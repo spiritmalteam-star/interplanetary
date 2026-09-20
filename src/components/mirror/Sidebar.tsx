@@ -1,39 +1,31 @@
 "use client";
 
 import { useMemo } from "react";
-import { BookOpenText, ChevronRight, Gift, Search, X } from "lucide-react";
+import { BookOpenText, FlaskConical, Search, X } from "lucide-react";
 import {
   civilizations,
 } from "@/lib/data/civilizations";
 import { interdimensional } from "@/lib/data/interdimensional";
-import { giftLines } from "@/lib/data/science";
 import { archiveTotals, useMirror } from "@/lib/mirror-store";
-import { toast } from "@/hooks/use-toast";
+import { entityImage, searchEntities } from "@/lib/entity-utils";
 import { cn } from "@/lib/utils";
 import type { CivilizationGroup, InterdimGroup } from "@/lib/mirror-types";
 
 function RefineRealityCard() {
-  const handleGift = () => {
-    const line = giftLines[Math.floor(Math.random() * giftLines.length)];
-    toast({
-      title: "✦ A gift from the stars",
-      description: line,
-      duration: 7000,
-    });
-  };
+  const openLab = useMirror((s) => s.openLab);
 
   return (
     <div className="p-3">
       <button
         type="button"
-        onClick={handleGift}
-        aria-label="Refine Reality — receive a gift from the stars"
-        className="focus-glow group block w-full rounded-2xl bg-gradient-to-br from-[var(--cy)]/45 via-[#8f6bff]/30 to-[var(--pk)]/45 p-[1px] text-left transition-all duration-300 hover:-translate-y-0.5 hover:glow"
+        onClick={openLab}
+        aria-label="Open the Reality Manifesting Laboratory"
+        className="focus-glow group block w-full rounded-2xl bg-gradient-to-br from-[var(--gd)]/50 via-[#8f6bff]/25 to-[var(--pk)]/45 p-[1px] text-left transition-all duration-300 hover:-translate-y-0.5 hover:glow"
       >
         <span className="flex items-start gap-3 rounded-[15px] bg-[var(--glass-bg-strong)] p-3.5">
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-full border hairline bg-gradient-to-br from-[var(--cy)]/15 to-[var(--pk)]/15">
-            <Gift
-              className="size-4 text-[var(--cy)] transition-transform duration-500 group-hover:rotate-12"
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-full border hairline bg-gradient-to-br from-[var(--gd)]/20 to-[var(--pk)]/15">
+            <FlaskConical
+              className="size-4 text-[var(--gd)] transition-transform duration-500 group-hover:rotate-12"
               aria-hidden="true"
             />
           </span>
@@ -42,7 +34,8 @@ function RefineRealityCard() {
               Refine Reality
             </span>
             <span className="mt-1.5 block text-[11px] leading-relaxed text-muted-foreground">
-              A gift from the stars — remember you are the creator
+              Enter the Reality Manifesting Laboratory — refine an intention
+              into a sealed blueprint
             </span>
           </span>
         </span>
@@ -62,15 +55,76 @@ function Row({ entry }: { entry: CivilizationGroup | InterdimGroup }) {
         onClick={() => openModal({ type: "dossier", kind, id: entry.id })}
         className="focus-glow group flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left transition-colors duration-200 hover:bg-[color-mix(in_srgb,var(--cy)_7%,transparent)]"
       >
-        <ChevronRight
-          className="size-3 shrink-0 text-muted-foreground/50 transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-[var(--cy)]"
-          aria-hidden="true"
-        />
+        <EntityAvatar id={entry.id} kind={kind} />
         <span className="min-w-0 flex-1 truncate text-[11.5px] font-medium uppercase tracking-[0.09em] text-foreground/75 transition-colors duration-200 group-hover:text-[var(--cy)]">
           {entry.name}
         </span>
         <span className="shrink-0 font-mono text-[10px] tabular-nums text-muted-foreground/70">
           {entry.count}
+        </span>
+      </button>
+    </li>
+  );
+}
+
+function EntityAvatar({ id, kind }: { id: string; kind: string }) {
+  const src =
+    kind === "civilization"
+      ? `/images/ai/fam-${id}.jpg`
+      : `/images/ai/ord-${id}.jpg`;
+  return (
+    <span
+      className="relative size-5 shrink-0 overflow-hidden rounded-full border hairline"
+      aria-hidden="true"
+    >
+      { }
+      <img
+        src={src}
+        alt=""
+        loading="lazy"
+        className="size-full object-cover"
+        onError={(e) => {
+          e.currentTarget.style.display = "none";
+        }}
+      />
+    </span>
+  );
+}
+
+function EntityResultRow({
+  entityId,
+  name,
+  kind,
+}: {
+  entityId: string;
+  name: string;
+  kind: "civilization" | "interdim";
+}) {
+  const openModal = useMirror((s) => s.openModal);
+  return (
+    <li>
+      <button
+        type="button"
+        onClick={() => openModal({ type: "entity", kind, id: entityId })}
+        className="focus-glow group flex w-full items-center gap-2.5 rounded-lg py-1.5 pl-7 pr-2.5 text-left transition-colors duration-200 hover:bg-[color-mix(in_srgb,var(--cy)_7%,transparent)]"
+      >
+        <span
+          className="relative size-6 shrink-0 overflow-hidden rounded-full border hairline"
+          aria-hidden="true"
+        >
+          { }
+          <img
+            src={entityImage(entityId)}
+            alt=""
+            loading="lazy"
+            className="size-full object-cover"
+            onError={(e) => {
+              e.currentTarget.style.visibility = "hidden";
+            }}
+          />
+        </span>
+        <span className="min-w-0 flex-1 truncate text-[11px] text-foreground/70 transition-colors duration-200 group-hover:text-[var(--cy)]">
+          {name}
         </span>
       </button>
     </li>
@@ -89,13 +143,22 @@ export function SidebarContent() {
       ? civilizations
       : interdimensional;
 
+  const kind = sidebarTab === "civilizations" ? "civilization" : "interdim";
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return source;
-    return source.filter((entry) =>
-      entry.name.toLowerCase().includes(q)
+    return source.filter(
+      (entry) =>
+        entry.name.toLowerCase().includes(q) ||
+        entry.origin.toLowerCase().includes(q)
     );
   }, [search, source]);
+
+  const entityMatches = useMemo(() => {
+    if (!search.trim()) return [];
+    return searchEntities(kind, search, 12);
+  }, [search, kind]);
 
   const emptyLabel =
     sidebarTab === "civilizations"
@@ -127,8 +190,8 @@ export function SidebarContent() {
         </div>
         <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
           Browse {archiveTotals.civilizations} civilizations and{" "}
-          {archiveTotals.interdim} interdimensional beings. Click any to open
-          its dossier.
+          {archiveTotals.interdim} interdimensional beings — every one with a
+          named representative and a portrait. Click any to open its dossier.
         </p>
       </div>
 
@@ -197,10 +260,32 @@ export function SidebarContent() {
         className="nice-scroll mt-3 flex-1 space-y-0.5 overflow-y-auto px-3 pb-3"
         aria-live="polite"
       >
+        {entityMatches.length > 0 && (
+          <li className="px-2.5 pb-1 pt-1">
+            <span className="mono-label text-[7.5px] text-muted-foreground/70">
+              Named representatives
+            </span>
+          </li>
+        )}
+        {entityMatches.map((e) => (
+          <EntityResultRow
+            key={e.id}
+            entityId={e.id}
+            name={e.name}
+            kind={kind}
+          />
+        ))}
+        {entityMatches.length > 0 && filtered.length > 0 && (
+          <li className="px-2.5 pb-1 pt-2">
+            <span className="mono-label text-[7.5px] text-muted-foreground/70">
+              Families &amp; orders
+            </span>
+          </li>
+        )}
         {filtered.map((entry) => (
           <Row key={entry.id} entry={entry} />
         ))}
-        {filtered.length === 0 && (
+        {filtered.length === 0 && entityMatches.length === 0 && (
           <li className="px-2.5 py-3 text-[11px] italic leading-relaxed text-muted-foreground/80">
             {emptyLabel}
           </li>

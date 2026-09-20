@@ -381,6 +381,118 @@ html:not(.dark) .text-hero {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Scope themes — each channel dresses the transmission frame in     */
+/*  its own alchemy of accents. Applied via .scope-* wrappers.         */
+/* ------------------------------------------------------------------ */
+
+.scope-interplanetary {
+  --scope-a: #0f8fc2;
+  --scope-b: #7c5cd6;
+}
+.dark .scope-interplanetary {
+  --scope-a: #5fe6ff;
+  --scope-b: #8f6bff;
+}
+
+.scope-science {
+  --scope-a: #0c8f6e;
+  --scope-b: #0d9488;
+}
+.dark .scope-science {
+  --scope-a: #4fe3b1;
+  --scope-b: #2dd4bf;
+}
+
+.scope-quantum {
+  --scope-a: #b144bc;
+  --scope-b: #5b5bd6;
+}
+.dark .scope-quantum {
+  --scope-a: #e58ffb;
+  --scope-b: #818cf8;
+}
+
+.scope-healing {
+  --scope-a: #c04a6e;
+  --scope-b: #0e8f70;
+}
+.dark .scope-healing {
+  --scope-a: #fb8fae;
+  --scope-b: #57f0c8;
+}
+
+.scope-manifesting {
+  --scope-a: #a67820;
+  --scope-b: #b45d24;
+}
+.dark .scope-manifesting {
+  --scope-a: #f6c66b;
+  --scope-b: #e8965a;
+}
+
+/* Scope-aware text gradient (opening line, titles) */
+.scope-gradient-text {
+  background-image: linear-gradient(
+    100deg,
+    color-mix(in srgb, var(--scope-a) 88%, white),
+    color-mix(in srgb, var(--scope-b) 82%, white)
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Themed frame card */
+.scope-frame-card {
+  border: 1px solid color-mix(in srgb, var(--scope-a) 24%, transparent);
+  box-shadow:
+    0 0 46px -18px color-mix(in srgb, var(--scope-a) 42%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--scope-a) 12%, transparent);
+}
+
+.scope-glow-text {
+  text-shadow: 0 0 22px color-mix(in srgb, var(--scope-a) 45%, transparent);
+}
+
+/* Corner ornaments for the frame */
+.scope-corner {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-color: color-mix(in srgb, var(--scope-a) 55%, transparent);
+  pointer-events: none;
+}
+.scope-corner-tl { top: 10px; left: 10px; border-top: 1px solid; border-left: 1px solid; border-top-left-radius: 10px; }
+.scope-corner-tr { top: 10px; right: 10px; border-top: 1px solid; border-right: 1px solid; border-top-right-radius: 10px; }
+.scope-corner-bl { bottom: 10px; left: 10px; border-bottom: 1px solid; border-left: 1px solid; border-bottom-left-radius: 10px; }
+.scope-corner-br { bottom: 10px; right: 10px; border-bottom: 1px solid; border-right: 1px solid; border-bottom-right-radius: 10px; }
+
+/* Animated conic frame glow */
+@keyframes scope-rotate {
+  to { transform: rotate(360deg); }
+}
+.scope-halo {
+  animation: scope-rotate 24s linear infinite;
+}
+.scope-halo-rev {
+  animation: scope-rotate 38s linear infinite reverse;
+}
+
+/* Charging ring (manifesting lab) */
+@keyframes charge-pulse {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.9; transform: scale(1.045); }
+}
+.animate-charge-pulse { animation: charge-pulse 2.2s ease-in-out infinite; }
+
+/* Gentle bob */
+@keyframes float-y {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+.animate-float-y { animation: float-y 6s ease-in-out infinite; }
+
+/* ------------------------------------------------------------------ */
 /*  Reduced motion                                                    */
 /* ------------------------------------------------------------------ */
 
@@ -393,6 +505,10 @@ html:not(.dark) .text-hero {
   .animate-line-breathe,
   .animate-rise-in,
   .animate-spin-slower,
+  .scope-halo,
+  .scope-halo-rev,
+  .animate-charge-pulse,
+  .animate-float-y,
   .shimmer-bar {
     animation: none !important;
   }

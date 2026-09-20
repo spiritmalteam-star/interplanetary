@@ -1,10 +1,20 @@
-import type { ModePill, SciencePill } from "@/lib/mirror-types";
+import type { LabFrequency, ModePill, SciencePill } from "@/lib/mirror-types";
 
 export const modes: ModePill[] = [
   { id: "interplanetary", emoji: "🌐", label: "Interplanetary" },
   { id: "science", emoji: "🔬", label: "Science" },
   { id: "quantum", emoji: "☯", label: "Quantum" },
   { id: "healing", emoji: "💚", label: "Healing" },
+];
+
+/* Reality Manifesting Laboratory — emotional frequencies the chamber can hold */
+export const labFrequencies: LabFrequency[] = [
+  { id: "gratitude", label: "Gratitude", glyph: "🙏", hint: "The fastest carrier wave" },
+  { id: "awe", label: "Awe", glyph: "✨", hint: "Opens the aperture wide" },
+  { id: "love", label: "Love", glyph: "❤️", hint: "The baseline of the field" },
+  { id: "certainty", label: "Certainty", glyph: "🎯", hint: "Crisp, directed signal" },
+  { id: "peace", label: "Peace", glyph: "🕊️", hint: "Zero-noise reception" },
+  { id: "joy", label: "Joy", glyph: "☀️", hint: "High-voltage creation" },
 ];
 
 export const fusionFields: SciencePill[] = [

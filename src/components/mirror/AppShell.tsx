@@ -13,6 +13,7 @@ import { QuestionCards } from "./QuestionCards";
 import { StatusBar } from "./StatusBar";
 import { QueryComposer } from "./QueryComposer";
 import { TransmissionView } from "./TransmissionView";
+import { ManifestationLab } from "./ManifestationLab";
 import { FederationModal } from "./FederationModal";
 import { AstralJobsModal } from "./AstralJobsModal";
 import { DossierModal } from "./DossierModal";
@@ -47,8 +48,10 @@ export default function AppShell() {
                   <QuestionCards />
                   <StatusBar />
                 </>
-              ) : (
+              ) : view === "transmission" ? (
                 <TransmissionView />
+              ) : (
+                <ManifestationLab />
               )}
             </div>
           </div>

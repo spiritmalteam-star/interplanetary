@@ -5,7 +5,9 @@ import {
   ArrowRight,
   Atom,
   ChevronLeft,
+  Compass,
   Dna,
+  Flame,
   Globe,
   Heart,
   Moon,
@@ -17,6 +19,7 @@ import {
 } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { professionDomains, professionTotal } from "@/lib/data/professions";
+import { sectionImage } from "@/lib/entity-utils";
 import { ModalShell } from "./ModalShell";
 import { cn } from "@/lib/utils";
 import type { ProfessionDomain } from "@/lib/mirror-types";
@@ -31,6 +34,9 @@ const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   waves: Waves,
   scroll: ScrollText,
   scale: Scale,
+  sparkles: Sparkles,
+  compass: Compass,
+  flame: Flame,
 };
 
 export function AstralJobsModal() {
@@ -70,12 +76,15 @@ export function AstralJobsModal() {
       open={open}
       onOpenChange={handleOpenChange}
       title="Astral Professions"
-      description="Click a domain to enter. Click a profession to learn more. Ask the Mirror for a full transmission anytime."
+      description="12 domains · 1,303 catalogued roles. Click a domain to enter, a profession to learn more — ask the Mirror for a full transmission anytime."
       widthClass="sm:max-w-[680px]"
     >
       <div className="flex items-center gap-3 px-5 sm:px-6">
         <span className="mono-label rounded-full border border-[var(--cy)]/30 bg-[color-mix(in_srgb,var(--cy)_8%,transparent)] px-2.5 py-1 text-[8.5px] text-[var(--cy)]">
-          {professionTotal.toLocaleString()} catalogued
+          {professionTotal.toLocaleString()} roles
+        </span>
+        <span className="mono-label rounded-full border hairline px-2.5 py-1 text-[8.5px] text-muted-foreground">
+          {professionDomains.length} domains
         </span>
         {domain && (
           <button
@@ -103,26 +112,48 @@ export function AstralJobsModal() {
                   key={d.id}
                   type="button"
                   onClick={() => setDomainId(d.id)}
-                  className="focus-glow group flex flex-col items-start rounded-xl border hairline bg-[var(--glass-bg-soft)] p-3.5 text-left transition-all duration-300 hover:-translate-y-0.5 hover:border-[var(--hairline-hover)] hover:glow-sm"
+                  className="focus-glow group flex flex-col items-start overflow-hidden rounded-xl border hairline bg-[var(--glass-bg-soft)] text-left transition-all duration-300 hover:-translate-y-0.5 hover:border-[var(--hairline-hover)] hover:glow-sm"
                 >
-                  <span className="flex w-full items-start justify-between gap-2">
-                    <span className="flex size-8 items-center justify-center rounded-lg border hairline bg-[color-mix(in_srgb,var(--cy)_10%,transparent)]">
+                  <span
+                    className="relative block h-16 w-full"
+                    aria-hidden="true"
+                  >
+                    { }
+                    <img
+                      src={sectionImage(`dom-${d.id}`)}
+                      alt=""
+                      loading="lazy"
+                      className="size-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                      }}
+                    />
+                    <span
+                      className="absolute inset-0"
+                      style={{
+                        background:
+                          "linear-gradient(180deg, transparent 20%, color-mix(in srgb, var(--card) 72%, transparent) 100%)",
+                      }}
+                    />
+                  </span>
+                  <span className="flex w-full items-start justify-between gap-2 px-3.5">
+                    <span className="-mt-5 flex size-8 items-center justify-center rounded-lg border hairline bg-[color-mix(in_srgb,var(--cy)_10%,transparent)] backdrop-blur-sm">
                       <Icon
                         className="size-4 text-[var(--cy)]"
                         aria-hidden="true"
                       />
                     </span>
-                    <span className="mono-label rounded-full bg-[color-mix(in_srgb,var(--cy)_10%,transparent)] px-1.5 py-0.5 text-[8px] text-[var(--cy)]">
+                    <span className="mono-label mt-2 rounded-full bg-[color-mix(in_srgb,var(--cy)_10%,transparent)] px-1.5 py-0.5 text-[8px] text-[var(--cy)]">
                       {d.count}
                     </span>
                   </span>
-                  <span className="mt-2.5 text-[11.5px] font-semibold uppercase tracking-[0.08em] text-foreground">
+                  <span className="mt-2 px-3.5 text-[11.5px] font-semibold uppercase tracking-[0.08em] text-foreground">
                     {d.title}
                   </span>
-                  <span className="mt-1 line-clamp-2 text-[11px] leading-relaxed text-muted-foreground">
+                  <span className="mt-1 line-clamp-2 px-3.5 pb-2 text-[11px] leading-relaxed text-muted-foreground">
                     {d.description}
                   </span>
-                  <span className="mono-label mt-2.5 flex items-center gap-1 text-[8.5px] text-[var(--cy)]">
+                  <span className="mono-label mb-3 mt-1.5 flex items-center gap-1 px-3.5 text-[8.5px] text-[var(--cy)]">
                     Explore
                     <ArrowRight
                       className="size-3 transition-transform duration-300 group-hover:translate-x-0.5"
@@ -162,8 +193,15 @@ export function AstralJobsModal() {
                   onClick={() => setProfession(p.name)}
                   className="focus-glow group rounded-xl border hairline bg-[var(--glass-bg-soft)] p-3.5 text-left transition-all duration-300 hover:-translate-y-0.5 hover:border-[var(--hairline-hover)] hover:glow-sm"
                 >
-                  <span className="block text-[12.5px] font-semibold text-foreground">
-                    {p.name}
+                  <span className="flex items-start justify-between gap-2">
+                    <span className="block text-[12.5px] font-semibold text-foreground">
+                      {p.name}
+                    </span>
+                    {p.openings != null && (
+                      <span className="mono-label shrink-0 rounded-full border border-[var(--ok)]/30 bg-[color-mix(in_srgb,var(--ok)_10%,transparent)] px-1.5 py-0.5 text-[7.5px] text-[var(--ok)]">
+                        {p.openings} seats
+                      </span>
+                    )}
                   </span>
                   <span className="mt-1 block text-[11px] leading-relaxed text-muted-foreground">
                     {p.blurb}
@@ -200,9 +238,14 @@ export function AstralJobsModal() {
             <h4 className="text-[14px] font-semibold text-foreground">
               {role.name}
             </h4>
-            <p className="mt-1 text-[11.5px] italic text-[var(--cy)]">
-              {role.blurb}
-            </p>
+            <div className="mt-1 flex flex-wrap items-center gap-2">
+              <p className="text-[11.5px] italic text-[var(--cy)]">{role.blurb}</p>
+              {role.openings != null && (
+                <span className="mono-label rounded-full border border-[var(--ok)]/30 bg-[color-mix(in_srgb,var(--ok)_10%,transparent)] px-2 py-0.5 text-[8px] text-[var(--ok)]">
+                  {role.openings} open seats across federated fleets
+                </span>
+              )}
+            </div>
             <p className="mt-3 text-[12.5px] leading-relaxed text-foreground/85">
               {role.detail}
             </p>

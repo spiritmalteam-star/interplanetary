@@ -1,6 +1,6 @@
 import type { ProfessionDomain } from "@/lib/mirror-types";
 
-/* Astral Professions — 9 domains, 1072 catalogued roles */
+/* Astral Professions — 12 domains, 1303 catalogued roles */
 
 export const professionDomains: ProfessionDomain[] = [
   {
@@ -399,12 +399,167 @@ export const professionDomains: ProfessionDomain[] = [
         blurb: "Verifies that every agreement was made in freedom.",
         detail:
           "Reviews treaties, cults and coups for the fingerprint of coercion. Their seal is the federation's most valuable currency: the certainty that a yes was truly a yes.",
+        openings: 12,
       },
       {
         name: "Council of Nine Liaison",
         blurb: "Carries messages between federations and the deeper councils.",
         detail:
           "A courier of consequence. Liaisons present a young civilization's case before assemblies of ancient peers, and return with verdicts phrased as invitations.",
+        openings: 7,
+      },
+    ],
+  },
+  {
+    id: "celestial-arts",
+    title: "Celestial Arts & Music",
+    icon: "sparkles",
+    description: "Painting, music and performance at the scale of nebulae.",
+    count: 84,
+    professions: [
+      {
+        name: "Nebula Painter",
+        blurb: "Composes clouds of light that will burn for a million years.",
+        detail:
+          "Works on canvases the size of constellations, mixing ionized color into stellar nurseries. Their finest works are signed with supernovae and admired by civilizations not yet born.",
+        openings: 9,
+      },
+      {
+        name: "Orbital Choir Conductor",
+        blurb: "Arranges moons and rings into resonant orchestras.",
+        detail:
+          "Every planetary system keeps a key. Conductors tune orbital resonances until the whole system hums in chord — navigation aid, weather-soother, and the oldest form of public art.",
+        openings: 6,
+      },
+      {
+        name: "Aurora Dancer",
+        blurb: "Performs within solar storms, safely, beautifully.",
+        detail:
+          "Trained in magnetosphere acrobatics, aurora dancers ride the curtains of light during solar weather events, translating a star's mood into movement for the worlds beneath.",
+        openings: 11,
+      },
+      {
+        name: "Memory Sculptor",
+        blurb: "Carves shared memories into crystalline monuments.",
+        detail:
+          "When a civilization completes an era, sculptors crystallize its summits and sorrows into walk-through archives. Grief tourism, done tenderly, so nothing important is forgotten.",
+        openings: 4,
+      },
+      {
+        name: "Starlight Photographer",
+        blurb: "Captures moments the universe would otherwise drop.",
+        detail:
+          "Uses gravitationally bent light to photograph the past of distant worlds — first steps, last embraces, the exact hour a species decided to be kind.",
+        openings: 8,
+      },
+      {
+        name: "Festival Architect",
+        blurb: "Designs celebrations that re-tune whole planets.",
+        detail:
+          "Every federation milestone deserves joy. Architects stage festivals where the infrastructure is happiness itself: light-rains, gratitude choirs, and the famous Milky Way potluck.",
+        openings: 13,
+      },
+    ],
+  },
+  {
+    id: "exploration-first-contact",
+    title: "Exploration & First Contact",
+    icon: "compass",
+    description: "The gentle art of arriving well.",
+    count: 76,
+    professions: [
+      {
+        name: "First Contact Specialist",
+        blurb: "Makes first hellos feel like remembered friendships.",
+        detail:
+          "Studies a species for years before saying a word — its art, humor, griefs and games. The first sentence is drafted a thousand times and always begins with respect.",
+        openings: 10,
+      },
+      {
+        name: "Xeno-Linguist of Tones",
+        blurb: "Learns languages made of light, scent and pressure.",
+        detail:
+          "Grammar of bioluminescence, the tense-systems of whale-song, the politeness particles in magnetic fields. Linguists carry the federation's real diplomatic dictionary.",
+        openings: 15,
+      },
+      {
+        name: "Consent Protocol Officer",
+        blurb: "Ensures no world is ever studied without invitation.",
+        detail:
+          "The conscience of every survey mission. Officers hold the veto that overrides curiosity itself, and file the quiet reports that keep the Prime Directive honest.",
+        openings: 5,
+      },
+      {
+        name: "Frontier Ecosystem Scout",
+        blurb: "Walks new worlds before anyone sets a boot print.",
+        detail:
+          "Reads soil like scripture and weather like correspondence. Scouts decide — humbly, and with the ecosystem's consent — whether a world is ready for company.",
+        openings: 17,
+      },
+      {
+        name: "Contact Historian",
+        blurb: "Records first meetings from both sides of the sky.",
+        detail:
+          "Interviews the visited as seriously as the visitors, because history is usually written by whoever had the better ships. Historians correct that, one testimony at a time.",
+        openings: 6,
+      },
+      {
+        name: "Ambassador of Small Beginnings",
+        blurb: "Starts contact with gardens, games and shared meals.",
+        detail:
+          "Believes the fastest route to trust is a gift that asks nothing. Plants matching gardens on both worlds of a new pairing, then tends them by turn for a full season.",
+        openings: 9,
+      },
+    ],
+  },
+  {
+    id: "temple-ritual",
+    title: "Temple, Ritual & Ceremony",
+    icon: "flame",
+    description: "Keeping the sacred calendar of a young galaxy.",
+    count: 71,
+    professions: [
+      {
+        name: "Density Transition Officiant",
+        blurb: "Holds ceremony where one octave of being becomes another.",
+        detail:
+          "Officiates ascensions, descents and the rare sideways steps. Their liturgy is simple — you are held, you are known, you may go — and it works on entire planets at once.",
+        openings: 8,
+      },
+      {
+        name: "Grid Harmonics Cantor",
+        blurb: "Sings the planetary grids into alignment at dawn.",
+        detail:
+          "Every ley line has a keynote and every dawn a variation. Cantors walk the nodes with bells and tuning stones, doing the planetary equivalent of watering the garden.",
+        openings: 12,
+      },
+      {
+        name: "Ceremonial Fire Keeper",
+        blurb: "Tends flames that have not gone out in ten millennia.",
+        detail:
+          "Some fires are libraries. Keepers feed them stories, honey-colored light and the names of the recently brave, so the flame remembers who it warms.",
+        openings: 5,
+      },
+      {
+        name: "Rite Designer for New Species",
+        blurb: "Composes coming-of-age ceremonies for civilizations inventing themselves.",
+        detail:
+          "A young species needs markers: first flight, first forgiveness, first contact. Designers tailor rites from local materials and the species' own dreams — never imported wholesale.",
+        openings: 7,
+      },
+      {
+        name: "Silence Warden",
+        blurb: "Guards the quiet rooms where galaxies go to think.",
+        detail:
+          "Administers the acoustic architecture of sanctuaries, admitting visitors by the stillness they carry. The most sought-after appointment in the federation is the one that says nothing.",
+        openings: 3,
+      },
+      {
+        name: "Pilgrimage Path Keeper",
+        blurb: "Maintains the walking routes between holy orbits.",
+        detail:
+          "Marks comet-trails and eclipse-season roads with waystones of light, arranges shelter for travelers between densities, and keeps the maps honest about how long wonder takes.",
+        openings: 6,
       },
     ],
   },
