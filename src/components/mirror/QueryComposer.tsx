@@ -6,10 +6,11 @@ import { useMirror } from "@/lib/mirror-store";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 export function QueryComposer() {
-  const query = useMirror((s) => s.query);
-  const setQuery = useMirror((s) => s.setQuery);
+  const activeMode = useMirror((s) => s.activeMode);
+  const draft = useMirror((s) => s.sessions[s.activeMode].draft);
+  const setDraft = useMirror((s) => s.setDraft);
   const askMirror = useMirror((s) => s.askMirror);
-  const status = useMirror((s) => s.status);
+  const status = useMirror((s) => s.sessions[s.activeMode].status);
   const composerFocusNonce = useMirror((s) => s.composerFocusNonce);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const isMobile = useIsMobile();
@@ -20,7 +21,7 @@ export function QueryComposer() {
     if (!el) return;
     el.style.height = "0px";
     el.style.height = `${Math.min(el.scrollHeight, 148)}px`;
-  }, [query]);
+  }, [draft]);
 
   // Focus on request (suggested question chosen, etc.)
   useEffect(() => {
@@ -29,11 +30,11 @@ export function QueryComposer() {
     }
   }, [composerFocusNonce]);
 
-  const canSend = query.trim().length > 0 && status !== "loading";
+  const canSend = draft.trim().length > 0 && status !== "loading";
 
   const submit = () => {
     if (!canSend) return;
-    void askMirror(query);
+    void askMirror(draft);
   };
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -68,8 +69,8 @@ export function QueryComposer() {
             id="mirror-query"
             ref={textareaRef}
             rows={1}
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
             onKeyDown={onKeyDown}
             placeholder={
               isMobile

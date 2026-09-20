@@ -19,6 +19,10 @@ import {
 } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { professionDomains, professionTotal } from "@/lib/data/professions";
+import {
+  domainProfiles,
+  professionProfiles,
+} from "@/lib/profession-profiles";
 import { sectionImage } from "@/lib/entity-utils";
 import { ModalShell } from "./ModalShell";
 import { cn } from "@/lib/utils";
@@ -185,6 +189,33 @@ export function AstralJobsModal() {
                 {domain.count} catalogued
               </span>
             </div>
+
+            {/* domain charter */}
+            {domainProfiles[domain.id] && (
+              <div className="mb-3 space-y-2.5 rounded-xl border hairline bg-[color-mix(in_srgb,var(--cy)_4%,transparent)] p-3.5">
+                <p className="text-[12px] leading-relaxed text-foreground/85">
+                  {domainProfiles[domain.id].charter}
+                </p>
+                <p className="mono-label text-[8px] text-muted-foreground">
+                  Seats · <span className="text-foreground/80">{domainProfiles[domain.id].seats}</span>
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {domainProfiles[domain.id].disciplines.map((d, i) => (
+                    <span
+                      key={i}
+                      className="mono-label rounded-full border hairline px-2 py-0.5 text-[8px] text-muted-foreground"
+                    >
+                      {d}
+                    </span>
+                  ))}
+                </div>
+                <p className="text-[11px] leading-relaxed text-muted-foreground">
+                  <span className="mono-label text-[8px] text-[var(--cy)]">Entrance trial · </span>
+                  {domainProfiles[domain.id].entranceTrial}
+                </p>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
               {domain.professions.map((p) => (
                 <button
@@ -249,6 +280,72 @@ export function AstralJobsModal() {
             <p className="mt-3 text-[12.5px] leading-relaxed text-foreground/85">
               {role.detail}
             </p>
+
+            {/* full profession dossier */}
+            {professionProfiles[role.name] && (
+              <div className="mt-4 space-y-3 rounded-lg border hairline bg-[color-mix(in_srgb,var(--cy)_4%,transparent)] p-3.5">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="mono-label rounded-full border border-[var(--cy)]/30 bg-[color-mix(in_srgb,var(--cy)_8%,transparent)] px-2 py-0.5 text-[8px] text-[var(--cy)]">
+                    {professionProfiles[role.name].ring}
+                  </span>
+                  <span className="mono-label rounded-full border hairline px-2 py-0.5 text-[8px] text-muted-foreground">
+                    Tenure · {professionProfiles[role.name].tenure}
+                  </span>
+                  <span className="mono-label rounded-full border hairline px-2 py-0.5 text-[8px] text-muted-foreground">
+                    Yield · {professionProfiles[role.name].compensation}
+                  </span>
+                </div>
+                <div>
+                  <h5 className="mono-label text-[8px] text-[var(--cy)]">Mandate</h5>
+                  <p className="mt-1 text-[12px] leading-relaxed text-foreground/85">
+                    {professionProfiles[role.name].mandate}
+                  </p>
+                </div>
+                <div>
+                  <h5 className="mono-label text-[8px] text-[var(--cy)]">Training pathway</h5>
+                  <p className="mt-1 text-[12px] leading-relaxed text-foreground/85">
+                    {professionProfiles[role.name].pathway}
+                  </p>
+                </div>
+                <div>
+                  <h5 className="mono-label text-[8px] text-[var(--cy)]">Toolkit</h5>
+                  <div className="mt-1.5 flex flex-wrap gap-1.5">
+                    {professionProfiles[role.name].toolkit.map((t, i) => (
+                      <span
+                        key={i}
+                        className="mono-label rounded-full border hairline px-2 py-0.5 text-[8px] text-muted-foreground"
+                      >
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <h5 className="mono-label text-[8px] text-[var(--cy)]">Where the work happens</h5>
+                  <p className="mt-1 text-[12px] leading-relaxed text-foreground/85">
+                    {professionProfiles[role.name].workplace}
+                  </p>
+                </div>
+                <div>
+                  <h5 className="mono-label text-[8px] text-[var(--gd)]">Honest hazards</h5>
+                  <p className="mt-1 text-[12px] leading-relaxed text-foreground/85">
+                    {professionProfiles[role.name].hazards}
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="mono-label text-[8px] text-muted-foreground">Allied domains ·</span>
+                  {professionProfiles[role.name].alliedDomains.map((d, i) => (
+                    <span
+                      key={i}
+                      className="mono-label rounded-full border hairline px-2 py-0.5 text-[8px] text-muted-foreground"
+                    >
+                      {d}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <button
               type="button"
               onClick={askAboutRole}

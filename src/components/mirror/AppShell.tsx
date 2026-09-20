@@ -14,6 +14,7 @@ import { StatusBar } from "./StatusBar";
 import { QueryComposer } from "./QueryComposer";
 import { TransmissionView } from "./TransmissionView";
 import { ManifestationLab } from "./ManifestationLab";
+import { ArchiveRegister } from "./ArchiveRegister";
 import { FederationModal } from "./FederationModal";
 import { AstralJobsModal } from "./AstralJobsModal";
 import { DossierModal } from "./DossierModal";
@@ -50,6 +51,8 @@ export default function AppShell() {
                 </>
               ) : view === "transmission" ? (
                 <TransmissionView />
+              ) : view === "register" ? (
+                <ArchiveRegister />
               ) : (
                 <ManifestationLab />
               )}

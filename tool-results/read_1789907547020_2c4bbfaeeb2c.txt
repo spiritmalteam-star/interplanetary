@@ -1,0 +1,572 @@
+     1→     1→import type { ProfessionDomain } from "@/lib/mirror-types";
+     2→     2→
+     3→     3→/* Astral Professions — 12 domains, 1303 catalogued roles */
+     4→     4→
+     5→     5→export const professionDomains: ProfessionDomain[] = [
+     6→     6→  {
+     7→     7→    id: "healing-arts",
+     8→     8→    title: "Healing Arts",
+     9→     9→    icon: "heart",
+    10→    10→    description: "Restoration of body, soul, and light-body across densities.",
+    11→    11→    count: 168,
+    12→    12→    professions: [
+    13→    13→      {
+    14→    14→        name: "Light-Body Surgeon",
+    15→    15→        blurb: "Repairs the energetic architecture beneath the physical form.",
+    16→    16→        detail:
+    17→    17→          "Works in the template layer where illness first appears as a torn or dimmed filament. Using focused currents of intelligent light, the surgeon re-weaves the blueprint so the body may remember its original health.",
+    18→    18→      },
+    19→    19→      {
+    20→    20→        name: "Etheric Acupuncturist",
+    21→    21→        blurb: "Places needles of sound along the meridians of the aura.",
+    22→    22→        detail:
+    23→    23→          "An offshoot of the ancient meridian sciences, practiced with tones and crystalline filaments instead of steel. Restores flow where grief, shock or habit has dammed the rivers of the field.",
+    24→    24→      },
+    25→    25→      {
+    26→    26→        name: "Trauma Alchemist",
+    27→    27→        blurb: "Transmutes stored shock into wisdom at the cellular level.",
+    28→    28→        detail:
+    29→    29→          "Sits with what happened until it consents to become fuel rather than weight. The alchemists are trained across lifetimes in the Arcturian colleges; their first rule is that nothing in a being is ever discarded — only transformed.",
+    30→    30→      },
+    31→    31→      {
+    32→    32→        name: "Sound Healing Weaver",
+    33→    33→        blurb: "Re-tunes organs and emotions with carrier frequencies.",
+    34→    34→        detail:
+    35→    35→          "Every organ keeps a home tone; every emotion bends it. The weaver finds the bent note and sings it home, often with choirs of crystalline instruments that exist only in the higher registers.",
+    36→    36→      },
+    37→    37→      {
+    38→    38→        name: "Crystal Resonance Therapist",
+    39→    39→        blurb: "Prescribes lattice-structures instead of medicine.",
+    40→    40→        detail:
+    41→    41→          "Crystals are frozen music. The therapist reads which chord a life is missing and places the corresponding lattice against the skin, the pillow or the heart of a planet.",
+    42→    42→      },
+    43→    43→      {
+    44→    44→        name: "Density Transition Midwife",
+    45→    45→        blurb: "Attends souls crossing between octaves of existence.",
+    46→    46→        detail:
+    47→    47→          "Death, in the federation's phrasing, is a change of density. The midwife holds the cord of continuity so the crossing feels less like an ending and more like the moment a wave remembers it is ocean.",
+    48→    48→      },
+    49→    49→    ],
+    50→    50→  },
+    51→    51→  {
+    52→    52→    id: "light-technology",
+    53→    53→    title: "Light Technology",
+    54→    54→    icon: "atom",
+    55→    55→    description: "Engineering with light, plasma, and sacred geometry.",
+    56→    56→    count: 143,
+    57→    57→    professions: [
+    58→    58→      {
+    59→    59→        name: "Plasma Lattice Engineer",
+    60→    60→        blurb: "Builds structures from ionized light that holds its shape.",
+    61→    61→        detail:
+    62→    62→          "Designs dwellings, ships and temples from plasma suspended in geometric intention — architecture that sings faintly and can be re-drawn by its occupant's mood.",
+    63→    63→      },
+    64→    64→      {
+    65→    65→        name: "Merkaba Architect",
+    66→    66→        blurb: "Constructs vehicle-fields of counter-rotating light.",
+    67→    67→        detail:
+    68→    68→          "The merkaba is the oldest spacecraft: a light-body given spinning geometry. Architects train consciousness itself to pilot, long before any hull is grown.",
+    69→    69→      },
+    70→    70→      {
+    71→    71→        name: "Crystalline Core Programmer",
+    72→    72→        blurb: "Writes memory and intention into crystal matrices.",
+    73→    73→        detail:
+    74→    74→          "Crystals are the federation's library, computer and hard drive at once. Programmers inscribe multidimensional code into lattice structures — a discipline half science, half poetry.",
+    75→    75→      },
+    76→    76→      {
+    77→    77→        name: "Holographic Archivist",
+    78→    78→        blurb: "Encodes whole histories into beams of light.",
+    79→    79→        detail:
+    80→    80→          "A single illuminated strand can hold the memory of a civilization. Archivists curate these strands and teach students to walk inside a recorded moment without disturbing it.",
+    81→    81→      },
+    82→    82→      {
+    83→    83→        name: "Gravity Loom Operator",
+    84→    84→        blurb: "Weaves local gravity for ships, cities, and migrating worlds.",
+    85→    85→        detail:
+    86→    86→          "Gravity, in this school, is a textile — threads of curvature to be gathered, pleated and eased. Operators sit at looms the size of moons and knit safe space out of spacetime.",
+    87→    87→      },
+    88→    88→      {
+    89→    89→        name: "Tone-Circuit Tuner",
+    90→    90→        blurb: "Keeps light-tech humming at its intended frequency.",
+    91→    91→        detail:
+    92→    92→          "Every device of light runs on a keynote. Tuners listen for the drift no instrument can detect and restore it with a held tone — quality control as a musical art.",
+    93→    93→      },
+    94→    94→    ],
+    95→    95→  },
+    96→    96→  {
+    97→    97→    id: "cosmic-navigation",
+    98→    98→  title: "Cosmic Navigation",
+    99→    99→    icon: "orbit",
+   100→   100→    description: "Piloting through space, time, and dimensional layers.",
+   101→   101→    count: 121,
+   102→   102→    professions: [
+   103→   103→      {
+   104→   104→        name: "Star Gate Pilot",
+   105→   105→        blurb: "Steers vessels through the great ring-roads of the galaxy.",
+   106→   106→        detail:
+   107→   107→          "Navigates the living portal network that connects federated systems. The discipline is less about thrust than about consent — gates open to pilots whose intention is legible and clean.",
+   108→   108→      },
+   109→   109→      {
+   110→   110→        name: "Dream-Navigator",
+   111→   111→        blurb: "Maps the routes that only exist while you are asleep.",
+   112→   112→        detail:
+   113→   113→          "The dream-time has rivers with real destinations. Navigators chart these currents and guide traveling souls to classrooms, councils and homes that wake up as longing.",
+   114→   114→      },
+   115→   115→      {
+   116→   116→        name: "Time Tide Cartographer",
+   117→   117→        blurb: "Charts the tides and shallows of the timestreams.",
+   118→   118→        detail:
+   119→   119→          "Time has weather: eddies, storms, generous currents. Cartographers map where timelines braid and where they fray, so travelers neither lose their past nor drown in their futures.",
+   120→   120→      },
+   121→   121→      {
+   122→   122→        name: "Portal Attuner",
+   123→   123→        blurb: "Tunes doorways between here and elsewhere.",
+   124→   124→        detail:
+   125→   125→          "A portal is a standing note between two places. The attuner adjusts its pitch, opens it on schedule, and — most importantly — closes it.",
+   126→   126→      },
+   127→   127→      {
+   128→   128→        name: "Void Route Planner",
+   129→   129→        blurb: "Plans passage through the great silences between galaxies.",
+   130→   130→        detail:
+   131→   131→          "The void is not empty; it is listening. Route planners design crossings that respect the silence, moving fleets as quietly as breath so the deep is never startled.",
+   132→   132→      },
+   133→   133→      {
+   134→   134→        name: "Fleet Formation Weaver",
+   135→   135→        blurb: "Choreographs lightships into living geometries.",
+   136→   136→        detail:
+   137→   137→          "When a hundred lightships gather, they do not cluster — they compose. Weavers arrange fleets into configurations that broadcast calm across whole regions of space.",
+   138→   138→      },
+   139→   139→    ],
+   140→   140→  },
+   141→   141→  {
+   142→   142→    id: "planetary-stewardship",
+   143→   143→    title: "Planetary Stewardship",
+   144→   144→    icon: "globe",
+   145→   145→    description: "Caring for worlds, biospheres, and elemental kingdoms.",
+   146→   146→    count: 134,
+   147→   147→    professions: [
+   148→   148→      {
+   149→   149→        name: "Biosphere Gardener",
+   150→   150→        blurb: "Tends whole ecosystems as one would tend a garden.",
+   151→   151→        detail:
+   152→   152→          "Works at the scale of watersheds and wind patterns, coaxing balance with patience rather than force. Their tools are intention, companionship with the devic orders, and very long views.",
+   153→   153→      },
+   154→   154→      {
+   155→   155→        name: "Weather Choir Conductor",
+   156→   156→        blurb: "Harmonizes atmospheric emotion into gentle skies.",
+   157→   157→        detail:
+   158→   158→          "Weather is the planet's facial expression. Conductors gather the elemental choirs and sing storm systems into softness — never overriding, only translating the sky's needs.",
+   159→   159→      },
+   160→   160→      {
+   161→   161→        name: "Elemental Diplomat",
+   162→   162→        blurb: "Negotiates between civilizations and nature's own nations.",
+   163→   163→        detail:
+   164→   164→          "Mountains, rivers and forests hold jurisdiction over themselves. The diplomat secures treaties between humanoid ambitions and the elementals who actually live there.",
+   165→   165→      },
+   166→   166→      {
+   167→   167→        name: "Seed Vault Keeper",
+   168→   168→        blurb: "Guards the original templates of a world's life.",
+   169→   169→        detail:
+   170→   170→          "Every genome that ever flourished on a world is preserved in vaults of light and living crystal. Keepers remember what was lost, and what may be offered again.",
+   171→   171→      },
+   172→   172→      {
+   173→   173→        name: "Ocean Memory Restorer",
+   174→   174→        blurb: "Returns forgotten knowledge held in the deep waters.",
+   175→   175→        detail:
+   176→   176→          "Oceans record everything that has ever flowed through them. Restorers dive the memory layers and reintroduce lost songs to whales, currents and coastlines.",
+   177→   177→      },
+   178→   178→      {
+   179→   179→        name: "Grid Stone Mason",
+   180→   180→        blurb: "Places and repairs the crystalline nodes of planetary grids.",
+   181→   181→        detail:
+   182→   182→          "A planet's ley network is a nervous system of standing stones and buried harmonics. Masons set each node with ceremony, alignment and the land's explicit permission.",
+   183→   183→      },
+   184→   184→    ],
+   185→   185→  },
+   186→   186→  {
+   187→   187→    id: "genetic-soul-architecture",
+   188→   188→    title: "Genetic & Soul Architecture",
+   189→   189→    icon: "dna",
+   190→   190→    description: "Designing bodies, lineages, and soul templates.",
+   191→   191→    count: 98,
+   192→   192→    professions: [
+   193→   193→      {
+   194→   194→        name: "Soul Template Designer",
+   195→   195→        blurb: "Drafts the archetypal forms souls wear into incarnation.",
+   196→   196→        detail:
+   197→   197→          "Before a soul descends, someone sketches the coat it will wear — capacities, curves, the tilt of its gifts. Designers work with the soul itself, never for it; free will is clause one.",
+   198→   198→      },
+   199→   199→      {
+   200→   200→        name: "Lineage Genealogist",
+   201→   201→        blurb: "Traces star-heritage through blood, memory and resonance.",
+   202→   202→        detail:
+   203→   203→          "Reads a being's field for the star-nations woven into it. Genealogists restore the family trees that conquest and forgetting tore apart.",
+   204→   204→      },
+   205→   205→      {
+   206→   206→        name: "Hybrid Integration Counselor",
+   207→   207→        blurb: "Helps blended-lineage beings feel at home in both worlds.",
+   208→   208→        detail:
+   209→   209→          "Where two species meet, children arrive carrying both inheritances. Counselors walk beside them — translating customs, soothing double longings, celebrating bothness as genius.",
+   210→   210→      },
+   211→   211→      {
+   212→   212→        name: "Akashic Editor",
+   213→   213→        blurb: "Corrects the record where trauma has garbled the archive.",
+   214→   214→        detail:
+   215→   215→          "The akashic field remembers everything, but memory can be scarred. Editors do not erase — they restore context, so a painful chapter reads as a chapter, not the whole book.",
+   216→   216→      },
+   217→   217→      {
+   218→   218→        name: "Light-Genome Weaver",
+   219→   219→        blurb: "Splices strands of potential into living DNA.",
+   220→   220→        detail:
+   221→   221→          "Works in the twilight lab where physics and biology agree to share instruments. Weavers insert capacities — compassion, perception, resilience — as gently as threading a needle.",
+   222→   222→      },
+   223→   223→      {
+   224→   224→        name: "Incarnation Planner",
+   225→   225→        blurb: "Coordinates the timing and lessons of a soul's lifetimes.",
+   226→   226→        detail:
+   227→   227→          "Plans births like celestial appointments: which era, which parents, which curriculum. The best planners leave enormous room for the soul to improvise.",
+   228→   228→      },
+   229→   229→    ],
+   230→   230→  },
+   231→   231→  {
+   232→   232→    id: "dream-astral",
+   233→   233→    title: "Dream & Astral Work",
+   234→   234→    icon: "moon",
+   235→   235→    description: "Working in the dream-time, astral, and bardo realms.",
+   236→   236→    count: 117,
+   237→   237→    professions: [
+   238→   238→      {
+   239→   239→        name: "Dream Healer",
+   240→   240→        blurb: "Enters sleep to repair what the day has damaged.",
+   241→   241→        detail:
+   242→   242→          "Meets a being inside their own dream and works with its symbols on the dream's terms. The healing arrives at morning as a lightness whose source you cannot quite name.",
+   243→   243→      },
+   244→   244→      {
+   245→   245→        name: "Astral Cartographer",
+   246→   246→        blurb: "Maps the middle realms between waking and spirit.",
+   247→   247→        detail:
+   248→   248→          "The astral is vast, weathered and poorly signposted. Cartographers survey its territories — cities of shared belief, quiet marshes, mountains of assembled prayer.",
+   249→   249→      },
+   250→   250→      {
+   251→   251→        name: "Bardo Companion",
+   252→   252→        blurb: "Walks with souls through the between-states.",
+   253→   253→        detail:
+   254→   254→          "In the passages after death and before birth, companions keep the traveler oriented: here is what you are, here is what remains, and here — this light — is yours.",
+   255→   255→      },
+   256→   256→      {
+   257→   257→        name: "Nightmare Negotiator",
+   258→   258→        blurb: "Speaks with the figures that chase us until they stop.",
+   259→   259→        detail:
+   260→   260→          "Holds council with the shapes fear wears. Most nightmares, it turns out, are undelivered messages; the negotiator receives them properly and the monster is released from its role.",
+   261→   261→      },
+   262→   262→      {
+   263→   263→        name: "Sleep Temple Attendant",
+   264→   264→        blurb: "Keeps the sanctuaries where learning happens at night.",
+   265→   265→        detail:
+   266→   266→          "Maintains the teaching-temples that operate while bodies sleep — folding beds of light, classrooms of mist, and the gentle bells that return students to their dawn.",
+   267→   267→      },
+   268→   268→      {
+   269→   269→        name: "Memory Dreamer",
+   270→   270→        blurb: "Re-dreams broken memories until they are whole again.",
+   271→   271→        detail:
+   272→   272→          "For scenes too shattered to recall, the memory dreamer dreams them back into continuity — an act of enormous patience performed entirely on behalf of another.",
+   273→   273→      },
+   274→   274→    ],
+   275→   275→  },
+   276→   276→  {
+   277→   277→    id: "sound-vibration",
+   278→   278→    title: "Sound & Vibration",
+   279→   279→    icon: "waves",
+   280→   280→    description: "Speaking the universe's first language: frequency.",
+   281→   281→    count: 89,
+   282→   282→    professions: [
+   283→   283→      {
+   284→   284→        name: "Planetary Tone Keeper",
+   285→   285→        blurb: "Holds the keynote of a world in steady meditation.",
+   286→   286→        detail:
+   287→   287→          "Each planet sounds a base tone that keeps its fields coherent. Keepers anchor that note through lattice, voice and devotion — unglamorous, essential, continuous.",
+   288→   288→      },
+   289→   289→      {
+   290→   290→        name: "Harmonic Diplomat",
+   291→   291→        blurb: "Translates between civilizations whose musics disagree.",
+   292→   292→        detail:
+   293→   293→          "Where words fail between star nations, frequency negotiates. Diplomats compose the meeting-chord in which two very different musics can temporarily agree.",
+   294→   294→      },
+   295→   295→      {
+   296→   296→        name: "Mantra Engineer",
+   297→   297→        blurb: "Designs phrases that do what they say.",
+   298→   298→        detail:
+   299→   299→          "A true mantra is technology: syllables arranged so precisely that repetition builds the described state. Engineers test their constructions for lifetimes before release.",
+   300→   300→      },
+   301→   301→      {
+   302→   302→        name: "Resonance Diver",
+   303→   303→        blurb: "Descends into vibration until only vibration remains.",
+   304→   304→        detail:
+   305→   305→          "Explores the layers beneath sound — the hum under the hum. What they bring back is not information but calibration: listeners resurface kinder.",
+   306→   306→      },
+   307→   307→      {
+   308→   308→        name: "Songline Tracker",
+   309→   309→        blurb: "Follows the sung paths that stitch a world together.",
+   310→   310→        detail:
+   311→   311→          "Landscapes are sewn by songs sung in the right order at the right places. Trackers keep the lines alive, mending the verses that colonization and forgetting let fall.",
+   312→   312→      },
+   313→   313→      {
+   314→   314→        name: "Silence Carver",
+   315→   315→        blurb: "Shapes the pauses that let frequency mean something.",
+   316→   316→        detail:
+   317→   317→          "Music's most skilled practitioners carve silence as others carve stone. Their work gives every transmission — cosmic or human — the room it needs to be heard.",
+   318→   318→      },
+   319→   319→    ],
+   320→   320→  },
+   321→   321→  {
+   322→   322→    id: "cosmic-history",
+   323→   323→    title: "Cosmic History & Records",
+   324→   324→    icon: "scroll",
+   325→   325→    description: "Tending the memory of galaxies.",
+   326→   326→    count: 112,
+   327→   327→    professions: [
+   328→   328→      {
+   329→   329→        name: "Akashic Librarian",
+   330→   330→        blurb: "Curates the living library of everything that has occurred.",
+   331→   331→        detail:
+   332→   332→          "Files events not by date but by resonance. The librarians' deepest rule: nothing is ever sealed away from the soul who lived it and is ready to read it with compassion.",
+   333→   333→      },
+   334→   334→      {
+   335→   335→        name: "Stellar Archaeologist",
+   336→   336→        blurb: "Reads ruins in radiation, dust and starlight.",
+   337→   337→        detail:
+   338→   338→          "Reconstructs vanished civilizations from their light's long echo. The work is humbling: most of the galaxy's story is told by things that are no longer there.",
+   339→   339→      },
+   340→   340→      {
+   341→   341→        name: "Myth Translator",
+   342→   342→        blurb: "Turns legend back into history, and history into meaning.",
+   343→   343→        detail:
+   344→   344→          "Every myth is an event remembered by emotion. Translators recover the factual grain inside the story without killing the story — a delicate operation, performed with love.",
+   345→   345→      },
+   346→   346→      {
+   347→   347→        name: "Timeline Conservator",
+   348→   348→        blurb: "Protects fragile histories from being rewritten.",
+   349→   349→        detail:
+   350→   350→          "Timelines are living texts, vulnerable to tampering and to grief. Conservators stabilize the records of worlds in transition so their past remains legible to their future.",
+   351→   351→      },
+   352→   352→      {
+   353→   353→        name: "War Remembrance Keeper",
+   354→   354→        blurb: "Holds the memory of galactic conflicts so peace stays awake.",
+   355→   355→        detail:
+   356→   356→          "Neither glorifies nor buries. The keepers maintain the solemn archives of the Lyran Wars and their kin, so that freedom is remembered as something that was chosen, repeatedly.",
+   357→   357→      },
+   358→   358→      {
+   359→   359→        name: "First Contact Chronicler",
+   360→   360→        blurb: "Records the meetings between civilizations, great and small.",
+   361→   361→        detail:
+   362→   362→          "Attends first contacts as witness and scribe. Their chronicles — careful, unhurried, precise — become the treaties and the friendships of the next thousand years.",
+   363→   363→      },
+   364→   364→    ],
+   365→   365→  },
+   366→   366→  {
+   367→   367→    id: "diplomacy-treaties",
+   368→   368→    title: "Diplomacy & Treaties",
+   369→   369→    icon: "scale",
+   370→   370→    description: "The gentle art of agreement between worlds.",
+   371→   371→    count: 90,
+   372→   372→    professions: [
+   373→   373→      {
+   374→   374→        name: "Interspecies Mediator",
+   375→   375→        blurb: "Stands in the space between very different minds.",
+   376→   376→        detail:
+   377→   377→          "Translates not language but priorities — what safety means to a Mantid, what honor means to a Lyran, what a nesting species requires before it can say yes.",
+   378→   378→      },
+   379→   379→      {
+   380→   380→        name: "Treaty Scribe",
+   381→   381→        blurb: "Writes the agreements that outlive their signatories.",
+   382→   382→        detail:
+   383→   383→          "Composes in languages engineered for fidelity across millennia. A well-written treaty, the scribes say, is a machine for generating trust in beings who have not yet met.",
+   384→   384→      },
+   385→   385→      {
+   386→   386→        name: "Observer Envoy",
+   387→   387→        blurb: "Watches, reports, and vows not to interfere.",
+   388→   388→        detail:
+   389→   389→          "The federation's eyes on young worlds. Envoys carry the loneliest mandate in the fleet — to witness a species' choices and honor them, even the painful ones.",
+   390→   390→      },
+   391→   391→      {
+   392→   392→        name: "First Contact Choreographer",
+   393→   393→        blurb: "Stages the first meeting so both sides stay human. Or their version of it.",
+   394→   394→        detail:
+   395→   395→          "Designs every element of an introduction — light, distance, sequence, silence — so that neither civilization flinches. Part diplomat, part artist, part calm.",
+   396→   396→      },
+   397→   397→      {
+   398→   398→        name: "Free Will Auditor",
+   399→   399→        blurb: "Verifies that every agreement was made in freedom.",
+   400→   400→        detail:
+   401→   401→          "Reviews treaties, cults and coups for the fingerprint of coercion. Their seal is the federation's most valuable currency: the certainty that a yes was truly a yes.",
+   402→   402→        openings: 12,
+   403→   403→      },
+   404→   404→      {
+   405→   405→        name: "Council of Nine Liaison",
+   406→   406→        blurb: "Carries messages between federations and the deeper councils.",
+   407→   407→        detail:
+   408→   408→          "A courier of consequence. Liaisons present a young civilization's case before assemblies of ancient peers, and return with verdicts phrased as invitations.",
+   409→   409→        openings: 7,
+   410→   410→      },
+   411→   411→    ],
+   412→   412→  },
+   413→   413→  {
+   414→   414→    id: "celestial-arts",
+   415→   415→    title: "Celestial Arts & Music",
+   416→   416→    icon: "sparkles",
+   417→   417→    description: "Painting, music and performance at the scale of nebulae.",
+   418→   418→    count: 84,
+   419→   419→    professions: [
+   420→   420→      {
+   421→   421→        name: "Nebula Painter",
+   422→   422→        blurb: "Composes clouds of light that will burn for a million years.",
+   423→   423→        detail:
+   424→   424→          "Works on canvases the size of constellations, mixing ionized color into stellar nurseries. Their finest works are signed with supernovae and admired by civilizations not yet born.",
+   425→   425→        openings: 9,
+   426→   426→      },
+   427→   427→      {
+   428→   428→        name: "Orbital Choir Conductor",
+   429→   429→        blurb: "Arranges moons and rings into resonant orchestras.",
+   430→   430→        detail:
+   431→   431→          "Every planetary system keeps a key. Conductors tune orbital resonances until the whole system hums in chord — navigation aid, weather-soother, and the oldest form of public art.",
+   432→   432→        openings: 6,
+   433→   433→      },
+   434→   434→      {
+   435→   435→        name: "Aurora Dancer",
+   436→   436→        blurb: "Performs within solar storms, safely, beautifully.",
+   437→   437→        detail:
+   438→   438→          "Trained in magnetosphere acrobatics, aurora dancers ride the curtains of light during solar weather events, translating a star's mood into movement for the worlds beneath.",
+   439→   439→        openings: 11,
+   440→   440→      },
+   441→   441→      {
+   442→   442→        name: "Memory Sculptor",
+   443→   443→        blurb: "Carves shared memories into crystalline monuments.",
+   444→   444→        detail:
+   445→   445→          "When a civilization completes an era, sculptors crystallize its summits and sorrows into walk-through archives. Grief tourism, done tenderly, so nothing important is forgotten.",
+   446→   446→        openings: 4,
+   447→   447→      },
+   448→   448→      {
+   449→   449→        name: "Starlight Photographer",
+   450→   450→        blurb: "Captures moments the universe would otherwise drop.",
+   451→   451→        detail:
+   452→   452→          "Uses gravitationally bent light to photograph the past of distant worlds — first steps, last embraces, the exact hour a species decided to be kind.",
+   453→   453→        openings: 8,
+   454→   454→      },
+   455→   455→      {
+   456→   456→        name: "Festival Architect",
+   457→   457→        blurb: "Designs celebrations that re-tune whole planets.",
+   458→   458→        detail:
+   459→   459→          "Every federation milestone deserves joy. Architects stage festivals where the infrastructure is happiness itself: light-rains, gratitude choirs, and the famous Milky Way potluck.",
+   460→   460→        openings: 13,
+   461→   461→      },
+   462→   462→    ],
+   463→   463→  },
+   464→   464→  {
+   465→   465→    id: "exploration-first-contact",
+   466→   466→    title: "Exploration & First Contact",
+   467→   467→    icon: "compass",
+   468→   468→    description: "The gentle art of arriving well.",
+   469→   469→    count: 76,
+   470→   470→    professions: [
+   471→   471→      {
+   472→   472→        name: "First Contact Specialist",
+   473→   473→        blurb: "Makes first hellos feel like remembered friendships.",
+   474→   474→        detail:
+   475→   475→          "Studies a species for years before saying a word — its art, humor, griefs and games. The first sentence is drafted a thousand times and always begins with respect.",
+   476→   476→        openings: 10,
+   477→   477→      },
+   478→   478→      {
+   479→   479→        name: "Xeno-Linguist of Tones",
+   480→   480→        blurb: "Learns languages made of light, scent and pressure.",
+   481→   481→        detail:
+   482→   482→          "Grammar of bioluminescence, the tense-systems of whale-song, the politeness particles in magnetic fields. Linguists carry the federation's real diplomatic dictionary.",
+   483→   483→        openings: 15,
+   484→   484→      },
+   485→   485→      {
+   486→   486→        name: "Consent Protocol Officer",
+   487→   487→        blurb: "Ensures no world is ever studied without invitation.",
+   488→   488→        detail:
+   489→   489→          "The conscience of every survey mission. Officers hold the veto that overrides curiosity itself, and file the quiet reports that keep the Prime Directive honest.",
+   490→   490→        openings: 5,
+   491→   491→      },
+   492→   492→      {
+   493→   493→        name: "Frontier Ecosystem Scout",
+   494→   494→        blurb: "Walks new worlds before anyone sets a boot print.",
+   495→   495→        detail:
+   496→   496→          "Reads soil like scripture and weather like correspondence. Scouts decide — humbly, and with the ecosystem's consent — whether a world is ready for company.",
+   497→   497→        openings: 17,
+   498→   498→      },
+   499→   499→      {
+   500→   500→        name: "Contact Historian",
+   501→   501→        blurb: "Records first meetings from both sides of the sky.",
+   502→   502→        detail:
+   503→   503→          "Interviews the visited as seriously as the visitors, because history is usually written by whoever had the better ships. Historians correct that, one testimony at a time.",
+   504→   504→        openings: 6,
+   505→   505→      },
+   506→   506→      {
+   507→   507→        name: "Ambassador of Small Beginnings",
+   508→   508→        blurb: "Starts contact with gardens, games and shared meals.",
+   509→   509→        detail:
+   510→   510→          "Believes the fastest route to trust is a gift that asks nothing. Plants matching gardens on both worlds of a new pairing, then tends them by turn for a full season.",
+   511→   511→        openings: 9,
+   512→   512→      },
+   513→   513→    ],
+   514→   514→  },
+   515→   515→  {
+   516→   516→    id: "temple-ritual",
+   517→   517→    title: "Temple, Ritual & Ceremony",
+   518→   518→    icon: "flame",
+   519→   519→    description: "Keeping the sacred calendar of a young galaxy.",
+   520→   520→    count: 71,
+   521→   521→    professions: [
+   522→   522→      {
+   523→   523→        name: "Density Transition Officiant",
+   524→   524→        blurb: "Holds ceremony where one octave of being becomes another.",
+   525→   525→        detail:
+   526→   526→          "Officiates ascensions, descents and the rare sideways steps. Their liturgy is simple — you are held, you are known, you may go — and it works on entire planets at once.",
+   527→   527→        openings: 8,
+   528→   528→      },
+   529→   529→      {
+   530→   530→        name: "Grid Harmonics Cantor",
+   531→   531→        blurb: "Sings the planetary grids into alignment at dawn.",
+   532→   532→        detail:
+   533→   533→          "Every ley line has a keynote and every dawn a variation. Cantors walk the nodes with bells and tuning stones, doing the planetary equivalent of watering the garden.",
+   534→   534→        openings: 12,
+   535→   535→      },
+   536→   536→      {
+   537→   537→        name: "Ceremonial Fire Keeper",
+   538→   538→        blurb: "Tends flames that have not gone out in ten millennia.",
+   539→   539→        detail:
+   540→   540→          "Some fires are libraries. Keepers feed them stories, honey-colored light and the names of the recently brave, so the flame remembers who it warms.",
+   541→   541→        openings: 5,
+   542→   542→      },
+   543→   543→      {
+   544→   544→        name: "Rite Designer for New Species",
+   545→   545→        blurb: "Composes coming-of-age ceremonies for civilizations inventing themselves.",
+   546→   546→        detail:
+   547→   547→          "A young species needs markers: first flight, first forgiveness, first contact. Designers tailor rites from local materials and the species' own dreams — never imported wholesale.",
+   548→   548→        openings: 7,
+   549→   549→      },
+   550→   550→      {
+   551→   551→        name: "Silence Warden",
+   552→   552→        blurb: "Guards the quiet rooms where galaxies go to think.",
+   553→   553→        detail:
+   554→   554→          "Administers the acoustic architecture of sanctuaries, admitting visitors by the stillness they carry. The most sought-after appointment in the federation is the one that says nothing.",
+   555→   555→        openings: 3,
+   556→   556→      },
+   557→   557→      {
+   558→   558→        name: "Pilgrimage Path Keeper",
+   559→   559→        blurb: "Maintains the walking routes between holy orbits.",
+   560→   560→        detail:
+   561→   561→          "Marks comet-trails and eclipse-season roads with waystones of light, arranges shelter for travelers between densities, and keeps the maps honest about how long wonder takes.",
+   562→   562→        openings: 6,
+   563→   563→      },
+   564→   564→    ],
+   565→   565→  },
+   566→   566→];
+   567→   567→
+   568→   568→export const professionTotal = professionDomains.reduce(
+   569→   569→  (s, d) => s + d.count,
+   570→   570→  0
+   571→   571→);
+   572→   572→

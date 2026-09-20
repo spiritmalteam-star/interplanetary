@@ -2,8 +2,16 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Check, Copy, Sparkles } from "lucide-react";
-import { useMirror } from "@/lib/mirror-store";
+import {
+  ArrowLeft,
+  Check,
+  Copy,
+  Eraser,
+  Radio,
+  Sparkles,
+} from "lucide-react";
+import { toast } from "sonner";
+import { useMirror, type ChatMessage } from "@/lib/mirror-store";
 import { SCOPE_META, sectionImage } from "@/lib/entity-utils";
 import type { Scope } from "@/lib/mirror-types";
 import { cn } from "@/lib/utils";
@@ -44,6 +52,19 @@ const TONE_VAR: Record<string, string> = {
   b: "var(--scope-b)",
   gd: "var(--gd)",
   ok: "var(--ok)",
+};
+
+const CHANNEL_PROMISE: Record<Scope, string> = {
+  interplanetary:
+    "Open contact channel with the star families. History here stays in this channel.",
+  science:
+    "Evidence-first channel. History here stays in this channel.",
+  quantum:
+    "Observer-included channel. History here stays in this channel.",
+  healing:
+    "Gentle-frequencies channel. History here stays in this channel.",
+  manifesting:
+    "Alchemy channel. History here stays in this channel.",
 };
 
 /* ---------- parsing the transmission into rich blocks ---------- */
@@ -90,29 +111,6 @@ function parseBlocks(text: string): Block[] {
 
 /* ---------- small themed pieces ---------- */
 
-function ScopeImage({
-  imageKey,
-  alt,
-  className,
-}: {
-  imageKey: string;
-  alt: string;
-  className?: string;
-}) {
-  const [failed, setFailed] = useState(false);
-  if (failed) return null;
-  return (
-     
-    <img
-      src={sectionImage(imageKey)}
-      alt={alt}
-      loading="lazy"
-      onError={() => setFailed(true)}
-      className={className}
-    />
-  );
-}
-
 function Medallion({ scope }: { scope: Scope }) {
   const meta = SCOPE_META[scope];
   const [failed, setFailed] = useState(false);
@@ -141,7 +139,6 @@ function Medallion({ scope }: { scope: Scope }) {
         }}
       >
         {!failed ? (
-           
           <img
             src={sectionImage(meta.imageKey)}
             alt=""
@@ -191,7 +188,7 @@ function OrbitSpinner() {
 
 /* ---------- loading ---------- */
 
-function LoadingTransmission({ scope }: { scope: Scope }) {
+function LoadingTransmission({ scope, query }: { scope: Scope; query: string }) {
   const [phase, setPhase] = useState(0);
   const phases = SCOPE_META[scope].phases;
 
@@ -205,6 +202,20 @@ function LoadingTransmission({ scope }: { scope: Scope }) {
 
   return (
     <div className="mt-8" aria-live="polite" aria-busy="true">
+      {query && (
+        <div className="relative mx-auto mb-6 max-w-[620px]">
+          <span
+            className="pointer-events-none absolute -left-1 -top-5 select-none font-serif text-[44px] leading-none opacity-40"
+            style={{ color: "var(--scope-a)" }}
+            aria-hidden="true"
+          >
+            “
+          </span>
+          <p className="px-6 text-[13.5px] italic leading-relaxed text-muted-foreground">
+            {query}
+          </p>
+        </div>
+      )}
       <OrbitSpinner />
       <div className="mt-4 flex items-center justify-center gap-2.5">
         <span
@@ -244,6 +255,11 @@ const staggerItem = {
     y: 0,
     transition: { delay: 0.12 + i * 0.14, duration: 0.6, ease: [0.22, 1, 0.36, 1] },
   }),
+};
+
+const stillItem = {
+  hidden: { opacity: 1 },
+  show: () => ({ opacity: 1 }),
 };
 
 function TransmissionBody({ text }: { text: string }) {
@@ -360,31 +376,31 @@ function Seal() {
   );
 }
 
-/* ---------- main view ---------- */
+/* ---------- one completed exchange ---------- */
 
-export function TransmissionView() {
-  const status = useMirror((s) => s.status);
-  const transmission = useMirror((s) => s.transmission);
-  const activeQuery = useMirror((s) => s.activeQuery);
-  const error = useMirror((s) => s.error);
-  const activeMode = useMirror((s) => s.activeMode);
-  const returnToObservatory = useMirror((s) => s.returnToObservatory);
+function Exchange({
+  message,
+  index,
+  animate,
+  scope,
+}: {
+  message: ChatMessage;
+  index: number;
+  animate: boolean;
+  scope: Scope;
+}) {
+  const scopeMeta = SCOPE_META[scope];
   const [copied, setCopied] = useState(false);
 
-  const scope: Scope = activeMode;
-  const meta = SCOPE_META[scope];
-
-  const classification = transmission
-    ? (CLASSIFICATION_META[transmission.classification] ?? {
-        label: "Archive reflection",
-        tone: "a" as const,
-        note: "Held gently by the archive — verify inwardly what resonates.",
-      })
-    : null;
+  const classification =
+    CLASSIFICATION_META[message.classification] ?? {
+      label: "Archive reflection",
+      tone: "a" as const,
+      note: "Held gently by the archive — verify inwardly what resonates.",
+    };
 
   const stamp = useMemo(() => {
-    if (!transmission) return null;
-    const d = new Date(transmission.createdAt);
+    const d = new Date(message.createdAt);
     if (Number.isNaN(d.getTime())) return null;
     return d.toLocaleString(undefined, {
       hour: "2-digit",
@@ -392,21 +408,19 @@ export function TransmissionView() {
       month: "short",
       day: "numeric",
     });
-  }, [transmission]);
+  }, [message.createdAt]);
 
   const txId = useMemo(() => {
-    if (!transmission) return "";
     let h = 0;
-    for (const ch of transmission.createdAt + transmission.query) {
+    for (const ch of message.createdAt + message.query) {
       h = (h * 31 + ch.charCodeAt(0)) >>> 0;
     }
     return `TX-${h.toString(16).toUpperCase().padStart(6, "0").slice(0, 6)}`;
-  }, [transmission]);
+  }, [message]);
 
   const handleCopy = async () => {
-    if (!transmission) return;
     try {
-      await navigator.clipboard.writeText(transmission.text);
+      await navigator.clipboard.writeText(message.text);
       setCopied(true);
       window.setTimeout(() => setCopied(false), 2200);
     } catch {
@@ -414,18 +428,164 @@ export function TransmissionView() {
     }
   };
 
+  const item = animate ? staggerItem : stillItem;
+
+  return (
+    <motion.article
+      initial={{ opacity: animate ? 0 : 1, y: animate ? 12 : 0 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: animate ? 0.55 : 0, ease: [0.22, 1, 0.36, 1] }}
+      aria-label={`Transmission ${index + 1}`}
+      className="pt-8 first:pt-0"
+    >
+      {/* index ribbon */}
+      <div className="mb-4 flex items-center gap-3">
+        <span
+          className="mono-label rounded-full border px-2 py-0.5 text-[8px]"
+          style={{
+            borderColor: "color-mix(in srgb, var(--scope-a) 35%, transparent)",
+            color: "color-mix(in srgb, var(--scope-a) 90%, white)",
+          }}
+        >
+          {scopeMeta.label} · exchange {String(index + 1).padStart(2, "0")}
+        </span>
+        <span
+          className="h-px flex-1"
+          style={{
+            background:
+              "linear-gradient(90deg, color-mix(in srgb, var(--scope-a) 30%, transparent), transparent)",
+          }}
+          aria-hidden="true"
+        />
+      </div>
+
+      {/* query echo */}
+      <div className="relative mx-auto max-w-[620px]">
+        <span
+          className="pointer-events-none absolute -left-1 -top-5 select-none font-serif text-[44px] leading-none opacity-40"
+          style={{ color: "var(--scope-a)" }}
+          aria-hidden="true"
+        >
+          “
+        </span>
+        <p className="px-6 text-[13.5px] italic leading-relaxed text-muted-foreground">
+          {message.query}
+        </p>
+      </div>
+
+      {/* themed frame */}
+      <div className="scope-frame-card relative mt-6 overflow-hidden rounded-2xl">
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.16]"
+          aria-hidden="true"
+          style={{
+            backgroundImage: `url(${sectionImage(scopeMeta.imageKey)})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            maskImage:
+              "radial-gradient(ellipse 90% 80% at 50% 0%, black 30%, transparent 78%)",
+            WebkitMaskImage:
+              "radial-gradient(ellipse 90% 80% at 50% 0%, black 30%, transparent 78%)",
+            mixBlendMode: "screen",
+          }}
+        />
+        <span className="scope-corner scope-corner-tl" aria-hidden="true" />
+        <span className="scope-corner scope-corner-tr" aria-hidden="true" />
+        <span className="scope-corner scope-corner-bl" aria-hidden="true" />
+        <span className="scope-corner scope-corner-br" aria-hidden="true" />
+        <div
+          className="animate-line-breathe h-px w-full"
+          style={{
+            background:
+              "linear-gradient(90deg, transparent, var(--scope-a) 30%, var(--scope-b) 70%, transparent)",
+          }}
+          aria-hidden="true"
+        />
+
+        <div className="relative px-6 py-7 sm:px-10 sm:py-9">
+          <TransmissionBody text={message.text} />
+        </div>
+        <Seal />
+      </div>
+
+      {/* meta row */}
+      <div className="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5">
+        {stamp && (
+          <span className="mono-label text-[8px] text-muted-foreground/60">
+            {stamp}
+          </span>
+        )}
+        <span className="mono-label text-[8px] text-muted-foreground/60">
+          {txId}
+        </span>
+        <span
+          className="mono-label text-[8px]"
+          style={{ color: "color-mix(in srgb, var(--scope-a) 75%, white)" }}
+        >
+          {scopeMeta.ornament} frame · {scopeMeta.label}
+        </span>
+        <button
+          type="button"
+          onClick={handleCopy}
+          className="focus-glow mono-label inline-flex items-center gap-1 text-[8px] text-muted-foreground/60 transition-colors hover:text-foreground"
+        >
+          {copied ? (
+            <Check className="size-3" aria-hidden="true" />
+          ) : (
+            <Copy className="size-3" aria-hidden="true" />
+          )}
+          {copied ? "copied" : "copy"}
+        </button>
+      </div>
+
+      {/* classification */}
+      <div className="mt-3 flex flex-col items-center gap-1.5 text-center">
+        <span
+          className="mono-label inline-flex items-center rounded-full border px-2.5 py-1 text-[8.5px]"
+          style={{
+            borderColor: `color-mix(in srgb, ${TONE_VAR[classification.tone]} 40%, transparent)`,
+            color: `color-mix(in srgb, ${TONE_VAR[classification.tone]} 85%, white)`,
+            background: `color-mix(in srgb, ${TONE_VAR[classification.tone]} 8%, transparent)`,
+          }}
+        >
+          {classification.label}
+        </span>
+        <p className="max-w-[540px] text-[10.5px] leading-relaxed text-muted-foreground/80">
+          {classification.note}
+        </p>
+      </div>
+    </motion.article>
+  );
+}
+
+/* ---------- main view: one independent channel per scope ---------- */
+
+export function TransmissionView() {
+  const activeMode = useMirror((s) => s.activeMode);
+  const session = useMirror((s) => s.sessions[s.activeMode]);
+  const returnToObservatory = useMirror((s) => s.returnToObservatory);
+  const clearChannel = useMirror((s) => s.clearChannel);
+
+  const scope: Scope = activeMode;
+  const meta = SCOPE_META[scope];
+
+  const handleClear = () => {
+    clearChannel();
+    toast.success(`${meta.label} channel cleared — this scope is now quiet.`);
+  };
+
   return (
     <motion.section
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-      aria-label={`Mirror transmission — ${meta.label} scope`}
+      aria-label={`${meta.label} channel — mirror transmissions`}
       className={cn(
         "scope-" + scope,
         "mx-auto w-full max-w-[760px] px-1 pb-6 pt-8 sm:pt-10"
       )}
     >
-      {/* ---------- header ---------- */}
+      {/* ---------- channel header ---------- */}
       <div className="text-center">
         <div className="flex items-center justify-center gap-4">
           <div
@@ -446,135 +606,95 @@ export function TransmissionView() {
             aria-hidden="true"
           />
         </div>
-        <div className="mt-3 flex items-center justify-center gap-2">
+        <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
           <span
             className="mono-label text-[10px]"
             style={{ color: "var(--scope-a)" }}
           >
             Mirror Transmission
           </span>
-          <span className="mono-label rounded-full border px-2 py-0.5 text-[8px] text-muted-foreground" style={{ borderColor: "color-mix(in srgb, var(--scope-a) 30%, transparent)" }}>
+          <span
+            className="mono-label rounded-full border px-2 py-0.5 text-[8px] text-muted-foreground"
+            style={{ borderColor: "color-mix(in srgb, var(--scope-a) 30%, transparent)" }}
+          >
             {meta.label} scope
+          </span>
+          <span className="mono-label inline-flex items-center gap-1 rounded-full border hairline px-2 py-0.5 text-[8px] text-muted-foreground">
+            <Radio className="size-2.5" aria-hidden="true" />
+            independent channel
           </span>
         </div>
         <p className="mono-label mt-1.5 text-[8.5px] text-muted-foreground/70">
           {meta.tagline}
         </p>
+        <p className="mx-auto mt-2 max-w-[480px] text-[11px] leading-relaxed text-muted-foreground/70">
+          {CHANNEL_PROMISE[scope]}
+        </p>
+      </div>
 
-        {activeQuery && (
-          <div className="relative mx-auto mt-5 max-w-[620px]">
-            <span
-              className="pointer-events-none absolute -left-1 -top-5 select-none font-serif text-[44px] leading-none opacity-40"
+      {/* ---------- thread ---------- */}
+      {session.messages.length === 0 &&
+        session.status === "idle" &&
+        !session.error && (
+          <div className="scope-frame-card relative mt-8 overflow-hidden rounded-2xl glass px-6 py-10 text-center">
+            <span className="scope-corner scope-corner-tl" aria-hidden="true" />
+            <span className="scope-corner scope-corner-tr" aria-hidden="true" />
+            <span className="scope-corner scope-corner-bl" aria-hidden="true" />
+            <span className="scope-corner scope-corner-br" aria-hidden="true" />
+            <p
+              className="mono-label text-[9px]"
               style={{ color: "var(--scope-a)" }}
-              aria-hidden="true"
             >
-              “
-            </span>
-            <p className="px-6 text-[13.5px] italic leading-relaxed text-muted-foreground">
-              {activeQuery}
+              {meta.label} channel
+            </p>
+            <p className="mt-3 text-[14px] font-medium text-foreground/85">
+              This channel is quiet.
+            </p>
+            <p className="mx-auto mt-2 max-w-[380px] text-[12px] leading-relaxed text-muted-foreground">
+              Every scope keeps its own private channel with its own history —
+              nothing carries over from other scopes. Ask from the composer
+              below to open the first transmission of this channel.
             </p>
           </div>
         )}
-      </div>
 
-      {/* ---------- body ---------- */}
-      {status === "loading" && <LoadingTransmission scope={scope} />}
+      {session.messages.map((m, i) => (
+        <Exchange
+          key={m.id}
+          message={m}
+          index={i}
+          scope={scope}
+          animate={i === session.messages.length - 1 && session.status !== "loading"}
+        />
+      ))}
 
-      {status === "error" && (
+      {session.status === "loading" && (
+        <LoadingTransmission scope={scope} query={session.activeQuery} />
+      )}
+
+      {session.status === "error" && (
         <div className="scope-frame-card mt-8 rounded-2xl glass p-6 text-center">
           <p className="text-[14px] leading-relaxed text-foreground/85">
             The field received your question but could not complete the
             transmission.
           </p>
           <p className="mt-2 text-[12.5px] italic text-muted-foreground">
-            {error}
+            {session.error}
           </p>
         </div>
       )}
 
-      {status === "ready" && transmission && (
+      {/* ---------- footer actions ---------- */}
+      {session.messages.length > 0 && (
         <>
-          <div className="scope-frame-card relative mt-7 overflow-hidden rounded-2xl">
-            {/* masked scope backdrop */}
-            <div
-              className="pointer-events-none absolute inset-0 opacity-[0.16]"
-              aria-hidden="true"
-              style={{
-                backgroundImage: `url(${sectionImage(meta.imageKey)})`,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-                maskImage:
-                  "radial-gradient(ellipse 90% 80% at 50% 0%, black 30%, transparent 78%)",
-                WebkitMaskImage:
-                  "radial-gradient(ellipse 90% 80% at 50% 0%, black 30%, transparent 78%)",
-                mixBlendMode: "screen",
-              }}
-            />
-            {/* corner ornaments */}
-            <span className="scope-corner scope-corner-tl" aria-hidden="true" />
-            <span className="scope-corner scope-corner-tr" aria-hidden="true" />
-            <span className="scope-corner scope-corner-bl" aria-hidden="true" />
-            <span className="scope-corner scope-corner-br" aria-hidden="true" />
-            {/* top gradient rule */}
-            <div
-              className="animate-line-breathe h-px w-full"
-              style={{
-                background:
-                  "linear-gradient(90deg, transparent, var(--scope-a) 30%, var(--scope-b) 70%, transparent)",
-              }}
-              aria-hidden="true"
-            />
-
-            <div className="relative px-6 py-7 sm:px-10 sm:py-9">
-              <TransmissionBody text={transmission.text} />
-            </div>
-            <Seal />
-          </div>
-
-          {/* meta row */}
-          <div className="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5">
-            {stamp && (
-              <span className="mono-label text-[8px] text-muted-foreground/60">
-                {stamp}
-              </span>
-            )}
-            {txId && (
-              <span className="mono-label text-[8px] text-muted-foreground/60">
-                {txId}
-              </span>
-            )}
-            <span
-              className="mono-label text-[8px]"
-              style={{ color: "color-mix(in srgb, var(--scope-a) 75%, white)" }}
-            >
-              {meta.ornament} frame · {meta.label}
-            </span>
-          </div>
-
-          {/* classification + honesty context */}
-          {classification && (
-            <div className="mt-4 flex flex-col items-center gap-1.5 text-center">
-              <span
-                className="mono-label inline-flex items-center rounded-full border px-2.5 py-1 text-[8.5px]"
-                style={{
-                  borderColor: `color-mix(in srgb, ${TONE_VAR[classification.tone]} 40%, transparent)`,
-                  color: `color-mix(in srgb, ${TONE_VAR[classification.tone]} 85%, white)`,
-                  background: `color-mix(in srgb, ${TONE_VAR[classification.tone]} 8%, transparent)`,
-                }}
-              >
-                {classification.label}
-              </span>
-              <p className="max-w-[540px] text-[10.5px] leading-relaxed text-muted-foreground/80">
-                {classification.note}
-              </p>
-            </div>
-          )}
-
-          <p className="mono-label mt-5 text-center text-[8.5px] text-muted-foreground/60">
-            Free will honored always · Transmitted with love ❤️
+          <p className="mono-label mt-8 text-center text-[8.5px] text-muted-foreground/60">
+            {session.messages.length}{" "}
+            {session.messages.length === 1
+              ? "exchange held in this channel"
+              : "exchanges held in this channel"}{" "}
+            · Free will honored always · Transmitted with love ❤️
           </p>
-
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-2.5">
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-2.5">
             <button
               type="button"
               onClick={returnToObservatory}
@@ -588,15 +708,14 @@ export function TransmissionView() {
             </button>
             <button
               type="button"
-              onClick={handleCopy}
-              className="focus-glow flex items-center gap-2 rounded-full border hairline px-4 py-2 text-[12px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+              onClick={handleClear}
+              className="focus-glow group flex items-center gap-2 rounded-full border hairline px-4 py-2 text-[12px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
             >
-              {copied ? (
-                <Check className="size-3.5" aria-hidden="true" />
-              ) : (
-                <Copy className="size-3.5" aria-hidden="true" />
-              )}
-              {copied ? "Copied" : "Copy transmission"}
+              <Eraser
+                className="size-3.5 transition-transform duration-300 group-hover:rotate-12"
+                aria-hidden="true"
+              />
+              Clear the {meta.label} channel
             </button>
           </div>
         </>

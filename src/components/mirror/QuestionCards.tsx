@@ -5,11 +5,11 @@ import { suggestedQuestions } from "@/lib/data/science";
 import { useMirror } from "@/lib/mirror-store";
 
 export function QuestionCards() {
-  const setQuery = useMirror((s) => s.setQuery);
+  const setDraft = useMirror((s) => s.setDraft);
   const focusComposer = useMirror((s) => s.focusComposer);
 
   const choose = (q: string) => {
-    setQuery(q);
+    setDraft(q);
     focusComposer();
   };
 

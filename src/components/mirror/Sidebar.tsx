@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { BookOpenText, FlaskConical, Search, X } from "lucide-react";
+import { BookOpenText, FlaskConical, Layers, Search, X } from "lucide-react";
 import {
   civilizations,
 } from "@/lib/data/civilizations";
@@ -131,6 +131,40 @@ function EntityResultRow({
   );
 }
 
+function FullRegisterButton() {
+  const openRegister = useMirror((s) => s.openRegister);
+  const sidebarTab = useMirror((s) => s.sidebarTab);
+  const kind = sidebarTab === "civilizations" ? "civilization" : "interdim";
+  const isCiv = sidebarTab === "civilizations";
+
+  return (
+    <div className="px-3 pt-2">
+      <button
+        type="button"
+        onClick={() => openRegister(kind)}
+        className="focus-glow group flex w-full items-center gap-2.5 rounded-xl border hairline bg-[var(--glass-bg-soft)] px-3 py-2.5 text-left transition-all duration-300 hover:-translate-y-px hover:border-[var(--hairline-hover)] hover:glow-sm"
+      >
+        <span className="flex size-7 shrink-0 items-center justify-center rounded-lg border hairline bg-[color-mix(in_srgb,var(--cy)_10%,transparent)]">
+          <Layers
+            className="size-3.5 text-[var(--cy)] transition-transform duration-500 group-hover:scale-110"
+            aria-hidden="true"
+          />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="mono-label block text-[9.5px] font-semibold text-foreground">
+            Open the full register
+          </span>
+          <span className="mt-0.5 block text-[10px] leading-snug text-muted-foreground">
+            Reveal all {isCiv ? archiveTotals.civilizations : archiveTotals.interdim}{" "}
+            {isCiv ? "named representatives" : "named presences"} — exact count,
+            searchable, every profile in depth
+          </span>
+        </span>
+      </button>
+    </div>
+  );
+}
+
 export function SidebarContent() {
   const sidebarTab = useMirror((s) => s.sidebarTab);
   const setSidebarTab = useMirror((s) => s.setSidebarTab);
@@ -157,7 +191,7 @@ export function SidebarContent() {
 
   const entityMatches = useMemo(() => {
     if (!search.trim()) return [];
-    return searchEntities(kind, search, 12);
+    return searchEntities(kind, search, 20);
   }, [search, kind]);
 
   const emptyLabel =
@@ -190,8 +224,9 @@ export function SidebarContent() {
         </div>
         <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
           Browse {archiveTotals.civilizations} civilizations and{" "}
-          {archiveTotals.interdim} interdimensional beings — every one with a
-          named representative and a portrait. Click any to open its dossier.
+          {archiveTotals.interdim} interdimensional beings — every single one
+          carries a name, a portrait and a full deep dossier. Exact numbers,
+          nothing summarized.
         </p>
       </div>
 
@@ -255,6 +290,9 @@ export function SidebarContent() {
         </button>
       </div>
 
+      {/* Full register entry */}
+      <FullRegisterButton />
+
       {/* List */}
       <ul
         className="nice-scroll mt-3 flex-1 space-y-0.5 overflow-y-auto px-3 pb-3"
@@ -280,6 +318,18 @@ export function SidebarContent() {
             <span className="mono-label text-[7.5px] text-muted-foreground/70">
               Families &amp; orders
             </span>
+          </li>
+        )}
+        {entityMatches.length >= 20 && (
+          <li className="px-2.5 pb-1 pt-2">
+            <button
+              type="button"
+              onClick={() => openRegister(kind)}
+              className="focus-glow mono-label text-[8px] text-[var(--cy)] transition-opacity hover:opacity-80"
+            >
+              Showing first 20 matches — open the full register to search every
+              name →
+            </button>
           </li>
         )}
         {filtered.map((entry) => (

@@ -20,14 +20,49 @@ export type ModalState =
 export type TransmissionStatus = "idle" | "loading" | "ready" | "error";
 export type LabStatus = "idle" | "charging" | "ready" | "error";
 
-export interface TransmissionRecord {
+/* ------------------------------------------------------------------ */
+/*  Per-scope chat channels                                            */
+/*  Every scope owns a fully independent channel: its own history,     */
+/*  status, in-flight query, error and composer draft. Switching       */
+/*  scopes never carries content from one channel into another.        */
+/* ------------------------------------------------------------------ */
+
+export interface ChatMessage {
+  id: string;
   query: string;
   text: string;
   classification: string;
   createdAt: string;
 }
 
-export type MainView = "observatory" | "transmission" | "manifesting";
+export interface ScopeSession {
+  /** Completed Q/A pairs — the permanent, private history of this channel. */
+  messages: ChatMessage[];
+  status: TransmissionStatus;
+  error: string | null;
+  /** Query currently being transmitted (loading state). */
+  activeQuery: string;
+  /** Composer draft — kept per channel so drafts never leak across scopes. */
+  draft: string;
+}
+
+const emptySession = (): ScopeSession => ({
+  messages: [],
+  status: "idle",
+  error: null,
+  activeQuery: "",
+  draft: "",
+});
+
+const emptySessions = (): Record<Mode, ScopeSession> => ({
+  interplanetary: emptySession(),
+  science: emptySession(),
+  quantum: emptySession(),
+  healing: emptySession(),
+});
+
+export type MainView = "observatory" | "transmission" | "manifesting" | "register";
+export type RegisterKind = DossierKind;
 
 interface MirrorState {
   activeMode: Mode;
@@ -37,13 +72,14 @@ interface MirrorState {
   search: string;
   modal: ModalState;
   mobileNavOpen: boolean;
-  query: string;
   view: MainView;
-  status: TransmissionStatus;
-  transmission: TransmissionRecord | null;
-  activeQuery: string;
-  error: string | null;
   composerFocusNonce: number;
+
+  /** One independent channel per scope. */
+  sessions: Record<Mode, ScopeSession>;
+
+  /* Full-archive register */
+  registerKind: RegisterKind;
 
   /* Reality Manifesting Lab */
   labStage: "compose" | "charging" | "blueprint";
@@ -62,11 +98,15 @@ interface MirrorState {
   openModal: (modal: NonNullable<ModalState>) => void;
   closeModal: () => void;
   setMobileNavOpen: (open: boolean) => void;
-  setQuery: (value: string) => void;
+  setDraft: (value: string) => void;
   focusComposer: () => void;
   returnToObservatory: () => void;
-  resetField: () => void;
+  clearChannel: (mode?: Mode) => void;
   askMirror: (question: string) => Promise<void>;
+
+  /* Full-archive register */
+  openRegister: (kind: RegisterKind) => void;
+  exitRegister: () => void;
 
   openLab: () => void;
   exitLab: () => void;
@@ -90,6 +130,9 @@ const emptyLab = {
   labError: null,
 };
 
+let messageCounter = 0;
+const nextMessageId = () => `m-${Date.now().toString(36)}-${(messageCounter++).toString(36)}`;
+
 export const useMirror = create<MirrorState>()((set, get) => ({
   activeMode: "interplanetary",
   activeScienceField: null,
@@ -98,12 +141,11 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   search: "",
   modal: null,
   mobileNavOpen: false,
-  query: "",
   view: "observatory",
-  status: "idle",
-  transmission: null,
-  error: null,
   composerFocusNonce: 0,
+  sessions: emptySessions(),
+
+  registerKind: "civilization",
 
   labStage: "compose",
   labIntention: "",
@@ -114,13 +156,22 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   labError: null,
 
   setMode: (mode) =>
-    set((s) => ({
-      activeMode: mode,
-      sidebarTab: defaultTabForMode(mode),
-      // keep filters if user returns to science mode, else leave untouched
-      activeScienceField: s.activeScienceField,
-      activeDirection: s.activeDirection,
-    })),
+    set((s) => {
+      const target = s.sessions[mode];
+      // Scopes are independent channels: switching scopes reveals THAT
+      // scope's own channel — never content from another scope.
+      const showChannel = target.messages.length > 0 || target.status === "loading";
+      return {
+        activeMode: mode,
+        sidebarTab: defaultTabForMode(mode),
+        view:
+          s.view === "manifesting"
+            ? s.view // deliberate: only leaving the lab via exit/return actions
+            : showChannel || s.view === "transmission"
+              ? "transmission"
+              : s.view,
+      };
+    }),
 
   setScienceField: (id) =>
     set((s) => ({
@@ -137,43 +188,49 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   openModal: (modal) => set({ modal, mobileNavOpen: false }),
   closeModal: () => set({ modal: null }),
   setMobileNavOpen: (open) => set({ mobileNavOpen: open }),
-  setQuery: (value) => set({ query: value }),
+
+  setDraft: (value) =>
+    set((s) => ({
+      sessions: {
+        ...s.sessions,
+        [s.activeMode]: { ...s.sessions[s.activeMode], draft: value },
+      },
+    })),
+
   focusComposer: () =>
     set((s) => ({ composerFocusNonce: s.composerFocusNonce + 1 })),
 
   returnToObservatory: () => set({ view: "observatory" }),
 
-  resetField: () =>
-    set({
-      activeMode: "interplanetary",
-      activeScienceField: null,
-      activeDirection: null,
-      sidebarTab: "civilizations",
-      search: "",
-      modal: null,
-      mobileNavOpen: false,
-      query: "",
-      view: "observatory",
-      status: "idle",
-      transmission: null,
-      activeQuery: "",
-      error: null,
-      ...emptyLab,
+  /** Wipe the current channel (or an explicit one) back to a quiet state. */
+  clearChannel: (mode) =>
+    set((s) => {
+      const target = mode ?? s.activeMode;
+      return {
+        sessions: { ...s.sessions, [target]: emptySession() },
+      };
     }),
 
   askMirror: async (question) => {
     const query = question.trim();
-    if (!query || get().status === "loading") return;
+    const mode = get().activeMode;
+    const session = get().sessions[mode];
+    if (!query || session.status === "loading") return;
 
-    set({
-      query: "",
+    set((s) => ({
       view: "transmission",
-      status: "loading",
-      transmission: null,
-      activeQuery: query,
-      error: null,
       mobileNavOpen: false,
-    });
+      sessions: {
+        ...s.sessions,
+        [mode]: {
+          ...s.sessions[mode],
+          status: "loading",
+          activeQuery: query,
+          draft: "",
+          error: null,
+        },
+      },
+    }));
 
     try {
       const res = await fetch("/api/transmission", {
@@ -181,7 +238,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           query,
-          mode: get().activeMode,
+          mode,
           scienceField: get().activeScienceField,
           direction: get().activeDirection,
         }),
@@ -195,25 +252,50 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         );
       }
 
-      set({
-        status: "ready",
-        transmission: {
-          query,
-          text: data.transmission,
-          classification: data.classification,
-          createdAt: data.createdAt ?? new Date().toISOString(),
+      set((s) => ({
+        sessions: {
+          ...s.sessions,
+          [mode]: {
+            ...s.sessions[mode],
+            status: "ready",
+            activeQuery: "",
+            messages: [
+              ...s.sessions[mode].messages,
+              {
+                id: nextMessageId(),
+                query,
+                text: data.transmission,
+                classification: data.classification,
+                createdAt: data.createdAt ?? new Date().toISOString(),
+              },
+            ],
+          },
         },
-      });
+      }));
     } catch (err) {
-      set({
-        status: "error",
-        error:
-          err instanceof Error
-            ? err.message
-            : "The field is momentarily quiet. Rest, then try again.",
-      });
+      set((s) => ({
+        sessions: {
+          ...s.sessions,
+          [mode]: {
+            ...s.sessions[mode],
+            status: "error",
+            activeQuery: "",
+            error:
+              err instanceof Error
+                ? err.message
+                : "The field is momentarily quiet. Rest, then try again.",
+          },
+        },
+      }));
     }
   },
+
+  /* ---------------- Full-archive register ---------------- */
+
+  openRegister: (kind) =>
+    set({ registerKind: kind, view: "register", mobileNavOpen: false, modal: null }),
+
+  exitRegister: () => set({ view: "observatory" }),
 
   /* ---------------- Reality Manifesting Lab ---------------- */
 
@@ -287,7 +369,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   },
 }));
 
-/* Archive totals for labels */
+/* Archive totals for labels — always the exact, derived-from-data numbers */
 export const archiveTotals = {
   civilizations: civilizationTotal, // 870
   interdim: interdimTotal, // 202
