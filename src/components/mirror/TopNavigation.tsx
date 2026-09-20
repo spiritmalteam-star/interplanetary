@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  Building2,
-  BriefcaseBusiness,
-  Menu,
-  RotateCcw,
-  Terminal,
-} from "lucide-react";
+import { Building2, BriefcaseBusiness, Menu, RotateCcw } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { ThemeToggle } from "./ThemeToggle";
 import { toast } from "@/hooks/use-toast";
@@ -72,16 +66,6 @@ export function TopNavigation() {
               aria-hidden="true"
             />
             <span className="hidden sm:inline">Astral Jobs</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => openModal({ type: "replication" })}
-            title="Open the precise replication prompt"
-            className="focus-glow group flex h-9 items-center gap-2 rounded-full border hairline px-3 text-[12px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground hover:glow-sm sm:px-3.5"
-          >
-            <Terminal className="size-3.5 text-[var(--cy)]" aria-hidden="true" />
-            <span className="hidden sm:inline">Replication</span>
           </button>
 
           <ThemeToggle />

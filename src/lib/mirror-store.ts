@@ -15,7 +15,6 @@ export type ModalState =
   | { type: "astral" }
   | { type: "dossier"; kind: DossierKind; id: string }
   | { type: "entity"; kind: DossierKind; id: string }
-  | { type: "replication" }
   | null;
 
 export type TransmissionStatus = "idle" | "loading" | "ready" | "error";

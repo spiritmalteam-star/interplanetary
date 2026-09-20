@@ -18,7 +18,6 @@ import { ArchiveRegister } from "./ArchiveRegister";
 import { FederationModal } from "./FederationModal";
 import { AstralJobsModal } from "./AstralJobsModal";
 import { DossierModal } from "./DossierModal";
-import { ReplicationPromptModal } from "./ReplicationPromptModal";
 
 export default function AppShell() {
   const view = useMirror((s) => s.view);
@@ -68,7 +67,6 @@ export default function AppShell() {
       <FederationModal />
       <AstralJobsModal />
       <DossierModal />
-      <ReplicationPromptModal />
     </div>
   );
 }

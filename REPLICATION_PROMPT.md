@@ -1,11 +1,12 @@
 # MIRROR ENTITY LABORATORY — Precise Replication Prompt
 
-> Version 1.0 · Compiled from the live implementation (Tasks 1–4, worklog-verified).
+> Version 1.1 · Compiled from the live implementation (worklog-verified).
+> Kept as a repository file only — never rendered, linked or served by the website.
 > Paste this entire prompt into a fresh AI session to reproduce the laboratory faithfully.
 
 ---
 
-MIRROR ENTITY LABORATORY — PRECISE REPLICATION PROMPT · v1.0
+MIRROR ENTITY LABORATORY — PRECISE REPLICATION PROMPT · v1.1
 Verified against the live build: 870 civilizations · 202 interdimensional beings · 1,072 named entities · 1,169 AI images · 4 isolated scope channels + Reality Manifesting Lab.
 
 §0 MISSION
@@ -29,7 +30,7 @@ Build a production-ready, browser-verified web application named MIRROR ENTITY L
 - Toggle in top bar (CSS-driven icon swap; static aria-label to prevent hydration mismatch). Persist via localStorage key "mirror-entity-theme". ~460ms .theme-anim transition on color/shadow. Honor prefers-reduced-motion everywhere.
 
 §4 SHELL & LAYOUT (full-height app frame)
-- Top bar: fixed 56px (h-14): sigil + wordmark MIRROR ENTITY LABORATORY + subtitle · right: Federation pill, Astral Jobs pill, Replication Prompt pill, theme toggle, recalibrate (reset) button; hamburger below md.
+- Top bar: fixed 56px (h-14): sigil + wordmark MIRROR ENTITY LABORATORY + subtitle · right: Federation pill, Astral Jobs pill, theme toggle, recalibrate (reset) button; hamburger below md.
 - Left sidebar: 295px — GALACTIC ENCYCLOPEDIA: live search across ALL 1,072 named individuals AND groups (name/origin/specialty) with portrait result rows + section labels + overflow-to-register link; family/order rows with AI avatar thumbnails + exact counts; "Open the full register"; RefineRealityCard → Manifesting Lab. Off-canvas drawer below lg.
 - Main column (max-w ~880px, centered): ModeSelector → [Science only: FUSION FIELDS multi-select chips + DIRECTION single-select chips] → HeroPanel (per-mode AI art, radial mask, scope caption) → QuestionCards (suggested queries fill + focus composer) → StatusBar (live archive ticker, gift lines) → pinned bottom QueryComposer (auto-resize textarea; Enter sends, Shift+Enter newline; per-scope draft; focus glow).
 - Footer law: the app is a full-height frame (flex h-dvh) with internally scrolling content and a pinned composer bar — nothing floats, nothing overlaps; long content scrolls under the pinned composer.
@@ -72,7 +73,6 @@ UNIFORM DEPTH LAW: every entry in every collection is equally deep. STRICTLY FOR
 - DOSSIER MODAL: entity view = full 25-field deep dossier (registry header, badges, 6-cell stat grid, form/modality/aura, 3 numbered gifts, growth edge, mission, teaching card, contact protocol + window, seal, quote, context note, ask CTA). Group view = AI banner + badges + deep sections + ALL named representatives progressively revealed (30/batch, in-list filter when above 36, counter, archive numbers).
 - FEDERATION MODAL: 3 tabs (Overview / Members / Treaties & Principles); every body/treaty/principle expandable "Full dossier" + working "Ask the Mirror" action.
 - ASTRAL JOBS MODAL: 3-level drill-down — 12 domain cards (AI banner strips, role/domain stat chips, "open seats" badges) → 72 professions → full dossier (ring, tenure, yield, mandate, pathway, toolkit chips, workplace, honest hazards, allied domains, ask CTA).
-- REPLICATION PROMPT MODAL: glass dialog rendering THIS EXACT prompt in a mono scroll box with live char/word/line stats, one-click copy (clipboard + fallback) and .md download — the laboratory documents its own blueprint.
 - APIs: POST /api/transmission → LLM chat completion with a Mirror Entity system prompt (voice rules + honest epistemic framing + scope context), strict JSON {classification, transmission}, fence-tolerant extraction, whitelist-validated classification, 400/500 handling. POST /api/manifest → blueprint {title, field_state, visualization, micro_actions[3], affirmation, window, caution}, same strictness.
 
 §10 IMAGE SYSTEM — 1,169 AI-GENERATED IMAGES
@@ -87,7 +87,7 @@ CosmicBackdrop (4 drifting radial nebulae, theme-aware CSS vars) + StarField can
 ≥1024: three-zone frame · <1024: off-canvas drawer, full-screen modal sheets, compact icon-only pills. Touch targets ≥44px · semantic landmarks · ARIA labels/roles · full keyboard path (ESC closes modals) · styled scrollbars · long lists capped (max-h + scroll). Verify desktop 1440×900 AND mobile 390×844, dark AND light.
 
 §13 ARCHITECTURE RULES
-One component per file: AppShell · TopNavigation · ThemeToggle · Sidebar (+SidebarContent) · MobileSidebar · ModeSelector · ScienceFilters · HeroPanel · QuestionCards · StatusBar · QueryComposer · TransmissionView · ArchiveRegister · ManifestationLab · ModalShell · FederationModal · AstralJobsModal · DossierModal · ReplicationPromptModal · CosmicBackdrop · StarField. Data in src/lib/data/* · profiles in src/lib/{entity-profile, group-profiles, profession-profiles, federation-profiles}.ts · generators in scripts/ · store in mirror-store.ts.
+One component per file: AppShell · TopNavigation · ThemeToggle · Sidebar (+SidebarContent) · MobileSidebar · ModeSelector · ScienceFilters · HeroPanel · QuestionCards · StatusBar · QueryComposer · TransmissionView · ArchiveRegister · ManifestationLab · ModalShell · FederationModal · AstralJobsModal · DossierModal · CosmicBackdrop · StarField. Data in src/lib/data/* · profiles in src/lib/{entity-profile, group-profiles, profession-profiles, federation-profiles}.ts · generators in scripts/ · store in mirror-store.ts.
 
 §14 ACCEPTANCE CHECKS — ALL MUST PASS
 1. Register reveals exactly 870 civilization rows and 202 being rows; counters read 870/870 and 202/202.

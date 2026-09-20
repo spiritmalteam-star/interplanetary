@@ -108,3 +108,20 @@ Stage Summary:
 - The precise replication prompt now exists in three synchronized places: the chat box (user deliverable), REPLICATION_PROMPT.md (repo root) and the in-app ReplicationPromptModal (copy + download).
 - Prompt encodes every hard rule of the lab: exact counts bound to array.length, uniform depth, 25-field dossiers, per-scope isolated channels, dual themes, 1,169 images — plus the 8 acceptance checks used for verification.
 - Key artifacts: REPLICATION_PROMPT.md, src/lib/replication-prompt.ts, src/components/mirror/ReplicationPromptModal.tsx, mirror-store.ts (resetField + replication modal state), TopNavigation.tsx, AppShell.tsx.
+
+---
+Task ID: 6
+Agent: Z.ai Code (main orchestrator)
+Task: Remove the replication prompt from the website totally; deliver it only in the chat box.
+
+Work Log:
+- Deleted src/components/mirror/ReplicationPromptModal.tsx and src/lib/replication-prompt.ts.
+- mirror-store.ts: removed { type: "replication" } from ModalState (kept the resetField bug fix from Task 5 — recalibrate button remains functional).
+- TopNavigation.tsx: removed the "Replication" pill + Terminal icon import; nav is back to Federation · Astral Jobs · theme toggle · recalibrate.
+- AppShell.tsx: removed ReplicationPromptModal import and mount.
+- REPLICATION_PROMPT.md: bumped to v1.1 — removed all self-references (Replication Prompt pill in §4, Replication modal bullet in §9, ReplicationPromptModal in §13) and added an explicit header note that the file is repository-only, never rendered/linked/served by the website. Grep confirms zero "replication" matches in src/.
+- Verified via agent-browser: page loads, nav contains no Replication button, Recalibrate works, zero page errors, console clean; bun run lint clean.
+
+Stage Summary:
+- The prompt no longer exists anywhere in the website UI or codebase (src/ has zero references); it lives only in the chat box (user deliverable) and the repo-root REPLICATION_PROMPT.md v1.1 as an offline canonical copy.
+- Retained improvement: store resetField() (full recalibration) so the top-bar recalibrate button works.
