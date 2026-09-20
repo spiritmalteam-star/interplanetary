@@ -1,0 +1,61 @@
+"use client";
+
+import { motion } from "framer-motion";
+import { modes, modeContext } from "@/lib/data/science";
+import { useMirror } from "@/lib/mirror-store";
+import { cn } from "@/lib/utils";
+
+export function ModeSelector() {
+  const activeMode = useMirror((s) => s.activeMode);
+  const setMode = useMirror((s) => s.setMode);
+  const context = modeContext[activeMode];
+
+  return (
+    <div className="flex flex-col items-center gap-2.5">
+      <div
+        className="flex w-full max-w-full justify-start overflow-x-auto py-0.5 no-scrollbar sm:justify-center"
+        role="group"
+        aria-label="Channel mode"
+      >
+        <div className="flex min-w-max items-center gap-1.5 sm:gap-2 px-1">
+          <span className="mono-label mr-1 hidden text-[9.5px] text-muted-foreground/70 sm:inline">
+            Mode:
+          </span>
+          {modes.map((m) => {
+            const active = m.id === activeMode;
+            return (
+              <button
+                key={m.id}
+                type="button"
+                onClick={() => setMode(m.id)}
+                aria-pressed={active}
+                className={cn(
+                  "focus-glow flex items-center gap-1.5 whitespace-nowrap rounded-full border px-3.5 py-1.5 text-[12.5px] transition-all duration-300 sm:px-4",
+                  active
+                    ? "animate-pill-breathe border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--cy)_12%,transparent)] font-semibold text-foreground"
+                    : "border-transparent text-muted-foreground/80 hover:border-[var(--hairline-hover)] hover:text-foreground"
+                )}
+              >
+                <span aria-hidden="true" className="text-[13px] leading-none">
+                  {m.emoji}
+                </span>
+                {m.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {context && (
+        <motion.p
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          className="mono-label text-center text-[8.5px] text-muted-foreground/70"
+        >
+          {context}
+        </motion.p>
+      )}
+    </div>
+  );
+}

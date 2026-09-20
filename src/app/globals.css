@@ -1,0 +1,404 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-jakarta);
+  --font-mono: var(--font-jetbrains);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-cyan-aura: var(--cy);
+  --color-rose-aura: var(--pk);
+  --color-gold-aura: var(--gd);
+}
+
+/* ------------------------------------------------------------------ */
+/*  MIRROR ENTITY LABORATORY — theme tokens                           */
+/* ------------------------------------------------------------------ */
+
+:root {
+  --radius: 0.75rem;
+
+  /* Light mode — ethereal daylight laboratory */
+  --background: #f2faff;
+  --foreground: #0e3a5f;
+  --card: #ffffff;
+  --card-foreground: #0e3a5f;
+  --popover: #ffffff;
+  --popover-foreground: #0e3a5f;
+  --primary: #1264b0;
+  --primary-foreground: #f5fbff;
+  --secondary: #e7f4fb;
+  --secondary-foreground: #0e3a5f;
+  --muted: #e9f5fa;
+  --muted-foreground: #4e7391;
+  --accent: #ddf1fa;
+  --accent-foreground: #0e3a5f;
+  --destructive: #c0395b;
+  --border: rgba(30, 130, 190, 0.18);
+  --input: rgba(30, 130, 190, 0.22);
+  --ring: rgba(18, 100, 176, 0.5);
+  --chart-1: #1264b0;
+  --chart-2: #17a6c9;
+  --chart-3: #7cc4e8;
+  --chart-4: #c99b4e;
+  --chart-5: #c24e9a;
+  --sidebar: #edf8fd;
+  --sidebar-foreground: #0e3a5f;
+  --sidebar-primary: #1264b0;
+  --sidebar-primary-foreground: #f5fbff;
+  --sidebar-accent: #ddf1fa;
+  --sidebar-accent-foreground: #0e3a5f;
+  --sidebar-border: rgba(30, 130, 190, 0.16);
+  --sidebar-ring: rgba(18, 100, 176, 0.45);
+
+  /* accents */
+  --cy: #0f8fc2;
+  --pk: #c24e9a;
+  --gd: #b98a3e;
+  --ok: #0ea885;
+
+  /* hairlines — extremely thin, spec-driven */
+  --hairline: rgba(30, 130, 190, 0.16);
+  --hairline-hover: rgba(30, 130, 190, 0.38);
+  --hairline-active: rgba(18, 100, 176, 0.55);
+
+  /* glass */
+  --glass-bg: rgba(255, 255, 255, 0.55);
+  --glass-bg-strong: rgba(255, 255, 255, 0.82);
+  --glass-bg-soft: rgba(255, 255, 255, 0.38);
+
+  /* atmosphere — pale cyan washes */
+  --atmo-1: rgba(186, 231, 248, 0.55);
+  --atmo-2: rgba(210, 240, 250, 0.65);
+  --atmo-3: rgba(198, 242, 238, 0.5);
+  --atmo-4: rgba(240, 214, 240, 0.4);
+
+  --star-opacity: 0;
+}
+
+.dark {
+  /* Dark mode — deep space */
+  --background: #05040b;
+  --foreground: #e9f2ff;
+  --card: #0b0716;
+  --card-foreground: #e9f2ff;
+  --popover: #0a0716;
+  --popover-foreground: #e9f2ff;
+  --primary: #5cdfff;
+  --primary-foreground: #031018;
+  --secondary: #120c26;
+  --secondary-foreground: #cde8ff;
+  --muted: #130d28;
+  --muted-foreground: #8fa3c4;
+  --accent: #161031;
+  --accent-foreground: #cde8ff;
+  --destructive: #ff6b8b;
+  --border: rgba(70, 210, 255, 0.14);
+  --input: rgba(70, 210, 255, 0.18);
+  --ring: rgba(90, 220, 255, 0.55);
+  --chart-1: #5cdfff;
+  --chart-2: #8f6bff;
+  --chart-3: #ff9ecd;
+  --chart-4: #f2ce8a;
+  --chart-5: #57f0c8;
+  --sidebar: #070510;
+  --sidebar-foreground: #dce9fa;
+  --sidebar-primary: #5cdfff;
+  --sidebar-primary-foreground: #031018;
+  --sidebar-accent: #14102b;
+  --sidebar-accent-foreground: #cde8ff;
+  --sidebar-border: rgba(70, 210, 255, 0.12);
+  --sidebar-ring: rgba(90, 220, 255, 0.45);
+
+  /* accents */
+  --cy: #5fe6ff;
+  --pk: #ff9ecd;
+  --gd: #f2ce8a;
+  --ok: #57f0c8;
+
+  /* hairlines */
+  --hairline: rgba(70, 210, 255, 0.16);
+  --hairline-hover: rgba(70, 230, 255, 0.4);
+  --hairline-active: rgba(50, 220, 255, 0.7);
+
+  /* glass */
+  --glass-bg: rgba(10, 8, 30, 0.45);
+  --glass-bg-strong: rgba(12, 10, 34, 0.78);
+  --glass-bg-soft: rgba(14, 11, 36, 0.3);
+
+  /* atmosphere — deep space nebulae */
+  --atmo-1: rgba(42, 11, 96, 0.5);
+  --atmo-2: rgba(27, 20, 80, 0.5);
+  --atmo-3: rgba(0, 61, 72, 0.42);
+  --atmo-4: rgba(92, 11, 69, 0.32);
+
+  --star-opacity: 1;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    color-scheme: light;
+  }
+  html.dark {
+    color-scheme: dark;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "ss01", "cv11";
+    letter-spacing: 0.005em;
+  }
+  ::selection {
+    background: color-mix(in srgb, var(--cy) 28%, transparent);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Theme transition (applied temporarily while toggling)             */
+/* ------------------------------------------------------------------ */
+
+.theme-anim,
+.theme-anim *,
+.theme-anim *::before,
+.theme-anim *::after {
+  transition-property: color, background-color, border-color, outline-color,
+    fill, stroke, box-shadow, opacity !important;
+  transition-duration: 460ms !important;
+  transition-timing-function: ease !important;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Glass & hairline utilities                                        */
+/* ------------------------------------------------------------------ */
+
+.glass {
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--hairline);
+}
+
+.glass-strong {
+  background: var(--glass-bg-strong);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--hairline);
+}
+
+.glass-soft {
+  background: var(--glass-bg-soft);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--hairline);
+}
+
+.hairline {
+  border-color: var(--hairline);
+}
+
+.mono-label {
+  font-family: var(--font-jetbrains), ui-monospace, monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-weight: 500;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Glow shadows                                                      */
+/* ------------------------------------------------------------------ */
+
+.glow-sm {
+  box-shadow: 0 0 18px -6px color-mix(in srgb, var(--cy) 38%, transparent);
+}
+
+.glow {
+  box-shadow:
+    0 0 28px -8px color-mix(in srgb, var(--cy) 45%, transparent),
+    0 0 64px -24px color-mix(in srgb, var(--pk) 35%, transparent);
+}
+
+.focus-glow:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 1px var(--hairline-active),
+    0 0 20px -4px color-mix(in srgb, var(--cy) 42%, transparent);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Text gradients                                                    */
+/* ------------------------------------------------------------------ */
+
+.text-hero {
+  background-image: linear-gradient(
+    104deg,
+    color-mix(in srgb, var(--pk) 92%, white) 0%,
+    var(--gd) 58%,
+    color-mix(in srgb, var(--pk) 75%, white) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Light mode: blue → cyan hero, per the daylight laboratory palette */
+html:not(.dark) .text-hero {
+  background-image: linear-gradient(104deg, #1264b0 0%, #17a6c9 70%, #3fb6d8 100%);
+}
+
+.title-gradient {
+  background-image: linear-gradient(100deg, var(--cy), var(--pk));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Keyframes — calm, subtle motion only                              */
+/* ------------------------------------------------------------------ */
+
+@keyframes drift-a {
+  0%, 100% { transform: translate(-50%, 0) scale(1); }
+  50% { transform: translate(-46%, 3%) scale(1.06); }
+}
+@keyframes drift-b {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(3%, -3%) scale(1.05); }
+}
+@keyframes drift-c {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-3%, 2.5%) scale(1.07); }
+}
+@keyframes dot-pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 color-mix(in srgb, var(--ok) 55%, transparent); }
+  50% { opacity: 0.55; box-shadow: 0 0 0 5px color-mix(in srgb, var(--ok) 0%, transparent); }
+}
+@keyframes pill-breathe {
+  0%, 100% { box-shadow: 0 0 14px -6px color-mix(in srgb, var(--cy) 45%, transparent); }
+  50% { box-shadow: 0 0 22px -4px color-mix(in srgb, var(--cy) 62%, transparent); }
+}
+@keyframes shimmer-line {
+  0% { background-position: -220px 0; }
+  100% { background-position: calc(220px + 100%) 0; }
+}
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes line-breathe {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+@keyframes spin-slower {
+  to { transform: rotate(360deg); }
+}
+
+.animate-drift-a { animation: drift-a 46s ease-in-out infinite; }
+.animate-drift-b { animation: drift-b 58s ease-in-out infinite; }
+.animate-drift-c { animation: drift-c 64s ease-in-out infinite; }
+.animate-dot-pulse { animation: dot-pulse 2.6s ease-in-out infinite; }
+.animate-pill-breathe { animation: pill-breathe 3.4s ease-in-out infinite; }
+.animate-line-breathe { animation: line-breathe 3s ease-in-out infinite; }
+.animate-rise-in { animation: rise-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-spin-slower { animation: spin-slower 22s linear infinite; }
+
+.shimmer-bar {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--cy) 6%, transparent) 0%,
+    color-mix(in srgb, var(--cy) 16%, transparent) 50%,
+    color-mix(in srgb, var(--cy) 6%, transparent) 100%
+  );
+  background-size: 220px 100%;
+  background-repeat: no-repeat;
+  animation: shimmer-line 2.1s linear infinite;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Scrollbars                                                        */
+/* ------------------------------------------------------------------ */
+
+.nice-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--cy) 22%, transparent) transparent;
+}
+.nice-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.nice-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.nice-scroll::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--cy) 20%, transparent);
+  border-radius: 999px;
+}
+.nice-scroll::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--cy) 38%, transparent);
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Reduced motion                                                    */
+/* ------------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-drift-a,
+  .animate-drift-b,
+  .animate-drift-c,
+  .animate-dot-pulse,
+  .animate-pill-breathe,
+  .animate-line-breathe,
+  .animate-rise-in,
+  .animate-spin-slower,
+  .shimmer-bar {
+    animation: none !important;
+  }
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+  }
+}
