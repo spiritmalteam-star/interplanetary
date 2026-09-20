@@ -15,6 +15,7 @@ export type ModalState =
   | { type: "astral" }
   | { type: "dossier"; kind: DossierKind; id: string }
   | { type: "entity"; kind: DossierKind; id: string }
+  | { type: "replication" }
   | null;
 
 export type TransmissionStatus = "idle" | "loading" | "ready" | "error";
@@ -103,6 +104,8 @@ interface MirrorState {
   returnToObservatory: () => void;
   clearChannel: (mode?: Mode) => void;
   askMirror: (question: string) => Promise<void>;
+  /** Full recalibration: wipe every scope channel, the lab and search. */
+  resetField: () => void;
 
   /* Full-archive register */
   openRegister: (kind: RegisterKind) => void;
@@ -201,6 +204,17 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     set((s) => ({ composerFocusNonce: s.composerFocusNonce + 1 })),
 
   returnToObservatory: () => set({ view: "observatory" }),
+
+  /** Full recalibration: every scope channel returns to its quiet origin. */
+  resetField: () =>
+    set({
+      sessions: emptySessions(),
+      view: "observatory",
+      search: "",
+      modal: null,
+      mobileNavOpen: false,
+      ...emptyLab,
+    }),
 
   /** Wipe the current channel (or an explicit one) back to a quiet state. */
   clearChannel: (mode) =>

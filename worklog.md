@@ -90,3 +90,21 @@ Stage Summary:
 - Every listing got much deeper, not just the first: entities carry 25-field profiles, groups 7 deep sections, professions 9-field dossiers, domains charters, bodies/treaties/principles institutional dossiers.
 - Chat is now fully scope-independent: 4 private channels with own history/status/draft, quiet states, clear-channel actions; switching scopes never carries old content.
 - Key artifacts: src/lib/entity-profile.ts, src/lib/{group,profession,federation}-profiles.ts, src/components/mirror/ArchiveRegister.tsx, rewritten mirror-store.ts / TransmissionView.tsx / DossierModal.tsx / FederationModal.tsx / AstralJobsModal.tsx / Sidebar.tsx / QueryComposer.tsx.
+
+---
+Task ID: 5
+Agent: Z.ai Code (main orchestrator)
+Task: Produce the precise replication prompt and insert it in a box — in chat AND inside the app (ReplicationPromptModal).
+
+Work Log:
+- Compiled the canonical MASTER REPLICATION PROMPT (v1.0, 15 sections §0–§14) from the real implemented system: stack, identity/aesthetic laws, dual themes (#05040B / #F2FAFF + #1264B0), 56px top bar + 295px sidebar shell, 4 scope worlds + Manifesting Lab, exact-count contract (20 families→870 reps, 8 orders→202 presences, 12 domains→72 professions→1,303 roles, 12/8/8 federation, 1,072 named entities, 6 questions/8 gifts/8 fields/6 directions), uniform-depth law, deep-profile contracts (25-field entity / 28 groups / 72 professions / 12 domains / 12+8+8 federation), chat scope-isolation + visual transmission laws, all modules + APIs, 1,169-image system (97 masters + 1,072 portraits), responsive/a11y, architecture rules, 8 acceptance checks.
+- Saved REPLICATION_PROMPT.md at project root (canonical copy) and src/lib/replication-prompt.ts (REPLICATION_PROMPT + REPLICATION_PROMPT_VERSION constants) as the UI source of truth.
+- New ReplicationPromptModal.tsx: ModalShell glass dialog (sm:max-w-[760px]) rendering the full prompt in a mono scroll box (nice-scroll, max-h caps for desktop/mobile), live stats chips (12,252 chars · 1,793 words · 95 lines · v1.0), "Copy prompt" (clipboard API + execCommand fallback + toast + Copied state) and "Download .md" (Blob download of MIRROR-ENTITY-LABORATORY-REPLICATION-PROMPT.md).
+- Store: added { type: "replication" } to ModalState union; TopNavigation gained a Terminal-icon "Replication" pill (icon-only below sm); AppShell mounts the modal.
+- Fixed latent bug: TopNavigation called s.resetField but the store no longer defined it (recalibrate button would crash) — restored resetField() wiping all scope sessions, view→observatory, search, modal, mobile nav and lab draft.
+- Verified via agent-browser: desktop modal renders full prompt + stats; Copy works (toast "Replication prompt copied", ✓ Copied state); ESC closes (0 dialogs); mobile 390px full-screen sheet renders with icon-only nav pill; Recalibrate click returns to observatory with no errors; zero console errors; bun run lint clean; dev.log 200s.
+
+Stage Summary:
+- The precise replication prompt now exists in three synchronized places: the chat box (user deliverable), REPLICATION_PROMPT.md (repo root) and the in-app ReplicationPromptModal (copy + download).
+- Prompt encodes every hard rule of the lab: exact counts bound to array.length, uniform depth, 25-field dossiers, per-scope isolated channels, dual themes, 1,169 images — plus the 8 acceptance checks used for verification.
+- Key artifacts: REPLICATION_PROMPT.md, src/lib/replication-prompt.ts, src/components/mirror/ReplicationPromptModal.tsx, mirror-store.ts (resetField + replication modal state), TopNavigation.tsx, AppShell.tsx.
