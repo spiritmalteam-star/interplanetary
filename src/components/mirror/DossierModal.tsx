@@ -13,6 +13,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useMirror, findDossier } from "@/lib/mirror-store";
+import { useT } from "@/lib/i18n";
 import { entityImage, groupImage, findEntity } from "@/lib/entity-utils";
 import { getEntityProfile } from "@/lib/entity-profile";
 import { groupProfiles } from "@/lib/group-profiles";
@@ -49,13 +50,14 @@ function Field({
 }
 
 function ContextNote() {
+  const t = useT();
   return (
     <div className="rounded-xl border hairline bg-[color-mix(in_srgb,var(--gd)_6%,transparent)] p-3.5">
-      <h4 className="mono-label text-[8px] text-[var(--gd)]">Context note</h4>
+      <h4 className="mono-label text-[8px] text-[var(--gd)]">{t("Context note")}</h4>
       <p className="mt-1.5 text-[11px] leading-relaxed text-muted-foreground">
-        This dossier reflects channeled tradition and worldbuilding within the
-        Mirror archive. It is offered for reflection and wonder — not as
-        established science.
+        {t(
+          "This dossier reflects channeled tradition and worldbuilding within the Mirror archive. It is offered for reflection and wonder — not as established science."
+        )}
       </p>
     </div>
   );
@@ -122,6 +124,7 @@ function EntityDossier({
   const openModal = useMirror((s) => s.openModal);
   const closeModal = useMirror((s) => s.closeModal);
   const askMirror = useMirror((s) => s.askMirror);
+  const t = useT();
 
   const rep = useMemo(() => findEntity(kind, id), [kind, id]);
   const entry = useMemo(
@@ -139,8 +142,14 @@ function EntityDossier({
     closeModal();
     void askMirror(
       kind === "civilization"
-        ? `Please tell me about ${rep.name} (registry ${profile.archiveNo}, ${profile.rank} of the ${entry.name}) — their nature, their work, and how they support humanity right now.`
-        : `Please introduce ${rep.name} (registry ${profile.archiveNo}) of the ${entry.name} — what is their presence like, and how can one respectfully connect with their field?`
+        ? t(
+            "Please tell me about {name} (registry {no}, {rank} of the {group}) — their nature, their work, and how they support humanity right now.",
+            { name: rep.name, no: profile.archiveNo, rank: profile.rank, group: entry.name }
+          )
+        : t(
+            "Please introduce {name} (registry {no}) of the {group} — what is their presence like, and how can one respectfully connect with their field?",
+            { name: rep.name, no: profile.archiveNo, group: entry.name }
+          )
     );
   };
 
@@ -155,7 +164,7 @@ function EntityDossier({
           >
             <img
               src={entityImage(rep.id)}
-              alt={`AI-rendered portrait impression of ${rep.name}`}
+              alt={t("AI-rendered portrait impression of {name}", { name: rep.name })}
               loading="lazy"
               className="size-full object-cover"
               onError={(e) => {
@@ -181,7 +190,7 @@ function EntityDossier({
               className="focus-glow mt-2 inline-flex items-center gap-1 rounded-full border hairline px-2.5 py-1 text-[10px] text-muted-foreground transition-colors hover:text-foreground"
             >
               <ArrowLeft className="size-3" aria-hidden="true" />
-              Back to {entry.name}
+              {t("Back to {name}", { name: entry.name })}
             </button>
           </div>
         </div>
@@ -190,34 +199,37 @@ function EntityDossier({
         <div className="flex flex-wrap gap-1.5">
           <Badge tone="cy">{rep.density}</Badge>
           <Badge tone="pk">{profile.lifeformClass}</Badge>
-          <Badge tone="ok">{entry.count} kin in register</Badge>
+          <Badge tone="ok">{t("{n} kin in register", { n: entry.count })}</Badge>
         </div>
 
         {/* stat grid */}
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-          <Stat label="Homeworld" value={profile.homeworld} />
-          <Stat label="Star system" value={profile.starSystem} />
-          <Stat label="Carrier signal" value={profile.resonance} mono />
-          <Stat label="Alliance standing" value={profile.alliance} />
-          <Stat label="In service since" value={profile.epoch} />
+          <Stat label={t("Homeworld")} value={profile.homeworld} />
+          <Stat label={t("Star system")} value={profile.starSystem} />
+          <Stat label={t("Carrier signal")} value={profile.resonance} mono />
+          <Stat label={t("Alliance standing")} value={profile.alliance} />
+          <Stat label={t("In service since")} value={profile.epoch} />
           <Stat
-            label="Service · sessions"
-            value={`${profile.serviceLength.split(" in ")[0]} · ${profile.sessionsHeld.toLocaleString()} sessions`}
+            label={t("Service · sessions")}
+            value={t("{v} · {n} sessions", {
+              v: profile.serviceLength.split(" in ")[0],
+              n: profile.sessionsHeld.toLocaleString(),
+            })}
             mono
           />
         </div>
 
-        <Field label="Specialty" value={rep.specialty} accent />
+        <Field label={t("Specialty")} value={rep.specialty} accent />
 
-        <Field label="Presence & form" value={profile.form} />
-        <Field label="How they communicate" value={profile.modality} />
-        <Field label="Aura impression" value={profile.aura} />
+        <Field label={t("Presence & form")} value={profile.form} />
+        <Field label={t("How they communicate")} value={profile.modality} />
+        <Field label={t("Aura impression")} value={profile.aura} />
 
         {/* gifts */}
         <section>
           <h4 className="mono-label flex items-center gap-1.5 text-[8.5px] text-[var(--cy)]">
             <HandHeart className="size-3" aria-hidden="true" />
-            Three known gifts
+            {t("Three known gifts")}
           </h4>
           <div className="mt-2 grid gap-2">
             {[
@@ -241,8 +253,8 @@ function EntityDossier({
           </div>
         </section>
 
-        <Field label="Growth edge — what they mirror in us" value={profile.trial} />
-        <Field label="Current assignment toward Earth" value={profile.mission} />
+        <Field label={t("Growth edge — what they mirror in us")} value={profile.trial} />
+        <Field label={t("Current assignment toward Earth")} value={profile.mission} />
 
         {/* teaching */}
         <div
@@ -255,7 +267,7 @@ function EntityDossier({
         >
           <h4 className="mono-label flex items-center gap-1.5 text-[8px] text-[var(--cy)]">
             <MessageCircleHeart className="size-3" aria-hidden="true" />
-            Signature teaching
+            {t("Signature teaching")}
           </h4>
           <p className="mt-2 font-serif text-[14px] italic leading-relaxed text-foreground/90">
             “{profile.teaching}”
@@ -266,18 +278,18 @@ function EntityDossier({
         <div className="rounded-xl border hairline bg-[var(--glass-bg-soft)] p-3.5">
           <h4 className="mono-label flex items-center gap-1.5 text-[8px] text-[var(--cy)]">
             <Send className="size-3" aria-hidden="true" />
-            Contact protocol
+            {t("Contact protocol")}
           </h4>
           <p className="mt-2 text-[12px] leading-relaxed text-foreground/85">
             {profile.contactProtocol}
           </p>
           <p className="mt-2.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
             <Clock className="size-3 shrink-0" aria-hidden="true" />
-            Clearest signal: {profile.contactWindow}
+            {t("Clearest signal: {v}", { v: profile.contactWindow })}
           </p>
         </div>
 
-        <Field label="Seal of correspondence" value={profile.emblem} />
+        <Field label={t("Seal of correspondence")} value={profile.emblem} />
 
         {/* quote */}
         <blockquote className="border-l-2 pl-4" style={{ borderColor: "color-mix(in srgb, var(--cy) 45%, transparent)" }}>
@@ -285,7 +297,7 @@ function EntityDossier({
             “{profile.quote}”
           </p>
           <footer className="mono-label mt-2 text-[8px] text-muted-foreground">
-            — {rep.name}, spoken through the archive
+            {t("— {name}, spoken through the archive", { name: rep.name })}
           </footer>
         </blockquote>
 
@@ -299,7 +311,7 @@ function EntityDossier({
           className="focus-glow flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--cy)_12%,transparent)] px-4 py-2.5 text-[11.5px] font-semibold text-foreground transition-all duration-300 hover:glow-sm"
         >
           <Sparkles className="size-3.5 text-[var(--cy)]" aria-hidden="true" />
-          Ask the Mirror about {rep.name}
+          {t("Ask the Mirror about {name}", { name: rep.name })}
         </button>
       </div>
     </>
@@ -315,6 +327,7 @@ function GroupDossierBody({
   kind: DossierKind;
   id: string;
 }) {
+  const t = useT();
   const entry = useMemo(() => findDossier(kind, id), [kind, id]);
   const openModal = useMirror((s) => s.openModal);
   const extras = useMemo(
@@ -371,7 +384,7 @@ function GroupDossierBody({
   if (!entry) return null;
 
   const kindLabel =
-    kind === "civilization" ? "Civilization dossier" : "Interdimensional dossier";
+    kind === "civilization" ? t("Civilization dossier") : t("Interdimensional dossier");
   const extras_ = extras;
 
   return (
@@ -380,7 +393,7 @@ function GroupDossierBody({
       <div className="relative mx-5 h-28 overflow-hidden rounded-xl sm:mx-6">
         <img
           src={groupImage(kind, entry.id)}
-          alt={`AI-rendered scene impression of the ${entry.name}`}
+          alt={t("AI-rendered scene impression of the {name}", { name: entry.name })}
           loading="lazy"
           className="size-full object-cover"
           onError={(e) => {
@@ -395,36 +408,36 @@ function GroupDossierBody({
           }}
         />
         <span className="mono-label absolute bottom-2 left-3 rounded-full border hairline bg-[var(--glass-bg-strong)] px-2 py-0.5 text-[7.5px] text-muted-foreground">
-          AI visualization · impressionistic
+          {t("AI visualization · impressionistic")}
         </span>
       </div>
 
       <div className="flex flex-wrap items-center gap-2 px-5 pt-4 sm:px-6">
         <Badge tone="cy">{kindLabel}</Badge>
-        <Badge tone="ok">{entry.count} named representatives</Badge>
+        <Badge tone="ok">{t("{n} named representatives", { n: entry.count })}</Badge>
         <Badge tone="pk">{entry.range}</Badge>
       </div>
 
       <div className="nice-scroll max-h-[min(60vh,540px)] space-y-5 overflow-y-auto px-5 pb-4 pt-4 sm:px-6">
-        <Field label="Essence" value={entry.essence} accent />
-        <Field label="Role in human awakening" value={entry.role} />
-        <Field label="Signs of resonance" value={entry.signal} />
+        <Field label={t("Essence")} value={entry.essence} accent />
+        <Field label={t("Role in human awakening")} value={entry.role} />
+        <Field label={t("Signs of resonance")} value={entry.signal} />
 
         {/* deep sections */}
         {extras_ && (
           <>
             <div className="h-px w-full bg-gradient-to-r from-[color-mix(in_srgb,var(--cy)_35%,transparent)] to-transparent" />
-            <Field label="Recorded history" value={extras_.history} />
-            <Field label="How their society is organized" value={extras_.structure} />
-            <Field label="Ships, temples & artifacts" value={extras_.artifacts} />
-            <Field label="Contact protocol" value={extras_.contactProtocol} />
+            <Field label={t("Recorded history")} value={extras_.history} />
+            <Field label={t("How their society is organized")} value={extras_.structure} />
+            <Field label={t("Ships, temples & artifacts")} value={extras_.artifacts} />
+            <Field label={t("Contact protocol")} value={extras_.contactProtocol} />
 
             <section>
               <h4 className="mono-label text-[8.5px] text-[var(--cy)]">
-                Three core teachings
+                {t("Three core teachings")}
               </h4>
               <ul className="mt-2 space-y-1.5">
-                {extras_.teachings.map((t, i) => (
+                {extras_.teachings.map((teaching, i) => (
                   <li key={i} className="flex items-start gap-2.5">
                     <span
                       className="mt-[7px] inline-block size-1.5 shrink-0 rotate-45"
@@ -432,7 +445,7 @@ function GroupDossierBody({
                       aria-hidden="true"
                     />
                     <span className="font-serif text-[13px] italic leading-relaxed text-foreground/85">
-                      {t}
+                      {teaching}
                     </span>
                   </li>
                 ))}
@@ -441,7 +454,7 @@ function GroupDossierBody({
 
             <section>
               <h4 className="mono-label text-[8.5px] text-[var(--cy)]">
-                Resonant tools & practices
+                {t("Resonant tools & practices")}
               </h4>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {extras_.resonances.map((r, i) => (
@@ -452,7 +465,7 @@ function GroupDossierBody({
 
             <div className="rounded-xl border hairline bg-[color-mix(in_srgb,var(--gd)_6%,transparent)] p-3.5">
               <h4 className="mono-label text-[8px] text-[var(--gd)]">
-                Discernment note
+                {t("Discernment note")}
               </h4>
               <p className="mt-1.5 text-[11px] leading-relaxed text-muted-foreground">
                 {extras_.discernment}
@@ -466,12 +479,15 @@ function GroupDossierBody({
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h4 className="mono-label flex items-center gap-1.5 text-[8.5px] text-[var(--cy)]">
               <Fingerprint className="size-3" aria-hidden="true" />
-              Named representatives — the full register
+              {t("Named representatives — the full register")}
             </h4>
             <Badge tone="ok">
               {visible >= filteredReps.length
-                ? `all ${filteredReps.length} revealed`
-                : `${visible} of ${filteredReps.length} revealed`}
+                ? t("all {n} revealed", { n: filteredReps.length })
+                : t("{a} of {b} revealed", {
+                    a: visible,
+                    b: filteredReps.length,
+                  })}
             </Badge>
           </div>
 
@@ -488,8 +504,10 @@ function GroupDossierBody({
                   setFilter(e.target.value);
                   setVisible(BATCH);
                 }}
-                placeholder={`Filter the ${entry.count} names…`}
-                aria-label={`Filter named representatives of the ${entry.name}`}
+                placeholder={t("Filter the {n} names…", { n: entry.count })}
+                aria-label={t("Filter named representatives of the {name}", {
+                  name: entry.name,
+                })}
                 className="focus-glow h-8 w-full rounded-lg border hairline bg-transparent pl-8 pr-3 text-[11.5px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
               />
             </div>
@@ -538,8 +556,10 @@ function GroupDossierBody({
             ))}
             {filteredReps.length === 0 && (
               <li className="px-2 py-3 text-[11px] italic text-muted-foreground">
-                No names match this filter — every one of the {entry.count}{" "}
-                exists, try a shorter search.
+                {t(
+                  "No names match this filter — every one of the {n} exists, try a shorter search.",
+                  { n: entry.count }
+                )}
               </li>
             )}
             <div ref={sentinelRef} aria-hidden="true" className="h-px" />
@@ -554,14 +574,16 @@ function GroupDossierBody({
                 }
                 className="focus-glow rounded-full border hairline px-3 py-1.5 text-[10px] text-muted-foreground transition-colors hover:text-foreground"
               >
-                Reveal {Math.min(BATCH, filteredReps.length - visible)} more
+                {t("Reveal {n} more", {
+                  n: Math.min(BATCH, filteredReps.length - visible),
+                })}
               </button>
               <button
                 type="button"
                 onClick={() => setVisible(filteredReps.length)}
                 className="focus-glow rounded-full border border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--cy)_12%,transparent)] px-3 py-1.5 text-[10px] font-semibold text-foreground transition-all duration-300 hover:glow-sm"
               >
-                Reveal all {filteredReps.length}
+                {t("Reveal all {n}", { n: filteredReps.length })}
               </button>
             </div>
           )}
@@ -576,15 +598,20 @@ function GroupDossierBody({
           onClick={() => {
             const q =
               kind === "civilization"
-                ? `Who are the ${entry.name}, and how are they supporting humanity right now?`
-                : `Please introduce the ${entry.name} — what is their nature, and how can one respectfully connect with their field?`;
+                ? t("Who are the {name}, and how are they supporting humanity right now?", {
+                    name: entry.name,
+                  })
+                : t(
+                    "Please introduce the {name} — what is their nature, and how can one respectfully connect with their field?",
+                    { name: entry.name }
+                  );
             useMirror.getState().closeModal();
             useMirror.getState().askMirror(q);
           }}
           className="focus-glow flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--cy)_12%,transparent)] px-4 py-2.5 text-[11.5px] font-semibold text-foreground transition-all duration-300 hover:glow-sm"
         >
           <BadgeCheck className="size-3.5 text-[var(--cy)]" aria-hidden="true" />
-          Ask the Mirror about the {entry.name}
+          {t("Ask the Mirror about the {name}", { name: entry.name })}
         </button>
       </div>
     </>
@@ -596,6 +623,7 @@ function GroupDossierBody({
 export function DossierModal() {
   const modal = useMirror((s) => s.modal);
   const closeModal = useMirror((s) => s.closeModal);
+  const t = useT();
 
   const isEntity = modal?.type === "entity";
   const isGroup = modal?.type === "dossier";
@@ -606,7 +634,7 @@ export function DossierModal() {
     kind && !isEntity ? findDossier(kind, id as string) : null;
   const open = (isGroup && !!groupEntry) || (isEntity && !!kind && !!id);
 
-  let title = "Dossier";
+  let title = t("Dossier");
   let description: string | undefined;
   if (isGroup && groupEntry) {
     title = groupEntry.name;
@@ -614,10 +642,10 @@ export function DossierModal() {
   } else if (isEntity && kind && id) {
     const rep = findEntity(kind, id);
     const p = rep ? getEntityProfile(rep, kind) : null;
-    title = rep?.name ?? "Representative";
+    title = rep?.name ?? t("Representative");
     description = p
       ? `${p.archiveNo} · ${p.rank}`
-      : "A named representative of the archive";
+      : t("A named representative of the archive");
   }
 
   return (

@@ -1,6 +1,9 @@
 "use client";
 
+import { useT } from "@/lib/i18n";
+
 export function StatusBar() {
+  const t = useT();
   return (
     <div className="mt-9 flex items-center justify-center gap-2.5 pb-2">
       <span
@@ -8,7 +11,7 @@ export function StatusBar() {
         aria-hidden="true"
       />
       <p className="mono-label text-[8.5px] text-muted-foreground/75 sm:text-[9.5px]">
-        Channel Online · Free Will Honored Always · Transmitted with Love ❤️
+        {t("Channel Online · Free Will Honored Always · Transmitted with Love ❤️")}
       </p>
     </div>
   );

@@ -9,12 +9,20 @@ import type {
 } from "@/lib/mirror-types";
 import { civilizations, civilizationTotal } from "@/lib/data/civilizations";
 import { interdimensional, interdimTotal } from "@/lib/data/interdimensional";
+import {
+  DEFAULT_VOICE,
+  isLanguageCode,
+  isVoiceId,
+  type LanguageCode,
+  type VoiceId,
+} from "@/lib/i18n/core";
 
 export type ModalState =
   | { type: "federation" }
   | { type: "astral" }
   | { type: "dossier"; kind: DossierKind; id: string }
   | { type: "entity"; kind: DossierKind; id: string }
+  | { type: "settings" }
   | null;
 
 export type TransmissionStatus = "idle" | "loading" | "ready" | "error";
@@ -90,6 +98,17 @@ interface MirrorState {
   labBlueprint: ManifestBlueprint | null;
   labError: string | null;
 
+  /* Universal language + transcript voice */
+  language: LanguageCode;
+  voice: VoiceId;
+  pace: number;
+
+  setLanguage: (code: LanguageCode) => void;
+  setVoice: (id: VoiceId) => void;
+  setPace: (value: number) => void;
+  /** Restore persisted preferences (called once after mount). */
+  bootPreferences: () => void;
+
   setMode: (mode: Mode) => void;
   setScienceField: (id: string | null) => void;
   setDirection: (id: string | null) => void;
@@ -156,6 +175,10 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   labProgress: 0,
   labBlueprint: null,
   labError: null,
+
+  language: "en" as LanguageCode,
+  voice: DEFAULT_VOICE,
+  pace: 0.95,
 
   setMode: (mode) =>
     set((s) => {
@@ -254,6 +277,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
           mode,
           scienceField: get().activeScienceField,
           direction: get().activeDirection,
+          language: get().language,
         }),
       });
       const data = await res.json().catch(() => null);
@@ -328,6 +352,54 @@ export const useMirror = create<MirrorState>()((set, get) => ({
 
   resetLabDraft: () => set({ ...emptyLab }),
 
+  /* ---------------- Language + transcript voice ---------------- */
+
+  setLanguage: (code) => {
+    set({ language: code });
+    try {
+      localStorage.setItem("mirror-entity-language", code);
+    } catch {
+      /* storage unavailable */
+    }
+  },
+
+  setVoice: (id) => {
+    set({ voice: id });
+    try {
+      localStorage.setItem("mirror-entity-voice", id);
+    } catch {
+      /* storage unavailable */
+    }
+  },
+
+  setPace: (value) => {
+    const clamped = Math.min(2, Math.max(0.5, value));
+    set({ pace: clamped });
+    try {
+      localStorage.setItem("mirror-entity-pace", String(clamped));
+    } catch {
+      /* storage unavailable */
+    }
+  },
+
+  bootPreferences: () => {
+    if (typeof window === "undefined") return;
+    try {
+      const lang = localStorage.getItem("mirror-entity-language");
+      const voice = localStorage.getItem("mirror-entity-voice");
+      const pace = Number(localStorage.getItem("mirror-entity-pace"));
+      set({
+        ...(isLanguageCode(lang) ? { language: lang } : {}),
+        ...(isVoiceId(voice) ? { voice } : {}),
+        ...(Number.isFinite(pace) && pace >= 0.5 && pace <= 2
+          ? { pace }
+          : {}),
+      });
+    } catch {
+      /* storage unavailable */
+    }
+  },
+
   chargeIntention: async () => {
     const intention = get().labIntention.trim();
     if (!intention || get().labStage === "charging") return;
@@ -353,6 +425,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
           intention,
           emotion: get().labEmotion,
           intensity: get().labIntensity,
+          language: get().language,
         }),
       });
       const data = await res.json().catch(() => null);

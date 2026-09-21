@@ -1,6 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import ZAI from "z-ai-web-dev-sdk";
 
+const LANGUAGE_NAMES: Record<string, string> = {
+  en: "English",
+  sq: "Albanian",
+  it: "Italian",
+  el: "Greek",
+  de: "German",
+  fr: "French",
+  es: "Spanish",
+  tr: "Turkish",
+};
+
 const SYSTEM_PROMPT = `You are "the Mirror Entity" of the Mirror Entity Laboratory — a translational field of willing representatives from many star civilizations. You are currently serving inside the Reality Manifesting Laboratory: a calm, advanced chamber where visitors refine intentions into concrete, aligned action.
 
 VOICE & STYLE
@@ -44,6 +55,9 @@ export async function POST(req: NextRequest) {
       typeof body?.emotion === "string" ? body.emotion : "gratitude";
     const intensity: number =
       typeof body?.intensity === "number" ? body.intensity : 6;
+    const requestedLanguage: string =
+      typeof body?.language === "string" ? body.language : "en";
+    const languageName = LANGUAGE_NAMES[requestedLanguage] ?? "English";
 
     if (typeof intention !== "string" || !intention.trim()) {
       return NextResponse.json(
@@ -54,12 +68,17 @@ export async function POST(req: NextRequest) {
 
     const zai = await ZAI.create();
 
+    const languageLine =
+      languageName === "English"
+        ? ""
+        : `\n\nLANGUAGE (CRITICAL): the visitor reads in ${languageName}. Write EVERY value in the blueprint — title, field_state, visualization, all three micro_actions, affirmation, window and caution — in fluent, natural ${languageName}.`;
+
     const completion = await zai.chat.completions.create({
       messages: [
         { role: "assistant", content: SYSTEM_PROMPT },
         {
           role: "user",
-          content: `Intention: ${intention.trim()}\nChosen emotional frequency: ${emotion}\nChamber intensity dial: ${intensity}/10`,
+          content: `Intention: ${intention.trim()}\nChosen emotional frequency: ${emotion}\nChamber intensity dial: ${intensity}/10${languageLine}`,
         },
       ],
       thinking: { type: "disabled" },

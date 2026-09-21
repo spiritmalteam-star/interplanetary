@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useMirror } from "@/lib/mirror-store";
 import { CosmicBackdrop } from "./CosmicBackdrop";
 import { StarField } from "./StarField";
@@ -18,9 +19,15 @@ import { ArchiveRegister } from "./ArchiveRegister";
 import { FederationModal } from "./FederationModal";
 import { AstralJobsModal } from "./AstralJobsModal";
 import { DossierModal } from "./DossierModal";
+import { SettingsModal } from "./SettingsModal";
 
 export default function AppShell() {
   const view = useMirror((s) => s.view);
+
+  /* Restore persisted language / voice / pace once after mount. */
+  useEffect(() => {
+    useMirror.getState().bootPreferences();
+  }, []);
 
   return (
     <div className="flex h-dvh flex-col overflow-hidden">
@@ -67,6 +74,7 @@ export default function AppShell() {
       <FederationModal />
       <AstralJobsModal />
       <DossierModal />
+      <SettingsModal />
     </div>
   );
 }

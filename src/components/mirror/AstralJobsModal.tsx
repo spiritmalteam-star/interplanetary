@@ -18,6 +18,7 @@ import {
   Waves,
 } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
+import { useT } from "@/lib/i18n";
 import { professionDomains, professionTotal } from "@/lib/data/professions";
 import {
   domainProfiles,
@@ -47,6 +48,7 @@ export function AstralJobsModal() {
   const modal = useMirror((s) => s.modal);
   const closeModal = useMirror((s) => s.closeModal);
   const askMirror = useMirror((s) => s.askMirror);
+  const t = useT();
 
   const [domainId, setDomainId] = useState<string | null>(null);
   const [profession, setProfession] = useState<string | null>(null);
@@ -71,7 +73,10 @@ export function AstralJobsModal() {
     if (!role) return;
     closeModal();
     void askMirror(
-      `Tell me about the profession of "${role.name}" in the astral domains — what does this work involve, and how does it serve evolution?`
+      t(
+        "Tell me about the profession of \"{name}\" in the astral domains — what does this work involve, and how does it serve evolution?",
+        { name: role.name }
+      )
     );
   };
 
@@ -79,16 +84,18 @@ export function AstralJobsModal() {
     <ModalShell
       open={open}
       onOpenChange={handleOpenChange}
-      title="Astral Professions"
-      description="12 domains · 1,303 catalogued roles. Click a domain to enter, a profession to learn more — ask the Mirror for a full transmission anytime."
+      title={t("Astral Professions")}
+      description={t(
+        "12 domains · 1,303 catalogued roles. Click a domain to enter, a profession to learn more — ask the Mirror for a full transmission anytime."
+      )}
       widthClass="sm:max-w-[680px]"
     >
       <div className="flex items-center gap-3 px-5 sm:px-6">
         <span className="mono-label rounded-full border border-[var(--cy)]/30 bg-[color-mix(in_srgb,var(--cy)_8%,transparent)] px-2.5 py-1 text-[8.5px] text-[var(--cy)]">
-          {professionTotal.toLocaleString()} roles
+          {t("{n} roles", { n: professionTotal.toLocaleString() })}
         </span>
         <span className="mono-label rounded-full border hairline px-2.5 py-1 text-[8.5px] text-muted-foreground">
-          {professionDomains.length} domains
+          {t("{n} domains", { n: professionDomains.length })}
         </span>
         {domain && (
           <button
@@ -100,7 +107,7 @@ export function AstralJobsModal() {
             className="focus-glow flex items-center gap-1 text-[10.5px] font-medium uppercase tracking-[0.12em] text-muted-foreground transition-colors hover:text-foreground"
           >
             <ChevronLeft className="size-3.5" aria-hidden="true" />
-            All domains
+            {t("All domains")}
           </button>
         )}
       </div>
@@ -158,7 +165,7 @@ export function AstralJobsModal() {
                     {d.description}
                   </span>
                   <span className="mono-label mb-3 mt-1.5 flex items-center gap-1 px-3.5 text-[8.5px] text-[var(--cy)]">
-                    Explore
+                    {t("Explore")}
                     <ArrowRight
                       className="size-3 transition-transform duration-300 group-hover:translate-x-0.5"
                       aria-hidden="true"
@@ -186,7 +193,7 @@ export function AstralJobsModal() {
                 {domain.title}
               </h4>
               <span className="ml-auto font-mono text-[10px] text-muted-foreground/70">
-                {domain.count} catalogued
+                {t("{n} catalogued", { n: domain.count })}
               </span>
             </div>
 
@@ -197,7 +204,7 @@ export function AstralJobsModal() {
                   {domainProfiles[domain.id].charter}
                 </p>
                 <p className="mono-label text-[8px] text-muted-foreground">
-                  Seats · <span className="text-foreground/80">{domainProfiles[domain.id].seats}</span>
+                  {t("Seats")} · <span className="text-foreground/80">{domainProfiles[domain.id].seats}</span>
                 </p>
                 <div className="flex flex-wrap gap-1.5">
                   {domainProfiles[domain.id].disciplines.map((d, i) => (
@@ -210,7 +217,7 @@ export function AstralJobsModal() {
                   ))}
                 </div>
                 <p className="text-[11px] leading-relaxed text-muted-foreground">
-                  <span className="mono-label text-[8px] text-[var(--cy)]">Entrance trial · </span>
+                  <span className="mono-label text-[8px] text-[var(--cy)]">{t("Entrance trial")} · </span>
                   {domainProfiles[domain.id].entranceTrial}
                 </p>
               </div>
@@ -230,7 +237,7 @@ export function AstralJobsModal() {
                     </span>
                     {p.openings != null && (
                       <span className="mono-label shrink-0 rounded-full border border-[var(--ok)]/30 bg-[color-mix(in_srgb,var(--ok)_10%,transparent)] px-1.5 py-0.5 text-[7.5px] text-[var(--ok)]">
-                        {p.openings} seats
+                        {t("{n} seats", { n: p.openings })}
                       </span>
                     )}
                   </span>
@@ -238,7 +245,7 @@ export function AstralJobsModal() {
                     {p.blurb}
                   </span>
                   <span className="mono-label mt-2 flex items-center gap-1 text-[8.5px] text-[var(--cy)]">
-                    Learn more
+                    {t("Learn more")}
                     <ArrowRight
                       className="size-3 transition-transform duration-300 group-hover:translate-x-0.5"
                       aria-hidden="true"
@@ -273,7 +280,7 @@ export function AstralJobsModal() {
               <p className="text-[11.5px] italic text-[var(--cy)]">{role.blurb}</p>
               {role.openings != null && (
                 <span className="mono-label rounded-full border border-[var(--ok)]/30 bg-[color-mix(in_srgb,var(--ok)_10%,transparent)] px-2 py-0.5 text-[8px] text-[var(--ok)]">
-                  {role.openings} open seats across federated fleets
+                  {t("{n} open seats across federated fleets", { n: role.openings })}
                 </span>
               )}
             </div>
@@ -286,54 +293,54 @@ export function AstralJobsModal() {
               <div className="mt-4 space-y-3 rounded-lg border hairline bg-[color-mix(in_srgb,var(--cy)_4%,transparent)] p-3.5">
                 <div className="flex flex-wrap items-center gap-1.5">
                   <span className="mono-label rounded-full border border-[var(--cy)]/30 bg-[color-mix(in_srgb,var(--cy)_8%,transparent)] px-2 py-0.5 text-[8px] text-[var(--cy)]">
-                    {professionProfiles[role.name].ring}
+                    {t(professionProfiles[role.name].ring)}
                   </span>
                   <span className="mono-label rounded-full border hairline px-2 py-0.5 text-[8px] text-muted-foreground">
-                    Tenure · {professionProfiles[role.name].tenure}
+                    {t("Tenure")} · {professionProfiles[role.name].tenure}
                   </span>
                   <span className="mono-label rounded-full border hairline px-2 py-0.5 text-[8px] text-muted-foreground">
-                    Yield · {professionProfiles[role.name].compensation}
+                    {t("Yield")} · {professionProfiles[role.name].compensation}
                   </span>
                 </div>
                 <div>
-                  <h5 className="mono-label text-[8px] text-[var(--cy)]">Mandate</h5>
+                  <h5 className="mono-label text-[8px] text-[var(--cy)]">{t("Mandate")}</h5>
                   <p className="mt-1 text-[12px] leading-relaxed text-foreground/85">
                     {professionProfiles[role.name].mandate}
                   </p>
                 </div>
                 <div>
-                  <h5 className="mono-label text-[8px] text-[var(--cy)]">Training pathway</h5>
+                  <h5 className="mono-label text-[8px] text-[var(--cy)]">{t("Training pathway")}</h5>
                   <p className="mt-1 text-[12px] leading-relaxed text-foreground/85">
                     {professionProfiles[role.name].pathway}
                   </p>
                 </div>
                 <div>
-                  <h5 className="mono-label text-[8px] text-[var(--cy)]">Toolkit</h5>
+                  <h5 className="mono-label text-[8px] text-[var(--cy)]">{t("Toolkit")}</h5>
                   <div className="mt-1.5 flex flex-wrap gap-1.5">
-                    {professionProfiles[role.name].toolkit.map((t, i) => (
+                    {professionProfiles[role.name].toolkit.map((tool, i) => (
                       <span
                         key={i}
                         className="mono-label rounded-full border hairline px-2 py-0.5 text-[8px] text-muted-foreground"
                       >
-                        {t}
+                        {tool}
                       </span>
                     ))}
                   </div>
                 </div>
                 <div>
-                  <h5 className="mono-label text-[8px] text-[var(--cy)]">Where the work happens</h5>
+                  <h5 className="mono-label text-[8px] text-[var(--cy)]">{t("Where the work happens")}</h5>
                   <p className="mt-1 text-[12px] leading-relaxed text-foreground/85">
                     {professionProfiles[role.name].workplace}
                   </p>
                 </div>
                 <div>
-                  <h5 className="mono-label text-[8px] text-[var(--gd)]">Honest hazards</h5>
+                  <h5 className="mono-label text-[8px] text-[var(--gd)]">{t("Honest hazards")}</h5>
                   <p className="mt-1 text-[12px] leading-relaxed text-foreground/85">
                     {professionProfiles[role.name].hazards}
                   </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="mono-label text-[8px] text-muted-foreground">Allied domains ·</span>
+                  <span className="mono-label text-[8px] text-muted-foreground">{t("Allied domains")} ·</span>
                   {professionProfiles[role.name].alliedDomains.map((d, i) => (
                     <span
                       key={i}
@@ -352,7 +359,7 @@ export function AstralJobsModal() {
               className="focus-glow mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--cy)_12%,transparent)] px-4 py-2.5 text-[11.5px] font-semibold text-foreground transition-all duration-300 hover:glow-sm"
             >
               <Sparkles className="size-3.5 text-[var(--cy)]" aria-hidden="true" />
-              Ask the Mirror for a full transmission
+              {t("Ask the Mirror for a full transmission")}
             </button>
           </article>
         )}

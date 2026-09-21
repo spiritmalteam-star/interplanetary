@@ -3,11 +3,13 @@
 import { motion } from "framer-motion";
 import { modes, modeContext } from "@/lib/data/science";
 import { useMirror } from "@/lib/mirror-store";
+import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 export function ModeSelector() {
   const activeMode = useMirror((s) => s.activeMode);
   const setMode = useMirror((s) => s.setMode);
+  const t = useT();
   const context = modeContext[activeMode];
 
   return (
@@ -15,11 +17,11 @@ export function ModeSelector() {
       <div
         className="flex w-full max-w-full justify-start overflow-x-auto py-0.5 no-scrollbar sm:justify-center"
         role="group"
-        aria-label="Channel mode"
+        aria-label={t("Channel mode")}
       >
         <div className="flex min-w-max items-center gap-1.5 sm:gap-2 px-1">
           <span className="mono-label mr-1 hidden text-[9.5px] text-muted-foreground/70 sm:inline">
-            Mode:
+            {t("Mode:")}
           </span>
           {modes.map((m) => {
             const active = m.id === activeMode;
@@ -39,7 +41,7 @@ export function ModeSelector() {
                 <span aria-hidden="true" className="text-[13px] leading-none">
                   {m.emoji}
                 </span>
-                {m.label}
+                {t(m.label)}
               </button>
             );
           })}
@@ -53,7 +55,7 @@ export function ModeSelector() {
           transition={{ duration: 0.5, ease: "easeOut" }}
           className="mono-label text-center text-[8.5px] text-muted-foreground/70"
         >
-          {context}
+          {t(context)}
         </motion.p>
       )}
     </div>

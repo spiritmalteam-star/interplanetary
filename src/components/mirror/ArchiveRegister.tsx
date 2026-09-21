@@ -23,6 +23,7 @@ import { civilizations } from "@/lib/data/civilizations";
 import { interdimensional } from "@/lib/data/interdimensional";
 import { entityImage } from "@/lib/entity-utils";
 import { entityRegistryLine } from "@/lib/entity-profile";
+import { useT } from "@/lib/i18n";
 import type { DossierKind, EntityDossier } from "@/lib/mirror-types";
 import { cn } from "@/lib/utils";
 
@@ -110,6 +111,7 @@ export function ArchiveRegister() {
   const registerKind = useMirror((s) => s.registerKind);
   const openRegister = useMirror((s) => s.openRegister);
   const exitRegister = useMirror((s) => s.exitRegister);
+  const t = useT();
 
   const [query, setQuery] = useState("");
   const [groupId, setGroupId] = useState<string | null>(null);
@@ -166,20 +168,20 @@ export function ArchiveRegister() {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-      aria-label={meta.title}
+      aria-label={t(meta.title)}
       className="mx-auto w-full max-w-[860px] px-1 pb-8 pt-8 sm:pt-10"
     >
       {/* header */}
       <div className="text-center">
         <span className="mono-label inline-flex items-center gap-1.5 rounded-full border hairline px-2.5 py-1 text-[8.5px] text-muted-foreground">
           <Layers className="size-3" aria-hidden="true" />
-          Mirror archive · full register
+          {t("Mirror archive · full register")}
         </span>
         <h1 className="hero-text mt-3 text-[24px] font-semibold leading-tight tracking-[-0.01em] sm:text-[28px]">
-          {meta.title}
+          {t(meta.title)}
         </h1>
         <p className="mx-auto mt-2.5 max-w-[560px] text-[12.5px] leading-relaxed text-muted-foreground">
-          {meta.subtitle}
+          {t(meta.subtitle)}
         </p>
       </div>
 
@@ -190,7 +192,7 @@ export function ArchiveRegister() {
             {total}
           </p>
           <p className="mono-label mt-1 text-[7.5px] text-muted-foreground">
-            named entries · exact
+            {t("named entries · exact")}
           </p>
         </div>
         <div className="rounded-xl border hairline bg-[var(--glass-bg-soft)] px-3 py-3 text-center">
@@ -198,7 +200,7 @@ export function ArchiveRegister() {
             {groupChips.length}
           </p>
           <p className="mono-label mt-1 text-[7.5px] text-muted-foreground">
-            {meta.groupLabel.toLowerCase()} catalogued
+            {t(meta.groupLabel).toLowerCase()} {t("catalogued")}
           </p>
         </div>
         <div className="rounded-xl border hairline bg-[var(--glass-bg-soft)] px-3 py-3 text-center">
@@ -212,7 +214,7 @@ export function ArchiveRegister() {
             <span className="text-[12px] text-muted-foreground">/{filtered.length}</span>
           </p>
           <p className="mono-label mt-1 text-[7.5px] text-muted-foreground">
-            revealed on this page
+            {t("revealed on this page")}
           </p>
         </div>
       </div>
@@ -228,15 +230,19 @@ export function ArchiveRegister() {
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search all names, origins, specialties…"
-            aria-label={`Search the full ${registerKind === "civilization" ? "civilization" : "interdimensional"} register`}
+            placeholder={t("Search all names, origins, specialties…")}
+            aria-label={
+              registerKind === "civilization"
+                ? t("Search the full civilization register")
+                : t("Search the full interdimensional register")
+            }
             className="focus-glow h-10 w-full rounded-xl border hairline bg-transparent pl-10 pr-9 text-[13px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
           />
           {query && (
             <button
               type="button"
               onClick={() => setQuery("")}
-              aria-label="Clear register search"
+              aria-label={t("Clear register search")}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/70 transition-colors hover:text-foreground"
             >
               <X className="size-4" aria-hidden="true" />
@@ -256,7 +262,10 @@ export function ArchiveRegister() {
                 : "hairline text-muted-foreground hover:text-foreground"
             )}
           >
-            All {meta.groupLabel.toLowerCase()} ({total})
+            {t("All {label} ({n})", {
+              label: t(meta.groupLabel).toLowerCase(),
+              n: total,
+            })}
           </button>
           {groupChips.map((g) => (
             <button
@@ -282,8 +291,13 @@ export function ArchiveRegister() {
         <BadgeCheck className="size-3.5 text-[var(--ok)]" aria-hidden="true" />
         <p className="mono-label text-[8.5px] text-muted-foreground/80">
           {revealed < filtered.length
-            ? `Revealed ${revealed} of ${filtered.length} — scroll to keep revealing`
-            : `All ${filtered.length} entries revealed — the register is complete`}
+            ? t("Revealed {a} of {b} — scroll to keep revealing", {
+                a: revealed,
+                b: filtered.length,
+              })
+            : t("All {n} entries revealed — the register is complete", {
+                n: filtered.length,
+              })}
         </p>
       </div>
 
@@ -296,9 +310,13 @@ export function ArchiveRegister() {
 
       {shown.length === 0 && (
         <div className="mt-6 rounded-2xl border hairline bg-[var(--glass-bg-soft)] px-6 py-10 text-center">
-          <p className="text-[13.5px] text-foreground/85">No entries match this filter.</p>
+          <p className="text-[13.5px] text-foreground/85">
+            {t("No entries match this filter.")}
+          </p>
           <p className="mt-1.5 text-[11.5px] italic text-muted-foreground">
-            Every name in the archive exists — try a softer search, or clear the filters.
+            {t(
+              "Every name in the archive exists — try a softer search, or clear the filters."
+            )}
           </p>
         </div>
       )}
@@ -312,14 +330,16 @@ export function ArchiveRegister() {
             onClick={() => setRevealed((r) => Math.min(r + BATCH, filtered.length))}
             className="focus-glow rounded-full border hairline px-4 py-2 text-[12px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
           >
-            Reveal {Math.min(BATCH, filtered.length - revealed)} more
+            {t("Reveal {n} more", {
+              n: Math.min(BATCH, filtered.length - revealed),
+            })}
           </button>
           <button
             type="button"
             onClick={() => setRevealed(filtered.length)}
             className="focus-glow rounded-full border border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--cy)_12%,transparent)] px-4 py-2 text-[12px] font-semibold text-foreground transition-all duration-300 hover:glow-sm"
           >
-            Reveal all {filtered.length}
+            {t("Reveal all {n}", { n: filtered.length })}
           </button>
         </div>
       )}
@@ -335,7 +355,7 @@ export function ArchiveRegister() {
             className="size-3.5 transition-transform duration-300 group-hover:-translate-x-0.5"
             aria-hidden="true"
           />
-          Return to the Observatory
+          {t("Return to the Observatory")}
         </button>
         <button
           type="button"
@@ -345,10 +365,16 @@ export function ArchiveRegister() {
           className="focus-glow flex items-center gap-2 rounded-full border hairline px-4 py-2 text-[12px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
         >
           <Layers className="size-3.5" aria-hidden="true" />
-          Switch to the{" "}
-          {registerKind === "civilization"
-            ? `interdimensional register (${archiveTotals.interdim})`
-            : `civilization register (${archiveTotals.civilizations})`}
+          {t("Switch to the {register}", {
+            register:
+              registerKind === "civilization"
+                ? t("interdimensional register ({n})", {
+                    n: archiveTotals.interdim,
+                  })
+                : t("civilization register ({n})", {
+                    n: archiveTotals.civilizations,
+                  }),
+          })}
         </button>
       </div>
     </motion.section>

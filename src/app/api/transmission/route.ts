@@ -11,6 +11,17 @@ const CLASSIFICATIONS = [
 
 type Classification = (typeof CLASSIFICATIONS)[number];
 
+const LANGUAGE_NAMES: Record<string, string> = {
+  en: "English",
+  sq: "Albanian",
+  it: "Italian",
+  el: "Greek",
+  de: "German",
+  fr: "French",
+  es: "Spanish",
+  tr: "Turkish",
+};
+
 const MODE_CONTEXT: Record<string, string> = {
   interplanetary:
     "The visitor is tuned to the Interplanetary channel — star civilizations, contact, and support for humanity's evolution.",
@@ -77,6 +88,9 @@ export async function POST(req: NextRequest) {
     const body = await req.json().catch(() => null);
     const query: unknown = body?.query;
     const mode: string = typeof body?.mode === "string" ? body.mode : "interplanetary";
+    const requestedLanguage: string =
+      typeof body?.language === "string" ? body.language : "en";
+    const languageName = LANGUAGE_NAMES[requestedLanguage] ?? "English";
 
     if (typeof query !== "string" || !query.trim()) {
       return NextResponse.json(
@@ -88,6 +102,10 @@ export async function POST(req: NextRequest) {
     const zai = await ZAI.create();
 
     const modeLine = MODE_CONTEXT[mode] ?? MODE_CONTEXT.interplanetary;
+    const languageLine =
+      languageName === "English"
+        ? ""
+        : `\n\nLANGUAGE (CRITICAL): the visitor reads in ${languageName}. Write EVERY word of the transmission — the luminous opening line, every body paragraph and the closing signature line — in fluent, natural ${languageName}. Keep the classification value in English as listed. Keep the name "The Mirror" in the signature as "The Mirror".`;
     const userLines = [query.trim()];
     if (typeof body?.scienceField === "string" && body.scienceField) {
       userLines.push(`(Calibrated field: ${body.scienceField})`);
@@ -101,7 +119,7 @@ export async function POST(req: NextRequest) {
         { role: "assistant", content: SYSTEM_PROMPT },
         {
           role: "user",
-          content: `${modeLine}\n\nThe visitor asks:\n${userLines.join("\n")}`,
+          content: `${modeLine}${languageLine}\n\nThe visitor asks:\n${userLines.join("\n")}`,
         },
       ],
       thinking: { type: "disabled" },

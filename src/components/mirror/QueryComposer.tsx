@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { Send } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
+import { useT } from "@/lib/i18n";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 export function QueryComposer() {
@@ -12,6 +13,7 @@ export function QueryComposer() {
   const askMirror = useMirror((s) => s.askMirror);
   const status = useMirror((s) => s.sessions[s.activeMode].status);
   const composerFocusNonce = useMirror((s) => s.composerFocusNonce);
+  const t = useT();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const isMobile = useIsMobile();
 
@@ -48,7 +50,7 @@ export function QueryComposer() {
     <div
       className="shrink-0 border-t hairline bg-[var(--glass-bg)] px-3 pb-[max(0.85rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-xl sm:px-6 sm:pb-4"
       role="search"
-      aria-label="Ask the mirror"
+      aria-label={t("Ask the mirror")}
     >
       <form
         onSubmit={(e) => {
@@ -63,7 +65,7 @@ export function QueryComposer() {
           }`}
         >
           <label htmlFor="mirror-query" className="sr-only">
-            Ask the mirror
+            {t("Ask the mirror")}
           </label>
           <textarea
             id="mirror-query"
@@ -74,23 +76,26 @@ export function QueryComposer() {
             onKeyDown={onKeyDown}
             placeholder={
               isMobile
-                ? "Ask the mirror... ✨"
-                : "Ask the mirror... ✨ e.g. Who are the Pleiadians, and how are they helping humanity evolve?"
+                ? t("Ask the mirror... ✨")
+                : t(
+                    "Ask the mirror... ✨ e.g. Who are the Pleiadians, and how are they helping humanity evolve?"
+                  )
             }
             className="nice-scroll max-h-[148px] flex-1 resize-none bg-transparent py-2.5 text-[14px] leading-relaxed text-foreground placeholder:text-muted-foreground/60 focus:outline-none sm:text-[14.5px]"
           />
           <button
             type="submit"
             disabled={!canSend}
-            aria-label="Transmit question to the mirror"
+            aria-label={t("Transmit question to the mirror")}
             className="focus-glow mb-0.5 flex size-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--cy)] to-[color-mix(in_srgb,var(--cy)_60%,#8f6bff)] text-[#031018] shadow-[0_0_20px_-6px_color-mix(in_srgb,var(--cy)_70%,transparent)] transition-all duration-300 hover:glow disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
           >
             <Send className="size-4" aria-hidden="true" />
           </button>
         </div>
         <p className="mono-label mt-2 hidden text-center text-[8px] text-muted-foreground/50 sm:block">
-          Enter to transmit · Shift + Enter for a new line · Free will honored
-          always
+          {t(
+            "Enter to transmit · Shift + Enter for a new line · Free will honored always"
+          )}
         </p>
       </form>
     </div>

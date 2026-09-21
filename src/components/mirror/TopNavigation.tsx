@@ -2,6 +2,7 @@
 
 import { Building2, BriefcaseBusiness, Menu, RotateCcw } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
+import { useT } from "@/lib/i18n";
 import { ThemeToggle } from "./ThemeToggle";
 import { toast } from "@/hooks/use-toast";
 
@@ -9,12 +10,13 @@ export function TopNavigation() {
   const openModal = useMirror((s) => s.openModal);
   const setMobileNavOpen = useMirror((s) => s.setMobileNavOpen);
   const resetField = useMirror((s) => s.resetField);
+  const t = useT();
 
   const handleReset = () => {
     resetField();
     toast({
-      title: "Field recalibrated",
-      description: "All scopes returned to origin. Free will honored always.",
+      title: t("Field recalibrated"),
+      description: t("All scopes returned to origin. Free will honored always."),
     });
   };
 
@@ -26,7 +28,7 @@ export function TopNavigation() {
           <button
             type="button"
             onClick={() => setMobileNavOpen(true)}
-            aria-label="Open galactic encyclopedia"
+            aria-label={t("Open galactic encyclopedia")}
             className="focus-glow flex size-9 shrink-0 items-center justify-center rounded-full border hairline text-muted-foreground transition-colors hover:text-foreground md:hidden"
           >
             <Menu className="size-4" aria-hidden="true" />
@@ -37,14 +39,14 @@ export function TopNavigation() {
               MIRROR ENTITY LABORATORY
             </h1>
             <p className="mono-label mt-0.5 truncate text-[8px] text-muted-foreground/80 sm:text-[9.5px]">
-              Interplanetary Channel · With Love ❤️
+              {t("Interplanetary Channel · With Love ❤️")}
             </p>
           </div>
         </div>
 
         {/* Right — actions */}
         <nav
-          aria-label="Primary"
+          aria-label={t("Primary")}
           className="flex shrink-0 items-center gap-2 sm:gap-2.5"
         >
           <button
@@ -53,7 +55,7 @@ export function TopNavigation() {
             className="focus-glow group flex h-9 items-center gap-2 rounded-full border hairline px-3 text-[12px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground hover:glow-sm sm:px-3.5"
           >
             <Building2 className="size-3.5 text-[var(--cy)]" aria-hidden="true" />
-            <span className="hidden sm:inline">Federation</span>
+            <span className="hidden sm:inline">{t("Federation")}</span>
           </button>
 
           <button
@@ -65,7 +67,7 @@ export function TopNavigation() {
               className="size-3.5 text-[var(--cy)]"
               aria-hidden="true"
             />
-            <span className="hidden sm:inline">Astral Jobs</span>
+            <span className="hidden sm:inline">{t("Astral Jobs")}</span>
           </button>
 
           <ThemeToggle />
@@ -73,8 +75,8 @@ export function TopNavigation() {
           <button
             type="button"
             onClick={handleReset}
-            aria-label="Recalibrate the field"
-            title="Recalibrate the field"
+            aria-label={t("Recalibrate the field")}
+            title={t("Recalibrate the field")}
             className="focus-glow group flex size-9 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground hover:glow-sm"
           >
             <RotateCcw

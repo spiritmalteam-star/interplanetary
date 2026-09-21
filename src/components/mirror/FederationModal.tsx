@@ -11,6 +11,7 @@ import {
   Users,
 } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
+import { useT } from "@/lib/i18n";
 import {
   federationBodies,
   federationPrinciples,
@@ -54,15 +55,25 @@ function Chip({ children }: { children: React.ReactNode }) {
 function Card({ card, tab }: { card: FederationCard; tab: Tab }) {
   const askMirror = useMirror((s) => s.askMirror);
   const closeModal = useMirror((s) => s.closeModal);
+  const t = useT();
   const [expanded, setExpanded] = useState(false);
 
   const ask = () => {
     const q =
       tab === "bodies"
-        ? `Please tell me about the ${card.name} of the Galactic Federation — their role, their members, and how they relate to Earth right now.`
+        ? t(
+            "Please tell me about the {name} of the Galactic Federation — their role, their members, and how they relate to Earth right now.",
+            { name: card.name }
+          )
         : tab === "treaties"
-          ? `Please explain "${card.name}" of the Galactic Federation — what it protects, and why it matters for humanity.`
-          : `Please teach me the principle of "${card.name}" as the Galactic Federation holds it — how can a human being practice it this week?`;
+          ? t(
+              "Please explain \"{name}\" of the Galactic Federation — what it protects, and why it matters for humanity.",
+              { name: card.name }
+            )
+          : t(
+              "Please teach me the principle of \"{name}\" as the Galactic Federation holds it — how can a human being practice it this week?",
+              { name: card.name }
+            );
     closeModal();
     void askMirror(q);
   };
@@ -99,11 +110,11 @@ function Card({ card, tab }: { card: FederationCard; tab: Tab }) {
               {card.name}
             </h4>
             <span className="mono-label shrink-0 rounded-full border border-[var(--cy)]/30 bg-[color-mix(in_srgb,var(--cy)_8%,transparent)] px-2 py-0.5 text-[8.5px] text-[var(--cy)]">
-              {card.badge}
+              {t(card.badge)}
             </span>
           </div>
           <p className="mono-label mt-1.5 text-[8.5px] text-[var(--pk)]/90">
-            {card.label}
+            {t(card.label)}
           </p>
         </div>
       </div>
@@ -114,7 +125,7 @@ function Card({ card, tab }: { card: FederationCard; tab: Tab }) {
       <div className="mt-3 flex items-center justify-between gap-2 border-t hairline pt-2.5">
         <span className="mono-label flex items-center gap-1.5 text-[8.5px] text-muted-foreground/80">
           <Users className="size-3 text-muted-foreground/70" aria-hidden="true" />
-          {card.footer}
+          {t(card.footer)}
         </span>
         <span className="flex shrink-0 items-center gap-3">
           <button
@@ -123,7 +134,7 @@ function Card({ card, tab }: { card: FederationCard; tab: Tab }) {
             aria-expanded={expanded}
             className="focus-glow mono-label flex items-center gap-1 text-[8.5px] text-muted-foreground transition-colors hover:text-foreground"
           >
-            Full dossier
+            {t("Full dossier")}
             <ChevronDown
               className={cn(
                 "size-3 transition-transform duration-300",
@@ -138,7 +149,7 @@ function Card({ card, tab }: { card: FederationCard; tab: Tab }) {
             className="focus-glow mono-label flex items-center gap-1 text-[8.5px] text-[var(--cy)] transition-opacity hover:opacity-80"
           >
             <Sparkles className="size-3" aria-hidden="true" />
-            Ask the Mirror
+            {t("Ask the Mirror")}
           </button>
         </span>
       </div>
@@ -148,7 +159,7 @@ function Card({ card, tab }: { card: FederationCard; tab: Tab }) {
           {body && (
             <>
               <div>
-                <h5 className="mono-label text-[8px] text-[var(--cy)]">Mandate</h5>
+                <h5 className="mono-label text-[8px] text-[var(--cy)]">{t("Mandate")}</h5>
                 <p className="mt-1 text-[12px] leading-relaxed text-foreground/85">
                   {body.mandate}
                 </p>
@@ -157,24 +168,24 @@ function Card({ card, tab }: { card: FederationCard; tab: Tab }) {
                 <div className="flex items-start gap-2 rounded-lg border hairline px-2.5 py-2">
                   <MapPin className="mt-0.5 size-3 shrink-0 text-[var(--pk)]" aria-hidden="true" />
                   <div>
-                    <p className="mono-label text-[7px] text-muted-foreground">Seat</p>
+                    <p className="mono-label text-[7px] text-muted-foreground">{t("Seat")}</p>
                     <p className="mt-0.5 text-[11px] leading-snug text-foreground/85">{body.seat}</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-2 rounded-lg border hairline px-2.5 py-2">
                   <CalendarClock className="mt-0.5 size-3 shrink-0 text-[var(--pk)]" aria-hidden="true" />
                   <div>
-                    <p className="mono-label text-[7px] text-muted-foreground">Founded</p>
+                    <p className="mono-label text-[7px] text-muted-foreground">{t("Founded")}</p>
                     <p className="mt-0.5 text-[11px] leading-snug text-foreground/85">{body.founded}</p>
                   </div>
                 </div>
               </div>
               <div>
-                <h5 className="mono-label text-[8px] text-[var(--cy)]">Fleet & assets</h5>
+                <h5 className="mono-label text-[8px] text-[var(--cy)]">{t("Fleet & assets")}</h5>
                 <p className="mt-1 text-[12px] leading-relaxed text-foreground/85">{body.fleet}</p>
               </div>
               <div>
-                <h5 className="mono-label text-[8px] text-[var(--cy)]">Jurisdiction</h5>
+                <h5 className="mono-label text-[8px] text-[var(--cy)]">{t("Jurisdiction")}</h5>
                 <div className="mt-1.5 flex flex-wrap gap-1.5">
                   {body.jurisdiction.map((j, i) => (
                     <Chip key={i}>{j}</Chip>
@@ -182,7 +193,7 @@ function Card({ card, tab }: { card: FederationCard; tab: Tab }) {
                 </div>
               </div>
               <div>
-                <h5 className="mono-label text-[8px] text-[var(--cy)]">Relation to Earth</h5>
+                <h5 className="mono-label text-[8px] text-[var(--cy)]">{t("Relation to Earth")}</h5>
                 <p className="mt-1 text-[12px] leading-relaxed text-foreground/85">{body.earthRelation}</p>
               </div>
             </>
@@ -192,14 +203,14 @@ function Card({ card, tab }: { card: FederationCard; tab: Tab }) {
             <>
               <div className="flex flex-wrap gap-x-5 gap-y-1">
                 <span className="mono-label text-[8px] text-muted-foreground">
-                  Signed · <span className="text-foreground/80">{treaty.signed}</span>
+                  {t("Signed")} · <span className="text-foreground/80">{treaty.signed}</span>
                 </span>
                 <span className="mono-label text-[8px] text-muted-foreground">
-                  Signatories · <span className="text-foreground/80">{treaty.signatories}</span>
+                  {t("Signatories")} · <span className="text-foreground/80">{treaty.signatories}</span>
                 </span>
               </div>
               <div>
-                <h5 className="mono-label text-[8px] text-[var(--cy)]">Clauses</h5>
+                <h5 className="mono-label text-[8px] text-[var(--cy)]">{t("Clauses")}</h5>
                 <ul className="mt-1.5 space-y-1.5">
                   {treaty.clauses.map((c, i) => (
                     <li key={i} className="flex items-start gap-2.5">
@@ -214,7 +225,7 @@ function Card({ card, tab }: { card: FederationCard; tab: Tab }) {
                 </ul>
               </div>
               <div>
-                <h5 className="mono-label text-[8px] text-[var(--cy)]">Effect</h5>
+                <h5 className="mono-label text-[8px] text-[var(--cy)]">{t("Effect")}</h5>
                 <p className="mt-1 text-[12px] leading-relaxed text-foreground/85">{treaty.effect}</p>
               </div>
             </>
@@ -223,11 +234,11 @@ function Card({ card, tab }: { card: FederationCard; tab: Tab }) {
           {principle && (
             <>
               <div>
-                <h5 className="mono-label text-[8px] text-[var(--cy)]">Codified</h5>
+                <h5 className="mono-label text-[8px] text-[var(--cy)]">{t("Codified")}</h5>
                 <p className="mt-1 text-[12px] leading-relaxed text-foreground/85">{principle.codified}</p>
               </div>
               <div>
-                <h5 className="mono-label text-[8px] text-[var(--cy)]">Clauses</h5>
+                <h5 className="mono-label text-[8px] text-[var(--cy)]">{t("Clauses")}</h5>
                 <ul className="mt-1.5 space-y-1.5">
                   {principle.clauses.map((c, i) => (
                     <li key={i} className="flex items-start gap-2.5">
@@ -242,7 +253,7 @@ function Card({ card, tab }: { card: FederationCard; tab: Tab }) {
                 </ul>
               </div>
               <div>
-                <h5 className="mono-label text-[8px] text-[var(--cy)]">Practice</h5>
+                <h5 className="mono-label text-[8px] text-[var(--cy)]">{t("Practice")}</h5>
                 <p className="mt-1 text-[12px] leading-relaxed text-foreground/85">{principle.practice}</p>
               </div>
             </>
@@ -256,6 +267,7 @@ function Card({ card, tab }: { card: FederationCard; tab: Tab }) {
 export function FederationModal() {
   const modal = useMirror((s) => s.modal);
   const closeModal = useMirror((s) => s.closeModal);
+  const t = useT();
   const [tab, setTab] = useState<Tab>("bodies");
 
   const open = modal?.type === "federation";
@@ -271,35 +283,37 @@ export function FederationModal() {
     <ModalShell
       open={open}
       onOpenChange={(o) => (o ? undefined : closeModal())}
-      title="Galactic Federation & Interstellar Treaties"
-      description="How diplomatic, interplanetary, and inter-reality governance actually works. Open any item for its full dossier — ask the Mirror for a transmission anytime."
+      title={t("Galactic Federation & Interstellar Treaties")}
+      description={t(
+        "How diplomatic, interplanetary, and inter-reality governance actually works. Open any item for its full dossier — ask the Mirror for a transmission anytime."
+      )}
       widthClass="sm:max-w-[620px]"
     >
-      <div className="flex gap-1.5 px-5 sm:px-6" role="tablist" aria-label="Federation archive sections">
-        {TABS.map((t) => (
+      <div className="flex gap-1.5 px-5 sm:px-6" role="tablist" aria-label={t("Federation archive sections")}>
+        {TABS.map(({ id, label }) => (
           <button
-            key={t.id}
+            key={id}
             type="button"
             role="tab"
-            aria-selected={tab === t.id}
-            onClick={() => setTab(t.id)}
+            aria-selected={tab === id}
+            onClick={() => setTab(id)}
             className={cn(
               "focus-glow flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-medium uppercase tracking-[0.14em] transition-all duration-300",
-              tab === t.id
+              tab === id
                 ? "border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--cy)_12%,transparent)] text-foreground glow-sm"
                 : "border-transparent text-muted-foreground hover:text-foreground"
             )}
           >
-            {t.id === "bodies" && (
+            {id === "bodies" && (
               <Users className="size-3" aria-hidden="true" />
             )}
-            {t.id === "treaties" && (
+            {id === "treaties" && (
               <ScrollText className="size-3" aria-hidden="true" />
             )}
-            {t.id === "principles" && (
+            {id === "principles" && (
               <Scale className="size-3" aria-hidden="true" />
             )}
-            {t.label}
+            {t(label)}
           </button>
         ))}
       </div>
@@ -310,7 +324,7 @@ export function FederationModal() {
         aria-label={tab}
       >
         <p className="mb-3 text-[11px] italic text-muted-foreground/80">
-          {TAB_INTRO[tab]}
+          {t(TAB_INTRO[tab])}
         </p>
         <div className="space-y-3">
           {cards.map((card) => (

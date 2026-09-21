@@ -3,10 +3,12 @@
 import { ChevronRight, Sparkles } from "lucide-react";
 import { suggestedQuestions } from "@/lib/data/science";
 import { useMirror } from "@/lib/mirror-store";
+import { useT } from "@/lib/i18n";
 
 export function QuestionCards() {
   const setDraft = useMirror((s) => s.setDraft);
   const focusComposer = useMirror((s) => s.focusComposer);
+  const t = useT();
 
   const choose = (q: string) => {
     setDraft(q);
@@ -15,7 +17,7 @@ export function QuestionCards() {
 
   return (
     <section
-      aria-label="Suggested questions"
+      aria-label={t("Suggested questions")}
       className="mx-auto mt-10 grid w-full max-w-[820px] grid-cols-1 gap-3 px-1 md:grid-cols-2"
     >
       {suggestedQuestions.map((q) => (
@@ -32,7 +34,7 @@ export function QuestionCards() {
             />
           </span>
           <span className="flex-1 text-[13px] leading-snug text-foreground/85 sm:text-[13.5px]">
-            {q}
+            {t(q)}
           </span>
           <ChevronRight
             className="size-4 shrink-0 text-muted-foreground/50 transition-all duration-300 group-hover:translate-x-1 group-hover:text-[var(--cy)]"

@@ -11,6 +11,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
+import { useT } from "@/lib/i18n";
 import { labFrequencies } from "@/lib/data/science";
 import { giftLines } from "@/lib/data/science";
 import { sectionImage } from "@/lib/entity-utils";
@@ -166,12 +167,16 @@ function BlueprintCard() {
   const resetLabDraft = useMirror((s) => s.resetLabDraft);
   const returnToObservatory = useMirror((s) => s.returnToObservatory);
   const labIntensity = useMirror((s) => s.labIntensity);
+  const t = useT();
 
   if (!blueprint) return null;
 
   const discuss = () => {
     void askMirror(
-      `I have just charged an intention called "${blueprint.title}" in the manifesting laboratory. How can I best hold and act on it?`
+      t(
+        "I have just charged an intention called \"{title}\" in the manifesting laboratory. How can I best hold and act on it?",
+        { title: blueprint.title }
+      )
     );
   };
 
@@ -205,7 +210,7 @@ function BlueprintCard() {
           <SigilForIntent text={blueprint.title} size={40} />
           <div className="text-center">
             <p className="mono-label text-[8.5px] text-muted-foreground">
-              Manifestation blueprint
+              {t("Manifestation blueprint")}
             </p>
             <h3 className="scope-gradient-text text-[20px] font-semibold sm:text-[23px]">
               {blueprint.title}
@@ -217,7 +222,7 @@ function BlueprintCard() {
         <div className="mx-auto mt-6 max-w-[640px] space-y-5">
           <section>
             <h4 className="mono-label text-[8.5px] text-[var(--scope-a)]">
-              Anchor this field state first
+              {t("Anchor this field state first")}
             </h4>
             <p className="mt-1.5 text-[13.5px] leading-[1.8] text-foreground/88">
               {blueprint.field_state}
@@ -226,7 +231,7 @@ function BlueprintCard() {
 
           <section className="rounded-xl border hairline bg-[color-mix(in_srgb,var(--scope-a)_6%,transparent)] p-4">
             <h4 className="mono-label text-[8.5px] text-[var(--scope-a)]">
-              Visualization · three breaths
+              {t("Visualization · three breaths")}
             </h4>
             <p className="mt-1.5 text-[13.5px] italic leading-[1.8] text-foreground/85">
               {blueprint.visualization}
@@ -235,7 +240,7 @@ function BlueprintCard() {
 
           <section>
             <h4 className="mono-label text-[8.5px] text-[var(--scope-a)]">
-              Give it hands · three small actions
+              {t("Give it hands · three small actions")}
             </h4>
             <ol className="mt-2 space-y-2.5">
               {blueprint.micro_actions.map((a, i) => (
@@ -256,7 +261,7 @@ function BlueprintCard() {
           </section>
 
           <div className="rounded-xl border hairline py-5 text-center">
-            <h4 className="mono-label text-[8.5px] text-[var(--scope-a)]">Seal it with</h4>
+            <h4 className="mono-label text-[8.5px] text-[var(--scope-a)]">{t("Seal it with")}</h4>
             <p className="scope-gradient-text mx-auto mt-2 max-w-[480px] font-serif text-[17px] italic leading-relaxed sm:text-[19px]">
               “{blueprint.affirmation}”
             </p>
@@ -264,13 +269,13 @@ function BlueprintCard() {
 
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="rounded-xl border hairline p-3.5">
-              <h4 className="mono-label text-[8px] text-muted-foreground">Aligned window</h4>
+              <h4 className="mono-label text-[8px] text-muted-foreground">{t("Aligned window")}</h4>
               <p className="mt-1.5 text-[12px] leading-relaxed text-foreground/80">
                 {blueprint.window}
               </p>
             </div>
             <div className="rounded-xl border border-[var(--gd)]/25 bg-[color-mix(in_srgb,var(--gd)_6%,transparent)] p-3.5">
-              <h4 className="mono-label text-[8px] text-[var(--gd)]">Honest note</h4>
+              <h4 className="mono-label text-[8px] text-[var(--gd)]">{t("Honest note")}</h4>
               <p className="mt-1.5 text-[12px] leading-relaxed text-foreground/80">
                 {blueprint.caution}
               </p>
@@ -279,7 +284,9 @@ function BlueprintCard() {
         </div>
 
         <p className="mono-label mt-6 text-center text-[8px] text-muted-foreground/60">
-          Chamber intensity {labIntensity}/10 · Free will honored always
+          {t("Chamber intensity {n}/10 · Free will honored always", {
+            n: labIntensity,
+          })}
         </p>
 
         <div className="mt-5 flex flex-wrap items-center justify-center gap-2.5">
@@ -293,7 +300,7 @@ function BlueprintCard() {
             }}
           >
             <Sparkles className="size-3.5" aria-hidden="true" />
-            Discuss in the Observatory
+            {t("Discuss in the Observatory")}
           </button>
           <button
             type="button"
@@ -301,7 +308,7 @@ function BlueprintCard() {
             className="focus-glow flex items-center gap-2 rounded-full border hairline px-4 py-2 text-[12px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
           >
             <RefreshCw className="size-3.5" aria-hidden="true" />
-            Charge a new intention
+            {t("Charge a new intention")}
           </button>
           <button
             type="button"
@@ -309,7 +316,7 @@ function BlueprintCard() {
             className="focus-glow flex items-center gap-2 rounded-full border hairline px-4 py-2 text-[12px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
           >
             <ArrowLeft className="size-3.5" aria-hidden="true" />
-            Return to the Observatory
+            {t("Return to the Observatory")}
           </button>
         </div>
       </div>
@@ -331,6 +338,7 @@ export function ManifestationLab() {
   const labError = useMirror((s) => s.labError);
   const chargeIntention = useMirror((s) => s.chargeIntention);
   const exitLab = useMirror((s) => s.exitLab);
+  const t = useT();
 
   const [phase, setPhase] = useState(0);
   const phases = [
@@ -355,8 +363,8 @@ export function ManifestationLab() {
   const handleGift = () => {
     const line = giftLines[Math.floor(Math.random() * giftLines.length)];
     toast({
-      title: "✦ A gift from the stars",
-      description: line,
+      title: t("✦ A gift from the stars"),
+      description: t(line),
       duration: 7000,
     });
   };
@@ -366,7 +374,7 @@ export function ManifestationLab() {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-      aria-label="Reality Manifesting Laboratory"
+      aria-label={t("Reality Manifesting Laboratory")}
       className="scope-manifesting mx-auto w-full max-w-[880px] px-1 pb-8 pt-8 sm:pt-10"
     >
       {/* header */}
@@ -391,16 +399,17 @@ export function ManifestationLab() {
               aria-hidden="true"
             />
             <span className="mono-label text-[9px]" style={{ color: "var(--scope-a)" }}>
-              Reality Manifesting Laboratory
+              {t("Reality Manifesting Laboratory")}
             </span>
           </div>
           <h2 className="scope-gradient-text text-[26px] font-semibold leading-tight sm:text-[32px]">
-            Refine Reality
+            {t("Refine Reality")}
           </h2>
           <p className="max-w-[560px] text-[13.5px] leading-relaxed text-muted-foreground">
-            An advanced chamber where intentions are distilled into field states,
-            small real-world actions and a sealed affirmation. The mirror
-            reflects; <span className="text-foreground/85">you</span> create.
+            {t(
+              "An advanced chamber where intentions are distilled into field states, small real-world actions and a sealed affirmation. The mirror reflects;"
+            )}{" "}
+            <span className="text-foreground/85">{t("you")}</span> {t("create.")}
           </p>
         </div>
       </div>
@@ -414,13 +423,13 @@ export function ManifestationLab() {
               htmlFor="lab-intention"
               className="mono-label text-[8.5px] text-[var(--scope-a)]"
             >
-              Intention · what do you choose to create?
+              {t("Intention · what do you choose to create?")}
             </label>
             <textarea
               id="lab-intention"
               value={labIntention}
               onChange={(e) => setLabIntention(e.target.value)}
-              placeholder="Speak it plainly — the chamber understands plain words best…"
+              placeholder={t("Speak it plainly — the chamber understands plain words best…")}
               rows={3}
               maxLength={400}
               className="focus-glow mt-2 w-full resize-none rounded-xl border hairline bg-transparent px-3.5 py-3 text-[13.5px] leading-relaxed text-foreground placeholder:text-muted-foreground/60"
@@ -430,12 +439,12 @@ export function ManifestationLab() {
             </p>
 
             <h3 className="mono-label mt-4 text-[8.5px] text-[var(--scope-a)]">
-              Emotional frequency · the carrier wave
+              {t("Emotional frequency · the carrier wave")}
             </h3>
             <div
               className="mt-2 flex flex-wrap gap-1.5"
               role="radiogroup"
-              aria-label="Emotional frequency"
+              aria-label={t("Emotional frequency")}
             >
               {labFrequencies.map((f) => {
                 const active = f.id === labEmotion;
@@ -445,7 +454,7 @@ export function ManifestationLab() {
                     type="button"
                     role="radio"
                     aria-checked={active}
-                    title={f.hint}
+                    title={t(f.hint)}
                     onClick={() => setLabEmotion(f.id)}
                     className={cn(
                       "focus-glow flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] transition-all duration-300",
@@ -465,7 +474,7 @@ export function ManifestationLab() {
                     }
                   >
                     <span aria-hidden="true">{f.glyph}</span>
-                    {f.label}
+                    {t(f.label)}
                   </button>
                 );
               })}
@@ -473,7 +482,7 @@ export function ManifestationLab() {
 
             <div className="mt-5 flex items-center justify-between gap-4">
               <h3 className="mono-label shrink-0 text-[8.5px] text-[var(--scope-a)]">
-                Chamber intensity
+                {t("Chamber intensity")}
               </h3>
               <span
                 className="mono-label shrink-0 rounded-full border px-2 py-0.5 text-[9px]"
@@ -491,13 +500,13 @@ export function ManifestationLab() {
               max={10}
               step={1}
               onValueChange={(v) => setLabIntensity(v[0] ?? 6)}
-              aria-label="Chamber intensity"
+              aria-label={t("Chamber intensity")}
               className="mt-2.5 [&_[data-slot=slider-range]]:bg-[var(--scope-a)] [&_[data-slot=slider-thumb]]:border-[var(--scope-a)]"
             />
 
             {labError && (
               <p className="mt-4 rounded-lg border border-[var(--destructive)]/30 bg-[color-mix(in_srgb,var(--destructive)_8%,transparent)] px-3 py-2 text-[12px] text-foreground/85">
-                {labError}
+                {t(labError)}
               </p>
             )}
 
@@ -518,18 +527,19 @@ export function ManifestationLab() {
               }}
             >
               <Zap className="size-4" aria-hidden="true" />
-              Charge the Chamber
+              {t("Charge the Chamber")}
             </button>
             <p className="mt-2 text-center text-[10.5px] leading-relaxed text-muted-foreground/70">
-              Min. 8 characters · The chamber never promises outcomes — it
-              sharpens alignment.
+              {t(
+                "Min. 8 characters · The chamber never promises outcomes — it sharpens alignment."
+              )}
             </p>
           </div>
 
           {/* chamber column */}
           <div className="rounded-2xl glass p-5 sm:p-6">
             <h3 className="mono-label text-center text-[8.5px] text-[var(--scope-a)]">
-              {labStage === "charging" ? "Charging…" : "Chamber"}
+              {labStage === "charging" ? t("Charging…") : t("Chamber")}
             </h3>
             <div className="mt-4">
               <ChargingOrb
@@ -540,7 +550,7 @@ export function ManifestationLab() {
             {labStage === "charging" ? (
               <div className="mt-5 text-center" aria-live="polite">
                 <p className="mono-label text-[8.5px] text-muted-foreground">
-                  {phases[phase]}
+                  {t(phases[phase])}
                 </p>
                 <div className="mx-auto mt-3 h-1 w-3/4 overflow-hidden rounded-full bg-[color-mix(in_srgb,var(--scope-a)_12%,transparent)]">
                   <div
@@ -556,15 +566,15 @@ export function ManifestationLab() {
             ) : (
               <div className="mt-5 text-center">
                 <p className="mono-label text-[8px] text-muted-foreground/70">
-                  Sigil forge
+                  {t("Sigil forge")}
                 </p>
                 <div className="mt-2 flex justify-center">
                   <SigilForIntent text={labIntention} size={104} />
                 </div>
                 <p className="mt-2 text-[10.5px] italic leading-relaxed text-muted-foreground/70">
                   {labIntention.trim()
-                    ? "Your sigil, awaiting charge."
-                    : "Your sigil will take shape as you write."}
+                    ? t("Your sigil, awaiting charge.")
+                    : t("Your sigil will take shape as you write.")}
                 </p>
               </div>
             )}
@@ -586,7 +596,7 @@ export function ManifestationLab() {
             className="size-3.5 transition-transform duration-300 group-hover:-translate-x-0.5"
             aria-hidden="true"
           />
-          Return to the Observatory
+          {t("Return to the Observatory")}
         </button>
         <button
           type="button"
@@ -594,13 +604,14 @@ export function ManifestationLab() {
           className="focus-glow flex items-center gap-2 rounded-full border hairline px-4 py-2 text-[12px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
         >
           <Gift className="size-3.5" aria-hidden="true" />
-          A gift from the stars
+          {t("A gift from the stars")}
         </button>
       </div>
 
       <p className="mono-label mt-5 text-center text-[8px] text-muted-foreground/60">
-        Manifesting complements action · it never replaces it · Free will honored
-        always ❤️
+        {t(
+          "Manifesting complements action · it never replaces it · Free will honored always ❤️"
+        )}
       </p>
     </motion.section>
   );
