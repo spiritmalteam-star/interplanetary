@@ -112,6 +112,24 @@ export const federationBodies: FederationCard[] = [
       "The federation's translators between laboratory and legend. The Procyon Delegation curates which documented findings are released to awakening worlds, and in what sequence, so that discovery arrives as invitation rather than shock.",
     footer: "Members: 31 research collectives",
   },
+  {
+    name: "The Andromedan Mediation Circle",
+    badge: "5D – 9D",
+    label: "Standing mediation between civilizations",
+    imageKey: "fed-mediation",
+    description:
+      "The federation's standing mediation circle, convened wherever two member civilizations cannot retune a dispute alone. It borrows the Andromedan method — expand the perspective until the argument dissolves — and adds procedure: a quorum of neutral delegates, a sealed record, and a written settlement each party may leave but rarely does. Most cases close before the third sitting.",
+    footer: "Convened at Zenith Gate · Neutral delegations",
+  },
+  {
+    name: "The Epsilon Conservatory",
+    badge: "4D – 7D",
+    label: "Living archive of biological records",
+    imageKey: "fed-conservatory",
+    description:
+      "The federation's living-archive conservatory — part library, part seed vault, part hospital for ecosystems. Stewarded under the Bio-Ethical Seeding Accord, it keeps the biological records of every catalogued world, germline reserves of ten thousand species, and the field teams who still knock before entering a young biosphere. The new Interplanetary Biology wing opens its holdings to the record for the first time.",
+    footer: "Stewarded with the Epsilon Eridani Gardeners",
+  },
 ];
 
 export const federationTreaties: FederationCard[] = [
@@ -187,6 +205,78 @@ export const federationTreaties: FederationCard[] = [
       "Designates worlds — and whole orbital habitats — where beings fleeing conquest, collapse or coercion may land without question. Sanctuary cannot be revoked by treaty, debt or lineage. The Act's single sentence is carved above every port: arrive, and be unfinished.",
     footer: "Co-stewarded by the Agarthan Network",
   },
+  {
+    name: "The Tuning Hall Concord",
+    badge: "Sound Accord",
+    label: "Tonal communication standards",
+    imageKey: "treaty-09",
+    description:
+      "Vega Concordium law on how civilizations may sound across shared space. Every broadcast travels inside an agreed harmonic band, dissonance is treated as a diplomatic incident rather than an insult, and silence between bands is held sacred. Drafter and keeper alike, the Concordium retunes conflicts before they become incidents.",
+    footer: "Kept by the Vega Concordium since the Lyran Accords",
+  },
+  {
+    name: "The Archive Ring Covenant",
+    badge: "Memory Covenant",
+    label: "Shared records & consent ledgers",
+    imageKey: "treaty-10",
+    description:
+      "The Zeta Reticulan Archives' covenant on shared record-keeping. What is recorded of a people belongs first and finally to that people; every observation ledger carries a consent line, and entries without one are sealed rather than deleted. The record serves the living, not the recorder.",
+    footer: "Sealed in the Archive Ring of Zeta Reticuli",
+  },
+  {
+    name: "The Omkari Resonance Act",
+    badge: "Harmonic Law",
+    label: "Standardized harmonic broadcasting",
+    imageKey: "treaty-11",
+    description:
+      "Proclaimed in the Great Omkari Hall above Sirius B's ocean, the Act standardizes harmonic broadcasting frequencies so that a tone sent in grief is never received as triumph. Every band carries a tone-signature naming its intent before its content, and the cetacean councils hold veto over bands that cross the ocean deeps.",
+    footer: "Proclaimed in the Great Omkari Hall, Sirius B",
+  },
+  {
+    name: "The Guardian Worlds Compact",
+    badge: "Stewardship Compact",
+    label: "Protection for young ecosystems",
+    imageKey: "treaty-12",
+    description:
+      "The stewardship compact protecting young ecosystems and seed worlds until they can speak for themselves — and listening for the first word. No harvest above replacement, no study that leaves the studied worse, and guardians who serve the world, never the reverse. The Epsilon Eridani Gardeners keep the Compact's registers.",
+    footer: "Kept by the Gardeners of Epsilon Eridani",
+  },
+  {
+    name: "The Open Sky Understanding",
+    badge: "Contact Protocol",
+    label: "First-contact arrival protocols",
+    imageKey: "treaty-13",
+    description:
+      "The airspace and arrival etiquette of first contact: arrive announced, above the clouds, in colors the young can see. No vessel descends before the sky's owner answers — and even silence is an answer, and is honored. The first gift offered is a view of the stars from outside, never a treaty.",
+    footer: "Binding on all arriving fleets",
+  },
+  {
+    name: "The Water Worlds Convention",
+    badge: "Ocean Convention",
+    label: "Protection for water worlds",
+    imageKey: "treaty-14",
+    description:
+      "The protection convention for ocean civilizations and water worlds. A water world's deeps are sovereign territory, surface treaties end at the thermocline, and ocean song is treated as testimony in any dispute that crosses a living sea. No sonar, dredge or dam of federated origin touches an ocean without its councils' consent.",
+    footer: "Ratified beneath the cetacean councils of Sirius B",
+  },
+  {
+    name: "The Elder Voices Undertaking",
+    badge: "Elder Etiquette",
+    label: "Receiving ancestral counsel",
+    imageKey: "treaty-15",
+    description:
+      "Etiquette for receiving ancestral transmissions and the counsel of elder civilizations: heard standing, answered slowly, never forwarded without leave. An ancestral voice belongs to its descendants first — the archive borrows, it does not keep. No council may invoke an elder it has not sat with in silence.",
+    footer: "Kept by the Lyran Founding Council",
+  },
+  {
+    name: "The Passage Accord",
+    badge: "Safe Transit",
+    label: "Corridors between star systems",
+    imageKey: "treaty-16",
+    description:
+      "The safe-transit accord threading corridors between the star systems. Within them, no question is asked of any honest traveler; corridors detour around cradle-worlds, sanctuaries and grieving fleets, always. A corridor closed for war is reopened by treaty, never by victory.",
+    footer: "Warded under Ashtar Command courtesy rules",
+  },
 ];
 
 export const federationPrinciples: FederationCard[] = [
@@ -260,6 +350,78 @@ export const federationPrinciples: FederationCard[] = [
     imageKey: "principle-joy",
     description:
       "Alliances survive on more than treaties. The Clause obliges members to show up for each other's festivals, name-days and graduations of whole species — because presence at another's joy is the deepest treaty a civilization can sign.",
+    footer: "Held by all signatories",
+  },
+  {
+    name: "The Keeping of Names",
+    badge: "Principle 09",
+    label: "Names are sacred, never taken",
+    imageKey: "principle-09",
+    description:
+      "A name is given once, by those with the right to give it, and is sacred thereafter. Names are never taken — not in jest, not in war, not in kindness. The federation's diplomacy, its archives and its friendships are all built on this single restraint.",
+    footer: "Held by all signatories",
+  },
+  {
+    name: "The Right to Silence",
+    badge: "Principle 10",
+    label: "Any being may decline contact",
+    imageKey: "principle-10",
+    description:
+      "Any being — a person, a fleet, a whole world — may decline contact, once or forever, and the declining is honored without explanation. An answer postponed is not an answer refused. The federation learned long ago that pressure feels the same from above as it does from below.",
+    footer: "Held by all signatories",
+  },
+  {
+    name: "The Ledger of Gifts",
+    badge: "Principle 11",
+    label: "Reciprocity in every exchange",
+    imageKey: "principle-11",
+    description:
+      "Every exchange is recorded as a gift given and a gift owed — both sides of the page, always. A gift accepted without the intention to reciprocate is a debt, and debts are treated as symptoms. Member worlds balance their ledgers publicly each cycle, without shame.",
+    footer: "Held by all signatories",
+  },
+  {
+    name: "The Slow Answer",
+    badge: "Principle 12",
+    label: "Wisdom before speed",
+    imageKey: "principle-12",
+    description:
+      "An answer that cannot wait a full turning probably was not an answer. Councils that must reply quickly attach their haste to the reply, like a stain they cannot remove. Wisdom before speed is not slowness — it is the discipline of letting a question finish.",
+    footer: "Held by all signatories",
+  },
+  {
+    name: "The Honored Question",
+    badge: "Principle 13",
+    label: "Every question deserves truth",
+    imageKey: "principle-13",
+    description:
+      "Every sincere question deserves a true answer, at whatever depth the asker can receive it. \u201cI do not know yet\u201d counts as a true answer; a comfortable guess does not. Federation academies open every seminar by collecting the students' questions first, and letting the curriculum follow.",
+    footer: "Held by all signatories",
+  },
+  {
+    name: "The Circle Kept Unbroken",
+    badge: "Principle 14",
+    label: "Continuity across generations",
+    imageKey: "principle-14",
+    description:
+      "No duty, debt or grief of a council dies with its members. Each generation keeps the circle it inherited and widens it where it can. Every federation body seats its youngest member directly beside its oldest, and the minutes are read aloud across the handover.",
+    footer: "Held by all signatories",
+  },
+  {
+    name: "The Grieving Protocol",
+    badge: "Principle 15",
+    label: "Shared mourning between civilizations",
+    imageKey: "principle-15",
+    description:
+      "Grief is shared property. A loss to one civilization is mourned by the circle, in the circle's own rites, and no member mourns alone unless it asks to. When a member world loses a ship, a colony or a generation, the festival fleets are converted to mourning fleets, and the quiet hours are doubled.",
+    footer: "Held by all signatories",
+  },
+  {
+    name: "The First Light Rule",
+    badge: "Principle 16",
+    label: "New worlds met with wonder",
+    imageKey: "principle-16",
+    description:
+      "New civilizations are greeted with wonder, never fear — the sky belongs to whoever has just opened their eyes in it. The arriving elder adjusts its face first; the young world owes no composure at all. First-contact crews are chosen for their capacity to be delighted.",
     footer: "Held by all signatories",
   },
 ];

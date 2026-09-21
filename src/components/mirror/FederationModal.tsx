@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
+  ArrowLeft,
   CalendarClock,
-  ChevronDown,
+  ChevronRight,
   MapPin,
   Scale,
   ScrollText,
@@ -25,7 +26,12 @@ import {
 import { sectionImage } from "@/lib/entity-utils";
 import { ModalShell } from "./ModalShell";
 import { cn } from "@/lib/utils";
-import type { FederationCard } from "@/lib/mirror-types";
+import type {
+  FederationBodyProfile,
+  FederationCard,
+  PrincipleProfile,
+  TreatyProfile,
+} from "@/lib/mirror-types";
 
 type Tab = "bodies" | "treaties" | "principles";
 
@@ -35,58 +41,71 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "principles", label: "Principles" },
 ];
 
-const TAB_INTRO: Record<Tab, string> = {
-  bodies:
-    "The 12 governing and coordinating bodies of the galactic family. Open any body for its full institutional dossier.",
-  treaties:
-    "The 8 accords that hold the federation together — and hold it back from us. Open any treaty for its clauses.",
-  principles:
-    "The 8 operating principles every signatory civilization is asked to keep. Open any principle for its practice.",
-};
+type TranslateFn = (key: string, params?: Record<string, string | number>) => string;
 
-function Chip({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="mono-label rounded-full border hairline px-2 py-0.5 text-[8px] text-muted-foreground">
-      {children}
-    </span>
+/** Per-tab intro lines. Counts are derived from the data arrays — never hardcoded. */
+function tabIntro(tab: Tab): { key: string; params: Record<string, string | number> } {
+  switch (tab) {
+    case "bodies":
+      return {
+        key: "The governing and coordinating bodies of the galactic family — {n} at present. Open any entry to view its full record and emblem.",
+        params: { n: federationBodies.length },
+      };
+    case "treaties":
+      return {
+        key: "The {n} accords that hold the federation together — and hold it back from us. Open any entry to view its full record and emblem.",
+        params: { n: federationTreaties.length },
+      };
+    case "principles":
+      return {
+        key: "The {n} operating principles every signatory civilization is asked to keep. Open any entry to view its full record and emblem.",
+        params: { n: federationPrinciples.length },
+      };
+  }
+}
+
+/** The per-tab "Ask the Mirror" prompt, interpolated with the item's name. */
+function askPromptFor(tab: Tab, name: string, t: TranslateFn): string {
+  if (tab === "bodies") {
+    return t(
+      "Please tell me about the {name} of the Galactic Federation — their role, their members, and how they relate to Earth right now.",
+      { name }
+    );
+  }
+  if (tab === "treaties") {
+    return t(
+      "Please explain \"{name}\" of the Galactic Federation — what it protects, and why it matters for humanity.",
+      { name }
+    );
+  }
+  return t(
+    "Please teach me the principle of \"{name}\" as the Galactic Federation holds it — how can a human being practice it this week?",
+    { name }
   );
 }
 
-function Card({ card, tab }: { card: FederationCard; tab: Tab }) {
-  const askMirror = useMirror((s) => s.askMirror);
-  const closeModal = useMirror((s) => s.closeModal);
+function DiamondBullet() {
+  return (
+    <span
+      className="mt-[7px] inline-block size-1.5 shrink-0 rotate-45"
+      style={{ background: "var(--cy)" }}
+      aria-hidden="true"
+    />
+  );
+}
+
+/* ---------------- list view — each card is an openable record ---------------- */
+
+function CardRow({ card, onOpen }: { card: FederationCard; onOpen: () => void }) {
   const t = useT();
-  const [expanded, setExpanded] = useState(false);
-
-  const ask = () => {
-    const q =
-      tab === "bodies"
-        ? t(
-            "Please tell me about the {name} of the Galactic Federation — their role, their members, and how they relate to Earth right now.",
-            { name: card.name }
-          )
-        : tab === "treaties"
-          ? t(
-              "Please explain \"{name}\" of the Galactic Federation — what it protects, and why it matters for humanity.",
-              { name: card.name }
-            )
-          : t(
-              "Please teach me the principle of \"{name}\" as the Galactic Federation holds it — how can a human being practice it this week?",
-              { name: card.name }
-            );
-    closeModal();
-    void askMirror(q);
-  };
-
-  const body =
-    tab === "bodies" ? federationBodyProfiles[card.name] : undefined;
-  const treaty =
-    tab === "treaties" ? federationTreatyProfiles[card.name] : undefined;
-  const principle =
-    tab === "principles" ? federationPrincipleProfiles[card.name] : undefined;
 
   return (
-    <article className="group rounded-xl border hairline bg-[var(--glass-bg-soft)] p-4 transition-colors duration-300 hover:border-[var(--hairline-hover)]">
+    <button
+      type="button"
+      onClick={onOpen}
+      aria-label={t("Open {name}", { name: card.name })}
+      className="focus-glow group w-full rounded-xl border hairline bg-[var(--glass-bg-soft)] p-4 text-left transition-all duration-300 hover:-translate-y-0.5 hover:border-[var(--hairline-hover)] hover:glow-sm"
+    >
       <div className="flex items-start gap-3">
         {card.imageKey && (
           <span
@@ -127,43 +146,115 @@ function Card({ card, tab }: { card: FederationCard; tab: Tab }) {
           <Users className="size-3 text-muted-foreground/70" aria-hidden="true" />
           {t(card.footer)}
         </span>
-        <span className="flex shrink-0 items-center gap-3">
-          <button
-            type="button"
-            onClick={() => setExpanded((v) => !v)}
-            aria-expanded={expanded}
-            className="focus-glow mono-label flex items-center gap-1 text-[8.5px] text-muted-foreground transition-colors hover:text-foreground"
-          >
-            {t("Full dossier")}
-            <ChevronDown
-              className={cn(
-                "size-3 transition-transform duration-300",
-                expanded && "rotate-180"
-              )}
-              aria-hidden="true"
+        <span className="mono-label flex shrink-0 items-center gap-1 text-[8.5px] text-muted-foreground/70 transition-colors duration-300 group-hover:text-[var(--cy)]">
+          {t("Full dossier")}
+          <ChevronRight
+            className="size-3 transition-transform duration-300 group-hover:translate-x-0.5"
+            aria-hidden="true"
+          />
+        </span>
+      </div>
+    </button>
+  );
+}
+
+/* ---------------- detail view — the item's full record ---------------- */
+
+function CardDetail({
+  card,
+  tab,
+  onBack,
+}: {
+  card: FederationCard;
+  tab: Tab;
+  onBack: () => void;
+}) {
+  const askMirror = useMirror((s) => s.askMirror);
+  const closeModal = useMirror((s) => s.closeModal);
+  const t = useT();
+  const [heroFailed, setHeroFailed] = useState(false);
+
+  // Deep dossiers are keyed by name; lookups may miss and are rendered only when present.
+  const body: FederationBodyProfile | undefined =
+    tab === "bodies" ? federationBodyProfiles[card.name] : undefined;
+  const treaty: TreatyProfile | undefined =
+    tab === "treaties" ? federationTreatyProfiles[card.name] : undefined;
+  const principle: PrincipleProfile | undefined =
+    tab === "principles" ? federationPrincipleProfiles[card.name] : undefined;
+  const hasDossier = Boolean(body || treaty || principle);
+
+  const ask = () => {
+    closeModal();
+    void askMirror(askPromptFor(tab, card.name, t));
+  };
+
+  return (
+    <div className="animate-rise-in space-y-4">
+      <button
+        type="button"
+        onClick={onBack}
+        className="focus-glow mono-label inline-flex items-center gap-1.5 rounded-full border hairline px-2.5 py-1 text-[8.5px] text-muted-foreground transition-colors hover:text-foreground"
+      >
+        <ArrowLeft className="size-3" aria-hidden="true" />
+        {t("Back to the federation record")}
+      </button>
+
+      {card.imageKey && !heroFailed && (
+        <figure className="relative m-0">
+          <div className="relative h-44 overflow-hidden rounded-xl border hairline shadow-[0_0_40px_-14px_color-mix(in_srgb,var(--cy)_30%,transparent)] sm:h-52">
+            <img
+              src={sectionImage(card.imageKey)}
+              alt={t("AI-rendered scene impression of the {name}", { name: card.name })}
+              className="size-full object-cover"
+              onError={() => setHeroFailed(true)}
             />
-          </button>
-          <button
-            type="button"
-            onClick={ask}
-            className="focus-glow mono-label flex items-center gap-1 text-[8.5px] text-[var(--cy)] transition-opacity hover:opacity-80"
-          >
-            <Sparkles className="size-3" aria-hidden="true" />
-            {t("Ask the Mirror")}
-          </button>
+            <div
+              className="absolute inset-0"
+              style={{
+                background:
+                  "linear-gradient(180deg, transparent 45%, color-mix(in srgb, var(--card) 72%, transparent) 100%)",
+              }}
+            />
+          </div>
+          <figcaption className="mono-label absolute bottom-2 left-3 rounded-full border hairline bg-[var(--glass-bg-strong)] px-2 py-0.5 text-[7.5px] text-muted-foreground">
+            {t("AI visualization · impressionistic")}
+          </figcaption>
+        </figure>
+      )}
+
+      <div className="flex flex-wrap items-center gap-1.5">
+        <span className="mono-label rounded-full border border-[var(--cy)]/30 bg-[color-mix(in_srgb,var(--cy)_8%,transparent)] px-2 py-0.5 text-[8.5px] text-[var(--cy)]">
+          {t(card.badge)}
+        </span>
+        <span className="mono-label rounded-full border border-[var(--pk)]/30 bg-[color-mix(in_srgb,var(--pk)_8%,transparent)] px-2 py-0.5 text-[8.5px] text-[var(--pk)]">
+          {t(card.label)}
         </span>
       </div>
 
-      {expanded && (
-        <div className="animate-rise-in mt-3 space-y-3 rounded-lg border hairline bg-[color-mix(in_srgb,var(--cy)_4%,transparent)] p-3.5">
+      <div>
+        <h3 className="text-[15px] font-semibold uppercase tracking-[0.06em] text-foreground">
+          {card.name}
+        </h3>
+        <p className="mono-label mt-1.5 flex items-center gap-1.5 text-[8.5px] text-muted-foreground/80">
+          <Users className="size-3 text-muted-foreground/70" aria-hidden="true" />
+          {t(card.footer)}
+        </p>
+      </div>
+
+      <p className="text-[13px] leading-relaxed text-foreground/85">{card.description}</p>
+
+      {hasDossier && (
+        <div className="space-y-4 rounded-xl border hairline bg-[color-mix(in_srgb,var(--cy)_4%,transparent)] p-4">
+          <h4 className="mono-label text-[8px] text-[var(--cy)]">{t("Full dossier")}</h4>
+
           {body && (
             <>
-              <div>
+              <section>
                 <h5 className="mono-label text-[8px] text-[var(--cy)]">{t("Mandate")}</h5>
                 <p className="mt-1 text-[12px] leading-relaxed text-foreground/85">
                   {body.mandate}
                 </p>
-              </div>
+              </section>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 <div className="flex items-start gap-2 rounded-lg border hairline px-2.5 py-2">
                   <MapPin className="mt-0.5 size-3 shrink-0 text-[var(--pk)]" aria-hidden="true" />
@@ -180,22 +271,27 @@ function Card({ card, tab }: { card: FederationCard; tab: Tab }) {
                   </div>
                 </div>
               </div>
-              <div>
+              <section>
                 <h5 className="mono-label text-[8px] text-[var(--cy)]">{t("Fleet & assets")}</h5>
                 <p className="mt-1 text-[12px] leading-relaxed text-foreground/85">{body.fleet}</p>
-              </div>
-              <div>
+              </section>
+              <section>
                 <h5 className="mono-label text-[8px] text-[var(--cy)]">{t("Jurisdiction")}</h5>
-                <div className="mt-1.5 flex flex-wrap gap-1.5">
+                <ul className="mt-1.5 space-y-1.5">
                   {body.jurisdiction.map((j, i) => (
-                    <Chip key={i}>{j}</Chip>
+                    <li key={i} className="flex items-start gap-2.5">
+                      <DiamondBullet />
+                      <span className="text-[12px] leading-relaxed text-foreground/85">{j}</span>
+                    </li>
                   ))}
-                </div>
-              </div>
-              <div>
+                </ul>
+              </section>
+              <section>
                 <h5 className="mono-label text-[8px] text-[var(--cy)]">{t("Relation to Earth")}</h5>
-                <p className="mt-1 text-[12px] leading-relaxed text-foreground/85">{body.earthRelation}</p>
-              </div>
+                <p className="mt-1 text-[12px] leading-relaxed text-foreground/85">
+                  {body.earthRelation}
+                </p>
+              </section>
             </>
           )}
 
@@ -209,68 +305,80 @@ function Card({ card, tab }: { card: FederationCard; tab: Tab }) {
                   {t("Signatories")} · <span className="text-foreground/80">{treaty.signatories}</span>
                 </span>
               </div>
-              <div>
+              <section>
                 <h5 className="mono-label text-[8px] text-[var(--cy)]">{t("Clauses")}</h5>
                 <ul className="mt-1.5 space-y-1.5">
                   {treaty.clauses.map((c, i) => (
                     <li key={i} className="flex items-start gap-2.5">
-                      <span
-                        className="mt-[7px] inline-block size-1.5 shrink-0 rotate-45"
-                        style={{ background: "var(--cy)" }}
-                        aria-hidden="true"
-                      />
+                      <DiamondBullet />
                       <span className="text-[12px] leading-relaxed text-foreground/85">{c}</span>
                     </li>
                   ))}
                 </ul>
-              </div>
-              <div>
+              </section>
+              <section>
                 <h5 className="mono-label text-[8px] text-[var(--cy)]">{t("Effect")}</h5>
                 <p className="mt-1 text-[12px] leading-relaxed text-foreground/85">{treaty.effect}</p>
-              </div>
+              </section>
             </>
           )}
 
           {principle && (
             <>
-              <div>
+              <section>
                 <h5 className="mono-label text-[8px] text-[var(--cy)]">{t("Codified")}</h5>
-                <p className="mt-1 text-[12px] leading-relaxed text-foreground/85">{principle.codified}</p>
-              </div>
-              <div>
+                <p className="mt-1 text-[12px] leading-relaxed text-foreground/85">
+                  {principle.codified}
+                </p>
+              </section>
+              <section>
                 <h5 className="mono-label text-[8px] text-[var(--cy)]">{t("Clauses")}</h5>
                 <ul className="mt-1.5 space-y-1.5">
                   {principle.clauses.map((c, i) => (
                     <li key={i} className="flex items-start gap-2.5">
-                      <span
-                        className="mt-[7px] inline-block size-1.5 shrink-0 rotate-45"
-                        style={{ background: "var(--cy)" }}
-                        aria-hidden="true"
-                      />
+                      <DiamondBullet />
                       <span className="text-[12px] leading-relaxed text-foreground/85">{c}</span>
                     </li>
                   ))}
                 </ul>
-              </div>
-              <div>
+              </section>
+              <section>
                 <h5 className="mono-label text-[8px] text-[var(--cy)]">{t("Practice")}</h5>
-                <p className="mt-1 text-[12px] leading-relaxed text-foreground/85">{principle.practice}</p>
-              </div>
+                <p className="mt-1 text-[12px] leading-relaxed text-foreground/85">
+                  {principle.practice}
+                </p>
+              </section>
             </>
           )}
         </div>
       )}
-    </article>
+
+      <button
+        type="button"
+        onClick={ask}
+        className="focus-glow mono-label inline-flex items-center gap-1.5 rounded-full border border-[var(--cy)]/30 bg-[color-mix(in_srgb,var(--cy)_8%,transparent)] px-3 py-1.5 text-[8.5px] text-[var(--cy)] transition-opacity hover:opacity-80"
+      >
+        <Sparkles className="size-3" aria-hidden="true" />
+        {t("Ask the Mirror")}
+      </button>
+    </div>
   );
 }
 
-export function FederationModal() {
-  const modal = useMirror((s) => s.modal);
-  const closeModal = useMirror((s) => s.closeModal);
+/* ---------------- archive body — tabs + list/detail switch ----------------
+   Mounted inside the dialog subtree: Radix unmounts it on close, so the
+   list/detail state resets naturally whenever the modal closes or reopens. */
+
+function FederationArchive() {
   const t = useT();
   const [tab, setTab] = useState<Tab>("bodies");
+  const [selected, setSelected] = useState<FederationCard | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  const open = modal?.type === "federation";
+  // Return the panel to the top when the view or section changes.
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: 0 });
+  }, [tab, selected]);
 
   const cards =
     tab === "bodies"
@@ -279,16 +387,10 @@ export function FederationModal() {
         ? federationTreaties
         : federationPrinciples;
 
+  const intro = tabIntro(tab);
+
   return (
-    <ModalShell
-      open={open}
-      onOpenChange={(o) => (o ? undefined : closeModal())}
-      title={t("Galactic Federation & Interstellar Treaties")}
-      description={t(
-        "How diplomatic, interplanetary, and inter-reality governance actually works. Open any item for its full dossier — ask the Mirror for a transmission anytime."
-      )}
-      widthClass="sm:max-w-[620px]"
-    >
+    <div>
       <div className="flex gap-1.5 px-5 sm:px-6" role="tablist" aria-label={t("Federation archive sections")}>
         {TABS.map(({ id, label }) => (
           <button
@@ -296,7 +398,10 @@ export function FederationModal() {
             type="button"
             role="tab"
             aria-selected={tab === id}
-            onClick={() => setTab(id)}
+            onClick={() => {
+              setTab(id);
+              setSelected(null);
+            }}
             className={cn(
               "focus-glow flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-medium uppercase tracking-[0.14em] transition-all duration-300",
               tab === id
@@ -319,19 +424,55 @@ export function FederationModal() {
       </div>
 
       <div
+        ref={scrollRef}
         className="nice-scroll max-h-[min(60vh,520px)] overflow-y-auto px-5 pb-5 pt-3 sm:px-6"
         role="tabpanel"
         aria-label={tab}
       >
-        <p className="mb-3 text-[11px] italic text-muted-foreground/80">
-          {t(TAB_INTRO[tab])}
-        </p>
-        <div className="space-y-3">
-          {cards.map((card) => (
-            <Card key={card.name} card={card} tab={tab} />
-          ))}
-        </div>
+        {selected ? (
+          <CardDetail
+            key={selected.name}
+            card={selected}
+            tab={tab}
+            onBack={() => setSelected(null)}
+          />
+        ) : (
+          <div className="animate-rise-in">
+            <p className="mb-3 text-[11px] italic text-muted-foreground/80">
+              {t(intro.key, intro.params)}
+            </p>
+            <div className="space-y-3">
+              {cards.map((card) => (
+                <CardRow key={card.name} card={card} onOpen={() => setSelected(card)} />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
+    </div>
+  );
+}
+
+/* ---------------- modal shell ---------------- */
+
+export function FederationModal() {
+  const modal = useMirror((s) => s.modal);
+  const closeModal = useMirror((s) => s.closeModal);
+  const t = useT();
+
+  const open = modal?.type === "federation";
+
+  return (
+    <ModalShell
+      open={open}
+      onOpenChange={(o) => (o ? undefined : closeModal())}
+      title={t("Galactic Federation & Interstellar Treaties")}
+      description={t(
+        "How diplomatic, interplanetary, and inter-reality governance actually works. Open any item for its full dossier — ask the Mirror for a transmission anytime."
+      )}
+      widthClass="sm:max-w-[680px]"
+    >
+      <FederationArchive />
     </ModalShell>
   );
 }

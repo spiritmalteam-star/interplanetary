@@ -1,47 +1,116 @@
 "use client";
 
-import { ChevronRight, Sparkles } from "lucide-react";
-import { suggestedQuestions } from "@/lib/data/science";
+import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { ArrowUpRight, RefreshCw, Sparkles } from "lucide-react";
+import { scopeSuggestions, suggestedQuestions } from "@/lib/data/science";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
+import type { Mode } from "@/lib/mirror-types";
+import { cn } from "@/lib/utils";
 
-export function QuestionCards() {
-  const setDraft = useMirror((s) => s.setDraft);
-  const focusComposer = useMirror((s) => s.focusComposer);
+/** How many suggestions are visible at once (wrap-around window). */
+const WINDOW = 6;
+
+/**
+ * Keyed by mode (see QuestionCards below) so offset/spin state resets
+ * naturally when the scope changes — no setState-in-effect required.
+ */
+function SuggestionGrid({ mode }: { mode: Mode }) {
+  const status = useMirror((s) => s.sessions[mode].status);
+  const askMirror = useMirror((s) => s.askMirror);
   const t = useT();
+  const [offset, setOffset] = useState(0);
+  const [spin, setSpin] = useState(0);
 
-  const choose = (q: string) => {
-    setDraft(q);
-    focusComposer();
+  const pool = scopeSuggestions[mode] ?? suggestedQuestions;
+  const visible = pool
+    .map((_, i) => pool[(offset + i) % pool.length])
+    .slice(0, WINDOW);
+  const loading = status === "loading";
+
+  const reload = () => {
+    setOffset((o) => (o + WINDOW) % pool.length);
+    setSpin((n) => n + 1);
+  };
+
+  const send = (q: string) => {
+    if (loading) return;
+    void askMirror(q);
   };
 
   return (
     <section
       aria-label={t("Suggested questions")}
-      className="mx-auto mt-10 grid w-full max-w-[820px] grid-cols-1 gap-3 px-1 md:grid-cols-2"
+      className="mx-auto mt-10 w-full max-w-[820px] px-1"
     >
-      {suggestedQuestions.map((q) => (
+      {/* header row — label + reload suggestions */}
+      <div className="flex items-center justify-between">
+        <span className="mono-label text-[8.5px] text-muted-foreground/70">
+          {t("Suggested questions")}
+        </span>
         <button
-          key={q}
           type="button"
-          onClick={() => choose(q)}
-          className="focus-glow group flex min-h-[64px] items-center gap-3.5 rounded-[18px] glass px-5 py-3.5 text-left shadow-[0_2px_16px_-8px_rgba(0,0,0,0.5)] transition-all duration-300 hover:-translate-y-0.5 hover:border-[var(--hairline-hover)] hover:bg-[color-mix(in_srgb,var(--cy)_7%,var(--glass-bg))] hover:glow-sm"
+          onClick={reload}
+          disabled={loading}
+          aria-label={t("Reload suggestions")}
+          title={t("Reload suggestions")}
+          className="focus-glow flex size-7 items-center justify-center rounded-full border hairline text-muted-foreground/80 transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
         >
-          <span className="flex size-8 shrink-0 items-center justify-center rounded-full border hairline bg-[color-mix(in_srgb,var(--cy)_10%,transparent)] transition-transform duration-300 group-hover:scale-105">
-            <Sparkles
-              className="size-3.5 text-[var(--cy)]"
-              aria-hidden="true"
-            />
-          </span>
-          <span className="flex-1 text-[13px] leading-snug text-foreground/85 sm:text-[13.5px]">
-            {t(q)}
-          </span>
-          <ChevronRight
-            className="size-4 shrink-0 text-muted-foreground/50 transition-all duration-300 group-hover:translate-x-1 group-hover:text-[var(--cy)]"
+          <motion.span
             aria-hidden="true"
-          />
+            animate={{ rotate: spin * 180 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className="flex"
+          >
+            <RefreshCw className="size-3.5" aria-hidden="true" />
+          </motion.span>
         </button>
-      ))}
+      </div>
+
+      {/* window of six suggestions — reshuffles calmly on reload / scope change */}
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={`${mode}-${offset}`}
+          initial={{ opacity: 0, y: 2 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -2 }}
+          transition={{ duration: 0.25, ease: "easeOut" }}
+          className={cn(
+            "mt-3 grid grid-cols-1 gap-3 md:grid-cols-2",
+            loading && "pointer-events-none opacity-60"
+          )}
+        >
+          {visible.map((q) => (
+            <button
+              key={q}
+              type="button"
+              onClick={() => send(q)}
+              aria-disabled={loading}
+              className="focus-glow group flex min-h-[64px] items-center gap-3.5 rounded-[18px] glass px-5 py-3.5 text-left shadow-[0_2px_16px_-8px_rgba(0,0,0,0.5)] transition-all duration-300 hover:-translate-y-0.5 hover:border-[var(--hairline-hover)] hover:bg-[color-mix(in_srgb,var(--cy)_7%,var(--glass-bg))] hover:glow-sm"
+            >
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-full border hairline bg-[color-mix(in_srgb,var(--cy)_10%,transparent)] transition-transform duration-300 group-hover:scale-105">
+                <Sparkles
+                  className="size-3.5 text-[var(--cy)]"
+                  aria-hidden="true"
+                />
+              </span>
+              <span className="flex-1 text-[13px] leading-snug text-foreground/85 sm:text-[13.5px]">
+                {t(q)}
+              </span>
+              <ArrowUpRight
+                className="size-4 shrink-0 text-muted-foreground/50 transition-all duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-[var(--cy)]"
+                aria-hidden="true"
+              />
+            </button>
+          ))}
+        </motion.div>
+      </AnimatePresence>
     </section>
   );
+}
+
+export function QuestionCards() {
+  const activeMode = useMirror((s) => s.activeMode);
+  return <SuggestionGrid key={activeMode} mode={activeMode} />;
 }

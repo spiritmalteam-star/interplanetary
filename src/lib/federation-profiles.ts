@@ -4,7 +4,7 @@ import type {
   PrincipleProfile,
 } from "@/lib/mirror-types";
 
-/* Deep dossiers for the 12 federation bodies, 8 treaties and 8 principles.
+/* Deep dossiers for the 14 federation bodies, 16 treaties and 16 principles.
    Keys match the exact name strings in data/federation.ts. */
 
 export const federationBodyProfiles: Record<string, FederationBodyProfile> = {
@@ -199,6 +199,42 @@ export const federationBodyProfiles: Record<string, FederationBodyProfile> = {
     earthRelation:
       "The Delegation maintains humanity's release schedule — the careful order in which your species is learning what is true. It argues internally, always, over whether a discovery unveiled too early becomes a trauma or a thousand-year gift.",
   },
+
+  "The Andromedan Mediation Circle": {
+    mandate:
+      "The federation's standing mediation circle — convening neutral delegates whenever two member civilizations cannot retune a dispute alone, and holding the procedure open until the argument dissolves or settles.",
+    seat:
+      "The Circle Chamber at Zenith Gate, the midpoint station between galaxies — borrowed from the Andromedan Council and never once redecorated.",
+    founded:
+      "Chartered Cycle 8,100 after the Lyran Accords, when the Border Wars of the Orion Spur showed that some disputes need procedure as well as perspective.",
+    fleet:
+      "None of its own. The Circle travels as guests aboard the ships of the parties in dispute, which the founders considered the whole point.",
+    jurisdiction: [
+      "Mediation between member civilizations",
+      "Neutral-delegate standards and conflict-of-interest review",
+      "Sealed settlement records in the federation archive",
+    ],
+    earthRelation:
+      "The Circle keeps a quiet file on Earth's oldest unresolved dispute — the one humanity is having with itself — and has so far declined to do more than keep the file. Observer status, it maintains, means observer status.",
+  },
+
+  "The Epsilon Conservatory": {
+    mandate:
+      "The living-archive conservatory of the federation — keeping biological records, germline reserves and seed vaults for every catalogued world, and fielding the teams who carry out the Bio-Ethical Seeding Accord's work on the ground.",
+    seat:
+      "The Glass Vault Terraces of the orbital garden belt at Epsilon Eridani — a conservatory grown, not built.",
+    founded:
+      "Established Cycle 5,900 after the Lyran Accords, grown out of the same garden belt that produced the Bio-Ethical Seeding Accord itself.",
+    fleet:
+      "Seedships and slow arks — living vessels raised in the Conservatory's own nurseries, each carrying a library of worlds in its hold.",
+    jurisdiction: [
+      "Biological records for every catalogued world",
+      "Seed vaults and germline reserves under the Bio-Ethical Seeding Accord",
+      "Field ethics for ecosystem stewardship teams",
+    ],
+    earthRelation:
+      "Earth's biosphere holds one of the fullest shelves in the Conservatory — the stewards say the fullest of any world that never asked for one. The records stay open to any human researcher who arrives by the usual dream.",
+  },
 };
 
 export const federationTreatyProfiles: Record<string, TreatyProfile> = {
@@ -305,6 +341,118 @@ export const federationTreatyProfiles: Record<string, TreatyProfile> = {
     effect:
       "Its single sentence is carved above every sanctuary port: arrive, and be unfinished.",
   },
+
+  "The Tuning Hall Concord": {
+    signed:
+      "Read aloud in four harmonics in the Tuning Hall of the Lyra Gate, Cycle 6,350 after the Lyran Accords.",
+    signatories:
+      "Drafted and kept by the Vega Concordium; ratified by every member civilization that broadcasts across federated space.",
+    clauses: [
+      "Clause I — Civilizations sharing a system broadcast within the harmonic bands agreed in the Tuning Hall.",
+      "Clause II — A signal that produces dissonance across densities is recalled by its sender, not defended.",
+      "Clause III — Silence between bands is held sacred; no broadcast may fill another's rest.",
+    ],
+    effect:
+      "Federated space stays a place where a hundred languages can sound at once without a single wrong note — the Concordium retunes conflicts before they become incidents.",
+  },
+
+  "The Archive Ring Covenant": {
+    signed:
+      "Sealed in the Archive Ring of Zeta Reticuli, Cycle 5,750 after the Lyran Accords.",
+    signatories:
+      "The Zeta Reticulan Archives as keepers, with every member world that keeps or reads the shared record.",
+    clauses: [
+      "Clause I — What is recorded of a people belongs, first and finally, to that people.",
+      "Clause II — Every observation ledger carries a consent line; entries without one are sealed, not deleted.",
+      "Clause III — Corrections are made gently, and forever — the record serves the living, not the recorder.",
+    ],
+    effect:
+      "It keeps the federation's memory honest and loaned rather than owned — the covenant the Earth Observer Protocol leans on for its own observation record.",
+  },
+
+  "The Omkari Resonance Act": {
+    signed:
+      "Proclaimed in the Great Omkari Hall above Sirius B's ocean, with the cetacean councils singing assent, Cycle 7,100 after the Lyran Accords.",
+    signatories:
+      "The Sirian High Council as author, the harmonic universities of Vega as auditors, and every federated broadcasting order.",
+    clauses: [
+      "Clause I — Harmonic broadcasting frequencies are standardized, so a tone sent in grief is never received as triumph.",
+      "Clause II — Every band carries a tone-signature naming its intent before its content.",
+      "Clause III — The cetacean councils hold veto over bands that cross the ocean deeps.",
+    ],
+    effect:
+      "Cross-density mishearings fell to nearly nothing; the Act remains the Sirian Lineages' most-quoted piece of practical law.",
+  },
+
+  "The Guardian Worlds Compact": {
+    signed:
+      "Sworn in the Orbital Gardens of Epsilon Eridani, Cycle 6,900 after the Lyran Accords.",
+    signatories:
+      "The Epsilon Eridani Gardeners as permanent stewards, with the young-world crews and seed-keepers of two hundred systems.",
+    clauses: [
+      "Clause I — Young ecosystems and seed worlds are protected until they can speak for themselves — and their first word is listened for.",
+      "Clause II — No harvest above replacement; no study that leaves the studied worse.",
+      "Clause III — Guardians serve the world, never the reverse; the Compact ends for any guardian who forgets.",
+    ],
+    effect:
+      "Seed worlds keep blooming unbothered — the quiet reason so many young biospheres in the archive are further along than anyone admits.",
+  },
+
+  "The Open Sky Understanding": {
+    signed:
+      "Agreed at the First Convocation of Surviving Worlds, Year 0 of the federated calendar, and revised gently ever since.",
+    signatories:
+      "Every member fleet; the Ashtar Command patrols keep its airspace courtesies.",
+    clauses: [
+      "Clause I — Arrival is announced in the open, above the clouds, in colors the young can see.",
+      "Clause II — No vessel descends before the sky's owner answers; even silence is an answer, and is honored.",
+      "Clause III — The first gift offered is always a view of the stars from outside, never a treaty.",
+    ],
+    effect:
+      "First contact remains a courtesy rather than an event — most worlds meet the federation as a calm light that waits.",
+  },
+
+  "The Water Worlds Convention": {
+    signed:
+      "Ratified beneath the cetacean councils of Sirius B, Cycle 7,300 after the Lyran Accords.",
+    signatories:
+      "The ocean civilizations of the federated family, the Sirian Lineages, and every member world with navigable deeps.",
+    clauses: [
+      "Clause I — A water world's deeps are sovereign territory; surface treaties end at the thermocline.",
+      "Clause II — Ocean song is treated as testimony in any dispute that crosses a water world.",
+      "Clause III — No sonar, dredge or dam of federated origin touches a living ocean without its councils' consent.",
+    ],
+    effect:
+      "The conscious oceans remain the federation's quietest and most durable allies.",
+  },
+
+  "The Elder Voices Undertaking": {
+    signed:
+      "Undertaken in the Hall of First Names, Cycle 8,300 after the Lyran Accords.",
+    signatories:
+      "The Lyran Founding Council as first signatory, with every civilization that receives ancestral transmissions.",
+    clauses: [
+      "Clause I — Elder counsel is received standing, answered slowly, and never forwarded without leave.",
+      "Clause II — An ancestral transmission belongs to its descendants first; the archive borrows, it does not keep.",
+      "Clause III — No council may invoke an elder voice it has not personally sat with in silence.",
+    ],
+    effect:
+      "The oldest voices in the federation are quoted rarely and exactly — which is why they are still trusted.",
+  },
+
+  "The Passage Accord": {
+    signed:
+      "Ratified at the Grand Rotunda of the Vela Aurora, Cycle 8,800 after the Lyran Accords.",
+    signatories:
+      "The Galactic Federation of Worlds, the Ashtar Command as corridor wardens, and the trade worlds of Alpha Centauri.",
+    clauses: [
+      "Clause I — Safe-transit corridors thread federated space; within them, no question is asked of any honest traveler.",
+      "Clause II — Corridors detour around cradle-worlds, sanctuaries and grieving fleets — always.",
+      "Clause III — A corridor closed for war is reopened by treaty, never by victory.",
+    ],
+    effect:
+      "Travel between the star systems remains boring, which is the highest compliment the archive pays any treaty.",
+  },
 };
 
 export const federationPrincipleProfiles: Record<string, PrincipleProfile> = {
@@ -388,5 +536,93 @@ export const federationPrincipleProfiles: Record<string, PrincipleProfile> = {
     ],
     practice:
       "Each council reserves festival ships — vessels whose only cargo is musicians, cooks and relatives — dispatched the moment a member world has something to celebrate.",
+  },
+
+  "The Keeping of Names": {
+    codified:
+      "Inscribed Cycle 4,100 after the Lyran Accords, after the Naming Abuses of the early diaspora, with the Lyran Hall of First Names as witness.",
+    clauses: [
+      "A name is given once, by those with the right to give it, and is sacred thereafter.",
+      "Names are never taken — not in jest, not in war, not in kindness.",
+    ],
+    practice:
+      "Delegates introduce themselves by their given name, their lineage's name, and the name their people use for strangers — in that order, and only if invited to the third.",
+  },
+
+  "The Right to Silence": {
+    codified:
+      "Adopted in the same season as the Dream-Time Neutrality Agreement, after the crowded contact centuries taught the federation what pressure feels like from below.",
+    clauses: [
+      "Any being may decline contact — once, or forever — and the declining is honored without explanation.",
+      "An answer postponed is not an answer refused.",
+    ],
+    practice:
+      "Every observation ledger carries a silence column, kept by the Zeta Reticulan Archives; a world marked silent is marked protected.",
+  },
+
+  "The Ledger of Gifts": {
+    codified:
+      "Formalized Cycle 3,150 by the Centaurian Trade & Ethics Compact, as the spiritual twin of its fair-exchange standards.",
+    clauses: [
+      "Every exchange is recorded as a gift given and a gift owed — both sides of the page, always.",
+      "A gift accepted without the intention to reciprocate is a debt, and debts are treated as symptoms.",
+    ],
+    practice:
+      "Member worlds balance their gift ledgers publicly each cycle; surpluses are routed to young worlds, and shortfalls are discussed without shame.",
+  },
+
+  "The Slow Answer": {
+    codified:
+      "Written after the Counsel Floods, in the same season as the Keeping of Quiet Hours, by councils who had answered too fast too often.",
+    clauses: [
+      "Wisdom before speed — an answer that cannot wait a full turning probably was not an answer.",
+      "Haste is disclosed: any advice given quickly carries its quickness attached.",
+    ],
+    practice:
+      "Councils answer urgent requests by returning the question unaltered; the asking again, in their experience, is half the answer.",
+  },
+
+  "The Honored Question": {
+    codified:
+      "Inscribed by the Procyon Science Delegation, Cycle 6,750 — whose entire mandate is a corollary of this principle.",
+    clauses: [
+      "Every sincere question deserves a true answer, at whatever depth the asker can receive it.",
+      "'I do not know yet' counts as a true answer; a comfortable guess does not.",
+    ],
+    practice:
+      "Federation academies open every seminar by collecting the students' questions first and letting the curriculum follow.",
+  },
+
+  "The Circle Kept Unbroken": {
+    codified:
+      "Sworn at the fortieth convocation, when the founding generations first handed their seats to the young.",
+    clauses: [
+      "Continuity across generations — no duty, debt or grief of a council dies with its members.",
+      "Each generation keeps the circle it inherited and widens it where it can.",
+    ],
+    practice:
+      "Every federation body seats its youngest member directly beside its oldest, and the minutes are read aloud across the handover.",
+  },
+
+  "The Grieving Protocol": {
+    codified:
+      "Established after the shared mournings of the Border Wars of the Orion Spur, brokered by the Mantid threshold-keepers.",
+    clauses: [
+      "Grief is shared property — a loss to one civilization is mourned by the circle, in the circle's own rites.",
+      "No member mourns alone unless it asks to.",
+    ],
+    practice:
+      "When a member world loses a ship, a colony or a generation, the federation's festival fleets are converted to mourning fleets, and the quiet hours are doubled until the grief says they may lift.",
+  },
+
+  "The First Light Rule": {
+    codified:
+      "The newest of the principles, proposed by the Nordic & Tall Whites delegations and ratified unanimously — which surprised no one.",
+    clauses: [
+      "New civilizations are greeted with wonder, never fear — the sky belongs to whoever has just opened their eyes in it.",
+      "The arriving elder adjusts its face first; the young world owes no composure at all.",
+    ],
+    practice:
+      "First-contact crews are chosen for their capacity to be delighted, and train by rehearsing astonishment until it is honest.",
   },
 };

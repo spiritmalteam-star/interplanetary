@@ -16,9 +16,11 @@ import { QueryComposer } from "./QueryComposer";
 import { TransmissionView } from "./TransmissionView";
 import { ManifestationLab } from "./ManifestationLab";
 import { ArchiveRegister } from "./ArchiveRegister";
+import { BiologyExplorer } from "./BiologyExplorer";
 import { FederationModal } from "./FederationModal";
 import { AstralJobsModal } from "./AstralJobsModal";
 import { DossierModal } from "./DossierModal";
+import { SpecimenModal } from "./SpecimenModal";
 import { SettingsModal } from "./SettingsModal";
 
 export default function AppShell() {
@@ -60,6 +62,8 @@ export default function AppShell() {
                 <TransmissionView />
               ) : view === "register" ? (
                 <ArchiveRegister />
+              ) : view === "biology" ? (
+                <BiologyExplorer />
               ) : (
                 <ManifestationLab />
               )}
@@ -74,6 +78,7 @@ export default function AppShell() {
       <FederationModal />
       <AstralJobsModal />
       <DossierModal />
+      <SpecimenModal />
       <SettingsModal />
     </div>
   );

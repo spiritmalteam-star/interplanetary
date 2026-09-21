@@ -239,3 +239,49 @@ export interface PrincipleProfile {
   clauses: string[];
   practice: string;
 }
+
+/* ---------------- Interplanetary Biology ---------------- */
+
+export type SpecimenKind = "fauna" | "flora";
+
+export interface FaunaSpecimen {
+  id: string; // "fauna-0001"
+  registryNo: string; // "BIO-FA-0001"
+  name: string; // e.g. "Velmora Sky-drift"
+  genus: string;
+  classId: string; // one of FAUNA_CLASS ids
+  className: string; // fauna class label
+  originGroupId: string; // civilization family id (from civilizations.ts)
+  originName: string; // civilization family name
+  originWorld: string; // short flavor world line
+  habitat: string;
+  diet: string;
+  temperament: string;
+  size: string;
+  lifespan: string;
+  traits: string[]; // EXACTLY 4
+  note: string; // one-sentence field note
+  rarity: string; // one of 5 fixed rarity tiers
+  artIndex: number; // 0..23 → /images/biology/fauna-NN.jpg
+}
+
+export interface FloraSpecimen {
+  id: string; // "flora-0001"
+  registryNo: string; // "BIO-FL-0001"
+  name: string;
+  genus: string;
+  lineageId: string; // one of FLORA_LINEAGE ids
+  lineage: string; // flora lineage label
+  originGroupId: string;
+  originName: string;
+  originWorld: string;
+  habitat: string;
+  bloomCycle: string;
+  scent: string;
+  height: string;
+  properties: string; // energetic / medicinal lore
+  traits: string[]; // EXACTLY 4
+  note: string;
+  rarity: string;
+  artIndex: number; // 0..23 → /images/biology/flora-NN.jpg
+}

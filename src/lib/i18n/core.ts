@@ -47,6 +47,23 @@ export function isLanguageCode(v: unknown): v is LanguageCode {
   return typeof v === "string" && LANGUAGES.some((l) => l.code === v);
 }
 
+/** BCP-47 locale per archive language, for numbers and dates. */
+export const LOCALES: Record<LanguageCode, string> = {
+  en: "en-US",
+  sq: "sq-AL",
+  it: "it-IT",
+  el: "el-GR",
+  de: "de-DE",
+  fr: "fr-FR",
+  es: "es-ES",
+  tr: "tr-TR",
+};
+
+/** Locale-aware archive number (e.g. 1200 → "1,200" / "1.200" / "1 200"). */
+export function formatArchiveNumber(n: number, language: LanguageCode): string {
+  return n.toLocaleString(LOCALES[language] ?? "en-US");
+}
+
 const DICTS: Record<Exclude<LanguageCode, "en">, Record<string, string>> = {
   sq, it, el, de, fr, es, tr,
 };

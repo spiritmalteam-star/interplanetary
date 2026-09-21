@@ -3,8 +3,10 @@
 import { useMemo } from "react";
 import {
   BookOpenText,
+  Flower2,
   FlaskConical,
   Layers,
+  PawPrint,
   Search,
   Settings,
   X,
@@ -13,8 +15,9 @@ import {
   civilizations,
 } from "@/lib/data/civilizations";
 import { interdimensional } from "@/lib/data/interdimensional";
+import { faunaTotal, floraTotal } from "@/lib/data/biology";
 import { archiveTotals, useMirror } from "@/lib/mirror-store";
-import { LANGUAGES, useT } from "@/lib/i18n";
+import { formatArchiveNumber, LANGUAGES, useT } from "@/lib/i18n";
 import { entityImage, searchEntities } from "@/lib/entity-utils";
 import { cn } from "@/lib/utils";
 import type { CivilizationGroup, InterdimGroup } from "@/lib/mirror-types";
@@ -210,9 +213,58 @@ function FullRegisterButton() {
   );
 }
 
+function BiologySection() {
+  const openBiology = useMirror((s) => s.openBiology);
+  const language = useMirror((s) => s.language);
+  const t = useT();
+
+  return (
+    <div className="px-4 pt-4">
+      <p className="mono-label text-[8.5px] text-muted-foreground/70">
+        {t("Interplanetary Biology")}
+      </p>
+      <div className="mt-1.5 space-y-0.5">
+        <button
+          type="button"
+          onClick={() => openBiology("fauna")}
+          className="focus-glow group flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left transition-colors duration-200 hover:bg-[color-mix(in_srgb,var(--ok)_7%,transparent)]"
+        >
+          <PawPrint
+            className="size-3.5 shrink-0 text-[var(--ok)]"
+            aria-hidden="true"
+          />
+          <span className="min-w-0 flex-1 truncate text-[12.5px] font-medium uppercase tracking-[0.09em] text-foreground/75 transition-colors duration-200 group-hover:text-[var(--ok)]">
+            {t("Fauna archive")}
+          </span>
+          <span className="shrink-0 font-mono text-[11px] tabular-nums text-muted-foreground/70">
+            {formatArchiveNumber(faunaTotal, language)}
+          </span>
+        </button>
+        <button
+          type="button"
+          onClick={() => openBiology("flora")}
+          className="focus-glow group flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left transition-colors duration-200 hover:bg-[color-mix(in_srgb,var(--ok)_7%,transparent)]"
+        >
+          <Flower2
+            className="size-3.5 shrink-0 text-[var(--ok)]"
+            aria-hidden="true"
+          />
+          <span className="min-w-0 flex-1 truncate text-[12.5px] font-medium uppercase tracking-[0.09em] text-foreground/75 transition-colors duration-200 group-hover:text-[var(--ok)]">
+            {t("Flora archive")}
+          </span>
+          <span className="shrink-0 font-mono text-[11px] tabular-nums text-muted-foreground/70">
+            {formatArchiveNumber(floraTotal, language)}
+          </span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function SidebarContent() {
   const sidebarTab = useMirror((s) => s.sidebarTab);
   const setSidebarTab = useMirror((s) => s.setSidebarTab);
+  const openRegister = useMirror((s) => s.openRegister);
   const search = useMirror((s) => s.search);
   const setSearch = useMirror((s) => s.setSearch);
   const setMobileNavOpen = useMirror((s) => s.setMobileNavOpen);
@@ -345,6 +397,9 @@ export function SidebarContent() {
 
       {/* Full register entry */}
       <FullRegisterButton />
+
+      {/* Interplanetary Biology */}
+      <BiologySection />
 
       {/* List */}
       <ul

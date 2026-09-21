@@ -6,6 +6,7 @@ import type {
   SidebarTab,
   DossierKind,
   ManifestBlueprint,
+  SpecimenKind,
 } from "@/lib/mirror-types";
 import { civilizations, civilizationTotal } from "@/lib/data/civilizations";
 import { interdimensional, interdimTotal } from "@/lib/data/interdimensional";
@@ -22,6 +23,7 @@ export type ModalState =
   | { type: "astral" }
   | { type: "dossier"; kind: DossierKind; id: string }
   | { type: "entity"; kind: DossierKind; id: string }
+  | { type: "specimen"; kind: SpecimenKind; id: string }
   | { type: "settings" }
   | null;
 
@@ -69,7 +71,12 @@ const emptySessions = (): Record<Mode, ScopeSession> => ({
   healing: emptySession(),
 });
 
-export type MainView = "observatory" | "transmission" | "manifesting" | "register";
+export type MainView =
+  | "observatory"
+  | "transmission"
+  | "manifesting"
+  | "register"
+  | "biology";
 export type RegisterKind = DossierKind;
 
 interface MirrorState {
@@ -88,6 +95,9 @@ interface MirrorState {
 
   /* Full-archive register */
   registerKind: RegisterKind;
+
+  /* Interplanetary Biology */
+  biologyKind: SpecimenKind;
 
   /* Reality Manifesting Lab */
   labStage: "compose" | "charging" | "blueprint";
@@ -129,6 +139,11 @@ interface MirrorState {
   openRegister: (kind: RegisterKind) => void;
   exitRegister: () => void;
 
+  /* Interplanetary Biology */
+  openBiology: (kind: SpecimenKind) => void;
+  exitBiology: () => void;
+  setBiologyKind: (kind: SpecimenKind) => void;
+
   openLab: () => void;
   exitLab: () => void;
   setLabIntention: (v: string) => void;
@@ -167,6 +182,8 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   sessions: emptySessions(),
 
   registerKind: "civilization",
+
+  biologyKind: "fauna",
 
   labStage: "compose",
   labIntention: "",
@@ -235,6 +252,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       search: "",
       modal: null,
       mobileNavOpen: false,
+      biologyKind: "fauna",
       ...emptyLab,
     }),
 
@@ -333,6 +351,15 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     set({ registerKind: kind, view: "register", mobileNavOpen: false, modal: null }),
 
   exitRegister: () => set({ view: "observatory" }),
+
+  /* ---------------- Interplanetary Biology ---------------- */
+
+  openBiology: (kind) =>
+    set({ biologyKind: kind, view: "biology", mobileNavOpen: false, modal: null }),
+
+  exitBiology: () => set({ view: "observatory" }),
+
+  setBiologyKind: (kind) => set({ biologyKind: kind }),
 
   /* ---------------- Reality Manifesting Lab ---------------- */
 
