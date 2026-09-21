@@ -243,3 +243,18 @@ Work Log:
 Stage Summary:
 - The laboratory now speaks 8 languages (default English, Albanian included) across every UI word and every new generation; documentary-grade TTS narration (Aurora warm woman by default, 6 voices, 3 paces) is one click away from the top of every transmission and from settings previews; the view auto-follows new generations; the palette is calmer with a better reading scale; sidebar text is larger.
 - Key artifacts: src/lib/i18n/* (core + 7 dicts), src/app/api/tts/route.ts, SettingsModal.tsx, ListenButton.tsx, rewritten TransmissionView.tsx, store preference system, calmed globals.css, scripts/{extract-i18n,check-i18n}.mjs.
+
+---
+Task ID: 8
+Agent: Z.ai Code (main orchestrator)
+Task: Full re-verification of the 7 refinements + issue REPLICATION_PROMPT v1.2 (repo file + chat delivery)
+
+Work Log:
+- Re-verified data contracts programmatically: 20 families→870, 8 orders→202, 1,072 named, 12→72→1,303 (domain counts sum exactly 1,303), 12/8/8 federation, 8 fields/6 directions, 1,169 images on disk.
+- Confirmed implementation state: i18n core + 7 complete dictionaries (411 keys each incl. sq), SettingsModal at sidebar top (language grid + 6 voices + 3 paces), ListenButton on every generation, /api/tts (WAV PCM merge), /api/transmission + /api/manifest language pass-through, auto-scroll sentinel in TransmissionView, calmed globals.css, enlarged sidebar typography.
+- bun run lint: clean. dev.log: healthy, no errors.
+- agent-browser end-to-end (1440×900 + 390×844): Settings opens from sidebar top; switched to Shqip → EVERY word translated (top bar, sidebar, tabs, hero, questions, composer, status, toasts, ARIA labels); sent a question → LLM answered fully in Albanian; Dëgjo (Listen) → /api/tts 200 (65s synth, 4.3MB WAV) → "Ndalo" playing state; auto-scroll followed the new generation; light theme coherent; reload → language persisted; zero console errors.
+- Updated REPLICATION_PROMPT.md to v1.2: added §15 Universal Language System (8 languages), §16 Laboratory Settings + transcript voices, §17 Listen (TTS) system + auto-scroll; updated §0 counts line, §9 modules, §13 architecture, §14 acceptance checks (now 12 checks).
+
+Stage Summary:
+- All refinements browser-verified working (desktop + mobile, both themes, zero console errors); replication prompt v1.2 issued in repo and delivered to the user in-chat as a copyable box.
