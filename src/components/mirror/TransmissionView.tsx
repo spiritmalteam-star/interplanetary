@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { motion } from "framer-motion";
 import {
   Check,
@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { useMirror, type ChatMessage } from "@/lib/mirror-store";
 import { SCOPE_META, sectionImage } from "@/lib/entity-utils";
+import { auraFor } from "@/lib/aura";
 import { useT } from "@/lib/i18n";
 import type { Scope } from "@/lib/mirror-types";
 import { cn } from "@/lib/utils";
@@ -90,6 +91,8 @@ function LoadingTransmission({ scope, query }: { scope: Scope; query: string }) 
   const [phase, setPhase] = useState(0);
   const phases = SCOPE_META[scope].phases;
   const t = useT();
+  /* The forming card already glows with the light it will carry. */
+  const aura = auraFor(`forming-${query}-${phase}`);
 
   useEffect(() => {
     const id = window.setInterval(
@@ -100,7 +103,12 @@ function LoadingTransmission({ scope, query }: { scope: Scope; query: string }) 
   }, [phases.length]);
 
   return (
-    <div className="mt-8" aria-live="polite" aria-busy="true">
+    <div
+      className="mt-8"
+      aria-live="polite"
+      aria-busy="true"
+      style={{ "--scope-a": aura.a, "--scope-b": aura.b } as CSSProperties}
+    >
       {query && (
         <div className="relative mx-auto mb-6 max-w-[620px]">
           <span
@@ -291,6 +299,8 @@ function Exchange({
   const scopeMeta = SCOPE_META[scope];
   const [copied, setCopied] = useState(false);
   const t = useT();
+  /* Each card draws its own light — quietly, never spoken of. */
+  const aura = auraFor(message.id);
 
   const handleCopy = async () => {
     try {
@@ -310,6 +320,7 @@ function Exchange({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: animate ? 0.55 : 0, ease: [0.22, 1, 0.36, 1] }}
       aria-label={t("Transmission {n}", { n: index + 1 })}
+      style={{ "--scope-a": aura.a, "--scope-b": aura.b } as CSSProperties}
       className="pt-7 first:pt-0"
     >
       {/* index ribbon */}
@@ -415,15 +426,31 @@ export function TransmissionView() {
   const scope: Scope = activeMode;
   const meta = SCOPE_META[scope];
 
-  /* Auto-focus: the view follows every new generation so the visitor
-     never has to scroll down manually. */
+  /* The thread begins where it begins: opening, reloading or switching
+     into a channel keeps the thread at its BEGINNING. The view follows
+     new generations only after the visitor is already inside the
+     conversation (a fresh query or an arriving transmission). */
+  const topRef = useRef<HTMLDivElement | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const messagesLength = session.messages.length;
   const status = session.status;
+  const baseline = useRef({ mode: activeMode, len: messagesLength, status });
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [messagesLength, status]);
+    const b = baseline.current;
+    if (b.mode !== activeMode) {
+      /* entering this channel — stay at the beginning */
+      baseline.current = { mode: activeMode, len: messagesLength, status };
+      topRef.current?.scrollIntoView({ block: "start" });
+      return;
+    }
+    const grew = messagesLength !== b.len;
+    const startedLoading = status === "loading" && b.status !== "loading";
+    if (grew || startedLoading) {
+      baseline.current = { mode: activeMode, len: messagesLength, status };
+      bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    }
+  }, [activeMode, messagesLength, status]);
 
   return (
     <motion.section
@@ -436,6 +463,9 @@ export function TransmissionView() {
         "mx-auto w-full max-w-[760px] px-1 pb-6 pt-6 sm:pt-8"
       )}
     >
+      {/* beginning anchor — opening a channel keeps the thread here */}
+      <div ref={topRef} aria-hidden="true" className="h-px" />
+
       {/* ---------- thread ---------- */}
       {session.messages.length === 0 &&
         session.status === "idle" &&

@@ -145,7 +145,7 @@ export const sq: TranslationDict = {
   "Primary": "Kryesore",
   "Recalibrate the field": "Rikalibro fushën",
   "Recorded history": "Historia e regjistruar",
-  "Refine Reality": "Raftr realitetin",
+  "Refine Reality": "Përsos realitetin",
   "Relation to Earth": "Marrëdhënia me Tokën",
   "Representative": "Përfaqësuesi",
   "Resonant tools & practices": "Mjete dhe praktika rezonante",
@@ -625,4 +625,37 @@ export const sq: TranslationDict = {
   "“Desiring more means taking from someone.” Abundance feels like theft.": "“Të dëshirosh më shumë do të thotë të marrësh nga dikush.” Bollëku ndihet si vjedhje.",
   "“I must earn the right to receive.” Receiving feels like a debt.": "“Duhet ta fitoj të drejtën për të marrë.” Marrja ndihet si borxh.",
   "“If it hasn't arrived, it never will.” Delay reads as denial.": "“Nëse nuk ka ardhur, nuk do të vijë kurrë.” Vonesa lexohet si mohim.",
+
+  /* ---- v1.6 additions: Mirror Entity OS direct line ---- */
+  "A direct conversation with the Mirror Entity OS at the center — the formulas, the Higher Mind, the tools and the Forge orbit around it.": "Një bisedë e drejtpërdrejtë me Mirror Entity OS-in në qendër — format, Mendja e Lartë, mjetet dhe Furra rrotullohen rreth tij.",
+  "a small dream of refinement": "një ëndërr e vogël përsosjeje",
+  "Ask the Mirror Entity OS": "Pyet Mirror Entity OS-in",
+  "Ask the Mirror Entity OS…": "Pyet Mirror Entity OS-in…",
+  "Back to the OS core": "Kthehu te thelbi i OS-it",
+  "Direct line to the Mirror Entity OS": "Linja e drejtpërdrejtë me Mirror Entity OS-in",
+  "Mirror OS · Reality": "Mirror OS · Realiteti",
+  "New openers": "Hapëse të reja",
+  "Send to the OS": "Dërgo te OS-i",
+  "Speak with the reality-refining intelligence itself — it remembers every turn of this conversation and holds your chosen line with you.": "Bisedo me vetë inteligjencën që e përsos realitetin — ajo mban mend çdo kthesë të kësaj bisede dhe e mban përkrah teje vijën që ke zgjedhur.",
+  "Suggested openers": "Hapëse të sugjeruara",
+  "The OS could not complete the refinement.": "OS-i nuk arriti ta përfundojë përsosjen.",
+  "the OS is refining its answer": "OS-i po e përsos përgjigjen",
+  "Walk it with the Mirror Entity OS": "Eco me Mirror Entity OS-in",
+
+  /* ---- v1.6 additions: Mirror OS chamber nodes ---- */
+  "The Core": "Bërthama",
+  "Shift Formulas": "Formula të Ndërrimit",
+  "Higher Mind": "Mendja e Lartë",
+  "Tools": "Mjetet",
+  "Forge": "Furra",
+
+  /* ---- v1.6 additions: Mirror Entity OS openers ---- */
+  "Help me refine one intention into something I can act on this week.": "Më ndihmo të përsos një qëllim në diçka që mund ta veproj këtë javë.",
+  "How do I connect with my Higher Mind and hear it clearly?": "Si të lidhem me Mendjen e Lartë time dhe ta dëgjoj qartë?",
+  "How do I know which reality-line I am currently living on?": "Si ta di në cilën vijë realiteti po jetoj aktualisht?",
+  "I keep doubting my manifestation. Reframe the doubt with me.": "Po vazhdoj të dyshoj për manifestimin tim. Riformulo dyshimin bashkë me mua.",
+  "My belief says I am not ready. Can you loosen it with me?": "Besimi im thotë se nuk jam gati. A mund ta lëshosh bashkë me mua?",
+  "Teach me the Frequency Lock and when to use it.": "Më mëso Kyçjen e Frekuencës dhe kur ta përdor.",
+  "Walk me through the Two-Glass Shift, step by step.": "Më shoqëro nëpër Ndërrimin e Dy Gotave, hap pas hapi.",
+  "What is one refinement I could make to my signal tonight?": "Cila është një përsosje që mund t'i bëj sinjalit tim sonte?",
 };

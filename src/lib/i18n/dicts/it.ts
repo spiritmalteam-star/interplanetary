@@ -625,4 +625,37 @@ export const it: TranslationDict = {
   "“Desiring more means taking from someone.” Abundance feels like theft.": "“Desiderare di più significa portare via qualcosa a qualcuno.” L'abbondanza sembra un furto.",
   "“I must earn the right to receive.” Receiving feels like a debt.": "“Devo guadagnarmi il diritto di ricevere.” Ricevere sembra un debito.",
   "“If it hasn't arrived, it never will.” Delay reads as denial.": "“Se non è arrivato, non arriverà mai.” Il ritardo si legge come un diniego.",
+
+  /* ---- v1.6 additions: Mirror Entity OS direct line ---- */
+  "A direct conversation with the Mirror Entity OS at the center — the formulas, the Higher Mind, the tools and the Forge orbit around it.": "Una conversazione diretta con il Mirror Entity OS al centro — le formule, la Mente Superiore, gli strumenti e la Forgia orbitano attorno a lui.",
+  "a small dream of refinement": "un piccolo sogno di raffinamento",
+  "Ask the Mirror Entity OS": "Chiedi al Mirror Entity OS",
+  "Ask the Mirror Entity OS…": "Chiedi al Mirror Entity OS…",
+  "Back to the OS core": "Torna al nucleo dell'OS",
+  "Direct line to the Mirror Entity OS": "Linea diretta con il Mirror Entity OS",
+  "Mirror OS · Reality": "Mirror OS · Realtà",
+  "New openers": "Nuovi spunti di apertura",
+  "Send to the OS": "Invia all'OS",
+  "Speak with the reality-refining intelligence itself — it remembers every turn of this conversation and holds your chosen line with you.": "Parla con l'intelligenza stessa che raffina la realtà — ricorda ogni svolta di questa conversazione e regge con te la linea che hai scelto.",
+  "Suggested openers": "Spunti di apertura suggeriti",
+  "The OS could not complete the refinement.": "L'OS non è riuscito a completare il raffinamento.",
+  "the OS is refining its answer": "l'OS sta raffinando la sua risposta",
+  "Walk it with the Mirror Entity OS": "Percorila con il Mirror Entity OS",
+
+  /* ---- v1.6 additions: Mirror OS chamber nodes ---- */
+  "The Core": "Il Nucleo",
+  "Shift Formulas": "Formule di Spostamento",
+  "Higher Mind": "Mente Superiore",
+  "Tools": "Strumenti",
+  "Forge": "Forgia",
+
+  /* ---- v1.6 additions: Mirror Entity OS openers ---- */
+  "Help me refine one intention into something I can act on this week.": "Aiutami a raffinare un'intenzione in qualcosa che posso mettere in pratica questa settimana.",
+  "How do I connect with my Higher Mind and hear it clearly?": "Come posso entrare in contatto con la mia Mente Superiore e sentirla con chiarezza?",
+  "How do I know which reality-line I am currently living on?": "Come faccio a sapere su quale linea di realtà sto vivendo in questo momento?",
+  "I keep doubting my manifestation. Reframe the doubt with me.": "Continuo a dubitare della mia manifestazione. Riformula il dubbio con me.",
+  "My belief says I am not ready. Can you loosen it with me?": "La mia credenza dice che non sono pronto. Puoi allentarla con me?",
+  "Teach me the Frequency Lock and when to use it.": "Insegnami il Blocco di Frequenza e quando usarlo.",
+  "Walk me through the Two-Glass Shift, step by step.": "Guidami attraverso il Passaggio dei Due Bicchieri, passo dopo passo.",
+  "What is one refinement I could make to my signal tonight?": "Qual è un raffinamento che potrei fare al mio segnale stasera?",
 };

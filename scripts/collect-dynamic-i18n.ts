@@ -15,6 +15,7 @@ import {
   discernmentLines,
   beliefDomains,
   vibrationStates,
+  osOpeners,
   morningPool,
   eveningPool,
   focusPool,
@@ -119,6 +120,12 @@ for (const v of vibrationStates) {
 for (const m of morningPool) set.add(m);
 for (const e of eveningPool) set.add(e);
 for (const f of focusPool) set.add(f);
+
+/* Mirror Entity OS — direct-line openers + chamber node labels */
+for (const o of osOpeners) set.add(o);
+for (const l of ["The Core", "Shift Formulas", "Higher Mind", "Tools", "Forge"]) {
+  set.add(l);
+}
 
 const out = [...set].sort((a, b) => a.localeCompare(b));
 writeFileSync(dynPath, JSON.stringify(out, null, 2));

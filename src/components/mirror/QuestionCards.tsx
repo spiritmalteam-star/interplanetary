@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowUpRight, RefreshCw, Sparkles } from "lucide-react";
-import { scopeSuggestions, suggestedQuestions } from "@/lib/data/science";
+import { scopeSuggestionPools } from "@/lib/data/suggestions";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import type { Mode } from "@/lib/mirror-types";
@@ -20,17 +20,21 @@ function SuggestionGrid({ mode }: { mode: Mode }) {
   const status = useMirror((s) => s.sessions[mode].status);
   const askMirror = useMirror((s) => s.askMirror);
   const t = useT();
-  const [offset, setOffset] = useState(0);
+  /* Every visit (and every reload) opens a different window of the
+     scope's 66-question pool. */
+  const [offset, setOffset] = useState(() =>
+    Math.floor(Math.random() * scopeSuggestionPools[mode].length)
+  );
   const [spin, setSpin] = useState(0);
 
-  const pool = scopeSuggestions[mode] ?? suggestedQuestions;
+  const pool = scopeSuggestionPools[mode];
   const visible = pool
     .map((_, i) => pool[(offset + i) % pool.length])
     .slice(0, WINDOW);
   const loading = status === "loading";
 
   const reload = () => {
-    setOffset((o) => (o + WINDOW) % pool.length);
+    setOffset(Math.floor(Math.random() * pool.length));
     setSpin((n) => n + 1);
   };
 
@@ -68,7 +72,8 @@ function SuggestionGrid({ mode }: { mode: Mode }) {
         </button>
       </div>
 
-      {/* window of six suggestions — reshuffles calmly on reload / scope change */}
+      {/* window of six suggestions — a fresh random window on every
+          visit, scope change and reload of the 66-question pool */}
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
           key={`${mode}-${offset}`}

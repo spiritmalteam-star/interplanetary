@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -8,13 +8,11 @@ import {
   Compass,
   FlaskConical,
   HeartHandshake,
-  NotebookPen,
-  Plus,
   ShieldCheck,
   Sparkles,
   Sun,
   Moon,
-  Trash2,
+  MessagesSquare,
   Waves,
   Wind,
 } from "lucide-react";
@@ -33,10 +31,15 @@ import {
 import { cn } from "@/lib/utils";
 import { ListenButton } from "./ListenButton";
 import { MirrorOSForge } from "./MirrorOSForge";
+import { MirrorOSChat } from "./MirrorOSChat";
 
-type OsTab = "formulas" | "higher" | "tools" | "forge";
+type OsPlace = "chat" | "formulas" | "higher" | "tools" | "forge";
 
-const OS_TABS: { id: OsTab; label: string; icon: typeof Compass }[] = [
+const OS_PLACES: {
+  id: Exclude<OsPlace, "chat">;
+  label: string;
+  icon: typeof Compass;
+}[] = [
   { id: "formulas", label: "Shift Formulas", icon: Compass },
   { id: "higher", label: "Higher Mind", icon: Sparkles },
   { id: "tools", label: "Tools", icon: HeartHandshake },
@@ -503,176 +506,6 @@ function DailyProtocolCard() {
   );
 }
 
-interface LedgerEntry {
-  id: string;
-  text: string;
-  date: string;
-}
-
-const LEDGER_KEY = "mirror-os-ledger";
-
-/* --- tiny external store around localStorage (React-recommended) --- */
-
-let ledgerSnapshot = "[]";
-const ledgerListeners = new Set<() => void>();
-
-function subscribeLedger(cb: () => void) {
-  ledgerListeners.add(cb);
-  return () => {
-    ledgerListeners.delete(cb);
-  };
-}
-
-function getLedgerSnapshot() {
-  return ledgerSnapshot;
-}
-
-function getServerLedger() {
-  return "[]";
-}
-
-function writeLedger(next: LedgerEntry[]) {
-  ledgerSnapshot = JSON.stringify(next);
-  try {
-    localStorage.setItem(LEDGER_KEY, ledgerSnapshot);
-  } catch {
-    /* storage unavailable */
-  }
-  ledgerListeners.forEach((l) => l());
-}
-
-function hydrateLedger() {
-  try {
-    const raw = localStorage.getItem(LEDGER_KEY);
-    if (raw && raw !== ledgerSnapshot) {
-      ledgerSnapshot = raw;
-      ledgerListeners.forEach((l) => l());
-    }
-  } catch {
-    /* storage unavailable */
-  }
-}
-
-function parseLedger(json: string): LedgerEntry[] {
-  try {
-    const parsed = JSON.parse(json) as LedgerEntry[];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-function RealityLedger() {
-  const t = useT();
-  const [draft, setDraft] = useState("");
-
-  const json = useSyncExternalStore(
-    subscribeLedger,
-    getLedgerSnapshot,
-    getServerLedger
-  );
-  const entries = useMemo(() => parseLedger(json), [json]);
-
-  useEffect(() => {
-    hydrateLedger();
-  }, []);
-
-  const add = () => {
-    const text = draft.trim();
-    if (!text) return;
-    writeLedger([
-      { id: `l-${Date.now().toString(36)}`, text, date: new Date().toLocaleDateString() },
-      ...entries,
-    ]);
-    setDraft("");
-  };
-
-  const remove = (id: string) =>
-    writeLedger(entries.filter((e) => e.id !== id));
-
-  return (
-    <div className="rounded-2xl glass p-5 sm:p-6">
-      <h3 className="mono-label flex items-center gap-2 text-[9px] text-[var(--scope-a)]">
-        <NotebookPen className="size-3.5" aria-hidden="true" />
-        {t("Reality Ledger")}
-      </h3>
-      <p className="mt-2 text-[12px] leading-relaxed text-muted-foreground">
-        {t(
-          "Small proofs, recorded often, recalibrate belief faster than grand declarations."
-        )}
-      </p>
-
-      <div className="mt-3 flex gap-2">
-        <input
-          type="text"
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              add();
-            }
-          }}
-          maxLength={160}
-          placeholder={t("Record one piece of evidence that your chosen line is real…")}
-          aria-label={t("Reality Ledger")}
-          className="focus-glow h-9 min-w-0 flex-1 rounded-lg border hairline bg-transparent px-3 text-[13px] text-foreground placeholder:text-muted-foreground/60"
-        />
-        <button
-          type="button"
-          onClick={add}
-          disabled={!draft.trim()}
-          aria-label={t("Seal it")}
-          className="focus-glow flex size-9 shrink-0 items-center justify-center rounded-lg border text-muted-foreground transition-all duration-300 hover:text-foreground disabled:opacity-40"
-          style={{
-            borderColor: "color-mix(in srgb, var(--scope-a) 40%, transparent)",
-            background: "color-mix(in srgb, var(--scope-a) 8%, transparent)",
-          }}
-        >
-          <Plus className="size-4" aria-hidden="true" />
-        </button>
-      </div>
-
-      {entries.length === 0 ? (
-        <p className="mt-3 text-[12px] italic leading-relaxed text-muted-foreground/80">
-          {t("No entries yet — the first proof tends to hide in an ordinary hour.")}
-        </p>
-      ) : (
-        <ul className="nice-scroll mt-3 max-h-56 space-y-2 overflow-y-auto pr-1">
-          {entries.map((e) => (
-            <li
-              key={e.id}
-              className="group flex items-start gap-2.5 rounded-lg border hairline px-3 py-2"
-            >
-              <span
-                className="mt-[7px] inline-block size-1.5 shrink-0 rotate-45"
-                style={{ background: "var(--scope-a)" }}
-                aria-hidden="true"
-              />
-              <span className="min-w-0 flex-1">
-                <span className="block text-[12.5px] leading-relaxed text-foreground/85">
-                  {e.text}
-                </span>
-                <span className="mono-label mt-0.5 block text-[7.5px] text-muted-foreground/60">
-                  {e.date}
-                </span>
-              </span>
-              <button
-                type="button"
-                onClick={() => remove(e.id)}
-                aria-label={t("Release this entry")}
-                className="focus-glow mt-0.5 shrink-0 text-muted-foreground/50 opacity-0 transition-all duration-200 hover:text-foreground group-hover:opacity-100"
-              >
-                <Trash2 className="size-3.5" aria-hidden="true" />
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-}
-
 function ToolsTab() {
   return (
     <div className="space-y-5">
@@ -680,10 +513,87 @@ function ToolsTab() {
         <BeliefReframer />
         <VibrationBridge />
       </div>
-      <div className="grid gap-5 lg:grid-cols-2">
-        <DailyProtocolCard />
-        <RealityLedger />
-      </div>
+      <DailyProtocolCard />
+    </div>
+  );
+}
+
+
+/* ---------------- orbital nodes ---------------- */
+
+function PlaceNode({
+  active,
+  onClick,
+  icon: Icon,
+  label,
+  compact,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: typeof Compass;
+  label: string;
+  compact?: boolean;
+}) {
+  const t = useT();
+  if (compact) {
+    return (
+      <button
+        type="button"
+        role="tab"
+        aria-selected={active}
+        onClick={onClick}
+        className={cn(
+          "focus-glow flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3.5 py-1.5 text-[12px] transition-all duration-300",
+          active
+            ? "border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--scope-a)_12%,transparent)] font-semibold text-foreground glow-sm"
+            : "border-transparent text-muted-foreground/80 hover:border-[var(--hairline-hover)] hover:text-foreground"
+        )}
+      >
+        <Icon className="size-3.5" aria-hidden="true" />
+        {t(label)}
+      </button>
+    );
+  }
+  return (
+    <div className="flex flex-col items-center gap-1.5">
+      <button
+        type="button"
+        aria-pressed={active}
+        aria-label={t(label)}
+        onClick={onClick}
+        className={cn(
+          "focus-glow group relative flex size-14 items-center justify-center rounded-full border transition-all duration-500",
+          active
+            ? "border-[color-mix(in_srgb,var(--scope-a)_55%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_14%,transparent)] glow-sm"
+            : "border-[color-mix(in_srgb,var(--scope-a)_22%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_5%,transparent)] hover:-translate-y-0.5 hover:border-[color-mix(in_srgb,var(--scope-a)_42%,transparent)]"
+        )}
+      >
+        {active && (
+          <span
+            className="animate-charge-pulse absolute inset-0 rounded-full"
+            style={{
+              background:
+                "radial-gradient(circle, color-mix(in srgb, var(--scope-a) 22%, transparent), transparent 72%)",
+            }}
+            aria-hidden="true"
+          />
+        )}
+        <Icon
+          className={cn(
+            "relative size-5 transition-colors duration-300",
+            active ? "text-[var(--scope-a)]" : "text-muted-foreground group-hover:text-[var(--scope-a)]"
+          )}
+          aria-hidden="true"
+        />
+      </button>
+      <span
+        className={cn(
+          "mono-label max-w-[74px] text-center text-[7.5px] leading-snug",
+          active ? "text-[var(--scope-a)]" : "text-muted-foreground/70"
+        )}
+      >
+        {t(label)}
+      </span>
     </div>
   );
 }
@@ -692,8 +602,11 @@ function ToolsTab() {
 
 export function MirrorOS() {
   const exitMirrorOS = useMirror((s) => s.exitMirrorOS);
-  const [tab, setTab] = useState<OsTab>("formulas");
+  const [place, setPlace] = useState<OsPlace>("chat");
   const t = useT();
+
+  const leftRail = OS_PLACES.slice(0, 2);
+  const rightRail = OS_PLACES.slice(2);
 
   return (
     <div className="scope-manifesting relative flex h-full flex-col">
@@ -731,118 +644,151 @@ export function MirrorOS() {
         </div>
       </header>
 
-      {/* ---------- scrollable OS body ---------- */}
+      {/* ---------- the OS core ---------- */}
       <main className="nice-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain">
-        <div className="mx-auto w-full max-w-[880px] px-4 pb-12 sm:px-6">
-          {/* hero */}
-          <div className="relative pt-9 text-center sm:pt-12">
+        <div className="mx-auto flex h-full w-full max-w-[1020px] flex-col px-4 pb-5 sm:px-6">
+          {/* slim greeting */}
+          <div className="shrink-0 pt-5 text-center sm:pt-6">
             <p
               className="mono-label text-[9px]"
               style={{ color: "var(--scope-a)" }}
             >
               MIRROR OS · {t("Reality Guidance")}
             </p>
-            <h2 className="scope-gradient-text mx-auto mt-3 max-w-[560px] text-[26px] font-semibold leading-tight sm:text-[32px]">
+            <h2 className="scope-gradient-text mt-2 text-[22px] font-semibold leading-tight sm:text-[26px]">
               {t("Refine Reality")}
             </h2>
-            <p className="mx-auto mt-3 max-w-[560px] text-[13.5px] leading-relaxed text-muted-foreground">
+            <p className="mx-auto mt-2 max-w-[540px] text-[12.5px] leading-relaxed text-muted-foreground">
               {t(
-                "An independent operating system for the reflective mind — formulas that shift the line you live on, contact with the Higher Mind that holds the view, and tools that keep manifestation honest."
+                "A direct conversation with the Mirror Entity OS at the center — the formulas, the Higher Mind, the tools and the Forge orbit around it."
               )}
             </p>
           </div>
 
-          {/* tabs */}
+          {/* mobile / tablet constellation */}
           <div
-            className="sticky top-0 z-20 -mx-4 mt-7 border-b hairline bg-[color-mix(in_srgb,var(--background)_86%,transparent)] px-4 py-2.5 backdrop-blur-md sm:-mx-6 sm:px-6"
+            className="sticky top-0 z-20 -mx-4 mt-4 shrink-0 border-b hairline bg-[color-mix(in_srgb,var(--background)_88%,transparent)] px-4 py-2 backdrop-blur-md sm:-mx-6 sm:px-6 xl:hidden"
             role="tablist"
             aria-label={t("Mirror OS chambers")}
           >
-            <div className="flex gap-1.5 overflow-x-auto no-scrollbar sm:justify-center">
-              {OS_TABS.map(({ id, label, icon: Icon }) => {
-                const active = tab === id;
-                return (
-                  <button
-                    key={id}
-                    type="button"
-                    role="tab"
-                    aria-selected={active}
-                    onClick={() => setTab(id)}
-                    className={cn(
-                      "focus-glow flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3.5 py-1.5 text-[12px] transition-all duration-300 sm:px-4",
-                      active
-                        ? "animate-pill-breathe border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--scope-a)_12%,transparent)] font-semibold text-foreground"
-                        : "border-transparent text-muted-foreground/80 hover:border-[var(--hairline-hover)] hover:text-foreground"
-                    )}
-                  >
-                    <Icon className="size-3.5" aria-hidden="true" />
-                    {t(label)}
-                  </button>
-                );
-              })}
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar sm:justify-center">
+              <PlaceNode
+                compact
+                active={place === "chat"}
+                onClick={() => setPlace("chat")}
+                icon={MessagesSquare}
+                label="The Core"
+              />
+              {OS_PLACES.map(({ id, label, icon: Icon }) => (
+                <PlaceNode
+                  key={id}
+                  compact
+                  active={place === id}
+                  onClick={() => setPlace(id)}
+                  icon={Icon}
+                  label={label}
+                />
+              ))}
             </div>
           </div>
 
-          {/* chambers */}
-          <div className="mt-7">
-            {tab === "formulas" && (
-              <motion.div
-                key="formulas"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.45 }}
-                className="space-y-4"
-                role="tabpanel"
-              >
-                <p className="mx-auto max-w-[560px] text-center text-[12.5px] leading-relaxed text-muted-foreground">
-                  {t(
-                    "Six complete formulas for shifting the line you live on. Open one, walk it slowly, and let the field do the arithmetic."
-                  )}
-                </p>
-                {shiftFormulas.map((f, i) => (
-                  <FormulaCard key={f.id} index={i} formulaId={f.id} />
-                ))}
-              </motion.div>
-            )}
+          {/* orbital layout: chambers flank the core on wide screens */}
+          <div className="flex min-h-0 flex-1 gap-6 pt-4">
+            {/* left rail */}
+            <div className="hidden shrink-0 flex-col items-center justify-center gap-7 xl:flex">
+              {leftRail.map(({ id, label, icon: Icon }) => (
+                <PlaceNode
+                  key={id}
+                  active={place === id}
+                  onClick={() => setPlace(id)}
+                  icon={Icon}
+                  label={label}
+                />
+              ))}
+            </div>
 
-            {tab === "higher" && (
-              <motion.div
-                key="higher"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.45 }}
-                role="tabpanel"
-              >
-                <HigherMindTab />
-              </motion.div>
-            )}
+            {/* the core column */}
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+              {place === "chat" ? (
+                <MirrorOSChat />
+              ) : (
+                <div className="nice-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1">
+                  <motion.div
+                    key={place}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.45 }}
+                    className="pb-8"
+                  >
+                    {/* return to the core */}
+                    <div className="mb-4 flex justify-center">
+                      <button
+                        type="button"
+                        onClick={() => setPlace("chat")}
+                        className="focus-glow group flex h-8 items-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--scope-a)_30%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_7%,transparent)] px-3.5 text-[11.5px] font-medium text-foreground/85 transition-all duration-300 hover:border-[color-mix(in_srgb,var(--scope-a)_50%,transparent)]"
+                      >
+                        <MessagesSquare className="size-3.5 text-[var(--scope-a)]" aria-hidden="true" />
+                        {t("Back to the OS core")}
+                      </button>
+                    </div>
 
-            {tab === "tools" && (
-              <motion.div
-                key="tools"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.45 }}
-                role="tabpanel"
-              >
-                <ToolsTab />
-              </motion.div>
-            )}
+                    {place === "formulas" && (
+                      <div className="space-y-4">
+                        <p className="mx-auto max-w-[560px] text-center text-[12.5px] leading-relaxed text-muted-foreground">
+                          {t(
+                            "Six complete formulas for shifting the line you live on. Open one, walk it slowly, and let the field do the arithmetic."
+                          )}
+                        </p>
+                        {shiftFormulas.map((f, i) => (
+                          <FormulaCard key={f.id} index={i} formulaId={f.id} />
+                        ))}
+                        {/* the bashar-formula doorway — walk it with the OS */}
+                        <div className="flex justify-center pt-1">
+                          <button
+                            type="button"
+                            onClick={() => setPlace("chat")}
+                            className="dream-btn focus-glow group flex h-10 items-center gap-2.5 rounded-full px-5 text-[12.5px] font-medium text-foreground transition-all duration-300 hover:-translate-y-px"
+                          >
+                            <span
+                              className="dream-star left-4 top-2 size-[3px]"
+                              aria-hidden="true"
+                            />
+                            <Sparkles className="size-3.5 text-[var(--gd)]" aria-hidden="true" />
+                            {t("Walk it with the Mirror Entity OS")}
+                            <span
+                              className="transition-transform duration-300 group-hover:translate-x-0.5"
+                              aria-hidden="true"
+                            >
+                              →
+                            </span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
 
-            {tab === "forge" && (
-              <motion.div
-                key="forge"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.45 }}
-                role="tabpanel"
-              >
-                <MirrorOSForge />
-              </motion.div>
-            )}
+                    {place === "higher" && <HigherMindTab />}
+                    {place === "tools" && <ToolsTab />}
+                    {place === "forge" && <MirrorOSForge />}
+                  </motion.div>
+                </div>
+              )}
+            </div>
+
+            {/* right rail */}
+            <div className="hidden shrink-0 flex-col items-center justify-center gap-7 xl:flex">
+              {rightRail.map(({ id, label, icon: Icon }) => (
+                <PlaceNode
+                  key={id}
+                  active={place === id}
+                  onClick={() => setPlace(id)}
+                  icon={Icon}
+                  label={label}
+                />
+              ))}
+            </div>
           </div>
 
-          <p className="mono-label mt-10 text-center text-[8px] text-muted-foreground/50">
+          <p className="mono-label shrink-0 pb-1 pt-4 text-center text-[8px] text-muted-foreground/50">
             {t("MIRROR OS runs independently of every other chamber · Free will honored always")}
           </p>
         </div>

@@ -9,6 +9,7 @@ import Sidebar from "./Sidebar";
 import { MobileSidebar } from "./MobileSidebar";
 import { ModeSelector } from "./ModeSelector";
 import { ScienceFilters } from "./ScienceFilters";
+import { ScienceFusionRail } from "./ScienceFusionRail";
 import { HeroPanel } from "./HeroPanel";
 import { QuestionCards } from "./QuestionCards";
 import { StatusBar } from "./StatusBar";
@@ -20,6 +21,7 @@ import { FederationModal } from "./FederationModal";
 import { AstralJobsModal } from "./AstralJobsModal";
 import { DossierModal } from "./DossierModal";
 import { SettingsModal } from "./SettingsModal";
+import { StarPlayModal } from "./StarPlayModal";
 
 export default function AppShell() {
   const view = useMirror((s) => s.view);
@@ -54,8 +56,12 @@ export default function AppShell() {
         <MobileSidebar />
 
         <main className="flex min-w-0 flex-1 flex-col">
-          {/* Scrollable content area */}
-          <div className="nice-scroll flex-1 overflow-y-auto overscroll-contain">
+          {/* Scrollable content area — keyed by view so each screen
+              (and every chat thread) opens at its very beginning */}
+          <div
+            key={view}
+            className="nice-scroll flex-1 overflow-y-auto overscroll-contain"
+          >
             <div className="mx-auto w-full max-w-[880px] px-4 pb-10 sm:px-6">
               {/* Top mode bar */}
               <div className="pt-5 sm:pt-6">
@@ -82,10 +88,14 @@ export default function AppShell() {
         </main>
       </div>
 
+      {/* Science scope fusion rail — vertical, at the side of the chat */}
+      <ScienceFusionRail />
+
       <FederationModal />
       <AstralJobsModal />
       <DossierModal />
       <SettingsModal />
+      <StarPlayModal />
     </div>
   );
 }

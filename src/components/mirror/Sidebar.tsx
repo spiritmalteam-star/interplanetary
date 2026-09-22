@@ -4,9 +4,10 @@ import { useMemo } from "react";
 import {
   BookOpenText,
   Layers,
-  MonitorSmartphone,
+  MoonStar,
   Search,
   Settings,
+  Sparkles,
   X,
 } from "lucide-react";
 import {
@@ -50,36 +51,85 @@ function SettingsButton() {
   );
 }
 
+function StarPlayButton() {
+  const openModal = useMirror((s) => s.openModal);
+  const t = useT();
+
+  return (
+    <div className="px-3 pb-1 pt-1.5">
+      <button
+        type="button"
+        onClick={() => openModal({ type: "starplay" })}
+        aria-label={t("Open Star Play — the Mirror's arcana deck")}
+        className="star-btn focus-glow group flex h-11 w-full items-center gap-2.5 rounded-full px-3 text-left transition-all duration-300 hover:-translate-y-px"
+      >
+        <span className="starplay-halo relative flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[color-mix(in_srgb,var(--sp-a)_45%,transparent)]">
+          <img
+            src="/images/ai/star-play-emblem.jpg"
+            alt=""
+            aria-hidden="true"
+            className="size-full object-cover transition-transform duration-500 group-hover:scale-110"
+          />
+        </span>
+        <span className="min-w-0 flex-1 leading-tight">
+          <span className="mono-label block truncate text-[11px] font-semibold tracking-[0.14em] text-foreground">
+            {t("Star Play")}
+          </span>
+          <span className="block truncate text-[10.5px] italic text-muted-foreground">
+            {t("the Mirror's star magic")}
+          </span>
+        </span>
+        <Sparkles
+          className="size-3.5 shrink-0 text-[var(--sp-a)] opacity-70 transition-all duration-300 group-hover:opacity-100"
+          aria-hidden="true"
+        />
+      </button>
+    </div>
+  );
+}
+
 function RefineRealityCard() {
   const openMirrorOS = useMirror((s) => s.openMirrorOS);
   const t = useT();
 
   return (
-    <div className="p-3">
+    <div className="px-3 py-3">
       <button
         type="button"
         onClick={openMirrorOS}
         aria-label={t("Open the Mirror OS — Reality Guidance")}
-        className="focus-glow group block w-full rounded-2xl bg-gradient-to-br from-[var(--gd)]/50 via-[#8f6bff]/25 to-[var(--pk)]/45 p-[1px] text-left transition-all duration-300 hover:-translate-y-0.5 hover:glow"
+        className="dream-btn focus-glow group flex h-11 w-full items-center gap-2.5 rounded-full px-3.5 text-left transition-all duration-300 hover:-translate-y-px"
       >
-        <span className="flex items-start gap-3 rounded-[15px] bg-[var(--glass-bg-strong)] p-3.5">
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-full border hairline bg-gradient-to-br from-[var(--gd)]/20 to-[var(--pk)]/15">
-            <MonitorSmartphone
-              className="size-4 text-[var(--gd)] transition-transform duration-500 group-hover:rotate-12"
-              aria-hidden="true"
-            />
+        {/* two tiny stars keeping time inside the dream */}
+        <span
+          className="dream-star left-5 top-2 size-[3px]"
+          aria-hidden="true"
+        />
+        <span
+          className="dream-star dream-star-slow right-6 bottom-2 size-[2px]"
+          aria-hidden="true"
+        />
+
+        <span className="dream-halo relative flex size-7 shrink-0 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--gd)_38%,transparent)] bg-[color-mix(in_srgb,var(--gd)_14%,transparent)]">
+          <MoonStar
+            className="size-3.5 text-[var(--gd)] transition-transform duration-500 group-hover:rotate-12"
+            aria-hidden="true"
+          />
+        </span>
+
+        <span className="min-w-0 flex-1 leading-tight">
+          <span className="mono-label block truncate text-[11px] font-semibold tracking-[0.14em] text-foreground">
+            {t("Mirror OS · Reality")}
           </span>
-          <span className="min-w-0">
-            <span className="mono-label block text-[11.5px] font-semibold text-foreground">
-              {t("Mirror OS · Reality Guidance")}
-            </span>
-            <span className="mt-1.5 block text-[12px] leading-relaxed text-muted-foreground">
-              {t(
-                "Enter the Mirror OS — shift formulas, higher-mind contact and reality-refinement tools in a fully independent workspace"
-              )}
-            </span>
+          <span className="block truncate text-[10.5px] italic text-muted-foreground">
+            {t("a small dream of refinement")}
           </span>
         </span>
+
+        <Sparkles
+          className="size-3.5 shrink-0 text-[var(--gd)] opacity-70 transition-all duration-300 group-hover:opacity-100"
+          aria-hidden="true"
+        />
       </button>
     </div>
   );
@@ -398,8 +448,9 @@ export function SidebarContent() {
         )}
       </ul>
 
-      {/* Bottom card */}
+      {/* Bottom cards — Star Play above the Reality dream */}
       <div className="shrink-0 border-t hairline">
+        <StarPlayButton />
         <RefineRealityCard />
       </div>
     </div>

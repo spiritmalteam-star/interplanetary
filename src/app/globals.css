@@ -92,6 +92,10 @@
   --gd: #a8863e;
   --ok: #2f9a7c;
 
+  /* star play — mystical violet */
+  --sp-a: #7b4fb6;
+  --sp-b: #b06ecb;
+
   /* hairlines — extremely thin, spec-driven */
   --hairline: rgba(30, 130, 190, 0.16);
   --hairline-hover: rgba(30, 130, 190, 0.38);
@@ -150,6 +154,10 @@
   --pk: #e3a4c2;
   --gd: #d9c49a;
   --ok: #66c9ac;
+
+  /* star play — mystical violet */
+  --sp-a: #b79bef;
+  --sp-b: #d9c2f4;
 
   /* hairlines */
   --hairline: rgba(110, 190, 214, 0.15);
@@ -497,6 +505,150 @@ html:not(.dark) .text-hero {
 .animate-float-y { animation: float-y 6s ease-in-out infinite; }
 
 /* ------------------------------------------------------------------ */
+/*  Dream button — a small, breathing doorway into the Mirror OS       */
+/* ------------------------------------------------------------------ */
+
+@keyframes dream-drift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+@keyframes dream-twinkle {
+  0%, 100% { opacity: 0.15; transform: scale(0.7); }
+  50% { opacity: 0.95; transform: scale(1.15); }
+}
+@keyframes dream-halo {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 0.8; }
+}
+
+.dream-btn {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background:
+    linear-gradient(
+      120deg,
+      color-mix(in srgb, var(--gd) 16%, transparent) 0%,
+      color-mix(in srgb, var(--pk) 13%, transparent) 30%,
+      color-mix(in srgb, #8f6bff 15%, transparent) 55%,
+      color-mix(in srgb, var(--gd) 12%, transparent) 80%,
+      color-mix(in srgb, var(--pk) 14%, transparent) 100%
+    );
+  background-size: 220% 100%;
+  animation: dream-drift 9s ease-in-out infinite;
+  border: 1px solid color-mix(in srgb, var(--gd) 30%, transparent);
+  box-shadow:
+    0 0 22px -10px color-mix(in srgb, var(--gd) 55%, transparent),
+    inset 0 1px 0 color-mix(in srgb, white 8%, transparent);
+}
+.dream-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(
+    100deg,
+    transparent 20%,
+    color-mix(in srgb, white 16%, transparent) 46%,
+    color-mix(in srgb, white 6%, transparent) 54%,
+    transparent 80%
+  );
+  background-size: 240% 100%;
+  animation: dream-drift 6.5s ease-in-out infinite;
+  pointer-events: none;
+}
+.dream-btn:hover {
+  border-color: color-mix(in srgb, var(--gd) 52%, transparent);
+  box-shadow:
+    0 0 30px -8px color-mix(in srgb, var(--gd) 65%, transparent),
+    0 0 18px -8px color-mix(in srgb, var(--pk) 55%, transparent),
+    inset 0 1px 0 color-mix(in srgb, white 10%, transparent);
+}
+
+/* Two tiny stars that keep time inside the dream */
+.dream-star {
+  position: absolute;
+  border-radius: 9999px;
+  background: white;
+  pointer-events: none;
+  animation: dream-twinkle 3.2s ease-in-out infinite;
+  box-shadow: 0 0 6px 1px color-mix(in srgb, var(--gd) 70%, transparent);
+}
+.dream-star-slow { animation-duration: 4.6s; animation-delay: 1.1s; }
+
+.dream-halo {
+  animation: dream-halo 3.4s ease-in-out infinite;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Star Play — mystical violet arcana                                 */
+/* ------------------------------------------------------------------ */
+
+.star-btn {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background:
+    linear-gradient(
+      120deg,
+      color-mix(in srgb, var(--sp-a) 18%, transparent) 0%,
+      color-mix(in srgb, var(--sp-b) 13%, transparent) 32%,
+      color-mix(in srgb, var(--pk) 12%, transparent) 58%,
+      color-mix(in srgb, var(--sp-a) 14%, transparent) 82%,
+      color-mix(in srgb, var(--sp-b) 13%, transparent) 100%
+    );
+  background-size: 220% 100%;
+  animation: dream-drift 10s ease-in-out infinite;
+  border: 1px solid color-mix(in srgb, var(--sp-a) 32%, transparent);
+  box-shadow:
+    0 0 24px -10px color-mix(in srgb, var(--sp-a) 60%, transparent),
+    inset 0 1px 0 color-mix(in srgb, white 8%, transparent);
+}
+.star-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(
+    100deg,
+    transparent 22%,
+    color-mix(in srgb, white 14%, transparent) 46%,
+    color-mix(in srgb, white 5%, transparent) 54%,
+    transparent 78%
+  );
+  background-size: 240% 100%;
+  animation: dream-drift 7s ease-in-out infinite;
+  pointer-events: none;
+}
+.star-btn:hover {
+  border-color: color-mix(in srgb, var(--sp-a) 55%, transparent);
+  box-shadow:
+    0 0 32px -8px color-mix(in srgb, var(--sp-a) 70%, transparent),
+    0 0 18px -8px color-mix(in srgb, var(--sp-b) 55%, transparent),
+    inset 0 1px 0 color-mix(in srgb, white 10%, transparent);
+}
+
+/* Breathing violet halo around the emblem / drawn seals */
+.starplay-halo {
+  animation: dream-halo 3.8s ease-in-out infinite;
+}
+
+/* Soft violet aura behind the modal body */
+.starplay-aura {
+  background:
+    radial-gradient(
+      120% 70% at 50% 0%,
+      color-mix(in srgb, var(--sp-a) 10%, transparent) 0%,
+      transparent 60%
+    ),
+    radial-gradient(
+      90% 60% at 85% 100%,
+      color-mix(in srgb, var(--sp-b) 8%, transparent) 0%,
+      transparent 55%
+    );
+}
+
+/* ------------------------------------------------------------------ */
 /*  Reduced motion                                                    */
 /* ------------------------------------------------------------------ */
 
@@ -513,7 +665,14 @@ html:not(.dark) .text-hero {
   .scope-halo-rev,
   .animate-charge-pulse,
   .animate-float-y,
-  .shimmer-bar {
+  .shimmer-bar,
+  .dream-btn,
+  .dream-btn::before,
+  .dream-star,
+  .dream-halo,
+  .star-btn,
+  .star-btn::before,
+  .starplay-halo {
     animation: none !important;
   }
   *,

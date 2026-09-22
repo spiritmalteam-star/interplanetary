@@ -20,6 +20,7 @@ import {
 export type ModalState =
   | { type: "federation" }
   | { type: "astral" }
+  | { type: "starplay" }
   | { type: "dossier"; kind: DossierKind; id: string }
   | { type: "entity"; kind: DossierKind; id: string }
   | { type: "settings" }
@@ -76,6 +77,14 @@ export type MainView =
   | "register";
 export type RegisterKind = DossierKind;
 
+/* -------- direct line to the Mirror Entity OS (reality refining) ------- */
+
+export interface OsMessage {
+  id: string;
+  role: "visitor" | "os";
+  text: string;
+}
+
 interface MirrorState {
   activeMode: Mode;
   activeScienceField: string | null;
@@ -101,6 +110,12 @@ interface MirrorState {
   labProgress: number;
   labBlueprint: ManifestBlueprint | null;
   labError: string | null;
+
+  /* Mirror Entity OS — the direct reality-refining chat */
+  osMessages: OsMessage[];
+  osStatus: TransmissionStatus;
+  osError: string | null;
+  osDraft: string;
 
   /* Universal language + transcript voice */
   language: LanguageCode;
@@ -144,6 +159,10 @@ interface MirrorState {
   setLabIntensity: (v: number) => void;
   chargeIntention: () => Promise<void>;
   resetLabDraft: () => void;
+
+  /* Mirror Entity OS — direct chat */
+  setOsDraft: (v: string) => void;
+  askOS: (question: string) => Promise<void>;
 }
 
 const defaultTabForMode = (mode: Mode): SidebarTab =>
@@ -184,6 +203,11 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   labBlueprint: null,
   labError: null,
 
+  osMessages: [],
+  osStatus: "idle" as TransmissionStatus,
+  osError: null,
+  osDraft: "",
+
   language: "en" as LanguageCode,
   voice: DEFAULT_VOICE,
   pace: 0.95,
@@ -209,11 +233,17 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   setScienceField: (id) =>
     set((s) => ({
       activeScienceField: s.activeScienceField === id ? null : id,
+      /* FUSION CLARITY LAW — any recalibration re-tunes the science
+         channel back to a quiet origin. */
+      sessions: { ...s.sessions, science: emptySession() },
     })),
 
   setDirection: (id) =>
     set((s) => ({
       activeDirection: s.activeDirection === id ? null : id,
+      /* FUSION CLARITY LAW — any recalibration re-tunes the science
+         channel back to a quiet origin. */
+      sessions: { ...s.sessions, science: emptySession() },
     })),
 
   setSidebarTab: (tab) => set({ sidebarTab: tab }),
@@ -277,6 +307,12 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     }));
 
     try {
+      /* Context memory: the mirror remembers this channel's earlier
+         exchanges, so conversations deepen instead of restarting. */
+      const history = session.messages.slice(-6).map((m) => ({
+        q: m.query,
+        a: m.text,
+      }));
       const res = await fetch("/api/transmission", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -286,6 +322,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
           scienceField: get().activeScienceField,
           direction: get().activeDirection,
           language: get().language,
+          history,
         }),
       });
       const data = await res.json().catch(() => null);
@@ -365,6 +402,66 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   setLabIntensity: (v) => set({ labIntensity: v }),
 
   resetLabDraft: () => set({ ...emptyLab }),
+
+  /* ---------------- Mirror Entity OS — direct chat ---------------- */
+
+  setOsDraft: (v) => set({ osDraft: v }),
+
+  askOS: async (question) => {
+    const query = question.trim();
+    if (!query || get().osStatus === "loading") return;
+
+    const visitorId = nextMessageId();
+    set((s) => ({
+      osStatus: "loading",
+      osError: null,
+      osDraft: "",
+      osMessages: [
+        ...s.osMessages,
+        { id: visitorId, role: "visitor" as const, text: query },
+      ],
+    }));
+
+    try {
+      const history = get()
+        .osMessages.filter((m) => m.id !== visitorId)
+        .slice(-10)
+        .map((m) => ({ role: m.role, text: m.text }));
+
+      const res = await fetch("/api/mirror-os", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query,
+          history,
+          language: get().language,
+        }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        throw new Error(
+          (data && data.error) ||
+            "The OS is momentarily quiet. Rest, then reach again."
+        );
+      }
+
+      set((s) => ({
+        osStatus: "ready",
+        osMessages: [
+          ...s.osMessages,
+          { id: nextMessageId(), role: "os" as const, text: data.reply },
+        ],
+      }));
+    } catch (err) {
+      set({
+        osStatus: "error",
+        osError:
+          err instanceof Error
+            ? err.message
+            : "The OS is momentarily quiet. Rest, then reach again.",
+      });
+    }
+  },
 
   /* ---------------- Language + transcript voice ---------------- */
 

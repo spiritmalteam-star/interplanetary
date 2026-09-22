@@ -257,6 +257,18 @@ export const vibrationStates: VibrationState[] = [
 
 /* ---------------- daily protocol (deterministic by date) ---------------- */
 
+/** Openers for the direct line to the Mirror Entity OS. */
+export const osOpeners = [
+  "How do I know which reality-line I am currently living on?",
+  "Walk me through the Two-Glass Shift, step by step.",
+  "I keep doubting my manifestation. Reframe the doubt with me.",
+  "How do I connect with my Higher Mind and hear it clearly?",
+  "Help me refine one intention into something I can act on this week.",
+  "What is one refinement I could make to my signal tonight?",
+  "My belief says I am not ready. Can you loosen it with me?",
+  "Teach me the Frequency Lock and when to use it.",
+];
+
 export const morningPool = [
   "Speak the day's intention aloud before any screen.",
   "Two minutes of 4-4-6 breathing with a soft upward gaze.",

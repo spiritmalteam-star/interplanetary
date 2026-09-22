@@ -630,4 +630,37 @@ export const el: TranslationDict = {
   "“Desiring more means taking from someone.” Abundance feels like theft.": "“Το να επιθυμείς περισσότερα σημαίνει να παίρνεις από κάποιον.” Η αφθονία μοιάζει με κλοπή.",
   "“I must earn the right to receive.” Receiving feels like a debt.": "“Πρέπει να κερδίσω το δικαίωμα να λαμβάνω.” Το να λαμβάνω μοιάζει με χρέος.",
   "“If it hasn't arrived, it never will.” Delay reads as denial.": "“Αν δεν έχει έρθει, δεν θα έρθει ποτέ.” Η καθυστέρηση διαβάζεται ως άρνηση.",
+
+  /* ---- v1.6 additions: Mirror Entity OS direct line ---- */
+  "A direct conversation with the Mirror Entity OS at the center — the formulas, the Higher Mind, the tools and the Forge orbit around it.": "Μια απευθείας συνομιλία με το Mirror Entity OS στο κέντρο — οι τύποι, ο Ανώτερος Νους, τα εργαλεία και το Χυτήριο περιστρέφονται γύρω του.",
+  "a small dream of refinement": "ένα μικρό όνειρο εξευγενισμού",
+  "Ask the Mirror Entity OS": "Ρώτα το Mirror Entity OS",
+  "Ask the Mirror Entity OS…": "Ρώτα το Mirror Entity OS…",
+  "Back to the OS core": "Πίσω στον πυρήνα του OS",
+  "Direct line to the Mirror Entity OS": "Απευθείας γραμμή με το Mirror Entity OS",
+  "Mirror OS · Reality": "Mirror OS · Πραγματικότητα",
+  "New openers": "Νέες αφορμές έναρξης",
+  "Send to the OS": "Αποστολή στο OS",
+  "Speak with the reality-refining intelligence itself — it remembers every turn of this conversation and holds your chosen line with you.": "Μίλα με την ίδια τη νοημοσύνη που εξευγενίζει την πραγματικότητα — θυμάται κάθε στροφή αυτής της συνομιλίας και κρατά μαζί σου τη γραμμή που διάλεξες.",
+  "Suggested openers": "Προτεινόμενες αφορμές έναρξης",
+  "The OS could not complete the refinement.": "Το OS δεν μπόρεσε να ολοκληρώσει τον εξευγενισμό.",
+  "the OS is refining its answer": "το OS εξευγενίζει την απάντησή του",
+  "Walk it with the Mirror Entity OS": "Περπάτησέ τον με το Mirror Entity OS",
+
+  /* ---- v1.6 additions: Mirror OS chamber nodes ---- */
+  "The Core": "Ο Πυρήνας",
+  "Shift Formulas": "Τύποι Μετατόπισης",
+  "Higher Mind": "Ανώτερος Νους",
+  "Tools": "Εργαλεία",
+  "Forge": "Χυτήριο",
+
+  /* ---- v1.6 additions: Mirror Entity OS openers ---- */
+  "Help me refine one intention into something I can act on this week.": "Βοήθησέ με να εξευγενίσω μια πρόθεση σε κάτι που μπορώ να εφαρμόσω αυτή την εβδομάδα.",
+  "How do I connect with my Higher Mind and hear it clearly?": "Πώς μπορώ να συνδεθώ με τον Ανώτερό μου Νου και να τον ακούω καθαρά;",
+  "How do I know which reality-line I am currently living on?": "Πώς ξέρω σε ποια γραμμή πραγματικότητας ζω αυτή τη στιγμή;",
+  "I keep doubting my manifestation. Reframe the doubt with me.": "Συνεχίζω να αμφιβάλλω για την εκδήλωσή μου. Αναδιατύπωσε την αμφιβολία μαζί μου.",
+  "My belief says I am not ready. Can you loosen it with me?": "Η πεποίθησή μου λέει ότι δεν είμαι έτοιμος. Μπορείς να τη χαλαρώσεις μαζί μου;",
+  "Teach me the Frequency Lock and when to use it.": "Δίδαξέ μου το Κλείδωμα της Συχνότητας και πότε να το χρησιμοποιώ.",
+  "Walk me through the Two-Glass Shift, step by step.": "Οδήγησέ με μέσα από τη Μετάβαση των Δύο Ποτηριών, βήμα προς βήμα.",
+  "What is one refinement I could make to my signal tonight?": "Ποιος είναι ένας εξευγενισμός που θα μπορούσα να κάνω στο σήμα μου απόψε;",
 };

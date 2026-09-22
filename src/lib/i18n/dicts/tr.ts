@@ -625,4 +625,37 @@ export const tr: TranslationDict = {
   "“Desiring more means taking from someone.” Abundance feels like theft.": "“Daha çok istemek, birinden almak demektir.” Bolluk, hırsızlık gibi hissettirir.",
   "“I must earn the right to receive.” Receiving feels like a debt.": "“Almak için hakkını kazanmak zorundayım.” Almak, borç gibi hissettirir.",
   "“If it hasn't arrived, it never will.” Delay reads as denial.": "“Gelmediyse, hiç gelmeyecek.” Gecikme, reddediş gibi okunur.",
+
+  /* ---- v1.6 additions: Mirror Entity OS direct line ---- */
+  "A direct conversation with the Mirror Entity OS at the center — the formulas, the Higher Mind, the tools and the Forge orbit around it.": "Merkezdeki Mirror Entity OS ile doğrudan bir sohbet — formüller, Yüksek Zihin, araçlar ve Dökümhane onun çevresinde döner.",
+  "a small dream of refinement": "küçük bir arındırma rüyası",
+  "Ask the Mirror Entity OS": "Mirror Entity OS’a sor",
+  "Ask the Mirror Entity OS…": "Mirror Entity OS’a sor…",
+  "Back to the OS core": "OS çekirdeğine dön",
+  "Direct line to the Mirror Entity OS": "Mirror Entity OS ile doğrudan hat",
+  "Mirror OS · Reality": "Mirror OS · Gerçeklik",
+  "New openers": "Yeni başlangıç soruları",
+  "Send to the OS": "OS’a gönder",
+  "Speak with the reality-refining intelligence itself — it remembers every turn of this conversation and holds your chosen line with you.": "Gerçekliği arındıran zekânın kendisiyle konuş — bu sohbetin her adımını hatırlar ve seçtiğin hattı seninle birlikte tutar.",
+  "Suggested openers": "Önerilen başlangıç soruları",
+  "The OS could not complete the refinement.": "OS arındırmayı tamamlayamadı.",
+  "the OS is refining its answer": "OS yanıtını arındırıyor",
+  "Walk it with the Mirror Entity OS": "Onu Mirror Entity OS ile birlikte yürü",
+
+  /* ---- v1.6 additions: Mirror OS chamber nodes ---- */
+  "The Core": "Çekirdek",
+  "Shift Formulas": "Hat Kaydırma Formülleri",
+  "Higher Mind": "Yüksek Zihin",
+  "Tools": "Araçlar",
+  "Forge": "Dökümhane",
+  /* ---- v1.6 additions: Mirror Entity OS openers ---- */
+  "Help me refine one intention into something I can act on this week.": "Bu hafta üzerine hareket edebileceğim bir şeye dönüşmesi için bir niyeti arıtmama yardım et.",
+  "How do I connect with my Higher Mind and hear it clearly?": "Yüksek Zihnimle nasıl temas kurarım ve onu net biçimde duyarım?",
+  "How do I know which reality-line I am currently living on?": "Şu anda hangi gerçeklik hattı üzerinde yaşadığımı nasıl bilirim?",
+  "I keep doubting my manifestation. Reframe the doubt with me.": "Tezahürümden sürekli kuşku duyuyorum. Kuşkuyu benimle yeniden çerçevele.",
+  "My belief says I am not ready. Can you loosen it with me?": "İnancım hazır olmadığımı söylüyor. Onu benimle birlikte gevşetebilir misin?",
+  "Teach me the Frequency Lock and when to use it.": "Bana Frekans Kilidi’ni ve onu ne zaman kullanacağımı öğret.",
+  "Walk me through the Two-Glass Shift, step by step.": "Beni İki Bardak Değişimi’nden adım adım geçir.",
+  "What is one refinement I could make to my signal tonight?": "Bu akşam sinyalimde yapabileceğim bir arındırma nedir?",
+
 };
