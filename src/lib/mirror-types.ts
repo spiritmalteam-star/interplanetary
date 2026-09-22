@@ -240,48 +240,49 @@ export interface PrincipleProfile {
   practice: string;
 }
 
-/* ---------------- Interplanetary Biology ---------------- */
+/* ---------------- Mirror OS — Reality Guidance ---------------- */
 
-export type SpecimenKind = "fauna" | "flora";
-
-export interface FaunaSpecimen {
-  id: string; // "fauna-0001"
-  registryNo: string; // "BIO-FA-0001"
-  name: string; // e.g. "Velmora Sky-drift"
-  genus: string;
-  classId: string; // one of FAUNA_CLASS ids
-  className: string; // fauna class label
-  originGroupId: string; // civilization family id (from civilizations.ts)
-  originName: string; // civilization family name
-  originWorld: string; // short flavor world line
-  habitat: string;
-  diet: string;
-  temperament: string;
-  size: string;
-  lifespan: string;
-  traits: string[]; // EXACTLY 4
-  note: string; // one-sentence field note
-  rarity: string; // one of 5 fixed rarity tiers
-  artIndex: number; // 0..23 → /images/biology/fauna-NN.jpg
+/** A complete formula for shifting one's lived reality-line. */
+export interface ShiftFormula {
+  id: string;
+  glyph: string;
+  name: string;
+  tagline: string;
+  steps: string[]; // exactly 4
+  seal: string;
 }
 
-export interface FloraSpecimen {
-  id: string; // "flora-0001"
-  registryNo: string; // "BIO-FL-0001"
+/** One rung of the Higher Mind ladder. */
+export interface LadderRung {
+  rung: number;
+  title: string;
+  line: string;
+}
+
+/** A protocol for connecting with the Higher Mind. */
+export interface HigherProtocol {
+  id: string;
+  glyph: string;
   name: string;
-  genus: string;
-  lineageId: string; // one of FLORA_LINEAGE ids
-  lineage: string; // flora lineage label
-  originGroupId: string;
-  originName: string;
-  originWorld: string;
-  habitat: string;
-  bloomCycle: string;
-  scent: string;
-  height: string;
-  properties: string; // energetic / medicinal lore
-  traits: string[]; // EXACTLY 4
-  note: string;
-  rarity: string;
-  artIndex: number; // 0..23 → /images/biology/flora-NN.jpg
+  purpose: string;
+  steps: string[]; // exactly 3
+}
+
+/** A belief domain offered to the Belief Reframer. */
+export interface BeliefDomain {
+  id: string;
+  glyph: string;
+  label: string;
+  pattern: string;
+  reframe: string;
+  practice: string;
+}
+
+/** A felt state the Vibration Bridge can lift. */
+export interface VibrationState {
+  id: string;
+  glyph: string;
+  label: string;
+  bridge: string; // the one-line movement out of this state
+  anchor: string; // the anchor phrase to install
 }

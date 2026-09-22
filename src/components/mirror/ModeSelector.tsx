@@ -9,6 +9,8 @@ import { cn } from "@/lib/utils";
 export function ModeSelector() {
   const activeMode = useMirror((s) => s.activeMode);
   const setMode = useMirror((s) => s.setMode);
+  const returnToObservatory = useMirror((s) => s.returnToObservatory);
+  const view = useMirror((s) => s.view);
   const t = useT();
   const context = modeContext[activeMode];
 
@@ -29,8 +31,13 @@ export function ModeSelector() {
               <button
                 key={m.id}
                 type="button"
-                onClick={() => setMode(m.id)}
+                onClick={() => (active && view !== "observatory" ? returnToObservatory() : setMode(m.id))}
                 aria-pressed={active}
+                title={
+                  active && view !== "observatory"
+                    ? t("Return to the Observatory")
+                    : t(m.label)
+                }
                 className={cn(
                   "focus-glow flex items-center gap-1.5 whitespace-nowrap rounded-full border px-3.5 py-1.5 text-[12.5px] transition-all duration-300 sm:px-4",
                   active

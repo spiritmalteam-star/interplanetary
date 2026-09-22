@@ -14,13 +14,11 @@ import { QuestionCards } from "./QuestionCards";
 import { StatusBar } from "./StatusBar";
 import { QueryComposer } from "./QueryComposer";
 import { TransmissionView } from "./TransmissionView";
-import { ManifestationLab } from "./ManifestationLab";
+import { MirrorOS } from "./MirrorOS";
 import { ArchiveRegister } from "./ArchiveRegister";
-import { BiologyExplorer } from "./BiologyExplorer";
 import { FederationModal } from "./FederationModal";
 import { AstralJobsModal } from "./AstralJobsModal";
 import { DossierModal } from "./DossierModal";
-import { SpecimenModal } from "./SpecimenModal";
 import { SettingsModal } from "./SettingsModal";
 
 export default function AppShell() {
@@ -30,6 +28,19 @@ export default function AppShell() {
   useEffect(() => {
     useMirror.getState().bootPreferences();
   }, []);
+
+  /* The Mirror OS is a fully independent world: when active it replaces
+     every other surface — its own screen, its own scroll, only a back
+     button connecting it to the rest of the application. */
+  if (view === "mirroros") {
+    return (
+      <div className="relative h-dvh overflow-hidden">
+        <CosmicBackdrop />
+        <StarField />
+        <MirrorOS />
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-dvh flex-col overflow-hidden">
@@ -60,12 +71,8 @@ export default function AppShell() {
                 </>
               ) : view === "transmission" ? (
                 <TransmissionView />
-              ) : view === "register" ? (
-                <ArchiveRegister />
-              ) : view === "biology" ? (
-                <BiologyExplorer />
               ) : (
-                <ManifestationLab />
+                <ArchiveRegister />
               )}
             </div>
           </div>
@@ -78,7 +85,6 @@ export default function AppShell() {
       <FederationModal />
       <AstralJobsModal />
       <DossierModal />
-      <SpecimenModal />
       <SettingsModal />
     </div>
   );

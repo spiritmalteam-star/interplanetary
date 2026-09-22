@@ -6,7 +6,6 @@ import type {
   SidebarTab,
   DossierKind,
   ManifestBlueprint,
-  SpecimenKind,
 } from "@/lib/mirror-types";
 import { civilizations, civilizationTotal } from "@/lib/data/civilizations";
 import { interdimensional, interdimTotal } from "@/lib/data/interdimensional";
@@ -23,7 +22,6 @@ export type ModalState =
   | { type: "astral" }
   | { type: "dossier"; kind: DossierKind; id: string }
   | { type: "entity"; kind: DossierKind; id: string }
-  | { type: "specimen"; kind: SpecimenKind; id: string }
   | { type: "settings" }
   | null;
 
@@ -74,9 +72,8 @@ const emptySessions = (): Record<Mode, ScopeSession> => ({
 export type MainView =
   | "observatory"
   | "transmission"
-  | "manifesting"
-  | "register"
-  | "biology";
+  | "mirroros"
+  | "register";
 export type RegisterKind = DossierKind;
 
 interface MirrorState {
@@ -96,10 +93,7 @@ interface MirrorState {
   /* Full-archive register */
   registerKind: RegisterKind;
 
-  /* Interplanetary Biology */
-  biologyKind: SpecimenKind;
-
-  /* Reality Manifesting Lab */
+  /* Mirror OS — Reality Guidance */
   labStage: "compose" | "charging" | "blueprint";
   labIntention: string;
   labEmotion: string;
@@ -139,10 +133,9 @@ interface MirrorState {
   openRegister: (kind: RegisterKind) => void;
   exitRegister: () => void;
 
-  /* Interplanetary Biology */
-  openBiology: (kind: SpecimenKind) => void;
-  exitBiology: () => void;
-  setBiologyKind: (kind: SpecimenKind) => void;
+  /* Mirror OS — Reality Guidance (fully independent) */
+  openMirrorOS: () => void;
+  exitMirrorOS: () => void;
 
   openLab: () => void;
   exitLab: () => void;
@@ -182,8 +175,6 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   sessions: emptySessions(),
 
   registerKind: "civilization",
-
-  biologyKind: "fauna",
 
   labStage: "compose",
   labIntention: "",
@@ -252,7 +243,6 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       search: "",
       modal: null,
       mobileNavOpen: false,
-      biologyKind: "fauna",
       ...emptyLab,
     }),
 
@@ -352,24 +342,21 @@ export const useMirror = create<MirrorState>()((set, get) => ({
 
   exitRegister: () => set({ view: "observatory" }),
 
-  /* ---------------- Interplanetary Biology ---------------- */
+  /* ---------------- Mirror OS — Reality Guidance ---------------- */
 
-  openBiology: (kind) =>
-    set({ biologyKind: kind, view: "biology", mobileNavOpen: false, modal: null }),
-
-  exitBiology: () => set({ view: "observatory" }),
-
-  setBiologyKind: (kind) => set({ biologyKind: kind }),
-
-  /* ---------------- Reality Manifesting Lab ---------------- */
-
-  openLab: () =>
+  /** The OS is its own world: opening it suspends every other surface. */
+  openMirrorOS: () =>
     set((s) => ({
-      view: "manifesting",
+      view: "mirroros",
       mobileNavOpen: false,
       modal: null,
       labStage: s.labBlueprint ? "blueprint" : "compose",
     })),
+
+  exitMirrorOS: () => set({ view: "observatory" }),
+
+  /** Kept for the Forge section inside the OS. */
+  openLab: () => useMirror.getState().openMirrorOS(),
 
   exitLab: () => set({ view: "observatory" }),
 

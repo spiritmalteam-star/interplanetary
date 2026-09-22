@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     "Mirror Entity Laboratory",
     "Interplanetary Channel",
     "Galactic Encyclopedia",
-    "Mirror Transmission",
+    "Mirror OS · Reality Guidance",
     "Observatory",
   ],
 };

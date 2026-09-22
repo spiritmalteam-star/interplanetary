@@ -438,3 +438,80 @@ Work Log:
 - Updated REPLICATION_PROMPT.md to v1.3: counts line (2,700 specimens, 14/16/16, 1,236 images, 556-key dicts), §4 biology sidebar + auto-send suggestions, §6 counts manifest + taxonomy, §7 specimen profile contract, §9 openable federation records + Biology wing, §10 image system 1,236, §13 new components/scripts, §14 556-key + locale numbers, §17 now 15 acceptance checks (biology/suggestions/determinism added).
 Stage Summary:
 - v1.3 shipped and browser-verified end-to-end: Interplanetary Biology (1,200 fauna + 1,500 flora, deterministic, plate-pooled AI art), extended openable Federation (14/16/16 + AI emblems), per-scope suggestions with reload + auto-send, full 8-language coverage of every new word, locale-aware numbers. REPLICATION_PROMPT.md v1.3 issued in repo and delivered in-chat.
+
+---
+Task ID: 9-c
+Agent: translation agent (es/tr)
+Task: Translate the 143 new Mirror OS i18n keys into Spanish and Turkish
+
+Work Log:
+- Read worklog.md and scripts/mirror-os-missing.json (143 English source strings for the Mirror OS — Reality Guidance wing: six shift formulas, Higher Mind contact/discernment, belief reframer, daily/evening protocols, Reality Ledger, all 4-4-6 breathing notations and two-glass ritual copy).
+- Pre-checked both dicts (es.ts, tr.ts): 504 keys each, 0 duplicates, 0 of the 143 keys already present.
+- Translated all 143 strings into Spanish and Turkish in the calm, luminous, reflective register of the product: natural (not word-for-word) renderings; titles translated as natural titles (La Apertura Matutina / Sabah Açıklığı, El Puente de los Sueños / Rüya Köprüsü, La Fórmula del Espejo / Ayna Formülü, El Cambio de los Dos Vasos / İki Bardak Değişimi, La Liberación del Vacío / Boşluk Bırakma, La Frecuencia Anclada / Frekans Kilidi…); em dashes (—), curly quotes (“ ”), ellipses (…), 4-4-6 notation, “·” separators and ❤️/✦-safe typography preserved; brand token "MIRROR OS" left untranslated; no ASCII double quotes in any value (typographic quotes/apostrophes only, e.g. Turkish Mirror OS’a / Yüksek Zihin’in with U+2019).
+- Applied the additions via a one-shot bun script (scripts/task-9c-apply.ts, deleted after use) that zipped keys from the JSON with the hand-written values, skipped any pre-existing key (none were), inserted the exact comment line `/* ---- v1.5 additions: Mirror OS — Reality Guidance (independent workspace) ---- */` plus 143 entries just before each file's final `};`, and guaranteed comma-safe insertion.
+- Validated: `bun` imports of both dicts succeed; duplicate-key regex scan shows 0 dups per file; diff against mirror-os-missing.json shows all 143 keys present as string values (0 absent, 0 empty); MIRROR OS token unchanged; no ASCII double quotes in new values.
+
+Stage Summary:
+- es.ts: +143 entries (504 → 647 keys), header comment inserted at line 511, bun import OK, 0 duplicates, 0 keys missing.
+- tr.ts: +143 entries (504 → 647 keys), header comment inserted at line 511, bun import OK, 0 duplicates, 0 keys missing.
+- All 143 Mirror OS — Reality Guidance keys now resolve in Spanish and Turkish with graceful-English fallback no longer needed for them.
+
+---
+Task ID: 9-b
+Agent: translation agent (de/fr)
+Task: Translate the 143 new Mirror OS i18n keys into German and French
+
+Work Log:
+- Read worklog.md (conventions from Tasks 3-b/14-b/14-d: de du-register, fr warm-formal vous, "Kammer/chambre", fr "scope"→"cadrage", de "composer"→"Eingabefeld", fr "composeur", de „…“ quotes / fr « … » guillemets) and scripts/mirror-os-missing.json (143 keys).
+- Studied the v1.5 source for context before translating: src/lib/data/mirroros.ts (six shift formulas, ladder rungs, higher protocols, belief domains, vibration states, daily-protocol pools) and src/components/mirror/MirrorOS.tsx (Seal/Seal it/Pattern/Reframe/Anchor phrase/Focus of the day/Reality Ledger usage), so labels got the right part of speech and register.
+- Verified none of the 143 keys pre-existed in either dict (0 in both; both files stood at 504 entries / 516 lines).
+- Crafted 143 de + 143 fr translations appended before the final `};` under the exact comment `/* ---- v1.5 additions: Mirror OS — Reality Guidance (independent workspace) ---- */` (one occurrence per file, inserted at line 516 just before the close). Purely additive; no existing entry touched.
+- Terminology: Higher Mind → Höherer Geist / Esprit Supérieur; reality-line → Realitätslinie / ligne de réalité; Reality Ledger → Realitätsregister / Registre de Réalité; Reality Guidance → Realitätsführung / Guidance de Réalité; titles translated naturally (Die Morgenblende, Die Traumbrücke, Die Spiegelformel, Die Zwei-Gläser-Verschiebung, Die Frequenzfixierung, Die Formel der Annahme, Die Vakuum-Loslösung / L'Ouverture du Matin, Le Pont des Rêves, La Formule du Miroir, Le Décalage des Deux Verres, Le Verrou de Fréquence, La Formule de l'Hypothèse, La Libération du Vide); "MIRROR OS" brand token kept verbatim everywhere.
+- Label disambiguations (kept distinct from English to avoid identical-value NOTEs, matching Task 14-b convention): rung titles de Stille/Blende/Zeichen/Dialog/Vertrauen/Integration, fr Immobilité/Ouverture/Signe/Échange/Confiance/Intégration; belief domains de Wert/Zeitpunkt/Erlaubnis, fr Valeur/Le moment/La permission; vibration states de Nebel/Schwere/Zerstreuung/Zweifel, fr Brouillard/Lourdeur/Dispersion/Doute; headings de Muster/Umdeutung/Siegel, fr Schéma/Recadrage/Sceau. de rung 6 stays "Integration" (correct German loanword; would print an informational checker NOTE only).
+- Typography preserved: — em dashes, … ellipses, · mid dots, 4-4-6 notation (breathe 4-4-6 / 4-4-6-Atmung / respiration 4-4-6), source curly “ ” kept in keys; values use native typography (de „…“, fr « … », ASCII apostrophe ' matching each dict's existing style), zero ASCII double quotes in values; feeling-gender agreement kept consistent across the Frequency Lock steps (de es/das Gefühl, fr la sensation → -la).
+- Wrote a temp script (scripts/tmp-i18n-9b.mjs, deleted after use) that asserted JSON key uniqueness and order, asserted zero pre-existing collisions, inserted the blocks, and re-verified per file: comment ×1, key regex count, duplicate scan, and 143-key diff against the JSON.
+- Validation: bun import → de 647 / fr 647 keys; duplicate regex check → dups: 0 both files; all 143 keys present exactly once per file (0 missing); bunx tsc --noEmit → no errors in either dict file; bun run lint → exit 0.
+- Observation for the orchestrator (pre-existing, NOT caused by this task): node scripts/check-i18n.mjs currently reports missing: 52 for ALL 7 dicts (biology/v1.3 keys like "Temperament", "Scent", "Origin civilization" absent from every language; dicts were already at 504 entries before 9-b started, and git shows those 52 deletions pre-date this task). The checker's key list (556) also predates v1.5 and does not yet include the 143 new keys. Needs a regeneration pass (collect-dynamic-i18n + dictionary re-add) outside 9-b's scope.
+
+Stage Summary:
+- de.ts and fr.ts each received all 143 v1.5 Mirror OS — Reality Guidance keys exactly once under the required comment block: 504 → 647 entries per dict, zero duplicates, zero keys skipped, both files import cleanly via bun (647/647), tsc and eslint clean.
+
+---
+Task ID: 9-a
+Agent: translation agent (sq/it/el)
+Task: Translate the 143 new Mirror OS i18n keys into Albanian, Italian and Greek
+
+Work Log:
+- Read worklog.md for established conventions (informal ti/tu/εσύ register; sq Pasqyrë/fushë/sferë, it Specchio/campo/ambito, el Καθρέφτης/πεδίο; "Free will honored always" footers) and scripts/mirror-os-missing.json (143 English keys for the v1.5 "Mirror OS — Reality Guidance" module). Verified via regex that NONE of the 143 keys pre-existed in sq.ts/it.ts/el.ts and that the three dicts had 0 duplicate keys before editing.
+- Drafted calm, poetic translations for all 143 keys × 3 languages, anchored to shared terminology per language: reality-line → sq "vija (e realitetit)" / it "linea (di realtà)" / el "γραμμή (πραγματικότητας)"; Higher Mind → sq "Mendja e Lartë" / it "Mente Superiore" / el "Ανώτερος Νους"; manifestation → sq "manifestim" / it "manifestazione" / el "εκδήλωση"; chamber → sq "dhomë" / it "camera" / el "θάλαμος"; field → fushë/campo/πεδίο. Reused each dict's existing phrasing for the composer/transmission line ("kompozuesi më poshtë", "compositore qui sotto", "τον συνθέτη παρακάτω") and the MIRROR OS independence footer (kept brand token "MIRROR OS" untranslated; matched existing "Vullneti i lirë nderohet gjithmonë / Libero arbitrio sempre onorato / Η ελεύθερη βούληση τιμάται πάντα").
+- Formula/ritual titles translated as titles: The Morning Aperture → Hapja e Mëngjesit / Il Diaframma del Mattino / Το Πρωινό Διάφραγμα; The Dream Bridge → Ura e Ëndrrës / Il Ponte dei Sogni / Η Γέφυρα των Ονείρων; The Two-Glass Shift, The Vacuum Release, The Frequency Lock, The Ladder of Arrival, The Mirror Formula, The Assumption Formula, The Scripting Method likewise. Quoted example phrases ("the line I am leaving", "I am so grateful that it happened", the three limiting-belief quotes) translated naturally inside “curly quotes”; gender-neutral phrasing chosen where the source is neutral (it "riconoscente", el "ευγνώμων", sq "ke gabuar/Falënderoj").
+- Typography preserved exactly: em dashes (—), curly quotes (“ ”), ellipses (…), the 4-4-6 notation and "·" separators all mirrored; no ASCII double quotes introduced in any value; Greek semicolons rendered with the Greek ano teleia "·" and questions with ";" per the dicts' existing Greek conventions.
+- Inserted via a temp script (scripts/tmp-insert-9a.mjs + scripts/tmp-tr-9a.json, both deleted after use): script asserted the translation maps contained exactly the 143 keys (no missing, no extra, no empties), asserted no key already existed in the target dict, then inserted a block starting with the exact comment `/* ---- v1.5 additions: Mirror OS — Reality Guidance (independent workspace) ---- */` just before each file's final `};`, keys in the same order as mirror-os-missing.json.
+
+Stage Summary:
+- sq.ts, it.ts, el.ts: 143 new entries added to EACH file (0 keys skipped — none pre-existed), each key present exactly once; dictionaries now import cleanly with bun at 647 entries each (504 → 647), zero duplicate keys, zero keys absent from mirror-os-missing.json.
+- Validation: bun import + Object.keys = 647 for all three; regex dup scan = 0 duplicates per file; 143/143 keys diffed as present per file; typography audit = all —/“ ”/…/4-4-6 marks present in values, no ASCII quotes; bunx tsc --noEmit → 0 errors in the three dict files (remaining project tsc errors are pre-existing in examples/, scripts/collect-dynamic-i18n.ts and components, untouched); bun run lint → exit 0.
+- Note for orchestrator: node scripts/check-i18n.mjs currently reports "keys: 556 | missing: 52" identically for ALL 7 dicts (the 52 are the v1.3 Interplanetary Biology strings; de/fr/es/tr show the same gap) — pre-existing repo-wide state unrelated to this task; the checker's 556-key universe does not yet include the new 143 v1.5 keys. The lone "NOTE (identical to English): {n} roles" belongs to es (not an owned file, pre-existing).
+- Key artifacts: src/lib/i18n/dicts/sq.ts, src/lib/i18n/dicts/it.ts, src/lib/i18n/dicts/el.ts. Nothing else touched; temp scripts removed.
+
+---
+Task ID: 15
+Agent: Z.ai Code (main orchestrator)
+Task: v1.4 — remove Flora & Fauna biology module entirely; refine "Reality OS" into the fully independent MIRROR OS (Reality Guidance); strip all chrome from the chatbox in every scope
+
+Work Log:
+- Removed the Interplanetary Biology module: deleted src/lib/data/biology.ts, BiologyExplorer.tsx, SpecimenModal.tsx and all 48 /images/biology assets + the bio-banner master; purged SpecimenKind/FaunaSpecimen/FloraSpecimen from mirror-types.ts and every biology state/action from mirror-store.ts ("specimen" modal, "biology" view, biologyKind, open/exit/setBiologyKind) and resetField.
+- AppShell: removed BiologyExplorer + SpecimenModal wiring; new MainView "mirroros" renders as a FULL-SCREEN independent surface (no top bar, no sidebar, no composer — only CosmicBackdrop + StarField + MirrorOS).
+- Sidebar: removed the Fauna/Flora section; bottom card now opens the Mirror OS ("Mirror OS · Reality Guidance").
+- Built the Mirror OS (src/lib/data/mirroros.ts + MirrorOS.tsx + MirrorOSForge.tsx): 4 internal chambers — Shift Formulas (6 expandable cards, 4 steps + seal + Listen TTS each), Higher Mind (orientation, 6-rung Ladder of Arrival, 3 contact protocols, 3 discernment laws), Tools (Belief Reframer 3 domains, Vibration Bridge 4 states, deterministic per-date Daily Protocol, localStorage Reality Ledger via useSyncExternalStore), Forge (former manifesting lab: intention → charging orb → blueprint; "Discuss in the Observatory" removed for independence). Single bridge back: "Return to the Observatory" header button (compact "Back" on mobile).
+- Chatbox chrome stripped in TransmissionView for ALL scopes: removed channel header (medallion/title/badges/tagline/promise), per-exchange meta (timestamp/TX id/frame line), classification chip + note, and the whole footer (exchange counter, free-will line, Return + Clear buttons). Kept/kept-slim: exchange ribbon, query echo, scope frame, body, Listen+copy row, auto-scroll. Quiet state reduced to two lines.
+- Navigation recovery: clicking the already-active mode pill in ModeSelector returns to the Observatory (replaces the removed footer button); channel clearing remains via top-bar recalibration.
+- i18n: extracted 195 t() literals + Mirror OS data keys; 143 genuinely new keys translated into ALL 7 dictionaries (sq/it/el/de/fr/es/tr) by 3 parallel agents (Task 9-a/b/c); retired 78 stale keys (biology + chat chrome + classification + old lab strings) via scripts/strip-biology-keys.ts; rebuilt scripts/collect-dynamic-i18n.ts (biology imports removed, Mirror OS content + phases + frequencies added); extract-i18n + check-i18n report ALL DICTIONARIES COMPLETE (615 required keys, 0 missing, 0 placeholder issues per dict).
+- Rewrote src/lib/replication-prompt.ts to v1.3 (biology-free, Mirror OS §5–6, i18n law §10, maximum-space chat §8, 1,187 images, updated acceptance checks); updated layout.tsx keywords.
+- Verified end-to-end with agent-browser at 1440×900 and 390×844, dark + light, EN + SQ: observatory, chrome-free transmission (POST /api/transmission 200), mode-pill return, Mirror OS all four chambers (formula expand, tools interactions, ledger persistence, POST /api/manifest 200 blueprint), Albanian rendering everywhere, mobile compact "Prapa" label. Zero console errors; bun run lint clean.
+
+Stage Summary:
+- Biology module fully removed (code, data, images, i18n, store, prompt).
+- Mirror OS ships as a fully independent full-screen Reality Guidance workspace with a single back button: 6 shift formulas, higher-mind ladder/protocols/discernment, 4 practical tools, and the intention Forge — every word translated in 8 languages.
+- Chat channels in all scopes now use the full column (zero chrome), with suggestion reload + click-to-send intact and mode-pill return to the Observatory.
+- Replication prompt in-app updated to v1.3; i18n checker reports ALL DICTIONARIES COMPLETE; lint clean; all APIs verified 200.

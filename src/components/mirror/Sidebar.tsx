@@ -3,10 +3,8 @@
 import { useMemo } from "react";
 import {
   BookOpenText,
-  Flower2,
-  FlaskConical,
   Layers,
-  PawPrint,
+  MonitorSmartphone,
   Search,
   Settings,
   X,
@@ -15,9 +13,8 @@ import {
   civilizations,
 } from "@/lib/data/civilizations";
 import { interdimensional } from "@/lib/data/interdimensional";
-import { faunaTotal, floraTotal } from "@/lib/data/biology";
 import { archiveTotals, useMirror } from "@/lib/mirror-store";
-import { formatArchiveNumber, LANGUAGES, useT } from "@/lib/i18n";
+import { LANGUAGES, useT } from "@/lib/i18n";
 import { entityImage, searchEntities } from "@/lib/entity-utils";
 import { cn } from "@/lib/utils";
 import type { CivilizationGroup, InterdimGroup } from "@/lib/mirror-types";
@@ -54,31 +51,31 @@ function SettingsButton() {
 }
 
 function RefineRealityCard() {
-  const openLab = useMirror((s) => s.openLab);
+  const openMirrorOS = useMirror((s) => s.openMirrorOS);
   const t = useT();
 
   return (
     <div className="p-3">
       <button
         type="button"
-        onClick={openLab}
-        aria-label={t("Open the Reality Manifesting Laboratory")}
+        onClick={openMirrorOS}
+        aria-label={t("Open the Mirror OS — Reality Guidance")}
         className="focus-glow group block w-full rounded-2xl bg-gradient-to-br from-[var(--gd)]/50 via-[#8f6bff]/25 to-[var(--pk)]/45 p-[1px] text-left transition-all duration-300 hover:-translate-y-0.5 hover:glow"
       >
         <span className="flex items-start gap-3 rounded-[15px] bg-[var(--glass-bg-strong)] p-3.5">
           <span className="flex size-9 shrink-0 items-center justify-center rounded-full border hairline bg-gradient-to-br from-[var(--gd)]/20 to-[var(--pk)]/15">
-            <FlaskConical
+            <MonitorSmartphone
               className="size-4 text-[var(--gd)] transition-transform duration-500 group-hover:rotate-12"
               aria-hidden="true"
             />
           </span>
           <span className="min-w-0">
             <span className="mono-label block text-[11.5px] font-semibold text-foreground">
-              {t("Refine Reality")}
+              {t("Mirror OS · Reality Guidance")}
             </span>
             <span className="mt-1.5 block text-[12px] leading-relaxed text-muted-foreground">
               {t(
-                "Enter the Reality Manifesting Laboratory — refine an intention into a sealed blueprint"
+                "Enter the Mirror OS — shift formulas, higher-mind contact and reality-refinement tools in a fully independent workspace"
               )}
             </span>
           </span>
@@ -209,54 +206,6 @@ function FullRegisterButton() {
           </span>
         </span>
       </button>
-    </div>
-  );
-}
-
-function BiologySection() {
-  const openBiology = useMirror((s) => s.openBiology);
-  const language = useMirror((s) => s.language);
-  const t = useT();
-
-  return (
-    <div className="px-4 pt-4">
-      <p className="mono-label text-[8.5px] text-muted-foreground/70">
-        {t("Interplanetary Biology")}
-      </p>
-      <div className="mt-1.5 space-y-0.5">
-        <button
-          type="button"
-          onClick={() => openBiology("fauna")}
-          className="focus-glow group flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left transition-colors duration-200 hover:bg-[color-mix(in_srgb,var(--ok)_7%,transparent)]"
-        >
-          <PawPrint
-            className="size-3.5 shrink-0 text-[var(--ok)]"
-            aria-hidden="true"
-          />
-          <span className="min-w-0 flex-1 truncate text-[12.5px] font-medium uppercase tracking-[0.09em] text-foreground/75 transition-colors duration-200 group-hover:text-[var(--ok)]">
-            {t("Fauna archive")}
-          </span>
-          <span className="shrink-0 font-mono text-[11px] tabular-nums text-muted-foreground/70">
-            {formatArchiveNumber(faunaTotal, language)}
-          </span>
-        </button>
-        <button
-          type="button"
-          onClick={() => openBiology("flora")}
-          className="focus-glow group flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left transition-colors duration-200 hover:bg-[color-mix(in_srgb,var(--ok)_7%,transparent)]"
-        >
-          <Flower2
-            className="size-3.5 shrink-0 text-[var(--ok)]"
-            aria-hidden="true"
-          />
-          <span className="min-w-0 flex-1 truncate text-[12.5px] font-medium uppercase tracking-[0.09em] text-foreground/75 transition-colors duration-200 group-hover:text-[var(--ok)]">
-            {t("Flora archive")}
-          </span>
-          <span className="shrink-0 font-mono text-[11px] tabular-nums text-muted-foreground/70">
-            {formatArchiveNumber(floraTotal, language)}
-          </span>
-        </button>
-      </div>
     </div>
   );
 }
@@ -397,9 +346,6 @@ export function SidebarContent() {
 
       {/* Full register entry */}
       <FullRegisterButton />
-
-      {/* Interplanetary Biology */}
-      <BiologySection />
 
       {/* List */}
       <ul
