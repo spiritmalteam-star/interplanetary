@@ -13,7 +13,8 @@ import {
 } from "@/lib/data/technologies";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
-import { ProfileGallery, FactTile, ProfileSection } from "./ProfileBits";
+import { sceneImageFor, sceneImageForDistinct } from "@/lib/profile-visuals";
+import { distinctChains, FactTile, ProfileFigure, ProfileSection } from "./ProfileBits";
 import { cn } from "@/lib/utils";
 
 const PAGE = 60;
@@ -118,7 +119,7 @@ function TechnologyRegister() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 16 }}
             transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
-            className="register-solid nice-scroll absolute inset-0 z-10 overflow-y-auto px-5 pb-6 pt-3 sm:px-7"
+            className="register-solid nice-scroll encyc-body absolute inset-0 z-10 overflow-y-auto px-5 pb-6 pt-3 sm:px-7"
             data-testid="technology-detail"
           >
             <TechDetail
@@ -202,15 +203,18 @@ function TechCard({
           className="aspect-[4/3] w-full transition-transform duration-500 group-hover:scale-[1.03]"
         />
       </div>
-      <div className="px-3 pb-3 pt-2.5">
-        <span className="mono-label block text-[9.5px] uppercase tracking-[0.16em] text-[var(--sp-a)]">
+      <div className="px-3 pb-3.5 pt-2.5">
+        <span className="mono-label block text-[10.5px] uppercase tracking-[0.16em] text-[var(--sp-a)]">
           {t(entry.family)}
         </span>
-        <span className="mt-1 block text-[14.5px] font-semibold leading-snug text-foreground">
+        <span className="mt-1 block text-[16px] font-semibold leading-snug text-foreground">
           {entry.name}
         </span>
-        <span className="mt-1 block truncate text-[12.5px] text-muted-foreground">
-          {entry.origin}
+        <span className="mt-1 block text-[13.5px] text-muted-foreground">
+          {entry.origin} · {entry.noun}
+        </span>
+        <span className="mt-1.5 block line-clamp-2 text-[13.5px] italic leading-relaxed text-foreground/75">
+          {entry.whisper}
         </span>
       </div>
     </button>
@@ -283,6 +287,15 @@ function TechDetail({
     .map((id) => getTechEntry(id))
     .filter((e): e is TechEntry => Boolean(e));
 
+  /* the page's three plates — own painting first, no image ever twice */
+  const craftScene = sceneImageFor(entry.id, "craft");
+  const workshopScene = sceneImageForDistinct(entry.id, "workshop", [craftScene]);
+  const plates = distinctChains([
+    [`/images/ai/et-tech/tech-${entry.id}.jpg`, entry.contextImage, entry.image],
+    [craftScene, entry.image],
+    [workshopScene],
+  ]);
+
   const meters: { label: string; value: number }[] = [
     { label: t("Rarity"), value: entry.meters.rarity },
     { label: t("Containment"), value: entry.meters.containment },
@@ -321,19 +334,12 @@ function TechDetail({
         {entry.origin} · {entry.noun} craft · {entry.adjectiveField}
       </p>
 
-      {/* the three context images — its own painting, its craft scene, its family */}
+      {/* the lead plate — its own painting, the record wrapping around */}
       <div className="mt-4">
-        <ProfileGallery
-          slots={[
-            [`/images/ai/et-tech/tech-${entry.id}.jpg`, entry.contextImage, entry.image],
-            [entry.contextImage, entry.image],
-            [entry.image],
-          ]}
-          alts={[
-            t("The {name} — its own painted impression", { name: entry.name }),
-            t("The craft context of the {name}", { name: entry.name }),
-            t("The {family} family portrait", { family: entry.family }),
-          ]}
+        <ProfileFigure
+          sources={plates[0]}
+          alt={t("The {name} — its own painted impression", { name: entry.name })}
+          variant="lead"
           testid="technology-gallery"
         />
       </div>
@@ -343,7 +349,7 @@ function TechDetail({
       </p>
 
       {/* at a glance — the fact console */}
-      <section className="mt-5">
+      <section className="mt-5 clear-both">
         <h4 className="mono-label text-[10.5px] text-[var(--sp-a)]">
           {t("At a glance")}
         </h4>
@@ -358,7 +364,7 @@ function TechDetail({
       </section>
 
       {/* meters */}
-      <ProfileSection index="01" label={t("Instrument readings")}>
+      <ProfileSection index="01" label={t("Instrument readings")} className="clear-both">
         <div className="grid grid-cols-1 gap-x-8 gap-y-3 sm:grid-cols-2">
           {meters.map((m) => (
             <div key={m.label}>
@@ -389,6 +395,14 @@ function TechDetail({
           {entry.overview}
         </p>
       </ProfileSection>
+
+      {/* the second plate — its craft context, wrapped by the principles */}
+      <ProfileFigure
+        sources={plates[1]}
+        alt={t("The craft context of the {name}", { name: entry.name })}
+        side="left"
+        testid="technology-gallery-craft"
+      />
 
       {/* principles */}
       <ProfileSection index="03" label={t("Working principles")}>
@@ -423,6 +437,13 @@ function TechDetail({
         </ul>
       </ProfileSection>
 
+      {/* the third plate — the workshop scene, wrapped by the ethics */}
+      <ProfileFigure
+        sources={plates[2]}
+        alt={t("The {family} family portrait", { family: entry.family })}
+        testid="technology-gallery-family"
+      />
+
       {/* ethics */}
       <ProfileSection index="05" label={t("Ethics")} tone="pk">
         <p className="text-[14.5px] leading-relaxed text-foreground/85">
@@ -431,7 +452,7 @@ function TechDetail({
       </ProfileSection>
 
       {/* adjacent crafts — navigates in place */}
-      <ProfileSection index="06" label={t("Adjacent crafts in the register")}>
+      <ProfileSection index="06" label={t("Adjacent crafts in the register")} className="clear-both">
         <div className="mt-3 flex flex-wrap gap-3">
           {adjacent.map((a) => (
             <button
@@ -458,7 +479,7 @@ function TechDetail({
         </div>
       </ProfileSection>
 
-      <div className="mt-6 flex justify-center border-t hairline pt-5">
+      <div className="mt-6 flex justify-center border-t hairline pt-5 clear-both">
         <button
           type="button"
           onClick={() => askAboutTechnology(entry.name)}

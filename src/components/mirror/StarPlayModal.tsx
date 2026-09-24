@@ -239,13 +239,14 @@ export function StarPlayModal() {
 
               {reading && (
                 <motion.article
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-                  className="starplay-reading relative w-full overflow-hidden rounded-2xl border border-[color-mix(in_srgb,var(--sp-a)_30%,transparent)] px-6 py-5 text-left shadow-[0_18px_50px_-24px_color-mix(in_srgb,var(--sp-a)_50%,transparent)]"
+                  initial={{ opacity: 0, y: 40, scale: 0.93, rotateX: 12 }}
+                  animate={{ opacity: 1, y: 0, scale: 1, rotateX: 0 }}
+                  transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+                  style={{ transformPerspective: 1000 }}
+                  className="oracle-paper relative w-full overflow-hidden rounded-2xl border px-6 py-6 text-left sm:px-9"
                   data-testid="starplay-reading"
                 >
-                  <p className="mono-label text-center text-[10.5px] uppercase tracking-[0.22em] text-[var(--sp-a)]">
+                  <p className="mono-label text-center text-[10.5px] uppercase tracking-[0.22em] text-[#7a5a1e]">
                     {t("One meaning · three seats")}
                   </p>
                   {reading.split(/\n\n+/).map((para, i, arr) => {
@@ -255,26 +256,26 @@ export function StarPlayModal() {
                       <p
                         key={i}
                         className={cn(
-                          "text-[15px] leading-relaxed text-foreground/90",
+                          "text-[15.5px] leading-relaxed text-[#33241a]",
                           i === 0 &&
                             !isSignature &&
-                            "mt-2 text-[16px] italic text-foreground",
+                            "mt-3 font-serif text-[17px] italic text-[#241a10]",
                           isSignature &&
-                            "mono-label mt-4 text-center text-[11.5px] tracking-[0.12em] text-[var(--sp-a)]"
+                            "mono-label mt-4 text-center text-[11.5px] tracking-[0.12em] text-[#7a5a1e]"
                         )}
                       >
                         {para}
                       </p>
                     );
                   })}
-                  <div className="mt-4 flex flex-wrap items-center justify-center gap-1.5 border-t border-[color-mix(in_srgb,var(--sp-a)_18%,transparent)] pt-3.5">
-                    <span className="mono-label mr-1 text-[10px] uppercase tracking-[0.2em] text-muted-foreground/60">
+                  <div className="mt-4 flex flex-wrap items-center justify-center gap-1.5 border-t border-[#7a5a1e]/25 pt-3.5">
+                    <span className="mono-label mr-1 text-[10px] uppercase tracking-[0.2em] text-[#7a5a1e]/70">
                       {t("Woven from")}
                     </span>
-                    {drawn.map((d, i) => (
+                    {drawn.map((d) => (
                       <span
                         key={d.card.id}
-                        className="rounded-full border border-[color-mix(in_srgb,var(--sp-a)_30%,transparent)] bg-[color-mix(in_srgb,var(--sp-a)_8%,transparent)] px-2.5 py-1 text-[12px] text-foreground/80"
+                        className="rounded-full border border-[#7a5a1e]/35 bg-white/40 px-2.5 py-1 text-[12px] text-[#4a3313]"
                       >
                         {t(d.position)}
                       </span>
@@ -307,7 +308,7 @@ function TarotCard({
   t: (k: string, params?: Record<string, string | number>) => string;
 }) {
   return (
-    <div className="tarot-scene relative aspect-[2/3] w-full" data-testid={`starplay-seat-${index}`}>
+    <div className="tarot-scene relative aspect-[2/3] w-full sm:aspect-auto sm:h-[520px]" data-testid={`starplay-seat-${index}`}>
       <motion.div
         className="tarot-inner size-full"
         initial={{ opacity: 0, y: 80, scale: 0.94 }}
@@ -347,14 +348,14 @@ function TarotCard({
           </span>
         </button>
 
-        {/* ---------- the revealed face — the whole meaning inside ---------- */}
+        {/* ---------- the revealed face — the whole story inside ---------- */}
         <div
           data-testid="starplay-card-face"
           className="tarot-face absolute inset-0 flex size-full flex-col overflow-hidden rounded-2xl border border-[color-mix(in_srgb,var(--sp-a)_45%,transparent)] bg-[#0d0718] shadow-[0_24px_60px_-18px_color-mix(in_srgb,var(--sp-a)_70%,transparent)]"
           style={{ transform: "rotateY(180deg)" }}
         >
-          {/* artwork — the top of the card */}
-          <div className="relative h-[45%] shrink-0 overflow-hidden">
+          {/* artwork — the vision above the story */}
+          <div className="relative h-[34%] shrink-0 overflow-hidden">
             <img
               src={drawn.card.image}
               alt=""
@@ -371,9 +372,10 @@ function TarotCard({
             />
           </div>
 
-          {/* the violet ink panel — the one thing this seat knows about you.
-              No card is ever named: only what the visitor must recognize. */}
-          <div className="relative flex min-h-0 flex-1 flex-col gap-2 overflow-hidden px-4 pb-4 pt-1 text-left">
+          {/* the story panel — a beautiful small tale that assists the one
+              reading it. No card is ever named: only what the visitor
+              must recognize, written large and luminous. */}
+          <div className="relative flex min-h-0 flex-1 flex-col gap-1.5 overflow-hidden px-4 pb-4 pt-1 text-left">
             <span className="mono-label shrink-0 text-[9.5px] uppercase tracking-[0.2em] text-[var(--sp-b)]">
               {t(drawn.position)}
             </span>
@@ -383,7 +385,7 @@ function TarotCard({
             />
             <span
               data-testid="starplay-card-message"
-              className="min-h-0 flex-1 overflow-hidden text-[12.5px] leading-relaxed text-white/85"
+              className="min-h-0 flex-1 overflow-hidden font-serif text-[15.5px] italic leading-[1.55] tracking-[0.01em] text-white/95 [text-shadow:0_0_16px_color-mix(in_srgb,var(--sp-a)_45%,transparent),0_1px_2px_rgba(0,0,0,0.6)] sm:text-[16px]"
             >
               {drawn.card.message}
             </span>

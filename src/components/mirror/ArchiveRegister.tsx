@@ -69,10 +69,10 @@ function RegisterRow({
       <button
         type="button"
         onClick={() => openModal({ type: "entity", kind, id: rep.id })}
-        className="focus-glow group flex w-full items-center gap-3 rounded-xl border hairline bg-[var(--glass-bg-soft)] px-3 py-2.5 text-left transition-all duration-300 hover:-translate-y-px hover:border-[var(--hairline-hover)] hover:glow-sm"
+        className="focus-glow group flex w-full items-center gap-3.5 rounded-xl border hairline bg-[var(--glass-bg-soft)] px-3.5 py-3 text-left transition-all duration-300 hover:-translate-y-px hover:border-[var(--hairline-hover)] hover:glow-sm"
       >
         <span
-          className="relative size-9 shrink-0 overflow-hidden rounded-full border hairline"
+          className="relative size-12 shrink-0 overflow-hidden rounded-xl border hairline"
           aria-hidden="true"
         >
           <img
@@ -87,19 +87,22 @@ function RegisterRow({
         </span>
         <span className="min-w-0 flex-1">
           <span className="flex items-baseline gap-2">
-            <span className="truncate text-[14.5px] font-medium text-foreground transition-colors group-hover:text-[var(--cy)]">
+            <span className="truncate text-[16px] font-semibold leading-tight text-foreground transition-colors group-hover:text-[var(--cy)]">
               {rep.name}
             </span>
-            <span className="shrink-0 font-mono text-[10.5px] text-muted-foreground/55">
+            <span className="ml-auto shrink-0 font-mono text-[11px] text-muted-foreground/55">
               {entityRegistryLine(rep, kind)}
             </span>
           </span>
-          <span className="mt-0.5 block truncate text-[12.5px] text-muted-foreground">
-            {group?.name} · {rep.origin} · {rep.density} — {rep.specialty}
+          <span className="mt-1 block truncate text-[14px] text-muted-foreground">
+            {group?.name} · {rep.origin} · {rep.density}
+          </span>
+          <span className="mt-0.5 block truncate text-[13.5px] italic leading-relaxed text-foreground/65">
+            {rep.specialty}
           </span>
         </span>
         <Sparkles
-          className="size-3.5 shrink-0 text-muted-foreground/30 transition-colors duration-300 group-hover:text-[var(--cy)]"
+          className="size-4 shrink-0 text-muted-foreground/30 transition-colors duration-300 group-hover:text-[var(--cy)]"
           aria-hidden="true"
         />
       </button>

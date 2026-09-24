@@ -770,15 +770,26 @@ html:not(.dark) .text-hero {
   100% { transform: scale(1.55); opacity: 0; }
 }
 
-/* A received transmission — luminous violet panel */
+/* A received transmission — a luminous LIGHT paper, always readable:
+   warm ivory vellum with deep violet ink, in either theme. */
 .communion-reading {
   background:
     radial-gradient(
-      120% 80% at 50% 0%,
-      color-mix(in srgb, var(--sp-b) 11%, transparent) 0%,
-      transparent 55%
+      130% 90% at 50% 0%,
+      rgba(255, 252, 242, 0.92) 0%,
+      transparent 58%
     ),
-    color-mix(in srgb, #0a0616 72%, transparent);
+    radial-gradient(
+      120% 120% at 50% 115%,
+      color-mix(in srgb, var(--sp-b) 13%, transparent) 0%,
+      transparent 56%
+    ),
+    #f4eede;
+  border-color: color-mix(in srgb, var(--sp-b) 24%, #d9cdb2);
+  box-shadow:
+    0 24px 70px -28px rgba(0, 0, 0, 0.7),
+    0 0 60px -26px color-mix(in srgb, var(--sp-b) 45%, transparent),
+    inset 0 0 80px -40px rgba(112, 82, 36, 0.5);
 }
 .communion-reading::before {
   content: "";
@@ -791,7 +802,7 @@ html:not(.dark) .text-hero {
   background: linear-gradient(
     90deg,
     transparent,
-    color-mix(in srgb, var(--sp-b) 65%, transparent),
+    color-mix(in srgb, #7a5a1e 65%, transparent),
     transparent
   );
 }
@@ -851,17 +862,29 @@ html:not(.dark) .text-hero {
   animation: dream-drift 6.5s ease-in-out infinite;
 }
 
-/* The oracle's reading panel */
-.starplay-reading {
+/* The oracle's reading panel — a beautiful paper sent in front of the
+   visitor: warm ivory sheet, faint starlight fibers, warm ink. */
+.oracle-paper {
   background:
     radial-gradient(
-      120% 80% at 50% 0%,
-      color-mix(in srgb, var(--sp-a) 13%, transparent) 0%,
-      transparent 58%
+      130% 90% at 50% 0%,
+      rgba(255, 252, 242, 0.88) 0%,
+      transparent 56%
     ),
-    color-mix(in srgb, #0a0616 72%, transparent);
+    radial-gradient(
+      120% 130% at 50% 118%,
+      color-mix(in srgb, var(--sp-a) 15%, transparent) 0%,
+      transparent 56%
+    ),
+    #f5efdf;
+  color: #33241a;
+  border-color: color-mix(in srgb, var(--sp-a) 26%, #d9cdb2);
+  box-shadow:
+    0 34px 90px -30px rgba(0, 0, 0, 0.8),
+    0 0 70px -26px color-mix(in srgb, var(--sp-a) 50%, transparent),
+    inset 0 0 90px -42px rgba(112, 82, 36, 0.5);
 }
-.starplay-reading::before {
+.oracle-paper::before {
   content: "";
   position: absolute;
   top: 0;
@@ -872,9 +895,57 @@ html:not(.dark) .text-hero {
   background: linear-gradient(
     90deg,
     transparent,
-    color-mix(in srgb, var(--sp-a) 70%, transparent),
+    color-mix(in srgb, #7a5a1e 65%, transparent),
     transparent
   );
+}
+
+/* ------------------------------------------------------------------ */
+/*  ENCYCLOPEDIA PROFILES — plates floated INSIDE the text, the way    */
+/*  a real encyclopedia blends images with information. The lead       */
+/*  plate sits beside the opening identity; inline plates alternate    */
+/*  down the page; the prose wraps around every one of them.           */
+/* ------------------------------------------------------------------ */
+
+.encyc-figure {
+  margin: 0;
+}
+.encyc-figure-lead {
+  float: right;
+  width: 46%;
+  max-width: 248px;
+  margin: 0.15rem 0 0.75rem 1.1rem;
+}
+.encyc-figure-inline {
+  float: right;
+  width: 52%;
+  max-width: 280px;
+  margin: 0.5rem 0 0.75rem 1.1rem;
+  clear: both;
+}
+.encyc-figure-left {
+  float: left;
+  margin: 0.5rem 1.1rem 0.75rem 0;
+}
+.encyc-figure-right {
+  float: right;
+  margin: 0.5rem 0 0.75rem 1.1rem;
+}
+/* the page's last word always settles below every floating plate */
+.encyc-body::after {
+  content: "";
+  display: block;
+  clear: both;
+}
+@media (max-width: 480px) {
+  .encyc-figure-lead {
+    width: 52%;
+    max-width: none;
+  }
+  .encyc-figure-inline {
+    width: 58%;
+    max-width: none;
+  }
 }
 
 /* ------------------------------------------------------------------ */

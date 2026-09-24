@@ -181,49 +181,67 @@ export function ZoomableImage({
   );
 }
 
-/* ---------------- the three context images of a profile ---------------- */
+/* ---------------- the encyclopedia figures of a profile ---------------- */
 
 /**
- * ProfileGallery — one wide impression plus two supporting scenes,
- * each zoomable. `slots` is exactly the profile's visual identity:
- * slot 0 = the profile's own painting, slots 1–2 = its context.
+ * distinctChains — takes the fallback chains of a profile's figures and
+ * guarantees no image can appear twice on one page, even when a primary
+ * painting is missing and a fallback has to step in. Chains are walked
+ * in order: each drops any source an earlier figure has already
+ * reserved, keeping at least one escape hatch. Earlier figures keep
+ * their full chain (own painting first, graceful fallback second);
+ * later figures never borrow an image an earlier one could show.
  */
-export function ProfileGallery({
-  slots,
-  alts,
-  captions,
+export function distinctChains(chains: string[][]): string[][] {
+  const seen = new Set<string>();
+  return chains.map((chain) => {
+    const filtered = chain.filter((src) => !seen.has(src));
+    const final = filtered.length > 0 ? filtered : [chain[0]];
+    for (const src of final) seen.add(src);
+    return final;
+  });
+}
+
+/**
+ * ProfileFigure — one image blended INTO the page, encyclopedia-style.
+ * "lead" floats right beside the opening identity text; "inline"
+ * floats (alternating sides) beside the sections further down. The
+ * surrounding prose wraps around every figure — the image never takes
+ * half the screen, it lives inside the text like a printed plate.
+ */
+export function ProfileFigure({
+  sources,
+  alt,
+  caption,
+  variant = "inline",
+  side = "right",
   testid,
 }: {
-  /** Three fallback chains, widest first. */
-  slots: [string[], string[], string[]];
-  alts: [string, string, string];
-  captions?: [string?, string?, string?];
+  /** Fallback chain: the profile's own painting first. */
+  sources: string[];
+  alt: string;
+  caption?: string;
+  /** lead = the opening portrait plate; inline = a plate between sections. */
+  variant?: "lead" | "inline";
+  side?: "left" | "right";
   testid?: string;
 }) {
   return (
-    <div
-      className="grid grid-cols-2 gap-2"
-      data-testid={testid ?? "profile-gallery"}
+    <figure
+      data-testid={testid}
+      className={cn(
+        "encyc-figure",
+        variant === "lead" ? "encyc-figure-lead" : "encyc-figure-inline",
+        side === "left" ? "encyc-figure-left" : "encyc-figure-right"
+      )}
     >
       <ZoomableImage
-        sources={slots[0]}
-        alt={alts[0]}
-        caption={captions?.[0]}
-        className="col-span-2 aspect-[16/9] sm:aspect-[21/9]"
+        sources={sources}
+        alt={alt}
+        caption={caption}
+        className={variant === "lead" ? "aspect-[4/5]" : "aspect-[4/3]"}
       />
-      <ZoomableImage
-        sources={slots[1]}
-        alt={alts[1]}
-        caption={captions?.[1]}
-        className="aspect-[4/3]"
-      />
-      <ZoomableImage
-        sources={slots[2]}
-        alt={alts[2]}
-        caption={captions?.[2]}
-        className="aspect-[4/3]"
-      />
-    </div>
+    </figure>
   );
 }
 
@@ -234,19 +252,21 @@ export function ProfileSection({
   label,
   children,
   tone = "cy",
+  className,
 }: {
   /** Two-digit ordering, e.g. "01" — omit for unnumbered sections. */
   index?: string;
   label: string;
   children: React.ReactNode;
   tone?: "cy" | "gd" | "pk";
+  className?: string;
 }) {
   const color =
     tone === "gd" ? "var(--gd)" : tone === "pk" ? "var(--pk)" : "var(--cy)";
   return (
-    <section>
+    <section className={className}>
       <h4
-        className="mono-label flex items-center gap-2 text-[10.5px]"
+        className="mono-label flex items-center gap-2 text-[11.5px]"
         style={{ color }}
       >
         {index && (
@@ -279,11 +299,11 @@ export function FactTile({
 }) {
   return (
     <div className="rounded-lg border hairline bg-[var(--glass-bg-soft)] px-2.5 py-2">
-      <p className="mono-label text-[9px] text-muted-foreground/80">{label}</p>
+      <p className="mono-label text-[10px] text-muted-foreground/80">{label}</p>
       <p
         className={cn(
-          "mt-1 text-[13px] leading-snug text-foreground/90",
-          mono && "font-mono tabular-nums"
+          "mt-1 text-[14.5px] leading-snug text-foreground/90",
+          mono && "font-mono text-[13.5px] tabular-nums"
         )}
       >
         {value}
@@ -294,12 +314,19 @@ export function FactTile({
 
 /* ---------------- the archive's discernment note ---------------- */
 
-export function ContextNote({ tone = "gd" }: { tone?: "gd" | "cy" }) {
+export function ContextNote({
+  tone = "gd",
+  className,
+}: {
+  tone?: "gd" | "cy";
+  className?: string;
+}) {
   const t = useT();
   return (
     <div
       className={cn(
         "rounded-xl border p-3.5",
+        className,
         tone === "gd"
           ? "border-[color-mix(in_srgb,var(--gd)_22%,transparent)] bg-[color-mix(in_srgb,var(--gd)_6%,transparent)]"
           : "border-[color-mix(in_srgb,var(--cy)_22%,transparent)] bg-[color-mix(in_srgb,var(--cy)_6%,transparent)]"
@@ -308,7 +335,7 @@ export function ContextNote({ tone = "gd" }: { tone?: "gd" | "cy" }) {
       <h4 className="mono-label text-[10px]" style={{ color: tone === "gd" ? "var(--gd)" : "var(--cy)" }}>
         {t("Context note")}
       </h4>
-      <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">
+      <p className="mt-1.5 text-[14px] leading-relaxed text-muted-foreground">
         {t(
           "This dossier reflects channeled tradition and worldbuilding within the Mirror archive. It is offered for reflection and wonder — not as established science."
         )}

@@ -25,7 +25,7 @@ import {
 } from "@/lib/federation-profiles";
 import { sectionImage } from "@/lib/entity-utils";
 import { sceneImageFor, sceneImageForDistinct } from "@/lib/profile-visuals";
-import { ProfileGallery } from "./ProfileBits";
+import { distinctChains, ProfileFigure } from "./ProfileBits";
 import { ModalShell } from "./ModalShell";
 import { cn } from "@/lib/utils";
 import type {
@@ -127,7 +127,7 @@ function CardRow({ card, onOpen }: { card: FederationCard; onOpen: () => void })
         )}
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-3">
-            <h4 className="text-[14.5px] font-semibold uppercase tracking-[0.08em] text-foreground">
+            <h4 className="text-[15.5px] font-semibold uppercase tracking-[0.08em] text-foreground">
               {card.name}
             </h4>
             <span className="mono-label shrink-0 rounded-full border border-[var(--cy)]/30 bg-[color-mix(in_srgb,var(--cy)_8%,transparent)] px-2 py-0.5 text-[10.5px] text-[var(--cy)]">
@@ -139,7 +139,7 @@ function CardRow({ card, onOpen }: { card: FederationCard; onOpen: () => void })
           </p>
         </div>
       </div>
-      <p className="mt-2.5 text-[14.5px] leading-relaxed text-foreground/80">
+      <p className="mt-2.5 text-[15px] leading-relaxed text-foreground/80">
         {card.description}
       </p>
 
@@ -174,7 +174,6 @@ function CardDetail({
   const askMirror = useMirror((s) => s.askMirror);
   const closeModal = useMirror((s) => s.closeModal);
   const t = useT();
-  const [heroFailed, setHeroFailed] = useState(false);
 
   // Deep dossiers are keyed by name; lookups may miss and are rendered only when present.
   const body: FederationBodyProfile | undefined =
@@ -190,6 +189,32 @@ function CardDetail({
     void askMirror(askPromptFor(tab, card.name, t));
   };
 
+  /* the page's three plates — emblem first, no image ever twice */
+  const emblem = card.imageKey ? sectionImage(card.imageKey) : null;
+  const milieuScene = card.imageKey
+    ? sceneImageFor(card.imageKey, "milieu")
+    : null;
+  const kinScene = card.imageKey
+    ? sceneImageForDistinct(card.imageKey, "kin", [
+        milieuScene!,
+        emblem!,
+      ])
+    : null;
+  const chambersScene = card.imageKey
+    ? sceneImageForDistinct(card.imageKey, "chambers", [
+        milieuScene!,
+        kinScene!,
+        emblem!,
+      ])
+    : null;
+  const plates = emblem
+    ? distinctChains([
+        [emblem, milieuScene!],
+        [kinScene!, milieuScene!],
+        [chambersScene!, milieuScene!],
+      ])
+    : null;
+
   return (
     <div className="animate-rise-in space-y-4">
       <button
@@ -201,27 +226,12 @@ function CardDetail({
         {t("Back to the federation record")}
       </button>
 
-      {card.imageKey && !heroFailed && (
-        <ProfileGallery
-          slots={[
-            [sectionImage(card.imageKey)],
-            [
-              sceneImageFor(card.imageKey, "milieu"),
-              sectionImage(card.imageKey),
-            ],
-            [
-              sceneImageForDistinct(card.imageKey, "chambers", [
-                sceneImageFor(card.imageKey, "milieu"),
-                sectionImage(card.imageKey),
-              ]),
-              sceneImageFor(card.imageKey, "milieu"),
-            ],
-          ]}
-          alts={[
-            t("AI-rendered emblem impression of the {name}", { name: card.name }),
-            t("The milieu of the {name} — an impressionistic scene", { name: card.name }),
-            t("The chambers of the {name} — an impressionistic scene", { name: card.name }),
-          ]}
+      {/* the lead plate — the emblem, the record wrapping around */}
+      {plates && (
+        <ProfileFigure
+          sources={plates[0]}
+          alt={t("AI-rendered emblem impression of the {name}", { name: card.name })}
+          variant="lead"
           testid="federation-gallery"
         />
       )}
@@ -247,8 +257,18 @@ function CardDetail({
 
       <p className="text-[14.5px] leading-relaxed text-foreground/85">{card.description}</p>
 
+      {/* the second plate — the milieu, wrapped by the dossier */}
+      {plates && (
+        <ProfileFigure
+          sources={plates[1]}
+          alt={t("The milieu of the {name} — an impressionistic scene", { name: card.name })}
+          side="left"
+          testid="federation-gallery-milieu"
+        />
+      )}
+
       {hasDossier && (
-        <div className="space-y-4 rounded-xl border hairline bg-[color-mix(in_srgb,var(--cy)_4%,transparent)] p-4">
+        <div className="clear-both space-y-4 rounded-xl border hairline bg-[color-mix(in_srgb,var(--cy)_4%,transparent)] p-4">
           <h4 className="mono-label text-[10px] text-[var(--cy)]">{t("Full dossier")}</h4>
 
           {body && (
@@ -357,6 +377,15 @@ function CardDetail({
         </div>
       )}
 
+      {/* the third plate — the chambers, before the closing invitation */}
+      {plates && (
+        <ProfileFigure
+          sources={plates[2]}
+          alt={t("The chambers of the {name} — an impressionistic scene", { name: card.name })}
+          testid="federation-gallery-chambers"
+        />
+      )}
+
       <button
         type="button"
         onClick={ask}
@@ -429,7 +458,7 @@ function FederationArchive() {
 
       <div
         ref={scrollRef}
-        className="nice-scroll max-h-[min(60vh,520px)] overflow-y-auto px-5 pb-5 pt-3 sm:px-6"
+        className="nice-scroll encyc-body max-h-[min(60vh,520px)] overflow-y-auto px-5 pb-5 pt-3 sm:px-6"
         role="tabpanel"
         aria-label={tab}
       >

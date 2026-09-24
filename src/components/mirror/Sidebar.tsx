@@ -268,25 +268,30 @@ function SpeciesRow({ species }: { species: InnerEarthSpecies }) {
         type="button"
         onClick={() => openSpecies(species.id)}
         aria-label={t("Open the dossier of {name}", { name: species.name })}
-        className="focus-glow group flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left transition-colors duration-200 hover:bg-[color-mix(in_srgb,var(--gd)_7%,transparent)]"
+        className="focus-glow group flex w-full items-start gap-2.5 rounded-lg px-2.5 py-2 text-left transition-colors duration-200 hover:bg-[color-mix(in_srgb,var(--gd)_7%,transparent)]"
       >
         <span
           aria-hidden="true"
-          className="flex size-5 shrink-0 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--gd)_40%,transparent)] bg-[color-mix(in_srgb,var(--gd)_10%,transparent)] font-serif text-[11px] leading-none text-[var(--gd)]"
+          className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--gd)_40%,transparent)] bg-[color-mix(in_srgb,var(--gd)_10%,transparent)] font-serif text-[12px] leading-none text-[var(--gd)]"
         >
           {species.name.charAt(0)}
         </span>
-        <span className="min-w-0 flex-1 truncate text-[14px] font-medium tracking-[0.02em] text-foreground/80 transition-colors duration-200 group-hover:text-[var(--gd)]">
-          {species.name}
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-[15px] font-medium tracking-[0.02em] text-foreground/85 transition-colors duration-200 group-hover:text-[var(--gd)]">
+            {species.name}
+          </span>
+          <span className="mt-0.5 block truncate text-[11.5px] leading-snug text-muted-foreground/70">
+            {species.hall}
+          </span>
         </span>
         <span
           aria-hidden="true"
-          className="mono-label shrink-0 text-[9px] text-muted-foreground/50"
+          className="mono-label mt-1 shrink-0 text-[9px] text-muted-foreground/50"
         >
           {t("dossier")}
         </span>
         <ChevronRight
-          className="size-3.5 shrink-0 text-muted-foreground/50 transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-[var(--gd)]"
+          className="mt-1 size-3.5 shrink-0 text-muted-foreground/50 transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-[var(--gd)]"
           aria-hidden="true"
         />
       </button>

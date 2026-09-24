@@ -17,8 +17,9 @@ import { getEntityProfile } from "@/lib/entity-profile";
 import { groupProfiles } from "@/lib/group-profiles";
 import { sceneImageFor, sceneImageForDistinct } from "@/lib/profile-visuals";
 import {
+  distinctChains,
   FactTile,
-  ProfileGallery,
+  ProfileFigure,
   ProfileSection,
 } from "./ProfileBits";
 import { ModalShell } from "./ModalShell";
@@ -28,20 +29,6 @@ import type { DossierKind } from "@/lib/mirror-types";
 /* ---------------- shared bits ---------------- */
 
 const BATCH = 30;
-
-function ContextNote() {
-  const t = useT();
-  return (
-    <div className="rounded-xl border hairline bg-[color-mix(in_srgb,var(--gd)_6%,transparent)] p-3.5">
-      <h4 className="mono-label text-[10px] text-[var(--gd)]">{t("Context note")}</h4>
-      <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">
-        {t(
-          "This dossier reflects channeled tradition and worldbuilding within the Mirror archive. It is offered for reflection and wonder — not as established science."
-        )}
-      </p>
-    </div>
-  );
-}
 
 function Badge({
   children,
@@ -94,6 +81,18 @@ function EntityDossier({
 
   if (!entry || !rep || !profile) return null;
 
+  /* the page's three plates — own portrait first, no image ever twice */
+  const kinScene = sceneImageFor(rep.id, "kin");
+  const milieuScene = sceneImageForDistinct(rep.id, "milieu", [
+    kinScene,
+    groupImage(kind, entry.id),
+  ]);
+  const plates = distinctChains([
+    [entityImage(rep.id), groupImage(kind, entry.id)],
+    [kinScene],
+    [milieuScene],
+  ]);
+
   const askQuestion = () => {
     closeModal();
     void askMirror(
@@ -111,44 +110,36 @@ function EntityDossier({
 
   return (
     <>
-      <div className="nice-scroll max-h-[min(64vh,560px)] space-y-5 overflow-y-auto px-5 pb-4 pt-1 sm:px-6">
-        {/* portrait + identity */}
-        <div className="flex items-start gap-4">
-          <span
-            className="relative size-20 shrink-0 overflow-hidden rounded-full border-2"
-            style={{ borderColor: "color-mix(in srgb, var(--cy) 35%, transparent)" }}
+      <div className="nice-scroll encyc-body max-h-[min(64vh,560px)] space-y-5 overflow-y-auto px-5 pb-4 pt-1 sm:px-6">
+        {/* the lead plate — the portrait the whole opening wraps around */}
+        <ProfileFigure
+          sources={plates[0]}
+          alt={t("AI-rendered portrait impression of {name}", { name: rep.name })}
+          variant="lead"
+          testid="entity-gallery"
+        />
+
+        {/* identity — text flowing beside the portrait, like a printed page */}
+        <div className="min-w-0">
+          <p className="text-[16.5px] font-semibold leading-snug text-foreground/95">
+            {rep.name}
+          </p>
+          <p className="mt-0.5 font-mono text-[11.5px] text-muted-foreground/70">
+            {profile.archiveNo} · {profile.designation}
+          </p>
+          <p className="mt-1 text-[14px] italic leading-relaxed text-muted-foreground">
+            {profile.rank}
+          </p>
+          <button
+            type="button"
+            onClick={() =>
+              openModal({ type: "dossier", kind, id: entry.id })
+            }
+            className="focus-glow mt-2 inline-flex items-center gap-1 rounded-full border hairline px-2.5 py-1 text-[12.5px] text-muted-foreground transition-colors hover:text-foreground"
           >
-            <img
-              src={entityImage(rep.id)}
-              alt={t("AI-rendered portrait impression of {name}", { name: rep.name })}
-              loading="lazy"
-              className="size-full object-cover"
-              onError={(e) => {
-                e.currentTarget.style.visibility = "hidden";
-              }}
-            />
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="text-[15.5px] font-semibold leading-snug text-foreground/95">
-              {rep.name}
-            </p>
-            <p className="mt-0.5 font-mono text-[11px] text-muted-foreground/70">
-              {profile.archiveNo} · {profile.designation}
-            </p>
-            <p className="mt-1 text-[13.5px] italic leading-relaxed text-muted-foreground">
-              {profile.rank}
-            </p>
-            <button
-              type="button"
-              onClick={() =>
-                openModal({ type: "dossier", kind, id: entry.id })
-              }
-              className="focus-glow mt-2 inline-flex items-center gap-1 rounded-full border hairline px-2.5 py-1 text-[12px] text-muted-foreground transition-colors hover:text-foreground"
-            >
-              <ArrowLeft className="size-3" aria-hidden="true" />
-              {t("Back to {name}", { name: entry.name })}
-            </button>
-          </div>
+            <ArrowLeft className="size-3" aria-hidden="true" />
+            {t("Back to {name}", { name: entry.name })}
+          </button>
         </div>
 
         {/* badges */}
@@ -158,26 +149,8 @@ function EntityDossier({
           <Badge tone="ok">{t("{n} kin in register", { n: entry.count })}</Badge>
         </div>
 
-        {/* the three context images — portrait, kin, milieu */}
-        <ProfileGallery
-          slots={[
-            [entityImage(rep.id)],
-            [groupImage(kind, entry.id)],
-            [
-              sceneImageFor(rep.id, "milieu"),
-              groupImage(kind, entry.id),
-            ],
-          ]}
-          alts={[
-            t("AI-rendered portrait impression of {name}", { name: rep.name }),
-            t("AI-rendered scene impression of the {name}", { name: entry.name }),
-            t("The milieu of {name} — an impressionistic scene", { name: entry.name }),
-          ]}
-          testid="entity-gallery"
-        />
-
-        {/* at a glance — the fact console */}
-        <section>
+        {/* at a glance — the fact console clears the lead plate */}
+        <section className="clear-both">
           <h4 className="mono-label text-[10.5px] text-[var(--cy)]">
             {t("At a glance")}
           </h4>
@@ -198,6 +171,14 @@ function EntityDossier({
           </div>
         </section>
 
+        {/* the second plate — the kin scene, wrapped by the opening sections */}
+        <ProfileFigure
+          sources={plates[1]}
+          alt={t("AI-rendered scene impression of the {name}", { name: entry.name })}
+          side="left"
+          testid="entity-gallery-kin"
+        />
+
         <ProfileSection index="01" label={t("Specialty")}>
           <p className="text-[14.5px] font-medium leading-relaxed text-foreground/90">{rep.specialty}</p>
         </ProfileSection>
@@ -213,7 +194,7 @@ function EntityDossier({
         </ProfileSection>
 
         {/* gifts */}
-        <ProfileSection index="05" label={t("Three known gifts")}>
+        <ProfileSection index="05" label={t("Three known gifts")} className="clear-both">
           <div className="grid gap-2">
             {[
               profile.giftPrimary,
@@ -243,9 +224,16 @@ function EntityDossier({
           <p className="text-[14.5px] leading-relaxed text-foreground/85">{profile.mission}</p>
         </ProfileSection>
 
+        {/* the third plate — the milieu, wrapped by what follows */}
+        <ProfileFigure
+          sources={plates[2]}
+          alt={t("The milieu of {name} — an impressionistic scene", { name: entry.name })}
+          testid="entity-gallery-milieu"
+        />
+
         {/* teaching */}
         <div
-          className="rounded-xl border p-3.5"
+          className="clear-both rounded-xl border p-3.5"
           style={{
             borderColor: "color-mix(in srgb, var(--cy) 25%, transparent)",
             background:
@@ -262,7 +250,7 @@ function EntityDossier({
         </div>
 
         {/* contact */}
-        <ProfileSection index="08" label={t("Contact protocol")}>
+        <ProfileSection index="08" label={t("Contact protocol")} className="clear-both">
           <div className="rounded-xl border hairline bg-[var(--glass-bg-soft)] p-3.5">
             <p className="text-[14px] leading-relaxed text-foreground/85">
               {profile.contactProtocol}
@@ -279,7 +267,7 @@ function EntityDossier({
         </ProfileSection>
 
         {/* quote */}
-        <blockquote className="border-l-2 pl-4" style={{ borderColor: "color-mix(in srgb, var(--cy) 45%, transparent)" }}>
+        <blockquote className="clear-both border-l-2 pl-4" style={{ borderColor: "color-mix(in srgb, var(--cy) 45%, transparent)" }}>
           <p className="font-serif text-[16.5px] leading-relaxed text-foreground/90">
             “{profile.quote}”
           </p>
@@ -288,7 +276,14 @@ function EntityDossier({
           </footer>
         </blockquote>
 
-        <ContextNote />
+        <div className="clear-both rounded-xl border hairline bg-[color-mix(in_srgb,var(--gd)_6%,transparent)] p-3.5">
+          <h4 className="mono-label text-[10px] text-[var(--gd)]">{t("Context note")}</h4>
+          <p className="mt-1.5 text-[14px] leading-relaxed text-muted-foreground">
+            {t(
+              "This dossier reflects channeled tradition and worldbuilding within the Mirror archive. It is offered for reflection and wonder — not as established science."
+            )}
+          </p>
+        </div>
       </div>
 
       <div className="border-t hairline px-5 py-4 sm:px-6">
@@ -374,41 +369,52 @@ function GroupDossierBody({
     kind === "civilization" ? t("Civilization dossier") : t("Interdimensional dossier");
   const extras_ = extras;
 
+  /* the page's three plates — the family portrait leads, no image twice */
+  const milieuScene = sceneImageFor(entry.id, "milieu");
+  const kinScene = sceneImageForDistinct(entry.id, "kin", [
+    milieuScene,
+    groupImage(kind, entry.id),
+  ]);
+  const homelandScene = sceneImageForDistinct(entry.id, "homelands", [
+    milieuScene,
+    kinScene,
+    groupImage(kind, entry.id),
+  ]);
+  const plates = distinctChains([
+    [groupImage(kind, entry.id), milieuScene],
+    [kinScene, milieuScene],
+    [homelandScene, milieuScene],
+  ]);
+
   return (
     <>
-      {/* the three context images — banner impression + two context scenes */}
-      <div className="px-5 pt-1 sm:px-6">
-        <ProfileGallery
-          slots={[
-            [groupImage(kind, entry.id)],
-            [
-              sceneImageFor(entry.id, "milieu"),
-              groupImage(kind, entry.id),
-            ],
-            [
-              sceneImageForDistinct(entry.id, "homelands", [
-                sceneImageFor(entry.id, "milieu"),
-                groupImage(kind, entry.id),
-              ]),
-              sceneImageFor(entry.id, "milieu"),
-            ],
-          ]}
-          alts={[
-            t("AI-rendered scene impression of the {name}", { name: entry.name }),
-            t("The milieu of {name} — an impressionistic scene", { name: entry.name }),
-            t("The homelands of {name} — an impressionistic scene", { name: entry.name }),
-          ]}
+      <div className="nice-scroll encyc-body max-h-[min(62vh,556px)] space-y-5 overflow-y-auto px-5 pb-4 pt-1 sm:px-6">
+        <button
+          type="button"
+          onClick={() => useMirror.getState().closeModal()}
+          className="focus-glow group inline-flex items-center gap-1.5 rounded-full border hairline px-3 py-1.5 text-[12.5px] text-muted-foreground transition-colors hover:border-[var(--hairline-hover)] hover:text-foreground"
+        >
+          <ArrowLeft
+            className="size-3.5 transition-transform duration-300 group-hover:-translate-x-0.5"
+            aria-hidden="true"
+          />
+          {t("Back to the register")}
+        </button>
+
+        {/* the lead plate — the family portrait the opening wraps around */}
+        <ProfileFigure
+          sources={plates[0]}
+          alt={t("AI-rendered scene impression of the {name}", { name: entry.name })}
+          variant="lead"
           testid="group-gallery"
         />
-      </div>
 
-      <div className="flex flex-wrap items-center gap-2 px-5 pt-4 sm:px-6">
-        <Badge tone="cy">{kindLabel}</Badge>
-        <Badge tone="ok">{t("{n} named representatives", { n: entry.count })}</Badge>
-        <Badge tone="pk">{entry.range}</Badge>
-      </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge tone="cy">{kindLabel}</Badge>
+          <Badge tone="ok">{t("{n} named representatives", { n: entry.count })}</Badge>
+          <Badge tone="pk">{entry.range}</Badge>
+        </div>
 
-      <div className="nice-scroll max-h-[min(60vh,540px)] space-y-5 overflow-y-auto px-5 pb-4 pt-4 sm:px-6">
         <ProfileSection index="01" label={t("Essence")}>
           <p className="text-[14.5px] font-medium leading-relaxed text-foreground/90">{entry.essence}</p>
         </ProfileSection>
@@ -418,6 +424,14 @@ function GroupDossierBody({
         <ProfileSection index="03" label={t("Signs of resonance")}>
           <p className="text-[14.5px] leading-relaxed text-foreground/85">{entry.signal}</p>
         </ProfileSection>
+
+        {/* the second plate — the milieu, wrapped by the deep sections */}
+        <ProfileFigure
+          sources={plates[1]}
+          alt={t("The milieu of {name} — an impressionistic scene", { name: entry.name })}
+          side="left"
+          testid="group-gallery-milieu"
+        />
 
         {/* deep sections */}
         {extras_ && (
@@ -432,6 +446,13 @@ function GroupDossierBody({
             <ProfileSection index="06" label={t("Ships, temples & artifacts")}>
               <p className="text-[14.5px] leading-relaxed text-foreground/85">{extras_.artifacts}</p>
             </ProfileSection>
+
+            {/* the third plate — the homelands, wrapped by what follows */}
+            <ProfileFigure
+              sources={plates[2]}
+              alt={t("The homelands of {name} — an impressionistic scene", { name: entry.name })}
+              testid="group-gallery-homelands"
+            />
             <ProfileSection index="07" label={t("Contact protocol")}>
               <p className="text-[14.5px] leading-relaxed text-foreground/85">{extras_.contactProtocol}</p>
             </ProfileSection>
@@ -461,7 +482,7 @@ function GroupDossierBody({
               </div>
             </ProfileSection>
 
-            <div className="rounded-xl border hairline bg-[color-mix(in_srgb,var(--gd)_6%,transparent)] p-3.5">
+            <div className="clear-both rounded-xl border hairline bg-[color-mix(in_srgb,var(--gd)_6%,transparent)] p-3.5">
               <h4 className="mono-label text-[10px] text-[var(--gd)]">
                 {t("Discernment note")}
               </h4>
@@ -473,7 +494,7 @@ function GroupDossierBody({
         )}
 
         {/* representatives — full reveal */}
-        <section>
+        <section className="clear-both">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h4 className="mono-label flex items-center gap-1.5 text-[10.5px] text-[var(--cy)]">
               <Fingerprint className="size-3" aria-hidden="true" />
@@ -587,7 +608,14 @@ function GroupDossierBody({
           )}
         </section>
 
-        <ContextNote />
+        <div className="clear-both rounded-xl border hairline bg-[color-mix(in_srgb,var(--gd)_6%,transparent)] p-3.5">
+          <h4 className="mono-label text-[10px] text-[var(--gd)]">{t("Context note")}</h4>
+          <p className="mt-1.5 text-[14px] leading-relaxed text-muted-foreground">
+            {t(
+              "This dossier reflects channeled tradition and worldbuilding within the Mirror archive. It is offered for reflection and wonder — not as established science."
+            )}
+          </p>
+        </div>
       </div>
 
       <div className="border-t hairline px-5 py-4 sm:px-6">

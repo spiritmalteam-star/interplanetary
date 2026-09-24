@@ -25,10 +25,9 @@ import {
   professionProfiles,
 } from "@/lib/profession-profiles";
 import { sectionImage } from "@/lib/entity-utils";
-import { sceneImageForDistinct, slugify } from "@/lib/profile-visuals";
-import { ProfileGallery } from "./ProfileBits";
+import { sceneImageFor, sceneImageForDistinct, slugify } from "@/lib/profile-visuals";
+import { distinctChains, ProfileFigure } from "./ProfileBits";
 import { ModalShell } from "./ModalShell";
-import { cn } from "@/lib/utils";
 import type { ProfessionDomain } from "@/lib/mirror-types";
 
 const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -70,6 +69,22 @@ export function AstralJobsModal() {
 
   const domain = professionDomains.find((d) => d.id === domainId) ?? null;
   const role = domain?.professions.find((p) => p.name === profession) ?? null;
+
+  /* the page's three plates — own painting first, no image ever twice */
+  const domainMaster = domain ? sectionImage(`dom-${domain.id}`) : null;
+  const craftScene = role ? sceneImageFor(role.name, "calling") : null;
+  const workplaceScene =
+    role && domainMaster
+      ? sceneImageForDistinct(role.name, "workplace", [craftScene!, domainMaster])
+      : null;
+  const plates =
+    domain && role && domainMaster && craftScene && workplaceScene
+      ? distinctChains([
+          [`/images/ai/astral/job-${slugify(role.name)}.jpg`, domainMaster],
+          [craftScene],
+          [workplaceScene],
+        ])
+      : null;
 
   const askAboutRole = () => {
     if (!role) return;
@@ -114,7 +129,7 @@ export function AstralJobsModal() {
         )}
       </div>
 
-      <div className="nice-scroll max-h-[min(58vh,500px)] overflow-y-auto px-5 pb-5 pt-3.5 sm:px-6">
+      <div className="nice-scroll encyc-body max-h-[min(58vh,500px)] overflow-y-auto px-5 pb-5 pt-3.5 sm:px-6">
         {/* Level 1 — domains */}
         {!domain && (
           <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
@@ -131,7 +146,6 @@ export function AstralJobsModal() {
                     className="relative block h-16 w-full"
                     aria-hidden="true"
                   >
-                    { }
                     <img
                       src={sectionImage(`dom-${d.id}`)}
                       alt=""
@@ -160,10 +174,10 @@ export function AstralJobsModal() {
                       {d.count}
                     </span>
                   </span>
-                  <span className="mt-2 px-3.5 text-[13.5px] font-semibold uppercase tracking-[0.08em] text-foreground">
+                  <span className="mt-2 px-3.5 text-[15px] font-semibold uppercase tracking-[0.08em] text-foreground">
                     {d.title}
                   </span>
-                  <span className="mt-1 line-clamp-2 px-3.5 pb-2 text-[13px] leading-relaxed text-muted-foreground">
+                  <span className="mt-1 line-clamp-2 px-3.5 pb-2 text-[13.5px] leading-relaxed text-muted-foreground">
                     {d.description}
                   </span>
                   <span className="mono-label mb-3 mt-1.5 flex items-center gap-1 px-3.5 text-[10.5px] text-[var(--cy)]">
@@ -234,7 +248,7 @@ export function AstralJobsModal() {
                   className="focus-glow group rounded-xl border hairline bg-[var(--glass-bg-soft)] p-3.5 text-left transition-all duration-300 hover:-translate-y-0.5 hover:border-[var(--hairline-hover)] hover:glow-sm"
                 >
                   <span className="flex items-start justify-between gap-2">
-                    <span className="block text-[14.5px] font-semibold text-foreground">
+                    <span className="block text-[15.5px] font-semibold leading-snug text-foreground">
                       {p.name}
                     </span>
                     {p.openings != null && (
@@ -243,7 +257,7 @@ export function AstralJobsModal() {
                       </span>
                     )}
                   </span>
-                  <span className="mt-1 block text-[13px] leading-relaxed text-muted-foreground">
+                  <span className="mt-1 block text-[13.5px] leading-relaxed text-muted-foreground">
                     {p.blurb}
                   </span>
                   <span className="mono-label mt-2 flex items-center gap-1 text-[10.5px] text-[var(--cy)]">
@@ -260,13 +274,8 @@ export function AstralJobsModal() {
         )}
 
         {/* Level 3 — profession detail */}
-        {domain && role && (
-          <article
-            className={cn(
-              "space-y-4 rounded-xl border hairline bg-[var(--glass-bg-soft)] p-4 sm:p-5",
-              "animate-rise-in"
-            )}
-          >
+        {domain && role && plates && (
+          <article className="animate-rise-in space-y-4">
             <button
               type="button"
               onClick={() => setProfession(null)}
@@ -276,23 +285,11 @@ export function AstralJobsModal() {
               {domain.title}
             </button>
 
-            {/* the three context images — its own painting, its domain, its workplace */}
-            <ProfileGallery
-              slots={[
-                [`/images/ai/astral/job-${slugify(role.name)}.jpg`, sectionImage(`dom-${domain.id}`)],
-                [sectionImage(`dom-${domain.id}`)],
-                [
-                  sceneImageForDistinct(role.name, "workplace", [
-                    sectionImage(`dom-${domain.id}`),
-                  ]),
-                  sectionImage(`dom-${domain.id}`),
-                ],
-              ]}
-              alts={[
-                t("Impression of the {name} at work", { name: role.name }),
-                t("The {domain} domain", { domain: domain.title }),
-                t("The workplace of the {name} — an impressionistic scene", { name: role.name }),
-              ]}
+            {/* the lead plate — the role's own painting, the charter wrapping around */}
+            <ProfileFigure
+              sources={plates[0]}
+              alt={t("Impression of the {name} at work", { name: role.name })}
+              variant="lead"
               testid="profession-gallery"
             />
 
@@ -313,9 +310,17 @@ export function AstralJobsModal() {
               {role.detail}
             </p>
 
+            {/* the second plate — the domain, wrapped by the mandate */}
+            <ProfileFigure
+              sources={plates[1]}
+              alt={t("The {domain} domain", { domain: domain.title })}
+              side="left"
+              testid="profession-gallery-domain"
+            />
+
             {/* full profession dossier */}
             {professionProfiles[role.name] && (
-              <div className="mt-4 space-y-3 rounded-lg border hairline bg-[color-mix(in_srgb,var(--cy)_4%,transparent)] p-3.5">
+              <div className="clear-both mt-4 space-y-3 rounded-lg border hairline bg-[color-mix(in_srgb,var(--cy)_4%,transparent)] p-3.5">
                 <div className="flex flex-wrap items-center gap-1.5">
                   <span className="mono-label rounded-full border border-[var(--cy)]/30 bg-[color-mix(in_srgb,var(--cy)_8%,transparent)] px-2 py-0.5 text-[10px] text-[var(--cy)]">
                     {t(professionProfiles[role.name].ring)}
@@ -339,6 +344,13 @@ export function AstralJobsModal() {
                     {professionProfiles[role.name].pathway}
                   </p>
                 </div>
+
+                {/* the third plate — the workplace, wrapped by the toolkit */}
+                <ProfileFigure
+                  sources={plates[2]}
+                  alt={t("The workplace of the {name} — an impressionistic scene", { name: role.name })}
+                  testid="profession-gallery-workplace"
+                />
                 <div>
                   <h5 className="mono-label text-[10px] text-[var(--cy)]">{t("Toolkit")}</h5>
                   <div className="mt-1.5 flex flex-wrap gap-1.5">
@@ -381,7 +393,7 @@ export function AstralJobsModal() {
             <button
               type="button"
               onClick={askAboutRole}
-              className="focus-glow mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--cy)_12%,transparent)] px-4 py-2.5 text-[13.5px] font-semibold text-foreground transition-all duration-300 hover:glow-sm"
+              className="focus-glow clear-both mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--cy)_12%,transparent)] px-4 py-2.5 text-[13.5px] font-semibold text-foreground transition-all duration-300 hover:glow-sm"
             >
               <Sparkles className="size-3.5 text-[var(--cy)]" aria-hidden="true" />
               {t("Ask the Mirror for a full transmission")}

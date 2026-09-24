@@ -140,7 +140,7 @@ export function CommunionView() {
 
   return (
     <div
-      className="communion-deep relative flex h-full flex-col overflow-hidden"
+      className="communion-deep relative flex h-full flex-col overflow-x-clip overflow-y-clip"
       data-testid="communion-view"
     >
       {/* ---------- drifting deep-field glows ---------- */}
@@ -403,7 +403,8 @@ export function CommunionView() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  One transmission of the Reflection — luminous violet panel.        */
+/*  One transmission of the Reflection — a luminous LIGHT paper with   */
+/*  deep violet ink, so every word stays easy to read.                 */
 /* ------------------------------------------------------------------ */
 function MirrorTransmission({
   text,
@@ -419,8 +420,7 @@ function MirrorTransmission({
       transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
       className={cn(
         "communion-reading relative overflow-hidden rounded-2xl border",
-        "border-[color-mix(in_srgb,var(--sp-b)_30%,transparent)] px-5 py-5",
-        "shadow-[0_24px_70px_-28px_color-mix(in_srgb,var(--sp-b)_55%,transparent)] sm:px-7"
+        "px-5 py-5 sm:px-7"
       )}
       data-testid="communion-transmission"
     >
@@ -431,10 +431,10 @@ function MirrorTransmission({
           <p
             key={i}
             className={cn(
-              "text-[15px] leading-relaxed text-foreground/90",
-              i === 0 && !isSignature && "text-[16px] italic text-foreground",
+              "text-[15.5px] leading-relaxed text-[#2a2136]",
+              i === 0 && !isSignature && "text-[16.5px] italic text-[#1d1430]",
               isSignature &&
-                "mono-label mt-4 text-center text-[11.5px] tracking-[0.12em] text-[var(--sp-b)]"
+                "mono-label mt-4 text-center text-[11.5px] tracking-[0.12em] text-[#7a5a1e]"
             )}
           >
             {para}
