@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronLeft, RotateCcw, Sparkles } from "lucide-react";
+import { RotateCcw, Sparkles } from "lucide-react";
 import { ModalShell } from "./ModalShell";
 import {
   STAR_PLAY_CARDS,
@@ -17,9 +17,12 @@ import { cn } from "@/lib/utils";
 const EMBLEM = "/images/ai/star-play-emblem.jpg";
 
 /**
- * StarPlayModal — the Mirror's arcana. Violet mysticism: draw three big
- * cards, open any card fully, and receive one single channeled core
- * message woven from the whole spread. Everything lives in memory only.
+ * StarPlayModal — the Mirror's tarot ritual. Three cards are dealt
+ * FACE-DOWN in a perfectly straight hand; clicking a card turns it
+ * like a true tarot card (real 3D flip) and its whole meaning is read
+ * INSIDE the card — artwork above, violet ink panel below. The oracle
+ * speaks only once every seat has been seen, weaving all three into
+ * one single meaning. Everything lives in memory only.
  */
 export function StarPlayModal() {
   const modal = useMirror((s) => s.modal);
@@ -30,15 +33,17 @@ export function StarPlayModal() {
   const open = modal?.type === "starplay";
 
   const [drawn, setDrawn] = useState<DrawnCard[] | null>(null);
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [flipped, setFlipped] = useState<boolean[]>([false, false, false]);
   const [reading, setReading] = useState<string | null>(null);
-  const [readingStatus, setReadingStatus] = useState<"idle" | "loading" | "error">("idle");
+  const [readingStatus, setReadingStatus] = useState<
+    "idle" | "loading" | "error"
+  >("idle");
 
   /* Fresh deck every time the doorway opens. */
   useEffect(() => {
     if (open) {
       setDrawn(null);
-      setOpenIndex(null);
+      setFlipped([false, false, false]);
       setReading(null);
       setReadingStatus("idle");
     }
@@ -46,13 +51,25 @@ export function StarPlayModal() {
 
   const draw = useCallback(() => {
     setDrawn(drawStarPlayCards(3));
-    setOpenIndex(null);
+    setFlipped([false, false, false]);
     setReading(null);
     setReadingStatus("idle");
   }, []);
 
+  const turn = useCallback((i: number) => {
+    setFlipped((f) => {
+      if (f[i]) return f;
+      const next = [...f];
+      next[i] = true;
+      return next;
+    });
+  }, []);
+
+  const allRevealed = drawn !== null && flipped.every(Boolean);
+
   const askReading = useCallback(async () => {
-    if (!drawn || readingStatus === "loading") return;
+    if (!drawn || !flipped.every(Boolean) || readingStatus === "loading")
+      return;
     setReadingStatus("loading");
     try {
       const res = await fetch("/api/star-play", {
@@ -77,9 +94,7 @@ export function StarPlayModal() {
     } catch {
       setReadingStatus("error");
     }
-  }, [drawn, readingStatus, language]);
-
-  const openedCard = openIndex !== null && drawn ? drawn[openIndex] : null;
+  }, [drawn, flipped, readingStatus, language]);
 
   return (
     <ModalShell
@@ -118,10 +133,26 @@ export function StarPlayModal() {
                 "Shuffle the one thousand four hundred and forty-three and draw three seats of starlight. The deck keeps no memory — each spread is born once."
               )}
             </p>
+
+            {/* a straight stack of sealed cards waiting behind the emblem */}
+            <div className="relative mt-7 h-[120px] w-[210px]" aria-hidden="true">
+              {[2, 1, 0].map((i) => (
+                <div
+                  key={i}
+                  className="tarot-back absolute inset-x-0 top-0 mx-auto aspect-[2/3] w-[80px] rounded-xl border border-[color-mix(in_srgb,var(--sp-a)_40%,transparent)] shadow-[0_10px_30px_-12px_color-mix(in_srgb,var(--sp-a)_55%,transparent)]"
+                  style={{
+                    transform: `translateY(${i * 6}px) scale(${1 - i * 0.04})`,
+                    opacity: 1 - i * 0.18,
+                  }}
+                />
+              ))}
+            </div>
+
             <button
               type="button"
               onClick={draw}
-              className="star-btn focus-glow mt-7 flex h-12 items-center gap-2.5 rounded-full px-7 text-[13px] font-semibold tracking-[0.08em] text-foreground transition-all duration-300 hover:-translate-y-px"
+              data-testid="starplay-draw"
+              className="star-btn focus-glow mt-6 flex h-12 items-center gap-2.5 rounded-full px-7 text-[13px] font-semibold tracking-[0.08em] text-foreground transition-all duration-300 hover:-translate-y-px"
             >
               <Sparkles className="size-4 text-[var(--sp-a)]" aria-hidden="true" />
               {t("Draw three cards")}
@@ -132,7 +163,7 @@ export function StarPlayModal() {
           </div>
         )}
 
-        {/* ---------- drawn: the spread ---------- */}
+        {/* ---------- drawn: the straight spread ---------- */}
         {drawn && (
           <div className="relative">
             <div className="flex items-center justify-between pb-4">
@@ -151,65 +182,47 @@ export function StarPlayModal() {
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-5">
               {drawn.map((d, i) => (
-                <motion.div
-                  key={`${d.card.id}-${i}`}
-                  initial={{ opacity: 0, y: 14, rotate: i === 1 ? 0 : i === 0 ? -1.5 : 1.5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.55, delay: i * 0.12, ease: [0.22, 1, 0.36, 1] }}
-                  className="flex flex-col"
-                >
+                <div key={`${d.card.id}-${i}`} className="flex flex-col">
                   <span className="mono-label mb-2 text-center text-[8.5px] uppercase tracking-[0.18em] text-[var(--sp-a)]">
                     {t(d.position)}
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => setOpenIndex(i)}
-                    aria-label={t("Open {name} fully", { name: d.card.name })}
-                    className={cn(
-                      "starplay-card group relative block w-full overflow-hidden rounded-2xl border",
-                      "border-[color-mix(in_srgb,var(--sp-a)_38%,transparent)]",
-                      "shadow-[0_18px_50px_-20px_color-mix(in_srgb,var(--sp-a)_55%,transparent)]",
-                      "transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_-18px_color-mix(in_srgb,var(--sp-a)_70%,transparent)]"
-                    )}
-                  >
-                    <img
-                      src={d.card.image}
-                      alt={d.card.name}
-                      className="aspect-[2/3] w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-                      loading="lazy"
-                    />
-                    <span
-                      className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[rgba(20,8,38,0.92)] via-[rgba(30,12,54,0.25)] to-transparent"
-                      aria-hidden="true"
-                    />
-                    <span className="pointer-events-none absolute inset-x-0 bottom-0 p-3.5 text-left">
-                      <span className="block text-[13px] font-semibold leading-snug text-white/95">
-                        {d.card.name}
-                      </span>
-                      <span className="mt-1 block truncate text-[10.5px] italic leading-snug text-white/65">
-                        {d.card.essence}
-                      </span>
-                    </span>
-                  </button>
-                </motion.div>
+                  <TarotCard
+                    drawn={d}
+                    index={i}
+                    flipped={flipped[i]}
+                    onTurn={() => turn(i)}
+                    t={t}
+                  />
+                </div>
               ))}
             </div>
 
-            {/* ---------- the single core message ---------- */}
+            {/* ---------- the oracle: one meaning out of three seen seats ---------- */}
             <div className="mt-7 flex flex-col items-center">
               {!reading && readingStatus !== "loading" && (
-                <button
-                  type="button"
-                  onClick={() => void askReading()}
-                  className="star-btn focus-glow flex h-11 items-center gap-2.5 rounded-full px-6 text-[12.5px] font-semibold tracking-[0.08em] text-foreground transition-all duration-300 hover:-translate-y-px"
-                >
-                  <Sparkles className="size-4 text-[var(--sp-a)]" aria-hidden="true" />
-                  {t("Ask the deck to speak")}
-                </button>
+                <div className="flex flex-col items-center">
+                  <button
+                    type="button"
+                    onClick={() => void askReading()}
+                    disabled={!allRevealed}
+                    data-testid="starplay-ask"
+                    className="star-btn focus-glow flex h-11 items-center gap-2.5 rounded-full px-6 text-[12.5px] font-semibold tracking-[0.08em] text-foreground transition-all duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    <Sparkles className="size-4 text-[var(--sp-a)]" aria-hidden="true" />
+                    {t("Ask the oracle to weave the three")}
+                  </button>
+                  {!allRevealed && (
+                    <span className="mt-2.5 text-[11px] italic text-muted-foreground/75">
+                      {t(
+                        "turn all three cards — the oracle reads only a fully seen spread"
+                      )}
+                    </span>
+                  )}
+                </div>
               )}
 
               {readingStatus === "loading" && (
-                <div className="flex items-center gap-2 py-3" aria-live="polite">
+                <div className="flex items-center gap-2 py-3" aria-live="polite" data-testid="starplay-reading-loading">
                   {[0, 1, 2].map((i) => (
                     <motion.span
                       key={i}
@@ -219,7 +232,7 @@ export function StarPlayModal() {
                     />
                   ))}
                   <span className="ml-1 text-[12px] italic text-muted-foreground">
-                    {t("the deck is gathering its one thread...")}
+                    {t("the oracle is weaving the three into one...")}
                   </span>
                 </div>
               )}
@@ -235,72 +248,158 @@ export function StarPlayModal() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-                  className="starplay-reading w-full rounded-2xl border border-[color-mix(in_srgb,var(--sp-a)_30%,transparent)] bg-[color-mix(in_srgb,var(--sp-a)_7%,var(--glass-bg))] px-6 py-5 text-left shadow-[0_18px_50px_-24px_color-mix(in_srgb,var(--sp-a)_50%,transparent)]"
+                  className="starplay-reading relative w-full overflow-hidden rounded-2xl border border-[color-mix(in_srgb,var(--sp-a)_30%,transparent)] px-6 py-5 text-left shadow-[0_18px_50px_-24px_color-mix(in_srgb,var(--sp-a)_50%,transparent)]"
+                  data-testid="starplay-reading"
                 >
-                  {reading.split(/\n\n+/).map((para, i) => (
-                    <p
-                      key={i}
-                      className="text-[13.5px] leading-relaxed text-foreground/90 first:text-[14.5px] first:italic first:text-foreground"
-                    >
-                      {para}
-                    </p>
-                  ))}
+                  <p className="mono-label text-center text-[8.5px] uppercase tracking-[0.22em] text-[var(--sp-a)]">
+                    {t("One meaning · three seats")}
+                  </p>
+                  {reading.split(/\n\n+/).map((para, i, arr) => {
+                    const isSignature =
+                      para.trimStart().startsWith("—") && i === arr.length - 1;
+                    return (
+                      <p
+                        key={i}
+                        className={cn(
+                          "text-[13.5px] leading-relaxed text-foreground/90",
+                          i === 0 &&
+                            !isSignature &&
+                            "mt-2 text-[14.5px] italic text-foreground",
+                          isSignature &&
+                            "mono-label mt-4 text-center text-[9.5px] tracking-[0.12em] text-[var(--sp-a)]"
+                        )}
+                      >
+                        {para}
+                      </p>
+                    );
+                  })}
+                  <div className="mt-4 flex flex-wrap items-center justify-center gap-1.5 border-t border-[color-mix(in_srgb,var(--sp-a)_18%,transparent)] pt-3.5">
+                    <span className="mono-label mr-1 text-[8px] uppercase tracking-[0.2em] text-muted-foreground/60">
+                      {t("Woven from")}
+                    </span>
+                    {drawn.map((d, i) => (
+                      <span
+                        key={d.card.id}
+                        className="rounded-full border border-[color-mix(in_srgb,var(--sp-a)_30%,transparent)] bg-[color-mix(in_srgb,var(--sp-a)_8%,transparent)] px-2.5 py-1 text-[10px] text-foreground/80"
+                      >
+                        {t(d.position)} · {d.card.name}
+                      </span>
+                    ))}
+                  </div>
                 </motion.article>
               )}
             </div>
           </div>
         )}
-
-        {/* ---------- fully opened card ---------- */}
-        <AnimatePresence>
-          {openedCard && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="absolute inset-0 z-10 overflow-y-auto nice-scroll rounded-2xl bg-[color-mix(in_srgb,var(--glass-bg-strong)_92%,transparent)] p-5 backdrop-blur-2xl sm:p-7"
-              data-testid="starplay-card-detail"
-            >
-              <button
-                type="button"
-                onClick={() => setOpenIndex(null)}
-                className="focus-glow mb-5 flex items-center gap-1.5 rounded-full border hairline px-3 py-1.5 text-[11px] text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
-              >
-                <ChevronLeft className="size-3.5" aria-hidden="true" />
-                {t("Back to the spread")}
-              </button>
-
-              <div className="flex flex-col items-start gap-6 sm:flex-row">
-                <div className="starplay-card mx-auto w-full max-w-[300px] shrink-0 overflow-hidden rounded-2xl border border-[color-mix(in_srgb,var(--sp-a)_40%,transparent)] shadow-[0_24px_70px_-24px_color-mix(in_srgb,var(--sp-a)_65%,transparent)] sm:mx-0">
-                  <img
-                    src={openedCard.card.image}
-                    alt={openedCard.card.name}
-                    className="aspect-[2/3] w-full object-cover"
-                  />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <span className="mono-label text-[9px] uppercase tracking-[0.18em] text-[var(--sp-a)]">
-                    {t(openedCard.position)}
-                  </span>
-                  <h3 className="mt-2 text-[19px] font-semibold leading-snug text-foreground">
-                    {openedCard.card.name}
-                  </h3>
-                  <p className="mt-1.5 text-[13px] italic leading-relaxed text-[var(--sp-b)]">
-                    {openedCard.card.essence}
-                  </p>
-                  <p className="mt-4 text-[13.5px] leading-relaxed text-foreground/85">
-                    {openedCard.card.message}
-                  </p>
-                  <p className="mono-label mt-6 text-[8.5px] uppercase tracking-[0.16em] text-muted-foreground/60">
-                    {openedCard.card.suit} · {openedCard.card.id}
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
     </ModalShell>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  One tarot card — sealed back, 3D turn, whole meaning inside.       */
+/* ------------------------------------------------------------------ */
+function TarotCard({
+  drawn,
+  index,
+  flipped,
+  onTurn,
+  t,
+}: {
+  drawn: DrawnCard;
+  index: number;
+  flipped: boolean;
+  onTurn: () => void;
+  t: (k: string, params?: Record<string, string | number>) => string;
+}) {
+  return (
+    <div className="tarot-scene relative aspect-[2/3] w-full" data-testid={`starplay-seat-${index}`}>
+      <motion.div
+        className="tarot-inner size-full"
+        initial={{ opacity: 0, y: 80, scale: 0.94 }}
+        animate={{ opacity: 1, y: 0, scale: 1, rotateY: flipped ? 180 : 0 }}
+        transition={{
+          opacity: { duration: 0.5, delay: index * 0.12 },
+          y: { duration: 0.6, delay: index * 0.12, ease: [0.22, 1, 0.36, 1] },
+          scale: { duration: 0.6, delay: index * 0.12, ease: [0.22, 1, 0.36, 1] },
+          rotateY: { duration: 0.85, ease: [0.66, 0, 0.32, 1] },
+        }}
+        whileHover={{ y: -6 }}
+      >
+        {/* ---------- the sealed back ---------- */}
+        <button
+          type="button"
+          onClick={onTurn}
+          aria-label={t("Turn the card of {seat}", { seat: drawn.position })}
+          data-testid="starplay-card-back"
+          className="tarot-face tarot-back relative block size-full cursor-pointer overflow-hidden rounded-2xl border border-[color-mix(in_srgb,var(--sp-a)_42%,transparent)] shadow-[0_18px_50px_-18px_color-mix(in_srgb,var(--sp-a)_60%,transparent)] transition-shadow duration-300 hover:shadow-[0_24px_60px_-16px_color-mix(in_srgb,var(--sp-a)_75%,transparent)]"
+        >
+          <span
+            aria-hidden="true"
+            className="tarot-glare pointer-events-none absolute inset-0"
+          />
+          {/* the emblem seal */}
+          <span className="absolute left-1/2 top-1/2 flex size-[46%] -translate-x-1/2 -translate-y-1/2 items-center justify-center">
+            <span className="starplay-halo absolute inset-0 rounded-full border border-[color-mix(in_srgb,var(--sp-a)_40%,transparent)]" />
+            <img
+              src={EMBLEM}
+              alt=""
+              aria-hidden="true"
+              className="absolute inset-[10%] size-[80%] rounded-full object-cover opacity-90"
+            />
+          </span>
+          <span className="mono-label absolute inset-x-0 bottom-4 text-center text-[7.5px] uppercase tracking-[0.3em] text-[color-mix(in_srgb,var(--sp-b)_75%,transparent)]">
+            ✦ {t("Star Play")} ✦
+          </span>
+        </button>
+
+        {/* ---------- the revealed face — the whole meaning inside ---------- */}
+        <div
+          data-testid="starplay-card-face"
+          className="tarot-face absolute inset-0 flex size-full flex-col overflow-hidden rounded-2xl border border-[color-mix(in_srgb,var(--sp-a)_45%,transparent)] bg-[#0d0718] shadow-[0_24px_60px_-18px_color-mix(in_srgb,var(--sp-a)_70%,transparent)]"
+          style={{ transform: "rotateY(180deg)" }}
+        >
+          {/* artwork — the top of the card */}
+          <div className="relative h-[45%] shrink-0 overflow-hidden">
+            <img
+              src={drawn.card.image}
+              alt={drawn.card.name}
+              className="size-full object-cover"
+              loading="lazy"
+              onError={(e) => {
+                e.currentTarget.src = EMBLEM;
+              }}
+            />
+            <span
+              aria-hidden="true"
+              className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0d0718]"
+            />
+          </div>
+
+          {/* the violet ink panel — name, essence, and the full message */}
+          <div className="relative flex min-h-0 flex-1 flex-col gap-1.5 overflow-hidden px-3.5 pb-3.5 pt-1 text-left">
+            <span className="mono-label shrink-0 text-[7.5px] uppercase tracking-[0.2em] text-[var(--sp-b)]">
+              {t(drawn.position)}
+            </span>
+            <span className="shrink-0 text-[13.5px] font-semibold leading-snug text-white/95">
+              {drawn.card.name}
+            </span>
+            <span className="shrink-0 text-[10.5px] italic leading-snug text-[color-mix(in_srgb,var(--sp-b)_85%,transparent)]">
+              {drawn.card.essence}
+            </span>
+            <span
+              aria-hidden="true"
+              className="shrink-0 border-t border-[color-mix(in_srgb,var(--sp-a)_28%,transparent)]"
+            />
+            <span
+              data-testid="starplay-card-message"
+              className="min-h-0 flex-1 overflow-hidden text-[10.5px] leading-relaxed text-white/78"
+            >
+              {drawn.card.message}
+            </span>
+          </div>
+        </div>
+      </motion.div>
+    </div>
   );
 }

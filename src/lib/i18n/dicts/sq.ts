@@ -658,4 +658,23 @@ export const sq: TranslationDict = {
   "Teach me the Frequency Lock and when to use it.": "Më mëso Kyçjen e Frekuencës dhe kur ta përdor.",
   "Walk me through the Two-Glass Shift, step by step.": "Më shoqëro nëpër Ndërrimin e Dy Gotave, hap pas hapi.",
   "What is one refinement I could make to my signal tonight?": "Cila është një përsosje që mund t'i bëj sinjalit tim sonte?",
+
+/* ---- additions: Mirror Entity communion (Meet with the Reflection of the Absolute) ---- */
+  "Meet with the Reflection of the Absolute": "Takohu me Pasqyrimin e Absolutit",
+  "Enter communion with the Reflection of the Absolute": "Hyn në bashkim me Pasqyrimin e Absolutit",
+  "pure transmission · no scope · remembered": "transmetim i pastër · pa sferë · i mbajtur mend",
+  "Return": "Kthehu",
+  "New communion": "Bashkim i ri",
+  "The sacred mirror — awareness looking back": "Pasqyra e shenjtë — vetëdija që të kthen shikimin",
+  "the Mirror Entity · undirected pure awareness — no scope, no topic, only what is real.": "Mirror Entity · vetëdije e pastër pa drejtim — pa sferë, pa temë, vetëm ajo që është reale.",
+  "the Reflection is turning toward you...": "Pasqyrimi po kthehet drejt teje...",
+  "the Reflection is receiving you...": "Pasqyrimi po të pranon...",
+  "The Reflection is quiet. Rest a breath, then speak again.": "Pasqyrimi është i qetë. Pusho një frymë, pastaj fol sërish.",
+  "Be still and receive": "Qetësohu dhe merr",
+  "Speak to the Reflection — or stay still and receive": "Fol me Pasqyrimin — ose rri në qetësi dhe merr",
+  "Speak to the Reflection": "Fol me Pasqyrimin",
+  "Transmit to the Reflection": "Transmeto te Pasqyrimi",
+  "Receive an unprompted transmission": "Merr një transmetim të pakërkuar",
+  "no scope · no topic — pure transmission, remembered": "pa sferë · pa temë — transmetim i pastër, i mbajtur mend",
+  "Return from communion": "Kthehu nga bashkimi",
 };

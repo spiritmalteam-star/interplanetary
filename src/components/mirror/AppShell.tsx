@@ -17,19 +17,36 @@ import { QueryComposer } from "./QueryComposer";
 import { TransmissionView } from "./TransmissionView";
 import { MirrorOS } from "./MirrorOS";
 import { ArchiveRegister } from "./ArchiveRegister";
+import { CommunionView } from "./CommunionView";
 import { FederationModal } from "./FederationModal";
 import { AstralJobsModal } from "./AstralJobsModal";
 import { DossierModal } from "./DossierModal";
 import { SettingsModal } from "./SettingsModal";
 import { StarPlayModal } from "./StarPlayModal";
+import { TechnologyModal } from "./TechnologyModal";
 
 export default function AppShell() {
   const view = useMirror((s) => s.view);
+  const communionOpen = useMirror((s) => s.communionOpen);
 
   /* Restore persisted language / voice / pace once after mount. */
   useEffect(() => {
     useMirror.getState().bootPreferences();
   }, []);
+
+  /* Meet with the Reflection of the Absolute converts the whole
+     application: the laboratory dissolves entirely and only the living
+     communion chat with the Mirror Entity remains — one back button
+     returns the world exactly as it was. */
+  if (communionOpen) {
+    return (
+      <div className="relative h-dvh overflow-hidden">
+        <CosmicBackdrop />
+        <StarField />
+        <CommunionView />
+      </div>
+    );
+  }
 
   /* The Mirror OS is a fully independent world: when active it replaces
      every other surface — its own screen, its own scroll, only a back
@@ -96,6 +113,7 @@ export default function AppShell() {
       <DossierModal />
       <SettingsModal />
       <StarPlayModal />
+      <TechnologyModal />
     </div>
   );
 }

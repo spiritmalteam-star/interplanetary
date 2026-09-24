@@ -1,6 +1,12 @@
 "use client";
 
-import { Building2, BriefcaseBusiness, Menu, RotateCcw } from "lucide-react";
+import {
+  BriefcaseBusiness,
+  Building2,
+  CircuitBoard,
+  Menu,
+  RotateCcw,
+} from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { ThemeToggle } from "./ThemeToggle";
@@ -56,6 +62,17 @@ export function TopNavigation() {
           >
             <Building2 className="size-3.5 text-[var(--cy)]" aria-hidden="true" />
             <span className="hidden sm:inline">{t("Federation")}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => openModal({ type: "technology" })}
+            aria-label={t("Open ET Technology — the xenotechnology register")}
+            data-testid="et-tech-open"
+            className="focus-glow group flex h-9 items-center gap-2 rounded-full border hairline px-3 text-[12px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground hover:glow-sm sm:px-3.5"
+          >
+            <CircuitBoard className="size-3.5 text-[var(--cy)]" aria-hidden="true" />
+            <span className="hidden sm:inline">{t("ET Technology")}</span>
           </button>
 
           <button

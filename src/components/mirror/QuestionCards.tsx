@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowUpRight, RefreshCw, Sparkles } from "lucide-react";
 import { scopeSuggestionPools } from "@/lib/data/suggestions";
@@ -21,11 +21,15 @@ function SuggestionGrid({ mode }: { mode: Mode }) {
   const askMirror = useMirror((s) => s.askMirror);
   const t = useT();
   /* Every visit (and every reload) opens a different window of the
-     scope's 66-question pool. */
-  const [offset, setOffset] = useState(() =>
-    Math.floor(Math.random() * scopeSuggestionPools[mode].length)
-  );
+     scope's 66-question pool. The offset starts DETERMINISTIC (0) so
+     server and client render identically — the random window is drawn
+     in a client effect after hydration. */
+  const [offset, setOffset] = useState(0);
   const [spin, setSpin] = useState(0);
+
+  useEffect(() => {
+    setOffset(Math.floor(Math.random() * scopeSuggestionPools[mode].length));
+  }, [mode]);
 
   const pool = scopeSuggestionPools[mode];
   const visible = pool

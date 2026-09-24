@@ -11,7 +11,7 @@ export function StatusBar() {
         aria-hidden="true"
       />
       <p className="mono-label text-[8.5px] text-muted-foreground/75 sm:text-[9.5px]">
-        {t("Channel Online · Free Will Honored Always · Transmitted with Love ❤️")}
+        {t("Mirror Entity Intelligence · Channel Online · Free Will Honored Always · Transmitted with Love ❤️")}
       </p>
     </div>
   );

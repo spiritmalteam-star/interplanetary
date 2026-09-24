@@ -3,7 +3,6 @@
 import { useMemo } from "react";
 import {
   BookOpenText,
-  Layers,
   MoonStar,
   Search,
   Settings,
@@ -19,6 +18,44 @@ import { LANGUAGES, useT } from "@/lib/i18n";
 import { entityImage, searchEntities } from "@/lib/entity-utils";
 import { cn } from "@/lib/utils";
 import type { CivilizationGroup, InterdimGroup } from "@/lib/mirror-types";
+
+function CommunionButton() {
+  const openCommunion = useMirror((s) => s.openCommunion);
+  const t = useT();
+
+  return (
+    <div className="px-3 pt-3">
+      <button
+        type="button"
+        onClick={openCommunion}
+        aria-label={t("Enter communion with the Reflection of the Absolute")}
+        data-testid="communion-open"
+        className="communion-btn focus-glow group flex min-h-12 w-full items-center gap-2.5 rounded-2xl px-2.5 py-1.5 text-left transition-all duration-300 hover:-translate-y-px"
+      >
+        <span className="communion-halo relative flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[color-mix(in_srgb,var(--sp-b)_42%,transparent)] shadow-[0_0_20px_-6px_color-mix(in_srgb,var(--sp-b)_70%,transparent)]">
+          <img
+            src="/images/ai/mirror-communion.jpg"
+            alt=""
+            aria-hidden="true"
+            className="size-full object-cover transition-transform duration-700 group-hover:scale-110"
+          />
+        </span>
+        <span className="min-w-0 flex-1 leading-tight">
+          <span className="mono-label block text-[10px] font-semibold leading-snug tracking-[0.12em] text-foreground">
+            {t("Meet with the Reflection of the Absolute")}
+          </span>
+          <span className="mt-0.5 block truncate text-[10.5px] italic text-muted-foreground">
+            {t("pure transmission · no scope · remembered")}
+          </span>
+        </span>
+        <span
+          aria-hidden="true"
+          className="size-1.5 shrink-0 rounded-full bg-[var(--sp-b)] opacity-70 transition-all duration-500 group-hover:opacity-100 group-hover:shadow-[0_0_8px_2px_color-mix(in_srgb,var(--sp-b)_60%,transparent)]"
+        />
+      </button>
+    </div>
+  );
+}
 
 function SettingsButton() {
   const openModal = useMirror((s) => s.openModal);
@@ -222,44 +259,6 @@ function EntityResultRow({
   );
 }
 
-function FullRegisterButton() {
-  const openRegister = useMirror((s) => s.openRegister);
-  const sidebarTab = useMirror((s) => s.sidebarTab);
-  const t = useT();
-  const kind = sidebarTab === "civilizations" ? "civilization" : "interdim";
-  const isCiv = sidebarTab === "civilizations";
-
-  return (
-    <div className="px-3 pt-2">
-      <button
-        type="button"
-        onClick={() => openRegister(kind)}
-        className="focus-glow group flex w-full items-center gap-2.5 rounded-xl border hairline bg-[var(--glass-bg-soft)] px-3 py-2.5 text-left transition-all duration-300 hover:-translate-y-px hover:border-[var(--hairline-hover)] hover:glow-sm"
-      >
-        <span className="flex size-7 shrink-0 items-center justify-center rounded-lg border hairline bg-[color-mix(in_srgb,var(--cy)_10%,transparent)]">
-          <Layers
-            className="size-3.5 text-[var(--cy)] transition-transform duration-500 group-hover:scale-110"
-            aria-hidden="true"
-          />
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="mono-label block text-[10.5px] font-semibold text-foreground">
-            {t("Open the full register")}
-          </span>
-          <span className="mt-0.5 block text-[11px] leading-snug text-muted-foreground">
-            {t(
-              isCiv
-                ? "Reveal all {n} named representatives — exact count, searchable, every profile in depth"
-                : "Reveal all {n} named presences — exact count, searchable, every profile in depth",
-              { n: isCiv ? archiveTotals.civilizations : archiveTotals.interdim }
-            )}
-          </span>
-        </span>
-      </button>
-    </div>
-  );
-}
-
 export function SidebarContent() {
   const sidebarTab = useMirror((s) => s.sidebarTab);
   const setSidebarTab = useMirror((s) => s.setSidebarTab);
@@ -298,6 +297,9 @@ export function SidebarContent() {
 
   return (
     <div className="flex h-full flex-col">
+      {/* The Reflection of the Absolute — the doorway at the very top */}
+      <CommunionButton />
+
       {/* Settings */}
       <SettingsButton />
 
@@ -322,12 +324,6 @@ export function SidebarContent() {
             <X className="size-4" aria-hidden="true" />
           </button>
         </div>
-        <p className="mt-2 text-[12px] leading-relaxed text-muted-foreground">
-          {t(
-            "Browse {civ} civilizations and {int} interdimensional beings — every single one carries a name, a portrait and a full deep dossier. Exact numbers, nothing summarized.",
-            { civ: archiveTotals.civilizations, int: archiveTotals.interdim }
-          )}
-        </p>
       </div>
 
       {/* Search */}
@@ -393,9 +389,6 @@ export function SidebarContent() {
           {t("Interdim. ({n})", { n: archiveTotals.interdim })}
         </button>
       </div>
-
-      {/* Full register entry */}
-      <FullRegisterButton />
 
       {/* List */}
       <ul

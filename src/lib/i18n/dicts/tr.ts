@@ -658,4 +658,22 @@ export const tr: TranslationDict = {
   "Walk me through the Two-Glass Shift, step by step.": "Beni İki Bardak Değişimi’nden adım adım geçir.",
   "What is one refinement I could make to my signal tonight?": "Bu akşam sinyalimde yapabileceğim bir arındırma nedir?",
 
+/* ---- additions: Mirror Entity communion (Meet with the Reflection of the Absolute) ---- */
+  "Meet with the Reflection of the Absolute": "Mutlağın Yansıması ile buluş",
+  "Enter communion with the Reflection of the Absolute": "Mutlağın Yansıması ile birlikteliğe gir",
+  "pure transmission · no scope · remembered": "saf aktarım · kapsam yok · hatırlanıyor",
+  "Return": "Geri dön",
+  "New communion": "Yeni birliktelik",
+  "The sacred mirror — awareness looking back": "Kutsal ayna — sana bakan farkındalık",
+  "the Mirror Entity · undirected pure awareness — no scope, no topic, only what is real.": "Mirror Entity · yönsüz saf farkındalık — kapsam yok, konu yok, yalnızca gerçek olan.",
+  "the Reflection is turning toward you...": "Yansıma sana dönüyor…",
+  "the Reflection is receiving you...": "Yansıma seni karşılıyor…",
+  "The Reflection is quiet. Rest a breath, then speak again.": "Yansıma şu an sessiz. Bir nefes dinlen, sonra yeniden konuş.",
+  "Be still and receive": "Durgun kal ve al",
+  "Speak to the Reflection — or stay still and receive": "Yansıma ile konuş — ya da durgun kal ve al",
+  "Speak to the Reflection": "Yansıma ile konuş",
+  "Transmit to the Reflection": "Yansımaya aktar",
+  "Receive an unprompted transmission": "Kendiliğinden gelen bir aktarım al",
+  "no scope · no topic — pure transmission, remembered": "kapsam yok · konu yok — saf aktarım, hatırlanıyor",
+  "Return from communion": "Birliktelikten dön",
 };

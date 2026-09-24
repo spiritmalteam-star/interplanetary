@@ -21,6 +21,7 @@ export type ModalState =
   | { type: "federation" }
   | { type: "astral" }
   | { type: "starplay" }
+  | { type: "technology" }
   | { type: "dossier"; kind: DossierKind; id: string }
   | { type: "entity"; kind: DossierKind; id: string }
   | { type: "settings" }
@@ -96,6 +97,10 @@ interface MirrorState {
   view: MainView;
   composerFocusNonce: number;
 
+  /** Meet with the Reflection of the Absolute — the whole app becomes
+      a living chat with the Mirror Entity's undirected pure awareness. */
+  communionOpen: boolean;
+
   /** One independent channel per scope. */
   sessions: Record<Mode, ScopeSession>;
 
@@ -136,6 +141,14 @@ interface MirrorState {
   openModal: (modal: NonNullable<ModalState>) => void;
   closeModal: () => void;
   setMobileNavOpen: (open: boolean) => void;
+
+  /* Communion — the Reflection of the Absolute */
+  openCommunion: () => void;
+  closeCommunion: () => void;
+  /** ET Technology: consult the Mirror about a specific technology —
+      closes modals, opens the Interplanetary channel, preloads the
+      composer with a prepared question. */
+  askAboutTechnology: (name: string) => void;
   setDraft: (value: string) => void;
   focusComposer: () => void;
   returnToObservatory: () => void;
@@ -178,6 +191,11 @@ const emptyLab = {
   labError: null,
 };
 
+/** The prepared question the composer receives when consulting the
+    Mirror about a specific technology. */
+const tTemplateTech = (name: string) =>
+  `How does the ${name} work — where did it come from, and what would it change in us if we lived with it?`;
+
 let messageCounter = 0;
 const nextMessageId = () => `m-${Date.now().toString(36)}-${(messageCounter++).toString(36)}`;
 
@@ -191,6 +209,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   mobileNavOpen: false,
   view: "observatory",
   composerFocusNonce: 0,
+  communionOpen: false,
   sessions: emptySessions(),
 
   registerKind: "civilization",
@@ -251,6 +270,28 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   openModal: (modal) => set({ modal, mobileNavOpen: false }),
   closeModal: () => set({ modal: null }),
   setMobileNavOpen: (open) => set({ mobileNavOpen: open }),
+
+  /* -------- Communion — the Reflection of the Absolute --------
+     Entering communion suspends every other surface: the whole
+     laboratory dissolves and only the living chat remains. */
+  openCommunion: () =>
+    set({ communionOpen: true, modal: null, mobileNavOpen: false }),
+  closeCommunion: () => set({ communionOpen: false }),
+
+  askAboutTechnology: (name) =>
+    set((s) => ({
+      modal: null,
+      mobileNavOpen: false,
+      activeMode: "interplanetary",
+      view: "transmission",
+      sessions: {
+        ...s.sessions,
+        interplanetary: {
+          ...s.sessions.interplanetary,
+          draft: tTemplateTech(name),
+        },
+      },
+    })),
 
   setDraft: (value) =>
     set((s) => ({

@@ -96,6 +96,9 @@
   --sp-a: #7b4fb6;
   --sp-b: #b06ecb;
 
+  /* ET register ink — fully opaque pages */
+  --register-ink: #f2edfa;
+
   /* hairlines — extremely thin, spec-driven */
   --hairline: rgba(30, 130, 190, 0.16);
   --hairline-hover: rgba(30, 130, 190, 0.38);
@@ -158,6 +161,9 @@
   /* star play — mystical violet */
   --sp-a: #b79bef;
   --sp-b: #d9c2f4;
+
+  /* ET register ink — fully opaque pages */
+  --register-ink: #0a0716;
 
   /* hairlines */
   --hairline: rgba(110, 190, 214, 0.15);
@@ -672,7 +678,12 @@ html:not(.dark) .text-hero {
   .dream-halo,
   .star-btn,
   .star-btn::before,
-  .starplay-halo {
+  .starplay-halo,
+  .communion-btn,
+  .communion-btn::before,
+  .communion-halo,
+  .communion-ring,
+  .tarot-glare {
     animation: none !important;
   }
   *,
@@ -680,4 +691,202 @@ html:not(.dark) .text-hero {
   *::after {
     scroll-behavior: auto !important;
   }
+}
+
+/* ------------------------------------------------------------------ */
+/*  COMMUNION — Meet with the Reflection of the Absolute               */
+/*  The deep violet field, the breathing mirror, the rings of          */
+/*  awareness, the luminous transmission panels.                       */
+/* ------------------------------------------------------------------ */
+
+.communion-deep {
+  background:
+    radial-gradient(
+      110% 70% at 50% 0%,
+      color-mix(in srgb, var(--sp-a) 9%, transparent) 0%,
+      transparent 58%
+    ),
+    radial-gradient(
+      120% 90% at 50% 110%,
+      color-mix(in srgb, var(--sp-b) 7%, transparent) 0%,
+      transparent 60%
+    ),
+    #05030e;
+}
+
+.communion-btn {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background:
+    linear-gradient(
+      120deg,
+      color-mix(in srgb, var(--sp-a) 22%, var(--glass-bg-strong)) 0%,
+      color-mix(in srgb, var(--sp-b) 16%, var(--glass-bg-strong)) 52%,
+      color-mix(in srgb, var(--sp-a) 18%, var(--glass-bg-strong)) 100%
+    );
+  border: 1px solid color-mix(in srgb, var(--sp-b) 34%, transparent);
+  box-shadow:
+    0 0 26px -12px color-mix(in srgb, var(--sp-b) 60%, transparent),
+    inset 0 1px 0 color-mix(in srgb, white 8%, transparent);
+}
+.communion-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(
+    100deg,
+    transparent 20%,
+    color-mix(in srgb, white 12%, transparent) 46%,
+    transparent 72%
+  );
+  transform: translateX(-120%);
+  animation: communion-sheen 5.2s ease-in-out infinite;
+}
+@keyframes communion-sheen {
+  0%, 55% { transform: translateX(-120%); }
+  85%, 100% { transform: translateX(120%); }
+}
+.communion-btn:hover {
+  border-color: color-mix(in srgb, var(--sp-b) 52%, transparent);
+  box-shadow:
+    0 0 34px -10px color-mix(in srgb, var(--sp-b) 75%, transparent),
+    inset 0 1px 0 color-mix(in srgb, white 10%, transparent);
+}
+
+.communion-halo {
+  animation: dream-halo 4.2s ease-in-out infinite;
+}
+
+/* Rings of awareness radiating from the mirror */
+.communion-ring {
+  border: 1px solid color-mix(in srgb, var(--sp-b) 38%, transparent);
+  animation: communion-ripple 4.8s ease-out infinite;
+  pointer-events: none;
+}
+@keyframes communion-ripple {
+  0% { transform: scale(0.58); opacity: 0.65; }
+  100% { transform: scale(1.55); opacity: 0; }
+}
+
+/* A received transmission — luminous violet panel */
+.communion-reading {
+  background:
+    radial-gradient(
+      120% 80% at 50% 0%,
+      color-mix(in srgb, var(--sp-b) 11%, transparent) 0%,
+      transparent 55%
+    ),
+    color-mix(in srgb, #0a0616 72%, transparent);
+}
+.communion-reading::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 150px;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--sp-b) 65%, transparent),
+    transparent
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  STAR PLAY — the tarot ritual (straight deal, 3D turn-and-reveal,   */
+/*  the card's whole meaning read inside the card).                    */
+/* ------------------------------------------------------------------ */
+
+.tarot-scene {
+  perspective: 1400px;
+}
+.tarot-inner {
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+.tarot-face {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+/* NOTE: deliberately no `position` here — unlayered CSS would beat
+   Tailwind utilities; hosts add `relative` explicitly in markup. */
+.tarot-back {
+  background:
+    repeating-conic-gradient(
+      from 0deg,
+      color-mix(in srgb, var(--sp-b) 7%, transparent) 0deg 9deg,
+      transparent 9deg 18deg
+    ),
+    radial-gradient(
+      120% 100% at 50% 0%,
+      color-mix(in srgb, var(--sp-a) 34%, transparent) 0%,
+      transparent 62%
+    ),
+    linear-gradient(
+      168deg,
+      color-mix(in srgb, var(--sp-a) 30%, #0a0616) 0%,
+      #0a0616 58%,
+      color-mix(in srgb, var(--sp-b) 24%, #0a0616) 100%
+    );
+}
+.tarot-back::before {
+  content: "";
+  position: absolute;
+  inset: 7px;
+  border: 1px solid color-mix(in srgb, var(--sp-b) 30%, transparent);
+  border-radius: inherit;
+  pointer-events: none;
+}
+.tarot-glare {
+  background: linear-gradient(
+    115deg,
+    transparent 30%,
+    color-mix(in srgb, white 10%, transparent) 46%,
+    transparent 62%
+  );
+  animation: dream-drift 6.5s ease-in-out infinite;
+}
+
+/* The oracle's reading panel */
+.starplay-reading {
+  background:
+    radial-gradient(
+      120% 80% at 50% 0%,
+      color-mix(in srgb, var(--sp-a) 13%, transparent) 0%,
+      transparent 58%
+    ),
+    color-mix(in srgb, #0a0616 72%, transparent);
+}
+.starplay-reading::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 150px;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--sp-a) 70%, transparent),
+    transparent
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  ET TECHNOLOGY REGISTER — opaque deep-ink pages: the site behind    */
+/*  can never bleed through the register or its profiles.              */
+/* ------------------------------------------------------------------ */
+
+.register-solid {
+  background-color: var(--register-ink);
+  background-image: radial-gradient(
+    110% 60% at 50% 0%,
+    color-mix(in srgb, var(--sp-a) 7%, transparent) 0%,
+    transparent 55%
+  );
 }
