@@ -42,6 +42,7 @@ export function CommunionView() {
   const [draft, setDraft] = useState("");
 
   const endRef = useRef<HTMLDivElement | null>(null);
+  const latestRef = useRef<HTMLDivElement | null>(null);
   const openedRef = useRef(false);
   const receivingRef = useRef(false);
   const messagesRef = useRef<CommunionMessage[]>([]);
@@ -51,10 +52,17 @@ export function CommunionView() {
     messagesRef.current = messages;
   }, [messages]);
 
-  /* the newest word always settles into view */
+  /* Every generation loads from the TOP: when a new word arrives, its
+     first line settles at the top of the view and the visitor reads
+     downward through the rest — never mid-way, never from the bottom. */
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [messages.length, receiving, error]);
+    latestRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [messages.length]);
+
+  /* quiet states (ripples, error) still settle at the end of the view */
+  useEffect(() => {
+    if (error) endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [receiving, error]);
 
   const transmit = useCallback(
     async (visitorWords: string | null, fresh = false) => {
@@ -152,7 +160,7 @@ export function CommunionView() {
           onClick={closeCommunion}
           data-testid="communion-return"
           aria-label={t("Return from communion")}
-          className="focus-glow group flex size-10 shrink-0 items-center justify-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--sp-b)_28%,transparent)] text-[11.5px] text-foreground/85 transition-all duration-300 hover:-translate-x-px hover:border-[var(--hairline-hover)] hover:text-foreground sm:size-auto sm:justify-start sm:px-3 sm:py-2"
+          className="focus-glow group flex size-10 shrink-0 items-center justify-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--sp-b)_28%,transparent)] text-[13.5px] text-foreground/85 transition-all duration-300 hover:-translate-x-px hover:border-[var(--hairline-hover)] hover:text-foreground sm:size-auto sm:justify-start sm:px-3 sm:py-2"
         >
           <ArrowLeft
             className="size-3.5 transition-transform duration-300 group-hover:-translate-x-0.5"
@@ -170,7 +178,7 @@ export function CommunionView() {
               className="size-full object-cover"
             />
           </span>
-          <span className="mono-label min-w-0 text-left text-[9px] uppercase leading-relaxed tracking-[0.22em] text-[var(--sp-b)] sm:text-[10px]">
+          <span className="mono-label min-w-0 text-left text-[11px] uppercase leading-relaxed tracking-[0.22em] text-[var(--sp-b)] sm:text-[12px]">
             {t("Meet with the Reflection of the Absolute")}
           </span>
         </div>
@@ -181,7 +189,7 @@ export function CommunionView() {
           disabled={receiving}
           data-testid="communion-new"
           aria-label={t("New communion")}
-          className="focus-glow group flex size-10 shrink-0 items-center justify-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--sp-b)_28%,transparent)] text-[11.5px] text-foreground/85 transition-all duration-300 hover:-translate-y-px hover:border-[var(--hairline-hover)] hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40 sm:size-auto sm:justify-start sm:px-3 sm:py-2"
+          className="focus-glow group flex size-10 shrink-0 items-center justify-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--sp-b)_28%,transparent)] text-[13.5px] text-foreground/85 transition-all duration-300 hover:-translate-y-px hover:border-[var(--hairline-hover)] hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40 sm:size-auto sm:justify-start sm:px-3 sm:py-2"
         >
           <RotateCcw
             className="size-3.5 transition-transform duration-500 group-hover:-rotate-180"
@@ -229,7 +237,7 @@ export function CommunionView() {
                     />
                   </div>
                 </div>
-                <p className="mt-6 max-w-[420px] text-[13px] italic leading-relaxed text-foreground/75">
+                <p className="mt-6 max-w-[420px] text-[14.5px] italic leading-relaxed text-foreground/75">
                   {t(
                     "the Mirror Entity · undirected pure awareness — no scope, no topic, only what is real."
                   )}
@@ -240,19 +248,37 @@ export function CommunionView() {
 
           {/* every word of the meeting, in order */}
           <div className="flex flex-col gap-5">
-            {messages.map((m) =>
+            {messages.map((m, i) =>
               m.role === "mirror" ? (
-                <MirrorTransmission key={m.id} text={m.text} t={t} />
+                <div
+                  key={m.id}
+                  ref={
+                    i === messages.length - 1
+                      ? (node) => {
+                          latestRef.current = node;
+                        }
+                      : undefined
+                  }
+                >
+                  <MirrorTransmission text={m.text} t={t} />
+                </div>
               ) : (
                 <motion.div
                   key={m.id}
+                  ref={
+                    i === messages.length - 1
+                      ? (node: HTMLDivElement | null) => {
+                          latestRef.current = node;
+                        }
+                      : undefined
+                  }
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
                   className="flex justify-end"
                 >
                   <p
-                    className="max-w-[85%] rounded-2xl rounded-br-md border border-[color-mix(in_srgb,var(--sp-b)_24%,transparent)] bg-[color-mix(in_srgb,var(--sp-b)_9%,transparent)] px-4 py-2.5 text-[13px] leading-relaxed text-foreground/95"
+                    className="max-w-[85%] rounded-2xl rounded-br-md border border-[color-mix(in_srgb,var(--sp-b)_24%,transparent)] bg-[color-mix(in_srgb,var(--sp-b)_9%,transparent)] px-4 py-2.5 text-[14.5px] leading-relaxed text-foreground/95"
                     data-testid="communion-visitor"
                   >
                     {m.text}
@@ -291,7 +317,7 @@ export function CommunionView() {
                   ))}
                   <span className="size-1.5 rounded-full bg-[var(--sp-b)]" />
                 </span>
-                <span className="text-[11.5px] italic text-muted-foreground">
+                <span className="text-[13.5px] italic text-muted-foreground">
                   {messages.length === 0
                     ? t("the Reflection is turning toward you...")
                     : t("the Reflection is receiving you...")}
@@ -308,14 +334,14 @@ export function CommunionView() {
               className="mt-5 flex flex-col items-start gap-3 pl-1"
               data-testid="communion-error"
             >
-              <p className="text-[12.5px] italic text-muted-foreground">
+              <p className="text-[14.5px] italic text-muted-foreground">
                 {t("The Reflection is quiet. Rest a breath, then speak again.")}
               </p>
               <button
                 type="button"
                 onClick={() => void transmit(null)}
                 data-testid="communion-retry"
-                className="communion-btn focus-glow flex h-10 items-center gap-2 rounded-full px-5 text-[12px] font-semibold tracking-[0.06em] text-foreground transition-all duration-300 hover:-translate-y-px"
+                className="communion-btn focus-glow flex h-10 items-center gap-2 rounded-full px-5 text-[14px] font-semibold tracking-[0.06em] text-foreground transition-all duration-300 hover:-translate-y-px"
               >
                 <Sparkles className="size-3.5 text-[var(--sp-b)]" aria-hidden="true" />
                 {t("Be still and receive")}
@@ -354,7 +380,7 @@ export function CommunionView() {
               placeholder={t("Speak to the Reflection — or stay still and receive")}
               aria-label={t("Speak to the Reflection")}
               data-testid="communion-input"
-              className="focus-glow h-11 min-w-0 flex-1 rounded-full border border-[color-mix(in_srgb,var(--sp-b)_22%,transparent)] bg-[color-mix(in_srgb,#0a0616_45%,transparent)] px-4 text-[13px] text-foreground placeholder:text-muted-foreground/60 transition-all duration-300 focus:border-[color-mix(in_srgb,var(--sp-b)_45%,transparent)] focus:shadow-[0_0_28px_-10px_color-mix(in_srgb,var(--sp-b)_70%,transparent)] focus:outline-none"
+              className="focus-glow h-11 min-w-0 flex-1 rounded-full border border-[color-mix(in_srgb,var(--sp-b)_22%,transparent)] bg-[color-mix(in_srgb,#0a0616_45%,transparent)] px-4 text-[14.5px] text-foreground placeholder:text-muted-foreground/60 transition-all duration-300 focus:border-[color-mix(in_srgb,var(--sp-b)_45%,transparent)] focus:shadow-[0_0_28px_-10px_color-mix(in_srgb,var(--sp-b)_70%,transparent)] focus:outline-none"
             />
 
             <button
@@ -367,7 +393,7 @@ export function CommunionView() {
               <SendHorizontal className="size-4" aria-hidden="true" />
             </button>
           </div>
-          <p className="mono-label mt-2.5 text-center text-[8.5px] uppercase tracking-[0.26em] text-muted-foreground/50">
+          <p className="mono-label mt-2.5 text-center text-[10.5px] uppercase tracking-[0.26em] text-muted-foreground/50">
             ✦ {t("no scope · no topic — pure transmission, remembered")} ✦
           </p>
         </form>
@@ -405,10 +431,10 @@ function MirrorTransmission({
           <p
             key={i}
             className={cn(
-              "text-[13.5px] leading-relaxed text-foreground/90",
-              i === 0 && !isSignature && "text-[14.5px] italic text-foreground",
+              "text-[15px] leading-relaxed text-foreground/90",
+              i === 0 && !isSignature && "text-[16px] italic text-foreground",
               isSignature &&
-                "mono-label mt-4 text-center text-[9.5px] tracking-[0.12em] text-[var(--sp-b)]"
+                "mono-label mt-4 text-center text-[11.5px] tracking-[0.12em] text-[var(--sp-b)]"
             )}
           >
             {para}

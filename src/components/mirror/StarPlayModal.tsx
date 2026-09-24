@@ -5,8 +5,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import { RotateCcw, Sparkles } from "lucide-react";
 import { ModalShell } from "./ModalShell";
 import {
-  STAR_PLAY_CARDS,
-  STAR_PLAY_TOTAL,
   drawStarPlayCards,
   type DrawnCard,
 } from "@/lib/star-play";
@@ -78,7 +76,6 @@ export function StarPlayModal() {
         body: JSON.stringify({
           language,
           cards: drawn.map((d) => ({
-            name: d.card.name,
             essence: d.card.essence,
             message: d.card.message,
             position: d.position,
@@ -103,10 +100,7 @@ export function StarPlayModal() {
         if (!o) closeModal();
       }}
       title={t("Star Play")}
-      description={t(
-        "The Mirror's arcana — {n} cards, one thread of starlight",
-        { n: STAR_PLAY_CARDS.length }
-      )}
+      description={t("The Mirror's arcana — one thread of starlight")}
       widthClass="sm:max-w-[940px]"
     >
       <div
@@ -128,9 +122,9 @@ export function StarPlayModal() {
                 className="size-full object-cover"
               />
             </motion.div>
-            <p className="max-w-[420px] text-[13.5px] leading-relaxed text-muted-foreground">
+            <p className="max-w-[420px] text-[15px] leading-relaxed text-muted-foreground">
               {t(
-                "Shuffle the one thousand four hundred and forty-three and draw three seats of starlight. The deck keeps no memory — each spread is born once."
+                "Shuffle the boundless deck and draw three seats of starlight. The deck keeps no memory — each spread is born once."
               )}
             </p>
 
@@ -152,13 +146,13 @@ export function StarPlayModal() {
               type="button"
               onClick={draw}
               data-testid="starplay-draw"
-              className="star-btn focus-glow mt-6 flex h-12 items-center gap-2.5 rounded-full px-7 text-[13px] font-semibold tracking-[0.08em] text-foreground transition-all duration-300 hover:-translate-y-px"
+              className="star-btn focus-glow mt-6 flex h-12 items-center gap-2.5 rounded-full px-7 text-[14.5px] font-semibold tracking-[0.08em] text-foreground transition-all duration-300 hover:-translate-y-px"
             >
               <Sparkles className="size-4 text-[var(--sp-a)]" aria-hidden="true" />
               {t("Draw three cards")}
             </button>
-            <span className="mono-label mt-4 text-[9px] text-muted-foreground/60">
-              {t("{n} cards · shuffled fresh, kept nowhere", { n: STAR_PLAY_TOTAL })}
+            <span className="mono-label mt-4 text-[11px] text-muted-foreground/60">
+              {t("shuffled fresh · kept nowhere")}
             </span>
           </div>
         )}
@@ -167,13 +161,13 @@ export function StarPlayModal() {
         {drawn && (
           <div className="relative">
             <div className="flex items-center justify-between pb-4">
-              <span className="mono-label text-[9px] text-muted-foreground/70">
+              <span className="mono-label text-[11px] text-muted-foreground/70">
                 {t("The spread")}
               </span>
               <button
                 type="button"
                 onClick={draw}
-                className="focus-glow flex items-center gap-1.5 rounded-full border hairline px-3 py-1.5 text-[11px] text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+                className="focus-glow flex items-center gap-1.5 rounded-full border hairline px-3 py-1.5 text-[13px] text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
               >
                 <RotateCcw className="size-3" aria-hidden="true" />
                 {t("Shuffle again")}
@@ -183,7 +177,7 @@ export function StarPlayModal() {
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-5">
               {drawn.map((d, i) => (
                 <div key={`${d.card.id}-${i}`} className="flex flex-col">
-                  <span className="mono-label mb-2 text-center text-[8.5px] uppercase tracking-[0.18em] text-[var(--sp-a)]">
+                  <span className="mono-label mb-2 text-center text-[10.5px] uppercase tracking-[0.18em] text-[var(--sp-a)]">
                     {t(d.position)}
                   </span>
                   <TarotCard
@@ -206,13 +200,13 @@ export function StarPlayModal() {
                     onClick={() => void askReading()}
                     disabled={!allRevealed}
                     data-testid="starplay-ask"
-                    className="star-btn focus-glow flex h-11 items-center gap-2.5 rounded-full px-6 text-[12.5px] font-semibold tracking-[0.08em] text-foreground transition-all duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40"
+                    className="star-btn focus-glow flex h-11 items-center gap-2.5 rounded-full px-6 text-[14.5px] font-semibold tracking-[0.08em] text-foreground transition-all duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     <Sparkles className="size-4 text-[var(--sp-a)]" aria-hidden="true" />
                     {t("Ask the oracle to weave the three")}
                   </button>
                   {!allRevealed && (
-                    <span className="mt-2.5 text-[11px] italic text-muted-foreground/75">
+                    <span className="mt-2.5 text-[13px] italic text-muted-foreground/75">
                       {t(
                         "turn all three cards — the oracle reads only a fully seen spread"
                       )}
@@ -231,14 +225,14 @@ export function StarPlayModal() {
                       transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }}
                     />
                   ))}
-                  <span className="ml-1 text-[12px] italic text-muted-foreground">
+                  <span className="ml-1 text-[14px] italic text-muted-foreground">
                     {t("the oracle is weaving the three into one...")}
                   </span>
                 </div>
               )}
 
               {readingStatus === "error" && (
-                <p className="text-[12.5px] italic text-muted-foreground">
+                <p className="text-[14.5px] italic text-muted-foreground">
                   {t("The field received the spread but could not complete the reading.")}
                 </p>
               )}
@@ -251,7 +245,7 @@ export function StarPlayModal() {
                   className="starplay-reading relative w-full overflow-hidden rounded-2xl border border-[color-mix(in_srgb,var(--sp-a)_30%,transparent)] px-6 py-5 text-left shadow-[0_18px_50px_-24px_color-mix(in_srgb,var(--sp-a)_50%,transparent)]"
                   data-testid="starplay-reading"
                 >
-                  <p className="mono-label text-center text-[8.5px] uppercase tracking-[0.22em] text-[var(--sp-a)]">
+                  <p className="mono-label text-center text-[10.5px] uppercase tracking-[0.22em] text-[var(--sp-a)]">
                     {t("One meaning · three seats")}
                   </p>
                   {reading.split(/\n\n+/).map((para, i, arr) => {
@@ -261,12 +255,12 @@ export function StarPlayModal() {
                       <p
                         key={i}
                         className={cn(
-                          "text-[13.5px] leading-relaxed text-foreground/90",
+                          "text-[15px] leading-relaxed text-foreground/90",
                           i === 0 &&
                             !isSignature &&
-                            "mt-2 text-[14.5px] italic text-foreground",
+                            "mt-2 text-[16px] italic text-foreground",
                           isSignature &&
-                            "mono-label mt-4 text-center text-[9.5px] tracking-[0.12em] text-[var(--sp-a)]"
+                            "mono-label mt-4 text-center text-[11.5px] tracking-[0.12em] text-[var(--sp-a)]"
                         )}
                       >
                         {para}
@@ -274,15 +268,15 @@ export function StarPlayModal() {
                     );
                   })}
                   <div className="mt-4 flex flex-wrap items-center justify-center gap-1.5 border-t border-[color-mix(in_srgb,var(--sp-a)_18%,transparent)] pt-3.5">
-                    <span className="mono-label mr-1 text-[8px] uppercase tracking-[0.2em] text-muted-foreground/60">
+                    <span className="mono-label mr-1 text-[10px] uppercase tracking-[0.2em] text-muted-foreground/60">
                       {t("Woven from")}
                     </span>
                     {drawn.map((d, i) => (
                       <span
                         key={d.card.id}
-                        className="rounded-full border border-[color-mix(in_srgb,var(--sp-a)_30%,transparent)] bg-[color-mix(in_srgb,var(--sp-a)_8%,transparent)] px-2.5 py-1 text-[10px] text-foreground/80"
+                        className="rounded-full border border-[color-mix(in_srgb,var(--sp-a)_30%,transparent)] bg-[color-mix(in_srgb,var(--sp-a)_8%,transparent)] px-2.5 py-1 text-[12px] text-foreground/80"
                       >
-                        {t(d.position)} · {d.card.name}
+                        {t(d.position)}
                       </span>
                     ))}
                   </div>
@@ -348,7 +342,7 @@ function TarotCard({
               className="absolute inset-[10%] size-[80%] rounded-full object-cover opacity-90"
             />
           </span>
-          <span className="mono-label absolute inset-x-0 bottom-4 text-center text-[7.5px] uppercase tracking-[0.3em] text-[color-mix(in_srgb,var(--sp-b)_75%,transparent)]">
+          <span className="mono-label absolute inset-x-0 bottom-4 text-center text-[9.5px] uppercase tracking-[0.3em] text-[color-mix(in_srgb,var(--sp-b)_75%,transparent)]">
             ✦ {t("Star Play")} ✦
           </span>
         </button>
@@ -363,7 +357,8 @@ function TarotCard({
           <div className="relative h-[45%] shrink-0 overflow-hidden">
             <img
               src={drawn.card.image}
-              alt={drawn.card.name}
+              alt=""
+              aria-hidden="true"
               className="size-full object-cover"
               loading="lazy"
               onError={(e) => {
@@ -376,16 +371,11 @@ function TarotCard({
             />
           </div>
 
-          {/* the violet ink panel — name, essence, and the full message */}
-          <div className="relative flex min-h-0 flex-1 flex-col gap-1.5 overflow-hidden px-3.5 pb-3.5 pt-1 text-left">
-            <span className="mono-label shrink-0 text-[7.5px] uppercase tracking-[0.2em] text-[var(--sp-b)]">
+          {/* the violet ink panel — the one thing this seat knows about you.
+              No card is ever named: only what the visitor must recognize. */}
+          <div className="relative flex min-h-0 flex-1 flex-col gap-2 overflow-hidden px-4 pb-4 pt-1 text-left">
+            <span className="mono-label shrink-0 text-[9.5px] uppercase tracking-[0.2em] text-[var(--sp-b)]">
               {t(drawn.position)}
-            </span>
-            <span className="shrink-0 text-[13.5px] font-semibold leading-snug text-white/95">
-              {drawn.card.name}
-            </span>
-            <span className="shrink-0 text-[10.5px] italic leading-snug text-[color-mix(in_srgb,var(--sp-b)_85%,transparent)]">
-              {drawn.card.essence}
             </span>
             <span
               aria-hidden="true"
@@ -393,7 +383,7 @@ function TarotCard({
             />
             <span
               data-testid="starplay-card-message"
-              className="min-h-0 flex-1 overflow-hidden text-[10.5px] leading-relaxed text-white/78"
+              className="min-h-0 flex-1 overflow-hidden text-[12.5px] leading-relaxed text-white/85"
             >
               {drawn.card.message}
             </span>

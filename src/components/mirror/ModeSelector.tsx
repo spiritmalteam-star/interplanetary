@@ -22,7 +22,7 @@ export function ModeSelector() {
         aria-label={t("Channel mode")}
       >
         <div className="flex min-w-max items-center gap-1.5 sm:gap-2 px-1">
-          <span className="mono-label mr-1 hidden text-[9.5px] text-muted-foreground/70 sm:inline">
+          <span className="mono-label mr-1 hidden text-[11.5px] text-muted-foreground/70 sm:inline">
             {t("Mode:")}
           </span>
           {modes.map((m) => {
@@ -39,13 +39,13 @@ export function ModeSelector() {
                     : t(m.label)
                 }
                 className={cn(
-                  "focus-glow flex items-center gap-1.5 whitespace-nowrap rounded-full border px-3.5 py-1.5 text-[12.5px] transition-all duration-300 sm:px-4",
+                  "focus-glow flex items-center gap-1.5 whitespace-nowrap rounded-full border px-3.5 py-1.5 text-[14.5px] transition-all duration-300 sm:px-4",
                   active
                     ? "animate-pill-breathe border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--cy)_12%,transparent)] font-semibold text-foreground"
                     : "border-transparent text-muted-foreground/80 hover:border-[var(--hairline-hover)] hover:text-foreground"
                 )}
               >
-                <span aria-hidden="true" className="text-[13px] leading-none">
+                <span aria-hidden="true" className="text-[14.5px] leading-none">
                   {m.emoji}
                 </span>
                 {t(m.label)}
@@ -60,7 +60,7 @@ export function ModeSelector() {
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
-          className="mono-label text-center text-[8.5px] text-muted-foreground/70"
+          className="mono-label text-center text-[10.5px] text-muted-foreground/70"
         >
           {t(context)}
         </motion.p>

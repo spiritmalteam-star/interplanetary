@@ -56,7 +56,7 @@ export function ScienceFusionRail() {
                   role="group"
                   aria-label={t("Fusion calibration")}
                 >
-                  <p className="mono-label text-[8.5px] uppercase tracking-[0.16em] text-muted-foreground/70">
+                  <p className="mono-label text-[10.5px] uppercase tracking-[0.16em] text-muted-foreground/70">
                     {t("Fusion fields")}
                   </p>
                   <div className="mt-2 flex flex-col gap-1">
@@ -69,13 +69,13 @@ export function ScienceFusionRail() {
                           onClick={() => setScienceField(p.id)}
                           aria-pressed={active}
                           className={cn(
-                            "focus-glow flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-left text-[11.5px] transition-all duration-200",
+                            "focus-glow flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-left text-[13.5px] transition-all duration-200",
                             active
                               ? "border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--cy)_12%,transparent)] font-semibold text-foreground glow-sm"
                               : "border-transparent text-muted-foreground hover:border-[var(--hairline-hover)] hover:text-foreground"
                           )}
                         >
-                          <span aria-hidden="true" className="text-[11.5px] leading-none">
+                          <span aria-hidden="true" className="text-[13.5px] leading-none">
                             {p.emoji}
                           </span>
                           {t(p.label)}
@@ -84,7 +84,7 @@ export function ScienceFusionRail() {
                     })}
                   </div>
 
-                  <p className="mono-label mt-4 text-[8.5px] uppercase tracking-[0.16em] text-muted-foreground/70">
+                  <p className="mono-label mt-4 text-[10.5px] uppercase tracking-[0.16em] text-muted-foreground/70">
                     {t("Direction")}
                   </p>
                   <div className="mt-2 flex flex-col gap-1">
@@ -97,13 +97,13 @@ export function ScienceFusionRail() {
                           onClick={() => setDirection(p.id)}
                           aria-pressed={active}
                           className={cn(
-                            "focus-glow flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-left text-[11.5px] transition-all duration-200",
+                            "focus-glow flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-left text-[13.5px] transition-all duration-200",
                             active
                               ? "border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--cy)_12%,transparent)] font-semibold text-foreground glow-sm"
                               : "border-transparent text-muted-foreground hover:border-[var(--hairline-hover)] hover:text-foreground"
                           )}
                         >
-                          <span aria-hidden="true" className="text-[11.5px] leading-none">
+                          <span aria-hidden="true" className="text-[13.5px] leading-none">
                             {p.emoji}
                           </span>
                           {t(p.label)}
@@ -118,7 +118,7 @@ export function ScienceFusionRail() {
                       if (activeScienceField) setScienceField(activeScienceField);
                       if (activeDirection) setDirection(activeDirection);
                     }}
-                    className="focus-glow mt-4 flex w-full items-center justify-center gap-1.5 rounded-lg border hairline px-2 py-1.5 text-[10.5px] text-muted-foreground transition-all duration-200 hover:border-[var(--hairline-hover)] hover:text-foreground"
+                    className="focus-glow mt-4 flex w-full items-center justify-center gap-1.5 rounded-lg border hairline px-2 py-1.5 text-[12.5px] text-muted-foreground transition-all duration-200 hover:border-[var(--hairline-hover)] hover:text-foreground"
                   >
                     <Eraser className="size-3" aria-hidden="true" />
                     {t("Clear calibration")}
@@ -149,14 +149,14 @@ export function ScienceFusionRail() {
                 aria-hidden="true"
               />
               <span
-                className="mono-label text-[8.5px] uppercase tracking-[0.22em] text-foreground/80"
+                className="mono-label text-[10.5px] uppercase tracking-[0.22em] text-foreground/80"
                 style={{ writingMode: "vertical-rl" }}
               >
                 {t("Fusion")}
               </span>
               {calibrationCount > 0 && (
                 <span
-                  className="flex size-4 items-center justify-center rounded-full border hairline bg-[color-mix(in_srgb,var(--cy)_16%,transparent)] font-mono text-[8.5px] leading-none text-[var(--cy)]"
+                  className="flex size-4 items-center justify-center rounded-full border hairline bg-[color-mix(in_srgb,var(--cy)_16%,transparent)] font-mono text-[10.5px] leading-none text-[var(--cy)]"
                   aria-hidden="true"
                 >
                   {calibrationCount}

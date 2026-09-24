@@ -96,19 +96,19 @@ export function ReplicationPromptModal() {
       <div className="flex flex-col gap-3 px-5 pb-5 sm:px-6">
         {/* Stats row */}
         <div className="flex flex-wrap items-center gap-2">
-          <span className="mono-label flex h-7 items-center rounded-full border hairline px-3 text-[9px] text-[var(--cy)]">
+          <span className="mono-label flex h-7 items-center rounded-full border hairline px-3 text-[11px] text-[var(--cy)]">
             {REPLICATION_PROMPT_VERSION}
           </span>
-          <span className="mono-label flex h-7 items-center rounded-full border hairline px-3 text-[9px] text-muted-foreground">
+          <span className="mono-label flex h-7 items-center rounded-full border hairline px-3 text-[11px] text-muted-foreground">
             {stats.chars.toLocaleString()} chars
           </span>
-          <span className="mono-label flex h-7 items-center rounded-full border hairline px-3 text-[9px] text-muted-foreground">
+          <span className="mono-label flex h-7 items-center rounded-full border hairline px-3 text-[11px] text-muted-foreground">
             {stats.words.toLocaleString()} words
           </span>
-          <span className="mono-label flex h-7 items-center rounded-full border hairline px-3 text-[9px] text-muted-foreground">
+          <span className="mono-label flex h-7 items-center rounded-full border hairline px-3 text-[11px] text-muted-foreground">
             {stats.lines.toLocaleString()} lines
           </span>
-          <span className="mono-label ml-auto hidden items-center gap-1.5 text-[9px] text-muted-foreground/80 sm:flex">
+          <span className="mono-label ml-auto hidden items-center gap-1.5 text-[11px] text-muted-foreground/80 sm:flex">
             <FileText className="size-3" aria-hidden="true" />
             verified against the live archive · 870 · 202 · 1,169 images
           </span>
@@ -120,7 +120,7 @@ export function ReplicationPromptModal() {
           aria-label="Replication prompt text"
           className="nice-scroll max-h-[44vh] overflow-y-auto rounded-xl border hairline bg-[var(--glass-bg)] p-4 max-md:max-h-[50dvh]"
         >
-          <pre className="whitespace-pre-wrap break-words font-mono text-[11.5px] leading-relaxed text-foreground/90 selection:bg-[var(--scope-a,#8b7cf8)]/30">
+          <pre className="whitespace-pre-wrap break-words font-mono text-[13.5px] leading-relaxed text-foreground/90 selection:bg-[var(--scope-a,#8b7cf8)]/30">
             {REPLICATION_PROMPT}
           </pre>
         </div>
@@ -130,7 +130,7 @@ export function ReplicationPromptModal() {
           <button
             type="button"
             onClick={handleCopy}
-            className="focus-glow flex h-10 items-center gap-2 rounded-full border hairline bg-[var(--glass-bg)] px-5 text-[12px] font-medium text-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:glow-sm"
+            className="focus-glow flex h-10 items-center gap-2 rounded-full border hairline bg-[var(--glass-bg)] px-5 text-[14px] font-medium text-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:glow-sm"
           >
             {copied ? (
               <Check className="size-4 text-[var(--cy)]" aria-hidden="true" />
@@ -142,12 +142,12 @@ export function ReplicationPromptModal() {
           <button
             type="button"
             onClick={handleDownload}
-            className="focus-glow flex h-10 items-center gap-2 rounded-full border hairline bg-[var(--glass-bg)] px-5 text-[12px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground hover:glow-sm"
+            className="focus-glow flex h-10 items-center gap-2 rounded-full border hairline bg-[var(--glass-bg)] px-5 text-[14px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground hover:glow-sm"
           >
             <Download className="size-4" aria-hidden="true" />
             Download .md
           </button>
-          <p className="mono-label ml-auto text-[9px] text-muted-foreground/70">
+          <p className="mono-label ml-auto text-[11px] text-muted-foreground/70">
             exact counts · uniform depth · isolated channels
           </p>
         </div>

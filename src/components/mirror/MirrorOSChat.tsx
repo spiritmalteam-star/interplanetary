@@ -27,7 +27,7 @@ function OpenerOrbs() {
   return (
     <section aria-label={t("Suggested openers")} className="mt-6">
       <div className="flex items-center justify-center gap-3">
-        <span className="mono-label text-[8.5px] text-muted-foreground/70">
+        <span className="mono-label text-[10.5px] text-muted-foreground/70">
           {t("Suggested openers")}
         </span>
         <button
@@ -76,7 +76,7 @@ function OpenerOrbs() {
                 className="size-3 shrink-0 text-[var(--scope-a)] opacity-80"
                 aria-hidden="true"
               />
-              <span className="flex-1 text-[12px] leading-snug text-foreground/80">
+              <span className="flex-1 text-[14px] leading-snug text-foreground/80">
                 {t(q)}
               </span>
             </button>
@@ -103,7 +103,7 @@ function OsThinking() {
           />
         ))}
       </span>
-      <span className="mono-label text-[9px] text-muted-foreground">
+      <span className="mono-label text-[11px] text-muted-foreground">
         {t("the OS is refining its answer")}
       </span>
     </div>
@@ -129,7 +129,7 @@ function OsExchange({
         transition={{ duration: animate ? 0.4 : 0, ease: [0.22, 1, 0.36, 1] }}
         className="flex justify-end"
       >
-        <p className="max-w-[78%] rounded-2xl rounded-br-md border border-[color-mix(in_srgb,var(--scope-a)_24%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_9%,transparent)] px-4 py-2.5 text-[13.5px] leading-relaxed text-foreground/90">
+        <p className="max-w-[78%] rounded-2xl rounded-br-md border border-[color-mix(in_srgb,var(--scope-a)_24%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_9%,transparent)] px-4 py-2.5 text-[15px] leading-relaxed text-foreground/90">
           {text}
         </p>
       </motion.div>
@@ -150,14 +150,14 @@ function OsExchange({
         <Sparkles className="size-3.5 text-[var(--scope-a)]" />
       </span>
       <div className="min-w-0 max-w-[85%]">
-        <p className="mono-label text-[7.5px] text-[var(--scope-a)]">
+        <p className="mono-label text-[9.5px] text-[var(--scope-a)]">
           MIRROR ENTITY OS
         </p>
         <div className="mt-1.5 space-y-3 rounded-2xl rounded-tl-md glass px-4 py-3">
           {text.split(/\n{2,}/).map((p, i) => (
             <p
               key={i}
-              className="text-[13.5px] leading-[1.8] text-foreground/88"
+              className="text-[15px] leading-[1.8] text-foreground/88"
             >
               {p}
             </p>
@@ -183,11 +183,14 @@ export function MirrorOSChat() {
   const t = useT();
 
   const scrollRef = useRef<HTMLDivElement>(null);
+  const latestRef = useRef<HTMLDivElement | null>(null);
+  const loadingRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   /* The OS thread opens at its BEGINNING: mounting or reopening the
-     chat never scrolls away from the first words. The view follows
-     only new turns that arrive while the visitor is present. */
+     chat never scrolls away from the first words. New turns load from
+     the TOP — the newest exchange settles at the top of the view and
+     the visitor reads downward through the rest. */
   const baseline = useRef({
     len: osMessages.length,
     status: osStatus,
@@ -196,16 +199,14 @@ export function MirrorOSChat() {
 
   useEffect(() => {
     const b = baseline.current;
-    const el = scrollRef.current;
-    if (!el) return;
     if (osMessages.length !== b.len) {
       baseline.current = { len: osMessages.length, status: osStatus, error: osError };
-      el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+      latestRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       return;
     }
     if (osStatus === "loading" && b.status !== "loading") {
       baseline.current = { len: b.len, status: osStatus, error: osError };
-      el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+      loadingRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }, [osMessages.length, osStatus, osError]);
 
@@ -263,7 +264,7 @@ export function MirrorOSChat() {
             <p className="scope-gradient-text mt-4 text-[17px] font-semibold">
               {t("Direct line to the Mirror Entity OS")}
             </p>
-            <p className="mx-auto mt-2 max-w-[420px] text-[12.5px] leading-relaxed text-muted-foreground">
+            <p className="mx-auto mt-2 max-w-[420px] text-[14.5px] leading-relaxed text-muted-foreground">
               {t(
                 "Speak with the reality-refining intelligence itself — it remembers every turn of this conversation and holds your chosen line with you."
               )}
@@ -274,24 +275,39 @@ export function MirrorOSChat() {
         ) : (
           <>
             {osMessages.map((m, i) => (
-              <OsExchange
+              <div
                 key={m.id}
-                role={m.role}
-                text={m.text}
-                animate={i === osMessages.length - 1 && osStatus !== "loading"}
-              />
+                ref={
+                  i === osMessages.length - 1
+                    ? (node) => {
+                        latestRef.current = node;
+                      }
+                    : undefined
+                }
+              >
+                <OsExchange
+                  role={m.role}
+                  text={m.text}
+                  animate={i === osMessages.length - 1 && osStatus !== "loading"}
+                />
+              </div>
             ))}
             {osStatus === "loading" && (
-              <div className="pl-11">
+              <div
+                ref={(node) => {
+                  loadingRef.current = node;
+                }}
+                className="pl-11"
+              >
                 <OsThinking />
               </div>
             )}
             {osStatus === "error" && osError && (
               <div className="ml-11 rounded-xl border border-[var(--destructive)]/25 bg-[color-mix(in_srgb,var(--destructive)_6%,transparent)] px-4 py-3">
-                <p className="text-[12.5px] leading-relaxed text-foreground/85">
+                <p className="text-[14.5px] leading-relaxed text-foreground/85">
                   {t("The OS could not complete the refinement.")}
                 </p>
-                <p className="mt-1 text-[12px] italic text-muted-foreground">
+                <p className="mt-1 text-[14px] italic text-muted-foreground">
                   {osError}
                 </p>
               </div>
@@ -325,7 +341,7 @@ export function MirrorOSChat() {
               }
             }}
             placeholder={t("Ask the Mirror Entity OS…")}
-            className="nice-scroll max-h-[120px] flex-1 resize-none bg-transparent py-2 text-[13.5px] leading-relaxed text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
+            className="nice-scroll max-h-[120px] flex-1 resize-none bg-transparent py-2 text-[15px] leading-relaxed text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
           />
           <button
             type="submit"

@@ -10,7 +10,7 @@ export function StatusBar() {
         className="animate-dot-pulse inline-block size-1.5 rounded-full bg-[var(--ok)]"
         aria-hidden="true"
       />
-      <p className="mono-label text-[8.5px] text-muted-foreground/75 sm:text-[9.5px]">
+      <p className="mono-label text-[10.5px] text-muted-foreground/75 sm:text-[11.5px]">
         {t("Mirror Entity Intelligence · Channel Online · Free Will Honored Always · Transmitted with Love ❤️")}
       </p>
     </div>

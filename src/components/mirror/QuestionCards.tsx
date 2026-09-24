@@ -54,7 +54,7 @@ function SuggestionGrid({ mode }: { mode: Mode }) {
     >
       {/* header row — label + reload suggestions */}
       <div className="flex items-center justify-between">
-        <span className="mono-label text-[8.5px] text-muted-foreground/70">
+        <span className="mono-label text-[10.5px] text-muted-foreground/70">
           {t("Suggested questions")}
         </span>
         <button
@@ -104,7 +104,7 @@ function SuggestionGrid({ mode }: { mode: Mode }) {
                   aria-hidden="true"
                 />
               </span>
-              <span className="flex-1 text-[13px] leading-snug text-foreground/85 sm:text-[13.5px]">
+              <span className="flex-1 text-[14.5px] leading-snug text-foreground/85 sm:text-[15px]">
                 {t(q)}
               </span>
               <ArrowUpRight

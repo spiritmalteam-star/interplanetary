@@ -13,6 +13,7 @@ import {
 } from "@/lib/data/technologies";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
+import { ProfileGallery, FactTile, ProfileSection } from "./ProfileBits";
 import { cn } from "@/lib/utils";
 
 const PAGE = 60;
@@ -77,7 +78,7 @@ function TechnologyRegister() {
               onClick={() => setFamily(null)}
               aria-pressed={family === null}
               className={cn(
-                "focus-glow mono-label shrink-0 whitespace-nowrap rounded-full border px-3 py-1.5 text-[9px] transition-all duration-300",
+                "focus-glow mono-label shrink-0 whitespace-nowrap rounded-full border px-3 py-1.5 text-[11px] transition-all duration-300",
                 family === null
                   ? "border-[color-mix(in_srgb,var(--sp-a)_55%,transparent)] bg-[color-mix(in_srgb,var(--sp-a)_14%,transparent)] text-foreground"
                   : "hairline text-muted-foreground hover:text-foreground"
@@ -92,7 +93,7 @@ function TechnologyRegister() {
                 onClick={() => setFamily(family === f.id ? null : f.id)}
                 aria-pressed={family === f.id}
                 className={cn(
-                  "focus-glow mono-label shrink-0 whitespace-nowrap rounded-full border px-3 py-1.5 text-[9px] transition-all duration-300",
+                  "focus-glow mono-label shrink-0 whitespace-nowrap rounded-full border px-3 py-1.5 text-[11px] transition-all duration-300",
                   family === f.id
                     ? "border-[color-mix(in_srgb,var(--sp-a)_55%,transparent)] bg-[color-mix(in_srgb,var(--sp-a)_14%,transparent)] text-foreground"
                     : "hairline text-muted-foreground hover:text-foreground"
@@ -162,11 +163,11 @@ function RevealGrid({
           <button
             type="button"
             onClick={() => setShown((s) => Math.min(s + PAGE, entries.length))}
-            className="focus-glow rounded-full border hairline px-5 py-2 text-[12px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+            className="focus-glow rounded-full border hairline px-5 py-2 text-[14px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
           >
             {t("Reveal more")}
           </button>
-          <p className="mono-label text-[8px] text-muted-foreground/60">
+          <p className="mono-label text-[10px] text-muted-foreground/60">
             {t("Revealed {a} of {b} — scroll to keep revealing", {
               a: visible.length,
               b: entries.length,
@@ -202,13 +203,13 @@ function TechCard({
         />
       </div>
       <div className="px-3 pb-3 pt-2.5">
-        <span className="mono-label block text-[7.5px] uppercase tracking-[0.16em] text-[var(--sp-a)]">
+        <span className="mono-label block text-[9.5px] uppercase tracking-[0.16em] text-[var(--sp-a)]">
           {t(entry.family)}
         </span>
-        <span className="mt-1 block text-[13px] font-semibold leading-snug text-foreground">
+        <span className="mt-1 block text-[14.5px] font-semibold leading-snug text-foreground">
           {entry.name}
         </span>
-        <span className="mt-1 block truncate text-[10.5px] text-muted-foreground">
+        <span className="mt-1 block truncate text-[12.5px] text-muted-foreground">
           {entry.origin}
         </span>
       </div>
@@ -217,8 +218,10 @@ function TechCard({
 }
 
 /* ------------------------------------------------------------------ */
-/*  TechImage — pure painted image, no sigils. Context scene first,    */
-/*  family portrait on error, then a quiet ink block.                  */
+/*  TechImage — pure painted image, no sigils. Each technology owns    */
+/*  its own painting (tech-XT-nnnn.jpg); if it is not on disk yet,     */
+/*  the chain falls back to the context scene, then the family         */
+/*  portrait, then a quiet ink block.                                  */
 /* ------------------------------------------------------------------ */
 function TechImage({
   entry,
@@ -231,7 +234,13 @@ function TechImage({
 }) {
   const [stage, setStage] = useState(0);
 
-  if (stage === 2) {
+  const chain = [
+    `/images/ai/et-tech/tech-${entry.id}.jpg`,
+    entry.contextImage,
+    entry.image,
+  ];
+
+  if (stage >= chain.length) {
     return (
       <span
         aria-hidden="true"
@@ -245,11 +254,11 @@ function TechImage({
 
   return (
     <img
-      src={stage === 0 ? entry.contextImage : entry.image}
+      src={chain[stage]}
       alt={alt ?? entry.name}
       loading="lazy"
       draggable={false}
-      onError={() => setStage((s) => (s === 0 ? 1 : 2))}
+      onError={() => setStage((s) => s + 1)}
       className={cn("object-cover", className)}
     />
   );
@@ -286,7 +295,7 @@ function TechDetail({
       <button
         type="button"
         onClick={onBack}
-        className="focus-glow group flex items-center gap-2 rounded-full border hairline px-3.5 py-1.5 text-[11.5px] text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+        className="focus-glow group flex items-center gap-2 rounded-full border hairline px-3.5 py-1.5 text-[13.5px] text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
       >
         <ArrowLeft
           className="size-3.5 transition-transform duration-300 group-hover:-translate-x-0.5"
@@ -295,7 +304,7 @@ function TechDetail({
         {t("Back to the register")}
       </button>
 
-      <p className="mono-label mt-4 text-[9px] uppercase tracking-[0.22em] text-[var(--sp-a)]">
+      <p className="mono-label mt-4 text-[11px] uppercase tracking-[0.22em] text-[var(--sp-a)]">
         {entry.registry}
       </p>
 
@@ -303,72 +312,102 @@ function TechDetail({
         <h3 className="text-[21px] font-semibold leading-tight text-foreground sm:text-[24px]">
           {entry.name}
         </h3>
-        <span className="mono-label rounded-full border border-[color-mix(in_srgb,var(--sp-a)_45%,transparent)] bg-[color-mix(in_srgb,var(--sp-a)_12%,transparent)] px-2.5 py-1 text-[8.5px] uppercase tracking-[0.16em] text-foreground">
+        <span className="mono-label rounded-full border border-[color-mix(in_srgb,var(--sp-a)_45%,transparent)] bg-[color-mix(in_srgb,var(--sp-a)_12%,transparent)] px-2.5 py-1 text-[10.5px] uppercase tracking-[0.16em] text-foreground">
           {entry.classificationTone} · {entry.grade}
         </span>
       </div>
 
-      <p className="mt-1.5 text-[11.5px] text-muted-foreground">
+      <p className="mt-1.5 text-[13.5px] text-muted-foreground">
         {entry.origin} · {entry.noun} craft · {entry.adjectiveField}
       </p>
 
-      <p className="mt-3 border-l-2 border-[color-mix(in_srgb,var(--sp-a)_35%,transparent)] pl-3 text-[12.5px] italic leading-relaxed text-foreground/85">
+      {/* the three context images — its own painting, its craft scene, its family */}
+      <div className="mt-4">
+        <ProfileGallery
+          slots={[
+            [`/images/ai/et-tech/tech-${entry.id}.jpg`, entry.contextImage, entry.image],
+            [entry.contextImage, entry.image],
+            [entry.image],
+          ]}
+          alts={[
+            t("The {name} — its own painted impression", { name: entry.name }),
+            t("The craft context of the {name}", { name: entry.name }),
+            t("The {family} family portrait", { family: entry.family }),
+          ]}
+          testid="technology-gallery"
+        />
+      </div>
+
+      <p className="mt-4 border-l-2 border-[color-mix(in_srgb,var(--sp-a)_35%,transparent)] pl-3 text-[14.5px] italic leading-relaxed text-foreground/85">
         {entry.whisper}
       </p>
 
-      {/* meters */}
-      <div className="mt-5 grid grid-cols-1 gap-x-8 gap-y-3 sm:grid-cols-2">
-        {meters.map((m) => (
-          <div key={m.label}>
-            <div className="flex items-baseline justify-between">
-              <span className="mono-label text-[8px] uppercase tracking-[0.18em] text-muted-foreground">
-                {m.label}
-              </span>
-              <span className="font-mono text-[10px] tabular-nums text-foreground/80">
-                {m.value}
-              </span>
-            </div>
-            <div className="mt-1 h-1 overflow-hidden rounded-full bg-[color-mix(in_srgb,var(--sp-a)_14%,transparent)]">
-              <div
-                className="h-full rounded-full"
-                style={{
-                  width: `${m.value}%`,
-                  backgroundColor: `color-mix(in srgb, var(--sp-a) ${35 + m.value * 0.55}%, transparent)`,
-                }}
-              />
-            </div>
-          </div>
-        ))}
-      </div>
+      {/* at a glance — the fact console */}
+      <section className="mt-5">
+        <h4 className="mono-label text-[10.5px] text-[var(--sp-a)]">
+          {t("At a glance")}
+        </h4>
+        <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
+          <FactTile label={t("Registry")} value={entry.id} mono />
+          <FactTile label={t("Family")} value={entry.family} />
+          <FactTile label={t("Classification")} value={`${entry.classificationTone} · ${entry.grade}`} />
+          <FactTile label={t("Era")} value={entry.era} />
+          <FactTile label={t("Craft form")} value={entry.noun} />
+          <FactTile label={t("Field tuning")} value={entry.adjectiveField} />
+        </div>
+      </section>
 
-      <p className="mt-5 text-[13px] leading-relaxed text-foreground/90">
-        {entry.overview}
-      </p>
+      {/* meters */}
+      <ProfileSection index="01" label={t("Instrument readings")}>
+        <div className="grid grid-cols-1 gap-x-8 gap-y-3 sm:grid-cols-2">
+          {meters.map((m) => (
+            <div key={m.label}>
+              <div className="flex items-baseline justify-between">
+                <span className="mono-label text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                  {m.label}
+                </span>
+                <span className="font-mono text-[12px] tabular-nums text-foreground/80">
+                  {m.value}
+                </span>
+              </div>
+              <div className="mt-1 h-1 overflow-hidden rounded-full bg-[color-mix(in_srgb,var(--sp-a)_14%,transparent)]">
+                <div
+                  className="h-full rounded-full"
+                  style={{
+                    width: `${m.value}%`,
+                    backgroundColor: `color-mix(in srgb, var(--sp-a) ${35 + m.value * 0.55}%, transparent)`,
+                  }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </ProfileSection>
+
+      <ProfileSection index="02" label={t("What it is")}>
+        <p className="text-[14.5px] leading-relaxed text-foreground/90">
+          {entry.overview}
+        </p>
+      </ProfileSection>
 
       {/* principles */}
-      <div className="mt-5">
-        <p className="mono-label text-[8.5px] uppercase tracking-[0.2em] text-muted-foreground">
-          {t("Working principles")}
-        </p>
+      <ProfileSection index="03" label={t("Working principles")}>
         <ol className="mt-2 space-y-2">
           {entry.principles.map((p, i) => (
             <li key={i} className="flex gap-3">
-              <span className="mono-label shrink-0 pt-0.5 text-[9px] text-[var(--sp-a)]">
+              <span className="mono-label shrink-0 pt-0.5 text-[11px] text-[var(--sp-a)]">
                 {String(i + 1).padStart(2, "0")}
               </span>
-              <span className="text-[12.5px] leading-relaxed text-foreground/85">
+              <span className="text-[14.5px] leading-relaxed text-foreground/85">
                 {p}
               </span>
             </li>
           ))}
         </ol>
-      </div>
+      </ProfileSection>
 
       {/* applications */}
-      <div className="mt-5">
-        <p className="mono-label text-[8.5px] uppercase tracking-[0.2em] text-muted-foreground">
-          {t("Recorded applications")}
-        </p>
+      <ProfileSection index="04" label={t("Recorded applications")}>
         <ul className="mt-2 space-y-1.5">
           {entry.applications.map((a) => (
             <li key={a} className="flex items-start gap-2.5">
@@ -376,39 +415,23 @@ function TechDetail({
                 aria-hidden="true"
                 className="mt-[7px] size-1.5 shrink-0 rotate-45 bg-[color-mix(in_srgb,var(--sp-a)_70%,transparent)]"
               />
-              <span className="text-[12.5px] leading-relaxed text-foreground/85">
+              <span className="text-[14.5px] leading-relaxed text-foreground/85">
                 {a}
               </span>
             </li>
           ))}
         </ul>
-      </div>
+      </ProfileSection>
 
-      {/* era + ethics */}
-      <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <div className="rounded-xl border hairline bg-[var(--glass-bg-soft)] px-4 py-3.5">
-          <p className="mono-label text-[8px] uppercase tracking-[0.2em] text-[var(--sp-a)]">
-            {t("Era")}
-          </p>
-          <p className="mt-1.5 text-[12px] leading-relaxed text-foreground/85">
-            {entry.era}
-          </p>
-        </div>
-        <div className="rounded-xl border hairline bg-[var(--glass-bg-soft)] px-4 py-3.5">
-          <p className="mono-label text-[8px] uppercase tracking-[0.2em] text-[var(--sp-a)]">
-            {t("Ethics")}
-          </p>
-          <p className="mt-1.5 text-[12px] leading-relaxed text-foreground/85">
-            {entry.ethics}
-          </p>
-        </div>
-      </div>
+      {/* ethics */}
+      <ProfileSection index="05" label={t("Ethics")} tone="pk">
+        <p className="text-[14.5px] leading-relaxed text-foreground/85">
+          {entry.ethics}
+        </p>
+      </ProfileSection>
 
       {/* adjacent crafts — navigates in place */}
-      <div className="mt-6 border-t hairline pt-4">
-        <p className="mono-label text-[8.5px] uppercase tracking-[0.2em] text-muted-foreground">
-          {t("Adjacent crafts in the register")}
-        </p>
+      <ProfileSection index="06" label={t("Adjacent crafts in the register")}>
         <div className="mt-3 flex flex-wrap gap-3">
           {adjacent.map((a) => (
             <button
@@ -423,23 +446,23 @@ function TechDetail({
                 className="size-11 shrink-0 rounded-full"
               />
               <span className="min-w-0">
-                <span className="block truncate text-[11.5px] font-medium leading-tight text-foreground">
+                <span className="block truncate text-[13.5px] font-medium leading-tight text-foreground">
                   {a.name}
                 </span>
-                <span className="mono-label block text-[7.5px] text-muted-foreground">
+                <span className="mono-label block text-[9.5px] text-muted-foreground">
                   {a.id}
                 </span>
               </span>
             </button>
           ))}
         </div>
-      </div>
+      </ProfileSection>
 
       <div className="mt-6 flex justify-center border-t hairline pt-5">
         <button
           type="button"
           onClick={() => askAboutTechnology(entry.name)}
-          className="star-btn focus-glow flex h-11 items-center gap-2.5 rounded-full px-6 text-[12.5px] font-semibold tracking-[0.08em] text-foreground transition-all duration-300 hover:-translate-y-px"
+          className="star-btn focus-glow flex h-11 items-center gap-2.5 rounded-full px-6 text-[14.5px] font-semibold tracking-[0.08em] text-foreground transition-all duration-300 hover:-translate-y-px"
         >
           <Sparkles className="size-4 text-[var(--sp-a)]" aria-hidden="true" />
           {t("Consult the Mirror about this technology")}

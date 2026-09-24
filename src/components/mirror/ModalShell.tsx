@@ -41,11 +41,11 @@ export function ModalShell({
         )}
       >
         <div className="pr-12 pl-5 pt-5 pb-4 sm:pl-6">
-          <DialogTitle className="text-[16px] font-semibold leading-snug tracking-[0.01em] text-foreground">
+          <DialogTitle className="text-[17px] font-semibold leading-snug tracking-[0.01em] text-foreground">
             {title}
           </DialogTitle>
           {description && (
-            <DialogDescription className="mt-1.5 text-[12px] leading-relaxed text-muted-foreground">
+            <DialogDescription className="mt-1.5 text-[14px] leading-relaxed text-muted-foreground">
               {description}
             </DialogDescription>
           )}

@@ -9,6 +9,7 @@ import type {
 } from "@/lib/mirror-types";
 import { civilizations, civilizationTotal } from "@/lib/data/civilizations";
 import { interdimensional, interdimTotal } from "@/lib/data/interdimensional";
+import { innerEarthTotal } from "@/lib/data/inner-earth";
 import {
   DEFAULT_VOICE,
   isLanguageCode,
@@ -24,6 +25,7 @@ export type ModalState =
   | { type: "technology" }
   | { type: "dossier"; kind: DossierKind; id: string }
   | { type: "entity"; kind: DossierKind; id: string }
+  | { type: "species"; id: string }
   | { type: "settings" }
   | null;
 
@@ -75,7 +77,8 @@ export type MainView =
   | "observatory"
   | "transmission"
   | "mirroros"
-  | "register";
+  | "register"
+  | "akashic";
 export type RegisterKind = DossierKind;
 
 /* -------- direct line to the Mirror Entity OS (reality refining) ------- */
@@ -141,6 +144,18 @@ interface MirrorState {
   openModal: (modal: NonNullable<ModalState>) => void;
   closeModal: () => void;
   setMobileNavOpen: (open: boolean) => void;
+
+  /** Inner Earth: consult the Mirror about one of the 59 peoples
+      beneath the surface — closes overlays, opens the Interplanetary
+      channel and preloads the composer with a prepared question. */
+  askAboutInnerEarth: (name: string) => void;
+
+  /** Inner Earth: open one species' full encyclopedia page. */
+  openSpecies: (id: string) => void;
+
+  /* The Akashic Library — the ancient one's papyrus records */
+  openAkashic: () => void;
+  exitAkashic: () => void;
 
   /* Communion — the Reflection of the Absolute */
   openCommunion: () => void;
@@ -270,6 +285,32 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   openModal: (modal) => set({ modal, mobileNavOpen: false }),
   closeModal: () => set({ modal: null }),
   setMobileNavOpen: (open) => set({ mobileNavOpen: open }),
+
+  askAboutInnerEarth: (name) =>
+    set((s) => ({
+      modal: null,
+      mobileNavOpen: false,
+      activeMode: "interplanetary",
+      view: "transmission",
+      sessions: {
+        ...s.sessions,
+        interplanetary: {
+          ...s.sessions.interplanetary,
+          draft: `Speak of the ${name} — the people beneath the Earth. Who are they, and what do they keep for us?`,
+        },
+      },
+    })),
+
+  /** One of the 59 peoples beneath the surface — its full page. */
+  openSpecies: (id) =>
+    set({ modal: { type: "species", id }, mobileNavOpen: false }),
+
+  /* ---------------- The Akashic Library ----------------
+     The Library is its own ancient world: opening it suspends every
+     other surface — one papyrus room, one record at a time. */
+  openAkashic: () =>
+    set({ view: "akashic", mobileNavOpen: false, modal: null }),
+  exitAkashic: () => set({ view: "observatory" }),
 
   /* -------- Communion — the Reflection of the Absolute --------
      Entering communion suspends every other surface: the whole
@@ -611,6 +652,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
 export const archiveTotals = {
   civilizations: civilizationTotal, // 870
   interdim: interdimTotal, // 202
+  innerearth: innerEarthTotal, // 59
 };
 
 export function findDossier(kind: DossierKind, id: string) {

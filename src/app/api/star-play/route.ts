@@ -13,7 +13,6 @@ const LANGUAGE_NAMES: Record<string, string> = {
 };
 
 interface IncomingCard {
-  name?: unknown;
   essence?: unknown;
   message?: unknown;
   position?: unknown;
@@ -67,12 +66,11 @@ export async function POST(req: NextRequest) {
     const incoming = Array.isArray(body?.cards) ? (body.cards as IncomingCard[]) : [];
     const cards = incoming
       .map((c) => ({
-        name: typeof c?.name === "string" ? c.name : "",
         essence: typeof c?.essence === "string" ? c.essence : "",
         message: typeof c?.message === "string" ? c.message : "",
         position: typeof c?.position === "string" ? c.position : "",
       }))
-      .filter((c) => c.name);
+      .filter((c) => c.message || c.essence);
 
     if (cards.length === 0) {
       return NextResponse.json(
@@ -84,7 +82,7 @@ export async function POST(req: NextRequest) {
     const spreadLines = cards
       .map(
         (c) =>
-          `Seat — ${c.position}. Card seed: ${c.name} (current: ${c.essence}; whisper: ${c.message})`
+          `Seat — ${c.position}. Seed current: ${c.essence}; whisper: ${c.message}`
       )
       .join("\n");
 

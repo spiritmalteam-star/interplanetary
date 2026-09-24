@@ -81,7 +81,7 @@ export function QueryComposer() {
                     "Ask the mirror... ✨ e.g. Who are the Pleiadians, and how are they helping humanity evolve?"
                   )
             }
-            className="nice-scroll max-h-[148px] flex-1 resize-none bg-transparent py-2.5 text-[14px] leading-relaxed text-foreground placeholder:text-muted-foreground/60 focus:outline-none sm:text-[14.5px]"
+            className="nice-scroll max-h-[148px] flex-1 resize-none bg-transparent py-2.5 text-[15.5px] leading-relaxed text-foreground placeholder:text-muted-foreground/60 focus:outline-none sm:text-[16px]"
           />
           <button
             type="submit"
@@ -92,7 +92,7 @@ export function QueryComposer() {
             <Send className="size-4" aria-hidden="true" />
           </button>
         </div>
-        <p className="mono-label mt-2 hidden text-center text-[8px] text-muted-foreground/50 sm:block">
+        <p className="mono-label mt-2 hidden text-center text-[10px] text-muted-foreground/50 sm:block">
           {t(
             "Enter to transmit · Shift + Enter for a new line · Free will honored always"
           )}

@@ -41,10 +41,10 @@ export function TopNavigation() {
           </button>
 
           <div className="min-w-0">
-            <h1 className="title-gradient truncate text-[14px] font-semibold tracking-[0.1em] sm:text-[16px] lg:text-[17px]">
+            <h1 className="title-gradient truncate text-[15.5px] font-semibold tracking-[0.1em] sm:text-[17px] lg:text-[17px]">
               MIRROR ENTITY LABORATORY
             </h1>
-            <p className="mono-label mt-0.5 truncate text-[8px] text-muted-foreground/80 sm:text-[9.5px]">
+            <p className="mono-label mt-0.5 truncate text-[10px] text-muted-foreground/80 sm:text-[11.5px]">
               {t("Interplanetary Channel · With Love ❤️")}
             </p>
           </div>
@@ -58,7 +58,7 @@ export function TopNavigation() {
           <button
             type="button"
             onClick={() => openModal({ type: "federation" })}
-            className="focus-glow group flex h-9 items-center gap-2 rounded-full border hairline px-3 text-[12px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground hover:glow-sm sm:px-3.5"
+            className="focus-glow group flex h-9 items-center gap-2 rounded-full border hairline px-3 text-[14px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground hover:glow-sm sm:px-3.5"
           >
             <Building2 className="size-3.5 text-[var(--cy)]" aria-hidden="true" />
             <span className="hidden sm:inline">{t("Federation")}</span>
@@ -69,7 +69,7 @@ export function TopNavigation() {
             onClick={() => openModal({ type: "technology" })}
             aria-label={t("Open ET Technology — the xenotechnology register")}
             data-testid="et-tech-open"
-            className="focus-glow group flex h-9 items-center gap-2 rounded-full border hairline px-3 text-[12px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground hover:glow-sm sm:px-3.5"
+            className="focus-glow group flex h-9 items-center gap-2 rounded-full border hairline px-3 text-[14px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground hover:glow-sm sm:px-3.5"
           >
             <CircuitBoard className="size-3.5 text-[var(--cy)]" aria-hidden="true" />
             <span className="hidden sm:inline">{t("ET Technology")}</span>
@@ -78,7 +78,7 @@ export function TopNavigation() {
           <button
             type="button"
             onClick={() => openModal({ type: "astral" })}
-            className="focus-glow group flex h-9 items-center gap-2 rounded-full border hairline px-3 text-[12px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground hover:glow-sm sm:px-3.5"
+            className="focus-glow group flex h-9 items-center gap-2 rounded-full border hairline px-3 text-[14px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground hover:glow-sm sm:px-3.5"
           >
             <BriefcaseBusiness
               className="size-3.5 text-[var(--cy)]"

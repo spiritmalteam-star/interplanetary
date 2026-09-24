@@ -175,7 +175,7 @@ export function ListenButton({
       onClick={toggle}
       aria-label={playing ? t("Stop") : t("Listen to this transmission")}
       className={cn(
-        "focus-glow mono-label inline-flex h-7 items-center gap-1.5 rounded-full border px-3 text-[9px] transition-all duration-300",
+        "focus-glow mono-label inline-flex h-7 items-center gap-1.5 rounded-full border px-3 text-[11px] transition-all duration-300",
         playing
           ? "text-[var(--scope-a)]"
           : "text-muted-foreground hover:text-foreground",

@@ -18,12 +18,14 @@ import { TransmissionView } from "./TransmissionView";
 import { MirrorOS } from "./MirrorOS";
 import { ArchiveRegister } from "./ArchiveRegister";
 import { CommunionView } from "./CommunionView";
+import { AkashicView } from "./AkashicView";
 import { FederationModal } from "./FederationModal";
 import { AstralJobsModal } from "./AstralJobsModal";
 import { DossierModal } from "./DossierModal";
 import { SettingsModal } from "./SettingsModal";
 import { StarPlayModal } from "./StarPlayModal";
 import { TechnologyModal } from "./TechnologyModal";
+import { SpeciesModal } from "./SpeciesModal";
 
 export default function AppShell() {
   const view = useMirror((s) => s.view);
@@ -57,6 +59,16 @@ export default function AppShell() {
         <CosmicBackdrop />
         <StarField />
         <MirrorOS />
+      </div>
+    );
+  }
+
+  /* The Akashic Library is its own ancient world: the wall of light
+     codes, the papyrus desk, and one record at a time. */
+  if (view === "akashic") {
+    return (
+      <div className="relative h-dvh overflow-hidden">
+        <AkashicView />
       </div>
     );
   }
@@ -114,6 +126,7 @@ export default function AppShell() {
       <SettingsModal />
       <StarPlayModal />
       <TechnologyModal />
+      <SpeciesModal />
     </div>
   );
 }

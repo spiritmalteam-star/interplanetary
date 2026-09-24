@@ -108,7 +108,7 @@ export function SettingsModal() {
       <div className="nice-scroll max-h-[62vh] space-y-6 overflow-y-auto px-5 pb-6 sm:px-6 max-md:max-h-[60dvh]">
         {/* ---------------- Language ---------------- */}
         <section aria-label={t("Language")}>
-          <p className="mono-label mb-2.5 text-[9.5px] text-muted-foreground">
+          <p className="mono-label mb-2.5 text-[11.5px] text-muted-foreground">
             {t("Language of everything")}
           </p>
           <div className="grid grid-cols-2 gap-2">
@@ -128,10 +128,10 @@ export function SettingsModal() {
                   )}
                 >
                   <span className="min-w-0">
-                    <span className="block truncate text-[13.5px] font-semibold text-foreground">
+                    <span className="block truncate text-[15px] font-semibold text-foreground">
                       {l.native}
                     </span>
-                    <span className="mono-label mt-0.5 block truncate text-[8.5px] text-muted-foreground">
+                    <span className="mono-label mt-0.5 block truncate text-[10.5px] text-muted-foreground">
                       {l.english}
                     </span>
                   </span>
@@ -149,7 +149,7 @@ export function SettingsModal() {
 
         {/* ---------------- Transcript voice ---------------- */}
         <section aria-label={t("Voice for transcript")}>
-          <p className="mono-label mb-2.5 text-[9.5px] text-muted-foreground">
+          <p className="mono-label mb-2.5 text-[11.5px] text-muted-foreground">
             {t("Voice for transcript")}
           </p>
           <div className="space-y-2">
@@ -180,10 +180,10 @@ export function SettingsModal() {
                       aria-hidden="true"
                     />
                     <span className="min-w-0">
-                      <span className="block truncate text-[13px] font-semibold text-foreground">
+                      <span className="block truncate text-[14.5px] font-semibold text-foreground">
                         {v.name}
                       </span>
-                      <span className="block truncate text-[11.5px] text-muted-foreground">
+                      <span className="block truncate text-[13.5px] text-muted-foreground">
                         {v.id === "aurora"
                           ? t(v.character)
                           : v.character}
@@ -221,7 +221,7 @@ export function SettingsModal() {
 
         {/* ---------------- Narration pace ---------------- */}
         <section aria-label={t("Narration pace")}>
-          <p className="mono-label mb-2.5 text-[9.5px] text-muted-foreground">
+          <p className="mono-label mb-2.5 text-[11.5px] text-muted-foreground">
             {t("Narration pace")}
           </p>
           <div className="flex flex-wrap gap-2">
@@ -234,7 +234,7 @@ export function SettingsModal() {
                   onClick={() => setPace(p.value)}
                   aria-pressed={selected}
                   className={cn(
-                    "focus-glow rounded-full border px-4 py-2 text-[12px] font-medium transition-all duration-300",
+                    "focus-glow rounded-full border px-4 py-2 text-[14px] font-medium transition-all duration-300",
                     selected
                       ? "border-[var(--hairline-active)] bg-[var(--accent)] text-foreground"
                       : "hairline text-muted-foreground hover:border-[var(--hairline-hover)] hover:text-foreground"
@@ -247,7 +247,7 @@ export function SettingsModal() {
           </div>
         </section>
 
-        <p className="mono-label text-center text-[8.5px] leading-relaxed text-muted-foreground/70">
+        <p className="mono-label text-center text-[10.5px] leading-relaxed text-muted-foreground/70">
           {t(
             "Every word of the interface and every new transmission follows the selected language."
           )}

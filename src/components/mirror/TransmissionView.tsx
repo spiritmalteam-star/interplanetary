@@ -118,7 +118,7 @@ function LoadingTransmission({ scope, query }: { scope: Scope; query: string }) 
           >
             “
           </span>
-          <p className="px-6 text-[14px] italic leading-relaxed text-muted-foreground">
+          <p className="px-6 text-[15.5px] italic leading-relaxed text-muted-foreground">
             {query}
           </p>
         </div>
@@ -129,7 +129,7 @@ function LoadingTransmission({ scope, query }: { scope: Scope; query: string }) 
           className="animate-dot-pulse inline-block size-1.5 rounded-full"
           style={{ background: "var(--scope-a)" }}
         />
-        <span className="mono-label text-[9.5px] text-muted-foreground">
+        <span className="mono-label text-[11.5px] text-muted-foreground">
           {t(phases[phase] ?? phases[0] ?? "")}
         </span>
       </div>
@@ -207,7 +207,7 @@ function TransmissionBody({ text }: { text: string }) {
                 }}
               />
               <p
-                className="mono-label text-[10px] leading-relaxed"
+                className="mono-label text-[12px] leading-relaxed"
                 style={{ color: "color-mix(in srgb, var(--scope-b) 80%, white)" }}
               >
                 {b.text}
@@ -232,7 +232,7 @@ function TransmissionBody({ text }: { text: string }) {
                     style={{ background: "var(--scope-a)" }}
                     aria-hidden="true"
                   />
-                  <span className="text-[14px] leading-[1.8] text-foreground/85 sm:text-[14.5px]">
+                  <span className="text-[15.5px] leading-[1.8] text-foreground/85 sm:text-[16px]">
                     {item}
                   </span>
                 </li>
@@ -247,7 +247,7 @@ function TransmissionBody({ text }: { text: string }) {
             variants={staggerItem}
             initial="hidden"
             animate="show"
-            className="text-[14.5px] leading-[1.85] text-foreground/88 sm:text-[15px]"
+            className="text-[16px] leading-[1.85] text-foreground/88 sm:text-[16.5px]"
           >
             {b.text}
           </motion.p>
@@ -326,7 +326,7 @@ function Exchange({
       {/* index ribbon */}
       <div className="mb-4 flex items-center gap-3">
         <span
-          className="mono-label rounded-full border px-2 py-0.5 text-[9px]"
+          className="mono-label rounded-full border px-2 py-0.5 text-[11px]"
           style={{
             borderColor: "color-mix(in srgb, var(--scope-a) 30%, transparent)",
             color: "color-mix(in srgb, var(--scope-a) 85%, white)",
@@ -356,7 +356,7 @@ function Exchange({
         >
           “
         </span>
-        <p className="px-6 text-[14px] italic leading-relaxed text-muted-foreground">
+        <p className="px-6 text-[15.5px] italic leading-relaxed text-muted-foreground">
           {message.query}
         </p>
       </div>
@@ -427,11 +427,12 @@ export function TransmissionView() {
   const meta = SCOPE_META[scope];
 
   /* The thread begins where it begins: opening, reloading or switching
-     into a channel keeps the thread at its BEGINNING. The view follows
-     new generations only after the visitor is already inside the
-     conversation (a fresh query or an arriving transmission). */
+     into a channel keeps the thread at its BEGINNING. New generations
+     load from the TOP — the newest exchange settles its first line at
+     the top of the view and the visitor reads downward from there. */
   const topRef = useRef<HTMLDivElement | null>(null);
-  const bottomRef = useRef<HTMLDivElement | null>(null);
+  const latestRef = useRef<HTMLDivElement | null>(null);
+  const loadingRef = useRef<HTMLDivElement | null>(null);
   const messagesLength = session.messages.length;
   const status = session.status;
   const baseline = useRef({ mode: activeMode, len: messagesLength, status });
@@ -446,9 +447,12 @@ export function TransmissionView() {
     }
     const grew = messagesLength !== b.len;
     const startedLoading = status === "loading" && b.status !== "loading";
-    if (grew || startedLoading) {
+    if (grew) {
       baseline.current = { mode: activeMode, len: messagesLength, status };
-      bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+      latestRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else if (startedLoading) {
+      baseline.current = { mode: activeMode, len: messagesLength, status };
+      loadingRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }, [activeMode, messagesLength, status]);
 
@@ -475,10 +479,10 @@ export function TransmissionView() {
             <span className="scope-corner scope-corner-tr" aria-hidden="true" />
             <span className="scope-corner scope-corner-bl" aria-hidden="true" />
             <span className="scope-corner scope-corner-br" aria-hidden="true" />
-            <p className="text-[15px] font-medium text-foreground/85">
+            <p className="text-[16.5px] font-medium text-foreground/85">
               {t("This channel is quiet.")}
             </p>
-            <p className="mx-auto mt-2 max-w-[380px] text-[12.5px] leading-relaxed text-muted-foreground">
+            <p className="mx-auto mt-2 max-w-[380px] text-[14.5px] leading-relaxed text-muted-foreground">
               {t(
                 "Every scope keeps its own private channel — ask from the composer below to open the first transmission."
               )}
@@ -487,34 +491,51 @@ export function TransmissionView() {
         )}
 
       {session.messages.map((m, i) => (
-        <Exchange
+        <div
           key={m.id}
-          message={m}
-          index={i}
-          scope={scope}
-          animate={i === session.messages.length - 1 && session.status !== "loading"}
-        />
+          ref={
+            i === session.messages.length - 1
+              ? (node) => {
+                  latestRef.current = node;
+                }
+              : undefined
+          }
+        >
+          <Exchange
+            message={m}
+            index={i}
+            scope={scope}
+            animate={i === session.messages.length - 1 && session.status !== "loading"}
+          />
+        </div>
       ))}
 
       {session.status === "loading" && (
-        <LoadingTransmission scope={scope} query={session.activeQuery} />
+        <div
+          ref={(node) => {
+            loadingRef.current = node;
+          }}
+        >
+          <LoadingTransmission scope={scope} query={session.activeQuery} />
+        </div>
       )}
 
       {session.status === "error" && (
         <div className="scope-frame-card mt-8 rounded-2xl glass p-6 text-center">
-          <p className="text-[14.5px] leading-relaxed text-foreground/85">
+          <p className="text-[16px] leading-relaxed text-foreground/85">
             {t(
               "The field received your question but could not complete the transmission."
             )}
           </p>
-          <p className="mt-2 text-[13px] italic text-muted-foreground">
+          <p className="mt-2 text-[14.5px] italic text-muted-foreground">
             {session.error}
           </p>
         </div>
       )}
 
-      {/* auto-scroll anchor — the view follows each new generation */}
-      <div ref={bottomRef} aria-hidden="true" className="h-px" />
+      {/* new generations settle at the TOP of this anchor — the reader
+          begins at their first line and scrolls down for the rest */}
+      <div aria-hidden="true" className="h-px" />
     </motion.section>
   );
 }

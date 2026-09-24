@@ -198,7 +198,7 @@
     @apply bg-background text-foreground;
     font-feature-settings: "ss01", "cv11";
     letter-spacing: 0.005em;
-    font-size: 15px;
+    font-size: 16px;
     line-height: 1.7;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
@@ -890,3 +890,284 @@ html:not(.dark) .text-hero {
     transparent 55%
   );
 }
+
+/* ------------------------------------------------------------------ */
+/*  THE AKASHIC LIBRARY — the ancient one's papyrus room.              */
+/*  A fixed warm-dark world, a wall of golden light codes, and one     */
+/*  sheet of papyrus where the Librarian's hand sets the record down.  */
+/* ------------------------------------------------------------------ */
+
+:root {
+  --font-ancient: "Cinzel", Georgia, "Times New Roman", serif;
+  --font-hand: "Patrick Hand", "Segoe Print", "Bradley Hand", cursive;
+}
+.font-ancient { font-family: var(--font-ancient); }
+.font-hand { font-family: var(--font-hand); }
+
+.akashic-world {
+  background:
+    radial-gradient(
+      110% 70% at 50% 0%,
+      color-mix(in srgb, #8a6a2f 10%, transparent) 0%,
+      transparent 58%
+    ),
+    radial-gradient(
+      120% 90% at 50% 112%,
+      color-mix(in srgb, #5c3a20 14%, transparent) 0%,
+      transparent 62%
+    ),
+    #0c0806;
+}
+
+/* the wall of light codes behind everything */
+.akashic-veil {
+  background-image: url("/images/ai/akashic-light-codes.jpg");
+  background-size: cover;
+  background-position: center;
+  opacity: 0.34;
+  mix-blend-mode: screen;
+}
+.akashic-veil::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    100% 80% at 50% 42%,
+    transparent 20%,
+    color-mix(in srgb, #0c0806 78%, transparent) 92%
+  );
+}
+
+/* the papyrus sheet — ancient paper, always light, in either theme */
+.papyrus {
+  background-color: #e9dcba;
+  background-image:
+    radial-gradient(
+      130% 100% at 50% 0%,
+      rgba(255, 248, 224, 0.55) 0%,
+      transparent 55%
+    ),
+    radial-gradient(
+      120% 120% at 50% 115%,
+      rgba(140, 104, 48, 0.22) 0%,
+      transparent 55%
+    ),
+    url("/images/ai/akashic-papyrus.jpg");
+  background-size: cover;
+  background-position: center;
+  background-blend-mode: normal, normal, luminosity;
+  color: #3a2b18;
+  border: 1px solid rgba(112, 82, 36, 0.4);
+  box-shadow:
+    0 30px 80px -30px rgba(0, 0, 0, 0.75),
+    0 0 60px -24px color-mix(in srgb, var(--gd) 40%, transparent),
+    inset 0 0 90px -40px rgba(112, 82, 36, 0.5);
+}
+/* the faded ink frame drawn just inside the sheet */
+.papyrus-frame {
+  border: 1px solid rgba(112, 82, 36, 0.28);
+  outline: 1px solid rgba(112, 82, 36, 0.12);
+  outline-offset: 3px;
+}
+.ink-title {
+  font-family: var(--font-ancient);
+  color: #4a3313;
+  text-shadow: 0 1px 0 rgba(255, 250, 230, 0.5);
+}
+.ink-hand { font-family: var(--font-hand); color: #3a2b18; }
+.ink-faint { color: rgba(74, 51, 19, 0.62); }
+.ink-gold { color: #7a5a1e; }
+
+/* a button drawn in aged ink on the sheet itself */
+.papyrus-btn {
+  font-family: var(--font-ancient);
+  border: 1px solid rgba(112, 82, 36, 0.45);
+  background: rgba(255, 250, 232, 0.42);
+  color: #4a3313;
+  transition: all 0.3s ease;
+}
+.papyrus-btn:hover {
+  background: rgba(255, 250, 232, 0.78);
+  border-color: rgba(112, 82, 36, 0.7);
+  box-shadow: 0 6px 18px -10px rgba(112, 82, 36, 0.6);
+}
+
+/* the ink forming while the Librarian writes */
+.ink-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(112, 82, 36, 0.08) 0%,
+    rgba(112, 82, 36, 0.26) 50%,
+    rgba(112, 82, 36, 0.08) 100%
+  );
+  background-size: 220px 100%;
+  background-repeat: no-repeat;
+  animation: shimmer-line 2.2s linear infinite;
+}
+
+/* sidebar doorway for the Library */
+.akashic-btn {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background:
+    linear-gradient(
+      120deg,
+      color-mix(in srgb, var(--gd) 18%, var(--glass-bg-strong)) 0%,
+      color-mix(in srgb, var(--pk) 12%, var(--glass-bg-strong)) 55%,
+      color-mix(in srgb, var(--gd) 14%, var(--glass-bg-strong)) 100%
+    );
+  border: 1px solid color-mix(in srgb, var(--gd) 34%, transparent);
+  box-shadow:
+    0 0 24px -12px color-mix(in srgb, var(--gd) 55%, transparent),
+    inset 0 1px 0 color-mix(in srgb, white 7%, transparent);
+}
+.akashic-btn:hover {
+  border-color: color-mix(in srgb, var(--gd) 55%, transparent);
+  box-shadow:
+    0 0 32px -10px color-mix(in srgb, var(--gd) 70%, transparent),
+    inset 0 1px 0 color-mix(in srgb, white 9%, transparent);
+}
+.akashic-halo {
+  box-shadow: 0 0 16px -6px color-mix(in srgb, var(--gd) 60%, transparent);
+  animation: dream-halo 4.6s ease-in-out infinite;
+}
+
+/* ------------------------------------------------------------------ */
+/*  ARCHIVE LIST SCROLL INDICATOR — a scrollbar one can actually see,  */
+/*  plus the breathing chevron rendered by the sidebar itself.         */
+/* ------------------------------------------------------------------ */
+
+.archive-scroll {
+  scrollbar-width: thin;
+  scrollbar-color:
+    color-mix(in srgb, var(--gd) 48%, transparent)
+    color-mix(in srgb, var(--gd) 7%, transparent);
+}
+.archive-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+.archive-scroll::-webkit-scrollbar-track {
+  background: color-mix(in srgb, var(--gd) 7%, transparent);
+  border-radius: 8px;
+}
+.archive-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--gd) 52%, transparent),
+    color-mix(in srgb, var(--cy) 45%, transparent)
+  );
+  border-radius: 8px;
+}
+.archive-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--gd) 75%, transparent),
+    color-mix(in srgb, var(--cy) 65%, transparent)
+  );
+}
+.archive-scroll.is-scrollable::-webkit-scrollbar {
+  width: 9px;
+}
+
+@keyframes scroll-hint {
+  0%, 100% { transform: translateY(0); opacity: 0.7; }
+  50% { transform: translateY(4px); opacity: 1; }
+}
+.scroll-hint { animation: scroll-hint 2.2s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-hint,
+  .akashic-halo,
+  .akashic-btn::before {
+    animation: none !important;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  THE LABORATORY SHELF — four books standing side by side at the     */
+/*  bottom of the sidebar: Manifest · Mirror · Akashic · Star Play.    */
+/*  Each spine carries its own color via --book; the covers read as    */
+/*  cloth in the dark and as dyed parchment in the light.              */
+/* ------------------------------------------------------------------ */
+.book-spine {
+  background:
+    linear-gradient(
+      100deg,
+      color-mix(in srgb, var(--book) 30%, var(--register-ink)) 0%,
+      color-mix(in srgb, var(--book) 12%, var(--register-ink)) 46%,
+      color-mix(in srgb, var(--book) 20%, var(--register-ink)) 82%,
+      color-mix(in srgb, var(--book) 34%, var(--register-ink)) 100%
+    );
+  border-color: color-mix(in srgb, var(--book) 42%, transparent);
+  box-shadow:
+    inset -3px 0 7px -3px rgba(0, 0, 0, 0.6),
+    inset 2px 0 5px -3px color-mix(in srgb, var(--book) 60%, transparent),
+    inset 0 1px 0 0 color-mix(in srgb, var(--book) 26%, transparent),
+    0 10px 22px -12px color-mix(in srgb, var(--book) 55%, transparent);
+  color: color-mix(in srgb, var(--book) 74%, var(--register-ink));
+  transform-origin: bottom center;
+  backdrop-filter: blur(2px);
+}
+.book-spine:hover {
+  border-color: color-mix(in srgb, var(--book) 68%, transparent);
+  box-shadow:
+    inset -3px 0 7px -3px rgba(0, 0, 0, 0.6),
+    inset 2px 0 5px -3px color-mix(in srgb, var(--book) 72%, transparent),
+    inset 0 1px 0 0 color-mix(in srgb, var(--book) 30%, transparent),
+    0 18px 30px -12px color-mix(in srgb, var(--book) 72%, transparent);
+}
+/* the gilt band near the crown of every spine */
+.book-band {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--book) 72%, white 8%),
+    transparent
+  );
+  opacity: 0.85;
+}
+/* the title, running down the spine like a real volume */
+.book-label {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  color: color-mix(in srgb, var(--book) 62%, var(--register-ink) 30%);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* the fore-edge: fine page lines catching the light */
+.book-edge {
+  background: repeating-linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--register-ink) 55%, transparent) 0px,
+    color-mix(in srgb, var(--register-ink) 55%, transparent) 1px,
+    transparent 1px,
+    transparent 4px
+  );
+  opacity: 0.5;
+}
+/* the plank the books stand on */
+.shelf-plank {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--foreground) 15%, transparent),
+    color-mix(in srgb, var(--foreground) 7%, transparent)
+  );
+  border-top: 1px solid color-mix(in srgb, var(--foreground) 12%, transparent);
+  box-shadow: 0 6px 14px -8px rgba(0, 0, 0, 0.5);
+}
+.shelf-lip {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--foreground) 8%, transparent),
+    transparent
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .book-spine {
+    transition: none !important;
+  }
+}
+
+/* task-29 css refresh marker */

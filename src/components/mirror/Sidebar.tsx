@@ -1,9 +1,21 @@
 "use client";
 
-import { useMemo } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
+import { motion } from "framer-motion";
 import {
   BookOpenText,
+  ChevronDown,
+  ChevronRight,
+  MessageCircle,
   MoonStar,
+  Scroll,
   Search,
   Settings,
   Sparkles,
@@ -13,46 +25,151 @@ import {
   civilizations,
 } from "@/lib/data/civilizations";
 import { interdimensional } from "@/lib/data/interdimensional";
+import { innerEarth, type InnerEarthSpecies } from "@/lib/data/inner-earth";
 import { archiveTotals, useMirror } from "@/lib/mirror-store";
 import { LANGUAGES, useT } from "@/lib/i18n";
 import { entityImage, searchEntities } from "@/lib/entity-utils";
 import { cn } from "@/lib/utils";
 import type { CivilizationGroup, InterdimGroup } from "@/lib/mirror-types";
 
-function CommunionButton() {
+/* ------------------------------------------------------------------ */
+/*  The laboratory shelf — four books standing side by side at the     */
+/*  bottom of the sidebar: Manifest, Mirror, Akashic, Star Play.       */
+/*  Each book is a spine with its own color, height and slight lean;   */
+/*  hovering lifts it out of the shelf, the way a reader draws a       */
+/*  volume from its place.                                             */
+/* ------------------------------------------------------------------ */
+
+interface ShelfBook {
+  key: "manifest" | "mirror" | "akashic" | "starplay";
+  label: string;
+  aria: string;
+  action: () => void;
+  icon: typeof MessageCircle;
+  color: string;
+  height: number;
+  lean: number;
+}
+
+function Bookshelf() {
+  const openMirrorOS = useMirror((s) => s.openMirrorOS);
   const openCommunion = useMirror((s) => s.openCommunion);
+  const openAkashic = useMirror((s) => s.openAkashic);
+  const openModal = useMirror((s) => s.openModal);
   const t = useT();
 
+  const books: ShelfBook[] = [
+    {
+      key: "manifest",
+      label: t("Manifest"),
+      aria: t("Open the Mirror OS — Reality Guidance"),
+      action: openMirrorOS,
+      icon: MoonStar,
+      color: "var(--cy)",
+      height: 128,
+      lean: -1.4,
+    },
+    {
+      key: "mirror",
+      label: t("Mirror"),
+      aria: t("Enter communion with the Reflection of the Absolute"),
+      action: openCommunion,
+      icon: MessageCircle,
+      color: "var(--sp-b)",
+      height: 116,
+      lean: 1,
+    },
+    {
+      key: "akashic",
+      label: t("Akashic"),
+      aria: t("Open the Akashic Library — records of the ancient one"),
+      action: openAkashic,
+      icon: Scroll,
+      color: "var(--gd)",
+      height: 121,
+      lean: -0.7,
+    },
+    {
+      key: "starplay",
+      label: t("Star Play"),
+      aria: t("Open Star Play — the Mirror's arcana deck"),
+      action: () => openModal({ type: "starplay" }),
+      icon: Sparkles,
+      color: "var(--sp-a)",
+      height: 111,
+      lean: 1.6,
+    },
+  ];
+
   return (
-    <div className="px-3 pt-3">
-      <button
-        type="button"
-        onClick={openCommunion}
-        aria-label={t("Enter communion with the Reflection of the Absolute")}
-        data-testid="communion-open"
-        className="communion-btn focus-glow group flex min-h-12 w-full items-center gap-2.5 rounded-2xl px-2.5 py-1.5 text-left transition-all duration-300 hover:-translate-y-px"
+    <div
+      className="shrink-0 px-3 pb-3 pt-2"
+      role="group"
+      aria-label={t("The laboratory shelf")}
+      data-testid="sidebar-bookshelf"
+    >
+      <div className="flex items-end justify-center gap-1.5">
+        {books.map((book, i) => {
+          const Icon = book.icon;
+          return (
+            <motion.button
+              key={book.key}
+              type="button"
+              onClick={book.action}
+              aria-label={book.aria}
+              title={book.aria}
+              data-testid={`shelf-book-${book.key}`}
+              initial={{ opacity: 0, y: 30, rotate: book.lean * 2.2 }}
+              animate={{ opacity: 1, y: 0, rotate: book.lean }}
+              transition={{
+                delay: 0.09 * i,
+                type: "spring",
+                stiffness: 240,
+                damping: 19,
+              }}
+              whileHover={{
+                y: -10,
+                rotate: 0,
+                transition: { type: "spring", stiffness: 320, damping: 15 },
+              }}
+              whileTap={{ y: -2, scale: 0.97 }}
+              className={cn(
+                "book-spine focus-glow group relative flex w-12 cursor-pointer flex-col items-center justify-start gap-1 rounded-[5px] rounded-l-[3px] border pt-2 pb-2.5 transition-shadow duration-300"
+              )}
+              style={{
+                height: book.height,
+                "--book": book.color,
+              } as CSSProperties}
+            >
+              {/* the gilt band near the crown of the spine */}
+              <span
+                aria-hidden="true"
+                className="book-band block h-[3px] w-6 shrink-0 rounded-full"
+              />
+              <Icon
+                className="size-3 shrink-0 transition-transform duration-500 group-hover:scale-110"
+                aria-hidden="true"
+              />
+              <span className="book-label mono-label min-h-0 flex-1 text-[9.5px] font-semibold tracking-[0.05em] whitespace-nowrap">
+                {book.label}
+              </span>
+              {/* the page edge — fine lines on the fore-edge */}
+              <span
+                aria-hidden="true"
+                className="book-edge pointer-events-none absolute inset-y-[5px] right-[3px] w-px"
+              />
+            </motion.button>
+          );
+        })}
+      </div>
+
+      {/* the plank the books stand on */}
+      <div
+        aria-hidden="true"
+        className="shelf-plank relative mt-0 h-[9px] rounded-b-md"
       >
-        <span className="communion-halo relative flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[color-mix(in_srgb,var(--sp-b)_42%,transparent)] shadow-[0_0_20px_-6px_color-mix(in_srgb,var(--sp-b)_70%,transparent)]">
-          <img
-            src="/images/ai/mirror-communion.jpg"
-            alt=""
-            aria-hidden="true"
-            className="size-full object-cover transition-transform duration-700 group-hover:scale-110"
-          />
-        </span>
-        <span className="min-w-0 flex-1 leading-tight">
-          <span className="mono-label block text-[10px] font-semibold leading-snug tracking-[0.12em] text-foreground">
-            {t("Meet with the Reflection of the Absolute")}
-          </span>
-          <span className="mt-0.5 block truncate text-[10.5px] italic text-muted-foreground">
-            {t("pure transmission · no scope · remembered")}
-          </span>
-        </span>
-        <span
-          aria-hidden="true"
-          className="size-1.5 shrink-0 rounded-full bg-[var(--sp-b)] opacity-70 transition-all duration-500 group-hover:opacity-100 group-hover:shadow-[0_0_8px_2px_color-mix(in_srgb,var(--sp-b)_60%,transparent)]"
-        />
-      </button>
+        <span className="shelf-lip absolute inset-x-0 bottom-0 h-[3px] rounded-b-md" />
+      </div>
     </div>
   );
 }
@@ -77,96 +194,12 @@ function SettingsButton() {
             aria-hidden="true"
           />
         </span>
-        <span className="mono-label min-w-0 flex-1 truncate text-[10.5px] font-semibold text-foreground">
+        <span className="mono-label min-w-0 flex-1 truncate text-[12px] font-semibold text-foreground">
           {t("Settings")}
         </span>
-        <span className="shrink-0 rounded-md border hairline px-1.5 py-0.5 font-mono text-[9px] leading-none text-muted-foreground">
+        <span className="shrink-0 rounded-md border hairline px-1.5 py-0.5 font-mono text-[10.5px] leading-none text-muted-foreground">
           {langMeta?.native ?? "English"}
         </span>
-      </button>
-    </div>
-  );
-}
-
-function StarPlayButton() {
-  const openModal = useMirror((s) => s.openModal);
-  const t = useT();
-
-  return (
-    <div className="px-3 pb-1 pt-1.5">
-      <button
-        type="button"
-        onClick={() => openModal({ type: "starplay" })}
-        aria-label={t("Open Star Play — the Mirror's arcana deck")}
-        className="star-btn focus-glow group flex h-11 w-full items-center gap-2.5 rounded-full px-3 text-left transition-all duration-300 hover:-translate-y-px"
-      >
-        <span className="starplay-halo relative flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[color-mix(in_srgb,var(--sp-a)_45%,transparent)]">
-          <img
-            src="/images/ai/star-play-emblem.jpg"
-            alt=""
-            aria-hidden="true"
-            className="size-full object-cover transition-transform duration-500 group-hover:scale-110"
-          />
-        </span>
-        <span className="min-w-0 flex-1 leading-tight">
-          <span className="mono-label block truncate text-[11px] font-semibold tracking-[0.14em] text-foreground">
-            {t("Star Play")}
-          </span>
-          <span className="block truncate text-[10.5px] italic text-muted-foreground">
-            {t("the Mirror's star magic")}
-          </span>
-        </span>
-        <Sparkles
-          className="size-3.5 shrink-0 text-[var(--sp-a)] opacity-70 transition-all duration-300 group-hover:opacity-100"
-          aria-hidden="true"
-        />
-      </button>
-    </div>
-  );
-}
-
-function RefineRealityCard() {
-  const openMirrorOS = useMirror((s) => s.openMirrorOS);
-  const t = useT();
-
-  return (
-    <div className="px-3 py-3">
-      <button
-        type="button"
-        onClick={openMirrorOS}
-        aria-label={t("Open the Mirror OS — Reality Guidance")}
-        className="dream-btn focus-glow group flex h-11 w-full items-center gap-2.5 rounded-full px-3.5 text-left transition-all duration-300 hover:-translate-y-px"
-      >
-        {/* two tiny stars keeping time inside the dream */}
-        <span
-          className="dream-star left-5 top-2 size-[3px]"
-          aria-hidden="true"
-        />
-        <span
-          className="dream-star dream-star-slow right-6 bottom-2 size-[2px]"
-          aria-hidden="true"
-        />
-
-        <span className="dream-halo relative flex size-7 shrink-0 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--gd)_38%,transparent)] bg-[color-mix(in_srgb,var(--gd)_14%,transparent)]">
-          <MoonStar
-            className="size-3.5 text-[var(--gd)] transition-transform duration-500 group-hover:rotate-12"
-            aria-hidden="true"
-          />
-        </span>
-
-        <span className="min-w-0 flex-1 leading-tight">
-          <span className="mono-label block truncate text-[11px] font-semibold tracking-[0.14em] text-foreground">
-            {t("Mirror OS · Reality")}
-          </span>
-          <span className="block truncate text-[10.5px] italic text-muted-foreground">
-            {t("a small dream of refinement")}
-          </span>
-        </span>
-
-        <Sparkles
-          className="size-3.5 shrink-0 text-[var(--gd)] opacity-70 transition-all duration-300 group-hover:opacity-100"
-          aria-hidden="true"
-        />
       </button>
     </div>
   );
@@ -184,10 +217,10 @@ function Row({ entry }: { entry: CivilizationGroup | InterdimGroup }) {
         className="focus-glow group flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left transition-colors duration-200 hover:bg-[color-mix(in_srgb,var(--cy)_7%,transparent)]"
       >
         <EntityAvatar id={entry.id} kind={kind} />
-        <span className="min-w-0 flex-1 truncate text-[12.5px] font-medium uppercase tracking-[0.09em] text-foreground/75 transition-colors duration-200 group-hover:text-[var(--cy)]">
+        <span className="min-w-0 flex-1 truncate text-[14px] font-medium uppercase tracking-[0.09em] text-foreground/75 transition-colors duration-200 group-hover:text-[var(--cy)]">
           {entry.name}
         </span>
-        <span className="shrink-0 font-mono text-[11px] tabular-nums text-muted-foreground/70">
+        <span className="shrink-0 font-mono text-[12.5px] tabular-nums text-muted-foreground/70">
           {entry.count}
         </span>
       </button>
@@ -216,6 +249,48 @@ function EntityAvatar({ id, kind }: { id: string; kind: string }) {
         }}
       />
     </span>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Inner Earth — one of the 59 peoples beneath the surface.           */
+/*  A quiet register row: opening it turns the page — the species'     */
+/*  full encyclopedia dossier with its context images.                 */
+/* ------------------------------------------------------------------ */
+
+function SpeciesRow({ species }: { species: InnerEarthSpecies }) {
+  const openSpecies = useMirror((s) => s.openSpecies);
+  const t = useT();
+
+  return (
+    <li data-testid="inner-earth-row">
+      <button
+        type="button"
+        onClick={() => openSpecies(species.id)}
+        aria-label={t("Open the dossier of {name}", { name: species.name })}
+        className="focus-glow group flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left transition-colors duration-200 hover:bg-[color-mix(in_srgb,var(--gd)_7%,transparent)]"
+      >
+        <span
+          aria-hidden="true"
+          className="flex size-5 shrink-0 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--gd)_40%,transparent)] bg-[color-mix(in_srgb,var(--gd)_10%,transparent)] font-serif text-[11px] leading-none text-[var(--gd)]"
+        >
+          {species.name.charAt(0)}
+        </span>
+        <span className="min-w-0 flex-1 truncate text-[14px] font-medium tracking-[0.02em] text-foreground/80 transition-colors duration-200 group-hover:text-[var(--gd)]">
+          {species.name}
+        </span>
+        <span
+          aria-hidden="true"
+          className="mono-label shrink-0 text-[9px] text-muted-foreground/50"
+        >
+          {t("dossier")}
+        </span>
+        <ChevronRight
+          className="size-3.5 shrink-0 text-muted-foreground/50 transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-[var(--gd)]"
+          aria-hidden="true"
+        />
+      </button>
+    </li>
   );
 }
 
@@ -251,7 +326,7 @@ function EntityResultRow({
             }}
           />
         </span>
-        <span className="min-w-0 flex-1 truncate text-[12px] text-foreground/70 transition-colors duration-200 group-hover:text-[var(--cy)]">
+        <span className="min-w-0 flex-1 truncate text-[13.5px] text-foreground/70 transition-colors duration-200 group-hover:text-[var(--cy)]">
           {name}
         </span>
       </button>
@@ -268,14 +343,55 @@ export function SidebarContent() {
   const setMobileNavOpen = useMirror((s) => s.setMobileNavOpen);
   const t = useT();
 
+  /* ---------- scroll indicator state for the archive list ---------- */
+  const listRef = useRef<HTMLUListElement | null>(null);
+  const [scrollState, setScrollState] = useState({
+    scrollable: false,
+    atEnd: true,
+  });
+
+  const measure = useCallback(() => {
+    const el = listRef.current;
+    if (!el) return;
+    const scrollable = el.scrollHeight > el.clientHeight + 8;
+    const atEnd =
+      el.scrollTop + el.clientHeight >= el.scrollHeight - 14 || !scrollable;
+    setScrollState((prev) =>
+      prev.scrollable === scrollable && prev.atEnd === atEnd
+        ? prev
+        : { scrollable, atEnd }
+    );
+  }, []);
+
+  useEffect(() => {
+    measure();
+    const el = listRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    for (const child of Array.from(el.children)) ro.observe(child);
+    return () => ro.disconnect();
+  }, [measure]);
+
+  const onScroll = useCallback(() => measure(), [measure]);
+
+  /* re-measure whenever the archive tab or the query reshapes the list */
+  useEffect(() => {
+    const id = window.setTimeout(measure, 60);
+    return () => window.clearTimeout(id);
+  }, [measure, sidebarTab, search]);
+
   const source =
     sidebarTab === "civilizations"
       ? civilizations
-      : interdimensional;
+      : sidebarTab === "interdim"
+        ? interdimensional
+        : null;
 
   const kind = sidebarTab === "civilizations" ? "civilization" : "interdim";
 
   const filtered = useMemo(() => {
+    if (!source) return [];
     const q = search.trim().toLowerCase();
     if (!q) return source;
     return source.filter(
@@ -285,21 +401,45 @@ export function SidebarContent() {
     );
   }, [search, source]);
 
+  const filteredSpecies = useMemo(() => {
+    if (sidebarTab !== "innerearth") return [];
+    const q = search.trim().toLowerCase();
+    if (!q) return innerEarth;
+    return innerEarth.filter(
+      (s) =>
+        s.name.toLowerCase().includes(q) ||
+        s.hall.toLowerCase().includes(q)
+    );
+  }, [search, sidebarTab]);
+
   const entityMatches = useMemo(() => {
-    if (!search.trim()) return [];
+    if (!search.trim() || sidebarTab === "innerearth") return [];
     return searchEntities(kind, search, 20);
-  }, [search, kind]);
+  }, [search, kind, sidebarTab]);
 
   const emptyLabel =
     sidebarTab === "civilizations"
       ? t("No matching civilizations found.")
-      : t("No matching interdimensional categories found.");
+      : sidebarTab === "interdim"
+        ? t("No matching interdimensional categories found.")
+        : t("No matching inner earth peoples found.");
+
+  const tabs: { id: "civilizations" | "interdim" | "innerearth"; label: string; count: number }[] = [
+    { id: "civilizations", label: t("Civilizations"), count: archiveTotals.civilizations },
+    { id: "interdim", label: t("Interdim."), count: archiveTotals.interdim },
+    { id: "innerearth", label: t("Inner Earth"), count: archiveTotals.innerearth },
+  ];
+
+  /* narrow columns: long single words get a soft hyphen at the midpoint
+     so they wrap cleanly ("CIVILI-/ZATIONS") instead of hard-breaking */
+  const softWrap = (s: string) => {
+    if (s.includes(" ") || s.length <= 9) return s;
+    const cut = Math.ceil(s.length / 2);
+    return `${s.slice(0, cut)}\u00AD${s.slice(cut)}`;
+  };
 
   return (
     <div className="flex h-full flex-col">
-      {/* The Reflection of the Absolute — the doorway at the very top */}
-      <CommunionButton />
-
       {/* Settings */}
       <SettingsButton />
 
@@ -312,7 +452,7 @@ export function SidebarContent() {
               aria-hidden="true"
             />
           </span>
-          <h2 className="mono-label text-[12px] font-semibold text-foreground">
+          <h2 className="mono-label text-[13.5px] font-semibold text-foreground">
             {t("Galactic Encyclopedia")}
           </h2>
           <button
@@ -339,7 +479,7 @@ export function SidebarContent() {
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t("Search civilizations, beings, origins...")}
             aria-label={t("Search civilizations, beings, origins")}
-            className="focus-glow h-9 w-full rounded-lg border hairline bg-transparent pl-9 pr-8 text-[13px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
+            className="focus-glow h-9 w-full rounded-lg border hairline bg-transparent pl-9 pr-8 text-[14.5px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
           />
           {search && (
             <button
@@ -354,98 +494,135 @@ export function SidebarContent() {
         </div>
       </div>
 
-      {/* Tabs */}
+      {/* Tabs — three archives: above, between, and beneath */}
       <div
-        className="grid grid-cols-2 gap-1.5 px-4 pt-3"
+        className="grid grid-cols-[1.25fr_1fr_1fr] gap-1 px-3 pt-3"
         role="tablist"
         aria-label={t("Encyclopedia archives")}
       >
-        <button
-          type="button"
-          role="tab"
-          aria-selected={sidebarTab === "civilizations"}
-          onClick={() => setSidebarTab("civilizations")}
-          className={cn(
-            "focus-glow rounded-lg border px-2 py-1.5 text-[10px] font-medium uppercase tracking-[0.12em] transition-all duration-300",
-            sidebarTab === "civilizations"
-              ? "border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--cy)_12%,transparent)] text-foreground glow-sm"
-              : "border-transparent text-muted-foreground hover:text-foreground"
-          )}
-        >
-          {t("Civilizations ({n})", { n: archiveTotals.civilizations })}
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={sidebarTab === "interdim"}
-          onClick={() => setSidebarTab("interdim")}
-          className={cn(
-            "focus-glow rounded-lg border px-2 py-1.5 text-[10px] font-medium uppercase tracking-[0.12em] transition-all duration-300",
-            sidebarTab === "interdim"
-              ? "border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--cy)_12%,transparent)] text-foreground glow-sm"
-              : "border-transparent text-muted-foreground hover:text-foreground"
-          )}
-        >
-          {t("Interdim. ({n})", { n: archiveTotals.interdim })}
-        </button>
-      </div>
-
-      {/* List */}
-      <ul
-        className="nice-scroll mt-3 flex-1 space-y-0.5 overflow-y-auto px-3 pb-3"
-        aria-live="polite"
-      >
-        {entityMatches.length > 0 && (
-          <li className="px-2.5 pb-1 pt-1">
-            <span className="mono-label text-[8.5px] text-muted-foreground/70">
-              {t("Named representatives")}
-            </span>
-          </li>
-        )}
-        {entityMatches.map((e) => (
-          <EntityResultRow
-            key={e.id}
-            entityId={e.id}
-            name={e.name}
-            kind={kind}
-          />
-        ))}
-        {entityMatches.length > 0 && filtered.length > 0 && (
-          <li className="px-2.5 pb-1 pt-2">
-            <span className="mono-label text-[8.5px] text-muted-foreground/70">
-              {t("Families & orders")}
-            </span>
-          </li>
-        )}
-        {entityMatches.length >= 20 && (
-          <li className="px-2.5 pb-1 pt-2">
-            <button
-              type="button"
-              onClick={() => openRegister(kind)}
-              className="focus-glow mono-label text-[9px] text-[var(--cy)] transition-opacity hover:opacity-80"
-            >
-              {t(
-                "Showing first {n} matches — open the full register to search every name →",
-                { n: 20 }
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            role="tab"
+            aria-selected={sidebarTab === tab.id}
+            onClick={() => setSidebarTab(tab.id)}
+            className={cn(
+              "focus-glow rounded-lg border px-1.5 py-1.5 text-center transition-all duration-300",
+              sidebarTab === tab.id
+                ? "border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--cy)_12%,transparent)] glow-sm"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <span
+              className={cn(
+                "block text-[10px] font-semibold uppercase leading-tight tracking-[0.02em] break-words",
+                sidebarTab === tab.id && "text-foreground"
               )}
-            </button>
-          </li>
-        )}
-        {filtered.map((entry) => (
-          <Row key={entry.id} entry={entry} />
+            >
+              {softWrap(tab.label)}
+            </span>
+            <span className="block font-mono text-[9.5px] tabular-nums leading-tight opacity-70">
+              {tab.count}
+            </span>
+          </button>
         ))}
-        {filtered.length === 0 && entityMatches.length === 0 && (
-          <li className="px-2.5 py-3 text-[12px] italic leading-relaxed text-muted-foreground/80">
-            {emptyLabel}
-          </li>
-        )}
-      </ul>
-
-      {/* Bottom cards — Star Play above the Reality dream */}
-      <div className="shrink-0 border-t hairline">
-        <StarPlayButton />
-        <RefineRealityCard />
       </div>
+
+      {/* List — with a visible scroll indicator */}
+      <div className="relative mt-3 min-h-0 flex-1">
+        <ul
+          ref={listRef}
+          onScroll={onScroll}
+          className={cn(
+            "nice-scroll archive-scroll h-full space-y-0.5 overflow-y-auto px-3 pb-3",
+            scrollState.scrollable && !scrollState.atEnd && "is-scrollable"
+          )}
+          aria-live="polite"
+          data-testid="archive-list"
+        >
+          {entityMatches.length > 0 && (
+            <li className="px-2.5 pb-1 pt-1">
+              <span className="mono-label text-[10.5px] text-muted-foreground/70">
+                {t("Named representatives")}
+              </span>
+            </li>
+          )}
+          {entityMatches.map((e) => (
+            <EntityResultRow
+              key={e.id}
+              entityId={e.id}
+              name={e.name}
+              kind={kind}
+            />
+          ))}
+          {entityMatches.length > 0 && filtered.length > 0 && (
+            <li className="px-2.5 pb-1 pt-2">
+              <span className="mono-label text-[10.5px] text-muted-foreground/70">
+                {t("Families & orders")}
+              </span>
+            </li>
+          )}
+          {entityMatches.length >= 20 && (
+            <li className="px-2.5 pb-1 pt-2">
+              <button
+                type="button"
+                onClick={() => openRegister(kind)}
+                className="focus-glow mono-label text-[11.5px] text-[var(--cy)] transition-opacity hover:opacity-80"
+              >
+                {t(
+                  "Showing first {n} matches — open the full register to search every name →",
+                  { n: 20 }
+                )}
+              </button>
+            </li>
+          )}
+
+          {/* the 59 peoples beneath the Earth — each opens its page */}
+          {sidebarTab === "innerearth" &&
+            filteredSpecies.map((s) => <SpeciesRow key={s.id} species={s} />)}
+
+          {sidebarTab !== "innerearth" &&
+            filtered.map((entry) => <Row key={entry.id} entry={entry} />)}
+
+          {sidebarTab === "innerearth"
+            ? filteredSpecies.length === 0 && (
+                <li className="px-2.5 py-3 text-[14px] italic leading-relaxed text-muted-foreground/80">
+                  {emptyLabel}
+                </li>
+              )
+            : filtered.length === 0 &&
+              entityMatches.length === 0 && (
+                <li className="px-2.5 py-3 text-[14px] italic leading-relaxed text-muted-foreground/80">
+                  {emptyLabel}
+                </li>
+              )}
+        </ul>
+
+        {/* the scroll indicator — a soft fade and a breathing chevron */}
+        {scrollState.scrollable && !scrollState.atEnd && (
+          <>
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-[color-mix(in_srgb,var(--background)_88%,transparent)] to-transparent"
+            />
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-x-0 bottom-1.5 flex flex-col items-center gap-0.5"
+              data-testid="scroll-indicator"
+            >
+              <span className="mono-label text-[9.5px] tracking-[0.2em] text-muted-foreground/80">
+                {t("scroll")}
+              </span>
+              <ChevronDown className="scroll-hint size-4 text-[var(--cy)]" />
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* The laboratory shelf — four books standing side by side:
+          Manifest · Mirror · Akashic · Star Play */}
+      <Bookshelf />
     </div>
   );
 }

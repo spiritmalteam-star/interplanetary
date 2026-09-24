@@ -20,7 +20,7 @@ function PillRow({
   const t = useT();
   return (
     <div className="flex w-full flex-col items-center gap-1.5 sm:flex-row sm:justify-center sm:gap-3">
-      <span className="mono-label shrink-0 text-[9px] text-muted-foreground/70">
+      <span className="mono-label shrink-0 text-[11px] text-muted-foreground/70">
         {t(label)}
       </span>
       <div className="flex w-full justify-start overflow-x-auto py-0.5 no-scrollbar sm:min-w-0 sm:flex-1 sm:flex-wrap sm:justify-center sm:overflow-visible">
@@ -34,13 +34,13 @@ function PillRow({
                 onClick={() => onSelect(p.id)}
                 aria-pressed={active}
                 className={cn(
-                  "focus-glow flex items-center gap-1 whitespace-nowrap rounded-full border px-2.5 py-1 text-[11px] transition-all duration-300",
+                  "focus-glow flex items-center gap-1 whitespace-nowrap rounded-full border px-2.5 py-1 text-[13px] transition-all duration-300",
                   active
                     ? "border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--cy)_13%,transparent)] font-semibold text-foreground glow-sm"
                     : "border-transparent text-muted-foreground/80 hover:border-[var(--hairline-hover)] hover:text-foreground"
                 )}
               >
-                <span aria-hidden="true" className="text-[11.5px] leading-none">
+                <span aria-hidden="true" className="text-[13.5px] leading-none">
                   {p.emoji}
                 </span>
                 {t(p.label)}

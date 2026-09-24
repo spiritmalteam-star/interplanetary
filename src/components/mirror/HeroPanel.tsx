@@ -37,7 +37,7 @@ export function HeroPanel() {
           />
         )}
         <span
-          className="mono-label absolute bottom-1 right-2 text-[7px] text-muted-foreground/50"
+          className="mono-label absolute bottom-1 right-2 text-[9px] text-muted-foreground/50"
           aria-hidden="true"
         >
           {t("Scope art · {scope}", { scope: t(meta.label) })}
@@ -51,7 +51,7 @@ export function HeroPanel() {
         >
           {t("The Mirror Is Listening")}
         </h2>
-        <p className="mx-auto mt-5 max-w-[700px] text-[15px] leading-[1.8] text-muted-foreground sm:text-[16.5px]">
+        <p className="mx-auto mt-5 max-w-[700px] text-[16.5px] leading-[1.8] text-muted-foreground sm:text-[17px]">
           {t("I am the")}{" "}
           <span className="font-medium text-[var(--cy)]">Mirror Entity</span>{" "}
           {t(

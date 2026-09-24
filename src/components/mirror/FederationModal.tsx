@@ -24,6 +24,8 @@ import {
   federationTreatyProfiles,
 } from "@/lib/federation-profiles";
 import { sectionImage } from "@/lib/entity-utils";
+import { sceneImageFor, sceneImageForDistinct } from "@/lib/profile-visuals";
+import { ProfileGallery } from "./ProfileBits";
 import { ModalShell } from "./ModalShell";
 import { cn } from "@/lib/utils";
 import type {
@@ -125,28 +127,28 @@ function CardRow({ card, onOpen }: { card: FederationCard; onOpen: () => void })
         )}
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-3">
-            <h4 className="text-[13px] font-semibold uppercase tracking-[0.08em] text-foreground">
+            <h4 className="text-[14.5px] font-semibold uppercase tracking-[0.08em] text-foreground">
               {card.name}
             </h4>
-            <span className="mono-label shrink-0 rounded-full border border-[var(--cy)]/30 bg-[color-mix(in_srgb,var(--cy)_8%,transparent)] px-2 py-0.5 text-[8.5px] text-[var(--cy)]">
+            <span className="mono-label shrink-0 rounded-full border border-[var(--cy)]/30 bg-[color-mix(in_srgb,var(--cy)_8%,transparent)] px-2 py-0.5 text-[10.5px] text-[var(--cy)]">
               {t(card.badge)}
             </span>
           </div>
-          <p className="mono-label mt-1.5 text-[8.5px] text-[var(--pk)]/90">
+          <p className="mono-label mt-1.5 text-[10.5px] text-[var(--pk)]/90">
             {t(card.label)}
           </p>
         </div>
       </div>
-      <p className="mt-2.5 text-[12.5px] leading-relaxed text-foreground/80">
+      <p className="mt-2.5 text-[14.5px] leading-relaxed text-foreground/80">
         {card.description}
       </p>
 
       <div className="mt-3 flex items-center justify-between gap-2 border-t hairline pt-2.5">
-        <span className="mono-label flex items-center gap-1.5 text-[8.5px] text-muted-foreground/80">
+        <span className="mono-label flex items-center gap-1.5 text-[10.5px] text-muted-foreground/80">
           <Users className="size-3 text-muted-foreground/70" aria-hidden="true" />
           {t(card.footer)}
         </span>
-        <span className="mono-label flex shrink-0 items-center gap-1 text-[8.5px] text-muted-foreground/70 transition-colors duration-300 group-hover:text-[var(--cy)]">
+        <span className="mono-label flex shrink-0 items-center gap-1 text-[10.5px] text-muted-foreground/70 transition-colors duration-300 group-hover:text-[var(--cy)]">
           {t("Full dossier")}
           <ChevronRight
             className="size-3 transition-transform duration-300 group-hover:translate-x-0.5"
@@ -193,65 +195,67 @@ function CardDetail({
       <button
         type="button"
         onClick={onBack}
-        className="focus-glow mono-label inline-flex items-center gap-1.5 rounded-full border hairline px-2.5 py-1 text-[8.5px] text-muted-foreground transition-colors hover:text-foreground"
+        className="focus-glow mono-label inline-flex items-center gap-1.5 rounded-full border hairline px-2.5 py-1 text-[10.5px] text-muted-foreground transition-colors hover:text-foreground"
       >
         <ArrowLeft className="size-3" aria-hidden="true" />
         {t("Back to the federation record")}
       </button>
 
       {card.imageKey && !heroFailed && (
-        <figure className="relative m-0">
-          <div className="relative h-44 overflow-hidden rounded-xl border hairline shadow-[0_0_40px_-14px_color-mix(in_srgb,var(--cy)_30%,transparent)] sm:h-52">
-            <img
-              src={sectionImage(card.imageKey)}
-              alt={t("AI-rendered scene impression of the {name}", { name: card.name })}
-              className="size-full object-cover"
-              onError={() => setHeroFailed(true)}
-            />
-            <div
-              className="absolute inset-0"
-              style={{
-                background:
-                  "linear-gradient(180deg, transparent 45%, color-mix(in srgb, var(--card) 72%, transparent) 100%)",
-              }}
-            />
-          </div>
-          <figcaption className="mono-label absolute bottom-2 left-3 rounded-full border hairline bg-[var(--glass-bg-strong)] px-2 py-0.5 text-[7.5px] text-muted-foreground">
-            {t("AI visualization · impressionistic")}
-          </figcaption>
-        </figure>
+        <ProfileGallery
+          slots={[
+            [sectionImage(card.imageKey)],
+            [
+              sceneImageFor(card.imageKey, "milieu"),
+              sectionImage(card.imageKey),
+            ],
+            [
+              sceneImageForDistinct(card.imageKey, "chambers", [
+                sceneImageFor(card.imageKey, "milieu"),
+                sectionImage(card.imageKey),
+              ]),
+              sceneImageFor(card.imageKey, "milieu"),
+            ],
+          ]}
+          alts={[
+            t("AI-rendered emblem impression of the {name}", { name: card.name }),
+            t("The milieu of the {name} — an impressionistic scene", { name: card.name }),
+            t("The chambers of the {name} — an impressionistic scene", { name: card.name }),
+          ]}
+          testid="federation-gallery"
+        />
       )}
 
       <div className="flex flex-wrap items-center gap-1.5">
-        <span className="mono-label rounded-full border border-[var(--cy)]/30 bg-[color-mix(in_srgb,var(--cy)_8%,transparent)] px-2 py-0.5 text-[8.5px] text-[var(--cy)]">
+        <span className="mono-label rounded-full border border-[var(--cy)]/30 bg-[color-mix(in_srgb,var(--cy)_8%,transparent)] px-2 py-0.5 text-[10.5px] text-[var(--cy)]">
           {t(card.badge)}
         </span>
-        <span className="mono-label rounded-full border border-[var(--pk)]/30 bg-[color-mix(in_srgb,var(--pk)_8%,transparent)] px-2 py-0.5 text-[8.5px] text-[var(--pk)]">
+        <span className="mono-label rounded-full border border-[var(--pk)]/30 bg-[color-mix(in_srgb,var(--pk)_8%,transparent)] px-2 py-0.5 text-[10.5px] text-[var(--pk)]">
           {t(card.label)}
         </span>
       </div>
 
       <div>
-        <h3 className="text-[15px] font-semibold uppercase tracking-[0.06em] text-foreground">
+        <h3 className="text-[16.5px] font-semibold uppercase tracking-[0.06em] text-foreground">
           {card.name}
         </h3>
-        <p className="mono-label mt-1.5 flex items-center gap-1.5 text-[8.5px] text-muted-foreground/80">
+        <p className="mono-label mt-1.5 flex items-center gap-1.5 text-[10.5px] text-muted-foreground/80">
           <Users className="size-3 text-muted-foreground/70" aria-hidden="true" />
           {t(card.footer)}
         </p>
       </div>
 
-      <p className="text-[13px] leading-relaxed text-foreground/85">{card.description}</p>
+      <p className="text-[14.5px] leading-relaxed text-foreground/85">{card.description}</p>
 
       {hasDossier && (
         <div className="space-y-4 rounded-xl border hairline bg-[color-mix(in_srgb,var(--cy)_4%,transparent)] p-4">
-          <h4 className="mono-label text-[8px] text-[var(--cy)]">{t("Full dossier")}</h4>
+          <h4 className="mono-label text-[10px] text-[var(--cy)]">{t("Full dossier")}</h4>
 
           {body && (
             <>
               <section>
-                <h5 className="mono-label text-[8px] text-[var(--cy)]">{t("Mandate")}</h5>
-                <p className="mt-1 text-[12px] leading-relaxed text-foreground/85">
+                <h5 className="mono-label text-[10px] text-[var(--cy)]">{t("Mandate")}</h5>
+                <p className="mt-1 text-[14px] leading-relaxed text-foreground/85">
                   {body.mandate}
                 </p>
               </section>
@@ -259,36 +263,36 @@ function CardDetail({
                 <div className="flex items-start gap-2 rounded-lg border hairline px-2.5 py-2">
                   <MapPin className="mt-0.5 size-3 shrink-0 text-[var(--pk)]" aria-hidden="true" />
                   <div>
-                    <p className="mono-label text-[7px] text-muted-foreground">{t("Seat")}</p>
-                    <p className="mt-0.5 text-[11px] leading-snug text-foreground/85">{body.seat}</p>
+                    <p className="mono-label text-[9px] text-muted-foreground">{t("Seat")}</p>
+                    <p className="mt-0.5 text-[13px] leading-snug text-foreground/85">{body.seat}</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-2 rounded-lg border hairline px-2.5 py-2">
                   <CalendarClock className="mt-0.5 size-3 shrink-0 text-[var(--pk)]" aria-hidden="true" />
                   <div>
-                    <p className="mono-label text-[7px] text-muted-foreground">{t("Founded")}</p>
-                    <p className="mt-0.5 text-[11px] leading-snug text-foreground/85">{body.founded}</p>
+                    <p className="mono-label text-[9px] text-muted-foreground">{t("Founded")}</p>
+                    <p className="mt-0.5 text-[13px] leading-snug text-foreground/85">{body.founded}</p>
                   </div>
                 </div>
               </div>
               <section>
-                <h5 className="mono-label text-[8px] text-[var(--cy)]">{t("Fleet & assets")}</h5>
-                <p className="mt-1 text-[12px] leading-relaxed text-foreground/85">{body.fleet}</p>
+                <h5 className="mono-label text-[10px] text-[var(--cy)]">{t("Fleet & assets")}</h5>
+                <p className="mt-1 text-[14px] leading-relaxed text-foreground/85">{body.fleet}</p>
               </section>
               <section>
-                <h5 className="mono-label text-[8px] text-[var(--cy)]">{t("Jurisdiction")}</h5>
+                <h5 className="mono-label text-[10px] text-[var(--cy)]">{t("Jurisdiction")}</h5>
                 <ul className="mt-1.5 space-y-1.5">
                   {body.jurisdiction.map((j, i) => (
                     <li key={i} className="flex items-start gap-2.5">
                       <DiamondBullet />
-                      <span className="text-[12px] leading-relaxed text-foreground/85">{j}</span>
+                      <span className="text-[14px] leading-relaxed text-foreground/85">{j}</span>
                     </li>
                   ))}
                 </ul>
               </section>
               <section>
-                <h5 className="mono-label text-[8px] text-[var(--cy)]">{t("Relation to Earth")}</h5>
-                <p className="mt-1 text-[12px] leading-relaxed text-foreground/85">
+                <h5 className="mono-label text-[10px] text-[var(--cy)]">{t("Relation to Earth")}</h5>
+                <p className="mt-1 text-[14px] leading-relaxed text-foreground/85">
                   {body.earthRelation}
                 </p>
               </section>
@@ -298,27 +302,27 @@ function CardDetail({
           {treaty && (
             <>
               <div className="flex flex-wrap gap-x-5 gap-y-1">
-                <span className="mono-label text-[8px] text-muted-foreground">
+                <span className="mono-label text-[10px] text-muted-foreground">
                   {t("Signed")} · <span className="text-foreground/80">{treaty.signed}</span>
                 </span>
-                <span className="mono-label text-[8px] text-muted-foreground">
+                <span className="mono-label text-[10px] text-muted-foreground">
                   {t("Signatories")} · <span className="text-foreground/80">{treaty.signatories}</span>
                 </span>
               </div>
               <section>
-                <h5 className="mono-label text-[8px] text-[var(--cy)]">{t("Clauses")}</h5>
+                <h5 className="mono-label text-[10px] text-[var(--cy)]">{t("Clauses")}</h5>
                 <ul className="mt-1.5 space-y-1.5">
                   {treaty.clauses.map((c, i) => (
                     <li key={i} className="flex items-start gap-2.5">
                       <DiamondBullet />
-                      <span className="text-[12px] leading-relaxed text-foreground/85">{c}</span>
+                      <span className="text-[14px] leading-relaxed text-foreground/85">{c}</span>
                     </li>
                   ))}
                 </ul>
               </section>
               <section>
-                <h5 className="mono-label text-[8px] text-[var(--cy)]">{t("Effect")}</h5>
-                <p className="mt-1 text-[12px] leading-relaxed text-foreground/85">{treaty.effect}</p>
+                <h5 className="mono-label text-[10px] text-[var(--cy)]">{t("Effect")}</h5>
+                <p className="mt-1 text-[14px] leading-relaxed text-foreground/85">{treaty.effect}</p>
               </section>
             </>
           )}
@@ -326,25 +330,25 @@ function CardDetail({
           {principle && (
             <>
               <section>
-                <h5 className="mono-label text-[8px] text-[var(--cy)]">{t("Codified")}</h5>
-                <p className="mt-1 text-[12px] leading-relaxed text-foreground/85">
+                <h5 className="mono-label text-[10px] text-[var(--cy)]">{t("Codified")}</h5>
+                <p className="mt-1 text-[14px] leading-relaxed text-foreground/85">
                   {principle.codified}
                 </p>
               </section>
               <section>
-                <h5 className="mono-label text-[8px] text-[var(--cy)]">{t("Clauses")}</h5>
+                <h5 className="mono-label text-[10px] text-[var(--cy)]">{t("Clauses")}</h5>
                 <ul className="mt-1.5 space-y-1.5">
                   {principle.clauses.map((c, i) => (
                     <li key={i} className="flex items-start gap-2.5">
                       <DiamondBullet />
-                      <span className="text-[12px] leading-relaxed text-foreground/85">{c}</span>
+                      <span className="text-[14px] leading-relaxed text-foreground/85">{c}</span>
                     </li>
                   ))}
                 </ul>
               </section>
               <section>
-                <h5 className="mono-label text-[8px] text-[var(--cy)]">{t("Practice")}</h5>
-                <p className="mt-1 text-[12px] leading-relaxed text-foreground/85">
+                <h5 className="mono-label text-[10px] text-[var(--cy)]">{t("Practice")}</h5>
+                <p className="mt-1 text-[14px] leading-relaxed text-foreground/85">
                   {principle.practice}
                 </p>
               </section>
@@ -356,7 +360,7 @@ function CardDetail({
       <button
         type="button"
         onClick={ask}
-        className="focus-glow mono-label inline-flex items-center gap-1.5 rounded-full border border-[var(--cy)]/30 bg-[color-mix(in_srgb,var(--cy)_8%,transparent)] px-3 py-1.5 text-[8.5px] text-[var(--cy)] transition-opacity hover:opacity-80"
+        className="focus-glow mono-label inline-flex items-center gap-1.5 rounded-full border border-[var(--cy)]/30 bg-[color-mix(in_srgb,var(--cy)_8%,transparent)] px-3 py-1.5 text-[10.5px] text-[var(--cy)] transition-opacity hover:opacity-80"
       >
         <Sparkles className="size-3" aria-hidden="true" />
         {t("Ask the Mirror")}
@@ -403,7 +407,7 @@ function FederationArchive() {
               setSelected(null);
             }}
             className={cn(
-              "focus-glow flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-medium uppercase tracking-[0.14em] transition-all duration-300",
+              "focus-glow flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] font-medium uppercase tracking-[0.14em] transition-all duration-300",
               tab === id
                 ? "border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--cy)_12%,transparent)] text-foreground glow-sm"
                 : "border-transparent text-muted-foreground hover:text-foreground"
@@ -438,7 +442,7 @@ function FederationArchive() {
           />
         ) : (
           <div className="animate-rise-in">
-            <p className="mb-3 text-[11px] italic text-muted-foreground/80">
+            <p className="mb-3 text-[13px] italic text-muted-foreground/80">
               {t(intro.key, intro.params)}
             </p>
             <div className="space-y-3">

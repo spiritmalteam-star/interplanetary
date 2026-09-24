@@ -189,7 +189,14 @@ export interface DrawnCard {
   position: string;
 }
 
-/** In-memory shuffle: Fisher–Yates over indices, nothing persisted. */
+/**
+ * In-memory shuffle: Fisher–Yates over indices, nothing persisted.
+ *
+ * THE SPREAD GUARD — no two cards of one draw may ever share a suit
+ * (so no two messages are woven from the same pair of threads) and no
+ * two may share a visualization (image). Every spread of three is
+ * therefore three different messages wearing three different paintings.
+ */
 export function drawStarPlayCards(count = 3): DrawnCard[] {
   const total = STAR_PLAY_CARDS.length;
   const indices = Array.from({ length: total }, (_, i) => i);
@@ -197,7 +204,30 @@ export function drawStarPlayCards(count = 3): DrawnCard[] {
     const j = Math.floor(Math.random() * (i + 1));
     [indices[i], indices[j]] = [indices[j], indices[i]];
   }
-  return indices.slice(0, count).map((idx, i) => ({
+
+  const picked: number[] = [];
+  const suits = new Set<string>();
+  const images = new Set<string>();
+  const messages = new Set<string>();
+  for (const idx of indices) {
+    if (picked.length >= count) break;
+    const card = STAR_PLAY_CARDS[idx];
+    if (suits.has(card.suit)) continue;
+    if (images.has(card.image)) continue;
+    if (messages.has(card.message)) continue;
+    picked.push(idx);
+    suits.add(card.suit);
+    images.add(card.image);
+    messages.add(card.message);
+  }
+  /* The guard above is always satisfiable for three of 1,443 — the
+     fallback fill exists only for pathological tiny counts. */
+  for (const idx of indices) {
+    if (picked.length >= count) break;
+    if (!picked.includes(idx)) picked.push(idx);
+  }
+
+  return picked.slice(0, count).map((idx, i) => ({
     card: STAR_PLAY_CARDS[idx],
     position: STAR_PLAY_POSITIONS[i % STAR_PLAY_POSITIONS.length],
   }));

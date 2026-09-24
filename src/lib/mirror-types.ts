@@ -3,7 +3,7 @@
 /* ------------------------------------------------------------------ */
 
 export type Mode = "interplanetary" | "science" | "quantum" | "healing";
-export type SidebarTab = "civilizations" | "interdim";
+export type SidebarTab = "civilizations" | "interdim" | "innerearth";
 
 /** A scope determines the visual theme of the chat/transmission frame. */
 export type Scope = Mode | "manifesting";

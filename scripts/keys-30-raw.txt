@@ -1,0 +1,33 @@
+NEW: Zoom the image
+NEW: Close the enlarged image
+NEW: Enlarged image
+NEW: Species dossier
+NEW: A people of the Inner Earth register
+NEW: Impression of {name}
+NEW: The Inner Earth realms
+NEW: A hall scene from the deep archive
+NEW: At a glance
+NEW: People
+NEW: Register
+NEW: 59 peoples beneath the surface
+NEW: Inner Earth register — the deep halls of the archive
+NEW: Open the dossier of {name}
+NEW: dossier
+NEW: The milieu of {name} — an impressionistic scene
+NEW: The homelands of {name} — an impressionistic scene
+NEW: The {name} — its own painted impression
+NEW: The craft context of the {name}
+NEW: The {family} family portrait
+NEW: Registry
+NEW: Family
+NEW: Classification
+NEW: Craft form
+NEW: Field tuning
+NEW: Instrument readings
+NEW: What it is
+NEW: AI-rendered emblem impression of the {name}
+NEW: The milieu of the {name} — an impressionistic scene
+NEW: The chambers of the {name} — an impressionistic scene
+NEW: Impression of the {name} at work
+NEW: The {domain} domain
+NEW: The workplace of the {name} — an impressionistic scene
