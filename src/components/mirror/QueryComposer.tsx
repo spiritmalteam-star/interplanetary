@@ -1,10 +1,19 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Send } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { useIsMobile } from "@/hooks/use-mobile";
+import {
+  AttachmentChips,
+  ChatInputExtras,
+} from "@/components/mirror/ChatInputExtras";
+import {
+  hasPendingAttachments,
+  type ChatAttachment,
+} from "@/components/mirror/attachments";
+import type { LiveScopeKey } from "@/lib/live-scopes";
 
 export function QueryComposer() {
   const activeMode = useMirror((s) => s.activeMode);
@@ -16,6 +25,7 @@ export function QueryComposer() {
   const t = useT();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const isMobile = useIsMobile();
+  const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
 
   // Auto-resize
   useEffect(() => {
@@ -32,11 +42,16 @@ export function QueryComposer() {
     }
   }, [composerFocusNonce]);
 
-  const canSend = draft.trim().length > 0 && status !== "loading";
+  const canSend =
+    draft.trim().length > 0 &&
+    status !== "loading" &&
+    !hasPendingAttachments(attachments);
 
   const submit = () => {
     if (!canSend) return;
-    void askMirror(draft);
+    const carried = attachments.length > 0 ? attachments : undefined;
+    setAttachments([]);
+    void askMirror(draft, carried);
   };
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -59,6 +74,13 @@ export function QueryComposer() {
         }}
         className="mx-auto w-full max-w-[760px]"
       >
+        <AttachmentChips
+          attachments={attachments}
+          onRemove={(id) =>
+            setAttachments((prev) => prev.filter((a) => a.id !== id))
+          }
+          testId="composer-attachments"
+        />
         <div
           className={`glass-strong flex items-end gap-2.5 rounded-[22px] p-2 pl-4 transition-all duration-300 focus-within:-translate-y-px focus-within:border-[var(--hairline-active)] focus-within:glow ${
             status === "loading" ? "opacity-80" : ""
@@ -82,6 +104,16 @@ export function QueryComposer() {
                   )
             }
             className="nice-scroll max-h-[148px] flex-1 resize-none bg-transparent py-2.5 text-[15.5px] leading-relaxed text-foreground placeholder:text-muted-foreground/60 focus:outline-none sm:text-[16px]"
+          />
+          <ChatInputExtras
+            scope={activeMode as LiveScopeKey}
+            size="sm"
+            disabled={status === "loading"}
+            onTranscript={(text) =>
+              setDraft(draft ? `${draft} ${text}` : text)
+            }
+            attachments={attachments}
+            onAttachmentsChange={setAttachments}
           />
           <button
             type="submit"

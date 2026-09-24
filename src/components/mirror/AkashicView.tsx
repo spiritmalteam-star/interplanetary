@@ -19,6 +19,12 @@ import { toast } from "sonner";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import { AttachmentChips, ChatInputExtras } from "./ChatInputExtras";
+import {
+  attachmentsToPayload,
+  hasPendingAttachments,
+  type ChatAttachment,
+} from "./attachments";
 
 interface AkashicRecord {
   title: string;
@@ -48,6 +54,7 @@ export function AkashicView() {
   const [error, setError] = useState(false);
   const [draft, setDraft] = useState("");
   const [copied, setCopied] = useState(false);
+  const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
 
   const seekingRef = useRef(false);
   /* the last entrance kinds the Librarian used — never the same door twice */
@@ -56,7 +63,11 @@ export function AkashicView() {
   const [replyAttempt, setReplyAttempt] = useState(false);
 
   const seek = useCallback(
-    async (resonance: string | null, asReply: boolean) => {
+    async (
+      resonance: string | null,
+      asReply: boolean,
+      carried?: ChatAttachment[]
+    ) => {
       if (seekingRef.current) return;
       seekingRef.current = true;
       setReplyAttempt(asReply);
@@ -64,6 +75,7 @@ export function AkashicView() {
       setError(false);
 
       try {
+        const payload = carried ? attachmentsToPayload(carried) : null;
         const res = await fetch("/api/akashic", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -80,6 +92,7 @@ export function AkashicView() {
                   }
                 : undefined,
             recentEntrances: recentEntrancesRef.current,
+            ...(payload ?? {}),
           }),
         });
         const data = (await res.json()) as AkashicResponse;
@@ -212,8 +225,11 @@ export function AkashicView() {
     e.preventDefault();
     if (seeking) return;
     const v = draft.trim();
+    if (!v && attachments.length === 0) return;
+    const carried = attachments.length > 0 ? attachments : undefined;
     setDraft("");
-    void seek(v || null, Boolean(record));
+    setAttachments([]);
+    void seek(v || null, Boolean(record), carried);
   };
 
   const listening = voiceState === "playing";
@@ -541,9 +557,18 @@ export function AkashicView() {
       <div className="relative z-20 border-t border-[color-mix(in_srgb,var(--gd)_20%,transparent)] bg-[color-mix(in_srgb,#0c0806_66%,transparent)] px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-md sm:px-5">
         <form
           onSubmit={send}
-          className="mx-auto flex w-full max-w-[680px] items-center gap-2"
+          className="mx-auto w-full max-w-[680px]"
           data-testid="akashic-composer"
         >
+          <AttachmentChips
+            attachments={attachments}
+            onRemove={(id) =>
+              setAttachments((prev) => prev.filter((a) => a.id !== id))
+            }
+            accentVar="var(--gd)"
+            testId="akashic-attachments"
+          />
+          <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => void seek(null, false)}
@@ -574,15 +599,31 @@ export function AkashicView() {
             className="focus-glow h-11 min-w-0 flex-1 rounded-full border border-[color-mix(in_srgb,var(--gd)_26%,transparent)] bg-[color-mix(in_srgb,#1a1108_45%,transparent)] px-4 text-[14.5px] text-foreground placeholder:text-muted-foreground/60 transition-all duration-300 focus:border-[color-mix(in_srgb,var(--gd)_50%,transparent)] focus:shadow-[0_0_28px_-10px_color-mix(in_srgb,var(--gd)_70%,transparent)] focus:outline-none"
           />
 
+          <ChatInputExtras
+            scope="akashic"
+            accentVar="var(--gd)"
+            disabled={seeking}
+            onTranscript={(text) =>
+              setDraft((prev) => (prev ? `${prev} ${text}` : text))
+            }
+            attachments={attachments}
+            onAttachmentsChange={setAttachments}
+          />
+
           <button
             type="submit"
-            disabled={seeking}
+            disabled={
+              seeking ||
+              (!draft.trim() && attachments.length === 0) ||
+              hasPendingAttachments(attachments)
+            }
             aria-label={replying ? t("Send the reply") : t("Receive by resonance")}
             data-testid="akashic-seek"
             className="akashic-btn focus-glow flex size-11 shrink-0 items-center justify-center rounded-full text-foreground transition-all duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-35"
           >
             <Feather className="size-4" aria-hidden="true" />
           </button>
+          </div>
         </form>
         <p className="mono-label mt-2.5 text-center text-[9px] uppercase tracking-[0.26em] text-muted-foreground/50">
           ✦ {t("received by resonance — the ancient one remembers")} ✦

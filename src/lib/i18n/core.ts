@@ -89,7 +89,14 @@ export function translate(
 /*  Transcript voices — warm documentary narration                     */
 /* ------------------------------------------------------------------ */
 
-export type VoiceId = "aurora" | "sage" | "regent" | "harbor" | "nova" | "pixie";
+export type VoiceId =
+  | "aurora"
+  | "sage"
+  | "regent"
+  | "harbor"
+  | "nova"
+  | "pixie"
+  | "lumen";
 
 export interface VoiceMeta {
   id: VoiceId;
@@ -135,6 +142,12 @@ export const VOICES: VoiceMeta[] = [
     name: "Pixie",
     character: "Bright, luminous spirit",
     engine: "chuichui",
+  },
+  {
+    id: "lumen",
+    name: "Lumen",
+    character: "Clear, precise, crystalline signal",
+    engine: "kazi",
   },
 ];
 

@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import ZAI from "z-ai-web-dev-sdk";
+import {
+  describeImage,
+  documentBlock,
+  imageBlock,
+  parseAttachments,
+} from "@/lib/server/attachments";
 
 /* ------------------------------------------------------------------ */
 /*  POST /api/akashic — the Akashic Library.                          */
@@ -272,6 +278,29 @@ export async function POST(req: NextRequest) {
 
     const zai = await ZAI.create();
 
+    /* Objects placed on the desk — the visitor may lay one image (seen
+       with the vision field) and up to three extracted documents
+       beside the record, and the Librarian reads them as part of the
+       resonance they carried in. */
+    const { imageDataUrl, documents } = parseAttachments(body);
+    const deskBlocks: string[] = [];
+    if (imageDataUrl) {
+      const block = imageBlock(await describeImage(zai, imageDataUrl));
+      if (block)
+        deskBlocks.push(
+          `Beside the resonance, the visitor set a photograph (or image) on the desk. ${block}`
+        );
+    }
+    const docBlock = documentBlock(documents);
+    if (docBlock)
+      deskBlocks.push(
+        `The visitor also set down old papers — documents whose full extracted text follows. Read them completely; they are part of what they carried in.\n\n${docBlock}`
+      );
+    const deskLine =
+      deskBlocks.length > 0
+        ? `\n\n${deskBlocks.join("\n\n")}\n\nWeave what these objects show into the record naturally — they came to the desk for a reason.`
+        : "";
+
     let completion;
     if (isContinuation) {
       const replyLine = resonance
@@ -292,7 +321,7 @@ ${thread?.seal}
 
 ---
 
-${replyLine} Write the next page of this same record now, in your hand.${languageLine}`,
+${replyLine} Write the next page of this same record now, in your hand.${deskLine}${languageLine}`,
           },
           {
             role: "user",
@@ -310,7 +339,7 @@ ${replyLine} Write the next page of this same record now, in your hand.${languag
           { role: "system", content: SYSTEM_PROMPT },
           {
             role: "user",
-            content: `${resonanceLine}\n\nDraw out the one record now, and read it in your hand.${languageLine}`,
+            content: `${resonanceLine}${deskLine}\n\nDraw out the one record now, and read it in your hand.${languageLine}`,
           },
           {
             role: "user",

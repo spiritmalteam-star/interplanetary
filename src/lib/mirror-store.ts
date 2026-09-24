@@ -17,6 +17,10 @@ import {
   type LanguageCode,
   type VoiceId,
 } from "@/lib/i18n/core";
+import {
+  attachmentsToPayload,
+  type ChatAttachment,
+} from "@/components/mirror/attachments";
 
 export type ModalState =
   | { type: "federation" }
@@ -45,6 +49,8 @@ export interface ChatMessage {
   text: string;
   classification: string;
   createdAt: string;
+  /** What traveled with the question — one image, up to three documents. */
+  attachments?: { images: number; docNames: string[] };
 }
 
 export interface ScopeSession {
@@ -87,6 +93,7 @@ export interface OsMessage {
   id: string;
   role: "visitor" | "os";
   text: string;
+  attachments?: { images: number; docNames: string[] };
 }
 
 interface MirrorState {
@@ -168,7 +175,10 @@ interface MirrorState {
   focusComposer: () => void;
   returnToObservatory: () => void;
   clearChannel: (mode?: Mode) => void;
-  askMirror: (question: string) => Promise<void>;
+  askMirror: (
+    question: string,
+    attachments?: ChatAttachment[]
+  ) => Promise<void>;
   /** Full recalibration: wipe every scope channel, the lab and search. */
   resetField: () => void;
 
@@ -190,7 +200,7 @@ interface MirrorState {
 
   /* Mirror Entity OS — direct chat */
   setOsDraft: (v: string) => void;
-  askOS: (question: string) => Promise<void>;
+  askOS: (question: string, attachments?: ChatAttachment[]) => Promise<void>;
 }
 
 const defaultTabForMode = (mode: Mode): SidebarTab =>
@@ -367,7 +377,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       };
     }),
 
-  askMirror: async (question) => {
+  askMirror: async (question, attachments) => {
     const query = question.trim();
     const mode = get().activeMode;
     const session = get().sessions[mode];
@@ -395,6 +405,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         q: m.query,
         a: m.text,
       }));
+      const payload = attachments ? attachmentsToPayload(attachments) : null;
       const res = await fetch("/api/transmission", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -405,6 +416,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
           direction: get().activeDirection,
           language: get().language,
           history,
+          ...(payload ?? {}),
         }),
       });
       const data = await res.json().catch(() => null);
@@ -431,6 +443,17 @@ export const useMirror = create<MirrorState>()((set, get) => ({
                 text: data.transmission,
                 classification: data.classification,
                 createdAt: data.createdAt ?? new Date().toISOString(),
+                ...(attachments
+                  ? {
+                      attachments: {
+                        images: attachments.filter((a) => a.kind === "image")
+                          .length,
+                        docNames: attachments
+                          .filter((a) => a.kind === "document")
+                          .map((a) => a.name),
+                      },
+                    }
+                  : {}),
               },
             ],
           },
@@ -489,7 +512,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
 
   setOsDraft: (v) => set({ osDraft: v }),
 
-  askOS: async (question) => {
+  askOS: async (question, attachments) => {
     const query = question.trim();
     if (!query || get().osStatus === "loading") return;
 
@@ -500,7 +523,21 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       osDraft: "",
       osMessages: [
         ...s.osMessages,
-        { id: visitorId, role: "visitor" as const, text: query },
+        {
+          id: visitorId,
+          role: "visitor" as const,
+          text: query,
+          ...(attachments
+            ? {
+                attachments: {
+                  images: attachments.filter((a) => a.kind === "image").length,
+                  docNames: attachments
+                    .filter((a) => a.kind === "document")
+                    .map((a) => a.name),
+                },
+              }
+            : {}),
+        },
       ],
     }));
 
@@ -510,6 +547,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         .slice(-10)
         .map((m) => ({ role: m.role, text: m.text }));
 
+      const payload = attachments ? attachmentsToPayload(attachments) : null;
       const res = await fetch("/api/mirror-os", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -517,6 +555,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
           query,
           history,
           language: get().language,
+          ...(payload ?? {}),
         }),
       });
       const data = await res.json().catch(() => null);

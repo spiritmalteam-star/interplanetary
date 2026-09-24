@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import ZAI from "z-ai-web-dev-sdk";
+import {
+  describeImage,
+  documentBlock,
+  imageBlock,
+  parseAttachments,
+} from "@/lib/server/attachments";
 
 const CLASSIFICATIONS = [
   "DOCUMENTED_SCIENCE",
@@ -322,6 +328,16 @@ export async function POST(req: NextRequest) {
         : `\n\nLANGUAGE (CRITICAL): the visitor reads in ${languageName}. Write EVERY word of the transmission — the luminous opening line, every body paragraph and the closing signature line — in fluent, natural ${languageName}. Keep the classification value in English as listed. Keep the name "The Mirror" in the signature as "The Mirror".`;
 
     const userLines = fusionLine ? [query.trim(), "", fusionLine] : [query.trim()];
+
+    /* Attachments — one image seen with the vision field, up to three
+       documents already extracted — folded faithfully into the question. */
+    const { imageDataUrl, documents } = parseAttachments(body);
+    if (imageDataUrl) {
+      const block = imageBlock(await describeImage(zai, imageDataUrl));
+      if (block) userLines.push("", block);
+    }
+    const docBlock = documentBlock(documents);
+    if (docBlock) userLines.push("", docBlock);
 
     const completion = await zai.chat.completions.create({
       messages: [

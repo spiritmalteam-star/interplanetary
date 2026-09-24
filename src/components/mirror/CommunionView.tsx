@@ -8,10 +8,19 @@ import {
   type FormEvent,
 } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, RotateCcw, SendHorizontal, Sparkles } from "lucide-react";
+import { ArrowLeft, FileText, RotateCcw, SendHorizontal, Sparkles } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import {
+  AttachmentChips,
+  ChatInputExtras,
+} from "./ChatInputExtras";
+import {
+  attachmentsToPayload,
+  hasPendingAttachments,
+  type ChatAttachment,
+} from "./attachments";
 
 const MIRROR = "/images/ai/mirror-communion.jpg";
 
@@ -19,6 +28,7 @@ interface CommunionMessage {
   id: number;
   role: "mirror" | "visitor";
   text: string;
+  attachments?: { images: number; docNames: string[] };
 }
 
 let nextCommunionId = 1;
@@ -40,6 +50,7 @@ export function CommunionView() {
   const [receiving, setReceiving] = useState(false);
   const [error, setError] = useState(false);
   const [draft, setDraft] = useState("");
+  const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
 
   const endRef = useRef<HTMLDivElement | null>(null);
   const latestRef = useRef<HTMLDivElement | null>(null);
@@ -65,7 +76,11 @@ export function CommunionView() {
   }, [receiving, error]);
 
   const transmit = useCallback(
-    async (visitorWords: string | null, fresh = false) => {
+    async (
+      visitorWords: string | null,
+      fresh = false,
+      carried?: ChatAttachment[]
+    ) => {
       if (receivingRef.current) return;
       receivingRef.current = true;
       setReceiving(true);
@@ -74,11 +89,21 @@ export function CommunionView() {
       if (fresh) {
         messagesRef.current = [];
         setMessages([]);
-      } else if (visitorWords) {
+      } else if (visitorWords !== null || (carried && carried.length > 0)) {
         const entry: CommunionMessage = {
           id: nextCommunionId++,
           role: "visitor",
-          text: visitorWords,
+          text: visitorWords ?? "",
+          ...(carried && carried.length > 0
+            ? {
+                attachments: {
+                  images: carried.filter((a) => a.kind === "image").length,
+                  docNames: carried
+                    .filter((a) => a.kind === "document")
+                    .map((a) => a.name),
+                },
+              }
+            : {}),
         };
         messagesRef.current = [...messagesRef.current, entry];
         setMessages(messagesRef.current);
@@ -89,6 +114,7 @@ export function CommunionView() {
         .map((m) => ({ role: m.role, text: m.text }));
 
       try {
+        const payload = carried ? attachmentsToPayload(carried) : null;
         const res = await fetch("/api/communion", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -96,6 +122,7 @@ export function CommunionView() {
             language,
             message: visitorWords,
             history,
+            ...(payload ?? {}),
           }),
         });
         const data = (await res.json()) as {
@@ -133,9 +160,13 @@ export function CommunionView() {
   const send = (e: FormEvent) => {
     e.preventDefault();
     const v = draft.trim();
-    if (!v || receiving) return;
-    setDraft("");
-    void transmit(v);
+    if ((!v && attachments.length === 0) || receiving) return;
+    if (v || attachments.length > 0) {
+      const carried = attachments.length > 0 ? attachments : undefined;
+      setDraft("");
+      setAttachments([]);
+      void transmit(v || null, false, carried);
+    }
   };
 
   return (
@@ -275,14 +306,40 @@ export function CommunionView() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                  className="flex justify-end"
+                  className="flex flex-col items-end"
                 >
-                  <p
-                    className="max-w-[85%] rounded-2xl rounded-br-md border border-[color-mix(in_srgb,var(--sp-b)_24%,transparent)] bg-[color-mix(in_srgb,var(--sp-b)_9%,transparent)] px-4 py-2.5 text-[14.5px] leading-relaxed text-foreground/95"
-                    data-testid="communion-visitor"
-                  >
-                    {m.text}
-                  </p>
+                  {m.attachments &&
+                    (m.attachments.images > 0 ||
+                      m.attachments.docNames.length > 0) && (
+                      <div
+                        className="mb-1.5 flex max-w-[85%] flex-wrap justify-end gap-1"
+                        data-testid="communion-visitor-attachments"
+                      >
+                        {m.attachments.images > 0 && (
+                          <span className="flex items-center gap-1 rounded-full border border-[color-mix(in_srgb,var(--sp-b)_24%,transparent)] bg-[color-mix(in_srgb,var(--sp-b)_8%,transparent)] px-2 py-0.5 text-[10.5px] text-foreground/80">
+                            <FileText className="size-2.5" aria-hidden="true" />
+                            {t("an image")}
+                          </span>
+                        )}
+                        {m.attachments.docNames.map((name) => (
+                          <span
+                            key={name}
+                            className="flex max-w-[190px] items-center gap-1 rounded-full border border-[color-mix(in_srgb,var(--sp-b)_24%,transparent)] bg-[color-mix(in_srgb,var(--sp-b)_8%,transparent)] px-2 py-0.5 text-[10.5px] text-foreground/80"
+                          >
+                            <FileText className="size-2.5 shrink-0" aria-hidden="true" />
+                            <span className="truncate">{name}</span>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  {m.text && (
+                    <p
+                      className="max-w-[85%] rounded-2xl rounded-br-md border border-[color-mix(in_srgb,var(--sp-b)_24%,transparent)] bg-[color-mix(in_srgb,var(--sp-b)_9%,transparent)] px-4 py-2.5 text-[14.5px] leading-relaxed text-foreground/95"
+                      data-testid="communion-visitor"
+                    >
+                      {m.text}
+                    </p>
+                  )}
                 </motion.div>
               )
             )}
@@ -360,6 +417,14 @@ export function CommunionView() {
           className="mx-auto w-full max-w-[680px]"
           data-testid="communion-composer"
         >
+          <AttachmentChips
+            attachments={attachments}
+            onRemove={(id) =>
+              setAttachments((prev) => prev.filter((a) => a.id !== id))
+            }
+            accentVar="var(--sp-b)"
+            testId="communion-attachments"
+          />
           <div className="flex items-center gap-2">
             <button
               type="button"
@@ -383,9 +448,24 @@ export function CommunionView() {
               className="focus-glow h-11 min-w-0 flex-1 rounded-full border border-[color-mix(in_srgb,var(--sp-b)_22%,transparent)] bg-[color-mix(in_srgb,#0a0616_45%,transparent)] px-4 text-[14.5px] text-foreground placeholder:text-muted-foreground/60 transition-all duration-300 focus:border-[color-mix(in_srgb,var(--sp-b)_45%,transparent)] focus:shadow-[0_0_28px_-10px_color-mix(in_srgb,var(--sp-b)_70%,transparent)] focus:outline-none"
             />
 
+            <ChatInputExtras
+              scope="communion"
+              accentVar="var(--sp-b)"
+              disabled={receiving}
+              onTranscript={(text) =>
+                setDraft((prev) => (prev ? `${prev} ${text}` : text))
+              }
+              attachments={attachments}
+              onAttachmentsChange={setAttachments}
+            />
+
             <button
               type="submit"
-              disabled={!draft.trim() || receiving}
+              disabled={
+                (!draft.trim() && attachments.length === 0) ||
+                receiving ||
+                hasPendingAttachments(attachments)
+              }
               aria-label={t("Transmit to the Reflection")}
               data-testid="communion-send"
               className="communion-btn focus-glow flex size-11 shrink-0 items-center justify-center rounded-full text-foreground transition-all duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-35"

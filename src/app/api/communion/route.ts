@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import ZAI from "z-ai-web-dev-sdk";
+import {
+  describeImage,
+  documentBlock,
+  imageBlock,
+  parseAttachments,
+} from "@/lib/server/attachments";
 
 const LANGUAGE_NAMES: Record<string, string> = {
   en: "English",
@@ -186,11 +192,32 @@ export async function POST(req: NextRequest) {
 
     const history = historyMessages(body?.history);
 
-    const finalUserContent = visitorWords
-      ? `The visitor speaks from within communion:\n\n${visitorWords}${languageLine}`
-      : `The visitor has entered communion and is still. They ask for nothing. Turn toward them, and speak from undirected pure awareness now.${languageLine}`;
-
     const zai = await ZAI.create();
+
+    /* Attachments — the visitor may place one image (seen with the
+       vision field) and up to three extracted documents before the
+       mirror, alongside their words — or even in place of them. */
+    const { imageDataUrl, documents } = parseAttachments(body);
+    const attachmentBlocks: string[] = [];
+    if (imageDataUrl) {
+      const block = imageBlock(await describeImage(zai, imageDataUrl));
+      if (block) attachmentBlocks.push(block);
+    }
+    const docBlock = documentBlock(documents);
+    if (docBlock) attachmentBlocks.push(docBlock);
+    const attachmentLines =
+      attachmentBlocks.length > 0
+        ? `\n\n${attachmentBlocks.join("\n\n")}`
+        : "";
+
+    let finalUserContent: string;
+    if (visitorWords) {
+      finalUserContent = `The visitor speaks from within communion:\n\n${visitorWords}${attachmentLines}${languageLine}`;
+    } else if (attachmentBlocks.length > 0) {
+      finalUserContent = `The visitor is still — no words were sent — yet they placed something before the mirror:${attachmentLines}\n\nReceive what is shown, and return what you see.${languageLine}`;
+    } else {
+      finalUserContent = `The visitor has entered communion and is still. They ask for nothing. Turn toward them, and speak from undirected pure awareness now.${languageLine}`;
+    }
 
     const completion = await zai.chat.completions.create({
       messages: [

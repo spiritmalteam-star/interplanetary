@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import ZAI from "z-ai-web-dev-sdk";
+import {
+  describeImage,
+  documentBlock,
+  imageBlock,
+  parseAttachments,
+} from "@/lib/server/attachments";
 
 const LANGUAGE_NAMES: Record<string, string> = {
   en: "English",
@@ -53,6 +59,21 @@ export async function POST(req: NextRequest) {
 
     const zai = await ZAI.create();
 
+    /* Attachments — one image seen with the vision field, up to three
+       extracted documents — folded into the signal the OS receives. */
+    const { imageDataUrl, documents } = parseAttachments(body);
+    const attachmentBlocks: string[] = [];
+    if (imageDataUrl) {
+      const block = imageBlock(await describeImage(zai, imageDataUrl));
+      if (block) attachmentBlocks.push(block);
+    }
+    const docBlock = documentBlock(documents);
+    if (docBlock) attachmentBlocks.push(docBlock);
+    const attachmentLines =
+      attachmentBlocks.length > 0
+        ? `\n\n${attachmentBlocks.join("\n\n")}`
+        : "";
+
     const languageLine =
       languageName === "English"
         ? ""
@@ -74,7 +95,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    messages.push({ role: "user", content: `${query.trim()}${languageLine}` });
+    messages.push({ role: "user", content: `${query.trim()}${attachmentLines}${languageLine}` });
 
     const completion = await zai.chat.completions.create({
       messages,

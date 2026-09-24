@@ -7,6 +7,11 @@ import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { osOpeners } from "@/lib/data/mirroros";
 import { ListenButton } from "./ListenButton";
+import { AttachmentChips, ChatInputExtras } from "./ChatInputExtras";
+import {
+  hasPendingAttachments,
+  type ChatAttachment,
+} from "./attachments";
 import { cn } from "@/lib/utils";
 
 /** Openers visible at once (wrap-around window). */
@@ -116,19 +121,40 @@ function OsExchange({
   role,
   text,
   animate,
+  attachments,
 }: {
   role: "visitor" | "os";
   text: string;
   animate: boolean;
+  attachments?: { images: number; docNames: string[] };
 }) {
+  const t = useT();
   if (role === "visitor") {
     return (
       <motion.div
         initial={{ opacity: animate ? 0 : 1, y: animate ? 8 : 0 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: animate ? 0.4 : 0, ease: [0.22, 1, 0.36, 1] }}
-        className="flex justify-end"
+        className="flex flex-col items-end"
       >
+        {attachments &&
+          (attachments.images > 0 || attachments.docNames.length > 0) && (
+            <div className="mb-1.5 flex max-w-[78%] flex-wrap justify-end gap-1">
+              {attachments.images > 0 && (
+                <span className="mono-label flex items-center gap-1 rounded-full border border-[color-mix(in_srgb,var(--scope-a)_24%,transparent)] px-2 py-0.5 text-[9.5px] text-muted-foreground">
+                  {t("an image")}
+                </span>
+              )}
+              {attachments.docNames.map((name) => (
+                <span
+                  key={name}
+                  className="mono-label flex max-w-[200px] items-center gap-1 rounded-full border border-[color-mix(in_srgb,var(--scope-a)_24%,transparent)] px-2 py-0.5 text-[9.5px] text-muted-foreground"
+                >
+                  <span className="truncate">{name}</span>
+                </span>
+              ))}
+            </div>
+          )}
         <p className="max-w-[78%] rounded-2xl rounded-br-md border border-[color-mix(in_srgb,var(--scope-a)_24%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_9%,transparent)] px-4 py-2.5 text-[15px] leading-relaxed text-foreground/90">
           {text}
         </p>
@@ -181,6 +207,7 @@ export function MirrorOSChat() {
   const setOsDraft = useMirror((s) => s.setOsDraft);
   const askOS = useMirror((s) => s.askOS);
   const t = useT();
+  const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const latestRef = useRef<HTMLDivElement | null>(null);
@@ -218,11 +245,16 @@ export function MirrorOSChat() {
     el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
   }, [osDraft]);
 
-  const canSend = osDraft.trim().length > 0 && osStatus !== "loading";
+  const canSend =
+    osDraft.trim().length > 0 &&
+    osStatus !== "loading" &&
+    !hasPendingAttachments(attachments);
 
   const submit = () => {
     if (!canSend) return;
-    void askOS(osDraft);
+    const carried = attachments.length > 0 ? attachments : undefined;
+    setAttachments([]);
+    void askOS(osDraft, carried);
   };
 
   return (
@@ -289,6 +321,7 @@ export function MirrorOSChat() {
                   role={m.role}
                   text={m.text}
                   animate={i === osMessages.length - 1 && osStatus !== "loading"}
+                  attachments={m.attachments}
                 />
               </div>
             ))}
@@ -323,8 +356,17 @@ export function MirrorOSChat() {
             e.preventDefault();
             submit();
           }}
-          className="glass-strong flex items-end gap-2 rounded-[18px] p-1.5 pl-3.5 transition-all duration-300 focus-within:-translate-y-px focus-within:border-[var(--hairline-active)] focus-within:glow-sm"
+          className="mx-auto w-full max-w-[720px]"
         >
+          <AttachmentChips
+            attachments={attachments}
+            onRemove={(id) =>
+              setAttachments((prev) => prev.filter((a) => a.id !== id))
+            }
+            testId="os-attachments"
+          />
+          <div className="glass-strong flex items-end gap-2 rounded-[18px] p-1.5 pl-3.5 transition-all duration-300 focus-within:-translate-y-px focus-within:border-[var(--hairline-active)] focus-within:glow-sm"
+          >
           <label htmlFor="os-query" className="sr-only">
             {t("Ask the Mirror Entity OS")}
           </label>
@@ -343,6 +385,17 @@ export function MirrorOSChat() {
             placeholder={t("Ask the Mirror Entity OS…")}
             className="nice-scroll max-h-[120px] flex-1 resize-none bg-transparent py-2 text-[15px] leading-relaxed text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
           />
+          <ChatInputExtras
+            scope="mirroros"
+            size="sm"
+            accentVar="var(--scope-a)"
+            disabled={osStatus === "loading"}
+            onTranscript={(text) =>
+              setOsDraft(osDraft ? `${osDraft} ${text}` : text)
+            }
+            attachments={attachments}
+            onAttachmentsChange={setAttachments}
+          />
           <button
             type="submit"
             disabled={!canSend}
@@ -351,6 +404,7 @@ export function MirrorOSChat() {
           >
             <Send className="size-3.5" aria-hidden="true" />
           </button>
+          </div>
         </form>
       </div>
     </div>

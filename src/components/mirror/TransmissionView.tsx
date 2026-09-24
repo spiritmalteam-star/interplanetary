@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import {
   Check,
   Copy,
+  FileText,
   Sparkles,
 } from "lucide-react";
 import { useMirror, type ChatMessage } from "@/lib/mirror-store";
@@ -359,6 +360,30 @@ function Exchange({
         <p className="px-6 text-[15.5px] italic leading-relaxed text-muted-foreground">
           {message.query}
         </p>
+        {message.attachments &&
+          (message.attachments.images > 0 ||
+            message.attachments.docNames.length > 0) && (
+            <div
+              className="mt-2 flex flex-wrap justify-end gap-1 px-6"
+              data-testid="exchange-attachments"
+            >
+              {message.attachments.images > 0 && (
+                <span className="mono-label flex items-center gap-1 rounded-full border px-2 py-0.5 text-[9.5px] text-muted-foreground">
+                  <FileText className="size-2.5" aria-hidden="true" />
+                  {t("an image")}
+                </span>
+              )}
+              {message.attachments.docNames.map((name) => (
+                <span
+                  key={name}
+                  className="mono-label flex max-w-[200px] items-center gap-1 rounded-full border px-2 py-0.5 text-[9.5px] text-muted-foreground"
+                >
+                  <FileText className="size-2.5 shrink-0" aria-hidden="true" />
+                  <span className="truncate">{name}</span>
+                </span>
+              ))}
+            </div>
+          )}
       </div>
 
       {/* themed frame */}
