@@ -41,8 +41,8 @@ const HOLD_MS = 1500;
 interface ChatInputExtrasProps {
   scope: LiveScopeKey;
   disabled?: boolean;
-  /** Button diameter — md = size-11, sm = size-9. */
-  size?: "md" | "sm";
+  /** Button diameter — md = size-11, sm = size-9, xs = size-8. */
+  size?: "md" | "sm" | "xs";
   /** Accent CSS variable for the hold ring and recording glow. */
   accentVar?: string;
   onTranscript: (text: string) => void;
@@ -74,8 +74,24 @@ export function ChatInputExtras({
   const [holdProgress, setHoldProgress] = useState(0);
   const [transcribing, setTranscribing] = useState(false);
   const [liveCallOpen, setLiveCallOpen] = useState(false);
+  const [elapsed, setElapsed] = useState(0);
 
   useEffect(() => () => cancelAnimationFrame(rafRef.current), []);
+
+  /* the visible recording clock — proof that the voice is being heard */
+  useEffect(() => {
+    if (!recorder.recording) {
+      setElapsed(0);
+      return;
+    }
+    const startedAt = Date.now();
+    setElapsed(0);
+    const id = window.setInterval(
+      () => setElapsed(Math.floor((Date.now() - startedAt) / 1000)),
+      500
+    );
+    return () => window.clearInterval(id);
+  }, [recorder.recording]);
 
   /* ---------- the microphone ---------- */
 
@@ -93,7 +109,7 @@ export function ChatInputExtras({
     setTranscribing(true);
     try {
       const result = await recorder.stop();
-      if (!result || result.durationMs < 350) {
+      if (!result || result.durationMs < 250) {
         toast.error(t("Your voice could not be heard — try again"));
         return;
       }
@@ -125,8 +141,15 @@ export function ChatInputExtras({
   }, []);
 
   const onMicPointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
-    if (disabled || recorder.recording || transcribing) return;
+    if (disabled || transcribing) return;
     e.preventDefault();
+
+    /* already recording — this press places the words into the field */
+    if (recorder.recording) {
+      void finishTranscript();
+      return;
+    }
+
     try {
       e.currentTarget.setPointerCapture?.(e.pointerId);
     } catch {
@@ -164,24 +187,28 @@ export function ChatInputExtras({
   const onMicPointerUp = () => {
     if (holdFiredRef.current) return;
     cancelPress();
-    if (wantingTranscriptRef.current) {
-      void finishTranscript();
-    }
+    /* TAP-TO-RECORD: the first tap arms the microphone and it stays
+       listening; the next tap places the words into the input. Whether
+       the release lands before or after the mic finished opening, the
+       recording continues — the voice is never lost. */
   };
 
   const onMicKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
     if (e.repeat) return;
     if (e.key === " " || e.key === "Enter") {
       e.preventDefault();
-      if (recorder.recording || transcribing || disabled) return;
-      wantingTranscriptRef.current = true;
+      if (disabled || transcribing) return;
+      if (recorder.recording) {
+        void finishTranscript();
+        return;
+      }
       void beginListening();
     }
   };
 
   const onMicKeyUp = (e: React.KeyboardEvent<HTMLButtonElement>) => {
     if (e.key === " " || e.key === "Enter") {
-      if (wantingTranscriptRef.current) void finishTranscript();
+      /* toggle mode — the recording simply continues after release */
     }
   };
 
@@ -272,9 +299,12 @@ export function ChatInputExtras({
     [attachments, t, updateAttachment, removeAttachment, onAttachmentsChange]
   );
 
-  const btnSize = size === "md" ? "size-11" : "size-9";
-  const iconSize = size === "md" ? "size-4" : "size-3.5";
-  const recording = recorder.recording && !holding;
+  const btnSize =
+    size === "md" ? "size-11" : size === "sm" ? "size-9" : "size-8";
+  const iconSize =
+    size === "md" ? "size-4" : size === "sm" ? "size-3.5" : "size-3.5";
+  const recording = recorder.recording && !transcribing;
+  const clock = `0:${String(Math.min(59, elapsed)).padStart(2, "0")}`;
 
   return (
     <>
@@ -306,11 +336,25 @@ export function ChatInputExtras({
         <Paperclip className={cn(iconSize, "text-muted-foreground")} aria-hidden="true" />
       </button>
 
-      {/* microphone — tap to transcribe · hold for the live call */}
+      {/* microphone — tap once to record, tap again to place the words · hold for the live call */}
       <span
         className={cn("relative shrink-0", btnSize)}
         data-testid={`chat-mic-${scope}`}
       >
+        {/* the recording clock — the voice is being heard */}
+        {recording && (
+          <span
+            aria-hidden="true"
+            className="mono-label pointer-events-none absolute -top-7 left-1/2 -translate-x-1/2 rounded-full border px-1.5 py-0.5 text-[9px] tracking-[0.14em]"
+            style={{
+              borderColor: `color-mix(in srgb, ${accentVar} 40%, transparent)`,
+              color: accentVar,
+              background: "color-mix(in srgb, #05030e 55%, transparent)",
+            }}
+          >
+            {clock}
+          </span>
+        )}
         {holding && (
           <svg
             aria-hidden="true"
@@ -337,8 +381,8 @@ export function ChatInputExtras({
               aria-hidden="true"
               className="absolute inset-0 rounded-full border"
               style={{ borderColor: accentVar }}
-              animate={{ scale: [1, 1.5], opacity: [0.55, 0] }}
-              transition={{ duration: 1.4, repeat: Infinity, ease: "easeOut" }}
+              animate={{ scale: [1, 1.45], opacity: [0.5, 0] }}
+              transition={{ duration: 1.6, repeat: Infinity, ease: "easeOut" }}
             />
             <span
               aria-hidden="true"
@@ -357,8 +401,17 @@ export function ChatInputExtras({
           onPointerCancel={onMicPointerUp}
           onKeyDown={onMicKeyDown}
           onKeyUp={onMicKeyUp}
-          aria-label={t("Speak by voice")}
-          title={`${t("Speak by voice")} — ${t("Hold for a live call")}`}
+          aria-label={
+            recording
+              ? t("Recording — tap again to place your words")
+              : t("Speak by voice")
+          }
+          title={
+            recording
+              ? t("Recording — tap again to place your words")
+              : `${t("Speak by voice")} — ${t("Hold for a live call")}`
+          }
+          aria-pressed={recording}
           className={cn(
             "focus-glow flex size-full items-center justify-center rounded-full border transition-all duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40",
             btnSize,

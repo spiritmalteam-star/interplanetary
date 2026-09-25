@@ -55,6 +55,10 @@ export interface ChatMessage {
   createdAt: string;
   /** What traveled with the question — one image, up to three documents. */
   attachments?: { images: number; docNames: string[] };
+  /* the Universal Visualization Engine — every channel also answers in images */
+  artifact?: VisualizationArtifact;
+  visual?: "pending" | "error";
+  visualRequest?: string;
 }
 
 export interface ScopeSession {
@@ -186,6 +190,21 @@ interface MirrorState {
   askMirror: (
     question: string,
     attachments?: ChatAttachment[]
+  ) => Promise<void>;
+  /** The Universal Visualization Engine in the scope channels — the
+      Interplanetary, Science, Quantum and Healing mirrors also answer
+      in images when the visitor asks to see. `regenerateOf` repaints
+      one existing artifact in place. */
+  askScopeVisual: (
+    mode: Mode,
+    question: string,
+    regenerateOf?: {
+      id: string;
+      request?: string;
+      prompt?: string;
+      subject?: string;
+      mode?: VisualizationMode;
+    } | null
   ) => Promise<void>;
   /** Full recalibration: wipe every scope channel, the lab and search. */
   resetField: () => void;
@@ -494,6 +513,122 @@ export const useMirror = create<MirrorState>()((set, get) => ({
               err instanceof Error
                 ? err.message
                 : "The field is momentarily quiet. Rest, then try again.",
+          },
+        },
+      }));
+    }
+  },
+
+  /* ------- the scope channels — the visualization engine ------- */
+
+  askScopeVisual: async (mode, question, regenerateOf) => {
+    if (get().sessions[mode].status === "loading") return;
+    const visualId = regenerateOf ? regenerateOf.id : nextMessageId();
+
+    set((s) => ({
+      view: "transmission",
+      mobileNavOpen: false,
+      sessions: {
+        ...s.sessions,
+        [mode]: {
+          ...s.sessions[mode],
+          status: "loading",
+          activeQuery: question,
+          draft: "",
+          error: null,
+          messages: regenerateOf
+            ? s.sessions[mode].messages.map((m) =>
+                m.id === regenerateOf.id
+                  ? { ...m, visual: "pending" as const }
+                  : m
+              )
+            : [
+                ...s.sessions[mode].messages,
+                {
+                  id: visualId,
+                  query: question,
+                  text: "",
+                  classification: "WORLD_BUILDING",
+                  createdAt: new Date().toISOString(),
+                  visual: "pending" as const,
+                  visualRequest: question,
+                },
+              ],
+        },
+      },
+    }));
+
+    try {
+      const current = get().sessions[mode];
+      const history = current.messages
+        .filter((m) => m.id !== visualId && !m.visual && !m.artifact && m.text)
+        .slice(-6)
+        .map((m) => ({ q: m.query, a: m.text }));
+      const lastArtifact = [...current.messages]
+        .reverse()
+        .find((m) => m.artifact)?.artifact;
+
+      const res = await fetch("/api/visualize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          language: get().language,
+          message: regenerateOf ? regenerateOf.request ?? question : question,
+          history,
+          ...(regenerateOf
+            ? {
+                regenerate: true,
+                previousPrompt: regenerateOf.prompt,
+                contextSubject: regenerateOf.subject,
+                previousMode: regenerateOf.mode,
+              }
+            : lastArtifact
+              ? {
+                  contextSubject: lastArtifact.subject,
+                  previousMode: lastArtifact.mode,
+                }
+              : {}),
+        }),
+      });
+      const data = (await res.json().catch(() => null)) as {
+        artifact?: VisualizationArtifact;
+        painted?: boolean;
+        error?: string;
+      } | null;
+      if (!res.ok || !data?.artifact) {
+        throw new Error(
+          (data && data.error) ||
+            "The atelier is quiet — the vision could not be composed."
+        );
+      }
+
+      const artifact = data.artifact;
+      set((s) => ({
+        sessions: {
+          ...s.sessions,
+          [mode]: {
+            ...s.sessions[mode],
+            status: "ready",
+            activeQuery: "",
+            messages: s.sessions[mode].messages.map((m) =>
+              m.id === visualId
+                ? { ...m, visual: undefined, artifact }
+                : m
+            ),
+          },
+        },
+      }));
+    } catch {
+      set((s) => ({
+        sessions: {
+          ...s.sessions,
+          [mode]: {
+            ...s.sessions[mode],
+            status: "ready",
+            activeQuery: "",
+            messages: s.sessions[mode].messages.map((m) =>
+              m.id === visualId ? { ...m, visual: "error" as const } : m
+            ),
           },
         },
       }));

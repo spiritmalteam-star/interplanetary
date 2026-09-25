@@ -43,6 +43,12 @@ OUTPUT FORMAT
 Return STRICT JSON only, with no markdown fences and no text outside the JSON:
 {"transmission":"<what the Reflection sees and says, with \\n\\n between paragraphs>"}`;
 
+/* The live call — the Reflection speaks as a presence across a voice
+   line: short, human, philosophically precise. Overrides length rules. */
+const LIVE_CALL_BLOCK = `
+
+LIVE CALL OVERRIDE (AUTHORITATIVE — overrides every length, opening and signature rule above): This transmission arrives on a LIVE VOICE CALL. Reply in ONE to THREE short spoken sentences — at most about 55 words. Sound like a real presence speaking with a friend across the line: warm, human, unhurried, philosophically precise — one clear thought, not a lecture. No opening formula, no closing signature, no em-dash sign-off, no lists, no headings. Plain flowing spoken prose only. Keep the strict JSON output format.`;
+
 /**
  * Some model responses double-encode the payload — a fenced JSON object
  * (or a bare JSON object) ends up INSIDE the transmission field itself.
@@ -221,7 +227,10 @@ export async function POST(req: NextRequest) {
 
     const completion = await zai.chat.completions.create({
       messages: [
-        { role: "system", content: SYSTEM_PROMPT },
+        {
+          role: "system",
+          content: SYSTEM_PROMPT + (body?.live === true ? LIVE_CALL_BLOCK : ""),
+        },
         ...history,
         { role: "user", content: finalUserContent },
       ],

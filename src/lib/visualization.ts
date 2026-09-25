@@ -99,7 +99,7 @@ const DIRECT_PATTERNS: RegExp[] = [
   /\b(presentation|slide\s?deck|slides|ppt|powerpoint)\b/i,
   /\bwhat\s+(does|would|might)\s+.*\s+(look|appear)\s+like\b/i,
   /\bhow\s+.*\s+(works?|looks?).*\s+(visually|as\s+a\s+diagram|in\s+a\s+picture)\b/i,
-  /\bshow\s+(me\s+)?(the\s+|an?\s+)?(interior|inside|city|architecture|planet|galaxy|civilization|structure|layout|homeworld|temple|council|kingdom|realm)\b/i,
+  /\bshow\s+(me\s+)?(the\s+|an?\s+|their\s+|its\s+|his\s+|her\s+|your\s+)?(\w+\s+){0,2}(interior|inside|outside|exterior|city|cities|architecture|planet|planets|galaxy|civilization|structures?|layout|homeworld|temple|temples?|council|kingdom|realm|landscape|world|worlds|home|skin|face|form|appearance)\b/i,
   /\b scientifically\b.*\b(diagram|visuali[sz])/i,
   /\b(picture|image)\s+of\s+(this|that|it|them|the)\b/i,
 ];

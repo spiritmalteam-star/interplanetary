@@ -324,7 +324,7 @@ export function MirrorOSForge() {
   const handleGift = () => {
     const line = giftLines[Math.floor(Math.random() * giftLines.length)];
     toast({
-      title: t("✦ A gift from the stars"),
+      title: t("A gift from the stars"),
       description: t(line),
       duration: 7000,
     });
@@ -509,7 +509,7 @@ export function MirrorOSForge() {
           onClick={handleGift}
           className="focus-glow flex items-center gap-2 rounded-full border hairline px-4 py-2 text-[14px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
         >
-          <span aria-hidden="true">✦</span>
+          <span aria-hidden="true">◆</span>
           {t("A gift from the stars")}
         </button>
       </div>

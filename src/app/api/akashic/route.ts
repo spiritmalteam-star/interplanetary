@@ -226,6 +226,11 @@ function drawEntrance(recentKeys: string[]): {
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
+/* The live call — the Librarian skips the parchment and simply speaks. */
+const LIVE_CALL_BLOCK = `
+
+LIVE CALL OVERRIDE (AUTHORITATIVE — overrides every length and format law above): The visitor is on a LIVE VOICE CALL. Skip the parchment entirely: let "record" be ONE short spoken passage — one to three sentences, at most about 55 words — in your own old, warm, philosophically precise voice, directly answering what the visitor just said. "title", "era" and "seal" may be empty strings. Keep the strict JSON output format.`;
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => null);
@@ -308,7 +313,10 @@ export async function POST(req: NextRequest) {
         : `The visitor sets down no words — only the wish that the story go on.`;
       completion = await zai.chat.completions.create({
         messages: [
-          { role: "system", content: CONTINUATION_PROMPT },
+          {
+            role: "system",
+            content: CONTINUATION_PROMPT + (body?.live === true ? LIVE_CALL_BLOCK : ""),
+          },
           {
             role: "user",
             content: `THE RECORD ALREADY ON THE DESK
@@ -336,7 +344,10 @@ ${replyLine} Write the next page of this same record now, in your hand.${deskLin
         : `The visitor set down no resonance — silence. The Library chooses: retrieve the record they did not ask for but quietly need.`;
       completion = await zai.chat.completions.create({
         messages: [
-          { role: "system", content: SYSTEM_PROMPT },
+          {
+            role: "system",
+            content: SYSTEM_PROMPT + (body?.live === true ? LIVE_CALL_BLOCK : ""),
+          },
           {
             role: "user",
             content: `${resonanceLine}${deskLine}\n\nDraw out the one record now, and read it in your hand.${languageLine}`,

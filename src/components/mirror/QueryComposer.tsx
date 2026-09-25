@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Send } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { detectVisualIntent } from "@/lib/visualization";
 import {
   AttachmentChips,
   ChatInputExtras,
@@ -20,6 +21,7 @@ export function QueryComposer() {
   const draft = useMirror((s) => s.sessions[s.activeMode].draft);
   const setDraft = useMirror((s) => s.setDraft);
   const askMirror = useMirror((s) => s.askMirror);
+  const askScopeVisual = useMirror((s) => s.askScopeVisual);
   const status = useMirror((s) => s.sessions[s.activeMode].status);
   const composerFocusNonce = useMirror((s) => s.composerFocusNonce);
   const t = useT();
@@ -27,12 +29,20 @@ export function QueryComposer() {
   const isMobile = useIsMobile();
   const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
 
-  // Auto-resize
+  /* the channel's last visualization — "this" in a follow-up refers to it */
+  const messages = useMirror((s) => s.sessions[s.activeMode].messages);
+  const lastArtifact = useMemo(
+    () =>
+      [...messages].reverse().find((m) => m.artifact)?.artifact ?? null,
+    [messages]
+  );
+
+  // Auto-resize — a slimmer field that grows only when truly needed
   useEffect(() => {
     const el = textareaRef.current;
     if (!el) return;
     el.style.height = "0px";
-    el.style.height = `${Math.min(el.scrollHeight, 148)}px`;
+    el.style.height = `${Math.min(el.scrollHeight, 104)}px`;
   }, [draft]);
 
   // Focus on request (suggested question chosen, etc.)
@@ -50,8 +60,17 @@ export function QueryComposer() {
   const submit = () => {
     if (!canSend) return;
     const carried = attachments.length > 0 ? attachments : undefined;
+    /* The visualization engine is not a button — a request to SEE simply
+       is one. Ordinary words never wake the atelier. */
+    const intent = detectVisualIntent(draft);
+    const wantsVisual =
+      intent.direct || (intent.followUp && lastArtifact !== null);
     setAttachments([]);
-    void askMirror(draft, carried);
+    if (wantsVisual) {
+      void askScopeVisual(activeMode, draft, null);
+    } else {
+      void askMirror(draft, carried);
+    }
   };
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -63,7 +82,7 @@ export function QueryComposer() {
 
   return (
     <div
-      className="shrink-0 border-t hairline bg-[var(--glass-bg)] px-3 pb-[max(0.85rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-xl sm:px-6 sm:pb-4"
+      className="shrink-0 border-t hairline bg-[var(--glass-bg)] px-3 pb-[max(0.8rem,env(safe-area-inset-bottom))] pt-2.5 backdrop-blur-xl sm:px-6 sm:pb-3.5"
       role="search"
       aria-label={t("Ask the mirror")}
     >
@@ -82,7 +101,7 @@ export function QueryComposer() {
           testId="composer-attachments"
         />
         <div
-          className={`glass-strong flex items-end gap-2.5 rounded-[22px] p-2 pl-4 transition-all duration-300 focus-within:-translate-y-px focus-within:border-[var(--hairline-active)] focus-within:glow ${
+          className={`glass-strong flex items-end gap-1.5 rounded-[20px] p-1.5 pl-3 transition-all duration-300 focus-within:-translate-y-px focus-within:border-[color-mix(in_srgb,var(--cy)_38%,transparent)] focus-within:glow-sm ${
             status === "loading" ? "opacity-80" : ""
           }`}
         >
@@ -98,16 +117,16 @@ export function QueryComposer() {
             onKeyDown={onKeyDown}
             placeholder={
               isMobile
-                ? t("Ask the mirror... ✨")
+                ? t("Ask the mirror...")
                 : t(
-                    "Ask the mirror... ✨ e.g. Who are the Pleiadians, and how are they helping humanity evolve?"
+                    "Ask the mirror... e.g. Who are the Pleiadians, and how are they helping humanity evolve?"
                   )
             }
-            className="nice-scroll max-h-[148px] flex-1 resize-none bg-transparent py-2.5 text-[15.5px] leading-relaxed text-foreground placeholder:text-muted-foreground/60 focus:outline-none sm:text-[16px]"
+            className="nice-scroll max-h-[104px] min-h-[34px] flex-1 resize-none bg-transparent py-1.5 text-[15px] leading-relaxed text-foreground placeholder:text-muted-foreground/60 focus:outline-none sm:text-[15.5px]"
           />
           <ChatInputExtras
             scope={activeMode as LiveScopeKey}
-            size="sm"
+            size="xs"
             disabled={status === "loading"}
             onTranscript={(text) =>
               setDraft(draft ? `${draft} ${text}` : text)
@@ -119,12 +138,12 @@ export function QueryComposer() {
             type="submit"
             disabled={!canSend}
             aria-label={t("Transmit question to the mirror")}
-            className="focus-glow mb-0.5 flex size-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--cy)] to-[color-mix(in_srgb,var(--cy)_60%,#8f6bff)] text-[#031018] shadow-[0_0_20px_-6px_color-mix(in_srgb,var(--cy)_70%,transparent)] transition-all duration-300 hover:glow disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
+            className="focus-glow mb-0 flex size-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--cy)] to-[color-mix(in_srgb,var(--cy)_55%,#8f6bff)] text-[#031018] shadow-[0_0_16px_-6px_color-mix(in_srgb,var(--cy)_75%,transparent)] transition-all duration-300 hover:glow-sm disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
           >
-            <Send className="size-4" aria-hidden="true" />
+            <Send className="size-3.5" aria-hidden="true" />
           </button>
         </div>
-        <p className="mono-label mt-2 hidden text-center text-[10px] text-muted-foreground/50 sm:block">
+        <p className="mono-label mt-1.5 hidden text-center text-[10px] text-muted-foreground/50 sm:block">
           {t(
             "Enter to transmit · Shift + Enter for a new line · Free will honored always"
           )}

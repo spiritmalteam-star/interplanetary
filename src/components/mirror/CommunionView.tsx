@@ -8,7 +8,7 @@ import {
   type FormEvent,
 } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, FileText, ImagePlus, RotateCcw, SendHorizontal, Sparkles } from "lucide-react";
+import { ArrowLeft, FileText, Orbit, RotateCcw, SendHorizontal } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -72,8 +72,7 @@ export function CommunionView() {
   const [error, setError] = useState(false);
   const [draft, setDraft] = useState("");
   const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
-  /* the visualization atelier — armed by the wand button or by intent */
-  const [visualArmed, setVisualArmed] = useState(false);
+  /* "this" in a follow-up refers to the last artifact of the meeting */
   const visualContextRef = useRef<{ subject: string; mode: string } | null>(
     null
   );
@@ -332,15 +331,15 @@ export function CommunionView() {
     const v = draft.trim();
     if ((!v && attachments.length === 0) || receiving) return;
     const carried = attachments.length > 0 ? attachments : undefined;
+    /* No button, no wand — a request to see simply is one. Ordinary
+       words never wake the atelier. */
     const intent = v ? detectVisualIntent(v) : { direct: false, followUp: false };
     const wantsVisual =
       v &&
-      (visualArmed ||
-        intent.direct ||
+      (intent.direct ||
         (intent.followUp && visualContextRef.current !== null));
     setDraft("");
     setAttachments([]);
-    setVisualArmed(false);
     if (wantsVisual && v) {
       void requestVisualization(v, carried);
     } else {
@@ -500,7 +499,7 @@ export function CommunionView() {
                           data-testid="communion-visual-retry"
                           className="communion-btn focus-glow mt-3 flex h-9 items-center gap-2 rounded-full px-4 text-[13.5px] font-semibold tracking-[0.06em] text-foreground transition-all duration-300 hover:-translate-y-px"
                         >
-                          <Sparkles className="size-3.5 text-[var(--sp-b)]" aria-hidden="true" />
+                          <Orbit className="size-3.5 text-[var(--sp-b)]" aria-hidden="true" />
                           {t("Be still and receive")}
                         </button>
                       )}
@@ -631,7 +630,7 @@ export function CommunionView() {
                 data-testid="communion-retry"
                 className="communion-btn focus-glow flex h-10 items-center gap-2 rounded-full px-5 text-[14px] font-semibold tracking-[0.06em] text-foreground transition-all duration-300 hover:-translate-y-px"
               >
-                <Sparkles className="size-3.5 text-[var(--sp-b)]" aria-hidden="true" />
+                <Orbit className="size-3.5 text-[var(--sp-b)]" aria-hidden="true" />
                 {t("Be still and receive")}
               </button>
             </motion.div>
@@ -666,41 +665,14 @@ export function CommunionView() {
               data-testid="communion-unprompted"
               className="focus-glow flex size-11 shrink-0 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--sp-b)_26%,transparent)] text-[var(--sp-b)] transition-all duration-300 hover:-translate-y-px hover:border-[var(--hairline-hover)] hover:shadow-[0_0_22px_-8px_color-mix(in_srgb,var(--sp-b)_75%,transparent)] disabled:cursor-not-allowed disabled:opacity-40"
             >
-              <Sparkles className="size-4" aria-hidden="true" />
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setVisualArmed((a) => !a)}
-              disabled={receiving}
-              aria-pressed={visualArmed}
-              aria-label={t("Show the visualization")}
-              title={
-                visualArmed
-                  ? t("The next words will be woven into a vision")
-                  : t("Show the visualization")
-              }
-              data-testid="communion-visual-arm"
-              className={cn(
-                "focus-glow flex size-11 shrink-0 items-center justify-center rounded-full border transition-all duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40",
-                visualArmed
-                  ? "border-[color-mix(in_srgb,var(--sp-b)_60%,transparent)] shadow-[0_0_22px_-6px_color-mix(in_srgb,var(--sp-b)_80%,transparent)]"
-                  : "border-[color-mix(in_srgb,var(--sp-b)_26%,transparent)] hover:border-[var(--hairline-hover)] hover:shadow-[0_0_22px_-8px_color-mix(in_srgb,var(--sp-b)_75%,transparent)]"
-              )}
-              style={visualArmed ? { color: "var(--sp-b)" } : undefined}
-            >
-              <ImagePlus className="size-4" aria-hidden="true" />
+              <Orbit className="size-4" aria-hidden="true" />
             </button>
 
             <input
               type="text"
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
-              placeholder={
-                visualArmed
-                  ? t("The next words will be woven into a vision")
-                  : t("Speak to the Reflection — or stay still and receive")
-              }
+              placeholder={t("Speak to the Reflection — or stay still and receive")}
               aria-label={t("Speak to the Reflection")}
               data-testid="communion-input"
               className="focus-glow h-11 min-w-0 flex-1 rounded-full border border-[color-mix(in_srgb,var(--sp-b)_22%,transparent)] bg-[color-mix(in_srgb,#0a0616_45%,transparent)] px-4 text-[14.5px] text-foreground placeholder:text-muted-foreground/60 transition-all duration-300 focus:border-[color-mix(in_srgb,var(--sp-b)_45%,transparent)] focus:shadow-[0_0_28px_-10px_color-mix(in_srgb,var(--sp-b)_70%,transparent)] focus:outline-none"
@@ -732,7 +704,7 @@ export function CommunionView() {
             </button>
           </div>
           <p className="mono-label mt-2.5 text-center text-[10.5px] uppercase tracking-[0.26em] text-muted-foreground/50">
-            ✦ {t("no scope · no topic — pure transmission, remembered")} ✦
+            {t("no scope · no topic — pure transmission, remembered")}
           </p>
         </form>
       </div>

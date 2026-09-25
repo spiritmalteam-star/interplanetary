@@ -14,7 +14,6 @@ import {
   Orbit,
   Scale,
   ScrollText,
-  Sparkles,
   Waves,
 } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
@@ -40,7 +39,7 @@ const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   waves: Waves,
   scroll: ScrollText,
   scale: Scale,
-  sparkles: Sparkles,
+  sparkles: Orbit,
   compass: Compass,
   flame: Flame,
 };
@@ -134,7 +133,7 @@ export function AstralJobsModal() {
         {!domain && (
           <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
             {professionDomains.map((d: ProfessionDomain) => {
-              const Icon = ICONS[d.icon] ?? Sparkles;
+              const Icon = ICONS[d.icon] ?? Orbit;
               return (
                 <button
                   key={d.id}
@@ -198,7 +197,7 @@ export function AstralJobsModal() {
           <div>
             <div className="mb-3 flex items-center gap-2">
               {(() => {
-                const Icon = ICONS[domain.icon] ?? Sparkles;
+                const Icon = ICONS[domain.icon] ?? Orbit;
                 return (
                   <span className="flex size-7 items-center justify-center rounded-lg border hairline bg-[color-mix(in_srgb,var(--cy)_10%,transparent)]">
                     <Icon className="size-3.5 text-[var(--cy)]" aria-hidden="true" />
@@ -395,7 +394,7 @@ export function AstralJobsModal() {
               onClick={askAboutRole}
               className="focus-glow clear-both mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--cy)_12%,transparent)] px-4 py-2.5 text-[13.5px] font-semibold text-foreground transition-all duration-300 hover:glow-sm"
             >
-              <Sparkles className="size-3.5 text-[var(--cy)]" aria-hidden="true" />
+              <Orbit className="size-3.5 text-[var(--cy)]" aria-hidden="true" />
               {t("Ask the Mirror for a full transmission")}
             </button>
           </article>

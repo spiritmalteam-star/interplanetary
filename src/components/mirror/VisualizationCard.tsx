@@ -689,7 +689,7 @@ export function VisualizationCard({
             className="mt-3.5 border-t border-[color-mix(in_srgb,var(--hairline)_40%,transparent)] pt-2.5 text-[11.5px] italic leading-relaxed text-muted-foreground/80"
             data-testid={`${testIdPrefix}-discernment`}
           >
-            ✦ {artifact.discernment}
+            ◆ {artifact.discernment}
           </p>
         )}
       </div>
@@ -781,7 +781,7 @@ export function VisualizationCard({
                     )}
                     {artifact.discernment && (
                       <p className="mx-auto mt-4 max-w-[720px] border-t border-white/10 pt-3 text-center text-[11.5px] italic text-muted-foreground/80">
-                        ✦ {artifact.discernment}
+                        ◆ {artifact.discernment}
                       </p>
                     )}
                   </div>

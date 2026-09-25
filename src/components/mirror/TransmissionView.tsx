@@ -6,7 +6,7 @@ import {
   Check,
   Copy,
   FileText,
-  Sparkles,
+  RotateCcw,
 } from "lucide-react";
 import { useMirror, type ChatMessage } from "@/lib/mirror-store";
 import { SCOPE_META, sectionImage } from "@/lib/entity-utils";
@@ -15,6 +15,11 @@ import { useT } from "@/lib/i18n";
 import type { Scope } from "@/lib/mirror-types";
 import { cn } from "@/lib/utils";
 import { ListenButton } from "./ListenButton";
+import {
+  PreparedPromptFallback,
+  VisualizationCard,
+  VisualizationPending,
+} from "./VisualizationCard";
 
 /* ---------- parsing the transmission into rich blocks ---------- */
 
@@ -275,12 +280,87 @@ function Seal() {
         style={{ borderColor: "color-mix(in srgb, var(--scope-a) 28%, transparent)" }}
       />
       <div className="flex h-full w-full items-center justify-center">
-        <Sparkles
-          className="size-4"
-          style={{ color: "color-mix(in srgb, var(--scope-a) 75%, white)" }}
+        <span
+          className="block size-2 rotate-45"
+          style={{
+            background: "color-mix(in srgb, var(--scope-a) 75%, white)",
+            boxShadow: "0 0 10px color-mix(in srgb, var(--scope-a) 60%, transparent)",
+          }}
         />
       </div>
     </div>
+  );
+}
+
+/* ---------- the vision itself — one exchange may carry an image ------- */
+
+function ExchangeVisual({ message }: { message: ChatMessage }) {
+  const t = useT();
+  const askScopeVisual = useMirror((s) => s.askScopeVisual);
+  const activeMode = useMirror((s) => s.activeMode);
+
+  if (message.visual === "pending") {
+    return (
+      <VisualizationPending
+        accent="var(--scope-a)"
+        testIdPrefix="scope-visual"
+        repaint
+      />
+    );
+  }
+  if (message.visual === "error") {
+    return (
+      <div
+        className="glass rounded-2xl border border-[color-mix(in_srgb,var(--hairline)_65%,transparent)] px-4 py-3.5"
+        data-testid="scope-visual-error"
+      >
+        <p className="text-[14px] italic leading-relaxed text-foreground/80">
+          {t(
+            "The atelier is quiet — the vision could not be composed. Rest a breath, then ask again."
+          )}
+        </p>
+        {message.visualRequest && (
+          <button
+            type="button"
+            onClick={() =>
+              void askScopeVisual(activeMode, message.visualRequest ?? "", null)
+            }
+            data-testid="scope-visual-retry"
+            className="focus-glow mt-2.5 flex h-9 items-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--scope-a)_35%,transparent)] px-4 text-[13px] text-foreground/90 transition-all duration-300 hover:-translate-y-px"
+          >
+            <RotateCcw className="size-3.5" aria-hidden="true" />
+            {t("Be still and receive")}
+          </button>
+        )}
+      </div>
+    );
+  }
+  if (!message.artifact) return null;
+  const artifact = message.artifact;
+  if (!artifact.imageUrl && artifact.slides.length === 0) {
+    return (
+      <PreparedPromptFallback
+        artifact={artifact}
+        accent="var(--scope-a)"
+        testIdPrefix="scope-visual"
+      />
+    );
+  }
+  return (
+    <VisualizationCard
+      artifact={artifact}
+      accent="var(--scope-a)"
+      testIdPrefix="scope-visual"
+      onRegenerate={() =>
+        void askScopeVisual(activeMode, message.visualRequest ?? artifact.subject, {
+          id: message.id,
+          request: message.visualRequest ?? artifact.subject,
+          prompt: artifact.prompt,
+          subject: artifact.subject,
+          mode: artifact.mode,
+        })
+      }
+    />
   );
 }
 
@@ -314,6 +394,7 @@ function Exchange({
   };
 
   const item = animate ? staggerItem : stillItem;
+  const hasVisual = Boolean(message.artifact || message.visual);
 
   return (
     <motion.article
@@ -416,24 +497,30 @@ function Exchange({
         />
 
         <div className="relative px-6 py-6 sm:px-10 sm:py-8">
-          {/* listen + copy — the only actions, one quiet row */}
-          <div className="mb-4 flex items-center justify-end gap-2">
-            <ListenButton text={message.text} cacheKey={message.id} />
-            <button
-              type="button"
-              onClick={handleCopy}
-              aria-label={copied ? t("copied") : t("copy")}
-              title={copied ? t("copied") : t("copy")}
-              className="focus-glow flex size-8 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
-            >
-              {copied ? (
-                <Check className="size-3.5" aria-hidden="true" />
-              ) : (
-                <Copy className="size-3.5" aria-hidden="true" />
-              )}
-            </button>
-          </div>
-          <TransmissionBody text={message.text} />
+          {/* listen + copy — the only actions, one quiet row (words only) */}
+          {!hasVisual && (
+            <div className="mb-4 flex items-center justify-end gap-2">
+              <ListenButton text={message.text} cacheKey={message.id} />
+              <button
+                type="button"
+                onClick={handleCopy}
+                aria-label={copied ? t("copied") : t("copy")}
+                title={copied ? t("copied") : t("copy")}
+                className="focus-glow flex size-8 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+              >
+                {copied ? (
+                  <Check className="size-3.5" aria-hidden="true" />
+                ) : (
+                  <Copy className="size-3.5" aria-hidden="true" />
+                )}
+              </button>
+            </div>
+          )}
+          {hasVisual ? (
+            <ExchangeVisual message={message} />
+          ) : (
+            <TransmissionBody text={message.text} />
+          )}
         </div>
         <Seal />
       </div>
@@ -535,7 +622,8 @@ export function TransmissionView() {
         </div>
       ))}
 
-      {session.status === "loading" && (
+      {session.status === "loading" &&
+        session.messages.at(-1)?.visual !== "pending" && (
         <div
           ref={(node) => {
             loadingRef.current = node;

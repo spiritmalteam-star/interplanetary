@@ -42,6 +42,11 @@ The earlier turns of THIS conversation are provided. You remember them: build on
 OUTPUT
 Plain text only — your reply, ready to be read aloud.`;
 
+/* The live call — the OS on a voice line: short, human, precise. */
+const LIVE_CALL_BLOCK = `
+
+LIVE CALL OVERRIDE (AUTHORITATIVE — overrides every length rule above): This moment is a LIVE VOICE CALL. Reply in ONE to THREE short spoken sentences — at most about 55 words. Sound like a real presence speaking with a friend across the line: warm, human, unhurried, philosophically precise — one clear thought, not a lecture. No lists, no headings, no sign-off. Plain flowing spoken prose only.`;
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => null);
@@ -80,7 +85,10 @@ export async function POST(req: NextRequest) {
         : `\n\nLANGUAGE (CRITICAL): the visitor speaks ${languageName}. Write your ENTIRE reply in fluent, natural ${languageName}.`;
 
     const messages: { role: "system" | "user" | "assistant"; content: string }[] = [
-      { role: "system", content: SYSTEM_PROMPT },
+      {
+        role: "system",
+        content: SYSTEM_PROMPT + (body?.live === true ? LIVE_CALL_BLOCK : ""),
+      },
     ];
 
     /* Conversation memory — the OS never forgets the thread it is in. */

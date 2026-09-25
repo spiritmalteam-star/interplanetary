@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, Sparkles } from "lucide-react";
+import { ArrowLeft, Orbit } from "lucide-react";
 import { ModalShell } from "./ModalShell";
 import {
   TECH_TOTAL,
@@ -485,7 +485,7 @@ function TechDetail({
           onClick={() => askAboutTechnology(entry.name)}
           className="star-btn focus-glow flex h-11 items-center gap-2.5 rounded-full px-6 text-[14.5px] font-semibold tracking-[0.08em] text-foreground transition-all duration-300 hover:-translate-y-px"
         >
-          <Sparkles className="size-4 text-[var(--sp-a)]" aria-hidden="true" />
+          <Orbit className="size-4 text-[var(--sp-a)]" aria-hidden="true" />
           {t("Consult the Mirror about this technology")}
         </button>
       </div>

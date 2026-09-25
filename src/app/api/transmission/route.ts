@@ -72,6 +72,12 @@ OUTPUT FORMAT
 Return STRICT JSON only, with no markdown fences and no text outside the JSON:
 {"classification":"<ONE OF THE FIVE VALUES ABOVE>","transmission":"<the transmission text, with \\n\\n between paragraphs>"}`;
 
+/* The live call — the Mirror speaks as a presence across a voice line:
+   short, human, philosophically precise. Overrides every length rule. */
+const LIVE_CALL_BLOCK = `
+
+LIVE CALL OVERRIDE (AUTHORITATIVE — overrides every length, opening and signature rule above): This transmission arrives on a LIVE VOICE CALL. Reply in ONE to THREE short spoken sentences — at most about 55 words. Sound like a real presence speaking with a friend across the line: warm, human, unhurried, philosophically precise — one clear thought, not a lecture. No luminous opening formula, no closing signature, no em-dash sign-off, no lists, no headings, no stage directions. Plain flowing spoken prose only. Keep the same classification rules and the strict JSON output format.`;
+
 /* ------------------------------------------------------------------ */
 /*  Fusion calibration — the science scope's fusion rail fuses a field */
 /*  and a direction into the Mirror's seeing. Raw ids are translated   */
@@ -341,7 +347,10 @@ export async function POST(req: NextRequest) {
 
     const completion = await zai.chat.completions.create({
       messages: [
-        { role: "assistant", content: SYSTEM_PROMPT + fusionBlock },
+        {
+          role: "assistant",
+          content: SYSTEM_PROMPT + fusionBlock + (body?.live === true ? LIVE_CALL_BLOCK : ""),
+        },
         ...historyMessages(body?.history),
         {
           role: "user",

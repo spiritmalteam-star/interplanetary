@@ -139,7 +139,7 @@ export function ZoomableImage({
           aria-hidden="true"
           className="flex size-full items-center justify-center bg-[linear-gradient(135deg,color-mix(in_srgb,var(--cy)_10%,transparent),color-mix(in_srgb,var(--sp-a)_8%,transparent))]"
         >
-          <span className="text-[18px] opacity-40">✦</span>
+          <span className="text-[18px] opacity-40">◆</span>
         </span>
       ) : (
         <img

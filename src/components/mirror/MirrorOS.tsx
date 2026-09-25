@@ -9,7 +9,7 @@ import {
   FlaskConical,
   HeartHandshake,
   ShieldCheck,
-  Sparkles,
+  Orbit,
   Sun,
   Moon,
   MessagesSquare,
@@ -41,7 +41,7 @@ const OS_PLACES: {
   icon: typeof Compass;
 }[] = [
   { id: "formulas", label: "Shift Formulas", icon: Compass },
-  { id: "higher", label: "Higher Mind", icon: Sparkles },
+  { id: "higher", label: "Higher Mind", icon: Orbit },
   { id: "tools", label: "Tools", icon: HeartHandshake },
   { id: "forge", label: "Forge", icon: FlaskConical },
 ];
@@ -639,7 +639,7 @@ export function MirrorOS() {
             className="flex size-9 shrink-0 items-center justify-center rounded-full border hairline"
             aria-hidden="true"
           >
-            <Sparkles className="size-4 text-[var(--gd)]" />
+            <Orbit className="size-4 text-[var(--gd)]" />
           </span>
         </div>
       </header>
@@ -749,11 +749,7 @@ export function MirrorOS() {
                             onClick={() => setPlace("chat")}
                             className="dream-btn focus-glow group flex h-10 items-center gap-2.5 rounded-full px-5 text-[14.5px] font-medium text-foreground transition-all duration-300 hover:-translate-y-px"
                           >
-                            <span
-                              className="dream-star left-4 top-2 size-[3px]"
-                              aria-hidden="true"
-                            />
-                            <Sparkles className="size-3.5 text-[var(--gd)]" aria-hidden="true" />
+                            <Orbit className="size-3.5 text-[var(--gd)]" aria-hidden="true" />
                             {t("Walk it with the Mirror Entity OS")}
                             <span
                               className="transition-transform duration-300 group-hover:translate-x-0.5"

@@ -8,7 +8,7 @@ import {
   Fingerprint,
   MessageCircleHeart,
   Search,
-  Sparkles,
+  Orbit,
 } from "lucide-react";
 import { useMirror, findDossier } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
@@ -292,7 +292,7 @@ function EntityDossier({
           onClick={askQuestion}
           className="focus-glow flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--cy)_12%,transparent)] px-4 py-2.5 text-[13.5px] font-semibold text-foreground transition-all duration-300 hover:glow-sm"
         >
-          <Sparkles className="size-3.5 text-[var(--cy)]" aria-hidden="true" />
+          <Orbit className="size-3.5 text-[var(--cy)]" aria-hidden="true" />
           {t("Ask the Mirror about {name}", { name: rep.name })}
         </button>
       </div>

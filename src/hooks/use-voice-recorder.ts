@@ -74,6 +74,9 @@ export function useVoiceRecorder(): VoiceRecorder {
   const startedAtRef = useRef(0);
   const rafRef = useRef<number>(0);
   const recordingRef = useRef(false);
+  /* A start still in flight — stop()/cancel() wait for it, so a quick
+     tap can never release the microphone before it has begun. */
+  const pendingStartRef = useRef<Promise<boolean> | null>(null);
 
   const teardown = useCallback(() => {
     cancelAnimationFrame(rafRef.current);
@@ -100,6 +103,17 @@ export function useVoiceRecorder(): VoiceRecorder {
 
   const start = useCallback(async (): Promise<boolean> => {
     if (recordingRef.current) return true;
+    if (pendingStartRef.current) return pendingStartRef.current;
+    const attempt = (async () => {
+      return await openMicrophone();
+    })();
+    pendingStartRef.current = attempt;
+    attempt.finally(() => {
+      if (pendingStartRef.current === attempt) pendingStartRef.current = null;
+    });
+    return attempt;
+
+    async function openMicrophone(): Promise<boolean> {
     if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
       setError("unavailable");
       return false;
@@ -198,12 +212,16 @@ export function useVoiceRecorder(): VoiceRecorder {
       );
       return false;
     }
+    }
   }, [teardown]);
 
   const stop = useCallback(async (): Promise<{
     wav: Blob;
     durationMs: number;
   } | null> => {
+    /* If the microphone is still opening, wait for it first — a quick
+       tap-and-release must still capture everything said from the start. */
+    if (pendingStartRef.current) await pendingStartRef.current.catch(() => false);
     if (!recordingRef.current) return null;
     const durationMs = Date.now() - startedAtRef.current;
     const merged = new Float32Array(lengthRef.current);
@@ -223,7 +241,10 @@ export function useVoiceRecorder(): VoiceRecorder {
   const cancel = useCallback(() => {
     chunksRef.current = [];
     lengthRef.current = 0;
-    teardown();
+    void pendingStartRef.current
+      ?.catch(() => false)
+      .then(() => teardown());
+    if (!pendingStartRef.current) teardown();
   }, [teardown]);
 
   const clearError = useCallback(() => setError(null), []);

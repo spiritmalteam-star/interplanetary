@@ -571,16 +571,7 @@ html:not(.dark) .text-hero {
     inset 0 1px 0 color-mix(in srgb, white 10%, transparent);
 }
 
-/* Two tiny stars that keep time inside the dream */
-.dream-star {
-  position: absolute;
-  border-radius: 9999px;
-  background: white;
-  pointer-events: none;
-  animation: dream-twinkle 3.2s ease-in-out infinite;
-  box-shadow: 0 0 6px 1px color-mix(in srgb, var(--gd) 70%, transparent);
-}
-.dream-star-slow { animation-duration: 4.6s; animation-delay: 1.1s; }
+/* the breathing halo of the dream pill */
 
 .dream-halo {
   animation: dream-halo 3.4s ease-in-out infinite;
@@ -674,7 +665,6 @@ html:not(.dark) .text-hero {
   .shimmer-bar,
   .dream-btn,
   .dream-btn::before,
-  .dream-star,
   .dream-halo,
   .star-btn,
   .star-btn::before,

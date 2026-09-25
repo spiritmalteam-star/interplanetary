@@ -8,7 +8,7 @@ import {
   MapPin,
   Scale,
   ScrollText,
-  Sparkles,
+  Orbit,
   Users,
 } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
@@ -391,7 +391,7 @@ function CardDetail({
         onClick={ask}
         className="focus-glow mono-label inline-flex items-center gap-1.5 rounded-full border border-[var(--cy)]/30 bg-[color-mix(in_srgb,var(--cy)_8%,transparent)] px-3 py-1.5 text-[10.5px] text-[var(--cy)] transition-opacity hover:opacity-80"
       >
-        <Sparkles className="size-3" aria-hidden="true" />
+        <Orbit className="size-3" aria-hidden="true" />
         {t("Ask the Mirror")}
       </button>
     </div>

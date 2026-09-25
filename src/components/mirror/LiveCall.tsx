@@ -1,13 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   AudioLines,
   Captions,
   Mic,
+  Orbit,
   PhoneOff,
-  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useT } from "@/lib/i18n";
@@ -19,11 +20,12 @@ import { readFileAsDataUrl } from "./attachments";
 
 /* ------------------------------------------------------------------ */
 /*  LiveCall — the direct call. Held for 1.5 seconds, the microphone   */
-/*  opens this mini tab in the exact theme of the scope it came from:  */
-/*  its own entity, its own voice, its own pace. Hold the orb and      */
-/*  speak; your words are transcribed, transmitted to the Mirror       */
-/*  intelligence of that scope, and answered aloud — every process     */
-/*  of the line made visible while it happens.                         */
+/*  opens this room: solid, dark, its own space — unlike every other   */
+/*  surface of the Laboratory. The presence on the line answers as a   */
+/*  human presence does: short, warm, philosophically precise. Every   */
+/*  word appears exactly as it is spoken, and every step of the line   */
+/*  is visible on one quiet rail. Nothing overwhelming — the call is   */
+/*  the fastest path from breath to answer.                            */
 /* ------------------------------------------------------------------ */
 
 type CallPhase = "idle" | "listening" | "transcribing" | "thinking" | "speaking";
@@ -36,7 +38,7 @@ interface CallTurn {
 const PHASE_STEPS: { key: CallPhase; icon: typeof Mic }[] = [
   { key: "listening", icon: Mic },
   { key: "transcribing", icon: Captions },
-  { key: "thinking", icon: Sparkles },
+  { key: "thinking", icon: Orbit },
   { key: "speaking", icon: AudioLines },
 ];
 
@@ -46,6 +48,8 @@ async function askScope(
   history: CallTurn[],
   language: string
 ): Promise<string> {
+  /* live: true — the presence on a call speaks in short, human,
+     philosophically precise sentences (see each route's LIVE CALL law) */
   if (scope === "communion") {
     const res = await fetch("/api/communion", {
       method: "POST",
@@ -53,6 +57,7 @@ async function askScope(
       body: JSON.stringify({
         language,
         message,
+        live: true,
         history: history.map((h) => ({ role: h.role, text: h.text })),
       }),
     });
@@ -68,17 +73,16 @@ async function askScope(
     const res = await fetch("/api/akashic", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ resonance: message, language }),
+      body: JSON.stringify({ resonance: message, language, live: true }),
     });
     const data = (await res.json().catch(() => null)) as {
-      title?: string;
-      era?: string;
       record?: string;
-      seal?: string;
       error?: string;
     } | null;
     if (!res.ok || !data?.record) throw new Error(data?.error ?? "quiet");
-    return `${data.title}. ${data.era}. ${data.record} ${data.seal}`;
+    /* on a live call the Librarian skips the parchment form — the spoken
+       passage is the whole answer */
+    return data.record;
   }
 
   if (scope === "mirroros") {
@@ -88,6 +92,7 @@ async function askScope(
       body: JSON.stringify({
         query: message,
         language,
+        live: true,
         history: history.map((h) => ({
           role: h.role === "visitor" ? "visitor" : "os",
           text: h.text,
@@ -110,6 +115,7 @@ async function askScope(
     body: JSON.stringify({
       query: message,
       mode: scope,
+      live: true,
       scienceField: state.activeMode === scope ? state.activeScienceField : null,
       direction: state.activeMode === scope ? state.activeDirection : null,
       language,
@@ -141,6 +147,9 @@ export function LiveCall({
 
   const [phase, setPhase] = useState<CallPhase>("idle");
   const [turns, setTurns] = useState<CallTurn[]>([]);
+  /* how much of the last mirror reply has been spoken aloud — the words
+     appear in the same breath as the voice */
+  const [revealedChars, setRevealedChars] = useState(Infinity);
   const phaseRef = useRef<CallPhase>("idle");
   const turnsRef = useRef<CallTurn[]>([]);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -187,26 +196,46 @@ export function LiveCall({
 
   const speak = useCallback(
     async (text: string) => {
-      setPhaseSafe("speaking");
+      /* the voice is prepared while the phase still reads "thinking" —
+         the visitor never watches a silent "speaking" state */
       const res = await fetch("/api/tts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text, voice: cfg.voice, pace: cfg.pace }),
+        body: JSON.stringify({
+          text,
+          voice: cfg.voice,
+          pace: Math.min(1.15, cfg.pace + 0.08),
+        }),
       });
       if (!res.ok) throw new Error("voice quiet");
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const audio = new Audio(url);
       audioRef.current = audio;
+
+      audio.ontimeupdate = () => {
+        const d = audio.duration;
+        const frac =
+          Number.isFinite(d) && d > 0
+            ? Math.min(1, audio.currentTime / d)
+            : 0;
+        setRevealedChars((prev) =>
+          Math.max(prev, Math.floor(text.length * frac))
+        );
+      };
       const release = () => {
         if (audioRef.current === audio) {
           URL.revokeObjectURL(url);
           audioRef.current = null;
         }
+        setRevealedChars(text.length);
         if (phaseRef.current === "speaking") setPhaseSafe("idle");
       };
       audio.onended = release;
       audio.onerror = release;
+
+      setPhaseSafe("speaking");
+      setRevealedChars(0);
       await audio.play();
     },
     [cfg.voice, cfg.pace, setPhaseSafe]
@@ -226,9 +255,11 @@ export function LiveCall({
         const withReply = [...next, { role: "mirror" as const, text: reply }];
         turnsRef.current = withReply;
         setTurns(withReply);
+        setRevealedChars(0);
         await speak(reply);
       } catch (err) {
         setPhaseSafe("idle");
+        setRevealedChars(Infinity);
         toast.error(t("Your voice could not be heard — try again"), {
           description:
             err instanceof Error && err.message !== "quiet"
@@ -244,6 +275,7 @@ export function LiveCall({
 
   const beginListening = useCallback(async () => {
     stopSpeaking();
+    setRevealedChars(Infinity);
     if (busyRef.current) return;
     const ok = await recorder.start();
     if (ok) {
@@ -259,7 +291,7 @@ export function LiveCall({
     busyRef.current = true;
     try {
       const result = await recorder.stop();
-      if (!result || result.durationMs < 350) {
+      if (!result || result.durationMs < 250) {
         setPhaseSafe("idle");
         return;
       }
@@ -319,8 +351,14 @@ export function LiveCall({
 
   const listening = phase === "listening";
   const speaking = phase === "speaking";
-  const thinking = phase === "thinking";
-  const transcribing = phase === "transcribing";
+  const phaseOrder = PHASE_STEPS.findIndex((s) => s.key === phase);
+
+  /* the room is portaled to <body> — a composer's backdrop-blur would
+     otherwise become the containing block for the fixed overlay and
+     shrink the whole room into it */
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return null;
 
   const statusKey =
     phase === "idle"
@@ -333,38 +371,51 @@ export function LiveCall({
             ? "reflecting"
             : "speaking";
 
-  return (
+  /* the words of the last mirror reply, revealed with the voice */
+  const lastMirrorIndex = (() => {
+    for (let i = turns.length - 1; i >= 0; i--) {
+      if (turns[i].role === "mirror") return i;
+    }
+    return -1;
+  })();
+
+  return createPortal(
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.3 }}
+      transition={{ duration: 0.25 }}
       className="fixed inset-0 z-[90] flex items-end justify-center sm:items-center sm:p-6"
       role="dialog"
       aria-modal="true"
       aria-label={t("Live call")}
       data-testid={`live-call-${scope}`}
     >
+      {/* the room: solid, dark, nothing behind it moves */}
       <button
         type="button"
         aria-label={t("End the call")}
         onClick={onClose}
-        className="absolute inset-0 cursor-default bg-[#05030e]/78 backdrop-blur-md"
+        className="absolute inset-0 cursor-default bg-[#040209]"
         tabIndex={-1}
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_90%_at_50%_-10%,color-mix(in_srgb,#120a2a_80%,transparent),transparent_60%)]"
       />
 
       <motion.div
-        initial={{ y: 70, opacity: 0, scale: 0.98 }}
+        initial={{ y: 60, opacity: 0, scale: 0.985 }}
         animate={{ y: 0, opacity: 1, scale: 1 }}
-        exit={{ y: 50, opacity: 0, scale: 0.98 }}
-        transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+        exit={{ y: 44, opacity: 0, scale: 0.985 }}
+        transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
         className={cn(
-          "glass-strong nice-scroll relative w-full overflow-y-auto border-t rounded-t-[28px] sm:rounded-[28px] sm:border sm:max-w-[440px] max-h-[94dvh]",
-          cfg.wrapperClass
+          "nice-scroll relative w-full overflow-y-auto rounded-t-[28px] border bg-[#0a0716] sm:max-w-[460px] sm:rounded-[28px] sm:border max-h-[94dvh]",
+          cfg.wrapperClass ?? ""
         )}
         style={{ borderColor: `color-mix(in srgb, ${cfg.accentA} 30%, transparent)` }}
       >
-        {/* breathing accent line */}
+        {/* a single accent line — the edge of the room */}
         <span
           aria-hidden="true"
           className="absolute inset-x-0 top-0 h-px"
@@ -393,7 +444,7 @@ export function LiveCall({
             aria-hidden="true"
             className={cn(
               "mt-1 flex size-2.5 shrink-0 rounded-full",
-              (phase !== "idle" || turns.length === 0) && "animate-pulse"
+              phase !== "idle" && "animate-pulse"
             )}
             style={{
               background: cfg.accentA,
@@ -402,59 +453,22 @@ export function LiveCall({
           />
         </div>
 
-        {/* ---------- the orb stage ---------- */}
-        <div className="relative flex h-[230px] flex-col items-center justify-center">
-          {/* expanding rings while listening */}
+        {/* ---------- the orb stage — calm, nothing extra ---------- */}
+        <div className="relative flex h-[212px] flex-col items-center justify-center">
+          {/* one soft breath while listening */}
           <AnimatePresence>
-            {listening &&
-              [0, 1, 2].map((i) => (
-                <motion.span
-                  key={`ring-${i}`}
-                  aria-hidden="true"
-                  className="absolute size-28 rounded-full border"
-                  style={{ borderColor: cfg.accentA }}
-                  initial={{ scale: 1, opacity: 0.5 }}
-                  animate={{ scale: 2.1, opacity: 0 }}
-                  exit={{ opacity: 0 }}
-                  transition={{
-                    duration: 1.7,
-                    repeat: Infinity,
-                    delay: i * 0.55,
-                    ease: "easeOut",
-                  }}
-                />
-              ))}
-          </AnimatePresence>
-
-          {/* orbiting reflections while thinking */}
-          <AnimatePresence>
-            {thinking &&
-              [0, 1, 2].map((i) => (
-                <motion.span
-                  key={`orbit-${i}`}
-                  aria-hidden="true"
-                  className="absolute size-[150px]"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1, rotate: 360 }}
-                  exit={{ opacity: 0 }}
-                  transition={{
-                    rotate: {
-                      duration: 3.2,
-                      repeat: Infinity,
-                      ease: "linear",
-                      delay: -i * 1.05,
-                    },
-                  }}
-                >
-                  <span
-                    className="absolute left-1/2 top-0 size-1.5 -translate-x-1/2 rounded-full"
-                    style={{
-                      background: cfg.accentB,
-                      boxShadow: `0 0 8px 1px color-mix(in srgb, ${cfg.accentB} 80%, transparent)`,
-                    }}
-                  />
-                </motion.span>
-              ))}
+            {listening && (
+              <motion.span
+                key="breath"
+                aria-hidden="true"
+                className="absolute size-28 rounded-full border"
+                style={{ borderColor: cfg.accentA }}
+                initial={{ scale: 1, opacity: 0.4 }}
+                animate={{ scale: 1.7, opacity: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 1.9, repeat: Infinity, ease: "easeOut" }}
+              />
+            )}
           </AnimatePresence>
 
           {/* the orb itself */}
@@ -465,59 +479,54 @@ export function LiveCall({
             onPointerCancel={onOrbUp}
             onKeyDown={onOrbKeyDown}
             onKeyUp={onOrbKeyUp}
-            disabled={transcribing}
+            disabled={phase === "transcribing"}
             aria-label={t("Hold the orb and speak — release to send")}
             data-testid="live-call-orb"
             animate={
               listening
-                ? { scale: 1 + recorder.level * 0.12 }
-                : speaking
-                  ? { scale: [1, 1.035, 1] }
-                  : { scale: 1 }
+                ? { scale: 1 + recorder.level * 0.1 }
+                : { scale: 1 }
             }
-            transition={
-              speaking
-                ? { duration: 1.1, repeat: Infinity, ease: "easeInOut" }
-                : { type: "spring", stiffness: 260, damping: 20 }
-            }
+            transition={{ type: "spring", stiffness: 260, damping: 22 }}
             className="relative flex size-28 touch-none select-none items-center justify-center rounded-full disabled:cursor-wait"
             style={{
               background: `radial-gradient(circle at 32% 28%, color-mix(in srgb, ${cfg.accentA} 88%, white) 0%, ${cfg.accentA} 42%, color-mix(in srgb, ${cfg.accentB} 92%, #05030e) 100%)`,
-              boxShadow: `0 0 ${listening ? 46 : 30}px -6px color-mix(in srgb, ${cfg.accentA} 80%, transparent), inset 0 0 26px -8px rgba(255,255,255,0.5)`,
+              boxShadow: `0 0 ${listening ? 42 : 26}px -6px color-mix(in srgb, ${cfg.accentA} 80%, transparent), inset 0 0 26px -8px rgba(255,255,255,0.5)`,
             }}
           >
             {/* waveform: alive with the voice while listening, singing while speaking */}
             <span className="flex h-10 items-center gap-[3px]" aria-hidden="true">
-              {(listening ? [0.9, 0.35, 0.7, 0.5, 1, 0.4, 0.8] : [0.5, 0.8, 0.45, 0.95, 0.55, 0.85, 0.4]).map(
-                (factor, i) => (
-                  <motion.span
-                    key={i}
-                    className="w-[3.5px] rounded-full bg-[#f5f2ff]"
-                    animate={
-                      listening
-                        ? {
-                            scaleY: Math.max(
-                              0.12,
-                              Math.min(1, recorder.level * factor * 2.6)
-                            ),
-                          }
-                        : speaking
-                          ? { scaleY: [0.25, 0.9 * factor + 0.2, 0.3] }
-                          : { scaleY: 0.3 }
-                    }
-                    transition={
-                      speaking
-                        ? {
-                            duration: 0.75 + i * 0.11,
-                            repeat: Infinity,
-                            ease: "easeInOut",
-                          }
-                        : { duration: 0.12 }
-                    }
-                    style={{ height: "100%", transformOrigin: "center" }}
-                  />
-                )
-              )}
+              {(listening
+                ? [0.9, 0.35, 0.7, 0.5, 1, 0.4, 0.8]
+                : [0.4, 0.6, 0.4, 0.7, 0.4, 0.6, 0.4]
+              ).map((factor, i) => (
+                <motion.span
+                  key={i}
+                  className="w-[3.5px] rounded-full bg-[#f5f2ff]"
+                  animate={
+                    listening
+                      ? {
+                          scaleY: Math.max(
+                            0.12,
+                            Math.min(1, recorder.level * factor * 2.6)
+                          ),
+                        }
+                      : speaking
+                        ? { scaleY: [0.3, 0.75 * factor + 0.15, 0.3] }
+                        : { scaleY: 0.3 }
+                  }
+                  transition={
+                    speaking
+                      ? {
+                          duration: 0.9 + i * 0.09,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                        }
+                      : { duration: 0.12 }
+                  }
+                  style={{ height: "100%", transformOrigin: "center" }}
+                />
+              ))}
             </span>
             {phase === "idle" && (
               <Mic
@@ -545,93 +554,116 @@ export function LiveCall({
           )}
         </div>
 
-        {/* ---------- the process strip — every step of the line, visible ---------- */}
-        <div className="flex items-center justify-center gap-1.5 px-5">
-          {PHASE_STEPS.map((step, i) => {
-            const order = PHASE_STEPS.findIndex((s) => s.key === phase);
-            const active = phase === step.key;
-            const done = order >= 0 && i < order;
-            const Icon = step.icon;
-            return (
-              <div
-                key={step.key}
-                className="flex items-center gap-1.5"
-                aria-hidden="true"
-              >
-                {i > 0 && (
-                  <span
-                    className="h-px w-4 sm:w-6"
-                    style={{
-                      background:
-                        done || active
-                          ? `color-mix(in srgb, ${cfg.accentA} 55%, transparent)`
-                          : "var(--hairline)",
-                    }}
-                  />
-                )}
-                <span
-                  className={cn(
-                    "flex items-center gap-1 rounded-full px-2 py-1 transition-all duration-300",
-                    active && "scale-105"
-                  )}
-                  style={{
-                    background: active
-                      ? `color-mix(in srgb, ${cfg.accentA} 16%, transparent)`
-                      : "transparent",
-                  }}
-                >
-                  <Icon
-                    className="size-3"
-                    style={{
-                      color: active
-                        ? cfg.accentA
-                        : done
-                          ? `color-mix(in srgb, ${cfg.accentA} 60%, transparent)`
-                          : "color-mix(in srgb, var(--muted-foreground) 45%, transparent)",
-                    }}
-                  />
-                  <span
-                    className={cn(
-                      "mono-label hidden text-[8.5px] uppercase tracking-[0.14em] sm:inline",
-                      !active && !done && "opacity-60"
-                    )}
-                    style={active ? { color: cfg.accentA } : undefined}
+        {/* ---------- the process rail — one quiet line, every step visible ---- */}
+        <div className="px-6">
+          <div className="relative" aria-hidden="true">
+            {/* the connecting line and its fill */}
+            <span className="absolute left-[9%] right-[9%] top-[13px] h-px bg-[color-mix(in_srgb,var(--muted-foreground)_18%,transparent)]" />
+            <span
+              className="absolute left-[9%] top-[13px] h-px transition-[width] duration-500 ease-out"
+              style={{
+                width: phaseOrder > 0 ? `${((phaseOrder) / 3) * 82}%` : "0%",
+                background: `linear-gradient(90deg, color-mix(in srgb, ${cfg.accentA} 30%, transparent), ${cfg.accentA})`,
+              }}
+            />
+            <div className="relative flex items-start justify-between">
+              {PHASE_STEPS.map((step, i) => {
+                const active = phase === step.key;
+                const done = phaseOrder >= 0 && i < phaseOrder;
+                const Icon = step.icon;
+                return (
+                  <div
+                    key={step.key}
+                    className="flex w-1/4 flex-col items-center gap-1.5"
                   >
-                    {t(step.key)}
-                  </span>
-                </span>
-              </div>
-            );
-          })}
+                    <span
+                      className={cn(
+                        "flex size-[27px] items-center justify-center rounded-full border transition-all duration-300",
+                        active && "scale-110"
+                      )}
+                      style={{
+                        borderColor: active
+                          ? cfg.accentA
+                          : done
+                            ? `color-mix(in srgb, ${cfg.accentA} 45%, transparent)`
+                            : "color-mix(in srgb, var(--muted-foreground) 25%, transparent)",
+                        background: active
+                          ? `color-mix(in srgb, ${cfg.accentA} 16%, transparent)`
+                          : done
+                            ? `color-mix(in srgb, ${cfg.accentA} 7%, transparent)`
+                            : "transparent",
+                        boxShadow: active
+                          ? `0 0 14px -4px color-mix(in srgb, ${cfg.accentA} 80%, transparent)`
+                          : "none",
+                      }}
+                    >
+                      <Icon
+                        className="size-3"
+                        style={{
+                          color: active
+                            ? cfg.accentA
+                            : done
+                              ? `color-mix(in srgb, ${cfg.accentA} 65%, transparent)`
+                              : "color-mix(in srgb, var(--muted-foreground) 50%, transparent)",
+                        }}
+                      />
+                    </span>
+                    <span
+                      className={cn(
+                        "mono-label text-[8.5px] uppercase tracking-[0.12em]",
+                        !active && !done && "opacity-50"
+                      )}
+                      style={
+                        active
+                          ? { color: cfg.accentA }
+                          : done
+                            ? {
+                                color: `color-mix(in srgb, ${cfg.accentA} 60%, transparent)`,
+                              }
+                            : undefined
+                      }
+                    >
+                      {t(step.key)}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
 
         {/* ---------- the words exchanged on this line ---------- */}
         {turns.length > 0 && (
-          <div className="nice-scroll mt-3 max-h-36 overflow-y-auto px-5">
+          <div className="nice-scroll mt-4 max-h-44 overflow-y-auto px-5">
             <div className="flex flex-col gap-2.5">
-              {turns.map((turn, i) => (
-                <div
-                  key={i}
-                  className={cn(
-                    "max-w-[92%] rounded-xl border px-3 py-2 text-[12.5px] leading-relaxed",
-                    turn.role === "visitor"
-                      ? "self-end rounded-br-sm text-foreground/85"
-                      : "self-start rounded-tl-sm"
-                  )}
-                  style={
-                    turn.role === "visitor"
-                      ? { borderColor: "var(--hairline)" }
-                      : {
-                          borderColor: `color-mix(in srgb, ${cfg.accentA} 30%, transparent)`,
-                          background: `color-mix(in srgb, ${cfg.accentA} 6%, transparent)`,
-                        }
-                  }
-                >
-                  {turn.text.length > 320 && turn.role === "mirror"
-                    ? `${turn.text.slice(0, 320)}…`
-                    : turn.text}
-                </div>
-              ))}
+              {turns.map((turn, i) => {
+                const isLastMirror = i === lastMirrorIndex;
+                const text =
+                  isLastMirror && Number.isFinite(revealedChars)
+                    ? turn.text.slice(0, revealedChars)
+                    : turn.text;
+                return (
+                  <div
+                    key={i}
+                    className={cn(
+                      "max-w-[92%] rounded-xl border px-3.5 py-2.5 text-[13.5px] leading-relaxed",
+                      turn.role === "visitor"
+                        ? "self-end rounded-br-sm text-foreground/85"
+                        : "self-start rounded-tl-sm"
+                    )}
+                    style={
+                      turn.role === "visitor"
+                        ? { borderColor: "var(--hairline)" }
+                        : {
+                            borderColor: `color-mix(in srgb, ${cfg.accentA} 30%, transparent)`,
+                            background: `color-mix(in srgb, ${cfg.accentA} 6%, transparent)`,
+                          }
+                    }
+                  >
+                    {text.trim() || (isLastMirror ? "…" : turn.text)}
+                  </div>
+                );
+              })}
               <div ref={transcriptEndRef} aria-hidden="true" />
             </div>
           </div>
@@ -654,6 +686,7 @@ export function LiveCall({
           </button>
         </div>
       </motion.div>
-    </motion.div>
+    </motion.div>,
+    document.body
   );
 }

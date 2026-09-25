@@ -125,7 +125,7 @@ export const SCOPE_META: Record<
     tagline: "Intention · resonance · creation",
     imageKey: "lab-chamber",
     ornament: "alchemy",
-    glyph: "✨",
+    glyph: "◆",
     phases: [
       "Sealing the chamber…",
       "Charging the sigil…",

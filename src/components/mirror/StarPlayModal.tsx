@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { RotateCcw, Sparkles } from "lucide-react";
+import { RotateCcw, Orbit } from "lucide-react";
 import { ModalShell } from "./ModalShell";
 import {
   drawStarPlayCards,
@@ -148,7 +148,7 @@ export function StarPlayModal() {
               data-testid="starplay-draw"
               className="star-btn focus-glow mt-6 flex h-12 items-center gap-2.5 rounded-full px-7 text-[14.5px] font-semibold tracking-[0.08em] text-foreground transition-all duration-300 hover:-translate-y-px"
             >
-              <Sparkles className="size-4 text-[var(--sp-a)]" aria-hidden="true" />
+              <Orbit className="size-4 text-[var(--sp-a)]" aria-hidden="true" />
               {t("Draw three cards")}
             </button>
             <span className="mono-label mt-4 text-[11px] text-muted-foreground/60">
@@ -202,7 +202,7 @@ export function StarPlayModal() {
                     data-testid="starplay-ask"
                     className="star-btn focus-glow flex h-11 items-center gap-2.5 rounded-full px-6 text-[14.5px] font-semibold tracking-[0.08em] text-foreground transition-all duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40"
                   >
-                    <Sparkles className="size-4 text-[var(--sp-a)]" aria-hidden="true" />
+                    <Orbit className="size-4 text-[var(--sp-a)]" aria-hidden="true" />
                     {t("Ask the oracle to weave the three")}
                   </button>
                   {!allRevealed && (
@@ -344,7 +344,7 @@ function TarotCard({
             />
           </span>
           <span className="mono-label absolute inset-x-0 bottom-4 text-center text-[9.5px] uppercase tracking-[0.3em] text-[color-mix(in_srgb,var(--sp-b)_75%,transparent)]">
-            ✦ {t("Star Play")} ✦
+            ◆ {t("Star Play")} ◆
           </span>
         </button>
 

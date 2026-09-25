@@ -9,17 +9,23 @@ import {
   Copy,
   Feather,
   LoaderCircle,
+  Orbit,
   RotateCcw,
   Scroll,
   Share2,
-  Sparkles,
   Square,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import { detectVisualIntent, type VisualizationArtifact } from "@/lib/visualization";
 import { AttachmentChips, ChatInputExtras } from "./ChatInputExtras";
+import {
+  PreparedPromptFallback,
+  VisualizationCard,
+  VisualizationPending,
+} from "./VisualizationCard";
 import {
   attachmentsToPayload,
   hasPendingAttachments,
@@ -56,6 +62,18 @@ export function AkashicView() {
   const [copied, setCopied] = useState(false);
   const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
 
+  /* the Universal Visualization Engine — the Library also answers in
+     images when the visitor asks to see */
+  const [visual, setVisual] = useState<{
+    state: "pending" | "error" | "ready";
+    request: string;
+    artifact?: VisualizationArtifact;
+  } | null>(null);
+  const visualContextRef = useRef<{ subject: string; mode: string } | null>(
+    null
+  );
+  const visualBusyRef = useRef(false);
+
   const seekingRef = useRef(false);
   /* the last entrance kinds the Librarian used — never the same door twice */
   const recentEntrancesRef = useRef<string[]>([]);
@@ -73,6 +91,7 @@ export function AkashicView() {
       setReplyAttempt(asReply);
       setSeeking(true);
       setError(false);
+      setVisual(null);
 
       try {
         const payload = carried ? attachmentsToPayload(carried) : null;
@@ -219,6 +238,63 @@ export function AkashicView() {
     }
   }, [record, voiceState, stopVoice, t]);
 
+  /* ---------------------------------------------------------------- */
+  /*  The Universal Visualization Engine — a request to SEE becomes    */
+  /*  a vision the Library sets beside the open record.                */
+  /* ---------------------------------------------------------------- */
+  const requestVisualization = useCallback(
+    async (request: string) => {
+      if (visualBusyRef.current) return;
+      visualBusyRef.current = true;
+      setVisual({ state: "pending", request });
+
+      try {
+        const res = await fetch("/api/visualize", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            language,
+            message: request,
+            history: record
+              ? [
+                  {
+                    role: "mirror",
+                    text: `${record.title}. ${record.era}. ${record.record}`,
+                  },
+                ]
+              : [],
+            ...(visualContextRef.current
+              ? {
+                  contextSubject: visualContextRef.current.subject,
+                  previousMode: visualContextRef.current.mode,
+                }
+              : {}),
+          }),
+        });
+        const data = (await res.json().catch(() => null)) as {
+          artifact?: VisualizationArtifact;
+          error?: string;
+        } | null;
+        if (!res.ok || !data?.artifact) {
+          throw new Error(data?.error ?? "the atelier stayed quiet");
+        }
+        const artifact = data.artifact;
+        visualContextRef.current = {
+          subject: artifact.subject,
+          mode: artifact.mode,
+        };
+        setVisual({ state: "ready", request, artifact });
+      } catch {
+        setVisual((prev) =>
+          prev ? { ...prev, state: "error" } : { state: "error", request }
+        );
+      } finally {
+        visualBusyRef.current = false;
+      }
+    },
+    [language, record]
+  );
+
   /* ---------- composer ---------- */
 
   const send = (e: FormEvent) => {
@@ -227,9 +303,20 @@ export function AkashicView() {
     const v = draft.trim();
     if (!v && attachments.length === 0) return;
     const carried = attachments.length > 0 ? attachments : undefined;
+    /* No button — a request to see simply is one. Ordinary words
+       never wake the atelier. */
+    const intent = detectVisualIntent(v);
+    const wantsVisual =
+      v &&
+      (intent.direct ||
+        (intent.followUp && visualContextRef.current !== null));
     setDraft("");
     setAttachments([]);
-    void seek(v || null, Boolean(record), carried);
+    if (wantsVisual) {
+      void requestVisualization(v);
+    } else {
+      void seek(v || null, Boolean(record), carried);
+    }
   };
 
   const listening = voiceState === "playing";
@@ -317,7 +404,7 @@ export function AkashicView() {
                   aria-hidden="true"
                   className="ink-gold mb-5 block text-[22px] leading-none"
                 >
-                  ✦ ❧ ✦
+                  ❧
                 </span>
                 <p className="ink-hand mx-auto max-w-[460px] text-[18px] leading-[1.9] sm:text-[20px]">
                   {t(
@@ -353,7 +440,7 @@ export function AkashicView() {
                   aria-hidden="true"
                   className="ink-gold mb-6 block text-center text-[22px] leading-none"
                 >
-                  ✦ ❧ ✦
+                  ❧
                 </span>
                 <div className="mx-auto flex max-w-[480px] flex-col gap-3.5">
                   {[86, 70, 92, 60, 78].map((w, i) => (
@@ -415,27 +502,27 @@ export function AkashicView() {
                 {/* corner light codes */}
                 <span
                   aria-hidden="true"
-                  className="ink-gold pointer-events-none absolute left-3 top-2.5 text-[13px] opacity-70"
+                  className="ink-gold pointer-events-none absolute left-3 top-2.5 text-[11px] opacity-70"
                 >
-                  ✶
+                  ◆
                 </span>
                 <span
                   aria-hidden="true"
-                  className="ink-gold pointer-events-none absolute right-3 top-2.5 text-[13px] opacity-70"
+                  className="ink-gold pointer-events-none absolute right-3 top-2.5 text-[11px] opacity-70"
                 >
-                  ✶
+                  ◆
                 </span>
                 <span
                   aria-hidden="true"
-                  className="ink-gold pointer-events-none absolute bottom-2.5 left-3 text-[13px] opacity-70"
+                  className="ink-gold pointer-events-none absolute bottom-2.5 left-3 text-[11px] opacity-70"
                 >
-                  ✶
+                  ◆
                 </span>
                 <span
                   aria-hidden="true"
-                  className="ink-gold pointer-events-none absolute bottom-2.5 right-3 text-[13px] opacity-70"
+                  className="ink-gold pointer-events-none absolute bottom-2.5 right-3 text-[11px] opacity-70"
                 >
-                  ✶
+                  ◆
                 </span>
 
                 {/* title & era */}
@@ -550,6 +637,68 @@ export function AkashicView() {
               </motion.article>
             )}
           </AnimatePresence>
+
+          {/* the vision — the Library sets it beside the record when asked to see */}
+          {visual && !seeking && (
+            <motion.div
+              key="akashic-visual"
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+              className="relative mx-auto mt-8 w-full"
+              data-testid="akashic-visual"
+            >
+              {visual.state === "pending" && (
+                <VisualizationPending
+                  accent="var(--gd)"
+                  testIdPrefix="akashic-visual"
+                  repaint
+                />
+              )}
+              {visual.state === "error" && (
+                <div
+                  className="papyrus papyrus-frame rounded-2xl px-6 py-8 text-center"
+                  data-testid="akashic-visual-error"
+                >
+                  <p className="ink-hand text-[16px] leading-[1.85]">
+                    {t(
+                      "The atelier is quiet — the vision could not be composed. Rest a breath, then ask again."
+                    )}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => void requestVisualization(visual.request)}
+                    data-testid="akashic-visual-retry"
+                    className="papyrus-btn focus-glow mt-5 inline-flex h-10 items-center gap-2 rounded-full px-5 text-[12px] font-semibold tracking-[0.08em]"
+                  >
+                    <RotateCcw className="size-3.5" aria-hidden="true" />
+                    {t("Be still and receive")}
+                  </button>
+                </div>
+              )}
+              {visual.state === "ready" && visual.artifact && (
+                <>
+                  {visual.artifact.imageUrl ||
+                  visual.artifact.slides.length > 0 ? (
+                    <VisualizationCard
+                      artifact={visual.artifact}
+                      accent="var(--gd)"
+                      testIdPrefix="akashic-visual"
+                      onRegenerate={() =>
+                        void requestVisualization(visual.request)
+                      }
+                    />
+                  ) : (
+                    <PreparedPromptFallback
+                      artifact={visual.artifact}
+                      accent="var(--gd)"
+                      testIdPrefix="akashic-visual"
+                    />
+                  )}
+                </>
+              )}
+            </motion.div>
+          )}
         </div>
       </div>
 
@@ -578,7 +727,7 @@ export function AkashicView() {
             data-testid="akashic-unprompted"
             className="focus-glow flex size-11 shrink-0 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--gd)_30%,transparent)] text-[var(--gd)] transition-all duration-300 hover:-translate-y-px hover:border-[var(--hairline-hover)] hover:shadow-[0_0_22px_-8px_color-mix(in_srgb,var(--gd)_75%,transparent)] disabled:cursor-not-allowed disabled:opacity-40"
           >
-            <Sparkles className="size-4" aria-hidden="true" />
+            <Orbit className="size-4" aria-hidden="true" />
           </button>
 
           <input
@@ -626,7 +775,7 @@ export function AkashicView() {
           </div>
         </form>
         <p className="mono-label mt-2.5 text-center text-[9px] uppercase tracking-[0.26em] text-muted-foreground/50">
-          ✦ {t("received by resonance — the ancient one remembers")} ✦
+          {t("received by resonance — the ancient one remembers")}
         </p>
       </div>
     </div>

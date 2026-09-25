@@ -7,7 +7,7 @@ import {
   BadgeCheck,
   Layers,
   Search,
-  Sparkles,
+  Orbit,
   X,
 } from "lucide-react";
 import {
@@ -101,7 +101,7 @@ function RegisterRow({
             {rep.specialty}
           </span>
         </span>
-        <Sparkles
+        <Orbit
           className="size-4 shrink-0 text-muted-foreground/30 transition-colors duration-300 group-hover:text-[var(--cy)]"
           aria-hidden="true"
         />

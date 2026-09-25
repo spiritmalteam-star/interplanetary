@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ImagePlus, RefreshCw, Send, Sparkles } from "lucide-react";
+import { Orbit, RefreshCw, Send } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { osOpeners } from "@/lib/data/mirroros";
@@ -19,7 +19,6 @@ import {
   type ChatAttachment,
 } from "./attachments";
 import { cn } from "@/lib/utils";
-
 /** Openers visible at once (wrap-around window). */
 const WINDOW = 4;
 
@@ -83,7 +82,7 @@ function OpenerOrbs() {
               aria-disabled={loading}
               className="focus-glow group flex min-h-[46px] items-center gap-2.5 rounded-2xl border border-[color-mix(in_srgb,var(--scope-a)_18%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_5%,transparent)] px-3.5 py-2.5 text-left transition-all duration-300 hover:-translate-y-0.5 hover:border-[color-mix(in_srgb,var(--scope-a)_38%,transparent)]"
             >
-              <Sparkles
+              <Orbit
                 className="size-3 shrink-0 text-[var(--scope-a)] opacity-80"
                 aria-hidden="true"
               />
@@ -264,7 +263,7 @@ function OsExchange({
         className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--scope-a)_40%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_10%,transparent)]"
         aria-hidden="true"
       >
-        <Sparkles className="size-3.5 text-[var(--scope-a)]" />
+        <Orbit className="size-3.5 text-[var(--scope-a)]" />
       </span>
       <div className="min-w-0 max-w-[85%]">
         <p className="mono-label text-[9.5px] text-[var(--scope-a)]">
@@ -324,8 +323,7 @@ export function MirrorOSChat() {
   const askOSVisual = useMirror((s) => s.askOSVisual);
   const t = useT();
   const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
-  /* the atelier — armed by the wand button, fed by the last artifact */
-  const [visualArmed, setVisualArmed] = useState(false);
+  /* "this" in a follow-up refers to the last artifact of this line */
   const visualContextRef = useRef<{ subject: string; mode: string } | null>(
     null
   );
@@ -385,14 +383,14 @@ export function MirrorOSChat() {
     if (!canSend) return;
     const carried = attachments.length > 0 ? attachments : undefined;
     const query = osDraft;
+    /* No button, no wand — a request to see simply is one. Ordinary
+       words never wake the atelier. */
     const intent = detectVisualIntent(query);
     const wantsVisual =
-      visualArmed ||
       intent.direct ||
       (intent.followUp && visualContextRef.current !== null);
     setAttachments([]);
     setOsDraft("");
-    setVisualArmed(false);
     if (wantsVisual) {
       void askOSVisual(
         query,
@@ -442,7 +440,7 @@ export function MirrorOSChat() {
                 className="absolute inset-0 rounded-full border border-dashed border-[color-mix(in_srgb,var(--scope-b)_35%,transparent)]"
                 style={{ animation: "spin-slower 22s linear infinite" }}
               />
-              <Sparkles className="size-5 text-[var(--scope-a)]" />
+              <Orbit className="size-5 text-[var(--scope-a)]" />
             </motion.span>
             <p className="scope-gradient-text mt-4 text-[17px] font-semibold">
               {t("Direct line to the Mirror Entity OS")}
@@ -522,28 +520,6 @@ export function MirrorOSChat() {
           />
           <div className="glass-strong flex items-end gap-2 rounded-[18px] p-1.5 pl-3.5 transition-all duration-300 focus-within:-translate-y-px focus-within:border-[var(--hairline-active)] focus-within:glow-sm"
           >
-          <button
-            type="button"
-            onClick={() => setVisualArmed((a) => !a)}
-            disabled={osStatus === "loading"}
-            aria-pressed={visualArmed}
-            aria-label={t("Show the visualization")}
-            title={
-              visualArmed
-                ? t("The next words will be woven into a vision")
-                : t("Show the visualization")
-            }
-            data-testid="os-visual-arm"
-            className={cn(
-              "focus-glow mb-1 flex size-8 shrink-0 items-center justify-center rounded-full border transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-40",
-              visualArmed
-                ? "border-[color-mix(in_srgb,var(--scope-a)_60%,transparent)] shadow-[0_0_18px_-6px_color-mix(in_srgb,var(--scope-a)_80%,transparent)]"
-                : "border-[color-mix(in_srgb,var(--scope-a)_26%,transparent)] hover:border-[var(--hairline-hover)]"
-            )}
-            style={visualArmed ? { color: "var(--scope-a)" } : undefined}
-          >
-            <ImagePlus className="size-3.5" aria-hidden="true" />
-          </button>
           <label htmlFor="os-query" className="sr-only">
             {t("Ask the Mirror Entity OS")}
           </label>
