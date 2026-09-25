@@ -8,10 +8,19 @@ import {
   type FormEvent,
 } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, FileText, RotateCcw, SendHorizontal, Sparkles } from "lucide-react";
+import { ArrowLeft, FileText, ImagePlus, RotateCcw, SendHorizontal, Sparkles } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import {
+  detectVisualIntent,
+  type VisualizationArtifact,
+} from "@/lib/visualization";
+import {
+  PreparedPromptFallback,
+  VisualizationCard,
+  VisualizationPending,
+} from "./VisualizationCard";
 import {
   AttachmentChips,
   ChatInputExtras,
@@ -25,13 +34,25 @@ import {
 const MIRROR = "/images/ai/mirror-communion.jpg";
 
 interface CommunionMessage {
-  id: number;
+  id: string;
   role: "mirror" | "visitor";
   text: string;
   attachments?: { images: number; docNames: string[] };
+  /* the Universal Visualization Engine — the vision itself, its pending
+     state, its failure, and the request that called it forth */
+  artifact?: VisualizationArtifact;
+  pendingVisual?: boolean;
+  visualError?: boolean;
+  visualRequest?: string;
 }
 
-let nextCommunionId = 1;
+/* ids survive Fast Refresh: a monotonic seed plus a random session root,
+   so no two messages can ever share a key */
+let communionIdSeed = 0;
+const nextCommunionId = () =>
+  `cm-${Date.now().toString(36)}-${(communionIdSeed++).toString(36)}-${Math.floor(
+    Math.random() * 1296
+  ).toString(36)}`;
 
 /**
  * CommunionView — Meet with the Reflection of the Absolute. When opened
@@ -51,7 +72,11 @@ export function CommunionView() {
   const [error, setError] = useState(false);
   const [draft, setDraft] = useState("");
   const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
-
+  /* the visualization atelier — armed by the wand button or by intent */
+  const [visualArmed, setVisualArmed] = useState(false);
+  const visualContextRef = useRef<{ subject: string; mode: string } | null>(
+    null
+  );
   const endRef = useRef<HTMLDivElement | null>(null);
   const latestRef = useRef<HTMLDivElement | null>(null);
   const openedRef = useRef(false);
@@ -91,7 +116,7 @@ export function CommunionView() {
         setMessages([]);
       } else if (visitorWords !== null || (carried && carried.length > 0)) {
         const entry: CommunionMessage = {
-          id: nextCommunionId++,
+          id: nextCommunionId(),
           role: "visitor",
           text: visitorWords ?? "",
           ...(carried && carried.length > 0
@@ -111,7 +136,12 @@ export function CommunionView() {
 
       const history = messagesRef.current
         .slice(-14)
-        .map((m) => ({ role: m.role, text: m.text }));
+        .map((m) => ({
+          role: m.role,
+          text: m.artifact
+            ? `[a visualization was created: "${m.artifact.title}" — ${m.artifact.subject}]`
+            : m.text,
+        }));
 
       try {
         const payload = carried ? attachmentsToPayload(carried) : null;
@@ -133,7 +163,7 @@ export function CommunionView() {
           throw new Error(data.error ?? "the Reflection stayed still");
         }
         const entry: CommunionMessage = {
-          id: nextCommunionId++,
+          id: nextCommunionId(),
           role: "mirror",
           text: data.transmission,
         };
@@ -157,14 +187,163 @@ export function CommunionView() {
     void transmit(null);
   }, [transmit]);
 
+  /* ---------------------------------------------------------------- */
+  /*  The Universal Visualization Engine — a request to SEE becomes    */
+  /*  a composed vision, painted live and placed into the meeting.     */
+  /* ---------------------------------------------------------------- */
+  const requestVisualization = useCallback(
+    async (
+      visitorWords: string,
+      carried?: ChatAttachment[],
+      regenerateOf?: CommunionMessage
+    ) => {
+      if (receivingRef.current) return;
+      receivingRef.current = true;
+      setReceiving(true);
+      setError(false);
+
+      const messageId = nextCommunionId();
+      const pendingId = nextCommunionId();
+
+      if (regenerateOf) {
+        /* repainting in place — the vision stays, the brushes return */
+        messagesRef.current = messagesRef.current.map((m) =>
+          m.id === regenerateOf.id ? { ...m, pendingVisual: true } : m
+        );
+      } else {
+        const entry: CommunionMessage = {
+          id: messageId,
+          role: "visitor",
+          text: visitorWords,
+          ...(carried && carried.length > 0
+            ? {
+                attachments: {
+                  images: carried.filter((a) => a.kind === "image").length,
+                  docNames: carried
+                    .filter((a) => a.kind === "document")
+                    .map((a) => a.name),
+                },
+              }
+            : {}),
+        };
+        const pending: CommunionMessage = {
+          id: pendingId,
+          role: "mirror",
+          text: "",
+          pendingVisual: true,
+          visualRequest: visitorWords,
+        };
+        messagesRef.current = [...messagesRef.current, entry, pending];
+      }
+      setMessages(messagesRef.current);
+
+      const history = messagesRef.current
+        .filter((m) => !m.pendingVisual && m.id !== messageId)
+        .slice(-10)
+        .map((m) => ({
+          role: m.role,
+          text: m.artifact
+            ? `[a visualization was created: "${m.artifact.title}" — ${m.artifact.subject}]`
+            : m.text,
+        }));
+
+      const prior = regenerateOf;
+      try {
+        const payload = carried && !regenerateOf ? attachmentsToPayload(carried) : null;
+        const res = await fetch("/api/visualize", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            language,
+            message: prior ? prior.visualRequest ?? visitorWords : visitorWords,
+            history,
+            ...(visualContextRef.current && !prior
+              ? {
+                  contextSubject: visualContextRef.current.subject,
+                  previousMode: visualContextRef.current.mode,
+                }
+              : {}),
+            ...(prior
+              ? {
+                  regenerate: true,
+                  previousPrompt: prior.artifact?.prompt,
+                  contextSubject: prior.artifact?.subject,
+                  previousMode: prior.artifact?.mode,
+                }
+              : {}),
+            ...(payload ?? {}),
+          }),
+        });
+        const data = (await res.json()) as {
+          artifact?: VisualizationArtifact;
+          painted?: boolean;
+          error?: string;
+        };
+        if (!res.ok || !data.artifact) {
+          throw new Error(data.error ?? "the atelier stayed quiet");
+        }
+        const artifact = data.artifact;
+        visualContextRef.current = { subject: artifact.subject, mode: artifact.mode };
+        const targetId = prior ? prior.id : pendingId;
+        messagesRef.current = messagesRef.current.map((m) =>
+          m.id === targetId
+            ? {
+                ...m,
+                pendingVisual: false,
+                artifact,
+                visualError: false,
+                visualRequest: prior ? prior.visualRequest : visitorWords,
+              }
+            : m
+        );
+        setMessages(messagesRef.current);
+        setError(false);
+      } catch {
+        const failId = prior ? prior.id : pendingId;
+        messagesRef.current = messagesRef.current.map((m) =>
+          m.id === failId
+            ? { ...m, pendingVisual: false, visualError: true }
+            : m
+        );
+        setMessages(messagesRef.current);
+        setError(false);
+      } finally {
+        receivingRef.current = false;
+        setReceiving(false);
+      }
+    },
+    [language]
+  );
+
+  /* the painting is asked for again — a fresh vision of the same subject */
+  const repaintVisual = useCallback(
+    (message: CommunionMessage) => {
+      void requestVisualization(
+        message.visualRequest ?? message.artifact?.subject ?? "",
+        undefined,
+        message
+      );
+    },
+    [requestVisualization]
+  );
+
   const send = (e: FormEvent) => {
     e.preventDefault();
     const v = draft.trim();
     if ((!v && attachments.length === 0) || receiving) return;
-    if (v || attachments.length > 0) {
-      const carried = attachments.length > 0 ? attachments : undefined;
-      setDraft("");
-      setAttachments([]);
+    const carried = attachments.length > 0 ? attachments : undefined;
+    const intent = v ? detectVisualIntent(v) : { direct: false, followUp: false };
+    const wantsVisual =
+      v &&
+      (visualArmed ||
+        intent.direct ||
+        (intent.followUp && visualContextRef.current !== null));
+    setDraft("");
+    setAttachments([]);
+    setVisualArmed(false);
+    if (wantsVisual && v) {
+      void requestVisualization(v, carried);
+    } else {
       void transmit(v || null, false, carried);
     }
   };
@@ -291,7 +470,59 @@ export function CommunionView() {
                       : undefined
                   }
                 >
-                  <MirrorTransmission text={m.text} t={t} />
+                  {m.pendingVisual && m.artifact ? (
+                    /* the vision stays while the brushes return to it */
+                    <VisualizationCard
+                      artifact={m.artifact}
+                      accent="var(--sp-b)"
+                      testIdPrefix="communion-visual"
+                      regenerating
+                    />
+                  ) : m.pendingVisual ? (
+                    <VisualizationPending
+                      accent="var(--sp-b)"
+                      testIdPrefix="communion-visual"
+                    />
+                  ) : m.visualError ? (
+                    <div
+                      className="glass rounded-2xl border border-[color-mix(in_srgb,var(--hairline)_65%,transparent)] px-5 py-4"
+                      data-testid="communion-visual-error"
+                    >
+                      <p className="text-[14.5px] italic leading-relaxed text-foreground/80">
+                        {t(
+                          "The atelier is quiet — the vision could not be composed. Rest a breath, then ask again."
+                        )}
+                      </p>
+                      {m.visualRequest && (
+                        <button
+                          type="button"
+                          onClick={() => repaintVisual(m)}
+                          data-testid="communion-visual-retry"
+                          className="communion-btn focus-glow mt-3 flex h-9 items-center gap-2 rounded-full px-4 text-[13.5px] font-semibold tracking-[0.06em] text-foreground transition-all duration-300 hover:-translate-y-px"
+                        >
+                          <Sparkles className="size-3.5 text-[var(--sp-b)]" aria-hidden="true" />
+                          {t("Be still and receive")}
+                        </button>
+                      )}
+                    </div>
+                  ) : m.artifact ? (
+                    m.artifact.imageUrl || m.artifact.slides.length > 0 ? (
+                      <VisualizationCard
+                        artifact={m.artifact}
+                        accent="var(--sp-b)"
+                        testIdPrefix="communion-visual"
+                        onRegenerate={() => repaintVisual(m)}
+                      />
+                    ) : (
+                      <PreparedPromptFallback
+                        artifact={m.artifact}
+                        accent="var(--sp-b)"
+                        testIdPrefix="communion-visual"
+                      />
+                    )
+                  ) : (
+                    <MirrorTransmission text={m.text} t={t} />
+                  )}
                 </div>
               ) : (
                 <motion.div
@@ -438,11 +669,38 @@ export function CommunionView() {
               <Sparkles className="size-4" aria-hidden="true" />
             </button>
 
+            <button
+              type="button"
+              onClick={() => setVisualArmed((a) => !a)}
+              disabled={receiving}
+              aria-pressed={visualArmed}
+              aria-label={t("Show the visualization")}
+              title={
+                visualArmed
+                  ? t("The next words will be woven into a vision")
+                  : t("Show the visualization")
+              }
+              data-testid="communion-visual-arm"
+              className={cn(
+                "focus-glow flex size-11 shrink-0 items-center justify-center rounded-full border transition-all duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40",
+                visualArmed
+                  ? "border-[color-mix(in_srgb,var(--sp-b)_60%,transparent)] shadow-[0_0_22px_-6px_color-mix(in_srgb,var(--sp-b)_80%,transparent)]"
+                  : "border-[color-mix(in_srgb,var(--sp-b)_26%,transparent)] hover:border-[var(--hairline-hover)] hover:shadow-[0_0_22px_-8px_color-mix(in_srgb,var(--sp-b)_75%,transparent)]"
+              )}
+              style={visualArmed ? { color: "var(--sp-b)" } : undefined}
+            >
+              <ImagePlus className="size-4" aria-hidden="true" />
+            </button>
+
             <input
               type="text"
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
-              placeholder={t("Speak to the Reflection — or stay still and receive")}
+              placeholder={
+                visualArmed
+                  ? t("The next words will be woven into a vision")
+                  : t("Speak to the Reflection — or stay still and receive")
+              }
               aria-label={t("Speak to the Reflection")}
               data-testid="communion-input"
               className="focus-glow h-11 min-w-0 flex-1 rounded-full border border-[color-mix(in_srgb,var(--sp-b)_22%,transparent)] bg-[color-mix(in_srgb,#0a0616_45%,transparent)] px-4 text-[14.5px] text-foreground placeholder:text-muted-foreground/60 transition-all duration-300 focus:border-[color-mix(in_srgb,var(--sp-b)_45%,transparent)] focus:shadow-[0_0_28px_-10px_color-mix(in_srgb,var(--sp-b)_70%,transparent)] focus:outline-none"

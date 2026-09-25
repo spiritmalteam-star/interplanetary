@@ -2,11 +2,17 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { RefreshCw, Send, Sparkles } from "lucide-react";
+import { ImagePlus, RefreshCw, Send, Sparkles } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { osOpeners } from "@/lib/data/mirroros";
+import { detectVisualIntent } from "@/lib/visualization";
 import { ListenButton } from "./ListenButton";
+import {
+  PreparedPromptFallback,
+  VisualizationCard,
+  VisualizationPending,
+} from "./VisualizationCard";
 import { AttachmentChips, ChatInputExtras } from "./ChatInputExtras";
 import {
   hasPendingAttachments,
@@ -115,6 +121,87 @@ function OsThinking() {
   );
 }
 
+/* -------- one exchange in the direct line (visualization aware) ----- */
+
+function OsVisualBlock({
+  messageId,
+  visualRequest,
+  accent,
+  testIdPrefix,
+}: {
+  messageId: string;
+  visualRequest?: string;
+  accent: string;
+  testIdPrefix: string;
+}) {
+  const t = useT();
+  const askOSVisual = useMirror((s) => s.askOSVisual);
+  const artifact = useMirror(
+    (s) => s.osMessages.find((m) => m.id === messageId)?.artifact
+  );
+  const visual = useMirror(
+    (s) => s.osMessages.find((m) => m.id === messageId)?.visual
+  );
+
+  if (visual === "pending" && artifact) {
+    return <VisualizationCard artifact={artifact} accent={accent} testIdPrefix={testIdPrefix} regenerating />;
+  }
+  if (visual === "pending") {
+    return <VisualizationPending accent={accent} testIdPrefix={testIdPrefix} />;
+  }
+  if (visual === "error") {
+    return (
+      <div
+        className="glass rounded-2xl border border-[color-mix(in_srgb,var(--hairline)_65%,transparent)] px-4 py-3.5"
+        data-testid={`${testIdPrefix}-error`}
+      >
+        <p className="text-[14px] italic leading-relaxed text-foreground/80">
+          {t(
+            "The atelier is quiet — the vision could not be composed. Rest a breath, then ask again."
+          )}
+        </p>
+        {visualRequest && (
+          <button
+            type="button"
+            onClick={() => void askOSVisual(visualRequest, null, null)}
+            data-testid={`${testIdPrefix}-retry`}
+            className="focus-glow mt-2.5 flex h-9 items-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--scope-a)_35%,transparent)] px-4 text-[13px] text-foreground/90 transition-all duration-300 hover:-translate-y-px"
+          >
+            <RefreshCw className="size-3.5" aria-hidden="true" />
+            {t("Be still and receive")}
+          </button>
+        )}
+      </div>
+    );
+  }
+  if (!artifact) return null;
+  if (!artifact.imageUrl && artifact.slides.length === 0) {
+    return (
+      <PreparedPromptFallback artifact={artifact} accent={accent} testIdPrefix={testIdPrefix} />
+    );
+  }
+  return (
+    <VisualizationCard
+      artifact={artifact}
+      accent={accent}
+      testIdPrefix={testIdPrefix}
+      onRegenerate={() =>
+        void askOSVisual(
+          visualRequest ?? artifact.subject,
+          null,
+          {
+            id: messageId,
+            request: visualRequest ?? artifact.subject,
+            prompt: artifact.prompt,
+            subject: artifact.subject,
+            mode: artifact.mode,
+          }
+        )
+      }
+    />
+  );
+}
+
 /* ---------------- one exchange in the direct line ---------------- */
 
 function OsExchange({
@@ -122,11 +209,15 @@ function OsExchange({
   text,
   animate,
   attachments,
+  hasVisual,
+  messageId,
 }: {
   role: "visitor" | "os";
   text: string;
   animate: boolean;
   attachments?: { images: number; docNames: string[] };
+  hasVisual?: boolean;
+  messageId?: string;
 }) {
   const t = useT();
   if (role === "visitor") {
@@ -179,19 +270,43 @@ function OsExchange({
         <p className="mono-label text-[9.5px] text-[var(--scope-a)]">
           MIRROR ENTITY OS
         </p>
-        <div className="mt-1.5 space-y-3 rounded-2xl rounded-tl-md glass px-4 py-3">
-          {text.split(/\n{2,}/).map((p, i) => (
-            <p
-              key={i}
-              className="text-[15px] leading-[1.8] text-foreground/88"
-            >
-              {p}
-            </p>
-          ))}
-        </div>
-        <div className="mt-1.5 flex">
-          <ListenButton text={text} cacheKey={`os-${text.slice(0, 24)}-${text.length}`} />
-        </div>
+        {hasVisual && messageId ? (
+          <div className="mt-1.5">
+            {text.trim() && (
+              <div className="space-y-3 rounded-2xl rounded-tl-md glass px-4 py-3">
+                {text.split(/\n{2,}/).map((p, i) => (
+                  <p
+                    key={i}
+                    className="text-[15px] leading-[1.8] text-foreground/88"
+                  >
+                    {p}
+                  </p>
+                ))}
+              </div>
+            )}
+            <OsVisualBlock
+              messageId={messageId}
+              accent="var(--scope-a)"
+              testIdPrefix="os-visual"
+            />
+          </div>
+        ) : (
+          <>
+            <div className="mt-1.5 space-y-3 rounded-2xl rounded-tl-md glass px-4 py-3">
+              {text.split(/\n{2,}/).map((p, i) => (
+                <p
+                  key={i}
+                  className="text-[15px] leading-[1.8] text-foreground/88"
+                >
+                  {p}
+                </p>
+              ))}
+            </div>
+            <div className="mt-1.5 flex">
+              <ListenButton text={text} cacheKey={`os-${text.slice(0, 24)}-${text.length}`} />
+            </div>
+          </>
+        )}
       </div>
     </motion.div>
   );
@@ -206,8 +321,14 @@ export function MirrorOSChat() {
   const osDraft = useMirror((s) => s.osDraft);
   const setOsDraft = useMirror((s) => s.setOsDraft);
   const askOS = useMirror((s) => s.askOS);
+  const askOSVisual = useMirror((s) => s.askOSVisual);
   const t = useT();
   const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
+  /* the atelier — armed by the wand button, fed by the last artifact */
+  const [visualArmed, setVisualArmed] = useState(false);
+  const visualContextRef = useRef<{ subject: string; mode: string } | null>(
+    null
+  );
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const latestRef = useRef<HTMLDivElement | null>(null);
@@ -237,6 +358,16 @@ export function MirrorOSChat() {
     }
   }, [osMessages.length, osStatus, osError]);
 
+  /* remember the last artifact's subject so follow-ups can evolve it */
+  useEffect(() => {
+    const lastArtifact = [...osMessages]
+      .reverse()
+      .find((m) => m.artifact)?.artifact;
+    visualContextRef.current = lastArtifact
+      ? { subject: lastArtifact.subject, mode: lastArtifact.mode }
+      : visualContextRef.current;
+  }, [osMessages]);
+
   /* auto-resize composer */
   useEffect(() => {
     const el = textareaRef.current;
@@ -253,8 +384,28 @@ export function MirrorOSChat() {
   const submit = () => {
     if (!canSend) return;
     const carried = attachments.length > 0 ? attachments : undefined;
+    const query = osDraft;
+    const intent = detectVisualIntent(query);
+    const wantsVisual =
+      visualArmed ||
+      intent.direct ||
+      (intent.followUp && visualContextRef.current !== null);
     setAttachments([]);
-    void askOS(osDraft, carried);
+    setOsDraft("");
+    setVisualArmed(false);
+    if (wantsVisual) {
+      void askOSVisual(
+        query,
+        visualContextRef.current
+          ? {
+              subject: visualContextRef.current.subject,
+              mode: visualContextRef.current.mode as never,
+            }
+          : null
+      );
+    } else {
+      void askOS(query, carried);
+    }
   };
 
   return (
@@ -320,8 +471,12 @@ export function MirrorOSChat() {
                 <OsExchange
                   role={m.role}
                   text={m.text}
-                  animate={i === osMessages.length - 1 && osStatus !== "loading"}
+                  animate={
+                    i === osMessages.length - 1 && osStatus !== "loading"
+                  }
                   attachments={m.attachments}
+                  hasVisual={Boolean(m.artifact || m.visual)}
+                  messageId={m.id}
                 />
               </div>
             ))}
@@ -367,6 +522,28 @@ export function MirrorOSChat() {
           />
           <div className="glass-strong flex items-end gap-2 rounded-[18px] p-1.5 pl-3.5 transition-all duration-300 focus-within:-translate-y-px focus-within:border-[var(--hairline-active)] focus-within:glow-sm"
           >
+          <button
+            type="button"
+            onClick={() => setVisualArmed((a) => !a)}
+            disabled={osStatus === "loading"}
+            aria-pressed={visualArmed}
+            aria-label={t("Show the visualization")}
+            title={
+              visualArmed
+                ? t("The next words will be woven into a vision")
+                : t("Show the visualization")
+            }
+            data-testid="os-visual-arm"
+            className={cn(
+              "focus-glow mb-1 flex size-8 shrink-0 items-center justify-center rounded-full border transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-40",
+              visualArmed
+                ? "border-[color-mix(in_srgb,var(--scope-a)_60%,transparent)] shadow-[0_0_18px_-6px_color-mix(in_srgb,var(--scope-a)_80%,transparent)]"
+                : "border-[color-mix(in_srgb,var(--scope-a)_26%,transparent)] hover:border-[var(--hairline-hover)]"
+            )}
+            style={visualArmed ? { color: "var(--scope-a)" } : undefined}
+          >
+            <ImagePlus className="size-3.5" aria-hidden="true" />
+          </button>
           <label htmlFor="os-query" className="sr-only">
             {t("Ask the Mirror Entity OS")}
           </label>

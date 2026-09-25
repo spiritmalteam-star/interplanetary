@@ -21,6 +21,10 @@ import {
   attachmentsToPayload,
   type ChatAttachment,
 } from "@/components/mirror/attachments";
+import type {
+  VisualizationArtifact,
+  VisualizationMode,
+} from "@/lib/visualization";
 
 export type ModalState =
   | { type: "federation" }
@@ -94,6 +98,10 @@ export interface OsMessage {
   role: "visitor" | "os";
   text: string;
   attachments?: { images: number; docNames: string[] };
+  /* the Universal Visualization Engine — the OS also answers in images */
+  artifact?: VisualizationArtifact;
+  visual?: "pending" | "error";
+  visualRequest?: string;
 }
 
 interface MirrorState {
@@ -201,6 +209,21 @@ interface MirrorState {
   /* Mirror Entity OS — direct chat */
   setOsDraft: (v: string) => void;
   askOS: (question: string, attachments?: ChatAttachment[]) => Promise<void>;
+  /** The Universal Visualization Engine — the OS paints what is asked to
+      be seen. `regenerateOf` repaints one existing artifact in place. */
+  askOSVisual: (
+    question: string,
+    context?: { subject: string; mode: VisualizationMode } | null,
+    regenerateOf?: {
+      id: string;
+      request?: string;
+      prompt?: string;
+      subject?: string;
+      mode?: VisualizationMode;
+    } | null
+  ) => Promise<void>;
+  /** Drop one artifact message entirely (the visitor may clear it). */
+  dismissOsVisual: (id: string) => void;
 }
 
 const defaultTabForMode = (mode: Mode): SidebarTab =>
@@ -583,6 +606,104 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       });
     }
   },
+
+  /* ------- Mirror Entity OS — the visualization engine ------- */
+
+  askOSVisual: async (question, context, regenerateOf) => {
+    if (get().osStatus === "loading") return;
+    const visualId = regenerateOf ? regenerateOf.id : nextMessageId();
+
+    set((s) => ({
+      osStatus: "loading",
+      osError: null,
+      osDraft: "",
+      osMessages: regenerateOf
+        ? s.osMessages.map((m) =>
+            m.id === regenerateOf.id ? { ...m, visual: "pending" as const } : m
+          )
+        : [
+            ...s.osMessages,
+            {
+              id: nextMessageId(),
+              role: "visitor" as const,
+              text: question,
+            },
+            {
+              id: visualId,
+              role: "os" as const,
+              text: "",
+              visual: "pending" as const,
+              visualRequest: question,
+            },
+          ],
+    }));
+
+    try {
+      const history = get()
+        .osMessages.filter((m) => !m.visual && m.id !== visualId)
+        .slice(-10)
+        .map((m) => ({
+          role: m.role,
+          text: m.artifact
+            ? `[a visualization was created: "${m.artifact.title}" — ${m.artifact.subject}]`
+            : m.text,
+        }));
+
+      const res = await fetch("/api/visualize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          language: get().language,
+          message: regenerateOf ? regenerateOf.request ?? question : question,
+          history,
+          ...(regenerateOf
+            ? {
+                regenerate: true,
+                previousPrompt: regenerateOf.prompt,
+                contextSubject: regenerateOf.subject,
+                previousMode: regenerateOf.mode,
+              }
+            : context
+              ? {
+                  contextSubject: context.subject,
+                  previousMode: context.mode,
+                }
+              : {}),
+        }),
+      });
+      const data = (await res.json().catch(() => null)) as {
+        artifact?: VisualizationArtifact;
+        painted?: boolean;
+        error?: string;
+      } | null;
+      if (!res.ok || !data?.artifact) {
+        throw new Error(
+          (data && data.error) ||
+            "The atelier is quiet — the vision could not be composed."
+        );
+      }
+
+      const artifact = data.artifact;
+      set((s) => ({
+        osStatus: "ready",
+        osMessages: s.osMessages.map((m) =>
+          m.id === visualId
+            ? { ...m, visual: undefined, artifact, text: "" }
+            : m
+        ),
+      }));
+    } catch {
+      set((s) => ({
+        osStatus: "ready",
+        osMessages: s.osMessages.map((m) =>
+          m.id === visualId ? { ...m, visual: "error" as const } : m
+        ),
+      }));
+    }
+  },
+
+  dismissOsVisual: (id) =>
+    set((s) => ({ osMessages: s.osMessages.filter((m) => m.id !== id) })),
 
   /* ---------------- Language + transcript voice ---------------- */
 
