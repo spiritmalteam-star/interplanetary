@@ -195,30 +195,49 @@ const MODE_DEFAULT_SIZE: Record<VisualizationMode, ImageSize> = {
 /*  the atelier — one real painting, saved and served                  */
 /* ------------------------------------------------------------------ */
 
+/* One brush at a time — the atelier refuses parallel hands, and a
+   refused hand (429) is given time, never abandoned. Every paint is
+   queued behind the previous one and retried with growing patience. */
+const PAINT_BACKOFF_MS = [2500, 6000, 12000, 20000];
+
+let brushLine: Promise<unknown> = Promise.resolve();
+function withBrush<T>(task: () => Promise<T>): Promise<T> {
+  const run = brushLine.then(task, task);
+  brushLine = run.catch(() => undefined);
+  return run;
+}
+
 async function paint(
   zai: Awaited<ReturnType<typeof ZAI.create>>,
   prompt: string,
   size: ImageSize,
-  attempts = 2
+  attempts = 4
 ): Promise<string | null> {
-  for (let i = 0; i < attempts; i++) {
-    try {
-      const response = await zai.images.generations.create({ prompt, size });
-      const base64 = response?.data?.[0]?.base64;
-      if (!base64) continue;
-      fs.mkdirSync(ART_DIR, { recursive: true });
-      const name = `viz-${Date.now().toString(36)}-${crypto
-        .randomBytes(3)
-        .toString("hex")}.png`;
-      fs.writeFileSync(path.join(ART_DIR, name), Buffer.from(base64, "base64"));
-      return name;
-    } catch (err) {
-      console.error(`[api/visualize] paint attempt ${i + 1} failed:`, err);
-      if (i < attempts - 1)
-        await new Promise((r) => setTimeout(r, 1500 * (i + 1)));
+  return withBrush(async () => {
+    for (let i = 0; i < attempts; i++) {
+      try {
+        const response = await zai.images.generations.create({ prompt, size });
+        const base64 = response?.data?.[0]?.base64;
+        if (base64) {
+          fs.mkdirSync(ART_DIR, { recursive: true });
+          const name = `viz-${Date.now().toString(36)}-${crypto
+            .randomBytes(3)
+            .toString("hex")}.png`;
+          fs.writeFileSync(path.join(ART_DIR, name), Buffer.from(base64, "base64"));
+          return name;
+        }
+        console.error(`[api/visualize] paint attempt ${i + 1}: empty canvas returned`);
+      } catch (err) {
+        console.error(`[api/visualize] paint attempt ${i + 1} failed:`, err);
+      }
+      if (i < attempts - 1) {
+        await new Promise((r) =>
+          setTimeout(r, PAINT_BACKOFF_MS[Math.min(i, PAINT_BACKOFF_MS.length - 1)])
+        );
+      }
     }
-  }
-  return null;
+    return null;
+  });
 }
 
 /** Keep the atelier tidy — paintings older than two days are released. */
@@ -437,14 +456,19 @@ export async function POST(req: NextRequest) {
     const slideImages: (string | null)[] = [];
 
     if (mode === "presentation") {
-      /* painted one by one — the atelier's brushes are shared, and a
-         hurried hand is refused; each slide may try twice */
+      /* painted one by one — the queue keeps the brushes honest; each
+         slide may try three times before the brushes rest */
       const slideDefs = slidesSpec.slice(0, 5);
       for (const s of slideDefs) {
         const sd = s as { artworkPrompt?: unknown };
         const sp = str(sd?.artworkPrompt, 1200) || artworkPrompt;
         slideImages.push(
-          await paint(zai, `${sp}. ${ART_DIRECTION}. ${ART_AVOID}.`, "1344x768")
+          await paint(
+            zai,
+            `${sp}. ${ART_DIRECTION}. ${ART_AVOID}.`,
+            "1344x768",
+            3
+          )
         );
       }
     } else {

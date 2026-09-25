@@ -343,6 +343,19 @@ function ExchangeVisual({ message }: { message: ChatMessage }) {
         artifact={artifact}
         accent="var(--scope-a)"
         testIdPrefix="scope-visual"
+        onPaint={() =>
+          void askScopeVisual(
+            activeMode,
+            message.visualRequest ?? artifact.subject,
+            {
+              id: message.id,
+              request: message.visualRequest ?? artifact.subject,
+              prompt: artifact.prompt,
+              subject: artifact.subject,
+              mode: artifact.mode,
+            }
+          )
+        }
       />
     );
   }

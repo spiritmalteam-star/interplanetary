@@ -57,20 +57,34 @@ export function QueryComposer() {
     status !== "loading" &&
     !hasPendingAttachments(attachments);
 
-  const submit = () => {
-    if (!canSend) return;
+  const submitText = (raw: string) => {
+    const query = raw.trim();
+    if (!query || status === "loading" || hasPendingAttachments(attachments))
+      return;
     const carried = attachments.length > 0 ? attachments : undefined;
     /* The visualization engine is not a button — a request to SEE simply
        is one. Ordinary words never wake the atelier. */
-    const intent = detectVisualIntent(draft);
+    const intent = detectVisualIntent(query);
     const wantsVisual =
       intent.direct || (intent.followUp && lastArtifact !== null);
     setAttachments([]);
     if (wantsVisual) {
-      void askScopeVisual(activeMode, draft, null);
+      void askScopeVisual(activeMode, query, null);
     } else {
-      void askMirror(draft, carried);
+      void askMirror(query, carried);
     }
+  };
+
+  const submit = () => submitText(draft);
+
+  /* the voice becomes words in the field — visible for a breath — then
+     the words fly to the mirror on their own */
+  const handleVoiceSubmit = (text: string) => {
+    const state = useMirror.getState();
+    const prev = state.sessions[state.activeMode].draft.trim();
+    const finalText = prev ? `${prev} ${text}` : text;
+    setDraft(finalText);
+    window.setTimeout(() => submitText(finalText), 650);
   };
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -128,9 +142,12 @@ export function QueryComposer() {
             scope={activeMode as LiveScopeKey}
             size="xs"
             disabled={status === "loading"}
-            onTranscript={(text) =>
-              setDraft(draft ? `${draft} ${text}` : text)
-            }
+            onTranscript={(text) => {
+              const state = useMirror.getState();
+              const prev = state.sessions[state.activeMode].draft;
+              setDraft(prev ? `${prev} ${text}` : text);
+            }}
+            onVoiceSubmit={handleVoiceSubmit}
             attachments={attachments}
             onAttachmentsChange={setAttachments}
           />

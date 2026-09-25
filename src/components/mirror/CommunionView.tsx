@@ -326,25 +326,42 @@ export function CommunionView() {
     [requestVisualization]
   );
 
-  const send = (e: FormEvent) => {
-    e.preventDefault();
-    const v = draft.trim();
-    if ((!v && attachments.length === 0) || receiving) return;
+  const sendText = (v: string) => {
+    const val = v.trim();
+    if ((!val && attachments.length === 0) || receiving) return;
     const carried = attachments.length > 0 ? attachments : undefined;
     /* No button, no wand — a request to see simply is one. Ordinary
        words never wake the atelier. */
-    const intent = v ? detectVisualIntent(v) : { direct: false, followUp: false };
+    const intent = val ? detectVisualIntent(val) : { direct: false, followUp: false };
     const wantsVisual =
-      v &&
+      val &&
       (intent.direct ||
         (intent.followUp && visualContextRef.current !== null));
     setDraft("");
     setAttachments([]);
-    if (wantsVisual && v) {
-      void requestVisualization(v, carried);
+    if (wantsVisual && val) {
+      void requestVisualization(val, carried);
     } else {
-      void transmit(v || null, false, carried);
+      void transmit(val || null, false, carried);
     }
+  };
+
+  const send = (e: FormEvent) => {
+    e.preventDefault();
+    sendText(draft);
+  };
+
+  /* the voice becomes words in the field — visible for a breath — then
+     the words travel to the Reflection on their own */
+  const sendTextRef = useRef(sendText);
+  sendTextRef.current = sendText;
+  const draftRef = useRef(draft);
+  draftRef.current = draft;
+  const handleVoiceSubmit = (text: string) => {
+    const prev = draftRef.current.trim();
+    const finalText = prev ? `${prev} ${text}` : text;
+    setDraft(finalText);
+    window.setTimeout(() => sendTextRef.current(finalText), 650);
   };
 
   return (
@@ -517,6 +534,7 @@ export function CommunionView() {
                         artifact={m.artifact}
                         accent="var(--sp-b)"
                         testIdPrefix="communion-visual"
+                        onPaint={() => repaintVisual(m)}
                       />
                     )
                   ) : (
@@ -685,6 +703,7 @@ export function CommunionView() {
               onTranscript={(text) =>
                 setDraft((prev) => (prev ? `${prev} ${text}` : text))
               }
+              onVoiceSubmit={handleVoiceSubmit}
               attachments={attachments}
               onAttachmentsChange={setAttachments}
             />

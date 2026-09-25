@@ -618,6 +618,29 @@ export const useMirror = create<MirrorState>()((set, get) => ({
           },
         },
       }));
+
+      /* the same one silent repaint for the scope channels */
+      if (!regenerateOf && !artifact.imageUrl && artifact.slides.length === 0) {
+        window.setTimeout(() => {
+          const msg = get().sessions[mode].messages.find(
+            (m) => m.id === visualId
+          );
+          if (
+            msg?.artifact &&
+            !msg.artifact.imageUrl &&
+            msg.artifact.slides.length === 0 &&
+            !msg.visual
+          ) {
+            void get().askScopeVisual(mode, msg.visualRequest ?? artifact.subject, {
+              id: visualId,
+              request: msg.visualRequest ?? artifact.subject,
+              prompt: artifact.prompt,
+              subject: artifact.subject,
+              mode: artifact.mode,
+            });
+          }
+        }, 1200);
+      }
     } catch {
       set((s) => ({
         sessions: {
@@ -827,6 +850,29 @@ export const useMirror = create<MirrorState>()((set, get) => ({
             : m
         ),
       }));
+
+      /* The atelier rested before the brush touched the canvas — one
+         silent repaint is set in motion before the prepared prompt is
+         shown. The visitor waits once more, not forever. */
+      if (!regenerateOf && !artifact.imageUrl && artifact.slides.length === 0) {
+        window.setTimeout(() => {
+          const msg = get().osMessages.find((m) => m.id === visualId);
+          if (
+            msg?.artifact &&
+            !msg.artifact.imageUrl &&
+            msg.artifact.slides.length === 0 &&
+            !msg.visual
+          ) {
+            void get().askOSVisual(artifact.subject, null, {
+              id: visualId,
+              request: msg.visualRequest ?? artifact.subject,
+              prompt: artifact.prompt,
+              subject: artifact.subject,
+              mode: artifact.mode,
+            });
+          }
+        }, 1200);
+      }
     } catch {
       set((s) => ({
         osStatus: "ready",

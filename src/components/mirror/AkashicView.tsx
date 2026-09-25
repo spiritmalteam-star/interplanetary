@@ -297,26 +297,43 @@ export function AkashicView() {
 
   /* ---------- composer ---------- */
 
-  const send = (e: FormEvent) => {
-    e.preventDefault();
+  const sendText = (v: string) => {
     if (seeking) return;
-    const v = draft.trim();
-    if (!v && attachments.length === 0) return;
+    const val = v.trim();
+    if (!val && attachments.length === 0) return;
     const carried = attachments.length > 0 ? attachments : undefined;
     /* No button — a request to see simply is one. Ordinary words
        never wake the atelier. */
-    const intent = detectVisualIntent(v);
+    const intent = detectVisualIntent(val);
     const wantsVisual =
-      v &&
+      val &&
       (intent.direct ||
         (intent.followUp && visualContextRef.current !== null));
     setDraft("");
     setAttachments([]);
     if (wantsVisual) {
-      void requestVisualization(v);
+      void requestVisualization(val);
     } else {
-      void seek(v || null, Boolean(record), carried);
+      void seek(val || null, Boolean(record), carried);
     }
+  };
+
+  const send = (e: FormEvent) => {
+    e.preventDefault();
+    sendText(draft);
+  };
+
+  /* the voice becomes words on the desk — visible for a breath — then
+     the resonance is sought on its own */
+  const sendTextRef = useRef(sendText);
+  sendTextRef.current = sendText;
+  const draftRef = useRef(draft);
+  draftRef.current = draft;
+  const handleVoiceSubmit = (text: string) => {
+    const prev = draftRef.current.trim();
+    const finalText = prev ? `${prev} ${text}` : text;
+    setDraft(finalText);
+    window.setTimeout(() => sendTextRef.current(finalText), 650);
   };
 
   const listening = voiceState === "playing";
@@ -693,6 +710,9 @@ export function AkashicView() {
                       artifact={visual.artifact}
                       accent="var(--gd)"
                       testIdPrefix="akashic-visual"
+                      onPaint={() =>
+                        void requestVisualization(visual.request)
+                      }
                     />
                   )}
                 </>
@@ -755,6 +775,7 @@ export function AkashicView() {
             onTranscript={(text) =>
               setDraft((prev) => (prev ? `${prev} ${text}` : text))
             }
+            onVoiceSubmit={handleVoiceSubmit}
             attachments={attachments}
             onAttachmentsChange={setAttachments}
           />

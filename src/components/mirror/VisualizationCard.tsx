@@ -10,6 +10,7 @@ import {
   Download,
   LoaderCircle,
   Maximize2,
+  Paintbrush,
   RefreshCw,
   X,
 } from "lucide-react";
@@ -156,10 +157,13 @@ export function PreparedPromptFallback({
   artifact,
   accent,
   testIdPrefix,
+  onPaint,
 }: {
   artifact: VisualizationArtifact;
   accent: string;
   testIdPrefix: string;
+  /** One press — the atelier tries the canvas again. */
+  onPaint?: () => void;
 }) {
   const t = useT();
   const [copied, setCopied] = useState(false);
@@ -194,15 +198,33 @@ export function PreparedPromptFallback({
       <p className="nice-scroll mt-2.5 max-h-24 overflow-y-auto rounded-xl border border-[color-mix(in_srgb,var(--hairline)_55%,transparent)] bg-[color-mix(in_srgb,var(--hairline)_16%,transparent)] px-3.5 py-2.5 text-[12.5px] leading-relaxed text-muted-foreground">
         {artifact.prompt}
       </p>
-      <button
-        type="button"
-        onClick={() => void copyPrompt()}
-        className="focus-glow mt-3 flex h-9 items-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--hairline)_70%,transparent)] px-4 text-[13px] text-foreground/85 transition-all duration-300 hover:-translate-y-px hover:border-[var(--hairline-hover)]"
-        data-testid={`${testIdPrefix}-copy-prompt`}
-      >
-        <Copy className="size-3.5" aria-hidden="true" />
-        {copied ? t("copied") : t("Copy the prompt")}
-      </button>
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        {onPaint && (
+          <button
+            type="button"
+            onClick={onPaint}
+            data-testid={`${testIdPrefix}-paint-now`}
+            className="focus-glow flex h-9 items-center gap-2 rounded-full px-4 text-[13px] font-semibold transition-all duration-300 hover:-translate-y-px"
+            style={{
+              border: `1px solid color-mix(in srgb, ${accent} 45%, transparent)`,
+              color: accent,
+              background: `color-mix(in srgb, ${accent} 10%, transparent)`,
+            }}
+          >
+            <Paintbrush className="size-3.5" aria-hidden="true" />
+            {t("Paint it now")}
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={() => void copyPrompt()}
+          className="focus-glow flex h-9 items-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--hairline)_70%,transparent)] px-4 text-[13px] text-foreground/85 transition-all duration-300 hover:-translate-y-px hover:border-[var(--hairline-hover)]"
+          data-testid={`${testIdPrefix}-copy-prompt`}
+        >
+          <Copy className="size-3.5" aria-hidden="true" />
+          {copied ? t("copied") : t("Copy the prompt")}
+        </button>
+      </div>
     </motion.div>
   );
 }

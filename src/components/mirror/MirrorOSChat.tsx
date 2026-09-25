@@ -176,7 +176,24 @@ function OsVisualBlock({
   if (!artifact) return null;
   if (!artifact.imageUrl && artifact.slides.length === 0) {
     return (
-      <PreparedPromptFallback artifact={artifact} accent={accent} testIdPrefix={testIdPrefix} />
+      <PreparedPromptFallback
+        artifact={artifact}
+        accent={accent}
+        testIdPrefix={testIdPrefix}
+        onPaint={() =>
+          void askOSVisual(
+            visualRequest ?? artifact.subject,
+            null,
+            {
+              id: messageId,
+              request: visualRequest ?? artifact.subject,
+              prompt: artifact.prompt,
+              subject: artifact.subject,
+              mode: artifact.mode,
+            }
+          )
+        }
+      />
     );
   }
   return (
@@ -379,10 +396,11 @@ export function MirrorOSChat() {
     osStatus !== "loading" &&
     !hasPendingAttachments(attachments);
 
-  const submit = () => {
-    if (!canSend) return;
+  const submitText = (raw: string) => {
+    const query = raw.trim();
+    if (!query || osStatus === "loading" || hasPendingAttachments(attachments))
+      return;
     const carried = attachments.length > 0 ? attachments : undefined;
-    const query = osDraft;
     /* No button, no wand — a request to see simply is one. Ordinary
        words never wake the atelier. */
     const intent = detectVisualIntent(query);
@@ -390,7 +408,8 @@ export function MirrorOSChat() {
       intent.direct ||
       (intent.followUp && visualContextRef.current !== null);
     setAttachments([]);
-    setOsDraft("");
+    /* clear the field only when it still holds exactly what is sent */
+    if (useMirror.getState().osDraft.trim() === query) setOsDraft("");
     if (wantsVisual) {
       void askOSVisual(
         query,
@@ -404,6 +423,17 @@ export function MirrorOSChat() {
     } else {
       void askOS(query, carried);
     }
+  };
+
+  const submit = () => submitText(osDraft);
+
+  /* the voice becomes words in the field — visible for a breath — and
+     then the words fly to the OS on their own. No second hand needed. */
+  const handleVoiceSubmit = (text: string) => {
+    const prev = useMirror.getState().osDraft.trim();
+    const finalText = prev ? `${prev} ${text}` : text;
+    setOsDraft(finalText);
+    window.setTimeout(() => submitText(finalText), 650);
   };
 
   return (
@@ -544,8 +574,13 @@ export function MirrorOSChat() {
             accentVar="var(--scope-a)"
             disabled={osStatus === "loading"}
             onTranscript={(text) =>
-              setOsDraft(osDraft ? `${osDraft} ${text}` : text)
+              setOsDraft(
+                useMirror.getState().osDraft
+                  ? `${useMirror.getState().osDraft} ${text}`
+                  : text
+              )
             }
+            onVoiceSubmit={handleVoiceSubmit}
             attachments={attachments}
             onAttachmentsChange={setAttachments}
           />

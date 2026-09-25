@@ -8,6 +8,7 @@ import {
   LoaderCircle,
   Mic,
   Paperclip,
+  Send,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -32,11 +33,13 @@ import {
 /*  ChatInputExtras — the microphone and the paperclip, on every       */
 /*  chat input. The paperclip receives ONE image and up to THREE       */
 /*  documents (PDF, Excel, Word). The microphone records by tap;       */
-/*  held for more than 1.5 seconds it opens the scope's own live       */
-/*  call — a mini tab in the exact theme of the room it came from.     */
+/*  tap again — or press the glowing voice-send button — and the       */
+/*  recording becomes words in the input, then flies on its own.       */
+/*  Held for ONE second it opens the scope's own live call — the       */
+/*  hold ring and its label make that threshold visible.               */
 /* ------------------------------------------------------------------ */
 
-const HOLD_MS = 1500;
+const HOLD_MS = 1000;
 
 interface ChatInputExtrasProps {
   scope: LiveScopeKey;
@@ -46,6 +49,9 @@ interface ChatInputExtrasProps {
   /** Accent CSS variable for the hold ring and recording glow. */
   accentVar?: string;
   onTranscript: (text: string) => void;
+  /** When given, a finished recording is placed into the input AND
+      sent automatically — the voice needs no second hand. */
+  onVoiceSubmit?: (text: string) => void;
   attachments: ChatAttachment[];
   onAttachmentsChange: (
     next: ChatAttachment[] | ((prev: ChatAttachment[]) => ChatAttachment[])
@@ -58,6 +64,7 @@ export function ChatInputExtras({
   size = "md",
   accentVar = "var(--scope-a)",
   onTranscript,
+  onVoiceSubmit,
   attachments,
   onAttachmentsChange,
 }: ChatInputExtrasProps) {
@@ -68,7 +75,12 @@ export function ChatInputExtras({
   const rafRef = useRef(0);
   const pressStartRef = useRef(0);
   const holdFiredRef = useRef(false);
-  const wantingTranscriptRef = useRef(false);
+  const transcribingRef = useRef(false);
+  /* always-current callbacks — a transcript never lands stale */
+  const onTranscriptRef = useRef(onTranscript);
+  onTranscriptRef.current = onTranscript;
+  const onVoiceSubmitRef = useRef(onVoiceSubmit);
+  onVoiceSubmitRef.current = onVoiceSubmit;
 
   const [holding, setHolding] = useState(false);
   const [holdProgress, setHoldProgress] = useState(0);
@@ -98,41 +110,52 @@ export function ChatInputExtras({
   const beginListening = useCallback(async () => {
     const ok = await recorder.start();
     if (!ok) {
-      wantingTranscriptRef.current = false;
       toast.error(t("The microphone is unavailable"));
       return;
     }
   }, [recorder, t]);
 
-  const finishTranscript = useCallback(async () => {
-    wantingTranscriptRef.current = false;
-    setTranscribing(true);
-    try {
-      const result = await recorder.stop();
-      if (!result || result.durationMs < 250) {
+  /* stop → transcribe → the words appear in the input → (optionally)
+     the words are sent on their own. One gesture, start to finish. */
+  const finalizeVoice = useCallback(
+    async (autoSend: boolean) => {
+      if (transcribingRef.current) return;
+      transcribingRef.current = true;
+      setTranscribing(true);
+      try {
+        const result = await recorder.stop();
+        if (!result || result.durationMs < 250) {
+          toast.error(t("Your voice could not be heard — try again"));
+          return;
+        }
+        const audio = await readFileAsDataUrl(result.wav);
+        const res = await fetch("/api/asr", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ audio }),
+        });
+        const data = (await res.json().catch(() => null)) as {
+          text?: string;
+          error?: string;
+        } | null;
+        if (!res.ok || !data?.text?.trim()) {
+          throw new Error(data?.error ?? "quiet");
+        }
+        const words = data.text.trim();
+        if (autoSend && onVoiceSubmitRef.current) {
+          onVoiceSubmitRef.current(words);
+        } else {
+          onTranscriptRef.current(words);
+        }
+      } catch {
         toast.error(t("Your voice could not be heard — try again"));
-        return;
+      } finally {
+        transcribingRef.current = false;
+        setTranscribing(false);
       }
-      const audio = await readFileAsDataUrl(result.wav);
-      const res = await fetch("/api/asr", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ audio }),
-      });
-      const data = (await res.json().catch(() => null)) as {
-        text?: string;
-        error?: string;
-      } | null;
-      if (!res.ok || !data?.text?.trim()) {
-        throw new Error(data?.error ?? "quiet");
-      }
-      onTranscript(data.text.trim());
-    } catch {
-      toast.error(t("Your voice could not be heard — try again"));
-    } finally {
-      setTranscribing(false);
-    }
-  }, [recorder, onTranscript, t]);
+    },
+    [recorder, t]
+  );
 
   const cancelPress = useCallback(() => {
     cancelAnimationFrame(rafRef.current);
@@ -144,9 +167,9 @@ export function ChatInputExtras({
     if (disabled || transcribing) return;
     e.preventDefault();
 
-    /* already recording — this press places the words into the field */
+    /* already recording — this press sends the voice on its journey */
     if (recorder.recording) {
-      void finishTranscript();
+      void finalizeVoice(true);
       return;
     }
 
@@ -158,15 +181,13 @@ export function ChatInputExtras({
     holdFiredRef.current = false;
     pressStartRef.current = performance.now();
     setHolding(true);
-    wantingTranscriptRef.current = true;
 
     const tick = () => {
       const p = Math.min(1, (performance.now() - pressStartRef.current) / HOLD_MS);
       setHoldProgress(p);
       if (p >= 1) {
-        /* the 1.5 second threshold — the live call opens itself */
+        /* ONE second of hold — the live connection opens itself */
         holdFiredRef.current = true;
-        wantingTranscriptRef.current = false;
         cancelPress();
         recorder.cancel();
         setLiveCallOpen(true);
@@ -188,9 +209,9 @@ export function ChatInputExtras({
     if (holdFiredRef.current) return;
     cancelPress();
     /* TAP-TO-RECORD: the first tap arms the microphone and it stays
-       listening; the next tap places the words into the input. Whether
-       the release lands before or after the mic finished opening, the
-       recording continues — the voice is never lost. */
+       listening; the next tap sends the voice. Whether the release
+       lands before or after the mic finished opening, the recording
+       continues — the voice is never lost. */
   };
 
   const onMicKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
@@ -199,7 +220,7 @@ export function ChatInputExtras({
       e.preventDefault();
       if (disabled || transcribing) return;
       if (recorder.recording) {
-        void finishTranscript();
+        void finalizeVoice(true);
         return;
       }
       void beginListening();
@@ -336,13 +357,29 @@ export function ChatInputExtras({
         <Paperclip className={cn(iconSize, "text-muted-foreground")} aria-hidden="true" />
       </button>
 
-      {/* microphone — tap once to record, tap again to place the words · hold for the live call */}
+      {/* microphone — tap once to record, tap again to send · hold 1s for the live call */}
       <span
         className={cn("relative shrink-0", btnSize)}
         data-testid={`chat-mic-${scope}`}
       >
+        {/* the hold indicator — one second opens the live connection */}
+        {holding && (
+          <span
+            aria-hidden="true"
+            className="mono-label pointer-events-none absolute -top-7 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border px-2 py-0.5 text-[9px] tracking-[0.14em]"
+            style={{
+              borderColor: `color-mix(in srgb, ${accentVar} 55%, transparent)`,
+              color: accentVar,
+              background: "color-mix(in srgb, #05030e 72%, transparent)",
+              boxShadow: `0 0 14px -4px color-mix(in srgb, ${accentVar} 70%, transparent)`,
+              opacity: 0.35 + holdProgress * 0.65,
+            }}
+          >
+            {t("Hold 1s — live connection")}
+          </span>
+        )}
         {/* the recording clock — the voice is being heard */}
-        {recording && (
+        {recording && !holding && (
           <span
             aria-hidden="true"
             className="mono-label pointer-events-none absolute -top-7 left-1/2 -translate-x-1/2 rounded-full border px-1.5 py-0.5 text-[9px] tracking-[0.14em]"
@@ -367,7 +404,7 @@ export function ChatInputExtras({
               r="20"
               fill="none"
               stroke={accentVar}
-              strokeWidth="2"
+              strokeWidth="2.5"
               strokeLinecap="round"
               strokeDasharray={2 * Math.PI * 20}
               strokeDashoffset={2 * Math.PI * 20 * (1 - holdProgress)}
@@ -403,12 +440,12 @@ export function ChatInputExtras({
           onKeyUp={onMicKeyUp}
           aria-label={
             recording
-              ? t("Recording — tap again to place your words")
+              ? t("Recording — tap again to send your voice")
               : t("Speak by voice")
           }
           title={
             recording
-              ? t("Recording — tap again to place your words")
+              ? t("Recording — tap again to send your voice")
               : `${t("Speak by voice")} — ${t("Hold for a live call")}`
           }
           aria-pressed={recording}
@@ -435,6 +472,39 @@ export function ChatInputExtras({
           )}
         </button>
       </span>
+
+      {/* the voice-send button — glowing while the voice is held:
+          one press transcribes into the input and sends on its own */}
+      <AnimatePresence>
+        {recording && (
+          <motion.button
+            type="button"
+            initial={{ opacity: 0, scale: 0.6 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.6 }}
+            transition={{ duration: 0.22, ease: "easeOut" }}
+            onClick={() => void finalizeVoice(true)}
+            disabled={transcribing}
+            aria-label={t("Send your voice")}
+            title={t("Send your voice")}
+            data-testid={`chat-voice-send-${scope}`}
+            className={cn(
+              "focus-glow flex shrink-0 items-center justify-center rounded-full text-[#0b0714] disabled:cursor-wait",
+              btnSize
+            )}
+            style={{
+              background: `linear-gradient(135deg, ${accentVar}, color-mix(in srgb, ${accentVar} 55%, #f5f2ff))`,
+              boxShadow: `0 0 ${14 + recorder.level * 16}px -4px color-mix(in srgb, ${accentVar} 85%, transparent)`,
+            }}
+          >
+            {transcribing ? (
+              <LoaderCircle className={cn(iconSize, "animate-spin")} aria-hidden="true" />
+            ) : (
+              <Send className={iconSize} aria-hidden="true" />
+            )}
+          </motion.button>
+        )}
+      </AnimatePresence>
 
       {/* the live call — the scope's own direct line */}
       <AnimatePresence>
