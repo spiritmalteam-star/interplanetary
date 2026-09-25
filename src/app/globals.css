@@ -673,6 +673,7 @@ html:not(.dark) .text-hero {
   .communion-btn::before,
   .communion-halo,
   .communion-ring,
+  .communion-star,
   .tarot-glare {
     animation: none !important;
   }
@@ -685,23 +686,55 @@ html:not(.dark) .text-hero {
 
 /* ------------------------------------------------------------------ */
 /*  COMMUNION — Meet with the Reflection of the Absolute               */
-/*  The deep violet field, the breathing mirror, the rings of          */
-/*  awareness, the luminous transmission panels.                       */
+/*  The cosmic void (#0a0010, near-black with a violet undertone) as   */
+/*  the sacred space; stars drifting upward like slow prayers; the     */
+/*  nebulae as emotional weather — cosmic purple longing, aurora teal  */
+/*  healing, gold revelation; the breathing mirror; the luminous       */
+/*  transmission papers; every seed of wisdom rendered in gold.        */
 /* ------------------------------------------------------------------ */
 
 .communion-deep {
+  /* the atmosphere of the mirror book — its own world, both themes */
+  --sp-a: #7b2d8e; /* the nebula of longing */
+  --sp-b: #00d4aa; /* the aurora of healing */
+  --communion-gold: #d4af37; /* revelation */
   background:
     radial-gradient(
       110% 70% at 50% 0%,
-      color-mix(in srgb, var(--sp-a) 9%, transparent) 0%,
+      color-mix(in srgb, var(--sp-a) 11%, transparent) 0%,
       transparent 58%
     ),
     radial-gradient(
       120% 90% at 50% 110%,
-      color-mix(in srgb, var(--sp-b) 7%, transparent) 0%,
+      color-mix(in srgb, var(--sp-b) 8%, transparent) 0%,
       transparent 60%
     ),
-    #05030e;
+    #0a0010;
+}
+
+/* The stars of the void — rising like slow prayers, twinkling
+   between thoughts. Each mote carries its own rhythm. */
+.communion-star {
+  position: absolute;
+  bottom: -6px;
+  border-radius: 9999px;
+  background: #efe9ff;
+  opacity: var(--o, 0.5);
+  box-shadow:
+    0 0 6px 1px rgba(238, 230, 255, 0.5),
+    0 0 14px 2px color-mix(in srgb, var(--sp-b) 22%, transparent);
+  animation:
+    communion-star-rise linear infinite,
+    communion-star-twinkle ease-in-out infinite;
+  will-change: transform, filter;
+}
+@keyframes communion-star-rise {
+  from { transform: translateY(0); }
+  to { transform: translateY(calc(-100vh - 32px)); }
+}
+@keyframes communion-star-twinkle {
+  0%, 100% { filter: brightness(0.7); }
+  50% { filter: brightness(1.7); }
 }
 
 .communion-btn {
@@ -795,6 +828,40 @@ html:not(.dark) .text-hero {
     color-mix(in srgb, #7a5a1e 65%, transparent),
     transparent
   );
+}
+
+/* The seed of wisdom — gold, for revelation: one line the seeker
+   carries like a light code out of the mirror book. */
+.communion-seed-rule {
+  display: block;
+  width: 128px;
+  height: 1px;
+  margin: 0 auto;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, #d4af37 75%, transparent),
+    transparent
+  );
+}
+.communion-seed-line {
+  margin-top: 0.9rem;
+  text-align: center;
+  font-size: 14.5px;
+  font-style: italic;
+  line-height: 1.75;
+  color: #6f5412;
+  text-wrap: balance;
+}
+.communion-seed-gem {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 0.55rem;
+  vertical-align: 1px;
+  transform: rotate(45deg);
+  background: #d4af37;
+  box-shadow: 0 0 10px color-mix(in srgb, #d4af37 60%, transparent);
 }
 
 /* ------------------------------------------------------------------ */

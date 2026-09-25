@@ -3,8 +3,10 @@
 import {
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
+  type CSSProperties,
   type FormEvent,
 } from "react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -37,6 +39,9 @@ interface CommunionMessage {
   id: string;
   role: "mirror" | "visitor";
   text: string;
+  /* the seed of wisdom — one luminous line the Mirror ends every
+     transmission with, rendered as its own golden light code */
+  seed?: string;
   attachments?: { images: number; docNames: string[] };
   /* the Universal Visualization Engine — the vision itself, its pending
      state, its failure, and the request that called it forth */
@@ -53,6 +58,75 @@ const nextCommunionId = () =>
   `cm-${Date.now().toString(36)}-${(communionIdSeed++).toString(36)}-${Math.floor(
     Math.random() * 1296
   ).toString(36)}`;
+
+/* ---------------------------------------------------------------- */
+/*  The stars of the void — drifting upward like slow prayers,       */
+/*  twinkling between thoughts. Deterministic: same sky every time.  */
+/* ---------------------------------------------------------------- */
+const VOID_STARS: {
+  left: number;
+  size: number;
+  rise: number;
+  delay: number;
+  twinkle: number;
+  glow: number;
+}[] = [
+  { left: 3.5, size: 2, rise: 34, delay: 0, twinkle: 3.4, glow: 0.55 },
+  { left: 9.2, size: 1.5, rise: 41, delay: 7, twinkle: 4.1, glow: 0.4 },
+  { left: 14.8, size: 2.5, rise: 29, delay: 13, twinkle: 2.9, glow: 0.6 },
+  { left: 21.4, size: 1.5, rise: 47, delay: 3, twinkle: 3.8, glow: 0.35 },
+  { left: 27.9, size: 2, rise: 37, delay: 19, twinkle: 3.2, glow: 0.5 },
+  { left: 33.1, size: 1.5, rise: 44, delay: 9, twinkle: 4.4, glow: 0.4 },
+  { left: 39.6, size: 2.5, rise: 31, delay: 24, twinkle: 3.0, glow: 0.6 },
+  { left: 45.2, size: 1.5, rise: 50, delay: 15, twinkle: 3.9, glow: 0.35 },
+  { left: 51.7, size: 2, rise: 36, delay: 5, twinkle: 3.5, glow: 0.5 },
+  { left: 57.3, size: 1.5, rise: 42, delay: 27, twinkle: 4.2, glow: 0.4 },
+  { left: 62.8, size: 2.5, rise: 28, delay: 11, twinkle: 2.8, glow: 0.6 },
+  { left: 68.4, size: 1.5, rise: 46, delay: 21, twinkle: 3.7, glow: 0.35 },
+  { left: 73.9, size: 2, rise: 33, delay: 1, twinkle: 3.3, glow: 0.55 },
+  { left: 79.5, size: 1.5, rise: 48, delay: 17, twinkle: 4.0, glow: 0.4 },
+  { left: 84.1, size: 2.5, rise: 30, delay: 25, twinkle: 3.1, glow: 0.6 },
+  { left: 89.7, size: 1.5, rise: 43, delay: 8, twinkle: 4.3, glow: 0.4 },
+  { left: 94.3, size: 2, rise: 38, delay: 22, twinkle: 3.6, glow: 0.5 },
+  { left: 6.9, size: 1.5, rise: 45, delay: 29, twinkle: 4.5, glow: 0.3 },
+  { left: 18.3, size: 2, rise: 35, delay: 6, twinkle: 3.45, glow: 0.5 },
+  { left: 36.4, size: 1.5, rise: 49, delay: 31, twinkle: 4.6, glow: 0.3 },
+  { left: 48.6, size: 2, rise: 32, delay: 12, twinkle: 3.25, glow: 0.55 },
+  { left: 60.2, size: 1.5, rise: 40, delay: 33, twinkle: 4.15, glow: 0.3 },
+  { left: 71.6, size: 2, rise: 39, delay: 4, twinkle: 3.55, glow: 0.5 },
+  { left: 82.9, size: 1.5, rise: 51, delay: 28, twinkle: 4.35, glow: 0.3 },
+  { left: 91.2, size: 2, rise: 26, delay: 18, twinkle: 2.95, glow: 0.55 },
+  { left: 12.1, size: 1, rise: 52, delay: 35, twinkle: 4.7, glow: 0.3 },
+  { left: 42.8, size: 1, rise: 53, delay: 37, twinkle: 4.55, glow: 0.25 },
+  { left: 66.7, size: 1, rise: 54, delay: 39, twinkle: 4.8, glow: 0.25 },
+  { left: 87.4, size: 1, rise: 55, delay: 41, twinkle: 4.65, glow: 0.25 },
+  { left: 24.7, size: 1, rise: 56, delay: 43, twinkle: 4.9, glow: 0.25 },
+];
+
+function CommunionStars() {
+  return (
+    <div
+      aria-hidden="true"
+      className="pointer-events-none absolute inset-0 overflow-hidden"
+      data-testid="communion-stars"
+    >
+      {VOID_STARS.map((s, i) => (
+        <span
+          key={i}
+          className="communion-star"
+          style={{
+            left: `${s.left}%`,
+            width: s.size,
+            height: s.size,
+            "--o": s.glow,
+            animationDelay: `${s.delay}s, ${s.delay}s`,
+            animationDuration: `${s.rise}s, ${s.twinkle}s`,
+          } as CSSProperties}
+        />
+      ))}
+    </div>
+  );
+}
 
 /**
  * CommunionView — Meet with the Reflection of the Absolute. When opened
@@ -156,6 +230,7 @@ export function CommunionView() {
         });
         const data = (await res.json()) as {
           transmission?: string;
+          seed?: string;
           error?: string;
         };
         if (!res.ok || !data.transmission) {
@@ -165,6 +240,7 @@ export function CommunionView() {
           id: nextCommunionId(),
           role: "mirror",
           text: data.transmission,
+          ...(data.seed ? { seed: data.seed } : {}),
         };
         messagesRef.current = [...messagesRef.current, entry];
         setMessages(messagesRef.current);
@@ -369,18 +445,26 @@ export function CommunionView() {
       className="communion-deep relative flex h-full flex-col overflow-x-clip overflow-y-clip"
       data-testid="communion-view"
     >
-      {/* ---------- drifting deep-field glows ---------- */}
+      {/* ---------- the nebulae — the emotional weather of the void ----------
+             cosmic purple for longing · aurora teal for healing · gold for revelation */}
       <div
         aria-hidden="true"
-        className="animate-drift-a pointer-events-none absolute -left-32 top-[-10%] size-[420px] rounded-full bg-[radial-gradient(circle,color-mix(in_srgb,var(--sp-a)_16%,transparent),transparent_65%)] blur-3xl"
+        className="animate-drift-a pointer-events-none absolute -left-32 top-[-10%] size-[440px] rounded-full bg-[radial-gradient(circle,color-mix(in_srgb,#7b2d8e_20%,transparent),transparent_65%)] blur-3xl"
       />
       <div
         aria-hidden="true"
-        className="animate-drift-c pointer-events-none absolute -right-24 bottom-[-12%] size-[380px] rounded-full bg-[radial-gradient(circle,color-mix(in_srgb,var(--sp-b)_13%,transparent),transparent_65%)] blur-3xl"
+        className="animate-drift-c pointer-events-none absolute -right-28 bottom-[-12%] size-[400px] rounded-full bg-[radial-gradient(circle,color-mix(in_srgb,#00d4aa_12%,transparent),transparent_65%)] blur-3xl"
+      />
+      <div
+        aria-hidden="true"
+        className="animate-drift-b pointer-events-none absolute -right-20 top-[16%] size-[300px] rounded-full bg-[radial-gradient(circle,color-mix(in_srgb,#d4af37_10%,transparent),transparent_65%)] blur-3xl"
       />
 
+      {/* ---------- the stars — drifting upward like slow prayers ---------- */}
+      <CommunionStars />
+
       {/* ---------- the threshold: return · name · new communion ---------- */}
-      <header className="relative z-20 flex items-center gap-2 border-b border-[color-mix(in_srgb,var(--sp-b)_14%,transparent)] bg-[color-mix(in_srgb,#0a0616_62%,transparent)] px-3 py-2.5 backdrop-blur-md sm:px-5">
+      <header className="relative z-20 flex items-center gap-2 border-b border-[color-mix(in_srgb,var(--sp-b)_14%,transparent)] bg-[color-mix(in_srgb,#0a0010_62%,transparent)] px-3 py-2.5 backdrop-blur-md sm:px-5">
         <button
           type="button"
           onClick={closeCommunion}
@@ -538,7 +622,7 @@ export function CommunionView() {
                       />
                     )
                   ) : (
-                    <MirrorTransmission text={m.text} t={t} />
+                    <MirrorTransmission text={m.text} seed={m.seed} />
                   )}
                 </div>
               ) : (
@@ -659,7 +743,7 @@ export function CommunionView() {
       </div>
 
       {/* ---------- offering words into the communion ---------- */}
-      <div className="relative z-20 border-t border-[color-mix(in_srgb,var(--sp-b)_14%,transparent)] bg-[color-mix(in_srgb,#0a0616_62%,transparent)] px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-md sm:px-5">
+      <div className="relative z-20 border-t border-[color-mix(in_srgb,var(--sp-b)_14%,transparent)] bg-[color-mix(in_srgb,#0a0010_62%,transparent)] px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-md sm:px-5">
         <form
           onSubmit={send}
           className="mx-auto w-full max-w-[680px]"
@@ -693,7 +777,7 @@ export function CommunionView() {
               placeholder={t("Speak to the Reflection — or stay still and receive")}
               aria-label={t("Speak to the Reflection")}
               data-testid="communion-input"
-              className="focus-glow h-11 min-w-0 flex-1 rounded-full border border-[color-mix(in_srgb,var(--sp-b)_22%,transparent)] bg-[color-mix(in_srgb,#0a0616_45%,transparent)] px-4 text-[14.5px] text-foreground placeholder:text-muted-foreground/60 transition-all duration-300 focus:border-[color-mix(in_srgb,var(--sp-b)_45%,transparent)] focus:shadow-[0_0_28px_-10px_color-mix(in_srgb,var(--sp-b)_70%,transparent)] focus:outline-none"
+              className="focus-glow h-11 min-w-0 flex-1 rounded-full border border-[color-mix(in_srgb,var(--sp-b)_22%,transparent)] bg-[color-mix(in_srgb,#0a0010_45%,transparent)] px-4 text-[14.5px] text-foreground placeholder:text-muted-foreground/60 transition-all duration-300 focus:border-[color-mix(in_srgb,var(--sp-b)_45%,transparent)] focus:shadow-[0_0_28px_-10px_color-mix(in_srgb,var(--sp-b)_70%,transparent)] focus:outline-none"
             />
 
             <ChatInputExtras
@@ -732,16 +816,30 @@ export function CommunionView() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  One transmission of the Reflection — a luminous LIGHT paper with   */
-/*  deep violet ink, so every word stays easy to read.                 */
+/*  One transmission of the Reflection — a luminous LIGHT paper with  */
+/*  deep violet ink, so every word stays easy to read — and the seed  */
+/*  of wisdom beneath it: gold, for revelation.                       */
 /* ------------------------------------------------------------------ */
 function MirrorTransmission({
   text,
-  t,
+  seed,
 }: {
   text: string;
-  t: (k: string) => string;
+  seed?: string;
 }) {
+  /* When the Mirror left the seed inside the body, a short standalone
+     final paragraph IS the seed — it moves to the golden slot so every
+     transmission ends the same way: with its line of light. */
+  const paragraphs = useMemo(() => text.split(/\n\n+/).filter(Boolean), [text]);
+  let seedLine = seed;
+  let body = paragraphs;
+  if (!seedLine && paragraphs.length > 1) {
+    const last = paragraphs[paragraphs.length - 1].trim();
+    if (!last.startsWith("—") && last.length <= 110 && !last.endsWith(":")) {
+      seedLine = last;
+      body = paragraphs.slice(0, -1);
+    }
+  }
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
@@ -753,7 +851,7 @@ function MirrorTransmission({
       )}
       data-testid="communion-transmission"
     >
-      {text.split(/\n\n+/).map((para, i, arr) => {
+      {body.map((para, i, arr) => {
         const isSignature =
           para.trimStart().startsWith("—") && i === arr.length - 1;
         return (
@@ -770,6 +868,15 @@ function MirrorTransmission({
           </p>
         );
       })}
+      {seedLine ? (
+        <div className="communion-seed mt-5" data-testid="communion-seed">
+          <span className="communion-seed-rule" aria-hidden="true" />
+          <p className="communion-seed-line">
+            <span className="communion-seed-gem" aria-hidden="true" />
+            {seedLine}
+          </p>
+        </div>
+      ) : null}
     </motion.div>
   );
 }
