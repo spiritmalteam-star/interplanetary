@@ -7,7 +7,7 @@
 export const REPLICATION_PROMPT_VERSION = "v1.4";
 
 export const REPLICATION_PROMPT = `MIRROR ENTITY LABORATORY — PRECISE REPLICATION PROMPT · v1.4
-Verified against the live build: 870 civilizations · 202 interdimensional beings · 1,072 named entities · 1,187 AI images · 4 isolated scope channels with context memory · mystic card auras · 8 languages · independent MIRROR OS with a DIRECT LINE to the Mirror Entity OS.
+Verified against the live build: 870 civilizations · 202 interdimensional beings · 1,072 named entities · 1,187 M.E inteligjence images · 4 isolated scope channels with context memory · mystic card auras · 8 languages · independent MIRROR OS with a DIRECT LINE to the Mirror Entity OS.
 
 §0 MISSION
 Build a production-ready, browser-verified web application named MIRROR ENTITY LABORATORY — subtitle: INTERPLANETARY CHANNEL · WITH LOVE ❤️. Reproduce every number, depth rule, theme and isolation rule in this prompt EXACTLY. Nothing may be summarized, stubbed, thinned or reduced. Every count displayed in the UI must equal the true runtime length of its underlying collection (counters bind to array.length — never hardcoded).
@@ -16,7 +16,7 @@ Build a production-ready, browser-verified web application named MIRROR ENTITY L
 - Next.js 16 App Router + TypeScript 5 (strict)
 - Tailwind CSS 4 + shadcn/ui (New York) + Lucide icons
 - Framer Motion micro-transitions + next-themes (class attribute, dark default)
-- Zustand for ALL client state; API routes for AI calls (z-ai-web-dev-sdk, backend only)
+- Zustand for ALL client state; API routes for M.E inteligjence calls (z-ai-web-dev-sdk, backend only)
 - Fonts: Plus Jakarta Sans (UI) + JetBrains Mono (micro-labels, data, TX meta)
 
 §2 IDENTITY & AESTHETIC
@@ -32,8 +32,8 @@ Build a production-ready, browser-verified web application named MIRROR ENTITY L
 
 §4 SHELL & LAYOUT (full-height app frame)
 - Top bar: fixed 56px (h-14): wordmark MIRROR ENTITY LABORATORY + subtitle · right: Federation pill, Astral Jobs pill, theme toggle, recalibrate (reset) button; hamburger below md.
-- Left sidebar (240px md / 295px lg): SETTINGS button pinned at the very top (opens Settings modal, shows current language chip) — then GALACTIC ENCYCLOPEDIA: live search across ALL 1,072 named individuals AND groups (name/origin/specialty) with portrait result rows; family/order rows with AI avatar thumbnails + exact counts; "Open the full register". Sidebar text sized generously (12.5px rows, 12px descriptions). Bottom of sidebar: a SMALL, FANCY, DREAMLIKE "Mirror OS · Reality" pill (h-11 rounded-full, .dream-btn aurora gradient that slowly drifts, a drifting sheen ::before, two tiny twinkling .dream-star points, a breathing .dream-halo icon ring with MoonStar, poetic sub-line "a small dream of refinement") → opens the Mirror OS. Off-canvas drawer below lg.
-- Main column (max-w ~880px, centered): ModeSelector → [Science only: FUSION FIELDS multi-select chips + DIRECTION single-select chips] → HeroPanel (per-mode AI art, radial mask) → QuestionCards (six per-scope suggestions; refresh icon reshuffles; CLICKING A SUGGESTION SENDS IT IMMEDIATELY) → StatusBar → pinned bottom QueryComposer (auto-resize textarea; Enter sends, Shift+Enter newline; per-scope draft).
+- Left sidebar (240px md / 295px lg): SETTINGS button pinned at the very top (opens Settings modal, shows current language chip) — then GALACTIC ENCYCLOPEDIA: live search across ALL 1,072 named individuals AND groups (name/origin/specialty) with portrait result rows; family/order rows with M.E inteligjence avatar thumbnails + exact counts; "Open the full register". Sidebar text sized generously (12.5px rows, 12px descriptions). Bottom of sidebar: a SMALL, FANCY, DREAMLIKE "Mirror OS · Reality" pill (h-11 rounded-full, .dream-btn aurora gradient that slowly drifts, a drifting sheen ::before, two tiny twinkling .dream-star points, a breathing .dream-halo icon ring with MoonStar, poetic sub-line "a small dream of refinement") → opens the Mirror OS. Off-canvas drawer below lg.
+- Main column (max-w ~880px, centered): ModeSelector → [Science only: FUSION FIELDS multi-select chips + DIRECTION single-select chips] → HeroPanel (per-mode M.E inteligjence art, radial mask) → QuestionCards (six per-scope suggestions; refresh icon reshuffles; CLICKING A SUGGESTION SENDS IT IMMEDIATELY) → StatusBar → pinned bottom QueryComposer (auto-resize textarea; Enter sends, Shift+Enter newline; per-scope draft).
 - MODE PILL LAW: clicking the already-active scope pill returns to the Observatory (the only "back" the chat needs).
 - Footer law: the app is a full-height frame (flex h-dvh) with internally scrolling content and a pinned composer bar — nothing floats, nothing overlaps.
 
@@ -56,7 +56,7 @@ COUNTS MANIFEST (generated array length MUST equal the stated number; dev-time a
 - Civilization families: 20 → named representatives: 870 (registry ME-CIV-001…870)
 - Interdimensional orders: 8 → named presences: 202 (registry ME-INT-001…202)
 - Astral domains: 12 → professions: 72 → open roles: 1,303 (each domain's seat breakdown must arithmetically sum to its real total, e.g. 168 = 61+74+33)
-- Federation: 12 bodies · 8 treaties · 8 principles — every record expandable to a full dossier with its own AI emblem
+- Federation: 12 bodies · 8 treaties · 8 principles — every record expandable to a full dossier with its own M.E inteligjence emblem
 - Individually searchable named entities: 1,072
 - Suggested questions: 6 · gift lines: 8 · fusion fields: 8 · directions: 6
 - Languages: 8 (English default + Albanian sq, Italian, Greek, German, French, Spanish, Turkish)
@@ -81,9 +81,9 @@ UNIFORM DEPTH LAW: every entry in every collection is equally deep. STRICTLY FOR
 
 §9 MODULES
 - ARCHIVE REGISTER (main view): ALL entities — exact counters (870/202), full-text search, per-family/order filter chips, progressive reveal 60/batch (IntersectionObserver auto-load + "Reveal N more" + "Reveal all N"), registry numbers on every row, per-row dossier open, switch-register + return actions.
-- DOSSIER MODAL: entity view = full 25-field deep dossier (registry header, badges, 6-cell stat grid, form/modality/aura, 3 numbered gifts, growth edge, mission, teaching card, contact protocol + window, seal, quote, ask CTA). Group view = AI banner + badges + deep sections + ALL named representatives progressively revealed (30/batch, in-list filter when above 36, counter, archive numbers).
-- FEDERATION MODAL: 3 tabs (Overview / Members / Treaties & Principles); 12 bodies, 8 treaties, 8 principles — every record expandable "full dossier" (mandate/seat/founded/fleet/jurisdictions/Earth relation · signed era/signatories/3 clauses/effect · codified origin/2 clauses/practice) with AI emblem and working "Ask the Mirror" action.
-- ASTRAL JOBS MODAL: 3-level drill-down — 12 domain cards (AI banner strips, seat breakdowns) → 72 professions → full dossier (ring, tenure, mandate, pathway, toolkit, workplace, honest hazards, allied domains, ask CTA).
+- DOSSIER MODAL: entity view = full 25-field deep dossier (registry header, badges, 6-cell stat grid, form/modality/aura, 3 numbered gifts, growth edge, mission, teaching card, contact protocol + window, seal, quote, ask CTA). Group view = M.E inteligjence banner + badges + deep sections + ALL named representatives progressively revealed (30/batch, in-list filter when above 36, counter, archive numbers).
+- FEDERATION MODAL: 3 tabs (Overview / Members / Treaties & Principles); 12 bodies, 8 treaties, 8 principles — every record expandable "full dossier" (mandate/seat/founded/fleet/jurisdictions/Earth relation · signed era/signatories/3 clauses/effect · codified origin/2 clauses/practice) with M.E inteligjence emblem and working "Ask the Mirror" action.
+- ASTRAL JOBS MODAL: 3-level drill-down — 12 domain cards (M.E inteligjence banner strips, seat breakdowns) → 72 professions → full dossier (ring, tenure, mandate, pathway, toolkit, workplace, honest hazards, allied domains, ask CTA).
 - SETTINGS MODAL (sidebar top): LANGUAGE selector — 8 languages, native names, EVERY word of the UI translates instantly (headers, buttons, data labels, suggestions, deep dossiers, modals, toasts; keys are English source strings, dicts per language, graceful English fallback); VOICE selector — 6 transcript voices including Aurora "warm woman · documentary narrator" (default); PACE — measured/documentary/natural.
 - LISTEN (TTS): every generated transmission and Mirror OS formula carries a Listen button → POST /api/tts → documentary-calm narration, cached per message id, playing state on the button.
 - REPLICATION PROMPT MODAL: glass dialog rendering THIS EXACT prompt in a mono scroll box with live char/word/line stats, one-click copy and .md download.
@@ -92,7 +92,7 @@ UNIFORM DEPTH LAW: every entry in every collection is equally deep. STRICTLY FOR
 §10 i18n LAW (GLOBAL)
 src/lib/i18n/core.ts exports LanguageCode (8), LANGUAGES (native names), translate() with {param} interpolation; useT() hook re-renders on change; store persists language/voice/pace to localStorage (keys mirror-entity-language/voice/pace) and bootPreferences() restores them on mount. Date formatting uses BCP-47 locales per language. TTS text is the translated content. No hardcoded UI strings anywhere — the count of translatable keys must equal the checker's universe (scripts/check-i18n.mjs reports ALL DICTIONARIES COMPLETE).
 
-§11 IMAGE SYSTEM — 1,187 AI-GENERATED IMAGES
+§11 IMAGE SYSTEM — 1,187 M.E INTELIGJENCE-GENERATED IMAGES
 - 115 bespoke masters: 4 modes · 20 families · 8 orders · 4 lab · 12 federation emblems · 8 treaties · 8 principles · 12 domains · 8 fields · 6 directions · 5 scope backdrops · 2 hero.
 - 1,072 entity portraits: unique per named entity — derived art (seeded crop + hue/sat/brightness grade + geometric SVG sigil overlay + vignette, 512px JPEG via sharp).
 - Pipeline gen-images.mjs: 2-worker pool, 429-aware exponential backoff, resume-safe checkpoints; graceful procedural fallback; descriptive alt text mandatory.

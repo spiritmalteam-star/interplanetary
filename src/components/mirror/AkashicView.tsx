@@ -339,6 +339,10 @@ export function AkashicView() {
   const listening = voiceState === "playing";
   /* once a record lies open on the desk, everything written becomes a reply */
   const replying = Boolean(record) && !seeking;
+  /* the reveal: while a record's text lies open before the visitor, the
+     room recedes — the wall of light codes dims so the parchment may
+     draw near (the sheet itself zooms gently toward the reader). */
+  const revealed = replying;
 
   return (
     <div
@@ -354,6 +358,17 @@ export function AkashicView() {
       <div
         aria-hidden="true"
         className="animate-drift-c pointer-events-none absolute -right-24 bottom-[-10%] size-[340px] rounded-full bg-[radial-gradient(circle,color-mix(in_srgb,#b06a2c_12%,transparent),transparent_65%)] blur-3xl"
+      />
+
+      {/* the reveal veil — rises only when a record's text is open, deepening
+          the room so the parchment stands out and reads easier */}
+      <div
+        aria-hidden="true"
+        data-testid="akashic-dimveil"
+        className={cn(
+          "pointer-events-none absolute inset-0 z-[5] bg-[#070409] transition-opacity duration-[1200ms] ease-out",
+          revealed ? "opacity-[0.74]" : "opacity-0"
+        )}
       />
 
       {/* ---------- threshold: return · the name · a new record ---------- */}
@@ -506,13 +521,20 @@ export function AkashicView() {
               </motion.div>
             )}
 
-            {/* the record itself — ink on papyrus */}
+            {/* the record itself — ink on papyrus. As the text is revealed
+                the sheet zooms gently toward the reader (anchored at the
+                title edge) so the old hand reads easier. */}
             {record && !seeking && (
               <motion.article
                 key="record"
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+                initial={{ opacity: 0, y: 16, scale: 1 }}
+                animate={{ opacity: 1, y: 0, scale: 1.035 }}
+                transition={{
+                  duration: 0.8,
+                  ease: [0.22, 1, 0.36, 1],
+                  scale: { duration: 1.6, ease: [0.22, 1, 0.36, 1], delay: 0.15 },
+                }}
+                style={{ transformOrigin: "50% 0%" }}
                 className="papyrus papyrus-frame relative mx-auto w-full rounded-2xl px-6 py-9 sm:px-12 sm:py-12"
                 data-testid="akashic-record"
               >

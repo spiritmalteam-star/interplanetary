@@ -35,7 +35,7 @@ export function ReplicationPromptModal() {
     toast({
       title: "Replication prompt copied",
       description:
-        "Paste it into any capable AI session to reproduce this laboratory exactly.",
+        "Paste it into any capable M.E inteligjence session to reproduce this laboratory exactly.",
     });
   };
 
@@ -90,7 +90,7 @@ export function ReplicationPromptModal() {
         if (!o) closeModal();
       }}
       title="Precise Replication Prompt"
-      description="The exact blueprint of this laboratory — every count, depth rule, theme and channel. Copy it into a fresh AI session to reproduce the app faithfully."
+      description="The exact blueprint of this laboratory — every count, depth rule, theme and channel. Copy it into a fresh M.E inteligjence session to reproduce the app faithfully."
       widthClass="sm:max-w-[760px]"
     >
       <div className="flex flex-col gap-3 px-5 pb-5 sm:px-6">

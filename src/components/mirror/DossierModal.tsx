@@ -114,7 +114,7 @@ function EntityDossier({
         {/* the lead plate — the portrait the whole opening wraps around */}
         <ProfileFigure
           sources={plates[0]}
-          alt={t("AI-rendered portrait impression of {name}", { name: rep.name })}
+          alt={t("M.E inteligjence-rendered portrait impression of {name}", { name: rep.name })}
           variant="lead"
           testid="entity-gallery"
         />
@@ -174,7 +174,7 @@ function EntityDossier({
         {/* the second plate — the kin scene, wrapped by the opening sections */}
         <ProfileFigure
           sources={plates[1]}
-          alt={t("AI-rendered scene impression of the {name}", { name: entry.name })}
+          alt={t("M.E inteligjence-rendered scene impression of the {name}", { name: entry.name })}
           side="left"
           testid="entity-gallery-kin"
         />
@@ -404,7 +404,7 @@ function GroupDossierBody({
         {/* the lead plate — the family portrait the opening wraps around */}
         <ProfileFigure
           sources={plates[0]}
-          alt={t("AI-rendered scene impression of the {name}", { name: entry.name })}
+          alt={t("M.E inteligjence-rendered scene impression of the {name}", { name: entry.name })}
           variant="lead"
           testid="group-gallery"
         />

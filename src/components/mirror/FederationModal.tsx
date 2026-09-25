@@ -230,7 +230,7 @@ function CardDetail({
       {plates && (
         <ProfileFigure
           sources={plates[0]}
-          alt={t("AI-rendered emblem impression of the {name}", { name: card.name })}
+          alt={t("M.E inteligjence-rendered emblem impression of the {name}", { name: card.name })}
           variant="lead"
           testid="federation-gallery"
         />
