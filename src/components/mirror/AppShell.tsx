@@ -8,9 +8,7 @@ import { TopNavigation } from "./TopNavigation";
 import Sidebar from "./Sidebar";
 import { MobileSidebar } from "./MobileSidebar";
 import { ModeSelector } from "./ModeSelector";
-import { ScienceFilters } from "./ScienceFilters";
 import { ScienceFusionRail } from "./ScienceFusionRail";
-import { HeroPanel } from "./HeroPanel";
 import { QuestionCards } from "./QuestionCards";
 import { StatusBar } from "./StatusBar";
 import { QueryComposer } from "./QueryComposer";
@@ -99,8 +97,6 @@ export default function AppShell() {
 
               {view === "observatory" ? (
                 <>
-                  <ScienceFilters />
-                  <HeroPanel />
                   <QuestionCards />
                   <StatusBar />
                 </>

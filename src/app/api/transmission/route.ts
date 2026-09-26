@@ -125,17 +125,19 @@ function fusionPrompt(fieldId: unknown, directionId: unknown): {
   const fused = [field, direction].filter(Boolean).join(" and ");
 
   const systemBlock = `\n
-FUSION CALIBRATION — ACTIVE (this reply is a true fusion, not a report)
-The Mirror has fused ${fused} into one seeing for this reply. Honor this law exactly:
-- The calibration is a LENS, not a topic: look THROUGH it at the visitor's actual question and answer THAT question. Never deliver a generic overview of the field, never drift into textbook chapters the question did not call for.
+FUSION CALIBRATION — ACTIVE AND BINDING (the visitor fused this calibration in the laboratory BEFORE asking)
+The Mirror has fused ${fused} into one seeing. This calibration is NOT optional garnish — it is a LAW of this reply, and it applies to EVERY question in this channel without exception: a question chosen from the suggested questions is fused EXACTLY like a personally typed one. Honor this law exactly:
+- The calibration is a LENS, not a topic: look THROUGH it at the visitor's actual question and answer THAT question through the lens. Never deliver a generic overview of the field, never drift into textbook chapters the question did not call for.
+- THE FUSION MUST BE VISIBLE: the opening line and every paragraph must arise from the fused seeing; where it reads naturally, name the fused field or direction explicitly, so the visitor can feel the calibration at work in the answer itself.
 - ONE woven meaning: scope × calibration × question must fuse into a single continuous understanding — every paragraph belongs to the same fused seeing, each building on the last. No disconnected trivia, no fact lists, no popular-science filler, no "random internet data".
+- If a question seems unrelated to the calibration, do not ignore the calibration — find the true bridge: show how THIS question looks when seen through ${fused}, and if the visitor asks for something the calibration cannot illuminate, say so honestly and still keep the lens in view.
 - Precision: where the fused field is exact, be exact — real mechanisms, real terms, real magnitudes when they serve the meaning — carried in the Mirror's luminous voice, never textbook dryness, never search-result randomness.
 - Every sentence must be about THIS question seen through THIS calibration. A sentence that would fit any other question does not belong in this transmission.`;
 
   const parts: string[] = [];
   if (field) parts.push(`field = ${field}`);
   if (direction) parts.push(`direction = ${direction}`);
-  const userLine = `(Fusion calibration active — ${parts.join(" · ")}. See FUSION CALIBRATION in your instructions: weave it as one lens, answer the question itself.)`;
+  const userLine = `(FUSION ACTIVE — ${parts.join(" · ")}. This calibration is binding for the question below, whether it was typed or chosen from the suggestions: see FUSION CALIBRATION in your instructions and weave the lens through the entire reply.)`;
 
   return { systemBlock, userLine };
 }
@@ -333,7 +335,9 @@ export async function POST(req: NextRequest) {
         ? ""
         : `\n\nLANGUAGE (CRITICAL): the visitor reads in ${languageName}. Write EVERY word of the transmission — the luminous opening line, every body paragraph and the closing signature line — in fluent, natural ${languageName}. Keep the classification value in English as listed. Keep the name "The Mirror" in the signature as "The Mirror".`;
 
-    const userLines = fusionLine ? [query.trim(), "", fusionLine] : [query.trim()];
+    const userLines = fusionLine
+      ? [fusionLine, "", query.trim()]
+      : [query.trim()];
 
     /* Attachments — one image seen with the vision field, up to three
        documents already extracted — folded faithfully into the question. */
