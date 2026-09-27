@@ -6,6 +6,7 @@ import {
   Check,
   Copy,
   FileText,
+  Leaf,
   RotateCcw,
 } from "lucide-react";
 import { useMirror, type ChatMessage } from "@/lib/mirror-store";
@@ -541,15 +542,71 @@ function Exchange({
   );
 }
 
+/* ---------- the healing apothecary — one quiet stand at the thread's
+   end, offered only in the Healing channel once a transmission has
+   been revealed ---------- */
+
+function ApothecaryStand({ concern }: { concern: string }) {
+  const askRemedy = useMirror((s) => s.askRemedy);
+  const t = useT();
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.55, delay: 0.35, ease: [0.22, 1, 0.36, 1] }}
+      className="mt-9 flex flex-col items-center pb-1 text-center"
+      data-testid="apothecary-stand"
+    >
+      <p className="mono-label text-[10px] uppercase tracking-[0.22em] text-muted-foreground/60">
+        {t("The healing apothecary")}
+      </p>
+      <button
+        type="button"
+        onClick={() => void askRemedy(concern)}
+        aria-label={t("Prepare a remedy")}
+        data-testid="prepare-remedy"
+        className="focus-glow mt-3 flex h-10 items-center gap-2.5 rounded-full border px-5 text-[13.5px] font-medium text-foreground/90 transition-all duration-300 hover:-translate-y-px hover:glow-sm"
+        style={{
+          borderColor: "color-mix(in srgb, #b05e76 42%, transparent)",
+          background:
+            "linear-gradient(120deg, color-mix(in srgb, #b05e76 15%, transparent), color-mix(in srgb, #2f8a6e 13%, transparent))",
+        }}
+      >
+        <Leaf
+          className="size-4"
+          style={{ color: "color-mix(in srgb, #b05e76 55%, white)" }}
+          aria-hidden="true"
+        />
+        {t("Prepare a remedy")}
+      </button>
+      <p className="mt-2.5 max-w-[320px] text-[12.5px] italic leading-relaxed text-muted-foreground/70">
+        {t("Prepared from what has been spoken here")}
+      </p>
+    </motion.div>
+  );
+}
+
 /* ---------- main view: one independent channel per scope ---------- */
 
 export function TransmissionView() {
   const activeMode = useMirror((s) => s.activeMode);
   const session = useMirror((s) => s.sessions[s.activeMode]);
+  const remedyStatus = useMirror((s) => s.remedyStatus);
   const t = useT();
 
   const scope: Scope = activeMode;
   const meta = SCOPE_META[scope];
+
+  /* The apothecary serves the concern most recently spoken — the last
+     exchange's question, held quietly until the thread rests. */
+  const lastSpoken = useMemo(
+    () =>
+      scope === "healing"
+        ? (session.messages.at(-1)?.query ?? null)
+        : null,
+    [scope, session.messages]
+  );
 
   /* The thread begins where it begins: opening, reloading or switching
      into a channel keeps the thread at its BEGINNING. New generations
@@ -634,6 +691,11 @@ export function TransmissionView() {
           />
         </div>
       ))}
+
+      {scope === "healing" &&
+        session.status !== "loading" &&
+        remedyStatus !== "crafting" &&
+        lastSpoken && <ApothecaryStand concern={lastSpoken} />}
 
       {session.status === "loading" &&
         session.messages.at(-1)?.visual !== "pending" && (

@@ -21,6 +21,12 @@ import {
   eveningPool,
   focusPool,
 } from "../src/lib/data/mirroros.ts";
+import {
+  CRAFT_PHASES,
+  KIND_LABEL,
+  STEPS_LABEL_HERBAL,
+  STEPS_LABEL_PRACTICE,
+} from "../src/lib/data/remedy.ts";
 
 const dynPath = "/home/z/my-project/scripts/i18n-keys-dynamic.json";
 const existing: string[] = JSON.parse(readFileSync(dynPath, "utf8"));
@@ -197,6 +203,12 @@ for (const o of osOpeners) set.add(o);
 for (const l of ["The Core", "Shift Formulas", "Higher Mind", "Tools", "Forge"]) {
   set.add(l);
 }
+
+/* The Healing Apothecary — craft phases, remedy kinds and step headings */
+for (const p of CRAFT_PHASES) set.add(p);
+for (const label of Object.values(KIND_LABEL)) set.add(label);
+set.add(STEPS_LABEL_HERBAL);
+set.add(STEPS_LABEL_PRACTICE);
 
 const out = [...set].sort((a, b) => a.localeCompare(b));
 writeFileSync(dynPath, JSON.stringify(out, null, 2));

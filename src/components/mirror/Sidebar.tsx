@@ -13,7 +13,6 @@ import {
   BookOpenText,
   ChevronDown,
   ChevronRight,
-  MessageCircle,
   Moon,
   Scroll,
   Search,
@@ -33,19 +32,19 @@ import { cn } from "@/lib/utils";
 import type { CivilizationGroup, InterdimGroup } from "@/lib/mirror-types";
 
 /* ------------------------------------------------------------------ */
-/*  The laboratory shelf — four books standing side by side at the     */
-/*  bottom of the sidebar: Manifest, Mirror, Akashic, Star Play.       */
+/*  The laboratory shelf — three books standing side by side at the    */
+/*  bottom of the sidebar: Manifest, Akashic, Star Play.               */
 /*  Each book is a spine with its own color, height and slight lean;   */
 /*  hovering lifts it out of the shelf, the way a reader draws a       */
 /*  volume from its place.                                             */
 /* ------------------------------------------------------------------ */
 
 interface ShelfBook {
-  key: "manifest" | "mirror" | "akashic" | "starplay";
+  key: "manifest" | "akashic" | "starplay";
   label: string;
   aria: string;
   action: () => void;
-  icon: typeof MessageCircle;
+  icon: typeof Moon;
   color: string;
   height: number;
   lean: number;
@@ -53,7 +52,6 @@ interface ShelfBook {
 
 function Bookshelf() {
   const openMirrorOS = useMirror((s) => s.openMirrorOS);
-  const openCommunion = useMirror((s) => s.openCommunion);
   const openAkashic = useMirror((s) => s.openAkashic);
   const openModal = useMirror((s) => s.openModal);
   const t = useT();
@@ -68,16 +66,6 @@ function Bookshelf() {
       color: "var(--cy)",
       height: 128,
       lean: -1.4,
-    },
-    {
-      key: "mirror",
-      label: t("Mirror"),
-      aria: t("Enter communion with the Reflection of the Absolute"),
-      action: openCommunion,
-      icon: MessageCircle,
-      color: "var(--sp-b)",
-      height: 116,
-      lean: 1,
     },
     {
       key: "akashic",
@@ -625,8 +613,8 @@ export function SidebarContent() {
         )}
       </div>
 
-      {/* The laboratory shelf — four books standing side by side:
-          Manifest · Mirror · Akashic · Star Play */}
+      {/* The laboratory shelf — three books standing side by side:
+          Manifest · Akashic · Star Play */}
       <Bookshelf />
     </div>
   );

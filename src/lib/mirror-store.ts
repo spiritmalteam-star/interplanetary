@@ -25,6 +25,7 @@ import type {
   VisualizationArtifact,
   VisualizationMode,
 } from "@/lib/visualization";
+import type { RemedyKind } from "@/lib/data/remedy";
 
 export type ModalState =
   | { type: "federation" }
@@ -71,6 +72,26 @@ export interface ScopeSession {
   /** Composer draft — kept per channel so drafts never leak across scopes. */
   draft: string;
 }
+
+/* ------------------------------------------------------------------ */
+/*  The Healing Apothecary — one remedy, prepared live in the Healing  */
+/*  channel. The form varies with the concern: a herbal preparation,   */
+/*  or a practice of meditation, imagination, breath, sound, ritual,   */
+/*  reflection or gentle movement. The shared vocabulary lives in      */
+/*  src/lib/data/remedy.ts.                                            */
+/* ------------------------------------------------------------------ */
+
+export type { RemedyKind };
+
+export interface RemedyResult {
+  kind: RemedyKind;
+  title: string;
+  needs: string[];
+  steps: string[];
+  cautions: string[];
+}
+
+export type RemedyStatus = "idle" | "crafting" | "ready" | "error";
 
 const emptySession = (): ScopeSession => ({
   messages: [],
@@ -125,6 +146,14 @@ interface MirrorState {
 
   /** One independent channel per scope. */
   sessions: Record<Mode, ScopeSession>;
+
+  /* The Healing Apothecary — the remedy mini tab of the Healing channel. */
+  remedyStatus: RemedyStatus;
+  remedyConcern: string;
+  remedy: RemedyResult | null;
+  remedyError: string | null;
+  askRemedy: (concern: string, context?: string | null) => Promise<void>;
+  closeRemedy: () => void;
 
   /* Full-archive register */
   registerKind: RegisterKind;
@@ -279,6 +308,11 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   communionOpen: false,
   sessions: emptySessions(),
 
+  remedyStatus: "idle" as RemedyStatus,
+  remedyConcern: "",
+  remedy: null,
+  remedyError: null,
+
   registerKind: "civilization",
 
   labStage: "compose",
@@ -407,6 +441,10 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       search: "",
       modal: null,
       mobileNavOpen: false,
+      remedyStatus: "idle",
+      remedyConcern: "",
+      remedy: null,
+      remedyError: null,
       ...emptyLab,
     }),
 
@@ -416,7 +454,66 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       const target = mode ?? s.activeMode;
       return {
         sessions: { ...s.sessions, [target]: emptySession() },
+        /* the apothecary belongs to the Healing channel — it quiets with it */
+        ...(target === "healing"
+          ? { remedyStatus: "idle" as RemedyStatus, remedyConcern: "", remedy: null, remedyError: null }
+          : {}),
       };
+    }),
+
+  /* ---------------- The Healing Apothecary ----------------
+     One live remedy at a time, prepared from the concern as it was
+     spoken. The mini tab (RemedyLayer) renders the crafting and the
+     revealed remedy inside the Healing channel. */
+  askRemedy: async (concern, context) => {
+    const trimmed = concern.trim();
+    if (!trimmed || get().remedyStatus === "crafting") return;
+
+    set({
+      remedyStatus: "crafting",
+      remedyConcern: trimmed,
+      remedy: null,
+      remedyError: null,
+    });
+
+    try {
+      const res = await fetch("/api/remedy", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          concern: trimmed,
+          context: context ?? null,
+          language: get().language,
+        }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.remedy) {
+        throw new Error(
+          (data && data.error) ||
+            "The apothecary is quiet — the remedy could not be prepared. Rest a breath, then ask again."
+        );
+      }
+      set({
+        remedyStatus: "ready",
+        remedy: data.remedy as RemedyResult,
+      });
+    } catch (err) {
+      set({
+        remedyStatus: "error",
+        remedyError:
+          err instanceof Error
+            ? err.message
+            : "The apothecary is quiet — the remedy could not be prepared. Rest a breath, then ask again.",
+      });
+    }
+  },
+
+  closeRemedy: () =>
+    set({
+      remedyStatus: "idle",
+      remedyConcern: "",
+      remedy: null,
+      remedyError: null,
     }),
 
   askMirror: async (question, attachments) => {

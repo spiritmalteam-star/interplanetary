@@ -10,6 +10,7 @@ import {
   AttachmentChips,
   ChatInputExtras,
 } from "@/components/mirror/ChatInputExtras";
+import { RemedyLayer } from "@/components/mirror/RemedyLayer";
 import {
   hasPendingAttachments,
   type ChatAttachment,
@@ -105,8 +106,11 @@ export function QueryComposer() {
           e.preventDefault();
           submit();
         }}
-        className="mx-auto w-full max-w-[760px]"
+        className="relative mx-auto w-full max-w-[760px]"
       >
+        {/* The Healing Apothecary's mini tab — floats just above the
+            composer, only inside the Healing channel. */}
+        {activeMode === "healing" && <RemedyLayer />}
         <AttachmentChips
           attachments={attachments}
           onRemove={(id) =>
