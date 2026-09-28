@@ -27,6 +27,12 @@ import {
   STEPS_LABEL_HERBAL,
   STEPS_LABEL_PRACTICE,
 } from "../src/lib/data/remedy.ts";
+import {
+  codexTitle,
+  codexSubtitle,
+  codexIntro,
+  codexChapters,
+} from "../src/lib/data/codex.ts";
 
 const dynPath = "/home/z/my-project/scripts/i18n-keys-dynamic.json";
 const existing: string[] = JSON.parse(readFileSync(dynPath, "utf8"));
@@ -209,6 +215,21 @@ for (const p of CRAFT_PHASES) set.add(p);
 for (const label of Object.values(KIND_LABEL)) set.add(label);
 set.add(STEPS_LABEL_HERBAL);
 set.add(STEPS_LABEL_PRACTICE);
+
+/* The Codex — the fourth book: title, subtitle, intro and every chapter */
+set.add(codexTitle);
+set.add(codexSubtitle);
+for (const p of codexIntro) set.add(p);
+for (const c of codexChapters) {
+  set.add(c.title);
+  set.add(c.tagline);
+  for (const s of c.sections) {
+    if (s.heading) set.add(s.heading);
+    for (const p of s.body ?? []) set.add(p);
+    for (const li of s.list ?? []) set.add(li);
+    if (s.seal) set.add(s.seal);
+  }
+}
 
 const out = [...set].sort((a, b) => a.localeCompare(b));
 writeFileSync(dynPath, JSON.stringify(out, null, 2));

@@ -14,6 +14,7 @@ import { StatusBar } from "./StatusBar";
 import { QueryComposer } from "./QueryComposer";
 import { TransmissionView } from "./TransmissionView";
 import { MirrorOS } from "./MirrorOS";
+import { CodexView } from "./CodexView";
 import { ArchiveRegister } from "./ArchiveRegister";
 import { CommunionView } from "./CommunionView";
 import { AkashicView } from "./AkashicView";
@@ -67,6 +68,18 @@ export default function AppShell() {
     return (
       <div className="relative h-dvh overflow-hidden">
         <AkashicView />
+      </div>
+    );
+  }
+
+  /* The Codex is its own bound world: the compact inscribed volume,
+     its chapter rail and its folded leaves — one back button returns. */
+  if (view === "codex") {
+    return (
+      <div className="relative h-dvh overflow-hidden">
+        <CosmicBackdrop />
+        <StarField />
+        <CodexView />
       </div>
     );
   }

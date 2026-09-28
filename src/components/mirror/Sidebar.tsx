@@ -18,6 +18,7 @@ import {
   Search,
   Settings,
   Orbit,
+  Feather,
   X,
 } from "lucide-react";
 import {
@@ -32,15 +33,15 @@ import { cn } from "@/lib/utils";
 import type { CivilizationGroup, InterdimGroup } from "@/lib/mirror-types";
 
 /* ------------------------------------------------------------------ */
-/*  The laboratory shelf — three books standing side by side at the    */
-/*  bottom of the sidebar: Manifest, Akashic, Star Play.               */
+/*  The laboratory shelf — four books standing side by side at the     */
+/*  bottom of the sidebar: Manifest, Akashic, Star Play, Codex.        */
 /*  Each book is a spine with its own color, height and slight lean;   */
 /*  hovering lifts it out of the shelf, the way a reader draws a       */
 /*  volume from its place.                                             */
 /* ------------------------------------------------------------------ */
 
 interface ShelfBook {
-  key: "manifest" | "akashic" | "starplay";
+  key: "manifest" | "akashic" | "starplay" | "codex";
   label: string;
   aria: string;
   action: () => void;
@@ -53,6 +54,7 @@ interface ShelfBook {
 function Bookshelf() {
   const openMirrorOS = useMirror((s) => s.openMirrorOS);
   const openAkashic = useMirror((s) => s.openAkashic);
+  const openCodex = useMirror((s) => s.openCodex);
   const openModal = useMirror((s) => s.openModal);
   const t = useT();
 
@@ -86,6 +88,16 @@ function Bookshelf() {
       color: "var(--sp-a)",
       height: 111,
       lean: 1.6,
+    },
+    {
+      key: "codex",
+      label: t("Codex"),
+      aria: t("Open the Codex — the compact volume of the laboratory"),
+      action: openCodex,
+      icon: Feather,
+      color: "var(--cx-a)",
+      height: 104,
+      lean: 1.1,
     },
   ];
 
@@ -613,8 +625,8 @@ export function SidebarContent() {
         )}
       </div>
 
-      {/* The laboratory shelf — three books standing side by side:
-          Manifest · Akashic · Star Play */}
+      {/* The laboratory shelf — four books standing side by side:
+          Manifest · Akashic · Star Play · Codex */}
       <Bookshelf />
     </div>
   );
