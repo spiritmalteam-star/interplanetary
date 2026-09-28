@@ -1,7 +1,7 @@
 import type {
   LabFrequency,
   ModePill,
-  ScienceLens,
+  SciencePill,
 } from "@/lib/mirror-types";
 
 export const modes: ModePill[] = [
@@ -21,26 +21,25 @@ export const labFrequencies: LabFrequency[] = [
   { id: "joy", label: "Joy", glyph: "☀️", hint: "High-voltage creation" },
 ];
 
-/* ------------------------------------------------------------------ */
-/*  THE EIGHT LENSES — the science scope's fusion engine.              */
-/*  Each lens is an entity-vibe: a distinct cognitive way of seeing.   */
-/*  One lens alone sees precisely; two or more lenses fused together   */
-/*  open the fusion document — analysis, convergence, divergence and   */
-/*  one unified answer, sealed with the fusion index.                  */
-/* ------------------------------------------------------------------ */
-
-export const scienceLenses: ScienceLens[] = [
-  { id: "voltaic", name: "VOLTAIC", emoji: "⚡", tag: "charge · fields · currents" },
-  { id: "biotic", name: "BIOTIC", emoji: "🧬", tag: "life · cells · evolution" },
-  { id: "magma", name: "MAGMA", emoji: "🌋", tag: "fire · pressure · deep time" },
-  { id: "clinic", name: "CLINIC", emoji: "🩺", tag: "healing · pathways · outcomes" },
-  { id: "empiric", name: "EMPIRIC", emoji: "📐", tag: "method · evidence · proof" },
-  { id: "quanta", name: "QUANTA", emoji: "⚛️", tag: "waves · probability · fields" },
-  { id: "cosma", name: "COSMA", emoji: "🌌", tag: "stars · gravity · horizons" },
-  { id: "synapse", name: "SYNAPSE", emoji: "🧠", tag: "mind · pattern · awareness" },
+export const fusionFields: SciencePill[] = [
+  { id: "math", emoji: "🧮", label: "Math" },
+  { id: "biology", emoji: "🧬", label: "Biology" },
+  { id: "chemistry", emoji: "⚗️", label: "Chemistry" },
+  { id: "physics", emoji: "📐", label: "Physics" },
+  { id: "astronomy", emoji: "🔭", label: "Astronomy" },
+  { id: "geology", emoji: "🌋", label: "Geology" },
+  { id: "neuroscience", emoji: "🧠", label: "Neuroscience" },
+  { id: "quantum-mech", emoji: "⚛️", label: "Quantum Mech" },
 ];
 
-export const ALL_LENS_IDS: string[] = scienceLenses.map((l) => l.id);
+export const directions: SciencePill[] = [
+  { id: "energy", emoji: "⚡", label: "Energy" },
+  { id: "consciousness", emoji: "🧠", label: "Consciousness" },
+  { id: "matter", emoji: "💎", label: "Matter" },
+  { id: "life", emoji: "🧬", label: "Life" },
+  { id: "spacetime", emoji: "🌌", label: "Spacetime" },
+  { id: "information", emoji: "◈", label: "Information" },
+];
 
 export const modeContext: Record<string, string> = {
   interplanetary: "",

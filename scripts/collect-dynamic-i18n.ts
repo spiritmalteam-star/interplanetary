@@ -5,11 +5,7 @@
    removed Interplanetary Biology vocabulary). */
 import { readFileSync, writeFileSync } from "node:fs";
 import { scopeSuggestionPools } from "../src/lib/data/suggestions.ts";
-import {
-  giftLines,
-  labFrequencies,
-  scienceLenses,
-} from "../src/lib/data/science.ts";
+import { giftLines, labFrequencies } from "../src/lib/data/science.ts";
 import { federationBodies, federationTreaties, federationPrinciples } from "../src/lib/data/federation.ts";
 import { SCOPE_META } from "../src/lib/entity-utils.ts";
 import {
@@ -302,9 +298,8 @@ const set = new Set<string>(existing.filter((k) => !retired.has(k)));
 /* scope suggestions — the live per-scope pools (66 questions each) */
 for (const arr of Object.values(scopeSuggestionPools)) for (const q of arr) set.add(q);
 
-/* gift lines + emotional frequencies (label + hint) + lens tags */
+/* gift lines + emotional frequencies (label + hint) */
 for (const line of giftLines) set.add(line);
-for (const lens of scienceLenses) set.add(lens.tag);
 for (const f of labFrequencies) {
   set.add(f.label);
   set.add(f.hint);

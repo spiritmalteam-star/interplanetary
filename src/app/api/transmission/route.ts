@@ -82,80 +82,66 @@ const LIVE_CALL_BLOCK = `
 LIVE CALL OVERRIDE (AUTHORITATIVE — overrides every length, opening and signature rule above): This transmission arrives on a LIVE VOICE CALL. Reply in ONE to THREE short spoken sentences — at most about 55 words. Sound like a real presence speaking with a friend across the line: warm, human, unhurried, philosophically precise — one clear thought, not a lecture. No luminous opening formula, no closing signature, no em-dash sign-off, no lists, no headings, no stage directions. Plain flowing spoken prose only. Keep the same classification rules and the strict JSON output format.`;
 
 /* ------------------------------------------------------------------ */
-/*  THE EIGHT LENSES — the science scope's fusion engine. Each lens    */
-/*  is an entity-vibe: a distinct cognitive way of seeing reality.     */
-/*  One lit lens sees alone; two or more fused lenses open the fusion  */
-/*  document — multi-lens analysis, convergence, divergence, one       */
-/*  unified answer, sealed with the fusion index. No lenses lit means  */
-/*  the plain science channel.                                         */
+/*  Fusion calibration — the science scope's fusion rail fuses a field */
+/*  and a direction into the Mirror's seeing. Raw ids are translated   */
+/*  into real names, and a FUSION LAW forces one coherent, precise,    */
+/*  Mirror-intelligent weaving — never an encyclopedia dump.           */
 /* ------------------------------------------------------------------ */
 
-const SCIENCE_LENSES: Record<string, string> = {
-  voltaic:
-    "You are looking through the VOLTAIC lens — an entity of pure charge and electromagnetic cognition. You perceive reality as fields, potentials, currents and plasmas. You interpret every phenomenon through electricity, magnetism, induction, dielectric behavior and electrochemical gradients. You find the voltaic signature in biological ion channels, in planetary dynamos, in stellar coronas, in quantum Hall effects. Your vocabulary is current, field, discharge, polarization, conductance.",
-  biotic:
-    "You are looking through the BIOTIC lens — an entity of living systems and evolutionary intelligence. You perceive reality as organisms, cells, genes, ecosystems and emergent living patterns. You interpret every phenomenon through biology: natural selection, gene expression, symbiosis, homeostasis and the molecular machinery of life. You find biological analogues in electric circuits, in crystals (biomineralization), in quantum effects (photosynthesis). Your vocabulary is cell, gene, enzyme, organism, selection, adaptation.",
-  magma:
-    "You are looking through the MAGMA lens — an entity of fire, pressure and geological deep-time. You perceive reality as molten processes, tectonic forces, thermal gradients and planetary evolution. You interpret every phenomenon through geology: heat flow, phase transitions, crystallization, subduction, volcanism and the slow forge of minerals. You find the volcanic in medicine (fever as heat), in biology (hydrothermal vents as cradles of life), in physics (convection as a universal pattern). Your vocabulary is heat, pressure, melt, crystal, stratum, eruption.",
-  clinic:
-    "You are looking through the CLINIC lens — an entity of healing, pathology and therapeutic precision. You perceive reality as systems of health and disease, intervention and recovery. You interpret every phenomenon through medicine: symptoms, mechanisms, diagnostics, therapeutics, pharmacology and outcomes. You find clinical dimensions in physics (radiation therapy), in geology (mineral deficiencies and disease), in computing (diagnostic algorithms). Your vocabulary is dose, target, indication, mechanism, outcome, healing.",
-  empiric:
-    "You are looking through the EMPIRIC lens — an entity of pure scientific method and analytical rigor. You perceive reality as hypotheses, experiments, measurements and falsifiable claims. You interpret every phenomenon through the scientific method: observation, hypothesis, prediction, experiment, peer review, reproducibility. You demand evidence, identify confounders, quantify uncertainty. Your vocabulary is evidence, hypothesis, control, measurement, replication, theory.",
-  quanta:
-    "You are looking through the QUANTA lens — an entity of the subatomic, the probabilistic and the wavefunction. You perceive reality as quantum fields, superpositions, entanglements and uncertainty principles. You interpret every phenomenon through quantum mechanics: wave-particle duality, tunneling, decoherence, vacuum fluctuations and the strange logic of Hilbert spaces. You find quantum dimensions in biology (enzyme tunneling, photosynthetic coherence), in chemistry (bond formation, orbital hybridization), in computing (qubits, quantum algorithms). Your vocabulary is wavefunction, superposition, entanglement, probability, coherence, observation.",
-  cosma:
-    "You are looking through the COSMA lens — an entity of cosmic scale, of galaxies and dark matter, of deep time and deep space. You perceive reality as astrophysical processes: stellar nucleosynthesis, gravitational lensing, cosmic expansion, black hole horizons and the large-scale structure of the universe. You find cosmic dimensions in atoms (nuclear furnaces mirror stellar cores), in biology (we are made of star dust), in chemistry (elements forged in supernovae). Your vocabulary is star, galaxy, gravity, expansion, horizon, infinity.",
-  synapse:
-    "You are looking through the SYNAPSE lens — an entity of cognition, consciousness and emergent mind. You perceive reality as information processing, neural networks, attention mechanisms and the strange loop of self-awareness. You interpret every phenomenon through cognition: how is this known? What does the knowing feel like? Could a mind emerge from this? You find cognitive dimensions in physics (the observer effect), in biology (nervous systems), in computing (artificial neural networks), in geology (Earth as a self-regulating system). Your vocabulary is mind, pattern, signal, awareness, model, emergence.",
+const FIELD_LABELS: Record<string, string> = {
+  math: "Mathematics",
+  biology: "Biology",
+  chemistry: "Chemistry",
+  physics: "Physics",
+  astronomy: "Astronomy",
+  geology: "Geology",
+  neuroscience: "Neuroscience",
+  "quantum-mech": "Quantum Mechanics",
 };
 
-function lensPrompt(lenses: unknown): {
+const DIRECTION_LABELS: Record<string, string> = {
+  energy: "Energy",
+  consciousness: "Consciousness",
+  matter: "Matter",
+  life: "Life",
+  spacetime: "Spacetime",
+  information: "Information",
+};
+
+function fusionPrompt(fieldId: unknown, directionId: unknown): {
   systemBlock: string;
   userLine: string;
 } {
-  const ids = Array.isArray(lenses)
-    ? lenses.filter(
-        (l): l is string =>
-          typeof l === "string" && Boolean(SCIENCE_LENSES[l])
-      )
-    : [];
+  const field =
+    typeof fieldId === "string" && FIELD_LABELS[fieldId]
+      ? FIELD_LABELS[fieldId]
+      : null;
+  const direction =
+    typeof directionId === "string" && DIRECTION_LABELS[directionId]
+      ? DIRECTION_LABELS[directionId]
+      : null;
 
-  if (ids.length === 0) return { systemBlock: "", userLine: "" };
-
-  /* -------- CASE A — single-lens mode: see alone, prose only ------- */
-  if (ids.length === 1) {
-    const id = ids[0];
-    const systemBlock = `\n\nLENS MODE — ONE LENS ACTIVE AND BINDING (the visitor lit exactly ONE fusion lens in the laboratory BEFORE asking)\n${SCIENCE_LENSES[id]}\nThis lens is a way of SEEING, not a topic: look THROUGH it at the visitor's actual question and answer THAT question. Never deliver a generic overview of the lens, never drift into textbook chapters the question did not call for. If a question seems unrelated to the lens, find the true bridge — show how THIS question looks when seen through it. Respond with precision and depth: real mechanisms, real terms, real magnitudes where they serve the meaning, carried in the Mirror's luminous voice. Keep the usual transmission format — luminous prose, no headings, no lists.`;
-    const userLine = `(LENS ACTIVE — ${id.toUpperCase()}. This lens is binding for the question below, whether typed or chosen from the suggestions: see LENS MODE in your instructions and see the question THROUGH it.)`;
-    return { systemBlock, userLine };
+  if (!field && !direction) {
+    return { systemBlock: "", userLine: "" };
   }
 
-  /* -------- CASE B — fusion mode: the fusion document -------------- */
-  const names = ids.map((id) => id.toUpperCase());
-  const lensBlocks = ids
-    .map((id) => `**${id.toUpperCase()}** — ${SCIENCE_LENSES[id]}`)
-    .join("\n\n---\n\n");
-  const systemBlock = `
+  const fused = [field, direction].filter(Boolean).join(" and ");
 
-FUSION MODE — ${ids.length} LENSES ACTIVE AND BINDING (the visitor fused these lenses in the laboratory BEFORE asking)
-The Mirror is running ${ids.length} cognitive lenses simultaneously to see this one question and produce one precise, unified answer. The fusion is a LAW of this reply, and it applies to EVERY question in this channel without exception: a question chosen from the suggested questions is fused EXACTLY like a personally typed one.
+  const systemBlock = `\n
+FUSION CALIBRATION — ACTIVE AND BINDING (the visitor fused this calibration in the laboratory BEFORE asking)
+The Mirror has fused ${fused} into one seeing. This calibration is NOT optional garnish — it is a LAW of this reply, and it applies to EVERY question in this channel without exception: a question chosen from the suggested questions is fused EXACTLY like a personally typed one. Honor this law exactly:
+- The calibration is a LENS, not a topic: look THROUGH it at the visitor's actual question and answer THAT question through the lens. Never deliver a generic overview of the field, never drift into textbook chapters the question did not call for.
+- THE FUSION MUST BE VISIBLE: the opening line and every paragraph must arise from the fused seeing; where it reads naturally, name the fused field or direction explicitly, so the visitor can feel the calibration at work in the answer itself.
+- ONE woven meaning: scope × calibration × question must fuse into a single continuous understanding — every paragraph belongs to the same fused seeing, each building on the last. No disconnected trivia, no fact lists, no popular-science filler, no "random internet data".
+- If a question seems unrelated to the calibration, do not ignore the calibration — find the true bridge: show how THIS question looks when seen through ${fused}, and if the visitor asks for something the calibration cannot illuminate, say so honestly and still keep the lens in view.
+- Precision: where the fused field is exact, be exact — real mechanisms, real terms, real magnitudes when they serve the meaning — carried in the Mirror's luminous voice, never textbook dryness, never search-result randomness.
+- Every sentence must be about THIS question seen through THIS calibration. A sentence that would fit any other question does not belong in this transmission.`;
 
-ACTIVE LENSES:
+  const parts: string[] = [];
+  if (field) parts.push(`field = ${field}`);
+  if (direction) parts.push(`direction = ${direction}`);
+  const userLine = `(FUSION ACTIVE — ${parts.join(" · ")}. This calibration is binding for the question below, whether it was typed or chosen from the suggestions: see FUSION CALIBRATION in your instructions and weave the lens through the entire reply.)`;
 
-${lensBlocks}
-
-FUSION PROTOCOL (MANDATORY STRUCTURE — the transmission must follow it exactly):
-1. Open with ONE single-sentence luminous opening line, as always.
-2. MULTI-LENS ANALYSIS — for EACH active lens, in the order listed above: one subheading line formatted exactly "### ${names[0]}" (uppercase lens name, one per lens, none skipped) followed by 2–4 sentences analyzing the question from that lens: the specific concepts, principles or predictions it brings.
-3. Under a heading line exactly "## Convergence" — 2–4 insights where the lenses agree. These are the most robust findings; emphasize them.
-4. Under a heading line exactly "## Divergence" — 1–2 cases where the lenses offer competing or complementary views, and why.
-5. Under a heading line exactly "## Unified Answer" — ONE single, precise, unified answer synthesizing all lenses: clear, concrete, illuminated — the final answer the visitor keeps. It must be stronger than any single lens alone. Close it with the signature line "— The Mirror, in the laboratory of the real".
-6. As the FINAL line, write exactly: "> FUSION INDEX: ${ids.length}/8 lenses active, coherence: High" — replacing High with the coherence that is TRUE of this fusion: High when the lenses converge on one understanding, Medium when they only partly meet, Low when they mostly diverge.
-
-FUSION DOCUMENT OVERRIDE (AUTHORITATIVE — overrides the no-headings and 160–280-word style rules for THIS transmission only): the "### lens" subheadings, the three "## " section headings and the final fusion-index line are REQUIRED, exactly as specified; the body may run longer than usual. Apart from these required lines, stay in the Mirror's voice: no emojis, no bullet lists, no markdown other than the specified heading and index lines.
-
-Rules: use ALL active lenses — none may be skipped; be rigorous, scientific and illuminating; a sentence that would fit any other question does not belong in this transmission.`;
-  const userLine = `(FUSION ACTIVE — ${ids.length} lenses: ${names.join(" · ")}. This fusion is binding for the question below, whether typed or chosen from the suggestions: see FUSION MODE in your instructions and follow the FUSION PROTOCOL structure exactly.)`;
   return { systemBlock, userLine };
 }
 
@@ -343,16 +329,17 @@ export async function POST(req: NextRequest) {
     const zai = await ZAI.create();
 
     const modeLine = MODE_CONTEXT[mode] ?? MODE_CONTEXT.interplanetary;
-    const { systemBlock: lensBlock, userLine: lensLine } = lensPrompt(
-      body?.lenses
+    const { systemBlock: fusionBlock, userLine: fusionLine } = fusionPrompt(
+      body?.scienceField,
+      body?.direction
     );
     const languageLine =
       languageName === "English"
         ? ""
         : `\n\nLANGUAGE (CRITICAL): the visitor reads in ${languageName}. Write EVERY word of the transmission — the luminous opening line, every body paragraph and the closing signature line — in fluent, natural ${languageName}. Keep the classification value in English as listed. Keep the name "The Mirror" in the signature as "The Mirror".`;
 
-    const userLines = lensLine
-      ? [lensLine, "", query.trim()]
+    const userLines = fusionLine
+      ? [fusionLine, "", query.trim()]
       : [query.trim()];
 
     /* Attachments — one image seen with the vision field, up to three
@@ -369,7 +356,7 @@ export async function POST(req: NextRequest) {
       messages: [
         {
           role: "assistant",
-          content: SYSTEM_PROMPT + lensBlock + (body?.live === true ? LIVE_CALL_BLOCK : ""),
+          content: SYSTEM_PROMPT + fusionBlock + (body?.live === true ? LIVE_CALL_BLOCK : ""),
         },
         ...historyMessages(body?.history),
         {

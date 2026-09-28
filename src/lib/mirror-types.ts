@@ -75,15 +75,6 @@ export interface SciencePill {
   label: string;
 }
 
-/** One of the eight fusion lenses of the science scope — an entity-vibe,
-    a distinct cognitive way of seeing reality. */
-export interface ScienceLens {
-  id: string;
-  name: string;
-  emoji: string;
-  tag: string;
-}
-
 export interface ModePill {
   id: Mode;
   emoji: string;

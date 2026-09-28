@@ -22,78 +22,28 @@ import {
   VisualizationPending,
 } from "./VisualizationCard";
 
-/* ---------- parsing the transmission into rich blocks ----------
-   Plain luminous prose AND the fusion document both parse here:
-   the fusion protocol contributes "### LENS" subheadings, "## Section"
-   headings and the final "> FUSION INDEX" line. */
+/* ---------- parsing the transmission into rich blocks ---------- */
 
 type Block =
   | { kind: "opening"; text: string }
   | { kind: "para"; text: string }
   | { kind: "list"; items: string[] }
-  | { kind: "lens"; text: string }
-  | { kind: "section"; text: string }
-  | { kind: "index"; text: string }
   | { kind: "signature"; text: string };
 
 function parseBlocks(text: string): Block[] {
-  const paragraphs = text
+  const raw = text
     .split(/\n{2,}/)
     .map((p) => p.trim())
     .filter(Boolean);
-
-  /* Flatten the paragraphs into an ordered stream of atoms — a heading
-     line (lens / section / index) or a plain paragraph. A heading may
-     share its paragraph with body text, so walk line by line. */
-  const atoms: {
-    kind: "para" | "lens" | "section" | "index";
-    text: string;
-  }[] = [];
-
-  for (const p of paragraphs) {
-    const lines = p.split("\n").map((l) => l.trim());
-    if (!lines.some((l) => /^(#{2,3} |> )/.test(l))) {
-      atoms.push({ kind: "para", text: p });
-      continue;
-    }
-    let buf: string[] = [];
-    const flush = () => {
-      if (buf.length) {
-        atoms.push({ kind: "para", text: buf.join(" ") });
-        buf = [];
-      }
-    };
-    for (const line of lines) {
-      if (line.startsWith("### ")) {
-        flush();
-        atoms.push({ kind: "lens", text: line.slice(4).trim() });
-      } else if (line.startsWith("## ")) {
-        flush();
-        atoms.push({ kind: "section", text: line.slice(3).trim() });
-      } else if (line.startsWith("> ")) {
-        flush();
-        atoms.push({ kind: "index", text: line.slice(2).trim() });
-      } else {
-        buf.push(line);
-      }
-    }
-    flush();
-  }
-
   const blocks: Block[] = [];
-  atoms.forEach((a, i) => {
-    if (a.kind !== "para") {
-      blocks.push({ kind: a.kind, text: a.text });
+
+  raw.forEach((p, i) => {
+    const isLast = i === raw.length - 1;
+    if (isLast && (p.startsWith("—") || p.startsWith("—"))) {
+      blocks.push({ kind: "signature", text: p });
       return;
     }
-    const isLast = i === atoms.length - 1;
-    /* the signature — usually the last atom, but in a fusion document
-       it closes the Unified Answer with the index line still to come */
-    if (a.text.startsWith("—") && (isLast || a.text.startsWith("— The "))) {
-      blocks.push({ kind: "signature", text: a.text });
-      return;
-    }
-    const lines = a.text.split("\n").map((l) => l.trim());
+    const lines = p.split("\n").map((l) => l.trim());
     const isList =
       lines.length > 0 &&
       lines.every((l) => l.startsWith("- ") || l.startsWith("• "));
@@ -104,11 +54,11 @@ function parseBlocks(text: string): Block[] {
       });
       return;
     }
-    if (!blocks.some((b) => b.kind === "opening")) {
-      blocks.push({ kind: "opening", text: a.text });
+    if (i === 0) {
+      blocks.push({ kind: "opening", text: p });
       return;
     }
-    blocks.push({ kind: "para", text: a.text });
+    blocks.push({ kind: "para", text: p });
   });
 
   return blocks;
@@ -244,92 +194,6 @@ function TransmissionBody({ text }: { text: string }) {
             >
               {b.text}
             </motion.p>
-          );
-        }
-        if (b.kind === "lens") {
-          return (
-            <motion.div
-              key={i}
-              custom={i}
-              variants={staggerItem}
-              initial="hidden"
-              animate="show"
-              className="flex items-center gap-2.5 pt-6 first:pt-0"
-            >
-              <span
-                className="size-1.5 shrink-0 rotate-45"
-                style={{
-                  background: "var(--scope-a)",
-                  boxShadow:
-                    "0 0 8px color-mix(in srgb, var(--scope-a) 55%, transparent)",
-                }}
-                aria-hidden="true"
-              />
-              <span
-                className="mono-label shrink-0 text-[13.5px] tracking-[0.22em]"
-                style={{ color: "color-mix(in srgb, var(--scope-a) 88%, white)" }}
-              >
-                {b.text}
-              </span>
-              <span
-                className="h-px flex-1"
-                style={{
-                  background:
-                    "linear-gradient(90deg, color-mix(in srgb, var(--scope-a) 32%, transparent), transparent)",
-                }}
-                aria-hidden="true"
-              />
-            </motion.div>
-          );
-        }
-        if (b.kind === "section") {
-          return (
-            <motion.div
-              key={i}
-              custom={i}
-              variants={staggerItem}
-              initial="hidden"
-              animate="show"
-              className="pt-7"
-            >
-              <h3 className="scope-gradient-text text-[17.5px] font-semibold leading-[1.5] sm:text-[19px]">
-                {b.text}
-              </h3>
-              <div
-                className="mt-1.5 h-px w-20"
-                style={{
-                  background:
-                    "linear-gradient(90deg, var(--scope-b), transparent)",
-                }}
-                aria-hidden="true"
-              />
-            </motion.div>
-          );
-        }
-        if (b.kind === "index") {
-          return (
-            <motion.div
-              key={i}
-              custom={i}
-              variants={staggerItem}
-              initial="hidden"
-              animate="show"
-              className="pt-6"
-            >
-              <span
-                className="mono-label inline-block rounded-full border px-3.5 py-1.5 text-[10.5px] tracking-[0.14em]"
-                style={{
-                  borderColor:
-                    "color-mix(in srgb, var(--scope-a) 36%, transparent)",
-                  background:
-                    "color-mix(in srgb, var(--scope-a) 9%, transparent)",
-                  color: "color-mix(in srgb, var(--scope-b) 88%, white)",
-                }}
-                data-testid="fusion-index"
-              >
-                {b.text}
-              </span>
-            </motion.div>
           );
         }
         if (b.kind === "signature") {

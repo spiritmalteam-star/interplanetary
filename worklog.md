@@ -1153,3 +1153,26 @@ Stage Summary:
 - The Invent book is now THE FORGE: an interactive invention workshop — the direct mirror chat specialized for invention (mode "forge") plus the random mystery creation with server-side ember randomness — interactive elements first, no static text walls, compact on every screen.
 - The science scope now runs the OCTAFUSE essence in the Mirror's voice: 8 multi-select entity-lenses (ALL lit by default), one lens sees alone in prose, 2+ lenses produce the fusion document (per-lens analysis → Convergence → Divergence → Unified Answer → FUSION INDEX pill), rendered natively in the chat.
 - i18n 1113 keys 0 missing in all 8 languages; lint clean; E2E green desktop + mobile; worklog updated.
+
+---
+Task ID: 44
+Agent: Z.ai Code (main)
+Task: User request — revert the last update on the scopes: OCTAFUSE must go away, leave the app as it was. (The Forge / Invent book stays — it was explicitly requested and is not part of the scope change.)
+
+Work Log:
+- Located the pre-OCTAFUSE state in git (commit c116b6f^, the Task 42 completion): the science scope ran FUSION CALIBRATION — 8 fields + 6 directions single-select pills in the vertical ScienceFusionRail, translated into a FUSION CALIBRATION system block via fusionPrompt(scienceField, direction) in /api/transmission.
+- Fully restored the three pure-science files from c116b6f^: src/lib/data/science.ts (fusionFields + directions + modeContext restored; scienceLenses/ALL_LENS_IDS gone), src/components/mirror/ScienceFusionRail.tsx (field/direction single-select popover, FlaskConical tab, calibration badge), src/components/mirror/TransmissionView.tsx (plain parseBlocks — lens/section/index block kinds and renderers removed).
+- Selectively reverted the mixed files, preserving all Forge work: mirror-store.ts (scienceLenses/toggleScienceLens/setScienceLenses → activeScienceField/activeDirection/setScienceField/setDirection with the FUSION CLARITY LAW; askMirror payload lenses[] → scienceField+direction; forgeSession/mystery state untouched), /api/transmission (SCIENCE_LENSES + lensPrompt + CASE A/B fusion protocol deleted → FIELD_LABELS/DIRECTION_LABELS + fusionPrompt FUSION CALIBRATION block restored via a scripted splice; MODE_CONTEXT.forge kept), LiveCall.tsx (lenses payload → scienceField/direction), mirror-types.ts (ScienceLens interface removed; ForgeDialOption/ForgeDials/MysteryCreation kept).
+- replication-prompt.ts: §5 science line back to "FUSION calibration (8 fields + 6 directions) ONLY in the vertical ScienceFusionRail"; §7 counts "fusion fields: 8 · directions: 6" (mystery dials + forge embers kept); §9b THE FUSION DOCUMENT (OCTAFUSE engine) deleted entirely; §9 APIs keep /api/forge and the forge mode but drop the OCTAFUSE mention; §14 ScienceFusionRail/TransmissionView descriptions plain again; §15 check 13 keeps THE FORGE check, drops the eight-lens science-rail sentence.
+- scripts/collect-dynamic-i18n.ts: removed the scienceLenses import + lens-tag collection (gift lines + lab frequencies only, as before); all Forge collections kept. Regenerated i18n-keys-dynamic.json. The 8 lens-tag dict entries remain as tolerated unused entries (dicts had zero deletions in the OCTAFUSE commit, so every pre-OCTAFUSE key was still present — no translation work needed).
+- Verified zero leftover references (scienceLenses/ALL_LENS_IDS/ScienceLens/toggleScienceLens/OCTAFUSE/FUSION INDEX/lensPrompt) across src/ and the collect script; removed the temporary revert script.
+
+Verification:
+- node scripts/check-i18n.mjs → ALL DICTIONARIES COMPLETE (1113 keys, 0 missing in every language); bun run lint clean; dev.log clean.
+- curl /api/transmission mode science with {scienceField:"physics", direction:"energy"} → 200, classic fused luminous prose (no headings, no FUSION INDEX); curl /api/forge → 200, "The Resonant Ember Coffer" — Forge untouched.
+- Agent Browser E2E desktop 1440×900: Science scope → rail present; popover shows FUSION FIELDS + DIRECTION headings with all 8 fields and all 6 directions, ZERO lens names (VOLTAIC/BIOTIC/MAGMA/SYNAPSE) and ZERO "FUSION INDEX" anywhere on the page; clicking Physics + Energy → 2 aria-pressed pills, rail badge "2".
+- Agent Browser E2E: Invent spine → INVENT · THE FORGE with forge chat + Mystery Chamber + STRIKE THE FORGE button all intact; back button returns to the Observatory with the rail still present. Mobile 390×844: no horizontal overflow (scrollWidth 390). Zero page errors, zero console errors.
+
+Stage Summary:
+- The OCTAFUSE update on the science scope is fully reverted: the fusion rail is again the 8-field + 6-direction single-select FUSION calibration feeding fusionPrompt, the transmission renders plain luminous prose, and every pre-OCTAFUSE file state is restored (with the one intentional merge: forge additions stay).
+- The app is otherwise exactly as it was after the Forge build — the Invent book remains THE FORGE (direct forge chat + random mystery creation), all 8 languages complete, lint clean, APIs 200, browser-verified desktop + mobile.

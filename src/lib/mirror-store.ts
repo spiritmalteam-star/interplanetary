@@ -9,7 +9,6 @@ import type {
   MysteryCreation,
   ForgeDials,
 } from "@/lib/mirror-types";
-import { ALL_LENS_IDS } from "@/lib/data/science";
 import { civilizations, civilizationTotal } from "@/lib/data/civilizations";
 import { interdimensional, interdimTotal } from "@/lib/data/interdimensional";
 import { innerEarthTotal } from "@/lib/data/inner-earth";
@@ -145,10 +144,8 @@ export interface OsMessage {
 
 interface MirrorState {
   activeMode: Mode;
-  /** The science scope's fusion lenses — multi-select; ALL eight are
-      active by default, two or more fused lenses open the fusion
-      document, one lens sees alone, none sees plainly. */
-  scienceLenses: string[];
+  activeScienceField: string | null;
+  activeDirection: string | null;
   sidebarTab: SidebarTab;
   search: string;
   modal: ModalState;
@@ -212,10 +209,8 @@ interface MirrorState {
   bootPreferences: () => void;
 
   setMode: (mode: Mode) => void;
-  /** Toggle one fusion lens of the science scope (multi-select). */
-  toggleScienceLens: (id: string) => void;
-  /** Set the whole lens set at once ("all eight" / "clear"). */
-  setScienceLenses: (ids: string[]) => void;
+  setScienceField: (id: string | null) => void;
+  setDirection: (id: string | null) => void;
   setSidebarTab: (tab: SidebarTab) => void;
   setSearch: (value: string) => void;
   openModal: (modal: NonNullable<ModalState>) => void;
@@ -330,8 +325,8 @@ const nextMessageId = () => `m-${Date.now().toString(36)}-${(messageCounter++).t
 
 export const useMirror = create<MirrorState>()((set, get) => ({
   activeMode: "interplanetary",
-  /* OCTAFUSE heritage: the fusion begins with ALL eight lenses lit. */
-  scienceLenses: ALL_LENS_IDS,
+  activeScienceField: null,
+  activeDirection: null,
   sidebarTab: "civilizations",
   search: "",
   modal: null,
@@ -389,23 +384,17 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       };
     }),
 
-  toggleScienceLens: (id) =>
-    set((s) => {
-      const active = s.scienceLenses.includes(id);
-      const next = active
-        ? s.scienceLenses.filter((l) => l !== id)
-        : [...s.scienceLenses, id];
+  setScienceField: (id) =>
+    set((s) => ({
+      activeScienceField: s.activeScienceField === id ? null : id,
       /* FUSION CLARITY LAW — any recalibration re-tunes the science
          channel back to a quiet origin. */
-      return {
-        scienceLenses: next,
-        sessions: { ...s.sessions, science: emptySession() },
-      };
-    }),
+      sessions: { ...s.sessions, science: emptySession() },
+    })),
 
-  setScienceLenses: (ids) =>
+  setDirection: (id) =>
     set((s) => ({
-      scienceLenses: ids,
+      activeDirection: s.activeDirection === id ? null : id,
       /* FUSION CLARITY LAW — any recalibration re-tunes the science
          channel back to a quiet origin. */
       sessions: { ...s.sessions, science: emptySession() },
@@ -738,7 +727,8 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         body: JSON.stringify({
           query,
           mode,
-          lenses: get().scienceLenses,
+          scienceField: get().activeScienceField,
+          direction: get().activeDirection,
           language: get().language,
           history,
           ...(payload ?? {}),
