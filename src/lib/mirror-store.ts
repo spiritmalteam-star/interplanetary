@@ -114,7 +114,7 @@ export type MainView =
   | "mirroros"
   | "register"
   | "akashic"
-  | "codex";
+  | "invent";
 export type RegisterKind = DossierKind;
 
 /* -------- direct line to the Mirror Entity OS (reality refining) ------- */
@@ -206,9 +206,9 @@ interface MirrorState {
   openAkashic: () => void;
   exitAkashic: () => void;
 
-  /* The Codex — the fourth book: a compact inscribed volume */
-  openCodex: () => void;
-  exitCodex: () => void;
+  /* The Invent — the fourth book: the inventor's compact studio */
+  openInvent: () => void;
+  exitInvent: () => void;
 
   /* Communion — the Reflection of the Absolute */
   openCommunion: () => void;
@@ -403,12 +403,12 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     set({ view: "akashic", mobileNavOpen: false, modal: null }),
   exitAkashic: () => set({ view: "observatory" }),
 
-  /* -------- The Codex — the fourth book --------
-     A compact inscribed volume: opening it suspends every other
+  /* -------- The Invent — the fourth book --------
+     The inventor's compact studio: opening it suspends every other
      surface, exactly like the Manifest and the Akashic Library. */
-  openCodex: () =>
-    set({ view: "codex", mobileNavOpen: false, modal: null }),
-  exitCodex: () => set({ view: "observatory" }),
+  openInvent: () =>
+    set({ view: "invent", mobileNavOpen: false, modal: null }),
+  exitInvent: () => set({ view: "observatory" }),
 
   /* -------- Communion — the Reflection of the Absolute --------
      Entering communion suspends every other surface: the whole

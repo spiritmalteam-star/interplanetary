@@ -28,11 +28,17 @@ import {
   STEPS_LABEL_PRACTICE,
 } from "../src/lib/data/remedy.ts";
 import {
-  codexTitle,
-  codexSubtitle,
-  codexIntro,
-  codexChapters,
-} from "../src/lib/data/codex.ts";
+  blueprints,
+  workshopIntro,
+  makingRungs,
+  studioProtocols,
+  workshopDiscernment,
+  makeDomains,
+  sparkStates,
+  benchMorningPool,
+  benchEveningPool,
+  benchFocusPool,
+} from "../src/lib/data/invent.ts";
 
 const dynPath = "/home/z/my-project/scripts/i18n-keys-dynamic.json";
 const existing: string[] = JSON.parse(readFileSync(dynPath, "utf8"));
@@ -128,6 +134,29 @@ const SCIENCE_POOL_RETIRED = [
   "How does a forest share sugar and warnings through its underground threads?",
   "What remains genuinely unknown about consciousness that no scan can yet touch?",
 ];
+/* Retired with the Codex book — replaced on the shelf by the Invent
+   studio; the dawn-rose volume is never required again. */
+const CODEX_RETIRED = [
+  "A compact volume of the laboratory",
+  "A golden seal closes every section — one line to carry with you.",
+  "Bound in dawn-rose, standing beside its three companions",
+  "Codex",
+  "Compact does not mean small — it means nothing wasted.",
+  "Each chapter folds into sections that open only on request.",
+  "Every chapter is typed and folded. A chapter opens only when it is asked for, and the slim rail above turns the volume to any chapter without a long scroll. When the text that belongs here arrives, it is inscribed chapter by chapter — and the book fills itself.",
+  "Four books stand on the laboratory shelf — the Manifest, the Akashic Library, the Star Play deck, and now this one. The Codex keeps its chapters folded, so a reader never wanders far to find a line.",
+  "How to Read It",
+  "Open the Codex — the compact volume of the laboratory",
+  "The binding",
+  "The chapters of the Codex",
+  "The chapters travel the rail; each leaf opens and folds",
+  "The leaves",
+  "The pages",
+  "The rail",
+  "The shelf holds the Manifest, the Akashic Library and the Star Play deck. This fourth spine was bound at the seeker's request — a codex: one volume meant to carry many inscriptions inside a single cover.",
+  "The slim rail at the top of the volume carries every chapter by its sigil. Choose one and the book turns to it — no wandering, no lost place.",
+  "The voice of the laboratory can read any open chapter aloud.",
+];
 const retired = new Set([
   ...BIOLOGY_RETIRED,
   /* removed chat classification block */
@@ -144,6 +173,7 @@ const retired = new Set([
   "Archive reflection",
   "Held gently by the archive — verify inwardly what resonates.",
   ...SCIENCE_POOL_RETIRED,
+  ...CODEX_RETIRED,
 ]);
 
 const set = new Set<string>(existing.filter((k) => !retired.has(k)));
@@ -216,19 +246,44 @@ for (const label of Object.values(KIND_LABEL)) set.add(label);
 set.add(STEPS_LABEL_HERBAL);
 set.add(STEPS_LABEL_PRACTICE);
 
-/* The Codex — the fourth book: title, subtitle, intro and every chapter */
-set.add(codexTitle);
-set.add(codexSubtitle);
-for (const p of codexIntro) set.add(p);
-for (const c of codexChapters) {
-  set.add(c.title);
-  set.add(c.tagline);
-  for (const s of c.sections) {
-    if (s.heading) set.add(s.heading);
-    for (const p of s.body ?? []) set.add(p);
-    for (const li of s.list ?? []) set.add(li);
-    if (s.seal) set.add(s.seal);
-  }
+/* The Invent studio — the fourth book: blueprints, workshop and bench */
+for (const b of blueprints) {
+  set.add(b.name);
+  set.add(b.tagline);
+  for (const s of b.steps) set.add(s);
+  set.add(b.seal);
+}
+for (const p of workshopIntro) set.add(p);
+for (const r of makingRungs) {
+  set.add(r.title);
+  set.add(r.line);
+}
+for (const p of studioProtocols) {
+  set.add(p.name);
+  set.add(p.purpose);
+  for (const s of p.steps) set.add(s);
+}
+for (const d of workshopDiscernment) set.add(d);
+for (const d of makeDomains) {
+  set.add(d.label);
+  set.add(d.pattern);
+  set.add(d.reframe);
+  set.add(d.practice);
+}
+for (const v of sparkStates) {
+  set.add(v.label);
+  set.add(v.bridge);
+  set.add(v.anchor);
+}
+for (const m of benchMorningPool) set.add(m);
+for (const e of benchEveningPool) set.add(e);
+for (const f of benchFocusPool) set.add(f);
+for (const l of [
+  "Blueprints",
+  "The Workshop",
+  "The Bench",
+]) {
+  set.add(l);
 }
 
 const out = [...set].sort((a, b) => a.localeCompare(b));

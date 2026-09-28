@@ -13,12 +13,12 @@ import {
   BookOpenText,
   ChevronDown,
   ChevronRight,
+  DraftingCompass,
   Moon,
   Scroll,
   Search,
   Settings,
   Orbit,
-  Feather,
   X,
 } from "lucide-react";
 import {
@@ -34,14 +34,14 @@ import type { CivilizationGroup, InterdimGroup } from "@/lib/mirror-types";
 
 /* ------------------------------------------------------------------ */
 /*  The laboratory shelf — four books standing side by side at the     */
-/*  bottom of the sidebar: Manifest, Akashic, Star Play, Codex.        */
+/*  bottom of the sidebar: Manifest, Akashic, Star Play, Invent.       */
 /*  Each book is a spine with its own color, height and slight lean;   */
 /*  hovering lifts it out of the shelf, the way a reader draws a       */
 /*  volume from its place.                                             */
 /* ------------------------------------------------------------------ */
 
 interface ShelfBook {
-  key: "manifest" | "akashic" | "starplay" | "codex";
+  key: "manifest" | "akashic" | "starplay" | "invent";
   label: string;
   aria: string;
   action: () => void;
@@ -54,7 +54,7 @@ interface ShelfBook {
 function Bookshelf() {
   const openMirrorOS = useMirror((s) => s.openMirrorOS);
   const openAkashic = useMirror((s) => s.openAkashic);
-  const openCodex = useMirror((s) => s.openCodex);
+  const openInvent = useMirror((s) => s.openInvent);
   const openModal = useMirror((s) => s.openModal);
   const t = useT();
 
@@ -90,12 +90,12 @@ function Bookshelf() {
       lean: 1.6,
     },
     {
-      key: "codex",
-      label: t("Codex"),
-      aria: t("Open the Codex — the compact volume of the laboratory"),
-      action: openCodex,
-      icon: Feather,
-      color: "var(--cx-a)",
+      key: "invent",
+      label: t("Invent"),
+      aria: t("Open Invent — the inventor's studio of the laboratory"),
+      action: openInvent,
+      icon: DraftingCompass,
+      color: "var(--iv-a)",
       height: 104,
       lean: 1.1,
     },
@@ -626,7 +626,7 @@ export function SidebarContent() {
       </div>
 
       {/* The laboratory shelf — four books standing side by side:
-          Manifest · Akashic · Star Play · Codex */}
+          Manifest · Akashic · Star Play · Invent */}
       <Bookshelf />
     </div>
   );

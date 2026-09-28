@@ -96,9 +96,9 @@
   --sp-a: #7b4fb6;
   --sp-b: #b06ecb;
 
-  /* codex — dawn-rose, the fourth book */
-  --cx-a: #a5526c;
-  --cx-b: #bd7d90;
+  /* invent — molten copper, the fourth book */
+  --iv-a: #a2632d;
+  --iv-b: #b87a3e;
 
   /* ET register ink — fully opaque pages */
   --register-ink: #f2edfa;
@@ -166,9 +166,9 @@
   --sp-a: #b79bef;
   --sp-b: #d9c2f4;
 
-  /* codex — dawn-rose, the fourth book */
-  --cx-a: #d895a8;
-  --cx-b: #e5b9c6;
+  /* invent — molten copper, the fourth book */
+  --iv-a: #e0ac6c;
+  --iv-b: #eac394;
 
   /* ET register ink — fully opaque pages */
   --register-ink: #0a0716;
@@ -456,13 +456,13 @@ html:not(.dark) .text-hero {
   --scope-b: #cd9068;
 }
 
-.scope-codex {
-  --scope-a: #9c4f66;
-  --scope-b: #a35a78;
+.scope-invent {
+  --scope-a: #9c5426;
+  --scope-b: #a8642e;
 }
-.dark .scope-codex {
-  --scope-a: #d9a3b4;
-  --scope-b: #cd8ba0;
+.dark .scope-invent {
+  --scope-a: #e5b27a;
+  --scope-b: #d49a5e;
 }
 
 /* Scope-aware text gradient (opening line, titles) — softened */
