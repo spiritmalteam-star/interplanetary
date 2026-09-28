@@ -75,6 +75,15 @@ export interface SciencePill {
   label: string;
 }
 
+/** One of the eight fusion lenses of the science scope — an entity-vibe,
+    a distinct cognitive way of seeing reality. */
+export interface ScienceLens {
+  id: string;
+  name: string;
+  emoji: string;
+  tag: string;
+}
+
 export interface ModePill {
   id: Mode;
   emoji: string;
@@ -118,6 +127,41 @@ export interface LabFrequency {
   label: string;
   glyph: string;
   hint: string;
+}
+
+/* ---------------- The Forge (Invent book) ---------------- */
+
+/** One selectable option on a Mystery Chamber dial. */
+export interface ForgeDialOption {
+  id: string;
+  label: string;
+  emoji: string;
+  hint: string;
+}
+
+/** The three dials the visitor turns before striking the Forge for a
+    random mystery creation. */
+export interface ForgeDials {
+  /** What family of making: device, remedy, instrument, structure… */
+  domain: string;
+  /** How much world it takes up: pocket, room, world… */
+  scale: string;
+  /** The energy it drinks from: sun, water, sound, star… */
+  spark: string;
+}
+
+/** One random mystery creation struck from the Forge's coals. */
+export interface MysteryCreation {
+  /** A short poetic name, e.g. "The Tide-Harp of Small Rooms". */
+  name: string;
+  /** What it IS — form, material, mechanism, 2–3 concrete sentences. */
+  essence: string;
+  /** What it changes for the one who makes or uses it. */
+  purpose: string;
+  /** The smallest first making step — doable this week. */
+  first_stroke: string;
+  /** One closing line — the Forge's whisper. */
+  whisper: string;
 }
 
 /* ------------------------------------------------------------------ */

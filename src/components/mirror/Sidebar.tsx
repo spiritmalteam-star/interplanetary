@@ -92,7 +92,7 @@ function Bookshelf() {
     {
       key: "invent",
       label: t("Invent"),
-      aria: t("Open Invent — the inventor's studio of the laboratory"),
+      aria: t("Open Invent — the Forge, the invention workshop of the Mirror"),
       action: openInvent,
       icon: DraftingCompass,
       color: "var(--iv-a)",

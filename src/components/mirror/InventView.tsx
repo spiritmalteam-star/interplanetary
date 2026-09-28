@@ -1,614 +1,676 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowLeft,
-  ChevronDown,
-  DraftingCompass,
+  Flame,
   Hammer,
-  Lightbulb,
-  ShieldCheck,
-  Sparkles,
-  Sun,
-  Moon,
-  Waves,
-  Wind,
-  Wrench,
+  RotateCcw,
+  Send,
 } from "lucide-react";
-import { useMirror } from "@/lib/mirror-store";
+import { useMirror, type ChatMessage } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import {
-  blueprints,
-  dailyBench,
-  makeDomains,
-  makingRungs,
-  sparkStates,
-  studioProtocols,
-  workshopDiscernment,
-  workshopIntro,
+  forgeChatPhases,
+  forgeDomains,
+  forgePhases,
+  forgeScales,
+  forgeSparks,
+  forgeSuggestions,
+  type ForgeDialOption,
 } from "@/lib/data/invent";
 import { cn } from "@/lib/utils";
 import { ListenButton } from "./ListenButton";
+import { SigilForIntent } from "./MirrorOSForge";
 
 /* ------------------------------------------------------------------ */
-/*  INVENT — the fourth book on the laboratory shelf, bound in         */
-/*  molten copper. Its structure mirrors the Manifest book — header,   */
-/*  greeting, chambers around the work, expandable cards with steps    */
-/*  and seals, a ladder, protocols, tools — but everything inside      */
-/*  belongs to invention.                                              */
+/*  INVENT — THE FORGE · the fourth book on the shelf, rebuilt as its  */
+/*  own interactive workshop. No reading rooms and no bold text walls: */
+/*  the whole book IS the making. Two live elements carry it —         */
 /*                                                                     */
-/*  COMPACTNESS: a slim sticky rail of three chambers turns the        */
-/*  studio; the blueprints are folded accordions with only one open    */
-/*  at a time, so the reader never scrolls far.                        */
+/*   · THE FORGE CHAT  — the direct mirror chat specialized for        */
+/*     invention: speak a want, a half-idea or a block, and the Forge  */
+/*     answers in sparks, always landing on one doable stroke.         */
+/*                                                                     */
+/*   · THE MYSTERY CHAMBER — turn three dials (what · how much world · */
+/*     which energy), strike, and a random mystery creation is forged  */
+/*     from three embers drawn server-side: named, embodied, and       */
+/*     handed over with its first stroke and a whisper.                */
+/*                                                                     */
+/*  COMPACTNESS: one screen, two columns on desktop, stacked on        */
+/*  mobile — the thread and the chamber scroll inside themselves.      */
 /* ------------------------------------------------------------------ */
 
-type StudioPlace = "blueprints" | "workshop" | "bench";
+/* ---------------- one dial group of the Mystery Chamber ---------------- */
 
-const STUDIO_PLACES: {
-  id: StudioPlace;
-  label: string;
-  icon: typeof DraftingCompass;
-}[] = [
-  { id: "blueprints", label: "Blueprints", icon: DraftingCompass },
-  { id: "workshop", label: "The Workshop", icon: Hammer },
-  { id: "bench", label: "The Bench", icon: Wrench },
-];
-
-/* ---------------- one blueprint — a folded sheet ---------------- */
-
-function BlueprintCard({
-  index,
-  blueprintId,
-  open,
-  onToggle,
+function DialGroup({
+  label,
+  options,
+  value,
+  onChange,
+  testId,
 }: {
-  index: number;
-  blueprintId: string;
-  open: boolean;
-  onToggle: () => void;
+  label: string;
+  options: ForgeDialOption[];
+  value: string;
+  onChange: (id: string) => void;
+  testId: string;
 }) {
-  const blueprint = blueprints[index];
+  const t = useT();
+  return (
+    <div>
+      <p className="mono-label text-[10px] uppercase tracking-[0.16em] text-muted-foreground/70">
+        {label}
+      </p>
+      <div
+        className="mt-2 flex flex-wrap gap-1.5"
+        role="radiogroup"
+        aria-label={label}
+        data-testid={testId}
+      >
+        {options.map((o) => {
+          const active = o.id === value;
+          return (
+            <button
+              key={o.id}
+              type="button"
+              role="radio"
+              aria-checked={active}
+              title={t(o.hint)}
+              onClick={() => onChange(o.id)}
+              className={cn(
+                "focus-glow flex items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-[13px] transition-all duration-300",
+                active
+                  ? "border-[var(--scope-a)] font-semibold text-foreground"
+                  : "hairline text-muted-foreground hover:text-foreground"
+              )}
+              style={
+                active
+                  ? {
+                      background:
+                        "color-mix(in srgb, var(--scope-a) 12%, transparent)",
+                      boxShadow:
+                        "0 0 16px -6px color-mix(in srgb, var(--scope-a) 55%, transparent)",
+                    }
+                  : undefined
+              }
+            >
+              <span aria-hidden="true">{o.emoji}</span>
+              {t(o.label)}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ---------------- the forging ember — strike animation ---------------- */
+
+function ForgingEmber({ phase }: { phase: number }) {
+  const t = useT();
+  return (
+    <div className="py-5 text-center" aria-live="polite" aria-busy="true">
+      <div className="relative mx-auto size-24" aria-hidden="true">
+        <div
+          className="scope-halo absolute inset-0 rounded-full border border-dashed"
+          style={{
+            borderColor: "color-mix(in srgb, var(--scope-a) 50%, transparent)",
+          }}
+        />
+        <div
+          className="scope-halo-rev absolute inset-3 rounded-full border"
+          style={{
+            borderColor: "color-mix(in srgb, var(--scope-b) 38%, transparent)",
+          }}
+        />
+        <div
+          className="animate-charge-pulse absolute inset-6 rounded-full"
+          style={{
+            background:
+              "radial-gradient(circle, color-mix(in srgb, var(--scope-a) 55%, transparent), transparent 72%)",
+          }}
+        />
+        <span
+          className="absolute left-1/2 top-1/2 size-2 -translate-x-1/2 -translate-y-1/2 rotate-45"
+          style={{
+            background: "var(--scope-a)",
+            boxShadow: "0 0 12px var(--scope-a)",
+          }}
+        />
+      </div>
+      <p className="mono-label mt-4 text-[11px] text-muted-foreground">
+        {t(forgePhases[phase] ?? forgePhases[0])}
+      </p>
+    </div>
+  );
+}
+
+/* ---------------- the revealed mystery creation ---------------- */
+
+function MysteryCard() {
+  const mystery = useMirror((s) => s.mystery);
+  const strikeMystery = useMirror((s) => s.strikeMystery);
+  const askForge = useMirror((s) => s.askForge);
+  const mysteryStatus = useMirror((s) => s.mysteryStatus);
   const t = useT();
 
   const spoken = useMemo(
     () =>
-      [
-        blueprint.name,
-        blueprint.tagline,
-        ...blueprint.steps.map((s, i) => `${i + 1}. ${s}`),
-        blueprint.seal,
-      ].join(". "),
-    [blueprint]
+      mystery
+        ? [
+            mystery.name,
+            mystery.essence,
+            mystery.purpose,
+            mystery.first_stroke,
+            mystery.whisper,
+          ]
+            .filter(Boolean)
+            .join(". ")
+        : "",
+    [mystery]
   );
+
+  if (!mystery) return null;
+
+  const askAbout = () => {
+    if (mysteryStatus === "forging") return;
+    void askForge(
+      t("Speak with me about {name} — what would making it truly take?", {
+        name: mystery.name,
+      })
+    );
+  };
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 14 }}
+      initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      className="scope-frame-card relative overflow-hidden rounded-2xl glass"
-      data-testid={`invent-blueprint-${blueprint.id}`}
+      transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+      className="mt-4 rounded-xl border px-4 py-5"
+      style={{
+        borderColor: "color-mix(in srgb, var(--scope-a) 30%, transparent)",
+        background:
+          "color-mix(in srgb, var(--scope-a) 7%, transparent)",
+      }}
+      data-testid="mystery-card"
+    >
+      {/* name + sigil */}
+      <div className="flex flex-col items-center text-center">
+        <SigilForIntent text={mystery.name} size={64} />
+        <h4 className="scope-gradient-text mt-2.5 font-serif text-[18.5px] italic leading-snug sm:text-[20px]">
+          {mystery.name}
+        </h4>
+      </div>
+
+      <div className="mt-4 space-y-3.5 text-left">
+        <section>
+          <p className="mono-label text-[9.5px] uppercase tracking-[0.16em] text-[var(--scope-a)]">
+            {t("What it is")}
+          </p>
+          <p className="mt-1 text-[14px] leading-[1.7] text-foreground/88">
+            {mystery.essence}
+          </p>
+        </section>
+
+        {mystery.purpose && (
+          <section>
+            <p className="mono-label text-[9.5px] uppercase tracking-[0.16em] text-[var(--scope-a)]">
+              {t("What it changes")}
+            </p>
+            <p className="mt-1 text-[14px] leading-[1.7] text-foreground/85">
+              {mystery.purpose}
+            </p>
+          </section>
+        )}
+
+        <section
+          className="rounded-lg border px-3.5 py-3"
+          style={{
+            borderColor:
+              "color-mix(in srgb, var(--scope-a) 26%, transparent)",
+            background:
+              "color-mix(in srgb, var(--scope-a) 6%, transparent)",
+          }}
+        >
+          <p className="mono-label text-[9.5px] uppercase tracking-[0.16em] text-[var(--scope-a)]">
+            {t("The first stroke")}
+          </p>
+          <p className="mt-1 text-[14px] leading-[1.7] text-foreground/90">
+            {mystery.first_stroke}
+          </p>
+        </section>
+
+        {mystery.whisper && (
+          <p className="pt-1 text-center font-serif text-[14.5px] italic leading-relaxed text-muted-foreground">
+            “{mystery.whisper}”
+          </p>
+        )}
+      </div>
+
+      {/* actions */}
+      <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+        <button
+          type="button"
+          onClick={askAbout}
+          data-testid="ask-forge-about"
+          className="focus-glow flex items-center gap-2 rounded-full border px-3.5 py-2 text-[13px] font-medium text-foreground/90 transition-all duration-300 hover:text-foreground"
+          style={{
+            borderColor:
+              "color-mix(in srgb, var(--scope-a) 40%, transparent)",
+            background:
+              "linear-gradient(120deg, color-mix(in srgb, var(--scope-a) 14%, transparent), color-mix(in srgb, var(--scope-b) 12%, transparent))",
+          }}
+        >
+          <Send className="size-3.5" aria-hidden="true" />
+          {t("Ask the Forge about it")}
+        </button>
+        <button
+          type="button"
+          onClick={() => void strikeMystery()}
+          disabled={mysteryStatus === "forging"}
+          data-testid="forge-another"
+          className={cn(
+            "focus-glow flex items-center gap-2 rounded-full border hairline px-3.5 py-2 text-[13px] font-medium text-muted-foreground transition-all duration-300 hover:text-foreground",
+            mysteryStatus === "forging" && "cursor-not-allowed opacity-50"
+          )}
+        >
+          <RotateCcw className="size-3.5" aria-hidden="true" />
+          {t("Forge another")}
+        </button>
+        <ListenButton text={spoken} cacheKey={`mystery-${mystery.name}`} />
+      </div>
+    </motion.div>
+  );
+}
+
+/* ---------------- the Mystery Chamber ---------------- */
+
+function MysteryChamber() {
+  const mysteryStatus = useMirror((s) => s.mysteryStatus);
+  const mysteryDials = useMirror((s) => s.mysteryDials);
+  const setMysteryDial = useMirror((s) => s.setMysteryDial);
+  const strikeMystery = useMirror((s) => s.strikeMystery);
+  const mysteryError = useMirror((s) => s.mysteryError);
+  const t = useT();
+  const [phase, setPhase] = useState(0);
+
+  useEffect(() => {
+    if (mysteryStatus !== "forging") return;
+    const id = window.setInterval(
+      () => setPhase((p) => (p + 1) % forgePhases.length),
+      1900
+    );
+    return () => window.clearInterval(id);
+  }, [mysteryStatus]);
+
+  return (
+    <div
+      className="scope-frame-card relative overflow-hidden rounded-2xl glass p-5 sm:p-6"
+      data-testid="mystery-chamber"
     >
       <span className="scope-corner scope-corner-tl" aria-hidden="true" />
       <span className="scope-corner scope-corner-tr" aria-hidden="true" />
       <span className="scope-corner scope-corner-bl" aria-hidden="true" />
       <span className="scope-corner scope-corner-br" aria-hidden="true" />
 
+      <h3 className="mono-label flex items-center gap-2 text-[11px] text-[var(--scope-a)]">
+        <Flame className="size-3.5" aria-hidden="true" />
+        {t("The Mystery Chamber")}
+      </h3>
+      <p className="mt-1.5 text-[13.5px] leading-relaxed text-muted-foreground">
+        {t(
+          "Turn the dials and strike — a creation you never asked for will climb out of the coals."
+        )}
+      </p>
+
+      <div className="mt-4 space-y-3.5">
+        <DialGroup
+          label={t("What it is")}
+          options={forgeDomains}
+          value={mysteryDials.domain}
+          onChange={(id) => setMysteryDial("domain", id)}
+          testId="dial-domain"
+        />
+        <DialGroup
+          label={t("How much world")}
+          options={forgeScales}
+          value={mysteryDials.scale}
+          onChange={(id) => setMysteryDial("scale", id)}
+          testId="dial-scale"
+        />
+        <DialGroup
+          label={t("Which energy")}
+          options={forgeSparks}
+          value={mysteryDials.spark}
+          onChange={(id) => setMysteryDial("spark", id)}
+          testId="dial-spark"
+        />
+      </div>
+
       <button
         type="button"
-        onClick={onToggle}
-        aria-expanded={open}
-        className="focus-glow flex w-full items-center gap-3.5 px-5 py-4 text-left sm:px-6"
+        disabled={mysteryStatus === "forging"}
+        onClick={() => void strikeMystery()}
+        data-testid="strike-forge"
+        aria-label={t("Strike the Forge")}
+        className={cn(
+          "focus-glow mt-5 flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-3 text-[14.5px] font-semibold transition-all duration-300",
+          mysteryStatus === "forging"
+            ? "cursor-wait opacity-70"
+            : "hover:glow-sm"
+        )}
+        style={{
+          borderColor:
+            "color-mix(in srgb, var(--scope-a) 50%, transparent)",
+          background:
+            "linear-gradient(120deg, color-mix(in srgb, var(--scope-a) 16%, transparent), color-mix(in srgb, var(--scope-b) 14%, transparent))",
+        }}
       >
-        <span
-          className="flex size-10 shrink-0 items-center justify-center rounded-full border text-[17px]"
-          style={{
-            borderColor: "color-mix(in srgb, var(--scope-a) 40%, transparent)",
-            background: "color-mix(in srgb, var(--scope-a) 8%, transparent)",
-          }}
-          aria-hidden="true"
-        >
-          {blueprint.glyph}
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="scope-gradient-text block text-[15.5px] font-semibold sm:text-[17px]">
-            {t(blueprint.name)}
-          </span>
-          <span className="mt-0.5 block truncate text-[13.5px] text-muted-foreground">
-            {t(blueprint.tagline)}
-          </span>
-        </span>
-        <ChevronDown
-          className={cn(
-            "size-4 shrink-0 text-muted-foreground transition-transform duration-300",
-            open && "rotate-180"
-          )}
-          aria-hidden="true"
-        />
+        <Hammer className="size-4" aria-hidden="true" />
+        {t("Strike the Forge")}
       </button>
 
-      {open && (
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: "auto" }}
-          transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-          className="overflow-hidden"
-        >
-          <div className="border-t hairline px-5 pb-5 pt-4 sm:px-6">
-            <p className="text-[14.5px] italic leading-relaxed text-muted-foreground">
-              {t(blueprint.tagline)}
-            </p>
+      <AnimatePresence mode="wait">
+        {mysteryStatus === "forging" && (
+          <motion.div
+            key="forging"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <ForgingEmber phase={phase} />
+          </motion.div>
+        )}
 
-            <ol className="mt-4 space-y-3">
-              {blueprint.steps.map((step, i) => (
-                <li key={i} className="flex items-start gap-3">
-                  <span
-                    className="mono-label mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border text-[10.5px]"
-                    style={{
-                      borderColor:
-                        "color-mix(in srgb, var(--scope-a) 40%, transparent)",
-                      color: "var(--scope-a)",
-                    }}
-                  >
-                    {i + 1}
-                  </span>
-                  <span className="text-[15px] leading-[1.75] text-foreground/88">
-                    {t(step)}
-                  </span>
-                </li>
-              ))}
-            </ol>
+        {mysteryStatus === "ready" && (
+          <motion.div
+            key="ready"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <MysteryCard />
+          </motion.div>
+        )}
 
-            <div
-              className="mt-5 rounded-xl border py-4 text-center"
-              style={{
-                borderColor:
-                  "color-mix(in srgb, var(--scope-a) 26%, transparent)",
-                background:
-                  "color-mix(in srgb, var(--scope-a) 6%, transparent)",
-              }}
-            >
-              <p className="mono-label text-[10px] text-[var(--scope-a)]">
-                {t("Seal")}
-              </p>
-              <p className="scope-gradient-text mx-auto mt-1.5 max-w-[440px] font-serif text-[17px] italic leading-relaxed">
-                “{t(blueprint.seal)}”
-              </p>
-            </div>
-
-            <div className="mt-3 flex justify-end">
-              <ListenButton text={spoken} cacheKey={`invent-${blueprint.id}`} />
-            </div>
-          </div>
-        </motion.div>
-      )}
-    </motion.div>
+        {(mysteryStatus === "idle" || mysteryStatus === "error") && (
+          <motion.p
+            key="idle"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="mt-4 text-center text-[12.5px] italic leading-relaxed text-muted-foreground/75"
+          >
+            {mysteryStatus === "error" && mysteryError
+              ? t(mysteryError)
+              : t("The coals are lit. The Forge is waiting.")}
+          </motion.p>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
 
-/* ---------------- the workshop tab ---------------- */
+/* ---------------- the forge chat — the direct mirror line ---------------- */
 
-function WorkshopTab() {
-  const t = useT();
-
+function ForgeBody({ text }: { text: string }) {
+  const paras = useMemo(
+    () =>
+      text
+        .split(/\n{2,}/)
+        .map((p) => p.trim())
+        .filter(Boolean),
+    [text]
+  );
   return (
-    <div className="space-y-6">
-      {/* orientation */}
-      <div className="rounded-2xl glass p-5 sm:p-6">
-        <h3 className="mono-label text-[11px] text-[var(--scope-a)]">
-          {t("The Inventor's Mind — the one that dreams in diagrams")}
-        </h3>
-        <div className="mt-3 space-y-3">
-          {workshopIntro.map((p, i) => (
+    <div className="space-y-2.5">
+      {paras.map((p, i) => {
+        const isLast = i === paras.length - 1;
+        if (isLast && p.startsWith("—")) {
+          return (
             <p
               key={i}
-              className="text-[15px] leading-[1.8] text-foreground/88"
+              className="mono-label pt-1 text-[11px] leading-relaxed"
+              style={{ color: "color-mix(in srgb, var(--scope-b) 82%, white)" }}
             >
-              {t(p)}
+              {p}
             </p>
-          ))}
-        </div>
-      </div>
+          );
+        }
+        return (
+          <p
+            key={i}
+            className={cn(
+              "text-[14.5px] leading-[1.75] text-foreground/88",
+              i === 0 && "font-medium text-foreground/95"
+            )}
+          >
+            {p}
+          </p>
+        );
+      })}
+    </div>
+  );
+}
 
-      {/* ladder of making */}
-      <div>
-        <h3 className="mono-label text-[11px] text-[var(--scope-a)]">
-          {t("The Ladder of Making — six rungs from wonder to offering")}
-        </h3>
-        <div className="relative mt-4 space-y-0">
-          {makingRungs.map((rung, i) => (
-            <motion.div
-              key={rung.rung}
-              initial={{ opacity: 0, x: -12 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, margin: "-40px" }}
-              transition={{ duration: 0.45, delay: i * 0.04 }}
-              className="relative flex gap-4 pb-4 last:pb-0"
-            >
-              {i < makingRungs.length - 1 && (
-                <span
-                  className="absolute left-[17px] top-9 h-[calc(100%-26px)] w-px"
-                  style={{
-                    background:
-                      "linear-gradient(180deg, color-mix(in srgb, var(--scope-a) 40%, transparent), color-mix(in srgb, var(--scope-a) 10%, transparent))",
-                  }}
-                  aria-hidden="true"
-                />
-              )}
-              <span
-                className="mono-label z-10 flex size-9 shrink-0 items-center justify-center rounded-full border bg-[var(--glass-bg-strong)] text-[12px] font-semibold"
-                style={{
-                  borderColor:
-                    "color-mix(in srgb, var(--scope-a) 45%, transparent)",
-                  color: "var(--scope-a)",
-                }}
-              >
-                {rung.rung}
-              </span>
-              <div className="min-w-0 pt-1">
-                <p className="text-[15px] font-semibold text-foreground">
-                  {t(rung.title)}
-                </p>
-                <p className="mt-0.5 text-[14px] leading-relaxed text-muted-foreground">
-                  {t(rung.line)}
-                </p>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+function ForgeExchange({
+  m,
+  animate,
+}: {
+  m: ChatMessage;
+  animate: boolean;
+}) {
+  return (
+    <motion.article
+      initial={animate ? { opacity: 0, y: 10 } : false}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+      className="rounded-xl border hairline px-4 py-3.5"
+      style={{
+        background: "color-mix(in srgb, var(--scope-a) 5%, transparent)",
+      }}
+    >
+      <p className="text-[13px] italic leading-relaxed text-muted-foreground">
+        {m.query}
+      </p>
+      <div className="mt-2.5">
+        <ForgeBody text={m.text} />
       </div>
+    </motion.article>
+  );
+}
 
-      {/* studio protocols */}
-      <div>
-        <h3 className="mono-label text-[11px] text-[var(--scope-a)]">
-          {t("Studio protocols")}
-        </h3>
-        <div className="mt-4 grid gap-4 md:grid-cols-3">
-          {studioProtocols.map((p) => (
-            <div key={p.id} className="rounded-2xl glass p-5">
-              <span
-                className="flex size-9 items-center justify-center rounded-full border text-[16.5px]"
-                style={{
-                  borderColor:
-                    "color-mix(in srgb, var(--scope-a) 38%, transparent)",
-                  background:
-                    "color-mix(in srgb, var(--scope-a) 8%, transparent)",
-                }}
-                aria-hidden="true"
-              >
-                {p.glyph}
-              </span>
-              <h4 className="scope-gradient-text mt-3 text-[15.5px] font-semibold">
-                {t(p.name)}
-              </h4>
-              <p className="mt-1.5 text-[13.5px] leading-relaxed text-muted-foreground">
-                {t(p.purpose)}
-              </p>
-              <ol className="mt-3 space-y-2">
-                {p.steps.map((s, i) => (
-                  <li key={i} className="flex items-start gap-2.5">
-                    <span
-                      className="mt-[7px] inline-block size-1.5 shrink-0 rotate-45"
-                      style={{ background: "var(--scope-a)" }}
-                      aria-hidden="true"
-                    />
-                    <span className="text-[14px] leading-[1.7] text-foreground/85">
-                      {t(s)}
-                    </span>
-                  </li>
-                ))}
-              </ol>
-            </div>
-          ))}
-        </div>
-      </div>
+function ForgeChat() {
+  const forgeSession = useMirror((s) => s.forgeSession);
+  const setForgeDraft = useMirror((s) => s.setForgeDraft);
+  const askForge = useMirror((s) => s.askForge);
+  const clearChannel = useMirror((s) => s.clearChannel);
+  const t = useT();
+  const threadRef = useRef<HTMLDivElement | null>(null);
+  const [phase, setPhase] = useState(0);
 
-      {/* discernment */}
-      <div className="rounded-2xl glass p-5 sm:p-6">
+  const { status, messages, draft, error, activeQuery } = forgeSession;
+  const loading = status === "loading";
+
+  useEffect(() => {
+    if (!loading) return;
+    const id = window.setInterval(
+      () => setPhase((p) => (p + 1) % forgeChatPhases.length),
+      1900
+    );
+    return () => window.clearInterval(id);
+  }, [loading]);
+
+  /* the thread keeps its latest stroke in view — inside its own pane */
+  useEffect(() => {
+    const el = threadRef.current;
+    if (!el) return;
+    el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+  }, [messages.length, status]);
+
+  const send = (text?: string) => {
+    const q = (text ?? draft).trim();
+    if (!q || loading) return;
+    void askForge(q);
+  };
+
+  const canSend = draft.trim().length > 0 && !loading;
+
+  return (
+    <div
+      className="scope-frame-card relative flex flex-col overflow-hidden rounded-2xl glass"
+      data-testid="forge-chat"
+    >
+      <span className="scope-corner scope-corner-tl" aria-hidden="true" />
+      <span className="scope-corner scope-corner-tr" aria-hidden="true" />
+      <span className="scope-corner scope-corner-bl" aria-hidden="true" />
+      <span className="scope-corner scope-corner-br" aria-hidden="true" />
+
+      {/* header */}
+      <div className="flex items-center justify-between gap-2 border-b hairline px-4 py-3 sm:px-5">
         <h3 className="mono-label flex items-center gap-2 text-[11px] text-[var(--scope-a)]">
-          <ShieldCheck className="size-3.5" aria-hidden="true" />
-          {t("Discernment — how to know a true invention")}
+          <Hammer className="size-3.5" aria-hidden="true" />
+          {t("The Forge speaks")}
         </h3>
-        <ul className="mt-3 space-y-2.5">
-          {workshopDiscernment.map((line, i) => (
-            <li key={i} className="flex items-start gap-2.5">
+        {messages.length > 0 && (
+          <button
+            type="button"
+            onClick={() => clearChannel("forge")}
+            aria-label={t("Quiet the Forge")}
+            title={t("Quiet the Forge")}
+            className="focus-glow flex size-7 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:text-foreground"
+          >
+            <RotateCcw className="size-3" aria-hidden="true" />
+          </button>
+        )}
+      </div>
+
+      {/* thread — scrolls inside its own pane, the workshop stays one screen */}
+      <div
+        ref={threadRef}
+        className="nice-scroll max-h-[46vh] min-h-[240px] flex-1 space-y-3.5 overflow-y-auto overscroll-contain px-4 py-4 sm:px-5 lg:max-h-[440px]"
+        data-testid="forge-thread"
+      >
+        {messages.length === 0 && status === "idle" && !error && (
+          <div className="flex h-full min-h-[220px] flex-col items-center justify-center text-center">
+            <Hammer
+              className="size-6 text-muted-foreground/40"
+              aria-hidden="true"
+            />
+            <p className="mt-3 max-w-[300px] text-[14px] leading-relaxed text-muted-foreground">
+              {t(
+                "The bench is quiet. Speak a want, a half-idea, a block — or strike the chamber for a mystery."
+              )}
+            </p>
+          </div>
+        )}
+
+        {messages.map((m, i) => (
+          <ForgeExchange
+            key={m.id}
+            m={m}
+            animate={i === messages.length - 1 && status !== "loading"}
+          />
+        ))}
+
+        {loading && (
+          <div className="rounded-xl border hairline px-4 py-3.5" aria-live="polite" aria-busy="true">
+            <p className="text-[13px] italic leading-relaxed text-muted-foreground">
+              {activeQuery}
+            </p>
+            <div className="mt-3 flex items-center gap-2.5">
               <span
-                className="mt-[9px] inline-block size-1.5 shrink-0 rotate-45"
+                className="animate-dot-pulse inline-block size-1.5 rotate-45"
                 style={{ background: "var(--scope-a)" }}
                 aria-hidden="true"
               />
-              <span className="text-[14.5px] leading-[1.75] text-foreground/85">
-                {t(line)}
+              <span className="mono-label text-[11px] text-muted-foreground">
+                {t(forgeChatPhases[phase] ?? forgeChatPhases[0])}
               </span>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </div>
-  );
-}
-
-/* ---------------- the bench tab ---------------- */
-
-function InventionSeeder() {
-  const [domainId, setDomainId] = useState<string | null>(null);
-  const t = useT();
-  const domain = makeDomains.find((d) => d.id === domainId) ?? null;
-
-  return (
-    <div className="rounded-2xl glass p-5 sm:p-6">
-      <h3 className="mono-label flex items-center gap-2 text-[11px] text-[var(--scope-a)]">
-        <Wind className="size-3.5" aria-hidden="true" />
-        {t("Invention Seeder")}
-      </h3>
-      <div
-        className="mt-3 flex flex-wrap gap-1.5"
-        role="group"
-        aria-label={t("Choose a field of making")}
-      >
-        {makeDomains.map((d) => {
-          const active = d.id === domainId;
-          return (
-            <button
-              key={d.id}
-              type="button"
-              aria-pressed={active}
-              onClick={() => setDomainId(active ? null : d.id)}
-              className={cn(
-                "focus-glow flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[14px] transition-all duration-300",
-                active
-                  ? "border-[var(--scope-a)] font-semibold text-foreground"
-                  : "hairline text-muted-foreground hover:text-foreground"
-              )}
-              style={
-                active
-                  ? {
-                      background:
-                        "color-mix(in srgb, var(--scope-a) 12%, transparent)",
-                      boxShadow:
-                        "0 0 16px -6px color-mix(in srgb, var(--scope-a) 55%, transparent)",
-                    }
-                  : undefined
-              }
-            >
-              <span aria-hidden="true">{d.glyph}</span>
-              {t(d.label)}
-            </button>
-          );
-        })}
-      </div>
-
-      {domain && (
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="mt-4 space-y-3"
-        >
-          <div className="rounded-xl border border-[var(--destructive)]/20 bg-[color-mix(in_srgb,var(--destructive)_5%,transparent)] p-3.5">
-            <p className="mono-label text-[10px] text-muted-foreground">
-              {t("The block")}
-            </p>
-            <p className="mt-1 text-[14px] leading-relaxed text-foreground/85">
-              {t(domain.pattern)}
-            </p>
+            </div>
           </div>
-          <div
-            className="rounded-xl border p-3.5"
+        )}
+
+        {status === "error" && error && (
+          <div className="rounded-xl border hairline px-4 py-3.5 text-[13.5px] leading-relaxed text-foreground/85">
+            {t(error)}
+          </div>
+        )}
+      </div>
+
+      {/* suggestion sparks — one tap speaks the whole line */}
+      <div className="flex flex-wrap gap-1.5 border-t hairline px-4 pt-3 sm:px-5">
+        {forgeSuggestions.map((s) => (
+          <button
+            key={s}
+            type="button"
+            disabled={loading}
+            onClick={() => send(s)}
+            data-testid="forge-suggestion"
+            className={cn(
+              "focus-glow max-w-full truncate rounded-full border px-2.5 py-1 text-[12px] text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground",
+              loading && "cursor-not-allowed opacity-50"
+            )}
+          >
+            {t(s)}
+          </button>
+        ))}
+      </div>
+
+      {/* composer */}
+      <div className="px-4 pb-4 pt-2.5 sm:px-5">
+        <div className="flex items-end gap-2">
+          <textarea
+            value={draft}
+            onChange={(e) => setForgeDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                send();
+              }
+            }}
+            rows={2}
+            maxLength={600}
+            aria-label={t("Speak to the Forge")}
+            data-testid="forge-composer"
+            placeholder={t("Speak to the Forge — a want, a half-idea, a block…")}
+            className="focus-glow max-h-28 min-h-[46px] w-full resize-none rounded-xl border hairline bg-transparent px-3.5 py-2.5 text-[14.5px] leading-relaxed text-foreground placeholder:text-muted-foreground/60"
+          />
+          <button
+            type="button"
+            onClick={() => send()}
+            disabled={!canSend}
+            aria-label={t("Send to the Forge")}
+            data-testid="forge-send"
+            className={cn(
+              "focus-glow flex size-11 shrink-0 items-center justify-center rounded-xl border transition-all duration-300",
+              canSend ? "hover:glow-sm" : "cursor-not-allowed opacity-45"
+            )}
             style={{
               borderColor:
-                "color-mix(in srgb, var(--scope-a) 30%, transparent)",
-              background: "color-mix(in srgb, var(--scope-a) 7%, transparent)",
+                "color-mix(in srgb, var(--scope-a) 45%, transparent)",
+              background:
+                "linear-gradient(120deg, color-mix(in srgb, var(--scope-a) 15%, transparent), color-mix(in srgb, var(--scope-b) 13%, transparent))",
             }}
           >
-            <p className="mono-label text-[10px] text-[var(--scope-a)]">
-              {t("The reframe")}
-            </p>
-            <p className="mt-1 text-[14px] leading-relaxed text-foreground/88">
-              {t(domain.reframe)}
-            </p>
-          </div>
-          <div className="rounded-xl border hairline p-3.5">
-            <p className="mono-label text-[10px] text-muted-foreground">
-              {t("The first stroke")}
-            </p>
-            <p className="mt-1 text-[14px] leading-relaxed text-foreground/85">
-              {t(domain.practice)}
-            </p>
-          </div>
-        </motion.div>
-      )}
-    </div>
-  );
-}
-
-function SparkBridge() {
-  const [stateId, setStateId] = useState<string | null>(null);
-  const t = useT();
-  const state = sparkStates.find((v) => v.id === stateId) ?? null;
-
-  return (
-    <div className="rounded-2xl glass p-5 sm:p-6">
-      <h3 className="mono-label flex items-center gap-2 text-[11px] text-[var(--scope-a)]">
-        <Waves className="size-3.5" aria-hidden="true" />
-        {t("Spark Bridge")}
-      </h3>
-      <div
-        className="mt-3 flex flex-wrap gap-1.5"
-        role="group"
-        aria-label={t("Where is your making now?")}
-      >
-        {sparkStates.map((v) => {
-          const active = v.id === stateId;
-          return (
-            <button
-              key={v.id}
-              type="button"
-              aria-pressed={active}
-              onClick={() => setStateId(active ? null : v.id)}
-              className={cn(
-                "focus-glow flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[14px] transition-all duration-300",
-                active
-                  ? "border-[var(--scope-a)] font-semibold text-foreground"
-                  : "hairline text-muted-foreground hover:text-foreground"
-              )}
-              style={
-                active
-                  ? {
-                      background:
-                        "color-mix(in srgb, var(--scope-a) 12%, transparent)",
-                      boxShadow:
-                        "0 0 16px -6px color-mix(in srgb, var(--scope-a) 55%, transparent)",
-                    }
-                  : undefined
-              }
-            >
-              <span aria-hidden="true">{v.glyph}</span>
-              {t(v.label)}
-            </button>
-          );
-        })}
-      </div>
-
-      {state && (
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="mt-4 space-y-3"
-        >
-          <div
-            className="rounded-xl border p-3.5"
-            style={{
-              borderColor:
-                "color-mix(in srgb, var(--scope-a) 30%, transparent)",
-              background: "color-mix(in srgb, var(--scope-a) 7%, transparent)",
-            }}
-          >
-            <p className="mono-label text-[10px] text-[var(--scope-a)]">
-              {t("The bridge")}
-            </p>
-            <p className="mt-1 text-[14px] leading-relaxed text-foreground/88">
-              {t(state.bridge)}
-            </p>
-          </div>
-          <div className="rounded-xl border hairline py-4 text-center">
-            <p className="mono-label text-[10px] text-muted-foreground">
-              {t("Anchor phrase")}
-            </p>
-            <p className="scope-gradient-text mx-auto mt-1.5 max-w-[380px] font-serif text-[15.5px] italic leading-relaxed">
-              “{t(state.anchor)}”
-            </p>
-          </div>
-        </motion.div>
-      )}
-    </div>
-  );
-}
-
-function DailyBenchCard() {
-  const t = useT();
-  const today = useMemo(() => {
-    const d = new Date();
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-    return { key, bench: dailyBench(key) };
-  }, []);
-
-  return (
-    <div className="rounded-2xl glass p-5 sm:p-6">
-      <h3 className="mono-label flex items-center gap-2 text-[11px] text-[var(--scope-a)]">
-        <Sun className="size-3.5" aria-hidden="true" />
-        {t("The Daily Bench")}
-      </h3>
-      <p className="mono-label mt-1 text-[10px] text-muted-foreground/70">
-        {today.key}
-      </p>
-      <div className="mt-4 space-y-3">
-        <div className="flex items-start gap-3">
-          <Sun
-            className="mt-0.5 size-4 shrink-0 text-[var(--scope-a)]"
-            aria-hidden="true"
-          />
-          <div>
-            <p className="mono-label text-[10px] text-muted-foreground">
-              {t("Morning")}
-            </p>
-            <p className="mt-0.5 text-[14.5px] leading-relaxed text-foreground/88">
-              {t(today.bench.morning)}
-            </p>
-          </div>
-        </div>
-        <div className="flex items-start gap-3">
-          <Moon
-            className="mt-0.5 size-4 shrink-0 text-[var(--scope-a)]"
-            aria-hidden="true"
-          />
-          <div>
-            <p className="mono-label text-[10px] text-muted-foreground">
-              {t("Evening")}
-            </p>
-            <p className="mt-0.5 text-[14.5px] leading-relaxed text-foreground/88">
-              {t(today.bench.evening)}
-            </p>
-          </div>
-        </div>
-        <div
-          className="rounded-xl border py-4 text-center"
-          style={{
-            borderColor: "color-mix(in srgb, var(--scope-a) 26%, transparent)",
-            background: "color-mix(in srgb, var(--scope-a) 6%, transparent)",
-          }}
-        >
-          <p className="mono-label text-[10px] text-[var(--scope-a)]">
-            {t("Focus of the day")}
-          </p>
-          <p className="scope-gradient-text mx-auto mt-1.5 max-w-[380px] font-serif text-[15.5px] italic leading-relaxed">
-            “{t(today.bench.focus)}”
-          </p>
+            <Send className="size-4" aria-hidden="true" />
+          </button>
         </div>
       </div>
     </div>
   );
 }
 
-function BenchTab() {
-  return (
-    <div className="space-y-5">
-      <div className="grid gap-5 lg:grid-cols-2">
-        <InventionSeeder />
-        <SparkBridge />
-      </div>
-      <DailyBenchCard />
-    </div>
-  );
-}
-
-/* ---------------- the studio shell ---------------- */
+/* ---------------- the workshop shell ---------------- */
 
 export function InventView() {
   const exitInvent = useMirror((s) => s.exitInvent);
-  const [place, setPlace] = useState<StudioPlace>("blueprints");
-  /* one blueprint open at a time — the compactness of the studio */
-  const [openId, setOpenId] = useState<string | null>(
-    blueprints[0]?.id ?? null
-  );
   const t = useT();
-
-  const openBlueprint = (id: string) => {
-    setOpenId((prev) => {
-      const next = prev === id ? null : id;
-      if (next) {
-        /* let the sheet unfold, then bring it into view */
-        requestAnimationFrame(() => {
-          document
-            .getElementById(`invent-blueprint-${id}`)
-            ?.scrollIntoView({ behavior: "smooth", block: "start" });
-        });
-      }
-      return next;
-    });
-  };
 
   return (
     <div className="scope-invent relative flex h-full flex-col">
@@ -633,10 +695,10 @@ export function InventView() {
 
           <div className="min-w-0 text-center">
             <h1 className="title-gradient truncate text-[15.5px] font-semibold tracking-[0.12em] sm:text-[17px]">
-              INVENT
+              INVENT · {t("The Forge")}
             </h1>
             <p className="mono-label mt-0.5 truncate text-[10px] text-muted-foreground/80 sm:text-[11px]">
-              {t("The inventor's studio of the laboratory")}
+              {t("The invention workshop of the Mirror")}
             </p>
           </div>
 
@@ -644,125 +706,39 @@ export function InventView() {
             className="flex size-9 shrink-0 items-center justify-center rounded-full border hairline"
             aria-hidden="true"
           >
-            <DraftingCompass className="size-4 text-[var(--iv-a)]" />
+            <Flame className="size-4 text-[var(--iv-a)]" />
           </span>
         </div>
       </header>
 
-      {/* ---------- the studio ---------- */}
+      {/* ---------- the workshop ---------- */}
       <main
         className="nice-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain"
         data-testid="invent-view"
       >
-        <div className="mx-auto w-full max-w-[820px] px-4 pb-8 sm:px-6">
-          {/* slim greeting */}
-          <div className="pt-5 text-center sm:pt-6">
-            <p
-              className="mono-label text-[11px]"
-              style={{ color: "var(--scope-a)" }}
-            >
-              INVENT · {t("The inventor's studio of the laboratory")}
-            </p>
-            <h2 className="scope-gradient-text mt-2 text-[22px] font-semibold leading-tight sm:text-[26px]">
-              {t("Imagine It Into Form")}
+        <div className="mx-auto w-full max-w-[1060px] px-4 pb-8 pt-5 sm:px-6 sm:pt-6">
+          {/* slim greeting — one breath, then straight to the work */}
+          <div className="text-center">
+            <h2 className="scope-gradient-text text-[21px] font-semibold leading-tight sm:text-[24px]">
+              {t("Strike While the Coals Are Lit")}
             </h2>
-            <p className="mx-auto mt-2 max-w-[540px] text-[14px] leading-relaxed text-muted-foreground">
+            <p className="mx-auto mt-2 max-w-[560px] text-[13.5px] leading-relaxed text-muted-foreground">
               {t(
-                "Three chambers of making: the Blueprints hold the laws of invention, the Workshop trains the inventor's mind, and the Bench keeps the daily tools. One sheet opens at a time — the studio is built compact."
+                "Speak with the Forge on the bench — or turn the dials, strike, and meet a mystery you never asked for."
               )}
             </p>
           </div>
 
-          {/* the slim rail of chambers — sticky, so turning the studio is
-              always one tap away and the reader never scrolls far */}
-          <div
-            className="sticky top-0 z-20 -mx-4 mt-4 border-b hairline bg-[color-mix(in_srgb,var(--background)_88%,transparent)] px-4 py-2 backdrop-blur-md sm:-mx-6 sm:px-6"
-            role="tablist"
-            aria-label={t("The chambers of the studio")}
-            data-testid="invent-rail"
-          >
-            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar sm:justify-center">
-              {STUDIO_PLACES.map(({ id, label, icon: Icon }) => {
-                const active = place === id;
-                return (
-                  <button
-                    key={id}
-                    type="button"
-                    role="tab"
-                    aria-selected={active}
-                    onClick={() => setPlace(id)}
-                    className={cn(
-                      "focus-glow flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3.5 py-1.5 text-[13.5px] transition-all duration-300",
-                      active
-                        ? "border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--scope-a)_12%,transparent)] font-semibold text-foreground glow-sm"
-                        : "border-transparent text-muted-foreground/80 hover:border-[var(--hairline-hover)] hover:text-foreground"
-                    )}
-                  >
-                    <Icon className="size-3.5" aria-hidden="true" />
-                    {t(label)}
-                  </button>
-                );
-              })}
-            </div>
+          {/* the two live elements — chat and chamber, side by side on
+              desktop, stacked on mobile; both scroll inside themselves */}
+          <div className="mt-5 grid items-start gap-5 lg:grid-cols-[1fr_360px]">
+            <ForgeChat />
+            <MysteryChamber />
           </div>
 
-          {/* the chambers */}
-          <motion.div
-            key={place}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45 }}
-            className="pt-4"
-          >
-            {place === "blueprints" && (
-              <div className="space-y-3">
-                <p className="mx-auto max-w-[560px] pb-1 text-center text-[14px] leading-relaxed text-muted-foreground">
-                  {t(
-                    "Six working laws for turning what is imagined into what is held. Open one, walk it slowly, and let the hands learn what the mind already knows."
-                  )}
-                </p>
-                {blueprints.map((b, i) => (
-                  <BlueprintCard
-                    key={b.id}
-                    index={i}
-                    blueprintId={b.id}
-                    open={openId === b.id}
-                    onToggle={() => openBlueprint(b.id)}
-                  />
-                ))}
-                {/* walk the blueprints with the Mirror */}
-                <div className="flex justify-center pt-1">
-                  <button
-                    type="button"
-                    onClick={exitInvent}
-                    className="dream-btn focus-glow group flex h-10 items-center gap-2.5 rounded-full px-5 text-[14.5px] font-medium text-foreground transition-all duration-300 hover:-translate-y-px"
-                  >
-                    <Sparkles className="size-3.5 text-[var(--iv-a)]" aria-hidden="true" />
-                    {t("Ask the Mirror about your invention")}
-                    <span
-                      className="transition-transform duration-300 group-hover:translate-x-0.5"
-                      aria-hidden="true"
-                    >
-                      →
-                    </span>
-                  </button>
-                </div>
-                <div className="flex items-center justify-center gap-2 pt-1">
-                  <Lightbulb
-                    className="size-3.5 text-muted-foreground/50"
-                    aria-hidden="true"
-                  />
-                </div>
-              </div>
-            )}
-
-            {place === "workshop" && <WorkshopTab />}
-            {place === "bench" && <BenchTab />}
-          </motion.div>
-
-          <p className="mono-label pb-1 pt-5 text-center text-[10px] text-muted-foreground/50">
+          <p className="mono-label mt-6 text-center text-[10px] text-muted-foreground/60">
             {t(
-              "INVENT stands beside the other chambers · every imagination honored"
+              "The Forge never promises the invention — it promises the next stroke · Free will honored always"
             )}
           </p>
         </div>

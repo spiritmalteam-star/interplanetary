@@ -6,7 +6,10 @@ import type {
   SidebarTab,
   DossierKind,
   ManifestBlueprint,
+  MysteryCreation,
+  ForgeDials,
 } from "@/lib/mirror-types";
+import { ALL_LENS_IDS } from "@/lib/data/science";
 import { civilizations, civilizationTotal } from "@/lib/data/civilizations";
 import { interdimensional, interdimTotal } from "@/lib/data/interdimensional";
 import { innerEarthTotal } from "@/lib/data/inner-earth";
@@ -93,6 +96,16 @@ export interface RemedyResult {
 
 export type RemedyStatus = "idle" | "crafting" | "ready" | "error";
 
+/* ------------------------------------------------------------------ */
+/*  THE FORGE — the Invent book's own live line: a direct mirror chat  */
+/*  specialized for invention, plus the random mystery creation — one  */
+/*  unasked-for conception struck from the coals at a time.            */
+/* ------------------------------------------------------------------ */
+
+export type MysteryStatus = "idle" | "forging" | "ready" | "error";
+
+export type { MysteryCreation, ForgeDials };
+
 const emptySession = (): ScopeSession => ({
   messages: [],
   status: "idle",
@@ -132,8 +145,10 @@ export interface OsMessage {
 
 interface MirrorState {
   activeMode: Mode;
-  activeScienceField: string | null;
-  activeDirection: string | null;
+  /** The science scope's fusion lenses — multi-select; ALL eight are
+      active by default, two or more fused lenses open the fusion
+      document, one lens sees alone, none sees plainly. */
+  scienceLenses: string[];
   sidebarTab: SidebarTab;
   search: string;
   modal: ModalState;
@@ -174,6 +189,17 @@ interface MirrorState {
   osError: string | null;
   osDraft: string;
 
+  /* THE FORGE — the Invent book's own direct chat + mystery creation */
+  forgeSession: ScopeSession;
+  mysteryStatus: MysteryStatus;
+  mysteryDials: ForgeDials;
+  mystery: MysteryCreation | null;
+  mysteryError: string | null;
+  setForgeDraft: (value: string) => void;
+  askForge: (question: string, attachments?: ChatAttachment[]) => Promise<void>;
+  setMysteryDial: (group: keyof ForgeDials, id: string) => void;
+  strikeMystery: () => Promise<void>;
+
   /* Universal language + transcript voice */
   language: LanguageCode;
   voice: VoiceId;
@@ -186,8 +212,10 @@ interface MirrorState {
   bootPreferences: () => void;
 
   setMode: (mode: Mode) => void;
-  setScienceField: (id: string | null) => void;
-  setDirection: (id: string | null) => void;
+  /** Toggle one fusion lens of the science scope (multi-select). */
+  toggleScienceLens: (id: string) => void;
+  /** Set the whole lens set at once ("all eight" / "clear"). */
+  setScienceLenses: (ids: string[]) => void;
   setSidebarTab: (tab: SidebarTab) => void;
   setSearch: (value: string) => void;
   openModal: (modal: NonNullable<ModalState>) => void;
@@ -220,7 +248,7 @@ interface MirrorState {
   setDraft: (value: string) => void;
   focusComposer: () => void;
   returnToObservatory: () => void;
-  clearChannel: (mode?: Mode) => void;
+  clearChannel: (mode?: Mode | "forge") => void;
   askMirror: (
     question: string,
     attachments?: ChatAttachment[]
@@ -302,8 +330,8 @@ const nextMessageId = () => `m-${Date.now().toString(36)}-${(messageCounter++).t
 
 export const useMirror = create<MirrorState>()((set, get) => ({
   activeMode: "interplanetary",
-  activeScienceField: null,
-  activeDirection: null,
+  /* OCTAFUSE heritage: the fusion begins with ALL eight lenses lit. */
+  scienceLenses: ALL_LENS_IDS,
   sidebarTab: "civilizations",
   search: "",
   modal: null,
@@ -333,6 +361,12 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   osError: null,
   osDraft: "",
 
+  forgeSession: emptySession(),
+  mysteryStatus: "idle" as MysteryStatus,
+  mysteryDials: { domain: "device", scale: "pocket", spark: "sun" },
+  mystery: null,
+  mysteryError: null,
+
   language: "en" as LanguageCode,
   voice: DEFAULT_VOICE,
   pace: 0.95,
@@ -355,17 +389,23 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       };
     }),
 
-  setScienceField: (id) =>
-    set((s) => ({
-      activeScienceField: s.activeScienceField === id ? null : id,
+  toggleScienceLens: (id) =>
+    set((s) => {
+      const active = s.scienceLenses.includes(id);
+      const next = active
+        ? s.scienceLenses.filter((l) => l !== id)
+        : [...s.scienceLenses, id];
       /* FUSION CLARITY LAW — any recalibration re-tunes the science
          channel back to a quiet origin. */
-      sessions: { ...s.sessions, science: emptySession() },
-    })),
+      return {
+        scienceLenses: next,
+        sessions: { ...s.sessions, science: emptySession() },
+      };
+    }),
 
-  setDirection: (id) =>
+  setScienceLenses: (ids) =>
     set((s) => ({
-      activeDirection: s.activeDirection === id ? null : id,
+      scienceLenses: ids,
       /* FUSION CLARITY LAW — any recalibration re-tunes the science
          channel back to a quiet origin. */
       sessions: { ...s.sessions, science: emptySession() },
@@ -449,6 +489,10 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   resetField: () =>
     set({
       sessions: emptySessions(),
+      forgeSession: emptySession(),
+      mysteryStatus: "idle" as MysteryStatus,
+      mystery: null,
+      mysteryError: null,
       view: "observatory",
       search: "",
       modal: null,
@@ -464,6 +508,9 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   clearChannel: (mode) =>
     set((s) => {
       const target = mode ?? s.activeMode;
+      if (target === "forge") {
+        return { forgeSession: emptySession() };
+      }
       return {
         sessions: { ...s.sessions, [target]: emptySession() },
         /* the apothecary belongs to the Healing channel — it quiets with it */
@@ -528,6 +575,134 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       remedyError: null,
     }),
 
+  /* ---------------- THE FORGE — the Invent book's own line ----------
+     A direct mirror chat specialized for invention. The Forge speaks
+     as the workshop's own presence: plain, concrete, makable — every
+     answer lands on a next stroke the visitor can actually take. */
+  setForgeDraft: (value) =>
+    set((s) => ({ forgeSession: { ...s.forgeSession, draft: value } })),
+
+  askForge: async (question, attachments) => {
+    const query = question.trim();
+    const session = get().forgeSession;
+    if (!query || session.status === "loading") return;
+
+    set((s) => ({
+      forgeSession: {
+        ...s.forgeSession,
+        status: "loading",
+        activeQuery: query,
+        draft: "",
+        error: null,
+      },
+    }));
+
+    try {
+      const history = session.messages.slice(-6).map((m) => ({
+        q: m.query,
+        a: m.text,
+      }));
+      const payload = attachments ? attachmentsToPayload(attachments) : null;
+      const res = await fetch("/api/transmission", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query,
+          mode: "forge",
+          language: get().language,
+          history,
+          ...(payload ?? {}),
+        }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        throw new Error(
+          (data && data.error) ||
+            "The coals are quiet. Rest a breath, then strike again."
+        );
+      }
+      set((s) => ({
+        forgeSession: {
+          ...s.forgeSession,
+          status: "ready",
+          activeQuery: "",
+          messages: [
+            ...s.forgeSession.messages,
+            {
+              id: nextMessageId(),
+              query,
+              text: data.transmission,
+              classification: data.classification,
+              createdAt: data.createdAt ?? new Date().toISOString(),
+            },
+          ],
+        },
+      }));
+    } catch (err) {
+      set((s) => ({
+        forgeSession: {
+          ...s.forgeSession,
+          status: "error",
+          activeQuery: "",
+          error:
+            err instanceof Error
+              ? err.message
+              : "The coals are quiet. Rest a breath, then strike again.",
+        },
+      }));
+    }
+  },
+
+  /* ---- the random mystery creation — one strike, one conception ---- */
+  setMysteryDial: (group, id) =>
+    set((s) => ({
+      mysteryDials: { ...s.mysteryDials, [group]: id },
+      /* a new dial setting cools the previous creation */
+      mysteryStatus: s.mysteryStatus === "ready" ? "idle" : s.mysteryStatus,
+      mystery: s.mysteryStatus === "ready" ? null : s.mystery,
+    })),
+
+  strikeMystery: async () => {
+    if (get().mysteryStatus === "forging") return;
+    const dials = get().mysteryDials;
+
+    set({
+      mysteryStatus: "forging",
+      mystery: null,
+      mysteryError: null,
+    });
+
+    try {
+      const res = await fetch("/api/forge", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          dials,
+          language: get().language,
+        }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.mystery) {
+        throw new Error(
+          (data && data.error) ||
+            "The coals are quiet — the creation could not be struck. Rest a breath, then try again."
+        );
+      }
+      set({
+        mysteryStatus: "ready",
+        mystery: data.mystery as MysteryCreation,
+      });
+    } catch (err) {
+      set({
+        mysteryStatus: "error",
+        mysteryError:
+          err instanceof Error
+            ? err.message
+            : "The coals are quiet — the creation could not be struck. Rest a breath, then try again.",
+      });
+    }
+  },
+
   askMirror: async (question, attachments) => {
     const query = question.trim();
     const mode = get().activeMode;
@@ -563,8 +738,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         body: JSON.stringify({
           query,
           mode,
-          scienceField: get().activeScienceField,
-          direction: get().activeDirection,
+          lenses: get().scienceLenses,
           language: get().language,
           history,
           ...(payload ?? {}),

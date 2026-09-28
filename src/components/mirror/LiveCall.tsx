@@ -116,8 +116,7 @@ async function askScope(
       query: message,
       mode: scope,
       live: true,
-      scienceField: state.activeMode === scope ? state.activeScienceField : null,
-      direction: state.activeMode === scope ? state.activeDirection : null,
+      lenses: state.activeMode === scope ? state.scienceLenses : [],
       language,
       history: history.map((h) => ({
         q: h.role === "visitor" ? h.text : "",

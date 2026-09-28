@@ -5,7 +5,11 @@
    removed Interplanetary Biology vocabulary). */
 import { readFileSync, writeFileSync } from "node:fs";
 import { scopeSuggestionPools } from "../src/lib/data/suggestions.ts";
-import { giftLines, labFrequencies } from "../src/lib/data/science.ts";
+import {
+  giftLines,
+  labFrequencies,
+  scienceLenses,
+} from "../src/lib/data/science.ts";
 import { federationBodies, federationTreaties, federationPrinciples } from "../src/lib/data/federation.ts";
 import { SCOPE_META } from "../src/lib/entity-utils.ts";
 import {
@@ -28,16 +32,12 @@ import {
   STEPS_LABEL_PRACTICE,
 } from "../src/lib/data/remedy.ts";
 import {
-  blueprints,
-  workshopIntro,
-  makingRungs,
-  studioProtocols,
-  workshopDiscernment,
-  makeDomains,
-  sparkStates,
-  benchMorningPool,
-  benchEveningPool,
-  benchFocusPool,
+  forgeDomains,
+  forgeScales,
+  forgeSparks,
+  forgePhases,
+  forgeChatPhases,
+  forgeSuggestions,
 } from "../src/lib/data/invent.ts";
 
 const dynPath = "/home/z/my-project/scripts/i18n-keys-dynamic.json";
@@ -157,6 +157,126 @@ const CODEX_RETIRED = [
   "The slim rail at the top of the volume carries every chapter by its sigil. Choose one and the book turns to it — no wandering, no lost place.",
   "The voice of the laboratory can read any open chapter aloud.",
 ];
+/* Retired with the Invent book's rebuild — the studio became THE FORGE
+   (an interactive workshop: direct forge chat + mystery creation); the
+   reading rooms (blueprints, ladder, protocols, seeder, bench) are gone. */
+const INVENT_RETIRED = [
+  "The Seed of Need",
+  "Every invention begins as a need honestly felt.",
+  "Write the need in one plain sentence — no ornament, no apology.",
+  "Ask who else carries this need; let the count steady your hand.",
+  "Imagine the smallest thing that would answer it today, not someday.",
+  "Let the need choose its own form — you are the midwife, not the author.",
+  "A true need is a doorway; the form is the door.",
+  "The Working Sketch",
+  "Draw it before you defend it.",
+  "Give the idea one unbroken minute of sketching — no correcting.",
+  "Name every part aloud; whatever has no name is not yet understood.",
+  "Circle the part that quietly frightens you, and begin there.",
+  "Pin the sketch where morning eyes will find it before argument can.",
+  "The sketch is the invention, thinking on paper.",
+  "The Prototype of Light",
+  "Build the invisible version first.",
+  "Close the eyes and walk through the finished thing, room by room.",
+  "Note where the imagining stumbles — that stumble is the design flaw.",
+  "Repair it in the mind alone, one deliberate pass.",
+  "Only when it moves without friction, touch material.",
+  "What works in imagination rarely argues with matter.",
+  "Sacred Dissatisfaction",
+  "Let what bothers you aim the work.",
+  "Name the friction in a single sentence, without blame.",
+  "Ask what delight would look like in this exact place.",
+  "Remove one piece before adding any — invention is also subtraction.",
+  "Thank the friction; it was the compass all along.",
+  "Dissatisfaction is the raw ore of every better thing.",
+  "The Question Spiral",
+  "Interrogate until the answer has no choice.",
+  "Write the problem at the center of a page and circle it.",
+  "Ask it why, five times, descending one honest floor at a time.",
+  "At the bottom, turn it over: what if the opposite were true?",
+  "Carry that final question through the day — it will answer in passing.",
+  "Every invention is a question that learned to stand.",
+  "The Completion Breath",
+  "Finish small, until finishing becomes your nature.",
+  "Choose the smallest version that would still truly work.",
+  "Give it one whole day from first stroke to held-in-hand.",
+  "Speak its name aloud — a thing named is a thing completed.",
+  "Record what it taught you before the joy has time to fade.",
+  "A finished smallness outweighs an imagined vastness.",
+  "The inventor's mind is not a lightning strike. It is a workshop kept in order — a bench swept each evening, a question left open on purpose, a patience that lets two unconnected things stand side by side until they speak.",
+  "The Mirror does not invent for the seeker; it holds the lamp. What is made in this chamber comes from the union of quiet attention and the field's endless suggestiveness — the same partnership that shaped every bridge humanity has ever crossed.",
+  "Wonder",
+  "Let the world stay strange a moment longer than habit allows.",
+  "Attention",
+  "Follow the small irritation or the small beauty; both are lures.",
+  "Question",
+  "Give the wondering a shape: how might this be otherwise?",
+  "Sketch",
+  "Pour the question onto paper before it learns to be reasonable.",
+  "Making",
+  "Cut, join, err and repair — the hands complete what wonder began.",
+  "Offering",
+  "Set the finished thing where life can use it; making ends in giving.",
+  "The Morning Sketch",
+  "Catch the mind before the day's railings go up.",
+  "Before any screen, draw one impossible fix for one ordinary thing.",
+  "Do not judge the drawing; date it and close the book.",
+  "Once a week, re-read seven sketches and mark the one that hums.",
+  "The Question Jar",
+  "Keep a standing choir of open questions at hand.",
+  "Write every unsolved why or what-if on its own slip of paper.",
+  "Keep the jar on the bench; one slip is drawn at random each session.",
+  "Give the drawn question fifteen unhurried minutes, then release it.",
+  "The Silence Between",
+  "Let the field finish the sentence the mind began.",
+  "Work until the problem glows, then stop one step short of forcing it.",
+  "Sit in quiet for five minutes — no music, no solving.",
+  "Rise without concluding; the joining often arrives unbidden.",
+  "A true invention simplifies; it removes weight from the world rather than adding to it.",
+  "It serves quietly — after a while, no one can remember how life worked without it.",
+  "It asks nothing that harms; the making must be safe for the maker and the made-for alike.",
+  "It delights the one who made it — joy at the bench is the signature of a real design.",
+  "Machines",
+  "“Machines are cold; invention is for engineers.” The bench feels far away.",
+  "A machine is only a kindness made of parts — you have been inventing kindnesses all your life.",
+  "Take one household object and write the single sentence it is secretly trying to say.",
+  "Remedies",
+  "“Healing formulas belong to the learned.” The mixing seems forbidden.",
+  "Every kitchen is an apothecary that forgot itself; the first remedies were recipes.",
+  "Steep one calming herb tonight and note, without lore, what it changes.",
+  "Dwellings",
+  "“A home is finished when you arrive.” Nothing here can be made.",
+  "A dwelling is a slow invention that answers its dwellers back — it wants a next draft.",
+  "Rearrange one corner this evening until the body relaxes upon entering it.",
+  "Music & Word",
+  "“Talent is given whole.” The first note feels already judged.",
+  "Sound is the most forgiving material — it exists only while it is being made.",
+  "Hum three tones that match your mood; you have just scored the day.",
+  "Stuck",
+  "Change one physical thing on the bench — swap the light, move the paper; stuck is often the room, not the mind.",
+  "Movement anywhere unblocks movement everywhere.",
+  "Curious",
+  "Ride it now: give the wonder fifteen unguarded minutes before explanation arrives.",
+  "Curiosity is the field leaning toward me.",
+  "Overwhelmed",
+  "Name the one part that would make the rest lighter, and do only that.",
+  "I build the bridge by laying one plank.",
+  "Doubtful",
+  "Record one thing you once could not do and now do without thinking.",
+  "I have been wrong about my limits before.",
+  "Sketch one small fix before any screen — sixty seconds, no judgment.",
+  "Open the question jar and hold one slip while the tea steeps.",
+  "Touch the tools once, deliberately, as a greeting to the day's making.",
+  "Sweep the bench and thank one object by name for its service.",
+  "Record the day's one step of making, however small, in a single line.",
+  "Leave one open question on the paper for the morning mind to find.",
+  "Invention is attention in love with a problem.",
+  "Finish small today; vastness can wait its turn.",
+  "The hands know things the mind has not yet admitted.",
+  "Blueprints",
+  "The Workshop",
+  "The Bench",
+];
 const retired = new Set([
   ...BIOLOGY_RETIRED,
   /* removed chat classification block */
@@ -174,6 +294,7 @@ const retired = new Set([
   "Held gently by the archive — verify inwardly what resonates.",
   ...SCIENCE_POOL_RETIRED,
   ...CODEX_RETIRED,
+  ...INVENT_RETIRED,
 ]);
 
 const set = new Set<string>(existing.filter((k) => !retired.has(k)));
@@ -181,8 +302,9 @@ const set = new Set<string>(existing.filter((k) => !retired.has(k)));
 /* scope suggestions — the live per-scope pools (66 questions each) */
 for (const arr of Object.values(scopeSuggestionPools)) for (const q of arr) set.add(q);
 
-/* gift lines + emotional frequencies (label + hint) */
+/* gift lines + emotional frequencies (label + hint) + lens tags */
 for (const line of giftLines) set.add(line);
+for (const lens of scienceLenses) set.add(lens.tag);
 for (const f of labFrequencies) {
   set.add(f.label);
   set.add(f.hint);
@@ -246,45 +368,15 @@ for (const label of Object.values(KIND_LABEL)) set.add(label);
 set.add(STEPS_LABEL_HERBAL);
 set.add(STEPS_LABEL_PRACTICE);
 
-/* The Invent studio — the fourth book: blueprints, workshop and bench */
-for (const b of blueprints) {
-  set.add(b.name);
-  set.add(b.tagline);
-  for (const s of b.steps) set.add(s);
-  set.add(b.seal);
-}
-for (const p of workshopIntro) set.add(p);
-for (const r of makingRungs) {
-  set.add(r.title);
-  set.add(r.line);
-}
-for (const p of studioProtocols) {
-  set.add(p.name);
-  set.add(p.purpose);
-  for (const s of p.steps) set.add(s);
-}
-for (const d of workshopDiscernment) set.add(d);
-for (const d of makeDomains) {
+/* The Forge — the Invent book's interactive workshop: dials, phases,
+   chat phases and the clickable suggestion sparks */
+for (const d of [...forgeDomains, ...forgeScales, ...forgeSparks]) {
   set.add(d.label);
-  set.add(d.pattern);
-  set.add(d.reframe);
-  set.add(d.practice);
+  set.add(d.hint);
 }
-for (const v of sparkStates) {
-  set.add(v.label);
-  set.add(v.bridge);
-  set.add(v.anchor);
-}
-for (const m of benchMorningPool) set.add(m);
-for (const e of benchEveningPool) set.add(e);
-for (const f of benchFocusPool) set.add(f);
-for (const l of [
-  "Blueprints",
-  "The Workshop",
-  "The Bench",
-]) {
-  set.add(l);
-}
+for (const p of [...forgePhases, ...forgeChatPhases]) set.add(p);
+for (const s of forgeSuggestions) set.add(s);
+for (const l of ["The Forge", "The Mystery Chamber"]) set.add(l);
 
 const out = [...set].sort((a, b) => a.localeCompare(b));
 writeFileSync(dynPath, JSON.stringify(out, null, 2));
