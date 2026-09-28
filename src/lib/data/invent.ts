@@ -1,12 +1,13 @@
-import type { ForgeDialOption } from "@/lib/mirror-types";
+import type { ForgeDialOption, InventToolDef } from "@/lib/mirror-types";
 
 /* ------------------------------------------------------------------ */
 /*  THE FORGE — the Invent book's interactive workshop · data layer    */
 /*  The fourth book on the laboratory shelf, bound in molten copper.   */
 /*  No reading rooms: the whole book is the workshop — a direct        */
-/*  mirror chat specialized for invention, and the Mystery Chamber     */
-/*  where a random creation is struck from the coals.                  */
-/*  Every string is an i18n key (English source).                      */
+/*  mirror chat specialized for invention, the Mystery Chamber         */
+/*  where a random creation is struck from the coals, and the Tool     */
+/*  Wall where the Mirror inteligjence works through four bench        */
+/*  presences. Every string is an i18n key (English source).           */
 /* ------------------------------------------------------------------ */
 
 /* ---------------- the mystery chamber dials ---------------- */
@@ -66,3 +67,74 @@ export const forgeSuggestions: string[] = [
   "What could I make from what my kitchen already holds?",
   "Speak of the difference between a gadget and a companion",
 ];
+
+/* ---------------- the tool wall — four bench presences ---------------- */
+
+/** The tools of the Forge's bench — each a small presence through
+    which the Mirror inteligjence works: one honest input in, one
+    usable gift out. */
+export const inventTools: InventToolDef[] = [
+  {
+    id: "crucible",
+    emoji: "🔥",
+    name: "The Crucible",
+    whisper:
+      "Pour in a raw idea — receive its buildable body: the form, the material, the mechanism, the first stroke.",
+    action: "Cast into the Crucible",
+    bring: "What you pour into the Crucible",
+  },
+  {
+    id: "namegiver",
+    emoji: "🪶",
+    name: "The Name-Giver",
+    whisper:
+      "Describe what you are making — receive the name it was always waiting for, and a second name beside it.",
+    action: "Ask for the name",
+    bring: "What the Name-Giver should hear",
+  },
+  {
+    id: "nature",
+    emoji: "🍃",
+    name: "The Nature Mirror",
+    whisper:
+      "Name a problem — meet the living teacher that solved it first, and learn how to borrow its way.",
+    action: "Hold it to the Mirror",
+    bring: "The problem set before the Nature Mirror",
+  },
+  {
+    id: "skeptic",
+    emoji: "⚖️",
+    name: "The Honest Spark",
+    whisper:
+      "Show it your idea kindly weighed — whether it holds, why, and the nearest thing that would hold better.",
+    action: "Test it at the Spark",
+    bring: "What the Honest Spark should weigh",
+  },
+];
+
+/** Cycled while a bench tool works. */
+export const toolPhases: string[] = [
+  "Reading the metal…",
+  "Turning it in the light…",
+  "Listening for the true form…",
+];
+
+/* Result line labels — the invent-tool API returns these English keys
+   inside its normalized result; the Tool Wall translates them. */
+export const TOOL_LINE_LABELS = {
+  conception: "The conception",
+  material: "The material",
+  mechanism: "The mechanism",
+  firstStroke: "The first stroke",
+  caution: "The gentle caution",
+  altName: "A second name",
+  why: "Why this name",
+  reason: "The honest reason",
+  teacher: "The teacher in nature",
+  principle: "How nature does it",
+  borrow: "How to borrow it",
+  verdict: "The verdict",
+  cousin: "The nearest working cousin",
+} as const;
+
+export type ToolLineKey = (typeof TOOL_LINE_LABELS)[keyof typeof TOOL_LINE_LABELS];

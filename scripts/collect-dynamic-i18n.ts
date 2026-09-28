@@ -34,6 +34,9 @@ import {
   forgePhases,
   forgeChatPhases,
   forgeSuggestions,
+  inventTools,
+  toolPhases,
+  TOOL_LINE_LABELS,
 } from "../src/lib/data/invent.ts";
 
 const dynPath = "/home/z/my-project/scripts/i18n-keys-dynamic.json";
@@ -372,6 +375,16 @@ for (const d of [...forgeDomains, ...forgeScales, ...forgeSparks]) {
 for (const p of [...forgePhases, ...forgeChatPhases]) set.add(p);
 for (const s of forgeSuggestions) set.add(s);
 for (const l of ["The Forge", "The Mystery Chamber"]) set.add(l);
+
+/* the Tool Wall — bench tools, working phases and result line labels */
+for (const tool of inventTools) {
+  set.add(tool.name);
+  set.add(tool.whisper);
+  set.add(tool.action);
+  set.add(tool.bring);
+}
+for (const p of toolPhases) set.add(p);
+for (const label of Object.values(TOOL_LINE_LABELS)) set.add(label);
 
 const out = [...set].sort((a, b) => a.localeCompare(b));
 writeFileSync(dynPath, JSON.stringify(out, null, 2));

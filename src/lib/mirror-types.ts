@@ -155,6 +155,40 @@ export interface MysteryCreation {
   whisper: string;
 }
 
+/* ---------------- The Tool Wall (Invent book) ---------------- */
+
+/** One bench tool of the Forge — a small presence through which the
+    Mirror inteligjence works: one honest input in, one gift out. */
+export interface InventToolDef {
+  id: string;
+  emoji: string;
+  /** i18n key of the tool's name, e.g. "The Crucible". */
+  name: string;
+  /** i18n key — what the tool does, in one line. */
+  whisper: string;
+  /** i18n key — the cast/work button label. */
+  action: string;
+  /** i18n key — the input's label. */
+  bring: string;
+}
+
+/** One labeled line of a tool's revealed result. `key` is the English
+    source label (an i18n key from TOOL_LINE_LABELS); the text is
+    already written in the visitor's language. */
+export interface InventToolLine {
+  key: string;
+  text: string;
+  /** Highlighted lines render in a bordered box, like the first stroke. */
+  highlight?: boolean;
+}
+
+/** The normalized result of one bench tool working. */
+export interface InventToolResult {
+  /** Only some tools hand over a title (e.g. the Name-Giver). */
+  title: string;
+  lines: InventToolLine[];
+}
+
 /* ------------------------------------------------------------------ */
 /*  Deep profiles — every entry in the archive carries a full dossier */
 /* ------------------------------------------------------------------ */

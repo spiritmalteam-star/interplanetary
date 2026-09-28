@@ -8,6 +8,7 @@ import type {
   ManifestBlueprint,
   MysteryCreation,
   ForgeDials,
+  InventToolResult,
 } from "@/lib/mirror-types";
 import { civilizations, civilizationTotal } from "@/lib/data/civilizations";
 import { interdimensional, interdimTotal } from "@/lib/data/interdimensional";
@@ -103,7 +104,9 @@ export type RemedyStatus = "idle" | "crafting" | "ready" | "error";
 
 export type MysteryStatus = "idle" | "forging" | "ready" | "error";
 
-export type { MysteryCreation, ForgeDials };
+export type ToolStatus = "idle" | "working" | "ready" | "error";
+
+export type { MysteryCreation, ForgeDials, InventToolResult };
 
 const emptySession = (): ScopeSession => ({
   messages: [],
@@ -192,10 +195,19 @@ interface MirrorState {
   mysteryDials: ForgeDials;
   mystery: MysteryCreation | null;
   mysteryError: string | null;
+  /* THE TOOL WALL — the Forge's bench tools, worked by the inteligjence */
+  toolStatus: ToolStatus;
+  toolId: string | null;
+  toolInput: string;
+  toolResult: InventToolResult | null;
+  toolError: string | null;
   setForgeDraft: (value: string) => void;
   askForge: (question: string, attachments?: ChatAttachment[]) => Promise<void>;
   setMysteryDial: (group: keyof ForgeDials, id: string) => void;
   strikeMystery: () => Promise<void>;
+  setToolId: (id: string) => void;
+  setToolInput: (value: string) => void;
+  workTool: () => Promise<void>;
 
   /* Universal language + transcript voice */
   language: LanguageCode;
@@ -361,6 +373,11 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   mysteryDials: { domain: "device", scale: "pocket", spark: "sun" },
   mystery: null,
   mysteryError: null,
+  toolStatus: "idle" as ToolStatus,
+  toolId: null,
+  toolInput: "",
+  toolResult: null,
+  toolError: null,
 
   language: "en" as LanguageCode,
   voice: DEFAULT_VOICE,
@@ -482,6 +499,11 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       mysteryStatus: "idle" as MysteryStatus,
       mystery: null,
       mysteryError: null,
+      toolStatus: "idle" as ToolStatus,
+      toolId: null,
+      toolInput: "",
+      toolResult: null,
+      toolError: null,
       view: "observatory",
       search: "",
       modal: null,
@@ -498,7 +520,14 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     set((s) => {
       const target = mode ?? s.activeMode;
       if (target === "forge") {
-        return { forgeSession: emptySession() };
+        return {
+          forgeSession: emptySession(),
+          toolStatus: "idle" as ToolStatus,
+          toolId: null,
+          toolInput: "",
+          toolResult: null,
+          toolError: null,
+        };
       }
       return {
         sessions: { ...s.sessions, [target]: emptySession() },
@@ -688,6 +717,63 @@ export const useMirror = create<MirrorState>()((set, get) => ({
           err instanceof Error
             ? err.message
             : "The coals are quiet — the creation could not be struck. Rest a breath, then try again.",
+      });
+    }
+  },
+
+  /* ---------------- THE TOOL WALL — the bench tools ----------------
+     Four small presences through which the Mirror inteligjence works
+     for the seeker's making: one honest input in, one gift out. */
+  setToolId: (id) =>
+    set((s) => ({
+      toolId: id,
+      /* a different tool cools the previous tool's gift */
+      toolStatus: s.toolStatus === "ready" ? "idle" : s.toolStatus,
+      toolResult: s.toolStatus === "ready" ? null : s.toolResult,
+      toolError: s.toolStatus === "ready" ? null : s.toolError,
+    })),
+
+  setToolInput: (value) => set({ toolInput: value }),
+
+  workTool: async () => {
+    const tool = get().toolId;
+    const input = get().toolInput.trim();
+    if (!tool || input.length < 2 || get().toolStatus === "working") return;
+
+    set({
+      toolStatus: "working",
+      toolResult: null,
+      toolError: null,
+    });
+
+    try {
+      const res = await fetch("/api/invent-tool", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tool,
+          input,
+          language: get().language,
+        }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.result) {
+        throw new Error(
+          (data && data.error) ||
+            "The tool is quiet — the work could not be done. Rest a breath, then try again."
+        );
+      }
+      set({
+        toolStatus: "ready",
+        toolResult: data.result as InventToolResult,
+      });
+    } catch (err) {
+      set({
+        toolStatus: "error",
+        toolError:
+          err instanceof Error
+            ? err.message
+            : "The tool is quiet — the work could not be done. Rest a breath, then try again.",
       });
     }
   },

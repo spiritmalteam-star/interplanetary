@@ -8,6 +8,7 @@ import {
   Hammer,
   RotateCcw,
   Send,
+  Wrench,
 } from "lucide-react";
 import { useMirror, type ChatMessage } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
@@ -18,6 +19,8 @@ import {
   forgeScales,
   forgeSparks,
   forgeSuggestions,
+  inventTools,
+  toolPhases,
   type ForgeDialOption,
 } from "@/lib/data/invent";
 import { cn } from "@/lib/utils";
@@ -33,10 +36,12 @@ import { SigilForIntent } from "./MirrorOSForge";
 /*     invention: speak a want, a half-idea or a block, and the Forge  */
 /*     answers in sparks, always landing on one doable stroke.         */
 /*                                                                     */
-/*   · THE MYSTERY CHAMBER — turn three dials (what · how much world · */
-/*     which energy), strike, and a random mystery creation is forged  */
-/*     from three embers drawn server-side: named, embodied, and       */
-/*     handed over with its first stroke and a whisper.                */
+/*   · THE RIGHT PANE  — two chambers sharing one pane: THE MYSTERY    */
+/*     CHAMBER (turn three dials, strike, a random creation climbs     */
+/*     out of the coals, forged from three server-drawn embers) and    */
+/*     THE TOOL WALL — four bench presences through which the Mirror   */
+/*     inteligjence works: the Crucible, the Name-Giver, the Nature    */
+/*     Mirror and the Honest Spark. One honest input in, one gift out. */
 /*                                                                     */
 /*  COMPACTNESS: one screen, two columns on desktop, stacked on        */
 /*  mobile — the thread and the chamber scroll inside themselves.      */
@@ -416,7 +421,391 @@ function MysteryChamber() {
   );
 }
 
-/* ---------------- the forge chat — the direct mirror line ---------------- */
+/* ---------------- the Tool Wall — four bench presences ---------------- */
+
+function ToolWorking({ phase }: { phase: number }) {
+  const t = useT();
+  return (
+    <div className="py-5 text-center" aria-live="polite" aria-busy="true">
+      <div className="relative mx-auto size-20" aria-hidden="true">
+        <div
+          className="scope-halo absolute inset-0 rounded-full border border-dashed"
+          style={{
+            borderColor: "color-mix(in srgb, var(--scope-a) 50%, transparent)",
+          }}
+        />
+        <div
+          className="scope-halo-rev absolute inset-3 rounded-full border"
+          style={{
+            borderColor: "color-mix(in srgb, var(--scope-b) 38%, transparent)",
+          }}
+        />
+        <div
+          className="animate-charge-pulse absolute inset-6 rounded-full"
+          style={{
+            background:
+              "radial-gradient(circle, color-mix(in srgb, var(--scope-a) 55%, transparent), transparent 72%)",
+          }}
+        />
+      </div>
+      <p className="mono-label mt-4 text-[11px] text-muted-foreground">
+        {t(toolPhases[phase] ?? toolPhases[0])}
+      </p>
+    </div>
+  );
+}
+
+function ToolResultCard() {
+  const result = useMirror((s) => s.toolResult);
+  const askForge = useMirror((s) => s.askForge);
+  const t = useT();
+
+  const spoken = useMemo(
+    () =>
+      result
+        ? [result.title, ...result.lines.map((l) => l.text)]
+            .filter(Boolean)
+            .join(". ")
+        : "",
+    [result]
+  );
+
+  if (!result) return null;
+
+  const askAbout = () => {
+    if (result.title) {
+      void askForge(
+        t("Speak with me about {name} — what would making it truly take?", {
+          name: result.title,
+        })
+      );
+      return;
+    }
+    void askForge(
+      t(
+        "Speak with me about what the bench tool revealed — what would making it truly take?"
+      )
+    );
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+      className="mt-4 rounded-xl border px-4 py-4"
+      style={{
+        borderColor: "color-mix(in srgb, var(--scope-a) 30%, transparent)",
+        background: "color-mix(in srgb, var(--scope-a) 7%, transparent)",
+      }}
+      data-testid="tool-result"
+    >
+      {result.title && (
+        <h4 className="scope-gradient-text text-center font-serif text-[18px] italic leading-snug">
+          {result.title}
+        </h4>
+      )}
+
+      <div className={cn("space-y-3", result.title && "mt-3.5")}>
+        {result.lines.map((l) =>
+          l.highlight ? (
+            <section
+              key={l.key}
+              className="rounded-lg border px-3.5 py-2.5"
+              style={{
+                borderColor:
+                  "color-mix(in srgb, var(--scope-a) 26%, transparent)",
+                background: "color-mix(in srgb, var(--scope-a) 6%, transparent)",
+              }}
+            >
+              <p className="mono-label text-[9.5px] uppercase tracking-[0.16em] text-[var(--scope-a)]">
+                {t(l.key)}
+              </p>
+              <p className="mt-1 text-[14px] leading-[1.7] text-foreground/90">
+                {l.text}
+              </p>
+            </section>
+          ) : (
+            <section key={l.key}>
+              <p className="mono-label text-[9.5px] uppercase tracking-[0.16em] text-[var(--scope-a)]">
+                {t(l.key)}
+              </p>
+              <p className="mt-1 text-[13.5px] leading-[1.7] text-foreground/85">
+                {l.text}
+              </p>
+            </section>
+          )
+        )}
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+        <button
+          type="button"
+          onClick={askAbout}
+          data-testid="ask-forge-about-tool"
+          className="focus-glow flex items-center gap-2 rounded-full border px-3.5 py-2 text-[13px] font-medium text-foreground/90 transition-all duration-300 hover:text-foreground"
+          style={{
+            borderColor: "color-mix(in srgb, var(--scope-a) 40%, transparent)",
+            background:
+              "linear-gradient(120deg, color-mix(in srgb, var(--scope-a) 14%, transparent), color-mix(in srgb, var(--scope-b) 12%, transparent))",
+          }}
+        >
+          <Send className="size-3.5" aria-hidden="true" />
+          {t("Ask the Forge about it")}
+        </button>
+        <ListenButton text={spoken} cacheKey={`tool-${spoken.length}-${spoken.slice(0, 24)}`} />
+      </div>
+    </motion.div>
+  );
+}
+
+function ToolWall() {
+  const toolStatus = useMirror((s) => s.toolStatus);
+  const toolId = useMirror((s) => s.toolId);
+  const toolInput = useMirror((s) => s.toolInput);
+  const toolError = useMirror((s) => s.toolError);
+  const setToolId = useMirror((s) => s.setToolId);
+  const setToolInput = useMirror((s) => s.setToolInput);
+  const workTool = useMirror((s) => s.workTool);
+  const t = useT();
+  const [phase, setPhase] = useState(0);
+
+  const tool = inventTools.find((x) => x.id === toolId) ?? null;
+
+  useEffect(() => {
+    if (toolStatus !== "working") return;
+    const id = window.setInterval(
+      () => setPhase((p) => (p + 1) % toolPhases.length),
+      1900
+    );
+    return () => window.clearInterval(id);
+  }, [toolStatus]);
+
+  const canWork = tool !== null && toolInput.trim().length >= 2 && toolStatus !== "working";
+
+  return (
+    <div
+      className="scope-frame-card relative overflow-hidden rounded-2xl glass p-5 sm:p-6"
+      data-testid="tool-wall"
+    >
+      <span className="scope-corner scope-corner-tl" aria-hidden="true" />
+      <span className="scope-corner scope-corner-tr" aria-hidden="true" />
+      <span className="scope-corner scope-corner-bl" aria-hidden="true" />
+      <span className="scope-corner scope-corner-br" aria-hidden="true" />
+
+      <h3 className="mono-label flex items-center gap-2 text-[11px] text-[var(--scope-a)]">
+        <Wrench className="size-3.5" aria-hidden="true" />
+        {t("The Tool Wall")}
+      </h3>
+      <p className="mt-1.5 text-[13.5px] leading-relaxed text-muted-foreground">
+        {t(
+          "Four bench presences — the Mirror inteligjence works through them. One honest input in, one gift out."
+        )}
+      </p>
+
+      {/* the tool chips */}
+      <div
+        className="mt-4 grid grid-cols-2 gap-1.5"
+        role="radiogroup"
+        aria-label={t("The Tool Wall")}
+        data-testid="tool-chips"
+      >
+        {inventTools.map((x) => {
+          const active = x.id === toolId;
+          return (
+            <button
+              key={x.id}
+              type="button"
+              role="radio"
+              aria-checked={active}
+              title={t(x.whisper)}
+              onClick={() => setToolId(x.id)}
+              data-testid={`tool-chip-${x.id}`}
+              className={cn(
+                "focus-glow flex items-center justify-center gap-1.5 rounded-full border px-2.5 py-2 text-[13px] transition-all duration-300",
+                active
+                  ? "border-[var(--scope-a)] font-semibold text-foreground"
+                  : "hairline text-muted-foreground hover:text-foreground"
+              )}
+              style={
+                active
+                  ? {
+                      background:
+                        "color-mix(in srgb, var(--scope-a) 12%, transparent)",
+                      boxShadow:
+                        "0 0 16px -6px color-mix(in srgb, var(--scope-a) 55%, transparent)",
+                    }
+                  : undefined
+              }
+            >
+              <span aria-hidden="true">{x.emoji}</span>
+              {t(x.name)}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* the selected tool's workbench */}
+      {tool && (
+        <div className="mt-4">
+          <p className="text-[13px] italic leading-relaxed text-muted-foreground/85">
+            {t(tool.whisper)}
+          </p>
+
+          <label
+            htmlFor="tool-input"
+            className="mono-label mt-3.5 block text-[10px] uppercase tracking-[0.16em] text-muted-foreground/70"
+          >
+            {t(tool.bring)}
+          </label>
+          <textarea
+            id="tool-input"
+            value={toolInput}
+            onChange={(e) => setToolInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey && canWork) {
+                e.preventDefault();
+                void workTool();
+              }
+            }}
+            rows={3}
+            maxLength={800}
+            aria-label={t(tool.bring)}
+            data-testid="tool-input"
+            placeholder={t("Set it on the bench — plainly, as it came to you…")}
+            className="focus-glow mt-1.5 max-h-32 min-h-[64px] w-full resize-none rounded-xl border hairline bg-transparent px-3.5 py-2.5 text-[14px] leading-relaxed text-foreground placeholder:text-muted-foreground/60"
+          />
+
+          <button
+            type="button"
+            disabled={!canWork}
+            onClick={() => void workTool()}
+            data-testid="work-tool"
+            aria-label={t(tool.action)}
+            className={cn(
+              "focus-glow mt-3 flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-[14px] font-semibold transition-all duration-300",
+              canWork ? "hover:glow-sm" : "cursor-not-allowed opacity-50"
+            )}
+            style={{
+              borderColor: "color-mix(in srgb, var(--scope-a) 50%, transparent)",
+              background:
+                "linear-gradient(120deg, color-mix(in srgb, var(--scope-a) 16%, transparent), color-mix(in srgb, var(--scope-b) 14%, transparent))",
+            }}
+          >
+            <Hammer className="size-4" aria-hidden="true" />
+            {t(tool.action)}
+          </button>
+
+          <AnimatePresence mode="wait">
+            {toolStatus === "working" && (
+              <motion.div
+                key="working"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <ToolWorking phase={phase} />
+              </motion.div>
+            )}
+
+            {toolStatus === "ready" && (
+              <motion.div
+                key="ready"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <ToolResultCard />
+              </motion.div>
+            )}
+
+            {toolStatus === "error" && (
+              <motion.p
+                key="error"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="mt-4 text-center text-[12.5px] italic leading-relaxed text-muted-foreground/75"
+              >
+                {toolError ? t(toolError) : t("The bench is still. Try once more.")}
+              </motion.p>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
+
+      {!tool && (
+        <p className="mt-4 text-center text-[12.5px] italic leading-relaxed text-muted-foreground/75">
+          {t("Choose a tool from the wall and set it to work.")}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/* ---------------- the right pane — two chambers, one wall ---------------- */
+
+type BenchPane = "mystery" | "tools";
+
+function BenchPaneTabs({
+  pane,
+  onChange,
+}: {
+  pane: BenchPane;
+  onChange: (p: BenchPane) => void;
+}) {
+  const t = useT();
+  const tabs: { id: BenchPane; label: string; icon: typeof Flame }[] = [
+    { id: "mystery", label: "The Mystery Chamber", icon: Flame },
+    { id: "tools", label: "The Tool Wall", icon: Wrench },
+  ];
+  return (
+    <div
+      className="grid grid-cols-2 gap-2"
+      role="tablist"
+      aria-label={t("The two chambers of the bench")}
+      data-testid="bench-tabs"
+    >
+      {tabs.map((tab) => {
+        const active = tab.id === pane;
+        const Icon = tab.icon;
+        return (
+          <button
+            key={tab.id}
+            type="button"
+            role="tab"
+            aria-selected={active}
+            onClick={() => onChange(tab.id)}
+            data-testid={`bench-tab-${tab.id}`}
+            className={cn(
+              "focus-glow flex items-center justify-center gap-1.5 rounded-full border px-3 py-2 text-[12.5px] transition-all duration-300",
+              active
+                ? "border-[var(--scope-a)] font-semibold text-foreground"
+                : "hairline text-muted-foreground hover:text-foreground"
+            )}
+            style={
+              active
+                ? {
+                    background:
+                      "color-mix(in srgb, var(--scope-a) 12%, transparent)",
+                    boxShadow:
+                      "0 0 16px -6px color-mix(in srgb, var(--scope-a) 55%, transparent)",
+                  }
+                : undefined
+            }
+          >
+            <Icon className="size-3.5" aria-hidden="true" />
+            {t(tab.label)}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 
 function ForgeBody({ text }: { text: string }) {
   const paras = useMemo(
@@ -670,6 +1059,7 @@ function ForgeChat() {
 
 export function InventView() {
   const exitInvent = useMirror((s) => s.exitInvent);
+  const [pane, setPane] = useState<BenchPane>("mystery");
   const t = useT();
 
   return (
@@ -724,16 +1114,30 @@ export function InventView() {
             </h2>
             <p className="mx-auto mt-2 max-w-[560px] text-[13.5px] leading-relaxed text-muted-foreground">
               {t(
-                "Speak with the Forge on the bench — or turn the dials, strike, and meet a mystery you never asked for."
+                "Speak with the Forge on the bench — set a tool of the inteligjence to work, or turn the dials and meet a mystery you never asked for."
               )}
             </p>
           </div>
 
-          {/* the two live elements — chat and chamber, side by side on
-              desktop, stacked on mobile; both scroll inside themselves */}
+          {/* the two live elements — chat and the right pane (mystery
+              chamber / tool wall), side by side on desktop, stacked on
+              mobile; both scroll inside themselves */}
           <div className="mt-5 grid items-start gap-5 lg:grid-cols-[1fr_360px]">
             <ForgeChat />
-            <MysteryChamber />
+            <div className="flex flex-col gap-3">
+              <BenchPaneTabs pane={pane} onChange={setPane} />
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.div
+                  key={pane}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.28, ease: "easeOut" }}
+                >
+                  {pane === "mystery" ? <MysteryChamber /> : <ToolWall />}
+                </motion.div>
+              </AnimatePresence>
+            </div>
           </div>
 
           <p className="mono-label mt-6 text-center text-[10px] text-muted-foreground/60">
