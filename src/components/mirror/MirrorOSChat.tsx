@@ -353,22 +353,38 @@ export function MirrorOSChat() {
   /* The OS thread opens at its BEGINNING: mounting or reopening the
      chat never scrolls away from the first words. New turns load from
      the TOP — the newest exchange settles at the top of the view and
-     the visitor reads downward through the rest. */
+     the visitor reads downward through the rest. One exception: if the
+     world is re-entered while a transmission is still forming, the
+     frame meets it where it forms. */
   const baseline = useRef({
     len: osMessages.length,
     status: osStatus,
     error: osError,
+    fresh: true,
   });
 
   useEffect(() => {
     const b = baseline.current;
-    if (osMessages.length !== b.len) {
-      baseline.current = { len: osMessages.length, status: osStatus, error: osError };
+    const grew = osMessages.length !== b.len;
+    const startedLoading =
+      !b.fresh && osStatus === "loading" && b.status !== "loading";
+    baseline.current = {
+      len: osMessages.length,
+      status: osStatus,
+      error: osError,
+      fresh: false,
+    };
+    if (b.fresh) {
+      if (osStatus === "loading") {
+        loadingRef.current?.scrollIntoView({ block: "start" });
+      }
+      return;
+    }
+    if (grew) {
       latestRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       return;
     }
-    if (osStatus === "loading" && b.status !== "loading") {
-      baseline.current = { len: b.len, status: osStatus, error: osError };
+    if (startedLoading) {
       loadingRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }, [osMessages.length, osStatus, osError]);

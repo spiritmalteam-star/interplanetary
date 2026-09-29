@@ -1247,3 +1247,24 @@ Stage Summary:
 - The science scope is GONE — replaced by the METAPHYSICS scope: a contemplative 🔮 channel with its own Oracle voice, its own amethyst/gold dress, its own 66-question pool and an interactive VEIL RAIL that fuses 8 classical schools × 6 veils into every answer under the LIVED ABSTRACTION law.
 - All 8 languages complete (1472 entries each); the scope-identity collection gap is closed at the pipeline level; Forge/Invent, healing/quantum/interplanetary channels and the visualize engine untouched.
 - Key artifacts: src/lib/data/metaphysics.ts, src/components/mirror/MetaphysicsRail.tsx, MODE_CONTEXT.metaphysics + metaphysicsPrompt in src/app/api/transmission/route.ts, scope-metaphysics CSS, mode-metaphysics.jpg, 7 dicts ×93 additions.
+
+---
+Task ID: 47
+Agent: Z.ai Code (main orchestrator)
+Task: User request — "Please make sure upon hiting suggestion again after the chat, the chat focuses and brings to the main frame the new suggestion answer."
+
+Work Log:
+- REPRODUCED FIRST (agent-browser, desktop 1440×900): after a chat existed, returning to the Observatory and striking a suggestion mounted the transmission channel MID-RECEPTION — the scroll container (key={view}) remounted at scrollTop 0 and TransmissionView's baseline captured {status:"loading"} at init, so NO effect branch ever fired at ask time: the user stared at the TOP OF THE OLD THREAD while the new question's loading card sat at y 939–1270, fully below the 900px fold (measured: loadingCard.visibleInViewport=false, scrollTop=0). The answer only arrived in frame later via the grew-branch.
+- TransmissionView.tsx — the FOCUS LAW implemented in the scroll effect: baseline gained a `fresh` sentinel; the effect now computes sameMode/grew/startedLoading/becameError and updates baseline unconditionally; on `b.fresh || !sameMode` (channel mounted or entered mid-reception — exactly the Observatory-suggestion path) status "loading" snaps INSTANTLY (block:start, no smooth — the user just acted) to the forming exchange's loading card, status "error" meets the error card (new errorRef attached to the error frame), settled channels still rest at their BEGINNING (unchanged law, verified both in-place and via remount); the grew branch keeps the smooth scroll to the newest answer and now RE-AFFIRMS it once after 450ms (cleanup-managed timeout) so the answer owns the frame even if the first glide was preempted; a new becameError branch glides to the error card when a follow-up fails mid-thread.
+- MirrorOSChat.tsx — same mount-fix for consistency: `fresh` sentinel; re-entering the Mirror OS world while a Direct Line answer is still forming snaps to the loading card instead of waiting at the thread top.
+- replication-prompt.ts §7 line 81 rewritten as "Auto-scroll (the focus law)" documenting the full behavior contract.
+- No new user-facing strings → zero i18n changes needed; focusComposer (unused store action) left untouched.
+
+Verification:
+- bun run lint clean (×2); node scripts/check-i18n.mjs ALL DICTIONARIES COMPLETE; dev.log clean (transmission POSTs 200).
+- Agent Browser E2E desktop 1440×900, full repro flow: suggestion 1 → EXCHANGE 01 framed (top 57); back to Observatory via active pill → suggestion 2 → **loading card now VISIBLE in viewport at ask time (top 381–711, scrollTop 616 — previously 939–1270/out of view at scrollTop 0)**; EXCHANGE 02 lands framed at top (57). Composer follow-up → loading glides into view (top 405) → EXCHANGE 03 framed (57). In-place mode switches: Metaphysics (quiet, scrollTop 0) → Interplanetary (thread at its beginning, exchange 01 at 58). Remount path: Observatory → re-enter settled channel → opens at beginning (scrollTop 0, first article 157).
+- Mobile 390×844: same flow — ask 2 after chat: loading visible (top 289, scrollTop 1067); EXCHANGE 02 framed (57); no horizontal overflow (scrollWidth 390). Zero page errors, zero console errors.
+
+Stage Summary:
+- Striking a suggestion — even after the thread already carries conversations — now focuses the chat deterministically: the frame snaps to the new question while it forms and the answer is brought to the main frame when it lands (with a settle re-affirm); error paths are framed too; entering settled channels still opens at the beginning. Mirror OS chat shares the mount-fix.
+- Key artifacts: src/components/mirror/TransmissionView.tsx (focus-law effect + errorRef), src/components/mirror/MirrorOSChat.tsx (fresh sentinel), src/lib/replication-prompt.ts (§7 focus law).

@@ -611,30 +611,77 @@ export function TransmissionView() {
   /* The thread begins where it begins: opening, reloading or switching
      into a channel keeps the thread at its BEGINNING. New generations
      load from the TOP — the newest exchange settles its first line at
-     the top of the view and the visitor reads downward from there. */
+     the top of the view and the visitor reads downward from there.
+     One law above all: the moment a suggestion is struck — even after
+     the thread already carries conversations — the frame must meet
+     THAT exchange, while it forms and again when it lands. */
   const topRef = useRef<HTMLDivElement | null>(null);
   const latestRef = useRef<HTMLDivElement | null>(null);
   const loadingRef = useRef<HTMLDivElement | null>(null);
+  const errorRef = useRef<HTMLDivElement | null>(null);
   const messagesLength = session.messages.length;
   const status = session.status;
-  const baseline = useRef({ mode: activeMode, len: messagesLength, status });
+  const baseline = useRef({
+    mode: activeMode,
+    len: messagesLength,
+    status,
+    fresh: true,
+  });
 
   useEffect(() => {
     const b = baseline.current;
-    if (b.mode !== activeMode) {
-      /* entering this channel — stay at the beginning */
-      baseline.current = { mode: activeMode, len: messagesLength, status };
-      topRef.current?.scrollIntoView({ block: "start" });
+    const sameMode = b.mode === activeMode;
+    const grew = sameMode && messagesLength !== b.len;
+    const startedLoading =
+      sameMode && !grew && status === "loading" && b.status !== "loading";
+    const becameError =
+      sameMode &&
+      !grew &&
+      !startedLoading &&
+      status === "error" &&
+      b.status !== "error";
+
+    baseline.current = {
+      mode: activeMode,
+      len: messagesLength,
+      status,
+      fresh: false,
+    };
+
+    if (b.fresh || !sameMode) {
+      /* First sight of the channel — arriving from the observatory the
+         transmission may ALREADY be forming (a suggestion was struck
+         and the channel mounted mid-reception): meet it where it
+         forms, never wait above the older thread. A channel entering
+         with a failed transmission meets the error; otherwise it
+         rests at its beginning. */
+      if (status === "loading") {
+        loadingRef.current?.scrollIntoView({ block: "start" });
+      } else if (status === "error") {
+        errorRef.current?.scrollIntoView({ block: "start" });
+      } else if (!sameMode) {
+        topRef.current?.scrollIntoView({ block: "start" });
+      }
       return;
     }
-    const grew = messagesLength !== b.len;
-    const startedLoading = status === "loading" && b.status !== "loading";
     if (grew) {
-      baseline.current = { mode: activeMode, len: messagesLength, status };
       latestRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    } else if (startedLoading) {
-      baseline.current = { mode: activeMode, len: messagesLength, status };
+      /* the answer must own the frame — re-affirm once the entrance
+         has settled, in case the first glide was preempted */
+      const id = window.setTimeout(() => {
+        latestRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }, 450);
+      return () => window.clearTimeout(id);
+    }
+    if (startedLoading) {
       loadingRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+    if (becameError) {
+      errorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }, [activeMode, messagesLength, status]);
 
@@ -709,7 +756,10 @@ export function TransmissionView() {
       )}
 
       {session.status === "error" && (
-        <div className="scope-frame-card mt-8 rounded-2xl glass p-6 text-center">
+        <div
+          ref={errorRef}
+          className="scope-frame-card mt-8 rounded-2xl glass p-6 text-center"
+        >
           <p className="text-[16px] leading-relaxed text-foreground/85">
             {t(
               "The field received your question but could not complete the transmission."
