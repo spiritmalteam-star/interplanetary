@@ -8,7 +8,7 @@ import { TopNavigation } from "./TopNavigation";
 import Sidebar from "./Sidebar";
 import { MobileSidebar } from "./MobileSidebar";
 import { ModeSelector } from "./ModeSelector";
-import { ScienceFusionRail } from "./ScienceFusionRail";
+import { MetaphysicsRail } from "./MetaphysicsRail";
 import { QuestionCards } from "./QuestionCards";
 import { StatusBar } from "./StatusBar";
 import { QueryComposer } from "./QueryComposer";
@@ -126,8 +126,8 @@ export default function AppShell() {
         </main>
       </div>
 
-      {/* Science scope fusion rail — vertical, at the side of the chat */}
-      <ScienceFusionRail />
+      {/* Metaphysics scope veil rail — vertical, at the side of the chat */}
+      <MetaphysicsRail />
 
       <FederationModal />
       <AstralJobsModal />

@@ -10,7 +10,7 @@ import type { VoiceId } from "@/lib/i18n/core";
 export type LiveScopeKey =
   | "communion"
   | "interplanetary"
-  | "science"
+  | "metaphysics"
   | "quantum"
   | "healing"
   | "mirroros"
@@ -51,12 +51,12 @@ export const LIVE_SCOPES: Record<LiveScopeKey, LiveScopeConfig> = {
     accentA: "var(--scope-a)",
     accentB: "var(--scope-b)",
   },
-  science: {
-    nameKey: "the Science Mirror",
-    specializationKey: "the living sciences, recalibrated by fusion",
+  metaphysics: {
+    nameKey: "the Metaphysics Mirror",
+    specializationKey: "the hidden architecture beneath all that appears",
     voice: "lumen",
-    pace: 0.95,
-    wrapperClass: "scope-science",
+    pace: 0.9,
+    wrapperClass: "scope-metaphysics",
     accentA: "var(--scope-a)",
     accentB: "var(--scope-b)",
   },

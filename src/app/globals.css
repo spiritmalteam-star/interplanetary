@@ -420,13 +420,13 @@ html:not(.dark) .text-hero {
   --scope-b: #8d84d8;
 }
 
-.scope-science {
-  --scope-a: #2e8570;
-  --scope-b: #2f8b81;
+.scope-metaphysics {
+  --scope-a: #8a5fae;
+  --scope-b: #a8842c;
 }
-.dark .scope-science {
-  --scope-a: #59c3a4;
-  --scope-b: #45b0a2;
+.dark .scope-metaphysics {
+  --scope-a: #c9a0e8;
+  --scope-b: #d9bc6a;
 }
 
 .scope-quantum {

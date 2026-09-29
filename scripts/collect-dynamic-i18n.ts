@@ -5,7 +5,8 @@
    removed Interplanetary Biology vocabulary). */
 import { readFileSync, writeFileSync } from "node:fs";
 import { scopeSuggestionPools } from "../src/lib/data/suggestions.ts";
-import { giftLines, labFrequencies } from "../src/lib/data/science.ts";
+import { giftLines, labFrequencies, schools, veils, modeContext } from "../src/lib/data/metaphysics.ts";
+import { LIVE_SCOPES } from "../src/lib/live-scopes.ts";
 import { federationBodies, federationTreaties, federationPrinciples } from "../src/lib/data/federation.ts";
 import { SCOPE_META } from "../src/lib/entity-utils.ts";
 import {
@@ -307,6 +308,21 @@ for (const f of labFrequencies) {
   set.add(f.label);
   set.add(f.hint);
 }
+
+/* the metaphysics veil rail — schools and veils (labels) */
+for (const p of [...schools, ...veils]) set.add(p.label);
+
+/* live-call scope identity + per-scope meta labels/taglines + per-mode
+   context lines (all rendered through dynamic t(value) call sites) */
+for (const cfg of Object.values(LIVE_SCOPES)) {
+  set.add(cfg.nameKey);
+  set.add(cfg.specializationKey);
+}
+for (const meta of Object.values(SCOPE_META)) {
+  set.add(meta.label);
+  set.add(meta.tagline);
+}
+for (const line of Object.values(modeContext)) if (line) set.add(line);
 
 /* per-scope loading phases */
 for (const meta of Object.values(SCOPE_META)) for (const p of meta.phases) set.add(p);

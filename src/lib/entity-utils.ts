@@ -81,17 +81,17 @@ export const SCOPE_META: Record<
       "Weaving the transmission…",
     ],
   },
-  science: {
-    label: "Science",
-    tagline: "Verified knowledge · honest wonder",
-    imageKey: "mode-science",
+  metaphysics: {
+    label: "Metaphysics",
+    tagline: "Beneath the seen · the architecture of being",
+    imageKey: "mode-metaphysics",
     ornament: "grid",
-    glyph: "🔬",
+    glyph: "🔮",
     phases: [
-      "Calibrating instruments…",
-      "Consulting the documented record…",
-      "Separating evidence from speculation…",
-      "Composing the reading…",
+      "Still the surface of thought…",
+      "Lifting the first veil…",
+      "Following the question downward…",
+      "Listening beneath the seen…",
     ],
   },
   quantum: {

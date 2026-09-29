@@ -30,7 +30,7 @@ export const SECTION_SCENES = [
   "mode-healing",
   "mode-interplanetary",
   "mode-quantum",
-  "mode-science",
+  "mode-metaphysics",
 ] as const;
 
 /** A deterministic thematic scene for a profile. The salt separates

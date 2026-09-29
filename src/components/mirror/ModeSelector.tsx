@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { modes, modeContext } from "@/lib/data/science";
+import { modes, modeContext } from "@/lib/data/metaphysics";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";

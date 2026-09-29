@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { RefreshCw, Zap } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
-import { giftLines, labFrequencies } from "@/lib/data/science";
+import { giftLines, labFrequencies } from "@/lib/data/metaphysics";
 import { sectionImage } from "@/lib/entity-utils";
 import { cn } from "@/lib/utils";
 import { Slider } from "@/components/ui/slider";

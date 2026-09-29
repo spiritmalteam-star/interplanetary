@@ -118,7 +118,7 @@ const emptySession = (): ScopeSession => ({
 
 const emptySessions = (): Record<Mode, ScopeSession> => ({
   interplanetary: emptySession(),
-  science: emptySession(),
+  metaphysics: emptySession(),
   quantum: emptySession(),
   healing: emptySession(),
 });
@@ -147,8 +147,8 @@ export interface OsMessage {
 
 interface MirrorState {
   activeMode: Mode;
-  activeScienceField: string | null;
-  activeDirection: string | null;
+  activeSchool: string | null;
+  activeVeil: string | null;
   sidebarTab: SidebarTab;
   search: string;
   modal: ModalState;
@@ -221,8 +221,8 @@ interface MirrorState {
   bootPreferences: () => void;
 
   setMode: (mode: Mode) => void;
-  setScienceField: (id: string | null) => void;
-  setDirection: (id: string | null) => void;
+  setSchool: (id: string | null) => void;
+  setVeil: (id: string | null) => void;
   setSidebarTab: (tab: SidebarTab) => void;
   setSearch: (value: string) => void;
   openModal: (modal: NonNullable<ModalState>) => void;
@@ -261,7 +261,7 @@ interface MirrorState {
     attachments?: ChatAttachment[]
   ) => Promise<void>;
   /** The Universal Visualization Engine in the scope channels — the
-      Interplanetary, Science, Quantum and Healing mirrors also answer
+      Interplanetary, Metaphysics, Quantum and Healing mirrors also answer
       in images when the visitor asks to see. `regenerateOf` repaints
       one existing artifact in place. */
   askScopeVisual: (
@@ -337,8 +337,8 @@ const nextMessageId = () => `m-${Date.now().toString(36)}-${(messageCounter++).t
 
 export const useMirror = create<MirrorState>()((set, get) => ({
   activeMode: "interplanetary",
-  activeScienceField: null,
-  activeDirection: null,
+  activeSchool: null,
+  activeVeil: null,
   sidebarTab: "civilizations",
   search: "",
   modal: null,
@@ -401,20 +401,20 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       };
     }),
 
-  setScienceField: (id) =>
+  setSchool: (id) =>
     set((s) => ({
-      activeScienceField: s.activeScienceField === id ? null : id,
-      /* FUSION CLARITY LAW — any recalibration re-tunes the science
+      activeSchool: s.activeSchool === id ? null : id,
+      /* VEIL CLARITY LAW — any recalibration re-tunes the metaphysics
          channel back to a quiet origin. */
-      sessions: { ...s.sessions, science: emptySession() },
+      sessions: { ...s.sessions, metaphysics: emptySession() },
     })),
 
-  setDirection: (id) =>
+  setVeil: (id) =>
     set((s) => ({
-      activeDirection: s.activeDirection === id ? null : id,
-      /* FUSION CLARITY LAW — any recalibration re-tunes the science
+      activeVeil: s.activeVeil === id ? null : id,
+      /* VEIL CLARITY LAW — any recalibration re-tunes the metaphysics
          channel back to a quiet origin. */
-      sessions: { ...s.sessions, science: emptySession() },
+      sessions: { ...s.sessions, metaphysics: emptySession() },
     })),
 
   setSidebarTab: (tab) => set({ sidebarTab: tab }),
@@ -813,8 +813,8 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         body: JSON.stringify({
           query,
           mode,
-          scienceField: get().activeScienceField,
-          direction: get().activeDirection,
+          school: get().activeSchool,
+          veil: get().activeVeil,
           language: get().language,
           history,
           ...(payload ?? {}),

@@ -2,7 +2,7 @@
 /*  Mirror Entity Laboratory — shared types & archive data            */
 /* ------------------------------------------------------------------ */
 
-export type Mode = "interplanetary" | "science" | "quantum" | "healing";
+export type Mode = "interplanetary" | "metaphysics" | "quantum" | "healing";
 export type SidebarTab = "civilizations" | "interdim" | "innerearth";
 
 /** A scope determines the visual theme of the chat/transmission frame. */
@@ -69,7 +69,7 @@ export interface FederationCard {
   imageKey?: string;
 }
 
-export interface SciencePill {
+export interface MetaphysicsPill {
   id: string;
   emoji: string;
   label: string;
