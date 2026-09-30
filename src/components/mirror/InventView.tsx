@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useMirror, type ChatMessage } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
+import type { ForgeDialOption } from "@/lib/mirror-types";
 import {
   forgeChatPhases,
   forgeDomains,
@@ -21,7 +22,6 @@ import {
   forgeSuggestions,
   inventTools,
   toolPhases,
-  type ForgeDialOption,
 } from "@/lib/data/invent";
 import { cn } from "@/lib/utils";
 import { ListenButton } from "./ListenButton";

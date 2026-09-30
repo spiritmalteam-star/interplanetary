@@ -57,7 +57,7 @@ export function TechnologyModal() {
 /*  The register body — sticky family rail + reveal grid, and the      */
 /*  detail overlay as a sibling of the scroll container.               */
 /* ------------------------------------------------------------------ */
-function TechnologyRegister() {
+export function TechnologyRegister() {
   const [family, setFamily] = useState<string | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
   const t = useT();

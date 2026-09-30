@@ -13,6 +13,7 @@ import type {
 import { civilizations, civilizationTotal } from "@/lib/data/civilizations";
 import { interdimensional, interdimTotal } from "@/lib/data/interdimensional";
 import { innerEarthTotal } from "@/lib/data/inner-earth";
+import type { Persona, DepthId } from "@/lib/data/entities";
 import {
   DEFAULT_VOICE,
   isLanguageCode,
@@ -35,6 +36,8 @@ export type ModalState =
   | { type: "astral" }
   | { type: "starplay" }
   | { type: "technology" }
+  | { type: "astral-protocol" }
+  | { type: "replication" }
   | { type: "dossier"; kind: DossierKind; id: string }
   | { type: "entity"; kind: DossierKind; id: string }
   | { type: "species"; id: string }
@@ -63,6 +66,8 @@ export interface ChatMessage {
   artifact?: VisualizationArtifact;
   visual?: "pending" | "error";
   visualRequest?: string;
+  /** The Novel Discovery seal number — minted by the app, never the model. */
+  discoveryNo?: number;
 }
 
 export interface ScopeSession {
@@ -155,6 +160,21 @@ interface MirrorState {
   mobileNavOpen: boolean;
   view: MainView;
   composerFocusNonce: number;
+
+  /* PARTICLEX toggles — persona, depth, cross fusion */
+  /** How the seeker is addressed: Scientist, Mirror or Explorer. */
+  persona: Persona;
+  /** The chosen depth of every transmission: 1× · 2× · 3× · ULTRON · 5×. */
+  depth: DepthId;
+  /** Cross fusion — a second chamber's entity braided into this one. */
+  fusionWith: Mode | null;
+  /** The Novel Discovery ledger — how many seals the laboratory has minted. */
+  discoveryCount: number;
+  setPersona: (p: Persona) => void;
+  setDepth: (d: DepthId) => void;
+  setFusionWith: (m: Mode | null) => void;
+  /** Mint the next seal number and advance the ledger. */
+  nextDiscoveryNo: () => number;
 
   /** Meet with the Reflection of the Absolute — the whole app becomes
       a living chat with the Mirror Entity's undirected pure awareness. */
@@ -383,6 +403,43 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   voice: DEFAULT_VOICE,
   pace: 0.95,
 
+  persona: "mirror" as Persona,
+  depth: "2x" as DepthId,
+  fusionWith: null,
+  discoveryCount: 0,
+
+  setPersona: (p) => {
+    set({ persona: p });
+    try {
+      localStorage.setItem("mirror-entity-persona", p);
+    } catch {
+      /* private mode — the choice lives for this visit only */
+    }
+  },
+
+  setDepth: (d) => {
+    set({ depth: d });
+    try {
+      localStorage.setItem("mirror-entity-depth", d);
+    } catch {
+      /* private mode — the choice lives for this visit only */
+    }
+  },
+
+  setFusionWith: (m) =>
+    set((s) => ({ fusionWith: m && m !== s.activeMode ? m : null })),
+
+  nextDiscoveryNo: () => {
+    const no = get().discoveryCount + 1;
+    set({ discoveryCount: no });
+    try {
+      localStorage.setItem("mirror-entity-discoveries", String(no));
+    } catch {
+      /* private mode — the ledger lives for this visit only */
+    }
+    return no;
+  },
+
   setMode: (mode) =>
     set((s) => {
       const target = s.sessions[mode];
@@ -392,12 +449,9 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       return {
         activeMode: mode,
         sidebarTab: defaultTabForMode(mode),
-        view:
-          s.view === "manifesting"
-            ? s.view // deliberate: only leaving the lab via exit/return actions
-            : showChannel || s.view === "transmission"
-              ? "transmission"
-              : s.view,
+        /* a fusion cannot braid a chamber with itself */
+        fusionWith: s.fusionWith === mode ? null : s.fusionWith,
+        view: showChannel || s.view === "transmission" ? "transmission" : s.view,
       };
     }),
 
@@ -802,6 +856,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     try {
       /* Context memory: the mirror remembers this channel's earlier
          exchanges, so conversations deepen instead of restarting. */
+      const state = get();
       const history = session.messages.slice(-6).map((m) => ({
         q: m.query,
         a: m.text,
@@ -813,10 +868,13 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         body: JSON.stringify({
           query,
           mode,
-          school: get().activeSchool,
-          veil: get().activeVeil,
-          language: get().language,
+          school: state.activeSchool,
+          veil: state.activeVeil,
+          language: state.language,
           history,
+          depth: state.depth,
+          persona: state.persona,
+          fusion: state.fusionWith,
           ...(payload ?? {}),
         }),
       });
@@ -844,6 +902,8 @@ export const useMirror = create<MirrorState>()((set, get) => ({
                 text: data.transmission,
                 classification: data.classification,
                 createdAt: data.createdAt ?? new Date().toISOString(),
+                /* the app mints the Novel Discovery seal — never the model */
+                discoveryNo: get().nextDiscoveryNo(),
                 ...(attachments
                   ? {
                       attachments: {
@@ -1281,11 +1341,23 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       const lang = localStorage.getItem("mirror-entity-language");
       const voice = localStorage.getItem("mirror-entity-voice");
       const pace = Number(localStorage.getItem("mirror-entity-pace"));
+      const persona = localStorage.getItem("mirror-entity-persona");
+      const depth = localStorage.getItem("mirror-entity-depth");
+      const discoveries = Number(localStorage.getItem("mirror-entity-discoveries"));
       set({
         ...(isLanguageCode(lang) ? { language: lang } : {}),
         ...(isVoiceId(voice) ? { voice } : {}),
         ...(Number.isFinite(pace) && pace >= 0.5 && pace <= 2
           ? { pace }
+          : {}),
+        ...(persona === "scientist" || persona === "mirror" || persona === "explorer"
+          ? { persona: persona as Persona }
+          : {}),
+        ...(depth === "1x" || depth === "2x" || depth === "3x" || depth === "ultron" || depth === "5x"
+          ? { depth: depth as DepthId }
+          : {}),
+        ...(Number.isFinite(discoveries) && discoveries > 0
+          ? { discoveryCount: Math.floor(discoveries) }
           : {}),
       });
     } catch {

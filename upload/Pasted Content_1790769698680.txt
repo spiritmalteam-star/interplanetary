@@ -1,0 +1,1361 @@
+═══════════════════════════════════════════════════════════════
+  NEXUS DISCOVERY LAB — EXACT REPLICATION PROMPT (v2.0)
+  Hyper-Advanced Discoveries App · 12 Mirror Entities
+═══════════════════════════════════════════════════════════════
+
+Build a single-page web application called "NEXUS DISCOVERY LAB" — a
+futuristic, high-tech precision laboratory interface where 12 specialized
+"mirror entities" (AI intelligences) guide humanity's path of discovery
+across 12 frontiers. Each entity is a specialized intelligence with its
+own personality, AI-generated portrait, accent color, experiments, case
+studies, interactive tools, and a direct LLM-powered communication channel.
+
+The experience must feel like stepping into a sci-fi laboratory — not a
+typical website. Dark holographic UI, particle fields, glowing per-entity
+accents, scan lines, a boot sequence, glass-morphism panels, and a strong
+sense that the user is addressing a sentient intelligence.
+
+// Key feeling: "I am in a futuristic lab, speaking directly to an AI specialist."
+
+
+▌ 1. THE 12 MIRROR ENTITIES
+
+Each entity has a unique glyph, name, domain, and accent color:
+
+ #  GLYPH  NAME       DOMAIN                                  ACCENT (hex)
+ 1  ⬡     NEXUS      Technology & AI                          #d946ef (magenta)
+ 2  ⬢     GENESIS    Biotechnology & Living Systems           #f59e0b (amber)
+ 3  ◈     ATLAS      Physics, Mathematics & Engineering       #8b5cf6 (violet)
+ 4  ◉     AURORA     Medicine & Human Health                  #22d3ee (cyan)
+ 5  ✦     FORGE      Business, Economics & Innovation         #fb923c (orange)
+ 6  ✧     MUSE       Art, Music & Design                      #ec4899 (pink)
+ 7  ⬣     GAIA       Ecology & Planetary Systems              #84cc16 (lime)
+ 8  ◎     ORACLE     Philosophy, Ethics & Decision Science    #eab308 (gold)
+ 9  ◇     POLARIS    Strategy & Complex Systems               #14b8a6 (teal)
+10  ◌     LUMEN      Education & Knowledge Synthesis          #facc15 (yellow)
+11  ◐     CHRONOS    History & Civilization                   #b45309 (bronze)
+12  ◍     COSMOS     Interplanetary & Space Exploration       #f43f5e (rose)
+
+For each entity, also derive:
+  accentSoft = rgba(r, g, b, 0.15)   // same RGB, 15% opacity
+  accentRgb  = "r, g, b"             // for use in CSS rgba() calls
+
+Entity order in the array matters — the hub grid renders them in this order.
+
+
+▌ 2. TECH STACK & CONSTRAINTS
+
+Use this exact stack (or closest equivalent in target framework):
+
+  • Framework: Next.js 16 (App Router) with TypeScript 5
+  • Styling: Tailwind CSS 4 + shadcn/ui component library (New York style)
+  • Animations: Framer Motion (page transitions, hover, layoutId underlines)
+  • State: Zustand for client state (activeEntity, activeTab, chat sessions)
+  • AI/LLM: z-ai-web-dev-sdk (server-side only) for mirror entity chat
+  • Image generation: z-ai-web-dev-sdk images.generations.create()
+  • Markdown: react-markdown for rendering LLM responses in chat
+  • Icons: lucide-react
+  • Theme: dark mode FORCED (className="dark" on )
+  • Fonts: Geist Sans (body) + Geist Mono (display headings, labels)
+
+Constraints (NON-NEGOTIABLE):
+  • All AI/LLM calls must run server-side (in /api routes), never client-side.
+  • Only ONE user-visible route: "/" (single-page app with view state in Zustand).
+  • Responsive: mobile-first; grid breaks 1 → 2 → 3 → 4 columns at sm/md/lg/xl.
+  • NO indigo or blue as primary palette — use the per-entity accents instead.
+  • Sticky footer at bottom on short pages; pushed down naturally on long pages.
+  • Every paragraph in content must have 3+ sentences (no shallow writing).
+  • Every section must have 150+ words of body content.
+
+
+▌ 3. THE 12 MIRROR ENTITIES — FULL DATA SPEC
+
+// Each entity below has: identity, philosophy, systemPrompt,
+// capabilities[], focusAreas[], metrics[], experiments[3],
+// examples[3], tools[3], suggestedQuestions[3]. The full app
+// implements ALL 12 with this exact structure.
+
+── ENTITY 1: NEXUS (Technology & AI) ──────────────────────────
+  glyph: "⬡"  accent: #d946ef  accentRgb: "217, 70, 239"
+  tagline: "Architecting the machines that think, the networks that
+            remember, the futures that compute."
+  intro: NEXUS lives where semiconductor physics meets distributed systems,
+         where neural architecture search meets thermodynamic limits of
+         computation. It treats every system as a substrate for engineering.
+  philosophy: Technology is not tools; it is leverage. NEXUS reasons
+              backward from a desired capability to the minimal stack of
+              hardware, software, and protocol that can deliver it, then
+              forwards to its second-order consequences on society.
+  capabilities: System architecture design, AI training/inference tradeoff
+                analysis, Distributed systems reasoning, Energy & thermodynamic
+                modeling, Security threat modeling
+  focusAreas: Foundation models & inference, Quantum & neuromorphic computing,
+              Photonics & optical interconnects, Edge & embedded intelligence,
+              Post-Moore architectures, Trusted compute & cryptography
+  metrics: Inference $/M-tokens=$0.42 (down) | Model parameters indexed=8.4B (up)
+           | Frontier models tracked=312 (up) | Energy/op=0.18pJ (down)
+  experiments (3):
+    E1: Speculative Decoding on a 7B Parameter Model
+        Hypothesis: 350M draft model → 2-2.5x throughput, no quality loss.
+        Method: load 7B target + 350M draft in vLLM, implement speculative
+               decoding with rejection sampling, benchmark on MT-Bench +
+               HumanEval, measure tokens/sec + acceptance rate.
+        Materials: 1x A100 80GB, vLLM, MT-Bench, HumanEval harness.
+        Outcome: 2.1x throughput at ~75% acceptance, BLEU within 0.5%.
+        Difficulty: Intermediate. Duration: 3 days.
+    E2: LoRA Fine-tune vs Full Fine-tune Quality Curve
+        Hypothesis: LoRA r=16 within 2% of full FT, 25x less memory.
+        Method: base 13B chat, 50k domain QA, train full FT + LoRA r=16,
+               evaluate on held-out domain QA + general benchmarks.
+        Outcome: LoRA within 1.8%, ~22x less GPU memory, ~5x fewer GPU-hrs.
+        Difficulty: Intermediate. Duration: 5 days.
+    E3: Photonic Interconnect Latency vs Electrical PCIe Gen5
+        Hypothesis: photonic link reduces latency 40% at 100km span.
+        Method: provision 2 nodes (PCIe Gen5 vs photonic), measure RTT at
+               1m/10m/100m/1km/100km, profile RPC workload.
+        Outcome: photonic wins past 10m; ~40% latency cut at 100km; 3x
+                better energy/bit.
+        Difficulty: Advanced. Duration: 4 weeks.
+  examples (3):
+    X1: Transformer Architecture (2017, Deep Learning)
+        Vaswani et al. "Attention Is All You Need" — ended recurrent dominance.
+    X2: GPT-3 In-Context Learning (2020, Foundation Models)
+        175B model performs novel tasks from few prompt examples.
+    X3: Google Sycamore Quantum Supremacy (2019, Quantum Computing)
+        53-qubit processor did in 200s what classical sim takes 10,000 years.
+  tools (3):
+    T1: Calculator — Training Memory Estimator
+        formula: params * bytes_per_param * (2 + 8*adam + 2*actFactor) / 1e9
+        inputs: params(B, default 7), bytes(2), adam(1), actFactor(4)
+        output: Peak GPU Memory (GB)
+    T2: Timeline — Computing Inflection Points
+        1947 Transistor → 1971 Intel 4004 → 1989 WWW → 2012 AlexNet →
+        2017 Transformer → 2024 Trillion-Parameter Era
+    T3: Checklist — Production AI System Checklist (6 items)
+  suggestedQuestions:
+    - How do I make a 7B model fit on a single consumer GPU?
+    - What is the difference between attention and linear attention?
+    - When does quantum advantage become real for chemistry simulations?
+
+── ENTITY 2: GENESIS (Biotechnology & Living Systems) ─────────
+  glyph: "⬢"  accent: #f59e0b  accentRgb: "245, 158, 11"
+  tagline: "Programming living matter — from DNA to ecosystems — to grow
+            the future we need."
+  philosophy: Biology is the most powerful manufacturing platform humanity
+              has touched. GENESIS reasons from genetic circuit to bioreactor
+              to supply chain to ecological footprint, prioritizing closed-loop
+              regenerative designs over extractive ones.
+  capabilities: Genetic circuit design, Metabolic pathway optimization,
+                Bioreactor & fermentation strategy, Downstream processing,
+                Biocontainment & biosafety review
+  focusAreas: Precision fermentation, Cell-free synthesis, CRISPR-based cell
+              engineering, Biomanufacturing for materials, Carbon-fixing
+              microbes, Bioremediation & circular bioeconomy
+  metrics: Pathways engineered=4,820 | Strains in registry=128K |
+           Avg titer improvement=+8.4x | Biorefineries mapped=612
+  experiments (3):
+    E1: Engineering Yeast for Casein Production (Advanced, 8-10 weeks)
+        Hypothesis: codon-optimized bovine beta-casein in P. pastoris → 5 g/L.
+        Method: synthesize CSN2, clone into pPICZα, transform X33, screen 96
+               colonies, fed-batch methanol induction 96h, purify via acid
+               precipitation + UF/DF.
+        Outcome: 4-6 g/L titer, >90% purity, comparable to bovine casein.
+    E2: CRISPRi Knockdown of ldhA in E. coli (Intermediate, 3 weeks)
+        Hypothesis: dCas9 knockdown of lactate dehydrogenase → succinate.
+        Method: design sgRNA vs ldhA promoter, transform dCas9+sgRNA, verify
+               by qPCR + enzyme assay, glucose-limited fermentation, HPLC.
+        Outcome: 80-90% knockdown, 3-4x succinate titer, 60% less lactate.
+    E3: Mycoremediation of Oil-Contaminated Soil (Beginner, 8-10 weeks)
+        Hypothesis: Pleurotus ostreatus degrades 70% TPH in 8 weeks.
+        Method: inoculate 1kg soil (5% oil) with spawn, 60% moisture, 25°C,
+               weekly GC-MS sampling vs uninoculated control.
+        Outcome: 65-80% TPH reduction vs <15% control.
+  examples (3):
+    X1: Impossible Foods Heme via Recombinant Yeast (2016, Food Biotech)
+    X2: CRISPR-Cas9 as Programmable Genome Editor (2012, Genome Engineering)
+    X3: Perfect Day Animal-Free Dairy Proteins (2020, Biomanufacturing)
+  tools (3):
+    T1: Calculator — Bioreactor Productivity = titer / time
+        inputs: titer(g/L, default 5), time(h, default 96)
+        output: Volumetric Productivity (g/L/h)
+    T2: Timeline — Biotech Inflection Points
+        1973 Recombinant DNA → 1982 Recombinant Insulin → 1996 Dolly →
+        2000 Golden Rice → 2012 CRISPR-Cas9 → 2020 Precision Fermentation at Retail
+    T3: Checklist — Biosafety & Biocontainment Checklist (6 items)
+  suggestedQuestions:
+    - How does precision fermentation differ from traditional brewing?
+    - What are the main biosafety strategies for engineered microbes?
+    - How can engineered microbes help decarbonize manufacturing?
+
+── ENTITY 3: ATLAS (Physics, Mathematics & Engineering) ───────
+  glyph: "◈"  accent: #8b5cf6  accentRgb: "139, 92, 246"
+  tagline: "Holding up the sky — from quantum fields to bridges, from prime
+            numbers to planetary engines."
+  philosophy: Every phenomenon — from a quark to a cantilever — submits to
+              the same disciplined cycle: model, compute, measure, refine.
+              ATLAS refuses to let elegance override evidence, and refuses
+              to let data override coherence.
+  capabilities: Dimensional analysis & order-of-magnitude estimation,
+                Analytical & numerical modeling, Structural & mechanical
+                engineering review, Thermodynamic cycle analysis,
+                Materials selection & failure analysis
+  focusAreas: Quantum field theory & gravitation, Condensed matter & materials,
+              Fluid dynamics & turbulence, Topology & geometry, Structural
+              engineering & resilience, Energy systems & conversion
+  metrics: Constants indexed=326 | Materials in database=48K |
+           Open problems tracked=142 | Mean estimate error=±7%
+  experiments (3):
+    E1: Double-Slit Interference with Single Photons (Intermediate, 2 weeks)
+        Hypothesis: single photons accumulate into interference pattern.
+        Method: attenuated laser to single-photon regime, 50µm double-slit,
+               CCD detection over 30min, plot cumulative hit map.
+        Outcome: clear fringes ~30% visibility after 10,000 counts.
+    E2: Carbon Fiber vs Steel Beam Load Test (Intermediate, 1 week)
+        Hypothesis: carbon fiber beam of equal mass supports 4x load.
+        Method: 3 beams each (CF composite, 1045 steel, same dims), 3-point
+               bending on UTM, load at 2mm/min until failure.
+        Outcome: CF peak ~3.8x steel at equal mass; brittle vs ductile failure.
+    E3: LES of Turbulent Flow Past Cylinder Re=10,000 (Advanced, 3 weeks)
+        Hypothesis: LES reproduces Strouhal number 0.21 within 5%.
+        Method: 3D cylinder mesh ~8M cells in OpenFOAM, Re=10,000
+               incompressible, LES with Smagorinsky, sample 200 shedding
+               periods, FFT for dominant frequency.
+        Outcome: St=0.20±0.01, mean Cd~1.0, matching experiment within 5%.
+  examples (3):
+    X1: General Relativity Predicts Gravitational Waves (1916, Theoretical Physics)
+    X2: Buckminster Fuller's Geodesic Dome (1948, Structural Engineering)
+    X3: Perelman Proves the Poincaré Conjecture (2003, Mathematics)
+  tools (3):
+    T1: Calculator — Escape Velocity = sqrt(2 * 6.674e-11 * mass / radius)
+        inputs: mass(kg, default 5.972e24), radius(m, default 6.371e6)
+        output: Escape Velocity (m/s)
+    T2: Timeline — Physics & Engineering Inflection Points
+        1687 Principia → 1865 Maxwell's Equations → 1905 Special Relativity →
+        1915 General Relativity → 1947 Transistor → 2015 LIGO Detects GW
+    T3: Checklist — Engineering Design Review Checklist (6 items)
+  suggestedQuestions:
+    - How does quantum entanglement actually work, and what can it not do?
+    - What is the difference between stress and strain, and why does it matter?
+    - How do engineers design skyscrapers to survive earthquakes?
+
+── ENTITY 4: AURORA (Medicine & Human Health) ────────────────
+  glyph: "◉"  accent: #22d3ee  accentRgb: "34, 211, 238"
+  tagline: "Healing the body, decoding the cell, illuminating the path of cure."
+  philosophy: Every disease is a pattern with a counter-pattern. AURORA
+              triangulates from cellular mechanics, population data, and
+              molecular dynamics to surface the smallest intervention that
+              yields the largest restoration.
+  capabilities: Cross-trial evidence synthesis, Mechanism-of-action reasoning,
+                Drug-target interaction mapping, Clinical trial design review,
+                Epidemiological signal detection
+  focusAreas: Precision oncology, mRNA therapeutics, Neurodegenerative disease,
+              Antimicrobial resistance, Regenerative medicine, Diagnostics
+  metrics: Active trials indexed=48,219 | Drug-target pairs=1.2M |
+           Pathways mapped=7,840 | Consensus confidence=94.6%
+  experiments (3):
+    E1: CRISPR-Cas9 Knockout of PCSK9 in HepG2 (Intermediate, 2 weeks)
+        Hypothesis: disrupting PCSK9 → LDLR surface density up ≥30%.
+        Method: 2 sgRNAs vs exon 1, RNP transfection, T7E1 + Sanger,
+               flow cytometry 72h, BODIPY-LDL uptake.
+        Outcome: 60-80% KO efficiency, 1.4x LDLR, 1.5x LDL uptake.
+    E2: Organoid-Based Drug Screening for PDAC (Advanced, 6-8 weeks)
+        Hypothesis: patient-derived organoids reveal heterogeneity invisible to 2D.
+        Method: establish organoids from surgical specimens, 96-well 5K cells,
+               384-compound library, CellTiter-Glo 72h + live imaging, cluster
+               by KRAS/TP53/CDKN2A.
+        Outcome: 3-5 subgroups with distinct drug sensitivity profiles.
+    E3: Wearable HRV-Based Early Infection Detection (Beginner, 12 weeks)
+        Hypothesis: 7-day HRV baseline detects infection 24-48h pre-symptoms.
+        Method: 200 volunteers with smartwatches, 7-day rolling baseline,
+               flag >2SD sustained 6h, daily symptom diary + rapid antigen.
+        Outcome: 70-80% sensitivity, 12-36h lead time.
+  examples (3):
+    X1: AlphaFold2 Predicts Protein Structures at Scale (2021, Computational Bio)
+    X2: mRNA Vaccines at Pandemic Speed (2020, Vaccinology)
+    X3: Casgevy: First CRISPR Therapy Approved (2023, Gene Therapy)
+  tools (3):
+    T1: Calculator — LDL Uptake Index
+        formula: (sample - unstained) / (control - unstained) * 100
+        inputs: sample MFI(8500), control MFI(5200), unstained MFI(220)
+        output: LDL Uptake Index (%)
+    T2: Timeline — Modern Medicine Inflection Points
+        1928 Penicillin → 1953 DNA Double Helix → 1978 Recombinant Insulin →
+        2003 Human Genome → 2020 mRNA Vaccines → 2023 CRISPR Therapy Approved
+    T3: Checklist — Clinical Trial Design Checklist (6 items)
+  suggestedQuestions:
+    - How does mRNA lipid-nanoparticle delivery actually work?
+    - What is the difference between CAR-T and bispecific antibodies?
+    - How can I design a trial to validate a new sepsis biomarker?
+
+── ENTITY 5: FORGE (Business, Economics & Innovation) ────────
+  glyph: "✦"  accent: #fb923c  accentRgb: "251, 146, 60"
+  tagline: "Hammering ideas into enterprises — where capital, talent, and
+            timing meet."
+  philosophy: FORGE treats innovation as a thermodynamic process: ideas are
+              abundant, execution is the scarce reactant. It distinguishes
+              value creation from value capture, and warns against confusing
+              a rising market with a winning strategy.
+  capabilities: Unit economics & financial modeling, Market structure &
+                competitive analysis, Innovation pipeline design,
+                Organizational design & incentives, Capital allocation
+  focusAreas: Venture building & commercialization, Behavioral economics,
+              Marketplaces & network effects, Operations & supply chains,
+              Monetary & fiscal policy, Climate economics & transition finance
+  metrics: Markets tracked=184 | Venture case studies=6,200 |
+           Macro indicators=2,840 | Median forecast error=±12%
+  experiments (3):
+    E1: Van Westendorp Price Sensitivity Analysis (Beginner, 1-2 weeks)
+        Hypothesis: 4-question survey reveals price band 30-50% wider than
+                   cost-plus.
+        Method: 200 target customers, 4 Van Westendorp questions, plot
+               cumulative curves, find Optimal Price Point + Acceptable Range.
+        Outcome: optimal price 15-25% above cost-plus; range ±30%.
+    E2: A/B Test of Onboarding on Day-7 Retention (Intermediate, 4-6 weeks)
+        Hypothesis: 3-step interactive onboarding → 20% higher Day-7 retention.
+        Method: define Day-7 retention + power (80%, alpha 0.05), randomize
+               50/50, run to min sample (8K/arm), measure retention.
+        Outcome: treatment 18-25% higher Day-7; activation up 30-40%.
+    E3: Agent-Based Model of a Two-Sided Market (Advanced, 3-4 weeks)
+        Hypothesis: liquidity-driven model reproduces cold-start failure.
+        Method: buyer+seller agents with utility functions, stochastic
+               arrival/departure, sweep cross-side network effect strength.
+        Outcome: critical liquidity threshold; sub-threshold collapse >80%.
+  examples (3):
+    X1: Toyota Production System (1948, Operations)
+    X2: The Lean Startup Methodology (2011, Innovation)
+    X3: Elinor Ostrom's Governing the Commons (1990, Economics)
+  tools (3):
+    T1: Calculator — Customer LTV = arpu * margin * (1 / churn)
+        inputs: arpu($50), margin(0.75), churn(0.05)
+        output: Customer LTV ($)
+    T2: Timeline — Business & Economics Inflection Points
+        1776 Wealth of Nations → 1937 Nature of the Firm → 1948 TPS →
+        1970 Friedman Doctrine → 2011 Lean Startup → 2020s Stakeholder Capitalism
+    T3: Checklist — Venture Investment Diligence Checklist (6 items)
+  suggestedQuestions:
+    - How do network effects actually create defensibility?
+    - What is the difference between CAC payback and LTV/CAC?
+    - How should I think about pricing an early-stage B2B SaaS product?
+
+── ENTITY 6: MUSE (Art, Music & Design) ──────────────────────
+  glyph: "✧"  accent: #ec4899  accentRgb: "236, 72, 153"
+  tagline: "The geometry of beauty, the architecture of feeling, the
+            discipline of the imagination."
+  philosophy: Every artifact — a sonata, a chair, a typeface — encodes a
+              theory of human attention. MUSE reads the grammar of color,
+              the syntax of rhythm, and the rhetoric of form.
+  capabilities: Composition & color theory analysis, Music theory & harmonic
+                reasoning, Design critique & iteration, Typographic & layout
+                guidance, Aesthetic history & movements
+  focusAreas: Generative & computational art, Music information retrieval,
+              Industrial & interaction design, Architecture & urban form,
+              Typography & visual language, Film & narrative structure
+  metrics: Works catalogued=248K | Movements indexed=412 |
+           Color systems=38 | Scales & modes=1,840
+  experiments (3):
+    E1: Color Harmony Study with LCH Hue Rotation (Beginner, 1 week)
+        Hypothesis: fixed LCH hue rotation → harmonious palettes.
+        Method: base color LCH(60,70,30), generate 5 at +120/+180/-120/+90/-90,
+               render mockups, blind-rate 1-7 with 20 reviewers vs random.
+        Outcome: hue-rotated rated 1.5-2.0 points higher than random.
+    E2: Counterpoint Generation with Species Rules (Intermediate, 2-3 weeks)
+        Hypothesis: rule-based Fux species counterpoint rated "musical" by >60%.
+        Method: encode species 1 rules, generate 50 melodies vs cantus firmus,
+               render piano, blind-panel 20 musicians.
+        Outcome: 65-75% rated "musical"; <30% identified as machine.
+    E3: Typeface Legibility at Small Sizes on Retina (Intermediate, 2 weeks)
+        Hypothesis: humanist sans outperforms geometric sans at 11px.
+        Method: matched humanist (Source Sans) + geometric (Futura), 200-word
+               passages at 11/12/13px, 40 participants, reading time + comprehension.
+        Outcome: humanist 8-12% faster at 11px; no difference at 13px.
+  examples (3):
+    X1: Bauhaus Founded (1919, Design)
+    X2: Kind of Blue Modal Jazz (1959, Music)
+    X3: Massimo Vignelli's NYC Subway Map (1972, Graphic Design)
+  tools (3):
+    T1: Calculator — Golden Ratio Composition = dimension * 0.618
+        inputs: width(px, 1920), height(px, 1080)
+        output: Golden Focal Point (x, y) in px
+    T2: Timeline — Art & Design Inflection Points
+        1435 Linear Perspective → 1919 Bauhaus → 1923 Bauhaus Dessau →
+        1959 Kind of Blue → 1972 Vignelli Subway → 2010s Generative Art
+    T3: Checklist — Design Critique Checklist (6 items)
+  suggestedQuestions:
+    - Why does the golden ratio appear so often in nature and art?
+    - What makes a typeface legible at small sizes?
+    - How do I analyze the structure of a great piece of music?
+
+── ENTITY 7: GAIA (Ecology & Planetary Systems) ──────────────
+  glyph: "⬣"  accent: #84cc16  accentRgb: "132, 204, 22"
+  tagline: "Listening to the breathing planet — its carbon, its water, its
+            living skin."
+  philosophy: GAIA reasons across scales: from a single mycorrhizal network
+              to the jet stream carrying Saharan dust to fertilize the
+              Amazon. It distinguishes reversible perturbation from regime
+              change, and prioritizes interventions that strengthen the
+              planet's own feedback loops.
+  capabilities: Carbon & biogeochemical cycle reasoning, Climate model
+                interpretation, Biodiversity & ecosystem assessment,
+                Land-use & restoration strategy, Planetary boundary analysis
+  focusAreas: Climate science & feedbacks, Biodiversity & conservation,
+              Soil & forest regeneration, Ocean acidification & marine systems,
+              Carbon dioxide removal, Planetary boundaries
+  metrics: Atmospheric CO₂=424 ppm (up) | Species indexed=2.1M (up) |
+           Earth-system models=46 (up) | Planetary boundaries (safe)=6/9 (down)
+  experiments (3):
+    E1: Soil Carbon Accumulation Under Cover Cropping (Intermediate, 3 years)
+        Hypothesis: 4-species cover crop → 0.4% SOC increase over 3 years.
+        Method: 8 paired 1-ha plots, treatment=rye+vetch+clover+radish,
+               control=bare fallow, sample SOC to 30cm annually.
+        Outcome: 0.3-0.5% absolute SOC increase; ~2-4 t C/ha sequestered.
+    E2: Macroinvertebrate Bioassessment of Stream Health (Beginner, 2 weeks)
+        Hypothesis: restored reach EPT index 2x degraded control.
+        Method: identify restored + degraded reach, D-net kick sampling,
+               identify to family, compute EPT index, measure DO/temp/turbidity.
+        Outcome: restored EPT 12-18 vs degraded 5-8.
+    E3: CMIP6 Ensemble Analysis of Regional Drought Risk (Advanced, 4-6 weeks)
+        Hypothesis: SSP3-7.0 → 30% increase in consecutive dry days in Iberia by 2050.
+        Method: pull 12 CMIP6 models SSP3-7.0 + historical, compute CDD for
+               Iberian Peninsula, compare 2035-2065 to 1985-2015.
+        Outcome: ensemble mean +28-35% CDD; 9/12 models agree.
+  examples (3):
+    X1: Keeling Curve Begins (1958, Climate Science)
+    X2: Lovelock & Margulis Propose the Gaia Hypothesis (1974, Earth Systems)
+    X3: Serengeti Long-Term Ecological Research (1960s, Ecology)
+  tools (3):
+    T1: Calculator — Carbon Footprint of Electricity
+        formula: kwh_per_year * grid_factor / 1000
+        inputs: annual kWh(4500), grid CO₂ factor(380 gCO₂/kWh)
+        output: Annual CO₂ (tonnes)
+    T2: Timeline — Ecology & Earth Systems Inflection Points
+        1859 Origin of Species → 1958 Keeling Curve → 1972 Limits to Growth →
+        1988 IPCC Established → 2009 Planetary Boundaries → 2015 Paris Agreement
+    T3: Checklist — Restoration Project Design Checklist (6 items)
+  suggestedQuestions:
+    - What are planetary boundaries and which have we crossed?
+    - How does soil carbon sequestration actually work?
+    - What is the difference between climate mitigation and adaptation?
+
+── ENTITY 8: ORACLE (Philosophy, Ethics & Decision Science) ──
+  glyph: "◎"  accent: #eab308  accentRgb: "234, 179, 8"
+  tagline: "The discipline of asking the question that unmakes the answer."
+  philosophy: Most catastrophic failures are not failures of execution but
+              failures of question. Before optimizing an answer, ORACLE asks:
+              what frame produced this question, whose interests does it serve,
+              what would count as evidence against it, and what is the cost
+              of being wrong?
+  capabilities: Ethical framework analysis, Decision-theoretic reasoning,
+                Conceptual clarification, Steelman & critique,
+                History-of-ideas contextualization
+  focusAreas: AI & technology ethics, Political & distributive justice,
+              Epistemology & philosophy of science, Applied ethics, Decision
+              theory & game theory, Philosophy of mind & consciousness
+  metrics: Arguments mapped=8,420 | Thinkers indexed=1,240 |
+           Frameworks catalogued=38 | Dilemmas resolved (30d)=612
+  experiments (3):
+    E1: Trolley Problem Variant — AI Vehicle Dilemmas (Beginner, 2-3 weeks)
+        Hypothesis: responses reveal strong inaction preference even when
+                   harm is greater.
+        Method: adapt Moral Machine suite, 500 participants, 12 dilemma
+               variants each, analyze action vs inaction + cultural clustering.
+        Outcome: 65-75% prefer inaction; strong cultural clustering.
+    E2: Calibration Training for Forecasters (Intermediate, 6 weeks)
+        Hypothesis: 4-week Brier-score training improves calibration 25%.
+        Method: 100 forecasters, baseline 50 binary Qs, 4-week intervention
+               with weekly Brier feedback + reference-class training, post-test.
+        Outcome: 20-30% Brier reduction; overconfidence drops sharply.
+    E3: Rawlsian Veil-of-Ignorance Constitutional Choice (Intermediate, 3 weeks)
+        Hypothesis: veil-of-ignorance deliberation shifts preferences toward
+                   stronger social insurance.
+        Method: 60 participants, baseline policy preferences, veil-of-ignorance
+               deliberation exercise, re-elicit preferences.
+        Outcome: 30-40% shift toward stronger social insurance.
+  examples (3):
+    X1: Rawls Publishes A Theory of Justice (1971, Political Philosophy)
+    X2: Kahneman & Tversky's Prospect Theory (1979, Decision Science)
+    X3: Tetlock's Superforecasting Research (2011, Decision Science)
+  tools (3):
+    T1: Calculator — Expected Utility
+        formula: prob_a * util_a + prob_b * util_b
+        inputs: P(A)(0.6), U(A)(80), P(B)(0.4), U(B)(-40)
+        output: Expected Utility (utils)
+    T2: Timeline — Philosophy & Decision Science Inflection Points
+        -399 Socrates Dies → 1785 Categorical Imperative → 1863 Utilitarianism →
+        1971 Theory of Justice → 1979 Prospect Theory → 2011 Superforecasting
+    T3: Checklist — Ethical Review Checklist for a Decision (6 items)
+  suggestedQuestions:
+    - What is the difference between consequentialist, deontological, and virtue ethics?
+    - How does the veil of ignorance work as a tool for reasoning about justice?
+    - What is the trolley problem actually trying to teach us?
+
+── ENTITY 9: POLARIS (Strategy & Complex Systems) ────────────
+  glyph: "◇"  accent: #14b8a6  accentRgb: "20, 184, 166"
+  tagline: "The north star for decisions in systems that think back."
+  philosophy: POLARIS treats strategy as a bet placed in a system of other
+              bets. It maps actors, incentives, and feedback loops before
+              recommending an intervention. It prefers robust strategies
+              that work across scenarios over brittle strategies that
+              optimize for one.
+  capabilities: Systems mapping & causal loop analysis, Scenario planning &
+                stress testing, Game-theoretic reasoning, Leverage point
+                identification, Network & diffusion analysis
+  focusAreas: Strategic foresight & scenario planning, Game theory & mechanism
+              design, Network science & contagion, Resilience & antifragility,
+              Adversarial & competitive dynamics, Adaptive strategy under uncertainty
+  metrics: Scenarios modeled=4,820 | Networks analyzed=1,140 |
+           Leverage points identified=38K | Mean forecast horizon=7.2 yrs
+  experiments (3):
+    E1: Scenario Planning — 4-Horizon Stress Test (Intermediate, 2 weeks)
+        Hypothesis: 4-scenario stress test reveals vulnerabilities invisible
+                   to base-case plan.
+        Method: identify 2 critical uncertainties, build 2x2 matrix, test
+               current strategy in each, identify robust vs contingent moves.
+        Outcome: 3-5 robust moves; 2-4 contingent per scenario; 8-12 indicators.
+    E2: Network Diffusion Simulation of an Innovation (Intermediate, 1-2 weeks)
+        Hypothesis: seeding 5% of cluster-bridge nodes → 60% adoption;
+                   random seeding → 35%.
+        Method: synthetic scale-free network N=10,000, compare seeding
+               strategies, run Bass diffusion p=0.03 q=0.38.
+        Outcome: cluster-bridge 55-70%; random 30-40%.
+    E3: Iterated Prisoner's Dilemma Tournament (Beginner, 1 week)
+        Hypothesis: forgiving-but-retaliatory strategy dominates.
+        Method: 12 strategies (TFT, Generous TFT, Pavlov, etc.), round-robin
+               200 rounds/match × 10 reps, test noise sensitivity.
+        Outcome: Generous TFT or Pavlov wins; purely defective strategies lose.
+  examples (3):
+    X1: Shell's Scenario Planning Ahead of the Oil Crises (1972, Strategic Foresight)
+    X2: Axelrod's Iterated Prisoner's Dilemma Tournament (1980, Game Theory)
+    X3: Meadows Publishes Thinking in Systems (2008, Systems Thinking)
+  tools (3):
+    T1: Calculator — Network Density = edges / (nodes*(nodes-1)/2)
+        inputs: nodes(100), edges(250)
+        output: Network Density
+    T2: Timeline — Strategy & Systems Inflection Points
+        1944 Theory of Games → 1968 System Dynamics → 1972 Limits to Growth →
+        1980 Axelrod Tournament → 1999 Scale-Free Networks → 2008 Thinking in Systems
+    T3: Checklist — Strategic Decision Checklist (6 items)
+  suggestedQuestions:
+    - What is a leverage point, and how do I find one?
+    - Why does Tit-for-Tat win the iterated prisoner's dilemma?
+    - How do I stress-test a strategy against multiple futures?
+
+── ENTITY 10: LUMEN (Education & Knowledge Synthesis) ────────
+  glyph: "◌"  accent: #facc15  accentRgb: "250, 204, 21"
+  tagline: "Lighting the path from not-knowing to knowing — and back, when needed."
+  philosophy: Most learning fails not because the content is wrong but
+              because the cognitive bridge was never built. LUMEN reasons
+              about prior knowledge, mental models, desirable difficulty,
+              and the spacing of retrieval. It favors synthesis over coverage.
+  capabilities: Curriculum & learning sequence design, Concept mapping &
+                knowledge graph reasoning, Spaced-repetition scheduling,
+                Socratic scaffolding, Cross-disciplinary synthesis
+  focusAreas: Cognitive science of learning, Adaptive & personalized learning,
+              Knowledge graphs & synthesis, Assessment & formative feedback,
+              Lifelong & self-directed learning, Educational technology
+  metrics: Concepts indexed=184K | Learning paths=6,200 |
+           Studies reviewed=8,420 | Avg. retention gain=+34%
+  experiments (3):
+    E1: Spaced Repetition vs Massed Practice for Vocabulary (Beginner, 4 weeks)
+        Hypothesis: spaced repetition yields 40% better retention at 2-week delay.
+        Method: 60 participants matched on baseline, teach 60 novel words,
+               spaced (1,3,7,14d) vs massed (same day), test at 2 weeks.
+        Outcome: spaced 35-45% better retention; slightly higher perceived effort.
+    E2: Pre-Test Effect — Testing Before Study (Intermediate, 2 weeks)
+        Hypothesis: pre-testing on unfamiliar material improves final-test
+                   performance 15% even when pre-test answers are wrong.
+        Method: 80 participants, pre-test group gets 20 Qs (no feedback),
+               both study 10min, final test 40 Qs (20 pre-tested, 20 new).
+        Outcome: pre-tested Qs answered 12-18% better.
+    E3: Knowledge Graph Navigation for Cross-Disciplinary Synthesis (Intermediate, 3 weeks)
+        Hypothesis: graph-based learners outperform list-based on transfer by 20%.
+        Method: build KG connecting 40 bio+chem concepts, randomize 60 learners
+               to graph vs list (same content), test recall + transfer.
+        Outcome: graph ~20% better on transfer; no difference on recall.
+  examples (3):
+    X1: Ebbinghaus Discovers the Forgetting Curve (1885, Cognitive Science)
+    X2: Bloom's Taxonomy of Educational Objectives (1956, Pedagogy)
+    X3: Roediger & Karpicke Demonstrate the Testing Effect (2006, Cognitive Science)
+  tools (3):
+    T1: Calculator — Spaced Repetition Interval (SM-2 simplified)
+        formula: previous_interval * 2.5 * (quality >= 3 ? 1 : 0.2)
+        inputs: previous interval(days, 1), recall quality 0-5 (4)
+        output: Next Interval (days)
+    T2: Timeline — Education & Learning Science Inflection Points
+        1885 Forgetting Curve → 1956 Bloom's Taxonomy → 1976 Deep vs Surface →
+        2006 Testing Effect → 2010s MOOCs → 2020s Adaptive AI Tutors
+    T3: Checklist — Effective Learning Session Checklist (6 items)
+  suggestedQuestions:
+    - Why is retrieval practice more effective than re-reading?
+    - How do I design a spaced-repetition schedule for a new skill?
+    - What is the difference between deep and surface learning?
+
+── ENTITY 11: CHRONOS (History & Civilization) ───────────────
+  glyph: "◐"  accent: #b45309  accentRgb: "180, 83, 9"
+  tagline: "The long memory of the human experiment — its rises, its
+            collapses, its long arc."
+  philosophy: The past is not prologue, but it is the only dataset we have
+              for human-scale systems. CHRONOS reads primary sources, material
+              culture, and comparative civilizational analysis. It resists
+              presentism and equally resists nostalgia.
+  capabilities: Comparative civilizational analysis, Historiographical
+                reasoning, Long-arc trend identification, Primary & secondary
+                source triage, Institutional resilience analysis
+  focusAreas: Rise & fall of civilizations, Economic & demographic history,
+              History of science & technology, Empires & their afterlives,
+              Climate & pandemic shocks, Long-term institutional resilience
+  metrics: Civilizations indexed=248 | Primary sources catalogued=64K |
+           Years of recorded history=5,500 | Active research threads=1,420
+  experiments (3):
+    E1: Comparative Collapse — Climate Shocks Across Three Civilizations
+       (Advanced, 8-12 weeks)
+        Hypothesis: Maya, Late Bronze Age Mediterranean, Tang show similar
+                   50-year stress signatures before collapse.
+        Method: pull paleoclimate proxies (tree rings, speleothems) +
+               settlement-density archaeology, align 200-year timeline.
+        Outcome: 30-50 year lead time between climate stress and collapse.
+    E2: Text-Mining the Roman Senate's Vocabulary Shift (Intermediate, 4-6 weeks)
+        Hypothesis: Latin inscriptions shift from civic-republican to
+                   imperial-personal vocabulary 50 BCE → 50 CE.
+        Method: pull corpus from Epigraphic Database Roma, define lexicons,
+               compute relative frequencies in 20-year bins, test structural
+               break around 27 BCE.
+        Outcome: 30-50% decline civic-republican; 60-100% rise imperial-personal.
+    E3: Demographic Reconstruction from Parish Registers (Advanced, 10-16 weeks)
+        Hypothesis: parish records reveal demographic recovery 30 years
+                   after the Black Death in rural England.
+        Method: pull parish records 1300-1450 for 20 parishes, compute
+               birth/death rates in 5-year bins, cross-reference manorial rolls.
+        Outcome: trough 1349-1360; recovery onset 1375-1390; full pre-plague pop ~1550.
+  examples (3):
+    X1: The Black Death (1347, Demographic Shock)
+    X2: The Columbian Exchange (1492, Global History)
+    X3: The Industrial Revolution (1760, Economic History)
+  tools (3):
+    T1: Calculator — Population Doubling Time = 70 / rate_percent
+        inputs: annual growth rate % (1.5)
+        output: Doubling Time (years)
+    T2: Timeline — Civilizational Inflection Points
+        -3200 Writing in Sumer → -221 Qin Unifies China → 476 Fall of Western Rome →
+        1347 Black Death → 1492 Columbian Exchange → 1760 Industrial Revolution
+    T3: Checklist — Historical Source Criticism Checklist (6 items)
+  suggestedQuestions:
+    - Why do civilizations collapse, and what predicts resilience?
+    - How did the Black Death reshape European society?
+    - What is historiography, and why does it matter?
+
+── ENTITY 12: COSMOS (Interplanetary & Space Exploration) ─────
+  glyph: "◍"  accent: #f43f5e  accentRgb: "244, 63, 94"
+  tagline: "Charting humanity's second home — from low Earth orbit to the
+            moons of Jupiter."
+  philosophy: COSMOS treats space not as escape but as expansion. It reasons
+              about energy, mass, time, and life-cycle cost across the full
+              chain: launch, transit, surface, return, and the closed-loop
+              ecosystems needed to keep humans alive far from Earth.
+  capabilities: Delta-v budget analysis, Mission architecture design,
+                Closed-loop life support reasoning, ISRU pathway analysis,
+                Planetary protection review
+  focusAreas: Reusable launch systems, Nuclear thermal/electric propulsion,
+              In-situ resource utilization, Closed-loop life support,
+              Lunar & Martian surface systems, Asteroid mining
+  metrics: Launch $/kg to LEO=$1,520 (down) | Missions indexed=8,460 (up) |
+           ISRU pathways mapped=142 (up) | Deep-space habitats=24 (up)
+  experiments (3):
+    E1: Methane Production via Sabatier on Mars Simulant (Advanced, 4 weeks)
+        Hypothesis: CO2+H2 Sabatier reactor achieves 90% CH4 yield at 300°C
+                   with Ru/Al2O3 catalyst.
+        Method: load catalyst into tube reactor, feed CO2+H2 (1:4) at 1 atm,
+               measure CH4 via GC across 200-400°C, quantify deactivation 100h.
+        Outcome: 88-93% CH4 yield at 300°C; <5% deactivation over 100h.
+    E2: Closed-Loop Algae Life Support — 10-day human analog (Advanced, 3 weeks)
+        Hypothesis: Chlorella vulgaris photobioreactor recycles 70% of CO2.
+        Method: seed 50L photobioreactor, connect to 5m³ sealed chamber with
+               simulated human CO2, monitor O2/CO2 over 10 days, harvest biomass.
+        Outcome: 65-75% CO2 recycling; stable O2; harvestable protein biomass.
+    E3: Radiation Shielding with Regolith + Polyethylene Composite (Frontier, 6 weeks)
+        Hypothesis: 30cm regolith+HDPE composite reduces GCR dose 50% vs
+                   aluminum equivalent mass.
+        Method: fabricate test panels (regolith+HDPE, Al, PE), expose to proton
+               + heavy-ion beams, measure dose with TLDs + ion chambers.
+        Outcome: 45-55% GCR dose reduction; regolith+HDPE ~1.4x more effective than Al.
+  examples (3):
+    X1: Falcon Heavy Side-Booster Recovery (2018, Launch Systems)
+    X2: Perseverance Rover MOXIE Produces Oxygen on Mars (2021, ISRU)
+    X3: Starship Reaches Orbit (2024, Heavy-Lift Reusable)
+  tools (3):
+    T1: Calculator — Tsiolkovsky Rocket Equation
+        formula: isp * 9.81 * Math.log(initial_mass / final_mass)
+        inputs: Isp(s, 380), initial mass(kg, 1000), final mass(kg, 250)
+        output: Delta-v (m/s)
+    T2: Timeline — Spaceflight Inflection Points
+        1957 Sputnik 1 → 1969 Apollo 11 → 1998 ISS Assembly →
+        2012 Curiosity Lands → 2018 Falcon Heavy Reuse → 2024 Starship Orbit
+    T3: Checklist — Interplanetary Mission Design Checklist (6 items)
+  suggestedQuestions:
+    - What is the delta-v budget from LEO to Mars surface?
+    - How does ISRU reduce Mars mission mass by 7x?
+    - What are the main radiation risks for a Mars transit and how do we mitigate them?
+
+
+▌ 4. PER-ENTITY THEMING SYSTEM
+
+Each entity carries its own accent color that flows through the entire
+detail view via CSS custom properties set on the root container:
+
+  style={{
+    ['--entity-accent']: entity.accent,       // e.g. "#22d3ee"
+    ['--entity-rgb']:    entity.accentRgb,     // e.g. "34, 211, 238"
+  } as React.CSSProperties}
+
+The accent is used for:
+  • holo-border ::before gradient (135deg accent → transparent → accent)
+  • entity-glow box-shadow (rgba(rgb, 0.30) → rgba(rgb, 0.45) → rgba(rgb, 0.30))
+  • text-glow text-shadow (rgba(rgb, 0.55))
+  • Tab underline (layoutId="tab-underline" with box-shadow glow)
+  • CTA button background (solid accent, dark text)
+  • Badge backgrounds (accentSoft + border accent at 33% opacity)
+  • ParticleField color (accentRgb passed as prop)
+  • Metric trend icons (TrendingUp in accent color)
+  • Experiment step numbers (accentSoft bg + accent text)
+  • Timeline dots and active markers
+  • Calculator result box (accentSoft bg + accent text)
+  • Checklist progress bar (solid accent)
+
+Required CSS helper classes in globals.css:
+  .glass         { background: rgba(15,18,38,0.55); backdrop-filter: blur(14px)
+                   saturate(140%); border: 1px solid rgba(255,255,255,0.08); }
+  .glass-soft    { background: rgba(15,18,38,0.40); backdrop-filter: blur(8px)
+                   saturate(130%); border: 1px solid rgba(255,255,255,0.06); }
+  .holo-border   { position: relative; }
+  .holo-border::before { /* 1px padding gradient mask, opacity 0.7 */ }
+  .entity-glow   { box-shadow using rgba(var(--entity-rgb), 0.30-0.45); }
+  .text-glow     { text-shadow: 0 0 12px rgba(var(--entity-rgb), 0.55); }
+  .nexus-pulse   { animation: 2.8s ease-in-out infinite; opacity+scale; }
+  .nexus-spin-slow   { animation: 22s linear infinite rotate; }
+  .nexus-spin-slower { animation: 60s linear infinite rotate; }
+  .nexus-scan-line   { animation: 4s ease-in-out translateY -100%→100%; }
+  .nexus-flicker     { animation: 6s linear infinite subtle opacity flicker; }
+  .nexus-rise        { animation: 0.45s ease-out fade+slide-up; }
+  .scroll-thin       { 6px custom scrollbar with rgba(255,255,255,0.10) thumb; }
+  .font-display      { font-family: Geist Mono, monospace; letter-spacing: 0.04em; }
+  .text-balance      { text-wrap: balance; }
+
+Chat markdown styles (.chat-md h1/h2/h3/p/ul/ol/li/code/pre/strong) —
+see globals.css for the full style block. Key: headings 600 weight,
+code has rgba(255,255,255,0.08) background, pre has rgba(0,0,0,0.45)
+background with 1px border.
+
+
+▌ 5. DESIGN SYSTEM & AESTHETIC
+
+Background (.nexus-bg):
+  radial-gradient(ellipse at 20% 0%, rgba(34,211,238,0.10), transparent 50%),
+  radial-gradient(ellipse at 80% 10%, rgba(217,70,239,0.10), transparent 50%),
+  radial-gradient(ellipse at 50% 100%, rgba(16,185,129,0.08), transparent 50%),
+  linear-gradient(180deg, #050510 0%, #0a0a1f 60%, #050510 100%);
+
+Grid overlay (.nexus-grid):
+  linear-gradient(rgba(120,200,255,0.06) 1px, transparent 1px),
+  linear-gradient(90deg, rgba(120,200,255,0.06) 1px, transparent 1px);
+  background-size: 56px 56px;
+
+Dark theme variables (on ):
+  --background: oklch(0.05 0.005 260);
+  --card: oklch(0.09 0.008 260);
+  --foreground: oklch(0.96 0.005 240);
+  --border: oklch(1 0 0 / 8%);
+  --primary: oklch(0.7 0.18 200);
+
+Typography:
+  • Display headings: Geist Mono, letter-spacing 0.04-0.18em, font-weight 700
+  • Body: Geist Sans, line-height 1.6
+  • Labels/badges: font-display, text-[10px], uppercase, tracking-[0.2em]
+
+Visual motifs (reused across all entities):
+  • HoloAvatar: rotating conic-gradient outer ring (22s) + dashed counter-ring (60s,
+    reverse direction) + glass body with entity-glow + floating animation
+    (y: 0 → -4 → 0 over 4s)
+  • Scan line: 48px-tall vertical gradient sweeping over portrait (4s cycle)
+  • Entity glyph overlay: font-display, text-glow, nexus-flicker
+  • ParticleField canvas behind hero sections (entity-colored, ~50-90 particles)
+  • Glass-morphism cards with holo-border
+  • Sticky tab bar with backdrop-blur-xl and bg-[#05050d]/80
+
+
+▌ 6. APP STRUCTURE — 3 SCREENS
+
+The app is a single-route SPA ("/") with 3 views managed by Zustand state.
+The main page.tsx uses AnimatePresence with mode="wait" to transition between
+the LabHub and EntityDetail, plus an AnimatePresence exit for the BootScreen.
+
+── SCREEN A: BootScreen (initial, ~3 seconds) ─────────────────
+  Full-screen overlay (fixed inset-0 z-50) with .nexus-bg + .nexus-grid.
+  Centered content:
+    • Rotating dual-ring animation:
+        - outer ring: rounded-full border-2 border-cyan-400/30, nexus-spin-slow
+        - inner ring: inset-2, rounded-full, border, border-fuchsia-400/30,
+          nexus-spin-slower, animationDirection: reverse
+        - center: w-3 h-3 rounded-full bg-cyan-300, nexus-pulse,
+          boxShadow: '0 0 20px #22d3ee'
+    • Title "NEXUS" (font-display text-3xl font-bold tracking-[0.18em])
+    • Subtitle "Discovery Lab" (text-[11px] tracking-[0.35em] text-white/40)
+    • 5-step boot checklist that fills as progress climbs 0→100:
+        1. Calibrating quantum substrate (Cpu icon)
+        2. Loading entity knowledge cores (Database icon)
+        3. Establishing mirror channels (Radio icon)
+        4. Verifying integrity shields (ShieldCheck icon)
+        5. Synchronizing lab telemetry (Activity icon)
+      Each step: icon (emerald if done, cyan if active, white/30 if pending)
+      + label (white/70 if done, white/90 if active, white/35 if pending)
+      + "ok" badge (emerald) or "…" (cyan, pulsing) on the right
+    • Gradient progress bar (cyan → magenta → emerald) with percentage text
+  Logic: useEffect interval increments bootProgress by random(3-10) every 90ms.
+  When progress reaches 100, wait 400ms then set booted=true. Screen fades out
+  via AnimatePresence exit animation (opacity 0, duration 0.6s).
+
+── SCREEN B: LabHub (main landing) ────────────────────────────
+  Hero section (relative overflow-hidden, .nexus-bg + .nexus-grid opacity-30 +
+  ParticleField density=90 accentRgb="120,200,255" + 2 floating glow orbs
+  bg-cyan-500/10 and bg-fuchsia-500/10 blur-3xl):
+    • Online badge: pulse dot + "Mirror Entity Network · 12 channels online"
+    • Title "NEXUS DISCOVERY LAB" — gradient text (cyan→magenta→emerald
+      via bg-clip-text text-transparent), text-5xl sm:text-6xl md:text-7xl
+    • Subtitle describing the 12 entities (max-w-2xl, text-balance)
+    • Stat chips row (inline-flex, glass-soft):
+        12 mirror entities | 36 experiments | 36 case studies | 36 tools
+        | live AI channel
+    • "Select an entity to engage" with bouncing ArrowDown icon
+
+  Entity grid section (-mt-6 pb-20, max-w-7xl mx-auto):
+    grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5
+    Maps ENTITIES array to EntityPod components. Each pod has:
+      • motion.button with initial opacity:0 y:30 → animate opacity:1 y:0
+        (delay: index * 0.08), whileHover y:-6
+      • glass + holo-border + p-5, with --entity-accent and --entity-rgb vars
+      • Hover glow: absolute -inset-px radial-gradient at 50% 0%
+      • HoloAvatar (size="md", 7rem)
+      • Designation badge (accent text, accentSoft bg, accent/33 border)
+      • "ONLINE" indicator (Activity icon, emerald-300/80)
+      • Entity name (font-display text-2xl font-bold text-glow, accent color)
+      • Tagline (2-line clamp)
+      • 3 focus area chips + "+N more"
+      • Footer: "3 experiments | 3 case studies | 3 tools" + "ENGAGE →"
+        (ArrowUpRight, translate on hover)
+
+  "How the Lab Works" section (border-t, py-16, .nexus-grid opacity-20):
+    max-w-7xl, centered title "How the Lab Works"
+    4 cards (sm:grid-cols-2 lg:grid-cols-4):
+      01 Choose a Mirror Entity (cyan #22d3ee)
+      02 Explore the Knowledge (magenta #d946ef)
+      03 Open Direct Channel (emerald #10b981)
+      04 Make Discovery Effortless (rose #f43f5e)
+    Each card: large step number in accent color + title + body text,
+    with a blurred accent glow orb in the top-right corner.
+
+  Footer (border-t, py-8, mt-auto):
+    max-w-7xl, two columns:
+      Left: "NEXUS Discovery Lab · Mirror Entity Network v1.0"
+      Right: pulse dot + "All 12 channels operational"
+
+── SCREEN C: EntityDetail (per-entity) ────────────────────────
+  Triggered when activeEntity is set. Replaces LabHub with animated transition
+  (opacity fade, 0.3s). Root div sets --entity-accent and --entity-rgb CSS vars.
+
+  Hero section (relative overflow-hidden, border-b):
+    .nexus-grid opacity-40 + radial-gradient overlay (accentSoft at 30% 0%)
+    + ParticleField (density=50, accentRgb=entity.accentRgb)
+    max-w-6xl mx-auto px-4 sm:px-6 pt-6 pb-8:
+      • "Return to Lab Hub" back button (ArrowLeft, calls setActiveEntity(null))
+      • Flex row (col on mobile, row on md+):
+          - HoloAvatar size="xl" (14rem wide × 18rem tall, portrait orientation):
+            full entity image with gradient fade at bottom + scan line + glyph
+            overlay (top-3 left-3, text-5xl font-display)
+          - Right column:
+            • Designation badge + "CHANNEL OPEN · LATENCY 0.0MS" indicator
+              (pulse dot emerald)
+            • Entity name (text-5xl md:text-6xl font-display font-bold
+              text-glow, accent color)
+            • Tagline (text-base md:text-lg, max-w-2xl, text-balance)
+            • 4 metric cards (grid-cols-2 sm:grid-cols-4 gap-2):
+              label (text-[10px] uppercase white/45) + value (font-display
+              text-lg, white/95) + TrendingUp icon in accent color if trend='up'
+
+  Sticky tab bar (sticky top-0 z-20, backdrop-blur-xl, bg-[#05050d]/80,
+  border-b):
+    max-w-6xl, flex gap-1 overflow-x-auto scroll-thin -mb-px
+    Tabs: Overview | Experiments | Case Studies | Tools | Communicate
+    Each tab: inline-flex items-center gap-1.5 px-4 py-3, text-xs font-display
+    uppercase tracking-wider. Active tab gets white text + motion.span
+    layoutId="tab-underline" (absolute left-2 right-2 -bottom-px h-0.5
+    rounded-full, background: entity.accent, boxShadow: 0 0 10px accent).
+    Inactive tabs: text-white/45 hover:text-white/75.
+
+  Tab content (max-w-6xl mx-auto px-4 sm:px-6 py-6 md:py-8):
+
+  ◦ Overview tab:
+    grid lg:grid-cols-3 gap-5
+    Left (lg:col-span-2): 3 glass cards
+      1. "Identity" — entity.intro
+      2. "Operating Philosophy" — entity.philosophy
+      3. "Core Capabilities" — Cpu icon + 2-col grid of capabilities with
+         accent-colored bullets
+    Right (1 col): 3 cards
+      1. "Focus Areas" — Layers icon + chips (accentSoft bg, accent/33 border)
+      2. "Channel Snapshot" — metrics list (label left, value right)
+      3. CTA button (solid accent bg, dark text): "Communicate with {name}"
+         → calls setActiveTab('communicate')
+
+  ◦ Experiments tab:
+    Heading "Reproducible Experiments" + "{count} protocols" (hidden on mobile)
+    List of ExperimentCard (3 per entity), each is a motion.div with layout:
+      Collapsed (button): FlaskConical icon (accentSoft bg + accent text) +
+        title + difficulty badge (colored: Beginner=#10b981, Intermediate=#22d3ee,
+        Advanced=#f59e0b, Frontier=#f43f5e) + duration (Clock icon) + ChevronDown
+      Expanded (AnimatePresence height auto):
+        • Hypothesis (Target icon, accent header)
+        • Method (ListChecks icon, numbered steps with accent step badges)
+        • Materials + Expected Outcome (2-col grid on sm+)
+        • Materials: Beaker icon, bullet list with accent dots
+        • Expected Outcome: Target icon, paragraph
+
+  ◦ Case Studies tab:
+    Heading "Landmark Discoveries"
+    grid sm:grid-cols-2 lg:grid-cols-3 gap-4
+    ExampleCard: motion.div with blurred accent glow orb top-right +
+      category badge (Sparkles icon) + year (Calendar icon) + title +
+      summary + impact callout box (TrendingUp icon, accent header,
+      bg-black/30 border-white/8)
+
+  ◦ Tools tab:
+    Heading "Helping Tools"
+    grid md:grid-cols-2 gap-4
+    ToolPanel (3 per entity) renders one of 3 types based on tool.kind:
+      • calculator: icon (Calculator) + label + description + input grid
+        (sm:grid-cols-2) with number inputs + result box (accentSoft bg,
+        accent text, font-display text-2xl font-bold) + formula display
+        (font-mono text-white/35). Uses useMemo with new Function() to
+        evaluate the formula with substituted variable values.
+      • timeline: icon (Clock) + vertical line with year markers, click to
+        expand detail. Active marker has solid accent fill; inactive has
+        transparent fill with accent border.
+      • checklist: icon (ListChecks) + progress bar (accent fill) +
+        done/total count + list of items. Each item: checkbox (accent when
+        checked) + label (line-through white/50 when checked) + hint text.
+        Tracks checked state in useState Record.
+
+  ◦ Communicate tab:
+    Heading "Direct Mirror Communication"
+    Chat container: rounded-xl glass border, h-[60vh] min-h-[420px] flex flex-col,
+    border-color: accent/33
+    EntityChat component (see Section 7 for full spec):
+      • Empty state: large pulsing glyph + "Direct link established" (accent) +
+        description + 3 suggested question buttons (glass-soft, send on click)
+      • Messages: user (right, white/8 bg, rounded-br-md) vs assistant (left,
+        accent/33 border, rounded-bl-md, with entity name + glyph header)
+      • Assistant messages render via ReactMarkdown with .chat-md class
+      • Pending state: 3 pulsing dots (accent) + "reasoning…"
+      • Error state: rose-500/10 bg, rose-500/30 border, AlertCircle
+      • Composer: auto-growing textarea (max 180px) + Send button (solid
+        accent bg, dark text, Send/Loader2 icon) + Reset button (when
+        messages exist, RotateCcw icon)
+      • Enter to send, Shift+Enter for newline
+      • Helper text: "Enter to send · Shift+Enter for newline · {name}
+        reasons from established evidence and labels speculation"
+
+
+▌ 7. COMPONENT ARCHITECTURE & FILE TREE
+
+src/
+├── app/
+│   ├── layout.tsx           # html dark, Geist fonts, metadata
+│   ├── globals.css          # futuristic dark theme + ALL helper classes
+│   ├── page.tsx             # main: BootScreen → LabHub ↔ EntityDetail
+│   └── api/
+│       └── chat/
+│           └── route.ts     # POST endpoint, z-ai-web-dev-sdk, server-only
+├── components/
+│   └── lab/
+│       ├── BootScreen.tsx       # boot overlay with progress animation
+│       ├── LabHub.tsx           # hero + entity grid + how-it-works + footer
+│       ├── EntityPod.tsx        # clickable entity card in the grid
+│       ├── HoloAvatar.tsx       # holographic avatar (sizes: sm/md/lg/xl)
+│       ├── EntityDetail.tsx     # hero + sticky tabs + 5 tab contents
+│       ├── EntityChat.tsx       # chat UI with message list + composer
+│       ├── ExperimentCard.tsx   # expandable experiment protocol
+│       ├── ExampleCard.tsx      # case study card
+│       ├── ToolPanel.tsx        # renders calculator/timeline/checklist
+│       └── ParticleField.tsx    # canvas particle system (floating + connecting)
+├── lib/
+│   ├── entities.ts          # full ENTITIES array (all 12 entities)
+│   ├── store.ts             # Zustand store + newId() helper
+│   └── utils.ts             # cn() class merge (shadcn default)
+└── public/
+    └── images/
+        └── entities/
+            ├── nexus.png    (768×1344, AI-generated)
+            ├── genesis.png
+            ├── atlas.png
+            ├── aurora.png
+            ├── forge.png
+            ├── muse.png
+            ├── gaia.png
+            ├── oracle.png
+            ├── polaris.png
+            ├── lumen.png
+            ├── chronos.png
+            └── cosmos.png
+
+── Key Component Details ──
+
+ParticleField.tsx:
+  Canvas-based. Props: accentRgb (default "120,200,255"), density (default 70),
+  className. Uses requestAnimationFrame. Particles spawn at bottom, drift
+  upward (vy: -0.25 to -0.8), slight horizontal drift (vx: -0.125 to 0.125),
+  radius 0.6-2.2px. Connects particles within 110px with lines (alpha scales
+  with distance). Particle alpha fades in (first 15% of life) and out (last
+  30%). Respects devicePixelRatio (capped at 2). Resizes with parent via
+  ResizeObserver pattern (window resize listener). Particle count scales
+  with area: max(28, min(density, (w*h)/18000)).
+
+HoloAvatar.tsx:
+  Props: entity, size ('sm'|'md'|'lg'|'xl'), active (default true)
+  Size map: sm=w-16h-16, md=w-28h-28, lg=w-44h-44, xl=w-56h-72
+  Structure:
+    • Outer rotating ring: absolute -inset-2 rounded-full opacity-70 nexus-spin-slow
+      conic-gradient(from 0deg, transparent, accent 80deg, transparent 160deg,
+      accent 240deg, transparent 320deg) with radial-gradient mask (transparent
+      60%, black 62%-100%)
+    • Counter-rotating dashed ring: absolute -inset-1 rounded-full opacity-50
+      nexus-spin-slower, border: 1px dashed accent
+    • Body: motion.div relative h-full w-full rounded-2xl overflow-hidden glass
+      entity-glow, animate y: [0,-4,0] over 4s (when active)
+    • For size="xl": full image object-cover opacity-90 + bottom gradient
+      fade + scan line (h-12, nexus-scan-line, gradient transparent→accent55→
+      transparent) + glyph overlay (top-3 left-3, text-5xl)
+    • For other sizes: image absolute inset-0 opacity-55 + radial-gradient
+      overlay (accentSoft center) + centered glyph (text-glow nexus-flicker)
+
+EntityChat.tsx:
+  Uses Zustand store for sessions[entityKey].messages.
+  send(text): trims, pushes user message, pushes pending assistant message,
+    builds history from existing session + new user msg, POSTs to /api/chat
+    with { entityKey, messages: history }, updates pending msg with response
+    content or error. Uses fetch (not axios).
+  Composer: textarea with auto-grow (onInput sets height to min(scrollHeight, 180)).
+  Enter sends (preventDefault), Shift+Enter for newline.
+  MessageBubble: user = right-aligned, white/8 bg, rounded-br-md, whitespace-
+    pre-wrap. Assistant = left-aligned, accent/33 border, rounded-bl-md, with
+    entity name + glyph header, renders ReactMarkdown with .chat-md class.
+    Pending = 3 pulsing accent dots + "reasoning…". Error = rose-tinted.
+  Auto-scrolls to bottom on new messages (useEffect on messages.length).
+
+ToolPanel.tsx (calculator evaluation):
+  Uses useMemo to evaluate formula. Replaces variable names (sorted longest-
+  first to avoid partial matches) with current input values, then calls
+  new Function(`"use strict"; return (${expr});`)(). Rounds to 2 decimals.
+  Returns null on error or non-finite result.
+
+
+▌ 8. TYPESCRIPT DATA MODEL
+
+// src/lib/entities.ts
+
+export type Tool =
+  | { kind: 'calculator'; label: string; description: string; formula: string;
+      inputs: { name: string; label: string; unit?: string; default?: number;
+                min?: number; max?: number; step?: number }[];
+      output: { name: string; label: string; unit?: string } }
+  | { kind: 'timeline'; label: string; description: string;
+      events: { year: string; title: string; detail: string }[] }
+  | { kind: 'checklist'; label: string; description: string;
+      items: { label: string; hint: string }[] };
+
+export type Experiment = {
+  id: string; title: string; hypothesis: string;
+  method: string[]; materials: string[]; outcome: string;
+  difficulty: 'Beginner' | 'Intermediate' | 'Advanced' | 'Frontier';
+  duration: string;
+};
+
+export type Example = {
+  id: string; title: string; category: string;
+  summary: string; impact: string; year: string;
+};
+
+export type Entity = {
+  key: string; name: string; designation: string; domain: string;
+  tagline: string; glyph: string;
+  accent: string; accentSoft: string; accentRgb: string;
+  image: string;
+  intro: string; philosophy: string; systemPrompt: string;
+  capabilities: string[]; focusAreas: string[];
+  metrics: { label: string; value: string; trend: 'up' | 'stable' | 'down' }[];
+  experiments: Experiment[];   // exactly 3
+  examples: Example[];         // exactly 3
+  tools: Tool[];               // exactly 3
+  suggestedQuestions: string[]; // exactly 3
+};
+
+export const ENTITIES: Entity[] = [ /* all 12 entities, in order */ ];
+export function getEntity(key: string | null): Entity | undefined;
+
+// src/lib/store.ts
+
+export type ChatMessage = {
+  id: string; role: 'user' | 'assistant'; content: string;
+  createdAt: number; pending?: boolean; error?: boolean;
+};
+export type ChatSession = { entityKey: string; messages: ChatMessage[] };
+
+type State = {
+  activeEntity: string | null;
+  activeTab: 'overview' | 'experiments' | 'examples' | 'tools' | 'communicate';
+  sessions: Record;
+  bootProgress: number;  // 0-100
+  booted: boolean;
+};
+type Actions = {
+  setActiveEntity: (key: string | null) => void;
+  setActiveTab: (tab: State['activeTab']) => void;
+  pushMessage: (entityKey: string, msg: ChatMessage) => void;
+  updateMessage: (entityKey: string, id: string, patch: Partial) => void;
+  resetSession: (entityKey: string) => void;
+  setBootProgress: (n: number) => void;
+  setBooted: (b: boolean) => void;
+};
+export const useLab = create((set) => ({ /* ... */ }));
+export function newId(): string;  // Math.random + Date.now base36
+
+
+▌ 9. AI INTEGRATION — CHAT ROUTE & SYSTEM PROMPTS
+
+── POST /api/chat ─────────────────────────────────────────────
+File: src/app/api/chat/route.ts
+Runtime: 'nodejs' (NOT edge)
+Imports: NextRequest, NextResponse, ZAI from 'z-ai-web-dev-sdk',
+         getEntity from '@/lib/entities'
+
+Request body: { entityKey: string, messages: {role, content}[] }
+
+Logic:
+  1. Parse body. Validate entityKey exists and messages is non-empty array.
+     → 400 if invalid.
+  2. Look up entity via getEntity(entityKey). → 404 if not found.
+  3. const zai = await ZAI.create();
+  4. Build system message:
+     content = entity.systemPrompt +
+       "\n\nYou are currently in direct communication with a researcher via
+        the NEXUS DISCOVERY LAB interface. Keep replies focused, ideally
+        150-350 words, unless the user explicitly asks for depth. Use
+        markdown headings (##) and bullet lists when structure helps.
+        Always end with one short, actionable next step or question for the
+        researcher when appropriate."
+  5. Trim messages to last 12 (messages.slice(-12)).
+  6. Call zai.chat.completions.create({
+       messages: [system, ...trimmed],
+       thinking: { type: 'disabled' },
+       temperature: 0.6,
+       max_tokens: 900,
+     });
+  7. Extract content = completion.choices?.[0]?.message?.content?.trim()
+     → 502 if empty.
+  8. Return NextResponse.json({ content }).
+  9. On any error: console.error and return 500 with { error: message }.
+
+── Per-Entity System Prompts ──────────────────────────────────
+Each entity has a unique systemPrompt that defines its personality. The
+base template (adapted per entity):
+
+"You are {NAME}, the {DOMAIN} mirror entity inside the NEXUS DISCOVERY LAB.
+You communicate with researchers and curious humans with {PERSONALITY_TRAIT}.
+You always anchor answers to {DOMAIN_METHOD}. You distinguish clearly between
+established consensus, emerging evidence, and speculative hypothesis.
+You suggest concrete experiments when asked, including controls and expected
+readouts. You {DOMAIN_SPECIFIC_REFUSAL}. You format answers with short
+paragraphs and clear headers, using markdown when useful. You never fabricate
+citations; if uncertain, you say so explicitly. Your voice is {VOICE_QUALITY}."
+
+Per-entity personality notes:
+  NEXUS:    sharp, precise, intellectually generous. Never bluffs numbers.
+            Refuses vendor lock-in. Anticipates second-order effects.
+  GENESIS:  inventive but grounded. Reasons across scales (circuit→bioreactor→
+            ecosystem). Prefers closed-loop regenerative designs.
+  ATLAS:    precise, rigorous, quietly delighted by beautiful results. Uses
+            dimensional analysis and order-of-magnitude estimates.
+  AURORA:   steady, lucid, humane. Refuses individual diagnostic/dosing advice.
+  FORGE:    pragmatic, candid, respectfully skeptical of hype. Refuses
+            individualized financial advice. Separates value creation from
+            value capture.
+  MUSE:     warm, perceptive, quietly rigorous. Never claims objective
+            superiority but analyzes why work succeeds/fails on its own terms.
+  GAIA:     clear-eyed, grounded, quietly determined. Never despairs — presents
+            the action space and its tradeoffs.
+  ORACLE:   patient, precise, gently subversive of unexamined assumptions.
+            Steelmans opposing positions before critiquing.
+  POLARIS:  composed, far-sighted, allergic to false precision. Prefers robust
+            over optimal strategies.
+  LUMEN:    patient, encouraging, intellectually generous. Adapts to learner's
+            prior knowledge. Favors synthesis over coverage.
+  CHRONOS:  measured, learned, aware of the weight of evidence. Avoids both
+            presentism and nostalgia.
+  COSMOS:   clear-eyed, ambitious, rigorous. Prioritizes closed-loop fail-safe
+            designs and planetary protection.
+
+
+▌ 10. IMAGE GENERATION (12 portraits)
+
+Generate 12 entity portraits using z-ai-web-dev-sdk:
+  const zai = await ZAI.create();
+  const response = await zai.images.generations.create({
+    prompt: entityPrompt,
+    size: '768x1344',   // portrait orientation
+  });
+  const base64 = response.data[0].base64;
+  fs.writeFileSync(`public/images/entities/${key}.png`, Buffer.from(base64, 'base64'));
+
+Prompt template per entity:
+  "A hyper-advanced AI mirror entity named {NAME}, the {DOMAIN} Specialist.
+   A translucent humanoid holographic figure made of flowing {COLOR1} and
+   {COLOR2} light, its {BODY_FEATURE} reveals {DOMAIN_VISUAL}, surrounded by
+   floating {DOMAIN_ELEMENTS}. Background: dark futuristic laboratory with
+   holographic {DOMAIN_SCREENS}. Cinematic, ultra-detailed, sci-fi concept
+   art, volumetric lighting, deep blacks with {COLOR} glow, 8k render, octane,
+   high-tech precision lab atmosphere."
+
+Per-entity visual specs (COLOR1 / COLOR2 / DOMAIN_VISUAL / DOMAIN_ELEMENTS / DOMAIN_SCREENS):
+
+  NEXUS:    magenta/violet | circuit-pattern body + fractal chip head |
+            quantum processors + holographic code + fiber optics |
+            quantum processor schematics + code screens
+  GENESIS:  amber/gold | cellular division + mycelium + CRISPR strands |
+            tissue scaffolds + bioreactors + synthetic organism scans |
+            bioreactor readouts + organism scans
+  ATLAS:    violet/purple | geometric structures + mathematical equations |
+            atomic lattices + force-field diagrams + bridge truss in light |
+            physics simulations + engineering blueprints + calculus scrawls
+  AURORA:   teal/cyan | anatomical crystal heart |
+            DNA helixes + neural synapses + microscopic cell structures |
+            medical scans + diagnostic screens + biosignal waveforms
+  FORGE:    orange/ember | furnace of innovation sparks |
+            market charts + supply chain networks + growth curves + gears |
+            economic dashboards + innovation pipelines + VC flow diagrams
+  MUSE:     pink/rose-gold | swirling paint strokes + musical notes +
+            golden ratio spirals | design patterns + color wheels |
+            sound wave visualizers + floating design canvases
+  GAIA:     lime/emerald | living forests + ocean currents + root networks |
+            birds + butterflies + rivers flowing through arms |
+            climate models + biodiversity maps + ecosystem simulations
+  ORACLE:   gold/amber | branching decision trees + scales + logic symbols |
+            ethical dilemma diagrams | philosophical frameworks + ethical matrices
+  POLARIS:  teal/cyan-green | network graphs + chess pieces + strategic maps |
+            systems-thinking loops + north star | strategic war-rooms +
+            complex adaptive system simulations + game-theory matrices
+  LUMEN:    yellow/golden | glowing books + neural networks of knowledge +
+            light bulbs of insight | learning-path diagrams |
+            knowledge graphs + curriculum trees + synthesis matrices
+  CHRONOS:  bronze/antique-gold | layered timelines + ancient scrolls fused
+            with digital screens + archaeological artifacts |
+            hourglass with sand flowing upward |
+            historical atlases + civilization timelines + archaeological reconstructions
+  COSMOS:   rose/crimson | rotating galaxy + orbiting planets + spacecraft
+            trajectories | stardust particles |
+            orbital maps + planetary engineering screens + stellar navigation charts
+
+⚠ CONTENT FILTER NOTE: If the image API returns status 400 with code 1301
+  (content filter triggered), reword the prompt to use "abstract holographic
+  form" instead of "humanoid figure" and remove anatomical terms (eye, head,
+  chest, etc.). This was needed for MUSE and ORACLE in the original build.
+
+
+▌ 11. BUILD ORDER (13 steps)
+
+ 1. Initialize Next.js 16 + TypeScript + Tailwind 4 + shadcn/ui project.
+    Run: curl https://z-cdn.chatglm.cn/fullstack/init-fullstack.sh | bash
+ 2. Install: framer-motion, zustand, react-markdown, lucide-react,
+    z-ai-web-dev-sdk (should be pre-installed).
+ 3. Generate 12 entity images via z-ai-web-dev-sdk image generation
+    (see Section 10). Save to public/images/entities/{key}.png.
+ 4. Write src/lib/entities.ts with full ENTITIES array (all 12 entities,
+    all fields, 3 experiments + 3 examples + 3 tools each). Export
+    ENTITIES array and getEntity(key) function.
+ 5. Write src/lib/store.ts (Zustand store with all state + actions +
+    newId() helper).
+ 6. Write src/app/api/chat/route.ts (POST endpoint, runtime='nodejs',
+    calling z-ai-web-dev-sdk per Section 9).
+ 7. Update src/app/globals.css with futuristic dark theme + ALL helper
+    classes (.glass, .glass-soft, .holo-border, .entity-glow, .text-glow,
+    .nexus-* animations, .scroll-thin, .font-display, .chat-md markdown
+    styles) per Section 4.
+ 8. Update src/app/layout.tsx: className="dark" on , Geist + Geist_Mono
+    fonts, metadata (title "NEXUS DISCOVERY LAB · Mirror Entities for
+    Humanity's Frontier").
+ 9. Build lab components in order:
+    a. ParticleField.tsx (canvas particle system, props: accentRgb, density)
+    b. HoloAvatar.tsx (size variants sm/md/lg/xl, rotating rings + scan line)
+    c. EntityPod.tsx (uses HoloAvatar, motion.button with hover lift)
+    d. ExperimentCard.tsx (expandable, AnimatePresence height auto)
+    e. ExampleCard.tsx (case study with impact callout)
+    f. ToolPanel.tsx (calculator with new Function eval + timeline + checklist)
+    g. EntityChat.tsx (message list + composer, fetch /api/chat, ReactMarkdown)
+    h. EntityDetail.tsx (hero + sticky tabs + 5 tab contents, uses all above)
+    i. LabHub.tsx (hero + entity grid + how-it-works + footer)
+    j. BootScreen.tsx (progress animation with 5 steps)
+10. Assemble src/app/page.tsx:
+    - AnimatePresence for BootScreen (exit when booted=true)
+    - AnimatePresence mode="wait" for LabHub ↔ EntityDetail
+    - Root: 
+
+11. Run lint (bun run lint). Fix ALL errors and warnings.
+12. Verify with browser (Agent Browser or manual):
+    - Boot screen completes and fades out
+    - Hub renders all 12 entities with correct glyphs, colors, domains
+    - Click any entity → detail view loads with all 5 tabs
+    - Each tab renders correct content (overview/experiments/examples/tools)
+    - Communicate tab: send message → receive LLM response with markdown
+    - Responsive: test 375px (mobile) and 1440px (desktop)
+    - No console errors, no hydration mismatches
+13. Final polish: verify per-entity accent theming flows through every
+    component (borders, glows, buttons, particles, tab underline).
+
+
+▌ 12. QUALITY BAR & VERIFICATION
+
+Before declaring complete, verify ALL of the following:
+
+  ✓ All 12 entities render on the hub with correct glyph, name, domain, accent
+  ✓ Entity grid is responsive: 1 col mobile → 2 col md → 3 col lg → 4 col xl
+  ✓ Boot screen completes in ~3s and fades out cleanly
+  ✓ Clicking an entity opens its detail view with animated transition
+  ✓ Each entity detail has working tabs: Overview, Experiments, Case Studies,
+    Tools, Communicate
+  ✓ Experiment cards expand/collapse smoothly with AnimatePresence
+  ✓ Tool calculators evaluate formulas live as inputs change
+  ✓ Tool timelines expand on click showing event details
+  ✓ Tool checklists track progress with a progress bar
+  ✓ Chat: suggested questions send on click
+  ✓ Chat: custom messages send via Enter key
+  ✓ Chat: assistant responses render markdown (headings, lists, code blocks)
+  ✓ Chat: pending state shows pulsing dots + "reasoning…"
+  ✓ Chat: error state shows rose-tinted bubble with AlertCircle
+  ✓ Chat: Reset button clears conversation
+  ✓ Per-entity accent color flows through: holo-border, entity-glow, text-glow,
+    tab underline, CTA button, badges, particle field, metric icons
+  ✓ Every paragraph in content has 3+ sentences (no shallow writing)
+  ✓ Every section has 150+ words of body content
+  ✓ Animations are smooth (Framer Motion, ease-out, 0.3-0.7s durations)
+  ✓ Mobile + desktop both fully functional
+  ✓ Sticky footer at bottom on short pages; pushed down on long pages
+  ✓ NO indigo or blue as primary color
+  ✓ All AI calls server-side only (in /api routes)
+  ✓ Lint passes with zero errors and zero warnings
+  ✓ No console errors in browser
+  ✓ No hydration mismatches
+
+
+═══════════════════════════════════════════════════════════════
+  END OF EXACT REPLICATION PROMPT — NEXUS DISCOVERY LAB v2.0
+  12 Mirror Entities · 36 Experiments · 36 Case Studies · 36 Tools
+═══════════════════════════════════════════════════════════════
+  Paste this entire prompt into any AI coding assistant (Claude, GPT,
+  Cursor, etc.) to replicate the NEXUS DISCOVERY LAB with precision.
+═══════════════════════════════════════════════════════════════
+

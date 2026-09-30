@@ -461,7 +461,7 @@ export function MirrorOSForge() {
             </h3>
             <div className="mt-4">
               <ChargingOrb
-                progress={labStage === "charging" ? labProgress : labStage === "blueprint" ? 100 : 0}
+                progress={labStage === "charging" ? labProgress : 0}
                 stage={labStage}
               />
             </div>

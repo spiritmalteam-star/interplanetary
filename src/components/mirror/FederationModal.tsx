@@ -402,7 +402,7 @@ function CardDetail({
    Mounted inside the dialog subtree: Radix unmounts it on close, so the
    list/detail state resets naturally whenever the modal closes or reopens. */
 
-function FederationArchive() {
+export function FederationArchive() {
   const t = useT();
   const [tab, setTab] = useState<Tab>("bodies");
   const [selected, setSelected] = useState<FederationCard | null>(null);
