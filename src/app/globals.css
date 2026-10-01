@@ -419,6 +419,13 @@ html.light .panel-solid-deep {
   color: var(--ac, var(--cy));
   font-weight: 600;
 }
+/* a tray allowed to wrap (depth switcher) — softened corners once it
+   grows past one line, so every label keeps its room to be read */
+.pill-tray.pill-tray-wrap {
+  flex-wrap: wrap;
+  row-gap: 4px;
+  border-radius: 16px;
+}
 
 /* attunement chips — outlined pills that turn accent-colored on hover */
 .chipbtn {

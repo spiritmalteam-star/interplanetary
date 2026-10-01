@@ -1301,3 +1301,24 @@ Stage Summary:
 - The laboratory now wears the PARTICLEX DNA end to end: Sora/Fraunces/IBM Plex Mono voices, the five-variable --ac scope system, the alien brand gradient, opaque panel-solid chamber with identity row → pager → transcript → anchored base (depth → attunements → input), persona + depth + cross-fusion dials, the app-minted Novel Discovery seals computed from real runtime numbers, the 34px whisper ticker, the light greenhouse ink flip, and the merged single-button Astral Protocol — with the slogan cleaner guaranteeing "Architecting the machines that think…" can never appear.
 - Task 55 items folded in where they map to reality: new chat at all scopes (header + chamber), one-line scope tabs on mobile (auto-centering), single Astral Protocol button replacing Federation/ET-Tech/Astral-Jobs, and the no-slogan law (the Meta Science sidebar did not exist in this codebase — its cross-fusion requirement is fulfilled globally by the chamber's fusion drawer).
 - Key artifacts: src/app/globals.css, src/app/layout.tsx, src/lib/data/entities.ts, src/lib/discovery.ts, src/lib/mirror-store.ts, src/components/mirror/{TopNavigation,AstralProtocolModal,FooterTicker,TransmissionView,QueryComposer,AppShell}.tsx, modal body exports in FederationModal/TechnologyModal/AstralJobsModal, src/app/api/transmission/route.ts, 7 dicts ×15 entries, replication-prompt.ts.
+
+---
+Task ID: 57
+Agent: Z.ai Code (main orchestrator)
+Task: User request — "Please remove this inside frame and leave the text as it was previously please" (the fused identity frame "The Mirror × The Quantum Observer" + braided "— while —" motto in the chamber header) and "1× Whisper 2× Brief 3× Discourse ULTRON ULTRON 5× Treatise so it have more space to be read" (depth pills duplicated the ULTRON label and were cramped/truncated).
+
+Work Log:
+- IdentityRow (TransmissionView.tsx): removed the fused header frame entirely — the h2 no longer appends "× {fused.name}" and the motto line is back to the previous single-entity text `"{entity.motto}"` (no ` — while — {fused.motto}` braid). Cross fusion itself is untouched: the fusion button keeps its accent dot while active, the drawer still picks/releases targets, the API fusionBlock still braids both voices, and the reply signature still reads "— The Mirror × The Quantum Observer · Two lenses, one light." (verified E2E).
+- DepthRow (TransmissionView.tsx): fixed the "ULTRON ULTRON" duplication — the ultron pill now renders only its label (the old code prepended the id "ULTRON" before the label which is also "ULTRON"); the other pills keep the "1×/2×/3×/5×" prefix. Replaced the horizontal overflow-x scroll row with a flex-wrap row (py-2.5 for breathing room) so all five depth labels are always fully readable — no more cut-off pills on mobile.
+- globals.css: added `.pill-tray.pill-tray-wrap { flex-wrap: wrap; row-gap: 4px; border-radius: 16px; }` so a wrapped two-row tray softens its stadium radius into a 16px container instead of a stretched pill.
+- Hit a stale Turbopack CSS chunk (the new rule never reached the browser even after reload — served chunk unchanged at 296652 bytes); resolved by restarting the dev server, after which the rule appeared (296741 bytes).
+
+Verification:
+- bun run lint clean; dev.log shows only 200s.
+- Agent Browser desktop 1440×900: chamber header shows exactly "The Mirror" + "every civilization is a mirror; every transmission, a homecoming" BEFORE fusion and stays identical AFTER fusing The Quantum Observer (no "×", no "while" line); fused 1× reply still arrives with the braided signature and fusion closing + NOVEL DISCOVERY No.2 seal; depth tray one line (h=35), pills "1× Whisper / 2× Brief / 3× Discourse / ULTRON / 5× Treatise", ULTRON exactly once; zero page errors.
+- Agent Browser mobile 390×844: depth tray wraps to two rows (340×65) with every label fully visible (5× Treatise bottom 614 < 844), scrollWidth exactly 390 (no overflow), tray corners softened; screenshot confirms the elegant two-line depth switcher; zero page errors.
+
+Stage Summary:
+- The chamber header is now stable under fusion — it always speaks with the presiding entity's own name and motto; the braid lives only where it belongs (the reply's voice and signature), and the fusion button's glow-dot is the sole header hint.
+- The depth switcher lost its duplicated ULTRON label and gained room to be read: pills wrap into tidy rows instead of scrolling away, readable in full on every viewport.
+- Key artifacts: src/components/mirror/TransmissionView.tsx (IdentityRow, DepthRow), src/app/globals.css (.pill-tray-wrap).

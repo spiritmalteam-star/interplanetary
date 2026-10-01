@@ -716,14 +716,6 @@ function IdentityRow({ scope }: { scope: Scope }) {
           <div className="flex items-baseline gap-2">
             <h2 className="voice truncate text-[17px] font-semibold text-foreground">
               {entity.name}
-              {fused && (
-                <span
-                  className="ml-1.5"
-                  style={{ color: "color-mix(in srgb, var(--ac) 85%, var(--foreground))" }}
-                >
-                  × {fused.name}
-                </span>
-              )}
             </h2>
             <span className="kicker hidden truncate text-muted-foreground/60 sm:inline">
               {entity.epithet}
@@ -734,8 +726,7 @@ function IdentityRow({ scope }: { scope: Scope }) {
             style={{ color: "color-mix(in srgb, var(--ac) 72%, var(--foreground))" }}
             data-testid="chamber-motto"
           >
-            “{entity.motto}
-            {fused ? ` — while — ${fused.motto}”` : "”"}
+            “{entity.motto}”
           </p>
         </div>
 
@@ -930,11 +921,15 @@ function DepthRow() {
   const t = useT();
 
   return (
-    <div className="no-scrollbar flex shrink-0 items-center gap-2 overflow-x-auto px-4 py-2 sm:px-6">
+    <div className="flex shrink-0 flex-wrap items-center gap-x-2 gap-y-1 px-4 py-2.5 sm:px-6">
       <span className="kicker hidden shrink-0 text-muted-foreground/50 sm:inline">
         {t("Depth")}
       </span>
-      <div className="pill-tray min-w-max" role="group" aria-label={t("Depth")}>
+      <div
+        className="pill-tray pill-tray-wrap max-w-full"
+        role="group"
+        aria-label={t("Depth")}
+      >
         {DEPTHS.map((d) => (
           <button
             key={d.id}
@@ -945,8 +940,14 @@ function DepthRow() {
             aria-pressed={depth === d.id}
             onClick={() => setDepth(d.id)}
           >
-            {d.id === "ultron" ? "ULTRON" : `${d.id.replace("x", "")}×`}{" "}
-            <span className="ml-1 opacity-80">{t(d.label)}</span>
+            {d.id === "ultron" ? (
+              t(d.label)
+            ) : (
+              <>
+                {`${d.id.replace("x", "")}×`}
+                <span className="ml-1 opacity-80">{t(d.label)}</span>
+              </>
+            )}
           </button>
         ))}
       </div>
