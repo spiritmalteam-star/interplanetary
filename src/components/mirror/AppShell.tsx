@@ -93,8 +93,9 @@ export default function AppShell() {
     );
   }
 
-  /* The Akashic Library is its own ancient world: the wall of light
-     codes, the papyrus desk, and one record at a time. */
+  /* The Akashic Library is its own quiet chapter: the reading room of
+     records — one sheet on the desk, one record at a time, in the same
+     ink as the rest of the book. */
   if (view === "akashic") {
     return (
       <div className="relative h-[var(--app-h,100dvh)] overflow-hidden">

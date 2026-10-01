@@ -1114,144 +1114,79 @@ html:not(.dark) .scope-invent {
 }
 
 /* ------------------------------------------------------------------ */
-/*  THE AKASHIC LIBRARY — the ancient one's papyrus room.              */
-/*  A fixed warm-dark world, a wall of golden light codes, and one     */
-/*  sheet of papyrus where the Librarian's hand sets the record down.  */
+/*  THE AKASHIC LIBRARY — the reading room of records. One quiet       */
+/*  chapter of the same book: the page itself is the room now — no     */
+/*  wall of light codes, no separate world — just the reading voice,   */
+/*  hairline rules, and one record lying open on the desk, sealed      */
+/*  in ink.                                                            */
 /* ------------------------------------------------------------------ */
 
-:root {
-  --font-ancient: "Cinzel", Georgia, "Times New Roman", serif;
-  --font-hand: "Patrick Hand", "Segoe Print", "Bradley Hand", cursive;
-}
-.font-ancient { font-family: var(--font-ancient); }
-.font-hand { font-family: var(--font-hand); }
-
-.akashic-world {
-  background:
-    radial-gradient(
-      110% 70% at 50% 0%,
-      color-mix(in srgb, #8a8a89 10%, transparent) 0%,
-      transparent 58%
-    ),
-    radial-gradient(
-      120% 90% at 50% 112%,
-      color-mix(in srgb, #5a5a59 14%, transparent) 0%,
-      transparent 62%
-    ),
-    #0d0d0e;
-}
-
-/* the wall of light codes behind everything */
-.akashic-veil {
-  background-image: url("/images/ai/akashic-light-codes.jpg");
-  background-size: cover;
-  background-position: center;
-  opacity: 0.34;
-  mix-blend-mode: screen;
-}
-.akashic-veil::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(
-    100% 80% at 50% 42%,
-    transparent 20%,
-    color-mix(in srgb, #0d0d0e 78%, transparent) 92%
-  );
-}
-
-/* the papyrus sheet — ancient paper, always light, in either theme */
+/* the record sheet — a clean page of the book, in either hour */
 .papyrus {
-  background-color: #dededc;
-  background-image:
-    radial-gradient(
-      130% 100% at 50% 0%,
-      rgba(255, 255, 255, 0.55) 0%,
-      transparent 55%
-    ),
-    radial-gradient(
-      120% 120% at 50% 115%,
-      rgba(255, 255, 255, 0.12) 0%,
-      transparent 55%
-    ),
-    url("/images/ai/akashic-papyrus.jpg");
-  background-size: cover;
-  background-position: center;
-  background-blend-mode: normal, normal, luminosity;
-  color: #2e2e2d;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background-color: var(--card);
+  color: var(--foreground);
+  border: 1px solid var(--border);
   box-shadow:
-    0 30px 80px -30px rgba(0, 0, 0, 0.75),
-    0 0 60px -24px color-mix(in srgb, var(--gd) 40%, transparent),
-    inset 0 0 90px -40px rgba(255, 255, 255, 0.12);
+    0 24px 70px -36px rgba(0, 0, 0, 0.28),
+    0 0 44px -32px color-mix(in srgb, var(--foreground) 14%, transparent);
 }
-/* the faded ink frame drawn just inside the sheet */
+.dark .papyrus {
+  box-shadow:
+    0 24px 70px -34px rgba(0, 0, 0, 0.55),
+    0 0 44px -30px color-mix(in srgb, var(--foreground) 20%, transparent);
+}
+/* the faded rule drawn just inside the sheet */
 .papyrus-frame {
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  outline: 1px solid rgba(112, 82, 36, 0.12);
-  outline-offset: 3px;
+  outline: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent);
+  outline-offset: 4px;
 }
-.ink-title {
-  font-family: var(--font-ancient);
-  color: #4b4b4a;
-  text-shadow: 0 1px 0 rgba(255, 250, 230, 0.5);
+/* the Librarian's hand — the book's own reading voice, set in serif */
+.ink-title,
+.ink-hand {
+  font-family: var(--font-literata), Georgia, "Times New Roman", serif;
+  color: var(--foreground);
 }
-.ink-hand { font-family: var(--font-hand); color: #2e2e2d; }
-.ink-faint { color: rgba(74, 51, 19, 0.62); }
-.ink-gold { color: #8a8a89; }
+.ink-faint { color: color-mix(in srgb, var(--foreground) 58%, transparent); }
+.ink-soft { color: var(--muted-foreground); }
 
-/* a button drawn in aged ink on the sheet itself */
+/* a quiet ink button on the sheet itself */
 .papyrus-btn {
-  font-family: var(--font-ancient);
-  border: 1px solid rgba(112, 82, 36, 0.45);
-  background: rgba(255, 250, 232, 0.42);
-  color: #4b4b4a;
+  font-family: var(--font-literata), Georgia, "Times New Roman", serif;
+  border: 1px solid color-mix(in srgb, var(--foreground) 26%, transparent);
+  background: transparent;
+  color: var(--foreground);
   transition: all 0.3s ease;
 }
 .papyrus-btn:hover {
-  background: rgba(255, 250, 232, 0.78);
-  border-color: rgba(112, 82, 36, 0.7);
-  box-shadow: 0 6px 18px -10px rgba(112, 82, 36, 0.6);
+  border-color: color-mix(in srgb, var(--foreground) 48%, transparent);
+  background: color-mix(in srgb, var(--foreground) 5%, transparent);
+  box-shadow: 0 6px 18px -12px color-mix(in srgb, var(--foreground) 55%, transparent);
 }
 
-/* the ink forming while the Librarian writes */
+/* the ink forming while the Librarian writes — a quiet base line
+   with one sheen travelling along it */
 .ink-shimmer {
-  background: linear-gradient(
+  background-color: color-mix(in srgb, var(--foreground) 8%, transparent);
+  background-image: linear-gradient(
     90deg,
-    rgba(112, 82, 36, 0.08) 0%,
-    rgba(112, 82, 36, 0.26) 50%,
-    rgba(112, 82, 36, 0.08) 100%
+    transparent 0%,
+    color-mix(in srgb, var(--foreground) 30%, transparent) 50%,
+    transparent 100%
   );
   background-size: 220px 100%;
   background-repeat: no-repeat;
   animation: shimmer-line 2.2s linear infinite;
 }
 
-/* sidebar doorway for the Library */
+/* the composer's quill — a neutral ink disc, like the send law */
 .akashic-btn {
-  position: relative;
-  overflow: hidden;
-  isolation: isolate;
-  background:
-    linear-gradient(
-      120deg,
-      color-mix(in srgb, var(--gd) 18%, var(--glass-bg-strong)) 0%,
-      color-mix(in srgb, var(--pk) 12%, var(--glass-bg-strong)) 55%,
-      color-mix(in srgb, var(--gd) 14%, var(--glass-bg-strong)) 100%
-    );
-  border: 1px solid color-mix(in srgb, var(--gd) 34%, transparent);
-  box-shadow:
-    0 0 24px -12px color-mix(in srgb, var(--gd) 55%, transparent),
-    inset 0 1px 0 color-mix(in srgb, white 7%, transparent);
+  background: var(--foreground);
+  color: var(--background);
+  transition: all 0.3s ease;
 }
-.akashic-btn:hover {
-  border-color: color-mix(in srgb, var(--gd) 55%, transparent);
-  box-shadow:
-    0 0 32px -10px color-mix(in srgb, var(--gd) 70%, transparent),
-    inset 0 1px 0 color-mix(in srgb, white 9%, transparent);
-}
+.akashic-btn:hover { opacity: 0.88; }
 .akashic-halo {
-  box-shadow: 0 0 16px -6px color-mix(in srgb, var(--gd) 60%, transparent);
+  box-shadow: 0 0 16px -6px color-mix(in srgb, var(--foreground) 42%, transparent);
   animation: dream-halo 4.6s ease-in-out infinite;
 }
 
@@ -1300,8 +1235,7 @@ html:not(.dark) .scope-invent {
 
 @media (prefers-reduced-motion: reduce) {
   .scroll-hint,
-  .akashic-halo,
-  .akashic-btn::before {
+  .akashic-halo {
     animation: none !important;
   }
 }

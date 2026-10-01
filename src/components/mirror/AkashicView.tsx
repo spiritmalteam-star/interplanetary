@@ -45,10 +45,11 @@ interface AkashicResponse extends AkashicRecord {
 }
 
 /**
- * AkashicView — the ancient one's reading room. A wall of golden
- * light codes, and one sheet of papyrus on which the Librarian sets
- * down a record retrieved by the visitor's resonance. The hand is
- * old but readable; the voice, an old man behind a great desk.
+ * AkashicView — the reading room of records. One quiet chapter of the
+ * same book: the page itself is the room now — no wall of light codes,
+ * no separate world — just the reading voice, hairline rules, and one
+ * record lying open on the desk, sealed in ink. The hand is old but
+ * readable; the voice, an old man behind a great desk.
  */
 export function AkashicView() {
   const exitAkashic = useMirror((s) => s.exitAkashic);
@@ -339,46 +340,20 @@ export function AkashicView() {
   const listening = voiceState === "playing";
   /* once a record lies open on the desk, everything written becomes a reply */
   const replying = Boolean(record) && !seeking;
-  /* the reveal: while a record's text lies open before the visitor, the
-     room recedes — the wall of light codes dims so the parchment may
-     draw near (the sheet itself zooms gently toward the reader). */
-  const revealed = replying;
 
   return (
     <div
-      className="akashic-world relative flex h-full flex-col overflow-hidden"
+      className="relative flex h-full flex-col overflow-hidden bg-background"
       data-testid="akashic-view"
     >
-      {/* ---------- the wall of light codes ---------- */}
-      <div aria-hidden="true" className="akashic-veil absolute inset-0" />
-      <div
-        aria-hidden="true"
-        className="animate-drift-a pointer-events-none absolute -left-28 top-[-8%] size-[380px] rounded-full bg-[radial-gradient(circle,color-mix(in_srgb,var(--gd)_14%,transparent),transparent_65%)] blur-3xl"
-      />
-      <div
-        aria-hidden="true"
-        className="animate-drift-c pointer-events-none absolute -right-24 bottom-[-10%] size-[340px] rounded-full bg-[radial-gradient(circle,color-mix(in_srgb,#8a8a89_12%,transparent),transparent_65%)] blur-3xl"
-      />
-
-      {/* the reveal veil — rises only when a record's text is open, deepening
-          the room so the parchment stands out and reads easier */}
-      <div
-        aria-hidden="true"
-        data-testid="akashic-dimveil"
-        className={cn(
-          "pointer-events-none absolute inset-0 z-[5] bg-[#0a0a0b] transition-opacity duration-[1200ms] ease-out",
-          revealed ? "opacity-[0.74]" : "opacity-0"
-        )}
-      />
-
       {/* ---------- threshold: return · the name · a new record ---------- */}
-      <header className="relative z-20 flex items-center gap-2 border-b border-[color-mix(in_srgb,var(--gd)_20%,transparent)] bg-[color-mix(in_srgb,#0d0d0e_66%,transparent)] px-3 py-2.5 backdrop-blur-md sm:px-5">
+      <header className="relative z-20 flex items-center gap-2 border-b hairline bg-background/80 px-3 py-2.5 backdrop-blur-md sm:px-5">
         <button
           type="button"
           onClick={exitAkashic}
           data-testid="akashic-return"
           aria-label={t("Return from the Library")}
-          className="focus-glow group flex size-10 shrink-0 items-center justify-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--gd)_30%,transparent)] text-[12px] text-foreground/85 transition-all duration-300 hover:-translate-x-px hover:border-[var(--hairline-hover)] hover:text-foreground sm:size-auto sm:justify-start sm:px-3 sm:py-2"
+          className="focus-glow group flex size-10 shrink-0 items-center justify-center gap-2 rounded-full border hairline bg-card/60 text-[12px] text-foreground/85 transition-all duration-300 hover:-translate-x-px hover:border-[var(--hairline-hover)] hover:text-foreground sm:size-auto sm:justify-start sm:px-3 sm:py-2"
         >
           <ArrowLeft
             className="size-3.5 transition-transform duration-300 group-hover:-translate-x-0.5"
@@ -389,10 +364,10 @@ export function AkashicView() {
 
         <div className="flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5">
           <span className="flex items-center gap-2">
-            <span className="akashic-halo flex size-6 shrink-0 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--gd)_45%,transparent)] bg-[color-mix(in_srgb,var(--gd)_10%,transparent)]">
-              <Scroll className="size-3 text-[var(--gd)]" aria-hidden="true" />
+            <span className="akashic-halo flex size-6 shrink-0 items-center justify-center rounded-full border hairline bg-card/60">
+              <Scroll className="size-3 text-muted-foreground" aria-hidden="true" />
             </span>
-            <h1 className="font-ancient min-w-0 truncate text-[15px] font-semibold tracking-[0.14em] text-[var(--gd)] sm:text-[17px]">
+            <h1 className="ink-title min-w-0 truncate text-[15px] font-semibold tracking-[0.14em] sm:text-[17px]">
               {t("The Akashic Library")}
             </h1>
           </span>
@@ -407,7 +382,7 @@ export function AkashicView() {
           disabled={seeking}
           data-testid="akashic-new"
           aria-label={t("New record")}
-          className="focus-glow group flex size-10 shrink-0 items-center justify-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--gd)_30%,transparent)] text-[12px] text-foreground/85 transition-all duration-300 hover:-translate-y-px hover:border-[var(--hairline-hover)] hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40 sm:size-auto sm:justify-start sm:px-3 sm:py-2"
+          className="focus-glow group flex size-10 shrink-0 items-center justify-center gap-2 rounded-full border hairline bg-card/60 text-[12px] text-foreground/85 transition-all duration-300 hover:-translate-y-px hover:border-[var(--hairline-hover)] hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40 sm:size-auto sm:justify-start sm:px-3 sm:py-2"
         >
           <RotateCcw
             className="size-3.5 transition-transform duration-500 group-hover:-rotate-180"
@@ -417,7 +392,7 @@ export function AkashicView() {
         </button>
       </header>
 
-      {/* ---------- the reading room: one papyrus, one record ---------- */}
+      {/* ---------- the reading room: one sheet, one record ---------- */}
       <div className="nice-scroll relative z-10 flex-1 overflow-y-auto">
         <div className="mx-auto flex w-full max-w-[780px] flex-col px-3 pb-10 pt-5 sm:px-6 sm:pt-7">
           <AnimatePresence mode="wait">
@@ -434,7 +409,7 @@ export function AkashicView() {
               >
                 <span
                   aria-hidden="true"
-                  className="ink-gold mb-5 block text-[22px] leading-none"
+                  className="ink-soft mb-5 block text-[22px] leading-none"
                 >
                   ❧
                 </span>
@@ -470,7 +445,7 @@ export function AkashicView() {
               >
                 <span
                   aria-hidden="true"
-                  className="ink-gold mb-6 block text-center text-[22px] leading-none"
+                  className="ink-soft mb-6 block text-center text-[22px] leading-none"
                 >
                   ❧
                 </span>
@@ -521,45 +496,39 @@ export function AkashicView() {
               </motion.div>
             )}
 
-            {/* the record itself — ink on papyrus. As the text is revealed
-                the sheet zooms gently toward the reader (anchored at the
-                title edge) so the old hand reads easier. */}
+            {/* the record itself — ink on the page. The first paragraph
+                opens with a drop cap, the way old chapters do. */}
             {record && !seeking && (
               <motion.article
                 key="record"
-                initial={{ opacity: 0, y: 16, scale: 1 }}
-                animate={{ opacity: 1, y: 0, scale: 1.035 }}
-                transition={{
-                  duration: 0.8,
-                  ease: [0.22, 1, 0.36, 1],
-                  scale: { duration: 1.6, ease: [0.22, 1, 0.36, 1], delay: 0.15 },
-                }}
-                style={{ transformOrigin: "50% 0%" }}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
                 className="papyrus papyrus-frame relative mx-auto w-full rounded-2xl px-6 py-9 sm:px-12 sm:py-12"
                 data-testid="akashic-record"
               >
-                {/* corner light codes */}
+                {/* corner folios */}
                 <span
                   aria-hidden="true"
-                  className="ink-gold pointer-events-none absolute left-3 top-2.5 text-[11px] opacity-70"
+                  className="ink-soft pointer-events-none absolute left-3 top-2.5 text-[11px] opacity-60"
                 >
                   ◆
                 </span>
                 <span
                   aria-hidden="true"
-                  className="ink-gold pointer-events-none absolute right-3 top-2.5 text-[11px] opacity-70"
+                  className="ink-soft pointer-events-none absolute right-3 top-2.5 text-[11px] opacity-60"
                 >
                   ◆
                 </span>
                 <span
                   aria-hidden="true"
-                  className="ink-gold pointer-events-none absolute bottom-2.5 left-3 text-[11px] opacity-70"
+                  className="ink-soft pointer-events-none absolute bottom-2.5 left-3 text-[11px] opacity-60"
                 >
                   ◆
                 </span>
                 <span
                   aria-hidden="true"
-                  className="ink-gold pointer-events-none absolute bottom-2.5 right-3 text-[11px] opacity-70"
+                  className="ink-soft pointer-events-none absolute bottom-2.5 right-3 text-[11px] opacity-60"
                 >
                   ◆
                 </span>
@@ -567,7 +536,7 @@ export function AkashicView() {
                 {/* title & era */}
                 <header className="text-center">
                   <h2
-                    className="ink-title text-[24px] font-semibold leading-tight tracking-[0.05em] sm:text-[28px]"
+                    className="ink-title text-[24px] font-semibold leading-tight tracking-[0.04em] sm:text-[28px]"
                     data-testid="akashic-title"
                   >
                     {record.title}
@@ -583,33 +552,47 @@ export function AkashicView() {
                     className="mx-auto mt-5 block h-px w-40"
                     style={{
                       background:
-                        "linear-gradient(90deg, transparent, rgba(112,82,36,0.55), transparent)",
+                        "linear-gradient(90deg, transparent, color-mix(in srgb, var(--foreground) 42%, transparent), transparent)",
                     }}
                   />
                 </header>
 
-                {/* the record, in the old hand — readable */}
+                {/* the record, in the reading voice — a drop cap opens it */}
                 <div className="mt-7 space-y-5" data-testid="akashic-body">
                   {record.record.split(/\n{2,}/).map((para, i) => (
                     <p
                       key={i}
-                      className="ink-hand text-[18.5px] leading-[1.95] sm:text-[20px]"
+                      className={cn(
+                        "ink-hand text-[18.5px] leading-[1.95] sm:text-[20px]",
+                        i === 0 &&
+                          "first-letter:float-left first-letter:mr-3 first-letter:mt-[7px] first-letter:text-[54px] first-letter:font-semibold first-letter:leading-[0.78]"
+                      )}
                     >
                       {para}
                     </p>
                   ))}
                 </div>
 
-                {/* the seal */}
-                <p
-                  className="ink-hand ink-gold mt-8 text-center text-[16.5px] italic"
-                  data-testid="akashic-seal"
-                >
-                  {record.seal}
-                </p>
+                {/* the seal — the record closed with the Library's stamp */}
+                <div className="mt-9 flex flex-col items-center gap-3">
+                  <span
+                    aria-hidden="true"
+                    className="ink-soft flex size-10 -rotate-[7deg] items-center justify-center rounded-full border-[1.5px] border-current opacity-55"
+                  >
+                    <span className="flex size-7 items-center justify-center rounded-full border border-dashed border-current text-[11px] leading-none">
+                      ✦
+                    </span>
+                  </span>
+                  <p
+                    className="ink-hand ink-soft text-center text-[16.5px] italic"
+                    data-testid="akashic-seal"
+                  >
+                    {record.seal}
+                  </p>
+                </div>
 
                 {/* the desk actions — reply · copy · share · the Librarian's voice */}
-                <div className="mt-9 flex flex-wrap items-center justify-center gap-2.5 border-t border-[rgba(112,82,36,0.28)] pt-6">
+                <div className="mt-9 flex flex-wrap items-center justify-center gap-2.5 border-t hairline pt-6">
                   <button
                     type="button"
                     onClick={() => void seek(null, true)}
@@ -653,7 +636,8 @@ export function AkashicView() {
                     }
                     className={cn(
                       "papyrus-btn focus-glow inline-flex h-10 items-center gap-2 rounded-full px-4 text-[11px] font-semibold tracking-[0.1em]",
-                      listening && "bg-[rgba(122,90,30,0.18)]"
+                      listening &&
+                        "bg-[color-mix(in_srgb,var(--foreground)_8%,transparent)]"
                     )}
                   >
                     {voiceState === "loading" ? (
@@ -689,7 +673,7 @@ export function AkashicView() {
             >
               {visual.state === "pending" && (
                 <VisualizationPending
-                  accent="var(--gd)"
+                  accent="var(--foreground)"
                   testIdPrefix="akashic-visual"
                   repaint
                 />
@@ -721,7 +705,7 @@ export function AkashicView() {
                   visual.artifact.slides.length > 0 ? (
                     <VisualizationCard
                       artifact={visual.artifact}
-                      accent="var(--gd)"
+                      accent="var(--foreground)"
                       testIdPrefix="akashic-visual"
                       onRegenerate={() =>
                         void requestVisualization(visual.request)
@@ -730,7 +714,7 @@ export function AkashicView() {
                   ) : (
                     <PreparedPromptFallback
                       artifact={visual.artifact}
-                      accent="var(--gd)"
+                      accent="var(--foreground)"
                       testIdPrefix="akashic-visual"
                       onPaint={() =>
                         void requestVisualization(visual.request)
@@ -745,7 +729,7 @@ export function AkashicView() {
       </div>
 
       {/* ---------- setting the resonance on the desk ---------- */}
-      <div className="relative z-20 border-t border-[color-mix(in_srgb,var(--gd)_20%,transparent)] bg-[color-mix(in_srgb,#0d0d0e_66%,transparent)] px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-md sm:px-5">
+      <div className="relative z-20 border-t hairline bg-background/80 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-md sm:px-5">
         <form
           onSubmit={send}
           className="mx-auto w-full max-w-[680px]"
@@ -756,7 +740,7 @@ export function AkashicView() {
             onRemove={(id) =>
               setAttachments((prev) => prev.filter((a) => a.id !== id))
             }
-            accentVar="var(--gd)"
+            accentVar="var(--foreground)"
             testId="akashic-attachments"
           />
           <div className="flex items-center gap-2">
@@ -767,7 +751,7 @@ export function AkashicView() {
             aria-label={t("Receive unasked")}
             title={t("Receive unasked")}
             data-testid="akashic-unprompted"
-            className="focus-glow flex size-11 shrink-0 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--gd)_30%,transparent)] text-[var(--gd)] transition-all duration-300 hover:-translate-y-px hover:border-[var(--hairline-hover)] hover:shadow-[0_0_22px_-8px_color-mix(in_srgb,var(--gd)_75%,transparent)] disabled:cursor-not-allowed disabled:opacity-40"
+            className="focus-glow flex size-11 shrink-0 items-center justify-center rounded-full border hairline bg-card/60 text-foreground transition-all duration-300 hover:-translate-y-px hover:border-[var(--hairline-hover)] disabled:cursor-not-allowed disabled:opacity-40"
           >
             <Orbit className="size-4" aria-hidden="true" />
           </button>
@@ -787,12 +771,12 @@ export function AkashicView() {
             }
             aria-label={replying ? t("Reply to the record") : t("Write your resonance")}
             data-testid="akashic-input"
-            className="focus-glow h-11 min-w-0 flex-1 rounded-full border border-[color-mix(in_srgb,var(--gd)_26%,transparent)] bg-[color-mix(in_srgb,#141415_45%,transparent)] px-4 text-[14.5px] text-foreground placeholder:text-muted-foreground/60 transition-all duration-300 focus:border-[color-mix(in_srgb,var(--gd)_50%,transparent)] focus:shadow-[0_0_28px_-10px_color-mix(in_srgb,var(--gd)_70%,transparent)] focus:outline-none"
+            className="focus-glow h-11 min-w-0 flex-1 rounded-full border hairline bg-card/60 px-4 text-[14.5px] text-foreground placeholder:text-muted-foreground/60 transition-all duration-300"
           />
 
           <ChatInputExtras
             scope="akashic"
-            accentVar="var(--gd)"
+            accentVar="var(--foreground)"
             disabled={seeking}
             onTranscript={(text) =>
               setDraft((prev) => (prev ? `${prev} ${text}` : text))
@@ -811,7 +795,7 @@ export function AkashicView() {
             }
             aria-label={replying ? t("Send the reply") : t("Receive by resonance")}
             data-testid="akashic-seek"
-            className="akashic-btn focus-glow flex size-11 shrink-0 items-center justify-center rounded-full text-foreground transition-all duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-35"
+            className="akashic-btn focus-glow flex size-11 shrink-0 items-center justify-center rounded-full transition-all duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-35"
           >
             <Feather className="size-4" aria-hidden="true" />
           </button>
