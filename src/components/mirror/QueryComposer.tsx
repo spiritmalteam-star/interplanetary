@@ -4,7 +4,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Send } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { detectVisualIntent } from "@/lib/visualization";
 import {
   AttachmentChips,
@@ -27,7 +26,6 @@ export function QueryComposer() {
   const composerFocusNonce = useMirror((s) => s.composerFocusNonce);
   const t = useT();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const isMobile = useIsMobile();
   const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
 
   /* the channel's last visualization — "this" in a follow-up refers to it */
@@ -38,12 +36,12 @@ export function QueryComposer() {
     [messages]
   );
 
-  // Auto-resize — a slimmer field that grows only when truly needed
+  // Auto-resize — a slim field that grows only when truly needed
   useEffect(() => {
     const el = textareaRef.current;
     if (!el) return;
     el.style.height = "0px";
-    el.style.height = `${Math.min(el.scrollHeight, 104)}px`;
+    el.style.height = `${Math.min(el.scrollHeight, 96)}px`;
   }, [draft]);
 
   // Focus on request (suggested question chosen, etc.)
@@ -97,7 +95,7 @@ export function QueryComposer() {
 
   return (
     <div
-      className="shrink-0 border-t hairline bg-[var(--glass-bg)] px-3 pb-[max(0.8rem,env(safe-area-inset-bottom))] pt-2.5 backdrop-blur-xl sm:px-6 sm:pb-3.5"
+      className="shrink-0 border-t hairline bg-[var(--glass-bg)] px-3 pb-[max(0.45rem,env(safe-area-inset-bottom))] pt-1.5 backdrop-blur-xl sm:px-6 sm:pb-2"
       role="search"
       aria-label={t("Ask the mirror")}
     >
@@ -119,7 +117,7 @@ export function QueryComposer() {
           testId="composer-attachments"
         />
         <div
-          className={`glass-strong flex items-end gap-1.5 rounded-[20px] p-1.5 pl-3 transition-all duration-300 focus-within:-translate-y-px focus-within:border-[color-mix(in_srgb,var(--cy)_38%,transparent)] focus-within:glow-sm ${
+          className={`glass-strong flex items-end gap-1 rounded-[16px] p-1 pl-2.5 transition-all duration-300 focus-within:border-[color-mix(in_srgb,var(--cy)_38%,transparent)] ${
             status === "loading" ? "opacity-80" : ""
           }`}
         >
@@ -133,18 +131,12 @@ export function QueryComposer() {
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={onKeyDown}
-            placeholder={
-              isMobile
-                ? t("Ask the mirror...")
-                : t(
-                    "Ask the mirror... e.g. Who are the Pleiadians, and how are they helping humanity evolve?"
-                  )
-            }
-            className="nice-scroll max-h-[104px] min-h-[34px] flex-1 resize-none bg-transparent py-1.5 text-[15px] leading-relaxed text-foreground placeholder:text-muted-foreground/60 focus:outline-none sm:text-[15.5px]"
+            placeholder={t("Ask the mirror...")}
+            className="nice-scroll max-h-[96px] min-h-[22px] flex-1 resize-none bg-transparent py-[2px] text-[14px] leading-snug text-foreground placeholder:text-muted-foreground/60 focus:outline-none sm:text-[14.5px]"
           />
           <ChatInputExtras
             scope={activeMode as LiveScopeKey}
-            size="xs"
+            size="2xs"
             disabled={status === "loading"}
             onTranscript={(text) => {
               const state = useMirror.getState();
@@ -159,16 +151,11 @@ export function QueryComposer() {
             type="submit"
             disabled={!canSend}
             aria-label={t("Transmit question to the mirror")}
-            className="focus-glow mb-0 flex size-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--cy)] to-[color-mix(in_srgb,var(--cy)_55%,#8f6bff)] text-[#031018] shadow-[0_0_16px_-6px_color-mix(in_srgb,var(--cy)_75%,transparent)] transition-all duration-300 hover:glow-sm disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
+            className="focus-glow mb-0 flex size-7 shrink-0 items-center justify-center rounded-full bg-[var(--foreground)] text-[var(--background)] transition-all duration-300 hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-30"
           >
             <Send className="size-3.5" aria-hidden="true" />
           </button>
         </div>
-        <p className="mono-label mt-1.5 hidden text-center text-[10px] text-muted-foreground/50 sm:block">
-          {t(
-            "Enter to transmit · Shift + Enter for a new line · Free will honored always"
-          )}
-        </p>
       </form>
     </div>
   );

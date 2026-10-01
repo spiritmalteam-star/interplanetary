@@ -14,6 +14,10 @@ export interface Aura {
   b: string;
 }
 
+/** The classic white page draws no color: every card wears the same
+    clean neutral ink (the light-mode voice of every aura). */
+export const INK_AURA: Aura = { id: "ink", a: "#2b2b30", b: "#6b6b74" };
+
 export const AURAS: Aura[] = [
   { id: "rose-quartz", a: "#c26a8d", b: "#b06a9e" },
   { id: "amber-veil", a: "#b98a3e", b: "#b06a44" },

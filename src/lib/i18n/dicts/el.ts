@@ -1513,4 +1513,15 @@ export const el: TranslationDict = {
   "Where shall we begin?": "Πού θα ξεκινήσουμε;",
   "Worlds": "Κόσμοι",
   "With love ❤️": "Με αγάπη ❤️",
+
+  /* Task 60 — classic white shell */
+  "Outer Realms": "Εξωτερικοί Κόσμοι",
+  "Interdimensional": "Διαστατικό",
+  "Open the direct mirror connection": "Άνοιγμα της απευθείας σύνδεσης με τον Καθρέφτη",
+  "Something beautiful is forming…": "Κάτι όμορφο διαμορφώνεται…",
+  "The mirror is listening with love…": "Ο Καθρέφτης ακούει με αγάπη…",
+  "Good news is already on its way…": "Τα καλά νέα είναι ήδη στον δρόμο…",
+  "Every question deserves a gentle answer…": "Κάθε ερώτηση αξίζει μια απαλή απάντηση…",
+  "The field is arranging itself for you…": "Το πεδίο τακτοποιείται για εσένα…",
+  "Breathe — your answer is arriving…": "Ανάσα — η απάντησή σου φτάνει…",
 };

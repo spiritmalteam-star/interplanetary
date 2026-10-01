@@ -8,6 +8,7 @@ import {
   LoaderCircle,
   Mic,
   Paperclip,
+  Phone,
   Send,
   X,
 } from "lucide-react";
@@ -30,22 +31,20 @@ import {
 } from "./attachments";
 
 /* ------------------------------------------------------------------ */
-/*  ChatInputExtras — the microphone and the paperclip, on every       */
-/*  chat input. The paperclip receives ONE image and up to THREE       */
+/*  ChatInputExtras — the paperclip, the microphone and the call, on   */
+/*  every chat input. The paperclip receives ONE image and up to THREE */
 /*  documents (PDF, Excel, Word). The microphone records by tap;       */
 /*  tap again — or press the glowing voice-send button — and the       */
 /*  recording becomes words in the input, then flies on its own.       */
-/*  Held for ONE second it opens the scope's own live call — the       */
-/*  hold ring and its label make that threshold visible.               */
+/*  The call icon has ONE purpose only: a single click opens the       */
+/*  scope's own direct mirror communication.                           */
 /* ------------------------------------------------------------------ */
-
-const HOLD_MS = 1000;
 
 interface ChatInputExtrasProps {
   scope: LiveScopeKey;
   disabled?: boolean;
-  /** Button diameter — md = size-11, sm = size-9, xs = size-8. */
-  size?: "md" | "sm" | "xs";
+  /** Button diameter — md = size-11, sm = size-9, xs = size-8, 2xs = size-7. */
+  size?: "md" | "sm" | "xs" | "2xs";
   /** Accent CSS variable for the hold ring and recording glow. */
   accentVar?: string;
   onTranscript: (text: string) => void;
@@ -72,9 +71,6 @@ export function ChatInputExtras({
   const recorder = useVoiceRecorder();
 
   const fileRef = useRef<HTMLInputElement | null>(null);
-  const rafRef = useRef(0);
-  const pressStartRef = useRef(0);
-  const holdFiredRef = useRef(false);
   const transcribingRef = useRef(false);
   /* always-current callbacks — a transcript never lands stale */
   const onTranscriptRef = useRef(onTranscript);
@@ -82,13 +78,9 @@ export function ChatInputExtras({
   const onVoiceSubmitRef = useRef(onVoiceSubmit);
   onVoiceSubmitRef.current = onVoiceSubmit;
 
-  const [holding, setHolding] = useState(false);
-  const [holdProgress, setHoldProgress] = useState(0);
   const [transcribing, setTranscribing] = useState(false);
   const [liveCallOpen, setLiveCallOpen] = useState(false);
   const [elapsed, setElapsed] = useState(0);
-
-  useEffect(() => () => cancelAnimationFrame(rafRef.current), []);
 
   /* the visible recording clock — proof that the voice is being heard */
   useEffect(() => {
@@ -157,81 +149,16 @@ export function ChatInputExtras({
     [recorder, t]
   );
 
-  const cancelPress = useCallback(() => {
-    cancelAnimationFrame(rafRef.current);
-    setHolding(false);
-    setHoldProgress(0);
-  }, []);
-
-  const onMicPointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
+  /* TAP-TO-RECORD: the first tap arms the microphone and it stays
+     listening; the next tap sends the voice. No hold, no thresholds. */
+  const onMicClick = useCallback(() => {
     if (disabled || transcribing) return;
-    e.preventDefault();
-
-    /* already recording — this press sends the voice on its journey */
     if (recorder.recording) {
       void finalizeVoice(true);
       return;
     }
-
-    try {
-      e.currentTarget.setPointerCapture?.(e.pointerId);
-    } catch {
-      /* pointer capture unavailable — the handlers still work */
-    }
-    holdFiredRef.current = false;
-    pressStartRef.current = performance.now();
-    setHolding(true);
-
-    const tick = () => {
-      const p = Math.min(1, (performance.now() - pressStartRef.current) / HOLD_MS);
-      setHoldProgress(p);
-      if (p >= 1) {
-        /* ONE second of hold — the live connection opens itself */
-        holdFiredRef.current = true;
-        cancelPress();
-        recorder.cancel();
-        setLiveCallOpen(true);
-        try {
-          navigator.vibrate?.(35);
-        } catch {
-          /* no haptics here */
-        }
-        return;
-      }
-      rafRef.current = requestAnimationFrame(tick);
-    };
-    rafRef.current = requestAnimationFrame(tick);
-
     void beginListening();
-  };
-
-  const onMicPointerUp = () => {
-    if (holdFiredRef.current) return;
-    cancelPress();
-    /* TAP-TO-RECORD: the first tap arms the microphone and it stays
-       listening; the next tap sends the voice. Whether the release
-       lands before or after the mic finished opening, the recording
-       continues — the voice is never lost. */
-  };
-
-  const onMicKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
-    if (e.repeat) return;
-    if (e.key === " " || e.key === "Enter") {
-      e.preventDefault();
-      if (disabled || transcribing) return;
-      if (recorder.recording) {
-        void finalizeVoice(true);
-        return;
-      }
-      void beginListening();
-    }
-  };
-
-  const onMicKeyUp = (e: React.KeyboardEvent<HTMLButtonElement>) => {
-    if (e.key === " " || e.key === "Enter") {
-      /* toggle mode — the recording simply continues after release */
-    }
-  };
+  }, [disabled, transcribing, recorder.recording, finalizeVoice, beginListening]);
 
   /* ---------- the paperclip ---------- */
 
@@ -321,7 +248,13 @@ export function ChatInputExtras({
   );
 
   const btnSize =
-    size === "md" ? "size-11" : size === "sm" ? "size-9" : "size-8";
+    size === "md"
+      ? "size-11"
+      : size === "sm"
+        ? "size-9"
+        : size === "xs"
+          ? "size-8"
+          : "size-7";
   const iconSize =
     size === "md" ? "size-4" : size === "sm" ? "size-3.5" : "size-3.5";
   const recording = recorder.recording && !transcribing;
@@ -357,29 +290,13 @@ export function ChatInputExtras({
         <Paperclip className={cn(iconSize, "text-muted-foreground")} aria-hidden="true" />
       </button>
 
-      {/* microphone — tap once to record, tap again to send · hold 1s for the live call */}
+      {/* microphone — tap once to record, tap again to send */}
       <span
         className={cn("relative shrink-0", btnSize)}
         data-testid={`chat-mic-${scope}`}
       >
-        {/* the hold indicator — one second opens the live connection */}
-        {holding && (
-          <span
-            aria-hidden="true"
-            className="mono-label pointer-events-none absolute -top-7 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border px-2 py-0.5 text-[9px] tracking-[0.14em]"
-            style={{
-              borderColor: `color-mix(in srgb, ${accentVar} 55%, transparent)`,
-              color: accentVar,
-              background: "color-mix(in srgb, #05030e 72%, transparent)",
-              boxShadow: `0 0 14px -4px color-mix(in srgb, ${accentVar} 70%, transparent)`,
-              opacity: 0.35 + holdProgress * 0.65,
-            }}
-          >
-            {t("Hold 1s — live connection")}
-          </span>
-        )}
         {/* the recording clock — the voice is being heard */}
-        {recording && !holding && (
+        {recording && (
           <span
             aria-hidden="true"
             className="mono-label pointer-events-none absolute -top-7 left-1/2 -translate-x-1/2 rounded-full border px-1.5 py-0.5 text-[9px] tracking-[0.14em]"
@@ -391,26 +308,6 @@ export function ChatInputExtras({
           >
             {clock}
           </span>
-        )}
-        {holding && (
-          <svg
-            aria-hidden="true"
-            viewBox="0 0 44 44"
-            className="pointer-events-none absolute inset-0 size-full -rotate-90"
-          >
-            <circle
-              cx="22"
-              cy="22"
-              r="20"
-              fill="none"
-              stroke={accentVar}
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeDasharray={2 * Math.PI * 20}
-              strokeDashoffset={2 * Math.PI * 20 * (1 - holdProgress)}
-              opacity={0.35 + holdProgress * 0.65}
-            />
-          </svg>
         )}
         {recording && (
           <>
@@ -433,11 +330,7 @@ export function ChatInputExtras({
         <button
           type="button"
           disabled={disabled}
-          onPointerDown={onMicPointerDown}
-          onPointerUp={onMicPointerUp}
-          onPointerCancel={onMicPointerUp}
-          onKeyDown={onMicKeyDown}
-          onKeyUp={onMicKeyUp}
+          onClick={onMicClick}
           aria-label={
             recording
               ? t("Recording — tap again to send your voice")
@@ -446,7 +339,7 @@ export function ChatInputExtras({
           title={
             recording
               ? t("Recording — tap again to send your voice")
-              : `${t("Speak by voice")} — ${t("Hold for a live call")}`
+              : t("Speak by voice")
           }
           aria-pressed={recording}
           className={cn(
@@ -472,6 +365,24 @@ export function ChatInputExtras({
           )}
         </button>
       </span>
+
+      {/* the call — one purpose only: a single click opens the scope's
+          own direct mirror communication */}
+      <button
+        type="button"
+        onClick={() => setLiveCallOpen(true)}
+        disabled={disabled}
+        aria-label={t("Open the direct mirror connection")}
+        title={t("Open the direct mirror connection")}
+        data-testid={`chat-call-${scope}`}
+        className={cn(
+          "focus-glow flex shrink-0 items-center justify-center rounded-full border transition-all duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40",
+          btnSize
+        )}
+        style={{ borderColor: "color-mix(in srgb, " + accentVar + " 26%, transparent)" }}
+      >
+        <Phone className={cn(iconSize, "text-muted-foreground")} aria-hidden="true" />
+      </button>
 
       {/* the voice-send button — glowing while the voice is held:
           one press transcribes into the input and sends on its own */}

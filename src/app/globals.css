@@ -53,44 +53,46 @@
 :root {
   --radius: 0.75rem;
 
-  /* Light mode — ethereal daylight laboratory */
-  --background: #f2faff;
-  --foreground: #0e3a5f;
+  /* Light mode — classic white page, clean neutral ink.
+     No colors: text and hairlines stay monochrome so the
+     purpose of the words is the only voice on the page. */
+  --background: #ffffff;
+  --foreground: #1b1b1f;
   --card: #ffffff;
-  --card-foreground: #0e3a5f;
+  --card-foreground: #1b1b1f;
   --popover: #ffffff;
-  --popover-foreground: #0e3a5f;
-  --primary: #1264b0;
-  --primary-foreground: #f5fbff;
-  --secondary: #e7f4fb;
-  --secondary-foreground: #0e3a5f;
-  --muted: #e9f5fa;
-  --muted-foreground: #4e7391;
-  --accent: #ddf1fa;
-  --accent-foreground: #0e3a5f;
+  --popover-foreground: #1b1b1f;
+  --primary: #1b1b1f;
+  --primary-foreground: #ffffff;
+  --secondary: #f4f4f5;
+  --secondary-foreground: #1b1b1f;
+  --muted: #f4f4f5;
+  --muted-foreground: #71717a;
+  --accent: #f4f4f5;
+  --accent-foreground: #1b1b1f;
   --destructive: #c0395b;
-  --border: rgba(30, 130, 190, 0.18);
-  --input: rgba(30, 130, 190, 0.22);
-  --ring: rgba(18, 100, 176, 0.5);
-  --chart-1: #1264b0;
-  --chart-2: #17a6c9;
-  --chart-3: #7cc4e8;
-  --chart-4: #c99b4e;
-  --chart-5: #c24e9a;
-  --sidebar: #edf8fd;
-  --sidebar-foreground: #0e3a5f;
-  --sidebar-primary: #1264b0;
-  --sidebar-primary-foreground: #f5fbff;
-  --sidebar-accent: #ddf1fa;
-  --sidebar-accent-foreground: #0e3a5f;
-  --sidebar-border: rgba(30, 130, 190, 0.16);
-  --sidebar-ring: rgba(18, 100, 176, 0.45);
+  --border: rgba(0, 0, 0, 0.1);
+  --input: rgba(0, 0, 0, 0.14);
+  --ring: rgba(0, 0, 0, 0.35);
+  --chart-1: #3f3f46;
+  --chart-2: #52525b;
+  --chart-3: #71717a;
+  --chart-4: #a1a1aa;
+  --chart-5: #d4d4d8;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #1b1b1f;
+  --sidebar-primary: #1b1b1f;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f4f4f5;
+  --sidebar-accent-foreground: #1b1b1f;
+  --sidebar-border: rgba(0, 0, 0, 0.08);
+  --sidebar-ring: rgba(0, 0, 0, 0.3);
 
-  /* accents — softened, never neon */
-  --cy: #0f8fc2;
-  --pk: #b85e96;
-  --gd: #a8863e;
-  --ok: #2f9a7c;
+  /* accents — neutral ink, never colored */
+  --cy: #3f3f46;
+  --pk: #52525b;
+  --gd: #52525b;
+  --ok: #3f3f46;
 
   /* star play — mystical violet */
   --sp-a: #7b4fb6;
@@ -103,21 +105,21 @@
   /* ET register ink — fully opaque pages */
   --register-ink: #f2edfa;
 
-  /* hairlines — extremely thin, spec-driven */
-  --hairline: rgba(30, 130, 190, 0.16);
-  --hairline-hover: rgba(30, 130, 190, 0.38);
-  --hairline-active: rgba(18, 100, 176, 0.55);
+  /* hairlines — extremely thin, neutral */
+  --hairline: rgba(0, 0, 0, 0.09);
+  --hairline-hover: rgba(0, 0, 0, 0.26);
+  --hairline-active: rgba(0, 0, 0, 0.42);
 
-  /* glass */
-  --glass-bg: rgba(255, 255, 255, 0.55);
-  --glass-bg-strong: rgba(255, 255, 255, 0.82);
-  --glass-bg-soft: rgba(255, 255, 255, 0.38);
+  /* glass — white veils on the white page */
+  --glass-bg: rgba(255, 255, 255, 0.68);
+  --glass-bg-strong: rgba(255, 255, 255, 0.9);
+  --glass-bg-soft: rgba(255, 255, 255, 0.55);
 
-  /* atmosphere — pale cyan washes */
-  --atmo-1: rgba(186, 231, 248, 0.55);
-  --atmo-2: rgba(210, 240, 250, 0.65);
-  --atmo-3: rgba(198, 242, 238, 0.5);
-  --atmo-4: rgba(240, 214, 240, 0.4);
+  /* atmosphere — faint gray breaths, barely there */
+  --atmo-1: rgba(0, 0, 0, 0.032);
+  --atmo-2: rgba(0, 0, 0, 0.02);
+  --atmo-3: rgba(0, 0, 0, 0.026);
+  --atmo-4: rgba(0, 0, 0, 0.016);
 
   --star-opacity: 0;
 }
@@ -303,9 +305,9 @@
   color: transparent;
 }
 
-/* Light mode: blue → cyan hero, per the daylight laboratory palette */
+/* Light mode: the hero text is plain clean ink — no gradient */
 html:not(.dark) .text-hero {
-  background-image: linear-gradient(104deg, #1264b0 0%, #17a6c9 70%, #3fb6d8 100%);
+  background-image: linear-gradient(104deg, #1b1b1f 0%, #45454c 70%, #1b1b1f 100%);
 }
 
 .title-gradient {
@@ -465,6 +467,21 @@ html:not(.dark) .text-hero {
   --scope-b: #d49a5e;
 }
 
+/* Light mode: every scope wears the same clean neutral ink — the
+   words carry the meaning, color carries nothing. Placed after the
+   per-scope rules so the classic white page always wins. The aura
+   engine (lib/aura.ts) also returns ink in light mode, so inline
+   --scope-a/b stay monochrome too. */
+html:not(.dark) .scope-interplanetary,
+html:not(.dark) .scope-metaphysics,
+html:not(.dark) .scope-quantum,
+html:not(.dark) .scope-healing,
+html:not(.dark) .scope-manifesting,
+html:not(.dark) .scope-invent {
+  --scope-a: #2b2b30;
+  --scope-b: #6b6b74;
+}
+
 /* Scope-aware text gradient (opening line, titles) — softened */
 .scope-gradient-text {
   background-image: linear-gradient(
@@ -519,6 +536,13 @@ html:not(.dark) .text-hero {
   50% { opacity: 0.9; transform: scale(1.045); }
 }
 .animate-charge-pulse { animation: charge-pulse 2.2s ease-in-out infinite; }
+
+/* The mirror breathing while it listens */
+@keyframes breathe {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.07); opacity: 1; }
+}
+.animate-breathe { animation: breathe 3.2s ease-in-out infinite; }
 
 /* Gentle bob */
 @keyframes float-y {

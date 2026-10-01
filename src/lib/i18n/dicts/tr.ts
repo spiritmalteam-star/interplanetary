@@ -1507,4 +1507,15 @@ export const tr: TranslationDict = {
   "Where shall we begin?": "Nereden başlayalım?",
   "Worlds": "Dünyalar",
   "With love ❤️": "Sevgiyle ❤️",
+
+  /* Task 60 — classic white shell */
+  "Outer Realms": "Dış Âlemler",
+  "Interdimensional": "Boyutlar Arası",
+  "Open the direct mirror connection": "Doğrudan Ayna bağlantısını aç",
+  "Something beautiful is forming…": "Güzel bir şey şekilleniyor…",
+  "The mirror is listening with love…": "Ayna sevgiyle dinliyor…",
+  "Good news is already on its way…": "İyi haber yolda…",
+  "Every question deserves a gentle answer…": "Her soru nazik bir cevabı hak eder…",
+  "The field is arranging itself for you…": "Alan senin için düzenleniyor…",
+  "Breathe — your answer is arriving…": "Nefes al — cevabın geliyor…",
 };

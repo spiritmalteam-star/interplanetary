@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { Menu, PanelLeftClose } from "lucide-react";
+import { AlignLeft, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { CosmicBackdrop } from "./CosmicBackdrop";
@@ -26,26 +26,11 @@ import { StarPlayModal } from "./StarPlayModal";
 import { TechnologyModal } from "./TechnologyModal";
 import { SpeciesModal } from "./SpeciesModal";
 
-/* The quiet welcome — a cosmic logo, one line of invitation, nothing
-   more. The conversation owns the space. */
+/* The quiet welcome — nothing at all. The page is a clean white
+   sheet; the conversation owns every pixel. The identity lives in
+   the top bar's simple cosmic mark. */
 function ObservatoryWelcome() {
-  const t = useT();
-  return (
-    <div className="flex min-h-[58vh] flex-col items-center justify-center py-10 text-center">
-      <img
-        src="/images/ai/cosmic-logo.png"
-        alt=""
-        aria-hidden="true"
-        className="size-20 rounded-3xl object-cover shadow-[0_10px_50px_-18px_rgba(130,150,255,0.65)]"
-      />
-      <h1 className="mt-6 text-[19px] font-medium tracking-[0.02em] text-foreground/90 sm:text-[21px]">
-        {t("Where shall we begin?")}
-      </h1>
-      <p className="mono-label mt-2 text-[10.5px] text-muted-foreground/70">
-        {t("Mirror Entity Intelligence · Channel Online · Free Will Honored Always · Transmitted with Love ❤️")}
-      </p>
-    </div>
-  );
+  return <div aria-hidden="true" className="h-[46vh]" />;
 }
 
 export default function AppShell() {
@@ -54,6 +39,7 @@ export default function AppShell() {
   const sidebarOpen = useMirror((s) => s.sidebarOpen);
   const setSidebarOpen = useMirror((s) => s.setSidebarOpen);
   const setMobileNavOpen = useMirror((s) => s.setMobileNavOpen);
+  const returnToObservatory = useMirror((s) => s.returnToObservatory);
   const t = useT();
 
   /* Restore persisted language / voice / pace once after mount. */
@@ -122,33 +108,53 @@ export default function AppShell() {
 
       <main className="relative flex min-w-0 flex-1 flex-col">
         {/* Floating handles — no header, just two quiet controls:
-            the sidebar at the left, the scope selector at the right */}
+            the sidebar at the left (with the simple cosmic mark),
+            the scope selector as a fancy icon at the right */}
         <div className="pointer-events-none absolute inset-x-0 top-0 z-30 flex items-start justify-between gap-2 px-3 pt-3 sm:px-4">
-          {/* mobile: open the sheet — desktop: collapse the rail */}
-          <button
-            type="button"
-            onClick={() => setMobileNavOpen(true)}
-            aria-label={t("Open sidebar")}
-            title={t("Open sidebar")}
-            data-testid="sidebar-toggle"
-            className="focus-glow pointer-events-auto flex size-9 items-center justify-center rounded-full border hairline bg-[var(--glass-bg)] text-muted-foreground shadow-[0_2px_14px_-8px_rgba(0,0,0,0.55)] backdrop-blur-xl transition-colors duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground md:hidden"
-          >
-            <Menu className="size-4" aria-hidden="true" />
-          </button>
-          <button
-            type="button"
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            aria-label={sidebarOpen ? t("Close sidebar") : t("Open sidebar")}
-            title={sidebarOpen ? t("Close sidebar") : t("Open sidebar")}
-            data-testid="sidebar-toggle-desktop"
-            className="focus-glow pointer-events-auto hidden size-9 items-center justify-center rounded-full border hairline bg-[var(--glass-bg)] text-muted-foreground shadow-[0_2px_14px_-8px_rgba(0,0,0,0.55)] backdrop-blur-xl transition-colors duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground md:flex"
-          >
-            {sidebarOpen ? (
-              <PanelLeftClose className="size-4" aria-hidden="true" />
-            ) : (
-              <Menu className="size-4" aria-hidden="true" />
-            )}
-          </button>
+          <div className="pointer-events-auto flex items-center gap-2">
+            {/* mobile: open the sheet — desktop: collapse the rail */}
+            <button
+              type="button"
+              onClick={() => setMobileNavOpen(true)}
+              aria-label={t("Open sidebar")}
+              title={t("Open sidebar")}
+              data-testid="sidebar-toggle"
+              className="focus-glow flex size-9 items-center justify-center rounded-full border hairline bg-[var(--glass-bg)] text-muted-foreground shadow-[0_2px_14px_-8px_rgba(0,0,0,0.4)] backdrop-blur-xl transition-colors duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground md:hidden"
+            >
+              <AlignLeft className="size-4" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              aria-label={sidebarOpen ? t("Close sidebar") : t("Open sidebar")}
+              title={sidebarOpen ? t("Close sidebar") : t("Open sidebar")}
+              data-testid="sidebar-toggle-desktop"
+              className="focus-glow hidden size-9 items-center justify-center rounded-full border hairline bg-[var(--glass-bg)] text-muted-foreground shadow-[0_2px_14px_-8px_rgba(0,0,0,0.4)] backdrop-blur-xl transition-colors duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground md:flex"
+            >
+              {sidebarOpen ? (
+                <PanelLeftClose className="size-4" aria-hidden="true" />
+              ) : (
+                <PanelLeftOpen className="size-4" aria-hidden="true" />
+              )}
+            </button>
+
+            {/* the simple cosmic mark — the only identity in the top bar */}
+            <button
+              type="button"
+              onClick={returnToObservatory}
+              aria-label={t("Mirror Entity Laboratory")}
+              title={t("Mirror Entity Laboratory")}
+              data-testid="topbar-logo"
+              className="focus-glow hidden rounded-full transition-opacity duration-300 hover:opacity-75 sm:block"
+            >
+              <img
+                src="/images/ai/cosmic-mark.png"
+                alt=""
+                aria-hidden="true"
+                className="size-9 rounded-full object-cover"
+              />
+            </button>
+          </div>
 
           <div className="pointer-events-auto">
             <ScopeSelector />

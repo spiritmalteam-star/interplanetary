@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, ChevronDown } from "lucide-react";
+import { Check } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,9 +14,10 @@ import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 /**
- * The scope selector — one calm dropdown pinned to the top-right of the
- * application. Chooses which Mirror Entity channel the seeker speaks in;
- * picking the active scope returns to the quiet observatory.
+ * The scope selector — one fancy icon floating at the very top-right
+ * of the application, never interfering with the text. Chooses which
+ * Mirror Entity channel the seeker speaks in; picking the active scope
+ * returns to the quiet observatory.
  */
 export function ScopeSelector() {
   const activeMode = useMirror((s) => s.activeMode);
@@ -32,19 +33,16 @@ export function ScopeSelector() {
     <DropdownMenu>
       <DropdownMenuTrigger
         aria-label={t("Select scope")}
+        title={t("Select scope")}
         data-testid="scope-selector"
-        className="focus-glow flex h-9 items-center gap-2 rounded-full border hairline bg-[var(--glass-bg)] px-3.5 text-[13.5px] font-medium text-foreground/85 shadow-[0_2px_14px_-8px_rgba(0,0,0,0.55)] backdrop-blur-xl transition-colors duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+        className="focus-glow flex size-9 items-center justify-center rounded-full border hairline bg-[var(--glass-bg)] shadow-[0_2px_14px_-8px_rgba(0,0,0,0.4)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-px hover:border-[var(--hairline-hover)]"
       >
-        <span aria-hidden="true" className="text-[14px] leading-none">
+        <span
+          aria-hidden="true"
+          className="text-[16px] leading-none drop-shadow-[0_1px_6px_rgba(0,0,0,0.12)]"
+        >
           {active.emoji}
         </span>
-        <span className="max-w-[110px] truncate sm:max-w-none">
-          {t(active.label)}
-        </span>
-        <ChevronDown
-          className="size-3.5 text-muted-foreground/70"
-          aria-hidden="true"
-        />
       </DropdownMenuTrigger>
 
       <DropdownMenuContent

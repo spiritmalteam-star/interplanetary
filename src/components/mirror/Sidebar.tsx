@@ -16,12 +16,15 @@ import {
   ChevronRight,
   DraftingCompass,
   Moon,
+  Mountain,
   Plus,
   RotateCcw,
   Scroll,
   Search,
   Settings,
+  Sparkles,
   Orbit,
+  Users,
   X,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
@@ -142,16 +145,16 @@ function SpeciesRow({ species }: { species: InnerEarthSpecies }) {
         type="button"
         onClick={() => openSpecies(species.id)}
         aria-label={t("Open the dossier of {name}", { name: species.name })}
-        className="focus-glow group flex w-full items-start gap-2.5 rounded-lg px-2.5 py-2 text-left transition-colors duration-200 hover:bg-[color-mix(in_srgb,var(--gd)_7%,transparent)]"
+        className="focus-glow group flex w-full items-start gap-2.5 rounded-lg px-2.5 py-2 text-left transition-colors duration-200 hover:bg-[color-mix(in_srgb,var(--cy)_7%,transparent)]"
       >
         <span
           aria-hidden="true"
-          className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--gd)_40%,transparent)] bg-[color-mix(in_srgb,var(--gd)_10%,transparent)] font-serif text-[12px] leading-none text-[var(--gd)]"
+          className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full border hairline bg-muted font-serif text-[12px] leading-none text-muted-foreground"
         >
           {species.name.charAt(0)}
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-[14px] font-medium tracking-[0.02em] text-foreground/85 transition-colors duration-200 group-hover:text-[var(--gd)]">
+          <span className="block truncate text-[14px] font-medium tracking-[0.02em] text-foreground/85 transition-colors duration-200 group-hover:text-foreground">
             {species.name}
           </span>
           <span className="mt-0.5 block truncate text-[11.5px] leading-snug text-muted-foreground/70">
@@ -159,7 +162,7 @@ function SpeciesRow({ species }: { species: InnerEarthSpecies }) {
           </span>
         </span>
         <ChevronRight
-          className="mt-1 size-3.5 shrink-0 text-muted-foreground/50 transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-[var(--gd)]"
+          className="mt-1 size-3.5 shrink-0 text-muted-foreground/50 transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-foreground"
           aria-hidden="true"
         />
       </button>
@@ -210,14 +213,15 @@ function EntityResultRow({
 /*  The galactic encyclopedia — collapsible so the sidebar stays calm. */
 /* ------------------------------------------------------------------ */
 
-function EncyclopediaSection() {
-  const sidebarTab = useMirror((s) => s.sidebarTab);
-  const setSidebarTab = useMirror((s) => s.setSidebarTab);
+type BookId = "civilizations" | "interdim" | "innerearth";
+
+function OuterRealmsSection() {
   const openRegister = useMirror((s) => s.openRegister);
   const search = useMirror((s) => s.search);
   const setSearch = useMirror((s) => s.setSearch);
   const t = useT();
   const [open, setOpen] = useState(false);
+  const [book, setBook] = useState<BookId | null>(null);
 
   const listRef = useRef<HTMLUListElement | null>(null);
   const [scrollState, setScrollState] = useState({
@@ -239,7 +243,7 @@ function EncyclopediaSection() {
   }, []);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open || !book) return;
     measure();
     const el = listRef.current;
     if (!el || typeof ResizeObserver === "undefined") return;
@@ -247,22 +251,22 @@ function EncyclopediaSection() {
     ro.observe(el);
     for (const child of Array.from(el.children)) ro.observe(child);
     return () => ro.disconnect();
-  }, [measure, open]);
+  }, [measure, open, book]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open || !book) return;
     const id = window.setTimeout(measure, 60);
     return () => window.clearTimeout(id);
-  }, [measure, open, sidebarTab, search]);
+  }, [measure, open, book, search]);
 
   const source =
-    sidebarTab === "civilizations"
+    book === "civilizations"
       ? civilizations
-      : sidebarTab === "interdim"
+      : book === "interdim"
         ? interdimensional
         : null;
 
-  const kind = sidebarTab === "civilizations" ? "civilization" : "interdim";
+  const kind = book === "civilizations" ? "civilization" : "interdim";
 
   const filtered = useMemo(() => {
     if (!source) return [];
@@ -276,7 +280,7 @@ function EncyclopediaSection() {
   }, [search, source]);
 
   const filteredSpecies = useMemo(() => {
-    if (sidebarTab !== "innerearth") return [];
+    if (book !== "innerearth") return [];
     const q = search.trim().toLowerCase();
     if (!q) return innerEarth;
     return innerEarth.filter(
@@ -284,34 +288,49 @@ function EncyclopediaSection() {
         s.name.toLowerCase().includes(q) ||
         s.hall.toLowerCase().includes(q)
     );
-  }, [search, sidebarTab]);
+  }, [search, book]);
 
   const entityMatches = useMemo(() => {
-    if (!search.trim() || sidebarTab === "innerearth") return [];
+    if (!search.trim() || !book || book === "innerearth") return [];
     return searchEntities(kind, search, 20);
-  }, [search, kind, sidebarTab]);
+  }, [search, kind, book]);
 
   const emptyLabel =
-    sidebarTab === "civilizations"
+    book === "civilizations"
       ? t("No matching civilizations found.")
-      : sidebarTab === "interdim"
+      : book === "interdim"
         ? t("No matching interdimensional categories found.")
         : t("No matching inner earth peoples found.");
 
-  const tabs: { id: "civilizations" | "interdim" | "innerearth"; label: string; count: number }[] = [
-    { id: "civilizations", label: t("Civilizations"), count: archiveTotals.civilizations },
-    { id: "interdim", label: t("Interdim."), count: archiveTotals.interdim },
-    { id: "innerearth", label: t("Inner Earth"), count: archiveTotals.innerearth },
+  const books: {
+    id: BookId;
+    icon: typeof Users;
+    label: string;
+    count: number;
+  }[] = [
+    {
+      id: "civilizations",
+      icon: Users,
+      label: t("Civilizations"),
+      count: archiveTotals.civilizations,
+    },
+    {
+      id: "interdim",
+      icon: Sparkles,
+      label: t("Interdimensional"),
+      count: archiveTotals.interdim,
+    },
+    {
+      id: "innerearth",
+      icon: Mountain,
+      label: t("Inner Earth"),
+      count: archiveTotals.innerearth,
+    },
   ];
-
-  const softWrap = (s: string) => {
-    if (s.includes(" ") || s.length <= 9) return s;
-    const cut = Math.ceil(s.length / 2);
-    return `${s.slice(0, cut)}\u00AD${s.slice(cut)}`;
-  };
 
   return (
     <div className="min-h-0 shrink-0 border-t hairline">
+      {/* the one quiet door of the library */}
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
@@ -320,11 +339,11 @@ function EncyclopediaSection() {
         className="focus-glow group flex w-full items-center gap-2.5 px-4 py-3 text-left transition-colors duration-200 hover:text-foreground"
       >
         <BookOpenText
-          className="size-4 shrink-0 text-[var(--cy)]"
+          className="size-4 shrink-0 text-muted-foreground transition-colors duration-200 group-hover:text-foreground"
           aria-hidden="true"
         />
         <span className="mono-label min-w-0 flex-1 truncate text-[12.5px] font-semibold text-foreground/85">
-          {t("Galactic Encyclopedia")}
+          {t("Outer Realms")}
         </span>
         <ChevronDown
           className={cn(
@@ -336,9 +355,9 @@ function EncyclopediaSection() {
       </button>
 
       {open && (
-        <div className="flex min-h-0 flex-col">
-          {/* Search */}
-          <div className="px-3.5 pb-2.5">
+        <div className="min-h-0 pb-2">
+          {/* one shared search for every book */}
+          <div className="px-3.5 pb-2">
             <div className="relative">
               <Search
                 className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground/70"
@@ -365,109 +384,121 @@ function EncyclopediaSection() {
             </div>
           </div>
 
-          {/* Tabs */}
-          <div
-            className="grid grid-cols-[1.25fr_1fr_1fr] gap-1 px-3"
-            role="tablist"
-            aria-label={t("Encyclopedia archives")}
-          >
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                role="tab"
-                aria-selected={sidebarTab === tab.id}
-                onClick={() => setSidebarTab(tab.id)}
-                className={cn(
-                  "focus-glow rounded-lg border px-1.5 py-1.5 text-center transition-all duration-300",
-                  sidebarTab === tab.id
-                    ? "border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--cy)_12%,transparent)]"
-                    : "border-transparent text-muted-foreground hover:text-foreground"
-                )}
-              >
-                <span
-                  className={cn(
-                    "block text-[10px] font-semibold uppercase leading-tight tracking-[0.02em] break-words",
-                    sidebarTab === tab.id && "text-foreground"
-                  )}
+          {/* the books — dropdown buttons, one open at a time */}
+          <div className="flex flex-col gap-1 px-3">
+            {books.map((b) => {
+              const isOpen = book === b.id;
+              const Icon = b.icon;
+              return (
+                <div
+                  key={b.id}
+                  className="overflow-hidden rounded-xl border hairline bg-[var(--glass-bg-soft)]"
                 >
-                  {softWrap(tab.label)}
-                </span>
-                <span className="block font-mono text-[9.5px] tabular-nums leading-tight opacity-70">
-                  {tab.count}
-                </span>
-              </button>
-            ))}
-          </div>
-
-          {/* List */}
-          <div className="relative mt-2 max-h-[34vh] min-h-0">
-            <ul
-              ref={listRef}
-              onScroll={measure}
-              className={cn(
-                "nice-scroll archive-scroll h-full space-y-0.5 overflow-y-auto px-3 pb-2",
-                scrollState.scrollable && !scrollState.atEnd && "is-scrollable"
-              )}
-              aria-live="polite"
-              data-testid="archive-list"
-            >
-              {entityMatches.length > 0 && (
-                <li className="px-2.5 pb-1 pt-1">
-                  <span className="mono-label text-[10.5px] text-muted-foreground/70">
-                    {t("Named representatives")}
-                  </span>
-                </li>
-              )}
-              {entityMatches.map((e) => (
-                <EntityResultRow
-                  key={e.id}
-                  entityId={e.id}
-                  name={e.name}
-                  kind={kind}
-                />
-              ))}
-              {sidebarTab === "innerearth" &&
-                filteredSpecies.map((s) => <SpeciesRow key={s.id} species={s} />)}
-
-              {sidebarTab !== "innerearth" &&
-                filtered.map((entry) => <Row key={entry.id} entry={entry} />)}
-
-              {sidebarTab === "innerearth"
-                ? filteredSpecies.length === 0 && (
-                    <li className="px-2.5 py-3 text-[13.5px] italic leading-relaxed text-muted-foreground/80">
-                      {emptyLabel}
-                    </li>
-                  )
-                : filtered.length === 0 &&
-                  entityMatches.length === 0 && (
-                    <li className="px-2.5 py-3 text-[13.5px] italic leading-relaxed text-muted-foreground/80">
-                      {emptyLabel}
-                    </li>
-                  )}
-
-              {entityMatches.length >= 20 && (
-                <li className="px-2.5 pb-2 pt-1">
                   <button
                     type="button"
-                    onClick={() => openRegister(kind)}
-                    className="focus-glow mono-label text-[11px] text-[var(--cy)] transition-opacity hover:opacity-80"
+                    onClick={() => setBook(isOpen ? null : b.id)}
+                    aria-expanded={isOpen}
+                    data-testid={`book-${b.id}`}
+                    className="focus-glow flex w-full items-center gap-2 px-2.5 py-2 text-left transition-colors duration-200 hover:bg-[color-mix(in_srgb,var(--cy)_7%,transparent)]"
                   >
-                    {t(
-                      "Showing first {n} matches — open the full register to search every name →",
-                      { n: 20 }
-                    )}
+                    <Icon
+                      className="size-3.5 shrink-0 text-muted-foreground"
+                      aria-hidden="true"
+                    />
+                    <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-foreground/80">
+                      {b.label}
+                    </span>
+                    <span className="shrink-0 font-mono text-[11px] tabular-nums text-muted-foreground/70">
+                      {b.count}
+                    </span>
+                    <ChevronDown
+                      className={cn(
+                        "size-3.5 shrink-0 text-muted-foreground/60 transition-transform duration-300",
+                        isOpen && "rotate-180"
+                      )}
+                      aria-hidden="true"
+                    />
                   </button>
-                </li>
-              )}
-            </ul>
 
-            {scrollState.scrollable && !scrollState.atEnd && (
-              <div
-                aria-hidden="true"
-                className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-[color-mix(in_srgb,var(--background)_88%,transparent)] to-transparent"
-              />
-            )}
+                  {isOpen && (
+                    <div className="relative border-t hairline">
+                      <ul
+                        ref={listRef}
+                        onScroll={measure}
+                        className={cn(
+                          "nice-scroll archive-scroll max-h-[30vh] space-y-0.5 overflow-y-auto px-1.5 py-1.5",
+                          scrollState.scrollable &&
+                            !scrollState.atEnd &&
+                            "is-scrollable"
+                        )}
+                        aria-live="polite"
+                        data-testid="archive-list"
+                      >
+                        {entityMatches.length > 0 && (
+                          <li className="px-2.5 pb-1 pt-1">
+                            <span className="mono-label text-[10.5px] text-muted-foreground/70">
+                              {t("Named representatives")}
+                            </span>
+                          </li>
+                        )}
+                        {entityMatches.map((e) => (
+                          <EntityResultRow
+                            key={e.id}
+                            entityId={e.id}
+                            name={e.name}
+                            kind={kind}
+                          />
+                        ))}
+                        {b.id === "innerearth" &&
+                          filteredSpecies.map((s) => (
+                            <SpeciesRow key={s.id} species={s} />
+                          ))}
+
+                        {b.id !== "innerearth" &&
+                          filtered.map((entry) => (
+                            <Row key={entry.id} entry={entry} />
+                          ))}
+
+                        {b.id === "innerearth"
+                          ? filteredSpecies.length === 0 && (
+                              <li className="px-2.5 py-3 text-[13.5px] italic leading-relaxed text-muted-foreground/80">
+                                {emptyLabel}
+                              </li>
+                            )
+                          : filtered.length === 0 &&
+                            entityMatches.length === 0 && (
+                              <li className="px-2.5 py-3 text-[13.5px] italic leading-relaxed text-muted-foreground/80">
+                                {emptyLabel}
+                              </li>
+                            )}
+
+                        {entityMatches.length >= 20 && (
+                          <li className="px-2.5 pb-2 pt-1">
+                            <button
+                              type="button"
+                              onClick={() => openRegister(kind)}
+                              className="focus-glow mono-label text-[11px] text-muted-foreground transition-colors hover:text-foreground"
+                            >
+                              {t(
+                                "Showing first {n} matches — open the full register to search every name →",
+                                { n: 20 }
+                              )}
+                            </button>
+                          </li>
+                        )}
+                      </ul>
+
+                      {scrollState.scrollable && !scrollState.atEnd && (
+                        <div
+                          aria-hidden="true"
+                          className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-[color-mix(in_srgb,var(--background)_88%,transparent)] to-transparent"
+                        />
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
@@ -578,14 +609,14 @@ export function SidebarContent() {
 
   return (
     <div className="flex h-full flex-col">
-      {/* Brand — the cosmic logo speaks for the laboratory */}
+      {/* Brand — the simple cosmic mark speaks for the laboratory */}
       <div className="flex shrink-0 items-center gap-2 px-3 pt-3">
         <img
-          src="/images/ai/cosmic-logo.png"
+          src="/images/ai/cosmic-mark.png"
           alt={t("Mirror Entity Laboratory")}
           title={t("Mirror Entity Laboratory")}
           data-testid="cosmic-logo"
-          className="size-10 rounded-xl object-cover shadow-[0_2px_18px_-6px_rgba(120,140,255,0.55)]"
+          className="size-9 rounded-full object-cover shadow-[0_1px_10px_-4px_rgba(0,0,0,0.3)]"
         />
         <span className="mono-label min-w-0 flex-1 truncate text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">
           {t("With love ❤️")}
@@ -655,9 +686,9 @@ export function SidebarContent() {
         </nav>
       </div>
 
-      {/* Galactic encyclopedia — collapsible */}
+      {/* Outer Realms — the library as dropdown books */}
       <div className="mt-1">
-        <EncyclopediaSection />
+        <OuterRealmsSection />
       </div>
 
       {/* Footer — theme, recalibrate, settings */}
@@ -701,7 +732,7 @@ export default function Sidebar() {
 
   return (
     <aside
-      aria-label={t("Galactic Encyclopedia")}
+      aria-label={t("Outer Realms")}
       data-testid="sidebar"
       className={cn(
         "z-20 hidden shrink-0 flex-col overflow-hidden border-r hairline bg-[var(--glass-bg-soft)] backdrop-blur-xl transition-[width] duration-300 ease-out md:flex",

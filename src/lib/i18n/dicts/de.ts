@@ -1513,4 +1513,15 @@ export const de: TranslationDict = {
   "Where shall we begin?": "Wo sollen wir beginnen?",
   "Worlds": "Welten",
   "With love ❤️": "Mit Liebe ❤️",
+
+  /* Task 60 — classic white shell */
+  "Outer Realms": "Äußere Reiche",
+  "Interdimensional": "Interdimensional",
+  "Open the direct mirror connection": "Die direkte Spiegelverbindung öffnen",
+  "Something beautiful is forming…": "Etwas Schönes nimmt Form an…",
+  "The mirror is listening with love…": "Der Spiegel hört mit Liebe zu…",
+  "Good news is already on its way…": "Die gute Nachricht ist schon unterwegs…",
+  "Every question deserves a gentle answer…": "Jede Frage verdient eine sanfte Antwort…",
+  "The field is arranging itself for you…": "Das Feld ordnet sich für dich…",
+  "Breathe — your answer is arriving…": "Atme — deine Antwort ist unterwegs…",
 };

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   Check,
   Copy,
@@ -11,7 +11,8 @@ import {
 } from "lucide-react";
 import { useMirror, type ChatMessage } from "@/lib/mirror-store";
 import { SCOPE_META, sectionImage } from "@/lib/entity-utils";
-import { auraFor } from "@/lib/aura";
+import { auraFor, INK_AURA, type Aura } from "@/lib/aura";
+import { useTheme } from "next-themes";
 import { useT } from "@/lib/i18n";
 import type { Scope } from "@/lib/mirror-types";
 import { cn } from "@/lib/utils";
@@ -66,48 +67,38 @@ function parseBlocks(text: string): Block[] {
 
 /* ---------- small themed pieces ---------- */
 
-function OrbitSpinner() {
-  return (
-    <div className="relative mx-auto size-20" aria-hidden="true">
-      <div
-        className="scope-halo absolute inset-0 rounded-full border border-dashed"
-        style={{ borderColor: "color-mix(in srgb, var(--scope-a) 50%, transparent)" }}
-      />
-      <div
-        className="scope-halo-rev absolute inset-3 rounded-full border"
-        style={{ borderColor: "color-mix(in srgb, var(--scope-b) 38%, transparent)" }}
-      />
-      <div
-        className="animate-charge-pulse absolute inset-6 rounded-full"
-        style={{
-          background:
-            "radial-gradient(circle, color-mix(in srgb, var(--scope-a) 45%, transparent), transparent 72%)",
-        }}
-      />
-      <span
-        className="absolute left-1/2 top-1/2 size-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full"
-        style={{ background: "var(--scope-a)", boxShadow: "0 0 10px var(--scope-a)" }}
-      />
-    </div>
-  );
+/* The mirror's waiting phrases — warm, positive, unhurried. */
+const WAITING_PHRASES = [
+  "Something beautiful is forming…",
+  "The mirror is listening with love…",
+  "Good news is already on its way…",
+  "Every question deserves a gentle answer…",
+  "The field is arranging itself for you…",
+  "Breathe — your answer is arriving…",
+];
+
+/* Each transmission draws its own light — in the dark. On the classic
+   white page every card wears the same clean neutral ink. */
+function useAura(seed: string): Aura {
+  const { resolvedTheme } = useTheme();
+  return resolvedTheme === "dark" ? auraFor(seed) : INK_AURA;
 }
 
 /* ---------- loading ---------- */
 
-function LoadingTransmission({ scope, query }: { scope: Scope; query: string }) {
+function LoadingTransmission({ query }: { query: string }) {
   const [phase, setPhase] = useState(0);
-  const phases = SCOPE_META[scope].phases;
   const t = useT();
   /* The forming card already glows with the light it will carry. */
-  const aura = auraFor(`forming-${query}-${phase}`);
+  const aura = useAura(`forming-${query}-${phase}`);
 
   useEffect(() => {
     const id = window.setInterval(
-      () => setPhase((p) => (p + 1) % phases.length),
-      2000
+      () => setPhase((p) => (p + 1) % WAITING_PHRASES.length),
+      2400
     );
     return () => window.clearInterval(id);
-  }, [phases.length]);
+  }, []);
 
   return (
     <div
@@ -130,15 +121,32 @@ function LoadingTransmission({ scope, query }: { scope: Scope; query: string }) 
           </p>
         </div>
       )}
-      <OrbitSpinner />
-      <div className="mt-4 flex items-center justify-center gap-2.5">
-        <span
-          className="animate-dot-pulse inline-block size-1.5 rounded-full"
-          style={{ background: "var(--scope-a)" }}
+      {/* no circle, no spinner — the mirror itself breathes quietly
+          while positive phrases keep the seeker company */}
+      <div className="flex justify-center">
+        <img
+          src="/images/ai/cosmic-mark.png"
+          alt=""
+          aria-hidden="true"
+          className="animate-breathe size-14 rounded-full object-cover"
         />
-        <span className="mono-label text-[11.5px] text-muted-foreground">
-          {t(phases[phase] ?? phases[0] ?? "")}
-        </span>
+      </div>
+      <div
+        className="mt-4 flex h-6 items-center justify-center px-4 text-center"
+        aria-hidden="true"
+      >
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.p
+            key={phase}
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.35, ease: "easeOut" }}
+            className="text-[14.5px] italic leading-relaxed text-muted-foreground"
+          >
+            {t(WAITING_PHRASES[phase] ?? WAITING_PHRASES[0])}
+          </motion.p>
+        </AnimatePresence>
       </div>
       <div className="scope-frame-card relative mx-auto mt-6 max-w-[680px] space-y-3 overflow-hidden rounded-2xl glass p-6 sm:p-7">
         {[92, 78, 85, 60].map((w, i) => (
@@ -395,7 +403,7 @@ function Exchange({
   const [copied, setCopied] = useState(false);
   const t = useT();
   /* Each card draws its own light — quietly, never spoken of. */
-  const aura = auraFor(message.id);
+  const aura = useAura(message.id);
 
   const handleCopy = async () => {
     try {
@@ -751,7 +759,7 @@ export function TransmissionView() {
             loadingRef.current = node;
           }}
         >
-          <LoadingTransmission scope={scope} query={session.activeQuery} />
+          <LoadingTransmission query={session.activeQuery} />
         </div>
       )}
 

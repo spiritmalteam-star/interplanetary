@@ -1507,4 +1507,15 @@ export const sq: TranslationDict = {
   "Where shall we begin?": "Nga ku të fillojmë?",
   "Worlds": "Botët",
   "With love ❤️": "Me dashuri ❤️",
+
+  /* Task 60 — classic white shell */
+  "Outer Realms": "Botët e Jashtme",
+  "Interdimensional": "Ndërdimensional",
+  "Open the direct mirror connection": "Hap lidhjen e drejtpërdrejtë me Pasqyrën",
+  "Something beautiful is forming…": "Diçka e bukur po formohet…",
+  "The mirror is listening with love…": "Pasqyra po dëgjon me dashuri…",
+  "Good news is already on its way…": "Lajmi i mirë është tashmë në rrugë…",
+  "Every question deserves a gentle answer…": "Çdo pyetje meriton një përgjigje të butë…",
+  "The field is arranging itself for you…": "Fusha po rregullohet për ju…",
+  "Breathe — your answer is arriving…": "Merr frymë — përgjigja po vjen…",
 };
