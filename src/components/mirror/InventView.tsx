@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 import { useMirror, type ChatMessage } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
-import type { ForgeDialOption } from "@/lib/mirror-types";
 import {
   forgeChatPhases,
   forgeDomains,
@@ -23,6 +22,7 @@ import {
   inventTools,
   toolPhases,
 } from "@/lib/data/invent";
+import type { ForgeDialOption } from "@/lib/mirror-types";
 import { cn } from "@/lib/utils";
 import { ListenButton } from "./ListenButton";
 import { SigilForIntent } from "./MirrorOSForge";

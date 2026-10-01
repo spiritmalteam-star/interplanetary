@@ -6,9 +6,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sora);
-  --font-mono: var(--font-plex);
-  --font-voice: var(--font-fraunces);
+  --font-sans: var(--font-jakarta);
+  --font-mono: var(--font-jetbrains);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -54,44 +53,44 @@
 :root {
   --radius: 0.75rem;
 
-  /* Light mode — the alien greenhouse, daylight hours */
-  --background: #f2f8f4;
-  --foreground: #0e1613;
+  /* Light mode — ethereal daylight laboratory */
+  --background: #f2faff;
+  --foreground: #0e3a5f;
   --card: #ffffff;
-  --card-foreground: #0e1613;
+  --card-foreground: #0e3a5f;
   --popover: #ffffff;
-  --popover-foreground: #0e1613;
-  --primary: #0aa76a;
-  --primary-foreground: #f2fbf6;
-  --secondary: #e6f4ec;
-  --secondary-foreground: #0e1613;
-  --muted: #e9f2ec;
-  --muted-foreground: #4e7364;
-  --accent: #ddf3e6;
-  --accent-foreground: #0e1613;
+  --popover-foreground: #0e3a5f;
+  --primary: #1264b0;
+  --primary-foreground: #f5fbff;
+  --secondary: #e7f4fb;
+  --secondary-foreground: #0e3a5f;
+  --muted: #e9f5fa;
+  --muted-foreground: #4e7391;
+  --accent: #ddf1fa;
+  --accent-foreground: #0e3a5f;
   --destructive: #c0395b;
-  --border: rgba(10, 129, 85, 0.18);
-  --input: rgba(10, 129, 85, 0.22);
-  --ring: rgba(10, 167, 106, 0.5);
-  --chart-1: #0aa76a;
-  --chart-2: #0b7d8f;
-  --chart-3: #7cc4a8;
-  --chart-4: #a8863e;
-  --chart-5: #7a4fae;
-  --sidebar: #eef7f1;
-  --sidebar-foreground: #0e1613;
-  --sidebar-primary: #0aa76a;
-  --sidebar-primary-foreground: #f2fbf6;
-  --sidebar-accent: #ddf3e6;
-  --sidebar-accent-foreground: #0e1613;
-  --sidebar-border: rgba(10, 129, 85, 0.16);
-  --sidebar-ring: rgba(10, 167, 106, 0.45);
+  --border: rgba(30, 130, 190, 0.18);
+  --input: rgba(30, 130, 190, 0.22);
+  --ring: rgba(18, 100, 176, 0.5);
+  --chart-1: #1264b0;
+  --chart-2: #17a6c9;
+  --chart-3: #7cc4e8;
+  --chart-4: #c99b4e;
+  --chart-5: #c24e9a;
+  --sidebar: #edf8fd;
+  --sidebar-foreground: #0e3a5f;
+  --sidebar-primary: #1264b0;
+  --sidebar-primary-foreground: #f5fbff;
+  --sidebar-accent: #ddf1fa;
+  --sidebar-accent-foreground: #0e3a5f;
+  --sidebar-border: rgba(30, 130, 190, 0.16);
+  --sidebar-ring: rgba(18, 100, 176, 0.45);
 
   /* accents — softened, never neon */
-  --cy: #0a8155;
+  --cy: #0f8fc2;
   --pk: #b85e96;
   --gd: #a8863e;
-  --ok: #0f9d68;
+  --ok: #2f9a7c;
 
   /* star play — mystical violet */
   --sp-a: #7b4fb6;
@@ -102,72 +101,66 @@
   --iv-b: #b87a3e;
 
   /* ET register ink — fully opaque pages */
-  --register-ink: #f2faf6;
+  --register-ink: #f2edfa;
 
   /* hairlines — extremely thin, spec-driven */
-  --hairline: rgba(10, 129, 85, 0.18);
-  --hairline-hover: rgba(10, 129, 85, 0.4);
-  --hairline-active: rgba(10, 140, 90, 0.58);
+  --hairline: rgba(30, 130, 190, 0.16);
+  --hairline-hover: rgba(30, 130, 190, 0.38);
+  --hairline-active: rgba(18, 100, 176, 0.55);
 
   /* glass */
-  --glass-bg: rgba(255, 255, 255, 0.6);
-  --glass-bg-strong: rgba(255, 255, 255, 0.86);
-  --glass-bg-soft: rgba(255, 255, 255, 0.45);
+  --glass-bg: rgba(255, 255, 255, 0.55);
+  --glass-bg-strong: rgba(255, 255, 255, 0.82);
+  --glass-bg-soft: rgba(255, 255, 255, 0.38);
 
-  /* atmosphere — pale greenhouse washes */
-  --atmo-1: rgba(178, 232, 199, 0.5);
-  --atmo-2: rgba(206, 240, 222, 0.6);
-  --atmo-3: rgba(190, 238, 224, 0.45);
-  --atmo-4: rgba(232, 224, 196, 0.4);
+  /* atmosphere — pale cyan washes */
+  --atmo-1: rgba(186, 231, 248, 0.55);
+  --atmo-2: rgba(210, 240, 250, 0.65);
+  --atmo-3: rgba(198, 242, 238, 0.5);
+  --atmo-4: rgba(240, 214, 240, 0.4);
 
   --star-opacity: 0;
-
-  /* PARTICLEX — the alien brand gradient, daylight form */
-  --alien-grad: linear-gradient(100deg, #067a4b 0%, #0aa76a 46%, #0e8f7a 100%);
-
-  /* the light-mode ink trick — one variable flips the whole interface */
-  --color-white: #0e1613;
 }
 
 .dark {
-  /* Dark mode — the alien greenhouse, night hours (obsidian) */
-  --background: #060a09;
-  --foreground: #e9edf1;
-  --card: #0b1210;
-  --card-foreground: #e9edf1;
-  --popover: #0a100e;
-  --popover-foreground: #e9edf1;
-  --primary: #35d68f;
-  --primary-foreground: #04120c;
-  --secondary: #0f1a16;
-  --secondary-foreground: #c9dcd0;
-  --muted: #0e1713;
-  --muted-foreground: #93a89d;
-  --accent: #12211b;
-  --accent-foreground: #c9dcd0;
+  /* Dark mode — deep space */
+  --background: #05040b;
+  --foreground: #e6edf8;
+  --card: #0b0716;
+  --card-foreground: #e6edf8;
+  --popover: #0a0716;
+  --popover-foreground: #e6edf8;
+  --primary: #62c5d8;
+  --primary-foreground: #031018;
+  --secondary: #120c26;
+  --secondary-foreground: #c6dcf0;
+  --muted: #130d28;
+  --muted-foreground: #9aa8c2;
+  --accent: #161031;
+  --accent-foreground: #c6dcf0;
   --destructive: #e07a90;
-  --border: rgba(120, 210, 165, 0.13);
-  --input: rgba(120, 210, 165, 0.17);
-  --ring: rgba(80, 220, 150, 0.5);
-  --chart-1: #35d68f;
-  --chart-2: #7fc9d8;
+  --border: rgba(110, 190, 214, 0.14);
+  --input: rgba(110, 190, 214, 0.18);
+  --ring: rgba(110, 200, 220, 0.5);
+  --chart-1: #62c5d8;
+  --chart-2: #8f83d6;
   --chart-3: #e3a4c2;
   --chart-4: #d9c49a;
-  --chart-5: #c9a0e8;
-  --sidebar: #070c0a;
-  --sidebar-foreground: #d8e4dc;
-  --sidebar-primary: #35d68f;
-  --sidebar-primary-foreground: #04120c;
-  --sidebar-accent: #0f1a16;
-  --sidebar-accent-foreground: #c9dcd0;
-  --sidebar-border: rgba(120, 210, 165, 0.11);
-  --sidebar-ring: rgba(80, 220, 150, 0.42);
+  --chart-5: #66c9ac;
+  --sidebar: #070510;
+  --sidebar-foreground: #d8e4f2;
+  --sidebar-primary: #62c5d8;
+  --sidebar-primary-foreground: #031018;
+  --sidebar-accent: #14102b;
+  --sidebar-accent-foreground: #c6dcf0;
+  --sidebar-border: rgba(110, 190, 214, 0.12);
+  --sidebar-ring: rgba(110, 200, 220, 0.42);
 
   /* accents — softened, never neon */
-  --cy: #3fd68f;
+  --cy: #79d2e0;
   --pk: #e3a4c2;
   --gd: #d9c49a;
-  --ok: #34d399;
+  --ok: #66c9ac;
 
   /* star play — mystical violet */
   --sp-a: #b79bef;
@@ -178,28 +171,25 @@
   --iv-b: #eac394;
 
   /* ET register ink — fully opaque pages */
-  --register-ink: #0a100e;
+  --register-ink: #0a0716;
 
   /* hairlines */
-  --hairline: rgba(140, 220, 175, 0.14);
-  --hairline-hover: rgba(140, 225, 180, 0.34);
-  --hairline-active: rgba(90, 220, 155, 0.58);
+  --hairline: rgba(110, 190, 214, 0.15);
+  --hairline-hover: rgba(110, 205, 225, 0.34);
+  --hairline-active: rgba(100, 200, 220, 0.58);
 
   /* glass */
-  --glass-bg: rgba(9, 15, 13, 0.46);
-  --glass-bg-strong: rgba(10, 17, 14, 0.82);
-  --glass-bg-soft: rgba(12, 19, 16, 0.34);
+  --glass-bg: rgba(10, 8, 30, 0.45);
+  --glass-bg-strong: rgba(12, 10, 34, 0.78);
+  --glass-bg-soft: rgba(14, 11, 36, 0.3);
 
-  /* atmosphere — deep greenhouse nebulae */
-  --atmo-1: rgba(6, 58, 40, 0.52);
-  --atmo-2: rgba(10, 48, 52, 0.5);
-  --atmo-3: rgba(18, 48, 32, 0.45);
-  --atmo-4: rgba(52, 20, 50, 0.3);
+  /* atmosphere — deep space nebulae */
+  --atmo-1: rgba(42, 11, 96, 0.5);
+  --atmo-2: rgba(27, 20, 80, 0.5);
+  --atmo-3: rgba(0, 61, 72, 0.42);
+  --atmo-4: rgba(92, 11, 69, 0.32);
 
   --star-opacity: 1;
-
-  /* PARTICLEX — the alien brand gradient, night form */
-  --alien-grad: linear-gradient(100deg, #0fd975 0%, #10cfa0 46%, #86efac 100%);
 }
 
 @layer base {
@@ -222,10 +212,7 @@
     -webkit-font-smoothing: antialiased;
   }
   ::selection {
-    background: color-mix(in srgb, var(--cy) 26%, transparent);
-  }
-  html.light ::selection {
-    background: color-mix(in srgb, var(--cy) 22%, transparent);
+    background: color-mix(in srgb, var(--cy) 28%, transparent);
   }
 }
 
@@ -273,7 +260,7 @@
 }
 
 .mono-label {
-  font-family: var(--font-plex), ui-monospace, monospace;
+  font-family: var(--font-jetbrains), ui-monospace, monospace;
   text-transform: uppercase;
   letter-spacing: 0.18em;
   font-weight: 500;
@@ -301,185 +288,6 @@
 }
 
 /* ------------------------------------------------------------------ */
-/*  PARTICLEX — the design DNA: surfaces, controls, motion, voice      */
-/* ------------------------------------------------------------------ */
-
-/* the entity's voice — Fraunces speaks the mottos, whispers, seals */
-.voice {
-  font-family: var(--font-voice), Georgia, serif;
-}
-.voice-italic {
-  font-family: var(--font-voice), Georgia, serif;
-  font-style: italic;
-}
-
-/* kicker — instrument labels (9.5px / 0.24em tracking) */
-.kicker {
-  font-family: var(--font-plex), ui-monospace, monospace;
-  font-size: 9.5px;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
-  font-weight: 600;
-}
-
-/* the alien brand gradient as text */
-.alien-text {
-  background: var(--alien-grad);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-/* surfaces — the chamber is fully opaque, no blur, no transparency */
-.panel-solid {
-  background:
-    radial-gradient(
-      120% 90% at 50% 0%,
-      color-mix(in srgb, var(--ac, var(--cy)) 7%, transparent),
-      transparent 60%
-    ),
-    linear-gradient(172deg, #0f1513, #0b100e 52%, #090c0b);
-  border: 1px solid var(--ac-line, var(--hairline));
-  border-radius: 20px;
-}
-html.light .panel-solid {
-  background:
-    radial-gradient(
-      120% 90% at 50% 0%,
-      color-mix(in srgb, var(--ac, var(--cy)) 9%, transparent),
-      transparent 60%
-    ),
-    linear-gradient(172deg, #ffffff, #f7fbf8 52%, #f2f8f4);
-  box-shadow:
-    0 24px 70px -38px color-mix(in srgb, var(--ac, var(--cy)) 35%, transparent);
-}
-.panel-solid-deep {
-  background: linear-gradient(172deg, #101714, #0b100e);
-  border: 1px solid var(--ac-line, var(--hairline));
-  border-radius: 16px;
-}
-html.light .panel-solid-deep {
-  background: #ffffff;
-}
-
-/* controls — the 28px round instrument button */
-.pgbtn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 9999px;
-  border: 1px solid var(--hairline);
-  color: var(--muted-foreground);
-  background: transparent;
-  transition: all 300ms ease;
-}
-.pgbtn:hover {
-  border-color: var(--ac-line, var(--hairline-hover));
-  color: var(--foreground);
-  box-shadow: 0 0 18px var(--ac-glow, color-mix(in srgb, var(--cy) 18%, transparent));
-  transform: scale(1.06);
-}
-.pgbtn:disabled {
-  opacity: 0.35;
-  pointer-events: none;
-}
-
-/* pill trays and their pills */
-.pill-tray {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  padding: 3px;
-  border-radius: 9999px;
-  background: var(--glass-bg-soft);
-  border: 1px solid var(--hairline);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
-}
-.pillbtn {
-  border: 1px solid transparent;
-  border-radius: 9999px;
-  padding: 3px 10px;
-  font-size: 11px;
-  letter-spacing: 0.05em;
-  color: var(--muted-foreground);
-  background: transparent;
-  transition: all 250ms ease;
-  white-space: nowrap;
-  cursor: pointer;
-}
-.pillbtn:hover {
-  color: var(--foreground);
-}
-.pillbtn[data-active="true"] {
-  background: var(--ac-soft, color-mix(in srgb, var(--cy) 12%, transparent));
-  border-color: var(--ac-line, var(--hairline-hover));
-  color: var(--ac, var(--cy));
-  font-weight: 600;
-}
-/* a tray allowed to wrap (depth switcher) — softened corners once it
-   grows past one line, so every label keeps its room to be read */
-.pill-tray.pill-tray-wrap {
-  flex-wrap: wrap;
-  row-gap: 4px;
-  border-radius: 16px;
-}
-
-/* attunement chips — outlined pills that turn accent-colored on hover */
-.chipbtn {
-  border: 1px solid var(--hairline);
-  border-radius: 9999px;
-  padding: 4px 12px;
-  font-size: 12px;
-  line-height: 1.5;
-  color: var(--muted-foreground);
-  background: transparent;
-  transition: all 300ms ease;
-  cursor: pointer;
-}
-.chipbtn:hover {
-  border-color: var(--ac-line, var(--hairline-hover));
-  color: var(--ac, var(--cy));
-  background: var(--ac-soft, color-mix(in srgb, var(--cy) 10%, transparent));
-}
-
-/* motion — breath, fadeup, reveal */
-@keyframes breath-k {
-  0%, 100% { transform: scale(1); opacity: 0.85; }
-  50% { transform: scale(1.08); opacity: 1; }
-}
-.breath { animation: breath-k 4.6s ease-in-out infinite; }
-
-@keyframes fadeup-k {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.fadeup { animation: fadeup-k 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
-
-@keyframes reveal-k {
-  from { opacity: 0; transform: translateY(6px); filter: blur(4px); }
-  to { opacity: 1; transform: translateY(0); filter: blur(0); }
-}
-.reveal-in { animation: reveal-k 0.3s cubic-bezier(0.22, 1, 0.36, 1) both; }
-
-/* film grain — 5%, laid quietly over the laboratory */
-.grain {
-  position: relative;
-}
-.grain::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.05;
-  z-index: 5;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
-  background-size: 180px 180px;
-}
-
-/* ------------------------------------------------------------------ */
 /*  Text gradients                                                    */
 /* ------------------------------------------------------------------ */
 
@@ -495,13 +303,13 @@ html.light .panel-solid-deep {
   color: transparent;
 }
 
-/* Light mode: alien green hero, per the daylight greenhouse palette */
+/* Light mode: blue → cyan hero, per the daylight laboratory palette */
 html:not(.dark) .text-hero {
-  background-image: linear-gradient(104deg, #067a4b 0%, #0aa76a 70%, #0e8f7a 100%);
+  background-image: linear-gradient(104deg, #1264b0 0%, #17a6c9 70%, #3fb6d8 100%);
 }
 
 .title-gradient {
-  background-image: var(--alien-grad);
+  background-image: linear-gradient(100deg, var(--cy), var(--pk));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -603,76 +411,58 @@ html:not(.dark) .text-hero {
 /*  its own alchemy of accents. Applied via .scope-* wrappers.         */
 /* ------------------------------------------------------------------ */
 
-/* The five-variable accent system, one pair per scope:
-   --ac solid · --ac-soft 12% fill · --ac-line 32% border
-   --ac-glow 18% shadow · --ac-deep 14% wash.
-   --scope-a/--scope-b remain as aliases for the older gradient code. */
 .scope-interplanetary {
-  --ac: #0a8155;
-  --scope-b: #0b7d8f;
+  --scope-a: #0f7fae;
+  --scope-b: #6f5cc4;
 }
 .dark .scope-interplanetary {
-  --ac: #8fd4b2;
-  --scope-b: #7fc9d8;
+  --scope-a: #6cc8dd;
+  --scope-b: #8d84d8;
 }
 
 .scope-metaphysics {
-  --ac: #7a4fae;
+  --scope-a: #8a5fae;
   --scope-b: #a8842c;
 }
 .dark .scope-metaphysics {
-  --ac: #c9a0e8;
+  --scope-a: #c9a0e8;
   --scope-b: #d9bc6a;
 }
 
 .scope-quantum {
-  --ac: #0b6f96;
+  --scope-a: #a357a8;
   --scope-b: #5f63c2;
 }
 .dark .scope-quantum {
-  --ac: #8fc7ec;
-  --scope-b: #9a9ae0;
+  --scope-a: #cf93d3;
+  --scope-b: #8b8bd8;
 }
 
 .scope-healing {
-  --ac: #96600f;
-  --scope-b: #b05e76;
+  --scope-a: #b05e76;
+  --scope-b: #2f8a6e;
 }
 .dark .scope-healing {
-  --ac: #edc48c;
-  --scope-b: #e8a9a0;
+  --scope-a: #e39dab;
+  --scope-b: #63c2a6;
 }
 
 .scope-manifesting {
-  --ac: #8a6a10;
+  --scope-a: #9c7430;
   --scope-b: #a66434;
 }
 .dark .scope-manifesting {
-  --ac: #d8b680;
+  --scope-a: #d8b680;
   --scope-b: #cd9068;
 }
 
 .scope-invent {
-  --ac: #96551f;
+  --scope-a: #9c5426;
   --scope-b: #a8642e;
 }
 .dark .scope-invent {
-  --ac: #e5b27a;
+  --scope-a: #e5b27a;
   --scope-b: #d49a5e;
-}
-
-/* derive the family from --ac inside every scope wrapper */
-.scope-interplanetary,
-.scope-metaphysics,
-.scope-quantum,
-.scope-healing,
-.scope-manifesting,
-.scope-invent {
-  --scope-a: var(--ac);
-  --ac-soft: color-mix(in srgb, var(--ac) 12%, transparent);
-  --ac-line: color-mix(in srgb, var(--ac) 32%, transparent);
-  --ac-glow: color-mix(in srgb, var(--ac) 18%, transparent);
-  --ac-deep: color-mix(in srgb, var(--ac) 14%, transparent);
 }
 
 /* Scope-aware text gradient (opening line, titles) — softened */

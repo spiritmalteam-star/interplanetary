@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Sora, Fraunces, IBM_Plex_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 import "@fontsource/cinzel/400.css";
 import "@fontsource/cinzel/600.css";
 import "@fontsource/cinzel/700.css";
@@ -9,25 +9,14 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/mirror/theme-provider";
 
-/* PARTICLEX DNA — three voices:
-   Sora speaks the interface, Fraunces speaks the entity,
-   IBM Plex Mono speaks the instruments. */
-const sora = Sora({
-  variable: "--font-sora",
+const jakartaSans = Plus_Jakarta_Sans({
+  variable: "--font-jakarta",
   subsets: ["latin"],
   display: "swap",
 });
 
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
-  subsets: ["latin"],
-  style: ["normal", "italic"],
-  display: "swap",
-});
-
-const plexMono = IBM_Plex_Mono({
-  variable: "--font-plex",
-  weight: ["400", "500", "600"],
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains",
   subsets: ["latin"],
   display: "swap",
 });
@@ -47,8 +36,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: dark)", color: "#060a09" },
-    { media: "(prefers-color-scheme: light)", color: "#f2f8f4" },
+    { media: "(prefers-color-scheme: dark)", color: "#05040B" },
+    { media: "(prefers-color-scheme: light)", color: "#F2FAFF" },
   ],
   width: "device-width",
   initialScale: 1,
@@ -62,7 +51,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${sora.variable} ${fraunces.variable} ${plexMono.variable} antialiased bg-background text-foreground`}
+        className={`${jakartaSans.variable} ${jetbrainsMono.variable} antialiased bg-background text-foreground`}
       >
         <ThemeProvider>
           {children}

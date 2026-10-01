@@ -16,9 +16,8 @@ import {
   type ChatAttachment,
 } from "@/components/mirror/attachments";
 import type { LiveScopeKey } from "@/lib/live-scopes";
-import { cn } from "@/lib/utils";
 
-export function QueryComposer({ embedded = false }: { embedded?: boolean }) {
+export function QueryComposer() {
   const activeMode = useMirror((s) => s.activeMode);
   const draft = useMirror((s) => s.sessions[s.activeMode].draft);
   const setDraft = useMirror((s) => s.setDraft);
@@ -98,14 +97,7 @@ export function QueryComposer({ embedded = false }: { embedded?: boolean }) {
 
   return (
     <div
-      className={cn(
-        "shrink-0 px-3 pb-[max(0.8rem,env(safe-area-inset-bottom))] pt-2.5 sm:px-6 sm:pb-3.5",
-        /* anchored inside the chamber: no seam of its own — the frame
-           already holds it; floating free: the old glass band */
-        embedded
-          ? "bg-transparent backdrop-blur-none"
-          : "border-t hairline bg-[var(--glass-bg)] backdrop-blur-xl"
-      )}
+      className="shrink-0 border-t hairline bg-[var(--glass-bg)] px-3 pb-[max(0.8rem,env(safe-area-inset-bottom))] pt-2.5 backdrop-blur-xl sm:px-6 sm:pb-3.5"
       role="search"
       aria-label={t("Ask the mirror")}
     >
@@ -127,7 +119,7 @@ export function QueryComposer({ embedded = false }: { embedded?: boolean }) {
           testId="composer-attachments"
         />
         <div
-          className={`glass-strong flex items-end gap-1.5 rounded-[20px] p-1.5 pl-3 transition-all duration-300 focus-within:-translate-y-px focus-within:border-[color-mix(in_srgb,var(--ac,var(--cy))_38%,transparent)] focus-within:glow-sm ${
+          className={`glass-strong flex items-end gap-1.5 rounded-[20px] p-1.5 pl-3 transition-all duration-300 focus-within:-translate-y-px focus-within:border-[color-mix(in_srgb,var(--cy)_38%,transparent)] focus-within:glow-sm ${
             status === "loading" ? "opacity-80" : ""
           }`}
         >
@@ -167,7 +159,7 @@ export function QueryComposer({ embedded = false }: { embedded?: boolean }) {
             type="submit"
             disabled={!canSend}
             aria-label={t("Transmit question to the mirror")}
-            className="focus-glow mb-0 flex size-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--cy)] to-[color-mix(in_srgb,var(--cy)_55%,#0fd975)] text-[#04120c] shadow-[0_0_16px_-6px_color-mix(in_srgb,var(--cy)_75%,transparent)] transition-all duration-300 hover:glow-sm disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
+            className="focus-glow mb-0 flex size-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--cy)] to-[color-mix(in_srgb,var(--cy)_55%,#8f6bff)] text-[#031018] shadow-[0_0_16px_-6px_color-mix(in_srgb,var(--cy)_75%,transparent)] transition-all duration-300 hover:glow-sm disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
           >
             <Send className="size-3.5" aria-hidden="true" />
           </button>

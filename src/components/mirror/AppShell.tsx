@@ -7,20 +7,19 @@ import { StarField } from "./StarField";
 import { TopNavigation } from "./TopNavigation";
 import Sidebar from "./Sidebar";
 import { MobileSidebar } from "./MobileSidebar";
+import { ModeSelector } from "./ModeSelector";
+import { MetaphysicsRail } from "./MetaphysicsRail";
 import { QuestionCards } from "./QuestionCards";
 import { StatusBar } from "./StatusBar";
 import { QueryComposer } from "./QueryComposer";
 import { TransmissionView } from "./TransmissionView";
-import { MetaphysicsRail } from "./MetaphysicsRail";
 import { MirrorOS } from "./MirrorOS";
 import { InventView } from "./InventView";
 import { ArchiveRegister } from "./ArchiveRegister";
 import { CommunionView } from "./CommunionView";
 import { AkashicView } from "./AkashicView";
-import { FooterTicker } from "./FooterTicker";
 import { FederationModal } from "./FederationModal";
 import { AstralJobsModal } from "./AstralJobsModal";
-import { AstralProtocolModal } from "./AstralProtocolModal";
 import { DossierModal } from "./DossierModal";
 import { SettingsModal } from "./SettingsModal";
 import { StarPlayModal } from "./StarPlayModal";
@@ -31,7 +30,7 @@ export default function AppShell() {
   const view = useMirror((s) => s.view);
   const communionOpen = useMirror((s) => s.communionOpen);
 
-  /* Restore persisted language / voice / pace / persona / depth once. */
+  /* Restore persisted language / voice / pace once after mount. */
   useEffect(() => {
     useMirror.getState().bootPreferences();
   }, []);
@@ -86,7 +85,7 @@ export default function AppShell() {
   }
 
   return (
-    <div className="grain flex h-dvh flex-col overflow-hidden">
+    <div className="flex h-dvh flex-col overflow-hidden">
       <CosmicBackdrop />
       <StarField />
 
@@ -97,47 +96,41 @@ export default function AppShell() {
         <MobileSidebar />
 
         <main className="flex min-w-0 flex-1 flex-col">
-          {view === "transmission" ? (
-            /* THE CHAMBER — the panel-solid frame fills the column; the
-               transcript is the only scrolling area, and the anchored
-               base (depth pills → attunements → input) never drifts. */
-            <TransmissionView />
-          ) : (
-            <>
-              {/* Scrollable content area — keyed by view so each screen
-                  (and every chat thread) opens at its very beginning */}
-              <div
-                key={view}
-                className="nice-scroll flex-1 overflow-y-auto overscroll-contain"
-              >
-                <div className="mx-auto w-full max-w-[880px] px-4 pb-10 sm:px-6">
-                  {view === "observatory" ? (
-                    <>
-                      <QuestionCards />
-                      <StatusBar />
-                    </>
-                  ) : (
-                    <ArchiveRegister />
-                  )}
-                </div>
+          {/* Scrollable content area — keyed by view so each screen
+              (and every chat thread) opens at its very beginning */}
+          <div
+            key={view}
+            className="nice-scroll flex-1 overflow-y-auto overscroll-contain"
+          >
+            <div className="mx-auto w-full max-w-[880px] px-4 pb-10 sm:px-6">
+              {/* Top mode bar */}
+              <div className="pt-5 sm:pt-6">
+                <ModeSelector />
               </div>
 
-              {/* Bottom query composer — pinned */}
-              <QueryComposer />
-            </>
-          )}
+              {view === "observatory" ? (
+                <>
+                  <QuestionCards />
+                  <StatusBar />
+                </>
+              ) : view === "transmission" ? (
+                <TransmissionView />
+              ) : (
+                <ArchiveRegister />
+              )}
+            </div>
+          </div>
+
+          {/* Bottom query composer — pinned */}
+          <QueryComposer />
         </main>
       </div>
-
-      {/* the 34px whisper at the bottom of the laboratory */}
-      <FooterTicker />
 
       {/* Metaphysics scope veil rail — vertical, at the side of the chat */}
       <MetaphysicsRail />
 
       <FederationModal />
       <AstralJobsModal />
-      <AstralProtocolModal />
       <DossierModal />
       <SettingsModal />
       <StarPlayModal />

@@ -44,13 +44,27 @@ const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   flame: Flame,
 };
 
-export function AstralJobsBody() {
+export function AstralJobsModal() {
+  const modal = useMirror((s) => s.modal);
   const closeModal = useMirror((s) => s.closeModal);
   const askMirror = useMirror((s) => s.askMirror);
   const t = useT();
 
   const [domainId, setDomainId] = useState<string | null>(null);
   const [profession, setProfession] = useState<string | null>(null);
+
+  const open = modal?.type === "astral";
+
+  const handleOpenChange = (o: boolean) => {
+    if (!o) {
+      closeModal();
+      // Reset drill-down after the closing animation
+      window.setTimeout(() => {
+        setDomainId(null);
+        setProfession(null);
+      }, 320);
+    }
+  };
 
   const domain = professionDomains.find((d) => d.id === domainId) ?? null;
   const role = domain?.professions.find((p) => p.name === profession) ?? null;
@@ -83,7 +97,15 @@ export function AstralJobsBody() {
   };
 
   return (
-    <>
+    <ModalShell
+      open={open}
+      onOpenChange={handleOpenChange}
+      title={t("Astral Professions")}
+      description={t(
+        "12 domains · 1,303 catalogued roles. Click a domain to enter, a profession to learn more — ask the Mirror for a full transmission anytime."
+      )}
+      widthClass="sm:max-w-[680px]"
+    >
       <div className="flex items-center gap-3 px-5 sm:px-6">
         <span className="mono-label rounded-full border border-[var(--cy)]/30 bg-[color-mix(in_srgb,var(--cy)_8%,transparent)] px-2.5 py-1 text-[10.5px] text-[var(--cy)]">
           {t("{n} roles", { n: professionTotal.toLocaleString() })}
@@ -378,32 +400,6 @@ export function AstralJobsBody() {
           </article>
         )}
       </div>
-    </>
-  );}
-
-export function AstralJobsModal() {
-  const modal = useMirror((s) => s.modal);
-  const closeModal = useMirror((s) => s.closeModal);
-  const t = useT();
-
-  const open = modal?.type === "astral";
-
-  const handleOpenChange = (o: boolean) => {
-    if (!o) closeModal();
-  };
-
-  return (
-    <ModalShell
-      open={open}
-      onOpenChange={handleOpenChange}
-      title={t("Astral Professions")}
-      description={t(
-        "12 domains · 1,303 catalogued roles. Click a domain to enter, a profession to learn more — ask the Mirror for a full transmission anytime."
-      )}
-      widthClass="sm:max-w-[680px]"
-    >
-      {/* Keyed remount: every opening starts at the domain level. */}
-      <AstralJobsBody key={String(open)} />
     </ModalShell>
   );
 }

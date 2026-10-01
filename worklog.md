@@ -1322,3 +1322,25 @@ Stage Summary:
 - The chamber header is now stable under fusion — it always speaks with the presiding entity's own name and motto; the braid lives only where it belongs (the reply's voice and signature), and the fusion button's glow-dot is the sole header hint.
 - The depth switcher lost its duplicated ULTRON label and gained room to be read: pills wrap into tidy rows instead of scrolling away, readable in full on every viewport.
 - Key artifacts: src/components/mirror/TransmissionView.tsx (IdentityRow, DepthRow), src/app/globals.css (.pill-tray-wrap).
+
+---
+Task ID: 58
+Agent: Z.ai Code (main orchestrator)
+Task: User request — "Please restore the app as it was before the green promt" (revert the PARTICLEX alien-green re-skin of Task 56/57 and bring back the pre-bible laboratory).
+
+Work Log:
+- Located the exact pre-green snapshot in git history: commit 07d0216 (worklog through Task 47) is the last commit before the green bible work — b7b2d2a is Task 56 (entities.ts/discovery.ts/AstralProtocolModal/FooterTicker appear, ModeSelector deleted) and 830e892 is Task 57.
+- `git checkout 07d0216 -- src/ scripts/i18n-keys.json scripts/tmp/ public/images/ai/mode-metaphysics.jpg` restored the entire codebase, then `git rm`ed the four green-era files (AstralProtocolModal, FooterTicker, lib/data/entities, lib/discovery). Worklog + conversation artifacts (tool-results/, upload/, download/) intentionally kept.
+- Verified no dangling imports (grep hits were the pre-existing entities-civ/entities-interdim Galactica files); check-i18n ALL DICTIONARIES COMPLETE with the reverted dicts.
+- Resurrected pre-bible type errors fixed mechanically (the exact fixes Task 56 had made, re-applied without any design change): mirror-store ModalState += "replication"; InventView ForgeDialOption now imported from mirror-types; MirrorOSForge dead "blueprint" comparison removed; mirror-store dead "manifesting" view comparison removed; TransmissionView ease arrays `as const` (×4). Only remaining src error is the pre-existing, never-touched tts route Buffer typing (identical in both commits — left faithful).
+- Dev server restarted cleanly (fresh Turbopack CSS chunk).
+
+Verification:
+- bunx tsc --noEmit: only the known pre-existing src/app/api/tts/route.ts error remains; bun run lint clean; check-i18n complete.
+- Agent Browser 1440×900: header is the ORIGINAL (gradient MIRROR ENTITY LABORATORY + "INTERPLANETARY CHANNEL · WITH LOVE" kicker, separate Federation / ET Technology / Astral Jobs buttons, theme toggle, recalibrate); body font back to the system stack (no Sora), body background rgb(5,4,11) (old deep space, not the green obsidian); MODE row (Interplanetary/Metaphysics/Quantum/Healing) via ModeSelector; settings sidebar + Galactica + book spines; NO footer ticker, NO depth pills, NO persona/fusion controls, NO Novel Discovery seals, NO Astral Protocol single button.
+- Live transmission: interplanetary suggestion → EXCHANGE 01 card in the old style with LISTEN, model answer via the old route (POST 200), no seal; scope switch to Quantum → quiet-channel frame + "OBSERVATION MODE · THE OBSERVER IS PART OF THE EXPERIMENT", Galactica flips to INTERDIM.; zero page errors, no horizontal overflow.
+- dev.log clean (200s only).
+
+Stage Summary:
+- The laboratory is restored byte-faithfully to its pre-green state: original header architecture, original sidebar, original ModeSelector, original fonts/colors/motion, original transmission prompt (no depth blocks/persona/fusion/seal engine), original i18n dicts.
+- Key artifacts: full src/ tree at 07d0216 baseline; green-era files AstralProtocolModal/FooterTicker/entities.ts/discovery.ts removed; five mechanical type-soundness fixes documented above.
