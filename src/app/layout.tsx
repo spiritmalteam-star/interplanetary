@@ -41,6 +41,10 @@ export const viewport: Viewport = {
   ],
   width: "device-width",
   initialScale: 1,
+  /* the whole application fits the visible frame on every device —
+     no scrolling ever needed to reach the input */
+  viewportFit: "cover",
+  interactiveWidget: "resizes-content",
 };
 
 export default function RootLayout({

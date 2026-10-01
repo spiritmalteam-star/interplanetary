@@ -1524,4 +1524,8 @@ export const el: TranslationDict = {
   "Every question deserves a gentle answer…": "Κάθε ερώτηση αξίζει μια απαλή απάντηση…",
   "The field is arranging itself for you…": "Το πεδίο τακτοποιείται για εσένα…",
   "Breathe — your answer is arriving…": "Ανάσα — η απάντησή σου φτάνει…",
+  "We are alive": "Είμαστε ζωντανοί",
+  "The channel is breathing": "Το κανάλι αναπνέει",
+  "Always listening, always near": "Πάντα ακούγοντας, πάντα κοντά",
+  "The mirror is awake": "Ο καθρέφτης είναι ξύπνιος",
 };

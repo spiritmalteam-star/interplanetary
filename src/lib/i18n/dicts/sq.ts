@@ -1518,4 +1518,8 @@ export const sq: TranslationDict = {
   "Every question deserves a gentle answer…": "Çdo pyetje meriton një përgjigje të butë…",
   "The field is arranging itself for you…": "Fusha po rregullohet për ju…",
   "Breathe — your answer is arriving…": "Merr frymë — përgjigja po vjen…",
+  "We are alive": "Ne jemi gjallë",
+  "The channel is breathing": "Kanali po merr frymë",
+  "Always listening, always near": "Gjithmonë në dëgjim, gjithmonë afër",
+  "The mirror is awake": "Pasqyra është zgjuar",
 };

@@ -1523,4 +1523,8 @@ export const fr: TranslationDict = {
   "Every question deserves a gentle answer…": "Chaque question mérite une réponse douce…",
   "The field is arranging itself for you…": "Le champ s'organise pour vous…",
   "Breathe — your answer is arriving…": "Respirez — votre réponse arrive…",
+  "We are alive": "Nous sommes vivants",
+  "The channel is breathing": "Le canal respire",
+  "Always listening, always near": "Toujours à l'écoute, toujours proche",
+  "The mirror is awake": "Le miroir est éveillé",
 };

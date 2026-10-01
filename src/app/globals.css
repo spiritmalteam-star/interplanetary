@@ -3,6 +3,19 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ------------------------------------------------------------------ */
+/*  The frame law — the application always fits the visible viewport.  */
+/*  No page scroll exists anywhere: every view owns its internal       */
+/*  scroll, and the composer is reachable in one glance on all         */
+/*  devices (small laptops, phones, tablets, split screens).           */
+/* ------------------------------------------------------------------ */
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -550,6 +563,22 @@ html:not(.dark) .scope-invent {
   50% { transform: translateY(-5px); }
 }
 .animate-float-y { animation: float-y 6s ease-in-out infinite; }
+
+/* The alive indicator — a small hovering saucer with three soft
+   rim lights, and one quiet phrase fading in as it changes */
+@keyframes alive-light {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 1; }
+}
+.alive-light { animation: alive-light 1.9s ease-in-out infinite; }
+.alive-light-2 { animation-delay: 0.32s; }
+.alive-light-3 { animation-delay: 0.64s; }
+
+@keyframes alive-swap {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+.alive-swap { animation: alive-swap 0.42s ease both; }
 
 /* ------------------------------------------------------------------ */
 /*  Dream button — a small, breathing doorway into the Mirror OS       */

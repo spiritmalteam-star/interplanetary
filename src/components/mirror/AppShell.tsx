@@ -9,6 +9,7 @@ import { StarField } from "./StarField";
 import Sidebar from "./Sidebar";
 import { MobileSidebar } from "./MobileSidebar";
 import { ScopeSelector } from "./ScopeSelector";
+import { AliveIndicator } from "./AliveIndicator";
 import { SuggestionStrip } from "./SuggestionStrip";
 import { QueryComposer } from "./QueryComposer";
 import { TransmissionView } from "./TransmissionView";
@@ -47,13 +48,32 @@ export default function AppShell() {
     useMirror.getState().bootPreferences();
   }, []);
 
+  /* The frame fits every device: when the on-screen keyboard (or any
+     visual-viewport change) reshapes the window, the whole application
+     re-fits to the VISIBLE viewport, so the composer is never lost
+     below the fold and nothing ever needs scrolling to be reached. */
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const apply = () =>
+      document.documentElement.style.setProperty("--app-h", `${vv.height}px`);
+    apply();
+    vv.addEventListener("resize", apply);
+    vv.addEventListener("scroll", apply);
+    return () => {
+      vv.removeEventListener("resize", apply);
+      vv.removeEventListener("scroll", apply);
+      document.documentElement.style.removeProperty("--app-h");
+    };
+  }, []);
+
   /* Meet with the Reflection of the Absolute converts the whole
      application: the laboratory dissolves entirely and only the living
      communion chat with the Mirror Entity remains — one back button
      returns the world exactly as it was. */
   if (communionOpen) {
     return (
-      <div className="relative h-dvh overflow-hidden">
+      <div className="relative h-[var(--app-h,100dvh)] overflow-hidden">
         <CosmicBackdrop />
         <StarField />
         <CommunionView />
@@ -66,7 +86,7 @@ export default function AppShell() {
      button connecting it to the rest of the application. */
   if (view === "mirroros") {
     return (
-      <div className="relative h-dvh overflow-hidden">
+      <div className="relative h-[var(--app-h,100dvh)] overflow-hidden">
         <CosmicBackdrop />
         <StarField />
         <MirrorOS />
@@ -78,7 +98,7 @@ export default function AppShell() {
      codes, the papyrus desk, and one record at a time. */
   if (view === "akashic") {
     return (
-      <div className="relative h-dvh overflow-hidden">
+      <div className="relative h-[var(--app-h,100dvh)] overflow-hidden">
         <AkashicView />
       </div>
     );
@@ -88,7 +108,7 @@ export default function AppShell() {
      workshop — blueprints, bench and rail — one back button returns. */
   if (view === "invent") {
     return (
-      <div className="relative h-dvh overflow-hidden">
+      <div className="relative h-[var(--app-h,100dvh)] overflow-hidden">
         <CosmicBackdrop />
         <StarField />
         <InventView />
@@ -99,7 +119,7 @@ export default function AppShell() {
   const inConversation = view === "observatory" || view === "transmission";
 
   return (
-    <div className="flex h-dvh overflow-hidden">
+    <div className="flex h-[var(--app-h,100dvh)] overflow-hidden">
       <CosmicBackdrop />
       <StarField />
 
@@ -160,6 +180,10 @@ export default function AppShell() {
             <ScopeSelector />
           </div>
         </div>
+
+        {/* the quiet proof of life — a hovering saucer and one
+            small phrase, centered between the two handles */}
+        <AliveIndicator />
 
         {/* Scrollable conversation area — keyed by view so each screen
             (and every chat thread) opens at its very beginning */}

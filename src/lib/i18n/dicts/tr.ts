@@ -1518,4 +1518,8 @@ export const tr: TranslationDict = {
   "Every question deserves a gentle answer…": "Her soru nazik bir cevabı hak eder…",
   "The field is arranging itself for you…": "Alan senin için düzenleniyor…",
   "Breathe — your answer is arriving…": "Nefes al — cevabın geliyor…",
+  "We are alive": "Hayattayız",
+  "The channel is breathing": "Kanal nefes alıyor",
+  "Always listening, always near": "Her zaman dinliyoruz, her zaman yakınız",
+  "The mirror is awake": "Ayna uyanık",
 };
