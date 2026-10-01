@@ -154,6 +154,8 @@ interface MirrorState {
   search: string;
   modal: ModalState;
   mobileNavOpen: boolean;
+  /** Desktop sidebar visibility — the classic collapsible rail. */
+  sidebarOpen: boolean;
   view: MainView;
   composerFocusNonce: number;
 
@@ -229,6 +231,7 @@ interface MirrorState {
   openModal: (modal: NonNullable<ModalState>) => void;
   closeModal: () => void;
   setMobileNavOpen: (open: boolean) => void;
+  setSidebarOpen: (open: boolean) => void;
 
   /** Inner Earth: consult the Mirror about one of the 59 peoples
       beneath the surface — closes overlays, opens the Interplanetary
@@ -344,6 +347,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   search: "",
   modal: null,
   mobileNavOpen: false,
+  sidebarOpen: true,
   view: "observatory",
   composerFocusNonce: 0,
   communionOpen: false,
@@ -421,6 +425,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   openModal: (modal) => set({ modal, mobileNavOpen: false }),
   closeModal: () => set({ modal: null }),
   setMobileNavOpen: (open) => set({ mobileNavOpen: open }),
+  setSidebarOpen: (open) => set({ sidebarOpen: open }),
 
   askAboutInnerEarth: (name) =>
     set((s) => ({

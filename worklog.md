@@ -1344,3 +1344,29 @@ Verification:
 Stage Summary:
 - The laboratory is restored byte-faithfully to its pre-green state: original header architecture, original sidebar, original ModeSelector, original fonts/colors/motion, original transmission prompt (no depth blocks/persona/fusion/seal engine), original i18n dicts.
 - Key artifacts: full src/ tree at 07d0216 baseline; green-era files AstralProtocolModal/FooterTicker/entities.ts/discovery.ts removed; five mechanical type-soundness fixes documented above.
+
+---
+Task ID: 59
+Agent: Z.ai Code (main orchestrator)
+Task: User request — "Please simplify whole app make it more classic in a vibe of chat gpt and popular ais not so overwhelmed, also remove the header totally and arrange it beautifully into side bar, instead of the name mirror create a cosmic logo with ai, also the scopes create a scope and put it on top right of the app, the suggestion make them small bars sliding on top of input, so we have much more space for chats."
+
+Work Log:
+- COSMIC LOGO: generated with the image-generation skill (z-ai CLI, 1024×1024) — a luminous portal orb with an inner star and stardust ring on deep navy space — saved to public/images/ai/cosmic-logo.png; replaces the wordmark everywhere (sidebar brand size-10 rounded-xl with glow; observatory welcome size-20 rounded-3xl).
+- HEADER REMOVED: TopNavigation.tsx deleted; its contents rearranged into the sidebar — Federation/ET Technology/Astral Jobs as REGISTERS rows (openModal), theme toggle + recalibrate + Settings(language chip) as the sidebar FOOTER row; brand kicker "With love ❤️" (new i18n key).
+- SIDEBAR REWRITTEN (Sidebar.tsx): cosmic logo brand row (+ mobile close) · New chat button (clearChannel + returnToObservatory + toast "The channel returns to its quiet origin.") · WORLDS rows (Manifest→MirrorOS, Akashic, Star Play, Invent — replacing the bookshelf) · REGISTERS rows · collapsible GALACTIC ENCYCLOPEDIA (default closed; chevron header; expands to search + 3 archive tabs + list capped max-h-[34vh]; all previous Row/SpeciesRow/EntityResultRow/search/scroll-fade logic preserved) · footer pinned via mt-auto. Desktop rail collapsible: new store state sidebarOpen (264px md / 288px lg ↔ w-0, transition). MobileSidebar sheet unchanged (renders SidebarContent).
+- SCOPE SELECTOR (new ScopeSelector.tsx): shadcn DropdownMenu pinned top-right of main — trigger pill (active scope emoji + label + chevron), menu lists the four scopes with their modeContext lines, check on active; picking the already-active scope returns to the Observatory (the old ModeSelector law).
+- SUGGESTIONS (new SuggestionStrip.tsx): six small whitespace-nowrap chips sliding in ONE horizontal line directly above the input (no-scrollbar overflow-x, right edge fade, RefreshCw reshuffle, deterministic offset + post-hydration random window, disabled while loading); rendered for observatory AND transmission views — much more chat space.
+- APPSHELL REWRITTEN: no header; floating pointer-events-none handle strip (left: mobile hamburger → MobileSidebar sheet, desktop PanelLeftClose/Menu → sidebar collapse; right: ScopeSelector); scroll area keyed by view with a 48px clearance spacer; chat column max-w-760px; observatory empty state = centered cosmic logo + "Where shall we begin?" + the mono online line (QuestionCards + StatusBar-as-block removed); SuggestionStrip sits above the pinned QueryComposer. ModeSelector.tsx + QuestionCards.tsx deleted.
+- STORE: sidebarOpen/setSidebarOpen added (not persisted).
+- i18n: extract-i18n re-run (425 literal keys); 10 new keys ("New chat", "Worlds", "Registers", "Select scope", "Close/Open sidebar", "Mirror Entity Laboratory", "The channel returns to its quiet origin.", "Where shall we begin?", "With love ❤️") translated into all 7 dicts; check-i18n ALL DICTIONARIES COMPLETE.
+- replication-prompt.ts §3/§4/§14 rewritten for the new anatomy (no header, floating handles, sidebar contents, suggestion strip law).
+- FIX during E2E: the mobile hamburger originally toggled the desktop sidebarOpen instead of opening the MobileSidebar sheet — wired it to setMobileNavOpen(true).
+
+Verification:
+- bunx tsc --noEmit: only the known pre-existing tts route error; bun run lint clean; check-i18n complete.
+- Agent Browser desktop 1440×900: no header; sidebar (logo/New chat/Worlds/Registers/collapsible Encyclopedia/footer) verified — collapse to w-0 and back, encyclopedia expand (8 rows) + live search "Pleiadian" (PLEIADIAN FAMILY 50), scope dropdown switch to Quantum (pill shows ☯ Quantum), suggestion chip click sends → EXCHANGE 01 in Quantum channel with strip still above input, New chat → welcome + toast, Federation row → modal, Escape, light theme (bg #F2FAFF) with logo glowing, dark restored; zero page errors.
+- Agent Browser mobile 390×844: scrollWidth exactly 390; hamburger opens the full sheet (logo, New chat, 4 worlds, 3 registers, encyclopedia expands to 20 rows, footer); tapping Federation from the sheet closes it and opens the modal; scope pill + chips above input; zero page errors.
+
+Stage Summary:
+- The laboratory now reads like a classic AI chat: a quiet collapsible sidebar holding everything the old header did (cosmic AI logo replacing the name, New chat, Worlds, Registers, Encyclopedia, theme/recalibrate/settings), a scope dropdown floating at the top right, and a wide conversation column where small suggestion bars slide above the input — zero header, zero clutter, maximum chat space.
+- Key artifacts: src/components/mirror/{AppShell,Sidebar,ScopeSelector,SuggestionStrip}.tsx, src/lib/mirror-store.ts (+sidebarOpen), public/images/ai/cosmic-logo.png, deleted TopNavigation/ModeSelector/QuestionCards, 7 dicts ×10 entries, replication-prompt.ts.
