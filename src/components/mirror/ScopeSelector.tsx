@@ -43,6 +43,7 @@ export function ScopeSelector() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
+        id="scope-selector-trigger"
         aria-label={t("Select scope")}
         title={t("Select scope")}
         data-testid="scope-selector"

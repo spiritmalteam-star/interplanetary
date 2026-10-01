@@ -8,18 +8,19 @@ import {
   useState,
 } from "react";
 import {
+  BookMarked,
+  BookOpen,
   BookOpenText,
-  BriefcaseBusiness,
-  Building2,
-  CircuitBoard,
   ChevronDown,
   ChevronRight,
-  DraftingCompass,
-  Moon,
+  Cpu,
+  Heart,
+  Landmark,
   Mountain,
+  NotebookPen,
   Plus,
   RotateCcw,
-  Scroll,
+  ScrollText,
   Search,
   Settings,
   Sparkles,
@@ -54,7 +55,7 @@ function NavRow({
   onClick,
   testId,
 }: {
-  icon: typeof Moon;
+  icon: typeof BookOpen;
   label: string;
   aria?: string;
   onClick: () => void;
@@ -316,7 +317,7 @@ function OuterRealmsSection() {
     },
     {
       id: "interdim",
-      icon: Sparkles,
+      icon: Orbit,
       label: t("Interdimensional"),
       count: archiveTotals.interdim,
     },
@@ -544,35 +545,35 @@ export function SidebarContent() {
 
   const worlds: {
     key: string;
-    icon: typeof Moon;
+    icon: typeof BookOpen;
     label: string;
     aria: string;
     action: () => void;
   }[] = [
     {
       key: "mirroros",
-      icon: Moon,
+      icon: BookOpen,
       label: t("Manifest"),
       aria: t("Open the Mirror OS — Reality Guidance"),
       action: openMirrorOS,
     },
     {
       key: "akashic",
-      icon: Scroll,
+      icon: BookMarked,
       label: t("Akashic"),
       aria: t("Open the Akashic Library — records of the ancient one"),
       action: openAkashic,
     },
     {
       key: "starplay",
-      icon: Orbit,
+      icon: Sparkles,
       label: t("Star Play"),
       aria: t("Open Star Play — the Mirror's arcana deck"),
       action: () => openModal({ type: "starplay" }),
     },
     {
       key: "invent",
-      icon: DraftingCompass,
+      icon: NotebookPen,
       label: t("Invent"),
       aria: t("Open Invent — the Forge, the invention workshop of the Mirror"),
       action: openInvent,
@@ -581,27 +582,27 @@ export function SidebarContent() {
 
   const registers: {
     key: string;
-    icon: typeof Building2;
+    icon: typeof Landmark;
     label: string;
     aria?: string;
     action: () => void;
   }[] = [
     {
       key: "federation",
-      icon: Building2,
+      icon: Landmark,
       label: t("Federation"),
       action: () => openModal({ type: "federation" }),
     },
     {
       key: "technology",
-      icon: CircuitBoard,
+      icon: Cpu,
       label: t("ET Technology"),
       aria: t("Open ET Technology — the xenotechnology register"),
       action: () => openModal({ type: "technology" }),
     },
     {
       key: "astral",
-      icon: BriefcaseBusiness,
+      icon: ScrollText,
       label: t("Astral Jobs"),
       action: () => openModal({ type: "astral" }),
     },
@@ -618,8 +619,12 @@ export function SidebarContent() {
           data-testid="cosmic-logo"
           className="size-9 rounded-full object-cover shadow-[0_1px_10px_-4px_rgba(0,0,0,0.3)]"
         />
-        <span className="mono-label min-w-0 flex-1 truncate text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">
-          {t("With love ❤️")}
+        <span className="mono-label flex min-w-0 flex-1 items-center gap-1.5 truncate text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">
+          <span className="truncate">{t("With love")}</span>
+          <Heart
+            className="size-2.5 shrink-0 fill-current"
+            aria-hidden="true"
+          />
         </span>
         <button
           type="button"

@@ -118,7 +118,7 @@ export const es: TranslationDict = {
   "Listen to this transmission": "Escuchar esta transmisión",
   "Mandate": "Mandato",
   "Manifestation blueprint": "Plano de manifestación",
-  "Manifesting complements action · it never replaces it · Free will honored always ❤️": "Manifestar complementa la acción · nunca la reemplaza · El libre albedrío siempre se honra ❤️",
+  "Manifesting complements action · it never replaces it · Free will honored always": "Manifestar complementa la acción · nunca la reemplaza · El libre albedrío siempre se honra ❤️",
   "Min. 8 characters · The chamber never promises outcomes — it sharpens alignment.": "Mín. 8 caracteres · La cámara nunca promete resultados — afila la alineación.",
   "Mirror archive · full register": "Archivo del Espejo · registro completo",
   "Mode:": "Modo:",
@@ -1506,7 +1506,7 @@ export const es: TranslationDict = {
   "The channel returns to its quiet origin.": "El canal regresa a su origen sereno.",
   "Where shall we begin?": "¿Por dónde empezamos?",
   "Worlds": "Mundos",
-  "With love ❤️": "Con amor ❤️",
+  "With love": "Con amor",
 
   /* Task 60 — classic white shell */
   "Outer Realms": "Reinos Exteriores",

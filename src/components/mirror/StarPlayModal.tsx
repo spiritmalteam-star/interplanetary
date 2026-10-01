@@ -246,7 +246,7 @@ export function StarPlayModal() {
                   className="oracle-paper relative w-full overflow-hidden rounded-2xl border px-6 py-6 text-left sm:px-9"
                   data-testid="starplay-reading"
                 >
-                  <p className="mono-label text-center text-[10.5px] uppercase tracking-[0.22em] text-[#7a5a1e]">
+                  <p className="mono-label text-center text-[10.5px] uppercase tracking-[0.22em] text-[#8a8a89]">
                     {t("One meaning · three seats")}
                   </p>
                   {reading.split(/\n\n+/).map((para, i, arr) => {
@@ -256,26 +256,26 @@ export function StarPlayModal() {
                       <p
                         key={i}
                         className={cn(
-                          "text-[15.5px] leading-relaxed text-[#33241a]",
+                          "text-[15.5px] leading-relaxed text-[#2b2b2a]",
                           i === 0 &&
                             !isSignature &&
-                            "mt-3 font-serif text-[17px] italic text-[#241a10]",
+                            "mt-3 font-serif text-[17px] italic text-[#262625]",
                           isSignature &&
-                            "mono-label mt-4 text-center text-[11.5px] tracking-[0.12em] text-[#7a5a1e]"
+                            "mono-label mt-4 text-center text-[11.5px] tracking-[0.12em] text-[#8a8a89]"
                         )}
                       >
                         {para}
                       </p>
                     );
                   })}
-                  <div className="mt-4 flex flex-wrap items-center justify-center gap-1.5 border-t border-[#7a5a1e]/25 pt-3.5">
-                    <span className="mono-label mr-1 text-[10px] uppercase tracking-[0.2em] text-[#7a5a1e]/70">
+                  <div className="mt-4 flex flex-wrap items-center justify-center gap-1.5 border-t border-[#8a8a89]/25 pt-3.5">
+                    <span className="mono-label mr-1 text-[10px] uppercase tracking-[0.2em] text-[#8a8a89]/70">
                       {t("Woven from")}
                     </span>
                     {drawn.map((d) => (
                       <span
                         key={d.card.id}
-                        className="rounded-full border border-[#7a5a1e]/35 bg-white/40 px-2.5 py-1 text-[12px] text-[#4a3313]"
+                        className="rounded-full border border-[#8a8a89]/35 bg-white/40 px-2.5 py-1 text-[12px] text-[#4b4b4a]"
                       >
                         {t(d.position)}
                       </span>
@@ -351,7 +351,7 @@ function TarotCard({
         {/* ---------- the revealed face — the whole story inside ---------- */}
         <div
           data-testid="starplay-card-face"
-          className="tarot-face absolute inset-0 flex size-full flex-col overflow-hidden rounded-2xl border border-[color-mix(in_srgb,var(--sp-a)_45%,transparent)] bg-[#0d0718] shadow-[0_24px_60px_-18px_color-mix(in_srgb,var(--sp-a)_70%,transparent)]"
+          className="tarot-face absolute inset-0 flex size-full flex-col overflow-hidden rounded-2xl border border-[color-mix(in_srgb,var(--sp-a)_45%,transparent)] bg-[#0d0d0e] shadow-[0_24px_60px_-18px_color-mix(in_srgb,var(--sp-a)_70%,transparent)]"
           style={{ transform: "rotateY(180deg)" }}
         >
           {/* artwork — the vision above the story */}
@@ -368,7 +368,7 @@ function TarotCard({
             />
             <span
               aria-hidden="true"
-              className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0d0718]"
+              className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0d0d0e]"
             />
           </div>
 

@@ -9,7 +9,7 @@ import {
   Mic,
   Paperclip,
   Phone,
-  Send,
+  Feather,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -303,7 +303,7 @@ export function ChatInputExtras({
             style={{
               borderColor: `color-mix(in srgb, ${accentVar} 40%, transparent)`,
               color: accentVar,
-              background: "color-mix(in srgb, #05030e 55%, transparent)",
+              background: "color-mix(in srgb, #0a0a0b 55%, transparent)",
             }}
           >
             {clock}
@@ -400,18 +400,18 @@ export function ChatInputExtras({
             title={t("Send your voice")}
             data-testid={`chat-voice-send-${scope}`}
             className={cn(
-              "focus-glow flex shrink-0 items-center justify-center rounded-full text-[#0b0714] disabled:cursor-wait",
+              "focus-glow flex shrink-0 items-center justify-center rounded-full text-[#0c0c0d] disabled:cursor-wait",
               btnSize
             )}
             style={{
-              background: `linear-gradient(135deg, ${accentVar}, color-mix(in srgb, ${accentVar} 55%, #f5f2ff))`,
+              background: `linear-gradient(135deg, ${accentVar}, color-mix(in srgb, ${accentVar} 55%, #f5f5f4))`,
               boxShadow: `0 0 ${14 + recorder.level * 16}px -4px color-mix(in srgb, ${accentVar} 85%, transparent)`,
             }}
           >
             {transcribing ? (
               <LoaderCircle className={cn(iconSize, "animate-spin")} aria-hidden="true" />
             ) : (
-              <Send className={iconSize} aria-hidden="true" />
+              <Feather className={iconSize} aria-hidden="true" />
             )}
           </motion.button>
         )}

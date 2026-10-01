@@ -63,7 +63,7 @@ export function StarField() {
       ctx.clearRect(0, 0, w, h);
       for (const s of stars) {
         ctx.globalAlpha = s.baseAlpha * 0.8;
-        ctx.fillStyle = s.hue === "cyan" ? "#BFE9FF" : "#F5E3D0";
+        ctx.fillStyle = s.hue === "cyan" ? "#e6e6e5" : "#f7f7f6";
         ctx.beginPath();
         ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
         ctx.fill();
@@ -79,7 +79,7 @@ export function StarField() {
         const a = Math.max(0.03, s.baseAlpha * tw);
         const y = s.y - ((t / 60000) * s.drift * 10) % (h + 20);
         ctx.globalAlpha = a;
-        ctx.fillStyle = s.hue === "cyan" ? "#BFE9FF" : "#F5E3D0";
+        ctx.fillStyle = s.hue === "cyan" ? "#e6e6e5" : "#f7f7f6";
         ctx.beginPath();
         ctx.arc(s.x, y, s.r, 0, Math.PI * 2);
         ctx.fill();

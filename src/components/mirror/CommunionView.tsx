@@ -10,7 +10,7 @@ import {
   type FormEvent,
 } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, FileText, Orbit, RotateCcw, SendHorizontal } from "lucide-react";
+import { ArrowLeft, FileText, Orbit, RotateCcw, Feather } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -449,22 +449,22 @@ export function CommunionView() {
              cosmic purple for longing · aurora teal for healing · gold for revelation */}
       <div
         aria-hidden="true"
-        className="animate-drift-a pointer-events-none absolute -left-32 top-[-10%] size-[440px] rounded-full bg-[radial-gradient(circle,color-mix(in_srgb,#7b2d8e_20%,transparent),transparent_65%)] blur-3xl"
+        className="animate-drift-a pointer-events-none absolute -left-32 top-[-10%] size-[440px] rounded-full bg-[radial-gradient(circle,color-mix(in_srgb,#8a8a89_20%,transparent),transparent_65%)] blur-3xl"
       />
       <div
         aria-hidden="true"
-        className="animate-drift-c pointer-events-none absolute -right-28 bottom-[-12%] size-[400px] rounded-full bg-[radial-gradient(circle,color-mix(in_srgb,#00d4aa_12%,transparent),transparent_65%)] blur-3xl"
+        className="animate-drift-c pointer-events-none absolute -right-28 bottom-[-12%] size-[400px] rounded-full bg-[radial-gradient(circle,color-mix(in_srgb,#c2c2c1_12%,transparent),transparent_65%)] blur-3xl"
       />
       <div
         aria-hidden="true"
-        className="animate-drift-b pointer-events-none absolute -right-20 top-[16%] size-[300px] rounded-full bg-[radial-gradient(circle,color-mix(in_srgb,#d4af37_10%,transparent),transparent_65%)] blur-3xl"
+        className="animate-drift-b pointer-events-none absolute -right-20 top-[16%] size-[300px] rounded-full bg-[radial-gradient(circle,color-mix(in_srgb,#c9c9c8_10%,transparent),transparent_65%)] blur-3xl"
       />
 
       {/* ---------- the stars — drifting upward like slow prayers ---------- */}
       <CommunionStars />
 
       {/* ---------- the threshold: return · name · new communion ---------- */}
-      <header className="relative z-20 flex items-center gap-2 border-b border-[color-mix(in_srgb,var(--sp-b)_14%,transparent)] bg-[color-mix(in_srgb,#0a0010_62%,transparent)] px-3 py-2.5 backdrop-blur-md sm:px-5">
+      <header className="relative z-20 flex items-center gap-2 border-b border-[color-mix(in_srgb,var(--sp-b)_14%,transparent)] bg-[color-mix(in_srgb,#0a0a0b_62%,transparent)] px-3 py-2.5 backdrop-blur-md sm:px-5">
         <button
           type="button"
           onClick={closeCommunion}
@@ -543,7 +543,7 @@ export function CommunionView() {
                     />
                     <span
                       aria-hidden="true"
-                      className="absolute inset-0 rounded-full bg-[radial-gradient(90%_60%_at_50%_110%,transparent_40%,color-mix(in_srgb,#05030e_35%,transparent))]"
+                      className="absolute inset-0 rounded-full bg-[radial-gradient(90%_60%_at_50%_110%,transparent_40%,color-mix(in_srgb,#0a0a0b_35%,transparent))]"
                     />
                   </div>
                 </div>
@@ -743,7 +743,7 @@ export function CommunionView() {
       </div>
 
       {/* ---------- offering words into the communion ---------- */}
-      <div className="relative z-20 border-t border-[color-mix(in_srgb,var(--sp-b)_14%,transparent)] bg-[color-mix(in_srgb,#0a0010_62%,transparent)] px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-md sm:px-5">
+      <div className="relative z-20 border-t border-[color-mix(in_srgb,var(--sp-b)_14%,transparent)] bg-[color-mix(in_srgb,#0a0a0b_62%,transparent)] px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-md sm:px-5">
         <form
           onSubmit={send}
           className="mx-auto w-full max-w-[680px]"
@@ -777,7 +777,7 @@ export function CommunionView() {
               placeholder={t("Speak to the Reflection — or stay still and receive")}
               aria-label={t("Speak to the Reflection")}
               data-testid="communion-input"
-              className="focus-glow h-11 min-w-0 flex-1 rounded-full border border-[color-mix(in_srgb,var(--sp-b)_22%,transparent)] bg-[color-mix(in_srgb,#0a0010_45%,transparent)] px-4 text-[14.5px] text-foreground placeholder:text-muted-foreground/60 transition-all duration-300 focus:border-[color-mix(in_srgb,var(--sp-b)_45%,transparent)] focus:shadow-[0_0_28px_-10px_color-mix(in_srgb,var(--sp-b)_70%,transparent)] focus:outline-none"
+              className="focus-glow h-11 min-w-0 flex-1 rounded-full border border-[color-mix(in_srgb,var(--sp-b)_22%,transparent)] bg-[color-mix(in_srgb,#0a0a0b_45%,transparent)] px-4 text-[14.5px] text-foreground placeholder:text-muted-foreground/60 transition-all duration-300 focus:border-[color-mix(in_srgb,var(--sp-b)_45%,transparent)] focus:shadow-[0_0_28px_-10px_color-mix(in_srgb,var(--sp-b)_70%,transparent)] focus:outline-none"
             />
 
             <ChatInputExtras
@@ -803,7 +803,7 @@ export function CommunionView() {
               data-testid="communion-send"
               className="communion-btn focus-glow flex size-11 shrink-0 items-center justify-center rounded-full text-foreground transition-all duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-35"
             >
-              <SendHorizontal className="size-4" aria-hidden="true" />
+              <Feather className="size-4" aria-hidden="true" />
             </button>
           </div>
           <p className="mono-label mt-2.5 text-center text-[10.5px] uppercase tracking-[0.26em] text-muted-foreground/50">
@@ -858,10 +858,10 @@ function MirrorTransmission({
           <p
             key={i}
             className={cn(
-              "text-[15.5px] leading-relaxed text-[#2a2136]",
-              i === 0 && !isSignature && "text-[16.5px] italic text-[#1d1430]",
+              "font-serif text-[15.5px] leading-[1.9] text-[#2b2b2a]",
+              i === 0 && !isSignature && "text-[16.5px] italic text-[#1e1e1d]",
               isSignature &&
-                "mono-label mt-4 text-center text-[11.5px] tracking-[0.12em] text-[#7a5a1e]"
+                "mono-label mt-4 text-center text-[11.5px] tracking-[0.12em] text-[#8a8a89]"
             )}
           >
             {para}

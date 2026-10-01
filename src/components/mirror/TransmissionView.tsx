@@ -198,7 +198,7 @@ function TransmissionBody({ text }: { text: string }) {
               variants={staggerItem}
               initial="hidden"
               animate="show"
-              className="scope-gradient-text scope-glow-text text-[20px] font-semibold leading-[1.55] tracking-[-0.005em] sm:text-[22px]"
+              className="scope-gradient-text scope-glow-text font-serif text-[20px] font-semibold leading-[1.6] tracking-[-0.005em] sm:text-[22px]"
             >
               {b.text}
             </motion.p>
@@ -247,7 +247,7 @@ function TransmissionBody({ text }: { text: string }) {
                     style={{ background: "var(--scope-a)" }}
                     aria-hidden="true"
                   />
-                  <span className="text-[15.5px] leading-[1.8] text-foreground/85 sm:text-[16px]">
+                  <span className="font-serif text-[15.5px] leading-[1.85] text-foreground/85 sm:text-[16px]">
                     {item}
                   </span>
                 </li>
@@ -262,7 +262,7 @@ function TransmissionBody({ text }: { text: string }) {
             variants={staggerItem}
             initial="hidden"
             animate="show"
-            className="text-[16px] leading-[1.85] text-foreground/88 sm:text-[16.5px]"
+            className="font-serif text-[16px] leading-[1.9] text-foreground/88 sm:text-[16.5px]"
           >
             {b.text}
           </motion.p>
@@ -576,14 +576,14 @@ function ApothecaryStand({ concern }: { concern: string }) {
         data-testid="prepare-remedy"
         className="focus-glow mt-3 flex h-10 items-center gap-2.5 rounded-full border px-5 text-[13.5px] font-medium text-foreground/90 transition-all duration-300 hover:-translate-y-px hover:glow-sm"
         style={{
-          borderColor: "color-mix(in srgb, #b05e76 42%, transparent)",
+          borderColor: "color-mix(in srgb, #52525b 42%, transparent)",
           background:
-            "linear-gradient(120deg, color-mix(in srgb, #b05e76 15%, transparent), color-mix(in srgb, #2f8a6e 13%, transparent))",
+            "linear-gradient(120deg, color-mix(in srgb, #52525b 15%, transparent), color-mix(in srgb, #71717a 13%, transparent))",
         }}
       >
         <Leaf
           className="size-4"
-          style={{ color: "color-mix(in srgb, #b05e76 55%, white)" }}
+          style={{ color: "color-mix(in srgb, #52525b 55%, white)" }}
           aria-hidden="true"
         />
         {t("Prepare a remedy")}

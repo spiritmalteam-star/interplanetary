@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans, JetBrains_Mono, Literata } from "next/font/google";
 import "@fontsource/cinzel/400.css";
 import "@fontsource/cinzel/600.css";
 import "@fontsource/cinzel/700.css";
@@ -21,6 +21,15 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
+/* Literata — the reading voice of the book reader. Every serif
+   passage (quotes, mottos, answers) is typeset in it. */
+const literata = Literata({
+  variable: "--font-literata",
+  subsets: ["latin"],
+  style: ["normal", "italic"],
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: "Mirror Entity Laboratory — Interplanetary Channel",
   description:
@@ -36,8 +45,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: dark)", color: "#05040B" },
-    { media: "(prefers-color-scheme: light)", color: "#FFFFFF" },
+    { media: "(prefers-color-scheme: dark)", color: "#0b0b0c" },
+    { media: "(prefers-color-scheme: light)", color: "#fbfbfa" },
   ],
   width: "device-width",
   initialScale: 1,
@@ -55,7 +64,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${jakartaSans.variable} ${jetbrainsMono.variable} antialiased bg-background text-foreground`}
+        className={`${jakartaSans.variable} ${jetbrainsMono.variable} ${literata.variable} antialiased bg-background text-foreground`}
       >
         <ThemeProvider>
           {children}

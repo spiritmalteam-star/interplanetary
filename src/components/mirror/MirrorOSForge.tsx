@@ -391,7 +391,7 @@ export function MirrorOSForge() {
                         : undefined
                     }
                   >
-                    <span aria-hidden="true">{f.glyph}</span>
+                    <span aria-hidden="true" className="emoji-ink">{f.glyph}</span>
                     {t(f.label)}
                   </button>
                 );
@@ -516,8 +516,11 @@ export function MirrorOSForge() {
 
       <p className="mono-label mt-4 text-center text-[10px] text-muted-foreground/60">
         {t(
-          "Manifesting complements action · it never replaces it · Free will honored always ❤️"
+          "Manifesting complements action · it never replaces it · Free will honored always"
         )}
+        <span aria-hidden="true" className="emoji-ink">
+          ❤️
+        </span>
       </p>
     </div>
   );

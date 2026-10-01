@@ -396,12 +396,12 @@ export function LiveCall({
         type="button"
         aria-label={t("End the call")}
         onClick={onClose}
-        className="absolute inset-0 cursor-default bg-[#040209]"
+        className="absolute inset-0 cursor-default bg-[#080809]"
         tabIndex={-1}
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_90%_at_50%_-10%,color-mix(in_srgb,#120a2a_80%,transparent),transparent_60%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_90%_at_50%_-10%,color-mix(in_srgb,#161617_80%,transparent),transparent_60%)]"
       />
 
       <motion.div
@@ -410,7 +410,7 @@ export function LiveCall({
         exit={{ y: 44, opacity: 0, scale: 0.985 }}
         transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
         className={cn(
-          "nice-scroll relative w-full overflow-y-auto rounded-t-[28px] border bg-[#0a0716] sm:max-w-[460px] sm:rounded-[28px] sm:border max-h-[94dvh]",
+          "nice-scroll relative w-full overflow-y-auto rounded-t-[28px] border bg-[#111112] sm:max-w-[460px] sm:rounded-[28px] sm:border max-h-[94dvh]",
           cfg.wrapperClass ?? ""
         )}
         style={{ borderColor: `color-mix(in srgb, ${cfg.accentA} 30%, transparent)` }}
@@ -490,7 +490,7 @@ export function LiveCall({
             transition={{ type: "spring", stiffness: 260, damping: 22 }}
             className="relative flex size-28 touch-none select-none items-center justify-center rounded-full disabled:cursor-wait"
             style={{
-              background: `radial-gradient(circle at 32% 28%, color-mix(in srgb, ${cfg.accentA} 88%, white) 0%, ${cfg.accentA} 42%, color-mix(in srgb, ${cfg.accentB} 92%, #05030e) 100%)`,
+              background: `radial-gradient(circle at 32% 28%, color-mix(in srgb, ${cfg.accentA} 88%, white) 0%, ${cfg.accentA} 42%, color-mix(in srgb, ${cfg.accentB} 92%, #0a0a0b) 100%)`,
               boxShadow: `0 0 ${listening ? 42 : 26}px -6px color-mix(in srgb, ${cfg.accentA} 80%, transparent), inset 0 0 26px -8px rgba(255,255,255,0.5)`,
             }}
           >
@@ -502,7 +502,7 @@ export function LiveCall({
               ).map((factor, i) => (
                 <motion.span
                   key={i}
-                  className="w-[3.5px] rounded-full bg-[#f5f2ff]"
+                  className="w-[3.5px] rounded-full bg-[#f5f5f4]"
                   animate={
                     listening
                       ? {

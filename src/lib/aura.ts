@@ -43,7 +43,9 @@ export function hashString(str: string): number {
   return h >>> 0;
 }
 
-/** The aura drawn for a given seed (message id, query, …). */
-export function auraFor(seed: string): Aura {
-  return AURAS[hashString(seed) % AURAS.length];
+/** The aura drawn for a given seed (message id, query, …).
+    The book reader draws no color in any theme: every card —
+    light or dark — wears the same clean neutral ink. */
+export function auraFor(_seed: string): Aura {
+  return INK_AURA;
 }

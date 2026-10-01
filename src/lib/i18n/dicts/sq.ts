@@ -118,7 +118,7 @@ export const sq: TranslationDict = {
   "Listen to this transmission": "Dëgjoje këtë transmetim",
   "Mandate": "Mandati",
   "Manifestation blueprint": "Plani i manifestimit",
-  "Manifesting complements action · it never replaces it · Free will honored always ❤️": "Manifestimi e plotëson veprimin · nuk e zëvendëson kurrë · Vullneti i lirë nderohet gjithmonë ❤️",
+  "Manifesting complements action · it never replaces it · Free will honored always": "Manifestimi e plotëson veprimin · nuk e zëvendëson kurrë · Vullneti i lirë nderohet gjithmonë ❤️",
   "Min. 8 characters · The chamber never promises outcomes — it sharpens alignment.": "Min. 8 karaktere · Dhoma nuk premton kurrë rezultate — e bën përafrimin më të mprehtë.",
   "Mirror archive · full register": "Arkivi i Pasqyrës · regjistri i plotë",
   "Mode:": "Mënyra:",
@@ -1506,7 +1506,7 @@ export const sq: TranslationDict = {
   "The channel returns to its quiet origin.": "Kanali kthehet në origjinën e tij të qetë.",
   "Where shall we begin?": "Nga ku të fillojmë?",
   "Worlds": "Botët",
-  "With love ❤️": "Me dashuri ❤️",
+  "With love": "Me dashuri",
 
   /* Task 60 — classic white shell */
   "Outer Realms": "Botët e Jashtme",

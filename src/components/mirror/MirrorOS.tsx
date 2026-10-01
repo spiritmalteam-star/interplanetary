@@ -83,7 +83,7 @@ function FormulaCard({ index, formulaId }: { index: number; formulaId: string })
         className="focus-glow flex w-full items-center gap-3.5 px-5 py-4 text-left sm:px-6"
       >
         <span
-          className="flex size-10 shrink-0 items-center justify-center rounded-full border text-[17px]"
+          className="emoji-ink flex size-10 shrink-0 items-center justify-center rounded-full border text-[17px]"
           style={{
             borderColor: "color-mix(in srgb, var(--scope-a) 40%, transparent)",
             background: "color-mix(in srgb, var(--scope-a) 8%, transparent)",
@@ -242,7 +242,7 @@ function HigherMindTab() {
           {higherProtocols.map((p) => (
             <div key={p.id} className="rounded-2xl glass p-5">
               <span
-                className="flex size-9 items-center justify-center rounded-full border text-[16.5px]"
+                className="emoji-ink flex size-9 items-center justify-center rounded-full border text-[16.5px]"
                 style={{
                   borderColor: "color-mix(in srgb, var(--scope-a) 38%, transparent)",
                   background: "color-mix(in srgb, var(--scope-a) 8%, transparent)",
@@ -338,7 +338,7 @@ function BeliefReframer() {
                   : undefined
               }
             >
-              <span aria-hidden="true">{d.glyph}</span>
+              <span aria-hidden="true" className="emoji-ink">{d.glyph}</span>
               {t(d.label)}
             </button>
           );
@@ -417,7 +417,7 @@ function VibrationBridge() {
                   : undefined
               }
             >
-              <span aria-hidden="true">{v.glyph}</span>
+              <span aria-hidden="true" className="emoji-ink">{v.glyph}</span>
               {t(v.label)}
             </button>
           );

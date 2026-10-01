@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Send } from "lucide-react";
+import { Feather } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { detectVisualIntent } from "@/lib/visualization";
@@ -153,7 +153,7 @@ export function QueryComposer() {
             aria-label={t("Transmit question to the mirror")}
             className="focus-glow mb-0 flex size-7 shrink-0 items-center justify-center rounded-full bg-[var(--foreground)] text-[var(--background)] transition-all duration-300 hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-30"
           >
-            <Send className="size-3.5" aria-hidden="true" />
+            <Feather className="size-3.5" aria-hidden="true" />
           </button>
         </div>
       </form>

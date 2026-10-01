@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Orbit, RefreshCw, Send } from "lucide-react";
+import { Feather, Orbit, RefreshCw } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { osOpeners } from "@/lib/data/mirroros";
@@ -604,9 +604,9 @@ export function MirrorOSChat() {
             type="submit"
             disabled={!canSend}
             aria-label={t("Send to the OS")}
-            className="focus-glow mb-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--gd)] to-[color-mix(in_srgb,var(--pk)_70%,var(--gd))] text-[#1a1206] shadow-[0_0_18px_-6px_color-mix(in_srgb,var(--gd)_70%,transparent)] transition-all duration-300 hover:glow-sm disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
+            className="focus-glow mb-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--gd)] to-[color-mix(in_srgb,var(--pk)_70%,var(--gd))] text-[#101010] shadow-[0_0_18px_-6px_color-mix(in_srgb,var(--gd)_70%,transparent)] transition-all duration-300 hover:glow-sm disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
           >
-            <Send className="size-3.5" aria-hidden="true" />
+            <Feather className="size-3.5" aria-hidden="true" />
           </button>
           </div>
         </form>

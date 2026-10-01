@@ -118,7 +118,7 @@ export const tr: TranslationDict = {
   "Listen to this transmission": "Bu aktarımı dinle",
   "Mandate": "Mandat",
   "Manifestation blueprint": "Tezahür taslağı",
-  "Manifesting complements action · it never replaces it · Free will honored always ❤️": "Tezahür eylemi tamamlar · onun yerini asla almaz · Özgür irade her zaman gözetilir ❤️",
+  "Manifesting complements action · it never replaces it · Free will honored always": "Tezahür eylemi tamamlar · onun yerini asla almaz · Özgür irade her zaman gözetilir ❤️",
   "Min. 8 characters · The chamber never promises outcomes — it sharpens alignment.": "En az 8 karakter · Oda asla sonuç vaat etmez — hizalanmayı keskinleştirir.",
   "Mirror archive · full register": "Ayna arşivi · tam sicil",
   "Mode:": "Mod:",
@@ -1506,7 +1506,7 @@ export const tr: TranslationDict = {
   "The channel returns to its quiet origin.": "Kanal kendi sessiz kaynağına döner.",
   "Where shall we begin?": "Nereden başlayalım?",
   "Worlds": "Dünyalar",
-  "With love ❤️": "Sevgiyle ❤️",
+  "With love": "Sevgiyle",
 
   /* Task 60 — classic white shell */
   "Outer Realms": "Dış Âlemler",

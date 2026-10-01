@@ -357,7 +357,7 @@ export function AkashicView() {
       />
       <div
         aria-hidden="true"
-        className="animate-drift-c pointer-events-none absolute -right-24 bottom-[-10%] size-[340px] rounded-full bg-[radial-gradient(circle,color-mix(in_srgb,#b06a2c_12%,transparent),transparent_65%)] blur-3xl"
+        className="animate-drift-c pointer-events-none absolute -right-24 bottom-[-10%] size-[340px] rounded-full bg-[radial-gradient(circle,color-mix(in_srgb,#8a8a89_12%,transparent),transparent_65%)] blur-3xl"
       />
 
       {/* the reveal veil — rises only when a record's text is open, deepening
@@ -366,13 +366,13 @@ export function AkashicView() {
         aria-hidden="true"
         data-testid="akashic-dimveil"
         className={cn(
-          "pointer-events-none absolute inset-0 z-[5] bg-[#070409] transition-opacity duration-[1200ms] ease-out",
+          "pointer-events-none absolute inset-0 z-[5] bg-[#0a0a0b] transition-opacity duration-[1200ms] ease-out",
           revealed ? "opacity-[0.74]" : "opacity-0"
         )}
       />
 
       {/* ---------- threshold: return · the name · a new record ---------- */}
-      <header className="relative z-20 flex items-center gap-2 border-b border-[color-mix(in_srgb,var(--gd)_20%,transparent)] bg-[color-mix(in_srgb,#0c0806_66%,transparent)] px-3 py-2.5 backdrop-blur-md sm:px-5">
+      <header className="relative z-20 flex items-center gap-2 border-b border-[color-mix(in_srgb,var(--gd)_20%,transparent)] bg-[color-mix(in_srgb,#0d0d0e_66%,transparent)] px-3 py-2.5 backdrop-blur-md sm:px-5">
         <button
           type="button"
           onClick={exitAkashic}
@@ -745,7 +745,7 @@ export function AkashicView() {
       </div>
 
       {/* ---------- setting the resonance on the desk ---------- */}
-      <div className="relative z-20 border-t border-[color-mix(in_srgb,var(--gd)_20%,transparent)] bg-[color-mix(in_srgb,#0c0806_66%,transparent)] px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-md sm:px-5">
+      <div className="relative z-20 border-t border-[color-mix(in_srgb,var(--gd)_20%,transparent)] bg-[color-mix(in_srgb,#0d0d0e_66%,transparent)] px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-md sm:px-5">
         <form
           onSubmit={send}
           className="mx-auto w-full max-w-[680px]"
@@ -787,7 +787,7 @@ export function AkashicView() {
             }
             aria-label={replying ? t("Reply to the record") : t("Write your resonance")}
             data-testid="akashic-input"
-            className="focus-glow h-11 min-w-0 flex-1 rounded-full border border-[color-mix(in_srgb,var(--gd)_26%,transparent)] bg-[color-mix(in_srgb,#1a1108_45%,transparent)] px-4 text-[14.5px] text-foreground placeholder:text-muted-foreground/60 transition-all duration-300 focus:border-[color-mix(in_srgb,var(--gd)_50%,transparent)] focus:shadow-[0_0_28px_-10px_color-mix(in_srgb,var(--gd)_70%,transparent)] focus:outline-none"
+            className="focus-glow h-11 min-w-0 flex-1 rounded-full border border-[color-mix(in_srgb,var(--gd)_26%,transparent)] bg-[color-mix(in_srgb,#141415_45%,transparent)] px-4 text-[14.5px] text-foreground placeholder:text-muted-foreground/60 transition-all duration-300 focus:border-[color-mix(in_srgb,var(--gd)_50%,transparent)] focus:shadow-[0_0_28px_-10px_color-mix(in_srgb,var(--gd)_70%,transparent)] focus:outline-none"
           />
 
           <ChatInputExtras

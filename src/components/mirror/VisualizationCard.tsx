@@ -289,7 +289,7 @@ function DiagramOverlay({
             top: `${n.y}%`,
             maxWidth: "30%",
             borderColor: `color-mix(in srgb, ${accent} 55%, transparent)`,
-            background: "color-mix(in srgb, #08050f 62%, transparent)",
+            background: "color-mix(in srgb, #0a0a0b 62%, transparent)",
             color: "rgba(255,255,255,0.94)",
             boxShadow: `0 0 18px -8px color-mix(in srgb, ${accent} 80%, transparent)`,
           }}
@@ -328,7 +328,7 @@ function AnnotationMarkers({
             className="size-2 shrink-0 rotate-45 border"
             style={{
               borderColor: accent,
-              background: "color-mix(in srgb, #08050f 55%, transparent)",
+              background: "color-mix(in srgb, #0a0a0b 55%, transparent)",
               boxShadow: `0 0 10px -2px color-mix(in srgb, ${accent} 90%, transparent)`,
             }}
           />
@@ -336,7 +336,7 @@ function AnnotationMarkers({
             className="max-w-[150px] rounded-full border px-2 py-0.5 text-[9.5px] leading-tight backdrop-blur-md sm:max-w-[190px] sm:text-[10.5px]"
             style={{
               borderColor: `color-mix(in srgb, ${accent} 45%, transparent)`,
-              background: "color-mix(in srgb, #08050f 58%, transparent)",
+              background: "color-mix(in srgb, #0a0a0b 58%, transparent)",
               color: "rgba(255,255,255,0.92)",
             }}
           >
@@ -393,7 +393,7 @@ function PresentationDeck({
               <div
                 className="flex aspect-[7/4] w-full items-center justify-center"
                 style={{
-                  background: `radial-gradient(circle at 30% 20%, color-mix(in srgb, ${accent} 22%, transparent), transparent 60%), linear-gradient(160deg, #0a0716, #120a24)`,
+                  background: `radial-gradient(circle at 30% 20%, color-mix(in srgb, ${accent} 22%, transparent), transparent 60%), linear-gradient(160deg, #0b0b0c, #161617)`,
                 }}
               >
                 <span className="mono-label text-[11px] tracking-[0.3em]" style={{ color: accent }}>

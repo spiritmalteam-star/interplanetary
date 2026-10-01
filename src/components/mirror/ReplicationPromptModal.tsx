@@ -120,7 +120,7 @@ export function ReplicationPromptModal() {
           aria-label="Replication prompt text"
           className="nice-scroll max-h-[44vh] overflow-y-auto rounded-xl border hairline bg-[var(--glass-bg)] p-4 max-md:max-h-[50dvh]"
         >
-          <pre className="whitespace-pre-wrap break-words font-mono text-[13.5px] leading-relaxed text-foreground/90 selection:bg-[var(--scope-a,#8b7cf8)]/30">
+          <pre className="whitespace-pre-wrap break-words font-mono text-[13.5px] leading-relaxed text-foreground/90 selection:bg-[var(--scope-a,#6b6b74)]/30">
             {REPLICATION_PROMPT}
           </pre>
         </div>

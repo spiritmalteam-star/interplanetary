@@ -76,7 +76,7 @@ export function MetaphysicsRail() {
                               : "border-transparent text-muted-foreground hover:border-[var(--hairline-hover)] hover:text-foreground"
                           )}
                         >
-                          <span aria-hidden="true" className="text-[13.5px] leading-none">
+                          <span aria-hidden="true" className="emoji-ink text-[13.5px] leading-none">
                             {p.emoji}
                           </span>
                           {t(p.label)}
@@ -104,7 +104,7 @@ export function MetaphysicsRail() {
                               : "border-transparent text-muted-foreground hover:border-[var(--hairline-hover)] hover:text-foreground"
                           )}
                         >
-                          <span aria-hidden="true" className="text-[13.5px] leading-none">
+                          <span aria-hidden="true" className="emoji-ink text-[13.5px] leading-none">
                             {p.emoji}
                           </span>
                           {t(p.label)}

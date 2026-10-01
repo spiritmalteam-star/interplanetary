@@ -4,10 +4,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowLeft,
+  Feather,
   Flame,
   Hammer,
   RotateCcw,
-  Send,
   Wrench,
 } from "lucide-react";
 import { useMirror, type ChatMessage } from "@/lib/mirror-store";
@@ -101,7 +101,7 @@ function DialGroup({
                   : undefined
               }
             >
-              <span aria-hidden="true">{o.emoji}</span>
+              <span aria-hidden="true" className="emoji-ink">{o.emoji}</span>
               {t(o.label)}
             </button>
           );
@@ -268,7 +268,7 @@ function MysteryCard() {
               "linear-gradient(120deg, color-mix(in srgb, var(--scope-a) 14%, transparent), color-mix(in srgb, var(--scope-b) 12%, transparent))",
           }}
         >
-          <Send className="size-3.5" aria-hidden="true" />
+          <Feather className="size-3.5" aria-hidden="true" />
           {t("Ask the Forge about it")}
         </button>
         <button
@@ -550,7 +550,7 @@ function ToolResultCard() {
               "linear-gradient(120deg, color-mix(in srgb, var(--scope-a) 14%, transparent), color-mix(in srgb, var(--scope-b) 12%, transparent))",
           }}
         >
-          <Send className="size-3.5" aria-hidden="true" />
+          <Feather className="size-3.5" aria-hidden="true" />
           {t("Ask the Forge about it")}
         </button>
         <ListenButton text={spoken} cacheKey={`tool-${spoken.length}-${spoken.slice(0, 24)}`} />
@@ -638,7 +638,7 @@ function ToolWall() {
                   : undefined
               }
             >
-              <span aria-hidden="true">{x.emoji}</span>
+              <span aria-hidden="true" className="emoji-ink">{x.emoji}</span>
               {t(x.name)}
             </button>
           );
@@ -1047,7 +1047,7 @@ function ForgeChat() {
                 "linear-gradient(120deg, color-mix(in srgb, var(--scope-a) 15%, transparent), color-mix(in srgb, var(--scope-b) 13%, transparent))",
             }}
           >
-            <Send className="size-4" aria-hidden="true" />
+            <Feather className="size-4" aria-hidden="true" />
           </button>
         </div>
       </div>

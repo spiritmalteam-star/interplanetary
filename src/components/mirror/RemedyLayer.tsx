@@ -22,9 +22,9 @@ import { useT } from "@/lib/i18n";
 /* ------------------------------------------------------------------ */
 
 /* the apothecary's own palette — rose and herb-green, softly lit */
-const ROSE = "#b05e76";
-const HERB = "#2f8a6e";
-const GOLD = "#d4af37";
+const ROSE = "#52525b";
+const HERB = "#71717a";
+const GOLD = "#71717a";
 
 function CraftingVessel() {
   return (
@@ -34,7 +34,7 @@ function CraftingVessel() {
         className="absolute inset-0 rounded-full"
         style={{
           background:
-            "radial-gradient(circle, color-mix(in srgb, #2f8a6e 26%, transparent), transparent 70%)",
+            "radial-gradient(circle, color-mix(in srgb, #71717a 26%, transparent), transparent 70%)",
         }}
         animate={{ scale: [0.9, 1.1, 0.9], opacity: [0.45, 0.85, 0.45] }}
         transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
@@ -42,7 +42,7 @@ function CraftingVessel() {
       {/* the vessel rim */}
       <div
         className="absolute inset-1.5 rounded-full border"
-        style={{ borderColor: "color-mix(in srgb, #b05e76 42%, transparent)" }}
+        style={{ borderColor: "color-mix(in srgb, #52525b 42%, transparent)" }}
       />
       {/* the swirling blend */}
       <motion.div
@@ -283,7 +283,7 @@ export function RemedyLayer() {
             style={{
               /* essentially opaque — the chat beneath never shows through */
               background:
-                "color-mix(in srgb, var(--background) 94%, #1a0f2e)",
+                "color-mix(in srgb, var(--background) 94%, #1b1b1c)",
             }}
           >
             <div

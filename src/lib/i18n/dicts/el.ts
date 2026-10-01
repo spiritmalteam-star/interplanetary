@@ -118,7 +118,7 @@ export const el: TranslationDict = {
   "Listen to this transmission": "Άκου αυτή τη μετάδοση",
   "Mandate": "Εντολή",
   "Manifestation blueprint": "Σχέδιο εκδήλωσης",
-  "Manifesting complements action · it never replaces it · Free will honored always ❤️": "Η εκδήλωση συμπληρώνει τη δράση · δεν την αντικαθιστά ποτέ · Η ελεύθερη βούληση τιμάται πάντα ❤️",
+  "Manifesting complements action · it never replaces it · Free will honored always": "Η εκδήλωση συμπληρώνει τη δράση · δεν την αντικαθιστά ποτέ · Η ελεύθερη βούληση τιμάται πάντα ❤️",
   "Min. 8 characters · The chamber never promises outcomes — it sharpens alignment.": "Ελάχ. 8 χαρακτήρες · Ο θάλαμος δεν υπόσχεται ποτέ αποτελέσματα — ακονίζει την ευθυγράμμιση.",
   "Mirror archive · full register": "Αρχείο του Καθρέφτη · πλήρες μητρώο",
   "Mode:": "Λειτουργία:",
@@ -1512,7 +1512,7 @@ export const el: TranslationDict = {
   "The channel returns to its quiet origin.": "Το κανάλι επιστρέφει στη σιωπηλή του αρχή.",
   "Where shall we begin?": "Πού θα ξεκινήσουμε;",
   "Worlds": "Κόσμοι",
-  "With love ❤️": "Με αγάπη ❤️",
+  "With love": "Με αγάπη",
 
   /* Task 60 — classic white shell */
   "Outer Realms": "Εξωτερικοί Κόσμοι",
