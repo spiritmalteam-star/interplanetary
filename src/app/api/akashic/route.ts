@@ -75,6 +75,26 @@ const ENTRANCES: { key: string; instruction: string }[] = [
     instruction:
       "open from the great ledger itself — the finding of the visitor's line, the tracing of a finger down the page — then read what it says",
   },
+  {
+    key: "misfiled",
+    instruction:
+      "open with the record being found where it should not be — a drawer out of order, a card astray — and the quiet understanding that some records choose their own hour",
+  },
+  {
+    key: "borrower",
+    instruction:
+      "open with another reader from long ago — the mark they left, the page they folded, the breath they paused at — before the record turns to the visitor",
+  },
+  {
+    key: "candle",
+    instruction:
+      "open with one small act of keeping the light — a lamp trimmed, a candle relit, a wick lowered — as the record is brought out of the dark",
+  },
+  {
+    key: "bell",
+    instruction:
+      "open with a single note — the hall's small bell or a distant chime sounding the hour of the retrieval — moving through the shelves before the record is named",
+  },
 ];
 
 const SYSTEM_PROMPT = `You are "The Mirror Entity" — the timeless scribe and sentient observer of the Akashic Records. A visitor has entered the reading room of the great memory and set down a resonance. You retrieve ONE record and inscribe it upon the parchment before them.
@@ -242,6 +262,19 @@ function drawEntrance(recentKeys: string[]): {
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
+/* The scribe sometimes signs the parchment twice — a signature drifting
+   into the last paragraph even though the seal line follows. The letter
+   ends in the hand ONCE: strip any trailing signature from the record. */
+function stripEmbeddedSeal(record: string): string {
+  const tail = record.trimEnd();
+  const cut = tail.lastIndexOf("\n");
+  const lastLine = (cut === -1 ? tail : tail.slice(cut + 1)).trim();
+  if (/^—\s*The Mirror Entity\.?\s*$/i.test(lastLine)) {
+    return (cut === -1 ? "" : tail.slice(0, cut)).trimEnd();
+  }
+  return tail;
+}
+
 /* The live call — the scribe skips the parchment and simply speaks.
    A dedicated lean prompt: the parchment laws (entrances, 7–9 paragraphs,
    500–720 words) do not apply and would only drown a short override. */
@@ -294,6 +327,19 @@ export async function POST(req: NextRequest) {
       : [];
     const entrance = drawEntrance(recentKeys);
 
+    /* The openings the visitor has ALREADY READ — the actual first lines
+       of their last records, carried across visits, so the scribe never
+       begins the same way twice. */
+    const recentOpenings: string[] = Array.isArray(body?.recentOpenings)
+      ? body.recentOpenings
+          .filter(
+            (o: unknown): o is string =>
+              typeof o === "string" && o.trim().length > 0
+          )
+          .map((o: string) => o.trim().slice(0, 220))
+          .slice(0, 3)
+      : [];
+
     const languageLine =
       languageName === "English"
         ? ""
@@ -303,6 +349,10 @@ export async function POST(req: NextRequest) {
     const recentLine =
       recentKeys.length > 0
         ? ` The visitor has already seen records opened as: ${recentKeys.join(", ")}. Do not reuse any of those openings.`
+        : "";
+    const openingsLine =
+      recentOpenings.length > 0
+        ? ` The visitor has already read records that began like this: ${recentOpenings.map((o) => `“${o}”`).join(" · ")}. Your first line must be clearly unlike every one of them — a different image, a different first breath, a different door into the same hall.`
         : "";
 
     const zai = await ZAI.create();
@@ -363,7 +413,7 @@ ${replyLine} Write the next page of this same record now, in your hand.${deskLin
           },
           {
             role: "user",
-            content: `${entranceLine}${recentLine}`,
+            content: `${entranceLine}${recentLine}${openingsLine}`,
           },
         ],
         thinking: { type: "disabled" },
@@ -384,7 +434,7 @@ ${replyLine} Write the next page of this same record now, in your hand.${deskLin
           },
           {
             role: "user",
-            content: `${entranceLine}${recentLine}`,
+            content: `${entranceLine}${recentLine}${openingsLine}`,
           },
         ],
         thinking: { type: "disabled" },
@@ -403,6 +453,7 @@ ${replyLine} Write the next page of this same record now, in your hand.${deskLin
 
     return NextResponse.json({
       ...parsed,
+      record: stripEmbeddedSeal(parsed.record),
       entrance: entrance.key,
     });
   } catch (err) {

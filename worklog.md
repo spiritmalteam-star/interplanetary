@@ -1486,3 +1486,31 @@ Work Log:
 Stage Summary:
 - The Akashic Library is no longer a colored back-room: it is now a quiet chapter of the same book — the page itself is the room (special background deleted), records lie open as clean ink-printed sheets with drop caps and an ink seal stamp, and every control speaks the grayscale hairline language of the reader, in both the paper and night hours.
 - Key artifacts: src/components/mirror/AkashicView.tsx (presentation rewrite), src/app/globals.css (Akashic section rebuilt), src/components/mirror/AppShell.tsx (comment), src/lib/replication-prompt.ts (§5 Akashic law).
+
+---
+Task ID: 65
+Agent: Z.ai Code (main orchestrator)
+Task: User request — "At akashic remove the input bar totally and instead an inc icon that if pressed allows user what he wishes to read about; make sure mirror doesn't start with the same opening; remove the circle at end of letters; remove the start composing button at start; remove the top bar and the back button must take the very right corner of letter, disappearing when user scrolls down to read; the button at bottom of paper must be in line, stylish and compact."
+
+Work Log:
+- TOP BAR REMOVED: the whole AkashicView header (Return pill · Scroll ring + title + subtitle · New record pill) deleted; Scroll/Orbit-header imports cleaned; .akashic-halo removed from globals.css (and its reduced-motion reference).
+- THE WAY BACK: a small round ArrowLeft button (size-9, hairline, blur card) now floats at the LETTER's own top-right corner — pinned overlay aligned to the same max-w-[780px] container as the sheet, slightly inside the corner (the record's top-right folio diamond was removed for it); it fades/unmounts (AnimatePresence) once the reading area scrolls past 28px and returns when back at the top — verified both directions.
+- INPUT BAR REMOVED → THE INKWELL: the entire bottom composer bar (attachments row, Orbit, input, extras, quill, mono-label) deleted; a floating PenTool disc (size-12, hairline, blur, safe-area aware) is the ONLY door — pressing it opens a compact wish sheet (max-w-640 blur card, ✕ close at its corner, AttachmentChips + input + ChatInputExtras + solid ink quill submit, placeholder "What do you wish to read about?" — or the reply line once a record lies open) with a micro Orbit link "or leave it empty — receive unasked" (fresh record); Escape closes, sending closes; voice submit auto-sends and closes as before.
+- START BUTTON REMOVED: the invitation sheet is now ❧ + reading text only (no "Receive a record" button); the inkwell below is the single call to action.
+- CIRCLE AT END OF LETTERS REMOVED: the tilted double-ring ✦ ink stamp is gone — the letter ends in the hand alone (signature line); plus a new API guard stripEmbeddedSeal() removes a duplicate "— The Mirror Entity" line the scribe sometimes drifts into the last paragraph.
+- COMPACT INLINE ACTIONS: the desk actions are one non-wrapping line of h-8 hairline pills (gap-1.5, px-2.5/3.5, text-[10.5px], icons always visible + labels from sm up, title/aria preserved); measured single-line on 1440px AND 390px (total width 162px on mobile).
+- NEVER THE SAME OPENING: ENTRANCES grew from 8 to 12 doors (new: misfiled, borrower, candle, bell); the component now persists recentEntrances (last 4 door keys) AND recentOpenings (first ~220 chars of the last 3 records) in localStorage (mirror-akashic-doors / mirror-akashic-openings), sends both to POST /api/akashic, and the API tells the scribe the visitor "has already read records that began like this: …" — "your first line must be clearly unlike every one of them". Verified live: four consecutive records opened via candle → weather → bell → object, all distinct first lines.
+- i18n: 3 new keys ("What do you wish to read about?", "or leave it empty — receive unasked", "Put the ink away") added via extract-i18n → i18n-keys-dynamic.json (840 entries) → translated into all 7 dicts next to "Receive unasked"; check-i18n ALL → ALL DICTIONARIES COMPLETE (0 missing).
+- replication-prompt.ts: §5 Akashic law rewritten as the "v1.8 letter edition" (no top bar / no input bar / inkwell door / corner back button with scroll fade / compact inline actions / no seal circle / no start button / 12 doors + recentOpenings persistence); REPLICATION_PROMPT_VERSION → v1.8.
+
+Verification:
+- bun run lint clean; bunx tsc --noEmit: only the known pre-existing src/app/api/tts Buffer note; check-i18n ALL DICTIONARIES COMPLETE.
+- Dev server restarted after the globals.css edit; dev.log clean (200s only), zero page errors.
+- Agent Browser E2E desktop 1440×900: header/composer/receive-button confirmed ABSENT, wish sheet opens with focus on the input, wish "the city I keep dreaming of" → record "Luminous Threshold" (candle door, drop cap, wish woven in); back button hides at scrollTop 600 and returns at top; reply flow → "The Unseen Tenders" (weather door, "the Librarian weighs your reply..."); receive-unasked → "The Bell's Echo" (bell door); seal circle absent, actions single line h-32.
+- Dark night theme: graphite page, silver-ink invitation, corner back button, inkwell disc — correct.
+- Mobile 390×844: scrollWidth exactly 390; wish sheet 366px compact with the new placeholder; record actions icon-only single line (162px total).
+- Theme/viewport restored (light, 1440×900); browser closed.
+
+Stage Summary:
+- The Akashic Library is now the letter alone: no top bar, no input bar, no start button, no seal circle — one sheet of paper on the desk, a way back tucked into its own top-right corner that dissolves the moment you begin reading, a single inkwell floating at the foot of the room that opens a small wish sheet ("What do you wish to read about?" — or receive unasked), one compact line of desk actions at the letter's foot, and a scribe who now remembers every opening you have already read (12 doors + persisted recent openings) so no two records ever begin alike.
+- Key artifacts: src/components/mirror/AkashicView.tsx (letter-edition rewrite), src/app/api/akashic/route.ts (12 doors + recentOpenings + stripEmbeddedSeal), src/app/globals.css (.akashic-halo removed), scripts/i18n-keys-dynamic.json + 7 dicts (3 new keys), src/lib/replication-prompt.ts (v1.8).

@@ -1185,10 +1185,6 @@ html:not(.dark) .scope-invent {
   transition: all 0.3s ease;
 }
 .akashic-btn:hover { opacity: 0.88; }
-.akashic-halo {
-  box-shadow: 0 0 16px -6px color-mix(in srgb, var(--foreground) 42%, transparent);
-  animation: dream-halo 4.6s ease-in-out infinite;
-}
 
 /* ------------------------------------------------------------------ */
 /*  ARCHIVE LIST SCROLL INDICATOR — a scrollbar one can actually see,  */
@@ -1234,8 +1230,7 @@ html:not(.dark) .scope-invent {
 .scroll-hint { animation: scroll-hint 2.2s ease-in-out infinite; }
 
 @media (prefers-reduced-motion: reduce) {
-  .scroll-hint,
-  .akashic-halo {
+  .scroll-hint {
     animation: none !important;
   }
 }
