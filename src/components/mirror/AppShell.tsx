@@ -9,7 +9,6 @@ import { StarField } from "./StarField";
 import Sidebar from "./Sidebar";
 import { MobileSidebar } from "./MobileSidebar";
 import { ScopeSelector } from "./ScopeSelector";
-import { AliveIndicator } from "./AliveIndicator";
 import { SuggestionStrip } from "./SuggestionStrip";
 import { QueryComposer } from "./QueryComposer";
 import { TransmissionView } from "./TransmissionView";
@@ -181,9 +180,8 @@ export default function AppShell() {
           </div>
         </div>
 
-        {/* the quiet proof of life — a hovering saucer and one
-            small phrase, centered between the two handles */}
-        <AliveIndicator />
+        {/* the space between the handles stays quiet — no indicator,
+            no pill; the page simply breathes */}
 
         {/* Scrollable conversation area — keyed by view so each screen
             (and every chat thread) opens at its very beginning */}

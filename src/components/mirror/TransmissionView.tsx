@@ -17,6 +17,7 @@ import { useT } from "@/lib/i18n";
 import type { Scope } from "@/lib/mirror-types";
 import { cn } from "@/lib/utils";
 import { ListenButton } from "./ListenButton";
+import { AlienLoading } from "./AlienLoading";
 import {
   PreparedPromptFallback,
   VisualizationCard,
@@ -67,14 +68,14 @@ function parseBlocks(text: string): Block[] {
 
 /* ---------- small themed pieces ---------- */
 
-/* The mirror's waiting phrases — warm, positive, unhurried. */
+/* The visitor's waiting phrases — cute, cryptic, unhurried. */
 const WAITING_PHRASES = [
-  "Something beautiful is forming…",
-  "The mirror is listening with love…",
-  "Good news is already on its way…",
-  "Every question deserves a gentle answer…",
-  "The field is arranging itself for you…",
-  "Breathe — your answer is arriving…",
+  "A little visitor is decoding your question…",
+  "Antennae tuned — the signal is forming…",
+  "Someone from orbit is writing this down…",
+  "The saucer hums in a language older than stars…",
+  "Strange lights are arranging your answer…",
+  "Hold still — something wonderful is landing…",
 ];
 
 /* Each transmission draws its own light — in the dark. On the classic
@@ -121,16 +122,10 @@ function LoadingTransmission({ query }: { query: string }) {
           </p>
         </div>
       )}
-      {/* no circle, no spinner — the mirror itself breathes quietly
-          while positive phrases keep the seeker company */}
-      <div className="flex justify-center">
-        <img
-          src="/images/ai/cosmic-mark.png"
-          alt=""
-          aria-hidden="true"
-          className="animate-breathe size-14 rounded-full object-cover"
-        />
-      </div>
+      {/* no circle, no spinner — the little visitor descends instead:
+          a cute cryptic saucer beaming up glyphs while its passenger
+          blinks, and cryptic phrases keep the seeker company */}
+      <AlienLoading />
       <div
         className="mt-4 flex h-6 items-center justify-center px-4 text-center"
         aria-hidden="true"

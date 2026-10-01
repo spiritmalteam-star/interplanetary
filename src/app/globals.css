@@ -532,21 +532,69 @@ html:not(.dark) .scope-invent {
 }
 .animate-float-y { animation: float-y 6s ease-in-out infinite; }
 
-/* The alive indicator — a small hovering saucer with three soft
-   rim lights, and one quiet phrase fading in as it changes */
-@keyframes alive-light {
+/* The little visitor — the cute cryptic saucer that forms each
+   transmission. Ink only: rim lights patrolling, antennae listening,
+   glyphs rising through the beam, strange stars twinkling, and one
+   slow blink behind the glass. */
+@keyframes alien-light {
   0%, 100% { opacity: 0.25; }
   50% { opacity: 1; }
 }
-.alive-light { animation: alive-light 1.9s ease-in-out infinite; }
-.alive-light-2 { animation-delay: 0.32s; }
-.alive-light-3 { animation-delay: 0.64s; }
+.alien-light { animation: alien-light 1.9s ease-in-out infinite; }
+.alien-light-2 { animation-delay: 0.32s; }
+.alien-light-3 { animation-delay: 0.64s; }
 
-@keyframes alive-swap {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: none; }
+@keyframes alien-beam {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0.95; }
 }
-.alive-swap { animation: alive-swap 0.42s ease both; }
+.alien-beam { animation: alien-beam 3.4s ease-in-out infinite; }
+
+@keyframes alien-glyph {
+  0% { transform: translateY(0); opacity: 0; }
+  16% { opacity: 0.8; }
+  60% { opacity: 0.55; }
+  100% { transform: translateY(-34px); opacity: 0; }
+}
+.alien-glyph { animation: alien-glyph 3.9s linear infinite; }
+.alien-glyph-2 { animation-delay: 1.3s; }
+.alien-glyph-3 { animation-delay: 2.6s; }
+
+@keyframes alien-blink {
+  0%, 90%, 100% { transform: scaleY(1); }
+  94% { transform: scaleY(0.08); }
+  98% { transform: scaleY(1); }
+}
+.alien-blink {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: alien-blink 4.6s ease-in-out infinite;
+}
+
+@keyframes alien-tip {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 1; }
+}
+.alien-tip { animation: alien-tip 1.6s ease-in-out infinite; }
+.alien-tip-2 { animation-delay: 0.5s; }
+
+@keyframes alien-star {
+  0%, 100% { opacity: 0.12; transform: scale(0.82) rotate(0deg); }
+  50% { opacity: 0.7; transform: scale(1.08) rotate(24deg); }
+}
+.alien-star {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: alien-star 2.8s ease-in-out infinite;
+}
+.alien-star-2 { animation-delay: 0.9s; }
+.alien-star-3 { animation-delay: 1.7s; }
+.alien-star-4 { animation-delay: 2.3s; }
+
+.alien-hull { fill: var(--background); }
+.alien-glass { fill: color-mix(in srgb, currentColor 4%, transparent); }
+.alien-skin { fill: color-mix(in srgb, currentColor 9%, transparent); }
+.alien-glint { fill: var(--background); }
 
 /* ------------------------------------------------------------------ */
 /*  The book reader draws no color — even glyphs. Any emoji used as    */
