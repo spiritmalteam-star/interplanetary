@@ -29,8 +29,6 @@ export const SECTION_SCENES = [
   "dom-temple-ritual",
   "mode-healing",
   "mode-interplanetary",
-  "mode-quantum",
-  "mode-metaphysics",
 ] as const;
 
 /** A deterministic thematic scene for a profile. The salt separates

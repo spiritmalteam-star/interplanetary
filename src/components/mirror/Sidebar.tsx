@@ -16,6 +16,7 @@ import {
   Cpu,
   Heart,
   Landmark,
+  MoonStar,
   Mountain,
   NotebookPen,
   Plus,
@@ -516,6 +517,7 @@ export function SidebarContent() {
   const openMirrorOS = useMirror((s) => s.openMirrorOS);
   const openAkashic = useMirror((s) => s.openAkashic);
   const openInvent = useMirror((s) => s.openInvent);
+  const openDreamBook = useMirror((s) => s.openDreamBook);
   const openModal = useMirror((s) => s.openModal);
   const resetField = useMirror((s) => s.resetField);
   const clearChannel = useMirror((s) => s.clearChannel);
@@ -577,6 +579,13 @@ export function SidebarContent() {
       label: t("Invent"),
       aria: t("Open Invent — the Forge, the invention workshop of the Mirror"),
       action: openInvent,
+    },
+    {
+      key: "dreambook",
+      icon: MoonStar,
+      label: t("Dream Book"),
+      aria: t("Open the Dream Book — tales woven from resonance"),
+      action: openDreamBook,
     },
   ];
 

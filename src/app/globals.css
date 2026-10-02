@@ -431,8 +431,6 @@ html:not(.dark) .text-hero {
 /* ------------------------------------------------------------------ */
 
 .scope-interplanetary,
-.scope-metaphysics,
-.scope-quantum,
 .scope-healing,
 .scope-manifesting,
 .scope-invent {
@@ -441,8 +439,6 @@ html:not(.dark) .text-hero {
 }
 
 .dark .scope-interplanetary,
-.dark .scope-metaphysics,
-.dark .scope-quantum,
 .dark .scope-healing,
 .dark .scope-manifesting,
 .dark .scope-invent {
@@ -454,8 +450,6 @@ html:not(.dark) .text-hero {
    meaning, color carries nothing. (Kept for parity with the aura
    engine, which also returns ink in light mode.) */
 html:not(.dark) .scope-interplanetary,
-html:not(.dark) .scope-metaphysics,
-html:not(.dark) .scope-quantum,
 html:not(.dark) .scope-healing,
 html:not(.dark) .scope-manifesting,
 html:not(.dark) .scope-invent {
@@ -1319,6 +1313,193 @@ html:not(.dark) .scope-invent {
   .book-spine {
     transition: none !important;
   }
+}
+
+/* ------------------------------------------------------------------ */
+/*  THE DREAM BOOK — the atelier of tales. A plum-violet night lit by  */
+/*  gold: the workshop where books are woven, and the clean black &    */
+/*  white pages they are read on. Nothing here is named; the magic     */
+/*  stays magic.                                                       */
+/* ------------------------------------------------------------------ */
+
+:root {
+  --dream-gold: #d9b25f;
+  --dream-gold-soft: #b9975b;
+  --dream-gold-deep: #a8823f;
+  --dream-ink: #26241f;
+  --dream-ink-soft: #5d574b;
+  --dream-ink-faint: #a29a8a;
+  --dream-ink-line: rgba(38, 36, 31, 0.22);
+}
+
+/* the workshop's night — deep plum over near-black, two gold breaths */
+.dream-night {
+  background:
+    radial-gradient(
+      120% 70% at 18% -6%,
+      rgba(217, 178, 95, 0.13) 0%,
+      transparent 52%
+    ),
+    radial-gradient(
+      130% 90% at 86% 108%,
+      rgba(150, 106, 156, 0.16) 0%,
+      transparent 55%
+    ),
+    linear-gradient(178deg, #1b1426 0%, #140e1d 44%, #0e0a15 100%);
+  color: #efe6d4;
+}
+
+/* drifting lights of the workshop — gold dust rising very slowly */
+.dream-dust {
+  background-image:
+    radial-gradient(2px 2px at 12% 30%, rgba(217, 178, 95, 0.4), transparent 60%),
+    radial-gradient(1.6px 1.6px at 32% 68%, rgba(240, 226, 196, 0.28), transparent 60%),
+    radial-gradient(2.2px 2.2px at 58% 22%, rgba(217, 178, 95, 0.3), transparent 60%),
+    radial-gradient(1.6px 1.6px at 74% 76%, rgba(240, 226, 196, 0.22), transparent 60%),
+    radial-gradient(2px 2px at 88% 40%, rgba(217, 178, 95, 0.34), transparent 60%);
+  animation: dream-drift 9s ease-in-out infinite alternate;
+}
+@keyframes dream-drift {
+  from { transform: translate3d(0, 0, 0); opacity: 0.8; }
+  to { transform: translate3d(0, -16px, 0); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dream-dust { animation: none !important; }
+}
+
+/* the weaver's bubbles — soft parchment glass on the night */
+.dream-bubble {
+  background: rgba(255, 250, 238, 0.07);
+  border: 1px solid rgba(255, 244, 214, 0.12);
+  backdrop-filter: blur(8px);
+}
+
+/* the whisper send disc — gold ink */
+.dream-send {
+  background: linear-gradient(160deg, #e3bd6d, #b98f45);
+  color: #241a08;
+  box-shadow: 0 4px 16px -6px rgba(217, 178, 95, 0.55);
+  transition: all 0.3s ease;
+}
+.dream-send:hover { filter: brightness(1.08); }
+
+/* the weave button — a thread of gold across the night */
+.dream-weave {
+  background: linear-gradient(160deg, #e0ba68 0%, #bd934a 52%, #a67c36 100%);
+  color: #241a08;
+  box-shadow:
+    0 10px 30px -12px rgba(217, 178, 95, 0.65),
+    inset 0 1px 0 rgba(255, 244, 214, 0.5);
+  transition: all 0.3s ease;
+}
+.dream-weave:hover {
+  filter: brightness(1.07);
+  box-shadow:
+    0 14px 36px -12px rgba(217, 178, 95, 0.8),
+    inset 0 1px 0 rgba(255, 244, 214, 0.5);
+}
+
+/* the loom — the book being woven */
+.dream-loom-ring {
+  border: 1px dashed rgba(217, 178, 95, 0.35);
+}
+.dream-loom-book {
+  animation: loom-breathe 3.4s ease-in-out infinite;
+}
+@keyframes loom-breathe {
+  0%, 100% { transform: translateY(0); box-shadow: 0 0 50px -14px rgba(217, 178, 95, 0.6); }
+  50% { transform: translateY(-6px); box-shadow: 0 0 74px -10px rgba(217, 178, 95, 0.85); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dream-loom-book { animation: none !important; }
+}
+
+/* the open book — spine shadow falling between two clean pages */
+.dream-book {
+  position: relative;
+  filter: drop-shadow(0 34px 60px rgba(0, 0, 0, 0.55));
+  border-radius: 6px;
+}
+.dream-book::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  transform: translateX(-50%);
+  background: linear-gradient(
+    180deg,
+    transparent,
+    rgba(38, 36, 31, 0.34) 12%,
+    rgba(38, 36, 31, 0.34) 88%,
+    transparent
+  );
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* one page — pure reading paper: black ink on near-white, both hours */
+.dream-page {
+  background: linear-gradient(178deg, #fdfcf9 0%, #f8f6f0 100%);
+  color: var(--dream-ink);
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 300px;
+}
+.dream-page-left {
+  border-radius: 6px 0 0 6px;
+  border: 1px solid rgba(38, 36, 31, 0.14);
+  border-right: none;
+  box-shadow: inset -14px 0 22px -20px rgba(38, 36, 31, 0.5);
+}
+.dream-page-right {
+  border-radius: 0 6px 6px 0;
+  border: 1px solid rgba(38, 36, 31, 0.14);
+  border-left: none;
+  box-shadow: inset 14px 0 22px -20px rgba(38, 36, 31, 0.5);
+}
+.dream-page-single {
+  border-radius: 6px;
+  border: 1px solid rgba(38, 36, 31, 0.14);
+  box-shadow: 0 24px 60px -28px rgba(0, 0, 0, 0.7);
+}
+
+/* the book's reading voice — Literata, justified like a real page */
+.dream-body {
+  font-family: var(--font-literata), Georgia, "Times New Roman", serif;
+  text-align: justify;
+  hyphens: auto;
+}
+.dream-body p + p {
+  text-indent: 1.4em;
+}
+
+/* the drop cap that opens a chapter */
+.dream-drop::first-letter {
+  float: left;
+  font-size: 3.1em;
+  line-height: 0.82;
+  padding: 0.06em 0.09em 0 0;
+  color: var(--dream-gold-deep);
+  font-weight: 500;
+}
+
+/* the floating page-turn buttons over the night */
+.dream-turn {
+  border: 1px solid rgba(255, 244, 214, 0.14);
+  background: rgba(20, 14, 29, 0.55);
+  color: rgba(240, 226, 196, 0.85);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+.dream-turn:hover:not(:disabled) {
+  border-color: rgba(217, 178, 95, 0.55);
+  color: var(--dream-gold);
+  box-shadow: 0 0 22px -8px rgba(217, 178, 95, 0.6);
+}
+.dream-turn:disabled {
+  opacity: 0.3;
 }
 
 /* task-29 css refresh marker */

@@ -127,8 +127,6 @@ const emptySession = (): ScopeSession => ({
 
 const emptySessions = (): Record<Mode, ScopeSession> => ({
   interplanetary: emptySession(),
-  metaphysics: emptySession(),
-  quantum: emptySession(),
   healing: emptySession(),
 });
 
@@ -138,7 +136,8 @@ export type MainView =
   | "mirroros"
   | "register"
   | "akashic"
-  | "invent";
+  | "invent"
+  | "dreambook";
 export type RegisterKind = DossierKind;
 
 /* -------- direct line to the Mirror Entity OS (reality refining) ------- */
@@ -156,8 +155,6 @@ export interface OsMessage {
 
 interface MirrorState {
   activeMode: Mode;
-  activeSchool: string | null;
-  activeVeil: string | null;
   sidebarTab: SidebarTab;
   search: string;
   modal: ModalState;
@@ -232,8 +229,6 @@ interface MirrorState {
   bootPreferences: () => void;
 
   setMode: (mode: Mode) => void;
-  setSchool: (id: string | null) => void;
-  setVeil: (id: string | null) => void;
   setSidebarTab: (tab: SidebarTab) => void;
   setSearch: (value: string) => void;
   openModal: (modal: NonNullable<ModalState>) => void;
@@ -256,6 +251,8 @@ interface MirrorState {
   /* The Invent — the fourth book: the inventor's compact studio */
   openInvent: () => void;
   exitInvent: () => void;
+  openDreamBook: () => void;
+  exitDreamBook: () => void;
 
   /* Communion — the Reflection of the Absolute */
   openCommunion: () => void;
@@ -326,8 +323,7 @@ interface MirrorState {
   dismissOsVisual: (id: string) => void;
 }
 
-const defaultTabForMode = (mode: Mode): SidebarTab =>
-  mode === "interplanetary" || mode === "healing" ? "civilizations" : "interdim";
+const defaultTabForMode = (_mode: Mode): SidebarTab => "civilizations";
 
 const emptyLab = {
   labStage: "compose" as const,
@@ -349,8 +345,6 @@ const nextMessageId = () => `m-${Date.now().toString(36)}-${(messageCounter++).t
 
 export const useMirror = create<MirrorState>()((set, get) => ({
   activeMode: "interplanetary",
-  activeSchool: null,
-  activeVeil: null,
   sidebarTab: "civilizations",
   search: "",
   modal: null,
@@ -412,22 +406,6 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       };
     }),
 
-  setSchool: (id) =>
-    set((s) => ({
-      activeSchool: s.activeSchool === id ? null : id,
-      /* VEIL CLARITY LAW — any recalibration re-tunes the metaphysics
-         channel back to a quiet origin. */
-      sessions: { ...s.sessions, metaphysics: emptySession() },
-    })),
-
-  setVeil: (id) =>
-    set((s) => ({
-      activeVeil: s.activeVeil === id ? null : id,
-      /* VEIL CLARITY LAW — any recalibration re-tunes the metaphysics
-         channel back to a quiet origin. */
-      sessions: { ...s.sessions, metaphysics: emptySession() },
-    })),
-
   setSidebarTab: (tab) => set({ sidebarTab: tab }),
   setSearch: (value) => set({ search: value }),
   openModal: (modal) => set({ modal, mobileNavOpen: false }),
@@ -467,6 +445,13 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   openInvent: () =>
     set({ view: "invent", mobileNavOpen: false, modal: null }),
   exitInvent: () => set({ view: "observatory" }),
+
+  /* -------- The Dream Book --------
+     A world of its own: the magical atelier where tales are woven
+     from resonance and read as they are being written. */
+  openDreamBook: () =>
+    set({ view: "dreambook", mobileNavOpen: false, modal: null }),
+  exitDreamBook: () => set({ view: "observatory" }),
 
   /* -------- Communion — the Reflection of the Absolute --------
      Entering communion suspends every other surface: the whole
@@ -830,8 +815,6 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         body: JSON.stringify({
           query,
           mode,
-          school: get().activeSchool,
-          veil: get().activeVeil,
           language: get().language,
           history,
           ...(payload ?? {}),

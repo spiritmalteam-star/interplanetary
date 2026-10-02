@@ -17,8 +17,6 @@ import { cn } from "@/lib/utils";
    never the category name. Interplanetary remains the resting default. */
 const SCOPE_ART: Record<string, string> = {
   interplanetary: "/images/ai/scope-art-interplanetary.png",
-  metaphysics: "/images/ai/scope-art-metaphysics.png",
-  quantum: "/images/ai/scope-art-quantum.png",
   healing: "/images/ai/scope-art-healing.png",
 };
 

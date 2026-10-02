@@ -17,7 +17,7 @@ import { InventView } from "./InventView";
 import { ArchiveRegister } from "./ArchiveRegister";
 import { CommunionView } from "./CommunionView";
 import { AkashicView } from "./AkashicView";
-import { MetaphysicsRail } from "./MetaphysicsRail";
+import { DreamBookView } from "./DreamBookView";
 import { FederationModal } from "./FederationModal";
 import { AstralJobsModal } from "./AstralJobsModal";
 import { DossierModal } from "./DossierModal";
@@ -100,6 +100,17 @@ export default function AppShell() {
     return (
       <div className="relative h-[var(--app-h,100dvh)] overflow-hidden">
         <AkashicView />
+      </div>
+    );
+  }
+
+  /* The Dream Book is its own enchanted world: the atelier where a
+     tale is woven with the visitor and read as it is being written —
+     one back button returns to the laboratory. */
+  if (view === "dreambook") {
+    return (
+      <div className="relative h-[var(--app-h,100dvh)] overflow-hidden">
+        <DreamBookView />
       </div>
     );
   }
@@ -214,9 +225,6 @@ export default function AppShell() {
         )}
         <QueryComposer />
       </main>
-
-      {/* Metaphysics scope veil rail — vertical, at the side of the chat */}
-      <MetaphysicsRail />
 
       <FederationModal />
       <AstralJobsModal />

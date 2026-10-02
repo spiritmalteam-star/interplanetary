@@ -107,8 +107,7 @@ async function askScope(
     return data.reply;
   }
 
-  /* interplanetary · metaphysics · quantum · healing */
-  const state = useMirror.getState();
+  /* interplanetary · healing */
   const res = await fetch("/api/transmission", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -116,8 +115,6 @@ async function askScope(
       query: message,
       mode: scope,
       live: true,
-      school: state.activeMode === scope ? state.activeSchool : null,
-      veil: state.activeMode === scope ? state.activeVeil : null,
       language,
       history: history.map((h) => ({
         q: h.role === "visitor" ? h.text : "",

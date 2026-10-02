@@ -81,32 +81,6 @@ export const SCOPE_META: Record<
       "Weaving the transmission…",
     ],
   },
-  metaphysics: {
-    label: "Metaphysics",
-    tagline: "Beneath the seen · the architecture of being",
-    imageKey: "mode-metaphysics",
-    ornament: "grid",
-    glyph: "🔮",
-    phases: [
-      "Still the surface of thought…",
-      "Lifting the first veil…",
-      "Following the question downward…",
-      "Listening beneath the seen…",
-    ],
-  },
-  quantum: {
-    label: "Quantum",
-    tagline: "Observation · superposition · entanglement",
-    imageKey: "mode-quantum",
-    ornament: "wave",
-    glyph: "☯",
-    phases: [
-      "Preparing the apparatus…",
-      "Superposing candidate answers…",
-      "Including the observer…",
-      "Collapsing the wavefunction…",
-    ],
-  },
   healing: {
     label: "Healing",
     tagline: "Restoration · gentle frequencies only",

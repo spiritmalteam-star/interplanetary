@@ -1,13 +1,7 @@
-import type {
-  LabFrequency,
-  MetaphysicsPill,
-  ModePill,
-} from "@/lib/mirror-types";
+import type { LabFrequency, ModePill } from "@/lib/mirror-types";
 
 export const modes: ModePill[] = [
   { id: "interplanetary", emoji: "🌐", label: "Interplanetary" },
-  { id: "metaphysics", emoji: "🔮", label: "Metaphysics" },
-  { id: "quantum", emoji: "☯", label: "Quantum" },
   { id: "healing", emoji: "💚", label: "Healing" },
 ];
 
@@ -22,38 +16,12 @@ export const labFrequencies: LabFrequency[] = [
 ];
 
 /* ------------------------------------------------------------------ */
-/*  THE METAPHYSICS SCOPE — the veil rail fuses a school (a classical  */
-/*  branch of the inquiry into what is) with a veil (the depth through */
-/*  which the question is read) into one contemplative seeing.         */
+/*  SCOPE DATA — the mode pills for the scope selector, plus the       */
+/*  Reality Manifesting Laboratory frequencies and the Forge gift      */
+/*  lines shared across the OS.                                        */
 /* ------------------------------------------------------------------ */
-
-/** The eight schools — where the question comes from. */
-export const schools: MetaphysicsPill[] = [
-  { id: "ontology", emoji: "🌌", label: "Ontology" },
-  { id: "cosmology", emoji: "🪐", label: "Cosmology" },
-  { id: "teleology", emoji: "🧭", label: "Teleology" },
-  { id: "epistemology", emoji: "👁️", label: "Epistemology" },
-  { id: "axiology", emoji: "⚖️", label: "Axiology" },
-  { id: "phenomenology", emoji: "🕯️", label: "Phenomenology" },
-  { id: "free-will", emoji: "🗝️", label: "Free Will" },
-  { id: "identity", emoji: "🪞", label: "Identity" },
-];
-
-/** The six veils — the depth through which the question is read. */
-export const veils: MetaphysicsPill[] = [
-  { id: "time", emoji: "🕰️", label: "Time" },
-  { id: "mind", emoji: "🌀", label: "Mind" },
-  { id: "causality", emoji: "🌊", label: "Causality" },
-  { id: "unity", emoji: "♾️", label: "Unity" },
-  { id: "threshold", emoji: "🌑", label: "Threshold" },
-  { id: "silence", emoji: "🌫️", label: "Silence" },
-];
-
 export const modeContext: Record<string, string> = {
   interplanetary: "",
-  metaphysics:
-    "Between the seen and the unseen · nothing to believe, only to look",
-  quantum: "Observation mode · The observer is part of the experiment",
   healing: "Restoration field · Gentle frequencies only · Integration over speed",
 };
 
