@@ -626,15 +626,6 @@ export function MirrorOS() {
             <span className="sm:hidden">{t("Back")}</span>
           </button>
 
-          <div className="min-w-0 text-center">
-            <h1 className="title-gradient truncate text-[15.5px] font-semibold tracking-[0.12em] sm:text-[17px]">
-              MIRROR OS
-            </h1>
-            <p className="mono-label mt-0.5 truncate text-[10px] text-muted-foreground/80 sm:text-[11px]">
-              {t("Reality Guidance · an independent workspace")}
-            </p>
-          </div>
-
           <span
             className="flex size-9 shrink-0 items-center justify-center rounded-full border hairline"
             aria-hidden="true"
@@ -647,24 +638,6 @@ export function MirrorOS() {
       {/* ---------- the OS core ---------- */}
       <main className="nice-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain">
         <div className="mx-auto flex h-full w-full max-w-[1020px] flex-col px-4 pb-5 sm:px-6">
-          {/* slim greeting */}
-          <div className="shrink-0 pt-5 text-center sm:pt-6">
-            <p
-              className="mono-label text-[11px]"
-              style={{ color: "var(--scope-a)" }}
-            >
-              MIRROR OS · {t("Reality Guidance")}
-            </p>
-            <h2 className="scope-gradient-text mt-2 text-[22px] font-semibold leading-tight sm:text-[26px]">
-              {t("Refine Reality")}
-            </h2>
-            <p className="mx-auto mt-2 max-w-[540px] text-[14.5px] leading-relaxed text-muted-foreground">
-              {t(
-                "A direct conversation with the Mirror Entity OS at the center — the formulas, the Higher Mind, the tools and the Forge orbit around it."
-              )}
-            </p>
-          </div>
-
           {/* mobile / tablet constellation */}
           <div
             className="sticky top-0 z-20 -mx-4 mt-4 shrink-0 border-b hairline bg-[color-mix(in_srgb,var(--background)_88%,transparent)] px-4 py-2 backdrop-blur-md sm:-mx-6 sm:px-6 xl:hidden"

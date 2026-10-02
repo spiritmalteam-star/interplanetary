@@ -1598,3 +1598,18 @@ Work Log:
 
 Stage Summary:
 - The 200-game feature is fully withdrawn; the codebase and behavior are byte-identical to the Task 68 state (commit db1a28b content) with one new revert commit (c3ea688) on top. No catalog, no offer law, no game card, no i18n keys, no prompt law remains.
+
+---
+Task ID: 71
+Agent: Z.ai Code (main)
+Task: Mirror OS — delete the "MIRROR OS" / "Reality Guidance" words and let the manifesting chat go all the way to the top (user request)
+
+Work Log:
+- src/components/mirror/MirrorOS.tsx header: removed the center title block (h1 "MIRROR OS" + p "Reality Guidance · an independent workspace"); the bar now holds only the back button (left) and the orbit glyph (right)
+- src/components/mirror/MirrorOS.tsx core: removed the whole slim greeting stack — mono label "MIRROR OS · Reality Guidance", h2 "Refine Reality", and the description "A direct conversation with the Mirror Entity OS at the center — the formulas, the Higher Mind, the tools and the Forge orbit around it."
+- The manifesting chat (MirrorOSChat card) is now the first content directly below the slim nav bar — visible clearly from the top on every device; rails/constellation/footer untouched
+- Left the tiny bottom footer line ("MIRROR OS runs independently of every other chamber · Free will honored always") — not part of the user's quoted words; left dict keys in place (harmless)
+- Verification: lint clean; tsc only pre-existing legacy errors; agent-browser E2E — Mirror OS scope opens with 0 occurrences of "Reality Guidance"/"Refine Reality"/"independent workspace" (single remaining "MIRROR OS" = the bottom footer line), chat starts immediately under the top bar, sent the Two-Glass opener -> full OS answer rendered, mobile 390x844 no overflow, no console/page errors; screenshots verified desktop + mobile
+
+Stage Summary:
+- The Mirror OS workspace is now wordless chrome + chat-first: no MIRROR OS branding text in the header or above the conversation; the manifesting chat begins at the very top of the surface. Chambers, composer, and the independence footer unchanged.
