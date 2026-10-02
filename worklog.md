@@ -1583,3 +1583,18 @@ Work Log:
 
 Stage Summary:
 - All chat composers now show exactly three icons: paperclip, call, ink send disc. Voice recording removed from every chat surface; voice input survives only inside the LiveCall overlay. Composer law updated to match.
+
+---
+Task ID: 70
+Agent: Z.ai Code (main)
+Task: Remove the 200-game idea totally; leave the app exactly as it was before (user request: "Remove the 200 game idea totally leave it as it was")
+
+Work Log:
+- Found that Task 69 (the 200 cosmic games) had been implemented and committed as 765a287 (catalog src/lib/cosmic-games.ts, cards GamePatterns.tsx + CosmicGameCard.tsx, ChatMessage.game wiring in mirror-store, TransmissionView mount, 22 i18n keys in 7 dicts, MIRROR GAMES LAW in replication-prompt, stray tool-results artifact)
+- git revert --no-edit 765a287 -> commit c3ea688: 16 files, +3 / -4146; deleted cosmic-games.ts, GamePatterns.tsx, CosmicGameCard.tsx, tool-results/read_*.txt; restored mirror-store.ts, TransmissionView.tsx, replication-prompt.ts, scripts/i18n-keys.json and all 7 dicts to the Task 68 state
+- Verified zero residual references in src (cosmic-games|CosmicGame|GamePatterns|offerGameFor|GameInstance|MIRROR GAMES = 0 hits; no game field in mirror-store)
+- Restarted dev server (clean Turbopack chunks); lint clean
+- agent-browser E2E: fresh visit 1440x900, pre-seeded stale localStorage keys (mirror-game-ever, mirror-game-recent) to simulate a previous games visitor -> nothing breaks; sent a real transmission -> exchange renders (LISTEN, seal, Task 67 Akashic button intact), "The Mirror offers a game"/"Let it pass"/"two hundred" = 0 occurrences; mobile 390x844 no horizontal overflow; no console/page errors; screenshots verified
+
+Stage Summary:
+- The 200-game feature is fully withdrawn; the codebase and behavior are byte-identical to the Task 68 state (commit db1a28b content) with one new revert commit (c3ea688) on top. No catalog, no offer law, no game card, no i18n keys, no prompt law remains.
