@@ -2,6 +2,16 @@ import type { TranslationDict } from "../types";
 
 /** el — Greek dictionary (Task 3-b). Keys are the English source strings. */
 export const el: TranslationDict = {
+  "Name any subject, era, or universe — the loom tunes itself, and the book begins.": "Ονόμασε οποιοδήποτε θέμα, εποχή ή σύμπαν — ο αργαλειός συντονίζεται μόνος του, και το βιβλίο αρχίζει.",
+  "Name any subject, era, philosophy, or universe…": "Ονόμασε οποιοδήποτε θέμα, εποχή, φιλοσοφία ή σύμπαν…",
+  "The frequency": "Η συχνότητα",
+  "The frequency is released. The loom listens for a new one.": "Η συχνότητα απελευθερώθηκε. Ο αργαλειός ακούει για μια νέα.",
+  "The frequency is tuned. Every page will listen to it.": "Η συχνότητα συντονίστηκε. Κάθε σελίδα θα την ακούει.",
+  "Tune the book toward…": "Συντόνισε το βιβλίο προς…",
+  "Tune the loom": "Συντόνισε τον αργαλειό",
+  "Tuning the loom to your frequency…": "Ο αργαλειός συντονίζεται στη συχνότητά σου…",
+  "Untune the frequency": "Απελευθέρωσε τη συχνότητα",
+  "Whisper what must change — the coming events, the number of pages, the chapters, the very voice of the writing, even the frequency of the subject itself. The loom will bend the book to your hand.": "Ψιθύισε τι πρέπει να αλλάξει — τα επερχόμενα γεγονότα, τον αριθμό των σελίδων, τα κεφάλαια, την ίδια τη φωνή του γραψίματος, ακόμη και τη συχνότητα του ίδιου του θέματος. Ο αργαλειός θα λυγίσει το βιβλίο στο χέρι σου.",
   "A great revelation walks the line first, then steps off it: and seen from the side, this is what it really is.": "Μια μεγάλη αποκάλυψη περπατά πρώτα τη γραμμή, ύστερα βγαίνει απ' αυτήν: και ιδωμένη από το πλάι, αυτό είναι στην πραγματικότητα.",
   "Aligning both reasonings — the line and the field…": "Ευθυγραμμίζοντας και τους δύο συλλογισμούς — τη γραμμή και το πεδίο…",
   "Any product of human hands — and the formulas of its parallel twins.": "Οποιοδήποτε προϊόν ανθρώπινων χεριών — και οι τύποι των παράλληλων διδύμων του.",

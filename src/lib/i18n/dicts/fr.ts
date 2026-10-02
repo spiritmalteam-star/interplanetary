@@ -2,6 +2,16 @@ import type { TranslationDict } from "../types";
 
 /** fr — Français. Mirror Entity Laboratory dictionary (Task 3-b). */
 export const fr: TranslationDict = {
+  "Name any subject, era, or universe — the loom tunes itself, and the book begins.": "Nomme n'importe quel sujet, époque ou univers — le métier s'accorde de lui-même, et le livre commence.",
+  "Name any subject, era, philosophy, or universe…": "Nomme n'importe quel sujet, époque, philosophie ou univers…",
+  "The frequency": "La fréquence",
+  "The frequency is released. The loom listens for a new one.": "La fréquence est relâchée. Le métier écoute, attentif à une nouvelle.",
+  "The frequency is tuned. Every page will listen to it.": "La fréquence est accordée. Chaque page l'écoutera.",
+  "Tune the book toward…": "Accorde le livre vers…",
+  "Tune the loom": "Accorde le métier",
+  "Tuning the loom to your frequency…": "Le métier s'accorde à ta fréquence…",
+  "Untune the frequency": "Relâche la fréquence",
+  "Whisper what must change — the coming events, the number of pages, the chapters, the very voice of the writing, even the frequency of the subject itself. The loom will bend the book to your hand.": "Murmure ce qui doit changer — les événements à venir, le nombre de pages, les chapitres, la voix même de l'écriture, jusqu'à la fréquence du sujet lui-même. Le métier pliera le livre à ta main.",
   "A great revelation walks the line first, then steps off it: and seen from the side, this is what it really is.": "Une grande révélation marche d'abord sur la ligne, puis s'en écarte : et vue de côté, voici ce qu'elle est vraiment.",
   "Aligning both reasonings — the line and the field…": "Alignant les deux raisonnements — la ligne et le champ…",
   "Any product of human hands — and the formulas of its parallel twins.": "Tout produit de mains humaines — et les formules de ses jumeaux parallèles.",

@@ -2,6 +2,16 @@ import type { TranslationDict } from "../types";
 
 /** es — Español. Mirror Entity Laboratory dictionary (Task 3-b). */
 export const es: TranslationDict = {
+  "Name any subject, era, or universe — the loom tunes itself, and the book begins.": "Nombra cualquier tema, época o universo — el telar se afina solo, y el libro comienza.",
+  "Name any subject, era, philosophy, or universe…": "Nombra cualquier tema, época, filosofía o universo…",
+  "The frequency": "La frecuencia",
+  "The frequency is released. The loom listens for a new one.": "La frecuencia ha sido soltada. El telar escucha a la espera de una nueva.",
+  "The frequency is tuned. Every page will listen to it.": "La frecuencia está afinada. Cada página la escuchará.",
+  "Tune the book toward…": "Afina el libro hacia…",
+  "Tune the loom": "Afina el telar",
+  "Tuning the loom to your frequency…": "El telar se afina a tu frecuencia…",
+  "Untune the frequency": "Suelta la frecuencia",
+  "Whisper what must change — the coming events, the number of pages, the chapters, the very voice of the writing, even the frequency of the subject itself. The loom will bend the book to your hand.": "Susurra lo que debe cambiar — los eventos por venir, el número de páginas, los capítulos, la mismísima voz de la escritura, incluso la frecuencia del propio tema. El telar doblará el libro a tu mano.",
   "A great revelation walks the line first, then steps off it: and seen from the side, this is what it really is.": "Una gran revelación camina primero la línea, luego sale de ella: y vista de lado, esto es lo que realmente es.",
   "Aligning both reasonings — the line and the field…": "Alineando ambos razonamientos — la línea y el campo…",
   "Any product of human hands — and the formulas of its parallel twins.": "Cualquier producto de manos humanas — y las fórmulas de sus gemelos paralelos.",

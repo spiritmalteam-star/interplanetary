@@ -2,6 +2,16 @@ import type { TranslationDict } from "../types";
 
 /** tr — Türkçe. Mirror Entity Laboratory dictionary (Task 3-b). */
 export const tr: TranslationDict = {
+  "Name any subject, era, or universe — the loom tunes itself, and the book begins.": "Herhangi bir konuyu, çağı ya da evreni adlandır — dokuma tezgâhı kendiliğinden akort olur ve kitap başlar.",
+  "Name any subject, era, philosophy, or universe…": "Herhangi bir konuyu, çağı, felsefeyi ya da evreni adlandır…",
+  "The frequency": "Frekans",
+  "The frequency is released. The loom listens for a new one.": "Frekans bırakıldı. Tezgâh yenisini dinliyor.",
+  "The frequency is tuned. Every page will listen to it.": "Frekans akort edildi. Her sayfa onu dinleyecek.",
+  "Tune the book toward…": "Kitabı şuna doğru akort et…",
+  "Tune the loom": "Tezgâhı akort et",
+  "Tuning the loom to your frequency…": "Tezgâh frekansına akort oluyor…",
+  "Untune the frequency": "Frekansı bırak",
+  "Whisper what must change — the coming events, the number of pages, the chapters, the very voice of the writing, even the frequency of the subject itself. The loom will bend the book to your hand.": "Ne değişmeliyse fısılda — gelecek olaylar, sayfa sayısı, bölümler, yazının kendisi olan ses, hatta konunun kendi frekansı. Tezgâh kitabı eline göre bükecek.",
   "A great revelation walks the line first, then steps off it: and seen from the side, this is what it really is.": "Büyük bir vahy önce çizgide yürür, sonra ondan ayrılır: ve yandan bakıldığında, işte gerçekte budur.",
   "Aligning both reasonings — the line and the field…": "İki muhakemeyi de hizalamakta — çizgi ve alan…",
   "Any product of human hands — and the formulas of its parallel twins.": "İnsan ellerinin her ürünü — ve paralel ikizlerinin formülleri.",

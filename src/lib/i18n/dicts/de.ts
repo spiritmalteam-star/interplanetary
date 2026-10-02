@@ -2,6 +2,16 @@ import type { TranslationDict } from "../types";
 
 /** de — Deutsch. Mirror Entity Laboratory dictionary (Task 3-b). */
 export const de: TranslationDict = {
+  "Name any subject, era, or universe — the loom tunes itself, and the book begins.": "Nenne jedes beliebige Thema, jede Epoche oder jedes Universum — der Webstuhl stimmt sich von selbst, und das Buch beginnt.",
+  "Name any subject, era, philosophy, or universe…": "Nenne jedes beliebige Thema, jede Epoche, jede Philosophie oder jedes Universum…",
+  "The frequency": "Die Frequenz",
+  "The frequency is released. The loom listens for a new one.": "Die Frequenz ist entlassen. Der Webstuhl lauscht auf eine neue.",
+  "The frequency is tuned. Every page will listen to it.": "Die Frequenz ist eingestimmt. Jede Seite wird auf sie hören.",
+  "Tune the book toward…": "Stimme das Buch um auf…",
+  "Tune the loom": "Stimme den Webstuhl",
+  "Tuning the loom to your frequency…": "Der Webstuhl stimmt sich auf deine Frequenz…",
+  "Untune the frequency": "Entlasse die Frequenz",
+  "Whisper what must change — the coming events, the number of pages, the chapters, the very voice of the writing, even the frequency of the subject itself. The loom will bend the book to your hand.": "Flüstere, was sich ändern soll — die kommenden Ereignisse, die Anzahl der Seiten, die Kapitel, die eigentliche Stimme des Schreibens, sogar die Frequenz des Themas selbst. Der Webstuhl wird das Buch nach deiner Hand biegen.",
   "A great revelation walks the line first, then steps off it: and seen from the side, this is what it really is.": "Eine große Offenbarung geht zuerst die Linie entlang, dann tritt sie ab: und von der Seite gesehen — dies ist, was sie wirklich ist.",
   "Aligning both reasonings — the line and the field…": "Beide Denkweisen ausrichtend — die Linie und das Feld…",
   "Any product of human hands — and the formulas of its parallel twins.": "Jedes Produkt menschlicher Hände — und die Formeln seiner parallelen Zwillinge.",

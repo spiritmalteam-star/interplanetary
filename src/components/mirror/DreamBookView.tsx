@@ -18,6 +18,7 @@ import {
   MoonStar,
   Sparkles,
   Square,
+  Waves,
   X,
   ZoomIn,
   ZoomOut,
@@ -63,6 +64,8 @@ interface WeavePage {
 interface BookMeta {
   title: string;
   subtitle: string;
+  sigil: string;
+  axiom: string;
   dedication: string;
   totalPages: number;
 }
@@ -139,12 +142,15 @@ export function DreamBookView() {
   const [age, setAge] = useState("timeless");
   const [tale, setTale] = useState("wonder");
   const [volume, setVolume] = useState("classic");
+  const [topic, setTopic] = useState("");
+  const [topicDraft, setTopicDraft] = useState("");
   const [draft, setDraft] = useState("");
   const threadRef = useRef<HTMLDivElement | null>(null);
   const [phaseIdx, setPhaseIdx] = useState(0);
 
   const WEAVING_PHASES = useMemo(
     () => [
+      t("Tuning the loom to your frequency…"),
       t("Gathering threads from the far side of sleep…"),
       t("Choosing names the stars have not used yet…"),
       t("Folding the first pages of the world…"),
@@ -179,19 +185,38 @@ export function DreamBookView() {
   const endedRef = useRef(false);
   const weavingRef = useRef(false);
   const rewritesRef = useRef<string[]>([]);
-  const configRef = useRef({ age, tale, volume });
+  const configRef = useRef({ age, tale, volume, topic });
   const narrRef = useRef<{ audio: HTMLAudioElement | null; ready: boolean }>({
     audio: null,
     ready: false,
   });
 
   useEffect(() => {
-    configRef.current = { age, tale, volume };
-  }, [age, tale, volume]);
+    configRef.current = { age, tale, volume, topic };
+  }, [age, tale, volume, topic]);
 
   const pushLine = useCallback((from: AtelierLine["from"], text: string) => {
     setLines((prev) => [...prev, { id: nextLineId(), from, text }]);
   }, []);
+
+  /* the frequency — the subject the loom tunes itself to */
+  const tuneFrequency = useCallback(
+    (e?: FormEvent) => {
+      e?.preventDefault();
+      const text = topicDraft.trim().slice(0, 300);
+      if (!text) return;
+      setTopicDraft("");
+      setTopic(text);
+      pushLine("visitor", `${t("The frequency")}: ${text}`);
+      pushLine("weaver", t("The frequency is tuned. Every page will listen to it."));
+    },
+    [topicDraft, pushLine, t]
+  );
+
+  const untuneFrequency = useCallback(() => {
+    setTopic("");
+    pushLine("weaver", t("The frequency is released. The loom listens for a new one."));
+  }, [pushLine, t]);
 
   /* the rewriting hand — wishes that bend the pages yet to come */
   const addRewrite = useCallback((text: string) => {
@@ -302,6 +327,8 @@ export function DreamBookView() {
           metaRef.current = {
             title: data.title ?? "The Unnamed Book",
             subtitle: data.subtitle ?? "",
+            sigil: typeof data.sigil === "string" ? data.sigil : "",
+            axiom: typeof data.axiom === "string" ? data.axiom : "",
             dedication: data.dedication ?? "",
             totalPages: data.totalPages ?? 96,
           };
@@ -500,7 +527,7 @@ export function DreamBookView() {
     try {
       const voice = NARRATOR_VOICE[configRef.current.age] ?? "aurora";
       const opening = pageIdx === 0 && meta
-        ? `${meta.title}. ${meta.subtitle} ${meta.dedication}`
+        ? `${meta.title}. ${meta.subtitle} ${meta.sigil} ${meta.axiom} ${meta.dedication}`
         : "";
       const body = currentPage ? pageText(currentPage) : "";
       const text = (opening || body).trim();
@@ -571,6 +598,7 @@ export function DreamBookView() {
     t("I wish the book to be about … pages"),
     t("Write in a different voice — …"),
     t("Add chapters where…"),
+    t("Tune the book toward…"),
   ];
 
   const applyRewrite = useCallback(() => {
@@ -623,7 +651,7 @@ export function DreamBookView() {
             </h1>
             <p className="ink-hand ink-soft mt-2 max-w-[440px] text-[12.5px] italic leading-relaxed sm:text-sm">
               {t(
-                "Where tales are woven from your resonance — choose, whisper, and the book begins."
+                "Name any subject, era, or universe — the loom tunes itself, and the book begins."
               )}
             </p>
             <div className="mt-5 flex items-center gap-3" aria-hidden="true">
@@ -673,6 +701,58 @@ export function DreamBookView() {
               active={volume}
               onPick={(id, label) => choose("volume", id, label)}
             />
+          </div>
+
+          {/* the frequency — name any subject and the loom tunes to it */}
+          <div className="mt-5">
+            <p className="mono-label mb-2 flex items-center gap-1.5 text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+              <Waves className="size-3" aria-hidden="true" />
+              {t("The frequency")}
+            </p>
+            {topic ? (
+              <div className="flex items-center gap-2 rounded-full border border-border bg-card py-2 pl-4 pr-2">
+                <span
+                  className="min-w-0 flex-1 truncate font-[family-name(var(--font-literata))] text-[13px] italic text-foreground/85"
+                  title={topic}
+                >
+                  {topic}
+                </span>
+                <button
+                  type="button"
+                  onClick={untuneFrequency}
+                  aria-label={t("Untune the frequency")}
+                  title={t("Untune the frequency")}
+                  className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  <X className="size-3.5" aria-hidden="true" />
+                </button>
+              </div>
+            ) : (
+              <form
+                onSubmit={tuneFrequency}
+                className="flex items-center gap-2 rounded-full border border-border bg-card py-1 pl-4 pr-1 transition-all duration-300 focus-within:border-foreground/35"
+              >
+                <input
+                  value={topicDraft}
+                  onChange={(e) => setTopicDraft(e.target.value)}
+                  placeholder={t(
+                    "Name any subject, era, philosophy, or universe…"
+                  )}
+                  aria-label={t("The frequency")}
+                  maxLength={300}
+                  className="min-w-0 flex-1 bg-transparent py-2 font-[family-name(var(--font-literata))] text-[13px] italic text-foreground placeholder:font-[family-name(var(--font-sans))] placeholder:not-italic placeholder:text-muted-foreground/60 focus:outline-none"
+                />
+                <button
+                  type="submit"
+                  aria-label={t("Tune the loom")}
+                  title={t("Tune the loom")}
+                  disabled={!topicDraft.trim()}
+                  className="akashic-btn focus-glow flex size-8 shrink-0 items-center justify-center rounded-full disabled:opacity-40"
+                >
+                  <Waves className="size-3.5" aria-hidden="true" />
+                </button>
+              </form>
+            )}
           </div>
         </div>
       </div>
@@ -959,16 +1039,21 @@ export function DreamBookView() {
                     </button>
                   </div>
                 ) : pageIdx === 0 ? (
-                  /* the title page — a single leaf */
+                  /* the title page — the Liminal Threshold, one leaf */
                   <div className="dream-page dream-page-single mx-auto flex min-h-[420px] w-full max-w-[560px] flex-col items-center justify-between px-8 py-12 text-center sm:px-12">
-                    <div className="flex flex-col items-center pt-6 text-center sm:pt-10">
+                    <div className="flex flex-col items-center pt-4 text-center sm:pt-8">
                       <span
                         className="font-[family-name(var(--font-literata))] text-2xl text-[var(--dream-ink-faint)]"
                         aria-hidden="true"
                       >
                         ❧
                       </span>
-                      <h2 className="mt-6 max-w-[340px] font-[family-name(var(--font-literata))] text-[26px] leading-snug text-[var(--dream-ink)] sm:text-[32px]">
+                      {meta?.sigil && (
+                        <p className="mt-4 max-w-[360px] font-[family-name(var(--font-literata))] text-[12.5px] italic leading-relaxed text-[var(--dream-ink-soft)]">
+                          {meta.sigil}
+                        </p>
+                      )}
+                      <h2 className="mt-5 max-w-[340px] font-[family-name(var(--font-literata))] text-[26px] leading-snug text-[var(--dream-ink)] sm:text-[32px]">
                         {meta?.title}
                       </h2>
                       {meta?.subtitle && (
@@ -977,9 +1062,22 @@ export function DreamBookView() {
                         </p>
                       )}
                     </div>
-                    <p className="max-w-[300px] font-[family-name(var(--font-literata))] text-[12px] italic leading-relaxed text-[var(--dream-ink-soft)]">
-                      {meta?.dedication}
-                    </p>
+                    <div className="flex flex-col items-center">
+                      {meta?.axiom && (
+                        <p className="max-w-[380px] font-[family-name(var(--font-literata))] text-[12.5px] italic leading-relaxed text-[var(--dream-ink-soft)]">
+                          {meta.axiom}
+                        </p>
+                      )}
+                      {meta?.axiom && meta?.dedication && (
+                        <span
+                          className="my-3 h-px w-10 bg-[var(--dream-ink-faint)]/40"
+                          aria-hidden="true"
+                        />
+                      )}
+                      <p className="max-w-[300px] font-[family-name(var(--font-literata))] text-[12px] italic leading-relaxed text-[var(--dream-ink-soft)]">
+                        {meta?.dedication}
+                      </p>
+                    </div>
                     <p className="pb-2 font-[family-name(var(--font-literata))] text-[10.5px] uppercase tracking-[0.24em] text-[var(--dream-ink-faint)]">
                       {t("woven for you, this very hour")}
                     </p>
@@ -1067,7 +1165,7 @@ export function DreamBookView() {
         onOpenChange={setRewriteOpen}
         title={t("The rewriting hand")}
         description={t(
-          "Whisper what must change — the coming events, the number of pages, the chapters, the very voice of the writing. The loom will bend the tale to your hand."
+          "Whisper what must change — the coming events, the number of pages, the chapters, the very voice of the writing, even the frequency of the subject itself. The loom will bend the book to your hand."
         )}
         widthClass="sm:max-w-[500px]"
       >

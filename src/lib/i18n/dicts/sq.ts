@@ -2,6 +2,16 @@ import type { TranslationDict } from "../types";
 
 /** sq — Shqip. Mirror Entity Laboratory dictionary (Task 3-a). */
 export const sq: TranslationDict = {
+  "Name any subject, era, or universe — the loom tunes itself, and the book begins.": "Emërto çdo subjekt, epokë ose univers — tezgja vetë akordohet dhe libri fillon.",
+  "Name any subject, era, philosophy, or universe…": "Emërto çdo subjekt, epokë, filozofi ose univers…",
+  "The frequency": "Frekuenca",
+  "The frequency is released. The loom listens for a new one.": "Frekuenca është lëshuar. Tezgja dëgjon për një të re.",
+  "The frequency is tuned. Every page will listen to it.": "Frekuenca është akorduar. Çdo faqe do t'i përgjigjet asaj.",
+  "Tune the book toward…": "Akordo librin drejt…",
+  "Tune the loom": "Akordo tezgjën",
+  "Tuning the loom to your frequency…": "Tezgja akordohet me frekuencën tënde…",
+  "Untune the frequency": "Lësho frekuencën",
+  "Whisper what must change — the coming events, the number of pages, the chapters, the very voice of the writing, even the frequency of the subject itself. The loom will bend the book to your hand.": "Pishpërit çfarë duhet të ndryshojë — ngjarjet që vijnë, numrin e faqeve, kapitujt, vetë zërin e shkrimit, madje edhe frekuencën e vetë subjektit. Tezgja do ta përkulojë librin në dorën tënde.",
   "A great revelation walks the line first, then steps off it: and seen from the side, this is what it really is.": "Një zbulim i madh ecën mbi vija fillimisht, pastaj hap larg saj: dhe parë anash, kjo është ajo çfarë është vërtet.",
   "Aligning both reasonings — the line and the field…": "Po i drejton të dyja arsyetimet — vija dhe fusha…",
   "Any product of human hands — and the formulas of its parallel twins.": "Çdo produkt i duarve njerëzore — dhe formulat e binjakëve të tij paralelë.",

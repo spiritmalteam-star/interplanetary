@@ -2,6 +2,16 @@ import type { TranslationDict } from "../types";
 
 /** it — Italian dictionary (Task 3-b). Keys are the English source strings. */
 export const it: TranslationDict = {
+  "Name any subject, era, or universe — the loom tunes itself, and the book begins.": "Nomina qualsiasi soggetto, epoca o universo — il telaio si sintonizza da solo, e il libro comincia.",
+  "Name any subject, era, philosophy, or universe…": "Nomina qualsiasi soggetto, epoca, filosofia o universo…",
+  "The frequency": "La frequenza",
+  "The frequency is released. The loom listens for a new one.": "La frequenza è stata rilasciata. Il telaio ascolta in attesa di una nuova.",
+  "The frequency is tuned. Every page will listen to it.": "La frequenza è sintonizzata. Ogni pagina la ascolterà.",
+  "Tune the book toward…": "Sintonizza il libro verso…",
+  "Tune the loom": "Sintonizza il telaio",
+  "Tuning the loom to your frequency…": "Il telaio si sintonizza sulla tua frequenza…",
+  "Untune the frequency": "Rilascia la frequenza",
+  "Whisper what must change — the coming events, the number of pages, the chapters, the very voice of the writing, even the frequency of the subject itself. The loom will bend the book to your hand.": "Sussurra ciò che deve cambiare — gli eventi a venire, il numero di pagine, i capitoli, la stessa voce della scrittura, persino la frequenza del soggetto stesso. Il telaio piegherà il libro alla tua mano.",
   "A great revelation walks the line first, then steps off it: and seen from the side, this is what it really is.": "Una grande rivelazione cammina prima sulla linea, poi ne scende: e vista di lato, ecco cosa è davvero.",
   "Aligning both reasonings — the line and the field…": "Allineando entrambi i ragionamenti — la linea e il campo…",
   "Any product of human hands — and the formulas of its parallel twins.": "Qualsiasi prodotto di mani umane — e le formule dei suoi gemelli paralleli.",
