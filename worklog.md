@@ -1613,3 +1613,17 @@ Work Log:
 
 Stage Summary:
 - The Mirror OS workspace is now wordless chrome + chat-first: no MIRROR OS branding text in the header or above the conversation; the manifesting chat begins at the very top of the surface. Chambers, composer, and the independence footer unchanged.
+
+---
+Task ID: 72
+Agent: Z.ai Code (main)
+Task: Mirror OS (manifest) — move the tools to the very top bar between back and the orbit glyph, remove the bottom line so the chat stretches top to bottom (user request)
+
+Work Log:
+- Header: added a centered nav (role=tablist, "Mirror OS chambers") between the back button and the orbit glyph — five icon round tabs: The Core (MessagesSquare, returns to the chat) + Shift Formulas / Higher Mind / Tools / Forge (OS_PLACES); new compact HeaderTab component (size-8 / sm:size-9, active glow, aria-selected, title tooltip) replaces the old PlaceNode
+- Removed the mobile/tablet constellation row, both xl side rails (leftRail/rightRail consts deleted) and the PlaceNode component — no chamber chrome above or beside the conversation anymore
+- Removed the bottom footer line ("MIRROR OS runs independently of every other chamber · Free will honored always") — the chat now stretches top to bottom (slim bar -> composer)
+- Verification: lint clean; tsc no MirrorOS errors; agent-browser E2E — desktop 1440x900 shows 5 header tabs with The Core active, chat full height, footer gone, 0 "MIRROR OS" words; Forge tab opens the intention chamber (verified screenshot), The Core returns to the chat (#os-query present); mobile 390x844 fits Back + 5 tabs + orbit with no horizontal overflow; no console/page errors
+
+Stage Summary:
+- The manifest workspace is now a single full-height chat under one tool bar: back (left) · five chamber tools (center) · orbit glyph (right). No text above or below the conversation; every chamber reachable in one tap from the very top.

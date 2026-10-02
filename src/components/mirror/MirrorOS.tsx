@@ -519,82 +519,37 @@ function ToolsTab() {
 }
 
 
-/* ---------------- orbital nodes ---------------- */
+/* ---------------- top-bar chamber tabs ---------------- */
 
-function PlaceNode({
+function HeaderTab({
   active,
   onClick,
   icon: Icon,
   label,
-  compact,
 }: {
   active: boolean;
   onClick: () => void;
   icon: typeof Compass;
   label: string;
-  compact?: boolean;
 }) {
   const t = useT();
-  if (compact) {
-    return (
-      <button
-        type="button"
-        role="tab"
-        aria-selected={active}
-        onClick={onClick}
-        className={cn(
-          "focus-glow flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3.5 py-1.5 text-[14px] transition-all duration-300",
-          active
-            ? "border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--scope-a)_12%,transparent)] font-semibold text-foreground glow-sm"
-            : "border-transparent text-muted-foreground/80 hover:border-[var(--hairline-hover)] hover:text-foreground"
-        )}
-      >
-        <Icon className="size-3.5" aria-hidden="true" />
-        {t(label)}
-      </button>
-    );
-  }
   return (
-    <div className="flex flex-col items-center gap-1.5">
-      <button
-        type="button"
-        aria-pressed={active}
-        aria-label={t(label)}
-        onClick={onClick}
-        className={cn(
-          "focus-glow group relative flex size-14 items-center justify-center rounded-full border transition-all duration-500",
-          active
-            ? "border-[color-mix(in_srgb,var(--scope-a)_55%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_14%,transparent)] glow-sm"
-            : "border-[color-mix(in_srgb,var(--scope-a)_22%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_5%,transparent)] hover:-translate-y-0.5 hover:border-[color-mix(in_srgb,var(--scope-a)_42%,transparent)]"
-        )}
-      >
-        {active && (
-          <span
-            className="animate-charge-pulse absolute inset-0 rounded-full"
-            style={{
-              background:
-                "radial-gradient(circle, color-mix(in srgb, var(--scope-a) 22%, transparent), transparent 72%)",
-            }}
-            aria-hidden="true"
-          />
-        )}
-        <Icon
-          className={cn(
-            "relative size-5 transition-colors duration-300",
-            active ? "text-[var(--scope-a)]" : "text-muted-foreground group-hover:text-[var(--scope-a)]"
-          )}
-          aria-hidden="true"
-        />
-      </button>
-      <span
-        className={cn(
-          "mono-label max-w-[74px] text-center text-[9.5px] leading-snug",
-          active ? "text-[var(--scope-a)]" : "text-muted-foreground/70"
-        )}
-      >
-        {t(label)}
-      </span>
-    </div>
+    <button
+      type="button"
+      role="tab"
+      aria-selected={active}
+      aria-label={t(label)}
+      title={t(label)}
+      onClick={onClick}
+      className={cn(
+        "focus-glow flex size-8 items-center justify-center rounded-full border transition-all duration-300 sm:size-9",
+        active
+          ? "border-[color-mix(in_srgb,var(--scope-a)_55%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_14%,transparent)] text-[var(--scope-a)] glow-sm"
+          : "border-transparent text-muted-foreground/80 hover:border-[var(--hairline-hover)] hover:text-foreground"
+      )}
+    >
+      <Icon className="size-4" aria-hidden="true" />
+    </button>
   );
 }
 
@@ -604,9 +559,6 @@ export function MirrorOS() {
   const exitMirrorOS = useMirror((s) => s.exitMirrorOS);
   const [place, setPlace] = useState<OsPlace>("chat");
   const t = useT();
-
-  const leftRail = OS_PLACES.slice(0, 2);
-  const rightRail = OS_PLACES.slice(2);
 
   return (
     <div className="scope-manifesting relative flex h-full flex-col">
@@ -626,6 +578,29 @@ export function MirrorOS() {
             <span className="sm:hidden">{t("Back")}</span>
           </button>
 
+          {/* the OS tools — chambers at the very top, between back and the orbit */}
+          <nav
+            role="tablist"
+            aria-label={t("Mirror OS chambers")}
+            className="flex items-center gap-1 sm:gap-1.5"
+          >
+            <HeaderTab
+              active={place === "chat"}
+              onClick={() => setPlace("chat")}
+              icon={MessagesSquare}
+              label="The Core"
+            />
+            {OS_PLACES.map(({ id, label, icon: Icon }) => (
+              <HeaderTab
+                key={id}
+                active={place === id}
+                onClick={() => setPlace(id)}
+                icon={Icon}
+                label={label}
+              />
+            ))}
+          </nav>
+
           <span
             className="flex size-9 shrink-0 items-center justify-center rounded-full border hairline"
             aria-hidden="true"
@@ -638,50 +613,8 @@ export function MirrorOS() {
       {/* ---------- the OS core ---------- */}
       <main className="nice-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain">
         <div className="mx-auto flex h-full w-full max-w-[1020px] flex-col px-4 pb-5 sm:px-6">
-          {/* mobile / tablet constellation */}
-          <div
-            className="sticky top-0 z-20 -mx-4 mt-4 shrink-0 border-b hairline bg-[color-mix(in_srgb,var(--background)_88%,transparent)] px-4 py-2 backdrop-blur-md sm:-mx-6 sm:px-6 xl:hidden"
-            role="tablist"
-            aria-label={t("Mirror OS chambers")}
-          >
-            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar sm:justify-center">
-              <PlaceNode
-                compact
-                active={place === "chat"}
-                onClick={() => setPlace("chat")}
-                icon={MessagesSquare}
-                label="The Core"
-              />
-              {OS_PLACES.map(({ id, label, icon: Icon }) => (
-                <PlaceNode
-                  key={id}
-                  compact
-                  active={place === id}
-                  onClick={() => setPlace(id)}
-                  icon={Icon}
-                  label={label}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* orbital layout: chambers flank the core on wide screens */}
-          <div className="flex min-h-0 flex-1 gap-6 pt-4">
-            {/* left rail */}
-            <div className="hidden shrink-0 flex-col items-center justify-center gap-7 xl:flex">
-              {leftRail.map(({ id, label, icon: Icon }) => (
-                <PlaceNode
-                  key={id}
-                  active={place === id}
-                  onClick={() => setPlace(id)}
-                  icon={Icon}
-                  label={label}
-                />
-              ))}
-            </div>
-
-            {/* the core column */}
-            <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+          {/* the core — one column, top to bottom */}
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col pt-4">
               {place === "chat" ? (
                 <MirrorOSChat />
               ) : (
@@ -741,25 +674,7 @@ export function MirrorOS() {
                   </motion.div>
                 </div>
               )}
-            </div>
-
-            {/* right rail */}
-            <div className="hidden shrink-0 flex-col items-center justify-center gap-7 xl:flex">
-              {rightRail.map(({ id, label, icon: Icon }) => (
-                <PlaceNode
-                  key={id}
-                  active={place === id}
-                  onClick={() => setPlace(id)}
-                  icon={Icon}
-                  label={label}
-                />
-              ))}
-            </div>
           </div>
-
-          <p className="mono-label shrink-0 pb-1 pt-4 text-center text-[10px] text-muted-foreground/50">
-            {t("MIRROR OS runs independently of every other chamber · Free will honored always")}
-          </p>
         </div>
       </main>
     </div>
