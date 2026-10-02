@@ -33,6 +33,10 @@ import {
   type SideArtifactRef,
 } from "@/lib/artifact-intent";
 import type { RemedyKind } from "@/lib/data/remedy";
+import {
+  offerGameFor,
+  type GameInstance,
+} from "@/lib/cosmic-games";
 
 export type ModalState =
   | { type: "federation" }
@@ -72,6 +76,9 @@ export interface ChatMessage {
      INTO the channel: the akashic letter, the star draw, the manifesting
      ritual or the forge strike, living beneath the mirror's words. */
   sideArtifact?: SideArtifactRef;
+  /* the Cosmic Games deck — ONE of the Mirror's two hundred small
+     encounters, offered only when this exchange resonates with it. */
+  game?: GameInstance;
 }
 
 export interface ScopeSession {
@@ -846,6 +853,19 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         );
       }
 
+      /* The Cosmic Games law: at most ONE of the two hundred encounters
+         rides with a transmission, chosen by resonance with what was
+         just asked and answered — never while a side activity is
+         already occupying the exchange, and never before the cooldown
+         has rested. */
+      const game = sideKind
+        ? null
+        : offerGameFor({
+            question: query,
+            transmission: data.transmission ?? "",
+            priorMessages: session.messages,
+          });
+
       set((s) => ({
         sessions: {
           ...s.sessions,
@@ -861,6 +881,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
                 text: data.transmission,
                 classification: data.classification,
                 createdAt: data.createdAt ?? new Date().toISOString(),
+                ...(game ? { game } : {}),
                 ...(sideKind
                   ? { sideArtifact: { kind: sideKind, resonance: query } }
                   : {}),
