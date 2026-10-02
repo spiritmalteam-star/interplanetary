@@ -226,39 +226,44 @@ export async function POST(req: NextRequest) {
       typeof body?.totalPages === "number" ? Math.floor(body.totalPages) : 120;
 
     const zai = await ZAI.create();
-    const completion = await zai.chat.completions.create({
-      messages: [
-        { role: "assistant", content: systemPrompt() },
-        {
-          role: "user",
-          content: buildUserPrompt({
-            phase,
-            age,
-            tale,
-            volume,
-            wishes,
-            languageName,
-            threads,
-            recentPages,
-            pageNumber,
-            totalPages,
-          }),
-        },
-      ],
-      thinking: { type: "disabled" },
-    });
+    const askLoom = async (reminder: boolean): Promise<string> => {
+      const completion = await zai.chat.completions.create({
+        messages: [
+          { role: "assistant", content: systemPrompt() },
+          {
+            role: "user",
+            content:
+              buildUserPrompt({
+                phase,
+                age,
+                tale,
+                volume,
+                wishes,
+                languageName,
+                threads,
+                recentPages,
+                pageNumber,
+                totalPages,
+              }) +
+              (reminder
+                ? "\n\nREMINDER: the loom could not read the last reply. Return ONLY the raw JSON object — no text, no markdown, nothing before or after it."
+                : ""),
+          },
+        ],
+        thinking: { type: "disabled" },
+      });
+      return completion.choices[0]?.message?.content ?? "";
+    };
 
-    const raw = completion.choices[0]?.message?.content ?? "";
-    const parsed = extractJson(raw);
-    if (!parsed) {
-      return NextResponse.json(
-        { error: "The loom fell silent for a moment. Breathe, then weave again." },
-        { status: 502 }
-      );
-    }
-
-    const pages = normalizePages(parsed.pages, pageNumber);
+    /* the loom always asks twice before it falls silent — one unreadable
+       reply must never cost the visitor their book */
+    let parsed = extractJson(await askLoom(false));
+    let pages = parsed ? normalizePages(parsed.pages, pageNumber) : [];
     if (pages.length === 0) {
+      parsed = extractJson(await askLoom(true));
+      pages = parsed ? normalizePages(parsed.pages, pageNumber) : [];
+    }
+    if (!parsed || pages.length === 0) {
       return NextResponse.json(
         { error: "The loom fell silent for a moment. Breathe, then weave again." },
         { status: 502 }

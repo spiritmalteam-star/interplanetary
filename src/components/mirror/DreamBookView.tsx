@@ -13,9 +13,9 @@ import {
   ArrowLeft,
   AudioLines,
   BookOpen,
+  Feather,
   LoaderCircle,
   MoonStar,
-  Sparkles,
   Square,
   ZoomIn,
   ZoomOut,
@@ -30,10 +30,14 @@ import { cn } from "@/lib/utils";
 /*  DreamBookView — the Dream Book: a world of its own.                */
 /*                                                                     */
 /*  THREE ROOMS:                                                       */
-/*  ① THE ATELIER — a magical workshop at night. The visitor shapes    */
-/*     the book (reader · tale · book), whispers wishes into the       */
-/*     chat, and presses "Weave my book".                              */
-/*  ② THE WEAVING — the loom gathers the tale while phases drift by.   */
+/*  ① THE ATELIER — a quiet ink workshop in the same classic theme     */
+/*     as every other chat. The visitor shapes the book (reader ·      */
+/*     tale · book), whispers wishes into the chat, and presses        */
+/*     "Weave my book".                                                */
+/*  ② THE WEAVING — an unseen ink emblem draws itself while magical    */
+/*     phrases drift by (never the word "loading"). If the loom ever   */
+/*     falls silent, the room says so in place and offers to weave     */
+/*     again — the visitor is never left wondering.                    */
 /*  ③ THE READER — a clean black-and-white open book. Two pages are    */
 /*     revealed at once; while the visitor reads, the next two are     */
 /*     woven elsewhere in the loom. A voice narrator reads aloud,      */
@@ -141,6 +145,8 @@ export function DreamBookView() {
   const [ended, setEnded] = useState(false);
   const [spread, setSpread] = useState(0);
   const [weavingNext, setWeavingNext] = useState(false);
+  const [weaveError, setWeaveError] = useState(false);
+  const [weaveFailed, setWeaveFailed] = useState(false);
   const [zoom, setZoom] = useState(1);
   const [narrating, setNarrating] = useState(false);
   const [narrLoading, setNarrLoading] = useState(false);
@@ -151,7 +157,10 @@ export function DreamBookView() {
   const endedRef = useRef(false);
   const weavingRef = useRef(false);
   const configRef = useRef({ age, tale, volume });
-  const narrRef = useRef<{ audio: HTMLAudioElement | null }>({ audio: null });
+  const narrRef = useRef<{ audio: HTMLAudioElement | null; ready: boolean }>({
+    audio: null,
+    ready: false,
+  });
 
   useEffect(() => {
     configRef.current = { age, tale, volume };
@@ -167,15 +176,15 @@ export function DreamBookView() {
     if (el) el.scrollTop = el.scrollHeight;
   }, [lines, stage]);
 
-  /* drift the weaving phases while the loom works */
+  /* drift the weaving phrases while the loom works */
   useEffect(() => {
-    if (stage !== "weaving") return;
+    if (stage !== "weaving" || weaveError) return;
     const iv = setInterval(
       () => setPhaseIdx((i) => (i + 1) % WEAVING_PHASES.length),
       2600
     );
     return () => clearInterval(iv);
-  }, [stage, WEAVING_PHASES]);
+  }, [stage, weaveError, WEAVING_PHASES]);
 
   /* ---------------- the narrator (declared early — others call it) --- */
 
@@ -189,13 +198,17 @@ export function DreamBookView() {
       }
     }
     narrRef.current.audio = null;
+    narrRef.current.ready = false;
     setNarrating(false);
     setNarrLoading(false);
   }, []);
 
   useEffect(() => stopNarration, [stopNarration]);
 
-  /* ---------------- the weaver's fetch ---------------- */
+  /* ---------------- the weaver's fetch ----------------
+     A generous timeout and one quiet retry: if a thread slips
+     (network, a sleeping gateway) the loom simply tries again
+     before ever troubling the visitor. */
 
   const weave = useCallback(
     async (
@@ -205,22 +218,32 @@ export function DreamBookView() {
       if (weavingRef.current) return false;
       weavingRef.current = true;
       setWeavingNext(true);
+      setWeaveFailed(false);
 
       try {
         const recent = pagesRef.current.slice(-2).map(pageText);
-        const res = await fetch("/api/dream-book", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            phase,
-            language,
-            config: configRef.current,
-            threads: threadsRef.current || undefined,
-            recentPages: recent.length ? recent : undefined,
-            pageNumber,
-            totalPages: metaRef.current?.totalPages,
-          }),
+        const payload = JSON.stringify({
+          phase,
+          language,
+          config: configRef.current,
+          threads: threadsRef.current || undefined,
+          recentPages: recent.length ? recent : undefined,
+          pageNumber,
+          totalPages: metaRef.current?.totalPages,
         });
+        const attempt = () =>
+          fetch("/api/dream-book", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: payload,
+            signal: AbortSignal.timeout(150000),
+          });
+        let res: Response;
+        try {
+          res = await attempt();
+        } catch {
+          res = await attempt();
+        }
         const data = await res.json().catch(() => null);
         if (!res.ok || !data?.pages?.length) {
           throw new Error(
@@ -256,9 +279,12 @@ export function DreamBookView() {
         }
         return true;
       } catch {
-        toast.error(t("The loom fell silent for a moment."), {
-          description: t("Rest, then weave again."),
-        });
+        setWeaveFailed(true);
+        if (phase !== "open") {
+          toast.error(t("The loom fell silent for a moment."), {
+            description: t("Rest, then weave again."),
+          });
+        }
         return false;
       } finally {
         weavingRef.current = false;
@@ -304,6 +330,7 @@ export function DreamBookView() {
 
   const openBook = useCallback(async () => {
     if (weavingRef.current) return;
+    setWeaveError(false);
     setStage("weaving");
     setPhaseIdx(0);
     const ok = await weave("open", 1);
@@ -311,7 +338,8 @@ export function DreamBookView() {
       setStage("reading");
       setSpread(0);
     } else {
-      setStage("atelier");
+      /* stay in the weaving room — it now speaks for itself */
+      setWeaveError(true);
     }
   }, [weave]);
 
@@ -333,9 +361,11 @@ export function DreamBookView() {
 
   const atPlannedEnd = !!meta && pages.length >= meta.totalPages && !ended;
 
-  /* the choice page and the ending live one spread past the last */
-  const limitSpread =
-    atPlannedEnd || ended ? maxSpread + 1 : maxSpread;
+  /* one spread past the woven ones may always be turned into: it is
+     either the crossroads, the ending, or the loom itself — where the
+     next two pages are being revealed (with a weave-again thread if
+     the loom ever fell silent). The visitor is never walled in. */
+  const limitSpread = maxSpread + 1;
   const showChoice = atPlannedEnd && spread === maxSpread + 1;
   const showEnd = ended && spread === maxSpread + 1;
 
@@ -384,6 +414,7 @@ export function DreamBookView() {
     setEnded(false);
     setSpread(0);
     setZoom(1);
+    setWeaveFailed(false);
     setStage("atelier");
     pushLine(
       "weaver",
@@ -404,6 +435,18 @@ export function DreamBookView() {
   /* ---------------- the narrator ---------------- */
 
   const narrate = useCallback(async () => {
+    /* a voice already prepared and waiting for a fresh touch? */
+    const prepared = narrRef.current.audio;
+    if (prepared && narrRef.current.ready && prepared.paused) {
+      narrRef.current.ready = false;
+      try {
+        await prepared.play();
+        setNarrating(true);
+      } catch {
+        stopNarration();
+      }
+      return;
+    }
     if (narrating || narrLoading) {
       stopNarration();
       return;
@@ -437,10 +480,22 @@ export function DreamBookView() {
       };
       await audio.play();
       setNarrating(true);
-    } catch {
-      toast.error(t("The voice of the book is resting."), {
-        description: t("Rest, then listen again."),
-      });
+    } catch (err) {
+      const waiting =
+        narrRef.current.audio &&
+        err instanceof DOMException &&
+        err.name === "NotAllowedError";
+      if (waiting) {
+        /* the voice is ready but the browser wants a fresher touch —
+           one more press on the same button lets it speak */
+        narrRef.current.ready = true;
+        toast(t("The voice is ready — press once more."));
+      } else {
+        narrRef.current.audio = null;
+        toast.error(t("The voice of the book is resting."), {
+          description: t("Rest, then listen again."),
+        });
+      }
     } finally {
       setNarrLoading(false);
     }
@@ -453,6 +508,11 @@ export function DreamBookView() {
     exitDreamBook();
   };
 
+  const backFromWeaving = () => {
+    setWeaveError(false);
+    setStage("atelier");
+  };
+
   const backFromReader = () => {
     stopNarration();
     setStage("atelier");
@@ -462,25 +522,27 @@ export function DreamBookView() {
     spread === 0 ? 0 : Math.min(spread * 2, Math.max(pages.length, 0));
   const progress = meta ? Math.min(1, readPageOf / meta.totalPages) : 0;
 
+  /* the shared ink icon button — the same quiet circle as every chat */
+  const inkIconBtn =
+    "focus-glow flex size-9 items-center justify-center rounded-full border border-border text-muted-foreground transition-all duration-300 hover:border-foreground/40 hover:text-foreground";
+
   /* ================================================================ */
   /*  THE ATELIER                                                      */
   /* ================================================================ */
 
   const atelier = (
-    <div className="dream-night relative flex h-full flex-col overflow-hidden">
-      <div aria-hidden="true" className="dream-dust pointer-events-none absolute inset-0" />
-
+    <div className="relative flex h-full flex-col overflow-hidden bg-background text-foreground">
       <header className="relative z-10 flex shrink-0 items-center gap-2 px-3 pt-3 sm:px-5">
         <button
           type="button"
           onClick={backFromAtelier}
           aria-label={t("Back to the laboratory")}
           title={t("Back to the laboratory")}
-          className="focus-glow flex size-9 items-center justify-center rounded-full border border-white/12 bg-white/5 text-white/70 backdrop-blur-xl transition-all duration-300 hover:border-[var(--dream-gold-soft)] hover:text-[var(--dream-gold)]"
+          className={inkIconBtn}
         >
           <ArrowLeft className="size-4" aria-hidden="true" />
         </button>
-        <span className="mono-label flex items-center gap-1.5 text-[10px] uppercase tracking-[0.22em] text-white/45">
+        <span className="mono-label flex items-center gap-1.5 text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
           <MoonStar className="size-3.5" aria-hidden="true" />
           <span className="hidden sm:inline">{t("The atelier of tales")}</span>
         </span>
@@ -488,31 +550,35 @@ export function DreamBookView() {
 
       <div className="nice-scroll relative z-10 min-h-0 flex-1 overflow-y-auto">
         <div className="mx-auto flex w-full max-w-[680px] flex-col px-4 pb-6 pt-4 sm:px-6">
-          {/* the hero — the book on the desk */}
-          <div className="dream-hero relative overflow-hidden rounded-3xl border border-white/10 shadow-[0_30px_80px_-30px_rgba(0,0,0,0.9)]">
-            <img
-              src="/images/ai/dream-book-atelier.jpg"
-              alt=""
+          {/* the hero — pure ink, no colours, the book's own face */}
+          <div className="flex flex-col items-center pb-1 pt-2 text-center">
+            <span
+              className="font-[family-name(var(--font-literata))] text-2xl text-foreground/30"
               aria-hidden="true"
-              className="h-44 w-full object-cover sm:h-56"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#120c1c] via-[#120c1c]/35 to-transparent" />
-            <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5">
-              <h1 className="font-[family-name(var(--font-literata))] text-[26px] leading-tight text-[#f5ead2] drop-shadow-[0_2px_16px_rgba(0,0,0,0.8)] sm:text-[32px]">
-                {t("Dream Book")}
-              </h1>
-              <p className="mt-1 font-[family-name(var(--font-literata))] text-[12.5px] italic text-white/70 sm:text-sm">
-                {t(
-                  "Where tales are woven from your resonance — choose, whisper, and the book begins."
-                )}
-              </p>
+            >
+              ❧
+            </span>
+            <h1 className="ink-title mt-3 text-[28px] leading-tight sm:text-[34px]">
+              {t("Dream Book")}
+            </h1>
+            <p className="ink-hand ink-soft mt-2 max-w-[440px] text-[12.5px] italic leading-relaxed sm:text-sm">
+              {t(
+                "Where tales are woven from your resonance — choose, whisper, and the book begins."
+              )}
+            </p>
+            <div className="mt-5 flex items-center gap-3" aria-hidden="true">
+              <span className="h-px w-14 bg-border" />
+              <span className="font-[family-name(var(--font-literata))] text-[10px] text-foreground/30">
+                ✦
+              </span>
+              <span className="h-px w-14 bg-border" />
             </div>
           </div>
 
           {/* the thread — the weaver and the visitor */}
           <div
             ref={threadRef}
-            className="nice-scroll mt-4 max-h-[34vh] min-h-[110px] space-y-2.5 overflow-y-auto rounded-2xl border border-white/8 bg-black/25 p-3 backdrop-blur-md sm:p-4"
+            className="nice-scroll mt-5 max-h-[32vh] min-h-[110px] space-y-2.5 overflow-y-auto rounded-2xl border border-border bg-card/40 p-3 sm:p-4"
             aria-live="polite"
           >
             <AtelierBubble from="weaver">
@@ -528,7 +594,7 @@ export function DreamBookView() {
           </div>
 
           {/* the shapes — reader / tale / book */}
-          <div className="mt-4 space-y-3.5">
+          <div className="mt-5 space-y-4">
             <ShapeRow
               label={t("The reader")}
               options={READERS}
@@ -552,31 +618,31 @@ export function DreamBookView() {
       </div>
 
       {/* the whisper composer + the weaving button */}
-      <div className="relative z-10 shrink-0 border-t border-white/8 bg-black/30 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2.5 backdrop-blur-xl sm:px-6">
+      <div className="relative z-10 shrink-0 border-t border-border bg-background px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2.5 sm:px-6">
         <div className="mx-auto w-full max-w-[680px]">
           <form
             onSubmit={sendWish}
-            className="flex items-center gap-2 rounded-full border border-white/12 bg-white/5 py-1 pl-4 pr-1 backdrop-blur-xl focus-within:border-[var(--dream-gold-soft)]"
+            className="flex items-center gap-2 rounded-full border border-border bg-card py-1 pl-4 pr-1 transition-all duration-300 focus-within:border-foreground/35"
           >
             <input
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               placeholder={t("Whisper a wish for the tale…")}
               aria-label={t("Whisper a wish for the tale…")}
-              className="min-w-0 flex-1 bg-transparent py-2 text-[13.5px] text-white/90 placeholder:text-white/35 focus:outline-none"
+              className="min-w-0 flex-1 bg-transparent py-2 text-[13.5px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
             />
             <button
               type="submit"
               aria-label={t("Whisper the wish")}
-              className="dream-send focus-glow flex size-8 shrink-0 items-center justify-center rounded-full"
+              className="akashic-btn focus-glow flex size-8 shrink-0 items-center justify-center rounded-full"
             >
-              <Sparkles className="size-3.5" aria-hidden="true" />
+              <Feather className="size-3.5" aria-hidden="true" />
             </button>
           </form>
           <button
             type="button"
             onClick={openBook}
-            className="dream-weave focus-glow mt-2.5 flex h-11 w-full items-center justify-center gap-2 rounded-full text-[14px] font-medium tracking-wide"
+            className="akashic-btn focus-glow mt-2.5 flex h-11 w-full items-center justify-center gap-2 rounded-full text-[14px] font-medium tracking-wide"
           >
             <BookOpen className="size-4" aria-hidden="true" />
             {t("Weave my book")}
@@ -587,35 +653,66 @@ export function DreamBookView() {
   );
 
   /* ================================================================ */
-  /*  THE WEAVING                                                      */
+  /*  THE WEAVING — the unseen ink emblem                              */
   /* ================================================================ */
 
   const weaving = (
-    <div className="dream-night relative flex h-full flex-col items-center justify-center overflow-hidden px-6">
-      <div aria-hidden="true" className="dream-dust pointer-events-none absolute inset-0" />
+    <div className="relative flex h-full flex-col items-center justify-center overflow-hidden bg-background px-6 text-foreground">
       <motion.div
-        initial={{ opacity: 0, scale: 0.92 }}
+        initial={{ opacity: 0, scale: 0.96 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.9, ease: "easeOut" }}
-        className="relative z-10 flex flex-col items-center"
+        className="flex flex-col items-center"
       >
-        <div className="relative">
-          <motion.div
-            className="dream-loom-ring absolute -inset-8 rounded-full"
-            animate={{ rotate: 360 }}
-            transition={{ duration: 14, repeat: Infinity, ease: "linear" }}
-            aria-hidden="true"
-          />
-          <div className="dream-loom-book relative flex size-28 items-center justify-center rounded-3xl border border-[var(--dream-gold-soft)]/40 bg-black/40 shadow-[0_0_60px_-12px_var(--dream-gold)] backdrop-blur-xl">
-            <BookOpen className="size-10 text-[var(--dream-gold)]" aria-hidden="true" />
-          </div>
-        </div>
-        <p className="mt-8 max-w-[420px] text-center font-[family-name(var(--font-literata))] text-[15px] italic text-white/75">
-          {WEAVING_PHASES[phaseIdx]}
-        </p>
-        <div className="mt-5 h-px w-40 overflow-hidden rounded-full bg-white/10">
-          <div className="ink-shimmer h-full w-full" />
-        </div>
+        <DreamEmblem />
+
+        {weaveError ? (
+          <>
+            <p className="ink-hand ink-soft mt-8 max-w-[420px] text-center text-[15px] italic">
+              {t("The loom fell silent for a moment.")}
+            </p>
+            <p className="ink-hand ink-faint mt-2 text-center text-[13px] italic">
+              {t("Rest, then weave again.")}
+            </p>
+            <div className="mt-7 flex flex-col items-center gap-2.5">
+              <button
+                type="button"
+                onClick={openBook}
+                className="akashic-btn focus-glow flex h-10 items-center justify-center gap-2 rounded-full px-7 text-[13.5px] font-medium"
+              >
+                <Feather className="size-3.5" aria-hidden="true" />
+                {t("Weave again")}
+              </button>
+              <button
+                type="button"
+                onClick={backFromWeaving}
+                className="papyrus-btn focus-glow flex h-10 items-center justify-center rounded-full px-6 text-[13px]"
+              >
+                {t("Return to the atelier")}
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="mt-8 h-[26px]">
+              <AnimatePresence mode="wait">
+                <motion.p
+                  key={phaseIdx}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.55, ease: "easeOut" }}
+                  className="ink-hand ink-soft max-w-[420px] text-center text-[15px] italic"
+                >
+                  {WEAVING_PHASES[phaseIdx]}
+                </motion.p>
+              </AnimatePresence>
+            </div>
+            <div className="mt-4 h-px w-40 overflow-hidden rounded-full bg-foreground/10">
+              <div className="ink-shimmer h-full w-full" />
+            </div>
+          </>
+        )}
       </motion.div>
     </div>
   );
@@ -628,20 +725,18 @@ export function DreamBookView() {
   const canPrev = spread > 0;
 
   const reader = (
-    <div className="dream-night relative flex h-full flex-col overflow-hidden">
-      <div aria-hidden="true" className="dream-dust pointer-events-none absolute inset-0 opacity-60" />
-
+    <div className="relative flex h-full flex-col overflow-hidden bg-background text-foreground">
       <header className="relative z-20 flex shrink-0 items-center gap-2 px-3 pt-3 sm:px-5">
         <button
           type="button"
           onClick={backFromReader}
           aria-label={t("Begin a new dream")}
           title={t("Begin a new dream")}
-          className="focus-glow flex size-9 items-center justify-center rounded-full border border-white/12 bg-white/5 text-white/70 backdrop-blur-xl transition-all duration-300 hover:border-[var(--dream-gold-soft)] hover:text-[var(--dream-gold)]"
+          className={inkIconBtn}
         >
           <ArrowLeft className="size-4" aria-hidden="true" />
         </button>
-        <h1 className="min-w-0 flex-1 truncate text-center font-[family-name(var(--font-literata))] text-[14px] text-white/85 sm:text-[16px]">
+        <h1 className="ink-hand min-w-0 flex-1 truncate text-center text-[14px] text-foreground/85 sm:text-[16px]">
           {meta?.title ?? ""}
         </h1>
         <div className="flex items-center gap-1.5">
@@ -651,10 +746,9 @@ export function DreamBookView() {
             aria-label={narrating ? t("Stop") : t("Listen to the story")}
             title={narrating ? t("Stop") : t("Listen to the story")}
             className={cn(
-              "focus-glow flex size-9 items-center justify-center rounded-full border backdrop-blur-xl transition-all duration-300",
-              narrating
-                ? "border-[var(--dream-gold)] text-[var(--dream-gold)]"
-                : "border-white/12 bg-white/5 text-white/70 hover:border-[var(--dream-gold-soft)] hover:text-[var(--dream-gold)]"
+              inkIconBtn,
+              (narrating || narrLoading) &&
+                "border-transparent bg-foreground text-background hover:opacity-90"
             )}
           >
             {narrLoading ? (
@@ -671,7 +765,7 @@ export function DreamBookView() {
             disabled={zoom === 0}
             aria-label={t("Smaller text")}
             title={t("Smaller text")}
-            className="focus-glow flex size-9 items-center justify-center rounded-full border border-white/12 bg-white/5 text-white/70 backdrop-blur-xl transition-all duration-300 hover:border-[var(--dream-gold-soft)] hover:text-[var(--dream-gold)] disabled:opacity-35"
+            className={cn(inkIconBtn, "disabled:opacity-35")}
           >
             <ZoomOut className="size-4" aria-hidden="true" />
           </button>
@@ -681,7 +775,7 @@ export function DreamBookView() {
             disabled={zoom === ZOOM_STEPS.length - 1}
             aria-label={t("Larger text")}
             title={t("Larger text")}
-            className="focus-glow flex size-9 items-center justify-center rounded-full border border-white/12 bg-white/5 text-white/70 backdrop-blur-xl transition-all duration-300 hover:border-[var(--dream-gold-soft)] hover:text-[var(--dream-gold)] disabled:opacity-35"
+            className={cn(inkIconBtn, "disabled:opacity-35")}
           >
             <ZoomIn className="size-4" aria-hidden="true" />
           </button>
@@ -725,7 +819,10 @@ export function DreamBookView() {
                 {showChoice ? (
                   /* the crossroads — the tale can go on */
                   <div className="dream-page dream-page-single mx-auto flex max-w-[460px] flex-col items-center justify-center px-8 py-14 text-center">
-                    <span className="font-[family-name(var(--font-literata))] text-3xl text-[var(--dream-ink-soft)]" aria-hidden="true">
+                    <span
+                      className="font-[family-name(var(--font-literata))] text-3xl text-[var(--dream-ink-faint)]"
+                      aria-hidden="true"
+                    >
                       ✦
                     </span>
                     <h2 className="mt-4 font-[family-name(var(--font-literata))] text-[22px] text-[var(--dream-ink)]">
@@ -741,16 +838,16 @@ export function DreamBookView() {
                         type="button"
                         onClick={weaveOnward}
                         disabled={weavingNext}
-                        className="dream-weave focus-glow flex h-11 items-center justify-center gap-2 rounded-full text-[14px] font-medium disabled:opacity-60"
+                        className="dream-ink-btn focus-glow flex h-11 items-center justify-center gap-2 rounded-full text-[14px] font-medium disabled:opacity-60"
                       >
-                        <Sparkles className="size-4" aria-hidden="true" />
+                        <Feather className="size-4" aria-hidden="true" />
                         {t("Weave onward")}
                       </button>
                       <button
                         type="button"
                         onClick={letRest}
                         disabled={weavingNext}
-                        className="focus-glow flex h-11 items-center justify-center rounded-full border border-[var(--dream-ink-line)] font-[family-name(var(--font-literata))] text-[13.5px] text-[var(--dream-ink)] transition-all duration-300 hover:bg-black/[0.045] disabled:opacity-60"
+                        className="dream-ink-outline focus-glow flex h-11 items-center justify-center rounded-full font-[family-name(var(--font-literata))] text-[13.5px] disabled:opacity-60"
                       >
                         {t("Let the story rest")}
                       </button>
@@ -759,7 +856,10 @@ export function DreamBookView() {
                 ) : showEnd ? (
                   /* the last page of the book */
                   <div className="dream-page dream-page-single mx-auto flex max-w-[460px] flex-col items-center justify-center px-8 py-16 text-center">
-                    <span className="font-[family-name(var(--font-literata))] text-4xl text-[var(--dream-gold-deep)]" aria-hidden="true">
+                    <span
+                      className="font-[family-name(var(--font-literata))] text-4xl text-[var(--dream-ink-soft)]"
+                      aria-hidden="true"
+                    >
                       ❦
                     </span>
                     <h2 className="mt-5 font-[family-name(var(--font-literata))] text-[24px] text-[var(--dream-ink)]">
@@ -771,7 +871,7 @@ export function DreamBookView() {
                     <button
                       type="button"
                       onClick={newDream}
-                      className="dream-weave focus-glow mt-8 flex h-11 items-center justify-center gap-2 rounded-full px-7 text-[14px] font-medium"
+                      className="dream-ink-btn focus-glow mt-8 flex h-11 items-center justify-center gap-2 rounded-full px-7 text-[14px] font-medium"
                     >
                       <MoonStar className="size-4" aria-hidden="true" />
                       {t("Begin a new dream")}
@@ -783,7 +883,10 @@ export function DreamBookView() {
                     {spread === 0 ? (
                       <div className="dream-page dream-page-left flex flex-col items-center justify-between px-7 py-9 sm:px-10">
                         <div className="flex flex-col items-center pt-6 text-center sm:pt-10">
-                          <span className="font-[family-name(var(--font-literata))] text-2xl text-[var(--dream-gold-deep)]" aria-hidden="true">
+                          <span
+                            className="font-[family-name(var(--font-literata))] text-2xl text-[var(--dream-ink-faint)]"
+                            aria-hidden="true"
+                          >
                             ❧
                           </span>
                           <h2 className="mt-6 max-w-[300px] font-[family-name(var(--font-literata))] text-[26px] leading-snug text-[var(--dream-ink)] sm:text-[30px]">
@@ -807,13 +910,17 @@ export function DreamBookView() {
                         page={spreadPages[0]}
                         side="left"
                         fontSize={ZOOM_STEPS[zoom]}
+                        stalled={weaveFailed && !weavingNext}
                       />
                     )}
 
                     {/* RIGHT — the endpaper or the even page */}
                     {spread === 0 ? (
                       <div className="dream-page dream-page-right hidden items-center justify-center md:flex">
-                        <span className="font-[family-name(var(--font-literata))] text-xl text-[var(--dream-gold-deep)] opacity-70" aria-hidden="true">
+                        <span
+                          className="font-[family-name(var(--font-literata))] text-xl text-[var(--dream-ink-faint)] opacity-70"
+                          aria-hidden="true"
+                        >
                           ❧
                         </span>
                       </div>
@@ -822,6 +929,10 @@ export function DreamBookView() {
                         page={spreadPages[1]}
                         side="right"
                         fontSize={ZOOM_STEPS[zoom]}
+                        stalled={weaveFailed && !weavingNext}
+                        onRetry={() =>
+                          void weave("next", pagesRef.current.length + 1)
+                        }
                       />
                     )}
                   </div>
@@ -836,9 +947,12 @@ export function DreamBookView() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="mono-label mt-4 flex items-center justify-center gap-2 text-[10px] uppercase tracking-[0.2em] text-white/40"
+                  className="mono-label mt-4 flex items-center justify-center gap-2 text-[10px] uppercase tracking-[0.2em] text-muted-foreground"
                 >
-                  <Sparkles className="size-3 animate-pulse" aria-hidden="true" />
+                  <span
+                    className="size-1 animate-pulse rounded-full bg-foreground/50"
+                    aria-hidden="true"
+                  />
                   {t("The loom weaves the next pages…")}
                 </motion.p>
               )}
@@ -861,13 +975,13 @@ export function DreamBookView() {
           </button>
 
           <div className="min-w-0 flex-1">
-            <div className="h-[3px] w-full overflow-hidden rounded-full bg-white/10">
+            <div className="h-[3px] w-full overflow-hidden rounded-full bg-foreground/10">
               <div
-                className="h-full rounded-full bg-[var(--dream-gold)] transition-all duration-700"
+                className="h-full rounded-full bg-foreground/60 transition-all duration-700"
                 style={{ width: `${Math.round(progress * 100)}%` }}
               />
             </div>
-            <p className="mono-label mt-1.5 text-center text-[10px] tracking-[0.18em] text-white/45">
+            <p className="mono-label mt-1.5 text-center text-[10px] tracking-[0.18em] text-muted-foreground">
               {meta
                 ? spread === 0
                   ? t("the title page")
@@ -898,6 +1012,122 @@ export function DreamBookView() {
 }
 
 /* ------------------------------------------------------------------ */
+/*  The unseen emblem — an ink loom that draws a book out of threads. */
+/*  Pure line art in the theme's own ink: it draws itself, the quill  */
+/*  breathes, the thread flows, lines write themselves, sparks of ink */
+/*  twinkle. No colours, no words — only the work being done.         */
+/* ------------------------------------------------------------------ */
+
+function DreamEmblem() {
+  return (
+    <svg
+      viewBox="0 0 220 170"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="dream-emblem h-44 w-56 text-foreground sm:h-52 sm:w-64"
+      aria-hidden="true"
+    >
+      {/* the thread-ring of the loom, turning very slowly */}
+      <circle
+        cx="110"
+        cy="92"
+        r="78"
+        className="de-ring"
+        strokeDasharray="1 7"
+        strokeWidth="1"
+        opacity="0.45"
+      />
+
+      {/* sparks of ink */}
+      <path
+        className="de-spark"
+        style={{ animationDelay: "0s" }}
+        strokeWidth="1"
+        d="M42 30 Q42 36 48 36 Q42 36 42 42 Q42 36 36 36 Q42 36 42 30 Z"
+      />
+      <path
+        className="de-spark"
+        style={{ animationDelay: "0.9s" }}
+        strokeWidth="1"
+        d="M182 40 Q182 45 187 45 Q182 45 182 50 Q182 45 177 45 Q182 45 182 40 Z"
+      />
+      <path
+        className="de-spark"
+        style={{ animationDelay: "1.7s" }}
+        strokeWidth="1"
+        d="M170 128 Q170 132 174 132 Q170 132 170 136 Q170 132 166 132 Q170 132 170 128 Z"
+      />
+
+      {/* the open book, drawn once in a single breath */}
+      <g strokeWidth="1.4">
+        <path
+          className="de-draw"
+          pathLength={1}
+          d="M110 74 C 96 64, 76 60, 58 63 L58 100 C 76 97, 96 101, 110 110"
+        />
+        <path
+          className="de-draw"
+          pathLength={1}
+          style={{ animationDelay: "0.18s" }}
+          d="M110 74 C 124 64, 144 60, 162 63 L162 100 C 144 97, 124 101, 110 110"
+        />
+        <path
+          className="de-draw"
+          pathLength={1}
+          style={{ animationDelay: "0.42s" }}
+          opacity="0.55"
+          d="M110 74 L110 110"
+        />
+      </g>
+
+      {/* the tale writing itself, line by line */}
+      <g strokeWidth="1.1" opacity="0.7">
+        <path
+          className="de-line"
+          pathLength={1}
+          style={{ animationDelay: "1s" }}
+          d="M68 77 C 80 74, 92 76, 101 80"
+        />
+        <path
+          className="de-line"
+          pathLength={1}
+          style={{ animationDelay: "1.5s" }}
+          d="M67 85 C 79 82, 91 84, 101 88"
+        />
+        <path
+          className="de-line"
+          pathLength={1}
+          style={{ animationDelay: "2s" }}
+          d="M119 80 C 129 76, 141 74, 152 77"
+        />
+        <path
+          className="de-line"
+          pathLength={1}
+          style={{ animationDelay: "2.5s" }}
+          d="M119 88 C 129 84, 143 82, 152 85"
+        />
+      </g>
+
+      {/* the quill, breathing above the page */}
+      <g className="de-quill" strokeWidth="1.3">
+        <path d="M152 16 C 142 30, 134 47, 131 62" />
+        <path d="M152 16 C 146 28, 139 45, 132 60 C 143 51, 150 34, 152 16 Z" />
+      </g>
+
+      {/* the thread of ink flowing from the nib to the page */}
+      <path
+        className="de-thread"
+        strokeWidth="1"
+        opacity="0.65"
+        d="M131 62 C 127 72, 123 78, 117 84"
+      />
+    </svg>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  Small pieces                                                       */
 /* ------------------------------------------------------------------ */
 
@@ -911,7 +1141,7 @@ function AtelierBubble({
   if (from === "weaver") {
     return (
       <div className="flex justify-start">
-        <p className="dream-bubble max-w-[92%] rounded-2xl rounded-tl-md px-3.5 py-2.5 font-[family-name(var(--font-literata))] text-[13.5px] leading-relaxed text-[#efe6d4] sm:text-sm">
+        <p className="ink-hand max-w-[92%] rounded-2xl rounded-tl-md border border-border bg-card px-3.5 py-2.5 text-[13.5px] leading-relaxed sm:text-sm">
           {children}
         </p>
       </div>
@@ -919,7 +1149,7 @@ function AtelierBubble({
   }
   return (
     <div className="flex justify-end">
-      <p className="max-w-[92%] rounded-2xl rounded-tr-md border border-[var(--dream-gold-soft)]/30 bg-[var(--dream-gold)]/10 px-3.5 py-2.5 text-[13px] leading-relaxed text-[#f6edd9] sm:text-[13.5px]">
+      <p className="max-w-[92%] rounded-2xl rounded-tr-md border border-border/70 bg-background px-3.5 py-2.5 text-[13px] leading-relaxed text-foreground/85 sm:text-[13.5px]">
         {children}
       </p>
     </div>
@@ -940,7 +1170,7 @@ function ShapeRow({
   const t = useT();
   return (
     <div>
-      <p className="mono-label mb-2 text-[10px] uppercase tracking-[0.22em] text-white/45">
+      <p className="mono-label mb-2 text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
         {label}
       </p>
       <div className="flex flex-wrap gap-1.5">
@@ -955,8 +1185,8 @@ function ShapeRow({
               className={cn(
                 "focus-glow rounded-full border px-3 py-1.5 text-[12px] transition-all duration-300",
                 isActive
-                  ? "border-[var(--dream-gold)] bg-[var(--dream-gold)]/15 text-[#f6e7c4] shadow-[0_0_18px_-6px_var(--dream-gold)]"
-                  : "border-white/12 bg-white/[0.04] text-white/65 hover:border-[var(--dream-gold-soft)] hover:text-white/90"
+                  ? "border-transparent bg-foreground text-background"
+                  : "border-border text-muted-foreground hover:border-foreground/40 hover:text-foreground"
               )}
             >
               {t(o.label)}
@@ -972,10 +1202,14 @@ function BookPage({
   page,
   side,
   fontSize,
+  stalled,
+  onRetry,
 }: {
   page?: WeavePage;
   side: "left" | "right";
   fontSize: number;
+  stalled?: boolean;
+  onRetry?: () => void;
 }) {
   const t = useT();
   return (
@@ -1016,11 +1250,27 @@ function BookPage({
       ) : (
         /* the page still in the loom */
         <div className="flex flex-1 flex-col items-center justify-center gap-3 py-16 text-center">
-          <Sparkles className="size-4 animate-pulse text-[var(--dream-ink-faint)]" aria-hidden="true" />
+          <span
+            className="font-[family-name(var(--font-literata))] text-lg text-[var(--dream-ink-faint)]"
+            aria-hidden="true"
+          >
+            ❧
+          </span>
           <p className="font-[family-name(var(--font-literata))] text-[12.5px] italic text-[var(--dream-ink-faint)]">
             {t("The loom weaves the next pages…")}
           </p>
-          <div className="ink-shimmer h-px w-28 rounded-full bg-black/[0.06]" />
+          <div className="h-px w-28 rounded-full bg-[var(--dream-ink-faint)]/25 overflow-hidden">
+            <div className="ink-shimmer h-full w-full" />
+          </div>
+          {stalled && onRetry && (
+            <button
+              type="button"
+              onClick={onRetry}
+              className="dream-ink-btn focus-glow mt-2 flex h-8 items-center justify-center rounded-full px-4 text-[12px] font-medium"
+            >
+              {t("Weave again")}
+            </button>
+          )}
         </div>
       )}
     </div>
