@@ -12,7 +12,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowLeft,
   AudioLines,
-  BookOpen,
   Feather,
   LoaderCircle,
   MoonStar,
@@ -144,7 +143,6 @@ export function DreamBookView() {
   const [volume, setVolume] = useState("classic");
   const [topic, setTopic] = useState("");
   const [topicDraft, setTopicDraft] = useState("");
-  const [draft, setDraft] = useState("");
   const threadRef = useRef<HTMLDivElement | null>(null);
   const [phaseIdx, setPhaseIdx] = useState(0);
 
@@ -198,25 +196,6 @@ export function DreamBookView() {
   const pushLine = useCallback((from: AtelierLine["from"], text: string) => {
     setLines((prev) => [...prev, { id: nextLineId(), from, text }]);
   }, []);
-
-  /* the frequency — the subject the loom tunes itself to */
-  const tuneFrequency = useCallback(
-    (e?: FormEvent) => {
-      e?.preventDefault();
-      const text = topicDraft.trim().slice(0, 300);
-      if (!text) return;
-      setTopicDraft("");
-      setTopic(text);
-      pushLine("visitor", `${t("The frequency")}: ${text}`);
-      pushLine("weaver", t("The frequency is tuned. Every page will listen to it."));
-    },
-    [topicDraft, pushLine, t]
-  );
-
-  const untuneFrequency = useCallback(() => {
-    setTopic("");
-    pushLine("weaver", t("The frequency is released. The loom listens for a new one."));
-  }, [pushLine, t]);
 
   /* the rewriting hand — wishes that bend the pages yet to come */
   const addRewrite = useCallback((text: string) => {
@@ -286,7 +265,18 @@ export function DreamBookView() {
         const payload = JSON.stringify({
           phase,
           language,
-          config: configRef.current,
+          config: {
+            ...configRef.current,
+            /* the exact second of this conjuring — a seed that has never
+               been woven and will never be woven again */
+            ...(phase === "open"
+              ? {
+                  seed: `${Date.now().toString(36)}-${Math.random()
+                    .toString(36)
+                    .slice(2, 8)}`,
+                }
+              : {}),
+          },
           threads: threadsRef.current || undefined,
           recentPages: recent.length ? recent : undefined,
           pageNumber,
@@ -367,21 +357,6 @@ export function DreamBookView() {
 
   /* ---------------- the atelier ---------------- */
 
-  const sendWish = useCallback(
-    (e?: FormEvent) => {
-      e?.preventDefault();
-      const text = draft.trim();
-      if (!text) return;
-      setDraft("");
-      pushLine("visitor", text);
-      pushLine(
-        "weaver",
-        t("Your wish is woven into the warp. The threads are listening.")
-      );
-    },
-    [draft, pushLine, t]
-  );
-
   const choose = useCallback(
     (kind: "reader" | "tale" | "volume", id: string, label: string) => {
       if (kind === "reader") setAge(id);
@@ -414,6 +389,23 @@ export function DreamBookView() {
       setWeaveError(true);
     }
   }, [weave]);
+
+  /* the one input — whatever is spoken, its send begins the channeling:
+     a totally authentic, never-repeating volume, woven in real time */
+  const channelBook = useCallback(
+    (e?: FormEvent) => {
+      e?.preventDefault();
+      const text = topicDraft.trim().slice(0, 600);
+      if (!text || weavingRef.current) return;
+      setTopicDraft("");
+      setTopic(text);
+      configRef.current = { ...configRef.current, topic: text };
+      pushLine("visitor", text);
+      pushLine("weaver", t("The loom is tuned. The channeling begins."));
+      void openBook();
+    },
+    [topicDraft, pushLine, t, openBook]
+  );
 
   /* ---------------- the reader's logic ----------------
      page 0 = the title page; page k ≥ 1 = story page n k.
@@ -486,10 +478,12 @@ export function DreamBookView() {
     setSlideDir(1);
     setZoom(1);
     setWeaveFailed(false);
+    setTopic("");
+    setTopicDraft("");
     setStage("atelier");
     pushLine(
       "weaver",
-      t("A new book waits in the loom. Shape it below, or simply whisper.")
+      t("A new book waits in the loom. Speak anything below, and the channeling begins.")
     );
   }, [pushLine, stopNarration, t]);
 
@@ -671,7 +665,7 @@ export function DreamBookView() {
           >
             <AtelierBubble from="weaver">
               {t(
-                "Welcome, keeper of wishes. Shape the book below — or simply whisper, and I will listen."
+                "Welcome, keeper of wishes. Speak anything — a subject, a wish, a whole world — and the book begins."
               )}
             </AtelierBubble>
             {lines.map((l) => (
@@ -702,91 +696,35 @@ export function DreamBookView() {
               onPick={(id, label) => choose("volume", id, label)}
             />
           </div>
-
-          {/* the frequency — name any subject and the loom tunes to it */}
-          <div className="mt-5">
-            <p className="mono-label mb-2 flex items-center gap-1.5 text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
-              <Waves className="size-3" aria-hidden="true" />
-              {t("The frequency")}
-            </p>
-            {topic ? (
-              <div className="flex items-center gap-2 rounded-full border border-border bg-card py-2 pl-4 pr-2">
-                <span
-                  className="min-w-0 flex-1 truncate font-[family-name(var(--font-literata))] text-[13px] italic text-foreground/85"
-                  title={topic}
-                >
-                  {topic}
-                </span>
-                <button
-                  type="button"
-                  onClick={untuneFrequency}
-                  aria-label={t("Untune the frequency")}
-                  title={t("Untune the frequency")}
-                  className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground"
-                >
-                  <X className="size-3.5" aria-hidden="true" />
-                </button>
-              </div>
-            ) : (
-              <form
-                onSubmit={tuneFrequency}
-                className="flex items-center gap-2 rounded-full border border-border bg-card py-1 pl-4 pr-1 transition-all duration-300 focus-within:border-foreground/35"
-              >
-                <input
-                  value={topicDraft}
-                  onChange={(e) => setTopicDraft(e.target.value)}
-                  placeholder={t(
-                    "Name any subject, era, philosophy, or universe…"
-                  )}
-                  aria-label={t("The frequency")}
-                  maxLength={300}
-                  className="min-w-0 flex-1 bg-transparent py-2 font-[family-name(var(--font-literata))] text-[13px] italic text-foreground placeholder:font-[family-name(var(--font-sans))] placeholder:not-italic placeholder:text-muted-foreground/60 focus:outline-none"
-                />
-                <button
-                  type="submit"
-                  aria-label={t("Tune the loom")}
-                  title={t("Tune the loom")}
-                  disabled={!topicDraft.trim()}
-                  className="akashic-btn focus-glow flex size-8 shrink-0 items-center justify-center rounded-full disabled:opacity-40"
-                >
-                  <Waves className="size-3.5" aria-hidden="true" />
-                </button>
-              </form>
-            )}
-          </div>
+          <div aria-hidden="true" className="h-4" />
         </div>
       </div>
 
-      {/* the whisper composer + the weaving button */}
+      {/* the one input — speak, send, and the channeling begins */}
       <div className="relative z-10 shrink-0 border-t border-border bg-background px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2.5 sm:px-6">
         <div className="mx-auto w-full max-w-[680px]">
           <form
-            onSubmit={sendWish}
+            onSubmit={channelBook}
             className="flex items-center gap-2 rounded-full border border-border bg-card py-1 pl-4 pr-1 transition-all duration-300 focus-within:border-foreground/35"
           >
             <input
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              placeholder={t("Whisper a wish for the tale…")}
-              aria-label={t("Whisper a wish for the tale…")}
-              className="min-w-0 flex-1 bg-transparent py-2 text-[13.5px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
+              value={topicDraft}
+              onChange={(e) => setTopicDraft(e.target.value)}
+              placeholder={t("Speak anything — a subject, a wish, a whole world…")}
+              aria-label={t("Speak anything — a subject, a wish, a whole world…")}
+              maxLength={600}
+              className="min-w-0 flex-1 bg-transparent py-2 font-[family-name(var(--font-literata))] text-[13.5px] italic text-foreground placeholder:font-[family-name(var(--font-sans))] placeholder:not-italic placeholder:text-muted-foreground/60 focus:outline-none"
             />
             <button
               type="submit"
-              aria-label={t("Whisper the wish")}
-              className="akashic-btn focus-glow flex size-8 shrink-0 items-center justify-center rounded-full"
+              disabled={!topicDraft.trim()}
+              aria-label={t("Channel the book")}
+              title={t("Channel the book")}
+              className="akashic-btn focus-glow flex size-8 shrink-0 items-center justify-center rounded-full disabled:opacity-40"
             >
-              <Feather className="size-3.5" aria-hidden="true" />
+              <Waves className="size-3.5" aria-hidden="true" />
             </button>
           </form>
-          <button
-            type="button"
-            onClick={openBook}
-            className="akashic-btn focus-glow mt-2.5 flex h-11 w-full items-center justify-center gap-2 rounded-full text-[14px] font-medium tracking-wide"
-          >
-            <BookOpen className="size-4" aria-hidden="true" />
-            {t("Weave my book")}
-          </button>
         </div>
       </div>
     </div>

@@ -2,6 +2,11 @@ import type { TranslationDict } from "../types";
 
 /** tr — Türkçe. Mirror Entity Laboratory dictionary (Task 3-b). */
 export const tr: TranslationDict = {
+  "Welcome, keeper of wishes. Speak anything — a subject, a wish, a whole world — and the book begins.": "Hoş geldin, dileklerin bekçisi. Herhangi bir şey söyle — bir konu, bir dilek, bütün bir dünya — ve kitap başlar.",
+  "A new book waits in the loom. Speak anything below, and the channeling begins.": "Yeni bir kitap tezgâhta bekliyor. Aşağıda herhangi bir şey söyle, kanal başlar.",
+  "Speak anything — a subject, a wish, a whole world…": "Herhangi bir şey söyle — bir konu, bir dilek, bütün bir dünya…",
+  "Channel the book": "Kitabı kanala",
+  "The loom is tuned. The channeling begins.": "Tezgâh akort edildi. Kanal başlıyor.",
   "Name any subject, era, or universe — the loom tunes itself, and the book begins.": "Herhangi bir konuyu, çağı ya da evreni adlandır — dokuma tezgâhı kendiliğinden akort olur ve kitap başlar.",
   "Name any subject, era, philosophy, or universe…": "Herhangi bir konuyu, çağı, felsefeyi ya da evreni adlandır…",
   "The frequency": "Frekans",

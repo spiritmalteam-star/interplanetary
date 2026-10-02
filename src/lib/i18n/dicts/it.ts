@@ -2,6 +2,11 @@ import type { TranslationDict } from "../types";
 
 /** it — Italian dictionary (Task 3-b). Keys are the English source strings. */
 export const it: TranslationDict = {
+  "Welcome, keeper of wishes. Speak anything — a subject, a wish, a whole world — and the book begins.": "Benvenuta, custode dei desideri. Di' qualsiasi cosa — un soggetto, un desiderio, un intero mondo — e il libro comincia.",
+  "A new book waits in the loom. Speak anything below, and the channeling begins.": "Un nuovo libro aspetta nel telaio. Di' qualsiasi cosa qui sotto, e il canale comincia.",
+  "Speak anything — a subject, a wish, a whole world…": "Di' qualsiasi cosa — un soggetto, un desiderio, un intero mondo…",
+  "Channel the book": "Canalizza il libro",
+  "The loom is tuned. The channeling begins.": "Il telaio è sintonizzato. Il canale comincia.",
   "Name any subject, era, or universe — the loom tunes itself, and the book begins.": "Nomina qualsiasi soggetto, epoca o universo — il telaio si sintonizza da solo, e il libro comincia.",
   "Name any subject, era, philosophy, or universe…": "Nomina qualsiasi soggetto, epoca, filosofia o universo…",
   "The frequency": "La frequenza",

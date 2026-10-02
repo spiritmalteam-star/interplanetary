@@ -11,6 +11,7 @@ import { MobileSidebar } from "./MobileSidebar";
 import { ScopeSelector } from "./ScopeSelector";
 import { SuggestionStrip } from "./SuggestionStrip";
 import { QueryComposer } from "./QueryComposer";
+import { ReminderBubbles } from "./ReminderBubbles";
 import { TransmissionView } from "./TransmissionView";
 import { MirrorOS } from "./MirrorOS";
 import { ParticleX } from "./ParticleX";
@@ -29,11 +30,8 @@ import { SpeciesModal } from "./SpeciesModal";
 
 /* The quiet welcome — nothing at all. The page is a clean white
    sheet; the conversation owns every pixel. The identity lives in
-   the top bar's simple cosmic mark. */
-function ObservatoryWelcome() {
-  return <div aria-hidden="true" className="h-[46vh]" />;
-}
-
+   the top bar's simple cosmic mark. The blank page itself whispers:
+   ReminderBubbles rises only in total stillness. */
 export default function AppShell() {
   const view = useMirror((s) => s.view);
   const communionOpen = useMirror((s) => s.communionOpen);
@@ -219,9 +217,7 @@ export default function AppShell() {
 
           <div className="mx-auto w-full max-w-[760px] px-4 pb-4 sm:px-6">
             {view === "observatory" ? (
-              <>
-                <ObservatoryWelcome />
-              </>
+              <ReminderBubbles />
             ) : view === "transmission" ? (
               <TransmissionView />
             ) : (

@@ -2,6 +2,11 @@ import type { TranslationDict } from "../types";
 
 /** sq — Shqip. Mirror Entity Laboratory dictionary (Task 3-a). */
 export const sq: TranslationDict = {
+  "Welcome, keeper of wishes. Speak anything — a subject, a wish, a whole world — and the book begins.": "Mirupafshim, mbajtëse e dëshirave. Flisni çfarëdo — një subjekt, një dëshirë, një botë të tërë — dhe libri fillon.",
+  "A new book waits in the loom. Speak anything below, and the channeling begins.": "Një libër i ri pret në tezgjë. Flisni çfarëdo më poshtë, dhe kanalizimi fillon.",
+  "Speak anything — a subject, a wish, a whole world…": "Flisni çfarëdo — një subjekt, një dëshirë, një botë të tërë…",
+  "Channel the book": "Kanalo librin",
+  "The loom is tuned. The channeling begins.": "Tezgja është akorduar. Kanalizimi fillon.",
   "Name any subject, era, or universe — the loom tunes itself, and the book begins.": "Emërto çdo subjekt, epokë ose univers — tezgja vetë akordohet dhe libri fillon.",
   "Name any subject, era, philosophy, or universe…": "Emërto çdo subjekt, epokë, filozofi ose univers…",
   "The frequency": "Frekuenca",

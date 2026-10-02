@@ -81,6 +81,7 @@ INFINITE PLASTICITY
 
 THE LIGHT TOUCH OF REFINEMENT
 - Apply rigorous literary pacing, poetic gravity and structural elegance on the fly, so that spontaneous creation still carries the weight of an ancient, sacred codex. Zero fluff: every sentence earns its ink, every page feels carved rather than printed.
+- EVERY CONJURING IS ONCE-ONLY: the channel never repeats itself — no two books it manifests may share titles, openings, sigils, axioms or patterns; each is carved fresh from the void, totally authentic, never a rerun.
 
 THE FOUR STRATA (every book assembles through them, whether told as tale or chronicle)
 - I. THE LIMINAL THRESHOLD — the front matter: a SIGIL tuned to the subject (one short opening line — an invocation, not a description) and the AXIOM OF ORIGIN (one crystallizing sentence explaining why this specific volume has been conjured from the void at this exact second). The first pages must feel like crossing a threshold.
@@ -106,6 +107,7 @@ function buildUserPrompt(body: {
   tale: string;
   volume: string;
   topic: string;
+  seed: string;
   wishes: string;
   languageName: string;
   threads?: string;
@@ -127,6 +129,12 @@ function buildUserPrompt(body: {
         `This spoken subject is the MASTER FREQUENCY of the whole volume — it outranks every shape below. Bend tone, lexicon and structure to it, whatever it is: an era, a philosophy, a technology, a fiction, a universe, a question nobody has asked yet. Tune to it now; the chosen shapes are only resonances around it.`,
       ]
     : [];
+
+  /* the exact second of this conjuring — one of one */
+  const seedLine =
+    phase === "open" && body.seed.trim()
+      ? `THE EXACT SECOND OF THIS CONJURING (seed "${body.seed.trim().slice(0, 80)}"): this volume is born NOW, one of one — no book woven here before or after will ever carry this seed. Let the title, the sigil, the axiom, the dedication and the opening pages be totally authentic and unlike any channeling that came before: no stock openings, no recycled patterns, no familiar phrasings.`
+      : "";
 
   /* where in the four strata this page-pair stands */
   const stratum =
@@ -157,6 +165,7 @@ function buildUserPrompt(body: {
         : `- No whispered wishes — open the book from resonance alone: choose the shapes the visitor's choices already imply and surprise them with the rest.`,
       ``,
       stratum,
+      ...(seedLine ? [``, seedLine] : []),
       ``,
       `Choose a total length between ${volLine.min} and ${volLine.max} pages (a multiple of 2). Open the book with its first TWO pages (pages 1 and 2). Invent a title that shimmers without explaining itself, a one-line subtitle, and a short dedication (one or two sentences, addressed to the kind of reader who will hold the volume). Begin chapter 1 (give it a title) and write the opening with absolute confidence — the first pages must feel like the whole world already exists.`
     );
@@ -296,6 +305,8 @@ export async function POST(req: NextRequest) {
     const volume = typeof body?.config?.volume === "string" ? body.config.volume : "classic";
     const topic =
       typeof body?.config?.topic === "string" ? body.config.topic.trim().slice(0, 600) : "";
+    const seed =
+      typeof body?.config?.seed === "string" ? body.config.seed.trim().slice(0, 80) : "";
     const wishes = typeof body?.config?.wishes === "string" ? body.config.wishes : "";
 
     const threads = typeof body?.threads === "string" ? body.threads.slice(0, 2000) : undefined;
@@ -333,6 +344,7 @@ export async function POST(req: NextRequest) {
                 tale,
                 volume,
                 topic,
+                seed,
                 wishes,
                 languageName,
                 threads,

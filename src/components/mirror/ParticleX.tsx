@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
-import { pxGatheringPhrases, pxOpeners, pxScopes } from "@/lib/data/particlex";
+import { pxGatheringPhrases, pxScopes } from "@/lib/data/particlex";
 import { cn } from "@/lib/utils";
 import { ListenButton } from "./ListenButton";
 import { KindleReader, type LetterRecord } from "./ChatArtifacts";
@@ -133,86 +133,6 @@ function PxThinking() {
         </motion.span>
       </AnimatePresence>
     </div>
-  );
-}
-
-/* -------------------------- the openers ---------------------------- */
-
-/** Openers visible at once (wrap-around window). */
-const OPENER_WINDOW = 4;
-
-function PxOpeners() {
-  const pxStatus = useMirror((s) => s.pxStatus);
-  const askPX = useMirror((s) => s.askPX);
-  const t = useT();
-  const [offset, setOffset] = useState(0);
-  const [spin, setSpin] = useState(0);
-
-  const visible = pxOpeners
-    .map((_, i) => pxOpeners[(offset + i) % pxOpeners.length])
-    .slice(0, OPENER_WINDOW);
-  const busy = pxStatus === "loading";
-
-  return (
-    <section aria-label={t("Suggested openers")} className="mt-6">
-      <div className="flex items-center justify-center gap-3">
-        <span className="mono-label text-[10.5px] text-muted-foreground/70">
-          {t("Suggested openers")}
-        </span>
-        <button
-          type="button"
-          onClick={() => {
-            setOffset((o) => (o + OPENER_WINDOW) % pxOpeners.length);
-            setSpin((n) => n + 1);
-          }}
-          disabled={busy}
-          aria-label={t("New openers")}
-          title={t("New openers")}
-          className="focus-glow flex size-6.5 items-center justify-center rounded-full border hairline text-muted-foreground/80 transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          <motion.span
-            aria-hidden="true"
-            animate={{ rotate: spin * 180 }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-            className="flex"
-          >
-            <RefreshCw className="size-3" aria-hidden="true" />
-          </motion.span>
-        </button>
-      </div>
-
-      <AnimatePresence mode="wait" initial={false}>
-        <motion.div
-          key={offset}
-          initial={{ opacity: 0, y: 4 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -4 }}
-          transition={{ duration: 0.25, ease: "easeOut" }}
-          className={cn(
-            "mx-auto mt-3 grid max-w-[560px] grid-cols-1 gap-2 sm:grid-cols-2",
-            busy && "pointer-events-none opacity-60"
-          )}
-        >
-          {visible.map((q) => (
-            <button
-              key={q}
-              type="button"
-              onClick={() => !busy && void askPX(q)}
-              aria-disabled={busy}
-              className="focus-glow group flex min-h-[46px] items-center gap-2.5 rounded-2xl border border-[color-mix(in_srgb,var(--scope-a)_18%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_5%,transparent)] px-3.5 py-2.5 text-left transition-all duration-300 hover:-translate-y-0.5 hover:border-[color-mix(in_srgb,var(--scope-a)_38%,transparent)]"
-            >
-              <Atom
-                className="size-3 shrink-0 text-[var(--scope-a)] opacity-80"
-                aria-hidden="true"
-              />
-              <span className="flex-1 text-[14px] leading-snug text-foreground/80">
-                {t(q)}
-              </span>
-            </button>
-          ))}
-        </motion.div>
-      </AnimatePresence>
-    </section>
   );
 }
 
@@ -723,8 +643,6 @@ function ParticleXChat() {
                   })}
                 </div>
               </div>
-
-              <PxOpeners />
             </div>
           </div>
         ) : (

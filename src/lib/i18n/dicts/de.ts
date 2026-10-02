@@ -2,6 +2,11 @@ import type { TranslationDict } from "../types";
 
 /** de — Deutsch. Mirror Entity Laboratory dictionary (Task 3-b). */
 export const de: TranslationDict = {
+  "Welcome, keeper of wishes. Speak anything — a subject, a wish, a whole world — and the book begins.": "Willkommen, Hüterin der Wünsche. Sprich alles — ein Thema, ein Wunsch, eine ganze Welt — und das Buch beginnt.",
+  "A new book waits in the loom. Speak anything below, and the channeling begins.": "Ein neues Buch wartet im Webstuhl. Sprich unten alles, und das Kanalisieren beginnt.",
+  "Speak anything — a subject, a wish, a whole world…": "Sprich alles — ein Thema, ein Wunsch, eine ganze Welt…",
+  "Channel the book": "Kanaliere das Buch",
+  "The loom is tuned. The channeling begins.": "Der Webstuhl ist gestimmt. Das Kanalisieren beginnt.",
   "Name any subject, era, or universe — the loom tunes itself, and the book begins.": "Nenne jedes beliebige Thema, jede Epoche oder jedes Universum — der Webstuhl stimmt sich von selbst, und das Buch beginnt.",
   "Name any subject, era, philosophy, or universe…": "Nenne jedes beliebige Thema, jede Epoche, jede Philosophie oder jedes Universum…",
   "The frequency": "Die Frequenz",
