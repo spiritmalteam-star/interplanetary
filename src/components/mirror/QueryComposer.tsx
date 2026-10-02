@@ -5,6 +5,7 @@ import { Feather } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { detectVisualIntent } from "@/lib/visualization";
+import { detectArtifactIntent } from "@/lib/artifact-intent";
 import {
   AttachmentChips,
   ChatInputExtras,
@@ -61,6 +62,13 @@ export function QueryComposer() {
     if (!query || status === "loading" || hasPendingAttachments(attachments))
       return;
     const carried = attachments.length > 0 ? attachments : undefined;
+    /* The side activities speak first: an akashic record, a card draw,
+       an intention to charge or a mystery to strike travels with the
+       reply as a living artifact — not as a picture. */
+    if (detectArtifactIntent(query)) {
+      void askMirror(query, carried);
+      return;
+    }
     /* The visualization engine is not a button — a request to SEE simply
        is one. Ordinary words never wake the atelier. */
     const intent = detectVisualIntent(query);

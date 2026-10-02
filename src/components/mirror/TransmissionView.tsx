@@ -18,6 +18,7 @@ import type { Scope } from "@/lib/mirror-types";
 import { cn } from "@/lib/utils";
 import { ListenButton } from "./ListenButton";
 import { AlienLoading } from "./AlienLoading";
+import { SideArtifact } from "./ChatArtifacts";
 import {
   PreparedPromptFallback,
   VisualizationCard,
@@ -537,6 +538,14 @@ function Exchange({
             <ExchangeVisual message={message} />
           ) : (
             <TransmissionBody text={message.text} />
+          )}
+          {/* the side activities — a whole world brought into the channel,
+              living quietly beneath the mirror's words */}
+          {message.sideArtifact && !hasVisual && (
+            <SideArtifact
+              kind={message.sideArtifact.kind}
+              resonance={message.sideArtifact.resonance}
+            />
           )}
         </div>
         <Seal />

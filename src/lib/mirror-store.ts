@@ -28,6 +28,10 @@ import type {
   VisualizationArtifact,
   VisualizationMode,
 } from "@/lib/visualization";
+import {
+  detectArtifactIntent,
+  type SideArtifactRef,
+} from "@/lib/artifact-intent";
 import type { RemedyKind } from "@/lib/data/remedy";
 
 export type ModalState =
@@ -64,6 +68,10 @@ export interface ChatMessage {
   artifact?: VisualizationArtifact;
   visual?: "pending" | "error";
   visualRequest?: string;
+  /* the Generative Side-Activity Engine — a whole side activity brought
+     INTO the channel: the akashic letter, the star draw, the manifesting
+     ritual or the forge strike, living beneath the mirror's words. */
+  sideArtifact?: SideArtifactRef;
 }
 
 export interface ScopeSession {
@@ -788,6 +796,11 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     const session = get().sessions[mode];
     if (!query || session.status === "loading") return;
 
+    /* A side activity riding with this question? The Librarian, the
+       deck, the chamber and the forge all keep their doors open — the
+       artifact is born beneath the reply, inside the channel. */
+    const sideKind = detectArtifactIntent(query);
+
     set((s) => ({
       view: "transmission",
       mobileNavOpen: false,
@@ -848,6 +861,9 @@ export const useMirror = create<MirrorState>()((set, get) => ({
                 text: data.transmission,
                 classification: data.classification,
                 createdAt: data.createdAt ?? new Date().toISOString(),
+                ...(sideKind
+                  ? { sideArtifact: { kind: sideKind, resonance: query } }
+                  : {}),
                 ...(attachments
                   ? {
                       attachments: {
