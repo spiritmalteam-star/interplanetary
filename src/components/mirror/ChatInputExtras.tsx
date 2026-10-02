@@ -1,21 +1,18 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Check,
   FileText,
   LoaderCircle,
-  Mic,
   Paperclip,
   Phone,
-  Feather,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
-import { useVoiceRecorder } from "@/hooks/use-voice-recorder";
 import { LiveCall } from "./LiveCall";
 import type { LiveScopeKey } from "@/lib/live-scopes";
 import {
@@ -31,13 +28,10 @@ import {
 } from "./attachments";
 
 /* ------------------------------------------------------------------ */
-/*  ChatInputExtras — the paperclip, the microphone and the call, on   */
-/*  every chat input. The paperclip receives ONE image and up to THREE */
-/*  documents (PDF, Excel, Word). The microphone records by tap;       */
-/*  tap again — or press the glowing voice-send button — and the       */
-/*  recording becomes words in the input, then flies on its own.       */
-/*  The call icon has ONE purpose only: a single click opens the       */
-/*  scope's own direct mirror communication.                           */
+/*  ChatInputExtras — the paperclip and the call, on every chat input. */
+/*  The paperclip receives ONE image and up to THREE documents         */
+/*  (PDF, Excel, Word). The call icon has ONE purpose only: a single   */
+/*  click opens the scope's own direct mirror communication.           */
 /* ------------------------------------------------------------------ */
 
 interface ChatInputExtrasProps {
@@ -45,12 +39,8 @@ interface ChatInputExtrasProps {
   disabled?: boolean;
   /** Button diameter — md = size-11, sm = size-9, xs = size-8, 2xs = size-7. */
   size?: "md" | "sm" | "xs" | "2xs";
-  /** Accent CSS variable for the hold ring and recording glow. */
+  /** Accent CSS variable for the hairline buttons. */
   accentVar?: string;
-  onTranscript: (text: string) => void;
-  /** When given, a finished recording is placed into the input AND
-      sent automatically — the voice needs no second hand. */
-  onVoiceSubmit?: (text: string) => void;
   attachments: ChatAttachment[];
   onAttachmentsChange: (
     next: ChatAttachment[] | ((prev: ChatAttachment[]) => ChatAttachment[])
@@ -62,103 +52,13 @@ export function ChatInputExtras({
   disabled = false,
   size = "md",
   accentVar = "var(--scope-a)",
-  onTranscript,
-  onVoiceSubmit,
   attachments,
   onAttachmentsChange,
 }: ChatInputExtrasProps) {
   const t = useT();
-  const recorder = useVoiceRecorder();
 
   const fileRef = useRef<HTMLInputElement | null>(null);
-  const transcribingRef = useRef(false);
-  /* always-current callbacks — a transcript never lands stale */
-  const onTranscriptRef = useRef(onTranscript);
-  onTranscriptRef.current = onTranscript;
-  const onVoiceSubmitRef = useRef(onVoiceSubmit);
-  onVoiceSubmitRef.current = onVoiceSubmit;
-
-  const [transcribing, setTranscribing] = useState(false);
   const [liveCallOpen, setLiveCallOpen] = useState(false);
-  const [elapsed, setElapsed] = useState(0);
-
-  /* the visible recording clock — proof that the voice is being heard */
-  useEffect(() => {
-    if (!recorder.recording) {
-      setElapsed(0);
-      return;
-    }
-    const startedAt = Date.now();
-    setElapsed(0);
-    const id = window.setInterval(
-      () => setElapsed(Math.floor((Date.now() - startedAt) / 1000)),
-      500
-    );
-    return () => window.clearInterval(id);
-  }, [recorder.recording]);
-
-  /* ---------- the microphone ---------- */
-
-  const beginListening = useCallback(async () => {
-    const ok = await recorder.start();
-    if (!ok) {
-      toast.error(t("The microphone is unavailable"));
-      return;
-    }
-  }, [recorder, t]);
-
-  /* stop → transcribe → the words appear in the input → (optionally)
-     the words are sent on their own. One gesture, start to finish. */
-  const finalizeVoice = useCallback(
-    async (autoSend: boolean) => {
-      if (transcribingRef.current) return;
-      transcribingRef.current = true;
-      setTranscribing(true);
-      try {
-        const result = await recorder.stop();
-        if (!result || result.durationMs < 250) {
-          toast.error(t("Your voice could not be heard — try again"));
-          return;
-        }
-        const audio = await readFileAsDataUrl(result.wav);
-        const res = await fetch("/api/asr", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ audio }),
-        });
-        const data = (await res.json().catch(() => null)) as {
-          text?: string;
-          error?: string;
-        } | null;
-        if (!res.ok || !data?.text?.trim()) {
-          throw new Error(data?.error ?? "quiet");
-        }
-        const words = data.text.trim();
-        if (autoSend && onVoiceSubmitRef.current) {
-          onVoiceSubmitRef.current(words);
-        } else {
-          onTranscriptRef.current(words);
-        }
-      } catch {
-        toast.error(t("Your voice could not be heard — try again"));
-      } finally {
-        transcribingRef.current = false;
-        setTranscribing(false);
-      }
-    },
-    [recorder, t]
-  );
-
-  /* TAP-TO-RECORD: the first tap arms the microphone and it stays
-     listening; the next tap sends the voice. No hold, no thresholds. */
-  const onMicClick = useCallback(() => {
-    if (disabled || transcribing) return;
-    if (recorder.recording) {
-      void finalizeVoice(true);
-      return;
-    }
-    void beginListening();
-  }, [disabled, transcribing, recorder.recording, finalizeVoice, beginListening]);
 
   /* ---------- the paperclip ---------- */
 
@@ -257,8 +157,6 @@ export function ChatInputExtras({
           : "size-7";
   const iconSize =
     size === "md" ? "size-4" : size === "sm" ? "size-3.5" : "size-3.5";
-  const recording = recorder.recording && !transcribing;
-  const clock = `0:${String(Math.min(59, elapsed)).padStart(2, "0")}`;
 
   return (
     <>
@@ -290,82 +188,6 @@ export function ChatInputExtras({
         <Paperclip className={cn(iconSize, "text-muted-foreground")} aria-hidden="true" />
       </button>
 
-      {/* microphone — tap once to record, tap again to send */}
-      <span
-        className={cn("relative shrink-0", btnSize)}
-        data-testid={`chat-mic-${scope}`}
-      >
-        {/* the recording clock — the voice is being heard */}
-        {recording && (
-          <span
-            aria-hidden="true"
-            className="mono-label pointer-events-none absolute -top-7 left-1/2 -translate-x-1/2 rounded-full border px-1.5 py-0.5 text-[9px] tracking-[0.14em]"
-            style={{
-              borderColor: `color-mix(in srgb, ${accentVar} 40%, transparent)`,
-              color: accentVar,
-              background: "color-mix(in srgb, #0a0a0b 55%, transparent)",
-            }}
-          >
-            {clock}
-          </span>
-        )}
-        {recording && (
-          <>
-            <motion.span
-              aria-hidden="true"
-              className="absolute inset-0 rounded-full border"
-              style={{ borderColor: accentVar }}
-              animate={{ scale: [1, 1.45], opacity: [0.5, 0] }}
-              transition={{ duration: 1.6, repeat: Infinity, ease: "easeOut" }}
-            />
-            <span
-              aria-hidden="true"
-              className="absolute inset-0 rounded-full"
-              style={{
-                boxShadow: `0 0 ${8 + recorder.level * 26}px -2px color-mix(in srgb, ${accentVar} 80%, transparent)`,
-              }}
-            />
-          </>
-        )}
-        <button
-          type="button"
-          disabled={disabled}
-          onClick={onMicClick}
-          aria-label={
-            recording
-              ? t("Recording — tap again to send your voice")
-              : t("Speak by voice")
-          }
-          title={
-            recording
-              ? t("Recording — tap again to send your voice")
-              : t("Speak by voice")
-          }
-          aria-pressed={recording}
-          className={cn(
-            "focus-glow flex size-full items-center justify-center rounded-full border transition-all duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40",
-            btnSize,
-            recording && "border-transparent"
-          )}
-          style={{
-            borderColor:
-              recording || transcribing
-                ? "transparent"
-                : "color-mix(in srgb, " + accentVar + " 26%, transparent)",
-          }}
-        >
-          {transcribing ? (
-            <LoaderCircle className={cn(iconSize, "animate-spin")} style={{ color: accentVar }} aria-hidden="true" />
-          ) : (
-            <Mic
-              className={iconSize}
-              style={{ color: recording ? accentVar : undefined }}
-              aria-hidden="true"
-            />
-          )}
-        </button>
-      </span>
-
       {/* the call — one purpose only: a single click opens the scope's
           own direct mirror communication */}
       <button
@@ -383,39 +205,6 @@ export function ChatInputExtras({
       >
         <Phone className={cn(iconSize, "text-muted-foreground")} aria-hidden="true" />
       </button>
-
-      {/* the voice-send button — glowing while the voice is held:
-          one press transcribes into the input and sends on its own */}
-      <AnimatePresence>
-        {recording && (
-          <motion.button
-            type="button"
-            initial={{ opacity: 0, scale: 0.6 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.6 }}
-            transition={{ duration: 0.22, ease: "easeOut" }}
-            onClick={() => void finalizeVoice(true)}
-            disabled={transcribing}
-            aria-label={t("Send your voice")}
-            title={t("Send your voice")}
-            data-testid={`chat-voice-send-${scope}`}
-            className={cn(
-              "focus-glow flex shrink-0 items-center justify-center rounded-full text-[#0c0c0d] disabled:cursor-wait",
-              btnSize
-            )}
-            style={{
-              background: `linear-gradient(135deg, ${accentVar}, color-mix(in srgb, ${accentVar} 55%, #f5f5f4))`,
-              boxShadow: `0 0 ${14 + recorder.level * 16}px -4px color-mix(in srgb, ${accentVar} 85%, transparent)`,
-            }}
-          >
-            {transcribing ? (
-              <LoaderCircle className={cn(iconSize, "animate-spin")} aria-hidden="true" />
-            ) : (
-              <Feather className={iconSize} aria-hidden="true" />
-            )}
-          </motion.button>
-        )}
-      </AnimatePresence>
 
       {/* the live call — the scope's own direct line */}
       <AnimatePresence>

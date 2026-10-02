@@ -84,16 +84,6 @@ export function QueryComposer() {
 
   const submit = () => submitText(draft);
 
-  /* the voice becomes words in the field — visible for a breath — then
-     the words fly to the mirror on their own */
-  const handleVoiceSubmit = (text: string) => {
-    const state = useMirror.getState();
-    const prev = state.sessions[state.activeMode].draft.trim();
-    const finalText = prev ? `${prev} ${text}` : text;
-    setDraft(finalText);
-    window.setTimeout(() => submitText(finalText), 650);
-  };
-
   const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -146,12 +136,6 @@ export function QueryComposer() {
             scope={activeMode as LiveScopeKey}
             size="2xs"
             disabled={status === "loading"}
-            onTranscript={(text) => {
-              const state = useMirror.getState();
-              const prev = state.sessions[state.activeMode].draft;
-              setDraft(prev ? `${prev} ${text}` : text);
-            }}
-            onVoiceSubmit={handleVoiceSubmit}
             attachments={attachments}
             onAttachmentsChange={setAttachments}
           />

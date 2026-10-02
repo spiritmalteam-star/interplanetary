@@ -427,19 +427,6 @@ export function CommunionView() {
     sendText(draft);
   };
 
-  /* the voice becomes words in the field — visible for a breath — then
-     the words travel to the Reflection on their own */
-  const sendTextRef = useRef(sendText);
-  sendTextRef.current = sendText;
-  const draftRef = useRef(draft);
-  draftRef.current = draft;
-  const handleVoiceSubmit = (text: string) => {
-    const prev = draftRef.current.trim();
-    const finalText = prev ? `${prev} ${text}` : text;
-    setDraft(finalText);
-    window.setTimeout(() => sendTextRef.current(finalText), 650);
-  };
-
   return (
     <div
       className="communion-deep relative flex h-full flex-col overflow-x-clip overflow-y-clip"
@@ -784,10 +771,6 @@ export function CommunionView() {
               scope="communion"
               accentVar="var(--sp-b)"
               disabled={receiving}
-              onTranscript={(text) =>
-                setDraft((prev) => (prev ? `${prev} ${text}` : text))
-              }
-              onVoiceSubmit={handleVoiceSubmit}
               attachments={attachments}
               onAttachmentsChange={setAttachments}
             />

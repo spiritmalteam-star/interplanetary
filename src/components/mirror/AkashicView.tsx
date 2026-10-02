@@ -380,19 +380,6 @@ export function AkashicView() {
     sendText(draft);
   };
 
-  /* the voice becomes words on the desk — visible for a breath — then
-     the resonance is sought on its own */
-  const sendTextRef = useRef(sendText);
-  sendTextRef.current = sendText;
-  const draftRef = useRef(draft);
-  draftRef.current = draft;
-  const handleVoiceSubmit = (text: string) => {
-    const prev = draftRef.current.trim();
-    const finalText = prev ? `${prev} ${text}` : text;
-    setDraft(finalText);
-    window.setTimeout(() => sendTextRef.current(finalText), 650);
-  };
-
   /* the inkwell opens with the field ready; escape puts it away */
   useEffect(() => {
     if (!wishOpen) return;
@@ -837,10 +824,6 @@ export function AkashicView() {
                   scope="akashic"
                   accentVar="var(--foreground)"
                   disabled={seeking}
-                  onTranscript={(text) =>
-                    setDraft((prev) => (prev ? `${prev} ${text}` : text))
-                  }
-                  onVoiceSubmit={handleVoiceSubmit}
                   attachments={attachments}
                   onAttachmentsChange={setAttachments}
                 />

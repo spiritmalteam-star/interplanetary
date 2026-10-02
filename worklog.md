@@ -1566,3 +1566,20 @@ Verification:
 Stage Summary:
 - Every transmission now ends with the notebook: one press on 📒 Akashic and the Librarian abandons the random shelves entirely — it opens the seeker's OWN book and inscribes their timeline's trajectory (founding pattern, knots, the present knot, the forward line, the remembrance) as a long, detailed, thread-true record, readable inline and zoomable into the full tablet reader. The conversation is the key; the record is theirs alone.
 - Key artifacts: src/app/api/akashic/chat/route.ts (new), src/lib/server/akashic-record.ts (new shared lib), src/components/mirror/ChatArtifacts.tsx (TimelineRecordSection + exported KindleReader/LetterRecord), src/components/mirror/TransmissionView.tsx (priors wiring), scripts/i18n-keys-dynamic.json + 7 dicts (5 keys), src/lib/replication-prompt.ts (v2.0).
+
+---
+Task ID: 68
+Agent: Z.ai Code (main)
+Task: Remove microphone 🎤 icons from chats (user request)
+
+Work Log:
+- Located the mic: rendered ONLY by the shared ChatInputExtras module (src/components/mirror/ChatInputExtras.tsx), consumed by all 4 chat composers (QueryComposer, MirrorOSChat, CommunionView, AkashicView inkwell)
+- ChatInputExtras.tsx: removed the mic button block (tap-to-record, clock, pulse ring), the glowing voice-send AnimatePresence button, the useVoiceRecorder hook usage, transcribing/elapsed state, beginListening/finalizeVoice/onMicClick callbacks, onTranscript/onVoiceSubmit props; cleaned imports (Mic, Feather, useVoiceRecorder, useEffect)
+- 4 call sites: removed onTranscript/onVoiceSubmit props plus dead handleVoiceSubmit functions and their sendTextRef/draftRef refs (CommunionView, AkashicView) and the orphaned voice comment (MirrorOSChat)
+- replication-prompt.ts COMPOSER LAW: four icons → three icons; added "NO microphone anywhere in the chat composers (the voice lives only inside the LiveCall overlay)"
+- LiveCall.tsx untouched (its Mic icon is inside the call overlay, not the chat composer); use-voice-recorder hook retained for LiveCall
+- Verification: eslint clean; tsc shows only pre-existing legacy errors (scripts/, skills/, api/tts Buffer); agent-browser E2E — desktop 1440×900 composer = paperclip+call+send only (chat-mic testids = 0), Akashic inkwell = 3 icons, mobile 390×844 no horizontal overflow, dark theme composer correct, no console/page errors
+- Unused i18n voice keys left in dicts (harmless; "The microphone is unavailable" still used by LiveCall)
+
+Stage Summary:
+- All chat composers now show exactly three icons: paperclip, call, ink send disc. Voice recording removed from every chat surface; voice input survives only inside the LiveCall overlay. Composer law updated to match.

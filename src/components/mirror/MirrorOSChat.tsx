@@ -443,15 +443,6 @@ export function MirrorOSChat() {
 
   const submit = () => submitText(osDraft);
 
-  /* the voice becomes words in the field — visible for a breath — and
-     then the words fly to the OS on their own. No second hand needed. */
-  const handleVoiceSubmit = (text: string) => {
-    const prev = useMirror.getState().osDraft.trim();
-    const finalText = prev ? `${prev} ${text}` : text;
-    setOsDraft(finalText);
-    window.setTimeout(() => submitText(finalText), 650);
-  };
-
   return (
     <div className="scope-frame-card relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl">
       <span className="scope-corner scope-corner-tl" aria-hidden="true" />
@@ -589,14 +580,6 @@ export function MirrorOSChat() {
             size="sm"
             accentVar="var(--scope-a)"
             disabled={osStatus === "loading"}
-            onTranscript={(text) =>
-              setOsDraft(
-                useMirror.getState().osDraft
-                  ? `${useMirror.getState().osDraft} ${text}`
-                  : text
-              )
-            }
-            onVoiceSubmit={handleVoiceSubmit}
             attachments={attachments}
             onAttachmentsChange={setAttachments}
           />
