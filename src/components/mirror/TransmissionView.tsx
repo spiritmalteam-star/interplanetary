@@ -118,7 +118,7 @@ function LoadingTransmission({ query }: { query: string }) {
           >
             “
           </span>
-          <p className="px-6 text-[15.5px] italic leading-relaxed text-muted-foreground">
+          <p className="ink-hand ink-soft px-6 text-[15.5px] italic leading-[1.85]">
             {query}
           </p>
         </div>
@@ -182,6 +182,9 @@ const stillItem = {
 
 function TransmissionBody({ text }: { text: string }) {
   const blocks = useMemo(() => parseBlocks(text), [text]);
+  /* the akashic hand — the first plain paragraph opens with a drop cap,
+     exactly as the records of the Library are written */
+  const firstParaIndex = blocks.findIndex((b) => b.kind === "para");
 
   return (
     <div>
@@ -194,7 +197,7 @@ function TransmissionBody({ text }: { text: string }) {
               variants={staggerItem}
               initial="hidden"
               animate="show"
-              className="scope-gradient-text scope-glow-text font-serif text-[20px] font-semibold leading-[1.6] tracking-[-0.005em] sm:text-[22px]"
+              className="ink-title text-[21px] font-semibold leading-[1.7] sm:text-[23px]"
             >
               {b.text}
             </motion.p>
@@ -217,10 +220,7 @@ function TransmissionBody({ text }: { text: string }) {
                     "linear-gradient(90deg, color-mix(in srgb, var(--scope-a) 32%, transparent), transparent)",
                 }}
               />
-              <p
-                className="mono-label text-[12px] leading-relaxed"
-                style={{ color: "color-mix(in srgb, var(--scope-b) 80%, white)" }}
-              >
+              <p className="ink-hand ink-soft text-center text-[14.5px] italic leading-relaxed">
                 {b.text}
               </p>
             </motion.div>
@@ -243,7 +243,7 @@ function TransmissionBody({ text }: { text: string }) {
                     style={{ background: "var(--scope-a)" }}
                     aria-hidden="true"
                   />
-                  <span className="font-serif text-[15.5px] leading-[1.85] text-foreground/85 sm:text-[16px]">
+                  <span className="ink-hand text-[15.5px] leading-[1.9] text-foreground/88 sm:text-[16px]">
                     {item}
                   </span>
                 </li>
@@ -258,7 +258,11 @@ function TransmissionBody({ text }: { text: string }) {
             variants={staggerItem}
             initial="hidden"
             animate="show"
-            className="font-serif text-[16px] leading-[1.9] text-foreground/88 sm:text-[16.5px]"
+            className={cn(
+              "ink-hand text-[16.5px] leading-[1.95] text-foreground/92",
+              i === firstParaIndex &&
+                "first-letter:float-left first-letter:mr-3 first-letter:mt-[7px] first-letter:text-[50px] first-letter:font-semibold first-letter:leading-[0.8]"
+            )}
           >
             {b.text}
           </motion.p>
@@ -458,7 +462,7 @@ function Exchange({
         >
           “
         </span>
-        <p className="px-6 text-[15.5px] italic leading-relaxed text-muted-foreground">
+        <p className="ink-hand ink-soft px-6 text-[15.5px] italic leading-[1.85]">
           {message.query}
         </p>
         {message.attachments &&

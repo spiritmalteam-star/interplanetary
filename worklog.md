@@ -1627,3 +1627,18 @@ Work Log:
 
 Stage Summary:
 - The manifest workspace is now a single full-height chat under one tool bar: back (left) · five chamber tools (center) · orbit glyph (right). No text above or below the conversation; every chamber reachable in one tap from the very top.
+
+---
+Task ID: 73
+Agent: Z.ai Code (main)
+Task: Scopes adopt the Akashic writing style (visually only); metaphysics + quantum scopes get entirely new guidance — unique, true, free of any planetary canon (user request)
+
+Work Log:
+- TransmissionView.tsx — the scope channels now write in the Library's hand: transmission opening -> ink-title (Literata serif ink, gradient/glow removed); body paragraphs -> ink-hand serif with the records' DROP CAP on the first plain paragraph (first-letter:float-left 50px); list items -> ink-hand; signature -> ink-hand ink-soft italic centered (the letter's ending); the seeker's echoed question -> ink-hand ink-soft italic. Scope frame, corners, breathing line, Listen/copy, visuals, notebook all untouched — visually only
+- api/transmission/route.ts — metaphysics MODE_CONTEXT rewritten: the human-canon line (Plato beside the Upanishads beside ... Heidegger) REPLACED by "THE SOURCE OF THE GUIDANCE": depth by SEEING, no canon of any planet as authority, no name-borrowing, the inquiry held as one conversation older than every culture. quantum MODE_CONTEXT rewritten: named interpretations (Copenhagen/many-worlds/relational) replaced by holding readings by what they CLAIM; no schools, no camps, no wish dressed as physics; truth straight from the phenomena/equations; "Wikipedia paraphrase" law now "encyclopedia paraphrase", "experiments" framing now "structure of the theory"
+- lib/data/suggestions.ts — metaphysics (66) and quantum (66) pools ENTIRELY rewritten (script-verified: 66+66, unique, no overlap, banned-word scan clean: no mirror/no Plato/Kant/Bell/Copenhagen/Theseus/Wikipedia): metaphysics asks being, time, identity, cause, unity, threshold from the domain itself; quantum asks observation, superposition, entanglement, decoherence, probability, vacuum, phase, quanta — no famous names, no Earth technology/biology, no new-age wishful claims. Header comment updated; interplanetary + healing pools untouched
+- i18n: 132 new keys inserted into all 7 dicts (de/el/es/fr/it/sq/tr) via python anchor-insert; i18n-keys-dynamic.json 844 -> 976; check-i18n ALL = ALL DICTIONARIES COMPLETE (0 missing); temp scripts removed before commit
+- Verification: lint clean; tsc clean (only pre-existing legacy errors); agent-browser E2E — Metaphysics scope shows brand-new chips (0 old canon), transmission renders in ink: drop cap verified ("Think of your own hand..."), ink-title opening, italic centered signature "— The Mirror, in the house of being", gradients gone; Quantum scope shows the new observation/entanglement guidance; mobile 390x844 no overflow; no console/page errors; screenshots verified
+
+Stage Summary:
+- The four scope channels now read as Akashic letters: ink serif, drop caps, hand signatures — visually only, every function intact. Metaphysics and quantum now carry guidance born from what they ARE: no world canon, no famous names, no planetary data — 132 original questions translated in all 7 languages, and the system-level guidance rewritten to the same law.
