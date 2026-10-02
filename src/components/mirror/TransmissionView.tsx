@@ -19,7 +19,6 @@ import { cn } from "@/lib/utils";
 import { ListenButton } from "./ListenButton";
 import { AlienLoading } from "./AlienLoading";
 import { SideArtifact, TimelineRecordSection, type PriorExchange } from "./ChatArtifacts";
-import { CosmicGameCard } from "./CosmicGameCard";
 import {
   PreparedPromptFallback,
   VisualizationCard,
@@ -548,15 +547,6 @@ function Exchange({
             <SideArtifact
               kind={message.sideArtifact.kind}
               resonance={message.sideArtifact.resonance}
-            />
-          )}
-          {/* the cosmic games — ONE of the Mirror's two hundred small
-              encounters, offered only when this exchange resonates with
-              it (quiet when a side activity already lives here) */}
-          {message.game && !hasVisual && !message.sideArtifact && (
-            <CosmicGameCard
-              instance={message.game}
-              testIdPrefix={`exchange-game-${index}`}
             />
           )}
           {/* the notebook at the end of every transmission — the Librarian
