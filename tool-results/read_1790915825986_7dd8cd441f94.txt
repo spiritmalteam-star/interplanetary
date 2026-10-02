@@ -1,0 +1,995 @@
+     1→"use client";
+     2→
+     3→import {
+     4→  useCallback,
+     5→  useEffect,
+     6→  useMemo,
+     7→  useRef,
+     8→  useState,
+     9→} from "react";
+    10→import { createPortal } from "react-dom";
+    11→import { AnimatePresence, motion } from "framer-motion";
+    12→import {
+    13→  BookOpen,
+    14→  Hammer,
+    15→  LoaderCircle,
+    16→  Minus,
+    17→  Plus,
+    18→  RotateCcw,
+    19→  ScrollText,
+    20→  Sparkles,
+    21→  X,
+    22→} from "lucide-react";
+    23→import { useMirror } from "@/lib/mirror-store";
+    24→import { useT } from "@/lib/i18n";
+    25→import { cn } from "@/lib/utils";
+    26→import type { SideArtifactKind } from "@/lib/artifact-intent";
+    27→import {
+    28→  drawStarPlayCards,
+    29→  STAR_PLAY_POSITIONS,
+    30→  type DrawnCard,
+    31→} from "@/lib/star-play";
+    32→import {
+    33→  forgeDomains,
+    34→  forgePhases,
+    35→  forgeScales,
+    36→  forgeSparks,
+    37→} from "@/lib/data/invent";
+    38→import { labFrequencies } from "@/lib/data/metaphysics";
+    39→
+    40→/* ================================================================== */
+    41→/*  THE GENERATIVE SIDE-ACTIVITY ARTIFACTS                             */
+    42→/*  Whole side activities brought INTO the channel: not their full     */
+    43→/*  worlds — one focused, tactile, generative piece each, living       */
+    44→/*  beneath the mirror's words. Clear, precise, playful.               */
+    45→/* ================================================================== */
+    46→
+    47→/* ---------- a small deterministic ink sigil (currentColor) ---------- */
+    48→
+    49→function hash32(str: string): number {
+    50→  let h = 2166136261;
+    51→  for (let i = 0; i < str.length; i++) {
+    52→    h ^= str.charCodeAt(i);
+    53→    h = Math.imul(h, 16777619);
+    54→  }
+    55→  return h >>> 0;
+    56→}
+    57→
+    58→function mulberry32(seed: number) {
+    59→  let a = seed;
+    60→  return () => {
+    61→    a |= 0;
+    62→    a = (a + 0x6d2b79f5) | 0;
+    63→    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    64→    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    65→    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    66→  };
+    67→}
+    68→
+    69→export function InkSigil({ text, size = 44 }: { text: string; size?: number }) {
+    70→  const svg = useMemo(() => {
+    71→    const rnd = mulberry32(hash32(text.trim() || "mirror"));
+    72→    const c = 60;
+    73→    const sides = 3 + Math.floor(rnd() * 6);
+    74→    const rot = rnd() * 360;
+    75→    const r2 = 34 + rnd() * 10;
+    76→    const dash = `${5 + rnd() * 14} ${3 + rnd() * 9}`;
+    77→    const pts: string[] = [];
+    78→    for (let i = 0; i < sides; i++) {
+    79→      const a = ((rot + (360 / sides) * i) * Math.PI) / 180;
+    80→      pts.push(`${(c + r2 * Math.cos(a)).toFixed(1)},${(c + r2 * Math.sin(a)).toFixed(1)}`);
+    81→    }
+    82→    const spokes = 5 + Math.floor(rnd() * 6);
+    83→    const lines: string[] = [];
+    84→    for (let i = 0; i < spokes; i++) {
+    85→      const a = ((rot + 12 + (360 / spokes) * i) * Math.PI) / 180;
+    86→      lines.push(
+    87→        `<line x1="${(c + 16 * Math.cos(a)).toFixed(1)}" y1="${(c + 16 * Math.sin(a)).toFixed(1)}" x2="${(c + 47 * Math.cos(a)).toFixed(1)}" y2="${(c + 47 * Math.sin(a)).toFixed(1)}" stroke="currentColor" stroke-opacity="0.38" stroke-width="1"/>`
+    88→      );
+    89→    }
+    90→    return `<svg width="${size}" height="${size}" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+    91→      <circle cx="60" cy="60" r="55" fill="none" stroke="currentColor" stroke-opacity="0.5" stroke-width="1.4"/>
+    92→      <circle cx="60" cy="60" r="40" fill="none" stroke="currentColor" stroke-opacity="0.3" stroke-width="1" stroke-dasharray="${dash}"/>
+    93→      <polygon points="${pts.join(" ")}" fill="none" stroke="currentColor" stroke-opacity="0.6" stroke-width="1.2"/>
+    94→      ${lines.join("")}
+    95→      <circle cx="60" cy="60" r="3.2" fill="currentColor" fill-opacity="0.85"/>
+    96→    </svg>`;
+    97→  }, [text, size]);
+    98→
+    99→  return (
+   100→    <span
+   101→      aria-hidden="true"
+   102→      className="inline-block shrink-0"
+   103→      dangerouslySetInnerHTML={{ __html: svg }}
+   104→    />
+   105→  );
+   106→}
+   107→
+   108→/* ---------- shared bits ---------- */
+   109→
+   110→const btnGhost =
+   111→  "focus-glow inline-flex h-9 items-center gap-2 rounded-full border hairline px-4 text-[12.5px] font-medium text-foreground/90 transition-all duration-300 hover:-translate-y-px hover:border-[var(--hairline-hover)] hover:text-foreground";
+   112→const btnSolid =
+   113→  "focus-glow inline-flex h-9 items-center gap-2 rounded-full bg-foreground px-4 text-[12.5px] font-semibold text-background transition-all duration-300 hover:-translate-y-px hover:opacity-88 disabled:cursor-not-allowed disabled:opacity-35";
+   114→const inkLine =
+   115→  "linear-gradient(90deg, transparent, color-mix(in srgb, var(--scope-a) 40%, transparent), transparent)";
+   116→
+   117→function ArtifactLoading({ phrase, bars = 3 }: { phrase: string; bars?: number }) {
+   118→  return (
+   119→    <div className="mx-auto max-w-[440px] py-1">
+   120→      <div className="flex flex-col gap-2.5">
+   121→        {Array.from({ length: bars }).map((_, i) => (
+   122→          <div
+   123→            key={i}
+   124→            className="ink-shimmer h-[9px] rounded-full"
+   125→            style={{ width: `${[88, 70, 80][i % 3]}%`, animationDelay: `${i * 0.16}s` }}
+   126→          />
+   127→        ))}
+   128→      </div>
+   129→      <p className="ink-hand ink-faint mt-4 text-center text-[13.5px] italic">{phrase}</p>
+   130→    </div>
+   131→  );
+   132→}
+   133→
+   134→function ArtifactError({ message, onRetry, retryLabel, testid }: {
+   135→  message: string;
+   136→  onRetry: () => void;
+   137→  retryLabel: string;
+   138→  testid: string;
+   139→}) {
+   140→  const t = useT();
+   141→  return (
+   142→    <div className="py-1 text-center">
+   143→      <p className="text-[13.5px] italic leading-relaxed text-muted-foreground">{t(message)}</p>
+   144→      <button type="button" onClick={onRetry} data-testid={testid} className={cn(btnGhost, "mt-3")}>
+   145→        <RotateCcw className="size-3.5" aria-hidden="true" />
+   146→        {t(retryLabel)}
+   147→      </button>
+   148→    </div>
+   149→  );
+   150→}
+   151→
+   152→/* ================================================================== */
+   153→/*  1 · THE AKASHIC LETTER — a record drawn into the channel, with     */
+   154→/*      a zoom that opens it to be read like a tablet.                 */
+   155→/* ================================================================== */
+   156→
+   157→interface LetterRecord {
+   158→  title: string;
+   159→  era: string;
+   160→  record: string;
+   161→  seal: string;
+   162→}
+   163→
+   164→const READER_SIZES = [17, 19.5, 22];
+   165→
+   166→function KindleReader({ record, onClose }: { record: LetterRecord; onClose: () => void }) {
+   167→  const t = useT();
+   168→  const [sizeIdx, setSizeIdx] = useState(1);
+   169→  const [progress, setProgress] = useState(0);
+   170→  const scrollRef = useRef<HTMLDivElement | null>(null);
+   171→
+   172→  useEffect(() => {
+   173→    const onKey = (e: KeyboardEvent) => {
+   174→      if (e.key === "Escape") onClose();
+   175→    };
+   176→    window.addEventListener("keydown", onKey);
+   177→    return () => window.removeEventListener("keydown", onKey);
+   178→  }, [onClose]);
+   179→
+   180→  const paras = record.record.split(/\n{2,}/);
+   181→
+   182→  return createPortal(
+   183→    <motion.div
+   184→      initial={{ opacity: 0 }}
+   185→      animate={{ opacity: 1 }}
+   186→      exit={{ opacity: 0 }}
+   187→      transition={{ duration: 0.3 }}
+   188→      className="fixed inset-0 z-[90] flex flex-col bg-background"
+   189→      data-testid="kindle-reader"
+   190→      role="dialog"
+   191→      aria-modal="true"
+   192→      aria-label={record.title}
+   193→    >
+   194→      {/* reader head — title · type size · progress · the way out */}
+   195→      <div className="flex shrink-0 items-center gap-3 border-b hairline px-4 py-3 sm:px-6">
+   196→        <ScrollText className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+   197→        <div className="min-w-0 flex-1">
+   198→          <p className="ink-title truncate text-[15px] font-semibold leading-tight">{record.title}</p>
+   199→          <p className="ink-faint truncate text-[11.5px] italic">{record.era}</p>
+   200→        </div>
+   201→        <div className="flex shrink-0 items-center gap-1">
+   202→          <button
+   203→            type="button"
+   204→            onClick={() => setSizeIdx((i) => Math.max(0, i - 1))}
+   205→            disabled={sizeIdx === 0}
+   206→            aria-label={t("Smaller text")}
+   207→            data-testid="kindle-font-minus"
+   208→            className="focus-glow flex size-8 items-center justify-center rounded-full border hairline text-muted-foreground transition-colors hover:text-foreground disabled:opacity-35"
+   209→          >
+   210→            <Minus className="size-3.5" aria-hidden="true" />
+   211→          </button>
+   212→          <button
+   213→            type="button"
+   214→            onClick={() => setSizeIdx((i) => Math.min(READER_SIZES.length - 1, i + 1))}
+   215→            disabled={sizeIdx === READER_SIZES.length - 1}
+   216→            aria-label={t("Larger text")}
+   217→            data-testid="kindle-font-plus"
+   218→            className="focus-glow flex size-8 items-center justify-center rounded-full border hairline text-muted-foreground transition-colors hover:text-foreground disabled:opacity-35"
+   219→          >
+   220→            <Plus className="size-3.5" aria-hidden="true" />
+   221→          </button>
+   222→        </div>
+   223→        <span className="mono-label hidden w-10 shrink-0 text-right text-[10px] text-muted-foreground sm:block">
+   224→          {Math.round(progress)}%
+   225→        </span>
+   226→        <button
+   227→          type="button"
+   228→          onClick={onClose}
+   229→          aria-label={t("Close the letter")}
+   230→          data-testid="kindle-close"
+   231→          className="focus-glow flex size-9 shrink-0 items-center justify-center rounded-full border hairline text-muted-foreground transition-colors hover:text-foreground"
+   232→        >
+   233→          <X className="size-4" aria-hidden="true" />
+   234→        </button>
+   235→      </div>
+   236→      <div className="h-px w-full bg-foreground/8">
+   237→        <div
+   238→          className="h-px transition-[width] duration-200"
+   239→          style={{ width: `${progress}%`, background: "var(--scope-a)" }}
+   240→        />
+   241→      </div>
+   242→
+   243→      {/* the page itself — one long sheet, read at the chosen size */}
+   244→      <div
+   245→        ref={scrollRef}
+   246→        onScroll={() => {
+   247→          const el = scrollRef.current;
+   248→          if (!el) return;
+   249→          const max = el.scrollHeight - el.clientHeight;
+   250→          setProgress(max > 0 ? Math.min(100, (el.scrollTop / max) * 100) : 100);
+   251→        }}
+   252→        className="nice-scroll flex-1 overflow-y-auto"
+   253→      >
+   254→        <div className="mx-auto max-w-[680px] px-6 py-10 sm:px-8 sm:py-14">
+   255→          <h1
+   256→            className="ink-title text-center text-[26px] font-semibold leading-tight tracking-[0.03em] sm:text-[30px]"
+   257→            style={{ fontSize: undefined }}
+   258→          >
+   259→            {record.title}
+   260→          </h1>
+   261→          <p className="ink-hand ink-faint mt-2 text-center text-[15px] italic">{record.era}</p>
+   262→          <span aria-hidden="true" className="mx-auto mt-6 block h-px w-40" style={{ background: inkLine }} />
+   263→          <div className="mt-8 space-y-5">
+   264→            {paras.map((para, i) => (
+   265→              <p
+   266→                key={i}
+   267→                className={cn(
+   268→                  "ink-hand leading-[1.95]",
+   269→                  i === 0 &&
+   270→                    "first-letter:float-left first-letter:mr-3 first-letter:mt-[7px] first-letter:text-[54px] first-letter:font-semibold first-letter:leading-[0.78]"
+   271→                )}
+   272→                style={{ fontSize: READER_SIZES[sizeIdx] }}
+   273→              >
+   274→                {para}
+   275→              </p>
+   276→            ))}
+   277→          </div>
+   278→          <p className="ink-hand ink-soft mt-10 text-center text-[15.5px] italic">{record.seal}</p>
+   279→          <p className="mono-label mt-8 text-center text-[9px] uppercase tracking-[0.26em] text-muted-foreground/50">
+   280→            {t("The Akashic Library")}
+   281→          </p>
+   282→        </div>
+   283→      </div>
+   284→    </motion.div>,
+   285→    document.body
+   286→  );
+   287→}
+   288→
+   289→function AkashicLetter({ resonance }: { resonance: string }) {
+   290→  const t = useT();
+   291→  const language = useMirror((s) => s.language);
+   292→  const [state, setState] = useState<"loading" | "ready" | "error">("loading");
+   293→  const [record, setRecord] = useState<LetterRecord | null>(null);
+   294→  const [readerOpen, setReaderOpen] = useState(false);
+   295→  const busyRef = useRef(false);
+   296→
+   297→  const fetchRecord = useCallback(async () => {
+   298→    if (busyRef.current) return;
+   299→    busyRef.current = true;
+   300→    setState("loading");
+   301→    try {
+   302→      const res = await fetch("/api/akashic", {
+   303→        method: "POST",
+   304→        headers: { "Content-Type": "application/json" },
+   305→        body: JSON.stringify({ language, resonance: resonance || null }),
+   306→      });
+   307→      const data = (await res.json()) as Partial<LetterRecord> & { error?: string };
+   308→      if (!res.ok || !data.record) throw new Error(data.error ?? "quiet");
+   309→      setRecord({
+   310→        title: data.title ?? "A Record Set Aside",
+   311→        era: data.era ?? "inscribed in an age the shelves remember",
+   312→        record: data.record,
+   313→        seal: data.seal ?? "— the Keeper of Records",
+   314→      });
+   315→      setState("ready");
+   316→    } catch {
+   317→      setState("error");
+   318→    } finally {
+   319→      busyRef.current = false;
+   320→    }
+   321→  }, [language, resonance]);
+   322→
+   323→  useEffect(() => {
+   324→    void fetchRecord();
+   325→  }, [fetchRecord]);
+   326→
+   327→  const preview = record ? record.record.split(/\n{2,}/).slice(0, 2) : [];
+   328→
+   329→  return (
+   330→    <div>
+   331→      {state === "loading" && (
+   332→        <ArtifactLoading phrase={t("the Librarian is drawing a record into the channel...")} bars={4} />
+   333→      )}
+   334→      {state === "error" && (
+   335→        <ArtifactError
+   336→          message="The record stayed quiet — rest, then ask again."
+   337→          onRetry={() => void fetchRecord()}
+   338→          retryLabel="Ask again, softly"
+   339→          testid="chat-akashic-retry"
+   340→        />
+   341→      )}
+   342→      {state === "ready" && record && (
+   343→        <motion.div
+   344→          initial={{ opacity: 0, y: 8 }}
+   345→          animate={{ opacity: 1, y: 0 }}
+   346→          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+   347→        >
+   348→          {/* the letter, lying on the channel's desk */}
+   349→          <div className="relative mx-auto max-w-[560px] rounded-xl border hairline bg-card/70 px-5 py-6 sm:px-7">
+   350→            <span aria-hidden="true" className="ink-faint pointer-events-none absolute right-3 top-2 text-[10px] opacity-60">◆</span>
+   351→            <h4 className="ink-title text-[17.5px] font-semibold leading-snug" data-testid="chat-akashic-title">
+   352→              {record.title}
+   353→            </h4>
+   354→            <p className="ink-faint mt-1 text-[13px] italic">{record.era}</p>
+   355→            <span aria-hidden="true" className="mt-3.5 block h-px w-full" style={{ background: inkLine }} />
+   356→            <div className="relative mt-4">
+   357→              <div className="ink-hand space-y-3.5 text-[14.5px] leading-[1.9]">
+   358→                {preview.map((para, i) => (
+   359→                  <p key={i} className={cn(i === 0 && "first-letter:float-left first-letter:mr-2.5 first-letter:mt-[5px] first-letter:text-[42px] first-letter:font-semibold first-letter:leading-[0.8]")}>
+   360→                    {para}
+   361→                  </p>
+   362→                ))}
+   363→              </div>
+   364→              {/* the rest of the letter waits behind the zoom */}
+   365→              <div
+   366→                aria-hidden="true"
+   367→                className="pointer-events-none absolute inset-x-0 bottom-0 h-16"
+   368→                style={{ background: "linear-gradient(180deg, transparent, var(--card))" }}
+   369→              />
+   370→            </div>
+   371→          </div>
+   372→          <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+   373→            <button
+   374→              type="button"
+   375→              onClick={() => setReaderOpen(true)}
+   376→              data-testid="chat-akashic-zoom"
+   377→              className={btnGhost}
+   378→              style={{ borderColor: "color-mix(in srgb, var(--scope-a) 38%, transparent)" }}
+   379→            >
+   380→              <BookOpen className="size-3.5" aria-hidden="true" />
+   381→              {t("Read the full letter")}
+   382→            </button>
+   383→            <button type="button" onClick={() => void fetchRecord()} data-testid="chat-akashic-another" className={btnGhost}>
+   384→              <RotateCcw className="size-3.5" aria-hidden="true" />
+   385→              {t("Another record")}
+   386→            </button>
+   387→          </div>
+   388→        </motion.div>
+   389→      )}
+   390→      <AnimatePresence>
+   391→        {readerOpen && record && (
+   392→          <KindleReader record={record} onClose={() => setReaderOpen(false)} />
+   393→        )}
+   394→      </AnimatePresence>
+   395→    </div>
+   396→  );
+   397→}
+   398→
+   399→/* ================================================================== */
+   400→/*  2 · THE STAR DRAW — three seats dealt in the channel; tap to       */
+   401→/*      turn, then let the deck speak.                                 */
+   402→/* ================================================================== */
+   403→
+   404→const STAR_EMBLEM = "/images/ai/star-play-emblem.jpg";
+   405→
+   406→function StarDraw() {
+   407→  const t = useT();
+   408→  const language = useMirror((s) => s.language);
+   409→  const [drawn, setDrawn] = useState<DrawnCard[] | null>(null);
+   410→  const [flipped, setFlipped] = useState<boolean[]>([false, false, false]);
+   411→  const [reading, setReading] = useState<string | null>(null);
+   412→  const [state, setState] = useState<"idle" | "loading" | "error">("idle");
+   413→
+   414→  useEffect(() => {
+   415→    setDrawn(drawStarPlayCards(3));
+   416→    setFlipped([false, false, false]);
+   417→    setReading(null);
+   418→    setState("idle");
+   419→  }, []);
+   420→
+   421→  const shuffle = () => {
+   422→    setDrawn(drawStarPlayCards(3));
+   423→    setFlipped([false, false, false]);
+   424→    setReading(null);
+   425→    setState("idle");
+   426→  };
+   427→
+   428→  const turn = (i: number) =>
+   429→    setFlipped((f) => {
+   430→      if (f[i]) return f;
+   431→      const next = [...f];
+   432→      next[i] = true;
+   433→      return next;
+   434→    });
+   435→
+   436→  const allUp = drawn !== null && flipped.every(Boolean);
+   437→
+   438→  const speak = useCallback(async () => {
+   439→    if (!drawn || !allUp || state === "loading") return;
+   440→    setState("loading");
+   441→    try {
+   442→      const res = await fetch("/api/star-play", {
+   443→        method: "POST",
+   444→        headers: { "Content-Type": "application/json" },
+   445→        body: JSON.stringify({
+   446→          language,
+   447→          cards: drawn.map((d) => ({
+   448→            essence: d.card.essence,
+   449→            message: d.card.message,
+   450→            position: d.position,
+   451→          })),
+   452→        }),
+   453→      });
+   454→      const data = (await res.json()) as { reading?: string; error?: string };
+   455→      if (!res.ok || !data.reading) throw new Error(data.error ?? "quiet");
+   456→      setReading(data.reading);
+   457→      setState("idle");
+   458→    } catch {
+   459→      setState("error");
+   460→    }
+   461→  }, [drawn, allUp, state, language]);
+   462→
+   463→  const readingParas = reading ? reading.split(/\n{2,}/) : [];
+   464→
+   465→  return (
+   466→    <div>
+   467→      {/* the three seats */}
+   468→      {drawn && (
+   469→        <div className="flex items-start justify-center gap-3 sm:gap-5" data-testid="chat-star-cards">
+   470→          {drawn.map((d, i) => (
+   471→            <div key={d.card.id} className="flex w-[96px] flex-col items-center sm:w-[116px]">
+   472→              <div className="tarot-scene relative h-[150px] w-full sm:h-[176px]" data-testid={`chat-star-card-${i}`}>
+   473→                <motion.div
+   474→                  className="tarot-inner size-full"
+   475→                  initial={{ opacity: 0, y: 26, scale: 0.94 }}
+   476→                  animate={{ opacity: 1, y: 0, scale: 1, rotateY: flipped[i] ? 180 : 0 }}
+   477→                  transition={{
+   478→                    opacity: { duration: 0.4, delay: i * 0.1 },
+   479→                    y: { duration: 0.5, delay: i * 0.1, ease: [0.22, 1, 0.36, 1] },
+   480→                    scale: { duration: 0.5, delay: i * 0.1 },
+   481→                    rotateY: { duration: 0.8, ease: [0.66, 0, 0.32, 1] },
+   482→                  }}
+   483→                  whileHover={{ y: -4 }}
+   484→                >
+   485→                  {/* sealed back */}
+   486→                  <button
+   487→                    type="button"
+   488→                    onClick={() => turn(i)}
+   489→                    aria-label={t("Turn the card of {seat}", { seat: t(STAR_PLAY_POSITIONS[i]) })}
+   490→                    data-testid={`chat-star-turn-${i}`}
+   491→                    className="tarot-face tarot-back relative block size-full cursor-pointer overflow-hidden rounded-xl border border-[color-mix(in_srgb,var(--scope-a)_38%,transparent)] transition-shadow duration-300"
+   492→                  >
+   493→                    <span className="tarot-glare pointer-events-none absolute inset-0" aria-hidden="true" />
+   494→                    <span className="absolute left-1/2 top-1/2 flex size-[52%] -translate-x-1/2 -translate-y-1/2 items-center justify-center">
+   495→                      <span className="starplay-halo absolute inset-0 rounded-full border border-[color-mix(in_srgb,var(--scope-a)_36%,transparent)]" />
+   496→                      <img
+   497→                        src={STAR_EMBLEM}
+   498→                        alt=""
+   499→                        aria-hidden="true"
+   500→                        className="absolute inset-[10%] size-[80%] rounded-full object-cover opacity-90"
+   501→                      />
+   502→                    </span>
+   503→                    <span className="mono-label absolute inset-x-0 bottom-2.5 text-center text-[8px] uppercase tracking-[0.28em] text-[color-mix(in_srgb,var(--scope-b)_80%,transparent)]">
+   504→                      ◆ {t("Star Play")} ◆
+   505→                    </span>
+   506→                  </button>
+   507→                  {/* the face */}
+   508→                  <div
+   509→                    className="tarot-face absolute inset-0 flex size-full flex-col overflow-hidden rounded-xl border border-[color-mix(in_srgb,var(--scope-a)_42%,transparent)] bg-card"
+   510→                    style={{ transform: "rotateY(180deg)" }}
+   511→                    data-testid={`chat-star-face-${i}`}
+   512→                  >
+   513→                    <div className="relative h-[52%] shrink-0 overflow-hidden">
+   514→                      <img src={d.card.image} alt="" aria-hidden="true" className="size-full object-cover" loading="lazy" />
+   515→                    </div>
+   516→                    <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-2 py-1.5 text-center">
+   517→                      <p className="ink-hand text-[10.5px] font-semibold leading-tight">{d.card.name}</p>
+   518→                      <p className="ink-faint mt-1 line-clamp-2 text-[8.5px] italic leading-snug">{d.card.essence}</p>
+   519→                    </div>
+   520→                  </div>
+   521→                </motion.div>
+   522→              </div>
+   523→              <span className="mono-label mt-2 text-center text-[8.5px] uppercase tracking-[0.18em] text-muted-foreground/75">
+   524→                {t(STAR_PLAY_POSITIONS[i])}
+   525→              </span>
+   526→            </div>
+   527→          ))}
+   528→        </div>
+   529→      )}
+   530→
+   531→      {/* speak / shuffle — one quiet row */}
+   532→      <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+   533→        {!allUp && (
+   534→          <p className="text-[12px] italic text-muted-foreground/75">{t("Turn each card when it calls you")}</p>
+   535→        )}
+   536→        {allUp && !reading && state !== "loading" && (
+   537→          <button type="button" onClick={() => void speak()} data-testid="chat-star-speak" className={btnSolid}>
+   538→            <Sparkles className="size-3.5" aria-hidden="true" />
+   539→            {t("Let the deck speak")}
+   540→          </button>
+   541→        )}
+   542→        {state === "loading" && (
+   543→          <span className="mono-label flex items-center gap-2 text-[10px] text-muted-foreground">
+   544→            <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
+   545→            {t("the deck is speaking...")}
+   546→          </span>
+   547→        )}
+   548→        <button type="button" onClick={shuffle} data-testid="chat-star-shuffle" className={btnGhost}>
+   549→          <RotateCcw className="size-3.5" aria-hidden="true" />
+   550→          {t("Shuffle again")}
+   551→        </button>
+   552→      </div>
+   553→      {state === "error" && (
+   554→        <p className="mt-3 text-center text-[13px] italic text-muted-foreground">
+   555→          {t("The deck stayed quiet — shuffle, then draw again.")}
+   556→        </p>
+   557→      )}
+   558→
+   559→      {/* the reading — one thread through the three seats */}
+   560→      <AnimatePresence>
+   561→        {reading && (
+   562→          <motion.div
+   563→            initial={{ opacity: 0, y: 10 }}
+   564→            animate={{ opacity: 1, y: 0 }}
+   565→            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+   566→            className="mx-auto mt-5 max-w-[560px] border-t hairline pt-4"
+   567→            data-testid="chat-star-reading"
+   568→          >
+   569→            {readingParas.map((para, i) => {
+   570→              const isSignature = para.trim().startsWith("—");
+   571→              return (
+   572→                <p
+   573→                  key={i}
+   574→                  className={cn(
+   575→                    isSignature
+   576→                      ? "mono-label mt-3 text-center text-[10px] tracking-[0.12em] text-muted-foreground"
+   577→                      : "ink-hand text-[14.5px] leading-[1.9] text-foreground/90",
+   578→                    i === 0 && !isSignature && "font-medium"
+   579→                  )}
+   580→                >
+   581→                  {para}
+   582→                </p>
+   583→              );
+   584→            })}
+   585→            <div className="mt-4 flex flex-wrap items-center justify-center gap-1.5 border-t hairline pt-3.5">
+   586→              <span className="mono-label mr-1 text-[9px] uppercase tracking-[0.2em] text-muted-foreground/70">
+   587→                {t("Woven from")}
+   588→              </span>
+   589→              {drawn?.map((d) => (
+   590→                <span key={d.card.id} className="rounded-full border hairline px-2 py-0.5 text-[10.5px] text-muted-foreground">
+   591→                  {t(d.position)}
+   592→                </span>
+   593→              ))}
+   594→            </div>
+   595→          </motion.div>
+   596→        )}
+   597→      </AnimatePresence>
+   598→    </div>
+   599→  );
+   600→}
+   601→
+   602→/* ================================================================== */
+   603→/*  3 · THE MANIFESTING RITUAL — intention, one carrier wave, one      */
+   604→/*      dial; charged right here into a compact blueprint.             */
+   605→/* ================================================================== */
+   606→
+   607→interface MiniBlueprint {
+   608→  title: string;
+   609→  field_state: string;
+   610→  visualization: string;
+   611→  micro_actions: string[];
+   612→  affirmation: string;
+   613→  window: string;
+   614→  caution: string;
+   615→}
+   616→
+   617→function ManifestRitual({ resonance }: { resonance: string }) {
+   618→  const t = useT();
+   619→  const language = useMirror((s) => s.language);
+   620→  const [stage, setStage] = useState<"compose" | "charging" | "blueprint">("compose");
+   621→  const [intention, setIntention] = useState(resonance.slice(0, 400));
+   622→  const [emotion, setEmotion] = useState(labFrequencies[0].id);
+   623→  const [intensity, setIntensity] = useState(6);
+   624→  const [blueprint, setBlueprint] = useState<MiniBlueprint | null>(null);
+   625→  const [progress, setProgress] = useState(0);
+   626→  const [error, setError] = useState(false);
+   627→
+   628→  const charge = async () => {
+   629→    if (!intention.trim() || stage === "charging") return;
+   630→    setStage("charging");
+   631→    setError(false);
+   632→    setProgress(0);
+   633→    const tick = window.setInterval(() => {
+   634→      setProgress((p) => Math.min(92, p + 3 + Math.random() * 5));
+   635→    }, 90);
+   636→    try {
+   637→      const [res] = await Promise.all([
+   638→        fetch("/api/manifest", {
+   639→          method: "POST",
+   640→          headers: { "Content-Type": "application/json" },
+   641→          body: JSON.stringify({ intention: intention.trim(), emotion, intensity, language }),
+   642→        }),
+   643→        new Promise((r) => window.setTimeout(r, 2100)), /* let the orb breathe */
+   644→      ]);
+   645→      const data = (await (res as Response).json()) as { blueprint?: MiniBlueprint; error?: string };
+   646→      if (!(res as Response).ok || !data.blueprint) throw new Error(data.error ?? "quiet");
+   647→      window.clearInterval(tick);
+   648→      setProgress(100);
+   649→      setBlueprint(data.blueprint);
+   650→      setStage("blueprint");
+   651→    } catch {
+   652→      window.clearInterval(tick);
+   653→      setError(true);
+   654→      setStage("compose");
+   655→    }
+   656→  };
+   657→
+   658→  const R = 30;
+   659→  const CIRC = 2 * Math.PI * R;
+   660→
+   661→  return (
+   662→    <div className="mx-auto max-w-[560px]" data-testid="chat-manifest">
+   663→      {stage === "compose" && (
+   664→        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+   665→          <label htmlFor="chat-manifest-intention" className="mono-label text-[9.5px] uppercase tracking-[0.2em] text-[var(--scope-a)]">
+   666→            {t("Intention · what do you choose to create?")}
+   667→          </label>
+   668→          <textarea
+   669→            id="chat-manifest-intention"
+   670→            value={intention}
+   671→            onChange={(e) => setIntention(e.target.value)}
+   672→            rows={2}
+   673→            maxLength={400}
+   674→            placeholder={t("Speak it plainly — the chamber understands plain words best…")}
+   675→            data-testid="chat-manifest-intention"
+   676→            className="focus-glow mt-2 w-full resize-none rounded-xl border hairline bg-background/50 px-3.5 py-2.5 text-[14px] leading-relaxed text-foreground placeholder:text-muted-foreground/60"
+   677→          />
+   678→          <p className="mono-label mt-3 text-[9.5px] uppercase tracking-[0.2em] text-[var(--scope-a)]">
+   679→            {t("Emotional frequency · the carrier wave")}
+   680→          </p>
+   681→          <div className="mt-2 flex flex-wrap gap-1.5" role="radiogroup" aria-label={t("Emotional frequency · the carrier wave")}>
+   682→            {labFrequencies.map((f) => {
+   683→              const active = f.id === emotion;
+   684→              return (
+   685→                <button
+   686→                  key={f.id}
+   687→                  type="button"
+   688→                  role="radio"
+   689→                  aria-checked={active}
+   690→                  title={t(f.hint)}
+   691→                  onClick={() => setEmotion(f.id)}
+   692→                  data-testid={`chat-manifest-freq-${f.id}`}
+   693→                  className={cn(
+   694→                    "focus-glow flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[12px] transition-all duration-300",
+   695→                    active
+   696→                      ? "border-[var(--scope-a)] font-semibold text-foreground"
+   697→                      : "hairline text-muted-foreground hover:text-foreground"
+   698→                  )}
+   699→                  style={active ? { background: "color-mix(in srgb, var(--scope-a) 12%, transparent)" } : undefined}
+   700→                >
+   701→                  <span aria-hidden="true" className="emoji-ink">{f.glyph}</span>
+   702→                  {t(f.label)}
+   703→                </button>
+   704→              );
+   705→            })}
+   706→          </div>
+   707→          <div className="mt-4 flex items-center gap-3">
+   708→            <span className="mono-label shrink-0 text-[9.5px] uppercase tracking-[0.2em] text-[var(--scope-a)]">
+   709→              {t("Chamber intensity")}
+   710→            </span>
+   711→            <input
+   712→              type="range"
+   713→              min={1}
+   714→              max={10}
+   715→              value={intensity}
+   716→              onChange={(e) => setIntensity(Number(e.target.value))}
+   717→              aria-label={t("Chamber intensity")}
+   718→              data-testid="chat-manifest-intensity"
+   719→              className="h-1 min-w-0 flex-1 accent-[var(--scope-a)]"
+   720→            />
+   721→            <span className="mono-label w-8 text-right text-[11px] text-muted-foreground">{intensity}</span>
+   722→          </div>
+   723→          <div className="mt-4 flex justify-center">
+   724→            <button type="button" onClick={() => void charge()} disabled={!intention.trim()} data-testid="chat-manifest-charge" className={btnSolid}>
+   725→              <Sparkles className="size-3.5" aria-hidden="true" />
+   726→              {t("Charge the intention")}
+   727→            </button>
+   728→          </div>
+   729→          {error && (
+   730→            <p className="mt-3 text-center text-[13px] italic text-muted-foreground">
+   731→              {t("The chamber stayed quiet — rest, then charge again.")}
+   732→            </p>
+   733→          )}
+   734→        </motion.div>
+   735→      )}
+   736→
+   737→      {stage === "charging" && (
+   738→        <div className="flex flex-col items-center py-2" aria-busy="true">
+   739→          <div className="relative size-[88px]" aria-hidden="true">
+   740→            <svg className="absolute inset-0 -rotate-90" viewBox="0 0 88 88">
+   741→              <circle cx="44" cy="44" r={R} fill="none" stroke="color-mix(in srgb, var(--scope-a) 16%, transparent)" strokeWidth="2.5" />
+   742→              <circle
+   743→                cx="44" cy="44" r={R}
+   744→                fill="none"
+   745→                stroke="var(--scope-a)"
+   746→                strokeWidth="2.5"
+   747→                strokeLinecap="round"
+   748→                strokeDasharray={CIRC}
+   749→                strokeDashoffset={CIRC * (1 - progress / 100)}
+   750→                style={{ transition: "stroke-dashoffset 120ms linear" }}
+   751→              />
+   752→            </svg>
+   753→            <span className="mono-label absolute inset-0 flex items-center justify-center text-[13px] font-semibold" style={{ color: "var(--scope-a)" }}>
+   754→              {Math.round(progress)}%
+   755→            </span>
+   756→          </div>
+   757→          <p className="ink-faint mt-3 text-[13.5px] italic">{t("Charging the field…")}</p>
+   758→        </div>
+   759→      )}
+   760→
+   761→      {stage === "blueprint" && blueprint && (
+   762→        <motion.div
+   763→          initial={{ opacity: 0, y: 10 }}
+   764→          animate={{ opacity: 1, y: 0 }}
+   765→          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+   766→          data-testid="chat-manifest-blueprint"
+   767→        >
+   768→          <div className="flex items-center gap-3.5">
+   769→            <InkSigil text={blueprint.title} size={52} />
+   770→            <div className="min-w-0">
+   771→              <h4 className="ink-title text-[17px] font-semibold leading-snug">{blueprint.title}</h4>
+   772→              <p className="ink-faint mt-0.5 text-[12.5px] italic">{t("A charged blueprint")}</p>
+   773→            </div>
+   774→          </div>
+   775→          <p className="ink-hand mt-4 text-[14px] leading-[1.85] text-foreground/90">{blueprint.field_state}</p>
+   776→          <p className="ink-faint mt-3 border-l-2 pl-3 text-[13.5px] italic leading-[1.8]" style={{ borderColor: "color-mix(in srgb, var(--scope-a) 45%, transparent)" }}>
+   777→            {blueprint.visualization}
+   778→          </p>
+   779→          <ol className="mt-4 space-y-2">
+   780→            {blueprint.micro_actions.slice(0, 3).map((a, i) => (
+   781→              <li key={i} className="flex items-start gap-2.5">
+   782→                <span
+   783→                  className="mono-label mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border text-[9px]"
+   784→                  style={{ borderColor: "color-mix(in srgb, var(--scope-a) 40%, transparent)", color: "var(--scope-a)" }}
+   785→                >
+   786→                  {i + 1}
+   787→                </span>
+   788→                <span className="text-[13.5px] leading-relaxed text-foreground/88">{a}</span>
+   789→              </li>
+   790→            ))}
+   791→          </ol>
+   792→          <p className="ink-hand mt-4 text-center text-[15px] font-medium italic leading-[1.8]">“{blueprint.affirmation}”</p>
+   793→          <p className="ink-faint mt-3 text-center text-[12px] italic">{blueprint.window}</p>
+   794→          <p className="mt-3 border-t hairline pt-3 text-[11.5px] italic leading-relaxed text-muted-foreground/80">{blueprint.caution}</p>
+   795→          <div className="mt-4 flex justify-center">
+   796→            <button
+   797→              type="button"
+   798→              onClick={() => { setStage("compose"); setBlueprint(null); }}
+   799→              data-testid="chat-manifest-again"
+   800→              className={btnGhost}
+   801→            >
+   802→              <RotateCcw className="size-3.5" aria-hidden="true" />
+   803→              {t("Charge a new intention")}
+   804→            </button>
+   805→          </div>
+   806→        </motion.div>
+   807→      )}
+   808→    </div>
+   809→  );
+   810→}
+   811→
+   812→/* ================================================================== */
+   813→/*  4 · THE FORGE STRIKE — turn three small dials, strike, and one     */
+   814→/*      unasked creation cools in the channel.                         */
+   815→/* ================================================================== */
+   816→
+   817→interface MiniMystery {
+   818→  name: string;
+   819→  essence: string;
+   820→  purpose: string;
+   821→  first_stroke: string;
+   822→  whisper: string;
+   823→}
+   824→
+   825→function pick<T>(arr: T[]): T {
+   826→  return arr[Math.floor(Math.random() * arr.length)];
+   827→}
+   828→
+   829→function ForgeStrike() {
+   830→  const t = useT();
+   831→  const language = useMirror((s) => s.language);
+   832→  const [dials, setDials] = useState({
+   833→    domain: pick(forgeDomains).id,
+   834→    scale: pick(forgeScales).id,
+   835→    spark: pick(forgeSparks).id,
+   836→  });
+   837→  const [stage, setStage] = useState<"idle" | "forging" | "ready" | "error">("idle");
+   838→  const [mystery, setMystery] = useState<MiniMystery | null>(null);
+   839→  const [phase, setPhase] = useState(0);
+   840→
+   841→  const strike = async () => {
+   842→    if (stage === "forging") return;
+   843→    setStage("forging");
+   844→    setMystery(null);
+   845→    const cycle = window.setInterval(() => setPhase((p) => (p + 1) % forgePhases.length), 650);
+   846→    try {
+   847→      const [res] = await Promise.all([
+   848→        fetch("/api/forge", {
+   849→          method: "POST",
+   850→          headers: { "Content-Type": "application/json" },
+   851→          body: JSON.stringify({ dials, language }),
+   852→        }),
+   853→        new Promise((r) => window.setTimeout(r, 2000)), /* let the embers breathe */
+   854→      ]);
+   855→      const data = (await (res as Response).json()) as { mystery?: MiniMystery; error?: string };
+   856→      if (!(res as Response).ok || !data.mystery) throw new Error(data.error ?? "quiet");
+   857→      window.clearInterval(cycle);
+   858→      setMystery(data.mystery);
+   859→      setStage("ready");
+   860→    } catch {
+   861→      window.clearInterval(cycle);
+   862→      setStage("error");
+   863→    }
+   864→  };
+   865→
+   866→  const dialRow = (label: string, options: typeof forgeDomains, key: "domain" | "scale" | "spark", testid: string) => (
+   867→    <div>
+   868→      <p className="mono-label text-[9.5px] uppercase tracking-[0.2em] text-[var(--scope-a)]">{label}</p>
+   869→      <div className="mt-1.5 flex flex-wrap gap-1.5">
+   870→        {options.map((o) => {
+   871→          const active = dials[key] === o.id;
+   872→          return (
+   873→            <button
+   874→              key={o.id}
+   875→              type="button"
+   876→              onClick={() => { setDials((d) => ({ ...d, [key]: o.id })); setStage("idle"); setMystery(null); }}
+   877→              aria-pressed={active}
+   878→              title={t(o.hint)}
+   879→              data-testid={`${testid}-${o.id}`}
+   880→              className={cn(
+   881→                "focus-glow flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[12px] transition-all duration-300",
+   882→                active
+   883→                  ? "border-[var(--scope-a)] font-semibold text-foreground"
+   884→                  : "hairline text-muted-foreground hover:text-foreground"
+   885→              )}
+   886→              style={active ? { background: "color-mix(in srgb, var(--scope-a) 12%, transparent)" } : undefined}
+   887→            >
+   888→              <span aria-hidden="true" className="emoji-ink">{o.emoji}</span>
+   889→              {t(o.label)}
+   890→            </button>
+   891→          );
+   892→        })}
+   893→      </div>
+   894→    </div>
+   895→  );
+   896→
+   897→  return (
+   898→    <div className="mx-auto max-w-[560px]" data-testid="chat-forge">
+   899→      {dialRow(t("What it is"), forgeDomains, "domain", "chat-forge-domain")}
+   900→      <div className="mt-3">{dialRow(t("How much world"), forgeScales, "scale", "chat-forge-scale")}</div>
+   901→      <div className="mt-3">{dialRow(t("Which energy"), forgeSparks, "spark", "chat-forge-spark")}</div>
+   902→
+   903→      <div className="mt-4 flex justify-center">
+   904→        <button type="button" onClick={() => void strike()} disabled={stage === "forging"} data-testid="chat-forge-strike" className={btnSolid}>
+   905→          <Hammer className="size-3.5" aria-hidden="true" />
+   906→          {t("Strike the Forge")}
+   907→        </button>
+   908→      </div>
+   909→
+   910→      {stage === "forging" && (
+   911→        <p className="mono-label mt-4 flex items-center justify-center gap-2 text-[10px] text-muted-foreground" aria-busy="true">
+   912→          <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
+   913→          {t(forgePhases[phase])}
+   914→        </p>
+   915→      )}
+   916→      {stage === "error" && (
+   917→        <p className="mt-4 text-center text-[13px] italic text-muted-foreground">
+   918→          {t("The forge stayed quiet — strike again.")}
+   919→        </p>
+   920→      )}
+   921→
+   922→      <AnimatePresence>
+   923→        {stage === "ready" && mystery && (
+   924→          <motion.div
+   925→            initial={{ opacity: 0, y: 12 }}
+   926→            animate={{ opacity: 1, y: 0 }}
+   927→            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+   928→            className="mt-5 border-t hairline pt-4"
+   929→            data-testid="chat-forge-mystery"
+   930→          >
+   931→            <div className="flex items-center gap-3.5">
+   932→              <InkSigil text={mystery.name} size={48} />
+   933→              <h4 className="ink-title text-[16.5px] font-semibold leading-snug">{mystery.name}</h4>
+   934→            </div>
+   935→            <p className="mt-3 text-[13.5px] leading-[1.85] text-foreground/88">{mystery.essence}</p>
+   936→            <p className="mt-2.5 text-[13.5px] leading-[1.85] text-foreground/88">
+   937→              <span className="mono-label mr-1.5 text-[9px] uppercase tracking-[0.18em] text-muted-foreground">{t("What it changes")}</span>
+   938→              {mystery.purpose}
+   939→            </p>
+   940→            <div
+   941→              className="mt-3.5 rounded-lg border-l-2 px-3 py-2"
+   942→              style={{
+   943→                borderColor: "color-mix(in srgb, var(--scope-a) 55%, transparent)",
+   944→                background: "color-mix(in srgb, var(--scope-a) 7%, transparent)",
+   945→              }}
+   946→            >
+   947→              <span className="mono-label text-[9px] uppercase tracking-[0.18em] text-muted-foreground">{t("The first stroke")}</span>
+   948→              <p className="mt-1 text-[13.5px] leading-relaxed text-foreground/92">{mystery.first_stroke}</p>
+   949→            </div>
+   950→            <p className="ink-faint mt-3.5 text-center text-[12.5px] italic">{mystery.whisper}</p>
+   951→            <div className="mt-4 flex justify-center">
+   952→              <button type="button" onClick={() => void strike()} data-testid="chat-forge-again" className={btnGhost}>
+   953→                <RotateCcw className="size-3.5" aria-hidden="true" />
+   954→                {t("Forge another")}
+   955→              </button>
+   956→            </div>
+   957→          </motion.div>
+   958→        )}
+   959→      </AnimatePresence>
+   960→    </div>
+   961→  );
+   962→}
+   963→
+   964→/* ================================================================== */
+   965→/*  THE DISPATCHER — one artifact, mounted beneath the reply.          */
+   966→/* ================================================================== */
+   967→
+   968→export function SideArtifact({ kind, resonance }: { kind: SideArtifactKind; resonance: string }) {
+   969→  const t = useT();
+   970→  const icon = kind === "akashic" ? ScrollText : kind === "forge" ? Hammer : Sparkles;
+   971→  const Icon = icon;
+   972→  const label =
+   973→    kind === "akashic"
+   974→      ? t("Brought from the Akashic Library")
+   975→      : kind === "star"
+   976→        ? t("Dealt from the Star Play")
+   977→        : kind === "manifest"
+   978→          ? t("The Manifesting Chamber")
+   979→          : t("Struck from the Forge");
+   980→
+   981→  return (
+   982→    <div className="mt-6 border-t hairline pt-5" data-testid={`chat-artifact-${kind}`}>
+   983→      <div className="mb-4 flex items-center gap-2.5">
+   984→        <Icon className="size-3.5 shrink-0" style={{ color: "var(--scope-a)" }} aria-hidden="true" />
+   985→        <span className="mono-label text-[9px] uppercase tracking-[0.24em] text-muted-foreground/75">{label}</span>
+   986→        <span className="h-px flex-1" style={{ background: "linear-gradient(90deg, color-mix(in srgb, var(--scope-a) 22%, transparent), transparent)" }} aria-hidden="true" />
+   987→      </div>
+   988→      {kind === "akashic" && <AkashicLetter resonance={resonance} />}
+   989→      {kind === "star" && <StarDraw />}
+   990→      {kind === "manifest" && <ManifestRitual resonance={resonance} />}
+   991→      {kind === "forge" && <ForgeStrike />}
+   992→    </div>
+   993→  );
+   994→}
+   995→

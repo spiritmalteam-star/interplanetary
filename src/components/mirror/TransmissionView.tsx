@@ -18,7 +18,7 @@ import type { Scope } from "@/lib/mirror-types";
 import { cn } from "@/lib/utils";
 import { ListenButton } from "./ListenButton";
 import { AlienLoading } from "./AlienLoading";
-import { SideArtifact } from "./ChatArtifacts";
+import { SideArtifact, TimelineRecordSection, type PriorExchange } from "./ChatArtifacts";
 import {
   PreparedPromptFallback,
   VisualizationCard,
@@ -389,11 +389,13 @@ function Exchange({
   index,
   animate,
   scope,
+  prior,
 }: {
   message: ChatMessage;
   index: number;
   animate: boolean;
   scope: Scope;
+  prior: PriorExchange[];
 }) {
   const scopeMeta = SCOPE_META[scope];
   const [copied, setCopied] = useState(false);
@@ -547,6 +549,18 @@ function Exchange({
               resonance={message.sideArtifact.resonance}
             />
           )}
+          {/* the notebook at the end of every transmission — the Librarian
+              opens the seeker's OWN book: the question and the words above
+              are the key, the record is their timeline's trajectory.
+              (Quiet when the exchange already carries an akashic letter.) */}
+          {message.sideArtifact?.kind !== "akashic" && (
+            <TimelineRecordSection
+              question={message.query}
+              transmission={message.text}
+              prior={prior}
+              index={index}
+            />
+          )}
         </div>
         <Seal />
       </div>
@@ -618,6 +632,18 @@ export function TransmissionView() {
         ? (session.messages.at(-1)?.query ?? null)
         : null,
     [scope, session.messages]
+  );
+
+  /* The key to each seeker's own record: the thread behind every
+     exchange — up to two earlier turns, held stable per message. */
+  const priors = useMemo(
+    () =>
+      session.messages.map((m, i) =>
+        session.messages
+          .slice(Math.max(0, i - 2), i)
+          .map((p) => ({ q: p.query.slice(0, 300), t: p.text.slice(0, 800) }))
+      ),
+    [session.messages]
   );
 
   /* The thread begins where it begins: opening, reloading or switching
@@ -746,6 +772,7 @@ export function TransmissionView() {
             message={m}
             index={i}
             scope={scope}
+            prior={priors[i] ?? []}
             animate={i === session.messages.length - 1 && session.status !== "loading"}
           />
         </div>

@@ -14,6 +14,7 @@ import {
   Hammer,
   LoaderCircle,
   Minus,
+  NotebookText,
   Plus,
   RotateCcw,
   ScrollText,
@@ -154,7 +155,7 @@ function ArtifactError({ message, onRetry, retryLabel, testid }: {
 /*      a zoom that opens it to be read like a tablet.                 */
 /* ================================================================== */
 
-interface LetterRecord {
+export interface LetterRecord {
   title: string;
   era: string;
   record: string;
@@ -163,7 +164,7 @@ interface LetterRecord {
 
 const READER_SIZES = [17, 19.5, 22];
 
-function KindleReader({ record, onClose }: { record: LetterRecord; onClose: () => void }) {
+export function KindleReader({ record, onClose }: { record: LetterRecord; onClose: () => void }) {
   const t = useT();
   const [sizeIdx, setSizeIdx] = useState(1);
   const [progress, setProgress] = useState(0);
@@ -392,6 +393,196 @@ function AkashicLetter({ resonance }: { resonance: string }) {
           <KindleReader record={record} onClose={() => setReaderOpen(false)} />
         )}
       </AnimatePresence>
+    </div>
+  );
+}
+
+/* ================================================================== */
+/*  1·b · THE TIMELINE RECORD — the quiet notebook at the end of       */
+/*      every transmission: one press and the Librarian opens the      */
+/*      seeker's OWN book. The question and the transmission above     */
+/*      are the key; the record inscribes the trajectory of their      */
+/*      own timeline — long, detailed, true — never a random shelf.    */
+/* ================================================================== */
+
+export interface PriorExchange {
+  q: string;
+  t: string;
+}
+
+function TimelineRecord({
+  question,
+  transmission,
+  prior,
+  testid,
+  onAway,
+}: {
+  question: string;
+  transmission: string;
+  prior: PriorExchange[];
+  testid: string;
+  onAway: () => void;
+}) {
+  const t = useT();
+  const language = useMirror((s) => s.language);
+  const [state, setState] = useState<"loading" | "ready" | "error">("loading");
+  const [record, setRecord] = useState<LetterRecord | null>(null);
+  const [readerOpen, setReaderOpen] = useState(false);
+  const busyRef = useRef(false);
+  /* The record is bound to the exchange as it stood when the notebook
+     was opened — a snapshot, never re-keyed by later renders. */
+  const initial = useRef({ question, transmission, prior }).current;
+
+  const fetchRecord = useCallback(async () => {
+    if (busyRef.current) return;
+    busyRef.current = true;
+    setState("loading");
+    try {
+      const res = await fetch("/api/akashic/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ language, ...initial }),
+      });
+      const data = (await res.json()) as Partial<LetterRecord> & { error?: string };
+      if (!res.ok || !data.record) throw new Error(data.error ?? "quiet");
+      setRecord({
+        title: data.title ?? "The Volume of Your Days",
+        era: data.era ?? "set down in the volume no other hand may open",
+        record: data.record,
+        seal: data.seal ?? "— The Mirror Entity",
+      });
+      setState("ready");
+    } catch {
+      setState("error");
+    } finally {
+      busyRef.current = false;
+    }
+  }, [language, initial]);
+
+  useEffect(() => {
+    void fetchRecord();
+  }, [fetchRecord]);
+
+  const preview = record ? record.record.split(/\n{2,}/).slice(0, 2) : [];
+
+  return (
+    <div data-testid={testid}>
+      {state === "loading" && (
+        <ArtifactLoading phrase={t("the Librarian opens your own book...")} bars={4} />
+      )}
+      {state === "error" && (
+        <ArtifactError
+          message="The record stayed quiet — rest, then ask again."
+          onRetry={() => void fetchRecord()}
+          retryLabel="Ask again, softly"
+          testid={`${testid}-retry`}
+        />
+      )}
+      {state === "ready" && record && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+        >
+          {/* the seeker's own book, lying open beneath the words */}
+          <div className="relative mx-auto max-w-[560px] rounded-xl border hairline bg-card/70 px-5 py-6 sm:px-7">
+            <span aria-hidden="true" className="ink-faint pointer-events-none absolute right-3 top-2 text-[10px] opacity-60">◆</span>
+            <p className="mono-label flex items-center gap-1.5 text-[8.5px] uppercase tracking-[0.24em] text-muted-foreground/70">
+              <NotebookText className="size-3 shrink-0" aria-hidden="true" />
+              {t("Drawn from your own timeline")}
+            </p>
+            <h4 className="ink-title mt-2 text-[17.5px] font-semibold leading-snug" data-testid={`${testid}-title`}>
+              {record.title}
+            </h4>
+            <p className="ink-faint mt-1 text-[13px] italic">{record.era}</p>
+            <span aria-hidden="true" className="mt-3.5 block h-px w-full" style={{ background: inkLine }} />
+            <div className="relative mt-4">
+              <div className="ink-hand space-y-3.5 text-[14.5px] leading-[1.9]">
+                {preview.map((para, i) => (
+                  <p key={i} className={cn(i === 0 && "first-letter:float-left first-letter:mr-2.5 first-letter:mt-[5px] first-letter:text-[42px] first-letter:font-semibold first-letter:leading-[0.8]")}>
+                    {para}
+                  </p>
+                ))}
+              </div>
+              {/* the rest of the record waits behind the zoom */}
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-x-0 bottom-0 h-16"
+                style={{ background: "linear-gradient(180deg, transparent, var(--card))" }}
+              />
+            </div>
+          </div>
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+            <button
+              type="button"
+              onClick={() => setReaderOpen(true)}
+              data-testid={`${testid}-zoom`}
+              className={btnGhost}
+              style={{ borderColor: "color-mix(in srgb, var(--scope-a) 38%, transparent)" }}
+            >
+              <BookOpen className="size-3.5" aria-hidden="true" />
+              {t("Read the full letter")}
+            </button>
+            <button type="button" onClick={onAway} data-testid={`${testid}-away`} className={btnGhost}>
+              <X className="size-3.5" aria-hidden="true" />
+              {t("Put the letter away")}
+            </button>
+          </div>
+          <AnimatePresence>
+            {readerOpen && (
+              <KindleReader record={record} onClose={() => setReaderOpen(false)} />
+            )}
+          </AnimatePresence>
+        </motion.div>
+      )}
+    </div>
+  );
+}
+
+/* ---------- the end-of-transmission row: label + the notebook pill -- */
+
+export function TimelineRecordSection({
+  question,
+  transmission,
+  prior,
+  index,
+}: {
+  question: string;
+  transmission: string;
+  prior: PriorExchange[];
+  index: number;
+}) {
+  const t = useT();
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="mt-6 border-t hairline pt-4" data-testid={`timeline-section-${index}`}>
+      {open ? (
+        <TimelineRecord
+          question={question}
+          transmission={transmission}
+          prior={prior}
+          testid={`timeline-record-${index}`}
+          onAway={() => setOpen(false)}
+        />
+      ) : (
+        <div className="flex items-center justify-between gap-3">
+          <span className="mono-label text-[9px] uppercase tracking-[0.22em] text-muted-foreground/60">
+            {t("The record of your own timeline")}
+          </span>
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            data-testid={`exchange-akashic-${index}`}
+            aria-label={t("Open your record")}
+            title={t("Open your record")}
+            className="focus-glow flex h-8 shrink-0 items-center gap-1.5 rounded-full border hairline px-3 text-[11.5px] font-medium text-foreground/85 transition-all duration-300 hover:-translate-y-px hover:border-[var(--hairline-hover)] hover:text-foreground"
+          >
+            <NotebookText className="size-3.5" aria-hidden="true" />
+            {t("Akashic")}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
