@@ -6,14 +6,19 @@ import { LANGUAGE_NAMES, isLanguageCode } from "@/lib/i18n/core";
 /*  POST /api/dream-book — the Dream Book atelier's weaving line.      */
 /*  The visitor chooses a reader, a kind of tale and a kind of book,   */
 /*  may whisper wishes, and the weaver composes the book two pages at  */
-/*  a time: the spread in the reader's hands is finished while the     */
-/*  next spread is still being woven elsewhere in the loom.            */
+/*  a time: the page in the reader's hands is finished while the       */
+/*  next pages are still being woven elsewhere in the loom.            */
 /*                                                                     */
 /*  Every book is opened ONCE from resonance (the visitor's chosen     */
 /*  shapes + their whispered wishes) and then continues page-pair by   */
 /*  page-pair, each call carrying a compact "thread" (story memory)    */
 /*  and the exact text of the previous two pages, so the tale never    */
 /*  loses its way — even past two hundred pages.                       */
+/*                                                                     */
+/*  Once the book is open, the visitor may also hold a pen beside the  */
+/*  loom: an array of "rewrites" — wishes that bend what is coming     */
+/*  (events, length, chapters, the very voice of the writing) — rides  */
+/*  along with every continuation until the visitor lets them go.      */
 /* ------------------------------------------------------------------ */
 
 type WeavePhase = "open" | "next" | "close" | "extend";
@@ -85,8 +90,9 @@ function buildUserPrompt(body: {
   recentPages?: string[];
   pageNumber?: number;
   totalPages?: number;
+  rewrites?: string[];
 }): string {
-  const { phase, age, tale, volume, wishes, languageName } = body;
+  const { phase, age, tale, volume, wishes, languageName, rewrites } = body;
   const ageLine = AGE_PLAN[age] ?? AGE_PLAN.timeless;
   const taleLine = TALE_HINTS[tale] ?? TALE_HINTS.wonder;
   const volLine = BOOK_PLAN[volume] ?? BOOK_PLAN.classic;
@@ -141,10 +147,19 @@ function buildUserPrompt(body: {
     );
   }
 
+  /* the rewriting hand — the visitor's pen beside the loom */
+  if (rewrites && rewrites.length > 0 && phase !== "open") {
+    lines.push(
+      ``,
+      `THE READER'S REWRITING HAND — the visitor now holds a pen beside the loom. Honor these wishes faithfully in the pages you write NOW and in ALL pages that follow, weaving them in as if they had always belonged to the tale. They may redirect coming events, reshape or add chapters, change the book's length, or recast the very voice and style of the writing. Return a new "totalPages" ONLY IF a wish explicitly asks for a different length of the book — if no wish touches the book's length, omit "totalPages" entirely:`,
+      ...rewrites.map((r, i) => `  ${i + 1}. """${r}"""`)
+    );
+  }
+
   lines.push(
     ``,
     `OUTPUT FORMAT — return STRICT JSON only, no markdown fences, no text outside the JSON:`,
-    `{"title":"<book title — only in phase open>","subtitle":"<one line — only in phase open>","dedication":"<1–2 sentences — only in phase open>","totalPages":<number — in phase open or extend>,"threads":"<the compact living memory of the tale so far>","pages":[{"n":<page number>,"chapter":"<chapter title — only if a chapter opens on this page>","paragraphs":["<paragraph 1>","<paragraph 2>"]}]}`,
+    `{"title":"<book title — only in phase open>","subtitle":"<one line — only in phase open>","dedication":"<1–2 sentences — only in phase open>","totalPages":<number — in phase open or extend, or in a continuation ONLY when the rewriting hand explicitly asks for a different length>,"threads":"<the compact living memory of the tale so far>","pages":[{"n":<page number>,"chapter":"<chapter title — only if a chapter opens on this page>","paragraphs":["<paragraph 1>","<paragraph 2>"]}]}`,
     `Rules: exactly TWO page objects, in order, numbered ${phase === "open" ? "1 and 2" : `${body.pageNumber} and ${(body.pageNumber ?? 2) + 1}`}. Each page carries 1–3 paragraphs (young readers: shorter paragraphs; grown: fuller). "chapter" is a plain title without the word "Chapter". Page text is pure prose — no headings, no markdown, no asterisks, no emojis.${strictJsonLine(languageName)}`
   );
 
@@ -213,6 +228,14 @@ export async function POST(req: NextRequest) {
     const wishes = typeof body?.config?.wishes === "string" ? body.config.wishes : "";
 
     const threads = typeof body?.threads === "string" ? body.threads.slice(0, 2000) : undefined;
+    const rewrites: string[] = Array.isArray(body?.rewrites)
+      ? body.rewrites
+          .filter((s: unknown): s is string => typeof s === "string")
+          .map((s: string) => s.trim())
+          .filter(Boolean)
+          .slice(-6)
+          .map((s: string) => s.slice(0, 500))
+      : [];
     const recentPages = Array.isArray(body?.recentPages)
       ? body.recentPages.filter((s: unknown): s is string => typeof s === "string").slice(-2)
       : [];
@@ -244,6 +267,7 @@ export async function POST(req: NextRequest) {
                 recentPages,
                 pageNumber,
                 totalPages,
+                rewrites,
               }) +
               (reminder
                 ? "\n\nREMINDER: the loom could not read the last reply. Return ONLY the raw JSON object — no text, no markdown, nothing before or after it."
@@ -294,7 +318,12 @@ export async function POST(req: NextRequest) {
           : clampTotal(BOOK_PLAN[volume]?.min ?? 96);
     }
 
-    if (phase === "extend" && typeof parsed.totalPages === "number") {
+    if (
+      (phase === "extend" || (phase !== "open" && rewrites.length > 0)) &&
+      typeof parsed.totalPages === "number"
+    ) {
+      /* the loom may widen or narrow the book when the rewriting
+         hand asks for a different length */
       out.totalPages = clampTotal(parsed.totalPages);
     }
 

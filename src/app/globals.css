@@ -1352,38 +1352,37 @@ html:not(.dark) .scope-invent {
   background: rgba(29, 28, 26, 0.05);
 }
 
-/* the open book — spine shadow falling between two clean pages */
-.dream-book {
+/* the fancy button at the very top of the reader — a clean ink pill
+   with a quiet sheen that sweeps across it when touched. No colours:
+   the shine is the theme's own foreground, only passing through. */
+.dream-fancy {
   position: relative;
-  filter: drop-shadow(0 30px 54px rgba(0, 0, 0, 0.4));
-  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--card) 92%, transparent);
+  color: var(--foreground);
+  transition: all 0.3s ease;
 }
-.dark .dream-book {
-  filter: drop-shadow(0 30px 54px rgba(0, 0, 0, 0.65));
-}
-.dream-book::after {
+.dream-fancy::before {
   content: "";
   position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 50%;
-  width: 1px;
-  transform: translateX(-50%);
+  inset: 0;
   background: linear-gradient(
-    180deg,
-    transparent,
-    rgba(29, 28, 26, 0.34) 12%,
-    rgba(29, 28, 26, 0.34) 88%,
-    transparent
+    105deg,
+    transparent 38%,
+    color-mix(in srgb, var(--foreground) 16%, transparent) 50%,
+    transparent 62%
   );
+  transform: translateX(-130%);
+  transition: transform 0.85s ease;
   pointer-events: none;
-  z-index: 5;
-  display: none; /* one page at a time on small screens — no spine */
 }
-@media (min-width: 768px) {
-  .dream-book::after {
-    display: block;
-  }
+.dream-fancy:hover {
+  border-color: color-mix(in srgb, var(--foreground) 42%, transparent);
+  box-shadow: 0 8px 24px -14px color-mix(in srgb, var(--foreground) 55%, transparent);
+}
+.dream-fancy:hover::before {
+  transform: translateX(130%);
 }
 
 /* one page — pure reading paper: black ink on near-white, both hours */
@@ -1393,18 +1392,6 @@ html:not(.dark) .scope-invent {
   overflow-y: auto;
   overflow-x: hidden;
   min-height: 300px;
-}
-.dream-page-left {
-  border-radius: 6px 0 0 6px;
-  border: 1px solid rgba(29, 28, 26, 0.14);
-  border-right: none;
-  box-shadow: inset -14px 0 22px -20px rgba(29, 28, 26, 0.5);
-}
-.dream-page-right {
-  border-radius: 0 6px 6px 0;
-  border: 1px solid rgba(29, 28, 26, 0.14);
-  border-left: none;
-  box-shadow: inset 14px 0 22px -20px rgba(29, 28, 26, 0.5);
 }
 .dream-page-single {
   border-radius: 6px;

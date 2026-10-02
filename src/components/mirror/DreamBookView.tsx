@@ -16,11 +16,14 @@ import {
   Feather,
   LoaderCircle,
   MoonStar,
+  Sparkles,
   Square,
+  X,
   ZoomIn,
   ZoomOut,
 } from "lucide-react";
 import { toast } from "sonner";
+import { ModalShell } from "./ModalShell";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import type { VoiceId } from "@/lib/i18n/core";
@@ -38,10 +41,14 @@ import { cn } from "@/lib/utils";
 /*     phrases drift by (never the word "loading"). If the loom ever   */
 /*     falls silent, the room says so in place and offers to weave     */
 /*     again — the visitor is never left wondering.                    */
-/*  ③ THE READER — a clean black-and-white open book. Two pages are    */
-/*     revealed at once; while the visitor reads, the next two are     */
-/*     woven elsewhere in the loom. A voice narrator reads aloud,      */
-/*     the page zooms, and one back button begins a new dream.         */
+/*  ③ THE READER — a clean black-and-white book revealing ONE page     */
+/*     at a time; the next button slides the page away and draws the   */
+/*     following one out of the loom. A fancy "Rewrite" button waits   */
+/*     at the very top: its panel lets the visitor bend anything —     */
+/*     coming events, the number of pages, the chapters, the very      */
+/*     voice of the writing. While the visitor reads, the loom weaves  */
+/*     ahead in the background. A voice narrator reads aloud, the      */
+/*     page zooms, and one back button begins a new dream.             */
 /*                                                                     */
 /*  The magic stays magic: nothing here is named, explained or         */
 /*  traced back to any chamber of the laboratory.                      */
@@ -107,6 +114,15 @@ const nextLineId = () => `l-${Date.now().toString(36)}-${(lineCounter++).toStrin
 
 const pageText = (p: WeavePage) => p.paragraphs.join(" ");
 
+/* the slide of the pages — one leaf glides out, the next glides in.
+   Resolved through `custom` so the leaving page knows the freshest
+   direction (AnimatePresence hands the newest custom to the exit). */
+const pageSlide = {
+  enter: (d: number) => ({ opacity: 0, x: d >= 0 ? 84 : -84 }),
+  center: { opacity: 1, x: 0 },
+  exit: (d: number) => ({ opacity: 0, x: d >= 0 ? -84 : 84 }),
+};
+
 /* ------------------------------------------------------------------ */
 
 export function DreamBookView() {
@@ -143,7 +159,8 @@ export function DreamBookView() {
   const [meta, setMeta] = useState<BookMeta | null>(null);
   const [pages, setPages] = useState<WeavePage[]>([]);
   const [ended, setEnded] = useState(false);
-  const [spread, setSpread] = useState(0);
+  const [pageIdx, setPageIdx] = useState(0);
+  const [slideDir, setSlideDir] = useState<1 | -1>(1);
   const [weavingNext, setWeavingNext] = useState(false);
   const [weaveError, setWeaveError] = useState(false);
   const [weaveFailed, setWeaveFailed] = useState(false);
@@ -151,11 +168,17 @@ export function DreamBookView() {
   const [narrating, setNarrating] = useState(false);
   const [narrLoading, setNarrLoading] = useState(false);
 
+  /* ---- the rewriting hand ---- */
+  const [rewriteOpen, setRewriteOpen] = useState(false);
+  const [rewriteDraft, setRewriteDraft] = useState("");
+  const [rewrites, setRewrites] = useState<string[]>([]);
+
   const pagesRef = useRef<WeavePage[]>([]);
   const threadsRef = useRef("");
   const metaRef = useRef<BookMeta | null>(null);
   const endedRef = useRef(false);
   const weavingRef = useRef(false);
+  const rewritesRef = useRef<string[]>([]);
   const configRef = useRef({ age, tale, volume });
   const narrRef = useRef<{ audio: HTMLAudioElement | null; ready: boolean }>({
     audio: null,
@@ -168,6 +191,19 @@ export function DreamBookView() {
 
   const pushLine = useCallback((from: AtelierLine["from"], text: string) => {
     setLines((prev) => [...prev, { id: nextLineId(), from, text }]);
+  }, []);
+
+  /* the rewriting hand — wishes that bend the pages yet to come */
+  const addRewrite = useCallback((text: string) => {
+    const clean = text.trim().slice(0, 500);
+    if (!clean) return;
+    rewritesRef.current = [...rewritesRef.current, clean].slice(-6);
+    setRewrites(rewritesRef.current);
+  }, []);
+
+  const removeRewrite = useCallback((idx: number) => {
+    rewritesRef.current = rewritesRef.current.filter((_, i) => i !== idx);
+    setRewrites(rewritesRef.current);
   }, []);
 
   /* keep the atelier thread pinned to its newest line */
@@ -230,6 +266,10 @@ export function DreamBookView() {
           recentPages: recent.length ? recent : undefined,
           pageNumber,
           totalPages: metaRef.current?.totalPages,
+          rewrites:
+            phase !== "open" && rewritesRef.current.length
+              ? rewritesRef.current
+              : undefined,
         });
         const attempt = () =>
           fetch("/api/dream-book", {
@@ -267,10 +307,14 @@ export function DreamBookView() {
           };
           setMeta(metaRef.current);
         }
-        if (phase === "extend" && typeof data.totalPages === "number") {
-          metaRef.current = metaRef.current
-            ? { ...metaRef.current, totalPages: data.totalPages }
-            : null;
+        if (
+          phase !== "open" &&
+          typeof data.totalPages === "number" &&
+          metaRef.current
+        ) {
+          /* the loom may widen or narrow the book when the rewriting
+             hand asks for a different length */
+          metaRef.current = { ...metaRef.current, totalPages: data.totalPages };
           setMeta(metaRef.current);
         }
         if (phase === "close") {
@@ -336,7 +380,8 @@ export function DreamBookView() {
     const ok = await weave("open", 1);
     if (ok) {
       setStage("reading");
-      setSpread(0);
+      setPageIdx(0);
+      setSlideDir(1);
     } else {
       /* stay in the weaving room — it now speaks for itself */
       setWeaveError(true);
@@ -344,64 +389,60 @@ export function DreamBookView() {
   }, [weave]);
 
   /* ---------------- the reader's logic ----------------
-     spread 0 = title spread (frontispiece + endpaper)
-     spread k ≥ 1 = pages (2k-1 | 2k) — two pages revealed at once */
+     page 0 = the title page; page k ≥ 1 = story page n k.
+     ONE page is revealed at a time — the next button slides it
+     away and draws the following one out of the loom. */
 
-  const spreadPages = useMemo(() => {
-    if (spread === 0) return [];
-    const left = pages.find((p) => p.n === spread * 2 - 1);
-    const right = pages.find((p) => p.n === spread * 2);
-    return [left, right].filter(Boolean) as WeavePage[];
-  }, [pages, spread]);
-
-  const maxSpread = useMemo(
-    () => (pages.length ? Math.ceil(pages.length / 2) : 0),
-    [pages.length]
+  const currentPage = useMemo(
+    () => (pageIdx >= 1 ? pages.find((p) => p.n === pageIdx) : undefined),
+    [pages, pageIdx]
   );
+
+  const maxIdx = pages.length;
 
   const atPlannedEnd = !!meta && pages.length >= meta.totalPages && !ended;
 
-  /* one spread past the woven ones may always be turned into: it is
+  /* one page past the woven ones may always be slid into: it is
      either the crossroads, the ending, or the loom itself — where the
-     next two pages are being revealed (with a weave-again thread if
+     next pages are being revealed (with a weave-again thread if
      the loom ever fell silent). The visitor is never walled in. */
-  const limitSpread = maxSpread + 1;
-  const showChoice = atPlannedEnd && spread === maxSpread + 1;
-  const showEnd = ended && spread === maxSpread + 1;
+  const limitIdx = maxIdx + 1;
+  const showChoice = atPlannedEnd && pageIdx === maxIdx + 1;
+  const showEnd = ended && pageIdx === maxIdx + 1;
 
-  /* prefetch — while the visitor reads spread k, the loom weaves k+1 */
+  /* prefetch — while the visitor reads page k, the loom weaves k+1 */
   useEffect(() => {
     if (stage !== "reading" || endedRef.current || !metaRef.current) return;
-    const needNext = (spread + 1) * 2;
     const have = pagesRef.current.length;
-    if (have >= needNext) return;
-    if (have + 2 > metaRef.current.totalPages) return; /* the choice will ask */
+    if (have >= pageIdx + 1) return;
+    if (have >= metaRef.current.totalPages) return; /* the choice will ask */
     void weave("next", have + 1);
-  }, [spread, pages.length, stage, weave]);
+  }, [pageIdx, pages.length, stage, weave]);
 
-  const goSpread = useCallback(
+  const goPage = useCallback(
     (dir: 1 | -1) => {
       stopNarration();
-      setSpread((s) => {
+      setSlideDir(dir);
+      setPageIdx((s) => {
         const next = s + dir;
         if (next < 0) return s;
-        if (dir === 1 && next > limitSpread) return s;
+        if (dir === 1 && next > limitIdx) return s;
         return next;
       });
     },
-    [limitSpread, stopNarration]
+    [limitIdx, stopNarration]
   );
 
   /* keyboard page turns */
   useEffect(() => {
     if (stage !== "reading") return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "ArrowRight") goSpread(1);
-      if (e.key === "ArrowLeft") goSpread(-1);
+      if (e.key === "ArrowRight") goPage(1);
+      if (e.key === "ArrowLeft") goPage(-1);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [stage, goSpread]);
+  }, [stage, goPage]);
 
   const newDream = useCallback(() => {
     stopNarration();
@@ -409,10 +450,13 @@ export function DreamBookView() {
     threadsRef.current = "";
     metaRef.current = null;
     endedRef.current = false;
+    rewritesRef.current = [];
     setPages([]);
     setMeta(null);
     setEnded(false);
-    setSpread(0);
+    setRewrites([]);
+    setPageIdx(0);
+    setSlideDir(1);
     setZoom(1);
     setWeaveFailed(false);
     setStage("atelier");
@@ -424,12 +468,12 @@ export function DreamBookView() {
 
   const weaveOnward = useCallback(async () => {
     const ok = await weave("extend", pagesRef.current.length + 1);
-    if (ok) setSpread((s) => s + 1);
+    if (ok) setPageIdx((s) => s + 1);
   }, [weave]);
 
   const letRest = useCallback(async () => {
     const ok = await weave("close", pagesRef.current.length + 1);
-    if (ok) setSpread((s) => s + 1);
+    if (ok) setPageIdx((s) => s + 1);
   }, [weave]);
 
   /* ---------------- the narrator ---------------- */
@@ -455,10 +499,10 @@ export function DreamBookView() {
     setNarrLoading(true);
     try {
       const voice = NARRATOR_VOICE[configRef.current.age] ?? "aurora";
-      const opening = spread === 0 && meta
+      const opening = pageIdx === 0 && meta
         ? `${meta.title}. ${meta.subtitle} ${meta.dedication}`
         : "";
-      const body = spreadPages.map(pageText).join(" ");
+      const body = currentPage ? pageText(currentPage) : "";
       const text = (opening || body).trim();
       if (!text) return;
       const res = await fetch("/api/tts", {
@@ -499,7 +543,7 @@ export function DreamBookView() {
     } finally {
       setNarrLoading(false);
     }
-  }, [narrating, narrLoading, spreadPages, spread, meta, stopNarration, t]);
+  }, [narrating, narrLoading, currentPage, pageIdx, meta, stopNarration, t]);
 
   /* ---------------- shared ---------------- */
 
@@ -518,9 +562,25 @@ export function DreamBookView() {
     setStage("atelier");
   };
 
-  const readPageOf =
-    spread === 0 ? 0 : Math.min(spread * 2, Math.max(pages.length, 0));
+  const readPageOf = meta ? Math.min(pageIdx, meta.totalPages) : 0;
   const progress = meta ? Math.min(1, readPageOf / meta.totalPages) : 0;
+
+  /* the rewriting hand — starters the visitor may lean on */
+  const REWRITE_STARTERS = [
+    t("Let the coming events turn toward…"),
+    t("I wish the book to be about … pages"),
+    t("Write in a different voice — …"),
+    t("Add chapters where…"),
+  ];
+
+  const applyRewrite = useCallback(() => {
+    const text = rewriteDraft.trim();
+    if (!text) return;
+    addRewrite(text);
+    setRewriteDraft("");
+    setRewriteOpen(false);
+    toast(t("Your hand is upon the loom — the coming pages will bend to it."));
+  }, [rewriteDraft, addRewrite, t]);
 
   /* the shared ink icon button — the same quiet circle as every chat */
   const inkIconBtn =
@@ -721,8 +781,8 @@ export function DreamBookView() {
   /*  THE READER                                                       */
   /* ================================================================ */
 
-  const canNext = spread < limitSpread && !showChoice && !showEnd;
-  const canPrev = spread > 0;
+  const canNext = pageIdx < limitIdx && !showChoice && !showEnd;
+  const canPrev = pageIdx > 0;
 
   const reader = (
     <div className="relative flex h-full flex-col overflow-hidden bg-background text-foreground">
@@ -740,6 +800,25 @@ export function DreamBookView() {
           {meta?.title ?? ""}
         </h1>
         <div className="flex items-center gap-1.5">
+          {/* the rewriting hand — a fancy button at the very top */}
+          <button
+            type="button"
+            onClick={() => setRewriteOpen(true)}
+            aria-label={t("Rewrite the coming pages")}
+            title={t("Rewrite the coming pages")}
+            className="dream-fancy focus-glow relative flex h-9 items-center gap-1.5 rounded-full pl-3 pr-3.5"
+          >
+            <Sparkles className="size-3.5" aria-hidden="true" />
+            <span className="font-[family-name(var(--font-literata))] text-[12.5px] italic tracking-wide">
+              {t("Rewrite")}
+            </span>
+            {rewrites.length > 0 && (
+              <span
+                className="absolute right-1 top-1 size-1.5 rounded-full bg-foreground"
+                aria-hidden="true"
+              />
+            )}
+          </button>
           <button
             type="button"
             onClick={narrate}
@@ -782,17 +861,17 @@ export function DreamBookView() {
         </div>
       </header>
 
-      {/* the book itself */}
+      {/* the book itself — one page at a time, sliding */}
       <div className="nice-scroll relative z-10 min-h-0 flex-1 overflow-y-auto overscroll-contain">
-        <div className="mx-auto flex min-h-full w-full max-w-[980px] items-start justify-center px-3 pb-24 pt-4 sm:px-8 sm:pb-28">
-          <div className="relative w-full md:w-auto">
-            {/* floating turn buttons — desktop */}
+        <div className="mx-auto flex min-h-full w-full max-w-[760px] items-start justify-center px-3 pb-24 pt-4 sm:px-8 sm:pb-28">
+          <div className="relative w-full max-w-[640px]">
+            {/* the slide buttons — desktop */}
             {canPrev && (
               <button
                 type="button"
-                onClick={() => goSpread(-1)}
+                onClick={() => goPage(-1)}
                 aria-label={t("Previous page")}
-                className="dream-turn focus-glow absolute -left-4 top-1/2 z-20 hidden size-11 -translate-y-1/2 items-center justify-center rounded-full md:flex xl:-left-16"
+                className="dream-turn focus-glow absolute -left-5 top-1/2 z-20 hidden size-11 -translate-y-1/2 items-center justify-center rounded-full md:flex"
               >
                 <ArrowLeft className="size-4" aria-hidden="true" />
               </button>
@@ -800,21 +879,23 @@ export function DreamBookView() {
             {canNext && (
               <button
                 type="button"
-                onClick={() => goSpread(1)}
+                onClick={() => goPage(1)}
                 aria-label={t("Next page")}
-                className="dream-turn focus-glow absolute -right-4 top-1/2 z-20 hidden size-11 -translate-y-1/2 items-center justify-center rounded-full md:flex xl:-right-16"
+                className="dream-turn focus-glow absolute -right-5 top-1/2 z-20 hidden size-11 -translate-y-1/2 items-center justify-center rounded-full md:flex"
               >
                 <ArrowLeft className="size-4 rotate-180" aria-hidden="true" />
               </button>
             )}
 
-            <AnimatePresence mode="wait">
+            <AnimatePresence mode="wait" custom={slideDir} initial={false}>
               <motion.div
-                key={`spread-${spread}`}
-                initial={{ opacity: 0, y: 14 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.55, ease: "easeOut" }}
+                key={`page-${pageIdx}`}
+                custom={slideDir}
+                variants={pageSlide}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ duration: 0.38, ease: "easeOut" }}
               >
                 {showChoice ? (
                   /* the crossroads — the tale can go on */
@@ -877,65 +958,41 @@ export function DreamBookView() {
                       {t("Begin a new dream")}
                     </button>
                   </div>
-                ) : (
-                  <div className="dream-book md:grid md:grid-cols-2">
-                    {/* LEFT — the frontispiece or the odd page */}
-                    {spread === 0 ? (
-                      <div className="dream-page dream-page-left flex flex-col items-center justify-between px-7 py-9 sm:px-10">
-                        <div className="flex flex-col items-center pt-6 text-center sm:pt-10">
-                          <span
-                            className="font-[family-name(var(--font-literata))] text-2xl text-[var(--dream-ink-faint)]"
-                            aria-hidden="true"
-                          >
-                            ❧
-                          </span>
-                          <h2 className="mt-6 max-w-[300px] font-[family-name(var(--font-literata))] text-[26px] leading-snug text-[var(--dream-ink)] sm:text-[30px]">
-                            {meta?.title}
-                          </h2>
-                          {meta?.subtitle && (
-                            <p className="mt-3 font-[family-name(var(--font-literata))] text-[13px] italic text-[var(--dream-ink-soft)] sm:text-sm">
-                              {meta.subtitle}
-                            </p>
-                          )}
-                        </div>
-                        <p className="max-w-[280px] text-center font-[family-name(var(--font-literata))] text-[12px] italic leading-relaxed text-[var(--dream-ink-soft)]">
-                          {meta?.dedication}
+                ) : pageIdx === 0 ? (
+                  /* the title page — a single leaf */
+                  <div className="dream-page dream-page-single mx-auto flex min-h-[420px] w-full max-w-[560px] flex-col items-center justify-between px-8 py-12 text-center sm:px-12">
+                    <div className="flex flex-col items-center pt-6 text-center sm:pt-10">
+                      <span
+                        className="font-[family-name(var(--font-literata))] text-2xl text-[var(--dream-ink-faint)]"
+                        aria-hidden="true"
+                      >
+                        ❧
+                      </span>
+                      <h2 className="mt-6 max-w-[340px] font-[family-name(var(--font-literata))] text-[26px] leading-snug text-[var(--dream-ink)] sm:text-[32px]">
+                        {meta?.title}
+                      </h2>
+                      {meta?.subtitle && (
+                        <p className="mt-3 font-[family-name(var(--font-literata))] text-[13px] italic text-[var(--dream-ink-soft)] sm:text-sm">
+                          {meta.subtitle}
                         </p>
-                        <p className="pb-2 font-[family-name(var(--font-literata))] text-[10.5px] uppercase tracking-[0.24em] text-[var(--dream-ink-faint)]">
-                          {t("woven for you, this very hour")}
-                        </p>
-                      </div>
-                    ) : (
-                      <BookPage
-                        page={spreadPages[0]}
-                        side="left"
-                        fontSize={ZOOM_STEPS[zoom]}
-                        stalled={weaveFailed && !weavingNext}
-                      />
-                    )}
-
-                    {/* RIGHT — the endpaper or the even page */}
-                    {spread === 0 ? (
-                      <div className="dream-page dream-page-right hidden items-center justify-center md:flex">
-                        <span
-                          className="font-[family-name(var(--font-literata))] text-xl text-[var(--dream-ink-faint)] opacity-70"
-                          aria-hidden="true"
-                        >
-                          ❧
-                        </span>
-                      </div>
-                    ) : (
-                      <BookPage
-                        page={spreadPages[1]}
-                        side="right"
-                        fontSize={ZOOM_STEPS[zoom]}
-                        stalled={weaveFailed && !weavingNext}
-                        onRetry={() =>
-                          void weave("next", pagesRef.current.length + 1)
-                        }
-                      />
-                    )}
+                      )}
+                    </div>
+                    <p className="max-w-[300px] font-[family-name(var(--font-literata))] text-[12px] italic leading-relaxed text-[var(--dream-ink-soft)]">
+                      {meta?.dedication}
+                    </p>
+                    <p className="pb-2 font-[family-name(var(--font-literata))] text-[10.5px] uppercase tracking-[0.24em] text-[var(--dream-ink-faint)]">
+                      {t("woven for you, this very hour")}
+                    </p>
                   </div>
+                ) : (
+                  <BookPage
+                    page={currentPage}
+                    fontSize={ZOOM_STEPS[zoom]}
+                    stalled={weaveFailed && !weavingNext}
+                    onRetry={() =>
+                      void weave("next", pagesRef.current.length + 1)
+                    }
+                  />
                 )}
               </motion.div>
             </AnimatePresence>
@@ -961,12 +1018,12 @@ export function DreamBookView() {
         </div>
       </div>
 
-      {/* the progress thread + mobile turns */}
+      {/* the progress thread + the slide buttons */}
       <footer className="relative z-20 shrink-0 px-4 pb-[max(0.7rem,env(safe-area-inset-bottom))] pt-2">
-        <div className="mx-auto flex w-full max-w-[980px] items-center gap-3">
+        <div className="mx-auto flex w-full max-w-[760px] items-center gap-3">
           <button
             type="button"
-            onClick={() => goSpread(-1)}
+            onClick={() => goPage(-1)}
             disabled={!canPrev}
             aria-label={t("Previous page")}
             className="dream-turn focus-glow flex size-10 shrink-0 items-center justify-center rounded-full md:hidden"
@@ -983,7 +1040,7 @@ export function DreamBookView() {
             </div>
             <p className="mono-label mt-1.5 text-center text-[10px] tracking-[0.18em] text-muted-foreground">
               {meta
-                ? spread === 0
+                ? pageIdx === 0
                   ? t("the title page")
                   : t("page {n} of {total}")
                       .replace("{n}", String(readPageOf))
@@ -994,7 +1051,7 @@ export function DreamBookView() {
 
           <button
             type="button"
-            onClick={() => goSpread(1)}
+            onClick={() => goPage(1)}
             disabled={!canNext}
             aria-label={t("Next page")}
             className="dream-turn focus-glow flex size-10 shrink-0 items-center justify-center rounded-full md:hidden"
@@ -1003,6 +1060,81 @@ export function DreamBookView() {
           </button>
         </div>
       </footer>
+
+      {/* the rewriting hand's panel */}
+      <ModalShell
+        open={rewriteOpen}
+        onOpenChange={setRewriteOpen}
+        title={t("The rewriting hand")}
+        description={t(
+          "Whisper what must change — the coming events, the number of pages, the chapters, the very voice of the writing. The loom will bend the tale to your hand."
+        )}
+        widthClass="sm:max-w-[500px]"
+      >
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            applyRewrite();
+          }}
+          className="px-5 pb-5 sm:px-6 sm:pb-6"
+        >
+          <textarea
+            value={rewriteDraft}
+            onChange={(e) => setRewriteDraft(e.target.value)}
+            rows={4}
+            placeholder={t("What do you wish to change?")}
+            aria-label={t("What do you wish to change?")}
+            className="nice-scroll w-full resize-none rounded-2xl border border-border bg-background px-4 py-3 text-[14px] leading-relaxed text-foreground transition-colors placeholder:text-muted-foreground/60 focus:border-foreground/35 focus:outline-none"
+          />
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {REWRITE_STARTERS.map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setRewriteDraft((d) => (d ? `${d} ${s}` : s))}
+                className="focus-glow rounded-full border border-border px-3 py-1.5 text-[11.5px] text-muted-foreground transition-all duration-300 hover:border-foreground/40 hover:text-foreground"
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+          {rewrites.length > 0 && (
+            <div className="mt-4">
+              <p className="mono-label text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+                {t("Already whispered into the weave")}
+              </p>
+              <ul className="mt-2 space-y-1.5">
+                {rewrites.map((r, i) => (
+                  <li
+                    key={`${i}-${r.slice(0, 12)}`}
+                    className="flex items-start gap-2 rounded-xl border border-border/70 bg-card/50 px-3 py-2"
+                  >
+                    <span className="ink-hand ink-soft min-w-0 flex-1 text-[12.5px] italic leading-relaxed">
+                      {r}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => removeRewrite(i)}
+                      aria-label={t("Let the wish go")}
+                      className="focus-glow mt-0.5 text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                      <X className="size-3.5" aria-hidden="true" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          <button
+            type="submit"
+            disabled={!rewriteDraft.trim()}
+            className="akashic-btn focus-glow mt-5 flex h-11 w-full items-center justify-center gap-2 rounded-full text-[14px] font-medium tracking-wide disabled:opacity-50"
+          >
+            <Sparkles className="size-4" aria-hidden="true" />
+            {t("Bend the tale")}
+          </button>
+        </form>
+      </ModalShell>
     </div>
   );
 
@@ -1200,13 +1332,11 @@ function ShapeRow({
 
 function BookPage({
   page,
-  side,
   fontSize,
   stalled,
   onRetry,
 }: {
   page?: WeavePage;
-  side: "left" | "right";
   fontSize: number;
   stalled?: boolean;
   onRetry?: () => void;
@@ -1215,9 +1345,8 @@ function BookPage({
   return (
     <div
       className={cn(
-        "dream-page nice-scroll flex flex-col px-6 py-8 sm:px-9",
-        side === "left" ? "dream-page-left" : "dream-page-right",
-        "max-h-[58vh] md:max-h-[66vh]"
+        "dream-page dream-page-single nice-scroll mx-auto flex w-full max-w-[560px] flex-col px-6 py-8 sm:px-10",
+        "max-h-[62vh] md:max-h-[68vh]"
       )}
     >
       {page ? (
