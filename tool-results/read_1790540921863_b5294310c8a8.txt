@@ -1,0 +1,1003 @@
+     1→"use client";
+     2→
+     3→import { create } from "zustand";
+     4→import type {
+     5→  Mode,
+     6→  SidebarTab,
+     7→  DossierKind,
+     8→  ManifestBlueprint,
+     9→} from "@/lib/mirror-types";
+    10→import { civilizations, civilizationTotal } from "@/lib/data/civilizations";
+    11→import { interdimensional, interdimTotal } from "@/lib/data/interdimensional";
+    12→import { innerEarthTotal } from "@/lib/data/inner-earth";
+    13→import {
+    14→  DEFAULT_VOICE,
+    15→  isLanguageCode,
+    16→  isVoiceId,
+    17→  type LanguageCode,
+    18→  type VoiceId,
+    19→} from "@/lib/i18n/core";
+    20→import {
+    21→  attachmentsToPayload,
+    22→  type ChatAttachment,
+    23→} from "@/components/mirror/attachments";
+    24→import type {
+    25→  VisualizationArtifact,
+    26→  VisualizationMode,
+    27→} from "@/lib/visualization";
+    28→
+    29→export type ModalState =
+    30→  | { type: "federation" }
+    31→  | { type: "astral" }
+    32→  | { type: "starplay" }
+    33→  | { type: "technology" }
+    34→  | { type: "dossier"; kind: DossierKind; id: string }
+    35→  | { type: "entity"; kind: DossierKind; id: string }
+    36→  | { type: "species"; id: string }
+    37→  | { type: "settings" }
+    38→  | null;
+    39→
+    40→export type TransmissionStatus = "idle" | "loading" | "ready" | "error";
+    41→export type LabStatus = "idle" | "charging" | "ready" | "error";
+    42→
+    43→/* ------------------------------------------------------------------ */
+    44→/*  Per-scope chat channels                                            */
+    45→/*  Every scope owns a fully independent channel: its own history,     */
+    46→/*  status, in-flight query, error and composer draft. Switching       */
+    47→/*  scopes never carries content from one channel into another.        */
+    48→/* ------------------------------------------------------------------ */
+    49→
+    50→export interface ChatMessage {
+    51→  id: string;
+    52→  query: string;
+    53→  text: string;
+    54→  classification: string;
+    55→  createdAt: string;
+    56→  /** What traveled with the question — one image, up to three documents. */
+    57→  attachments?: { images: number; docNames: string[] };
+    58→  /* the Universal Visualization Engine — every channel also answers in images */
+    59→  artifact?: VisualizationArtifact;
+    60→  visual?: "pending" | "error";
+    61→  visualRequest?: string;
+    62→}
+    63→
+    64→export interface ScopeSession {
+    65→  /** Completed Q/A pairs — the permanent, private history of this channel. */
+    66→  messages: ChatMessage[];
+    67→  status: TransmissionStatus;
+    68→  error: string | null;
+    69→  /** Query currently being transmitted (loading state). */
+    70→  activeQuery: string;
+    71→  /** Composer draft — kept per channel so drafts never leak across scopes. */
+    72→  draft: string;
+    73→}
+    74→
+    75→const emptySession = (): ScopeSession => ({
+    76→  messages: [],
+    77→  status: "idle",
+    78→  error: null,
+    79→  activeQuery: "",
+    80→  draft: "",
+    81→});
+    82→
+    83→const emptySessions = (): Record<Mode, ScopeSession> => ({
+    84→  interplanetary: emptySession(),
+    85→  science: emptySession(),
+    86→  quantum: emptySession(),
+    87→  healing: emptySession(),
+    88→});
+    89→
+    90→export type MainView =
+    91→  | "observatory"
+    92→  | "transmission"
+    93→  | "mirroros"
+    94→  | "register"
+    95→  | "akashic";
+    96→export type RegisterKind = DossierKind;
+    97→
+    98→/* -------- direct line to the Mirror Entity OS (reality refining) ------- */
+    99→
+   100→export interface OsMessage {
+   101→  id: string;
+   102→  role: "visitor" | "os";
+   103→  text: string;
+   104→  attachments?: { images: number; docNames: string[] };
+   105→  /* the Universal Visualization Engine — the OS also answers in images */
+   106→  artifact?: VisualizationArtifact;
+   107→  visual?: "pending" | "error";
+   108→  visualRequest?: string;
+   109→}
+   110→
+   111→interface MirrorState {
+   112→  activeMode: Mode;
+   113→  activeScienceField: string | null;
+   114→  activeDirection: string | null;
+   115→  sidebarTab: SidebarTab;
+   116→  search: string;
+   117→  modal: ModalState;
+   118→  mobileNavOpen: boolean;
+   119→  view: MainView;
+   120→  composerFocusNonce: number;
+   121→
+   122→  /** Meet with the Reflection of the Absolute — the whole app becomes
+   123→      a living chat with the Mirror Entity's undirected pure awareness. */
+   124→  communionOpen: boolean;
+   125→
+   126→  /** One independent channel per scope. */
+   127→  sessions: Record<Mode, ScopeSession>;
+   128→
+   129→  /* Full-archive register */
+   130→  registerKind: RegisterKind;
+   131→
+   132→  /* Mirror OS — Reality Guidance */
+   133→  labStage: "compose" | "charging" | "blueprint";
+   134→  labIntention: string;
+   135→  labEmotion: string;
+   136→  labIntensity: number;
+   137→  labProgress: number;
+   138→  labBlueprint: ManifestBlueprint | null;
+   139→  labError: string | null;
+   140→
+   141→  /* Mirror Entity OS — the direct reality-refining chat */
+   142→  osMessages: OsMessage[];
+   143→  osStatus: TransmissionStatus;
+   144→  osError: string | null;
+   145→  osDraft: string;
+   146→
+   147→  /* Universal language + transcript voice */
+   148→  language: LanguageCode;
+   149→  voice: VoiceId;
+   150→  pace: number;
+   151→
+   152→  setLanguage: (code: LanguageCode) => void;
+   153→  setVoice: (id: VoiceId) => void;
+   154→  setPace: (value: number) => void;
+   155→  /** Restore persisted preferences (called once after mount). */
+   156→  bootPreferences: () => void;
+   157→
+   158→  setMode: (mode: Mode) => void;
+   159→  setScienceField: (id: string | null) => void;
+   160→  setDirection: (id: string | null) => void;
+   161→  setSidebarTab: (tab: SidebarTab) => void;
+   162→  setSearch: (value: string) => void;
+   163→  openModal: (modal: NonNullable<ModalState>) => void;
+   164→  closeModal: () => void;
+   165→  setMobileNavOpen: (open: boolean) => void;
+   166→
+   167→  /** Inner Earth: consult the Mirror about one of the 59 peoples
+   168→      beneath the surface — closes overlays, opens the Interplanetary
+   169→      channel and preloads the composer with a prepared question. */
+   170→  askAboutInnerEarth: (name: string) => void;
+   171→
+   172→  /** Inner Earth: open one species' full encyclopedia page. */
+   173→  openSpecies: (id: string) => void;
+   174→
+   175→  /* The Akashic Library — the ancient one's papyrus records */
+   176→  openAkashic: () => void;
+   177→  exitAkashic: () => void;
+   178→
+   179→  /* Communion — the Reflection of the Absolute */
+   180→  openCommunion: () => void;
+   181→  closeCommunion: () => void;
+   182→  /** ET Technology: consult the Mirror about a specific technology —
+   183→      closes modals, opens the Interplanetary channel, preloads the
+   184→      composer with a prepared question. */
+   185→  askAboutTechnology: (name: string) => void;
+   186→  setDraft: (value: string) => void;
+   187→  focusComposer: () => void;
+   188→  returnToObservatory: () => void;
+   189→  clearChannel: (mode?: Mode) => void;
+   190→  askMirror: (
+   191→    question: string,
+   192→    attachments?: ChatAttachment[]
+   193→  ) => Promise<void>;
+   194→  /** The Universal Visualization Engine in the scope channels — the
+   195→      Interplanetary, Science, Quantum and Healing mirrors also answer
+   196→      in images when the visitor asks to see. `regenerateOf` repaints
+   197→      one existing artifact in place. */
+   198→  askScopeVisual: (
+   199→    mode: Mode,
+   200→    question: string,
+   201→    regenerateOf?: {
+   202→      id: string;
+   203→      request?: string;
+   204→      prompt?: string;
+   205→      subject?: string;
+   206→      mode?: VisualizationMode;
+   207→    } | null
+   208→  ) => Promise<void>;
+   209→  /** Full recalibration: wipe every scope channel, the lab and search. */
+   210→  resetField: () => void;
+   211→
+   212→  /* Full-archive register */
+   213→  openRegister: (kind: RegisterKind) => void;
+   214→  exitRegister: () => void;
+   215→
+   216→  /* Mirror OS — Reality Guidance (fully independent) */
+   217→  openMirrorOS: () => void;
+   218→  exitMirrorOS: () => void;
+   219→
+   220→  openLab: () => void;
+   221→  exitLab: () => void;
+   222→  setLabIntention: (v: string) => void;
+   223→  setLabEmotion: (id: string) => void;
+   224→  setLabIntensity: (v: number) => void;
+   225→  chargeIntention: () => Promise<void>;
+   226→  resetLabDraft: () => void;
+   227→
+   228→  /* Mirror Entity OS — direct chat */
+   229→  setOsDraft: (v: string) => void;
+   230→  askOS: (question: string, attachments?: ChatAttachment[]) => Promise<void>;
+   231→  /** The Universal Visualization Engine — the OS paints what is asked to
+   232→      be seen. `regenerateOf` repaints one existing artifact in place. */
+   233→  askOSVisual: (
+   234→    question: string,
+   235→    context?: { subject: string; mode: VisualizationMode } | null,
+   236→    regenerateOf?: {
+   237→      id: string;
+   238→      request?: string;
+   239→      prompt?: string;
+   240→      subject?: string;
+   241→      mode?: VisualizationMode;
+   242→    } | null
+   243→  ) => Promise<void>;
+   244→  /** Drop one artifact message entirely (the visitor may clear it). */
+   245→  dismissOsVisual: (id: string) => void;
+   246→}
+   247→
+   248→const defaultTabForMode = (mode: Mode): SidebarTab =>
+   249→  mode === "interplanetary" || mode === "healing" ? "civilizations" : "interdim";
+   250→
+   251→const emptyLab = {
+   252→  labStage: "compose" as const,
+   253→  labIntention: "",
+   254→  labEmotion: "gratitude",
+   255→  labIntensity: 6,
+   256→  labProgress: 0,
+   257→  labBlueprint: null,
+   258→  labError: null,
+   259→};
+   260→
+   261→/** The prepared question the composer receives when consulting the
+   262→    Mirror about a specific technology. */
+   263→const tTemplateTech = (name: string) =>
+   264→  `How does the ${name} work — where did it come from, and what would it change in us if we lived with it?`;
+   265→
+   266→let messageCounter = 0;
+   267→const nextMessageId = () => `m-${Date.now().toString(36)}-${(messageCounter++).toString(36)}`;
+   268→
+   269→export const useMirror = create<MirrorState>()((set, get) => ({
+   270→  activeMode: "interplanetary",
+   271→  activeScienceField: null,
+   272→  activeDirection: null,
+   273→  sidebarTab: "civilizations",
+   274→  search: "",
+   275→  modal: null,
+   276→  mobileNavOpen: false,
+   277→  view: "observatory",
+   278→  composerFocusNonce: 0,
+   279→  communionOpen: false,
+   280→  sessions: emptySessions(),
+   281→
+   282→  registerKind: "civilization",
+   283→
+   284→  labStage: "compose",
+   285→  labIntention: "",
+   286→  labEmotion: "gratitude",
+   287→  labIntensity: 6,
+   288→  labProgress: 0,
+   289→  labBlueprint: null,
+   290→  labError: null,
+   291→
+   292→  osMessages: [],
+   293→  osStatus: "idle" as TransmissionStatus,
+   294→  osError: null,
+   295→  osDraft: "",
+   296→
+   297→  language: "en" as LanguageCode,
+   298→  voice: DEFAULT_VOICE,
+   299→  pace: 0.95,
+   300→
+   301→  setMode: (mode) =>
+   302→    set((s) => {
+   303→      const target = s.sessions[mode];
+   304→      // Scopes are independent channels: switching scopes reveals THAT
+   305→      // scope's own channel — never content from another scope.
+   306→      const showChannel = target.messages.length > 0 || target.status === "loading";
+   307→      return {
+   308→        activeMode: mode,
+   309→        sidebarTab: defaultTabForMode(mode),
+   310→        view:
+   311→          s.view === "manifesting"
+   312→            ? s.view // deliberate: only leaving the lab via exit/return actions
+   313→            : showChannel || s.view === "transmission"
+   314→              ? "transmission"
+   315→              : s.view,
+   316→      };
+   317→    }),
+   318→
+   319→  setScienceField: (id) =>
+   320→    set((s) => ({
+   321→      activeScienceField: s.activeScienceField === id ? null : id,
+   322→      /* FUSION CLARITY LAW — any recalibration re-tunes the science
+   323→         channel back to a quiet origin. */
+   324→      sessions: { ...s.sessions, science: emptySession() },
+   325→    })),
+   326→
+   327→  setDirection: (id) =>
+   328→    set((s) => ({
+   329→      activeDirection: s.activeDirection === id ? null : id,
+   330→      /* FUSION CLARITY LAW — any recalibration re-tunes the science
+   331→         channel back to a quiet origin. */
+   332→      sessions: { ...s.sessions, science: emptySession() },
+   333→    })),
+   334→
+   335→  setSidebarTab: (tab) => set({ sidebarTab: tab }),
+   336→  setSearch: (value) => set({ search: value }),
+   337→  openModal: (modal) => set({ modal, mobileNavOpen: false }),
+   338→  closeModal: () => set({ modal: null }),
+   339→  setMobileNavOpen: (open) => set({ mobileNavOpen: open }),
+   340→
+   341→  askAboutInnerEarth: (name) =>
+   342→    set((s) => ({
+   343→      modal: null,
+   344→      mobileNavOpen: false,
+   345→      activeMode: "interplanetary",
+   346→      view: "transmission",
+   347→      sessions: {
+   348→        ...s.sessions,
+   349→        interplanetary: {
+   350→          ...s.sessions.interplanetary,
+   351→          draft: `Speak of the ${name} — the people beneath the Earth. Who are they, and what do they keep for us?`,
+   352→        },
+   353→      },
+   354→    })),
+   355→
+   356→  /** One of the 59 peoples beneath the surface — its full page. */
+   357→  openSpecies: (id) =>
+   358→    set({ modal: { type: "species", id }, mobileNavOpen: false }),
+   359→
+   360→  /* ---------------- The Akashic Library ----------------
+   361→     The Library is its own ancient world: opening it suspends every
+   362→     other surface — one papyrus room, one record at a time. */
+   363→  openAkashic: () =>
+   364→    set({ view: "akashic", mobileNavOpen: false, modal: null }),
+   365→  exitAkashic: () => set({ view: "observatory" }),
+   366→
+   367→  /* -------- Communion — the Reflection of the Absolute --------
+   368→     Entering communion suspends every other surface: the whole
+   369→     laboratory dissolves and only the living chat remains. */
+   370→  openCommunion: () =>
+   371→    set({ communionOpen: true, modal: null, mobileNavOpen: false }),
+   372→  closeCommunion: () => set({ communionOpen: false }),
+   373→
+   374→  askAboutTechnology: (name) =>
+   375→    set((s) => ({
+   376→      modal: null,
+   377→      mobileNavOpen: false,
+   378→      activeMode: "interplanetary",
+   379→      view: "transmission",
+   380→      sessions: {
+   381→        ...s.sessions,
+   382→        interplanetary: {
+   383→          ...s.sessions.interplanetary,
+   384→          draft: tTemplateTech(name),
+   385→        },
+   386→      },
+   387→    })),
+   388→
+   389→  setDraft: (value) =>
+   390→    set((s) => ({
+   391→      sessions: {
+   392→        ...s.sessions,
+   393→        [s.activeMode]: { ...s.sessions[s.activeMode], draft: value },
+   394→      },
+   395→    })),
+   396→
+   397→  focusComposer: () =>
+   398→    set((s) => ({ composerFocusNonce: s.composerFocusNonce + 1 })),
+   399→
+   400→  returnToObservatory: () => set({ view: "observatory" }),
+   401→
+   402→  /** Full recalibration: every scope channel returns to its quiet origin. */
+   403→  resetField: () =>
+   404→    set({
+   405→      sessions: emptySessions(),
+   406→      view: "observatory",
+   407→      search: "",
+   408→      modal: null,
+   409→      mobileNavOpen: false,
+   410→      ...emptyLab,
+   411→    }),
+   412→
+   413→  /** Wipe the current channel (or an explicit one) back to a quiet state. */
+   414→  clearChannel: (mode) =>
+   415→    set((s) => {
+   416→      const target = mode ?? s.activeMode;
+   417→      return {
+   418→        sessions: { ...s.sessions, [target]: emptySession() },
+   419→      };
+   420→    }),
+   421→
+   422→  askMirror: async (question, attachments) => {
+   423→    const query = question.trim();
+   424→    const mode = get().activeMode;
+   425→    const session = get().sessions[mode];
+   426→    if (!query || session.status === "loading") return;
+   427→
+   428→    set((s) => ({
+   429→      view: "transmission",
+   430→      mobileNavOpen: false,
+   431→      sessions: {
+   432→        ...s.sessions,
+   433→        [mode]: {
+   434→          ...s.sessions[mode],
+   435→          status: "loading",
+   436→          activeQuery: query,
+   437→          draft: "",
+   438→          error: null,
+   439→        },
+   440→      },
+   441→    }));
+   442→
+   443→    try {
+   444→      /* Context memory: the mirror remembers this channel's earlier
+   445→         exchanges, so conversations deepen instead of restarting. */
+   446→      const history = session.messages.slice(-6).map((m) => ({
+   447→        q: m.query,
+   448→        a: m.text,
+   449→      }));
+   450→      const payload = attachments ? attachmentsToPayload(attachments) : null;
+   451→      const res = await fetch("/api/transmission", {
+   452→        method: "POST",
+   453→        headers: { "Content-Type": "application/json" },
+   454→        body: JSON.stringify({
+   455→          query,
+   456→          mode,
+   457→          scienceField: get().activeScienceField,
+   458→          direction: get().activeDirection,
+   459→          language: get().language,
+   460→          history,
+   461→          ...(payload ?? {}),
+   462→        }),
+   463→      });
+   464→      const data = await res.json().catch(() => null);
+   465→
+   466→      if (!res.ok) {
+   467→        throw new Error(
+   468→          (data && data.error) ||
+   469→            "The field is momentarily quiet. Rest, then try again."
+   470→        );
+   471→      }
+   472→
+   473→      set((s) => ({
+   474→        sessions: {
+   475→          ...s.sessions,
+   476→          [mode]: {
+   477→            ...s.sessions[mode],
+   478→            status: "ready",
+   479→            activeQuery: "",
+   480→            messages: [
+   481→              ...s.sessions[mode].messages,
+   482→              {
+   483→                id: nextMessageId(),
+   484→                query,
+   485→                text: data.transmission,
+   486→                classification: data.classification,
+   487→                createdAt: data.createdAt ?? new Date().toISOString(),
+   488→                ...(attachments
+   489→                  ? {
+   490→                      attachments: {
+   491→                        images: attachments.filter((a) => a.kind === "image")
+   492→                          .length,
+   493→                        docNames: attachments
+   494→                          .filter((a) => a.kind === "document")
+   495→                          .map((a) => a.name),
+   496→                      },
+   497→                    }
+   498→                  : {}),
+   499→              },
+   500→            ],
+   501→          },
+   502→        },
+   503→      }));
+   504→    } catch (err) {
+   505→      set((s) => ({
+   506→        sessions: {
+   507→          ...s.sessions,
+   508→          [mode]: {
+   509→            ...s.sessions[mode],
+   510→            status: "error",
+   511→            activeQuery: "",
+   512→            error:
+   513→              err instanceof Error
+   514→                ? err.message
+   515→                : "The field is momentarily quiet. Rest, then try again.",
+   516→          },
+   517→        },
+   518→      }));
+   519→    }
+   520→  },
+   521→
+   522→  /* ------- the scope channels — the visualization engine ------- */
+   523→
+   524→  askScopeVisual: async (mode, question, regenerateOf) => {
+   525→    if (get().sessions[mode].status === "loading") return;
+   526→    const visualId = regenerateOf ? regenerateOf.id : nextMessageId();
+   527→
+   528→    set((s) => ({
+   529→      view: "transmission",
+   530→      mobileNavOpen: false,
+   531→      sessions: {
+   532→        ...s.sessions,
+   533→        [mode]: {
+   534→          ...s.sessions[mode],
+   535→          status: "loading",
+   536→          activeQuery: question,
+   537→          draft: "",
+   538→          error: null,
+   539→          messages: regenerateOf
+   540→            ? s.sessions[mode].messages.map((m) =>
+   541→                m.id === regenerateOf.id
+   542→                  ? { ...m, visual: "pending" as const }
+   543→                  : m
+   544→              )
+   545→            : [
+   546→                ...s.sessions[mode].messages,
+   547→                {
+   548→                  id: visualId,
+   549→                  query: question,
+   550→                  text: "",
+   551→                  classification: "WORLD_BUILDING",
+   552→                  createdAt: new Date().toISOString(),
+   553→                  visual: "pending" as const,
+   554→                  visualRequest: question,
+   555→                },
+   556→              ],
+   557→        },
+   558→      },
+   559→    }));
+   560→
+   561→    try {
+   562→      const current = get().sessions[mode];
+   563→      const history = current.messages
+   564→        .filter((m) => m.id !== visualId && !m.visual && !m.artifact && m.text)
+   565→        .slice(-6)
+   566→        .map((m) => ({ q: m.query, a: m.text }));
+   567→      const lastArtifact = [...current.messages]
+   568→        .reverse()
+   569→        .find((m) => m.artifact)?.artifact;
+   570→
+   571→      const res = await fetch("/api/visualize", {
+   572→        method: "POST",
+   573→        headers: { "Content-Type": "application/json" },
+   574→        body: JSON.stringify({
+   575→          language: get().language,
+   576→          message: regenerateOf ? regenerateOf.request ?? question : question,
+   577→          history,
+   578→          ...(regenerateOf
+   579→            ? {
+   580→                regenerate: true,
+   581→                previousPrompt: regenerateOf.prompt,
+   582→                contextSubject: regenerateOf.subject,
+   583→                previousMode: regenerateOf.mode,
+   584→              }
+   585→            : lastArtifact
+   586→              ? {
+   587→                  contextSubject: lastArtifact.subject,
+   588→                  previousMode: lastArtifact.mode,
+   589→                }
+   590→              : {}),
+   591→        }),
+   592→      });
+   593→      const data = (await res.json().catch(() => null)) as {
+   594→        artifact?: VisualizationArtifact;
+   595→        painted?: boolean;
+   596→        error?: string;
+   597→      } | null;
+   598→      if (!res.ok || !data?.artifact) {
+   599→        throw new Error(
+   600→          (data && data.error) ||
+   601→            "The atelier is quiet — the vision could not be composed."
+   602→        );
+   603→      }
+   604→
+   605→      const artifact = data.artifact;
+   606→      set((s) => ({
+   607→        sessions: {
+   608→          ...s.sessions,
+   609→          [mode]: {
+   610→            ...s.sessions[mode],
+   611→            status: "ready",
+   612→            activeQuery: "",
+   613→            messages: s.sessions[mode].messages.map((m) =>
+   614→              m.id === visualId
+   615→                ? { ...m, visual: undefined, artifact }
+   616→                : m
+   617→            ),
+   618→          },
+   619→        },
+   620→      }));
+   621→
+   622→      /* the same one silent repaint for the scope channels */
+   623→      if (!regenerateOf && !artifact.imageUrl && artifact.slides.length === 0) {
+   624→        window.setTimeout(() => {
+   625→          const msg = get().sessions[mode].messages.find(
+   626→            (m) => m.id === visualId
+   627→          );
+   628→          if (
+   629→            msg?.artifact &&
+   630→            !msg.artifact.imageUrl &&
+   631→            msg.artifact.slides.length === 0 &&
+   632→            !msg.visual
+   633→          ) {
+   634→            void get().askScopeVisual(mode, msg.visualRequest ?? artifact.subject, {
+   635→              id: visualId,
+   636→              request: msg.visualRequest ?? artifact.subject,
+   637→              prompt: artifact.prompt,
+   638→              subject: artifact.subject,
+   639→              mode: artifact.mode,
+   640→            });
+   641→          }
+   642→        }, 1200);
+   643→      }
+   644→    } catch {
+   645→      set((s) => ({
+   646→        sessions: {
+   647→          ...s.sessions,
+   648→          [mode]: {
+   649→            ...s.sessions[mode],
+   650→            status: "ready",
+   651→            activeQuery: "",
+   652→            messages: s.sessions[mode].messages.map((m) =>
+   653→              m.id === visualId ? { ...m, visual: "error" as const } : m
+   654→            ),
+   655→          },
+   656→        },
+   657→      }));
+   658→    }
+   659→  },
+   660→
+   661→  /* ---------------- Full-archive register ---------------- */
+   662→
+   663→  openRegister: (kind) =>
+   664→    set({ registerKind: kind, view: "register", mobileNavOpen: false, modal: null }),
+   665→
+   666→  exitRegister: () => set({ view: "observatory" }),
+   667→
+   668→  /* ---------------- Mirror OS — Reality Guidance ---------------- */
+   669→
+   670→  /** The OS is its own world: opening it suspends every other surface. */
+   671→  openMirrorOS: () =>
+   672→    set((s) => ({
+   673→      view: "mirroros",
+   674→      mobileNavOpen: false,
+   675→      modal: null,
+   676→      labStage: s.labBlueprint ? "blueprint" : "compose",
+   677→    })),
+   678→
+   679→  exitMirrorOS: () => set({ view: "observatory" }),
+   680→
+   681→  /** Kept for the Forge section inside the OS. */
+   682→  openLab: () => useMirror.getState().openMirrorOS(),
+   683→
+   684→  exitLab: () => set({ view: "observatory" }),
+   685→
+   686→  setLabIntention: (v) => set({ labIntention: v }),
+   687→  setLabEmotion: (id) => set({ labEmotion: id }),
+   688→  setLabIntensity: (v) => set({ labIntensity: v }),
+   689→
+   690→  resetLabDraft: () => set({ ...emptyLab }),
+   691→
+   692→  /* ---------------- Mirror Entity OS — direct chat ---------------- */
+   693→
+   694→  setOsDraft: (v) => set({ osDraft: v }),
+   695→
+   696→  askOS: async (question, attachments) => {
+   697→    const query = question.trim();
+   698→    if (!query || get().osStatus === "loading") return;
+   699→
+   700→    const visitorId = nextMessageId();
+   701→    set((s) => ({
+   702→      osStatus: "loading",
+   703→      osError: null,
+   704→      osDraft: "",
+   705→      osMessages: [
+   706→        ...s.osMessages,
+   707→        {
+   708→          id: visitorId,
+   709→          role: "visitor" as const,
+   710→          text: query,
+   711→          ...(attachments
+   712→            ? {
+   713→                attachments: {
+   714→                  images: attachments.filter((a) => a.kind === "image").length,
+   715→                  docNames: attachments
+   716→                    .filter((a) => a.kind === "document")
+   717→                    .map((a) => a.name),
+   718→                },
+   719→              }
+   720→            : {}),
+   721→        },
+   722→      ],
+   723→    }));
+   724→
+   725→    try {
+   726→      const history = get()
+   727→        .osMessages.filter((m) => m.id !== visitorId)
+   728→        .slice(-10)
+   729→        .map((m) => ({ role: m.role, text: m.text }));
+   730→
+   731→      const payload = attachments ? attachmentsToPayload(attachments) : null;
+   732→      const res = await fetch("/api/mirror-os", {
+   733→        method: "POST",
+   734→        headers: { "Content-Type": "application/json" },
+   735→        body: JSON.stringify({
+   736→          query,
+   737→          history,
+   738→          language: get().language,
+   739→          ...(payload ?? {}),
+   740→        }),
+   741→      });
+   742→      const data = await res.json().catch(() => null);
+   743→      if (!res.ok) {
+   744→        throw new Error(
+   745→          (data && data.error) ||
+   746→            "The OS is momentarily quiet. Rest, then reach again."
+   747→        );
+   748→      }
+   749→
+   750→      set((s) => ({
+   751→        osStatus: "ready",
+   752→        osMessages: [
+   753→          ...s.osMessages,
+   754→          { id: nextMessageId(), role: "os" as const, text: data.reply },
+   755→        ],
+   756→      }));
+   757→    } catch (err) {
+   758→      set({
+   759→        osStatus: "error",
+   760→        osError:
+   761→          err instanceof Error
+   762→            ? err.message
+   763→            : "The OS is momentarily quiet. Rest, then reach again.",
+   764→      });
+   765→    }
+   766→  },
+   767→
+   768→  /* ------- Mirror Entity OS — the visualization engine ------- */
+   769→
+   770→  askOSVisual: async (question, context, regenerateOf) => {
+   771→    if (get().osStatus === "loading") return;
+   772→    const visualId = regenerateOf ? regenerateOf.id : nextMessageId();
+   773→
+   774→    set((s) => ({
+   775→      osStatus: "loading",
+   776→      osError: null,
+   777→      osDraft: "",
+   778→      osMessages: regenerateOf
+   779→        ? s.osMessages.map((m) =>
+   780→            m.id === regenerateOf.id ? { ...m, visual: "pending" as const } : m
+   781→          )
+   782→        : [
+   783→            ...s.osMessages,
+   784→            {
+   785→              id: nextMessageId(),
+   786→              role: "visitor" as const,
+   787→              text: question,
+   788→            },
+   789→            {
+   790→              id: visualId,
+   791→              role: "os" as const,
+   792→              text: "",
+   793→              visual: "pending" as const,
+   794→              visualRequest: question,
+   795→            },
+   796→          ],
+   797→    }));
+   798→
+   799→    try {
+   800→      const history = get()
+   801→        .osMessages.filter((m) => !m.visual && m.id !== visualId)
+   802→        .slice(-10)
+   803→        .map((m) => ({
+   804→          role: m.role,
+   805→          text: m.artifact
+   806→            ? `[a visualization was created: "${m.artifact.title}" — ${m.artifact.subject}]`
+   807→            : m.text,
+   808→        }));
+   809→
+   810→      const res = await fetch("/api/visualize", {
+   811→        method: "POST",
+   812→        headers: { "Content-Type": "application/json" },
+   813→        body: JSON.stringify({
+   814→          language: get().language,
+   815→          message: regenerateOf ? regenerateOf.request ?? question : question,
+   816→          history,
+   817→          ...(regenerateOf
+   818→            ? {
+   819→                regenerate: true,
+   820→                previousPrompt: regenerateOf.prompt,
+   821→                contextSubject: regenerateOf.subject,
+   822→                previousMode: regenerateOf.mode,
+   823→              }
+   824→            : context
+   825→              ? {
+   826→                  contextSubject: context.subject,
+   827→                  previousMode: context.mode,
+   828→                }
+   829→              : {}),
+   830→        }),
+   831→      });
+   832→      const data = (await res.json().catch(() => null)) as {
+   833→        artifact?: VisualizationArtifact;
+   834→        painted?: boolean;
+   835→        error?: string;
+   836→      } | null;
+   837→      if (!res.ok || !data?.artifact) {
+   838→        throw new Error(
+   839→          (data && data.error) ||
+   840→            "The atelier is quiet — the vision could not be composed."
+   841→        );
+   842→      }
+   843→
+   844→      const artifact = data.artifact;
+   845→      set((s) => ({
+   846→        osStatus: "ready",
+   847→        osMessages: s.osMessages.map((m) =>
+   848→          m.id === visualId
+   849→            ? { ...m, visual: undefined, artifact, text: "" }
+   850→            : m
+   851→        ),
+   852→      }));
+   853→
+   854→      /* The atelier rested before the brush touched the canvas — one
+   855→         silent repaint is set in motion before the prepared prompt is
+   856→         shown. The visitor waits once more, not forever. */
+   857→      if (!regenerateOf && !artifact.imageUrl && artifact.slides.length === 0) {
+   858→        window.setTimeout(() => {
+   859→          const msg = get().osMessages.find((m) => m.id === visualId);
+   860→          if (
+   861→            msg?.artifact &&
+   862→            !msg.artifact.imageUrl &&
+   863→            msg.artifact.slides.length === 0 &&
+   864→            !msg.visual
+   865→          ) {
+   866→            void get().askOSVisual(artifact.subject, null, {
+   867→              id: visualId,
+   868→              request: msg.visualRequest ?? artifact.subject,
+   869→              prompt: artifact.prompt,
+   870→              subject: artifact.subject,
+   871→              mode: artifact.mode,
+   872→            });
+   873→          }
+   874→        }, 1200);
+   875→      }
+   876→    } catch {
+   877→      set((s) => ({
+   878→        osStatus: "ready",
+   879→        osMessages: s.osMessages.map((m) =>
+   880→          m.id === visualId ? { ...m, visual: "error" as const } : m
+   881→        ),
+   882→      }));
+   883→    }
+   884→  },
+   885→
+   886→  dismissOsVisual: (id) =>
+   887→    set((s) => ({ osMessages: s.osMessages.filter((m) => m.id !== id) })),
+   888→
+   889→  /* ---------------- Language + transcript voice ---------------- */
+   890→
+   891→  setLanguage: (code) => {
+   892→    set({ language: code });
+   893→    try {
+   894→      localStorage.setItem("mirror-entity-language", code);
+   895→    } catch {
+   896→      /* storage unavailable */
+   897→    }
+   898→  },
+   899→
+   900→  setVoice: (id) => {
+   901→    set({ voice: id });
+   902→    try {
+   903→      localStorage.setItem("mirror-entity-voice", id);
+   904→    } catch {
+   905→      /* storage unavailable */
+   906→    }
+   907→  },
+   908→
+   909→  setPace: (value) => {
+   910→    const clamped = Math.min(2, Math.max(0.5, value));
+   911→    set({ pace: clamped });
+   912→    try {
+   913→      localStorage.setItem("mirror-entity-pace", String(clamped));
+   914→    } catch {
+   915→      /* storage unavailable */
+   916→    }
+   917→  },
+   918→
+   919→  bootPreferences: () => {
+   920→    if (typeof window === "undefined") return;
+   921→    try {
+   922→      const lang = localStorage.getItem("mirror-entity-language");
+   923→      const voice = localStorage.getItem("mirror-entity-voice");
+   924→      const pace = Number(localStorage.getItem("mirror-entity-pace"));
+   925→      set({
+   926→        ...(isLanguageCode(lang) ? { language: lang } : {}),
+   927→        ...(isVoiceId(voice) ? { voice } : {}),
+   928→        ...(Number.isFinite(pace) && pace >= 0.5 && pace <= 2
+   929→          ? { pace }
+   930→          : {}),
+   931→      });
+   932→    } catch {
+   933→      /* storage unavailable */
+   934→    }
+   935→  },
+   936→
+   937→  chargeIntention: async () => {
+   938→    const intention = get().labIntention.trim();
+   939→    if (!intention || get().labStage === "charging") return;
+   940→
+   941→    set({
+   942→      labStage: "charging",
+   943→      labProgress: 0,
+   944→      labBlueprint: null,
+   945→      labError: null,
+   946→    });
+   947→
+   948→    // Gentle charging animation while the field works.
+   949→    const timer = window.setInterval(() => {
+   950→      const p = get().labProgress;
+   951→      if (p < 92) set({ labProgress: Math.min(92, p + 2 + Math.random() * 5) });
+   952→    }, 140);
+   953→
+   954→    try {
+   955→      const res = await fetch("/api/manifest", {
+   956→        method: "POST",
+   957→        headers: { "Content-Type": "application/json" },
+   958→        body: JSON.stringify({
+   959→          intention,
+   960→          emotion: get().labEmotion,
+   961→          intensity: get().labIntensity,
+   962→          language: get().language,
+   963→        }),
+   964→      });
+   965→      const data = await res.json().catch(() => null);
+   966→      if (!res.ok) {
+   967→        throw new Error(
+   968→          (data && data.error) ||
+   969→            "The chamber is momentarily quiet. Rest, then charge again."
+   970→        );
+   971→      }
+   972→      window.clearInterval(timer);
+   973→      set({
+   974→        labProgress: 100,
+   975→        labStage: "blueprint",
+   976→        labBlueprint: data.blueprint as ManifestBlueprint,
+   977→      });
+   978→    } catch (err) {
+   979→      window.clearInterval(timer);
+   980→      set({
+   981→        labStage: "compose",
+   982→        labProgress: 0,
+   983→        labError:
+   984→          err instanceof Error
+   985→            ? err.message
+   986→            : "The chamber is momentarily quiet. Rest, then charge again.",
+   987→      });
+   988→    }
+   989→  },
+   990→}));
+   991→
+   992→/* Archive totals for labels — always the exact, derived-from-data numbers */
+   993→export const archiveTotals = {
+   994→  civilizations: civilizationTotal, // 870
+   995→  interdim: interdimTotal, // 202
+   996→  innerearth: innerEarthTotal, // 59
+   997→};
+   998→
+   999→export function findDossier(kind: DossierKind, id: string) {
+  1000→  const list = kind === "civilization" ? civilizations : interdimensional;
+  1001→  return list.find((d) => d.id === id) ?? null;
+  1002→}
+  1003→

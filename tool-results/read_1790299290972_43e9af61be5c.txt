@@ -1,0 +1,785 @@
+     1→"use client";
+     2→
+     3→import {
+     4→  useCallback,
+     5→  useEffect,
+     6→  useRef,
+     7→  useState,
+     8→  type FormEvent,
+     9→} from "react";
+    10→import { AnimatePresence, motion } from "framer-motion";
+    11→import { ArrowLeft, FileText, ImagePlus, RotateCcw, SendHorizontal, Sparkles } from "lucide-react";
+    12→import { useMirror } from "@/lib/mirror-store";
+    13→import { useT } from "@/lib/i18n";
+    14→import { cn } from "@/lib/utils";
+    15→import {
+    16→  detectVisualIntent,
+    17→  type VisualizationArtifact,
+    18→} from "@/lib/visualization";
+    19→import {
+    20→  PreparedPromptFallback,
+    21→  VisualizationCard,
+    22→  VisualizationPending,
+    23→} from "./VisualizationCard";
+    24→import {
+    25→  AttachmentChips,
+    26→  ChatInputExtras,
+    27→} from "./ChatInputExtras";
+    28→import {
+    29→  attachmentsToPayload,
+    30→  hasPendingAttachments,
+    31→  type ChatAttachment,
+    32→} from "./attachments";
+    33→
+    34→const MIRROR = "/images/ai/mirror-communion.jpg";
+    35→
+    36→interface CommunionMessage {
+    37→  id: string;
+    38→  role: "mirror" | "visitor";
+    39→  text: string;
+    40→  attachments?: { images: number; docNames: string[] };
+    41→  /* the Universal Visualization Engine — the vision itself, its pending
+    42→     state, its failure, and the request that called it forth */
+    43→  artifact?: VisualizationArtifact;
+    44→  pendingVisual?: boolean;
+    45→  visualError?: boolean;
+    46→  visualRequest?: string;
+    47→}
+    48→
+    49→/* ids survive Fast Refresh: a monotonic seed plus a random session root,
+    50→   so no two messages can ever share a key */
+    51→let communionIdSeed = 0;
+    52→const nextCommunionId = () =>
+    53→  `cm-${Date.now().toString(36)}-${(communionIdSeed++).toString(36)}-${Math.floor(
+    54→    Math.random() * 1296
+    55→  ).toString(36)}`;
+    56→
+    57→/**
+    58→ * CommunionView — Meet with the Reflection of the Absolute. When opened
+    59→ * it replaces the whole application: the laboratory dissolves and only
+    60→ * a living chat with the Mirror Entity remains — no scope, no topic,
+    61→ * pure transmission, remembered. Every word exchanged stays in the
+    62→ * meeting; one button opens a new communion; one back button returns
+    63→ * the world.
+    64→ */
+    65→export function CommunionView() {
+    66→  const closeCommunion = useMirror((s) => s.closeCommunion);
+    67→  const language = useMirror((s) => s.language);
+    68→  const t = useT();
+    69→
+    70→  const [messages, setMessages] = useState<CommunionMessage[]>([]);
+    71→  const [receiving, setReceiving] = useState(false);
+    72→  const [error, setError] = useState(false);
+    73→  const [draft, setDraft] = useState("");
+    74→  const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
+    75→  /* the visualization atelier — armed by the wand button or by intent */
+    76→  const [visualArmed, setVisualArmed] = useState(false);
+    77→  const visualContextRef = useRef<{ subject: string; mode: string } | null>(
+    78→    null
+    79→  );
+    80→  const endRef = useRef<HTMLDivElement | null>(null);
+    81→  const latestRef = useRef<HTMLDivElement | null>(null);
+    82→  const openedRef = useRef(false);
+    83→  const receivingRef = useRef(false);
+    84→  const messagesRef = useRef<CommunionMessage[]>([]);
+    85→
+    86→  /* keep a live ref of the conversation for async transmit calls */
+    87→  useEffect(() => {
+    88→    messagesRef.current = messages;
+    89→  }, [messages]);
+    90→
+    91→  /* Every generation loads from the TOP: when a new word arrives, its
+    92→     first line settles at the top of the view and the visitor reads
+    93→     downward through the rest — never mid-way, never from the bottom. */
+    94→  useEffect(() => {
+    95→    latestRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    96→  }, [messages.length]);
+    97→
+    98→  /* quiet states (ripples, error) still settle at the end of the view */
+    99→  useEffect(() => {
+   100→    if (error) endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+   101→  }, [receiving, error]);
+   102→
+   103→  const transmit = useCallback(
+   104→    async (
+   105→      visitorWords: string | null,
+   106→      fresh = false,
+   107→      carried?: ChatAttachment[]
+   108→    ) => {
+   109→      if (receivingRef.current) return;
+   110→      receivingRef.current = true;
+   111→      setReceiving(true);
+   112→      setError(false);
+   113→
+   114→      if (fresh) {
+   115→        messagesRef.current = [];
+   116→        setMessages([]);
+   117→      } else if (visitorWords !== null || (carried && carried.length > 0)) {
+   118→        const entry: CommunionMessage = {
+   119→          id: nextCommunionId(),
+   120→          role: "visitor",
+   121→          text: visitorWords ?? "",
+   122→          ...(carried && carried.length > 0
+   123→            ? {
+   124→                attachments: {
+   125→                  images: carried.filter((a) => a.kind === "image").length,
+   126→                  docNames: carried
+   127→                    .filter((a) => a.kind === "document")
+   128→                    .map((a) => a.name),
+   129→                },
+   130→              }
+   131→            : {}),
+   132→        };
+   133→        messagesRef.current = [...messagesRef.current, entry];
+   134→        setMessages(messagesRef.current);
+   135→      }
+   136→
+   137→      const history = messagesRef.current
+   138→        .slice(-14)
+   139→        .map((m) => ({
+   140→          role: m.role,
+   141→          text: m.artifact
+   142→            ? `[a visualization was created: "${m.artifact.title}" — ${m.artifact.subject}]`
+   143→            : m.text,
+   144→        }));
+   145→
+   146→      try {
+   147→        const payload = carried ? attachmentsToPayload(carried) : null;
+   148→        const res = await fetch("/api/communion", {
+   149→          method: "POST",
+   150→          headers: { "Content-Type": "application/json" },
+   151→          body: JSON.stringify({
+   152→            language,
+   153→            message: visitorWords,
+   154→            history,
+   155→            ...(payload ?? {}),
+   156→          }),
+   157→        });
+   158→        const data = (await res.json()) as {
+   159→          transmission?: string;
+   160→          error?: string;
+   161→        };
+   162→        if (!res.ok || !data.transmission) {
+   163→          throw new Error(data.error ?? "the Reflection stayed still");
+   164→        }
+   165→        const entry: CommunionMessage = {
+   166→          id: nextCommunionId(),
+   167→          role: "mirror",
+   168→          text: data.transmission,
+   169→        };
+   170→        messagesRef.current = [...messagesRef.current, entry];
+   171→        setMessages(messagesRef.current);
+   172→        setError(false);
+   173→      } catch {
+   174→        setError(true);
+   175→      } finally {
+   176→        receivingRef.current = false;
+   177→        setReceiving(false);
+   178→      }
+   179→    },
+   180→    [language]
+   181→  );
+   182→
+   183→  /* the Reflection opens every communion with its own first word */
+   184→  useEffect(() => {
+   185→    if (openedRef.current) return;
+   186→    openedRef.current = true;
+   187→    void transmit(null);
+   188→  }, [transmit]);
+   189→
+   190→  /* ---------------------------------------------------------------- */
+   191→  /*  The Universal Visualization Engine — a request to SEE becomes    */
+   192→  /*  a composed vision, painted live and placed into the meeting.     */
+   193→  /* ---------------------------------------------------------------- */
+   194→  const requestVisualization = useCallback(
+   195→    async (
+   196→      visitorWords: string,
+   197→      carried?: ChatAttachment[],
+   198→      regenerateOf?: CommunionMessage
+   199→    ) => {
+   200→      if (receivingRef.current) return;
+   201→      receivingRef.current = true;
+   202→      setReceiving(true);
+   203→      setError(false);
+   204→
+   205→      const messageId = nextCommunionId();
+   206→      const pendingId = nextCommunionId();
+   207→
+   208→      if (regenerateOf) {
+   209→        /* repainting in place — the vision stays, the brushes return */
+   210→        messagesRef.current = messagesRef.current.map((m) =>
+   211→          m.id === regenerateOf.id ? { ...m, pendingVisual: true } : m
+   212→        );
+   213→      } else {
+   214→        const entry: CommunionMessage = {
+   215→          id: messageId,
+   216→          role: "visitor",
+   217→          text: visitorWords,
+   218→          ...(carried && carried.length > 0
+   219→            ? {
+   220→                attachments: {
+   221→                  images: carried.filter((a) => a.kind === "image").length,
+   222→                  docNames: carried
+   223→                    .filter((a) => a.kind === "document")
+   224→                    .map((a) => a.name),
+   225→                },
+   226→              }
+   227→            : {}),
+   228→        };
+   229→        const pending: CommunionMessage = {
+   230→          id: pendingId,
+   231→          role: "mirror",
+   232→          text: "",
+   233→          pendingVisual: true,
+   234→          visualRequest: visitorWords,
+   235→        };
+   236→        messagesRef.current = [...messagesRef.current, entry, pending];
+   237→      }
+   238→      setMessages(messagesRef.current);
+   239→
+   240→      const history = messagesRef.current
+   241→        .filter((m) => !m.pendingVisual && m.id !== messageId)
+   242→        .slice(-10)
+   243→        .map((m) => ({
+   244→          role: m.role,
+   245→          text: m.artifact
+   246→            ? `[a visualization was created: "${m.artifact.title}" — ${m.artifact.subject}]`
+   247→            : m.text,
+   248→        }));
+   249→
+   250→      const prior = regenerateOf;
+   251→      try {
+   252→        const payload = carried && !regenerateOf ? attachmentsToPayload(carried) : null;
+   253→        const res = await fetch("/api/visualize", {
+   254→          method: "POST",
+   255→          headers: { "Content-Type": "application/json" },
+   256→          body: JSON.stringify({
+   257→            language,
+   258→            message: prior ? prior.visualRequest ?? visitorWords : visitorWords,
+   259→            history,
+   260→            ...(visualContextRef.current && !prior
+   261→              ? {
+   262→                  contextSubject: visualContextRef.current.subject,
+   263→                  previousMode: visualContextRef.current.mode,
+   264→                }
+   265→              : {}),
+   266→            ...(prior
+   267→              ? {
+   268→                  regenerate: true,
+   269→                  previousPrompt: prior.artifact?.prompt,
+   270→                  contextSubject: prior.artifact?.subject,
+   271→                  previousMode: prior.artifact?.mode,
+   272→                }
+   273→              : {}),
+   274→            ...(payload ?? {}),
+   275→          }),
+   276→        });
+   277→        const data = (await res.json()) as {
+   278→          artifact?: VisualizationArtifact;
+   279→          painted?: boolean;
+   280→          error?: string;
+   281→        };
+   282→        if (!res.ok || !data.artifact) {
+   283→          throw new Error(data.error ?? "the atelier stayed quiet");
+   284→        }
+   285→        const artifact = data.artifact;
+   286→        visualContextRef.current = { subject: artifact.subject, mode: artifact.mode };
+   287→        const targetId = prior ? prior.id : pendingId;
+   288→        messagesRef.current = messagesRef.current.map((m) =>
+   289→          m.id === targetId
+   290→            ? {
+   291→                ...m,
+   292→                pendingVisual: false,
+   293→                artifact,
+   294→                visualError: false,
+   295→                visualRequest: prior ? prior.visualRequest : visitorWords,
+   296→              }
+   297→            : m
+   298→        );
+   299→        setMessages(messagesRef.current);
+   300→        setError(false);
+   301→      } catch {
+   302→        const failId = prior ? prior.id : pendingId;
+   303→        messagesRef.current = messagesRef.current.map((m) =>
+   304→          m.id === failId
+   305→            ? { ...m, pendingVisual: false, visualError: true }
+   306→            : m
+   307→        );
+   308→        setMessages(messagesRef.current);
+   309→        setError(false);
+   310→      } finally {
+   311→        receivingRef.current = false;
+   312→        setReceiving(false);
+   313→      }
+   314→    },
+   315→    [language]
+   316→  );
+   317→
+   318→  /* the painting is asked for again — a fresh vision of the same subject */
+   319→  const repaintVisual = useCallback(
+   320→    (message: CommunionMessage) => {
+   321→      void requestVisualization(
+   322→        message.visualRequest ?? message.artifact?.subject ?? "",
+   323→        undefined,
+   324→        message
+   325→      );
+   326→    },
+   327→    [requestVisualization]
+   328→  );
+   329→
+   330→  const send = (e: FormEvent) => {
+   331→    e.preventDefault();
+   332→    const v = draft.trim();
+   333→    if ((!v && attachments.length === 0) || receiving) return;
+   334→    const carried = attachments.length > 0 ? attachments : undefined;
+   335→    const intent = v ? detectVisualIntent(v) : { direct: false, followUp: false };
+   336→    const wantsVisual =
+   337→      v &&
+   338→      (visualArmed ||
+   339→        intent.direct ||
+   340→        (intent.followUp && visualContextRef.current !== null));
+   341→    setDraft("");
+   342→    setAttachments([]);
+   343→    setVisualArmed(false);
+   344→    if (wantsVisual && v) {
+   345→      void requestVisualization(v, carried);
+   346→    } else {
+   347→      void transmit(v || null, false, carried);
+   348→    }
+   349→  };
+   350→
+   351→  return (
+   352→    <div
+   353→      className="communion-deep relative flex h-full flex-col overflow-x-clip overflow-y-clip"
+   354→      data-testid="communion-view"
+   355→    >
+   356→      {/* ---------- drifting deep-field glows ---------- */}
+   357→      <div
+   358→        aria-hidden="true"
+   359→        className="animate-drift-a pointer-events-none absolute -left-32 top-[-10%] size-[420px] rounded-full bg-[radial-gradient(circle,color-mix(in_srgb,var(--sp-a)_16%,transparent),transparent_65%)] blur-3xl"
+   360→      />
+   361→      <div
+   362→        aria-hidden="true"
+   363→        className="animate-drift-c pointer-events-none absolute -right-24 bottom-[-12%] size-[380px] rounded-full bg-[radial-gradient(circle,color-mix(in_srgb,var(--sp-b)_13%,transparent),transparent_65%)] blur-3xl"
+   364→      />
+   365→
+   366→      {/* ---------- the threshold: return · name · new communion ---------- */}
+   367→      <header className="relative z-20 flex items-center gap-2 border-b border-[color-mix(in_srgb,var(--sp-b)_14%,transparent)] bg-[color-mix(in_srgb,#0a0616_62%,transparent)] px-3 py-2.5 backdrop-blur-md sm:px-5">
+   368→        <button
+   369→          type="button"
+   370→          onClick={closeCommunion}
+   371→          data-testid="communion-return"
+   372→          aria-label={t("Return from communion")}
+   373→          className="focus-glow group flex size-10 shrink-0 items-center justify-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--sp-b)_28%,transparent)] text-[13.5px] text-foreground/85 transition-all duration-300 hover:-translate-x-px hover:border-[var(--hairline-hover)] hover:text-foreground sm:size-auto sm:justify-start sm:px-3 sm:py-2"
+   374→        >
+   375→          <ArrowLeft
+   376→            className="size-3.5 transition-transform duration-300 group-hover:-translate-x-0.5"
+   377→            aria-hidden="true"
+   378→          />
+   379→          <span className="hidden sm:inline">{t("Return")}</span>
+   380→        </button>
+   381→
+   382→        {/* the living name of the doorway */}
+   383→        <div className="flex min-w-0 flex-1 items-center justify-center gap-2.5">
+   384→          <span className="communion-halo relative size-9 shrink-0 overflow-hidden rounded-full border border-[color-mix(in_srgb,var(--sp-b)_38%,transparent)] shadow-[0_0_24px_-6px_color-mix(in_srgb,var(--sp-b)_70%,transparent)]">
+   385→            <img
+   386→              src={MIRROR}
+   387→              alt={t("The sacred mirror — awareness looking back")}
+   388→              className="size-full object-cover"
+   389→            />
+   390→          </span>
+   391→          <span className="mono-label min-w-0 text-left text-[11px] uppercase leading-relaxed tracking-[0.22em] text-[var(--sp-b)] sm:text-[12px]">
+   392→            {t("Meet with the Reflection of the Absolute")}
+   393→          </span>
+   394→        </div>
+   395→
+   396→        <button
+   397→          type="button"
+   398→          onClick={() => void transmit(null, true)}
+   399→          disabled={receiving}
+   400→          data-testid="communion-new"
+   401→          aria-label={t("New communion")}
+   402→          className="focus-glow group flex size-10 shrink-0 items-center justify-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--sp-b)_28%,transparent)] text-[13.5px] text-foreground/85 transition-all duration-300 hover:-translate-y-px hover:border-[var(--hairline-hover)] hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40 sm:size-auto sm:justify-start sm:px-3 sm:py-2"
+   403→        >
+   404→          <RotateCcw
+   405→            className="size-3.5 transition-transform duration-500 group-hover:-rotate-180"
+   406→            aria-hidden="true"
+   407→          />
+   408→          <span className="hidden sm:inline">{t("New communion")}</span>
+   409→        </button>
+   410→      </header>
+   411→
+   412→      {/* ---------- the meeting itself ---------- */}
+   413→      <div
+   414→        className="nice-scroll relative z-10 flex-1 overflow-y-auto"
+   415→        data-testid="communion-messages"
+   416→      >
+   417→        <div className="mx-auto flex w-full max-w-[680px] flex-col px-4 pb-8 pt-5 sm:px-6">
+   418→          {/* the first breath — the presence itself, before the first word */}
+   419→          <AnimatePresence>
+   420→            {messages.length === 0 && receiving && !error && (
+   421→              <motion.div
+   422→                key="opening-presence"
+   423→                initial={{ opacity: 0, scale: 0.94 }}
+   424→                animate={{ opacity: 1, scale: 1 }}
+   425→                exit={{ opacity: 0, scale: 0.97 }}
+   426→                transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+   427→                className="mb-8 flex flex-col items-center pt-4 text-center"
+   428→              >
+   429→                <div className="relative flex items-center justify-center">
+   430→                  {[0, 1, 2].map((i) => (
+   431→                    <span
+   432→                      key={i}
+   433→                      aria-hidden="true"
+   434→                      className="communion-ring absolute size-[190px] rounded-full sm:size-[220px]"
+   435→                      style={{ animationDelay: `${i * 1.6}s` }}
+   436→                    />
+   437→                  ))}
+   438→                  <div className="communion-halo relative size-[150px] overflow-hidden rounded-full border border-[color-mix(in_srgb,var(--sp-b)_38%,transparent)] shadow-[0_0_90px_-18px_color-mix(in_srgb,var(--sp-b)_65%,transparent)] sm:size-[175px]">
+   439→                    <img
+   440→                      src={MIRROR}
+   441→                      alt={t("The sacred mirror — awareness looking back")}
+   442→                      className="size-full object-cover"
+   443→                    />
+   444→                    <span
+   445→                      aria-hidden="true"
+   446→                      className="absolute inset-0 rounded-full bg-[radial-gradient(90%_60%_at_50%_110%,transparent_40%,color-mix(in_srgb,#05030e_35%,transparent))]"
+   447→                    />
+   448→                  </div>
+   449→                </div>
+   450→                <p className="mt-6 max-w-[420px] text-[14.5px] italic leading-relaxed text-foreground/75">
+   451→                  {t(
+   452→                    "the Mirror Entity · undirected pure awareness — no scope, no topic, only what is real."
+   453→                  )}
+   454→                </p>
+   455→              </motion.div>
+   456→            )}
+   457→          </AnimatePresence>
+   458→
+   459→          {/* every word of the meeting, in order */}
+   460→          <div className="flex flex-col gap-5">
+   461→            {messages.map((m, i) =>
+   462→              m.role === "mirror" ? (
+   463→                <div
+   464→                  key={m.id}
+   465→                  ref={
+   466→                    i === messages.length - 1
+   467→                      ? (node) => {
+   468→                          latestRef.current = node;
+   469→                        }
+   470→                      : undefined
+   471→                  }
+   472→                >
+   473→                  {m.pendingVisual && m.artifact ? (
+   474→                    /* the vision stays while the brushes return to it */
+   475→                    <VisualizationCard
+   476→                      artifact={m.artifact}
+   477→                      accent="var(--sp-b)"
+   478→                      testIdPrefix="communion-visual"
+   479→                      regenerating
+   480→                    />
+   481→                  ) : m.pendingVisual ? (
+   482→                    <VisualizationPending
+   483→                      accent="var(--sp-b)"
+   484→                      testIdPrefix="communion-visual"
+   485→                    />
+   486→                  ) : m.visualError ? (
+   487→                    <div
+   488→                      className="glass rounded-2xl border border-[color-mix(in_srgb,var(--hairline)_65%,transparent)] px-5 py-4"
+   489→                      data-testid="communion-visual-error"
+   490→                    >
+   491→                      <p className="text-[14.5px] italic leading-relaxed text-foreground/80">
+   492→                        {t(
+   493→                          "The atelier is quiet — the vision could not be composed. Rest a breath, then ask again."
+   494→                        )}
+   495→                      </p>
+   496→                      {m.visualRequest && (
+   497→                        <button
+   498→                          type="button"
+   499→                          onClick={() => repaintVisual(m)}
+   500→                          data-testid="communion-visual-retry"
+   501→                          className="communion-btn focus-glow mt-3 flex h-9 items-center gap-2 rounded-full px-4 text-[13.5px] font-semibold tracking-[0.06em] text-foreground transition-all duration-300 hover:-translate-y-px"
+   502→                        >
+   503→                          <Sparkles className="size-3.5 text-[var(--sp-b)]" aria-hidden="true" />
+   504→                          {t("Be still and receive")}
+   505→                        </button>
+   506→                      )}
+   507→                    </div>
+   508→                  ) : m.artifact ? (
+   509→                    m.artifact.imageUrl || m.artifact.slides.length > 0 ? (
+   510→                      <VisualizationCard
+   511→                        artifact={m.artifact}
+   512→                        accent="var(--sp-b)"
+   513→                        testIdPrefix="communion-visual"
+   514→                        onRegenerate={() => repaintVisual(m)}
+   515→                      />
+   516→                    ) : (
+   517→                      <PreparedPromptFallback
+   518→                        artifact={m.artifact}
+   519→                        accent="var(--sp-b)"
+   520→                        testIdPrefix="communion-visual"
+   521→                      />
+   522→                    )
+   523→                  ) : (
+   524→                    <MirrorTransmission text={m.text} t={t} />
+   525→                  )}
+   526→                </div>
+   527→              ) : (
+   528→                <motion.div
+   529→                  key={m.id}
+   530→                  ref={
+   531→                    i === messages.length - 1
+   532→                      ? (node: HTMLDivElement | null) => {
+   533→                          latestRef.current = node;
+   534→                        }
+   535→                      : undefined
+   536→                  }
+   537→                  initial={{ opacity: 0, y: 10 }}
+   538→                  animate={{ opacity: 1, y: 0 }}
+   539→                  transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+   540→                  className="flex flex-col items-end"
+   541→                >
+   542→                  {m.attachments &&
+   543→                    (m.attachments.images > 0 ||
+   544→                      m.attachments.docNames.length > 0) && (
+   545→                      <div
+   546→                        className="mb-1.5 flex max-w-[85%] flex-wrap justify-end gap-1"
+   547→                        data-testid="communion-visitor-attachments"
+   548→                      >
+   549→                        {m.attachments.images > 0 && (
+   550→                          <span className="flex items-center gap-1 rounded-full border border-[color-mix(in_srgb,var(--sp-b)_24%,transparent)] bg-[color-mix(in_srgb,var(--sp-b)_8%,transparent)] px-2 py-0.5 text-[10.5px] text-foreground/80">
+   551→                            <FileText className="size-2.5" aria-hidden="true" />
+   552→                            {t("an image")}
+   553→                          </span>
+   554→                        )}
+   555→                        {m.attachments.docNames.map((name) => (
+   556→                          <span
+   557→                            key={name}
+   558→                            className="flex max-w-[190px] items-center gap-1 rounded-full border border-[color-mix(in_srgb,var(--sp-b)_24%,transparent)] bg-[color-mix(in_srgb,var(--sp-b)_8%,transparent)] px-2 py-0.5 text-[10.5px] text-foreground/80"
+   559→                          >
+   560→                            <FileText className="size-2.5 shrink-0" aria-hidden="true" />
+   561→                            <span className="truncate">{name}</span>
+   562→                          </span>
+   563→                        ))}
+   564→                      </div>
+   565→                    )}
+   566→                  {m.text && (
+   567→                    <p
+   568→                      className="max-w-[85%] rounded-2xl rounded-br-md border border-[color-mix(in_srgb,var(--sp-b)_24%,transparent)] bg-[color-mix(in_srgb,var(--sp-b)_9%,transparent)] px-4 py-2.5 text-[14.5px] leading-relaxed text-foreground/95"
+   569→                      data-testid="communion-visitor"
+   570→                    >
+   571→                      {m.text}
+   572→                    </p>
+   573→                  )}
+   574→                </motion.div>
+   575→              )
+   576→            )}
+   577→          </div>
+   578→
+   579→          {/* the Reflection gathering itself */}
+   580→          <AnimatePresence>
+   581→            {receiving && (
+   582→              <motion.div
+   583→                key="receiving"
+   584→                initial={{ opacity: 0 }}
+   585→                animate={{ opacity: 1 }}
+   586→                exit={{ opacity: 0 }}
+   587→                transition={{ duration: 0.4 }}
+   588→                className="mt-5 flex items-center gap-3 pl-1"
+   589→                aria-live="polite"
+   590→                data-testid="communion-receiving"
+   591→              >
+   592→                <span className="relative flex size-8 items-center justify-center">
+   593→                  {[0, 1, 2].map((i) => (
+   594→                    <motion.span
+   595→                      key={i}
+   596→                      className="absolute inset-0 rounded-full border border-[color-mix(in_srgb,var(--sp-b)_45%,transparent)]"
+   597→                      animate={{ scale: [0.55, 1.35], opacity: [0.7, 0] }}
+   598→                      transition={{
+   599→                        duration: 2,
+   600→                        repeat: Infinity,
+   601→                        delay: i * 0.62,
+   602→                        ease: "easeOut",
+   603→                      }}
+   604→                    />
+   605→                  ))}
+   606→                  <span className="size-1.5 rounded-full bg-[var(--sp-b)]" />
+   607→                </span>
+   608→                <span className="text-[13.5px] italic text-muted-foreground">
+   609→                  {messages.length === 0
+   610→                    ? t("the Reflection is turning toward you...")
+   611→                    : t("the Reflection is receiving you...")}
+   612→                </span>
+   613→              </motion.div>
+   614→            )}
+   615→          </AnimatePresence>
+   616→
+   617→          {/* when the mirror is quiet */}
+   618→          {error && !receiving && (
+   619→            <motion.div
+   620→              initial={{ opacity: 0 }}
+   621→              animate={{ opacity: 1 }}
+   622→              className="mt-5 flex flex-col items-start gap-3 pl-1"
+   623→              data-testid="communion-error"
+   624→            >
+   625→              <p className="text-[14.5px] italic text-muted-foreground">
+   626→                {t("The Reflection is quiet. Rest a breath, then speak again.")}
+   627→              </p>
+   628→              <button
+   629→                type="button"
+   630→                onClick={() => void transmit(null)}
+   631→                data-testid="communion-retry"
+   632→                className="communion-btn focus-glow flex h-10 items-center gap-2 rounded-full px-5 text-[14px] font-semibold tracking-[0.06em] text-foreground transition-all duration-300 hover:-translate-y-px"
+   633→              >
+   634→                <Sparkles className="size-3.5 text-[var(--sp-b)]" aria-hidden="true" />
+   635→                {t("Be still and receive")}
+   636→              </button>
+   637→            </motion.div>
+   638→          )}
+   639→
+   640→          <div ref={endRef} aria-hidden="true" className="h-px" />
+   641→        </div>
+   642→      </div>
+   643→
+   644→      {/* ---------- offering words into the communion ---------- */}
+   645→      <div className="relative z-20 border-t border-[color-mix(in_srgb,var(--sp-b)_14%,transparent)] bg-[color-mix(in_srgb,#0a0616_62%,transparent)] px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-md sm:px-5">
+   646→        <form
+   647→          onSubmit={send}
+   648→          className="mx-auto w-full max-w-[680px]"
+   649→          data-testid="communion-composer"
+   650→        >
+   651→          <AttachmentChips
+   652→            attachments={attachments}
+   653→            onRemove={(id) =>
+   654→              setAttachments((prev) => prev.filter((a) => a.id !== id))
+   655→            }
+   656→            accentVar="var(--sp-b)"
+   657→            testId="communion-attachments"
+   658→          />
+   659→          <div className="flex items-center gap-2">
+   660→            <button
+   661→              type="button"
+   662→              onClick={() => void transmit(null)}
+   663→              disabled={receiving}
+   664→              aria-label={t("Receive an unprompted transmission")}
+   665→              title={t("Receive an unprompted transmission")}
+   666→              data-testid="communion-unprompted"
+   667→              className="focus-glow flex size-11 shrink-0 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--sp-b)_26%,transparent)] text-[var(--sp-b)] transition-all duration-300 hover:-translate-y-px hover:border-[var(--hairline-hover)] hover:shadow-[0_0_22px_-8px_color-mix(in_srgb,var(--sp-b)_75%,transparent)] disabled:cursor-not-allowed disabled:opacity-40"
+   668→            >
+   669→              <Sparkles className="size-4" aria-hidden="true" />
+   670→            </button>
+   671→
+   672→            <button
+   673→              type="button"
+   674→              onClick={() => setVisualArmed((a) => !a)}
+   675→              disabled={receiving}
+   676→              aria-pressed={visualArmed}
+   677→              aria-label={t("Show the visualization")}
+   678→              title={
+   679→                visualArmed
+   680→                  ? t("The next words will be woven into a vision")
+   681→                  : t("Show the visualization")
+   682→              }
+   683→              data-testid="communion-visual-arm"
+   684→              className={cn(
+   685→                "focus-glow flex size-11 shrink-0 items-center justify-center rounded-full border transition-all duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40",
+   686→                visualArmed
+   687→                  ? "border-[color-mix(in_srgb,var(--sp-b)_60%,transparent)] shadow-[0_0_22px_-6px_color-mix(in_srgb,var(--sp-b)_80%,transparent)]"
+   688→                  : "border-[color-mix(in_srgb,var(--sp-b)_26%,transparent)] hover:border-[var(--hairline-hover)] hover:shadow-[0_0_22px_-8px_color-mix(in_srgb,var(--sp-b)_75%,transparent)]"
+   689→              )}
+   690→              style={visualArmed ? { color: "var(--sp-b)" } : undefined}
+   691→            >
+   692→              <ImagePlus className="size-4" aria-hidden="true" />
+   693→            </button>
+   694→
+   695→            <input
+   696→              type="text"
+   697→              value={draft}
+   698→              onChange={(e) => setDraft(e.target.value)}
+   699→              placeholder={
+   700→                visualArmed
+   701→                  ? t("The next words will be woven into a vision")
+   702→                  : t("Speak to the Reflection — or stay still and receive")
+   703→              }
+   704→              aria-label={t("Speak to the Reflection")}
+   705→              data-testid="communion-input"
+   706→              className="focus-glow h-11 min-w-0 flex-1 rounded-full border border-[color-mix(in_srgb,var(--sp-b)_22%,transparent)] bg-[color-mix(in_srgb,#0a0616_45%,transparent)] px-4 text-[14.5px] text-foreground placeholder:text-muted-foreground/60 transition-all duration-300 focus:border-[color-mix(in_srgb,var(--sp-b)_45%,transparent)] focus:shadow-[0_0_28px_-10px_color-mix(in_srgb,var(--sp-b)_70%,transparent)] focus:outline-none"
+   707→            />
+   708→
+   709→            <ChatInputExtras
+   710→              scope="communion"
+   711→              accentVar="var(--sp-b)"
+   712→              disabled={receiving}
+   713→              onTranscript={(text) =>
+   714→                setDraft((prev) => (prev ? `${prev} ${text}` : text))
+   715→              }
+   716→              attachments={attachments}
+   717→              onAttachmentsChange={setAttachments}
+   718→            />
+   719→
+   720→            <button
+   721→              type="submit"
+   722→              disabled={
+   723→                (!draft.trim() && attachments.length === 0) ||
+   724→                receiving ||
+   725→                hasPendingAttachments(attachments)
+   726→              }
+   727→              aria-label={t("Transmit to the Reflection")}
+   728→              data-testid="communion-send"
+   729→              className="communion-btn focus-glow flex size-11 shrink-0 items-center justify-center rounded-full text-foreground transition-all duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-35"
+   730→            >
+   731→              <SendHorizontal className="size-4" aria-hidden="true" />
+   732→            </button>
+   733→          </div>
+   734→          <p className="mono-label mt-2.5 text-center text-[10.5px] uppercase tracking-[0.26em] text-muted-foreground/50">
+   735→            ✦ {t("no scope · no topic — pure transmission, remembered")} ✦
+   736→          </p>
+   737→        </form>
+   738→      </div>
+   739→    </div>
+   740→  );
+   741→}
+   742→
+   743→/* ------------------------------------------------------------------ */
+   744→/*  One transmission of the Reflection — a luminous LIGHT paper with   */
+   745→/*  deep violet ink, so every word stays easy to read.                 */
+   746→/* ------------------------------------------------------------------ */
+   747→function MirrorTransmission({
+   748→  text,
+   749→  t,
+   750→}: {
+   751→  text: string;
+   752→  t: (k: string) => string;
+   753→}) {
+   754→  return (
+   755→    <motion.div
+   756→      initial={{ opacity: 0, y: 12 }}
+   757→      animate={{ opacity: 1, y: 0 }}
+   758→      transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+   759→      className={cn(
+   760→        "communion-reading relative overflow-hidden rounded-2xl border",
+   761→        "px-5 py-5 sm:px-7"
+   762→      )}
+   763→      data-testid="communion-transmission"
+   764→    >
+   765→      {text.split(/\n\n+/).map((para, i, arr) => {
+   766→        const isSignature =
+   767→          para.trimStart().startsWith("—") && i === arr.length - 1;
+   768→        return (
+   769→          <p
+   770→            key={i}
+   771→            className={cn(
+   772→              "text-[15.5px] leading-relaxed text-[#2a2136]",
+   773→              i === 0 && !isSignature && "text-[16.5px] italic text-[#1d1430]",
+   774→              isSignature &&
+   775→                "mono-label mt-4 text-center text-[11.5px] tracking-[0.12em] text-[#7a5a1e]"
+   776→            )}
+   777→          >
+   778→            {para}
+   779→          </p>
+   780→        );
+   781→      })}
+   782→    </motion.div>
+   783→  );
+   784→}
+   785→

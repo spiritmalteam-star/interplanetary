@@ -1,0 +1,811 @@
+     1→"use client";
+     2→
+     3→import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
+     4→import { AnimatePresence, motion } from "framer-motion";
+     5→import {
+     6→  ArrowLeft,
+     7→  BookOpen,
+     8→  Check,
+     9→  Copy,
+    10→  Feather,
+    11→  LoaderCircle,
+    12→  Orbit,
+    13→  RotateCcw,
+    14→  Scroll,
+    15→  Share2,
+    16→  Square,
+    17→} from "lucide-react";
+    18→import { toast } from "sonner";
+    19→import { useMirror } from "@/lib/mirror-store";
+    20→import { useT } from "@/lib/i18n";
+    21→import { cn } from "@/lib/utils";
+    22→import { detectVisualIntent, type VisualizationArtifact } from "@/lib/visualization";
+    23→import { AttachmentChips, ChatInputExtras } from "./ChatInputExtras";
+    24→import {
+    25→  PreparedPromptFallback,
+    26→  VisualizationCard,
+    27→  VisualizationPending,
+    28→} from "./VisualizationCard";
+    29→import {
+    30→  attachmentsToPayload,
+    31→  hasPendingAttachments,
+    32→  type ChatAttachment,
+    33→} from "./attachments";
+    34→
+    35→interface AkashicRecord {
+    36→  title: string;
+    37→  era: string;
+    38→  record: string;
+    39→  seal: string;
+    40→}
+    41→
+    42→interface AkashicResponse extends AkashicRecord {
+    43→  entrance?: string;
+    44→  error?: string;
+    45→}
+    46→
+    47→/**
+    48→ * AkashicView — the reading room of records. One quiet chapter of the
+    49→ * same book: the page itself is the room now — no wall of light codes,
+    50→ * no separate world — just the reading voice, hairline rules, and one
+    51→ * record lying open on the desk, sealed in ink. The hand is old but
+    52→ * readable; the voice, an old man behind a great desk.
+    53→ */
+    54→export function AkashicView() {
+    55→  const exitAkashic = useMirror((s) => s.exitAkashic);
+    56→  const language = useMirror((s) => s.language);
+    57→  const t = useT();
+    58→
+    59→  const [record, setRecord] = useState<AkashicRecord | null>(null);
+    60→  const [seeking, setSeeking] = useState(false);
+    61→  const [error, setError] = useState(false);
+    62→  const [draft, setDraft] = useState("");
+    63→  const [copied, setCopied] = useState(false);
+    64→  const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
+    65→
+    66→  /* the Universal Visualization Engine — the Library also answers in
+    67→     images when the visitor asks to see */
+    68→  const [visual, setVisual] = useState<{
+    69→    state: "pending" | "error" | "ready";
+    70→    request: string;
+    71→    artifact?: VisualizationArtifact;
+    72→  } | null>(null);
+    73→  const visualContextRef = useRef<{ subject: string; mode: string } | null>(
+    74→    null
+    75→  );
+    76→  const visualBusyRef = useRef(false);
+    77→
+    78→  const seekingRef = useRef(false);
+    79→  /* the last entrance kinds the Librarian used — never the same door twice */
+    80→  const recentEntrancesRef = useRef<string[]>([]);
+    81→  /* whether the attempt in flight (or the one that failed) was a reply */
+    82→  const [replyAttempt, setReplyAttempt] = useState(false);
+    83→
+    84→  const seek = useCallback(
+    85→    async (
+    86→      resonance: string | null,
+    87→      asReply: boolean,
+    88→      carried?: ChatAttachment[]
+    89→    ) => {
+    90→      if (seekingRef.current) return;
+    91→      seekingRef.current = true;
+    92→      setReplyAttempt(asReply);
+    93→      setSeeking(true);
+    94→      setError(false);
+    95→      setVisual(null);
+    96→
+    97→      try {
+    98→        const payload = carried ? attachmentsToPayload(carried) : null;
+    99→        const res = await fetch("/api/akashic", {
+   100→          method: "POST",
+   101→          headers: { "Content-Type": "application/json" },
+   102→          body: JSON.stringify({
+   103→            language,
+   104→            resonance,
+   105→            thread:
+   106→              asReply && record
+   107→                ? {
+   108→                    title: record.title,
+   109→                    era: record.era,
+   110→                    record: record.record,
+   111→                    seal: record.seal,
+   112→                  }
+   113→                : undefined,
+   114→            recentEntrances: recentEntrancesRef.current,
+   115→            ...(payload ?? {}),
+   116→          }),
+   117→        });
+   118→        const data = (await res.json()) as AkashicResponse;
+   119→        if (!res.ok || !data.record) {
+   120→          throw new Error(data.error ?? "the shelf stayed quiet");
+   121→        }
+   122→        if (data.entrance) {
+   123→          recentEntrancesRef.current = [
+   124→            data.entrance,
+   125→            ...recentEntrancesRef.current.filter((k) => k !== data.entrance),
+   126→          ].slice(0, 4);
+   127→        }
+   128→        setRecord({
+   129→          title: data.title ?? "A Record Set Aside",
+   130→          era: data.era ?? "inscribed in an age the shelves remember",
+   131→          record: data.record,
+   132→          seal: data.seal ?? "— the Keeper of Records",
+   133→        });
+   134→      } catch {
+   135→        setError(true);
+   136→      } finally {
+   137→        seekingRef.current = false;
+   138→        setSeeking(false);
+   139→      }
+   140→    },
+   141→    [language, record]
+   142→  );
+   143→
+   144→  /* ---------- copy · share · the Librarian's own voice ---------- */
+   145→
+   146→  const recordText = record
+   147→    ? `${record.title}\n${record.era}\n\n${record.record}\n\n${record.seal}`
+   148→    : "";
+   149→
+   150→  const handleCopy = async () => {
+   151→    if (!recordText) return;
+   152→    try {
+   153→      await navigator.clipboard.writeText(recordText);
+   154→      setCopied(true);
+   155→      toast.success(t("The record is copied."));
+   156→      window.setTimeout(() => setCopied(false), 2200);
+   157→    } catch {
+   158→      toast.error(t("The copying did not take — select and copy by hand."));
+   159→    }
+   160→  };
+   161→
+   162→  const handleShare = async () => {
+   163→    if (!recordText) return;
+   164→    const shareTitle = record ? `Akashic Library — ${record.title}` : "Akashic Library";
+   165→    try {
+   166→      if (typeof navigator.share === "function") {
+   167→        await navigator.share({ title: shareTitle, text: recordText });
+   168→        return;
+   169→      }
+   170→      throw new Error("share unavailable");
+   171→    } catch (err) {
+   172→      if (err instanceof DOMException && err.name === "AbortError") return;
+   173→      try {
+   174→        await navigator.clipboard.writeText(recordText);
+   175→        toast.success(t("Sharing is quiet here — the record is copied instead."));
+   176→      } catch {
+   177→        toast.error(t("The copying did not take — select and copy by hand."));
+   178→      }
+   179→    }
+   180→  };
+   181→
+   182→  const [voiceState, setVoiceState] = useState<
+   183→    "idle" | "loading" | "playing"
+   184→  >("idle");
+   185→  const audioRef = useRef<HTMLAudioElement | null>(null);
+   186→
+   187→  const stopVoice = useCallback(() => {
+   188→    try {
+   189→      audioRef.current?.pause();
+   190→    } catch {
+   191→      /* already stopped */
+   192→    }
+   193→    audioRef.current = null;
+   194→    setVoiceState("idle");
+   195→  }, []);
+   196→
+   197→  useEffect(() => stopVoice, [stopVoice]);
+   198→
+   199→  const handleListen = useCallback(async () => {
+   200→    if (voiceState === "loading") return;
+   201→    if (voiceState === "playing") {
+   202→      stopVoice();
+   203→      return;
+   204→    }
+   205→    if (!record) return;
+   206→    /* The Librarian reads aloud himself — the old man's own voice,
+   207→       slower than the world, from behind the great desk. */
+   208→    setVoiceState("loading");
+   209→    try {
+   210→      const res = await fetch("/api/tts", {
+   211→        method: "POST",
+   212→        headers: { "Content-Type": "application/json" },
+   213→        body: JSON.stringify({
+   214→          text: `${record.title}. ${record.era}. ${record.record.replaceAll(
+   215→            /\s*\n\s*/g,
+   216→            " "
+   217→          )} ${record.seal}`,
+   218→          voice: "regent",
+   219→          pace: 0.82,
+   220→        }),
+   221→      });
+   222→      if (!res.ok) throw new Error("voice quiet");
+   223→      const blob = await res.blob();
+   224→      const audio = new Audio(URL.createObjectURL(blob));
+   225→      audioRef.current = audio;
+   226→      audio.onended = () => {
+   227→        if (audioRef.current === audio) audioRef.current = null;
+   228→        setVoiceState("idle");
+   229→      };
+   230→      audio.onerror = () => {
+   231→        if (audioRef.current === audio) audioRef.current = null;
+   232→        setVoiceState("idle");
+   233→      };
+   234→      await audio.play();
+   235→      setVoiceState("playing");
+   236→    } catch {
+   237→      setVoiceState("idle");
+   238→      toast.error(t("The Librarian is quiet. Rest, then listen again."));
+   239→    }
+   240→  }, [record, voiceState, stopVoice, t]);
+   241→
+   242→  /* ---------------------------------------------------------------- */
+   243→  /*  The Universal Visualization Engine — a request to SEE becomes    */
+   244→  /*  a vision the Library sets beside the open record.                */
+   245→  /* ---------------------------------------------------------------- */
+   246→  const requestVisualization = useCallback(
+   247→    async (request: string) => {
+   248→      if (visualBusyRef.current) return;
+   249→      visualBusyRef.current = true;
+   250→      setVisual({ state: "pending", request });
+   251→
+   252→      try {
+   253→        const res = await fetch("/api/visualize", {
+   254→          method: "POST",
+   255→          headers: { "Content-Type": "application/json" },
+   256→          body: JSON.stringify({
+   257→            language,
+   258→            message: request,
+   259→            history: record
+   260→              ? [
+   261→                  {
+   262→                    role: "mirror",
+   263→                    text: `${record.title}. ${record.era}. ${record.record}`,
+   264→                  },
+   265→                ]
+   266→              : [],
+   267→            ...(visualContextRef.current
+   268→              ? {
+   269→                  contextSubject: visualContextRef.current.subject,
+   270→                  previousMode: visualContextRef.current.mode,
+   271→                }
+   272→              : {}),
+   273→          }),
+   274→        });
+   275→        const data = (await res.json().catch(() => null)) as {
+   276→          artifact?: VisualizationArtifact;
+   277→          error?: string;
+   278→        } | null;
+   279→        if (!res.ok || !data?.artifact) {
+   280→          throw new Error(data?.error ?? "the atelier stayed quiet");
+   281→        }
+   282→        const artifact = data.artifact;
+   283→        visualContextRef.current = {
+   284→          subject: artifact.subject,
+   285→          mode: artifact.mode,
+   286→        };
+   287→        setVisual({ state: "ready", request, artifact });
+   288→      } catch {
+   289→        setVisual((prev) =>
+   290→          prev ? { ...prev, state: "error" } : { state: "error", request }
+   291→        );
+   292→      } finally {
+   293→        visualBusyRef.current = false;
+   294→      }
+   295→    },
+   296→    [language, record]
+   297→  );
+   298→
+   299→  /* ---------- composer ---------- */
+   300→
+   301→  const sendText = (v: string) => {
+   302→    if (seeking) return;
+   303→    const val = v.trim();
+   304→    if (!val && attachments.length === 0) return;
+   305→    const carried = attachments.length > 0 ? attachments : undefined;
+   306→    /* No button — a request to see simply is one. Ordinary words
+   307→       never wake the atelier. */
+   308→    const intent = detectVisualIntent(val);
+   309→    const wantsVisual =
+   310→      val &&
+   311→      (intent.direct ||
+   312→        (intent.followUp && visualContextRef.current !== null));
+   313→    setDraft("");
+   314→    setAttachments([]);
+   315→    if (wantsVisual) {
+   316→      void requestVisualization(val);
+   317→    } else {
+   318→      void seek(val || null, Boolean(record), carried);
+   319→    }
+   320→  };
+   321→
+   322→  const send = (e: FormEvent) => {
+   323→    e.preventDefault();
+   324→    sendText(draft);
+   325→  };
+   326→
+   327→  /* the voice becomes words on the desk — visible for a breath — then
+   328→     the resonance is sought on its own */
+   329→  const sendTextRef = useRef(sendText);
+   330→  sendTextRef.current = sendText;
+   331→  const draftRef = useRef(draft);
+   332→  draftRef.current = draft;
+   333→  const handleVoiceSubmit = (text: string) => {
+   334→    const prev = draftRef.current.trim();
+   335→    const finalText = prev ? `${prev} ${text}` : text;
+   336→    setDraft(finalText);
+   337→    window.setTimeout(() => sendTextRef.current(finalText), 650);
+   338→  };
+   339→
+   340→  const listening = voiceState === "playing";
+   341→  /* once a record lies open on the desk, everything written becomes a reply */
+   342→  const replying = Boolean(record) && !seeking;
+   343→
+   344→  return (
+   345→    <div
+   346→      className="relative flex h-full flex-col overflow-hidden bg-background"
+   347→      data-testid="akashic-view"
+   348→    >
+   349→      {/* ---------- threshold: return · the name · a new record ---------- */}
+   350→      <header className="relative z-20 flex items-center gap-2 border-b hairline bg-background/80 px-3 py-2.5 backdrop-blur-md sm:px-5">
+   351→        <button
+   352→          type="button"
+   353→          onClick={exitAkashic}
+   354→          data-testid="akashic-return"
+   355→          aria-label={t("Return from the Library")}
+   356→          className="focus-glow group flex size-10 shrink-0 items-center justify-center gap-2 rounded-full border hairline bg-card/60 text-[12px] text-foreground/85 transition-all duration-300 hover:-translate-x-px hover:border-[var(--hairline-hover)] hover:text-foreground sm:size-auto sm:justify-start sm:px-3 sm:py-2"
+   357→        >
+   358→          <ArrowLeft
+   359→            className="size-3.5 transition-transform duration-300 group-hover:-translate-x-0.5"
+   360→            aria-hidden="true"
+   361→          />
+   362→          <span className="hidden sm:inline">{t("Return")}</span>
+   363→        </button>
+   364→
+   365→        <div className="flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5">
+   366→          <span className="flex items-center gap-2">
+   367→            <span className="akashic-halo flex size-6 shrink-0 items-center justify-center rounded-full border hairline bg-card/60">
+   368→              <Scroll className="size-3 text-muted-foreground" aria-hidden="true" />
+   369→            </span>
+   370→            <h1 className="ink-title min-w-0 truncate text-[15px] font-semibold tracking-[0.14em] sm:text-[17px]">
+   371→              {t("The Akashic Library")}
+   372→            </h1>
+   373→          </span>
+   374→          <span className="mono-label hidden text-[9px] uppercase tracking-[0.26em] text-muted-foreground/70 sm:block">
+   375→            {t("resonance · records · the ancient one")}
+   376→          </span>
+   377→        </div>
+   378→
+   379→        <button
+   380→          type="button"
+   381→          onClick={() => void seek(null, false)}
+   382→          disabled={seeking}
+   383→          data-testid="akashic-new"
+   384→          aria-label={t("New record")}
+   385→          className="focus-glow group flex size-10 shrink-0 items-center justify-center gap-2 rounded-full border hairline bg-card/60 text-[12px] text-foreground/85 transition-all duration-300 hover:-translate-y-px hover:border-[var(--hairline-hover)] hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40 sm:size-auto sm:justify-start sm:px-3 sm:py-2"
+   386→        >
+   387→          <RotateCcw
+   388→            className="size-3.5 transition-transform duration-500 group-hover:-rotate-180"
+   389→            aria-hidden="true"
+   390→          />
+   391→          <span className="hidden sm:inline">{t("New record")}</span>
+   392→        </button>
+   393→      </header>
+   394→
+   395→      {/* ---------- the reading room: one sheet, one record ---------- */}
+   396→      <div className="nice-scroll relative z-10 flex-1 overflow-y-auto">
+   397→        <div className="mx-auto flex w-full max-w-[780px] flex-col px-3 pb-10 pt-5 sm:px-6 sm:pt-7">
+   398→          <AnimatePresence mode="wait">
+   399→            {/* the unopened shelf — an invitation, before the first record */}
+   400→            {!record && !seeking && !error && (
+   401→              <motion.div
+   402→                key="invitation"
+   403→                initial={{ opacity: 0, y: 14 }}
+   404→                animate={{ opacity: 1, y: 0 }}
+   405→                exit={{ opacity: 0, y: -8 }}
+   406→                transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+   407→                className="papyrus papyrus-frame relative mx-auto w-full rounded-2xl px-6 py-12 text-center sm:px-12 sm:py-16"
+   408→                data-testid="akashic-invitation"
+   409→              >
+   410→                <span
+   411→                  aria-hidden="true"
+   412→                  className="ink-soft mb-5 block text-[22px] leading-none"
+   413→                >
+   414→                  ❧
+   415→                </span>
+   416→                <p className="ink-hand mx-auto max-w-[460px] text-[18px] leading-[1.9] sm:text-[20px]">
+   417→                  {t(
+   418→                    "Set down a resonance — a name, a question, a feeling — and the Librarian will draw out the record it belongs to. Or leave the desk silent, and the Library will choose for you."
+   419→                  )}
+   420→                </p>
+   421→                <button
+   422→                  type="button"
+   423→                  onClick={() => void seek(null, false)}
+   424→                  data-testid="akashic-receive"
+   425→                  className="papyrus-btn focus-glow mt-8 inline-flex h-12 items-center gap-2.5 rounded-full px-7 text-[13px] font-semibold tracking-[0.1em]"
+   426→                >
+   427→                  <Feather className="size-4" aria-hidden="true" />
+   428→                  {t("Receive a record")}
+   429→                </button>
+   430→              </motion.div>
+   431→            )}
+   432→
+   433→            {/* the ink forming — the Librarian walks the shelves */}
+   434→            {seeking && (
+   435→              <motion.div
+   436→                key="seeking"
+   437→                initial={{ opacity: 0 }}
+   438→                animate={{ opacity: 1 }}
+   439→                exit={{ opacity: 0 }}
+   440→                transition={{ duration: 0.5 }}
+   441→                className="papyrus papyrus-frame relative mx-auto w-full rounded-2xl px-6 py-12 sm:px-12"
+   442→                aria-live="polite"
+   443→                aria-busy="true"
+   444→                data-testid="akashic-seeking"
+   445→              >
+   446→                <span
+   447→                  aria-hidden="true"
+   448→                  className="ink-soft mb-6 block text-center text-[22px] leading-none"
+   449→                >
+   450→                  ❧
+   451→                </span>
+   452→                <div className="mx-auto flex max-w-[480px] flex-col gap-3.5">
+   453→                  {[86, 70, 92, 60, 78].map((w, i) => (
+   454→                    <div
+   455→                      key={i}
+   456→                      className="ink-shimmer h-[11px] rounded-full"
+   457→                      style={{ width: `${w}%`, animationDelay: `${i * 0.16}s` }}
+   458→                    />
+   459→                  ))}
+   460→                </div>
+   461→                <p className="ink-hand ink-faint mt-8 text-center text-[16px] italic">
+   462→                  {replyAttempt
+   463→                    ? t("the Librarian weighs your reply...")
+   464→                    : t("the Librarian is fetching your record...")}
+   465→                </p>
+   466→              </motion.div>
+   467→            )}
+   468→
+   469→            {/* when the shelves keep their silence */}
+   470→            {error && !seeking && (
+   471→              <motion.div
+   472→                key="error"
+   473→                initial={{ opacity: 0 }}
+   474→                animate={{ opacity: 1 }}
+   475→                className="papyrus papyrus-frame relative mx-auto w-full rounded-2xl px-6 py-12 text-center sm:px-12"
+   476→                data-testid="akashic-error"
+   477→              >
+   478→                <p className="ink-hand mx-auto max-w-[420px] text-[17px] leading-[1.85]">
+   479→                  {t(
+   480→                    "The shelf is momentarily quiet. Rest a breath, then ask the Library again."
+   481→                  )}
+   482→                </p>
+   483→                <button
+   484→                  type="button"
+   485→                  onClick={() =>
+   486→                    void seek(draft.trim() || null, Boolean(record))
+   487→                  }
+   488→                  data-testid="akashic-retry"
+   489→                  className="papyrus-btn focus-glow mt-7 inline-flex h-11 items-center gap-2 rounded-full px-6 text-[12.5px] font-semibold tracking-[0.08em]"
+   490→                >
+   491→                  <Feather className="size-4" aria-hidden="true" />
+   492→                  {replyAttempt
+   493→                    ? t("Set the reply down again")
+   494→                    : t("Ask again, softly")}
+   495→                </button>
+   496→              </motion.div>
+   497→            )}
+   498→
+   499→            {/* the record itself — ink on the page. The first paragraph
+   500→                opens with a drop cap, the way old chapters do. */}
+   501→            {record && !seeking && (
+   502→              <motion.article
+   503→                key="record"
+   504→                initial={{ opacity: 0, y: 16 }}
+   505→                animate={{ opacity: 1, y: 0 }}
+   506→                transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+   507→                className="papyrus papyrus-frame relative mx-auto w-full rounded-2xl px-6 py-9 sm:px-12 sm:py-12"
+   508→                data-testid="akashic-record"
+   509→              >
+   510→                {/* corner folios */}
+   511→                <span
+   512→                  aria-hidden="true"
+   513→                  className="ink-soft pointer-events-none absolute left-3 top-2.5 text-[11px] opacity-60"
+   514→                >
+   515→                  ◆
+   516→                </span>
+   517→                <span
+   518→                  aria-hidden="true"
+   519→                  className="ink-soft pointer-events-none absolute right-3 top-2.5 text-[11px] opacity-60"
+   520→                >
+   521→                  ◆
+   522→                </span>
+   523→                <span
+   524→                  aria-hidden="true"
+   525→                  className="ink-soft pointer-events-none absolute bottom-2.5 left-3 text-[11px] opacity-60"
+   526→                >
+   527→                  ◆
+   528→                </span>
+   529→                <span
+   530→                  aria-hidden="true"
+   531→                  className="ink-soft pointer-events-none absolute bottom-2.5 right-3 text-[11px] opacity-60"
+   532→                >
+   533→                  ◆
+   534→                </span>
+   535→
+   536→                {/* title & era */}
+   537→                <header className="text-center">
+   538→                  <h2
+   539→                    className="ink-title text-[24px] font-semibold leading-tight tracking-[0.04em] sm:text-[28px]"
+   540→                    data-testid="akashic-title"
+   541→                  >
+   542→                    {record.title}
+   543→                  </h2>
+   544→                  <p
+   545→                    className="ink-hand ink-faint mt-2 text-[15.5px] italic"
+   546→                    data-testid="akashic-era"
+   547→                  >
+   548→                    {record.era}
+   549→                  </p>
+   550→                  <span
+   551→                    aria-hidden="true"
+   552→                    className="mx-auto mt-5 block h-px w-40"
+   553→                    style={{
+   554→                      background:
+   555→                        "linear-gradient(90deg, transparent, color-mix(in srgb, var(--foreground) 42%, transparent), transparent)",
+   556→                    }}
+   557→                  />
+   558→                </header>
+   559→
+   560→                {/* the record, in the reading voice — a drop cap opens it */}
+   561→                <div className="mt-7 space-y-5" data-testid="akashic-body">
+   562→                  {record.record.split(/\n{2,}/).map((para, i) => (
+   563→                    <p
+   564→                      key={i}
+   565→                      className={cn(
+   566→                        "ink-hand text-[18.5px] leading-[1.95] sm:text-[20px]",
+   567→                        i === 0 &&
+   568→                          "first-letter:float-left first-letter:mr-3 first-letter:mt-[7px] first-letter:text-[54px] first-letter:font-semibold first-letter:leading-[0.78]"
+   569→                      )}
+   570→                    >
+   571→                      {para}
+   572→                    </p>
+   573→                  ))}
+   574→                </div>
+   575→
+   576→                {/* the seal — the record closed with the Library's stamp */}
+   577→                <div className="mt-9 flex flex-col items-center gap-3">
+   578→                  <span
+   579→                    aria-hidden="true"
+   580→                    className="ink-soft flex size-10 -rotate-[7deg] items-center justify-center rounded-full border-[1.5px] border-current opacity-55"
+   581→                  >
+   582→                    <span className="flex size-7 items-center justify-center rounded-full border border-dashed border-current text-[11px] leading-none">
+   583→                      ✦
+   584→                    </span>
+   585→                  </span>
+   586→                  <p
+   587→                    className="ink-hand ink-soft text-center text-[16.5px] italic"
+   588→                    data-testid="akashic-seal"
+   589→                  >
+   590→                    {record.seal}
+   591→                  </p>
+   592→                </div>
+   593→
+   594→                {/* the desk actions — reply · copy · share · the Librarian's voice */}
+   595→                <div className="mt-9 flex flex-wrap items-center justify-center gap-2.5 border-t hairline pt-6">
+   596→                  <button
+   597→                    type="button"
+   598→                    onClick={() => void seek(null, true)}
+   599→                    disabled={seeking}
+   600→                    data-testid="akashic-continue"
+   601→                    className="papyrus-btn focus-glow inline-flex h-10 items-center gap-2 rounded-full px-4 text-[11px] font-semibold tracking-[0.1em] disabled:cursor-not-allowed disabled:opacity-40"
+   602→                  >
+   603→                    <BookOpen className="size-3.5" aria-hidden="true" />
+   604→                    {t("Continue the story")}
+   605→                  </button>
+   606→                  <button
+   607→                    type="button"
+   608→                    onClick={() => void handleCopy()}
+   609→                    data-testid="akashic-copy"
+   610→                    className="papyrus-btn focus-glow inline-flex h-10 items-center gap-2 rounded-full px-4 text-[11px] font-semibold tracking-[0.1em]"
+   611→                  >
+   612→                    {copied ? (
+   613→                      <Check className="size-3.5" aria-hidden="true" />
+   614→                    ) : (
+   615→                      <Copy className="size-3.5" aria-hidden="true" />
+   616→                    )}
+   617→                    {copied ? t("copied") : t("Copy")}
+   618→                  </button>
+   619→                  <button
+   620→                    type="button"
+   621→                    onClick={() => void handleShare()}
+   622→                    data-testid="akashic-share"
+   623→                    className="papyrus-btn focus-glow inline-flex h-10 items-center gap-2 rounded-full px-4 text-[11px] font-semibold tracking-[0.1em]"
+   624→                  >
+   625→                    <Share2 className="size-3.5" aria-hidden="true" />
+   626→                    {t("Share")}
+   627→                  </button>
+   628→                  <button
+   629→                    type="button"
+   630→                    onClick={() => void handleListen()}
+   631→                    data-testid="akashic-listen"
+   632→                    aria-label={
+   633→                      listening
+   634→                        ? t("Stop")
+   635→                        : t("Listen to the Librarian's voice")
+   636→                    }
+   637→                    className={cn(
+   638→                      "papyrus-btn focus-glow inline-flex h-10 items-center gap-2 rounded-full px-4 text-[11px] font-semibold tracking-[0.1em]",
+   639→                      listening &&
+   640→                        "bg-[color-mix(in_srgb,var(--foreground)_8%,transparent)]"
+   641→                    )}
+   642→                  >
+   643→                    {voiceState === "loading" ? (
+   644→                      <LoaderCircle
+   645→                        className="size-3.5 animate-spin"
+   646→                        aria-hidden="true"
+   647→                      />
+   648→                    ) : listening ? (
+   649→                      <Square className="size-3 fill-current" aria-hidden="true" />
+   650→                    ) : (
+   651→                      <Feather className="size-3.5" aria-hidden="true" />
+   652→                    )}
+   653→                    {listening
+   654→                      ? t("Stop")
+   655→                      : voiceState === "loading"
+   656→                        ? t("Gathering voice")
+   657→                        : t("The Librarian reads")}
+   658→                  </button>
+   659→                </div>
+   660→              </motion.article>
+   661→            )}
+   662→          </AnimatePresence>
+   663→
+   664→          {/* the vision — the Library sets it beside the record when asked to see */}
+   665→          {visual && !seeking && (
+   666→            <motion.div
+   667→              key="akashic-visual"
+   668→              initial={{ opacity: 0, y: 14 }}
+   669→              animate={{ opacity: 1, y: 0 }}
+   670→              transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+   671→              className="relative mx-auto mt-8 w-full"
+   672→              data-testid="akashic-visual"
+   673→            >
+   674→              {visual.state === "pending" && (
+   675→                <VisualizationPending
+   676→                  accent="var(--foreground)"
+   677→                  testIdPrefix="akashic-visual"
+   678→                  repaint
+   679→                />
+   680→              )}
+   681→              {visual.state === "error" && (
+   682→                <div
+   683→                  className="papyrus papyrus-frame rounded-2xl px-6 py-8 text-center"
+   684→                  data-testid="akashic-visual-error"
+   685→                >
+   686→                  <p className="ink-hand text-[16px] leading-[1.85]">
+   687→                    {t(
+   688→                      "The atelier is quiet — the vision could not be composed. Rest a breath, then ask again."
+   689→                    )}
+   690→                  </p>
+   691→                  <button
+   692→                    type="button"
+   693→                    onClick={() => void requestVisualization(visual.request)}
+   694→                    data-testid="akashic-visual-retry"
+   695→                    className="papyrus-btn focus-glow mt-5 inline-flex h-10 items-center gap-2 rounded-full px-5 text-[12px] font-semibold tracking-[0.08em]"
+   696→                  >
+   697→                    <RotateCcw className="size-3.5" aria-hidden="true" />
+   698→                    {t("Be still and receive")}
+   699→                  </button>
+   700→                </div>
+   701→              )}
+   702→              {visual.state === "ready" && visual.artifact && (
+   703→                <>
+   704→                  {visual.artifact.imageUrl ||
+   705→                  visual.artifact.slides.length > 0 ? (
+   706→                    <VisualizationCard
+   707→                      artifact={visual.artifact}
+   708→                      accent="var(--foreground)"
+   709→                      testIdPrefix="akashic-visual"
+   710→                      onRegenerate={() =>
+   711→                        void requestVisualization(visual.request)
+   712→                      }
+   713→                    />
+   714→                  ) : (
+   715→                    <PreparedPromptFallback
+   716→                      artifact={visual.artifact}
+   717→                      accent="var(--foreground)"
+   718→                      testIdPrefix="akashic-visual"
+   719→                      onPaint={() =>
+   720→                        void requestVisualization(visual.request)
+   721→                      }
+   722→                    />
+   723→                  )}
+   724→                </>
+   725→              )}
+   726→            </motion.div>
+   727→          )}
+   728→        </div>
+   729→      </div>
+   730→
+   731→      {/* ---------- setting the resonance on the desk ---------- */}
+   732→      <div className="relative z-20 border-t hairline bg-background/80 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-md sm:px-5">
+   733→        <form
+   734→          onSubmit={send}
+   735→          className="mx-auto w-full max-w-[680px]"
+   736→          data-testid="akashic-composer"
+   737→        >
+   738→          <AttachmentChips
+   739→            attachments={attachments}
+   740→            onRemove={(id) =>
+   741→              setAttachments((prev) => prev.filter((a) => a.id !== id))
+   742→            }
+   743→            accentVar="var(--foreground)"
+   744→            testId="akashic-attachments"
+   745→          />
+   746→          <div className="flex items-center gap-2">
+   747→          <button
+   748→            type="button"
+   749→            onClick={() => void seek(null, false)}
+   750→            disabled={seeking}
+   751→            aria-label={t("Receive unasked")}
+   752→            title={t("Receive unasked")}
+   753→            data-testid="akashic-unprompted"
+   754→            className="focus-glow flex size-11 shrink-0 items-center justify-center rounded-full border hairline bg-card/60 text-foreground transition-all duration-300 hover:-translate-y-px hover:border-[var(--hairline-hover)] disabled:cursor-not-allowed disabled:opacity-40"
+   755→          >
+   756→            <Orbit className="size-4" aria-hidden="true" />
+   757→          </button>
+   758→
+   759→          <input
+   760→            type="text"
+   761→            value={draft}
+   762→            onChange={(e) => setDraft(e.target.value)}
+   763→            placeholder={
+   764→              replying
+   765→                ? t(
+   766→                    "Reply — ask the Librarian anything, or let the story go on"
+   767→                  )
+   768→                : t(
+   769→                    "Write your resonance — a name, a question, a feeling — or leave it still"
+   770→                  )
+   771→            }
+   772→            aria-label={replying ? t("Reply to the record") : t("Write your resonance")}
+   773→            data-testid="akashic-input"
+   774→            className="focus-glow h-11 min-w-0 flex-1 rounded-full border hairline bg-card/60 px-4 text-[14.5px] text-foreground placeholder:text-muted-foreground/60 transition-all duration-300"
+   775→          />
+   776→
+   777→          <ChatInputExtras
+   778→            scope="akashic"
+   779→            accentVar="var(--foreground)"
+   780→            disabled={seeking}
+   781→            onTranscript={(text) =>
+   782→              setDraft((prev) => (prev ? `${prev} ${text}` : text))
+   783→            }
+   784→            onVoiceSubmit={handleVoiceSubmit}
+   785→            attachments={attachments}
+   786→            onAttachmentsChange={setAttachments}
+   787→          />
+   788→
+   789→          <button
+   790→            type="submit"
+   791→            disabled={
+   792→              seeking ||
+   793→              (!draft.trim() && attachments.length === 0) ||
+   794→              hasPendingAttachments(attachments)
+   795→            }
+   796→            aria-label={replying ? t("Send the reply") : t("Receive by resonance")}
+   797→            data-testid="akashic-seek"
+   798→            className="akashic-btn focus-glow flex size-11 shrink-0 items-center justify-center rounded-full transition-all duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-35"
+   799→          >
+   800→            <Feather className="size-4" aria-hidden="true" />
+   801→          </button>
+   802→          </div>
+   803→        </form>
+   804→        <p className="mono-label mt-2.5 text-center text-[9px] uppercase tracking-[0.26em] text-muted-foreground/50">
+   805→          {t("received by resonance — the ancient one remembers")}
+   806→        </p>
+   807→      </div>
+   808→    </div>
+   809→  );
+   810→}
+   811→

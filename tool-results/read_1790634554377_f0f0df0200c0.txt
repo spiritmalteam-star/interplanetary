@@ -1,0 +1,749 @@
+     1→"use client";
+     2→
+     3→import { useEffect, useMemo, useRef, useState } from "react";
+     4→import { AnimatePresence, motion } from "framer-motion";
+     5→import {
+     6→  ArrowLeft,
+     7→  Flame,
+     8→  Hammer,
+     9→  RotateCcw,
+    10→  Send,
+    11→} from "lucide-react";
+    12→import { useMirror, type ChatMessage } from "@/lib/mirror-store";
+    13→import { useT } from "@/lib/i18n";
+    14→import {
+    15→  forgeChatPhases,
+    16→  forgeDomains,
+    17→  forgePhases,
+    18→  forgeScales,
+    19→  forgeSparks,
+    20→  forgeSuggestions,
+    21→  type ForgeDialOption,
+    22→} from "@/lib/data/invent";
+    23→import { cn } from "@/lib/utils";
+    24→import { ListenButton } from "./ListenButton";
+    25→import { SigilForIntent } from "./MirrorOSForge";
+    26→
+    27→/* ------------------------------------------------------------------ */
+    28→/*  INVENT — THE FORGE · the fourth book on the shelf, rebuilt as its  */
+    29→/*  own interactive workshop. No reading rooms and no bold text walls: */
+    30→/*  the whole book IS the making. Two live elements carry it —         */
+    31→/*                                                                     */
+    32→/*   · THE FORGE CHAT  — the direct mirror chat specialized for        */
+    33→/*     invention: speak a want, a half-idea or a block, and the Forge  */
+    34→/*     answers in sparks, always landing on one doable stroke.         */
+    35→/*                                                                     */
+    36→/*   · THE MYSTERY CHAMBER — turn three dials (what · how much world · */
+    37→/*     which energy), strike, and a random mystery creation is forged  */
+    38→/*     from three embers drawn server-side: named, embodied, and       */
+    39→/*     handed over with its first stroke and a whisper.                */
+    40→/*                                                                     */
+    41→/*  COMPACTNESS: one screen, two columns on desktop, stacked on        */
+    42→/*  mobile — the thread and the chamber scroll inside themselves.      */
+    43→/* ------------------------------------------------------------------ */
+    44→
+    45→/* ---------------- one dial group of the Mystery Chamber ---------------- */
+    46→
+    47→function DialGroup({
+    48→  label,
+    49→  options,
+    50→  value,
+    51→  onChange,
+    52→  testId,
+    53→}: {
+    54→  label: string;
+    55→  options: ForgeDialOption[];
+    56→  value: string;
+    57→  onChange: (id: string) => void;
+    58→  testId: string;
+    59→}) {
+    60→  const t = useT();
+    61→  return (
+    62→    <div>
+    63→      <p className="mono-label text-[10px] uppercase tracking-[0.16em] text-muted-foreground/70">
+    64→        {label}
+    65→      </p>
+    66→      <div
+    67→        className="mt-2 flex flex-wrap gap-1.5"
+    68→        role="radiogroup"
+    69→        aria-label={label}
+    70→        data-testid={testId}
+    71→      >
+    72→        {options.map((o) => {
+    73→          const active = o.id === value;
+    74→          return (
+    75→            <button
+    76→              key={o.id}
+    77→              type="button"
+    78→              role="radio"
+    79→              aria-checked={active}
+    80→              title={t(o.hint)}
+    81→              onClick={() => onChange(o.id)}
+    82→              className={cn(
+    83→                "focus-glow flex items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-[13px] transition-all duration-300",
+    84→                active
+    85→                  ? "border-[var(--scope-a)] font-semibold text-foreground"
+    86→                  : "hairline text-muted-foreground hover:text-foreground"
+    87→              )}
+    88→              style={
+    89→                active
+    90→                  ? {
+    91→                      background:
+    92→                        "color-mix(in srgb, var(--scope-a) 12%, transparent)",
+    93→                      boxShadow:
+    94→                        "0 0 16px -6px color-mix(in srgb, var(--scope-a) 55%, transparent)",
+    95→                    }
+    96→                  : undefined
+    97→              }
+    98→            >
+    99→              <span aria-hidden="true">{o.emoji}</span>
+   100→              {t(o.label)}
+   101→            </button>
+   102→          );
+   103→        })}
+   104→      </div>
+   105→    </div>
+   106→  );
+   107→}
+   108→
+   109→/* ---------------- the forging ember — strike animation ---------------- */
+   110→
+   111→function ForgingEmber({ phase }: { phase: number }) {
+   112→  const t = useT();
+   113→  return (
+   114→    <div className="py-5 text-center" aria-live="polite" aria-busy="true">
+   115→      <div className="relative mx-auto size-24" aria-hidden="true">
+   116→        <div
+   117→          className="scope-halo absolute inset-0 rounded-full border border-dashed"
+   118→          style={{
+   119→            borderColor: "color-mix(in srgb, var(--scope-a) 50%, transparent)",
+   120→          }}
+   121→        />
+   122→        <div
+   123→          className="scope-halo-rev absolute inset-3 rounded-full border"
+   124→          style={{
+   125→            borderColor: "color-mix(in srgb, var(--scope-b) 38%, transparent)",
+   126→          }}
+   127→        />
+   128→        <div
+   129→          className="animate-charge-pulse absolute inset-6 rounded-full"
+   130→          style={{
+   131→            background:
+   132→              "radial-gradient(circle, color-mix(in srgb, var(--scope-a) 55%, transparent), transparent 72%)",
+   133→          }}
+   134→        />
+   135→        <span
+   136→          className="absolute left-1/2 top-1/2 size-2 -translate-x-1/2 -translate-y-1/2 rotate-45"
+   137→          style={{
+   138→            background: "var(--scope-a)",
+   139→            boxShadow: "0 0 12px var(--scope-a)",
+   140→          }}
+   141→        />
+   142→      </div>
+   143→      <p className="mono-label mt-4 text-[11px] text-muted-foreground">
+   144→        {t(forgePhases[phase] ?? forgePhases[0])}
+   145→      </p>
+   146→    </div>
+   147→  );
+   148→}
+   149→
+   150→/* ---------------- the revealed mystery creation ---------------- */
+   151→
+   152→function MysteryCard() {
+   153→  const mystery = useMirror((s) => s.mystery);
+   154→  const strikeMystery = useMirror((s) => s.strikeMystery);
+   155→  const askForge = useMirror((s) => s.askForge);
+   156→  const mysteryStatus = useMirror((s) => s.mysteryStatus);
+   157→  const t = useT();
+   158→
+   159→  const spoken = useMemo(
+   160→    () =>
+   161→      mystery
+   162→        ? [
+   163→            mystery.name,
+   164→            mystery.essence,
+   165→            mystery.purpose,
+   166→            mystery.first_stroke,
+   167→            mystery.whisper,
+   168→          ]
+   169→            .filter(Boolean)
+   170→            .join(". ")
+   171→        : "",
+   172→    [mystery]
+   173→  );
+   174→
+   175→  if (!mystery) return null;
+   176→
+   177→  const askAbout = () => {
+   178→    if (mysteryStatus === "forging") return;
+   179→    void askForge(
+   180→      t("Speak with me about {name} — what would making it truly take?", {
+   181→        name: mystery.name,
+   182→      })
+   183→    );
+   184→  };
+   185→
+   186→  return (
+   187→    <motion.div
+   188→      initial={{ opacity: 0, y: 16 }}
+   189→      animate={{ opacity: 1, y: 0 }}
+   190→      transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+   191→      className="mt-4 rounded-xl border px-4 py-5"
+   192→      style={{
+   193→        borderColor: "color-mix(in srgb, var(--scope-a) 30%, transparent)",
+   194→        background:
+   195→          "color-mix(in srgb, var(--scope-a) 7%, transparent)",
+   196→      }}
+   197→      data-testid="mystery-card"
+   198→    >
+   199→      {/* name + sigil */}
+   200→      <div className="flex flex-col items-center text-center">
+   201→        <SigilForIntent text={mystery.name} size={64} />
+   202→        <h4 className="scope-gradient-text mt-2.5 font-serif text-[18.5px] italic leading-snug sm:text-[20px]">
+   203→          {mystery.name}
+   204→        </h4>
+   205→      </div>
+   206→
+   207→      <div className="mt-4 space-y-3.5 text-left">
+   208→        <section>
+   209→          <p className="mono-label text-[9.5px] uppercase tracking-[0.16em] text-[var(--scope-a)]">
+   210→            {t("What it is")}
+   211→          </p>
+   212→          <p className="mt-1 text-[14px] leading-[1.7] text-foreground/88">
+   213→            {mystery.essence}
+   214→          </p>
+   215→        </section>
+   216→
+   217→        {mystery.purpose && (
+   218→          <section>
+   219→            <p className="mono-label text-[9.5px] uppercase tracking-[0.16em] text-[var(--scope-a)]">
+   220→              {t("What it changes")}
+   221→            </p>
+   222→            <p className="mt-1 text-[14px] leading-[1.7] text-foreground/85">
+   223→              {mystery.purpose}
+   224→            </p>
+   225→          </section>
+   226→        )}
+   227→
+   228→        <section
+   229→          className="rounded-lg border px-3.5 py-3"
+   230→          style={{
+   231→            borderColor:
+   232→              "color-mix(in srgb, var(--scope-a) 26%, transparent)",
+   233→            background:
+   234→              "color-mix(in srgb, var(--scope-a) 6%, transparent)",
+   235→          }}
+   236→        >
+   237→          <p className="mono-label text-[9.5px] uppercase tracking-[0.16em] text-[var(--scope-a)]">
+   238→            {t("The first stroke")}
+   239→          </p>
+   240→          <p className="mt-1 text-[14px] leading-[1.7] text-foreground/90">
+   241→            {mystery.first_stroke}
+   242→          </p>
+   243→        </section>
+   244→
+   245→        {mystery.whisper && (
+   246→          <p className="pt-1 text-center font-serif text-[14.5px] italic leading-relaxed text-muted-foreground">
+   247→            “{mystery.whisper}”
+   248→          </p>
+   249→        )}
+   250→      </div>
+   251→
+   252→      {/* actions */}
+   253→      <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+   254→        <button
+   255→          type="button"
+   256→          onClick={askAbout}
+   257→          data-testid="ask-forge-about"
+   258→          className="focus-glow flex items-center gap-2 rounded-full border px-3.5 py-2 text-[13px] font-medium text-foreground/90 transition-all duration-300 hover:text-foreground"
+   259→          style={{
+   260→            borderColor:
+   261→              "color-mix(in srgb, var(--scope-a) 40%, transparent)",
+   262→            background:
+   263→              "linear-gradient(120deg, color-mix(in srgb, var(--scope-a) 14%, transparent), color-mix(in srgb, var(--scope-b) 12%, transparent))",
+   264→          }}
+   265→        >
+   266→          <Send className="size-3.5" aria-hidden="true" />
+   267→          {t("Ask the Forge about it")}
+   268→        </button>
+   269→        <button
+   270→          type="button"
+   271→          onClick={() => void strikeMystery()}
+   272→          disabled={mysteryStatus === "forging"}
+   273→          data-testid="forge-another"
+   274→          className={cn(
+   275→            "focus-glow flex items-center gap-2 rounded-full border hairline px-3.5 py-2 text-[13px] font-medium text-muted-foreground transition-all duration-300 hover:text-foreground",
+   276→            mysteryStatus === "forging" && "cursor-not-allowed opacity-50"
+   277→          )}
+   278→        >
+   279→          <RotateCcw className="size-3.5" aria-hidden="true" />
+   280→          {t("Forge another")}
+   281→        </button>
+   282→        <ListenButton text={spoken} cacheKey={`mystery-${mystery.name}`} />
+   283→      </div>
+   284→    </motion.div>
+   285→  );
+   286→}
+   287→
+   288→/* ---------------- the Mystery Chamber ---------------- */
+   289→
+   290→function MysteryChamber() {
+   291→  const mysteryStatus = useMirror((s) => s.mysteryStatus);
+   292→  const mysteryDials = useMirror((s) => s.mysteryDials);
+   293→  const setMysteryDial = useMirror((s) => s.setMysteryDial);
+   294→  const strikeMystery = useMirror((s) => s.strikeMystery);
+   295→  const mysteryError = useMirror((s) => s.mysteryError);
+   296→  const t = useT();
+   297→  const [phase, setPhase] = useState(0);
+   298→
+   299→  useEffect(() => {
+   300→    if (mysteryStatus !== "forging") return;
+   301→    const id = window.setInterval(
+   302→      () => setPhase((p) => (p + 1) % forgePhases.length),
+   303→      1900
+   304→    );
+   305→    return () => window.clearInterval(id);
+   306→  }, [mysteryStatus]);
+   307→
+   308→  return (
+   309→    <div
+   310→      className="scope-frame-card relative overflow-hidden rounded-2xl glass p-5 sm:p-6"
+   311→      data-testid="mystery-chamber"
+   312→    >
+   313→      <span className="scope-corner scope-corner-tl" aria-hidden="true" />
+   314→      <span className="scope-corner scope-corner-tr" aria-hidden="true" />
+   315→      <span className="scope-corner scope-corner-bl" aria-hidden="true" />
+   316→      <span className="scope-corner scope-corner-br" aria-hidden="true" />
+   317→
+   318→      <h3 className="mono-label flex items-center gap-2 text-[11px] text-[var(--scope-a)]">
+   319→        <Flame className="size-3.5" aria-hidden="true" />
+   320→        {t("The Mystery Chamber")}
+   321→      </h3>
+   322→      <p className="mt-1.5 text-[13.5px] leading-relaxed text-muted-foreground">
+   323→        {t(
+   324→          "Turn the dials and strike — a creation you never asked for will climb out of the coals."
+   325→        )}
+   326→      </p>
+   327→
+   328→      <div className="mt-4 space-y-3.5">
+   329→        <DialGroup
+   330→          label={t("What it is")}
+   331→          options={forgeDomains}
+   332→          value={mysteryDials.domain}
+   333→          onChange={(id) => setMysteryDial("domain", id)}
+   334→          testId="dial-domain"
+   335→        />
+   336→        <DialGroup
+   337→          label={t("How much world")}
+   338→          options={forgeScales}
+   339→          value={mysteryDials.scale}
+   340→          onChange={(id) => setMysteryDial("scale", id)}
+   341→          testId="dial-scale"
+   342→        />
+   343→        <DialGroup
+   344→          label={t("Which energy")}
+   345→          options={forgeSparks}
+   346→          value={mysteryDials.spark}
+   347→          onChange={(id) => setMysteryDial("spark", id)}
+   348→          testId="dial-spark"
+   349→        />
+   350→      </div>
+   351→
+   352→      <button
+   353→        type="button"
+   354→        disabled={mysteryStatus === "forging"}
+   355→        onClick={() => void strikeMystery()}
+   356→        data-testid="strike-forge"
+   357→        aria-label={t("Strike the Forge")}
+   358→        className={cn(
+   359→          "focus-glow mt-5 flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-3 text-[14.5px] font-semibold transition-all duration-300",
+   360→          mysteryStatus === "forging"
+   361→            ? "cursor-wait opacity-70"
+   362→            : "hover:glow-sm"
+   363→        )}
+   364→        style={{
+   365→          borderColor:
+   366→            "color-mix(in srgb, var(--scope-a) 50%, transparent)",
+   367→          background:
+   368→            "linear-gradient(120deg, color-mix(in srgb, var(--scope-a) 16%, transparent), color-mix(in srgb, var(--scope-b) 14%, transparent))",
+   369→        }}
+   370→      >
+   371→        <Hammer className="size-4" aria-hidden="true" />
+   372→        {t("Strike the Forge")}
+   373→      </button>
+   374→
+   375→      <AnimatePresence mode="wait">
+   376→        {mysteryStatus === "forging" && (
+   377→          <motion.div
+   378→            key="forging"
+   379→            initial={{ opacity: 0 }}
+   380→            animate={{ opacity: 1 }}
+   381→            exit={{ opacity: 0 }}
+   382→            transition={{ duration: 0.3 }}
+   383→          >
+   384→            <ForgingEmber phase={phase} />
+   385→          </motion.div>
+   386→        )}
+   387→
+   388→        {mysteryStatus === "ready" && (
+   389→          <motion.div
+   390→            key="ready"
+   391→            initial={{ opacity: 0 }}
+   392→            animate={{ opacity: 1 }}
+   393→            exit={{ opacity: 0 }}
+   394→            transition={{ duration: 0.3 }}
+   395→          >
+   396→            <MysteryCard />
+   397→          </motion.div>
+   398→        )}
+   399→
+   400→        {(mysteryStatus === "idle" || mysteryStatus === "error") && (
+   401→          <motion.p
+   402→            key="idle"
+   403→            initial={{ opacity: 0 }}
+   404→            animate={{ opacity: 1 }}
+   405→            exit={{ opacity: 0 }}
+   406→            transition={{ duration: 0.3 }}
+   407→            className="mt-4 text-center text-[12.5px] italic leading-relaxed text-muted-foreground/75"
+   408→          >
+   409→            {mysteryStatus === "error" && mysteryError
+   410→              ? t(mysteryError)
+   411→              : t("The coals are lit. The Forge is waiting.")}
+   412→          </motion.p>
+   413→        )}
+   414→      </AnimatePresence>
+   415→    </div>
+   416→  );
+   417→}
+   418→
+   419→/* ---------------- the forge chat — the direct mirror line ---------------- */
+   420→
+   421→function ForgeBody({ text }: { text: string }) {
+   422→  const paras = useMemo(
+   423→    () =>
+   424→      text
+   425→        .split(/\n{2,}/)
+   426→        .map((p) => p.trim())
+   427→        .filter(Boolean),
+   428→    [text]
+   429→  );
+   430→  return (
+   431→    <div className="space-y-2.5">
+   432→      {paras.map((p, i) => {
+   433→        const isLast = i === paras.length - 1;
+   434→        if (isLast && p.startsWith("—")) {
+   435→          return (
+   436→            <p
+   437→              key={i}
+   438→              className="mono-label pt-1 text-[11px] leading-relaxed"
+   439→              style={{ color: "color-mix(in srgb, var(--scope-b) 82%, white)" }}
+   440→            >
+   441→              {p}
+   442→            </p>
+   443→          );
+   444→        }
+   445→        return (
+   446→          <p
+   447→            key={i}
+   448→            className={cn(
+   449→              "text-[14.5px] leading-[1.75] text-foreground/88",
+   450→              i === 0 && "font-medium text-foreground/95"
+   451→            )}
+   452→          >
+   453→            {p}
+   454→          </p>
+   455→        );
+   456→      })}
+   457→    </div>
+   458→  );
+   459→}
+   460→
+   461→function ForgeExchange({
+   462→  m,
+   463→  animate,
+   464→}: {
+   465→  m: ChatMessage;
+   466→  animate: boolean;
+   467→}) {
+   468→  return (
+   469→    <motion.article
+   470→      initial={animate ? { opacity: 0, y: 10 } : false}
+   471→      animate={{ opacity: 1, y: 0 }}
+   472→      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+   473→      className="rounded-xl border hairline px-4 py-3.5"
+   474→      style={{
+   475→        background: "color-mix(in srgb, var(--scope-a) 5%, transparent)",
+   476→      }}
+   477→    >
+   478→      <p className="text-[13px] italic leading-relaxed text-muted-foreground">
+   479→        {m.query}
+   480→      </p>
+   481→      <div className="mt-2.5">
+   482→        <ForgeBody text={m.text} />
+   483→      </div>
+   484→    </motion.article>
+   485→  );
+   486→}
+   487→
+   488→function ForgeChat() {
+   489→  const forgeSession = useMirror((s) => s.forgeSession);
+   490→  const setForgeDraft = useMirror((s) => s.setForgeDraft);
+   491→  const askForge = useMirror((s) => s.askForge);
+   492→  const clearChannel = useMirror((s) => s.clearChannel);
+   493→  const t = useT();
+   494→  const threadRef = useRef<HTMLDivElement | null>(null);
+   495→  const [phase, setPhase] = useState(0);
+   496→
+   497→  const { status, messages, draft, error, activeQuery } = forgeSession;
+   498→  const loading = status === "loading";
+   499→
+   500→  useEffect(() => {
+   501→    if (!loading) return;
+   502→    const id = window.setInterval(
+   503→      () => setPhase((p) => (p + 1) % forgeChatPhases.length),
+   504→      1900
+   505→    );
+   506→    return () => window.clearInterval(id);
+   507→  }, [loading]);
+   508→
+   509→  /* the thread keeps its latest stroke in view — inside its own pane */
+   510→  useEffect(() => {
+   511→    const el = threadRef.current;
+   512→    if (!el) return;
+   513→    el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+   514→  }, [messages.length, status]);
+   515→
+   516→  const send = (text?: string) => {
+   517→    const q = (text ?? draft).trim();
+   518→    if (!q || loading) return;
+   519→    void askForge(q);
+   520→  };
+   521→
+   522→  const canSend = draft.trim().length > 0 && !loading;
+   523→
+   524→  return (
+   525→    <div
+   526→      className="scope-frame-card relative flex flex-col overflow-hidden rounded-2xl glass"
+   527→      data-testid="forge-chat"
+   528→    >
+   529→      <span className="scope-corner scope-corner-tl" aria-hidden="true" />
+   530→      <span className="scope-corner scope-corner-tr" aria-hidden="true" />
+   531→      <span className="scope-corner scope-corner-bl" aria-hidden="true" />
+   532→      <span className="scope-corner scope-corner-br" aria-hidden="true" />
+   533→
+   534→      {/* header */}
+   535→      <div className="flex items-center justify-between gap-2 border-b hairline px-4 py-3 sm:px-5">
+   536→        <h3 className="mono-label flex items-center gap-2 text-[11px] text-[var(--scope-a)]">
+   537→          <Hammer className="size-3.5" aria-hidden="true" />
+   538→          {t("The Forge speaks")}
+   539→        </h3>
+   540→        {messages.length > 0 && (
+   541→          <button
+   542→            type="button"
+   543→            onClick={() => clearChannel("forge")}
+   544→            aria-label={t("Quiet the Forge")}
+   545→            title={t("Quiet the Forge")}
+   546→            className="focus-glow flex size-7 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:text-foreground"
+   547→          >
+   548→            <RotateCcw className="size-3" aria-hidden="true" />
+   549→          </button>
+   550→        )}
+   551→      </div>
+   552→
+   553→      {/* thread — scrolls inside its own pane, the workshop stays one screen */}
+   554→      <div
+   555→        ref={threadRef}
+   556→        className="nice-scroll max-h-[46vh] min-h-[240px] flex-1 space-y-3.5 overflow-y-auto overscroll-contain px-4 py-4 sm:px-5 lg:max-h-[440px]"
+   557→        data-testid="forge-thread"
+   558→      >
+   559→        {messages.length === 0 && status === "idle" && !error && (
+   560→          <div className="flex h-full min-h-[220px] flex-col items-center justify-center text-center">
+   561→            <Hammer
+   562→              className="size-6 text-muted-foreground/40"
+   563→              aria-hidden="true"
+   564→            />
+   565→            <p className="mt-3 max-w-[300px] text-[14px] leading-relaxed text-muted-foreground">
+   566→              {t(
+   567→                "The bench is quiet. Speak a want, a half-idea, a block — or strike the chamber for a mystery."
+   568→              )}
+   569→            </p>
+   570→          </div>
+   571→        )}
+   572→
+   573→        {messages.map((m, i) => (
+   574→          <ForgeExchange
+   575→            key={m.id}
+   576→            m={m}
+   577→            animate={i === messages.length - 1 && status !== "loading"}
+   578→          />
+   579→        ))}
+   580→
+   581→        {loading && (
+   582→          <div className="rounded-xl border hairline px-4 py-3.5" aria-live="polite" aria-busy="true">
+   583→            <p className="text-[13px] italic leading-relaxed text-muted-foreground">
+   584→              {activeQuery}
+   585→            </p>
+   586→            <div className="mt-3 flex items-center gap-2.5">
+   587→              <span
+   588→                className="animate-dot-pulse inline-block size-1.5 rotate-45"
+   589→                style={{ background: "var(--scope-a)" }}
+   590→                aria-hidden="true"
+   591→              />
+   592→              <span className="mono-label text-[11px] text-muted-foreground">
+   593→                {t(forgeChatPhases[phase] ?? forgeChatPhases[0])}
+   594→              </span>
+   595→            </div>
+   596→          </div>
+   597→        )}
+   598→
+   599→        {status === "error" && error && (
+   600→          <div className="rounded-xl border hairline px-4 py-3.5 text-[13.5px] leading-relaxed text-foreground/85">
+   601→            {t(error)}
+   602→          </div>
+   603→        )}
+   604→      </div>
+   605→
+   606→      {/* suggestion sparks — one tap speaks the whole line */}
+   607→      <div className="flex flex-wrap gap-1.5 border-t hairline px-4 pt-3 sm:px-5">
+   608→        {forgeSuggestions.map((s) => (
+   609→          <button
+   610→            key={s}
+   611→            type="button"
+   612→            disabled={loading}
+   613→            onClick={() => send(s)}
+   614→            data-testid="forge-suggestion"
+   615→            className={cn(
+   616→              "focus-glow max-w-full truncate rounded-full border px-2.5 py-1 text-[12px] text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground",
+   617→              loading && "cursor-not-allowed opacity-50"
+   618→            )}
+   619→          >
+   620→            {t(s)}
+   621→          </button>
+   622→        ))}
+   623→      </div>
+   624→
+   625→      {/* composer */}
+   626→      <div className="px-4 pb-4 pt-2.5 sm:px-5">
+   627→        <div className="flex items-end gap-2">
+   628→          <textarea
+   629→            value={draft}
+   630→            onChange={(e) => setForgeDraft(e.target.value)}
+   631→            onKeyDown={(e) => {
+   632→              if (e.key === "Enter" && !e.shiftKey) {
+   633→                e.preventDefault();
+   634→                send();
+   635→              }
+   636→            }}
+   637→            rows={2}
+   638→            maxLength={600}
+   639→            aria-label={t("Speak to the Forge")}
+   640→            data-testid="forge-composer"
+   641→            placeholder={t("Speak to the Forge — a want, a half-idea, a block…")}
+   642→            className="focus-glow max-h-28 min-h-[46px] w-full resize-none rounded-xl border hairline bg-transparent px-3.5 py-2.5 text-[14.5px] leading-relaxed text-foreground placeholder:text-muted-foreground/60"
+   643→          />
+   644→          <button
+   645→            type="button"
+   646→            onClick={() => send()}
+   647→            disabled={!canSend}
+   648→            aria-label={t("Send to the Forge")}
+   649→            data-testid="forge-send"
+   650→            className={cn(
+   651→              "focus-glow flex size-11 shrink-0 items-center justify-center rounded-xl border transition-all duration-300",
+   652→              canSend ? "hover:glow-sm" : "cursor-not-allowed opacity-45"
+   653→            )}
+   654→            style={{
+   655→              borderColor:
+   656→                "color-mix(in srgb, var(--scope-a) 45%, transparent)",
+   657→              background:
+   658→                "linear-gradient(120deg, color-mix(in srgb, var(--scope-a) 15%, transparent), color-mix(in srgb, var(--scope-b) 13%, transparent))",
+   659→            }}
+   660→          >
+   661→            <Send className="size-4" aria-hidden="true" />
+   662→          </button>
+   663→        </div>
+   664→      </div>
+   665→    </div>
+   666→  );
+   667→}
+   668→
+   669→/* ---------------- the workshop shell ---------------- */
+   670→
+   671→export function InventView() {
+   672→  const exitInvent = useMirror((s) => s.exitInvent);
+   673→  const t = useT();
+   674→
+   675→  return (
+   676→    <div className="scope-invent relative flex h-full flex-col">
+   677→      {/* ---------- top bar with the single bridge back to the app ---------- */}
+   678→      <header className="relative z-30 shrink-0 border-b hairline bg-[var(--glass-bg)] backdrop-blur-xl">
+   679→        <div className="flex h-14 items-center justify-between gap-3 px-4 sm:px-5">
+   680→          <button
+   681→            type="button"
+   682→            onClick={exitInvent}
+   683→            data-testid="invent-back"
+   684→            className="focus-glow group flex h-9 items-center gap-2 rounded-full border hairline px-3 text-[14px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground sm:px-3.5"
+   685→          >
+   686→            <ArrowLeft
+   687→              className="size-3.5 transition-transform duration-300 group-hover:-translate-x-0.5"
+   688→              aria-hidden="true"
+   689→            />
+   690→            <span className="hidden sm:inline">
+   691→              {t("Return to the Observatory")}
+   692→            </span>
+   693→            <span className="sm:hidden">{t("Back")}</span>
+   694→          </button>
+   695→
+   696→          <div className="min-w-0 text-center">
+   697→            <h1 className="title-gradient truncate text-[15.5px] font-semibold tracking-[0.12em] sm:text-[17px]">
+   698→              INVENT · {t("The Forge")}
+   699→            </h1>
+   700→            <p className="mono-label mt-0.5 truncate text-[10px] text-muted-foreground/80 sm:text-[11px]">
+   701→              {t("The invention workshop of the Mirror")}
+   702→            </p>
+   703→          </div>
+   704→
+   705→          <span
+   706→            className="flex size-9 shrink-0 items-center justify-center rounded-full border hairline"
+   707→            aria-hidden="true"
+   708→          >
+   709→            <Flame className="size-4 text-[var(--iv-a)]" />
+   710→          </span>
+   711→        </div>
+   712→      </header>
+   713→
+   714→      {/* ---------- the workshop ---------- */}
+   715→      <main
+   716→        className="nice-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain"
+   717→        data-testid="invent-view"
+   718→      >
+   719→        <div className="mx-auto w-full max-w-[1060px] px-4 pb-8 pt-5 sm:px-6 sm:pt-6">
+   720→          {/* slim greeting — one breath, then straight to the work */}
+   721→          <div className="text-center">
+   722→            <h2 className="scope-gradient-text text-[21px] font-semibold leading-tight sm:text-[24px]">
+   723→              {t("Strike While the Coals Are Lit")}
+   724→            </h2>
+   725→            <p className="mx-auto mt-2 max-w-[560px] text-[13.5px] leading-relaxed text-muted-foreground">
+   726→              {t(
+   727→                "Speak with the Forge on the bench — or turn the dials, strike, and meet a mystery you never asked for."
+   728→              )}
+   729→            </p>
+   730→          </div>
+   731→
+   732→          {/* the two live elements — chat and chamber, side by side on
+   733→              desktop, stacked on mobile; both scroll inside themselves */}
+   734→          <div className="mt-5 grid items-start gap-5 lg:grid-cols-[1fr_360px]">
+   735→            <ForgeChat />
+   736→            <MysteryChamber />
+   737→          </div>
+   738→
+   739→          <p className="mono-label mt-6 text-center text-[10px] text-muted-foreground/60">
+   740→            {t(
+   741→              "The Forge never promises the invention — it promises the next stroke · Free will honored always"
+   742→            )}
+   743→          </p>
+   744→        </div>
+   745→      </main>
+   746→    </div>
+   747→  );
+   748→}
+   749→

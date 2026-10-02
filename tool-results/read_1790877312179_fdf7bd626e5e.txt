@@ -1,0 +1,780 @@
+     1→"use client";
+     2→
+     3→import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+     4→import { motion } from "framer-motion";
+     5→import {
+     6→  Check,
+     7→  Copy,
+     8→  FileText,
+     9→  Leaf,
+    10→  RotateCcw,
+    11→} from "lucide-react";
+    12→import { useMirror, type ChatMessage } from "@/lib/mirror-store";
+    13→import { SCOPE_META, sectionImage } from "@/lib/entity-utils";
+    14→import { auraFor } from "@/lib/aura";
+    15→import { useT } from "@/lib/i18n";
+    16→import type { Scope } from "@/lib/mirror-types";
+    17→import { cn } from "@/lib/utils";
+    18→import { ListenButton } from "./ListenButton";
+    19→import {
+    20→  PreparedPromptFallback,
+    21→  VisualizationCard,
+    22→  VisualizationPending,
+    23→} from "./VisualizationCard";
+    24→
+    25→/* ---------- parsing the transmission into rich blocks ---------- */
+    26→
+    27→type Block =
+    28→  | { kind: "opening"; text: string }
+    29→  | { kind: "para"; text: string }
+    30→  | { kind: "list"; items: string[] }
+    31→  | { kind: "signature"; text: string };
+    32→
+    33→function parseBlocks(text: string): Block[] {
+    34→  const raw = text
+    35→    .split(/\n{2,}/)
+    36→    .map((p) => p.trim())
+    37→    .filter(Boolean);
+    38→  const blocks: Block[] = [];
+    39→
+    40→  raw.forEach((p, i) => {
+    41→    const isLast = i === raw.length - 1;
+    42→    if (isLast && (p.startsWith("—") || p.startsWith("—"))) {
+    43→      blocks.push({ kind: "signature", text: p });
+    44→      return;
+    45→    }
+    46→    const lines = p.split("\n").map((l) => l.trim());
+    47→    const isList =
+    48→      lines.length > 0 &&
+    49→      lines.every((l) => l.startsWith("- ") || l.startsWith("• "));
+    50→    if (isList) {
+    51→      blocks.push({
+    52→        kind: "list",
+    53→        items: lines.map((l) => l.replace(/^[-•]\s*/, "")),
+    54→      });
+    55→      return;
+    56→    }
+    57→    if (i === 0) {
+    58→      blocks.push({ kind: "opening", text: p });
+    59→      return;
+    60→    }
+    61→    blocks.push({ kind: "para", text: p });
+    62→  });
+    63→
+    64→  return blocks;
+    65→}
+    66→
+    67→/* ---------- small themed pieces ---------- */
+    68→
+    69→function OrbitSpinner() {
+    70→  return (
+    71→    <div className="relative mx-auto size-20" aria-hidden="true">
+    72→      <div
+    73→        className="scope-halo absolute inset-0 rounded-full border border-dashed"
+    74→        style={{ borderColor: "color-mix(in srgb, var(--scope-a) 50%, transparent)" }}
+    75→      />
+    76→      <div
+    77→        className="scope-halo-rev absolute inset-3 rounded-full border"
+    78→        style={{ borderColor: "color-mix(in srgb, var(--scope-b) 38%, transparent)" }}
+    79→      />
+    80→      <div
+    81→        className="animate-charge-pulse absolute inset-6 rounded-full"
+    82→        style={{
+    83→          background:
+    84→            "radial-gradient(circle, color-mix(in srgb, var(--scope-a) 45%, transparent), transparent 72%)",
+    85→        }}
+    86→      />
+    87→      <span
+    88→        className="absolute left-1/2 top-1/2 size-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full"
+    89→        style={{ background: "var(--scope-a)", boxShadow: "0 0 10px var(--scope-a)" }}
+    90→      />
+    91→    </div>
+    92→  );
+    93→}
+    94→
+    95→/* ---------- loading ---------- */
+    96→
+    97→function LoadingTransmission({ scope, query }: { scope: Scope; query: string }) {
+    98→  const [phase, setPhase] = useState(0);
+    99→  const phases = SCOPE_META[scope].phases;
+   100→  const t = useT();
+   101→  /* The forming card already glows with the light it will carry. */
+   102→  const aura = auraFor(`forming-${query}-${phase}`);
+   103→
+   104→  useEffect(() => {
+   105→    const id = window.setInterval(
+   106→      () => setPhase((p) => (p + 1) % phases.length),
+   107→      2000
+   108→    );
+   109→    return () => window.clearInterval(id);
+   110→  }, [phases.length]);
+   111→
+   112→  return (
+   113→    <div
+   114→      className="mt-8"
+   115→      aria-live="polite"
+   116→      aria-busy="true"
+   117→      style={{ "--scope-a": aura.a, "--scope-b": aura.b } as CSSProperties}
+   118→    >
+   119→      {query && (
+   120→        <div className="relative mx-auto mb-6 max-w-[620px]">
+   121→          <span
+   122→            className="pointer-events-none absolute -left-1 -top-5 select-none font-serif text-[44px] leading-none opacity-40"
+   123→            style={{ color: "var(--scope-a)" }}
+   124→            aria-hidden="true"
+   125→          >
+   126→            “
+   127→          </span>
+   128→          <p className="px-6 text-[15.5px] italic leading-relaxed text-muted-foreground">
+   129→            {query}
+   130→          </p>
+   131→        </div>
+   132→      )}
+   133→      <OrbitSpinner />
+   134→      <div className="mt-4 flex items-center justify-center gap-2.5">
+   135→        <span
+   136→          className="animate-dot-pulse inline-block size-1.5 rounded-full"
+   137→          style={{ background: "var(--scope-a)" }}
+   138→        />
+   139→        <span className="mono-label text-[11.5px] text-muted-foreground">
+   140→          {t(phases[phase] ?? phases[0] ?? "")}
+   141→        </span>
+   142→      </div>
+   143→      <div className="scope-frame-card relative mx-auto mt-6 max-w-[680px] space-y-3 overflow-hidden rounded-2xl glass p-6 sm:p-7">
+   144→        {[92, 78, 85, 60].map((w, i) => (
+   145→          <div
+   146→            key={i}
+   147→            className="h-3 rounded-full"
+   148→            style={{
+   149→              width: `${w}%`,
+   150→              background:
+   151→                "linear-gradient(90deg, transparent, color-mix(in srgb, var(--scope-a) 14%, transparent), transparent)",
+   152→              backgroundSize: "220px 100%",
+   153→              animation: `shimmer-line 2.1s linear infinite`,
+   154→              animationDelay: `${i * 0.18}s`,
+   155→            }}
+   156→          />
+   157→        ))}
+   158→      </div>
+   159→    </div>
+   160→  );
+   161→}
+   162→
+   163→/* ---------- rich body ---------- */
+   164→
+   165→const staggerItem = {
+   166→  hidden: { opacity: 0, y: 14 },
+   167→  show: (i: number) => ({
+   168→    opacity: 1,
+   169→    y: 0,
+   170→    transition: { delay: 0.12 + i * 0.14, duration: 0.6, ease: [0.22, 1, 0.36, 1] as const },
+   171→  }),
+   172→};
+   173→
+   174→const stillItem = {
+   175→  hidden: { opacity: 1 },
+   176→  show: () => ({ opacity: 1 }),
+   177→};
+   178→
+   179→function TransmissionBody({ text }: { text: string }) {
+   180→  const blocks = useMemo(() => parseBlocks(text), [text]);
+   181→
+   182→  return (
+   183→    <div>
+   184→      {blocks.map((b, i) => {
+   185→        if (b.kind === "opening") {
+   186→          return (
+   187→            <motion.p
+   188→              key={i}
+   189→              custom={i}
+   190→              variants={staggerItem}
+   191→              initial="hidden"
+   192→              animate="show"
+   193→              className="scope-gradient-text scope-glow-text text-[20px] font-semibold leading-[1.55] tracking-[-0.005em] sm:text-[22px]"
+   194→            >
+   195→              {b.text}
+   196→            </motion.p>
+   197→          );
+   198→        }
+   199→        if (b.kind === "signature") {
+   200→          return (
+   201→            <motion.div
+   202→              key={i}
+   203→              custom={i}
+   204→              variants={staggerItem}
+   205→              initial="hidden"
+   206→              animate="show"
+   207→              className="pt-4"
+   208→            >
+   209→              <div
+   210→                className="mb-3 h-px w-full"
+   211→                style={{
+   212→                  background:
+   213→                    "linear-gradient(90deg, color-mix(in srgb, var(--scope-a) 32%, transparent), transparent)",
+   214→                }}
+   215→              />
+   216→              <p
+   217→                className="mono-label text-[12px] leading-relaxed"
+   218→                style={{ color: "color-mix(in srgb, var(--scope-b) 80%, white)" }}
+   219→              >
+   220→                {b.text}
+   221→              </p>
+   222→            </motion.div>
+   223→          );
+   224→        }
+   225→        if (b.kind === "list") {
+   226→          return (
+   227→            <motion.ul
+   228→              key={i}
+   229→              custom={i}
+   230→              variants={staggerItem}
+   231→              initial="hidden"
+   232→              animate="show"
+   233→              className="space-y-2.5"
+   234→            >
+   235→              {b.items.map((item, j) => (
+   236→                <li key={j} className="flex items-start gap-3">
+   237→                  <span
+   238→                    className="mt-[10px] inline-block size-1.5 shrink-0 rotate-45"
+   239→                    style={{ background: "var(--scope-a)" }}
+   240→                    aria-hidden="true"
+   241→                  />
+   242→                  <span className="text-[15.5px] leading-[1.8] text-foreground/85 sm:text-[16px]">
+   243→                    {item}
+   244→                  </span>
+   245→                </li>
+   246→              ))}
+   247→            </motion.ul>
+   248→          );
+   249→        }
+   250→        return (
+   251→          <motion.p
+   252→            key={i}
+   253→            custom={i}
+   254→            variants={staggerItem}
+   255→            initial="hidden"
+   256→            animate="show"
+   257→            className="text-[16px] leading-[1.85] text-foreground/88 sm:text-[16.5px]"
+   258→          >
+   259→            {b.text}
+   260→          </motion.p>
+   261→        );
+   262→      })}
+   263→    </div>
+   264→  );
+   265→}
+   266→
+   267→/* ---------- seal ---------- */
+   268→
+   269→function Seal() {
+   270→  return (
+   271→    <div
+   272→      className="pointer-events-none absolute bottom-5 right-5 hidden size-16 sm:block"
+   273→      aria-hidden="true"
+   274→    >
+   275→      <div
+   276→        className="scope-halo-rev absolute inset-0 rounded-full border border-dashed"
+   277→        style={{ borderColor: "color-mix(in srgb, var(--scope-b) 32%, transparent)" }}
+   278→      />
+   279→      <div
+   280→        className="absolute inset-2 rounded-full border"
+   281→        style={{ borderColor: "color-mix(in srgb, var(--scope-a) 28%, transparent)" }}
+   282→      />
+   283→      <div className="flex h-full w-full items-center justify-center">
+   284→        <span
+   285→          className="block size-2 rotate-45"
+   286→          style={{
+   287→            background: "color-mix(in srgb, var(--scope-a) 75%, white)",
+   288→            boxShadow: "0 0 10px color-mix(in srgb, var(--scope-a) 60%, transparent)",
+   289→          }}
+   290→        />
+   291→      </div>
+   292→    </div>
+   293→  );
+   294→}
+   295→
+   296→/* ---------- the vision itself — one exchange may carry an image ------- */
+   297→
+   298→function ExchangeVisual({ message }: { message: ChatMessage }) {
+   299→  const t = useT();
+   300→  const askScopeVisual = useMirror((s) => s.askScopeVisual);
+   301→  const activeMode = useMirror((s) => s.activeMode);
+   302→
+   303→  if (message.visual === "pending") {
+   304→    return (
+   305→      <VisualizationPending
+   306→        accent="var(--scope-a)"
+   307→        testIdPrefix="scope-visual"
+   308→        repaint
+   309→      />
+   310→    );
+   311→  }
+   312→  if (message.visual === "error") {
+   313→    return (
+   314→      <div
+   315→        className="glass rounded-2xl border border-[color-mix(in_srgb,var(--hairline)_65%,transparent)] px-4 py-3.5"
+   316→        data-testid="scope-visual-error"
+   317→      >
+   318→        <p className="text-[14px] italic leading-relaxed text-foreground/80">
+   319→          {t(
+   320→            "The atelier is quiet — the vision could not be composed. Rest a breath, then ask again."
+   321→          )}
+   322→        </p>
+   323→        {message.visualRequest && (
+   324→          <button
+   325→            type="button"
+   326→            onClick={() =>
+   327→              void askScopeVisual(activeMode, message.visualRequest ?? "", null)
+   328→            }
+   329→            data-testid="scope-visual-retry"
+   330→            className="focus-glow mt-2.5 flex h-9 items-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--scope-a)_35%,transparent)] px-4 text-[13px] text-foreground/90 transition-all duration-300 hover:-translate-y-px"
+   331→          >
+   332→            <RotateCcw className="size-3.5" aria-hidden="true" />
+   333→            {t("Be still and receive")}
+   334→          </button>
+   335→        )}
+   336→      </div>
+   337→    );
+   338→  }
+   339→  if (!message.artifact) return null;
+   340→  const artifact = message.artifact;
+   341→  if (!artifact.imageUrl && artifact.slides.length === 0) {
+   342→    return (
+   343→      <PreparedPromptFallback
+   344→        artifact={artifact}
+   345→        accent="var(--scope-a)"
+   346→        testIdPrefix="scope-visual"
+   347→        onPaint={() =>
+   348→          void askScopeVisual(
+   349→            activeMode,
+   350→            message.visualRequest ?? artifact.subject,
+   351→            {
+   352→              id: message.id,
+   353→              request: message.visualRequest ?? artifact.subject,
+   354→              prompt: artifact.prompt,
+   355→              subject: artifact.subject,
+   356→              mode: artifact.mode,
+   357→            }
+   358→          )
+   359→        }
+   360→      />
+   361→    );
+   362→  }
+   363→  return (
+   364→    <VisualizationCard
+   365→      artifact={artifact}
+   366→      accent="var(--scope-a)"
+   367→      testIdPrefix="scope-visual"
+   368→      onRegenerate={() =>
+   369→        void askScopeVisual(activeMode, message.visualRequest ?? artifact.subject, {
+   370→          id: message.id,
+   371→          request: message.visualRequest ?? artifact.subject,
+   372→          prompt: artifact.prompt,
+   373→          subject: artifact.subject,
+   374→          mode: artifact.mode,
+   375→        })
+   376→      }
+   377→    />
+   378→  );
+   379→}
+   380→
+   381→/* ---------- one completed exchange ---------- */
+   382→
+   383→function Exchange({
+   384→  message,
+   385→  index,
+   386→  animate,
+   387→  scope,
+   388→}: {
+   389→  message: ChatMessage;
+   390→  index: number;
+   391→  animate: boolean;
+   392→  scope: Scope;
+   393→}) {
+   394→  const scopeMeta = SCOPE_META[scope];
+   395→  const [copied, setCopied] = useState(false);
+   396→  const t = useT();
+   397→  /* Each card draws its own light — quietly, never spoken of. */
+   398→  const aura = auraFor(message.id);
+   399→
+   400→  const handleCopy = async () => {
+   401→    try {
+   402→      await navigator.clipboard.writeText(message.text);
+   403→      setCopied(true);
+   404→      window.setTimeout(() => setCopied(false), 2200);
+   405→    } catch {
+   406→      /* clipboard unavailable — quiet fail */
+   407→    }
+   408→  };
+   409→
+   410→  const item = animate ? staggerItem : stillItem;
+   411→  const hasVisual = Boolean(message.artifact || message.visual);
+   412→
+   413→  return (
+   414→    <motion.article
+   415→      initial={{ opacity: animate ? 0 : 1, y: animate ? 12 : 0 }}
+   416→      animate={{ opacity: 1, y: 0 }}
+   417→      transition={{ duration: animate ? 0.55 : 0, ease: [0.22, 1, 0.36, 1] as const }}
+   418→      aria-label={t("Transmission {n}", { n: index + 1 })}
+   419→      style={{ "--scope-a": aura.a, "--scope-b": aura.b } as CSSProperties}
+   420→      className="pt-7 first:pt-0"
+   421→    >
+   422→      {/* index ribbon */}
+   423→      <div className="mb-4 flex items-center gap-3">
+   424→        <span
+   425→          className="mono-label rounded-full border px-2 py-0.5 text-[11px]"
+   426→          style={{
+   427→            borderColor: "color-mix(in srgb, var(--scope-a) 30%, transparent)",
+   428→            color: "color-mix(in srgb, var(--scope-a) 85%, white)",
+   429→          }}
+   430→        >
+   431→          {t("{scope} · exchange {n}", {
+   432→            scope: t(scopeMeta.label),
+   433→            n: String(index + 1).padStart(2, "0"),
+   434→          })}
+   435→        </span>
+   436→        <span
+   437→          className="h-px flex-1"
+   438→          style={{
+   439→            background:
+   440→              "linear-gradient(90deg, color-mix(in srgb, var(--scope-a) 24%, transparent), transparent)",
+   441→          }}
+   442→          aria-hidden="true"
+   443→        />
+   444→      </div>
+   445→
+   446→      {/* query echo */}
+   447→      <div className="relative mx-auto max-w-[620px]">
+   448→        <span
+   449→          className="pointer-events-none absolute -left-1 -top-5 select-none font-serif text-[44px] leading-none opacity-40"
+   450→          style={{ color: "var(--scope-a)" }}
+   451→          aria-hidden="true"
+   452→        >
+   453→          “
+   454→        </span>
+   455→        <p className="px-6 text-[15.5px] italic leading-relaxed text-muted-foreground">
+   456→          {message.query}
+   457→        </p>
+   458→        {message.attachments &&
+   459→          (message.attachments.images > 0 ||
+   460→            message.attachments.docNames.length > 0) && (
+   461→            <div
+   462→              className="mt-2 flex flex-wrap justify-end gap-1 px-6"
+   463→              data-testid="exchange-attachments"
+   464→            >
+   465→              {message.attachments.images > 0 && (
+   466→                <span className="mono-label flex items-center gap-1 rounded-full border px-2 py-0.5 text-[9.5px] text-muted-foreground">
+   467→                  <FileText className="size-2.5" aria-hidden="true" />
+   468→                  {t("an image")}
+   469→                </span>
+   470→              )}
+   471→              {message.attachments.docNames.map((name) => (
+   472→                <span
+   473→                  key={name}
+   474→                  className="mono-label flex max-w-[200px] items-center gap-1 rounded-full border px-2 py-0.5 text-[9.5px] text-muted-foreground"
+   475→                >
+   476→                  <FileText className="size-2.5 shrink-0" aria-hidden="true" />
+   477→                  <span className="truncate">{name}</span>
+   478→                </span>
+   479→              ))}
+   480→            </div>
+   481→          )}
+   482→      </div>
+   483→
+   484→      {/* themed frame */}
+   485→      <div className="scope-frame-card relative mt-6 overflow-hidden rounded-2xl">
+   486→        <div
+   487→          className="pointer-events-none absolute inset-0 opacity-[0.13]"
+   488→          aria-hidden="true"
+   489→          style={{
+   490→            backgroundImage: `url(${sectionImage(scopeMeta.imageKey)})`,
+   491→            backgroundSize: "cover",
+   492→            backgroundPosition: "center",
+   493→            maskImage:
+   494→              "radial-gradient(ellipse 90% 80% at 50% 0%, black 30%, transparent 78%)",
+   495→            WebkitMaskImage:
+   496→              "radial-gradient(ellipse 90% 80% at 50% 0%, black 30%, transparent 78%)",
+   497→            mixBlendMode: "screen",
+   498→          }}
+   499→        />
+   500→        <span className="scope-corner scope-corner-tl" aria-hidden="true" />
+   501→        <span className="scope-corner scope-corner-tr" aria-hidden="true" />
+   502→        <span className="scope-corner scope-corner-bl" aria-hidden="true" />
+   503→        <span className="scope-corner scope-corner-br" aria-hidden="true" />
+   504→        <div
+   505→          className="animate-line-breathe h-px w-full"
+   506→          style={{
+   507→            background:
+   508→              "linear-gradient(90deg, transparent, var(--scope-a) 30%, var(--scope-b) 70%, transparent)",
+   509→          }}
+   510→          aria-hidden="true"
+   511→        />
+   512→
+   513→        <div className="relative px-6 py-6 sm:px-10 sm:py-8">
+   514→          {/* listen + copy — the only actions, one quiet row (words only) */}
+   515→          {!hasVisual && (
+   516→            <div className="mb-4 flex items-center justify-end gap-2">
+   517→              <ListenButton text={message.text} cacheKey={message.id} />
+   518→              <button
+   519→                type="button"
+   520→                onClick={handleCopy}
+   521→                aria-label={copied ? t("copied") : t("copy")}
+   522→                title={copied ? t("copied") : t("copy")}
+   523→                className="focus-glow flex size-8 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+   524→              >
+   525→                {copied ? (
+   526→                  <Check className="size-3.5" aria-hidden="true" />
+   527→                ) : (
+   528→                  <Copy className="size-3.5" aria-hidden="true" />
+   529→                )}
+   530→              </button>
+   531→            </div>
+   532→          )}
+   533→          {hasVisual ? (
+   534→            <ExchangeVisual message={message} />
+   535→          ) : (
+   536→            <TransmissionBody text={message.text} />
+   537→          )}
+   538→        </div>
+   539→        <Seal />
+   540→      </div>
+   541→    </motion.article>
+   542→  );
+   543→}
+   544→
+   545→/* ---------- the healing apothecary — one quiet stand at the thread's
+   546→   end, offered only in the Healing channel once a transmission has
+   547→   been revealed ---------- */
+   548→
+   549→function ApothecaryStand({ concern }: { concern: string }) {
+   550→  const askRemedy = useMirror((s) => s.askRemedy);
+   551→  const t = useT();
+   552→
+   553→  return (
+   554→    <motion.div
+   555→      initial={{ opacity: 0, y: 10 }}
+   556→      animate={{ opacity: 1, y: 0 }}
+   557→      transition={{ duration: 0.55, delay: 0.35, ease: [0.22, 1, 0.36, 1] as const }}
+   558→      className="mt-9 flex flex-col items-center pb-1 text-center"
+   559→      data-testid="apothecary-stand"
+   560→    >
+   561→      <p className="mono-label text-[10px] uppercase tracking-[0.22em] text-muted-foreground/60">
+   562→        {t("The healing apothecary")}
+   563→      </p>
+   564→      <button
+   565→        type="button"
+   566→        onClick={() => void askRemedy(concern)}
+   567→        aria-label={t("Prepare a remedy")}
+   568→        data-testid="prepare-remedy"
+   569→        className="focus-glow mt-3 flex h-10 items-center gap-2.5 rounded-full border px-5 text-[13.5px] font-medium text-foreground/90 transition-all duration-300 hover:-translate-y-px hover:glow-sm"
+   570→        style={{
+   571→          borderColor: "color-mix(in srgb, #b05e76 42%, transparent)",
+   572→          background:
+   573→            "linear-gradient(120deg, color-mix(in srgb, #b05e76 15%, transparent), color-mix(in srgb, #2f8a6e 13%, transparent))",
+   574→        }}
+   575→      >
+   576→        <Leaf
+   577→          className="size-4"
+   578→          style={{ color: "color-mix(in srgb, #b05e76 55%, white)" }}
+   579→          aria-hidden="true"
+   580→        />
+   581→        {t("Prepare a remedy")}
+   582→      </button>
+   583→      <p className="mt-2.5 max-w-[320px] text-[12.5px] italic leading-relaxed text-muted-foreground/70">
+   584→        {t("Prepared from what has been spoken here")}
+   585→      </p>
+   586→    </motion.div>
+   587→  );
+   588→}
+   589→
+   590→/* ---------- main view: one independent channel per scope ---------- */
+   591→
+   592→export function TransmissionView() {
+   593→  const activeMode = useMirror((s) => s.activeMode);
+   594→  const session = useMirror((s) => s.sessions[s.activeMode]);
+   595→  const remedyStatus = useMirror((s) => s.remedyStatus);
+   596→  const t = useT();
+   597→
+   598→  const scope: Scope = activeMode;
+   599→  const meta = SCOPE_META[scope];
+   600→
+   601→  /* The apothecary serves the concern most recently spoken — the last
+   602→     exchange's question, held quietly until the thread rests. */
+   603→  const lastSpoken = useMemo(
+   604→    () =>
+   605→      scope === "healing"
+   606→        ? (session.messages.at(-1)?.query ?? null)
+   607→        : null,
+   608→    [scope, session.messages]
+   609→  );
+   610→
+   611→  /* The thread begins where it begins: opening, reloading or switching
+   612→     into a channel keeps the thread at its BEGINNING. New generations
+   613→     load from the TOP — the newest exchange settles its first line at
+   614→     the top of the view and the visitor reads downward from there.
+   615→     One law above all: the moment a suggestion is struck — even after
+   616→     the thread already carries conversations — the frame must meet
+   617→     THAT exchange, while it forms and again when it lands. */
+   618→  const topRef = useRef<HTMLDivElement | null>(null);
+   619→  const latestRef = useRef<HTMLDivElement | null>(null);
+   620→  const loadingRef = useRef<HTMLDivElement | null>(null);
+   621→  const errorRef = useRef<HTMLDivElement | null>(null);
+   622→  const messagesLength = session.messages.length;
+   623→  const status = session.status;
+   624→  const baseline = useRef({
+   625→    mode: activeMode,
+   626→    len: messagesLength,
+   627→    status,
+   628→    fresh: true,
+   629→  });
+   630→
+   631→  useEffect(() => {
+   632→    const b = baseline.current;
+   633→    const sameMode = b.mode === activeMode;
+   634→    const grew = sameMode && messagesLength !== b.len;
+   635→    const startedLoading =
+   636→      sameMode && !grew && status === "loading" && b.status !== "loading";
+   637→    const becameError =
+   638→      sameMode &&
+   639→      !grew &&
+   640→      !startedLoading &&
+   641→      status === "error" &&
+   642→      b.status !== "error";
+   643→
+   644→    baseline.current = {
+   645→      mode: activeMode,
+   646→      len: messagesLength,
+   647→      status,
+   648→      fresh: false,
+   649→    };
+   650→
+   651→    if (b.fresh || !sameMode) {
+   652→      /* First sight of the channel — arriving from the observatory the
+   653→         transmission may ALREADY be forming (a suggestion was struck
+   654→         and the channel mounted mid-reception): meet it where it
+   655→         forms, never wait above the older thread. A channel entering
+   656→         with a failed transmission meets the error; otherwise it
+   657→         rests at its beginning. */
+   658→      if (status === "loading") {
+   659→        loadingRef.current?.scrollIntoView({ block: "start" });
+   660→      } else if (status === "error") {
+   661→        errorRef.current?.scrollIntoView({ block: "start" });
+   662→      } else if (!sameMode) {
+   663→        topRef.current?.scrollIntoView({ block: "start" });
+   664→      }
+   665→      return;
+   666→    }
+   667→    if (grew) {
+   668→      latestRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+   669→      /* the answer must own the frame — re-affirm once the entrance
+   670→         has settled, in case the first glide was preempted */
+   671→      const id = window.setTimeout(() => {
+   672→        latestRef.current?.scrollIntoView({
+   673→          behavior: "smooth",
+   674→          block: "start",
+   675→        });
+   676→      }, 450);
+   677→      return () => window.clearTimeout(id);
+   678→    }
+   679→    if (startedLoading) {
+   680→      loadingRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+   681→      return;
+   682→    }
+   683→    if (becameError) {
+   684→      errorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+   685→    }
+   686→  }, [activeMode, messagesLength, status]);
+   687→
+   688→  return (
+   689→    <motion.section
+   690→      initial={{ opacity: 0, y: 12 }}
+   691→      animate={{ opacity: 1, y: 0 }}
+   692→      transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] as const }}
+   693→      aria-label={`${meta.label} channel — mirror transmissions`}
+   694→      className={cn(
+   695→        "scope-" + scope,
+   696→        "mx-auto w-full max-w-[760px] px-1 pb-6 pt-6 sm:pt-8"
+   697→      )}
+   698→    >
+   699→      {/* beginning anchor — opening a channel keeps the thread here */}
+   700→      <div ref={topRef} aria-hidden="true" className="h-px" />
+   701→
+   702→      {/* ---------- thread ---------- */}
+   703→      {session.messages.length === 0 &&
+   704→        session.status === "idle" &&
+   705→        !session.error && (
+   706→          <div className="scope-frame-card relative mt-2 overflow-hidden rounded-2xl glass px-6 py-9 text-center">
+   707→            <span className="scope-corner scope-corner-tl" aria-hidden="true" />
+   708→            <span className="scope-corner scope-corner-tr" aria-hidden="true" />
+   709→            <span className="scope-corner scope-corner-bl" aria-hidden="true" />
+   710→            <span className="scope-corner scope-corner-br" aria-hidden="true" />
+   711→            <p className="text-[16.5px] font-medium text-foreground/85">
+   712→              {t("This channel is quiet.")}
+   713→            </p>
+   714→            <p className="mx-auto mt-2 max-w-[380px] text-[14.5px] leading-relaxed text-muted-foreground">
+   715→              {t(
+   716→                "Every scope keeps its own private channel — ask from the composer below to open the first transmission."
+   717→              )}
+   718→            </p>
+   719→          </div>
+   720→        )}
+   721→
+   722→      {session.messages.map((m, i) => (
+   723→        <div
+   724→          key={m.id}
+   725→          ref={
+   726→            i === session.messages.length - 1
+   727→              ? (node) => {
+   728→                  latestRef.current = node;
+   729→                }
+   730→              : undefined
+   731→          }
+   732→        >
+   733→          <Exchange
+   734→            message={m}
+   735→            index={i}
+   736→            scope={scope}
+   737→            animate={i === session.messages.length - 1 && session.status !== "loading"}
+   738→          />
+   739→        </div>
+   740→      ))}
+   741→
+   742→      {scope === "healing" &&
+   743→        session.status !== "loading" &&
+   744→        remedyStatus !== "crafting" &&
+   745→        lastSpoken && <ApothecaryStand concern={lastSpoken} />}
+   746→
+   747→      {session.status === "loading" &&
+   748→        session.messages.at(-1)?.visual !== "pending" && (
+   749→        <div
+   750→          ref={(node) => {
+   751→            loadingRef.current = node;
+   752→          }}
+   753→        >
+   754→          <LoadingTransmission scope={scope} query={session.activeQuery} />
+   755→        </div>
+   756→      )}
+   757→
+   758→      {session.status === "error" && (
+   759→        <div
+   760→          ref={errorRef}
+   761→          className="scope-frame-card mt-8 rounded-2xl glass p-6 text-center"
+   762→        >
+   763→          <p className="text-[16px] leading-relaxed text-foreground/85">
+   764→            {t(
+   765→              "The field received your question but could not complete the transmission."
+   766→            )}
+   767→          </p>
+   768→          <p className="mt-2 text-[14.5px] italic text-muted-foreground">
+   769→            {session.error}
+   770→          </p>
+   771→        </div>
+   772→      )}
+   773→
+   774→      {/* new generations settle at the TOP of this anchor — the reader
+   775→          begins at their first line and scrolls down for the rest */}
+   776→      <div aria-hidden="true" className="h-px" />
+   777→    </motion.section>
+   778→  );
+   779→}
+   780→

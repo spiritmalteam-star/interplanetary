@@ -1,0 +1,893 @@
+     1→@import "tailwindcss";
+     2→@import "tw-animate-css";
+     3→
+     4→@custom-variant dark (&:is(.dark *));
+     5→
+     6→@theme inline {
+     7→  --color-background: var(--background);
+     8→  --color-foreground: var(--foreground);
+     9→  --font-sans: var(--font-jakarta);
+    10→  --font-mono: var(--font-jetbrains);
+    11→  --color-sidebar-ring: var(--sidebar-ring);
+    12→  --color-sidebar-border: var(--sidebar-border);
+    13→  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    14→  --color-sidebar-accent: var(--sidebar-accent);
+    15→  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    16→  --color-sidebar-primary: var(--sidebar-primary);
+    17→  --color-sidebar-foreground: var(--sidebar-foreground);
+    18→  --color-sidebar: var(--sidebar);
+    19→  --color-chart-5: var(--chart-5);
+    20→  --color-chart-4: var(--chart-4);
+    21→  --color-chart-3: var(--chart-3);
+    22→  --color-chart-2: var(--chart-2);
+    23→  --color-chart-1: var(--chart-1);
+    24→  --color-ring: var(--ring);
+    25→  --color-input: var(--input);
+    26→  --color-border: var(--border);
+    27→  --color-destructive: var(--destructive);
+    28→  --color-accent-foreground: var(--accent-foreground);
+    29→  --color-accent: var(--accent);
+    30→  --color-muted-foreground: var(--muted-foreground);
+    31→  --color-muted: var(--muted);
+    32→  --color-secondary-foreground: var(--secondary-foreground);
+    33→  --color-secondary: var(--secondary);
+    34→  --color-primary-foreground: var(--primary-foreground);
+    35→  --color-primary: var(--primary);
+    36→  --color-popover-foreground: var(--popover-foreground);
+    37→  --color-popover: var(--popover);
+    38→  --color-card-foreground: var(--card-foreground);
+    39→  --color-card: var(--card);
+    40→  --radius-sm: calc(var(--radius) - 4px);
+    41→  --radius-md: calc(var(--radius) - 2px);
+    42→  --radius-lg: var(--radius);
+    43→  --radius-xl: calc(var(--radius) + 4px);
+    44→  --color-cyan-aura: var(--cy);
+    45→  --color-rose-aura: var(--pk);
+    46→  --color-gold-aura: var(--gd);
+    47→}
+    48→
+    49→/* ------------------------------------------------------------------ */
+    50→/*  MIRROR ENTITY LABORATORY — theme tokens                           */
+    51→/* ------------------------------------------------------------------ */
+    52→
+    53→:root {
+    54→  --radius: 0.75rem;
+    55→
+    56→  /* Light mode — ethereal daylight laboratory */
+    57→  --background: #f2faff;
+    58→  --foreground: #0e3a5f;
+    59→  --card: #ffffff;
+    60→  --card-foreground: #0e3a5f;
+    61→  --popover: #ffffff;
+    62→  --popover-foreground: #0e3a5f;
+    63→  --primary: #1264b0;
+    64→  --primary-foreground: #f5fbff;
+    65→  --secondary: #e7f4fb;
+    66→  --secondary-foreground: #0e3a5f;
+    67→  --muted: #e9f5fa;
+    68→  --muted-foreground: #4e7391;
+    69→  --accent: #ddf1fa;
+    70→  --accent-foreground: #0e3a5f;
+    71→  --destructive: #c0395b;
+    72→  --border: rgba(30, 130, 190, 0.18);
+    73→  --input: rgba(30, 130, 190, 0.22);
+    74→  --ring: rgba(18, 100, 176, 0.5);
+    75→  --chart-1: #1264b0;
+    76→  --chart-2: #17a6c9;
+    77→  --chart-3: #7cc4e8;
+    78→  --chart-4: #c99b4e;
+    79→  --chart-5: #c24e9a;
+    80→  --sidebar: #edf8fd;
+    81→  --sidebar-foreground: #0e3a5f;
+    82→  --sidebar-primary: #1264b0;
+    83→  --sidebar-primary-foreground: #f5fbff;
+    84→  --sidebar-accent: #ddf1fa;
+    85→  --sidebar-accent-foreground: #0e3a5f;
+    86→  --sidebar-border: rgba(30, 130, 190, 0.16);
+    87→  --sidebar-ring: rgba(18, 100, 176, 0.45);
+    88→
+    89→  /* accents — softened, never neon */
+    90→  --cy: #0f8fc2;
+    91→  --pk: #b85e96;
+    92→  --gd: #a8863e;
+    93→  --ok: #2f9a7c;
+    94→
+    95→  /* star play — mystical violet */
+    96→  --sp-a: #7b4fb6;
+    97→  --sp-b: #b06ecb;
+    98→
+    99→  /* ET register ink — fully opaque pages */
+   100→  --register-ink: #f2edfa;
+   101→
+   102→  /* hairlines — extremely thin, spec-driven */
+   103→  --hairline: rgba(30, 130, 190, 0.16);
+   104→  --hairline-hover: rgba(30, 130, 190, 0.38);
+   105→  --hairline-active: rgba(18, 100, 176, 0.55);
+   106→
+   107→  /* glass */
+   108→  --glass-bg: rgba(255, 255, 255, 0.55);
+   109→  --glass-bg-strong: rgba(255, 255, 255, 0.82);
+   110→  --glass-bg-soft: rgba(255, 255, 255, 0.38);
+   111→
+   112→  /* atmosphere — pale cyan washes */
+   113→  --atmo-1: rgba(186, 231, 248, 0.55);
+   114→  --atmo-2: rgba(210, 240, 250, 0.65);
+   115→  --atmo-3: rgba(198, 242, 238, 0.5);
+   116→  --atmo-4: rgba(240, 214, 240, 0.4);
+   117→
+   118→  --star-opacity: 0;
+   119→}
+   120→
+   121→.dark {
+   122→  /* Dark mode — deep space */
+   123→  --background: #05040b;
+   124→  --foreground: #e6edf8;
+   125→  --card: #0b0716;
+   126→  --card-foreground: #e6edf8;
+   127→  --popover: #0a0716;
+   128→  --popover-foreground: #e6edf8;
+   129→  --primary: #62c5d8;
+   130→  --primary-foreground: #031018;
+   131→  --secondary: #120c26;
+   132→  --secondary-foreground: #c6dcf0;
+   133→  --muted: #130d28;
+   134→  --muted-foreground: #9aa8c2;
+   135→  --accent: #161031;
+   136→  --accent-foreground: #c6dcf0;
+   137→  --destructive: #e07a90;
+   138→  --border: rgba(110, 190, 214, 0.14);
+   139→  --input: rgba(110, 190, 214, 0.18);
+   140→  --ring: rgba(110, 200, 220, 0.5);
+   141→  --chart-1: #62c5d8;
+   142→  --chart-2: #8f83d6;
+   143→  --chart-3: #e3a4c2;
+   144→  --chart-4: #d9c49a;
+   145→  --chart-5: #66c9ac;
+   146→  --sidebar: #070510;
+   147→  --sidebar-foreground: #d8e4f2;
+   148→  --sidebar-primary: #62c5d8;
+   149→  --sidebar-primary-foreground: #031018;
+   150→  --sidebar-accent: #14102b;
+   151→  --sidebar-accent-foreground: #c6dcf0;
+   152→  --sidebar-border: rgba(110, 190, 214, 0.12);
+   153→  --sidebar-ring: rgba(110, 200, 220, 0.42);
+   154→
+   155→  /* accents — softened, never neon */
+   156→  --cy: #79d2e0;
+   157→  --pk: #e3a4c2;
+   158→  --gd: #d9c49a;
+   159→  --ok: #66c9ac;
+   160→
+   161→  /* star play — mystical violet */
+   162→  --sp-a: #b79bef;
+   163→  --sp-b: #d9c2f4;
+   164→
+   165→  /* ET register ink — fully opaque pages */
+   166→  --register-ink: #0a0716;
+   167→
+   168→  /* hairlines */
+   169→  --hairline: rgba(110, 190, 214, 0.15);
+   170→  --hairline-hover: rgba(110, 205, 225, 0.34);
+   171→  --hairline-active: rgba(100, 200, 220, 0.58);
+   172→
+   173→  /* glass */
+   174→  --glass-bg: rgba(10, 8, 30, 0.45);
+   175→  --glass-bg-strong: rgba(12, 10, 34, 0.78);
+   176→  --glass-bg-soft: rgba(14, 11, 36, 0.3);
+   177→
+   178→  /* atmosphere — deep space nebulae */
+   179→  --atmo-1: rgba(42, 11, 96, 0.5);
+   180→  --atmo-2: rgba(27, 20, 80, 0.5);
+   181→  --atmo-3: rgba(0, 61, 72, 0.42);
+   182→  --atmo-4: rgba(92, 11, 69, 0.32);
+   183→
+   184→  --star-opacity: 1;
+   185→}
+   186→
+   187→@layer base {
+   188→  * {
+   189→    @apply border-border outline-ring/50;
+   190→  }
+   191→  html {
+   192→    color-scheme: light;
+   193→  }
+   194→  html.dark {
+   195→    color-scheme: dark;
+   196→  }
+   197→  body {
+   198→    @apply bg-background text-foreground;
+   199→    font-feature-settings: "ss01", "cv11";
+   200→    letter-spacing: 0.005em;
+   201→    font-size: 15px;
+   202→    line-height: 1.7;
+   203→    text-rendering: optimizeLegibility;
+   204→    -webkit-font-smoothing: antialiased;
+   205→  }
+   206→  ::selection {
+   207→    background: color-mix(in srgb, var(--cy) 28%, transparent);
+   208→  }
+   209→}
+   210→
+   211→/* ------------------------------------------------------------------ */
+   212→/*  Theme transition (applied temporarily while toggling)             */
+   213→/* ------------------------------------------------------------------ */
+   214→
+   215→.theme-anim,
+   216→.theme-anim *,
+   217→.theme-anim *::before,
+   218→.theme-anim *::after {
+   219→  transition-property: color, background-color, border-color, outline-color,
+   220→    fill, stroke, box-shadow, opacity !important;
+   221→  transition-duration: 460ms !important;
+   222→  transition-timing-function: ease !important;
+   223→}
+   224→
+   225→/* ------------------------------------------------------------------ */
+   226→/*  Glass & hairline utilities                                        */
+   227→/* ------------------------------------------------------------------ */
+   228→
+   229→.glass {
+   230→  background: var(--glass-bg);
+   231→  -webkit-backdrop-filter: blur(16px);
+   232→  backdrop-filter: blur(16px);
+   233→  border: 1px solid var(--hairline);
+   234→}
+   235→
+   236→.glass-strong {
+   237→  background: var(--glass-bg-strong);
+   238→  -webkit-backdrop-filter: blur(20px);
+   239→  backdrop-filter: blur(20px);
+   240→  border: 1px solid var(--hairline);
+   241→}
+   242→
+   243→.glass-soft {
+   244→  background: var(--glass-bg-soft);
+   245→  -webkit-backdrop-filter: blur(12px);
+   246→  backdrop-filter: blur(12px);
+   247→  border: 1px solid var(--hairline);
+   248→}
+   249→
+   250→.hairline {
+   251→  border-color: var(--hairline);
+   252→}
+   253→
+   254→.mono-label {
+   255→  font-family: var(--font-jetbrains), ui-monospace, monospace;
+   256→  text-transform: uppercase;
+   257→  letter-spacing: 0.18em;
+   258→  font-weight: 500;
+   259→}
+   260→
+   261→/* ------------------------------------------------------------------ */
+   262→/*  Glow shadows                                                      */
+   263→/* ------------------------------------------------------------------ */
+   264→
+   265→.glow-sm {
+   266→  box-shadow: 0 0 14px -6px color-mix(in srgb, var(--cy) 24%, transparent);
+   267→}
+   268→
+   269→.glow {
+   270→  box-shadow:
+   271→    0 0 24px -10px color-mix(in srgb, var(--cy) 30%, transparent),
+   272→    0 0 56px -26px color-mix(in srgb, var(--pk) 22%, transparent);
+   273→}
+   274→
+   275→.focus-glow:focus-visible {
+   276→  outline: none;
+   277→  box-shadow:
+   278→    0 0 0 1px var(--hairline-active),
+   279→    0 0 16px -6px color-mix(in srgb, var(--cy) 28%, transparent);
+   280→}
+   281→
+   282→/* ------------------------------------------------------------------ */
+   283→/*  Text gradients                                                    */
+   284→/* ------------------------------------------------------------------ */
+   285→
+   286→.text-hero {
+   287→  background-image: linear-gradient(
+   288→    104deg,
+   289→    color-mix(in srgb, var(--pk) 92%, white) 0%,
+   290→    var(--gd) 58%,
+   291→    color-mix(in srgb, var(--pk) 75%, white) 100%
+   292→  );
+   293→  -webkit-background-clip: text;
+   294→  background-clip: text;
+   295→  color: transparent;
+   296→}
+   297→
+   298→/* Light mode: blue → cyan hero, per the daylight laboratory palette */
+   299→html:not(.dark) .text-hero {
+   300→  background-image: linear-gradient(104deg, #1264b0 0%, #17a6c9 70%, #3fb6d8 100%);
+   301→}
+   302→
+   303→.title-gradient {
+   304→  background-image: linear-gradient(100deg, var(--cy), var(--pk));
+   305→  -webkit-background-clip: text;
+   306→  background-clip: text;
+   307→  color: transparent;
+   308→}
+   309→
+   310→/* ------------------------------------------------------------------ */
+   311→/*  Keyframes — calm, subtle motion only                              */
+   312→/* ------------------------------------------------------------------ */
+   313→
+   314→@keyframes drift-a {
+   315→  0%, 100% { transform: translate(-50%, 0) scale(1); }
+   316→  50% { transform: translate(-46%, 3%) scale(1.06); }
+   317→}
+   318→@keyframes drift-b {
+   319→  0%, 100% { transform: translate(0, 0) scale(1); }
+   320→  50% { transform: translate(3%, -3%) scale(1.05); }
+   321→}
+   322→@keyframes drift-c {
+   323→  0%, 100% { transform: translate(0, 0) scale(1); }
+   324→  50% { transform: translate(-3%, 2.5%) scale(1.07); }
+   325→}
+   326→@keyframes dot-pulse {
+   327→  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 color-mix(in srgb, var(--ok) 38%, transparent); }
+   328→  50% { opacity: 0.55; box-shadow: 0 0 0 5px color-mix(in srgb, var(--ok) 0%, transparent); }
+   329→}
+   330→@keyframes pill-breathe {
+   331→  0%, 100% { box-shadow: 0 0 14px -6px color-mix(in srgb, var(--cy) 30%, transparent); }
+   332→  50% { box-shadow: 0 0 22px -4px color-mix(in srgb, var(--cy) 42%, transparent); }
+   333→}
+   334→@keyframes shimmer-line {
+   335→  0% { background-position: -220px 0; }
+   336→  100% { background-position: calc(220px + 100%) 0; }
+   337→}
+   338→@keyframes rise-in {
+   339→  from { opacity: 0; transform: translateY(10px); }
+   340→  to { opacity: 1; transform: translateY(0); }
+   341→}
+   342→@keyframes line-breathe {
+   343→  0%, 100% { opacity: 0.55; }
+   344→  50% { opacity: 1; }
+   345→}
+   346→@keyframes spin-slower {
+   347→  to { transform: rotate(360deg); }
+   348→}
+   349→
+   350→.animate-drift-a { animation: drift-a 46s ease-in-out infinite; }
+   351→.animate-drift-b { animation: drift-b 58s ease-in-out infinite; }
+   352→.animate-drift-c { animation: drift-c 64s ease-in-out infinite; }
+   353→.animate-dot-pulse { animation: dot-pulse 2.6s ease-in-out infinite; }
+   354→.animate-pill-breathe { animation: pill-breathe 3.4s ease-in-out infinite; }
+   355→.animate-line-breathe { animation: line-breathe 3s ease-in-out infinite; }
+   356→.animate-rise-in { animation: rise-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both; }
+   357→.animate-spin-slower { animation: spin-slower 22s linear infinite; }
+   358→
+   359→.shimmer-bar {
+   360→  background: linear-gradient(
+   361→    90deg,
+   362→    color-mix(in srgb, var(--cy) 5%, transparent) 0%,
+   363→    color-mix(in srgb, var(--cy) 12%, transparent) 50%,
+   364→    color-mix(in srgb, var(--cy) 5%, transparent) 100%
+   365→  );
+   366→  background-size: 220px 100%;
+   367→  background-repeat: no-repeat;
+   368→  animation: shimmer-line 2.1s linear infinite;
+   369→}
+   370→
+   371→/* ------------------------------------------------------------------ */
+   372→/*  Scrollbars                                                        */
+   373→/* ------------------------------------------------------------------ */
+   374→
+   375→.nice-scroll {
+   376→  scrollbar-width: thin;
+   377→  scrollbar-color: color-mix(in srgb, var(--cy) 22%, transparent) transparent;
+   378→}
+   379→.nice-scroll::-webkit-scrollbar {
+   380→  width: 6px;
+   381→  height: 6px;
+   382→}
+   383→.nice-scroll::-webkit-scrollbar-track {
+   384→  background: transparent;
+   385→}
+   386→.nice-scroll::-webkit-scrollbar-thumb {
+   387→  background: color-mix(in srgb, var(--cy) 20%, transparent);
+   388→  border-radius: 999px;
+   389→}
+   390→.nice-scroll::-webkit-scrollbar-thumb:hover {
+   391→  background: color-mix(in srgb, var(--cy) 38%, transparent);
+   392→}
+   393→
+   394→.no-scrollbar {
+   395→  scrollbar-width: none;
+   396→}
+   397→.no-scrollbar::-webkit-scrollbar {
+   398→  display: none;
+   399→}
+   400→
+   401→/* ------------------------------------------------------------------ */
+   402→/*  Scope themes — each channel dresses the transmission frame in     */
+   403→/*  its own alchemy of accents. Applied via .scope-* wrappers.         */
+   404→/* ------------------------------------------------------------------ */
+   405→
+   406→.scope-interplanetary {
+   407→  --scope-a: #0f7fae;
+   408→  --scope-b: #6f5cc4;
+   409→}
+   410→.dark .scope-interplanetary {
+   411→  --scope-a: #6cc8dd;
+   412→  --scope-b: #8d84d8;
+   413→}
+   414→
+   415→.scope-science {
+   416→  --scope-a: #2e8570;
+   417→  --scope-b: #2f8b81;
+   418→}
+   419→.dark .scope-science {
+   420→  --scope-a: #59c3a4;
+   421→  --scope-b: #45b0a2;
+   422→}
+   423→
+   424→.scope-quantum {
+   425→  --scope-a: #a357a8;
+   426→  --scope-b: #5f63c2;
+   427→}
+   428→.dark .scope-quantum {
+   429→  --scope-a: #cf93d3;
+   430→  --scope-b: #8b8bd8;
+   431→}
+   432→
+   433→.scope-healing {
+   434→  --scope-a: #b05e76;
+   435→  --scope-b: #2f8a6e;
+   436→}
+   437→.dark .scope-healing {
+   438→  --scope-a: #e39dab;
+   439→  --scope-b: #63c2a6;
+   440→}
+   441→
+   442→.scope-manifesting {
+   443→  --scope-a: #9c7430;
+   444→  --scope-b: #a66434;
+   445→}
+   446→.dark .scope-manifesting {
+   447→  --scope-a: #d8b680;
+   448→  --scope-b: #cd9068;
+   449→}
+   450→
+   451→/* Scope-aware text gradient (opening line, titles) — softened */
+   452→.scope-gradient-text {
+   453→  background-image: linear-gradient(
+   454→    100deg,
+   455→    color-mix(in srgb, var(--scope-a) 72%, white),
+   456→    color-mix(in srgb, var(--scope-b) 66%, white)
+   457→  );
+   458→  -webkit-background-clip: text;
+   459→  background-clip: text;
+   460→  color: transparent;
+   461→}
+   462→
+   463→/* Themed frame card */
+   464→.scope-frame-card {
+   465→  border: 1px solid color-mix(in srgb, var(--scope-a) 20%, transparent);
+   466→  box-shadow:
+   467→    0 0 40px -20px color-mix(in srgb, var(--scope-a) 28%, transparent),
+   468→    inset 0 1px 0 color-mix(in srgb, var(--scope-a) 9%, transparent);
+   469→}
+   470→
+   471→.scope-glow-text {
+   472→  text-shadow: 0 0 20px color-mix(in srgb, var(--scope-a) 24%, transparent);
+   473→}
+   474→
+   475→/* Corner ornaments for the frame */
+   476→.scope-corner {
+   477→  position: absolute;
+   478→  width: 22px;
+   479→  height: 22px;
+   480→  border-color: color-mix(in srgb, var(--scope-a) 55%, transparent);
+   481→  pointer-events: none;
+   482→}
+   483→.scope-corner-tl { top: 10px; left: 10px; border-top: 1px solid; border-left: 1px solid; border-top-left-radius: 10px; }
+   484→.scope-corner-tr { top: 10px; right: 10px; border-top: 1px solid; border-right: 1px solid; border-top-right-radius: 10px; }
+   485→.scope-corner-bl { bottom: 10px; left: 10px; border-bottom: 1px solid; border-left: 1px solid; border-bottom-left-radius: 10px; }
+   486→.scope-corner-br { bottom: 10px; right: 10px; border-bottom: 1px solid; border-right: 1px solid; border-bottom-right-radius: 10px; }
+   487→
+   488→/* Animated conic frame glow */
+   489→@keyframes scope-rotate {
+   490→  to { transform: rotate(360deg); }
+   491→}
+   492→.scope-halo {
+   493→  animation: scope-rotate 24s linear infinite;
+   494→}
+   495→.scope-halo-rev {
+   496→  animation: scope-rotate 38s linear infinite reverse;
+   497→}
+   498→
+   499→/* Charging ring (manifesting lab) */
+   500→@keyframes charge-pulse {
+   501→  0%, 100% { opacity: 0.4; transform: scale(1); }
+   502→  50% { opacity: 0.9; transform: scale(1.045); }
+   503→}
+   504→.animate-charge-pulse { animation: charge-pulse 2.2s ease-in-out infinite; }
+   505→
+   506→/* Gentle bob */
+   507→@keyframes float-y {
+   508→  0%, 100% { transform: translateY(0); }
+   509→  50% { transform: translateY(-5px); }
+   510→}
+   511→.animate-float-y { animation: float-y 6s ease-in-out infinite; }
+   512→
+   513→/* ------------------------------------------------------------------ */
+   514→/*  Dream button — a small, breathing doorway into the Mirror OS       */
+   515→/* ------------------------------------------------------------------ */
+   516→
+   517→@keyframes dream-drift {
+   518→  0%, 100% { background-position: 0% 50%; }
+   519→  50% { background-position: 100% 50%; }
+   520→}
+   521→@keyframes dream-twinkle {
+   522→  0%, 100% { opacity: 0.15; transform: scale(0.7); }
+   523→  50% { opacity: 0.95; transform: scale(1.15); }
+   524→}
+   525→@keyframes dream-halo {
+   526→  0%, 100% { opacity: 0.35; }
+   527→  50% { opacity: 0.8; }
+   528→}
+   529→
+   530→.dream-btn {
+   531→  position: relative;
+   532→  overflow: hidden;
+   533→  isolation: isolate;
+   534→  background:
+   535→    linear-gradient(
+   536→      120deg,
+   537→      color-mix(in srgb, var(--gd) 16%, transparent) 0%,
+   538→      color-mix(in srgb, var(--pk) 13%, transparent) 30%,
+   539→      color-mix(in srgb, #8f6bff 15%, transparent) 55%,
+   540→      color-mix(in srgb, var(--gd) 12%, transparent) 80%,
+   541→      color-mix(in srgb, var(--pk) 14%, transparent) 100%
+   542→    );
+   543→  background-size: 220% 100%;
+   544→  animation: dream-drift 9s ease-in-out infinite;
+   545→  border: 1px solid color-mix(in srgb, var(--gd) 30%, transparent);
+   546→  box-shadow:
+   547→    0 0 22px -10px color-mix(in srgb, var(--gd) 55%, transparent),
+   548→    inset 0 1px 0 color-mix(in srgb, white 8%, transparent);
+   549→}
+   550→.dream-btn::before {
+   551→  content: "";
+   552→  position: absolute;
+   553→  inset: 0;
+   554→  z-index: -1;
+   555→  background: linear-gradient(
+   556→    100deg,
+   557→    transparent 20%,
+   558→    color-mix(in srgb, white 16%, transparent) 46%,
+   559→    color-mix(in srgb, white 6%, transparent) 54%,
+   560→    transparent 80%
+   561→  );
+   562→  background-size: 240% 100%;
+   563→  animation: dream-drift 6.5s ease-in-out infinite;
+   564→  pointer-events: none;
+   565→}
+   566→.dream-btn:hover {
+   567→  border-color: color-mix(in srgb, var(--gd) 52%, transparent);
+   568→  box-shadow:
+   569→    0 0 30px -8px color-mix(in srgb, var(--gd) 65%, transparent),
+   570→    0 0 18px -8px color-mix(in srgb, var(--pk) 55%, transparent),
+   571→    inset 0 1px 0 color-mix(in srgb, white 10%, transparent);
+   572→}
+   573→
+   574→/* Two tiny stars that keep time inside the dream */
+   575→.dream-star {
+   576→  position: absolute;
+   577→  border-radius: 9999px;
+   578→  background: white;
+   579→  pointer-events: none;
+   580→  animation: dream-twinkle 3.2s ease-in-out infinite;
+   581→  box-shadow: 0 0 6px 1px color-mix(in srgb, var(--gd) 70%, transparent);
+   582→}
+   583→.dream-star-slow { animation-duration: 4.6s; animation-delay: 1.1s; }
+   584→
+   585→.dream-halo {
+   586→  animation: dream-halo 3.4s ease-in-out infinite;
+   587→}
+   588→
+   589→/* ------------------------------------------------------------------ */
+   590→/*  Star Play — mystical violet arcana                                 */
+   591→/* ------------------------------------------------------------------ */
+   592→
+   593→.star-btn {
+   594→  position: relative;
+   595→  overflow: hidden;
+   596→  isolation: isolate;
+   597→  background:
+   598→    linear-gradient(
+   599→      120deg,
+   600→      color-mix(in srgb, var(--sp-a) 18%, transparent) 0%,
+   601→      color-mix(in srgb, var(--sp-b) 13%, transparent) 32%,
+   602→      color-mix(in srgb, var(--pk) 12%, transparent) 58%,
+   603→      color-mix(in srgb, var(--sp-a) 14%, transparent) 82%,
+   604→      color-mix(in srgb, var(--sp-b) 13%, transparent) 100%
+   605→    );
+   606→  background-size: 220% 100%;
+   607→  animation: dream-drift 10s ease-in-out infinite;
+   608→  border: 1px solid color-mix(in srgb, var(--sp-a) 32%, transparent);
+   609→  box-shadow:
+   610→    0 0 24px -10px color-mix(in srgb, var(--sp-a) 60%, transparent),
+   611→    inset 0 1px 0 color-mix(in srgb, white 8%, transparent);
+   612→}
+   613→.star-btn::before {
+   614→  content: "";
+   615→  position: absolute;
+   616→  inset: 0;
+   617→  z-index: -1;
+   618→  background: linear-gradient(
+   619→    100deg,
+   620→    transparent 22%,
+   621→    color-mix(in srgb, white 14%, transparent) 46%,
+   622→    color-mix(in srgb, white 5%, transparent) 54%,
+   623→    transparent 78%
+   624→  );
+   625→  background-size: 240% 100%;
+   626→  animation: dream-drift 7s ease-in-out infinite;
+   627→  pointer-events: none;
+   628→}
+   629→.star-btn:hover {
+   630→  border-color: color-mix(in srgb, var(--sp-a) 55%, transparent);
+   631→  box-shadow:
+   632→    0 0 32px -8px color-mix(in srgb, var(--sp-a) 70%, transparent),
+   633→    0 0 18px -8px color-mix(in srgb, var(--sp-b) 55%, transparent),
+   634→    inset 0 1px 0 color-mix(in srgb, white 10%, transparent);
+   635→}
+   636→
+   637→/* Breathing violet halo around the emblem / drawn seals */
+   638→.starplay-halo {
+   639→  animation: dream-halo 3.8s ease-in-out infinite;
+   640→}
+   641→
+   642→/* Soft violet aura behind the modal body */
+   643→.starplay-aura {
+   644→  background:
+   645→    radial-gradient(
+   646→      120% 70% at 50% 0%,
+   647→      color-mix(in srgb, var(--sp-a) 10%, transparent) 0%,
+   648→      transparent 60%
+   649→    ),
+   650→    radial-gradient(
+   651→      90% 60% at 85% 100%,
+   652→      color-mix(in srgb, var(--sp-b) 8%, transparent) 0%,
+   653→      transparent 55%
+   654→    );
+   655→}
+   656→
+   657→/* ------------------------------------------------------------------ */
+   658→/*  Reduced motion                                                    */
+   659→/* ------------------------------------------------------------------ */
+   660→
+   661→@media (prefers-reduced-motion: reduce) {
+   662→  .animate-drift-a,
+   663→  .animate-drift-b,
+   664→  .animate-drift-c,
+   665→  .animate-dot-pulse,
+   666→  .animate-pill-breathe,
+   667→  .animate-line-breathe,
+   668→  .animate-rise-in,
+   669→  .animate-spin-slower,
+   670→  .scope-halo,
+   671→  .scope-halo-rev,
+   672→  .animate-charge-pulse,
+   673→  .animate-float-y,
+   674→  .shimmer-bar,
+   675→  .dream-btn,
+   676→  .dream-btn::before,
+   677→  .dream-star,
+   678→  .dream-halo,
+   679→  .star-btn,
+   680→  .star-btn::before,
+   681→  .starplay-halo,
+   682→  .communion-btn,
+   683→  .communion-btn::before,
+   684→  .communion-halo,
+   685→  .communion-ring,
+   686→  .tarot-glare {
+   687→    animation: none !important;
+   688→  }
+   689→  *,
+   690→  *::before,
+   691→  *::after {
+   692→    scroll-behavior: auto !important;
+   693→  }
+   694→}
+   695→
+   696→/* ------------------------------------------------------------------ */
+   697→/*  COMMUNION — Meet with the Reflection of the Absolute               */
+   698→/*  The deep violet field, the breathing mirror, the rings of          */
+   699→/*  awareness, the luminous transmission panels.                       */
+   700→/* ------------------------------------------------------------------ */
+   701→
+   702→.communion-deep {
+   703→  background:
+   704→    radial-gradient(
+   705→      110% 70% at 50% 0%,
+   706→      color-mix(in srgb, var(--sp-a) 9%, transparent) 0%,
+   707→      transparent 58%
+   708→    ),
+   709→    radial-gradient(
+   710→      120% 90% at 50% 110%,
+   711→      color-mix(in srgb, var(--sp-b) 7%, transparent) 0%,
+   712→      transparent 60%
+   713→    ),
+   714→    #05030e;
+   715→}
+   716→
+   717→.communion-btn {
+   718→  position: relative;
+   719→  overflow: hidden;
+   720→  isolation: isolate;
+   721→  background:
+   722→    linear-gradient(
+   723→      120deg,
+   724→      color-mix(in srgb, var(--sp-a) 22%, var(--glass-bg-strong)) 0%,
+   725→      color-mix(in srgb, var(--sp-b) 16%, var(--glass-bg-strong)) 52%,
+   726→      color-mix(in srgb, var(--sp-a) 18%, var(--glass-bg-strong)) 100%
+   727→    );
+   728→  border: 1px solid color-mix(in srgb, var(--sp-b) 34%, transparent);
+   729→  box-shadow:
+   730→    0 0 26px -12px color-mix(in srgb, var(--sp-b) 60%, transparent),
+   731→    inset 0 1px 0 color-mix(in srgb, white 8%, transparent);
+   732→}
+   733→.communion-btn::before {
+   734→  content: "";
+   735→  position: absolute;
+   736→  inset: 0;
+   737→  z-index: -1;
+   738→  background: linear-gradient(
+   739→    100deg,
+   740→    transparent 20%,
+   741→    color-mix(in srgb, white 12%, transparent) 46%,
+   742→    transparent 72%
+   743→  );
+   744→  transform: translateX(-120%);
+   745→  animation: communion-sheen 5.2s ease-in-out infinite;
+   746→}
+   747→@keyframes communion-sheen {
+   748→  0%, 55% { transform: translateX(-120%); }
+   749→  85%, 100% { transform: translateX(120%); }
+   750→}
+   751→.communion-btn:hover {
+   752→  border-color: color-mix(in srgb, var(--sp-b) 52%, transparent);
+   753→  box-shadow:
+   754→    0 0 34px -10px color-mix(in srgb, var(--sp-b) 75%, transparent),
+   755→    inset 0 1px 0 color-mix(in srgb, white 10%, transparent);
+   756→}
+   757→
+   758→.communion-halo {
+   759→  animation: dream-halo 4.2s ease-in-out infinite;
+   760→}
+   761→
+   762→/* Rings of awareness radiating from the mirror */
+   763→.communion-ring {
+   764→  border: 1px solid color-mix(in srgb, var(--sp-b) 38%, transparent);
+   765→  animation: communion-ripple 4.8s ease-out infinite;
+   766→  pointer-events: none;
+   767→}
+   768→@keyframes communion-ripple {
+   769→  0% { transform: scale(0.58); opacity: 0.65; }
+   770→  100% { transform: scale(1.55); opacity: 0; }
+   771→}
+   772→
+   773→/* A received transmission — luminous violet panel */
+   774→.communion-reading {
+   775→  background:
+   776→    radial-gradient(
+   777→      120% 80% at 50% 0%,
+   778→      color-mix(in srgb, var(--sp-b) 11%, transparent) 0%,
+   779→      transparent 55%
+   780→    ),
+   781→    color-mix(in srgb, #0a0616 72%, transparent);
+   782→}
+   783→.communion-reading::before {
+   784→  content: "";
+   785→  position: absolute;
+   786→  top: 0;
+   787→  left: 50%;
+   788→  transform: translateX(-50%);
+   789→  width: 150px;
+   790→  height: 1px;
+   791→  background: linear-gradient(
+   792→    90deg,
+   793→    transparent,
+   794→    color-mix(in srgb, var(--sp-b) 65%, transparent),
+   795→    transparent
+   796→  );
+   797→}
+   798→
+   799→/* ------------------------------------------------------------------ */
+   800→/*  STAR PLAY — the tarot ritual (straight deal, 3D turn-and-reveal,   */
+   801→/*  the card's whole meaning read inside the card).                    */
+   802→/* ------------------------------------------------------------------ */
+   803→
+   804→.tarot-scene {
+   805→  perspective: 1400px;
+   806→}
+   807→.tarot-inner {
+   808→  transform-style: preserve-3d;
+   809→  will-change: transform;
+   810→}
+   811→.tarot-face {
+   812→  backface-visibility: hidden;
+   813→  -webkit-backface-visibility: hidden;
+   814→}
+   815→/* NOTE: deliberately no `position` here — unlayered CSS would beat
+   816→   Tailwind utilities; hosts add `relative` explicitly in markup. */
+   817→.tarot-back {
+   818→  background:
+   819→    repeating-conic-gradient(
+   820→      from 0deg,
+   821→      color-mix(in srgb, var(--sp-b) 7%, transparent) 0deg 9deg,
+   822→      transparent 9deg 18deg
+   823→    ),
+   824→    radial-gradient(
+   825→      120% 100% at 50% 0%,
+   826→      color-mix(in srgb, var(--sp-a) 34%, transparent) 0%,
+   827→      transparent 62%
+   828→    ),
+   829→    linear-gradient(
+   830→      168deg,
+   831→      color-mix(in srgb, var(--sp-a) 30%, #0a0616) 0%,
+   832→      #0a0616 58%,
+   833→      color-mix(in srgb, var(--sp-b) 24%, #0a0616) 100%
+   834→    );
+   835→}
+   836→.tarot-back::before {
+   837→  content: "";
+   838→  position: absolute;
+   839→  inset: 7px;
+   840→  border: 1px solid color-mix(in srgb, var(--sp-b) 30%, transparent);
+   841→  border-radius: inherit;
+   842→  pointer-events: none;
+   843→}
+   844→.tarot-glare {
+   845→  background: linear-gradient(
+   846→    115deg,
+   847→    transparent 30%,
+   848→    color-mix(in srgb, white 10%, transparent) 46%,
+   849→    transparent 62%
+   850→  );
+   851→  animation: dream-drift 6.5s ease-in-out infinite;
+   852→}
+   853→
+   854→/* The oracle's reading panel */
+   855→.starplay-reading {
+   856→  background:
+   857→    radial-gradient(
+   858→      120% 80% at 50% 0%,
+   859→      color-mix(in srgb, var(--sp-a) 13%, transparent) 0%,
+   860→      transparent 58%
+   861→    ),
+   862→    color-mix(in srgb, #0a0616 72%, transparent);
+   863→}
+   864→.starplay-reading::before {
+   865→  content: "";
+   866→  position: absolute;
+   867→  top: 0;
+   868→  left: 50%;
+   869→  transform: translateX(-50%);
+   870→  width: 150px;
+   871→  height: 1px;
+   872→  background: linear-gradient(
+   873→    90deg,
+   874→    transparent,
+   875→    color-mix(in srgb, var(--sp-a) 70%, transparent),
+   876→    transparent
+   877→  );
+   878→}
+   879→
+   880→/* ------------------------------------------------------------------ */
+   881→/*  ET TECHNOLOGY REGISTER — opaque deep-ink pages: the site behind    */
+   882→/*  can never bleed through the register or its profiles.              */
+   883→/* ------------------------------------------------------------------ */
+   884→
+   885→.register-solid {
+   886→  background-color: var(--register-ink);
+   887→  background-image: radial-gradient(
+   888→    110% 60% at 50% 0%,
+   889→    color-mix(in srgb, var(--sp-a) 7%, transparent) 0%,
+   890→    transparent 55%
+   891→  );
+   892→}
+   893→

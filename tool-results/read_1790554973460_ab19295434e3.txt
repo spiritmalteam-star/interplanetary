@@ -1,0 +1,795 @@
+     1→"use client";
+     2→
+     3→import { useMemo, useState } from "react";
+     4→import { motion } from "framer-motion";
+     5→import {
+     6→  ArrowLeft,
+     7→  ChevronDown,
+     8→  Compass,
+     9→  FlaskConical,
+    10→  HeartHandshake,
+    11→  ShieldCheck,
+    12→  Orbit,
+    13→  Sun,
+    14→  Moon,
+    15→  MessagesSquare,
+    16→  Waves,
+    17→  Wind,
+    18→} from "lucide-react";
+    19→import { useMirror } from "@/lib/mirror-store";
+    20→import { useT } from "@/lib/i18n";
+    21→import {
+    22→  beliefDomains,
+    23→  dailyProtocol,
+    24→  discernmentLines,
+    25→  higherMindIntro,
+    26→  higherProtocols,
+    27→  ladderRungs,
+    28→  shiftFormulas,
+    29→  vibrationStates,
+    30→} from "@/lib/data/mirroros";
+    31→import { cn } from "@/lib/utils";
+    32→import { ListenButton } from "./ListenButton";
+    33→import { MirrorOSForge } from "./MirrorOSForge";
+    34→import { MirrorOSChat } from "./MirrorOSChat";
+    35→
+    36→type OsPlace = "chat" | "formulas" | "higher" | "tools" | "forge";
+    37→
+    38→const OS_PLACES: {
+    39→  id: Exclude<OsPlace, "chat">;
+    40→  label: string;
+    41→  icon: typeof Compass;
+    42→}[] = [
+    43→  { id: "formulas", label: "Shift Formulas", icon: Compass },
+    44→  { id: "higher", label: "Higher Mind", icon: Orbit },
+    45→  { id: "tools", label: "Tools", icon: HeartHandshake },
+    46→  { id: "forge", label: "Forge", icon: FlaskConical },
+    47→];
+    48→
+    49→/* ---------------- formula card (expandable) ---------------- */
+    50→
+    51→function FormulaCard({ index, formulaId }: { index: number; formulaId: string }) {
+    52→  const formula = shiftFormulas[index];
+    53→  const [open, setOpen] = useState(index === 0);
+    54→  const t = useT();
+    55→
+    56→  const spoken = useMemo(
+    57→    () =>
+    58→      [
+    59→        formula.name,
+    60→        formula.tagline,
+    61→        ...formula.steps.map((s, i) => `${i + 1}. ${s}`),
+    62→        formula.seal,
+    63→      ].join(". "),
+    64→    [formula]
+    65→  );
+    66→
+    67→  return (
+    68→    <motion.div
+    69→      initial={{ opacity: 0, y: 14 }}
+    70→      animate={{ opacity: 1, y: 0 }}
+    71→      transition={{ duration: 0.5, delay: index * 0.05, ease: [0.22, 1, 0.36, 1] }}
+    72→      className="scope-frame-card relative overflow-hidden rounded-2xl glass"
+    73→    >
+    74→      <span className="scope-corner scope-corner-tl" aria-hidden="true" />
+    75→      <span className="scope-corner scope-corner-tr" aria-hidden="true" />
+    76→      <span className="scope-corner scope-corner-bl" aria-hidden="true" />
+    77→      <span className="scope-corner scope-corner-br" aria-hidden="true" />
+    78→
+    79→      <button
+    80→        type="button"
+    81→        onClick={() => setOpen((v) => !v)}
+    82→        aria-expanded={open}
+    83→        className="focus-glow flex w-full items-center gap-3.5 px-5 py-4 text-left sm:px-6"
+    84→      >
+    85→        <span
+    86→          className="flex size-10 shrink-0 items-center justify-center rounded-full border text-[17px]"
+    87→          style={{
+    88→            borderColor: "color-mix(in srgb, var(--scope-a) 40%, transparent)",
+    89→            background: "color-mix(in srgb, var(--scope-a) 8%, transparent)",
+    90→          }}
+    91→          aria-hidden="true"
+    92→        >
+    93→          {formula.glyph}
+    94→        </span>
+    95→        <span className="min-w-0 flex-1">
+    96→          <span className="scope-gradient-text block text-[15.5px] font-semibold sm:text-[17px]">
+    97→            {t(formula.name)}
+    98→          </span>
+    99→          <span className="mt-0.5 block truncate text-[14px] text-muted-foreground">
+   100→            {t(formula.tagline)}
+   101→          </span>
+   102→        </span>
+   103→        <ChevronDown
+   104→          className={cn(
+   105→            "size-4 shrink-0 text-muted-foreground transition-transform duration-300",
+   106→            open && "rotate-180"
+   107→          )}
+   108→          aria-hidden="true"
+   109→        />
+   110→      </button>
+   111→
+   112→      {open && (
+   113→        <motion.div
+   114→          initial={{ opacity: 0, height: 0 }}
+   115→          animate={{ opacity: 1, height: "auto" }}
+   116→          transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+   117→          className="overflow-hidden"
+   118→        >
+   119→          <div className="border-t hairline px-5 pb-5 pt-4 sm:px-6">
+   120→            <p className="text-[14.5px] italic leading-relaxed text-muted-foreground">
+   121→              {t(formula.tagline)}
+   122→            </p>
+   123→
+   124→            <ol className="mt-4 space-y-3">
+   125→              {formula.steps.map((step, i) => (
+   126→                <li key={i} className="flex items-start gap-3">
+   127→                  <span
+   128→                    className="mono-label mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border text-[10.5px]"
+   129→                    style={{
+   130→                      borderColor: "color-mix(in srgb, var(--scope-a) 40%, transparent)",
+   131→                      color: "var(--scope-a)",
+   132→                    }}
+   133→                  >
+   134→                    {i + 1}
+   135→                  </span>
+   136→                  <span className="text-[15px] leading-[1.75] text-foreground/88">
+   137→                    {t(step)}
+   138→                  </span>
+   139→                </li>
+   140→              ))}
+   141→            </ol>
+   142→
+   143→            <div
+   144→              className="mt-5 rounded-xl border py-4 text-center"
+   145→              style={{
+   146→                borderColor: "color-mix(in srgb, var(--scope-a) 26%, transparent)",
+   147→                background: "color-mix(in srgb, var(--scope-a) 6%, transparent)",
+   148→              }}
+   149→            >
+   150→              <p className="mono-label text-[10px] text-[var(--scope-a)]">
+   151→                {t("Seal")}
+   152→              </p>
+   153→              <p className="scope-gradient-text mx-auto mt-1.5 max-w-[440px] font-serif text-[17px] italic leading-relaxed">
+   154→                “{t(formula.seal)}”
+   155→              </p>
+   156→            </div>
+   157→
+   158→            <div className="mt-3 flex justify-end">
+   159→              <ListenButton text={spoken} cacheKey={`os-${formula.id}`} />
+   160→            </div>
+   161→          </div>
+   162→        </motion.div>
+   163→      )}
+   164→    </motion.div>
+   165→  );
+   166→}
+   167→
+   168→/* ---------------- higher mind tab ---------------- */
+   169→
+   170→function HigherMindTab() {
+   171→  const t = useT();
+   172→
+   173→  return (
+   174→    <div className="space-y-8">
+   175→      {/* orientation */}
+   176→      <div className="rounded-2xl glass p-5 sm:p-6">
+   177→        <h3 className="mono-label text-[11px] text-[var(--scope-a)]">
+   178→          {t("The Higher Mind — the one that holds the view")}
+   179→        </h3>
+   180→        <div className="mt-3 space-y-3">
+   181→          {higherMindIntro.map((p, i) => (
+   182→            <p key={i} className="text-[15.5px] leading-[1.85] text-foreground/88">
+   183→              {t(p)}
+   184→            </p>
+   185→          ))}
+   186→        </div>
+   187→      </div>
+   188→
+   189→      {/* ladder */}
+   190→      <div>
+   191→        <h3 className="mono-label text-[11px] text-[var(--scope-a)]">
+   192→          {t("The Ladder of Arrival — six rungs into the higher view")}
+   193→        </h3>
+   194→        <div className="relative mt-4 space-y-0">
+   195→          {ladderRungs.map((rung, i) => (
+   196→            <motion.div
+   197→              key={rung.rung}
+   198→              initial={{ opacity: 0, x: -12 }}
+   199→              whileInView={{ opacity: 1, x: 0 }}
+   200→              viewport={{ once: true, margin: "-40px" }}
+   201→              transition={{ duration: 0.45, delay: i * 0.04 }}
+   202→              className="relative flex gap-4 pb-5 last:pb-0"
+   203→            >
+   204→              {i < ladderRungs.length - 1 && (
+   205→                <span
+   206→                  className="absolute left-[17px] top-9 h-[calc(100%-28px)] w-px"
+   207→                  style={{
+   208→                    background:
+   209→                      "linear-gradient(180deg, color-mix(in srgb, var(--scope-a) 40%, transparent), color-mix(in srgb, var(--scope-a) 10%, transparent))",
+   210→                  }}
+   211→                  aria-hidden="true"
+   212→                />
+   213→              )}
+   214→              <span
+   215→                className="mono-label z-10 flex size-9 shrink-0 items-center justify-center rounded-full border bg-[var(--glass-bg-strong)] text-[12px] font-semibold"
+   216→                style={{
+   217→                  borderColor: "color-mix(in srgb, var(--scope-a) 45%, transparent)",
+   218→                  color: "var(--scope-a)",
+   219→                }}
+   220→              >
+   221→                {rung.rung}
+   222→              </span>
+   223→              <div className="min-w-0 pt-1">
+   224→                <p className="text-[15.5px] font-semibold text-foreground">
+   225→                  {t(rung.title)}
+   226→                </p>
+   227→                <p className="mt-1 text-[14.5px] leading-relaxed text-muted-foreground">
+   228→                  {t(rung.line)}
+   229→                </p>
+   230→              </div>
+   231→            </motion.div>
+   232→          ))}
+   233→        </div>
+   234→      </div>
+   235→
+   236→      {/* protocols */}
+   237→      <div>
+   238→        <h3 className="mono-label text-[11px] text-[var(--scope-a)]">
+   239→          {t("Contact protocols")}
+   240→        </h3>
+   241→        <div className="mt-4 grid gap-4 md:grid-cols-3">
+   242→          {higherProtocols.map((p) => (
+   243→            <div key={p.id} className="rounded-2xl glass p-5">
+   244→              <span
+   245→                className="flex size-9 items-center justify-center rounded-full border text-[16.5px]"
+   246→                style={{
+   247→                  borderColor: "color-mix(in srgb, var(--scope-a) 38%, transparent)",
+   248→                  background: "color-mix(in srgb, var(--scope-a) 8%, transparent)",
+   249→                }}
+   250→                aria-hidden="true"
+   251→              >
+   252→                {p.glyph}
+   253→              </span>
+   254→              <h4 className="scope-gradient-text mt-3 text-[16px] font-semibold">
+   255→                {t(p.name)}
+   256→              </h4>
+   257→              <p className="mt-1.5 text-[14px] leading-relaxed text-muted-foreground">
+   258→                {t(p.purpose)}
+   259→              </p>
+   260→              <ol className="mt-3 space-y-2">
+   261→                {p.steps.map((s, i) => (
+   262→                  <li key={i} className="flex items-start gap-2.5">
+   263→                    <span
+   264→                      className="mt-[7px] inline-block size-1.5 shrink-0 rotate-45"
+   265→                      style={{ background: "var(--scope-a)" }}
+   266→                      aria-hidden="true"
+   267→                    />
+   268→                    <span className="text-[14.5px] leading-[1.7] text-foreground/85">
+   269→                      {t(s)}
+   270→                    </span>
+   271→                  </li>
+   272→                ))}
+   273→              </ol>
+   274→            </div>
+   275→          ))}
+   276→        </div>
+   277→      </div>
+   278→
+   279→      {/* discernment */}
+   280→      <div className="rounded-2xl glass p-5 sm:p-6">
+   281→        <h3 className="mono-label flex items-center gap-2 text-[11px] text-[var(--scope-a)]">
+   282→          <ShieldCheck className="size-3.5" aria-hidden="true" />
+   283→          {t("Discernment — how to know it is the Higher Mind")}
+   284→        </h3>
+   285→        <ul className="mt-3 space-y-2.5">
+   286→          {discernmentLines.map((line, i) => (
+   287→            <li key={i} className="flex items-start gap-2.5">
+   288→              <span
+   289→                className="mt-[9px] inline-block size-1.5 shrink-0 rotate-45"
+   290→                style={{ background: "var(--scope-a)" }}
+   291→                aria-hidden="true"
+   292→              />
+   293→              <span className="text-[14.5px] leading-[1.75] text-foreground/85">
+   294→                {t(line)}
+   295→              </span>
+   296→            </li>
+   297→          ))}
+   298→        </ul>
+   299→      </div>
+   300→    </div>
+   301→  );
+   302→}
+   303→
+   304→/* ---------------- tools tab ---------------- */
+   305→
+   306→function BeliefReframer() {
+   307→  const [domainId, setDomainId] = useState<string | null>(null);
+   308→  const t = useT();
+   309→  const domain = beliefDomains.find((d) => d.id === domainId) ?? null;
+   310→
+   311→  return (
+   312→    <div className="rounded-2xl glass p-5 sm:p-6">
+   313→      <h3 className="mono-label flex items-center gap-2 text-[11px] text-[var(--scope-a)]">
+   314→        <Wind className="size-3.5" aria-hidden="true" />
+   315→        {t("Belief Reframer")}
+   316→      </h3>
+   317→      <div className="mt-3 flex flex-wrap gap-1.5" role="group" aria-label={t("Choose a belief domain")}>
+   318→        {beliefDomains.map((d) => {
+   319→          const active = d.id === domainId;
+   320→          return (
+   321→            <button
+   322→              key={d.id}
+   323→              type="button"
+   324→              aria-pressed={active}
+   325→              onClick={() => setDomainId(active ? null : d.id)}
+   326→              className={cn(
+   327→                "focus-glow flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[14px] transition-all duration-300",
+   328→                active
+   329→                  ? "border-[var(--scope-a)] font-semibold text-foreground"
+   330→                  : "hairline text-muted-foreground hover:text-foreground"
+   331→              )}
+   332→              style={
+   333→                active
+   334→                  ? {
+   335→                      background: "color-mix(in srgb, var(--scope-a) 12%, transparent)",
+   336→                      boxShadow: "0 0 16px -6px color-mix(in srgb, var(--scope-a) 55%, transparent)",
+   337→                    }
+   338→                  : undefined
+   339→              }
+   340→            >
+   341→              <span aria-hidden="true">{d.glyph}</span>
+   342→              {t(d.label)}
+   343→            </button>
+   344→          );
+   345→        })}
+   346→      </div>
+   347→
+   348→      {domain && (
+   349→        <motion.div
+   350→          initial={{ opacity: 0, y: 8 }}
+   351→          animate={{ opacity: 1, y: 0 }}
+   352→          transition={{ duration: 0.4 }}
+   353→          className="mt-4 space-y-3"
+   354→        >
+   355→          <div className="rounded-xl border border-[var(--destructive)]/20 bg-[color-mix(in_srgb,var(--destructive)_5%,transparent)] p-3.5">
+   356→            <p className="mono-label text-[10px] text-muted-foreground">{t("Pattern")}</p>
+   357→            <p className="mt-1 text-[14.5px] leading-relaxed text-foreground/85">
+   358→              {t(domain.pattern)}
+   359→            </p>
+   360→          </div>
+   361→          <div
+   362→            className="rounded-xl border p-3.5"
+   363→            style={{
+   364→              borderColor: "color-mix(in srgb, var(--scope-a) 30%, transparent)",
+   365→              background: "color-mix(in srgb, var(--scope-a) 7%, transparent)",
+   366→            }}
+   367→          >
+   368→            <p className="mono-label text-[10px] text-[var(--scope-a)]">{t("Reframe")}</p>
+   369→            <p className="mt-1 text-[14.5px] leading-relaxed text-foreground/88">
+   370→              {t(domain.reframe)}
+   371→            </p>
+   372→          </div>
+   373→          <div className="rounded-xl border hairline p-3.5">
+   374→            <p className="mono-label text-[10px] text-muted-foreground">{t("Practice")}</p>
+   375→            <p className="mt-1 text-[14.5px] leading-relaxed text-foreground/85">
+   376→              {t(domain.practice)}
+   377→            </p>
+   378→          </div>
+   379→        </motion.div>
+   380→      )}
+   381→    </div>
+   382→  );
+   383→}
+   384→
+   385→function VibrationBridge() {
+   386→  const [stateId, setStateId] = useState<string | null>(null);
+   387→  const t = useT();
+   388→  const state = vibrationStates.find((v) => v.id === stateId) ?? null;
+   389→
+   390→  return (
+   391→    <div className="rounded-2xl glass p-5 sm:p-6">
+   392→      <h3 className="mono-label flex items-center gap-2 text-[11px] text-[var(--scope-a)]">
+   393→        <Waves className="size-3.5" aria-hidden="true" />
+   394→        {t("Vibration Bridge")}
+   395→      </h3>
+   396→      <div className="mt-3 flex flex-wrap gap-1.5" role="group" aria-label={t("Where are you now?")}>
+   397→        {vibrationStates.map((v) => {
+   398→          const active = v.id === stateId;
+   399→          return (
+   400→            <button
+   401→              key={v.id}
+   402→              type="button"
+   403→              aria-pressed={active}
+   404→              onClick={() => setStateId(active ? null : v.id)}
+   405→              className={cn(
+   406→                "focus-glow flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[14px] transition-all duration-300",
+   407→                active
+   408→                  ? "border-[var(--scope-a)] font-semibold text-foreground"
+   409→                  : "hairline text-muted-foreground hover:text-foreground"
+   410→              )}
+   411→              style={
+   412→                active
+   413→                  ? {
+   414→                      background: "color-mix(in srgb, var(--scope-a) 12%, transparent)",
+   415→                      boxShadow: "0 0 16px -6px color-mix(in srgb, var(--scope-a) 55%, transparent)",
+   416→                    }
+   417→                  : undefined
+   418→              }
+   419→            >
+   420→              <span aria-hidden="true">{v.glyph}</span>
+   421→              {t(v.label)}
+   422→            </button>
+   423→          );
+   424→        })}
+   425→      </div>
+   426→
+   427→      {state && (
+   428→        <motion.div
+   429→          initial={{ opacity: 0, y: 8 }}
+   430→          animate={{ opacity: 1, y: 0 }}
+   431→          transition={{ duration: 0.4 }}
+   432→          className="mt-4 space-y-3"
+   433→        >
+   434→          <div
+   435→            className="rounded-xl border p-3.5"
+   436→            style={{
+   437→              borderColor: "color-mix(in srgb, var(--scope-a) 30%, transparent)",
+   438→              background: "color-mix(in srgb, var(--scope-a) 7%, transparent)",
+   439→            }}
+   440→          >
+   441→            <p className="mono-label text-[10px] text-[var(--scope-a)]">{t("The bridge")}</p>
+   442→            <p className="mt-1 text-[14.5px] leading-relaxed text-foreground/88">
+   443→              {t(state.bridge)}
+   444→            </p>
+   445→          </div>
+   446→          <div className="rounded-xl border hairline py-4 text-center">
+   447→            <p className="mono-label text-[10px] text-muted-foreground">{t("Anchor phrase")}</p>
+   448→            <p className="scope-gradient-text mx-auto mt-1.5 max-w-[380px] font-serif text-[15.5px] italic leading-relaxed">
+   449→              “{t(state.anchor)}”
+   450→            </p>
+   451→          </div>
+   452→        </motion.div>
+   453→      )}
+   454→    </div>
+   455→  );
+   456→}
+   457→
+   458→function DailyProtocolCard() {
+   459→  const t = useT();
+   460→  const today = useMemo(() => {
+   461→    const d = new Date();
+   462→    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+   463→    return { key, protocol: dailyProtocol(key) };
+   464→  }, []);
+   465→
+   466→  return (
+   467→    <div className="rounded-2xl glass p-5 sm:p-6">
+   468→      <h3 className="mono-label flex items-center gap-2 text-[11px] text-[var(--scope-a)]">
+   469→        <Sun className="size-3.5" aria-hidden="true" />
+   470→        {t("Daily Protocol")}
+   471→      </h3>
+   472→      <p className="mono-label mt-1 text-[10px] text-muted-foreground/70">{today.key}</p>
+   473→      <div className="mt-4 space-y-3">
+   474→        <div className="flex items-start gap-3">
+   475→          <Sun className="mt-0.5 size-4 shrink-0 text-[var(--scope-a)]" aria-hidden="true" />
+   476→          <div>
+   477→            <p className="mono-label text-[10px] text-muted-foreground">{t("Morning")}</p>
+   478→            <p className="mt-0.5 text-[14.5px] leading-relaxed text-foreground/88">
+   479→              {t(today.protocol.morning)}
+   480→            </p>
+   481→          </div>
+   482→        </div>
+   483→        <div className="flex items-start gap-3">
+   484→          <Moon className="mt-0.5 size-4 shrink-0 text-[var(--scope-a)]" aria-hidden="true" />
+   485→          <div>
+   486→            <p className="mono-label text-[10px] text-muted-foreground">{t("Evening")}</p>
+   487→            <p className="mt-0.5 text-[14.5px] leading-relaxed text-foreground/88">
+   488→              {t(today.protocol.evening)}
+   489→            </p>
+   490→          </div>
+   491→        </div>
+   492→        <div
+   493→          className="rounded-xl border py-4 text-center"
+   494→          style={{
+   495→            borderColor: "color-mix(in srgb, var(--scope-a) 26%, transparent)",
+   496→            background: "color-mix(in srgb, var(--scope-a) 6%, transparent)",
+   497→          }}
+   498→        >
+   499→          <p className="mono-label text-[10px] text-[var(--scope-a)]">{t("Focus of the day")}</p>
+   500→          <p className="scope-gradient-text mx-auto mt-1.5 max-w-[380px] font-serif text-[15.5px] italic leading-relaxed">
+   501→            “{t(today.protocol.focus)}”
+   502→          </p>
+   503→        </div>
+   504→      </div>
+   505→    </div>
+   506→  );
+   507→}
+   508→
+   509→function ToolsTab() {
+   510→  return (
+   511→    <div className="space-y-5">
+   512→      <div className="grid gap-5 lg:grid-cols-2">
+   513→        <BeliefReframer />
+   514→        <VibrationBridge />
+   515→      </div>
+   516→      <DailyProtocolCard />
+   517→    </div>
+   518→  );
+   519→}
+   520→
+   521→
+   522→/* ---------------- orbital nodes ---------------- */
+   523→
+   524→function PlaceNode({
+   525→  active,
+   526→  onClick,
+   527→  icon: Icon,
+   528→  label,
+   529→  compact,
+   530→}: {
+   531→  active: boolean;
+   532→  onClick: () => void;
+   533→  icon: typeof Compass;
+   534→  label: string;
+   535→  compact?: boolean;
+   536→}) {
+   537→  const t = useT();
+   538→  if (compact) {
+   539→    return (
+   540→      <button
+   541→        type="button"
+   542→        role="tab"
+   543→        aria-selected={active}
+   544→        onClick={onClick}
+   545→        className={cn(
+   546→          "focus-glow flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3.5 py-1.5 text-[14px] transition-all duration-300",
+   547→          active
+   548→            ? "border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--scope-a)_12%,transparent)] font-semibold text-foreground glow-sm"
+   549→            : "border-transparent text-muted-foreground/80 hover:border-[var(--hairline-hover)] hover:text-foreground"
+   550→        )}
+   551→      >
+   552→        <Icon className="size-3.5" aria-hidden="true" />
+   553→        {t(label)}
+   554→      </button>
+   555→    );
+   556→  }
+   557→  return (
+   558→    <div className="flex flex-col items-center gap-1.5">
+   559→      <button
+   560→        type="button"
+   561→        aria-pressed={active}
+   562→        aria-label={t(label)}
+   563→        onClick={onClick}
+   564→        className={cn(
+   565→          "focus-glow group relative flex size-14 items-center justify-center rounded-full border transition-all duration-500",
+   566→          active
+   567→            ? "border-[color-mix(in_srgb,var(--scope-a)_55%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_14%,transparent)] glow-sm"
+   568→            : "border-[color-mix(in_srgb,var(--scope-a)_22%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_5%,transparent)] hover:-translate-y-0.5 hover:border-[color-mix(in_srgb,var(--scope-a)_42%,transparent)]"
+   569→        )}
+   570→      >
+   571→        {active && (
+   572→          <span
+   573→            className="animate-charge-pulse absolute inset-0 rounded-full"
+   574→            style={{
+   575→              background:
+   576→                "radial-gradient(circle, color-mix(in srgb, var(--scope-a) 22%, transparent), transparent 72%)",
+   577→            }}
+   578→            aria-hidden="true"
+   579→          />
+   580→        )}
+   581→        <Icon
+   582→          className={cn(
+   583→            "relative size-5 transition-colors duration-300",
+   584→            active ? "text-[var(--scope-a)]" : "text-muted-foreground group-hover:text-[var(--scope-a)]"
+   585→          )}
+   586→          aria-hidden="true"
+   587→        />
+   588→      </button>
+   589→      <span
+   590→        className={cn(
+   591→          "mono-label max-w-[74px] text-center text-[9.5px] leading-snug",
+   592→          active ? "text-[var(--scope-a)]" : "text-muted-foreground/70"
+   593→        )}
+   594→      >
+   595→        {t(label)}
+   596→      </span>
+   597→    </div>
+   598→  );
+   599→}
+   600→
+   601→/* ---------------- the OS shell ---------------- */
+   602→
+   603→export function MirrorOS() {
+   604→  const exitMirrorOS = useMirror((s) => s.exitMirrorOS);
+   605→  const [place, setPlace] = useState<OsPlace>("chat");
+   606→  const t = useT();
+   607→
+   608→  const leftRail = OS_PLACES.slice(0, 2);
+   609→  const rightRail = OS_PLACES.slice(2);
+   610→
+   611→  return (
+   612→    <div className="scope-manifesting relative flex h-full flex-col">
+   613→      {/* ---------- top bar with the single bridge back to the app ---------- */}
+   614→      <header className="relative z-30 shrink-0 border-b hairline bg-[var(--glass-bg)] backdrop-blur-xl">
+   615→        <div className="flex h-14 items-center justify-between gap-3 px-4 sm:px-5">
+   616→          <button
+   617→            type="button"
+   618→            onClick={exitMirrorOS}
+   619→            className="focus-glow group flex h-9 items-center gap-2 rounded-full border hairline px-3 text-[14px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground sm:px-3.5"
+   620→          >
+   621→            <ArrowLeft
+   622→              className="size-3.5 transition-transform duration-300 group-hover:-translate-x-0.5"
+   623→              aria-hidden="true"
+   624→            />
+   625→            <span className="hidden sm:inline">{t("Return to the Observatory")}</span>
+   626→            <span className="sm:hidden">{t("Back")}</span>
+   627→          </button>
+   628→
+   629→          <div className="min-w-0 text-center">
+   630→            <h1 className="title-gradient truncate text-[15.5px] font-semibold tracking-[0.12em] sm:text-[17px]">
+   631→              MIRROR OS
+   632→            </h1>
+   633→            <p className="mono-label mt-0.5 truncate text-[10px] text-muted-foreground/80 sm:text-[11px]">
+   634→              {t("Reality Guidance · an independent workspace")}
+   635→            </p>
+   636→          </div>
+   637→
+   638→          <span
+   639→            className="flex size-9 shrink-0 items-center justify-center rounded-full border hairline"
+   640→            aria-hidden="true"
+   641→          >
+   642→            <Orbit className="size-4 text-[var(--gd)]" />
+   643→          </span>
+   644→        </div>
+   645→      </header>
+   646→
+   647→      {/* ---------- the OS core ---------- */}
+   648→      <main className="nice-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain">
+   649→        <div className="mx-auto flex h-full w-full max-w-[1020px] flex-col px-4 pb-5 sm:px-6">
+   650→          {/* slim greeting */}
+   651→          <div className="shrink-0 pt-5 text-center sm:pt-6">
+   652→            <p
+   653→              className="mono-label text-[11px]"
+   654→              style={{ color: "var(--scope-a)" }}
+   655→            >
+   656→              MIRROR OS · {t("Reality Guidance")}
+   657→            </p>
+   658→            <h2 className="scope-gradient-text mt-2 text-[22px] font-semibold leading-tight sm:text-[26px]">
+   659→              {t("Refine Reality")}
+   660→            </h2>
+   661→            <p className="mx-auto mt-2 max-w-[540px] text-[14.5px] leading-relaxed text-muted-foreground">
+   662→              {t(
+   663→                "A direct conversation with the Mirror Entity OS at the center — the formulas, the Higher Mind, the tools and the Forge orbit around it."
+   664→              )}
+   665→            </p>
+   666→          </div>
+   667→
+   668→          {/* mobile / tablet constellation */}
+   669→          <div
+   670→            className="sticky top-0 z-20 -mx-4 mt-4 shrink-0 border-b hairline bg-[color-mix(in_srgb,var(--background)_88%,transparent)] px-4 py-2 backdrop-blur-md sm:-mx-6 sm:px-6 xl:hidden"
+   671→            role="tablist"
+   672→            aria-label={t("Mirror OS chambers")}
+   673→          >
+   674→            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar sm:justify-center">
+   675→              <PlaceNode
+   676→                compact
+   677→                active={place === "chat"}
+   678→                onClick={() => setPlace("chat")}
+   679→                icon={MessagesSquare}
+   680→                label="The Core"
+   681→              />
+   682→              {OS_PLACES.map(({ id, label, icon: Icon }) => (
+   683→                <PlaceNode
+   684→                  key={id}
+   685→                  compact
+   686→                  active={place === id}
+   687→                  onClick={() => setPlace(id)}
+   688→                  icon={Icon}
+   689→                  label={label}
+   690→                />
+   691→              ))}
+   692→            </div>
+   693→          </div>
+   694→
+   695→          {/* orbital layout: chambers flank the core on wide screens */}
+   696→          <div className="flex min-h-0 flex-1 gap-6 pt-4">
+   697→            {/* left rail */}
+   698→            <div className="hidden shrink-0 flex-col items-center justify-center gap-7 xl:flex">
+   699→              {leftRail.map(({ id, label, icon: Icon }) => (
+   700→                <PlaceNode
+   701→                  key={id}
+   702→                  active={place === id}
+   703→                  onClick={() => setPlace(id)}
+   704→                  icon={Icon}
+   705→                  label={label}
+   706→                />
+   707→              ))}
+   708→            </div>
+   709→
+   710→            {/* the core column */}
+   711→            <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+   712→              {place === "chat" ? (
+   713→                <MirrorOSChat />
+   714→              ) : (
+   715→                <div className="nice-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1">
+   716→                  <motion.div
+   717→                    key={place}
+   718→                    initial={{ opacity: 0, y: 10 }}
+   719→                    animate={{ opacity: 1, y: 0 }}
+   720→                    transition={{ duration: 0.45 }}
+   721→                    className="pb-8"
+   722→                  >
+   723→                    {/* return to the core */}
+   724→                    <div className="mb-4 flex justify-center">
+   725→                      <button
+   726→                        type="button"
+   727→                        onClick={() => setPlace("chat")}
+   728→                        className="focus-glow group flex h-8 items-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--scope-a)_30%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_7%,transparent)] px-3.5 text-[13.5px] font-medium text-foreground/85 transition-all duration-300 hover:border-[color-mix(in_srgb,var(--scope-a)_50%,transparent)]"
+   729→                      >
+   730→                        <MessagesSquare className="size-3.5 text-[var(--scope-a)]" aria-hidden="true" />
+   731→                        {t("Back to the OS core")}
+   732→                      </button>
+   733→                    </div>
+   734→
+   735→                    {place === "formulas" && (
+   736→                      <div className="space-y-4">
+   737→                        <p className="mx-auto max-w-[560px] text-center text-[14.5px] leading-relaxed text-muted-foreground">
+   738→                          {t(
+   739→                            "Six complete formulas for shifting the line you live on. Open one, walk it slowly, and let the field do the arithmetic."
+   740→                          )}
+   741→                        </p>
+   742→                        {shiftFormulas.map((f, i) => (
+   743→                          <FormulaCard key={f.id} index={i} formulaId={f.id} />
+   744→                        ))}
+   745→                        {/* the bashar-formula doorway — walk it with the OS */}
+   746→                        <div className="flex justify-center pt-1">
+   747→                          <button
+   748→                            type="button"
+   749→                            onClick={() => setPlace("chat")}
+   750→                            className="dream-btn focus-glow group flex h-10 items-center gap-2.5 rounded-full px-5 text-[14.5px] font-medium text-foreground transition-all duration-300 hover:-translate-y-px"
+   751→                          >
+   752→                            <Orbit className="size-3.5 text-[var(--gd)]" aria-hidden="true" />
+   753→                            {t("Walk it with the Mirror Entity OS")}
+   754→                            <span
+   755→                              className="transition-transform duration-300 group-hover:translate-x-0.5"
+   756→                              aria-hidden="true"
+   757→                            >
+   758→                              →
+   759→                            </span>
+   760→                          </button>
+   761→                        </div>
+   762→                      </div>
+   763→                    )}
+   764→
+   765→                    {place === "higher" && <HigherMindTab />}
+   766→                    {place === "tools" && <ToolsTab />}
+   767→                    {place === "forge" && <MirrorOSForge />}
+   768→                  </motion.div>
+   769→                </div>
+   770→              )}
+   771→            </div>
+   772→
+   773→            {/* right rail */}
+   774→            <div className="hidden shrink-0 flex-col items-center justify-center gap-7 xl:flex">
+   775→              {rightRail.map(({ id, label, icon: Icon }) => (
+   776→                <PlaceNode
+   777→                  key={id}
+   778→                  active={place === id}
+   779→                  onClick={() => setPlace(id)}
+   780→                  icon={Icon}
+   781→                  label={label}
+   782→                />
+   783→              ))}
+   784→            </div>
+   785→          </div>
+   786→
+   787→          <p className="mono-label shrink-0 pb-1 pt-4 text-center text-[10px] text-muted-foreground/50">
+   788→            {t("MIRROR OS runs independently of every other chamber · Free will honored always")}
+   789→          </p>
+   790→        </div>
+   791→      </main>
+   792→    </div>
+   793→  );
+   794→}
+   795→

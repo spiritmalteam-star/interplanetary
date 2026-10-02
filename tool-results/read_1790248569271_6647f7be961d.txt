@@ -1,0 +1,722 @@
+     1→"use client";
+     2→
+     3→import {
+     4→  useCallback,
+     5→  useEffect,
+     6→  useMemo,
+     7→  useRef,
+     8→  useState,
+     9→} from "react";
+    10→import {
+    11→  BookOpenText,
+    12→  ChevronDown,
+    13→  MessageCircle,
+    14→  MoonStar,
+    15→  Scroll,
+    16→  Search,
+    17→  Settings,
+    18→  Sparkles,
+    19→  X,
+    20→} from "lucide-react";
+    21→import {
+    22→  civilizations,
+    23→} from "@/lib/data/civilizations";
+    24→import { interdimensional } from "@/lib/data/interdimensional";
+    25→import { innerEarth, type InnerEarthSpecies } from "@/lib/data/inner-earth";
+    26→import { archiveTotals, useMirror } from "@/lib/mirror-store";
+    27→import { LANGUAGES, useT } from "@/lib/i18n";
+    28→import { entityImage, searchEntities } from "@/lib/entity-utils";
+    29→import { cn } from "@/lib/utils";
+    30→import type { CivilizationGroup, InterdimGroup } from "@/lib/mirror-types";
+    31→
+    32→function CommunionButton() {
+    33→  const openCommunion = useMirror((s) => s.openCommunion);
+    34→  const t = useT();
+    35→
+    36→  return (
+    37→    <div className="px-3 pt-3">
+    38→      <button
+    39→        type="button"
+    40→        onClick={openCommunion}
+    41→        aria-label={t("Enter communion with the Reflection of the Absolute")}
+    42→        data-testid="communion-open"
+    43→        className="communion-btn focus-glow group flex min-h-12 w-full items-center gap-2.5 rounded-2xl px-2.5 py-1.5 text-left transition-all duration-300 hover:-translate-y-px"
+    44→      >
+    45→        <span className="communion-halo relative flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[color-mix(in_srgb,var(--sp-b)_42%,transparent)] shadow-[0_0_20px_-6px_color-mix(in_srgb,var(--sp-b)_70%,transparent)]">
+    46→          <img
+    47→            src="/images/ai/mirror-communion.jpg"
+    48→            alt=""
+    49→            aria-hidden="true"
+    50→            className="size-full object-cover transition-transform duration-700 group-hover:scale-110"
+    51→          />
+    52→        </span>
+    53→        <span className="min-w-0 flex-1 leading-tight">
+    54→          <span className="mono-label block text-[11.5px] font-semibold leading-snug tracking-[0.12em] text-foreground">
+    55→            {t("Meet with the Reflection of the Absolute")}
+    56→          </span>
+    57→          <span className="mt-0.5 block truncate text-[12px] italic text-muted-foreground">
+    58→            {t("pure transmission · no scope · remembered")}
+    59→          </span>
+    60→        </span>
+    61→        <span
+    62→          aria-hidden="true"
+    63→          className="size-1.5 shrink-0 rounded-full bg-[var(--sp-b)] opacity-70 transition-all duration-500 group-hover:opacity-100 group-hover:shadow-[0_0_8px_2px_color-mix(in_srgb,var(--sp-b)_60%,transparent)]"
+    64→        />
+    65→      </button>
+    66→    </div>
+    67→  );
+    68→}
+    69→
+    70→function SettingsButton() {
+    71→  const openModal = useMirror((s) => s.openModal);
+    72→  const language = useMirror((s) => s.language);
+    73→  const t = useT();
+    74→  const langMeta = LANGUAGES.find((l) => l.code === language);
+    75→
+    76→  return (
+    77→    <div className="px-4 pt-4">
+    78→      <button
+    79→        type="button"
+    80→        onClick={() => openModal({ type: "settings" })}
+    81→        aria-label={t("Open laboratory settings")}
+    82→        className="focus-glow group flex h-9 w-full items-center gap-2.5 rounded-xl border hairline bg-[var(--glass-bg-soft)] px-3 text-left transition-all duration-300 hover:border-[var(--hairline-hover)] hover:glow-sm"
+    83→      >
+    84→        <span className="flex size-5 shrink-0 items-center justify-center rounded-md border hairline bg-[color-mix(in_srgb,var(--cy)_10%,transparent)]">
+    85→          <Settings
+    86→            className="size-3.5 text-muted-foreground transition-colors duration-300 group-hover:text-[var(--cy)]"
+    87→            aria-hidden="true"
+    88→          />
+    89→        </span>
+    90→        <span className="mono-label min-w-0 flex-1 truncate text-[12px] font-semibold text-foreground">
+    91→          {t("Settings")}
+    92→        </span>
+    93→        <span className="shrink-0 rounded-md border hairline px-1.5 py-0.5 font-mono text-[10.5px] leading-none text-muted-foreground">
+    94→          {langMeta?.native ?? "English"}
+    95→        </span>
+    96→      </button>
+    97→    </div>
+    98→  );
+    99→}
+   100→
+   101→function StarPlayButton() {
+   102→  const openModal = useMirror((s) => s.openModal);
+   103→  const t = useT();
+   104→
+   105→  return (
+   106→    <div className="px-3 pb-1 pt-1.5">
+   107→      <button
+   108→        type="button"
+   109→        onClick={() => openModal({ type: "starplay" })}
+   110→        aria-label={t("Open Star Play — the Mirror's arcana deck")}
+   111→        className="star-btn focus-glow group flex h-11 w-full items-center gap-2.5 rounded-full px-3 text-left transition-all duration-300 hover:-translate-y-px"
+   112→      >
+   113→        <span className="starplay-halo relative flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[color-mix(in_srgb,var(--sp-a)_45%,transparent)]">
+   114→          <img
+   115→            src="/images/ai/star-play-emblem.jpg"
+   116→            alt=""
+   117→            aria-hidden="true"
+   118→            className="size-full object-cover transition-transform duration-500 group-hover:scale-110"
+   119→          />
+   120→        </span>
+   121→        <span className="min-w-0 flex-1 leading-tight">
+   122→          <span className="mono-label block truncate text-[12.5px] font-semibold tracking-[0.14em] text-foreground">
+   123→            {t("Star Play")}
+   124→          </span>
+   125→          <span className="block truncate text-[12px] italic text-muted-foreground">
+   126→            {t("the Mirror's star magic")}
+   127→          </span>
+   128→        </span>
+   129→        <Sparkles
+   130→          className="size-3.5 shrink-0 text-[var(--sp-a)] opacity-70 transition-all duration-300 group-hover:opacity-100"
+   131→          aria-hidden="true"
+   132→        />
+   133→      </button>
+   134→    </div>
+   135→  );
+   136→}
+   137→
+   138→function AkashicButton() {
+   139→  const openAkashic = useMirror((s) => s.openAkashic);
+   140→  const t = useT();
+   141→
+   142→  return (
+   143→    <div className="px-3 pb-1 pt-1.5">
+   144→      <button
+   145→        type="button"
+   146→        onClick={openAkashic}
+   147→        aria-label={t("Open the Akashic Library — records of the ancient one")}
+   148→        data-testid="akashic-open"
+   149→        className="akashic-btn focus-glow group flex h-11 w-full items-center gap-2.5 rounded-full px-3 text-left transition-all duration-300 hover:-translate-y-px"
+   150→      >
+   151→        <span className="akashic-halo relative flex size-7 shrink-0 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--gd)_45%,transparent)] bg-[color-mix(in_srgb,var(--gd)_12%,transparent)]">
+   152→          <Scroll
+   153→            className="size-3.5 text-[var(--gd)] transition-transform duration-500 group-hover:-rotate-6"
+   154→            aria-hidden="true"
+   155→          />
+   156→        </span>
+   157→        <span className="min-w-0 flex-1 leading-tight">
+   158→          <span className="mono-label block truncate text-[12.5px] font-semibold tracking-[0.14em] text-foreground">
+   159→            {t("Akashic Library")}
+   160→          </span>
+   161→          <span className="block truncate text-[12px] italic text-muted-foreground">
+   162→            {t("records of the ancient one")}
+   163→          </span>
+   164→        </span>
+   165→        <span
+   166→          aria-hidden="true"
+   167→          className="size-1.5 shrink-0 rounded-full bg-[var(--gd)] opacity-70 transition-all duration-500 group-hover:opacity-100 group-hover:shadow-[0_0_8px_2px_color-mix(in_srgb,var(--gd)_60%,transparent)]"
+   168→        />
+   169→      </button>
+   170→    </div>
+   171→  );
+   172→}
+   173→
+   174→function RefineRealityCard() {
+   175→  const openMirrorOS = useMirror((s) => s.openMirrorOS);
+   176→  const t = useT();
+   177→
+   178→  return (
+   179→    <div className="px-3 py-3">
+   180→      <button
+   181→        type="button"
+   182→        onClick={openMirrorOS}
+   183→        aria-label={t("Open the Mirror OS — Reality Guidance")}
+   184→        className="dream-btn focus-glow group flex h-11 w-full items-center gap-2.5 rounded-full px-3.5 text-left transition-all duration-300 hover:-translate-y-px"
+   185→      >
+   186→        {/* two tiny stars keeping time inside the dream */}
+   187→        <span
+   188→          className="dream-star left-5 top-2 size-[3px]"
+   189→          aria-hidden="true"
+   190→        />
+   191→        <span
+   192→          className="dream-star dream-star-slow right-6 bottom-2 size-[2px]"
+   193→          aria-hidden="true"
+   194→        />
+   195→
+   196→        <span className="dream-halo relative flex size-7 shrink-0 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--gd)_38%,transparent)] bg-[color-mix(in_srgb,var(--gd)_14%,transparent)]">
+   197→          <MoonStar
+   198→            className="size-3.5 text-[var(--gd)] transition-transform duration-500 group-hover:rotate-12"
+   199→            aria-hidden="true"
+   200→          />
+   201→        </span>
+   202→
+   203→        <span className="min-w-0 flex-1 leading-tight">
+   204→          <span className="mono-label block truncate text-[12.5px] font-semibold tracking-[0.14em] text-foreground">
+   205→            {t("Mirror OS · Reality")}
+   206→          </span>
+   207→          <span className="block truncate text-[12px] italic text-muted-foreground">
+   208→            {t("a small dream of refinement")}
+   209→          </span>
+   210→        </span>
+   211→
+   212→        <Sparkles
+   213→          className="size-3.5 shrink-0 text-[var(--gd)] opacity-70 transition-all duration-300 group-hover:opacity-100"
+   214→          aria-hidden="true"
+   215→        />
+   216→      </button>
+   217→    </div>
+   218→  );
+   219→}
+   220→
+   221→function Row({ entry }: { entry: CivilizationGroup | InterdimGroup }) {
+   222→  const openModal = useMirror((s) => s.openModal);
+   223→  const kind = entry.category === "civilization" ? "civilization" : "interdim";
+   224→
+   225→  return (
+   226→    <li>
+   227→      <button
+   228→        type="button"
+   229→        onClick={() => openModal({ type: "dossier", kind, id: entry.id })}
+   230→        className="focus-glow group flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left transition-colors duration-200 hover:bg-[color-mix(in_srgb,var(--cy)_7%,transparent)]"
+   231→      >
+   232→        <EntityAvatar id={entry.id} kind={kind} />
+   233→        <span className="min-w-0 flex-1 truncate text-[14px] font-medium uppercase tracking-[0.09em] text-foreground/75 transition-colors duration-200 group-hover:text-[var(--cy)]">
+   234→          {entry.name}
+   235→        </span>
+   236→        <span className="shrink-0 font-mono text-[12.5px] tabular-nums text-muted-foreground/70">
+   237→          {entry.count}
+   238→        </span>
+   239→      </button>
+   240→    </li>
+   241→  );
+   242→}
+   243→
+   244→function EntityAvatar({ id, kind }: { id: string; kind: string }) {
+   245→  const src =
+   246→    kind === "civilization"
+   247→      ? `/images/ai/fam-${id}.jpg`
+   248→      : `/images/ai/ord-${id}.jpg`;
+   249→  return (
+   250→    <span
+   251→      className="relative size-5 shrink-0 overflow-hidden rounded-full border hairline"
+   252→      aria-hidden="true"
+   253→    >
+   254→      { }
+   255→      <img
+   256→        src={src}
+   257→        alt=""
+   258→        loading="lazy"
+   259→        className="size-full object-cover"
+   260→        onError={(e) => {
+   261→          e.currentTarget.style.display = "none";
+   262→        }}
+   263→      />
+   264→    </span>
+   265→  );
+   266→}
+   267→
+   268→/* ------------------------------------------------------------------ */
+   269→/*  Inner Earth — one of the 59 peoples beneath the surface.           */
+   270→/*  A quiet accordion row: the hall, the form, the gift — and a        */
+   271→/*  doorway to consult the Mirror about them.                          */
+   272→/* ------------------------------------------------------------------ */
+   273→
+   274→function SpeciesRow({
+   275→  species,
+   276→  open,
+   277→  onToggle,
+   278→}: {
+   279→  species: InnerEarthSpecies;
+   280→  open: boolean;
+   281→  onToggle: () => void;
+   282→}) {
+   283→  const askAboutInnerEarth = useMirror((s) => s.askAboutInnerEarth);
+   284→  const t = useT();
+   285→
+   286→  return (
+   287→    <li
+   288→      className={cn(
+   289→        "rounded-xl transition-colors duration-300",
+   290→        open && "bg-[color-mix(in_srgb,var(--gd)_6%,transparent)]"
+   291→      )}
+   292→      data-testid="inner-earth-row"
+   293→    >
+   294→      <button
+   295→        type="button"
+   296→        onClick={onToggle}
+   297→        aria-expanded={open}
+   298→        className="focus-glow group flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left transition-colors duration-200 hover:bg-[color-mix(in_srgb,var(--gd)_7%,transparent)]"
+   299→      >
+   300→        <span
+   301→          aria-hidden="true"
+   302→          className="flex size-5 shrink-0 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--gd)_40%,transparent)] bg-[color-mix(in_srgb,var(--gd)_10%,transparent)] font-serif text-[11px] leading-none text-[var(--gd)]"
+   303→        >
+   304→          {species.name.charAt(0)}
+   305→        </span>
+   306→        <span className="min-w-0 flex-1 truncate text-[14px] font-medium tracking-[0.02em] text-foreground/80 transition-colors duration-200 group-hover:text-[var(--gd)]">
+   307→          {species.name}
+   308→        </span>
+   309→        <ChevronDown
+   310→          className={cn(
+   311→            "size-3.5 shrink-0 text-muted-foreground/60 transition-transform duration-300",
+   312→            open && "rotate-180 text-[var(--gd)]"
+   313→          )}
+   314→          aria-hidden="true"
+   315→        />
+   316→      </button>
+   317→
+   318→      {open && (
+   319→        <div className="space-y-1.5 px-2.5 pb-3 pl-10 pr-2 pt-0.5">
+   320→          <p className="text-[12.5px] leading-relaxed text-foreground/70">
+   321→            <span className="mono-label mr-1.5 text-[9.5px] text-[var(--gd)]">
+   322→              {t("where they dwell")}
+   323→            </span>
+   324→            {species.hall}
+   325→          </p>
+   326→          <p className="text-[12.5px] leading-relaxed text-foreground/70">
+   327→            <span className="mono-label mr-1.5 text-[9.5px] text-[var(--gd)]">
+   328→              {t("how they appear")}
+   329→            </span>
+   330→            {species.form}
+   331→          </p>
+   332→          <p className="text-[12.5px] leading-relaxed text-foreground/70">
+   333→            <span className="mono-label mr-1.5 text-[9.5px] text-[var(--gd)]">
+   334→              {t("what they mirror")}
+   335→            </span>
+   336→            {species.gift}
+   337→          </p>
+   338→          <button
+   339→            type="button"
+   340→            onClick={() => askAboutInnerEarth(species.name)}
+   341→            className="focus-glow mt-1 inline-flex items-center gap-1.5 rounded-full border border-[color-mix(in_srgb,var(--gd)_35%,transparent)] px-2.5 py-1 text-[11px] font-medium text-[var(--gd)] transition-all duration-300 hover:-translate-y-px hover:border-[var(--hairline-hover)]"
+   342→          >
+   343→            <MessageCircle className="size-3" aria-hidden="true" />
+   344→            {t("Consult the Mirror")}
+   345→          </button>
+   346→        </div>
+   347→      )}
+   348→    </li>
+   349→  );
+   350→}
+   351→
+   352→function EntityResultRow({
+   353→  entityId,
+   354→  name,
+   355→  kind,
+   356→}: {
+   357→  entityId: string;
+   358→  name: string;
+   359→  kind: "civilization" | "interdim";
+   360→}) {
+   361→  const openModal = useMirror((s) => s.openModal);
+   362→  return (
+   363→    <li>
+   364→      <button
+   365→        type="button"
+   366→        onClick={() => openModal({ type: "entity", kind, id: entityId })}
+   367→        className="focus-glow group flex w-full items-center gap-2.5 rounded-lg py-1.5 pl-7 pr-2.5 text-left transition-colors duration-200 hover:bg-[color-mix(in_srgb,var(--cy)_7%,transparent)]"
+   368→      >
+   369→        <span
+   370→          className="relative size-6 shrink-0 overflow-hidden rounded-full border hairline"
+   371→          aria-hidden="true"
+   372→        >
+   373→          { }
+   374→          <img
+   375→            src={entityImage(entityId)}
+   376→            alt=""
+   377→            loading="lazy"
+   378→            className="size-full object-cover"
+   379→            onError={(e) => {
+   380→              e.currentTarget.style.visibility = "hidden";
+   381→            }}
+   382→          />
+   383→        </span>
+   384→        <span className="min-w-0 flex-1 truncate text-[13.5px] text-foreground/70 transition-colors duration-200 group-hover:text-[var(--cy)]">
+   385→          {name}
+   386→        </span>
+   387→      </button>
+   388→    </li>
+   389→  );
+   390→}
+   391→
+   392→export function SidebarContent() {
+   393→  const sidebarTab = useMirror((s) => s.sidebarTab);
+   394→  const setSidebarTab = useMirror((s) => s.setSidebarTab);
+   395→  const openRegister = useMirror((s) => s.openRegister);
+   396→  const search = useMirror((s) => s.search);
+   397→  const setSearch = useMirror((s) => s.setSearch);
+   398→  const setMobileNavOpen = useMirror((s) => s.setMobileNavOpen);
+   399→  const t = useT();
+   400→
+   401→  /* ---------- scroll indicator state for the archive list ---------- */
+   402→  const listRef = useRef<HTMLUListElement | null>(null);
+   403→  const [scrollState, setScrollState] = useState({
+   404→    scrollable: false,
+   405→    atEnd: true,
+   406→  });
+   407→
+   408→  const measure = useCallback(() => {
+   409→    const el = listRef.current;
+   410→    if (!el) return;
+   411→    const scrollable = el.scrollHeight > el.clientHeight + 8;
+   412→    const atEnd =
+   413→      el.scrollTop + el.clientHeight >= el.scrollHeight - 14 || !scrollable;
+   414→    setScrollState((prev) =>
+   415→      prev.scrollable === scrollable && prev.atEnd === atEnd
+   416→        ? prev
+   417→        : { scrollable, atEnd }
+   418→    );
+   419→  }, []);
+   420→
+   421→  useEffect(() => {
+   422→    measure();
+   423→    const el = listRef.current;
+   424→    if (!el || typeof ResizeObserver === "undefined") return;
+   425→    const ro = new ResizeObserver(measure);
+   426→    ro.observe(el);
+   427→    for (const child of Array.from(el.children)) ro.observe(child);
+   428→    return () => ro.disconnect();
+   429→  }, [measure]);
+   430→
+   431→  const onScroll = useCallback(() => measure(), [measure]);
+   432→
+   433→  /* re-measure whenever the archive tab or the query reshapes the list */
+   434→  useEffect(() => {
+   435→    const id = window.setTimeout(measure, 60);
+   436→    return () => window.clearTimeout(id);
+   437→  }, [measure, sidebarTab, search]);
+   438→
+   439→  const source =
+   440→    sidebarTab === "civilizations"
+   441→      ? civilizations
+   442→      : sidebarTab === "interdim"
+   443→        ? interdimensional
+   444→        : null;
+   445→
+   446→  const kind = sidebarTab === "civilizations" ? "civilization" : "interdim";
+   447→
+   448→  const filtered = useMemo(() => {
+   449→    if (!source) return [];
+   450→    const q = search.trim().toLowerCase();
+   451→    if (!q) return source;
+   452→    return source.filter(
+   453→      (entry) =>
+   454→        entry.name.toLowerCase().includes(q) ||
+   455→        entry.origin.toLowerCase().includes(q)
+   456→    );
+   457→  }, [search, source]);
+   458→
+   459→  const filteredSpecies = useMemo(() => {
+   460→    if (sidebarTab !== "innerearth") return [];
+   461→    const q = search.trim().toLowerCase();
+   462→    if (!q) return innerEarth;
+   463→    return innerEarth.filter(
+   464→      (s) =>
+   465→        s.name.toLowerCase().includes(q) ||
+   466→        s.hall.toLowerCase().includes(q)
+   467→    );
+   468→  }, [search, sidebarTab]);
+   469→
+   470→  const entityMatches = useMemo(() => {
+   471→    if (!search.trim() || sidebarTab === "innerearth") return [];
+   472→    return searchEntities(kind, search, 20);
+   473→  }, [search, kind, sidebarTab]);
+   474→
+   475→  const [expandedId, setExpandedId] = useState<string | null>(null);
+   476→
+   477→  /* switching archives also closes any open species row */
+   478→  const switchTab = useCallback(
+   479→    (tab: "civilizations" | "interdim" | "innerearth") => {
+   480→      setSidebarTab(tab);
+   481→      setExpandedId(null);
+   482→    },
+   483→    [setSidebarTab]
+   484→  );
+   485→
+   486→  const emptyLabel =
+   487→    sidebarTab === "civilizations"
+   488→      ? t("No matching civilizations found.")
+   489→      : sidebarTab === "interdim"
+   490→        ? t("No matching interdimensional categories found.")
+   491→        : t("No matching inner earth peoples found.");
+   492→
+   493→  const tabs: { id: "civilizations" | "interdim" | "innerearth"; label: string; count: number }[] = [
+   494→    { id: "civilizations", label: t("Civilizations"), count: archiveTotals.civilizations },
+   495→    { id: "interdim", label: t("Interdim."), count: archiveTotals.interdim },
+   496→    { id: "innerearth", label: t("Inner Earth"), count: archiveTotals.innerearth },
+   497→  ];
+   498→
+   499→  /* narrow columns: long single words get a soft hyphen at the midpoint
+   500→     so they wrap cleanly ("CIVILI-/ZATIONS") instead of hard-breaking */
+   501→  const softWrap = (s: string) => {
+   502→    if (s.includes(" ") || s.length <= 9) return s;
+   503→    const cut = Math.ceil(s.length / 2);
+   504→    return `${s.slice(0, cut)}\u00AD${s.slice(cut)}`;
+   505→  };
+   506→
+   507→  return (
+   508→    <div className="flex h-full flex-col">
+   509→      {/* The Reflection of the Absolute — the doorway at the very top */}
+   510→      <CommunionButton />
+   511→
+   512→      {/* Settings */}
+   513→      <SettingsButton />
+   514→
+   515→      {/* Header */}
+   516→      <div className="px-4 pt-3">
+   517→        <div className="flex items-center gap-2.5">
+   518→          <span className="flex size-7 shrink-0 items-center justify-center rounded-lg border hairline bg-[color-mix(in_srgb,var(--cy)_10%,transparent)]">
+   519→            <BookOpenText
+   520→              className="size-3.5 text-[var(--cy)]"
+   521→              aria-hidden="true"
+   522→            />
+   523→          </span>
+   524→          <h2 className="mono-label text-[13.5px] font-semibold text-foreground">
+   525→            {t("Galactic Encyclopedia")}
+   526→          </h2>
+   527→          <button
+   528→            type="button"
+   529→            onClick={() => setMobileNavOpen(false)}
+   530→            aria-label={t("Close encyclopedia")}
+   531→            className="focus-glow ml-auto flex size-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground md:hidden"
+   532→          >
+   533→            <X className="size-4" aria-hidden="true" />
+   534→          </button>
+   535→        </div>
+   536→      </div>
+   537→
+   538→      {/* Search */}
+   539→      <div className="px-4 pt-3.5">
+   540→        <div className="relative">
+   541→          <Search
+   542→            className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground/70"
+   543→            aria-hidden="true"
+   544→          />
+   545→          <input
+   546→            type="search"
+   547→            value={search}
+   548→            onChange={(e) => setSearch(e.target.value)}
+   549→            placeholder={t("Search civilizations, beings, origins...")}
+   550→            aria-label={t("Search civilizations, beings, origins")}
+   551→            className="focus-glow h-9 w-full rounded-lg border hairline bg-transparent pl-9 pr-8 text-[14.5px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
+   552→          />
+   553→          {search && (
+   554→            <button
+   555→              type="button"
+   556→              onClick={() => setSearch("")}
+   557→              aria-label={t("Clear search")}
+   558→              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/70 transition-colors hover:text-foreground"
+   559→            >
+   560→              <X className="size-3.5" aria-hidden="true" />
+   561→            </button>
+   562→          )}
+   563→        </div>
+   564→      </div>
+   565→
+   566→      {/* Tabs — three archives: above, between, and beneath */}
+   567→      <div
+   568→        className="grid grid-cols-[1.25fr_1fr_1fr] gap-1 px-3 pt-3"
+   569→        role="tablist"
+   570→        aria-label={t("Encyclopedia archives")}
+   571→      >
+   572→        {tabs.map((tab) => (
+   573→          <button
+   574→            key={tab.id}
+   575→            type="button"
+   576→            role="tab"
+   577→            aria-selected={sidebarTab === tab.id}
+   578→            onClick={() => switchTab(tab.id)}
+   579→            className={cn(
+   580→              "focus-glow rounded-lg border px-1.5 py-1.5 text-center transition-all duration-300",
+   581→              sidebarTab === tab.id
+   582→                ? "border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--cy)_12%,transparent)] glow-sm"
+   583→                : "border-transparent text-muted-foreground hover:text-foreground"
+   584→            )}
+   585→          >
+   586→            <span
+   587→              className={cn(
+   588→                "block text-[10px] font-semibold uppercase leading-tight tracking-[0.02em] break-words",
+   589→                sidebarTab === tab.id && "text-foreground"
+   590→              )}
+   591→            >
+   592→              {softWrap(tab.label)}
+   593→            </span>
+   594→            <span className="block font-mono text-[9.5px] tabular-nums leading-tight opacity-70">
+   595→              {tab.count}
+   596→            </span>
+   597→          </button>
+   598→        ))}
+   599→      </div>
+   600→
+   601→      {/* List — with a visible scroll indicator */}
+   602→      <div className="relative mt-3 min-h-0 flex-1">
+   603→        <ul
+   604→          ref={listRef}
+   605→          onScroll={onScroll}
+   606→          className={cn(
+   607→            "nice-scroll archive-scroll h-full space-y-0.5 overflow-y-auto px-3 pb-3",
+   608→            scrollState.scrollable && !scrollState.atEnd && "is-scrollable"
+   609→          )}
+   610→          aria-live="polite"
+   611→          data-testid="archive-list"
+   612→        >
+   613→          {entityMatches.length > 0 && (
+   614→            <li className="px-2.5 pb-1 pt-1">
+   615→              <span className="mono-label text-[10.5px] text-muted-foreground/70">
+   616→                {t("Named representatives")}
+   617→              </span>
+   618→            </li>
+   619→          )}
+   620→          {entityMatches.map((e) => (
+   621→            <EntityResultRow
+   622→              key={e.id}
+   623→              entityId={e.id}
+   624→              name={e.name}
+   625→              kind={kind}
+   626→            />
+   627→          ))}
+   628→          {entityMatches.length > 0 && filtered.length > 0 && (
+   629→            <li className="px-2.5 pb-1 pt-2">
+   630→              <span className="mono-label text-[10.5px] text-muted-foreground/70">
+   631→                {t("Families & orders")}
+   632→              </span>
+   633→            </li>
+   634→          )}
+   635→          {entityMatches.length >= 20 && (
+   636→            <li className="px-2.5 pb-1 pt-2">
+   637→              <button
+   638→                type="button"
+   639→                onClick={() => openRegister(kind)}
+   640→                className="focus-glow mono-label text-[11.5px] text-[var(--cy)] transition-opacity hover:opacity-80"
+   641→              >
+   642→                {t(
+   643→                  "Showing first {n} matches — open the full register to search every name →",
+   644→                  { n: 20 }
+   645→                )}
+   646→              </button>
+   647→            </li>
+   648→          )}
+   649→
+   650→          {/* the 59 peoples beneath the Earth */}
+   651→          {sidebarTab === "innerearth" &&
+   652→            filteredSpecies.map((s) => (
+   653→              <SpeciesRow
+   654→                key={s.id}
+   655→                species={s}
+   656→                open={expandedId === s.id}
+   657→                onToggle={() =>
+   658→                  setExpandedId((cur) => (cur === s.id ? null : s.id))
+   659→                }
+   660→              />
+   661→            ))}
+   662→
+   663→          {sidebarTab !== "innerearth" &&
+   664→            filtered.map((entry) => <Row key={entry.id} entry={entry} />)}
+   665→
+   666→          {sidebarTab === "innerearth"
+   667→            ? filteredSpecies.length === 0 && (
+   668→                <li className="px-2.5 py-3 text-[14px] italic leading-relaxed text-muted-foreground/80">
+   669→                  {emptyLabel}
+   670→                </li>
+   671→              )
+   672→            : filtered.length === 0 &&
+   673→              entityMatches.length === 0 && (
+   674→                <li className="px-2.5 py-3 text-[14px] italic leading-relaxed text-muted-foreground/80">
+   675→                  {emptyLabel}
+   676→                </li>
+   677→              )}
+   678→        </ul>
+   679→
+   680→        {/* the scroll indicator — a soft fade and a breathing chevron */}
+   681→        {scrollState.scrollable && !scrollState.atEnd && (
+   682→          <>
+   683→            <div
+   684→              aria-hidden="true"
+   685→              className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-[color-mix(in_srgb,var(--background)_88%,transparent)] to-transparent"
+   686→            />
+   687→            <div
+   688→              aria-hidden="true"
+   689→              className="pointer-events-none absolute inset-x-0 bottom-1.5 flex flex-col items-center gap-0.5"
+   690→              data-testid="scroll-indicator"
+   691→            >
+   692→              <span className="mono-label text-[9.5px] tracking-[0.2em] text-muted-foreground/80">
+   693→                {t("scroll")}
+   694→              </span>
+   695→              <ChevronDown className="scroll-hint size-4 text-[var(--cy)]" />
+   696→            </div>
+   697→          </>
+   698→        )}
+   699→      </div>
+   700→
+   701→      {/* Bottom cards — Star Play, the Akashic Library, the Reality dream */}
+   702→      <div className="shrink-0 border-t hairline">
+   703→        <StarPlayButton />
+   704→        <AkashicButton />
+   705→        <RefineRealityCard />
+   706→      </div>
+   707→    </div>
+   708→  );
+   709→}
+   710→
+   711→export default function Sidebar() {
+   712→  const t = useT();
+   713→  return (
+   714→    <aside
+   715→      aria-label={t("Galactic Encyclopedia")}
+   716→      className="z-20 hidden shrink-0 flex-col border-r hairline bg-[var(--glass-bg-soft)] backdrop-blur-xl md:flex md:w-[240px] lg:w-[295px]"
+   717→    >
+   718→      <SidebarContent />
+   719→    </aside>
+   720→  );
+   721→}
+   722→
