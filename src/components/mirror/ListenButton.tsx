@@ -5,6 +5,7 @@ import { AudioLines, LoaderCircle, Square } from "lucide-react";
 import { toast } from "sonner";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
+import type { VoiceId } from "@/lib/i18n/core";
 import { cn } from "@/lib/utils";
 
 /* ------------------------------------------------------------------ */
@@ -30,24 +31,32 @@ function stopActive() {
   active = null;
   current.reset();
 }
-
 export function ListenButton({
   text,
   cacheKey,
   variant = "pill",
   className,
+  /** A fixed voice — when given it wins over the visitor's setting
+      (e.g. ParticleX's gentle gentleman narrator). */
+  voice: fixedVoice,
 }: {
   text: string;
   cacheKey: string;
   variant?: "pill" | "icon";
   className?: string;
+  voice?: VoiceId;
 }) {
   const t = useT();
-  const voice = useMirror((s) => s.voice);
+  const storeVoice = useMirror((s) => s.voice);
+  const voice = fixedVoice ?? storeVoice;
   const pace = useMirror((s) => s.pace);
   const language = useMirror((s) => s.language);
   const [state, setState] = useState<"idle" | "loading" | "playing">("idle");
   const stateRef = useRef<"idle" | "loading" | "playing">("idle");
+  /* A long narration fetch can outlive the browser's click-activation;
+     when play() is refused the prepared voice is kept and the next
+     press releases it (the dream-book lesson, generalized). */
+  const prepared = useRef<{ key: string; audio: HTMLAudioElement } | null>(null);
 
   const setSafe = useCallback((s: "idle" | "loading" | "playing") => {
     stateRef.current = s;
@@ -57,6 +66,7 @@ export function ListenButton({
   /* Preferences changed — silence narration so settings always win. */
   useEffect(() => {
     if (active && active.key.startsWith(`${cacheKey}::`)) stopActive();
+    prepared.current = null;
   }, [cacheKey, voice, pace, language]);
 
   /* Unmount — release the voice if this button owns it. */
@@ -64,7 +74,7 @@ export function ListenButton({
     return () => {
       if (active && active.key.startsWith(`${cacheKey}::`)) stopActive();
     };
-  }, [cacheKey]);
+  }, [cacheKey, voice]);
 
   const toggle = useCallback(async () => {
     if (stateRef.current === "loading") return;
@@ -73,9 +83,38 @@ export function ListenButton({
       return;
     }
     if (!text.trim()) return;
-    stopActive();
 
     const key = `${cacheKey}::${voice}::${pace}::${language}`;
+
+    /* The prepared voice from a refused first play — release it now. */
+    const ready = prepared.current;
+    if (ready && ready.key === key) {
+      prepared.current = null;
+      const handle: ActiveHandle = {
+        key,
+        audio: ready.audio,
+        reset: () => setSafe("idle"),
+      };
+      ready.audio.onended = () => {
+        if (active === handle) active = null;
+        setSafe("idle");
+      };
+      ready.audio.onerror = () => {
+        if (active === handle) active = null;
+        setSafe("idle");
+      };
+      try {
+        await ready.audio.play();
+        active = handle;
+        setSafe("playing");
+      } catch {
+        setSafe("idle");
+      }
+      return;
+    }
+    prepared.current = null;
+    stopActive();
+
     setSafe("loading");
     try {
       let url = audioCache.get(key);
@@ -113,9 +152,21 @@ export function ListenButton({
         if (active === handle) active = null;
         setSafe("idle");
       };
-      await audio.play();
-      active = handle;
-      setSafe("playing");
+      try {
+        await audio.play();
+        active = handle;
+        setSafe("playing");
+      } catch (playErr) {
+        if (playErr instanceof DOMException && playErr.name === "NotAllowedError") {
+          /* The press that fetched the voice grew old while the voice
+             traveled. Keep it warm — one more press and it speaks. */
+          prepared.current = { key, audio };
+          setSafe("idle");
+          toast.info(t("The voice is ready — press once more."));
+          return;
+        }
+        throw playErr;
+      }
     } catch (err) {
       setSafe("idle");
       if (!(err instanceof DOMException && err.name === "NotSupportedError")) {

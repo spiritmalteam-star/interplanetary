@@ -164,7 +164,17 @@ export interface LetterRecord {
 
 const READER_SIZES = [17, 19.5, 22];
 
-export function KindleReader({ record, onClose }: { record: LetterRecord; onClose: () => void }) {
+export function KindleReader({
+  record,
+  onClose,
+  footerLabel,
+}: {
+  record: LetterRecord;
+  onClose: () => void;
+  /** The small mono line at the novel's foot — defaults to the
+      Library's own name. */
+  footerLabel?: string;
+}) {
   const t = useT();
   const [sizeIdx, setSizeIdx] = useState(1);
   const [progress, setProgress] = useState(0);
@@ -278,7 +288,7 @@ export function KindleReader({ record, onClose }: { record: LetterRecord; onClos
           </div>
           <p className="ink-hand ink-soft mt-10 text-center text-[15.5px] italic">{record.seal}</p>
           <p className="mono-label mt-8 text-center text-[9px] uppercase tracking-[0.26em] text-muted-foreground/50">
-            {t("The Akashic Library")}
+            {footerLabel ?? t("The Akashic Library")}
           </p>
         </div>
       </div>

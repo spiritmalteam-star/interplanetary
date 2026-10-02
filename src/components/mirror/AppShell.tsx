@@ -13,6 +13,7 @@ import { SuggestionStrip } from "./SuggestionStrip";
 import { QueryComposer } from "./QueryComposer";
 import { TransmissionView } from "./TransmissionView";
 import { MirrorOS } from "./MirrorOS";
+import { ParticleX } from "./ParticleX";
 import { InventView } from "./InventView";
 import { ArchiveRegister } from "./ArchiveRegister";
 import { CommunionView } from "./CommunionView";
@@ -89,6 +90,18 @@ export default function AppShell() {
         <CosmicBackdrop />
         <StarField />
         <MirrorOS />
+      </div>
+    );
+  }
+
+  /* ParticleX — the quantum narrator is its own world too, structured
+     like the manifest: one top bar, chamber tabs, one full-height core. */
+  if (view === "particlex") {
+    return (
+      <div className="relative h-[var(--app-h,100dvh)] overflow-hidden">
+        <CosmicBackdrop />
+        <StarField />
+        <ParticleX />
       </div>
     );
   }

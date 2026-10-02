@@ -26,6 +26,7 @@ import {
   Settings,
   Sparkles,
   Orbit,
+  Atom,
   Users,
   X,
 } from "lucide-react";
@@ -515,6 +516,7 @@ function OuterRealmsSection() {
 export function SidebarContent() {
   const setMobileNavOpen = useMirror((s) => s.setMobileNavOpen);
   const openMirrorOS = useMirror((s) => s.openMirrorOS);
+  const openParticleX = useMirror((s) => s.openParticleX);
   const openAkashic = useMirror((s) => s.openAkashic);
   const openInvent = useMirror((s) => s.openInvent);
   const openDreamBook = useMirror((s) => s.openDreamBook);
@@ -677,6 +679,24 @@ export function SidebarContent() {
               testId={`world-${w.key}`}
             />
           ))}
+        </nav>
+      </div>
+
+      {/* ParticleX — its own category, outside the worlds: the quantum
+          narrator with its eight scopes and its instruments. */}
+      <div className="shrink-0 px-3">
+        <SectionLabel>{t("ParticleX")}</SectionLabel>
+        <nav aria-label={t("ParticleX")} className="flex flex-col">
+          <NavRow
+            icon={Atom}
+            label={t("Quantum World")}
+            aria={t("Open ParticleX — the quantum narrator of the laboratory")}
+            onClick={() => {
+              openParticleX();
+              setMobileNavOpen(false);
+            }}
+            testId="particlex-open"
+          />
         </nav>
       </div>
 

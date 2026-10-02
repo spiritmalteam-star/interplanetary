@@ -433,7 +433,8 @@ html:not(.dark) .text-hero {
 .scope-interplanetary,
 .scope-healing,
 .scope-manifesting,
-.scope-invent {
+.scope-invent,
+.scope-particlex {
   --scope-a: #2b2b30;
   --scope-b: #6b6b74;
 }
@@ -441,7 +442,8 @@ html:not(.dark) .text-hero {
 .dark .scope-interplanetary,
 .dark .scope-healing,
 .dark .scope-manifesting,
-.dark .scope-invent {
+.dark .scope-invent,
+.dark .scope-particlex {
   --scope-a: #d6d6d5;
   --scope-b: #a3a3a2;
 }
@@ -452,7 +454,8 @@ html:not(.dark) .text-hero {
 html:not(.dark) .scope-interplanetary,
 html:not(.dark) .scope-healing,
 html:not(.dark) .scope-manifesting,
-html:not(.dark) .scope-invent {
+html:not(.dark) .scope-invent,
+html:not(.dark) .scope-particlex {
   --scope-a: #2b2b30;
   --scope-b: #6b6b74;
 }
@@ -467,6 +470,62 @@ html:not(.dark) .scope-invent {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+}
+
+/* ------------------------------------------------------------------ */
+/*  ParticleX — the quantum narrator. Ink only, like every channel.    */
+/* ------------------------------------------------------------------ */
+
+/* The formula plate — where the formulas that run reality rest. */
+.px-formula {
+  border: 1px solid color-mix(in srgb, var(--scope-a) 26%, transparent);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--scope-a) 6%, transparent),
+      transparent
+    ),
+    color-mix(in srgb, var(--scope-a) 3%, transparent);
+}
+
+/* A slow quantum shimmer along the plate's seam — ink only. */
+@keyframes px-seam {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+.px-seam {
+  animation: px-seam 3.4s ease-in-out infinite;
+}
+
+/* The quantum dual reasoning glyph — two orbits around one center. */
+@keyframes px-orbit-a {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes px-orbit-b {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+.px-orbit-a {
+  animation: px-orbit-a 26s linear infinite;
+}
+.px-orbit-b {
+  animation: px-orbit-b 34s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .px-seam,
+  .px-orbit-a,
+  .px-orbit-b {
+    animation: none;
+  }
 }
 
 /* Themed frame card */

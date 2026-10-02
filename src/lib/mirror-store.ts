@@ -33,6 +33,7 @@ import {
   type SideArtifactRef,
 } from "@/lib/artifact-intent";
 import type { RemedyKind } from "@/lib/data/remedy";
+import { pxScopes } from "@/lib/data/particlex";
 
 export type ModalState =
   | { type: "federation" }
@@ -137,7 +138,8 @@ export type MainView =
   | "register"
   | "akashic"
   | "invent"
-  | "dreambook";
+  | "dreambook"
+  | "particlex";
 export type RegisterKind = DossierKind;
 
 /* -------- direct line to the Mirror Entity OS (reality refining) ------- */
@@ -151,6 +153,17 @@ export interface OsMessage {
   artifact?: VisualizationArtifact;
   visual?: "pending" | "error";
   visualRequest?: string;
+}
+
+/* -------- the quantum narrator — ParticleX's own line --------- */
+
+export interface PxMessage {
+  id: string;
+  role: "visitor" | "px";
+  text: string;
+  /** The formulas that ran this revelation (ParticleX notation). */
+  formulas?: string[];
+  seal?: string;
 }
 
 interface MirrorState {
@@ -196,6 +209,16 @@ interface MirrorState {
   osStatus: TransmissionStatus;
   osError: string | null;
   osDraft: string;
+
+  /* ParticleX — the quantum narrator (fully independent) */
+  pxMessages: PxMessage[];
+  pxStatus: TransmissionStatus;
+  pxError: string | null;
+  pxDraft: string;
+  /** The active scope window id (a pxScopes id) or null. */
+  pxScope: string | null;
+  /** Scope fusion — up to two scope ids melted into one seeing. */
+  pxFusion: string[];
 
   /* THE FORGE — the Invent book's own direct chat + mystery creation */
   forgeSession: ScopeSession;
@@ -295,6 +318,14 @@ interface MirrorState {
   openMirrorOS: () => void;
   exitMirrorOS: () => void;
 
+  /* ParticleX — the quantum narrator (fully independent) */
+  openParticleX: () => void;
+  exitParticleX: () => void;
+  setPxDraft: (v: string) => void;
+  setPxScope: (id: string | null) => void;
+  setPxFusion: (ids: string[] | ((prev: string[]) => string[])) => void;
+  askPX: (question: string) => Promise<void>;
+
   openLab: () => void;
   exitLab: () => void;
   setLabIntention: (v: string) => void;
@@ -374,6 +405,13 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   osStatus: "idle" as TransmissionStatus,
   osError: null,
   osDraft: "",
+
+  pxMessages: [],
+  pxStatus: "idle" as TransmissionStatus,
+  pxError: null,
+  pxDraft: "",
+  pxScope: null,
+  pxFusion: [],
 
   forgeSession: emptySession(),
   mysteryStatus: "idle" as MysteryStatus,
@@ -1039,6 +1077,100 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     })),
 
   exitMirrorOS: () => set({ view: "observatory" }),
+
+  /* ---------------- ParticleX — the quantum narrator ---------------- */
+
+  /** ParticleX is its own world: opening it suspends every other
+      surface, exactly like the Mirror OS does. */
+  openParticleX: () =>
+    set({ view: "particlex", mobileNavOpen: false, modal: null }),
+
+  exitParticleX: () => set({ view: "observatory" }),
+
+  setPxDraft: (v) => set({ pxDraft: v }),
+  setPxScope: (id) => set({ pxScope: id }),
+  setPxFusion: (ids) =>
+    set((s) => ({
+      pxFusion: (
+        typeof ids === "function" ? ids(s.pxFusion) : ids
+      ).slice(0, 2),
+    })),
+
+  askPX: async (question) => {
+    const query = question.trim();
+    if (!query || get().pxStatus === "loading") return;
+
+    const visitorId = nextMessageId();
+    set((s) => ({
+      pxStatus: "loading",
+      pxError: null,
+      pxDraft: "",
+      pxMessages: [
+        ...s.pxMessages,
+        { id: visitorId, role: "visitor" as const, text: query },
+      ],
+    }));
+
+    try {
+      const history = get()
+        .pxMessages.filter((m) => m.id !== visitorId)
+        .slice(-10)
+        .map((m) => ({ role: m.role, text: m.text }));
+      const { pxScope, pxFusion } = get();
+      const scopeName = pxScope
+        ? (pxScopes.find((s) => s.id === pxScope)?.name ?? null)
+        : null;
+      const fusionNames = pxFusion
+        .map((id) => pxScopes.find((s) => s.id === id)?.name)
+        .filter((n): n is string => Boolean(n));
+
+      const res = await fetch("/api/particlex", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query,
+          history,
+          language: get().language,
+          scope: scopeName,
+          fusion: fusionNames.length === 2 ? fusionNames : [],
+        }),
+      });
+      const data = (await res.json().catch(() => null)) as {
+        revelation?: string;
+        formulas?: string[];
+        seal?: string;
+        error?: string;
+      } | null;
+      if (!res.ok) {
+        throw new Error(
+          (data && data.error) ||
+            "ParticleX is momentarily quiet. Rest, then reach again."
+        );
+      }
+
+      set((s) => ({
+        pxStatus: "ready",
+        pxMessages: [
+          ...s.pxMessages,
+          {
+            id: nextMessageId(),
+            role: "px" as const,
+            text: data?.revelation ?? "",
+            formulas: Array.isArray(data?.formulas) ? data.formulas : [],
+            seal: typeof data?.seal === "string" ? data.seal : "— ParticleX",
+          },
+        ],
+      }));
+    } catch (err) {
+      set({
+        pxStatus: "error",
+        pxError:
+          err instanceof Error
+            ? err.message
+            : "ParticleX is momentarily quiet. Rest, then reach again.",
+      });
+    }
+  },
 
   /** Kept for the Forge section inside the OS. */
   openLab: () => useMirror.getState().openMirrorOS(),
