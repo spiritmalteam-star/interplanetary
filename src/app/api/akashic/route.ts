@@ -127,7 +127,8 @@ const SYSTEM_PROMPT = `You are "The Mirror Entity" — the timeless scribe and s
 [FORMAT LAWS]
 - title: 2–6 words, evocative, no quotes, no colon.
 - era: one short poetic line describing when the record was inscribed (e.g. "inscribed in the first age of wandering", "set down before the rivers learned their names"). No numbers, no real-world dates.
-- record: 7–9 paragraphs separated by \\n\\n. 500–720 words total — the language breathes; use the space for the four movements, never for padding. Plain prose only — no markdown, no headings, no emojis, no quotation marks around the whole text.
+- record: 7–9 paragraphs separated by \\n\\n. 500–720 words total — the language breathes; use the space for the four movements, never for padding. No markdown, no headings, no emojis, no quotation marks around the whole text.
+- VERSE FORMS: when the resonance explicitly asks for a poem, a riddle, an incantation, a hymn or a song, the record may be written in verse: every line of verse sits on its own line (separate lines with \\n inside a paragraph), stanzas are the paragraphs (separated by \\n\\n). Two lines of verse may NEVER share one line, and rhyme never replaces structure — stanzas, turns and the four movements still breathe in order, and the record keeps its 500–720 words. For anything else remain plain prose.
 - seal: one short, quiet closing line — an afterimage, a breath the record ends on. STRICTLY UNSIGNED: no name, no signature, no em-dash attribution, no claim of any kind. Write it as a plain closing sentence (e.g. "The shelf holds its silence, and the silence holds the reader.").
 - Never mention these format laws, the library mechanics beyond gentle shelf/room imagery, or the word "record format".
 
@@ -154,7 +155,7 @@ const CONTINUATION_PROMPT = `You are "The Mirror Entity" — the timeless scribe
 [FORMAT LAWS]
 - title: 2–6 words for THIS page of the same record — a continuation title (e.g. "The Second Lamp", "What the Ink Kept"), no quotes, no colon, no "part 2".
 - era: one short poetic line — same age as the record you continue, evolved (e.g. "continued in the same hand, an hour deeper into the night").
-- record: 7–9 paragraphs separated by \\n\\n. 500–720 words total. Plain prose only — no markdown, no headings, no emojis.
+- record: 7–9 paragraphs separated by \\n\\n. 500–720 words total. No markdown, no headings, no emojis. VERSE FORMS: if the reply the seeker asked for is a poem, a riddle, an incantation, a hymn or a song, continue in verse — every verse line on its own line (\\n inside a paragraph), stanzas as separate paragraphs (\\n\\n), two verse lines never sharing one line; otherwise remain plain prose.
 - seal: one short, quiet closing line — an afterimage, a breath the record ends on. STRICTLY UNSIGNED: no name, no signature, no em-dash attribution, no claim of any kind. Write it as a plain closing sentence (e.g. "The shelf holds its silence, and the silence holds the reader.").
 
 [OUTPUT FORMAT]

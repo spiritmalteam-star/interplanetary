@@ -6,7 +6,12 @@
 /*  Safe on client and server: no imports, no I/O.                     */
 /* ------------------------------------------------------------------ */
 
-export type SideArtifactKind = "akashic" | "star" | "manifest" | "forge";
+export type SideArtifactKind =
+  | "akashic"
+  | "star"
+  | "manifest"
+  | "forge"
+  | "book";
 
 export interface SideArtifactRef {
   kind: SideArtifactKind;
@@ -59,6 +64,16 @@ const FORGE_PATTERNS: RegExp[] = [
   /\bsomething\s+(strange|wonderful|new|playful)\b[^.?!]{0,24}\b(make|build|create|invent)\b/i,
 ];
 
+/* The Book door — a volume woven right inside the conversation:
+   the mirror asks about the book, then the loom binds it in chat. */
+const BOOK_PATTERNS: RegExp[] = [
+  /\b(make|create|craft|write|weave|manifest|compose|start|begin|open)\b[^.?!]{0,32}\b(a|an|the|my|us|me)\s+(book|storybook|storybook|volume|tale|story)\b/i,
+  /\b(book|storybook|volume)\b[^.?!]{0,32}\b(about|of|on|for)\b/i,
+  /\bwrite\s+(me|us)\s+(a|an)?\s*(book|story|tale|novel)\b/i,
+  /\b(make|create|craft|write|weave|compose)\b[^.?!]{0,24}\b(poem|poetry|riddle|riddles|ballad|lullaby)\s+(book|volume|collection)\b/i,
+  /\b(cozy|little|whole|entire|full|new|another)\s+book\b/i,
+];
+
 /**
  * One pass, most specific doors first. Returns the artifact kind that
  * should ride along with the mirror's reply — or null for ordinary
@@ -67,6 +82,7 @@ const FORGE_PATTERNS: RegExp[] = [
 export function detectArtifactIntent(text: string): SideArtifactKind | null {
   const v = text.trim();
   if (v.length < 3) return null;
+  if (BOOK_PATTERNS.some((re) => re.test(v))) return "book";
   if (AKASHIC_PATTERNS.some((re) => re.test(v))) return "akashic";
   if (STAR_PATTERNS.some((re) => re.test(v))) return "star";
   if (MANIFEST_PATTERNS.some((re) => re.test(v))) return "manifest";

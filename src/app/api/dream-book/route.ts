@@ -62,7 +62,21 @@ const TALE_HINTS: Record<string, string> = {
   fantasy: "a fantasy quest — gifts and burdens, old prophecies with fresh faces, worlds that breathe",
   bedtime: "a dreamlike calm tale — the cadence of the sea at night, images that carry a reader toward sleep",
   wonder: "a tale of everyday wonder — the hidden magic folded inside ordinary streets and hours",
+  poem: "one long poem — the whole volume carried by stanzas of verse, image after image, the story sung rather than told",
+  riddle: "a book of riddles — every page poses its riddles in verse, and each answer is woven or unveiled by the stanzas that follow, never left hanging",
+  ballad: "a ballad — a song-like verse tale with repeating refrains, the kind of song sung from age to age",
 };
+
+/* Verse forms — these tales are written in stanzas, and stanzas obey
+   their own structural law (every line on its own line). */
+const VERSE_FORMS = new Set(["poem", "riddle", "ballad"]);
+
+const VERSE_LAW = `THE LAW OF VERSE (this volume is written in verse — AUTHORITATIVE, overrides the prose habit):
+- Every paragraph you return is a STANZA. A stanza is 2–6 SHORT lines of verse, and EVERY line of verse sits on its own line: separate lines with a real line break (\\n) inside the paragraph string. NEVER place two lines of verse inside one line, and never let a comma do a line-break's work.
+- One array item of "paragraphs" = one stanza; the next stanza is the next array item. A stanza is a room: it holds one image, one turn, one breath.
+- The verse must carry the STORY exactly as prose would: characters, events, turning points and the four strata all advance inside the stanzas — rhyme and rhythm are the vehicle, never the cargo.
+- Rhyme gently, by the volume's own law (couplets, cross-rhyme or near-chime), but STRUCTURE outranks rhyme: stanzas, refrains, turns and the closing cadence must exist even where a rhyme is softened.
+- For riddle volumes: each page poses its riddles in verse, and every riddle is answered by the following stanza or the following page — a riddle is never left hanging beyond the next page.`;
 
 /* ------------------------------------------------------------------ */
 /*  THE NAMING CHARTER — drawn fresh at random for every conjuring.    */
@@ -264,6 +278,7 @@ function buildUserPrompt(body: {
   const ageLine = AGE_PLAN[age] ?? AGE_PLAN.timeless;
   const taleLine = TALE_HINTS[tale] ?? TALE_HINTS.wonder;
   const volLine = BOOK_PLAN[volume] ?? BOOK_PLAN.classic;
+  const isVerse = VERSE_FORMS.has(tale);
 
   /* the subject spoken by the visitor — the master frequency */
   const hasTopic = topic.trim().length > 0;
@@ -310,6 +325,7 @@ function buildUserPrompt(body: {
       `- Reader: ${ageLine}`,
       `- Kind of resonance: ${taleLine}`,
       `- Kind of book: ${volLine.label}`,
+      ...(isVerse ? [``, VERSE_LAW] : []),
       wishes.trim()
         ? `- Whispered wishes (honor them faithfully, fold them in as the book's own bones): """${wishes.trim().slice(0, 1200)}"""`
         : `- No whispered wishes — open the book from resonance alone: choose the shapes the visitor's choices already imply and surprise them with the rest.`,
@@ -330,6 +346,7 @@ function buildUserPrompt(body: {
       ...topicLines,
       `- Reader: ${ageLine}`,
       `- Kind of resonance: ${taleLine}`,
+      ...(isVerse ? [``, VERSE_LAW] : []),
       body.threads ? `- THE THREAD (everything the volume remembers): ${body.threads}` : "",
       body.recentPages?.length
         ? `- THE PAGES JUST READ (continue seamlessly from exactly this voice and moment — never re-tell them, never contradict them):\n"""${body.recentPages.join("\n\n").slice(-2600)}"""`
@@ -349,6 +366,7 @@ function buildUserPrompt(body: {
       `THE READER WISHES THE BOOK TO GO ON — the codex refuses to thin. Extend the loom.`,
       ...topicLines,
       `- Reader: ${ageLine}`,
+      ...(isVerse ? [``, VERSE_LAW] : []),
       body.threads ? `- THE THREAD (everything the volume remembers): ${body.threads}` : "",
       body.recentPages?.length
         ? `- THE PAGES JUST READ:\n"""${body.recentPages.join("\n\n").slice(-2600)}"""`
@@ -366,6 +384,7 @@ function buildUserPrompt(body: {
     lines.push(
       `WRITE THE SEAL OF CLOSING — the Eternal Return. The reader has chosen to let the volume complete itself: these are the FINAL TWO pages (${body.pageNumber} and ${(body.pageNumber ?? 2) + 1}) of the book.`,
       ...topicLines,
+      ...(isVerse ? [``, VERSE_LAW] : []),
       body.threads ? `- THE THREAD (everything the volume remembers): ${body.threads}` : "",
       body.recentPages?.length
         ? `- THE PAGES JUST READ:\n"""${body.recentPages.join("\n\n").slice(-2600)}"""`
@@ -398,7 +417,7 @@ function buildUserPrompt(body: {
     ``,
     `OUTPUT FORMAT — return STRICT JSON only, no markdown fences, no text outside the JSON:`,
     `{"title":"<book title — only in phase open>","subtitle":"<one line — only in phase open>","sigil":"<one short invocation line tuned to the subject — only in phase open>","axiom":"<one crystallizing sentence: why this volume is conjured now — only in phase open>","dedication":"<1–2 sentences — only in phase open>","totalPages":<number — in phase open or extend, or in a continuation ONLY when the rewriting hand explicitly asks for a different length>,"threads":"<the compact living memory of the volume so far>","pages":[{"n":<page number>,"chapter":"<chapter title — only if a chapter opens on this page>","paragraphs":["<paragraph 1>","<paragraph 2>"]}]}`,
-    `Rules: exactly TWO page objects, in order, numbered ${phase === "open" ? "1 and 2" : `${body.pageNumber} and ${(body.pageNumber ?? 2) + 1}`}. Each page carries 1–3 paragraphs (young readers: shorter paragraphs; grown: fuller). "chapter" is a plain title without the word "Chapter". Page text is pure prose — no headings, no markdown, no asterisks, no emojis. The channel is open: manifest the book.${strictJsonLine(languageName)}`
+    `Rules: exactly TWO page objects, in order, numbered ${phase === "open" ? "1 and 2" : `${body.pageNumber} and ${(body.pageNumber ?? 2) + 1}`}. Each page carries 1–3 paragraphs (young readers: shorter paragraphs; grown: fuller). "chapter" is a plain title without the word "Chapter". Page text is pure prose — no headings, no markdown, no asterisks, no emojis. In verse forms a paragraph string may contain real line breaks (\\n) so every verse line sits on its own line. The channel is open: manifest the book.${strictJsonLine(languageName)}`
   );
 
   return lines.filter((l) => l !== "").join("\n");

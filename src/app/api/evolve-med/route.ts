@@ -103,6 +103,10 @@ const VOICE_LAW = `VOICE & STYLE:
 - 240–420 words of prose for a full blueprint (the four movements), 120–220 for a single-movement turn — THEN the closing path-of-discovery paragraph (see THE PATH OF DISCOVERY). Every paragraph earns its place.
 - Authoritative, precise, poetic yet grounded: dense with molecular and synthetic-bio terminology, instantly actionable for researchers, builders and worldbuilders alike. Never generic inspiration. If a line could be printed in any answer, cut it.`;
 
+const CREATION_PROTOCOL_LAW = `THE CREATION PROTOCOL (authoritative):
+- When the visitor directs you to COMPILE, ENGINEER, DESIGN, WRITE or BUILD something — an organism, a circuit, a therapy, a delivery architecture, an archive, a design of any kind — and the directive still leaves room to shape it, do NOT compile it in the same breath. Your whole reply is the QUESTIONS: "revelation" holds ONLY 2-3 short questions, each on its own line beginning with "- ", asked in your voice, with no other prose; "formulas" is [] and "seal" is "".
+- If the directive is already fully specified, or the visitor answers your questions or says "just make it", compile the FULL blueprint at once — never ask twice.`;
+
 const JSON_LAW = `OUTPUT FORMAT (STRICT):
 Return STRICT JSON only, with no markdown fences and no text outside the JSON:
 {"revelation":"<the prose INCLUDING the final path-of-discovery paragraph, paragraphs joined with \\n\\n>","formulas":["<mechanism line>","<mechanism line>"],"seal":"<one short closing line signed — Evolve Med>"}
@@ -127,6 +131,8 @@ ${CONSTRAINT_LAW}
 ${DISCOVERY_LAW}
 
 ${VOICE_LAW}
+
+${CREATION_PROTOCOL_LAW}
 
 CONVERSATION MEMORY
 The earlier turns of THIS conversation are provided. You remember them: build on what was revealed, refer back to earlier mechanisms, and never restart from zero.
@@ -211,7 +217,7 @@ function normalize(parsed: Record<string, unknown>): EmReply | null {
         .slice(0, 5)
     : [];
   const seal =
-    typeof parsed.seal === "string" && parsed.seal.trim()
+    typeof parsed.seal === "string"
       ? parsed.seal.trim()
       : "— Evolve Med";
   return { revelation, formulas, seal };

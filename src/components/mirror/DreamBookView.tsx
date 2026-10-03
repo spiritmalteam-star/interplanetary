@@ -12,6 +12,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowLeft,
   AudioLines,
+  Check,
+  ChevronsUpDown,
   Feather,
   LoaderCircle,
   MoonStar,
@@ -24,10 +26,17 @@ import {
   ZoomIn,
   ZoomOut,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { ModalShell } from "./ModalShell";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
+import { READERS, TALES, VOLUMES } from "@/lib/data/book-options";
 import type { VoiceId } from "@/lib/i18n/core";
 import { cn } from "@/lib/utils";
 
@@ -76,31 +85,6 @@ interface AtelierLine {
   from: "weaver" | "visitor";
   text: string;
 }
-
-const READERS = [
-  { id: "little", label: "Little dreamers (4–8)" },
-  { id: "young", label: "Young readers (9–12)" },
-  { id: "teen", label: "Teens (13–17)" },
-  { id: "grown", label: "Grown dreamers" },
-  { id: "timeless", label: "All ages" },
-];
-
-const TALES = [
-  { id: "fairytale", label: "Fairy tale" },
-  { id: "adventure", label: "Adventure" },
-  { id: "mystery", label: "Gentle mystery" },
-  { id: "cosmic", label: "Cosmic journey" },
-  { id: "creatures", label: "Creature friends" },
-  { id: "fantasy", label: "Fantasy quest" },
-  { id: "bedtime", label: "Dreamlike calm" },
-  { id: "wonder", label: "Everyday wonder" },
-];
-
-const VOLUMES = [
-  { id: "bedtime", label: "Bedtime treasure" },
-  { id: "classic", label: "Classic tale" },
-  { id: "saga", label: "Grand saga" },
-];
 
 /* The narrator voice each book speaks with — THE KIND LADY READER,
    one warm woman's voice for every volume (never the man). */
@@ -797,7 +781,7 @@ export function DreamBookView() {
               active={age}
               onPick={(id, label) => choose("reader", id, label)}
             />
-            <ShapeRow
+            <ShapeMenu
               label={t("The tale")}
               options={TALES}
               active={tale}
@@ -1466,6 +1450,63 @@ function AtelierBubble({
   );
 }
 
+function ShapeMenu({
+  label,
+  options,
+  active,
+  onPick,
+}: {
+  label: string;
+  options: { id: string; label: string }[];
+  active: string;
+  onPick: (id: string, label: string) => void;
+}) {
+  const t = useT();
+  const current = options.find((o) => o.id === active) ?? options[0];
+  return (
+    <div>
+      <p className="mono-label mb-2 text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+        {label}
+      </p>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            type="button"
+            data-testid="tale-menu-trigger"
+            aria-label={`${label}: ${t(current.label)}`}
+            className="focus-glow flex min-w-[190px] items-center justify-between gap-3 rounded-full border border-border bg-card px-4 py-2 text-[13px] text-foreground transition-all duration-300 hover:border-foreground/40"
+          >
+            <span className="truncate">{t(current.label)}</span>
+            <ChevronsUpDown className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          align="start"
+          className="max-h-[290px] w-[220px] overflow-y-auto nice-scroll"
+        >
+          {options.map((o) => {
+            const isActive = o.id === active;
+            return (
+              <DropdownMenuItem
+                key={o.id}
+                onSelect={() => onPick(o.id, t(o.label))}
+                data-testid={`tale-option-${o.id}`}
+                className={cn(
+                  "cursor-pointer justify-between gap-3 text-[13px]",
+                  isActive && "bg-foreground/8 font-medium text-foreground"
+                )}
+              >
+                <span className="truncate">{t(o.label)}</span>
+                {isActive && <Check className="size-3.5 shrink-0" aria-hidden="true" />}
+              </DropdownMenuItem>
+            );
+          })}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+}
+
 function ShapeRow({
   label,
   options,
@@ -1541,7 +1582,7 @@ function BookPage({
               <p
                 key={i}
                 className={cn(
-                  "mb-4 text-[var(--dream-ink)] last:mb-0",
+                  "mb-4 whitespace-pre-wrap text-[var(--dream-ink)] last:mb-0",
                   page.chapter && i === 0 && "dream-drop"
                 )}
               >

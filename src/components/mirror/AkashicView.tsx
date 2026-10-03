@@ -569,7 +569,7 @@ export function AkashicView() {
                     <p
                       key={i}
                       className={cn(
-                        "ink-hand text-[18.5px] leading-[1.95] sm:text-[20px]",
+                        "ink-hand whitespace-pre-wrap text-[18.5px] leading-[1.95] sm:text-[20px]",
                         i === 0 &&
                           "first-letter:float-left first-letter:mr-3 first-letter:mt-[7px] first-letter:text-[54px] first-letter:font-semibold first-letter:leading-[0.78]"
                       )}

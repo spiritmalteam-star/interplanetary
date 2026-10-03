@@ -9,6 +9,7 @@ import {
   Compass,
   Feather,
   FlaskConical,
+  Maximize2,
   Microscope,
   ScrollText,
   X,
@@ -16,8 +17,10 @@ import {
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { emGatheringPhrases, emVectors } from "@/lib/data/evolvemed";
+import { emPresentations } from "@/lib/data/window-presentations";
 import { cn } from "@/lib/utils";
 import { ListenButton } from "./ListenButton";
+import { WindowPresentation } from "./WindowPresentation";
 import {
   EM_VECTOR_ICONS,
   EmCodexTab,
@@ -255,6 +258,9 @@ function EvolveMedChat() {
   const t = useT();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  /* the mini-website experience of a vector window */
+  const [presentation, setPresentation] = useState<string | null>(null);
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const latestRef = useRef<HTMLDivElement | null>(null);
   const loadingRef = useRef<HTMLDivElement | null>(null);
@@ -374,7 +380,12 @@ function EvolveMedChat() {
                         key={vector.id}
                         type="button"
                         aria-pressed={active}
-                        onClick={() => setEmVector(active ? null : vector.id)}
+                        onClick={() => {
+                          /* route the directive AND open the window's
+                             living presentation — both, in one touch */
+                          setEmVector(vector.id);
+                          setPresentation(vector.id);
+                        }}
                         data-testid={`em-pill-${vector.id}`}
                         title={t(vector.tagline)}
                         className={cn(
@@ -453,6 +464,35 @@ function EvolveMedChat() {
         )}
       </div>
 
+      {/* the vector's own living presentation — inside the frame */}
+      <AnimatePresence>
+        {presentation &&
+          (() => {
+            const presVector = emVectors.find((v) => v.id === presentation);
+            const presData = presVector
+              ? emPresentations[presVector.id]
+              : null;
+            if (!presVector || !presData) return null;
+            return (
+              <WindowPresentation
+                key={presVector.id}
+                name={presVector.name}
+                tagline={presVector.tagline}
+                glyph={presVector.glyph}
+                data={presData}
+                onClose={() => {
+                  setPresentation(null);
+                  scrollRef.current?.scrollTo({ top: 0 });
+                }}
+                onBegin={() => {
+                  setEmVector(presVector.id);
+                  setPresentation(null);
+                }}
+              />
+            );
+          })()}
+      </AnimatePresence>
+
       {/* the active vector line — sits above the composer while talking */}
       {hasWindow && (
         <div className="shrink-0 px-4 pt-2 sm:px-6">
@@ -468,6 +508,16 @@ function EvolveMedChat() {
               >
                 <Activity className="size-3 text-[var(--scope-a)]" aria-hidden="true" />
                 {t(activeVector.name)}
+                <button
+                  type="button"
+                  onClick={() => setPresentation(activeVector.id)}
+                  aria-label={t("Experience this window")}
+                  title={t("Experience this window")}
+                  data-testid="em-experience-active"
+                  className="focus-glow rounded-full text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  <Maximize2 className="size-3" aria-hidden="true" />
+                </button>
                 <button
                   type="button"
                   onClick={() => setEmVector(null)}

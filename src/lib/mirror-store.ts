@@ -956,6 +956,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
           mode,
           language: get().language,
           history,
+          ...(sideKind ? { artifact: sideKind } : {}),
           ...(payload ?? {}),
         }),
       });

@@ -259,7 +259,7 @@ function TransmissionBody({ text }: { text: string }) {
             initial="hidden"
             animate="show"
             className={cn(
-              "ink-hand text-[16.5px] leading-[1.95] text-foreground/92",
+              "ink-hand whitespace-pre-wrap text-[16.5px] leading-[1.95] text-foreground/92",
               i === firstParaIndex &&
                 "first-letter:float-left first-letter:mr-3 first-letter:mt-[7px] first-letter:text-[50px] first-letter:font-semibold first-letter:leading-[0.8]"
             )}

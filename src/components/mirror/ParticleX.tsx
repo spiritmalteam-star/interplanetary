@@ -8,6 +8,7 @@ import {
   AudioLines,
   Feather,
   FlaskConical,
+  Maximize2,
   Orbit,
   ScrollText,
   Telescope,
@@ -16,8 +17,10 @@ import {
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { pxGatheringPhrases, pxScopes } from "@/lib/data/particlex";
+import { pxPresentations } from "@/lib/data/window-presentations";
 import { cn } from "@/lib/utils";
 import { ListenButton } from "./ListenButton";
+import { WindowPresentation } from "./WindowPresentation";
 import {
   PxCodexTab,
   PxCopyButton,
@@ -258,6 +261,9 @@ function ParticleXChat() {
   const t = useT();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  /* the mini-website experience of a window — living inside the frame */
+  const [presentation, setPresentation] = useState<string | null>(null);
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const latestRef = useRef<HTMLDivElement | null>(null);
   const loadingRef = useRef<HTMLDivElement | null>(null);
@@ -377,7 +383,12 @@ function ParticleXChat() {
                         key={scope.id}
                         type="button"
                         aria-pressed={active}
-                        onClick={() => setPxScope(active ? null : scope.id)}
+                        onClick={() => {
+                          /* orient the scope AND open the window's own
+                             living presentation — both, in one touch */
+                          setPxScope(scope.id);
+                          setPresentation(scope.id);
+                        }}
                         data-testid={`px-pill-${scope.id}`}
                         title={t(scope.tagline)}
                         className={cn(
@@ -456,6 +467,36 @@ function ParticleXChat() {
         )}
       </div>
 
+      {/* the window's own living presentation — inside the frame,
+          closed by one X back to the start of the conversation */}
+      <AnimatePresence>
+        {presentation &&
+          (() => {
+            const presScope = pxScopes.find((s) => s.id === presentation);
+            const presData = presScope
+              ? pxPresentations[presScope.id]
+              : null;
+            if (!presScope || !presData) return null;
+            return (
+              <WindowPresentation
+                key={presScope.id}
+                name={presScope.name}
+                tagline={presScope.tagline}
+                glyph={presScope.glyph}
+                data={presData}
+                onClose={() => {
+                  setPresentation(null);
+                  scrollRef.current?.scrollTo({ top: 0 });
+                }}
+                onBegin={() => {
+                  setPxScope(presScope.id);
+                  setPresentation(null);
+                }}
+              />
+            );
+          })()}
+      </AnimatePresence>
+
       {/* the active window line — sits above the composer while talking */}
       {hasWindow && (
         <div className="shrink-0 px-4 pt-2 sm:px-6">
@@ -471,6 +512,16 @@ function ParticleXChat() {
               >
                 <Atom className="size-3 text-[var(--scope-a)]" aria-hidden="true" />
                 {t(activeScope.name)}
+                <button
+                  type="button"
+                  onClick={() => setPresentation(activeScope.id)}
+                  aria-label={t("Experience this window")}
+                  title={t("Experience this window")}
+                  data-testid="px-experience-active"
+                  className="focus-glow rounded-full text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  <Maximize2 className="size-3" aria-hidden="true" />
+                </button>
                 <button
                   type="button"
                   onClick={() => setPxScope(null)}
