@@ -2,6 +2,12 @@ import type { TranslationDict } from "../types";
 
 /** sq — Shqip. Mirror Entity Laboratory dictionary (Task 3-a). */
 export const sq: TranslationDict = {
+  "What do you wish to remember, dear one?": "Çfarë dëshiron të mbash mend, i dashur?",
+  "Expand into a PDF": "Zgjero në një PDF",
+  "Expanding the codex…": "Kodeksi po zgjerohet…",
+  "PDF": "PDF",
+  "The codex stayed quiet — rest, then press again.": "Kodeksi mbeti i qetë — pusho, pastaj shtyp përsëri.",
+  "The quantum codex has arrived": "Kodeksi kuantik ka arritur",
   "Welcome, keeper of wishes. Speak anything — a subject, a wish, a whole world — and the book begins.": "Mirupafshim, mbajtëse e dëshirave. Flisni çfarëdo — një subjekt, një dëshirë, një botë të tërë — dhe libri fillon.",
   "A new book waits in the loom. Speak anything below, and the channeling begins.": "Një libër i ri pret në tezgjë. Flisni çfarëdo më poshtë, dhe kanalizimi fillon.",
   "Speak anything — a subject, a wish, a whole world…": "Flisni çfarëdo — një subjekt, një dëshirë, një botë të tërë…",

@@ -118,7 +118,24 @@ export function useVoiceRecorder(): VoiceRecorder {
       setError("unavailable");
       return false;
     }
+    const AudioCtor =
+      window.AudioContext ??
+      (window as unknown as { webkitAudioContext?: typeof AudioContext })
+        .webkitAudioContext;
+    if (!AudioCtor) {
+      setError("unavailable");
+      return false;
+    }
+    /* The context opens synchronously — before any await — and is
+       resumed if the platform wakes it suspended. A context born after
+       an await can stay silent on some platforms, which once made the
+       live call answer exactly once and then fall forever quiet. */
+    const context = new AudioCtor();
+    contextRef.current = context;
     try {
+      if (context.state === "suspended") {
+        await context.resume().catch(() => undefined);
+      }
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           channelCount: 1,
@@ -128,24 +145,16 @@ export function useVoiceRecorder(): VoiceRecorder {
       });
       streamRef.current = stream;
 
-      const AudioCtor =
-        window.AudioContext ??
-        (window as unknown as { webkitAudioContext?: typeof AudioContext })
-          .webkitAudioContext;
-      if (!AudioCtor) {
-        teardown();
-        setError("unavailable");
-        return false;
+      const contextRate = context.sampleRate;
+      if (context.state === "suspended") {
+        await context.resume().catch(() => undefined);
       }
-      const context = new AudioCtor();
-      contextRef.current = context;
 
       const source = context.createMediaStreamSource(stream);
       sourceRef.current = source;
 
       /* Downmix to 16 kHz mono for compact, ASR-friendly WAV. */
       const targetRate = SAMPLE_RATE;
-      const contextRate = context.sampleRate;
       const ratio = contextRate / targetRate;
       const processor = context.createScriptProcessor(4096, 1, 1);
       processorRef.current = processor;

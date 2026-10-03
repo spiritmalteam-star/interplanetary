@@ -24,6 +24,7 @@ import { KindleReader, type LetterRecord } from "./ChatArtifacts";
 import {
   PxCodexTab,
   PxCopyButton,
+  PxPdfButton,
   PxScopesTab,
   PxToolsTab,
   PX_SCOPE_ICONS,
@@ -463,6 +464,7 @@ function PxExchange({
             voice="regent"
           />
           <PxCopyButton text={`${text}\n\n${formulaList.join("\n")}`} />
+          <PxPdfButton />
         </div>
 
         {question && (

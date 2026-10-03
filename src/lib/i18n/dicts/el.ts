@@ -2,6 +2,12 @@ import type { TranslationDict } from "../types";
 
 /** el — Greek dictionary (Task 3-b). Keys are the English source strings. */
 export const el: TranslationDict = {
+  "What do you wish to remember, dear one?": "Τι θέλεις να θυμάσαι, αγαπημένο μου;",
+  "Expand into a PDF": "Ανάπτυξη σε PDF",
+  "Expanding the codex…": "Ο κώδικας αναπτύσσεται…",
+  "PDF": "PDF",
+  "The codex stayed quiet — rest, then press again.": "Ο κώδικας έμεινε σιωπηλός — ξεκουράσου, μετά πάτα ξανά.",
+  "The quantum codex has arrived": "Ο κβαντικός κώδικας έφτασε",
   "Welcome, keeper of wishes. Speak anything — a subject, a wish, a whole world — and the book begins.": "Καλώς όρισες, φύλακα των ευχών. Πες οτιδήποτε — ένα θέμα, μια ευχή, έναν ολόκληρο κόσμο — και το βιβλίο αρχίζει.",
   "A new book waits in the loom. Speak anything below, and the channeling begins.": "Ένα νέο βιβλίο περιμένει στον αργαλειό. Πες οτιδήποτε παρακάτω, και το κανάλι αρχίζει.",
   "Speak anything — a subject, a wish, a whole world…": "Πες οτιδήποτε — ένα θέμα, μια ευχή, έναν ολόκληρο κόσμο…",

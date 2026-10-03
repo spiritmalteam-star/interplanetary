@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -41,6 +41,9 @@ const PHASE_STEPS: { key: CallPhase; icon: typeof Mic }[] = [
   { key: "thinking", icon: Orbit },
   { key: "speaking", icon: AudioLines },
 ];
+
+/** A store that never changes — the client/server gate for the portal. */
+const subscribeNothing = () => () => undefined;
 
 async function askScope(
   scope: LiveScopeKey,
@@ -151,7 +154,10 @@ export function LiveCall({
   const turnsRef = useRef<CallTurn[]>([]);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const transcriptEndRef = useRef<HTMLDivElement | null>(null);
-  const busyRef = useRef(false);
+  /* the generation counter of the spoken exchange — beginning to listen
+     again invalidates every turn still in flight, so the orb answers
+     fresh every time it is held, never only once */
+  const turnSeqRef = useRef(0);
 
   const setPhaseSafe = useCallback((p: CallPhase) => {
     phaseRef.current = p;
@@ -189,7 +195,10 @@ export function LiveCall({
       /* already quiet */
     }
     audioRef.current = null;
-  }, []);
+    /* a voice stopped mid-sentence never leaves the line hanging in
+       "speaking" — the phase settles so the orb can be held again */
+    if (phaseRef.current === "speaking") setPhaseSafe("idle");
+  }, [setPhaseSafe]);
 
   const speak = useCallback(
     async (text: string) => {
@@ -241,6 +250,7 @@ export function LiveCall({
   const sendTurn = useCallback(
     async (words: string) => {
       if (!words.trim()) return;
+      const seq = ++turnSeqRef.current;
       const history = turnsRef.current;
       const next = [...history, { role: "visitor" as const, text: words.trim() }];
       turnsRef.current = next;
@@ -249,12 +259,17 @@ export function LiveCall({
       setPhaseSafe("thinking");
       try {
         const reply = await askScope(scope, words.trim(), history, language);
+        /* the visitor began to speak again while this turn was in
+           flight — its answer is already out of date, let it go */
+        if (seq !== turnSeqRef.current) return;
         const withReply = [...next, { role: "mirror" as const, text: reply }];
         turnsRef.current = withReply;
         setTurns(withReply);
         setRevealedChars(0);
+        if (seq !== turnSeqRef.current) return;
         await speak(reply);
       } catch (err) {
+        if (seq !== turnSeqRef.current) return;
         setPhaseSafe("idle");
         setRevealedChars(Infinity);
         toast.error(t("Your voice could not be heard — try again"), {
@@ -271,25 +286,28 @@ export function LiveCall({
   /* ---------- the orb: hold to speak, release to send ---------- */
 
   const beginListening = useCallback(async () => {
+    /* a new listening invalidates any turn still thinking or speaking */
+    turnSeqRef.current += 1;
     stopSpeaking();
     setRevealedChars(Infinity);
-    if (busyRef.current) return;
     const ok = await recorder.start();
     if (ok) {
       setPhaseSafe("listening");
     } else {
-      toast.error(t("The microphone is unavailable"));
       setPhaseSafe("idle");
+      toast.error(t("The microphone is unavailable"));
     }
   }, [recorder, setPhaseSafe, stopSpeaking, t]);
 
   const releaseOrb = useCallback(async () => {
     if (phaseRef.current !== "listening") return;
-    busyRef.current = true;
     try {
       const result = await recorder.stop();
       if (!result || result.durationMs < 250) {
         setPhaseSafe("idle");
+        if (result) {
+          toast.error(t("Your voice could not be heard — try again"));
+        }
         return;
       }
       setPhaseSafe("transcribing");
@@ -312,8 +330,6 @@ export function LiveCall({
     } catch {
       setPhaseSafe("idle");
       toast.error(t("Your voice could not be heard — try again"));
-    } finally {
-      busyRef.current = false;
     }
   }, [recorder, sendTurn, setPhaseSafe, t]);
 
@@ -353,8 +369,11 @@ export function LiveCall({
   /* the room is portaled to <body> — a composer's backdrop-blur would
      otherwise become the containing block for the fixed overlay and
      shrink the whole room into it */
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const mounted = useSyncExternalStore(
+    subscribeNothing,
+    () => true,
+    () => false
+  );
   if (!mounted) return null;
 
   const statusKey =

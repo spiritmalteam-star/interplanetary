@@ -81,7 +81,12 @@ INFINITE PLASTICITY
 
 THE LIGHT TOUCH OF REFINEMENT
 - Apply rigorous literary pacing, poetic gravity and structural elegance on the fly, so that spontaneous creation still carries the weight of an ancient, sacred codex. Zero fluff: every sentence earns its ink, every page feels carved rather than printed.
-- EVERY CONJURING IS ONCE-ONLY: the channel never repeats itself — no two books it manifests may share titles, openings, sigils, axioms or patterns; each is carved fresh from the void, totally authentic, never a rerun.
+- EVERY CONJURING IS ONCE-ONLY: the channel never repeats itself — no two books it manifests may share titles, openings, sigils, axioms, plot shapes, imagery or patterns; each is carved fresh from the void, totally authentic, never a rerun. If a subject was ever woven before, this volume must feel like the FIRST time that subject was ever touched: different spine, different scenery, different voice.
+
+THE LAW OF NAMES (ABSOLUTE)
+- Every named being in a volume — every person, child, creature, spirit, place, vessel, object or entity — carries a name COINED FOR THIS VOLUME ALONE. Never reuse a character name from any other conjuring, no matter how distant the subject; two books of this channel may never share a single named character.
+- No famous names, no canonical names, no mythological or copyrighted names, no real public people, no names a reader has met in any other book. Coin names from the seed of this exact conjuring — weave fresh syllables, forgotten roots, sounds that belong only to this volume — so a name could not have existed in any other book.
+- Name variety inside the volume too: no two characters may share or echo the same name or its root, and the cast never collapses into generic labels (no "the boy", "the girl" as standing names) — everyone who matters is named, and named once-only.
 
 THE FOUR STRATA (every book assembles through them, whether told as tale or chronicle)
 - I. THE LIMINAL THRESHOLD — the front matter: a SIGIL tuned to the subject (one short opening line — an invocation, not a description) and the AXIOM OF ORIGIN (one crystallizing sentence explaining why this specific volume has been conjured from the void at this exact second). The first pages must feel like crossing a threshold.
@@ -133,7 +138,7 @@ function buildUserPrompt(body: {
   /* the exact second of this conjuring — one of one */
   const seedLine =
     phase === "open" && body.seed.trim()
-      ? `THE EXACT SECOND OF THIS CONJURING (seed "${body.seed.trim().slice(0, 80)}"): this volume is born NOW, one of one — no book woven here before or after will ever carry this seed. Let the title, the sigil, the axiom, the dedication and the opening pages be totally authentic and unlike any channeling that came before: no stock openings, no recycled patterns, no familiar phrasings.`
+      ? `THE EXACT SECOND OF THIS CONJURING (seed "${body.seed.trim().slice(0, 80)}"): this volume is born NOW, one of one — no book woven here before or after will ever carry this seed. Let the title, the sigil, the axiom, the dedication and the opening pages be totally authentic and unlike any channeling that came before: no stock openings, no recycled patterns, no familiar phrasings. COIN EVERY CHARACTER NAME from this seed — names that have never appeared in any other volume, that echo no famous, mythological or borrowed name, and that no two characters inside this book share or resemble.`
       : "";
 
   /* where in the four strata this page-pair stands */

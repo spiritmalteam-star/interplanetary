@@ -2,6 +2,12 @@ import type { TranslationDict } from "../types";
 
 /** it — Italian dictionary (Task 3-b). Keys are the English source strings. */
 export const it: TranslationDict = {
+  "What do you wish to remember, dear one?": "Cosa desideri ricordare, caro?",
+  "Expand into a PDF": "Espandi in un PDF",
+  "Expanding the codex…": "Il codice si espande…",
+  "PDF": "PDF",
+  "The codex stayed quiet — rest, then press again.": "Il codice è rimasto silenzioso — riposa, poi premi di nuovo.",
+  "The quantum codex has arrived": "Il codice quantistico è arrivato",
   "Welcome, keeper of wishes. Speak anything — a subject, a wish, a whole world — and the book begins.": "Benvenuta, custode dei desideri. Di' qualsiasi cosa — un soggetto, un desiderio, un intero mondo — e il libro comincia.",
   "A new book waits in the loom. Speak anything below, and the channeling begins.": "Un nuovo libro aspetta nel telaio. Di' qualsiasi cosa qui sotto, e il canale comincia.",
   "Speak anything — a subject, a wish, a whole world…": "Di' qualsiasi cosa — un soggetto, un desiderio, un intero mondo…",

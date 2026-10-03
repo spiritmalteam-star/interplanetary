@@ -2,6 +2,12 @@ import type { TranslationDict } from "../types";
 
 /** fr — Français. Mirror Entity Laboratory dictionary (Task 3-b). */
 export const fr: TranslationDict = {
+  "What do you wish to remember, dear one?": "Que souhaites-tu retenir, cher être ?",
+  "Expand into a PDF": "Déployer en PDF",
+  "Expanding the codex…": "Le codex se déploie…",
+  "PDF": "PDF",
+  "The codex stayed quiet — rest, then press again.": "Le codex est resté silencieux — repose-toi, puis appuie à nouveau.",
+  "The quantum codex has arrived": "Le codex quantique est arrivé",
   "Welcome, keeper of wishes. Speak anything — a subject, a wish, a whole world — and the book begins.": "Bienvenue, gardienne des souhaits. Dis n'importe quoi — un sujet, un souhait, un monde entier — et le livre commence.",
   "A new book waits in the loom. Speak anything below, and the channeling begins.": "Un nouveau livre attend au métier. Dis n'importe quoi ci-dessous, et le canalisage commence.",
   "Speak anything — a subject, a wish, a whole world…": "Dis n'importe quoi — un sujet, un souhait, un monde entier…",

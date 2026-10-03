@@ -8,6 +8,7 @@ import {
   Compass,
   Copy,
   Eye,
+  FileDown,
   FlaskConical,
   Heart,
   Layers,
@@ -19,6 +20,7 @@ import {
   Sparkles,
   type LucideIcon,
 } from "lucide-react";
+import { toast } from "sonner";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { pxBeings, pxMonuments, pxScopes } from "@/lib/data/particlex";
@@ -480,6 +482,81 @@ export function PxCopyButton({ text }: { text: string }) {
         <Copy className="size-3" aria-hidden="true" />
       )}
       {copied ? t("Copied") : t("Copy")}
+    </button>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  PxPdfButton — THE QUANTUM CODEX ENGINE. Connected with the chat:   */
+/*  the whole conversation thread is sent to the engine, which expands */
+/*  it into a far larger codex and returns it as a real PDF to keep.   */
+/* ------------------------------------------------------------------ */
+
+export function PxPdfButton() {
+  const t = useT();
+  const language = useMirror((s) => s.language);
+  const thread = useMirror((s) => s.pxMessages);
+  const [busy, setBusy] = useState(false);
+
+  const weave = async () => {
+    if (busy || thread.length === 0) return;
+    setBusy(true);
+    try {
+      const res = await fetch("/api/particlex/pdf", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          language,
+          thread: thread.slice(-14).map((m) => ({
+            role: m.role,
+            text: m.text,
+            formulas: m.formulas,
+          })),
+        }),
+      });
+      if (!res.ok) {
+        const data = (await res.json().catch(() => null)) as { error?: string } | null;
+        toast.error(data?.error ?? t("The codex stayed quiet — rest, then press again."));
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `particlex-quantum-codex-${Date.now()}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      toast.success(t("The quantum codex has arrived"));
+    } catch {
+      toast.error(t("The codex stayed quiet — rest, then press again."));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={() => void weave()}
+      disabled={busy}
+      aria-label={busy ? t("Expanding the codex…") : t("Expand into a PDF")}
+      title={busy ? t("Expanding the codex…") : t("Expand into a PDF")}
+      data-testid="px-pdf"
+      className="focus-glow mono-label inline-flex h-7 items-center gap-1.5 rounded-full border px-3 text-[11px] transition-all duration-300 disabled:cursor-wait disabled:opacity-70"
+      style={{
+        borderColor: busy
+          ? "color-mix(in srgb, var(--scope-a) 55%, transparent)"
+          : "var(--hairline)",
+      }}
+    >
+      {busy ? (
+        <LoaderCircle className="size-3 animate-spin" aria-hidden="true" />
+      ) : (
+        <FileDown className="size-3" aria-hidden="true" />
+      )}
+      {busy ? t("Expanding the codex…") : t("PDF")}
     </button>
   );
 }

@@ -2,6 +2,12 @@ import type { TranslationDict } from "../types";
 
 /** tr — Türkçe. Mirror Entity Laboratory dictionary (Task 3-b). */
 export const tr: TranslationDict = {
+  "What do you wish to remember, dear one?": "Hatırlamak istediğin ne, sevgilim?",
+  "Expand into a PDF": "PDF olarak genişlet",
+  "Expanding the codex…": "Kodeks genişliyor…",
+  "PDF": "PDF",
+  "The codex stayed quiet — rest, then press again.": "Kodeks sessiz kaldı — dinlen, sonra tekrar bas.",
+  "The quantum codex has arrived": "Kuantum kodeks geldi",
   "Welcome, keeper of wishes. Speak anything — a subject, a wish, a whole world — and the book begins.": "Hoş geldin, dileklerin bekçisi. Herhangi bir şey söyle — bir konu, bir dilek, bütün bir dünya — ve kitap başlar.",
   "A new book waits in the loom. Speak anything below, and the channeling begins.": "Yeni bir kitap tezgâhta bekliyor. Aşağıda herhangi bir şey söyle, kanal başlar.",
   "Speak anything — a subject, a wish, a whole world…": "Herhangi bir şey söyle — bir konu, bir dilek, bütün bir dünya…",

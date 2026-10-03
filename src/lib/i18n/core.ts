@@ -86,7 +86,10 @@ export function translate(
 
 
 /* ------------------------------------------------------------------ */
-/*  Transcript voices — warm documentary narration                     */
+/*  Transcript voices — one male presence, seven registers.            */
+/*  Every voice of the Laboratory is THE SAME MAN: the synthesis       */
+/*  engine is "xiaochen" (a measured, low, male voice — measured at    */
+/*  ~123 Hz), and each register below differs only in pace and use.    */
 /* ------------------------------------------------------------------ */
 
 export type VoiceId =
@@ -97,6 +100,9 @@ export type VoiceId =
   | "nova"
   | "pixie"
   | "lumen";
+
+/** The one male engine every register speaks through. */
+const MALE_ENGINE = "xiaochen";
 
 export interface VoiceMeta {
   id: VoiceId;
@@ -110,44 +116,44 @@ export const VOICES: VoiceMeta[] = [
   {
     id: "aurora",
     name: "Aurora",
-    character: "Warm woman · documentary narrator",
-    engine: "tongtong",
+    character: "A man · warm documentary narrator",
+    engine: MALE_ENGINE,
   },
   {
     id: "sage",
     name: "Sage",
-    character: "Calm, steady, professional woman",
-    engine: "xiaochen",
+    character: "A man · calm, steady, professional",
+    engine: MALE_ENGINE,
   },
   {
     id: "regent",
     name: "Regent",
-    character: "Gentleman narrator · classic register",
-    engine: "jam",
+    character: "A man · classic narrator's register",
+    engine: MALE_ENGINE,
   },
   {
     id: "harbor",
     name: "Harbor",
-    character: "Natural, flowing storyteller",
-    engine: "douji",
+    character: "A man · natural, flowing storyteller",
+    engine: MALE_ENGINE,
   },
   {
     id: "nova",
     name: "Nova",
-    character: "Expressive cinematic narrator",
-    engine: "luodo",
+    character: "A man · expressive cinematic narrator",
+    engine: MALE_ENGINE,
   },
   {
     id: "pixie",
     name: "Pixie",
-    character: "Bright, luminous spirit",
-    engine: "chuichui",
+    character: "A man · bright, luminous tone",
+    engine: MALE_ENGINE,
   },
   {
     id: "lumen",
     name: "Lumen",
-    character: "Clear, precise, crystalline signal",
-    engine: "kazi",
+    character: "A man · clear, precise signal",
+    engine: MALE_ENGINE,
   },
 ];
 
@@ -158,7 +164,7 @@ export function isVoiceId(v: unknown): v is VoiceId {
 }
 
 export function voiceEngine(id: VoiceId): string {
-  return VOICES.find((v) => v.id === id)?.engine ?? "tongtong";
+  return VOICES.find((v) => v.id === id)?.engine ?? MALE_ENGINE;
 }
 
 /* Narration pace — documentary by default. */
