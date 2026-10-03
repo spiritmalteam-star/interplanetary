@@ -2026,3 +2026,22 @@ Work Log:
 
 Stage Summary:
 - Voice lives on Vercel (OpenAI TTS/ASR through the bridge; brain remains Z.ai). Images: DALL·E leads everywhere images flow (visualize engine, chat bridge, vision gift); akashic + book remain text-only by design. Dream Book reads fullscreen. Requires deploy; TTS/ASR need OPENAI_API_KEY (already configured on Vercel).
+
+---
+Task ID: 2..10 (batch)
+Agent: Z.ai Code (main orchestrator)
+Task: reflectme.space domain, OpenAI paint-failure diagnostics, ChatGPT-style image reveal, remove Akashic pill + Seal circle, new light/dark logos + favicon, cloud voice polish, book immersive verification
+
+Work Log:
+- Explored full UI surface via Explore agent (TransmissionView, ChatArtifacts, VisualizationCard, DreamBookView, zai-client, image-engine, tts/asr routes).
+- image-engine.ts: added the painter's journal (paintErrors + consumePaintErrors) — every brush failure reason is captured and served; paintWithDalle now falls back dall-e-3 → gpt-image-1 (correct sizes/qualities, no response_format, b64→data-url in cloud), OPENAI_IMAGE_MODEL can force either.
+- api/visualize: artifact now carries paintErrors (last 4) when unpainted; api/chat fallback also returns paintErrors.
+- VisualizationCard: PreparedPromptFallback shows "Why the brushes rest" with the journal; artwork is click-to-open (role=button, keyboard accessible) with blur-up scale reveal; download rewritten as blob fetch (remote/cloud canvases now download; falls back to new tab).
+- TransmissionView: removed the Seal (the decorative desktop circle at card bottom) and the TimelineRecordSection/Akashic pill from every exchange (text + visual); removed now-unused priors plumbing.
+- Brand: scripts/make-logos.mjs (sharp, alpha-aware) → public/images/ai/mark-light.png (black glyph, transparent) + mark-dark.png (white glyph, transparent) from the two uploaded sigils; src/app/icon.png + apple-icon.png (white on near-black). AppShell + Sidebar render the theme-matched glyph (dark: classes, no more circle bg); layout metadataBase → https://reflectme.space, favicon via app-router convention.
+- Voice: zai-client openAIAudio — tts model chain gpt-4o-mini-tts → tts-1 (retry only on 400/404/422), asr gains mime-aware extension (webm/ogg/mp3/mp4/flac/wav); asr route parses dataURL mime; tts/asr error responses carry detail.
+- README + .env.example: reflectme.space domain steps (A 76.76.21.21 / CNAME cname.vercel-dns.com), paint-journal + voice docs, OpenAI image/tts/asr env vars.
+- Verified in browser: light+dark logos, transmission golden path, painting flow (pending skeleton → painted card → lightbox), no Seal, no Akashic pill; Dream Book immersion verified (wheel down hides header leaving page + floating next button; wheel up reveals); lint clean; icon serves.
+
+Stage Summary:
+- All six user requests implemented + voice hardening + book immersive verified. Commit pushed for Vercel deploy; live checks follow (status, TTS, visualize paintErrors).

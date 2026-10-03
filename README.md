@@ -58,12 +58,22 @@ The worlds speak through a provider bridge (`src/lib/zai-client.ts`):
 ```
 
 Notes:
+- **Domain** — the laboratory lives at **https://reflectme.space**. In Vercel:
+  Project → Settings → Domains → add `reflectme.space` and `www.reflectme.space`
+  (apex: A record `76.76.21.21`; www: CNAME `cname.vercel-dns.com`), keep the
+  `interplanetary-sigma.vercel.app` URL as a redirect. `metadataBase` in
+  `src/app/layout.tsx` already points at the new home.
 - Images flow through the multi-brush engine (`src/lib/image-engine.ts`):
-  the lead brush follows the chat brain — CogView (Z.ai) first in the Z.ai
-  sky, DALL·E 3 first in the OpenAI sky — and the other brush plus the Z.ai
-  atelier serve as fallbacks. On Vercel (read-only filesystem) paintings are
-  served from the painter's hosted url instead of the local gallery.
-- Voice (TTS/ASR) currently speaks only through the z-ai atelier
-  (`LLM_PROVIDER=zai`); in the cloud the Listen button rests quietly.
+  with `OPENAI_API_KEY` present the OpenAI brushes lead (DALL·E 3, then
+  `gpt-image-1` — force either with `OPENAI_IMAGE_MODEL`), CogView (Z.ai)
+  and the Z.ai atelier serve as fallbacks. When every brush rests, the
+  fallback card shows *why* — each painter's last words travel in
+  `paintErrors` and into the Vercel function logs. On Vercel (read-only
+  filesystem) paintings are served from the painter's hosted url instead of
+  the local gallery.
+- Voice (TTS/ASR) rides the OpenAI sky on Vercel — the same `OPENAI_API_KEY`
+  that paints also sings (`gpt-4o-mini-tts` → `tts-1` fallback, Whisper for
+  hearing). In the laboratory the z-ai atelier speaks. If the voice is
+  quiet, the response `detail` field and the Vercel logs say why.
 - The cosmic library and accounts need a database (`DATABASE_URL`);
   point it at a hosted provider to use them in the cloud.

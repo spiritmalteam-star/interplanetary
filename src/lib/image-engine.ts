@@ -131,6 +131,23 @@ const breakers: Record<ImageEngineName, { failures: number; openUntil: number }>
     zai: { failures: 0, openUntil: 0 },
   };
 
+/* --------------------- the painter's journal ----------------------- */
+/*  When every brush rests, the visitor deserves to know WHY. Each     */
+/*  failure is kept here and served to the interface alongside the     */
+/*  prepared prompt, so a misconfigured key is never a mystery again.  */
+
+let paintErrors: string[] = [];
+
+function journal(engine: string, err: unknown): void {
+  const msg = err instanceof Error ? err.message : String(err);
+  paintErrors.push(`${engine}: ${msg.slice(0, 240)}`);
+}
+
+/** The failures of the last generateImage attempt — newest last. */
+export function consumePaintErrors(): string[] {
+  return paintErrors;
+}
+
 function breakerOpen(engine: ImageEngineName): boolean {
   return Date.now() < breakers[engine].openUntil;
 }
@@ -140,6 +157,7 @@ function noteSuccess(engine: ImageEngineName): void {
 }
 
 function noteFailure(engine: ImageEngineName, err: unknown): void {
+  journal(engine, err);
   const b = breakers[engine];
   b.failures += 1;
   if (b.failures >= BREAKER_THRESHOLD) {
@@ -247,34 +265,53 @@ async function paintWithDalle(
   ).replace(/\/$/, "");
 
   const cloudMode = !canWriteGallery();
+  const forcedModel = process.env.OPENAI_IMAGE_MODEL;
 
-  const res = await fetch(`${base}/images/generations`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "dall-e-3",
-      prompt,
-      n: 1,
-      size,
-      quality,
-      response_format: cloudMode ? "url" : "b64_json",
-    }),
-    signal: AbortSignal.timeout(120_000),
-  });
+  /* one shared hand for both OpenAI brushes */
+  const paint = async (
+    model: "dall-e-3" | "gpt-image-1"
+  ): Promise<GeneratedImage> => {
+    /* gpt-image-1 speaks different sizes and qualities, and knows no
+       response_format — its canvas always comes home as base64 */
+    const isGptImage = model === "gpt-image-1";
+    const modelSize = isGptImage
+      ? size === "1024x1792"
+        ? "1024x1536"
+        : size === "1792x1024"
+          ? "1536x1024"
+          : "1024x1024"
+      : size;
+    const modelQuality = isGptImage
+      ? quality === "hd"
+        ? "high"
+        : "medium"
+      : quality;
 
-  if (!res.ok) {
-    const detail = (await res.text()).slice(0, 300);
-    throw new Error(`OpenAI ${res.status}: ${detail}`);
-  }
+    const res = await fetch(`${base}/images/generations`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model,
+        prompt,
+        n: 1,
+        size: modelSize,
+        quality: modelQuality,
+        ...(isGptImage ? {} : { response_format: cloudMode ? "url" : "b64_json" }),
+      }),
+      signal: AbortSignal.timeout(120_000),
+    });
 
-  const json = (await res.json()) as DalleResponse;
-  const item = json.data?.[0];
+    if (!res.ok) {
+      const detail = (await res.text()).slice(0, 300);
+      throw new Error(`OpenAI ${model} ${res.status}: ${detail}`);
+    }
 
-  /* in the cloud serve the hosted painting directly */
-  if (cloudMode) {
+    const json = (await res.json()) as DalleResponse;
+    const item = json.data?.[0];
+
     if (item?.url) {
       return {
         url: item.url,
@@ -283,19 +320,44 @@ async function paintWithDalle(
         engine: "openai",
       };
     }
-    throw new Error("OpenAI returned no image url");
-  }
 
-  const b64 = item?.b64_json;
-  if (!b64) throw new Error("OpenAI returned no image data");
+    const b64 = item?.b64_json;
+    if (!b64) throw new Error(`OpenAI ${model} returned no image`);
 
-  const name = savePainting(b64);
-  return {
-    url: `/api/visual/${name}`,
-    revisedPrompt: item?.revised_prompt ?? null,
-    originalPrompt: prompt,
-    engine: "openai",
+    /* in the cloud (read-only gallery) the painting travels embedded */
+    if (cloudMode) {
+      return {
+        url: `data:image/png;base64,${b64}`,
+        revisedPrompt: item.revised_prompt ?? null,
+        originalPrompt: prompt,
+        engine: "openai",
+      };
+    }
+
+    const name = savePainting(b64);
+    return {
+      url: `/api/visual/${name}`,
+      revisedPrompt: item.revised_prompt ?? null,
+      originalPrompt: prompt,
+      engine: "openai",
+    };
   };
+
+  /* the chosen painter leads; the other OpenAI brush covers it */
+  if (forcedModel === "gpt-image-1") {
+    return paint("gpt-image-1");
+  }
+  try {
+    return await paint("dall-e-3");
+  } catch (err) {
+    if (forcedModel === "dall-e-3") throw err;
+    journal("openai/dall-e-3", err);
+    console.error(
+      "[image-engine] dall-e-3 rested — offering the canvas to gpt-image-1:",
+      err instanceof Error ? err.message : err
+    );
+    return paint("gpt-image-1");
+  }
 }
 
 /* ------------------------ brush: the atelier ----------------------- */
@@ -352,6 +414,7 @@ export async function generateImage(
   originalPrompt: string,
   options: GenerateImageOptions = {}
 ): Promise<GeneratedImage | null> {
+  paintErrors = [];
   const prompt = originalPrompt.trim().slice(0, 4000);
   if (!prompt) return null;
 
@@ -398,6 +461,7 @@ export async function generateImage(
   try {
     return await paintWithAtelier(prompt, toZaiSize(options.size));
   } catch (err) {
+    journal("atelier", err);
     console.error("[image-engine] every brush has rested:", err);
     return null;
   }

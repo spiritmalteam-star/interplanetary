@@ -20,8 +20,9 @@
 /*  max_tokens, and { choices: [{ message, finish_reason }] } replies.*/
 /*  Z.ai's endpoint is OpenAI-compatible, so one class serves both.   */
 /*                                                                    */
-/*  Audio (tts/asr) remains an atelier gift — it fails with a clear   */
-/*  voice on the cloud skies.                                         */
+/*  Audio (tts/asr) rides the OpenAI sky whenever its key exists —     */
+/*  independent of which brain chats — and fails with a clear voice    */
+/*  when no singer is configured.                                      */
 /* ================================================================== */
 
 interface ChatParams {
@@ -64,6 +65,8 @@ interface TTSParams {
 
 interface ASRParams {
   file_base64: string;
+  /** e.g. "audio/webm" — decides the extension whispered to OpenAI */
+  mime?: string;
   [key: string]: unknown;
 }
 
@@ -84,38 +87,70 @@ const OPENAI_VOICE_MAP: Record<string, string> = {
   tongtong: "shimmer",
 };
 
+const OPENAI_TTS_MODELS = [
+  process.env.OPENAI_TTS_MODEL ?? "gpt-4o-mini-tts",
+  "tts-1", /* the veteran — tried when the modern voice is refused */
+].filter((m, i, a) => a.indexOf(m) === i);
+
+/** audio/webm → webm, audio/mpeg → mp3 … wav is the house default */
+function audioExtension(mime?: string): string {
+  const m = (mime ?? "").toLowerCase();
+  if (m.includes("webm")) return "webm";
+  if (m.includes("ogg")) return "ogg";
+  if (m.includes("mpeg") || m.includes("mp3")) return "mp3";
+  if (m.includes("mp4") || m.includes("m4a")) return "mp4";
+  if (m.includes("flac")) return "flac";
+  return "wav";
+}
+
 function openAIAudio(cfg: CloudConfig): AudioEngine {
   return {
     tts: {
       create: async (params: TTSParams) => {
-        const res = await fetch(`${cfg.baseUrl}/audio/speech`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${cfg.apiKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: process.env.OPENAI_TTS_MODEL ?? "gpt-4o-mini-tts",
-            input: String(params.input ?? "").slice(0, 4096),
-            voice: OPENAI_VOICE_MAP[params.voice] ?? params.voice ?? "onyx",
-            response_format: "wav",
-            speed: typeof params.speed === "number" ? params.speed : 1,
-          }),
-          signal: AbortSignal.timeout(180_000),
-        });
-        if (!res.ok) {
+        const voice =
+          OPENAI_VOICE_MAP[params.voice] ?? params.voice ?? "onyx";
+        const speed = typeof params.speed === "number" ? params.speed : 1;
+        const input = String(params.input ?? "").slice(0, 4096);
+        let lastError: unknown = null;
+
+        for (const model of OPENAI_TTS_MODELS) {
+          const res = await fetch(`${cfg.baseUrl}/audio/speech`, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${cfg.apiKey}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              model,
+              input,
+              voice,
+              response_format: "wav",
+              speed,
+            }),
+            signal: AbortSignal.timeout(180_000),
+          });
+          if (res.ok) {
+            const buf = await res.arrayBuffer();
+            return { arrayBuffer: async () => buf };
+          }
           const detail = (await res.text()).slice(0, 300);
-          throw new Error(`OpenAI tts ${res.status}: ${detail}`);
+          lastError = new Error(
+            `OpenAI tts (${model}) ${res.status}: ${detail}`
+          );
+          /* a refused model may be answered by the veteran — anything
+             else (auth, quota) is the same door for every model */
+          if (![400, 404, 422].includes(res.status)) throw lastError;
         }
-        const buf = await res.arrayBuffer();
-        return { arrayBuffer: async () => buf };
+        throw lastError ?? new Error("OpenAI tts could not sing");
       },
     },
     asr: {
       create: async (params: ASRParams) => {
         const bytes = Buffer.from(params.file_base64, "base64");
+        const ext = audioExtension(params.mime);
+        const mime = params.mime || "audio/wav";
         const form = new FormData();
-        form.append("file", new Blob([bytes], { type: "audio/wav" }), "audio.wav");
+        form.append("file", new Blob([bytes], { type: mime }), `audio.${ext}`);
         form.append("model", process.env.OPENAI_ASR_MODEL ?? "whisper-1");
         const res = await fetch(`${cfg.baseUrl}/audio/transcriptions`, {
           method: "POST",

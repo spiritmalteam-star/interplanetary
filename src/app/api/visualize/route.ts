@@ -9,6 +9,7 @@ import {
 } from "@/lib/visualization";
 import {
   generateImage,
+  consumePaintErrors,
   GALLERY_DIR,
   type GeneratedImage,
 } from "@/lib/image-engine";
@@ -503,6 +504,10 @@ export async function POST(req: NextRequest) {
       diagram,
       annotations,
       slides,
+      paintErrors:
+        !mainPainting && slides.every((s) => !s.imageUrl)
+          ? consumePaintErrors().slice(-4)
+          : [],
       createdAt: new Date().toISOString(),
     };
 

@@ -63,3 +63,5 @@ tool-results/
 # the keyless template may travel
 !.env.example
 skills/
+upload/
+scripts/

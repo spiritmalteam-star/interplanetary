@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import ZAI, { resolveProvider } from "@/lib/zai-client";
 import {
   generateImage,
+  consumePaintErrors,
   isZaiCloudConfigured,
   isOpenAiConfigured,
   type ImageQuality,
@@ -173,12 +174,14 @@ export async function POST(req: NextRequest) {
         });
       }
 
-      /* every brush rested — the text still answers */
+      /* every brush rested — the text still answers, and the journal
+         travels along so the silence has a name */
       return NextResponse.json({
         text:
           decision.text ||
           "The brushes rest right now — ask again in a moment.",
         hasImage: false,
+        paintErrors: consumePaintErrors().slice(-4),
       });
     }
 

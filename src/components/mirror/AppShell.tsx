@@ -270,20 +270,26 @@ export default function AppShell() {
               )}
             </button>
 
-            {/* the simple cosmic mark — the only identity in the top bar */}
+            {/* the Mirror's mark — one glyph for each sky (light/dark) */}
             <button
               type="button"
               onClick={returnToObservatory}
               aria-label={t("Mirror Entity Laboratory")}
               title={t("Mirror Entity Laboratory")}
               data-testid="topbar-logo"
-              className="focus-glow hidden rounded-full transition-opacity duration-300 hover:opacity-75 sm:block"
+              className="focus-glow hidden transition-opacity duration-300 hover:opacity-75 sm:block"
             >
               <img
-                src="/images/ai/cosmic-mark.png"
+                src="/images/ai/mark-light.png"
                 alt=""
                 aria-hidden="true"
-                className="size-9 rounded-full bg-[#f4f2ee] p-1.5 object-contain"
+                className="size-9 object-contain dark:hidden"
+              />
+              <img
+                src="/images/ai/mark-dark.png"
+                alt=""
+                aria-hidden="true"
+                className="hidden size-9 object-contain dark:block"
               />
             </button>
           </div>

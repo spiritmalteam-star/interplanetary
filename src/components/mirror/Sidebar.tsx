@@ -626,14 +626,21 @@ export function SidebarContent() {
 
   return (
     <div className="flex h-full flex-col">
-      {/* Brand — the simple cosmic mark, and the laboratory's name */}
+      {/* Brand — the Mirror's mark, and the laboratory's name */}
       <div className="flex shrink-0 items-center gap-2 px-3 pt-3">
         <img
-          src="/images/ai/cosmic-mark.png"
+          src="/images/ai/mark-light.png"
           alt={t("Mirror Entity Laboratory")}
           title={t("Mirror Entity Laboratory")}
           data-testid="cosmic-logo"
-          className="size-9 rounded-full bg-[#f4f2ee] p-1.5 object-contain shadow-[0_1px_10px_-4px_rgba(0,0,0,0.3)]"
+          className="size-9 object-contain dark:hidden"
+        />
+        <img
+          src="/images/ai/mark-dark.png"
+          alt={t("Mirror Entity Laboratory")}
+          title={t("Mirror Entity Laboratory")}
+          data-testid="cosmic-logo"
+          className="hidden size-9 object-contain dark:block"
         />
         <span className="mono-label flex min-w-0 flex-1 items-center truncate text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">
           <span className="truncate">{t("Mirror Entity")}</span>

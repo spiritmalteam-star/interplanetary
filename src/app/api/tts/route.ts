@@ -159,7 +159,11 @@ export async function POST(req: NextRequest) {
 
     if (!mergeMeta || pcmParts.length === 0) {
       return NextResponse.json(
-        { error: "The voice field is momentarily quiet." },
+        {
+          error: "The voice field is momentarily quiet.",
+          detail:
+            "the synthesis returned audio that could not be shaped into a voice",
+        },
         { status: 502 }
       );
     }
@@ -177,7 +181,10 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     console.error("[tts] failed:", err);
     return NextResponse.json(
-      { error: "The voice field is momentarily quiet. Rest, then listen again." },
+      {
+        error: "The voice field is momentarily quiet. Rest, then listen again.",
+        detail: err instanceof Error ? err.message.slice(0, 300) : undefined,
+      },
       { status: 500 }
     );
   }
