@@ -53,3 +53,6 @@ server.log
 # Skills directory
 /skills/tool-results/
 tool-results/
+
+# generated artwork gallery (the image engine paints here)
+.visualizations/
