@@ -2045,3 +2045,18 @@ Work Log:
 
 Stage Summary:
 - All six user requests implemented + voice hardening + book immersive verified. Commit pushed for Vercel deploy; live checks follow (status, TTS, visualize paintErrors).
+
+---
+Task ID: 10 (live verification)
+Agent: Z.ai Code (main orchestrator)
+Task: Verify deployed build on Vercel (status, voice, paint, brand)
+
+Work Log:
+- Pushed cc2ab7a after untracking upload/ + scripts/ (kept out of the repo).
+- GET /api/chat (live): provider zai-cloud, zaiCloudConfigured true, openaiConfigured true.
+- POST /api/tts (live): 200 audio/wav, 252KB valid PCM (24 kHz mono) — VOICE WORKS ON VERCEL via the OpenAI bridge.
+- POST /api/visualize (live): painted TRUE in ~22s; imageUrl is a data: URL — proof the new gpt-image-1 fallback brush painted after DALL·E 3 refused the key (the Arcturus failure root cause).
+- Live homepage screenshot: new light sigil glyph in sidebar + top bar; /icon.png 200 (favicon).
+
+Stage Summary:
+- All requested features verified live. Root cause of the earlier paint failure: dall-e-3 unavailable on the user's OpenAI key; gpt-image-1 fallback now paints. Remaining user-side steps: add reflectme.space in Vercel → Settings → Domains; optionally rotate the GitHub token.
