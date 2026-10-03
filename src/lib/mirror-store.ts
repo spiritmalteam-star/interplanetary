@@ -199,6 +199,9 @@ export interface PxMessage {
   /** The formulas that ran this revelation (ParticleX notation). */
   formulas?: string[];
   seal?: string;
+  /** When set, this thread item is a pinned cluster of the window's
+      note stickers (illustrated sections inside the chat flow). */
+  notesScope?: string;
 }
 
 /* -------- the evolutionary medical nexus — Evolve Med's own line -------- */
@@ -210,6 +213,9 @@ export interface EmMessage {
   /** The mechanisms that ran this revelation (nexus notation). */
   formulas?: string[];
   seal?: string;
+  /** When set, this thread item is a pinned cluster of the vector's
+      note stickers (illustrated sections inside the chat flow). */
+  notesVector?: string;
 }
 
 interface MirrorState {
@@ -401,6 +407,8 @@ interface MirrorState {
   exitParticleX: () => void;
   setPxDraft: (v: string) => void;
   setPxScope: (id: string | null) => void;
+  /** Pin a window's note stickers into the conversation flow. */
+  pinPxNotes: (scopeId: string) => void;
   setPxFusion: (ids: string[] | ((prev: string[]) => string[])) => void;
   askPX: (question: string) => Promise<void>;
 
@@ -409,6 +417,8 @@ interface MirrorState {
   exitEvolveMed: () => void;
   setEmDraft: (v: string) => void;
   setEmVector: (id: string | null) => void;
+  /** Pin a vector window's note stickers into the conversation flow. */
+  pinEmNotes: (vectorId: string) => void;
   setEmFusion: (ids: string[] | ((prev: string[]) => string[])) => void;
   askEM: (question: string) => Promise<void>;
 
@@ -1236,6 +1246,24 @@ export const useMirror = create<MirrorState>()((set, get) => ({
 
   setPxDraft: (v) => set({ pxDraft: v }),
   setPxScope: (id) => set({ pxScope: id }),
+  pinPxNotes: (scopeId) =>
+    set((s) => {
+      const last = s.pxMessages[s.pxMessages.length - 1];
+      /* already the newest thing in the thread — never pin it twice */
+      if (last && last.notesScope === scopeId && s.pxStatus !== "loading")
+        return {};
+      return {
+        pxMessages: [
+          ...s.pxMessages,
+          {
+            id: nextMessageId(),
+            role: "px" as const,
+            text: "",
+            notesScope: scopeId,
+          },
+        ],
+      };
+    }),
   setPxFusion: (ids) =>
     set((s) => ({
       pxFusion: (
@@ -1333,6 +1361,24 @@ export const useMirror = create<MirrorState>()((set, get) => ({
 
   setEmDraft: (v) => set({ emDraft: v }),
   setEmVector: (id) => set({ emVector: id }),
+  pinEmNotes: (vectorId) =>
+    set((s) => {
+      const last = s.emMessages[s.emMessages.length - 1];
+      /* already the newest thing in the thread — never pin it twice */
+      if (last && last.notesVector === vectorId && s.emStatus !== "loading")
+        return {};
+      return {
+        emMessages: [
+          ...s.emMessages,
+          {
+            id: nextMessageId(),
+            role: "em" as const,
+            text: "",
+            notesVector: vectorId,
+          },
+        ],
+      };
+    }),
   setEmFusion: (ids) =>
     set((s) => ({
       emFusion: (
