@@ -628,7 +628,7 @@ export function SidebarContent() {
           alt={t("Mirror Entity Laboratory")}
           title={t("Mirror Entity Laboratory")}
           data-testid="cosmic-logo"
-          className="size-9 rounded-full object-cover shadow-[0_1px_10px_-4px_rgba(0,0,0,0.3)]"
+          className="size-9 rounded-full bg-[#f4f2ee] p-1.5 object-contain shadow-[0_1px_10px_-4px_rgba(0,0,0,0.3)]"
         />
         <span className="mono-label flex min-w-0 flex-1 items-center gap-1.5 truncate text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">
           <span className="truncate">{t("With love")}</span>

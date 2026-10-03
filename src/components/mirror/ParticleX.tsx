@@ -227,11 +227,12 @@ function PxExchange({
           </p>
         )}
 
-        <div className="mt-2 flex flex-wrap items-center gap-2">
+        <div className="mt-2 flex flex-nowrap items-center gap-1.5 sm:gap-2">
           <ListenButton
             text={`${text}. ${formulaList.join(". ")}`}
             cacheKey={`px-${text.slice(0, 24)}-${text.length}-${index}`}
             voice="regent"
+            className="shrink-0 whitespace-nowrap"
           />
           <PxCopyButton text={`${text}\n\n${formulaList.join("\n")}`} />
           <PxPdfButton />

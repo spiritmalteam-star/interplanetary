@@ -193,7 +193,7 @@ export default function AppShell() {
                 src="/images/ai/cosmic-mark.png"
                 alt=""
                 aria-hidden="true"
-                className="size-9 rounded-full object-cover"
+                className="size-9 rounded-full bg-[#f4f2ee] p-1.5 object-contain"
               />
             </button>
           </div>

@@ -41,6 +41,10 @@ export const metadata: Metadata = {
     "Mirror OS · Reality Guidance",
     "Observatory",
   ],
+  icons: {
+    icon: "/images/ai/cosmic-mark.png",
+    apple: "/images/ai/cosmic-mark.png",
+  },
 };
 
 export const viewport: Viewport = {

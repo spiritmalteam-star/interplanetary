@@ -21,6 +21,13 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { pxBeings, pxMonuments, pxScopes } from "@/lib/data/particlex";
@@ -469,7 +476,7 @@ export function PxCopyButton({ text }: { text: string }) {
       aria-label={copied ? t("Copied") : t("Copy the revelation")}
       title={copied ? t("Copied") : t("Copy the revelation")}
       data-testid="px-copy"
-      className="focus-glow mono-label inline-flex h-7 items-center gap-1.5 rounded-full border px-3 text-[11px] transition-all duration-300"
+      className="focus-glow mono-label inline-flex h-7 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-[11px] transition-all duration-300"
       style={{
         borderColor: copied
           ? "color-mix(in srgb, var(--scope-a) 55%, transparent)"
@@ -487,18 +494,32 @@ export function PxCopyButton({ text }: { text: string }) {
 }
 
 /* ------------------------------------------------------------------ */
-/*  PxPdfButton — THE QUANTUM CODEX ENGINE. Connected with the chat:   */
-/*  the whole conversation thread is sent to the engine, which expands */
-/*  it into a far larger codex and returns it as a real PDF to keep.   */
+/*  PxPdfButton — THE QUICK TRANSMISSION PRESS. Connected with the     */
+/*  chat: the whole conversation is pressed into ONE channeled         */
+/*  transmission (never a lecture) and returned as a real PDF to keep. */
+/*  Pressing the button opens the tuning: a focus to carry, a gear of  */
+/*  depth (1–5) and the length of the material (1–5 PDF pages).        */
 /* ------------------------------------------------------------------ */
+
+const GEAR_DESCRIPTIONS = [
+  "The surface shimmer — one breath beneath what was said",
+  "The first veil lifted — the patterns just out of sight",
+  "The middle strata — the machinery behind the thread",
+  "The deep fields — where questions are shaped",
+  "The innermost chamber — the farthest reach",
+];
 
 export function PxPdfButton() {
   const t = useT();
   const language = useMirror((s) => s.language);
   const thread = useMirror((s) => s.pxMessages);
+  const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [focus, setFocus] = useState("");
+  const [depth, setDepth] = useState(3);
+  const [pages, setPages] = useState(2);
 
-  const weave = async () => {
+  const press = async () => {
     if (busy || thread.length === 0) return;
     setBusy(true);
     try {
@@ -507,6 +528,9 @@ export function PxPdfButton() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           language,
+          focus: focus.trim() || null,
+          depth,
+          pages,
           thread: thread.slice(-14).map((m) => ({
             role: m.role,
             text: m.text,
@@ -516,48 +540,180 @@ export function PxPdfButton() {
       });
       if (!res.ok) {
         const data = (await res.json().catch(() => null)) as { error?: string } | null;
-        toast.error(data?.error ?? t("The codex stayed quiet — rest, then press again."));
+        toast.error(data?.error ?? t("The transmission stayed quiet — rest, then press again."));
         return;
       }
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `particlex-quantum-codex-${Date.now()}.pdf`;
+      a.download = `particlex-transmission-${Date.now()}.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
-      toast.success(t("The quantum codex has arrived"));
+      toast.success(t("The transmission has been pressed into ink"));
+      setOpen(false);
     } catch {
-      toast.error(t("The codex stayed quiet — rest, then press again."));
+      toast.error(t("The transmission stayed quiet — rest, then press again."));
     } finally {
       setBusy(false);
     }
   };
 
   return (
-    <button
-      type="button"
-      onClick={() => void weave()}
-      disabled={busy}
-      aria-label={busy ? t("Expanding the codex…") : t("Expand into a PDF")}
-      title={busy ? t("Expanding the codex…") : t("Expand into a PDF")}
-      data-testid="px-pdf"
-      className="focus-glow mono-label inline-flex h-7 items-center gap-1.5 rounded-full border px-3 text-[11px] transition-all duration-300 disabled:cursor-wait disabled:opacity-70"
-      style={{
-        borderColor: busy
-          ? "color-mix(in srgb, var(--scope-a) 55%, transparent)"
-          : "var(--hairline)",
-      }}
-    >
-      {busy ? (
-        <LoaderCircle className="size-3 animate-spin" aria-hidden="true" />
-      ) : (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        aria-label={t("Press a transmission into a PDF")}
+        title={t("Press a transmission into a PDF")}
+        data-testid="px-pdf"
+        className="focus-glow mono-label inline-flex h-7 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-[11px] transition-all duration-300"
+        style={{ borderColor: "var(--hairline)" }}
+      >
         <FileDown className="size-3" aria-hidden="true" />
-      )}
-      {busy ? t("Expanding the codex…") : t("PDF")}
-    </button>
+        {t("PDF")}
+      </button>
+
+      <Dialog
+        open={open}
+        onOpenChange={(v) => {
+          if (!busy) setOpen(v);
+        }}
+      >
+        <DialogContent
+          data-testid="px-pdf-dialog"
+          className="max-w-[430px] gap-0 rounded-2xl border hairline bg-[var(--glass-bg)] p-5 backdrop-blur-xl"
+        >
+          <DialogHeader>
+            <DialogTitle className="font-[family-name(var(--font-literata))] text-[19px] font-semibold text-foreground">
+              {t("The Quantum Transmission")}
+            </DialogTitle>
+            <DialogDescription className="pt-1 text-[13.5px] leading-relaxed">
+              {t(
+                "The whole conversation pressed into ink — one channeled transmission to keep, not a lecture."
+              )}
+            </DialogDescription>
+          </DialogHeader>
+
+          {/* the focus the visitor may carry */}
+          <div className="mt-4">
+            <label
+              htmlFor="px-pdf-focus"
+              className="mono-label text-[9.5px] uppercase tracking-[0.22em] text-muted-foreground"
+            >
+              {t("Carry a focus")}
+            </label>
+            <textarea
+              id="px-pdf-focus"
+              value={focus}
+              onChange={(e) => setFocus(e.target.value)}
+              rows={2}
+              placeholder={t(
+                "Lean the transmission toward something — or leave it silent and let the thread choose."
+              )}
+              data-testid="px-pdf-focus"
+              className="nice-scroll mt-1.5 w-full resize-none rounded-xl border hairline bg-transparent px-3 py-2 text-[14px] leading-relaxed text-foreground placeholder:text-muted-foreground/50 focus:border-[var(--hairline-active)] focus:outline-none"
+            />
+          </div>
+
+          {/* the gear of depth */}
+          <div className="mt-4">
+            <span className="mono-label text-[9.5px] uppercase tracking-[0.22em] text-muted-foreground">
+              {t("Gear of depth")}
+            </span>
+            <div
+              role="group"
+              aria-label={t("Gear of depth")}
+              className="mt-1.5 flex gap-1.5"
+            >
+              {[1, 2, 3, 4, 5].map((g) => (
+                <button
+                  key={g}
+                  type="button"
+                  onClick={() => setDepth(g)}
+                  aria-pressed={depth === g}
+                  aria-label={`${t("Gear of depth")} ${g}`}
+                  data-testid={`px-pdf-depth-${g}`}
+                  className={cn(
+                    "focus-glow mono-label h-9 flex-1 rounded-full border text-[13px] transition-all duration-300",
+                    depth === g
+                      ? "border-transparent bg-foreground text-background"
+                      : "hairline text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {g}
+                </button>
+              ))}
+            </div>
+            <p className="mt-1.5 font-[family-name(var(--font-literata))] text-[12.5px] italic text-muted-foreground">
+              {t(GEAR_DESCRIPTIONS[depth - 1])}
+            </p>
+          </div>
+
+          {/* the length of the material */}
+          <div className="mt-4">
+            <span className="mono-label text-[9.5px] uppercase tracking-[0.22em] text-muted-foreground">
+              {t("Length of the material")}
+            </span>
+            <div
+              role="group"
+              aria-label={t("Length of the material")}
+              className="mt-1.5 flex gap-1.5"
+            >
+              {[1, 2, 3, 4, 5].map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => setPages(n)}
+                  aria-pressed={pages === n}
+                  aria-label={`${n} ${t("PDF pages")}`}
+                  data-testid={`px-pdf-pages-${n}`}
+                  className={cn(
+                    "focus-glow mono-label h-9 flex-1 rounded-full border text-[13px] transition-all duration-300",
+                    pages === n
+                      ? "border-transparent bg-foreground text-background"
+                      : "hairline text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
+            <p className="mt-1.5 text-[12px] text-muted-foreground">
+              {t("{n} PDF pages", { n: pages })}
+            </p>
+          </div>
+
+          {/* the press */}
+          <div className="mt-5 flex items-center justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              disabled={busy}
+              className="focus-glow h-9 rounded-full border hairline px-4 text-[13px] text-muted-foreground transition-all duration-300 hover:text-foreground disabled:opacity-50"
+            >
+              {t("Cancel")}
+            </button>
+            <button
+              type="button"
+              onClick={() => void press()}
+              disabled={busy}
+              data-testid="px-pdf-press"
+              className="focus-glow inline-flex h-9 items-center gap-2 rounded-full bg-foreground px-4 text-[13px] font-medium text-background transition-all duration-300 hover:-translate-y-px disabled:cursor-wait disabled:opacity-70"
+            >
+              {busy ? (
+                <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
+              ) : (
+                <FileDown className="size-3.5" aria-hidden="true" />
+              )}
+              {busy ? t("Receiving the transmission…") : t("Press the transmission")}
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
