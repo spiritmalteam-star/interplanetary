@@ -15,6 +15,7 @@ import { StillCompanion } from "./StillCompanion";
 import { TransmissionView } from "./TransmissionView";
 import { MirrorOS } from "./MirrorOS";
 import { ParticleX } from "./ParticleX";
+import { EvolveMed } from "./EvolveMed";
 import { InventView } from "./InventView";
 import { ArchiveRegister } from "./ArchiveRegister";
 import { CommunionView } from "./CommunionView";
@@ -100,6 +101,18 @@ export default function AppShell() {
         <CosmicBackdrop />
         <StarField />
         <ParticleX />
+      </div>
+    );
+  }
+
+  /* Evolve Med — the evolutionary medical nexus is its own world too:
+     one top bar, chamber tabs, one full-height nexus core. */
+  if (view === "evolvemed") {
+    return (
+      <div className="relative h-[var(--app-h,100dvh)] overflow-hidden">
+        <CosmicBackdrop />
+        <StarField />
+        <EvolveMed />
       </div>
     );
   }

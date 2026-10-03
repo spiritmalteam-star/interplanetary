@@ -14,6 +14,7 @@ import {
   ChevronDown,
   ChevronRight,
   Cpu,
+  Dna,
   Heart,
   Landmark,
   MoonStar,
@@ -517,6 +518,7 @@ export function SidebarContent() {
   const setMobileNavOpen = useMirror((s) => s.setMobileNavOpen);
   const openMirrorOS = useMirror((s) => s.openMirrorOS);
   const openParticleX = useMirror((s) => s.openParticleX);
+  const openEvolveMed = useMirror((s) => s.openEvolveMed);
   const openAkashic = useMirror((s) => s.openAkashic);
   const openInvent = useMirror((s) => s.openInvent);
   const openDreamBook = useMirror((s) => s.openDreamBook);
@@ -683,7 +685,8 @@ export function SidebarContent() {
       </div>
 
       {/* ParticleX — its own category, outside the worlds: the quantum
-          narrator with its eight scopes and its instruments. */}
+          narrator with its eight scopes and its instruments — and below
+          it, its medical twin: Evolve Med, the evolutionary nexus. */}
       <div className="shrink-0 px-3">
         <SectionLabel>{t("ParticleX")}</SectionLabel>
         <nav aria-label={t("ParticleX")} className="flex flex-col">
@@ -696,6 +699,16 @@ export function SidebarContent() {
               setMobileNavOpen(false);
             }}
             testId="particlex-open"
+          />
+          <NavRow
+            icon={Dna}
+            label={t("Evolve Med")}
+            aria={t("Open Evolve Med — the evolutionary medical nexus of the laboratory")}
+            onClick={() => {
+              openEvolveMed();
+              setMobileNavOpen(false);
+            }}
+            testId="evolvemed-open"
           />
         </nav>
       </div>

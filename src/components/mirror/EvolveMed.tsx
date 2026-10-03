@@ -1,0 +1,720 @@
+"use client";
+
+import { useEffect, useMemo, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  Activity,
+  ArrowLeft,
+  AudioLines,
+  Compass,
+  Feather,
+  FlaskConical,
+  Microscope,
+  ScrollText,
+  X,
+} from "lucide-react";
+import { useMirror } from "@/lib/mirror-store";
+import { useT } from "@/lib/i18n";
+import { emGatheringPhrases, emVectors } from "@/lib/data/evolvemed";
+import { cn } from "@/lib/utils";
+import { ListenButton } from "./ListenButton";
+import {
+  EM_VECTOR_ICONS,
+  EmCodexTab,
+  EmCopyButton,
+  EmInstrumentsTab,
+  EmPdfButton,
+  EmVectorsTab,
+} from "./EvolveMedChambers";
+
+type EmPlace = "chat" | "vectors" | "instruments" | "codex";
+
+const EM_PLACES: {
+  id: Exclude<EmPlace, "chat">;
+  label: string;
+  icon: typeof Compass;
+}[] = [
+  { id: "vectors", label: "Vectors", icon: Compass },
+  { id: "instruments", label: "Instruments", icon: FlaskConical },
+  { id: "codex", label: "Codex", icon: ScrollText },
+];
+
+/* --------------------------- the emblem ---------------------------- */
+
+/** Evolve Med's mark: a living helix — two strands crossing around
+    one axis, the digital and the biological breathing together. */
+function EmEmblem({ className }: { className?: string }) {
+  return (
+    <span
+      className={cn("relative inline-flex items-center justify-center", className)}
+      aria-hidden="true"
+    >
+      <svg viewBox="0 0 64 64" className="size-full text-[var(--scope-a)]">
+        {/* the two strands of the helix */}
+        <g className="em-helix" style={{ transformOrigin: "32px 32px" }}>
+          <path
+            d="M22 8 C42 20 22 44 42 56"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.4"
+            strokeLinecap="round"
+          />
+          <path
+            d="M42 8 C22 20 42 44 22 56"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.4"
+            strokeLinecap="round"
+            opacity="0.55"
+          />
+          {/* the rungs — the meeting places of the strands */}
+          <line x1="26" y1="16" x2="38" y2="16" stroke="currentColor" strokeWidth="1" opacity="0.7" />
+          <line x1="24" y1="28" x2="40" y2="28" stroke="currentColor" strokeWidth="1" opacity="0.5" />
+          <line x1="24" y1="40" x2="40" y2="40" stroke="currentColor" strokeWidth="1" opacity="0.7" />
+          <line x1="26" y1="50" x2="38" y2="50" stroke="currentColor" strokeWidth="1" opacity="0.45" />
+        </g>
+        {/* the four vectors — one quiet dot for each, at the compass points */}
+        <circle cx="32" cy="3.5" r="1.4" fill="currentColor" opacity="0.8" />
+        <circle cx="60.5" cy="32" r="1.4" fill="currentColor" opacity="0.55" />
+        <circle cx="32" cy="60.5" r="1.4" fill="currentColor" opacity="0.8" />
+        <circle cx="3.5" cy="32" r="1.4" fill="currentColor" opacity="0.55" />
+      </svg>
+    </span>
+  );
+}
+
+/* --------------------------- the thinking -------------------------- */
+
+function EmThinking() {
+  const t = useT();
+  const [phraseIdx, setPhraseIdx] = useState(0);
+
+  useEffect(() => {
+    const id = window.setInterval(
+      () => setPhraseIdx((i) => (i + 1) % emGatheringPhrases.length),
+      3400
+    );
+    return () => window.clearInterval(id);
+  }, []);
+
+  return (
+    <div
+      className="flex flex-col items-start gap-2.5"
+      aria-live="polite"
+      aria-busy="true"
+    >
+      <span className="flex items-center gap-1.5">
+        {[0, 1, 2].map((i) => (
+          <span
+            key={i}
+            className="animate-dot-pulse size-1.5 rounded-full"
+            style={{
+              background: "var(--scope-a)",
+              animationDelay: `${i * 0.35}s`,
+            }}
+          />
+        ))}
+      </span>
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.span
+          key={phraseIdx}
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -4 }}
+          transition={{ duration: 0.35 }}
+          className="font-serif text-[14px] italic text-muted-foreground"
+        >
+          {t(emGatheringPhrases[phraseIdx])}
+        </motion.span>
+      </AnimatePresence>
+    </div>
+  );
+}
+
+/* ------------------------- one exchange ---------------------------- */
+
+function EmExchange({
+  role,
+  text,
+  formulas,
+  seal,
+  animate,
+  index,
+}: {
+  role: "visitor" | "em";
+  text: string;
+  formulas?: string[];
+  seal?: string;
+  animate: boolean;
+  index: number;
+}) {
+  const t = useT();
+
+  if (role === "visitor") {
+    return (
+      <motion.div
+        initial={{ opacity: animate ? 0 : 1, y: animate ? 8 : 0 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: animate ? 0.4 : 0, ease: [0.22, 1, 0.36, 1] }}
+        className="flex flex-col items-end"
+      >
+        <p className="max-w-[78%] rounded-2xl rounded-br-md border border-[color-mix(in_srgb,var(--scope-a)_24%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_9%,transparent)] px-4 py-2.5 text-[15px] leading-relaxed text-foreground/90">
+          {text}
+        </p>
+      </motion.div>
+    );
+  }
+
+  const formulaList = formulas ?? [];
+
+  return (
+    <motion.div
+      initial={{ opacity: animate ? 0 : 1, y: animate ? 10 : 0 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: animate ? 0.5 : 0, ease: [0.22, 1, 0.36, 1] }}
+      className="flex items-start gap-3"
+      data-testid={`em-answer-${index}`}
+    >
+      <span
+        className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--scope-a)_40%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_10%,transparent)]"
+        aria-hidden="true"
+      >
+        <Activity className="size-3.5 text-[var(--scope-a)]" />
+      </span>
+      <div className="min-w-0 max-w-[85%]">
+        <p className="mono-label text-[9.5px] text-[var(--scope-a)]">EVOLVE MED</p>
+        <div className="mt-1.5 space-y-3 rounded-2xl rounded-tl-md glass px-4 py-3">
+          {text.split(/\n{2,}/).map((p, i) => (
+            <p key={i} className="text-[15px] leading-[1.8] text-foreground/88">
+              {p}
+            </p>
+          ))}
+        </div>
+
+        {formulaList.length > 0 && (
+          <div className="px-formula relative mt-2.5 overflow-hidden rounded-xl px-4 py-3" data-testid={`em-formulas-${index}`}>
+            <span
+              aria-hidden="true"
+              className="px-seam absolute inset-x-0 top-0 h-px"
+              style={{
+                background:
+                  "linear-gradient(90deg, transparent, var(--scope-a), transparent)",
+              }}
+            />
+            <p className="mono-label flex items-center gap-1.5 text-[9px] uppercase tracking-[0.22em] text-muted-foreground">
+              <Microscope className="size-3" aria-hidden="true" />
+              {t("The mechanisms that run it")}
+            </p>
+            <div className="mt-2 space-y-1.5">
+              {formulaList.map((f, i) => (
+                <p
+                  key={i}
+                  className="px-formula-line text-center font-serif text-[15.5px] italic leading-relaxed text-foreground/90"
+                >
+                  {f}
+                </p>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {seal && (
+          <p className="ink-soft mt-2.5 text-center font-serif text-[14px] italic">
+            {seal}
+          </p>
+        )}
+
+        <div className="mt-2 flex flex-nowrap items-center gap-1.5 sm:gap-2">
+          <ListenButton
+            text={`${text}. ${formulaList.join(". ")}`}
+            cacheKey={`em-${text.slice(0, 24)}-${text.length}-${index}`}
+            voice="regent"
+            className="shrink-0 whitespace-nowrap"
+          />
+          <EmCopyButton text={`${text}\n\n${formulaList.join("\n")}`} />
+          <EmPdfButton />
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+/* --------------------------- the core chat -------------------------- */
+
+function EvolveMedChat() {
+  const emMessages = useMirror((s) => s.emMessages);
+  const emStatus = useMirror((s) => s.emStatus);
+  const emError = useMirror((s) => s.emError);
+  const emDraft = useMirror((s) => s.emDraft);
+  const setEmDraft = useMirror((s) => s.setEmDraft);
+  const askEM = useMirror((s) => s.askEM);
+  const emVector = useMirror((s) => s.emVector);
+  const setEmVector = useMirror((s) => s.setEmVector);
+  const emFusion = useMirror((s) => s.emFusion);
+  const setEmFusion = useMirror((s) => s.setEmFusion);
+  const t = useT();
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const latestRef = useRef<HTMLDivElement | null>(null);
+  const loadingRef = useRef<HTMLDivElement | null>(null);
+
+  /* The thread opens at its BEGINNING: mounting or reopening the chat
+     never scrolls away from the first words. New turns settle at the
+     top of the view — the same law as the quantum world. */
+  const baseline = useRef({
+    len: emMessages.length,
+    status: emStatus,
+    error: emError,
+    fresh: true,
+  });
+
+  useEffect(() => {
+    const b = baseline.current;
+    const grew = emMessages.length !== b.len;
+    const startedLoading =
+      !b.fresh && emStatus === "loading" && b.status !== "loading";
+    baseline.current = {
+      len: emMessages.length,
+      status: emStatus,
+      error: emError,
+      fresh: false,
+    };
+    if (b.fresh) {
+      if (emStatus === "loading") {
+        loadingRef.current?.scrollIntoView({ block: "start" });
+      }
+      return;
+    }
+    if (grew) {
+      latestRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+    if (startedLoading) {
+      loadingRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [emMessages.length, emStatus, emError]);
+
+  /* auto-resize composer */
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = "0px";
+    el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
+  }, [emDraft]);
+
+  const canSend = emDraft.trim().length > 0 && emStatus !== "loading";
+
+  const submit = () => {
+    const query = emDraft.trim();
+    if (!query || emStatus === "loading") return;
+    void askEM(query);
+  };
+
+  /* The active route: one vector, or a melted pair. */
+  const activeVector = emVector
+    ? emVectors.find((s) => s.id === emVector) ?? null
+    : null;
+  const fusionPair = emFusion
+    .map((id) => emVectors.find((s) => s.id === id))
+    .filter((s): s is (typeof emVectors)[number] => Boolean(s));
+  const hasWindow = Boolean(activeVector) || fusionPair.length === 2;
+
+  return (
+    <div className="scope-frame-card relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl">
+      <span className="scope-corner scope-corner-tl" aria-hidden="true" />
+      <span className="scope-corner scope-corner-tr" aria-hidden="true" />
+      <span className="scope-corner scope-corner-bl" aria-hidden="true" />
+      <span className="scope-corner scope-corner-br" aria-hidden="true" />
+      <div
+        className="animate-line-breathe h-px w-full"
+        style={{
+          background:
+            "linear-gradient(90deg, transparent, var(--scope-a) 30%, var(--scope-b) 70%, transparent)",
+        }}
+        aria-hidden="true"
+      />
+
+      {/* thread */}
+      <div
+        ref={scrollRef}
+        className="nice-scroll min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-4 py-5 sm:px-6"
+      >
+        {emMessages.length === 0 && emStatus === "idle" && !emError ? (
+          <div className="flex h-full flex-col py-6 text-center">
+            <div className="my-auto flex w-full flex-col items-center">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.92 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+                className="dream-halo relative flex size-16 items-center justify-center"
+              >
+                <EmEmblem className="size-16" />
+              </motion.div>
+              <p className="scope-gradient-text mt-4 text-[17px] font-semibold">
+                {t("The medical nexus is online")}
+              </p>
+              <p className="mx-auto mt-2 max-w-[460px] text-[14.5px] leading-relaxed text-muted-foreground">
+                {t(
+                  "Ask anything of the healing frontier — Evolve Med routes your question across the four vectors of the facility, in prose and in the mechanisms that run the living machine."
+                )}
+              </p>
+
+              {/* the four vector windows */}
+              <div className="mt-5 w-full max-w-[560px]">
+                <p className="mono-label text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">
+                  {t("Choose a vector")}
+                </p>
+                <div className="mt-2.5 flex flex-wrap justify-center gap-1.5">
+                  {emVectors.map((vector) => {
+                    const Icon = EM_VECTOR_ICONS[vector.id] ?? Activity;
+                    const active = emVector === vector.id;
+                    return (
+                      <button
+                        key={vector.id}
+                        type="button"
+                        aria-pressed={active}
+                        onClick={() => setEmVector(active ? null : vector.id)}
+                        data-testid={`em-pill-${vector.id}`}
+                        title={t(vector.tagline)}
+                        className={cn(
+                          "focus-glow flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] transition-all duration-300",
+                          active
+                            ? "font-semibold text-foreground"
+                            : "hairline text-muted-foreground hover:text-foreground"
+                        )}
+                        style={
+                          active
+                            ? {
+                                borderColor:
+                                  "color-mix(in srgb, var(--scope-a) 55%, transparent)",
+                                background:
+                                  "color-mix(in srgb, var(--scope-a) 12%, transparent)",
+                              }
+                            : undefined
+                        }
+                      >
+                        <Icon
+                          className="size-3 text-[var(--scope-a)]"
+                          aria-hidden="true"
+                        />
+                        {t(vector.name)}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <>
+            {emMessages.map((m, i) => (
+              <div
+                key={m.id}
+                ref={
+                  i === emMessages.length - 1
+                    ? (node) => {
+                        latestRef.current = node;
+                      }
+                    : undefined
+                }
+              >
+                <EmExchange
+                  role={m.role}
+                  text={m.text}
+                  formulas={m.formulas}
+                  seal={m.seal}
+                  animate={i === emMessages.length - 1 && emStatus !== "loading"}
+                  index={i}
+                />
+              </div>
+            ))}
+            {emStatus === "loading" && (
+              <div
+                ref={(node) => {
+                  loadingRef.current = node;
+                }}
+                className="pl-11"
+              >
+                <EmThinking />
+              </div>
+            )}
+            {emStatus === "error" && emError && (
+              <div className="ml-11 rounded-xl border border-[var(--destructive)]/25 bg-[color-mix(in_srgb,var(--destructive)_6%,transparent)] px-4 py-3">
+                <p className="text-[14.5px] leading-relaxed text-foreground/85">
+                  {t("Evolve Med could not finish the revealing.")}
+                </p>
+                <p className="mt-1 text-[14px] italic text-muted-foreground">
+                  {emError}
+                </p>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* the active vector line — sits above the composer while talking */}
+      {hasWindow && (
+        <div className="shrink-0 px-4 pt-2 sm:px-6">
+          <div className="mx-auto flex w-full max-w-[720px] flex-wrap items-center gap-1.5">
+            {activeVector && (
+              <span
+                className="mono-label flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9.5px] uppercase tracking-[0.18em] text-foreground/80"
+                style={{
+                  borderColor:
+                    "color-mix(in srgb, var(--scope-a) 40%, transparent)",
+                }}
+                data-testid="em-active-vector"
+              >
+                <Activity className="size-3 text-[var(--scope-a)]" aria-hidden="true" />
+                {t(activeVector.name)}
+                <button
+                  type="button"
+                  onClick={() => setEmVector(null)}
+                  aria-label={t("Clear the scope")}
+                  title={t("Clear the scope")}
+                  className="focus-glow rounded-full text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  <X className="size-3" aria-hidden="true" />
+                </button>
+              </span>
+            )}
+            {fusionPair.length === 2 && (
+              <span
+                className="mono-label flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9.5px] uppercase tracking-[0.18em] text-foreground/80"
+                style={{
+                  borderColor:
+                    "color-mix(in srgb, var(--scope-a) 40%, transparent)",
+                }}
+                data-testid="em-active-fusion"
+              >
+                {t(fusionPair[0].name)} × {t(fusionPair[1].name)}
+                <button
+                  type="button"
+                  onClick={() => setEmFusion([])}
+                  aria-label={t("Let the windows separate")}
+                  title={t("Let the windows separate")}
+                  className="focus-glow rounded-full text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  <X className="size-3" aria-hidden="true" />
+                </button>
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* composer */}
+      <div className="shrink-0 border-t hairline bg-[var(--glass-bg)] px-3 py-2.5 backdrop-blur-xl sm:px-4">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            submit();
+          }}
+          className="mx-auto w-full max-w-[720px]"
+        >
+          <div className="glass-strong flex items-end gap-2 rounded-[18px] p-1.5 pl-3.5 transition-all duration-300 focus-within:-translate-y-px focus-within:border-[var(--hairline-active)] focus-within:glow-sm">
+            <label htmlFor="em-query" className="sr-only">
+              {t("Ask Evolve Med")}
+            </label>
+            <textarea
+              id="em-query"
+              ref={textareaRef}
+              rows={1}
+              value={emDraft}
+              onChange={(e) => setEmDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  submit();
+                }
+              }}
+              placeholder={t("Ask Evolve Med…")}
+              className="nice-scroll max-h-[120px] flex-1 resize-none bg-transparent py-2 text-[15px] leading-relaxed text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
+            />
+            <button
+              type="submit"
+              disabled={!canSend}
+              aria-label={t("Send to Evolve Med")}
+              data-testid="em-send"
+              className="focus-glow mb-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-foreground text-background transition-all duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <Feather className="size-3.5" aria-hidden="true" />
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------- header tab ------------------------------- */
+
+function HeaderTab({
+  active,
+  onClick,
+  icon: Icon,
+  label,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: typeof Compass;
+  label: string;
+}) {
+  const t = useT();
+  return (
+    <button
+      type="button"
+      role="tab"
+      aria-selected={active}
+      aria-label={t(label)}
+      title={t(label)}
+      onClick={onClick}
+      className={cn(
+        "focus-glow flex size-8 items-center justify-center rounded-full border transition-all duration-300 sm:size-9",
+        active
+          ? "border-[color-mix(in_srgb,var(--scope-a)_55%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_14%,transparent)] text-[var(--scope-a)] glow-sm"
+          : "border-transparent text-muted-foreground/80 hover:border-[var(--hairline-hover)] hover:text-foreground"
+      )}
+    >
+      <Icon className="size-4" aria-hidden="true" />
+    </button>
+  );
+}
+
+/* --------------------------- the shell ------------------------------ */
+
+export function EvolveMed() {
+  const exitEvolveMed = useMirror((s) => s.exitEvolveMed);
+  const setEmVector = useMirror((s) => s.setEmVector);
+  const emMessages = useMirror((s) => s.emMessages);
+  const [place, setPlace] = useState<EmPlace>("chat");
+  const t = useT();
+
+  /* The voice button narrates the latest revelation with the
+     gentleman narrator — a man, gentle and natural. */
+  const latest = useMemo(
+    () => [...emMessages].reverse().find((m) => m.role === "em"),
+    [emMessages]
+  );
+  const voiceText = latest
+    ? `${latest.text}${latest.formulas?.length ? `. ${latest.formulas.join(". ")}` : ""}`
+    : "";
+
+  return (
+    <div className="scope-evolvemed relative flex h-full flex-col">
+      {/* ---------- top bar with the single bridge back to the app ---------- */}
+      <header className="relative z-30 shrink-0 border-b hairline bg-[var(--glass-bg)] backdrop-blur-xl">
+        <div className="flex h-14 items-center justify-between gap-2 px-3 sm:gap-3 sm:px-5">
+          <button
+            type="button"
+            onClick={exitEvolveMed}
+            className="focus-glow group flex h-9 items-center gap-2 rounded-full border hairline px-3 text-[14px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground sm:px-3.5"
+          >
+            <ArrowLeft
+              className="size-3.5 transition-transform duration-300 group-hover:-translate-x-0.5"
+              aria-hidden="true"
+            />
+            <span className="hidden sm:inline">{t("Return to the Observatory")}</span>
+            <span className="sm:hidden">{t("Back")}</span>
+          </button>
+
+          {/* the chambers — at the very top, between back and the voice */}
+          <nav
+            role="tablist"
+            aria-label={t("Evolve Med chambers")}
+            className="flex items-center gap-1 sm:gap-1.5"
+          >
+            <HeaderTab
+              active={place === "chat"}
+              onClick={() => setPlace("chat")}
+              icon={Activity}
+              label="The Nexus"
+            />
+            {EM_PLACES.map(({ id, label, icon: Icon }) => (
+              <HeaderTab
+                key={id}
+                active={place === id}
+                onClick={() => setPlace(id)}
+                icon={Icon}
+                label={label}
+              />
+            ))}
+          </nav>
+
+          <div className="flex shrink-0 items-center gap-2">
+            {/* the voice — narrates the latest revelation, a man's gentle
+                natural voice, at the very top as asked */}
+            {voiceText ? (
+              <ListenButton
+                text={voiceText}
+                cacheKey="em-top-narration"
+                variant="icon"
+                className="size-9"
+                voice="regent"
+              />
+            ) : (
+              <span
+                className="flex size-9 items-center justify-center rounded-full border hairline text-muted-foreground/40"
+                aria-hidden="true"
+                title={t("The voice waits for the first revelation")}
+              >
+                <AudioLines className="size-4" />
+              </span>
+            )}
+            <span
+              className="flex size-9 items-center justify-center rounded-full border hairline"
+              aria-hidden="true"
+            >
+              <Microscope className="size-4 text-[var(--gd)]" />
+            </span>
+          </div>
+        </div>
+      </header>
+
+      {/* ---------- the nexus ---------- */}
+      <main className="nice-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        <div className="mx-auto flex h-full w-full max-w-[1020px] flex-col px-4 pb-5 sm:px-6">
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col pt-4">
+            {place === "chat" ? (
+              <EvolveMedChat />
+            ) : (
+              <div className="nice-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1">
+                <motion.div
+                  key={place}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.45 }}
+                  className="pb-8"
+                >
+                  {/* return to the nexus */}
+                  <div className="mb-4 flex justify-center">
+                    <button
+                      type="button"
+                      onClick={() => setPlace("chat")}
+                      className="focus-glow group flex h-8 items-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--scope-a)_30%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_7%,transparent)] px-3.5 text-[13.5px] font-medium text-foreground/85 transition-all duration-300 hover:border-[color-mix(in_srgb,var(--scope-a)_50%,transparent)]"
+                    >
+                      <Activity className="size-3.5 text-[var(--scope-a)]" aria-hidden="true" />
+                      {t("Back to the Nexus")}
+                    </button>
+                  </div>
+
+                  {place === "vectors" && (
+                    <EmVectorsTab
+                      onOpenInNexus={(vectorId) => {
+                        if (vectorId) setEmVector(vectorId);
+                        setPlace("chat");
+                      }}
+                    />
+                  )}
+                  {place === "instruments" && <EmInstrumentsTab />}
+                  {place === "codex" && <EmCodexTab />}
+                </motion.div>
+              </div>
+            )}
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}

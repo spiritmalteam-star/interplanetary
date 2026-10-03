@@ -34,6 +34,7 @@ import {
 } from "@/lib/artifact-intent";
 import type { RemedyKind } from "@/lib/data/remedy";
 import { pxScopes } from "@/lib/data/particlex";
+import { emVectors } from "@/lib/data/evolvemed";
 
 export type ModalState =
   | { type: "federation" }
@@ -139,7 +140,8 @@ export type MainView =
   | "akashic"
   | "invent"
   | "dreambook"
-  | "particlex";
+  | "particlex"
+  | "evolvemed";
 export type RegisterKind = DossierKind;
 
 /* -------- direct line to the Mirror Entity OS (reality refining) ------- */
@@ -162,6 +164,17 @@ export interface PxMessage {
   role: "visitor" | "px";
   text: string;
   /** The formulas that ran this revelation (ParticleX notation). */
+  formulas?: string[];
+  seal?: string;
+}
+
+/* -------- the evolutionary medical nexus — Evolve Med's own line -------- */
+
+export interface EmMessage {
+  id: string;
+  role: "visitor" | "em";
+  text: string;
+  /** The mechanisms that ran this revelation (nexus notation). */
   formulas?: string[];
   seal?: string;
 }
@@ -219,6 +232,16 @@ interface MirrorState {
   pxScope: string | null;
   /** Scope fusion — up to two scope ids melted into one seeing. */
   pxFusion: string[];
+
+  /* Evolve Med — the evolutionary medical nexus (fully independent) */
+  emMessages: EmMessage[];
+  emStatus: TransmissionStatus;
+  emError: string | null;
+  emDraft: string;
+  /** The active vector window id (an emVectors id) or null. */
+  emVector: string | null;
+  /** Vector fusion — up to two vector ids melted into one architecture. */
+  emFusion: string[];
 
   /* THE FORGE — the Invent book's own direct chat + mystery creation */
   forgeSession: ScopeSession;
@@ -326,6 +349,14 @@ interface MirrorState {
   setPxFusion: (ids: string[] | ((prev: string[]) => string[])) => void;
   askPX: (question: string) => Promise<void>;
 
+  /* Evolve Med — the evolutionary medical nexus (fully independent) */
+  openEvolveMed: () => void;
+  exitEvolveMed: () => void;
+  setEmDraft: (v: string) => void;
+  setEmVector: (id: string | null) => void;
+  setEmFusion: (ids: string[] | ((prev: string[]) => string[])) => void;
+  askEM: (question: string) => Promise<void>;
+
   openLab: () => void;
   exitLab: () => void;
   setLabIntention: (v: string) => void;
@@ -412,6 +443,13 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   pxDraft: "",
   pxScope: null,
   pxFusion: [],
+
+  emMessages: [],
+  emStatus: "idle" as TransmissionStatus,
+  emError: null,
+  emDraft: "",
+  emVector: null,
+  emFusion: [],
 
   forgeSession: emptySession(),
   mysteryStatus: "idle" as MysteryStatus,
@@ -1168,6 +1206,100 @@ export const useMirror = create<MirrorState>()((set, get) => ({
           err instanceof Error
             ? err.message
             : "ParticleX is momentarily quiet. Rest, then reach again.",
+      });
+    }
+  },
+
+  /* ------------- Evolve Med — the evolutionary medical nexus ------------- */
+
+  /** Evolve Med is its own world: opening it suspends every other
+      surface, exactly like ParticleX does. */
+  openEvolveMed: () =>
+    set({ view: "evolvemed", mobileNavOpen: false, modal: null }),
+
+  exitEvolveMed: () => set({ view: "observatory" }),
+
+  setEmDraft: (v) => set({ emDraft: v }),
+  setEmVector: (id) => set({ emVector: id }),
+  setEmFusion: (ids) =>
+    set((s) => ({
+      emFusion: (
+        typeof ids === "function" ? ids(s.emFusion) : ids
+      ).slice(0, 2),
+    })),
+
+  askEM: async (question) => {
+    const query = question.trim();
+    if (!query || get().emStatus === "loading") return;
+
+    const visitorId = nextMessageId();
+    set((s) => ({
+      emStatus: "loading",
+      emError: null,
+      emDraft: "",
+      emMessages: [
+        ...s.emMessages,
+        { id: visitorId, role: "visitor" as const, text: query },
+      ],
+    }));
+
+    try {
+      const history = get()
+        .emMessages.filter((m) => m.id !== visitorId)
+        .slice(-10)
+        .map((m) => ({ role: m.role, text: m.text }));
+      const { emVector, emFusion } = get();
+      const vectorName = emVector
+        ? (emVectors.find((s) => s.id === emVector)?.name ?? null)
+        : null;
+      const fusionNames = emFusion
+        .map((id) => emVectors.find((s) => s.id === id)?.name)
+        .filter((n): n is string => Boolean(n));
+
+      const res = await fetch("/api/evolve-med", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query,
+          history,
+          language: get().language,
+          scope: vectorName,
+          fusion: fusionNames.length === 2 ? fusionNames : [],
+        }),
+      });
+      const data = (await res.json().catch(() => null)) as {
+        revelation?: string;
+        formulas?: string[];
+        seal?: string;
+        error?: string;
+      } | null;
+      if (!res.ok) {
+        throw new Error(
+          (data && data.error) ||
+            "Evolve Med is momentarily quiet. Rest, then reach again."
+        );
+      }
+
+      set((s) => ({
+        emStatus: "ready",
+        emMessages: [
+          ...s.emMessages,
+          {
+            id: nextMessageId(),
+            role: "em" as const,
+            text: data?.revelation ?? "",
+            formulas: Array.isArray(data?.formulas) ? data.formulas : [],
+            seal: typeof data?.seal === "string" ? data.seal : "— Evolve Med",
+          },
+        ],
+      }));
+    } catch (err) {
+      set({
+        emStatus: "error",
+        emError:
+          err instanceof Error
+            ? err.message
+            : "Evolve Med is momentarily quiet. Rest, then reach again.",
       });
     }
   },
