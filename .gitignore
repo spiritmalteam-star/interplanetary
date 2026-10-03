@@ -56,3 +56,6 @@ tool-results/
 
 # generated artwork gallery (the image engine paints here)
 .visualizations/
+
+# local database — runtime data, never publish
+/db/
