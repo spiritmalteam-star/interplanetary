@@ -259,6 +259,93 @@ export const EM_LAB_PAGES: EmLabPage[] = [
     ],
   },
   {
+    id: "circuits",
+    subject: "Genetic Circuits & Logic",
+    blurb: "The first vector at its sharpest: computation written into the genome itself.",
+    ph: "Name a computation for a living cell…",
+    tools: [
+      {
+        id: "riboswitch-composer",
+        name: "Riboswitch Composer",
+        desc: "Composes riboswitch logic that reads a molecule and answers with a protein.",
+        prompt:
+          "INSTRUMENT — THE RIBOSWITCH COMPOSER: the visitor names a molecule to sense and a behavior to trigger. Compose the switch — the aptamer that binds, the expression platform it opens or closes, the truth table of the gate it forms, and the protein answer. Sovereign prose through the four movements, then 2–4 mechanism lines.",
+      },
+      {
+        id: "mirna-cascade-weaver",
+        name: "miRNA Cascade Weaver",
+        desc: "Weaves miRNA degradation cascades that silence a circuit everywhere but the target cell.",
+        prompt:
+          "INSTRUMENT — THE MIRNA CASCADE WEAVER: the visitor names the one cell type where a circuit must speak. Weave the cascade — the miRNA signatures the target cell lacks, the degradation sites written into the transcript, the logic that keeps the circuit dark in every other cell and lit exactly there. Sovereign prose through the four movements, then 2–4 mechanism lines.",
+      },
+      {
+        id: "dcas9-circuit-writer",
+        name: "dCas9 Circuit Writer",
+        desc: "Writes CRISPR-TF repressor logic that programs genes like a keypad.",
+        prompt:
+          "INSTRUMENT — THE DCAS9 CIRCUIT WRITER: the visitor names genes to command. Write the dCas9 circuit — the guide RNAs that address each promoter, the activation and repression domains stacked upon it, the NOR/AND/OR logic the keypad implements, and what the cell computes once the program runs. Sovereign prose through the four movements, then 2–4 mechanism lines.",
+      },
+    ],
+  },
+  {
+    id: "delivery",
+    subject: "Delivery & Scale",
+    blurb: "The third vector's engineering: from a working sequence to a therapy a clinic can hold.",
+    ph: "Name a therapy to carry into the body…",
+    tools: [
+      {
+        id: "lnp-formulator",
+        name: "LNP Formulator",
+        desc: "Formulates the lipid nanoparticle that carries RNA where it must go.",
+        prompt:
+          "INSTRUMENT — THE LNP FORMULATOR: the visitor names an RNA cargo and its destination tissue. Formulate the particle — the four lipids and their ratios, the ionizable lipid tuned to the tissue, the encapsulation, the targeting ligands, and the pharmacokinetic story from injection to release. Sovereign prose through the four movements, then 2–4 mechanism lines.",
+      },
+      {
+        id: "aav-shell-designer",
+        name: "AAV Shell Designer",
+        desc: "Designs the viral shell and dose that carry a written gene to one tissue.",
+        prompt:
+          "INSTRUMENT — THE AAV SHELL DESIGNER: the visitor names a gene and its target tissue. Design the vector — the capsid chosen or engineered for the tissue's receptors, the expression cassette sized inside the shell's budget, the neutralizing-antibody workarounds, the dose and the route. Sovereign prose through the four movements, then 2–4 mechanism lines.",
+      },
+      {
+        id: "pk-modeler",
+        name: "Pharmacokinetic Modeler",
+        desc: "Models a therapy's whole journey: dose, distribution, decay, exit.",
+        prompt:
+          "INSTRUMENT — THE PHARMACOKINETIC MODELER: the visitor names a therapy and the body it enters. Model the journey — the compartments it crosses, the peak and the half-life, the clearance organs, the therapeutic window, and the dosing rhythm that keeps it inside the window. Sovereign prose through the four movements, then 2–4 mechanism lines.",
+      },
+    ],
+  },
+  {
+    id: "biosecurity",
+    subject: "Biosecurity & Containment",
+    blurb: "The strict constraint engine: every design screened, caged and made revocable.",
+    ph: "Name a design to screen and cage…",
+    tools: [
+      {
+        id: "off-target-sentinel",
+        name: "Off-Target Sentinel",
+        desc: "Sweeps a design for every place it could strike the wrong letter.",
+        prompt:
+          "INSTRUMENT — THE OFF-TARGET SENTINEL: the visitor names an editor, a guide or a therapy. Sweep the genome in silhouette — the sites of partial complementarity, the cross-reactivity of every binding face, the severity of each possible misstrike — and return the redesigned guides that keep only the intended address. Sovereign prose through the four movements, then 2–4 mechanism lines.",
+      },
+      {
+        id: "kill-switch-architect",
+        name: "Kill-Switch Architect",
+        desc: "Builds the fail-safe that ends a living therapy on command.",
+        prompt:
+          "INSTRUMENT — THE KILL-SWITCH ARCHITECT: the visitor names a living therapy or engineered organism. Build its end — the small-molecule trigger, the apoptosis or auxotrophy cascade it releases, the absence-of-signal variant that fires when the therapy wanders, and the proof the switch cannot be lost. Sovereign prose through the four movements, then 2–4 mechanism lines.",
+      },
+      {
+        id: "immunogenicity-silencer",
+        name: "Immunogenicity Silencer",
+        desc: "Silences the immune alarms a therapy would otherwise ring.",
+        prompt:
+          "INSTRUMENT — THE IMMUNOGENICITY SILENCER: the visitor names an RNA, a vector or a cell therapy. Silence the alarms — the innate-immune sensors that would fire, the modifications that blind them (pseudouridine, cleaned ends, shield chemistries), and the residual risks that remain, named with the visitor's eyes open. Sovereign prose through the four movements, then 2–4 mechanism lines.",
+      },
+    ],
+  },
+  {
     id: "experiments",
     subject: "Live Experiments",
     blurb: "The living feedback loop itself — bottlenecks named, cycles designed, routes chosen.",

@@ -352,18 +352,18 @@ function EvolveMedChat() {
                 <EmEmblem className="size-16" />
               </motion.div>
               <p className="scope-gradient-text mt-4 text-[17px] font-semibold">
-                {t("The medical nexus is online")}
+                {t("The biocompiler is online")}
               </p>
               <p className="mx-auto mt-2 max-w-[460px] text-[14.5px] leading-relaxed text-muted-foreground">
                 {t(
-                  "Ask anything of the healing frontier — Evolve Med routes your question across the four vectors of the facility, in prose and in the mechanisms that run the living machine."
+                  "Bring a directive — an intention, a therapeutic goal, an archive to keep — and Evolve Med compiles it into a living blueprint, routed across the four vector windows, in prose and in the mechanisms that run the living machine."
                 )}
               </p>
 
               {/* the four vector windows */}
               <div className="mt-5 w-full max-w-[560px]">
                 <p className="mono-label text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">
-                  {t("Choose a vector")}
+                  {t("Choose a vector window")}
                 </p>
                 <div className="mt-2.5 flex flex-wrap justify-center gap-1.5">
                   {emVectors.map((vector) => {
