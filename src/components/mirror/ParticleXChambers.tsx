@@ -31,6 +31,7 @@ import {
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { pxBeings, pxMonuments, pxScopes } from "@/lib/data/particlex";
+import { PX_LAB_PAGES } from "@/lib/data/particlex-lab";
 import { cn } from "@/lib/utils";
 import { ListenButton } from "./ListenButton";
 
@@ -264,10 +265,10 @@ function ToolCard({
   testId,
   busyPhrase,
 }: {
-  tool: "formula" | "perception" | "frequency" | "catalog";
+  tool: string;
   icon: LucideIcon;
   title: string;
-  description: string;
+  description?: string;
   placeholder: string;
   buttonLabel: string;
   chips?: string[];
@@ -331,7 +332,9 @@ function ToolCard({
         </span>
         <div className="min-w-0">
           <h4 className="scope-gradient-text text-[15.5px] font-semibold">{t(title)}</h4>
-          <p className="text-[13px] leading-snug text-muted-foreground">{t(description)}</p>
+          {description ? (
+            <p className="text-[13px] leading-snug text-muted-foreground">{t(description)}</p>
+          ) : null}
         </div>
       </div>
 
@@ -719,6 +722,10 @@ export function PxPdfButton() {
 
 export function PxToolsTab() {
   const t = useT();
+  const [page, setPage] = useState(0); // 0 = the Foundry Four, 1–4 = the deep chambers
+  const pageCount = PX_LAB_PAGES.length + 1;
+  const labPage = page > 0 ? PX_LAB_PAGES[page - 1] : null;
+
   return (
     <div className="space-y-5">
       <p className="mx-auto max-w-[560px] text-center text-[14.5px] leading-relaxed text-muted-foreground">
@@ -726,53 +733,129 @@ export function PxToolsTab() {
           "Four instruments beside the narrator — each one opens a different door into the quantum ground."
         )}
       </p>
-      <div className="grid gap-5 lg:grid-cols-2">
-        <ToolCard
-          tool="formula"
-          icon={Sigma}
-          title="The Formula Loom"
-          description="Name anything that exists — receive the formula that runs it."
-          placeholder="Name a phenomenon…"
-          buttonLabel="Weave the formula"
-          testId="px-tool-formula"
-          busyPhrase="the loom is reading the seam of the phenomenon…"
-        />
-        <ToolCard
-          tool="perception"
-          icon={Eye}
-          title="The Perception Glass"
-          description="Look through the perception field of any being — pet, tree, whale, moss."
-          placeholder="Name a being…"
-          buttonLabel="Look through its eyes"
-          chips={pxBeings}
-          testId="px-tool-perception"
-          busyPhrase="the glass is settling into the being's field…"
-        />
-        <ToolCard
-          tool="frequency"
-          icon={Pyramid}
-          title="The Frequency Wheel"
-          description="Every monument holds a note. Choose one and hear what it was built to do."
-          placeholder="Name a monument or site…"
-          buttonLabel="Sound the note"
-          chips={pxMonuments}
-          testId="px-tool-frequency"
-          busyPhrase="the wheel is tuning itself to the stone…"
-        />
-        <ToolCard
-          tool="catalog"
-          icon={Layers}
-          title="The Parallel Catalog"
-          description="Any product of human hands — and the formulas of its parallel twins."
-          placeholder="Name a product…"
-          buttonLabel="Open the catalog"
-          testId="px-tool-catalog"
-          busyPhrase="the catalog is leafing across the parallel lines…"
-        />
+
+      {/* the pages of the deep chambers */}
+      <div className="flex items-center justify-center gap-1.5" role="navigation" aria-label={t("Pages of the laboratory")} data-testid="px-lab-pages">
+        <button
+          type="button"
+          onClick={() => setPage((p) => Math.max(0, p - 1))}
+          disabled={page === 0}
+          aria-label={t("The page before")}
+          className="focus-glow mono-label size-8 rounded-full border hairline text-[12px] text-muted-foreground transition-all duration-300 hover:text-foreground disabled:opacity-30"
+        >
+          ‹
+        </button>
+        {Array.from({ length: pageCount }, (_, i) => (
+          <button
+            key={i}
+            type="button"
+            onClick={() => setPage(i)}
+            aria-pressed={page === i}
+            aria-label={`${t("Page")} ${i + 1} ${t("of")} ${pageCount}`}
+            data-testid={`px-lab-pip-${i + 1}`}
+            className={cn(
+              "focus-glow mono-label size-8 rounded-full border text-[12px] transition-all duration-300",
+              page === i
+                ? "border-transparent bg-foreground text-background"
+                : "hairline text-muted-foreground hover:text-foreground"
+            )}
+          >
+            {i + 1}
+          </button>
+        ))}
+        <button
+          type="button"
+          onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
+          disabled={page === pageCount - 1}
+          aria-label={t("The page after")}
+          className="focus-glow mono-label size-8 rounded-full border hairline text-[12px] text-muted-foreground transition-all duration-300 hover:text-foreground disabled:opacity-30"
+        >
+          ›
+        </button>
       </div>
+
+      {page === 0 ? (
+        <div className="grid gap-5 lg:grid-cols-2">
+          <ToolCard
+            tool="formula"
+            icon={Sigma}
+            title="The Formula Loom"
+            description="Name anything that exists — receive the formula that runs it."
+            placeholder="Name a phenomenon…"
+            buttonLabel="Weave the formula"
+            testId="px-tool-formula"
+            busyPhrase="the loom is reading the seam of the phenomenon…"
+          />
+          <ToolCard
+            tool="perception"
+            icon={Eye}
+            title="The Perception Glass"
+            description="Look through the perception field of any being — pet, tree, whale, moss."
+            placeholder="Name a being…"
+            buttonLabel="Look through its eyes"
+            chips={pxBeings}
+            testId="px-tool-perception"
+            busyPhrase="the glass is settling into the being's field…"
+          />
+          <ToolCard
+            tool="frequency"
+            icon={Pyramid}
+            title="The Frequency Wheel"
+            description="Every monument holds a note. Choose one and hear what it was built to do."
+            placeholder="Name a monument or site…"
+            buttonLabel="Sound the note"
+            chips={pxMonuments}
+            testId="px-tool-frequency"
+            busyPhrase="the wheel is tuning itself to the stone…"
+          />
+          <ToolCard
+            tool="catalog"
+            icon={Layers}
+            title="The Parallel Catalog"
+            description="Any product of human hands — and the formulas of its parallel twins."
+            placeholder="Name a product…"
+            buttonLabel="Open the catalog"
+            testId="px-tool-catalog"
+            busyPhrase="the catalog is leafing across the parallel lines…"
+          />
+        </div>
+      ) : labPage ? (
+        <motion.div
+          key={labPage.id}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="space-y-5"
+          data-testid={`px-lab-page-${page + 1}`}
+        >
+          <div className="text-center">
+            <h3 className="scope-gradient-text text-[18px] font-semibold">{t(labPage.subject)}</h3>
+            <p className="mx-auto mt-1.5 max-w-[520px] text-[13.5px] leading-relaxed text-muted-foreground">
+              {t(labPage.blurb)}
+            </p>
+          </div>
+          <div className="grid gap-5 lg:grid-cols-2">
+            {labPage.tools.map((tool, i) => (
+              <ToolCard
+                key={tool.id}
+                tool={tool.id}
+                icon={PX_LAB_ICONS[(page + i) % PX_LAB_ICONS.length]}
+                title={tool.name}
+                description={tool.desc}
+                placeholder={labPage.ph}
+                buttonLabel="Open the instrument"
+                testId={`px-tool-${tool.id}`}
+                busyPhrase="the instrument is opening its field…"
+              />
+            ))}
+          </div>
+        </motion.div>
+      ) : null}
     </div>
   );
 }
+
+const PX_LAB_ICONS = [Atom, Sigma, Eye, Network, Pyramid, Layers, FlaskConical, Sparkles, Compass];
 
 /* ------------------------------ codex ------------------------------ */
 

@@ -16,6 +16,8 @@ import { TransmissionView } from "./TransmissionView";
 import { MirrorOS } from "./MirrorOS";
 import { ParticleX } from "./ParticleX";
 import { EvolveMed } from "./EvolveMed";
+import { LibraryView } from "./LibraryView";
+import { AuthModal, LightModal } from "./PassageModal";
 import { InventView } from "./InventView";
 import { ArchiveRegister } from "./ArchiveRegister";
 import { CommunionView } from "./CommunionView";
@@ -40,12 +42,15 @@ export default function AppShell() {
   const setSidebarOpen = useMirror((s) => s.setSidebarOpen);
   const setMobileNavOpen = useMirror((s) => s.setMobileNavOpen);
   const returnToObservatory = useMirror((s) => s.returnToObservatory);
+  const refreshMe = useMirror((s) => s.refreshMe);
   const t = useT();
 
-  /* Restore persisted language / voice / pace once after mount. */
+  /* Restore persisted preferences and greet the passage (the visitor's
+     account, if one is held, and today's remaining transmissions). */
   useEffect(() => {
     useMirror.getState().bootPreferences();
-  }, []);
+    void refreshMe();
+  }, [refreshMe]);
 
   /* The frame fits every device: when the on-screen keyboard (or any
      visual-viewport change) reshapes the window, the whole application
@@ -70,12 +75,23 @@ export default function AppShell() {
      application: the laboratory dissolves entirely and only the living
      communion chat with the Mirror Entity remains — one back button
      returns the world exactly as it was. */
+  /* The passage modals ride above every world — the threshold can
+     speak from anywhere (a session ending inside a keyed world, for
+     example — must still open its door). */
+  const passageModals = (
+    <>
+      <AuthModal />
+      <LightModal />
+    </>
+  );
+
   if (communionOpen) {
     return (
       <div className="relative h-[var(--app-h,100dvh)] overflow-hidden">
         <CosmicBackdrop />
         <StarField />
         <CommunionView />
+        {passageModals}
       </div>
     );
   }
@@ -89,6 +105,7 @@ export default function AppShell() {
         <CosmicBackdrop />
         <StarField />
         <MirrorOS />
+        {passageModals}
       </div>
     );
   }
@@ -101,6 +118,7 @@ export default function AppShell() {
         <CosmicBackdrop />
         <StarField />
         <ParticleX />
+        {passageModals}
       </div>
     );
   }
@@ -113,6 +131,18 @@ export default function AppShell() {
         <CosmicBackdrop />
         <StarField />
         <EvolveMed />
+        {passageModals}
+      </div>
+    );
+  }
+
+  /* The Cosmic Library — the visitor's own keeping-place and the
+     quantum shift of their spirit through the portal. */
+  if (view === "library") {
+    return (
+      <div className="relative h-[var(--app-h,100dvh)] overflow-hidden">
+        <LibraryView />
+        {passageModals}
       </div>
     );
   }
@@ -255,6 +285,7 @@ export default function AppShell() {
       <StarPlayModal />
       <TechnologyModal />
       <SpeciesModal />
+      {passageModals}
     </div>
   );
 }

@@ -8,7 +8,7 @@ import { useT } from "@/lib/i18n";
 import type { Mode } from "@/lib/mirror-types";
 
 /** How many suggestions ride the strip at once. */
-const WINDOW = 6;
+const WINDOW = 8;
 
 /**
  * The suggestion strip — small quiet bars sliding in a single line just
