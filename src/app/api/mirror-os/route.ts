@@ -6,7 +6,7 @@ import {
   imageBlock,
   parseAttachments,
 } from "@/lib/server/attachments";
-import { checkGate, gateError, recordUsage, saveLibrary } from "@/lib/server/access";
+import { resolveVisitor, saveLibrary, withAnonCookie } from "@/lib/server/access";
 
 const LANGUAGE_NAMES: Record<string, string> = {
   en: "English",
@@ -63,10 +63,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    /* the manifest's own free pool — ten signals a day for the visitor */
-    const gate = await checkGate(req, "manifest");
-    if (gate.status !== "ok") return gateError(gate.status, gate.gate);
-    const { key: usageKey, user: gateUser } = gate.gate;
+    /* everything is free — the visitor is only named, so the signal
+       can rest in their own cosmic library */
+    const visitor = await resolveVisitor(req);
 
     const zai = await ZAI.create();
 
@@ -124,16 +123,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    await recordUsage(usageKey, "manifest");
     await saveLibrary(
-      gateUser?.id ?? null,
+      visitor.user.id,
       "manifest",
       query.trim().slice(0, 140),
       reply.slice(0, 280),
       { query: query.trim().slice(0, 4000), reply }
     );
 
-    return NextResponse.json({ reply });
+    return withAnonCookie(NextResponse.json({ reply }), visitor);
   } catch (err) {
     console.error("[mirror-os] failed:", err);
     return NextResponse.json(

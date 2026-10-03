@@ -145,7 +145,7 @@ export type MainView =
   | "library";
 export type RegisterKind = DossierKind;
 
-/* -------- the passage — the visitor's account and daily light -------- */
+/* -------- the passage — the visitor's account and the free door -------- */
 
 export interface MeUser {
   email: string;
@@ -153,10 +153,29 @@ export interface MeUser {
   tier: "crystalline" | "light";
 }
 
-export interface MeUsage {
-  used: number;
-  limit: number | null; // null = boundless (the Light passage)
-  remaining: number | null;
+/* -------- the dream book's keeping — a volume brought back -------- */
+
+export interface DreamBookResumePage {
+  n: number;
+  chapter?: string;
+  paragraphs: string[];
+}
+
+export interface DreamBookResume {
+  /** The library entry the volume lives in — updates ride to it. */
+  bookId: string;
+  config: { age: string; tale: string; volume: string; topic: string };
+  meta: {
+    title: string;
+    subtitle: string;
+    sigil: string;
+    axiom: string;
+    dedication: string;
+    totalPages: number;
+  };
+  pages: DreamBookResumePage[];
+  threads: string;
+  ended: boolean;
 }
 
 /* -------- direct line to the Mirror Entity OS (reality refining) ------- */
@@ -258,22 +277,27 @@ interface MirrorState {
   /** Vector fusion — up to two vector ids melted into one architecture. */
   emFusion: string[];
 
-  /* The passage — the visitor's account, daily thresholds, modals */
+  /* The passage — the visitor's account and modals. Everything is free:
+     the passage only keeps the cosmic library with its one owner. */
   me: MeUser | null;
-  usage: MeUsage | null;
   googleConfigured: boolean;
   authOpen: boolean;
-  authMode: "signin" | "register" | "gate";
-  authWorld: "dreambook" | "quantum" | "evolvemed" | null;
-  lightOpen: boolean;
+  authMode: "signin" | "register";
+  profileOpen: boolean;
   refreshMe: () => Promise<void>;
   setMe: (user: MeUser | null) => void;
-  openAuth: (mode: "signin" | "register" | "gate", world?: "dreambook" | "quantum" | "evolvemed" | null) => void;
+  openAuth: (mode?: "signin" | "register") => void;
   closeAuth: () => void;
-  openLight: () => void;
-  closeLight: () => void;
+  openProfile: () => void;
+  closeProfile: () => void;
   signOut: () => Promise<void>;
   openLibrary: () => void;
+
+  /* A volume brought back from the cosmic library, waiting to be read
+     and continued where it was left. */
+  dreamResume: DreamBookResume | null;
+  resumeDreamBook: (resume: DreamBookResume) => void;
+  clearDreamResume: () => void;
 
   /* THE FORGE — the Invent book's own direct chat + mystery creation */
   forgeSession: ScopeSession;
@@ -484,12 +508,11 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   emFusion: [],
 
   me: null,
-  usage: null,
   googleConfigured: false,
   authOpen: false,
   authMode: "signin" as const,
-  authWorld: null,
-  lightOpen: false,
+  profileOpen: false,
+  dreamResume: null,
 
   forgeSession: emptySession(),
   mysteryStatus: "idle" as MysteryStatus,
@@ -565,14 +588,9 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   /* -------- The Dream Book --------
      A world of its own: the magical atelier where tales are woven
      from resonance and read as they are being written.
-     It opens only with the Crystalline key. */
-  openDreamBook: () => {
-    if (!get().me) {
-      set({ authOpen: true, authMode: "gate", authWorld: "dreambook", mobileNavOpen: false, modal: null });
-      return;
-    }
-    set({ view: "dreambook", mobileNavOpen: false, modal: null });
-  },
+     Free for every visitor. */
+  openDreamBook: () =>
+    set({ view: "dreambook", mobileNavOpen: false, modal: null }),
   exitDreamBook: () => set({ view: "observatory" }),
 
   /* -------- Communion — the Reflection of the Absolute --------
@@ -945,23 +963,6 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       const data = await res.json().catch(() => null);
 
       if (!res.ok) {
-        /* the threshold spoke: the daily light is spent — open the
-           passage (register when anonymous, the Light when attuned) */
-        if (data?.code === "quota") {
-          set((s) => ({
-            sessions: {
-              ...s.sessions,
-              [mode]: {
-                ...s.sessions[mode],
-                status: "idle",
-                activeQuery: "",
-                draft: query,
-              },
-            },
-            ...(s.me ? { lightOpen: true } : { authOpen: true, authMode: "register" as const, authWorld: null }),
-          }));
-          return;
-        }
         throw new Error(
           (data && data.error) ||
             "The field is momentarily quiet. Rest, then try again."
@@ -1181,19 +1182,17 @@ export const useMirror = create<MirrorState>()((set, get) => ({
 
   exitMirrorOS: () => set({ view: "observatory" }),
 
-  /* ------------- The passage — account, thresholds, light ------------- */
+  /* ------------- The passage — account, free door, profile ------------- */
 
   refreshMe: async () => {
     try {
       const res = await fetch("/api/auth/me");
       const data = (await res.json().catch(() => null)) as {
         user?: MeUser | null;
-        usage?: MeUsage | null;
         googleConfigured?: boolean;
       } | null;
       set({
         me: data?.user ?? null,
-        usage: data?.usage ?? null,
         googleConfigured: Boolean(data?.googleConfigured),
       });
     } catch {
@@ -1203,12 +1202,11 @@ export const useMirror = create<MirrorState>()((set, get) => ({
 
   setMe: (user) => set({ me: user }),
 
-  openAuth: (mode, world = null) =>
-    set({ authOpen: true, authMode: mode, authWorld: world, lightOpen: false }),
-  closeAuth: () => set({ authOpen: false, authWorld: null }),
+  openAuth: (mode = "signin") => set({ authOpen: true, authMode: mode }),
+  closeAuth: () => set({ authOpen: false }),
 
-  openLight: () => set({ lightOpen: true, authOpen: false }),
-  closeLight: () => set({ lightOpen: false }),
+  openProfile: () => set({ profileOpen: true, authOpen: false, mobileNavOpen: false }),
+  closeProfile: () => set({ profileOpen: false }),
 
   signOut: async () => {
     try {
@@ -1216,29 +1214,23 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     } catch {
       /* even if the line is quiet, the visitor leaves cleanly */
     }
-    set({ me: null, usage: null, lightOpen: false, authOpen: false, view: "observatory" });
+    set({ me: null, authOpen: false, profileOpen: false, view: "observatory" });
   },
 
-  /** The visitor's own cosmic library — account required. */
-  openLibrary: () => {
-    if (!get().me) {
-      set({ authOpen: true, authMode: "gate", authWorld: null, mobileNavOpen: false, modal: null });
-      return;
-    }
-    set({ view: "library", mobileNavOpen: false, modal: null });
-  },
+  /** The visitor's own cosmic library — free for everyone. */
+  openLibrary: () =>
+    set({ view: "library", profileOpen: false, mobileNavOpen: false, modal: null }),
+
+  resumeDreamBook: (resume) =>
+    set({ dreamResume: resume, view: "dreambook", profileOpen: false, modal: null, mobileNavOpen: false }),
+  clearDreamResume: () => set({ dreamResume: null }),
 
   /* ---------------- ParticleX — the quantum narrator ---------------- */
 
   /** ParticleX is its own world: opening it suspends every other
-      surface, exactly like the Mirror OS does. Crystalline key only. */
-  openParticleX: () => {
-    if (!get().me) {
-      set({ authOpen: true, authMode: "gate", authWorld: "quantum", mobileNavOpen: false, modal: null });
-      return;
-    }
-    set({ view: "particlex", mobileNavOpen: false, modal: null });
-  },
+      surface, exactly like the Mirror OS does. Free for everyone. */
+  openParticleX: () =>
+    set({ view: "particlex", mobileNavOpen: false, modal: null }),
 
   exitParticleX: () => set({ view: "observatory" }),
 
@@ -1298,18 +1290,6 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         error?: string;
       } | null;
       if (!res.ok) {
-        if (data?.code === "auth" || data?.code === "quota") {
-          set({
-            pxStatus: "idle" as const,
-            pxDraft: query,
-            ...(data.code === "auth"
-              ? { authOpen: true, authMode: "gate" as const, authWorld: "quantum" as const }
-              : get().me
-                ? { lightOpen: true }
-                : { authOpen: true, authMode: "register" as const, authWorld: null }),
-          });
-          return;
-        }
         throw new Error(
           (data && data.error) ||
             "ParticleX is momentarily quiet. Rest, then reach again."
@@ -1345,14 +1325,9 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   /* ------------- Evolve Med — the evolutionary medical nexus ------------- */
 
   /** Evolve Med is its own world: opening it suspends every other
-      surface, exactly like ParticleX does. Crystalline key only. */
-  openEvolveMed: () => {
-    if (!get().me) {
-      set({ authOpen: true, authMode: "gate", authWorld: "evolvemed", mobileNavOpen: false, modal: null });
-      return;
-    }
-    set({ view: "evolvemed", mobileNavOpen: false, modal: null });
-  },
+      surface, exactly like ParticleX does. Free for everyone. */
+  openEvolveMed: () =>
+    set({ view: "evolvemed", mobileNavOpen: false, modal: null }),
 
   exitEvolveMed: () => set({ view: "observatory" }),
 
@@ -1412,18 +1387,6 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         error?: string;
       } | null;
       if (!res.ok) {
-        if (data?.code === "auth" || data?.code === "quota") {
-          set({
-            emStatus: "idle" as const,
-            emDraft: query,
-            ...(data.code === "auth"
-              ? { authOpen: true, authMode: "gate" as const, authWorld: "evolvemed" as const }
-              : get().me
-                ? { lightOpen: true }
-                : { authOpen: true, authMode: "register" as const, authWorld: null }),
-          });
-          return;
-        }
         throw new Error(
           (data && data.error) ||
             "Evolve Med is momentarily quiet. Rest, then reach again."
@@ -1519,18 +1482,6 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       });
       const data = await res.json().catch(() => null);
       if (!res.ok) {
-        if (data?.code === "auth" || data?.code === "quota") {
-          set((s) => ({
-            osStatus: "idle" as const,
-            osDraft: query,
-            ...(data.code === "auth"
-              ? { authOpen: true, authMode: "gate" as const, authWorld: null }
-              : s.me
-                ? { lightOpen: true }
-                : { authOpen: true, authMode: "register" as const, authWorld: null }),
-          }));
-          return;
-        }
         throw new Error(
           (data && data.error) ||
             "The OS is momentarily quiet. Rest, then reach again."

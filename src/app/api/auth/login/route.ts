@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import {
   loginAttemptsExceeded,
+  mergeAnonLibrary,
+  readAnonId,
   setSessionCookie,
   verifyPassword,
 } from "@/lib/server/access";
@@ -38,6 +40,8 @@ export async function POST(req: NextRequest) {
       user: { email: user.email, name: user.name, tier: user.tier === "light" ? "light" : "crystalline" },
     });
     setSessionCookie(res, user.id);
+    /* everything the anonymous cookie kept comes with the visitor */
+    await mergeAnonLibrary(readAnonId(req), user.id);
     return res;
   } catch (err) {
     console.error("[auth/login] failed:", err);

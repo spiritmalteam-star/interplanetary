@@ -15,6 +15,8 @@ import {
   Feather,
   LoaderCircle,
   MoonStar,
+  Pause,
+  Play,
   Sparkles,
   Square,
   Waves,
@@ -100,14 +102,9 @@ const VOLUMES = [
   { id: "saga", label: "Grand saga" },
 ];
 
-/* The narrator voice each book speaks with, chosen by its reader */
-const NARRATOR_VOICE: Record<string, VoiceId> = {
-  little: "pixie",
-  young: "aurora",
-  teen: "nova",
-  grown: "regent",
-  timeless: "aurora",
-};
+/* The narrator voice each book speaks with — THE KIND LADY READER,
+   one warm woman's voice for every volume (never the man). */
+const BOOK_VOICE: VoiceId = "reader";
 
 const ZOOM_STEPS = [15.5, 17.5, 19.5, 21.5, 24];
 
@@ -170,6 +167,7 @@ export function DreamBookView() {
   const [weaveFailed, setWeaveFailed] = useState(false);
   const [zoom, setZoom] = useState(1);
   const [narrating, setNarrating] = useState(false);
+  const [narrPaused, setNarrPaused] = useState(false);
   const [narrLoading, setNarrLoading] = useState(false);
 
   /* ---- the rewriting hand ---- */
@@ -184,6 +182,10 @@ export function DreamBookView() {
   const weavingRef = useRef(false);
   const rewritesRef = useRef<string[]>([]);
   const configRef = useRef({ age, tale, volume, topic });
+  /* the book's own place in its keeper's cosmic library — a fresh
+     volume is given it on open; a volume brought back already has one,
+     and every woven page keeps that entry alive */
+  const bookIdRef = useRef("");
   const narrRef = useRef<{ audio: HTMLAudioElement | null; ready: boolean }>({
     audio: null,
     ready: false,
@@ -196,6 +198,47 @@ export function DreamBookView() {
   const pushLine = useCallback((from: AtelierLine["from"], text: string) => {
     setLines((prev) => [...prev, { id: nextLineId(), from, text }]);
   }, []);
+
+  /* -------- a volume brought back from the cosmic library --------
+     The DreamBookView mounts fresh when the library hands a volume
+     over: the whole book — its pages, its thread, its voice config —
+     is restored, and the reading resumes exactly where it was left. */
+  const dreamResume = useMirror((s) => s.dreamResume);
+  const clearDreamResume = useMirror((s) => s.clearDreamResume);
+  const resumeAppliedRef = useRef(false);
+  useEffect(() => {
+    if (resumeAppliedRef.current) return;
+    const r = dreamResume;
+    if (!r) return;
+    resumeAppliedRef.current = true;
+    bookIdRef.current = r.bookId;
+    pagesRef.current = r.pages.map((p) => ({ ...p, paragraphs: [...p.paragraphs] }));
+    threadsRef.current = r.threads;
+    metaRef.current = { ...r.meta };
+    endedRef.current = r.ended;
+    configRef.current = {
+      age: r.config.age,
+      tale: r.config.tale,
+      volume: r.config.volume,
+      topic: r.config.topic,
+    };
+    setAge(r.config.age);
+    setTale(r.config.tale);
+    setVolume(r.config.volume);
+    setTopic(r.config.topic);
+    setPages(pagesRef.current);
+    setMeta(metaRef.current);
+    setEnded(r.ended);
+    setPageIdx(0);
+    setSlideDir(1);
+    setZoom(1);
+    setStage("reading");
+    pushLine(
+      "weaver",
+      t("The volume returns from your library — exactly where it was left.")
+    );
+    clearDreamResume();
+  }, [dreamResume, clearDreamResume, pushLine, t]);
 
   /* the rewriting hand — wishes that bend the pages yet to come */
   const addRewrite = useCallback((text: string) => {
@@ -240,7 +283,38 @@ export function DreamBookView() {
     narrRef.current.audio = null;
     narrRef.current.ready = false;
     setNarrating(false);
+    setNarrPaused(false);
     setNarrLoading(false);
+  }, []);
+
+  /* the pause — the lady's voice holds its breath exactly where it was,
+     and one touch lets it go on from the same word */
+  const pauseNarration = useCallback(() => {
+    const a = narrRef.current.audio;
+    if (!a) return;
+    try {
+      a.pause();
+    } catch {
+      /* already paused */
+    }
+    setNarrating(false);
+    setNarrPaused(true);
+  }, []);
+
+  const resumeNarration = useCallback(async () => {
+    const a = narrRef.current.audio;
+    if (!a) {
+      setNarrPaused(false);
+      return;
+    }
+    try {
+      await a.play();
+      setNarrating(true);
+      setNarrPaused(false);
+    } catch {
+      /* the browser wants a fresher touch — the button remains ready */
+      narrRef.current.ready = true;
+    }
   }, []);
 
   useEffect(() => stopNarration, [stopNarration]);
@@ -250,6 +324,7 @@ export function DreamBookView() {
      (network, a sleeping gateway) the loom simply tries again
      before ever troubling the visitor. */
 
+  /* the weaving phase — the loom keeps count */
   const weave = useCallback(
     async (
       phase: "open" | "next" | "close" | "extend",
@@ -262,6 +337,22 @@ export function DreamBookView() {
 
       try {
         const recent = pagesRef.current.slice(-2).map(pageText);
+        /* the book's own keeping — when a volume continues (from the
+           cosmic library or from this same evening), its identity and
+           the pages woven so far ride along, so the library entry grows
+           with the story instead of repeating itself */
+        const carrying = phase !== "open" && bookIdRef.current
+          ? {
+              bookId: bookIdRef.current,
+              bookPages: pagesRef.current.map((p) => ({
+                n: p.n,
+                ...(p.chapter ? { chapter: p.chapter } : {}),
+                paragraphs: p.paragraphs,
+              })),
+              bookMeta: metaRef.current ? { ...metaRef.current } : undefined,
+              bookConfig: { ...configRef.current },
+            }
+          : {};
         const payload = JSON.stringify({
           phase,
           language,
@@ -277,6 +368,7 @@ export function DreamBookView() {
                 }
               : {}),
           },
+          ...carrying,
           threads: threadsRef.current || undefined,
           recentPages: recent.length ? recent : undefined,
           pageNumber,
@@ -301,20 +393,18 @@ export function DreamBookView() {
         }
         const data = await res.json().catch(() => null);
         if (!res.ok || !data?.pages?.length) {
-          /* the threshold spoke — open the passage instead of failing */
-          if (data?.code === "auth") {
-            useMirror.getState().openAuth("gate", "dreambook");
-            return false;
-          }
-          if (data?.code === "quota") {
-            if (useMirror.getState().me) useMirror.getState().openLight();
-            else useMirror.getState().openAuth("register");
-            return false;
-          }
+          /* the loom simply speaks for itself when a thread slips —
+             everything in the laboratory is free, so no threshold
+             can ever interrupt the weaving */
           throw new Error(
             data?.error ||
               "The loom fell silent for a moment. Breathe, then weave again."
           );
+        }
+
+        /* a fresh volume's place in the library rides home with it */
+        if (phase === "open" && typeof data.libraryId === "string") {
+          bookIdRef.current = data.libraryId;
         }
 
         const fresh: WeavePage[] = data.pages;
@@ -483,6 +573,7 @@ export function DreamBookView() {
     metaRef.current = null;
     endedRef.current = false;
     rewritesRef.current = [];
+    bookIdRef.current = "";
     setPages([]);
     setMeta(null);
     setEnded(false);
@@ -513,6 +604,12 @@ export function DreamBookView() {
   /* ---------------- the narrator ---------------- */
 
   const narrate = useCallback(async () => {
+    /* a voice holding its breath — let it go on from the same word */
+    const held = narrRef.current.audio;
+    if (held && narrPaused && held.paused) {
+      await resumeNarration();
+      return;
+    }
     /* a voice already prepared and waiting for a fresh touch? */
     const prepared = narrRef.current.audio;
     if (prepared && narrRef.current.ready && prepared.paused) {
@@ -520,6 +617,7 @@ export function DreamBookView() {
       try {
         await prepared.play();
         setNarrating(true);
+        setNarrPaused(false);
       } catch {
         stopNarration();
       }
@@ -532,7 +630,7 @@ export function DreamBookView() {
     stopNarration();
     setNarrLoading(true);
     try {
-      const voice = NARRATOR_VOICE[configRef.current.age] ?? "aurora";
+      const voice = BOOK_VOICE;
       const opening = pageIdx === 0 && meta
         ? `${meta.title}. ${meta.subtitle} ${meta.sigil} ${meta.axiom} ${meta.dedication}`
         : "";
@@ -551,13 +649,16 @@ export function DreamBookView() {
       audio.onended = () => {
         if (narrRef.current.audio === audio) narrRef.current.audio = null;
         setNarrating(false);
+        setNarrPaused(false);
       };
       audio.onerror = () => {
         if (narrRef.current.audio === audio) narrRef.current.audio = null;
         setNarrating(false);
+        setNarrPaused(false);
       };
       await audio.play();
       setNarrating(true);
+      setNarrPaused(false);
     } catch (err) {
       const waiting =
         narrRef.current.audio &&
@@ -577,7 +678,7 @@ export function DreamBookView() {
     } finally {
       setNarrLoading(false);
     }
-  }, [narrating, narrLoading, currentPage, pageIdx, meta, stopNarration, t]);
+  }, [narrating, narrLoading, narrPaused, currentPage, pageIdx, meta, stopNarration, resumeNarration, t]);
 
   /* ---------------- shared ---------------- */
 
@@ -869,6 +970,31 @@ export function DreamBookView() {
               <AudioLines className="size-4" aria-hidden="true" />
             )}
           </button>
+          {/* the pause — the lady's voice holds its breath, one touch
+              returns it to the same word */}
+          {(narrating || narrPaused) && !narrLoading && (
+            <button
+              type="button"
+              onClick={() => {
+                if (narrPaused) void resumeNarration();
+                else pauseNarration();
+              }}
+              data-testid="book-narration-pause"
+              aria-label={narrPaused ? t("Play") : t("Pause")}
+              title={narrPaused ? t("Play") : t("Pause")}
+              className={cn(
+                inkIconBtn,
+                narrPaused &&
+                  "border-transparent bg-foreground text-background hover:opacity-90"
+              )}
+            >
+              {narrPaused ? (
+                <Play className="size-4 fill-current" aria-hidden="true" />
+              ) : (
+                <Pause className="size-4 fill-current" aria-hidden="true" />
+              )}
+            </button>
+          )}
           <button
             type="button"
             onClick={() => setZoom((z) => Math.max(0, z - 1))}

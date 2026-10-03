@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { hashPassword, setSessionCookie } from "@/lib/server/access";
+import { hashPassword, mergeAnonLibrary, readAnonId, setSessionCookie } from "@/lib/server/access";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -42,6 +42,8 @@ export async function POST(req: NextRequest) {
 
     const res = NextResponse.json({ user: publicUser(user) }, { status: 201 });
     setSessionCookie(res, user.id);
+    /* everything the anonymous cookie kept comes with the new passage */
+    await mergeAnonLibrary(readAnonId(req), user.id);
     return res;
   } catch (err) {
     if ((err as { code?: string })?.code === "P2002") {

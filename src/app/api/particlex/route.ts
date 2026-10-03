@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import ZAI from "z-ai-web-dev-sdk";
-import { checkGate, gateError, recordUsage, saveLibrary } from "@/lib/server/access";
+import { resolveVisitor, saveLibrary, withAnonCookie } from "@/lib/server/access";
 import { PX_LAB_PAGES } from "@/lib/data/particlex-lab";
 
 /* ------------------------------------------------------------------ */
@@ -203,10 +203,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    /* the quantum world opens only with the Crystalline key */
-    const gate = await checkGate(req, "quantum");
-    if (gate.status !== "ok") return gateError(gate.status, gate.gate);
-    const { key: usageKey, user: gateUser } = gate.gate;
+    /* everything is free — the visitor is only named, so the revelation
+       can rest in their own cosmic library */
+    const visitor = await resolveVisitor(req);
 
     const zai = await ZAI.create();
 
@@ -278,16 +277,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    await recordUsage(usageKey, "quantum");
     await saveLibrary(
-      gateUser?.id ?? null,
+      visitor.user.id,
       "quantum",
       query.trim().slice(0, 140),
       reply.revelation.slice(0, 280),
       { query: query.trim().slice(0, 4000), reply: reply.revelation, formulas: reply.formulas, seal: reply.seal }
     );
 
-    return NextResponse.json(reply);
+    return withAnonCookie(NextResponse.json(reply), visitor);
   } catch (err) {
     console.error("[particlex] failed:", err);
     return NextResponse.json(

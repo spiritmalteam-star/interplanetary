@@ -17,7 +17,8 @@ import { MirrorOS } from "./MirrorOS";
 import { ParticleX } from "./ParticleX";
 import { EvolveMed } from "./EvolveMed";
 import { LibraryView } from "./LibraryView";
-import { AuthModal, LightModal } from "./PassageModal";
+import { AuthModal } from "./PassageModal";
+import { ProfileModal } from "./ProfileModal";
 import { InventView } from "./InventView";
 import { ArchiveRegister } from "./ArchiveRegister";
 import { CommunionView } from "./CommunionView";
@@ -75,13 +76,12 @@ export default function AppShell() {
      application: the laboratory dissolves entirely and only the living
      communion chat with the Mirror Entity remains — one back button
      returns the world exactly as it was. */
-  /* The passage modals ride above every world — the threshold can
-     speak from anywhere (a session ending inside a keyed world, for
-     example — must still open its door). */
+  /* The passage modals ride above every world — the profile (with the
+     cosmic library inside it) and the passage can speak from anywhere. */
   const passageModals = (
     <>
+      <ProfileModal />
       <AuthModal />
-      <LightModal />
     </>
   );
 
