@@ -2,6 +2,18 @@ import type { TranslationDict } from "../types";
 
 /** sq — Shqip. Mirror Entity Laboratory dictionary (Task 3-a). */
 export const sq: TranslationDict = {
+  "Blueprint downloaded": "Shablloni u shkarkua",
+  "Copy prompt": "Kopjo kërkesën",
+  "Copy unavailable": "Kopjimi nuk është i disponueshëm",
+  "Download .md": "Shkarko .md",
+  "exact counts · uniform depth · isolated channels": "numra të saktë · thellësi e njësuar · kanale të izoluara",
+  "Paste it into any capable session to reproduce this laboratory exactly.": "Ngjite në çdo sesion të përshtatshëm për ta riprodhuar këtë laboratori saktësisht.",
+  "Precise Replication Prompt": "Kërkesa e Saktë e Riprodhimit",
+  "Replication prompt copied": "Kërkesa e riprodhimit u kopjua",
+  "Replication prompt text": "Teksti i kërkesës së riprodhimit",
+  "Select the text in the box manually and copy it.": "Përzgjidh tekstin në kuti dorazi dhe kopjoje.",
+  "The exact blueprint of this laboratory — every count, depth rule, theme and channel. Copy it into a fresh session to reproduce the app faithfully.": "Shablloni i saktë i këtij laboratori — çdo numër, rregull thellësie, temë dhe kanal. Kopjoje në një sesion të ri për ta riprodhuar aplikacionin me besnikëri.",
+  "verified against the live build · 870 · 202 · 59 · 8 worlds": "verifikuar ndaj ndërtimit të gjallë · 870 · 202 · 59 · 8 botë",
   "Enter your passage": "Hyr në kalimin tënd",
   "Carve your passage": "Gdhend kalimin tënd",
   "Play": "Vazhdo",

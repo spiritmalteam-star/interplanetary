@@ -2,6 +2,18 @@ import type { TranslationDict } from "../types";
 
 /** el — Greek dictionary (Task 3-b). Keys are the English source strings. */
 export const el: TranslationDict = {
+  "Blueprint downloaded": "Το σχέδιο κατέβηκε",
+  "Copy prompt": "Αντιγραφή του prompt",
+  "Copy unavailable": "Η αντιγραφή δεν είναι διαθέσιμη",
+  "Download .md": "Λήψη .md",
+  "exact counts · uniform depth · isolated channels": "ακριβείς αριθμοί · ενιαίο βάθος · απομονωμένα κανάλια",
+  "Paste it into any capable session to reproduce this laboratory exactly.": "Επικόλλησέ το σε οποιαδήποτε κατάλληλη συνεδρία για να αναπαράγεις αυτό το εργαστήριο ακριβώς.",
+  "Precise Replication Prompt": "Ακριβές Prompt Αναπαραγωγής",
+  "Replication prompt copied": "Το prompt αναπαραγωγής αντιγράφηκε",
+  "Replication prompt text": "Κείμενο του prompt αναπαραγωγής",
+  "Select the text in the box manually and copy it.": "Επίλεξε χειροκίνητα το κείμενο στο πλαίσιο και αντίγραφέ το.",
+  "The exact blueprint of this laboratory — every count, depth rule, theme and channel. Copy it into a fresh session to reproduce the app faithfully.": "Το ακριβές σχέδιο αυτού του εργαστηρίου — κάθε αριθμός, κανόνας βάθους, θέμα και κανάλι. Αντίγραφέ το σε μια νέα συνεδρία για να αναπαράγεις την εφαρμογή πιστά.",
+  "verified against the live build · 870 · 202 · 59 · 8 worlds": "επαληθευμένο στη ζωντανή έκδοση · 870 · 202 · 59 · 8 κόσμοι",
   "Enter your passage": "Μπλέκε στην πύλη σου",
   "Carve your passage": "Σκάλισε την πύλη σου",
   "Play": "Συνέχεια",
