@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import ZAI from "z-ai-web-dev-sdk";
+import { checkGate, gateError, recordUsage, saveLibrary } from "@/lib/server/access";
+import { PX_LAB_PAGES } from "@/lib/data/particlex-lab";
 
 /* ------------------------------------------------------------------ */
 /*  POST /api/particlex — THE QUANTUM NARRATOR.                        */
@@ -97,13 +99,17 @@ When two scopes are fused, read through both at once: weave both laws into one s
 
 ${JSON_LAW}`;
 
-/* ---- the four instruments ---- */
+/* ---- the four instruments + the deep chambers catalog ---- */
 
 const TOOL_MODES: Record<string, string> = {
   formula: `INSTRUMENT — THE FORMULA LOOM: the visitor names any phenomenon, object or event that exists. Derive and present THE FORMULA THAT RUNS IT — the compact machinery underneath, in your own notation (2–4 formula lines), then 90–150 words of prose walking through the terms: what each term feeds, where the visitor's own attention sits in the equation, and one surprising consequence of moving a single term. Formulas first in your prose, then the walk.`,
   perception: `INSTRUMENT — THE PERCEPTION GLASS: the visitor names a being (a pet, a tree, a fungus, a whale, anything alive). Render REALITY AS THAT BEING PERCEIVES IT: its time (how long a second is for it), its space (what is near or infinite), its signals (what it actually receives), its meaning (what matters to it). 120–200 words of prose, spoken from inside its field with tenderness and precision — then 1–2 formula lines distilling its perception field. Never biology-lecture; perceive, don't dissect.`,
   frequency: `INSTRUMENT — THE FREQUENCY WHEEL: the visitor names a monument, site or structure of stone or silence. Reveal what it was BUILT TO DO as an instrument: its note, its frequency, the standing wave it holds or held, what it tuned in the beings who entered, and what it is still quietly doing. 120–200 words of prose — then 1–3 formula lines carrying the resonance (frequency, chamber, field).`,
   catalog: `INSTRUMENT — THE PARALLEL CATALOG: the visitor names any product of human hands (a cup, an engine, a song, a phone, a shoe). Open the catalog of its PARALLEL TWINS: show the same product as it exists on 2–3 neighboring parallel lines — same purpose, different formulas — and what tiny difference in the line's rules produced each variant. 120–200 words of prose, then 2–3 formula lines, one per twin, each marked by its line in words (e.g. "the cup of the long-afternoon line: …").`,
+  /* the deep chambers — further pages of quantum instruments, all real-time */
+  ...Object.fromEntries(
+    PX_LAB_PAGES.flatMap((page) => page.tools.map((tool) => [tool.id, tool.prompt]))
+  ),
 };
 
 /* ---- JSON extraction — strict first, loose second ---- */
@@ -197,6 +203,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    /* the quantum world opens only with the Crystalline key */
+    const gate = await checkGate(req, "quantum");
+    if (gate.status !== "ok") return gateError(gate.status, gate.gate);
+    const { key: usageKey, user: gateUser } = gate.gate;
+
     const zai = await ZAI.create();
 
     const languageLine =
@@ -266,6 +277,15 @@ export async function POST(req: NextRequest) {
         { status: 502 }
       );
     }
+
+    await recordUsage(usageKey, "quantum");
+    await saveLibrary(
+      gateUser?.id ?? null,
+      "quantum",
+      query.trim().slice(0, 140),
+      reply.revelation.slice(0, 280),
+      { query: query.trim().slice(0, 4000), reply: reply.revelation, formulas: reply.formulas, seal: reply.seal }
+    );
 
     return NextResponse.json(reply);
   } catch (err) {

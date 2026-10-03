@@ -301,6 +301,16 @@ export function DreamBookView() {
         }
         const data = await res.json().catch(() => null);
         if (!res.ok || !data?.pages?.length) {
+          /* the threshold spoke — open the passage instead of failing */
+          if (data?.code === "auth") {
+            useMirror.getState().openAuth("gate", "dreambook");
+            return false;
+          }
+          if (data?.code === "quota") {
+            if (useMirror.getState().me) useMirror.getState().openLight();
+            else useMirror.getState().openAuth("register");
+            return false;
+          }
           throw new Error(
             data?.error ||
               "The loom fell silent for a moment. Breathe, then weave again."
@@ -337,6 +347,9 @@ export function DreamBookView() {
         if (phase === "close") {
           endedRef.current = true;
           setEnded(true);
+        }
+        if (phase === "open") {
+          void useMirror.getState().refreshMe();
         }
         return true;
       } catch {

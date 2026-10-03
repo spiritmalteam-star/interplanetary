@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import ZAI from "z-ai-web-dev-sdk";
+import { checkGate, gateError, recordUsage, saveLibrary } from "@/lib/server/access";
+import { EM_LAB_PAGES } from "@/lib/data/evolvemed-lab";
 
 /* ------------------------------------------------------------------ */
 /*  POST /api/evolve-med — THE EVOLUTIONARY MEDICAL NEXUS.             */
@@ -106,13 +108,17 @@ When two vectors are fused, read through both at once: weave both territories in
 
 ${JSON_LAW}`;
 
-/* ---- the four instruments ---- */
+/* ---- the four instruments of the Foundry + the deep lab catalog ---- */
 
 const TOOL_MODES: Record<string, string> = {
   target: `INSTRUMENT — THE TARGET ENGINE: the visitor names a therapeutic target or a disease (a protein, a pathway, a condition, a senescent state). Map THE DEGRADATION ROUTE: the target's role in the disease machine, the E3-ligase recognition logic, the degrader modality the route favors (PROTAC, molecular glue, or a modality of your own naming), the ubiquitin-proteasome hand-off, and what the cell does once the target is gone. 90–150 words of sovereign prose walking the route, then 2–4 mechanism lines carrying it.`,
   edit: `INSTRUMENT — THE EDITING LOOM: the visitor names a fault in the living code (a mutation, a repeat, a silenced gene, an epigenetic scar). Design THE REWRITING STRATEGY: which editing system the fault calls for (CRISPR-Cas, prime editing, epigenetic rewriting, or a system of your own naming), why that chisel and not another, the delivery architecture, and what the corrected cell becomes. 120–200 words of prose, then 1–3 mechanism lines carrying the rewrite.`,
   fabric: `INSTRUMENT — THE LIVING FOUNDRY: the visitor names a tissue, organ or biological structure. Print ITS ARCHITECTURE: the bioink and the lattice, the vascular logic, the organoid-on-a-chip where the construct is tested alive, and how the printed thing graduates into a living body. 120–200 words of prose, then 1–3 mechanism lines carrying the fabrication.`,
   bridge: `INSTRUMENT — THE BRIDGE: the visitor names a signal of the mind or body (a memory, a spike, a hormone wave, an immune signal). Render ITS TRANSLATION across the meta-biological interface: how the living signal is read into digital information, how AI neural weights learn to hold it, and how the answer is written back into cellular transduction. 120–200 words of prose, then 1–3 mechanism lines carrying the translation in both directions.`,
+  /* the deep lab — ten pages of advanced instruments, all real-time */
+  ...Object.fromEntries(
+    EM_LAB_PAGES.flatMap((page) => page.tools.map((tool) => [tool.id, tool.prompt]))
+  ),
 };
 
 /* ---- JSON extraction — strict first, loose second ---- */
@@ -206,6 +212,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    /* the medical nexus opens only with the Crystalline key */
+    const gate = await checkGate(req, "evolvemed");
+    if (gate.status !== "ok") return gateError(gate.status, gate.gate);
+    const { key: usageKey, user: gateUser } = gate.gate;
+
     const zai = await ZAI.create();
 
     const languageLine =
@@ -275,6 +286,15 @@ export async function POST(req: NextRequest) {
         { status: 502 }
       );
     }
+
+    await recordUsage(usageKey, "evolvemed");
+    await saveLibrary(
+      gateUser?.id ?? null,
+      "evolvemed",
+      query.trim().slice(0, 140),
+      reply.revelation.slice(0, 280),
+      { query: query.trim().slice(0, 4000), reply: reply.revelation, formulas: reply.formulas, seal: reply.seal }
+    );
 
     return NextResponse.json(reply);
   } catch (err) {

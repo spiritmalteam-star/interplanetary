@@ -17,6 +17,9 @@ import {
   Dna,
   Heart,
   Landmark,
+  LibraryBig,
+  LogIn,
+  LogOut,
   MoonStar,
   Mountain,
   NotebookPen,
@@ -519,6 +522,11 @@ export function SidebarContent() {
   const openMirrorOS = useMirror((s) => s.openMirrorOS);
   const openParticleX = useMirror((s) => s.openParticleX);
   const openEvolveMed = useMirror((s) => s.openEvolveMed);
+  const me = useMirror((s) => s.me);
+  const usage = useMirror((s) => s.usage);
+  const openLibrary = useMirror((s) => s.openLibrary);
+  const openAuth = useMirror((s) => s.openAuth);
+  const signOut = useMirror((s) => s.signOut);
   const openAkashic = useMirror((s) => s.openAkashic);
   const openInvent = useMirror((s) => s.openInvent);
   const openDreamBook = useMirror((s) => s.openDreamBook);
@@ -713,6 +721,25 @@ export function SidebarContent() {
         </nav>
       </div>
 
+      {/* Your Cosmos — the visitor's own keeping-place (Crystalline) */}
+      {me && (
+        <div className="shrink-0 px-3">
+          <SectionLabel>{t("Your Cosmos")}</SectionLabel>
+          <nav aria-label={t("Your Cosmos")} className="flex flex-col">
+            <NavRow
+              icon={LibraryBig}
+              label={t("Cosmic Library")}
+              aria={t("Open your cosmic library — every transmission kept, and the quantum shift of your spirit")}
+              onClick={() => {
+                openLibrary();
+                setMobileNavOpen(false);
+              }}
+              testId="library-open"
+            />
+          </nav>
+        </div>
+      )}
+
       {/* Registers */}
       <div className="shrink-0 px-3">
         <SectionLabel>{t("Registers")}</SectionLabel>
@@ -738,8 +765,59 @@ export function SidebarContent() {
         <OuterRealmsSection />
       </div>
 
-      {/* Footer — theme, recalibrate, settings */}
-      <div className="mt-auto flex shrink-0 items-center gap-1.5 border-t hairline px-3 py-2.5">
+      {/* Footer — the passage, theme, recalibrate, settings */}
+      <div className="mt-auto flex shrink-0 flex-col gap-2 border-t hairline px-3 py-2.5">
+        {me ? (
+          <div className="flex items-center gap-2" data-testid="passage-account">
+            <span
+              className="mono-label flex size-8 shrink-0 items-center justify-center rounded-full border hairline bg-[var(--glass-bg)] text-[12px] text-foreground/85"
+              aria-hidden="true"
+            >
+              {(me.name || me.email).slice(0, 1).toUpperCase()}
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-[12.5px] font-medium text-foreground/85">
+                {me.name || me.email}
+              </span>
+              <span className="mono-label block text-[8.5px] uppercase tracking-[0.16em] text-muted-foreground" data-testid="passage-usage">
+                {me.tier === "light"
+                  ? t("The Light passage")
+                  : usage
+                    ? t("{used} / {limit} today", { used: usage.used, limit: usage.limit ?? "∞" })
+                    : t("Crystalline")}
+              </span>
+            </span>
+            <button
+              type="button"
+              onClick={() => void signOut()}
+              aria-label={t("Leave the passage")}
+              title={t("Leave the passage")}
+              data-testid="passage-signout"
+              className="focus-glow flex size-8 shrink-0 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+            >
+              <LogOut className="size-3.5" aria-hidden="true" />
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => {
+              openAuth("signin");
+              setMobileNavOpen(false);
+            }}
+            data-testid="passage-enter"
+            className="focus-glow flex h-9 w-full items-center gap-2.5 rounded-xl border hairline bg-[var(--glass-bg-soft)] px-3 text-left transition-all duration-300 hover:border-[var(--hairline-hover)] hover:glow-sm"
+          >
+            <LogIn className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+            <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-foreground/85">
+              {t("Enter the passage")}
+            </span>
+            <span className="mono-label shrink-0 rounded-md border hairline px-1.5 py-0.5 text-[8.5px] uppercase tracking-[0.14em] text-muted-foreground">
+              {t("Crystalline")}
+            </span>
+          </button>
+        )}
+        <div className="flex items-center gap-1.5">
         <ThemeToggle />
         <button
           type="button"
@@ -768,6 +846,7 @@ export function SidebarContent() {
             {langMeta?.native ?? "English"}
           </span>
         </button>
+        </div>
       </div>
     </div>
   );

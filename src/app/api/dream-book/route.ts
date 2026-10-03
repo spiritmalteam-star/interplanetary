@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import ZAI from "z-ai-web-dev-sdk";
+import { checkGate, gateError, recordUsage, saveLibrary } from "@/lib/server/access";
 import { LANGUAGE_NAMES, isLanguageCode } from "@/lib/i18n/core";
 
 /* ------------------------------------------------------------------ */
@@ -419,6 +420,12 @@ export async function POST(req: NextRequest) {
     const totalPages =
       typeof body?.totalPages === "number" ? Math.floor(body.totalPages) : 120;
 
+    /* the Dream Book opens only with the Crystalline key; the conjuring
+       itself is one transmission — its page turns are the book's breath */
+    const gate = await checkGate(req, "dreambook");
+    if (gate.status !== "ok") return gateError(gate.status, gate.gate);
+    const { key: usageKey, user: gateUser } = gate.gate;
+
     const zai = await ZAI.create();
     const askLoom = async (reminder: boolean): Promise<string> => {
       const completion = await zai.chat.completions.create({
@@ -493,6 +500,25 @@ export async function POST(req: NextRequest) {
         typeof parsed.totalPages === "number"
           ? clampTotal(parsed.totalPages)
           : clampTotal(BOOK_PLAN[volume]?.min ?? 96);
+
+      /* the conjuring is counted, and the volume enters the library */
+      await recordUsage(usageKey, "dreambook");
+      await saveLibrary(
+        gateUser?.id ?? null,
+        "dreambook",
+        String(out.title),
+        String(out.axiom || out.subtitle || "A volume woven in real time."),
+        {
+          topic,
+          seed,
+          title: out.title,
+          subtitle: out.subtitle,
+          axiom: out.axiom,
+          dedication: out.dedication,
+          totalPages: out.totalPages,
+          firstPage: pages[0] ?? null,
+        }
+      );
     }
 
     if (

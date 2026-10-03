@@ -6,6 +6,7 @@ import {
   imageBlock,
   parseAttachments,
 } from "@/lib/server/attachments";
+import { checkGate, gateError, recordUsage, saveLibrary } from "@/lib/server/access";
 
 const LANGUAGE_NAMES: Record<string, string> = {
   en: "English",
@@ -62,6 +63,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    /* the manifest's own free pool — ten signals a day for the visitor */
+    const gate = await checkGate(req, "manifest");
+    if (gate.status !== "ok") return gateError(gate.status, gate.gate);
+    const { key: usageKey, user: gateUser } = gate.gate;
+
     const zai = await ZAI.create();
 
     /* Attachments — one image seen with the vision field, up to three
@@ -117,6 +123,15 @@ export async function POST(req: NextRequest) {
         { status: 502 }
       );
     }
+
+    await recordUsage(usageKey, "manifest");
+    await saveLibrary(
+      gateUser?.id ?? null,
+      "manifest",
+      query.trim().slice(0, 140),
+      reply.slice(0, 280),
+      { query: query.trim().slice(0, 4000), reply }
+    );
 
     return NextResponse.json({ reply });
   } catch (err) {

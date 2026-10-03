@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import {
+  Activity,
   ArrowLeftRight,
   Atom,
   Boxes,
@@ -13,8 +14,10 @@ import {
   Crosshair,
   Dna,
   FileDown,
+  FlaskConical,
   HeartPulse,
   LoaderCircle,
+  Microscope,
   PenLine,
   Pill,
   RefreshCw,
@@ -40,6 +43,7 @@ import {
   emTissues,
   emVectors,
 } from "@/lib/data/evolvemed";
+import { EM_LAB_PAGES } from "@/lib/data/evolvemed-lab";
 import { cn } from "@/lib/utils";
 import { ListenButton } from "./ListenButton";
 
@@ -269,10 +273,10 @@ function EmToolCard({
   testId,
   busyPhrase,
 }: {
-  tool: "target" | "edit" | "fabric" | "bridge";
+  tool: string;
   icon: LucideIcon;
   title: string;
-  description: string;
+  description?: string;
   placeholder: string;
   buttonLabel: string;
   chips?: string[];
@@ -335,8 +339,10 @@ function EmToolCard({
           <Icon className="size-4 text-[var(--scope-a)]" />
         </span>
         <div className="min-w-0">
-          <h4 className="scope-gradient-text text-[15.5px] font-semibold">{t(title)}</h4>
-          <p className="text-[13px] leading-snug text-muted-foreground">{t(description)}</p>
+          <h4 className="scope-gradient-text text-[15.5px] font-semibold">{typeof title === "string" ? t(title) : title}</h4>
+          {description ? (
+            <p className="text-[13px] leading-snug text-muted-foreground">{t(description)}</p>
+          ) : null}
         </div>
       </div>
 
@@ -724,6 +730,10 @@ export function EmPdfButton() {
 
 export function EmInstrumentsTab() {
   const t = useT();
+  const [page, setPage] = useState(0); // 0 = the Foundry Four, 1–9 = the deep lab
+  const pageCount = EM_LAB_PAGES.length + 1;
+  const labPage = page > 0 ? EM_LAB_PAGES[page - 1] : null;
+
   return (
     <div className="space-y-5">
       <p className="mx-auto max-w-[560px] text-center text-[14.5px] leading-relaxed text-muted-foreground">
@@ -731,55 +741,144 @@ export function EmInstrumentsTab() {
           "Four instruments beside the Nexus — each one opens a different door into the living machine."
         )}
       </p>
-      <div className="grid gap-5 lg:grid-cols-2">
-        <EmToolCard
-          tool="target"
-          icon={Crosshair}
-          title="The Target Engine"
-          description="Name a target — receive its degradation route."
-          placeholder="Name a protein or disease target…"
-          buttonLabel="Weave the route"
-          chips={emTargets}
-          testId="em-tool-target"
-          busyPhrase="the engine is tracing the degradation route…"
-        />
-        <EmToolCard
-          tool="edit"
-          icon={PenLine}
-          title="The Editing Loom"
-          description="Name a fault in the living code — receive the rewriting strategy."
-          placeholder="Name the fault…"
-          buttonLabel="Loom the rewrite"
-          chips={emFaults}
-          testId="em-tool-edit"
-          busyPhrase="the loom is reading the fault in the code…"
-        />
-        <EmToolCard
-          tool="fabric"
-          icon={Boxes}
-          title="The Living Foundry"
-          description="Name a tissue or organ — receive its printed architecture and the chip that tests it alive."
-          placeholder="Name a tissue or organ…"
-          buttonLabel="Print the architecture"
-          chips={emTissues}
-          testId="em-tool-fabric"
-          busyPhrase="the foundry is printing the architecture of the tissue…"
-        />
-        <EmToolCard
-          tool="bridge"
-          icon={ArrowLeftRight}
-          title="The Bridge"
-          description="Name a signal of mind or body — receive its translation between digital and living."
-          placeholder="Name a signal…"
-          buttonLabel="Open the bridge"
-          chips={emSignals}
-          testId="em-tool-bridge"
-          busyPhrase="the bridge is tuning both sides of the signal…"
-        />
+
+      {/* the pages of the deep lab — 1 to 10 */}
+      <div className="flex items-center justify-center gap-1.5" role="navigation" aria-label={t("Pages of the laboratory")} data-testid="em-lab-pages">
+        <button
+          type="button"
+          onClick={() => setPage((p) => Math.max(0, p - 1))}
+          disabled={page === 0}
+          aria-label={t("The page before")}
+          className="focus-glow mono-label size-8 rounded-full border hairline text-[12px] text-muted-foreground transition-all duration-300 hover:text-foreground disabled:opacity-30"
+        >
+          ‹
+        </button>
+        {Array.from({ length: pageCount }, (_, i) => (
+          <button
+            key={i}
+            type="button"
+            onClick={() => setPage(i)}
+            aria-pressed={page === i}
+            aria-label={`${t("Page")} ${i + 1} ${t("of")} ${pageCount}`}
+            data-testid={`em-lab-pip-${i + 1}`}
+            className={cn(
+              "focus-glow mono-label size-8 rounded-full border text-[12px] transition-all duration-300",
+              page === i
+                ? "border-transparent bg-foreground text-background"
+                : "hairline text-muted-foreground hover:text-foreground"
+            )}
+          >
+            {i + 1}
+          </button>
+        ))}
+        <button
+          type="button"
+          onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
+          disabled={page === pageCount - 1}
+          aria-label={t("The page after")}
+          className="focus-glow mono-label size-8 rounded-full border hairline text-[12px] text-muted-foreground transition-all duration-300 hover:text-foreground disabled:opacity-30"
+        >
+          ›
+        </button>
       </div>
+
+      {page === 0 ? (
+        <div className="grid gap-5 lg:grid-cols-2">
+          <EmToolCard
+            tool="target"
+            icon={Crosshair}
+            title="The Target Engine"
+            description="Name a target — receive its degradation route."
+            placeholder="Name a protein or disease target…"
+            buttonLabel="Weave the route"
+            chips={emTargets}
+            testId="em-tool-target"
+            busyPhrase="the engine is tracing the degradation route…"
+          />
+          <EmToolCard
+            tool="edit"
+            icon={PenLine}
+            title="The Editing Loom"
+            description="Name a fault in the living code — receive the rewriting strategy."
+            placeholder="Name the fault…"
+            buttonLabel="Loom the rewrite"
+            chips={emFaults}
+            testId="em-tool-edit"
+            busyPhrase="the loom is reading the fault in the code…"
+          />
+          <EmToolCard
+            tool="fabric"
+            icon={Boxes}
+            title="The Living Foundry"
+            description="Name a tissue or organ — receive its printed architecture and the chip that tests it alive."
+            placeholder="Name a tissue or organ…"
+            buttonLabel="Print the architecture"
+            chips={emTissues}
+            testId="em-tool-fabric"
+            busyPhrase="the foundry is printing the architecture of the tissue…"
+          />
+          <EmToolCard
+            tool="bridge"
+            icon={ArrowLeftRight}
+            title="The Bridge"
+            description="Name a signal of mind or body — receive its translation between digital and living."
+            placeholder="Name a signal…"
+            buttonLabel="Open the bridge"
+            chips={emSignals}
+            testId="em-tool-bridge"
+            busyPhrase="the bridge is tuning both sides of the signal…"
+          />
+        </div>
+      ) : labPage ? (
+        <motion.div
+          key={labPage.id}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="space-y-5"
+          data-testid={`em-lab-page-${page + 1}`}
+        >
+          <div className="text-center">
+            <h3 className="scope-gradient-text text-[18px] font-semibold">{t(labPage.subject)}</h3>
+            <p className="mx-auto mt-1.5 max-w-[520px] text-[13.5px] leading-relaxed text-muted-foreground">
+              {t(labPage.blurb)}
+            </p>
+          </div>
+          <div className="grid gap-5 lg:grid-cols-2">
+            {labPage.tools.map((tool, i) => (
+              <EmToolCard
+                key={tool.id}
+                tool={tool.id}
+                icon={LAB_ICONS[(page + i) % LAB_ICONS.length]}
+                title={tool.name}
+                description={tool.desc}
+                placeholder={labPage.ph}
+                buttonLabel="Run the instrument"
+                testId={`em-tool-${tool.id}`}
+                busyPhrase="the instrument is opening its field…"
+              />
+            ))}
+          </div>
+        </motion.div>
+      ) : null}
     </div>
   );
 }
+
+const LAB_ICONS = [
+  FlaskConical,
+  Microscope,
+  Atom,
+  Sigma,
+  Dna,
+  BrainCircuit,
+  Boxes,
+  Pill,
+  Crosshair,
+  HeartPulse,
+  Activity,
+  Sparkles,
+];
 
 /* ------------------------------- codex ----------------------------- */
 
