@@ -1977,3 +1977,23 @@ Work Log:
 Stage Summary:
 - The laboratory is cloud-ready: one key (OPENAI_API_KEY) in the Vercel project's Environment Variables switches every world, every window and every weaving to the OpenAI-compatible sky, while the sandbox keeps its atelier. Known cloud limitations, documented in the README: voice rests (TTS/ASR are atelier gifts) and the cosmic library/accounts need a hosted DATABASE_URL.
 - Key artifacts: src/lib/zai-client.ts, 19 rewired routes + attachments, README deploy section, .env.example.
+
+---
+Task ID: ZAIVER
+Agent: Z.ai Code (main)
+Task: Make the Vercel deployment answer with Z.ai (GLM) — the same brains as the sandbox — instead of ChatGPT/OpenAI.
+
+Work Log:
+- Probed Z.ai public API: https://api.z.ai/api/paas/v4 is OpenAI-compatible and reachable; dummy-key probe returned Z.ai's own 401 (endpoint + auth shape validated).
+- Rewrote src/lib/zai-client.ts: three skies — zai-cloud (api.z.ai GLM), openai (OpenAI-compatible), zai (atelier SDK). CloudBackend shared class; vision rides ZAI_VISION_MODEL (default glm-4.6v); GLM `thinking` param forwarded only on the Z.ai sky; on Vercel with no key the bridge throws a clear setup error.
+- Provider auto-resolution on Vercel: ZAI_API_KEY wins → zai-cloud; else OPENAI_API_KEY → openai. Explicit LLM_PROVIDER (zai-cloud|openai|zai) overrides. Sandbox auto = atelier.
+- Rewrote src/lib/image-engine.ts: CogView brush (ZAI_IMAGE_MODEL, default cogview-3-flash) added; lead brush follows chat brain (Z.ai sky → CogView first, OpenAI sky → DALL·E first); per-engine circuit breakers; cloud-safe gallery: writability probe, hosted urls served directly on read-only filesystems (fixed Vercel EROFS crash for all image paths).
+- /api/chat GET status light now reports provider + zaiCloudConfigured + openaiConfigured.
+- Updated .env.example and README deploy section (Z.ai key instructions).
+- Verified: bun lint clean; provider resolution matrix 7/7; zai-cloud request path E2E (Z.ai auth 401 with dummy key as expected); sandbox regression — /api/transmission answers via atelier, status light provider=zai.
+- Committed 0add30f. Push blocked: no GitHub credentials (old tokens advised-revoked).
+
+Stage Summary:
+- Vercel now answers with Z.ai GLM by default: user adds ZAI_API_KEY env var → redeploy → done. Models: ZAI_MODEL (default glm-4.5-flash, free), ZAI_VISION_MODEL (glm-4.6v), ZAI_IMAGE_MODEL (cogview-3-flash, free).
+- Commit 0add30f awaits push (needs fresh GitHub token from user) — then Vercel auto-redeploys.
+- Fixed latent cloud bug: image painting would crash on Vercel's read-only FS; now serves hosted urls in cloud mode.
