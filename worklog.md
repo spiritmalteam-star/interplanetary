@@ -1940,3 +1940,23 @@ Work Log:
 Stage Summary:
 - The window illustration way is gone: no more overlay presentations. Selecting a scope now pins a cluster of note stickers — information sections with drawn 3D ink animations — directly into the conversation flow, for every ParticleX window and every Evolve Med vector, and the stickers live in the chat history like any other turn.
 - Key artifacts: src/lib/data/scope-notes.ts, src/components/mirror/InkScenes.tsx (16 scenes), src/components/mirror/ScopeNotes.tsx, mirror-store.ts (pinPxNotes/pinEmNotes), ParticleX.tsx / EvolveMed.tsx rewiring, 7 dictionaries (+2/−7 keys).
+
+---
+Task ID: IMG-BRIDGE
+Agent: Z.ai Code (main)
+Task: User pasted a complete Z.ai + OpenAI image integration specification — an assistant that triggers a `generate_image` tool whenever visuals are needed, a backend bridge painting via OpenAI DALL·E 3, and the response contract { text, hasImage, image: { url, revisedPrompt, originalPrompt } } rendered inside the chat — plus an OpenAI API key to be kept secret.
+
+Work Log:
+- SECURITY: the OpenAI key arrived in plain chat. Stored ONLY in .env; discovered .env was git-TRACKED (the .env* ignore rule does not apply to tracked files) — ran `git rm --cached .env` so the key can never be committed; user was told to rotate the key.
+- Connectivity probe: api.openai.com answers 403 "unsupported_country_region_territory" from this sandbox — DALL·E 3 is fully wired but cannot paint from here, so the engine carries an eternal fallback.
+- NEW src/lib/image-engine.ts — the generate_image tool: brush 1 = DALL·E 3 (REST images/generations, model dall-e-3, b64_json, revised_prompt captured, sizes 1024x1024/1024x1792/1792x1024 mapped by aspect, quality standard|hd, 120s timeout); brush 2 = the Z.ai atelier (3 attempts, backoff 2.5s/6s/12s); a 3-failure/10-minute circuit breaker stops knocking on OpenAI's door when it is unreachable; every painting lands in .visualizations/ and is served by the existing /api/visual/[file] route.
+- NEW src/app/api/chat/route.ts — the bridge with the spec's exact contract: Z.ai chat (tool-call emulation via strict-JSON decision) → generate_image → { text, hasImage: true, image: { url, revisedPrompt, originalPrompt, engine } } or { text, hasImage: false }; spec's system prompt (image rules + DALL·E prompt-optimization rules) baked in; GET status light.
+- WIRED /api/visualize (the app's Universal Visualization Engine — every channel's in-chat images): paint() now runs through generateImage(), so all chat artwork flows through the dual engine; contract unchanged (artifact.imageUrl/downloadUrl).
+- Verified: lint clean; tsc clean (only the known legacy api/tts Buffer note); check-i18n ALL → missing: 0 (no UI strings touched); curl smoke — GET/POST /api/chat text-only {hasImage:false}, POST /api/chat image request → hasImage:true (DALL·E 403 → Z.ai fallback, optimized DALL·E-style prompt), painting serves 200 image/png (168 KB), POST /api/visualize → painted artifact via the engine; dev.log shows the clean fallback trail.
+- E2E (agent-browser): sent "Show me a visualization of a crystal observatory floating above the rings of Saturn" in the interplanetary channel — artifact card painted by the engine and rendered INSIDE the chat <main> (img naturalWidth>0 at t+45s); desktop 1440×900 light + dark (deep space) and mobile 390×844 all render the card with no horizontal overflow; zero console/page errors; dev.log clean.
+- Repo hygiene: .visualizations/ was git-TRACKED (old viz paintings) while the 48h sweep kept deleting them — untracked the gallery and added it to .gitignore.
+
+Stage Summary:
+- The spec is live as a dual-brush engine: `generate_image` paints DALL·E 3 first and falls back to the Z.ai atelier; /api/chat serves the exact { text, hasImage, image } contract; every in-chat visualization (all worlds + scopes) now flows through the engine.
+- Key artifacts: src/lib/image-engine.ts, src/app/api/chat/route.ts, /api/visualize rewiring; .env untracked (key sealed), .visualizations/ untracked (gallery is runtime data).
+- The OpenAI key MUST be rotated — it traveled through chat in plain text.
