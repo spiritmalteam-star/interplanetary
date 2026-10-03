@@ -2,18 +2,16 @@ import fs from "fs";
 import path from "path";
 import crypto from "crypto";
 import ZAI_SDK from "z-ai-web-dev-sdk";
-import { resolveProvider } from "@/lib/zai-client";
 
 /* ================================================================== */
 /*  THE GENERATIVE ENGINE — the generate_image tool                    */
 /*                                                                    */
 /*  One door for every image this application paints. The assistant   */
 /*  decides WHEN a visual is needed; this engine decides HOW it is    */
-/*  painted. The lead brush follows the chat brain (see zai-client):  */
-/*                                                                    */
-/*    Z.ai sky (default)   → CogView first, DALL·E 3 as fallback      */
-/*    OpenAI sky           → DALL·E 3 first, CogView as fallback      */
-/*    Laboratory (no keys) → the Z.ai atelier, always available       */
+/*  painted. The OpenAI brush (DALL·E 3) leads whenever its key       */
+/*  exists — the visitor's chosen painter; the Z.ai CogView brush     */
+/*  serves as the first fallback, and the Z.ai atelier as the final   */
+/*  one, always ready in the laboratory.                              */
 /*                                                                    */
 /*  Every painting is kept in the atelier's gallery (.visualizations/) */
 /*  and served through /api/visual/[file] when the filesystem is      */
@@ -360,8 +358,9 @@ export async function generateImage(
   const quality: ImageQuality =
     options.quality === "hd" ? "hd" : "standard";
 
-  /* the lead brush follows the same sky as the chat brain */
-  const zaiLeads = resolveProvider() !== "openai";
+  /* the visitor's chosen painter leads: DALL·E 3 when the OpenAI
+     key exists, CogView otherwise — the other serves as fallback */
+  const openaiLeads = Boolean(process.env.OPENAI_API_KEY);
 
   const cogReady =
     Boolean(process.env.ZAI_API_KEY) && !breakerOpen("zai");
@@ -381,9 +380,9 @@ export async function generateImage(
       run: () => paintWithDalle(prompt, toDalleSize(options.size), quality),
     });
 
-  const ordered = zaiLeads
-    ? candidates
-    : [...candidates].reverse();
+  const ordered = openaiLeads
+    ? [...candidates].reverse()
+    : candidates;
 
   for (const brush of ordered) {
     try {

@@ -981,6 +981,9 @@ export const useMirror = create<MirrorState>()((set, get) => ({
 
       void get().refreshMe();
 
+      /* the reply's own id — a model-requested vision attaches to it */
+      const replyId = nextMessageId();
+
       set((s) => ({
         sessions: {
           ...s.sessions,
@@ -991,7 +994,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
             messages: [
               ...s.sessions[mode].messages,
               {
-                id: nextMessageId(),
+                id: replyId,
                 query,
                 text: data.transmission,
                 classification: data.classification,
@@ -1015,6 +1018,16 @@ export const useMirror = create<MirrorState>()((set, get) => ({
           },
         },
       }));
+
+      /* THE VISION GIFT — the mirror itself decided this reply wants
+         a painting (ChatGPT-like understanding). The visualization
+         engine paints it silently beneath the words. */
+      if (typeof data.vision === "string" && data.vision.trim()) {
+        void get().askScopeVisual(mode, data.vision.trim(), {
+          id: replyId,
+          request: data.vision.trim(),
+        });
+      }
     } catch (err) {
       set((s) => ({
         sessions: {

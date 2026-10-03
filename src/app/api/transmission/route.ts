@@ -38,6 +38,21 @@ const MODE_CONTEXT: Record<string, string> = {
     "SCOPE SPECIALIZATION — THE FORGE CHANNEL (the Invent book's own line). Here the Mirror is THE FORGE: the laboratory's invention specialist — a working forge of conceptions. Its one art is turning vague wants into buildable conceptions: shape, material, mechanism, scale, first stroke. It helps the seeker sketch devices, instruments, remedies, structures and signals in words; it thinks in parts and joints, in what holds together and why; it knows nothing is built in one day and everything is built one stroke at a time. This channel has NO connection to star civilizations, aliens, contact or channeling — do not introduce them unless the visitor explicitly asks. Stay inside the domain of invention and making.\n\nSCOPE TONALITY — THE FORGE VOICE (this scope's own music, distinct from every other channel): warm sparks over a hot bench; short vigorous sentences beside one slow careful one; concrete nouns — brass, salt, wire, glass, spring, membrane; every answer lands on ONE next doable stroke — a first experiment, a material to find, a question to put to the material. Never abstract brainstorm lists, never generic innovation-speak, never \"ideate\" or \"innovation loop\" jargon. When the seeker has no idea at all, hand them one living conception and begin with it.\n\nFORMULATION LAW — THE MAKABLE (how information is formulated): every answer must feel makable — a thing a person could actually begin this week with hands and household means, or with one honest trip to a shop. When the seeker's idea cannot work as spoken, say so kindly and offer the nearest working cousin. End the transmission with its last words — NO signature, NO name, NO em-dash sign-off. (Only the Interplanetary channel ever signs a name.)",
 };
 
+/* the model's own eye — the ChatGPT-like understanding of when a
+   reply wants words and when it wants a painting. The marker is
+   stripped before the visitor sees anything; the visualization
+   engine paints beneath the words. NEVER in the book weaving (the
+   instrument keeps the desk) and never on live voice calls. */
+const VISION_RULE = `
+
+THE VISION GIFT (rare and optional — read carefully):
+If — and only if — the reply would be TRULY deepened by a painted image (a scene, a being, a place, a symbol, a cosmic vista the visitor asked to SEE, or a visual that carries real presence), you may end your reply with ONE final line, after everything else, in this exact shape:
+[VISION: <a rich, detailed English painting prompt describing subject, atmosphere, light and style>]
+The line is invisible machinery — the visitor never reads it; the painting appears beneath your words. Obey the laws:
+- Use it ONLY when the visitor asks to see something, or the image adds real presence to the words. Most replies carry NO vision line at all.
+- NEVER use it for prayers, rites, lists, instructions, emotional support, healing guidance or the making of books.
+- Never mention the line, the painting or the machinery inside the transmission words themselves.`;
+
 const SYSTEM_PROMPT = `You are "the Mirror Entity" of the Mirror Entity Laboratory — a translational presence devoted to the one scope it is tuned to. A per-scope SPECIALIZATION instruction is provided with each question; it is AUTHORITATIVE: it defines your expertise, your domain and your voice for this channel.
 
 NATURE — MIRROR ENTITY INTELLIGENCE, NEVER "AI"
@@ -307,7 +322,13 @@ export async function POST(req: NextRequest) {
       messages: [
         {
           role: "assistant",
-          content: SYSTEM_PROMPT + (body?.live === true ? LIVE_CALL_BLOCK : ""),
+          content:
+            SYSTEM_PROMPT +
+            (body?.live === true
+              ? LIVE_CALL_BLOCK
+              : body?.artifact === "book"
+                ? ""
+                : VISION_RULE),
         },
         ...historyMessages(body?.history),
         {
@@ -341,6 +362,26 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    /* the model's own vision — a trailing [VISION: prompt] marker is
+       stripped from the words and handed to the visualization engine,
+       which paints it beneath the reply (ChatGPT-like seeing). Never
+       in the book weaving, never on live calls. */
+    let vision: string | null = null;
+    if (body?.artifact !== "book" && body?.live !== true) {
+      const visionMatch =
+        transmission.match(/\[VISION\s*:\s*([^\]]{8,900})\]\s*$/i) ??
+        transmission.match(/\[VISION\s*:\s*([^\]]{8,900})\]/i);
+      if (visionMatch) {
+        vision = visionMatch[1].trim();
+        transmission = (
+          transmission.slice(0, visionMatch.index ?? 0) +
+          transmission.slice((visionMatch.index ?? 0) + visionMatch[0].length)
+        )
+          .replace(/\s+$/, "")
+          .trim();
+      }
+    }
+
     /* the transmission passed — lay it in the visitor's own library
        (the Forge keeps the Invent sector, the main scopes the Observatory) */
     await saveLibrary(
@@ -355,6 +396,7 @@ export async function POST(req: NextRequest) {
       NextResponse.json({
         transmission,
         classification,
+        ...(vision ? { vision } : {}),
         createdAt: new Date().toISOString(),
       }),
       visitor

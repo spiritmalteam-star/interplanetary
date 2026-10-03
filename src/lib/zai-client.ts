@@ -51,6 +51,88 @@ interface ZAIClient {
   audio: any;
 }
 
+/* ------------------------- the voice gift -------------------------- */
+
+interface TTSParams {
+  input: string;
+  voice: string;
+  speed?: number;
+  response_format?: string;
+  stream?: boolean;
+  [key: string]: unknown;
+}
+
+interface ASRParams {
+  file_base64: string;
+  [key: string]: unknown;
+}
+
+interface AudioEngine {
+  tts: {
+    create(params: TTSParams): Promise<{ arrayBuffer(): Promise<ArrayBuffer> }>;
+  };
+  asr: {
+    create(params: ASRParams): Promise<{ text?: string }>;
+  };
+}
+
+/* the laboratory's voices mapped onto OpenAI's choir:
+   xiaochen (the warm documentary male) → onyx,
+   tongtong (the kind lady reader)      → shimmer */
+const OPENAI_VOICE_MAP: Record<string, string> = {
+  xiaochen: "onyx",
+  tongtong: "shimmer",
+};
+
+function openAIAudio(cfg: CloudConfig): AudioEngine {
+  return {
+    tts: {
+      create: async (params: TTSParams) => {
+        const res = await fetch(`${cfg.baseUrl}/audio/speech`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${cfg.apiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: process.env.OPENAI_TTS_MODEL ?? "gpt-4o-mini-tts",
+            input: String(params.input ?? "").slice(0, 4096),
+            voice: OPENAI_VOICE_MAP[params.voice] ?? params.voice ?? "onyx",
+            response_format: "wav",
+            speed: typeof params.speed === "number" ? params.speed : 1,
+          }),
+          signal: AbortSignal.timeout(180_000),
+        });
+        if (!res.ok) {
+          const detail = (await res.text()).slice(0, 300);
+          throw new Error(`OpenAI tts ${res.status}: ${detail}`);
+        }
+        const buf = await res.arrayBuffer();
+        return { arrayBuffer: async () => buf };
+      },
+    },
+    asr: {
+      create: async (params: ASRParams) => {
+        const bytes = Buffer.from(params.file_base64, "base64");
+        const form = new FormData();
+        form.append("file", new Blob([bytes], { type: "audio/wav" }), "audio.wav");
+        form.append("model", process.env.OPENAI_ASR_MODEL ?? "whisper-1");
+        const res = await fetch(`${cfg.baseUrl}/audio/transcriptions`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${cfg.apiKey}` },
+          body: form,
+          signal: AbortSignal.timeout(180_000),
+        });
+        if (!res.ok) {
+          const detail = (await res.text()).slice(0, 300);
+          throw new Error(`OpenAI asr ${res.status}: ${detail}`);
+        }
+        return (await res.json()) as { text?: string };
+      },
+    },
+  };
+}
+
 interface CloudConfig {
   apiKey: string;
   baseUrl: string;
@@ -113,7 +195,12 @@ export function resolveProvider(): Provider {
 /* ------------------------- the cloud sky --------------------------- */
 
 class CloudBackend implements ZAIClient {
-  constructor(private readonly cfg: CloudConfig) {}
+  /* the voice rides OpenAI whenever its key exists — independent of
+     which brain chats (Z.ai's cloud sky has no voice endpoint yet) */
+  constructor(
+    private readonly cfg: CloudConfig,
+    private readonly audioCfg: CloudConfig | null
+  ) {}
 
   private async complete(
     params: ChatParams,
@@ -162,9 +249,10 @@ class CloudBackend implements ZAIClient {
     },
   };
 
-  get audio(): never {
+  get audio(): AudioEngine {
+    if (this.audioCfg) return openAIAudio(this.audioCfg);
     throw new Error(
-      "Audio (tts/asr) is only available with the atelier provider (LLM_PROVIDER=zai, laboratory)."
+      "Voice (tts/asr) on the cloud needs an OpenAI key — set OPENAI_API_KEY in Vercel's Environment Variables (the chat brain may remain Z.ai)."
     );
   }
 }
@@ -183,13 +271,16 @@ async function atelierBackend(): Promise<ZAIClient> {
 export default class ZAI {
   static async create(): Promise<ZAIClient> {
     const provider = resolveProvider();
+    /* the voice gift follows the OpenAI key wherever it exists */
+    const audioCfg =
+      provider === "openai" ? null : openaiConfig();
     if (provider === "zai-cloud") {
       const cfg = zaiCloudConfig();
-      if (cfg) return new CloudBackend(cfg);
+      if (cfg) return new CloudBackend(cfg, audioCfg);
     }
     if (provider === "openai") {
       const cfg = openaiConfig();
-      if (cfg) return new CloudBackend(cfg);
+      if (cfg) return new CloudBackend(cfg, null);
     }
     if (!process.env.VERCEL) return atelierBackend();
     /* the cloud can only live from a key — say clearly which one */

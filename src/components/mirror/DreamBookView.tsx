@@ -7,6 +7,9 @@ import {
   useRef,
   useState,
   type FormEvent,
+  type TouchEvent as ReactTouchEvent,
+  type UIEvent as ReactUIEvent,
+  type WheelEvent as ReactWheelEvent,
 } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -150,6 +153,12 @@ export function DreamBookView() {
   const [weaveError, setWeaveError] = useState(false);
   const [weaveFailed, setWeaveFailed] = useState(false);
   const [zoom, setZoom] = useState(1);
+  /* the immersive reading — when the visitor scrolls down, only the
+     page remains (one next button); scrolling up reveals the top */
+  const [immersed, setImmersed] = useState(false);
+  const wheelAccum = useRef(0);
+  const lastTop = useRef(0);
+  const touchY = useRef<number | null>(null);
   const [narrating, setNarrating] = useState(false);
   const [narrPaused, setNarrPaused] = useState(false);
   const [narrLoading, setNarrLoading] = useState(false);
@@ -900,9 +909,61 @@ export function DreamBookView() {
   const canNext = pageIdx < limitIdx && !showChoice && !showEnd;
   const canPrev = pageIdx > 0;
 
+  /* ================================================================ */
+  /*  the immersive scroll — down: only the page; up: the top returns */
+  /* ================================================================ */
+  useEffect(() => {
+    if (stage !== "reading") setImmersed(false);
+  }, [stage]);
+
+  const readerScroll = useMemo(
+    () => ({
+      onScroll: (e: ReactUIEvent<HTMLDivElement>) => {
+        const top = e.currentTarget.scrollTop;
+        if (top > lastTop.current + 4 && top > 64) setImmersed(true);
+        else if (top < lastTop.current - 4) setImmersed(false);
+        lastTop.current = top;
+      },
+      onWheel: (e: ReactWheelEvent<HTMLDivElement>) => {
+        wheelAccum.current += e.deltaY;
+        if (wheelAccum.current > 90) {
+          setImmersed(true);
+          wheelAccum.current = 0;
+        } else if (wheelAccum.current < -80) {
+          setImmersed(false);
+          wheelAccum.current = 0;
+        }
+      },
+      onTouchStart: (e: ReactTouchEvent<HTMLDivElement>) => {
+        touchY.current = e.touches[0]?.clientY ?? null;
+      },
+      onTouchMove: (e: ReactTouchEvent<HTMLDivElement>) => {
+        const y = e.touches[0]?.clientY ?? null;
+        if (touchY.current != null && y != null) {
+          const dy = touchY.current - y;
+          if (dy > 18) setImmersed(true);
+          else if (dy < -18) setImmersed(false);
+        }
+        touchY.current = y;
+      },
+      onTouchEnd: () => {
+        touchY.current = null;
+        wheelAccum.current = 0;
+      },
+    }),
+    []
+  );
+
   const reader = (
     <div className="relative flex h-full flex-col overflow-hidden bg-background text-foreground">
-      <header className="relative z-20 flex shrink-0 items-center gap-2 px-3 pt-3 sm:px-5">
+      <header
+        className={cn(
+          "relative z-20 flex shrink-0 items-center gap-2 overflow-hidden px-3 transition-all duration-500 sm:px-5",
+          immersed
+            ? "pointer-events-none max-h-0 -translate-y-5 opacity-0"
+            : "max-h-24 translate-y-0 pt-3 opacity-100"
+        )}
+      >
         <button
           type="button"
           onClick={backFromReader}
@@ -1004,11 +1065,15 @@ export function DreamBookView() {
 
       {/* the book itself — one page at a time, sliding, each page
           stretching the full height of the screen once revealed */}
-      <div className="nice-scroll relative z-10 min-h-0 flex-1 overflow-y-auto overscroll-contain">
+      <div
+        {...readerScroll}
+        className="nice-scroll relative z-10 min-h-0 flex-1 overflow-y-auto overscroll-contain"
+      >
         <div className="mx-auto flex h-full w-full max-w-[760px] items-stretch justify-center px-3 pb-7 pt-3 sm:px-8 sm:pb-9">
           <div className="relative flex min-h-full w-full max-w-[640px] flex-col">
-            {/* the slide buttons — desktop */}
-            {canPrev && (
+            {/* the slide buttons — desktop (the previous one rests while
+                the reading is immersed — only the next page remains) */}
+            {canPrev && !immersed && (
               <button
                 type="button"
                 onClick={() => goPage(-1)}
@@ -1180,8 +1245,16 @@ export function DreamBookView() {
         </div>
       </div>
 
-      {/* the progress thread + the slide buttons */}
-      <footer className="relative z-20 shrink-0 px-4 pb-[max(0.7rem,env(safe-area-inset-bottom))] pt-2">
+      {/* the progress thread + the slide buttons (they rest while the
+          reading is immersed — the page alone fills the screen) */}
+      <footer
+        className={cn(
+          "relative z-20 shrink-0 overflow-hidden px-4 transition-all duration-500",
+          immersed
+            ? "pointer-events-none max-h-0 translate-y-5 pb-0 pt-0 opacity-0"
+            : "max-h-24 translate-y-0 pb-[max(0.7rem,env(safe-area-inset-bottom))] pt-2 opacity-100"
+        )}
+      >
         <div className="mx-auto flex w-full max-w-[760px] items-center gap-3">
           <button
             type="button"
@@ -1222,6 +1295,26 @@ export function DreamBookView() {
           </button>
         </div>
       </footer>
+
+      {/* the one button that remains while immersed — the next page,
+          floating alone over the reading */}
+      <AnimatePresence>
+        {immersed && canNext && (
+          <motion.button
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 16 }}
+            transition={{ duration: 0.35, ease: "easeOut" }}
+            type="button"
+            onClick={() => goPage(1)}
+            aria-label={t("Next page")}
+            title={t("Next page")}
+            className="dream-turn focus-glow absolute bottom-6 right-5 z-30 flex size-12 items-center justify-center rounded-full"
+          >
+            <ArrowLeft className="size-5 rotate-180" aria-hidden="true" />
+          </motion.button>
+        )}
+      </AnimatePresence>
 
       {/* the rewriting hand's panel */}
       <ModalShell

@@ -2010,3 +2010,19 @@ Work Log:
 
 Stage Summary:
 - Z.ai cloud bridge is live on GitHub; Vercel redeploys automatically. Remaining user step: add ZAI_API_KEY (from z.ai) in Vercel env vars -> Redeploy -> /api/chat status light should show provider "zai-cloud".
+
+---
+Task ID: VOICE-IMG-BOOK
+Agent: Z.ai Code (main)
+Task: Three gifts — cloud voice (TTS/ASR), OpenAI-led image generation with ChatGPT-style vision understanding in all chats except akashic/book, and the immersive fullscreen Dream Book reader.
+
+Work Log:
+- zai-client.ts: OpenAI voice engine in the bridge (audio.tts → /audio/speech gpt-4o-mini-tts WAV; audio.asr → /audio/transcriptions whisper-1 multipart). Voice is INDEPENDENT of the chat brain — Z.ai chat + OpenAI voice on Vercel simultaneously; laboratory voice map xiaochen→onyx, tongtong→shimmer (OPENAI_TTS_MODEL/OPENAI_ASR_MODEL overridable).
+- image-engine.ts: lead brush flipped — DALL·E 3 first when OPENAI_API_KEY exists (the visitor's chosen painter), CogView fallback, atelier last.
+- transmission route: THE VISION GIFT — the model may end a reply with [VISION: <english prompt>]; server strips the marker and returns a `vision` field; rule NOT attached for book weaving (artifact=book) nor live voice calls. Extraction: end-match then anywhere-match, no text leak (unit-verified).
+- mirror-store askMirror: on data.vision → silent askScopeVisual(mode, vision, {id: replyId}) — the existing visualization engine paints beneath the reply, ChatGPT-style; images via DALL·E on Vercel.
+- DreamBookView: immersive reader — scroll/wheel/swipe down hides header+footer (one floating next-page button remains); scroll up reveals the top; immersion persists across page flips, resets on leaving the reader.
+- Verified: lint clean; sandbox transmission 200; /api/tts → HTTP 200 audio/wav 65KB (real OpenAI speech through the bridge); vision marker extraction unit-tested.
+
+Stage Summary:
+- Voice lives on Vercel (OpenAI TTS/ASR through the bridge; brain remains Z.ai). Images: DALL·E leads everywhere images flow (visualize engine, chat bridge, vision gift); akashic + book remain text-only by design. Dream Book reads fullscreen. Requires deploy; TTS/ASR need OPENAI_API_KEY (already configured on Vercel).
