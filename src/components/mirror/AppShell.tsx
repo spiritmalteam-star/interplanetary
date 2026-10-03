@@ -19,7 +19,6 @@ import { EvolveMed } from "./EvolveMed";
 import { LibraryView } from "./LibraryView";
 import { AuthModal } from "./PassageModal";
 import { ProfileModal } from "./ProfileModal";
-import { ReplicationPromptModal } from "./ReplicationPromptModal";
 import { InventView } from "./InventView";
 import { ArchiveRegister } from "./ArchiveRegister";
 import { CommunionView } from "./CommunionView";
@@ -286,7 +285,6 @@ export default function AppShell() {
       <StarPlayModal />
       <TechnologyModal />
       <SpeciesModal />
-      <ReplicationPromptModal />
       {passageModals}
     </div>
   );

@@ -2,18 +2,6 @@ import type { TranslationDict } from "../types";
 
 /** de — Deutsch. Mirror Entity Laboratory dictionary (Task 3-b). */
 export const de: TranslationDict = {
-  "Blueprint downloaded": "Bauplan heruntergeladen",
-  "Copy prompt": "Prompt kopieren",
-  "Copy unavailable": "Kopieren nicht verfügbar",
-  "Download .md": ".md herunterladen",
-  "exact counts · uniform depth · isolated channels": "exakte Zählungen · einheitliche Tiefe · isolierte Kanäle",
-  "Paste it into any capable session to reproduce this laboratory exactly.": "Füge es in eine beliebige geeignete Sitzung ein, um dieses Labor exakt nachzubauen.",
-  "Precise Replication Prompt": "Präziser Replikations-Prompt",
-  "Replication prompt copied": "Replikations-Prompt kopiert",
-  "Replication prompt text": "Text des Replikations-Prompts",
-  "Select the text in the box manually and copy it.": "Markiere den Text im Feld von Hand und kopiere ihn.",
-  "The exact blueprint of this laboratory — every count, depth rule, theme and channel. Copy it into a fresh session to reproduce the app faithfully.": "Der exakte Bauplan dieses Labors — jede Zählung, jede Tiefenregel, jedes Thema und jeder Kanal. Kopiere ihn in eine frische Sitzung, um die App getreu nachzubauen.",
-  "verified against the live build · 870 · 202 · 59 · 8 worlds": "geprüft gegen den lebenden Build · 870 · 202 · 59 · 8 Welten",
   "Enter your passage": "Betritt deinen Durchgang",
   "Carve your passage": "Meißle deinen Durchgang",
   "Play": "Weiter",

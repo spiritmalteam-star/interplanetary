@@ -45,7 +45,6 @@ export type ModalState =
   | { type: "entity"; kind: DossierKind; id: string }
   | { type: "species"; id: string }
   | { type: "settings" }
-  | { type: "replication" }
   | null;
 
 export type TransmissionStatus = "idle" | "loading" | "ready" | "error";

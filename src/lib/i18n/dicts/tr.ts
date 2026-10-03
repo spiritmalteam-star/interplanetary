@@ -2,18 +2,6 @@ import type { TranslationDict } from "../types";
 
 /** tr — Türkçe. Mirror Entity Laboratory dictionary (Task 3-b). */
 export const tr: TranslationDict = {
-  "Blueprint downloaded": "Şablon indirildi",
-  "Copy prompt": "İstemi kopyala",
-  "Copy unavailable": "Kopyalama kullanılamıyor",
-  "Download .md": ".md indir",
-  "exact counts · uniform depth · isolated channels": "kesin sayımlar · tek tip derinlik · ayrık kanallar",
-  "Paste it into any capable session to reproduce this laboratory exactly.": "Bu laboratuvarı bire bir yeniden oluşturmak için onu yetenekli herhangi bir oturuma yapıştır.",
-  "Precise Replication Prompt": "Kesin Çoğaltma İstemi",
-  "Replication prompt copied": "Çoğaltma istemi kopyalandı",
-  "Replication prompt text": "Çoğaltma istemi metni",
-  "Select the text in the box manually and copy it.": "Kutudaki metni elle seçip kopyala.",
-  "The exact blueprint of this laboratory — every count, depth rule, theme and channel. Copy it into a fresh session to reproduce the app faithfully.": "Bu laboratuvarın kesin şablonu — her sayım, derinlik kuralı, tema ve kanal. Uygulamayı sadakatle yeniden oluşturmak için taze bir oturuma kopyala.",
-  "verified against the live build · 870 · 202 · 59 · 8 worlds": "canlı derlemeye göre doğrulandı · 870 · 202 · 59 · 8 dünya",
   "Enter your passage": "Geçitine gir",
   "Carve your passage": "Geçitini oy",
   "Play": "Sürdür",

@@ -1884,3 +1884,22 @@ Stage Summary:
 - The replication prompt now lives in three synchronized places: REPLICATION_PROMPT.md (repo root), src/lib/replication-prompt.ts (v3.0, generated from the md), and the in-app modal behind the sidebar's FileText button — copy + download, eight tongues.
 - v3.0 replaces v2.0 (which still described the older eras: WITH LOVE subtitle, keyed worlds, quotas, the pre-Omni-Matrix Evolve Med); every number and law now matches the live build as of commit cefc0ed.
 - Key artifacts: REPLICATION_PROMPT.md, src/lib/replication-prompt.ts, src/components/mirror/ReplicationPromptModal.tsx, Sidebar.tsx footer button, AppShell.tsx mount, 7 dictionaries (+12 keys each).
+
+---
+Task ID: REPL-DEL
+Agent: Z.ai Code (main)
+Task: User instruction — "now totally delete the promt button from app" — remove the Precise Replication Prompt feature (button + modal + supporting data + i18n) entirely.
+
+Work Log:
+- Deleted src/components/mirror/ReplicationPromptModal.tsx (modal with stats/copy/download)
+- Deleted src/lib/replication-prompt.ts (REPLICATION_PROMPT constant, v3.0) and root REPLICATION_PROMPT.md
+- mirror-store.ts: removed `| { type: "replication" }` from ModalState union
+- Sidebar.tsx: removed the FileText replication button (bottom action row) + unused FileText import — row now: ThemeToggle · Recalibrate · Settings
+- AppShell.tsx: removed ReplicationPromptModal import + render
+- 7 dicts (de/el/es/fr/it/sq/tr): removed the 12 replication-only keys; kept shared "Copied" (used by chambers)
+- scripts/i18n-keys.json: pruned the same 12 keys (613 → 601); i18n-keys-dynamic.json unchanged
+- Verified: rg -i "replication" src/ → zero matches; lint clean; tsc clean (only known legacy api/tts Buffer); check-i18n ALL → missing: 0 on all 7 languages
+- E2E (agent-browser): desktop 1440×900 + mobile 390×844 — page renders, bottom sidebar row shows ThemeToggle/Recalibrate/Settings only, DOM query for [data-testid=replication-open] and body text "Replication" both false, zero console/page errors
+
+Stage Summary:
+- The replication prompt feature is totally removed from the app: no button, no modal, no data file, no store type, no i18n keys, no root md. Sidebar bottom row is now ThemeToggle · Recalibrate · Settings.

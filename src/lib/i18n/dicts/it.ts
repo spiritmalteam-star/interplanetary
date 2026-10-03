@@ -2,18 +2,6 @@ import type { TranslationDict } from "../types";
 
 /** it — Italian dictionary (Task 3-b). Keys are the English source strings. */
 export const it: TranslationDict = {
-  "Blueprint downloaded": "Progetto scaricato",
-  "Copy prompt": "Copia il prompt",
-  "Copy unavailable": "Copia non disponibile",
-  "Download .md": "Scarica .md",
-  "exact counts · uniform depth · isolated channels": "conteggi esatti · profondità uniforme · canali isolati",
-  "Paste it into any capable session to reproduce this laboratory exactly.": "Incollalo in qualsiasi sessione idonea per riprodurre questo laboratorio esattamente.",
-  "Precise Replication Prompt": "Prompt di Replica Preciso",
-  "Replication prompt copied": "Prompt di replica copiato",
-  "Replication prompt text": "Testo del prompt di replica",
-  "Select the text in the box manually and copy it.": "Seleziona manualmente il testo nel riquadro e copialo.",
-  "The exact blueprint of this laboratory — every count, depth rule, theme and channel. Copy it into a fresh session to reproduce the app faithfully.": "Il progetto esatto di questo laboratorio — ogni conteggio, regola di profondità, tema e canale. Copialo in una nuova sessione per riprodurre l'app fedelmente.",
-  "verified against the live build · 870 · 202 · 59 · 8 worlds": "verificato sulla build viva · 870 · 202 · 59 · 8 mondi",
   "Enter your passage": "Entra nel tuo passaggio",
   "Carve your passage": "Scolpisci il tuo passaggio",
   "Play": "Riprendi",

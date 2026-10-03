@@ -15,7 +15,6 @@ import {
   ChevronRight,
   Cpu,
   Dna,
-  FileText,
   Landmark,
   LogIn,
   LogOut,
@@ -774,19 +773,6 @@ export function SidebarContent() {
         </button>
         <div className="flex items-center gap-1.5">
         <ThemeToggle />
-        <button
-          type="button"
-          onClick={() => openModal({ type: "replication" })}
-          aria-label={t("Precise Replication Prompt")}
-          title={t("Precise Replication Prompt")}
-          data-testid="replication-open"
-          className="focus-glow group flex size-8 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
-        >
-          <FileText
-            className="size-3.5"
-            aria-hidden="true"
-          />
-        </button>
         <button
           type="button"
           onClick={recalibrate}
