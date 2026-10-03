@@ -119,9 +119,19 @@ export function clearSessionCookie(res: NextResponse): void {
 export async function getSessionUser(req: NextRequest): Promise<SessionUser | null> {
   const uid = readSessionToken(req.cookies.get(SESSION_COOKIE)?.value);
   if (!uid) return null;
-  const user = await db.user.findUnique({ where: { id: uid } });
-  if (!user) return null;
-  return { id: user.id, email: user.email, name: user.name, tier: user.tier === "light" ? "light" : "crystalline" };
+  try {
+    const user = await db.user.findUnique({ where: { id: uid } });
+    if (!user) return null;
+    return { id: user.id, email: user.email, name: user.name, tier: user.tier === "light" ? "light" : "crystalline" };
+  } catch (err) {
+    /* the cloud without a database — a signed-in cookie is received
+       but cannot be looked up; the visitor passes as anonymous */
+    console.error(
+      "[access] session lookup failed (database unreachable):",
+      err instanceof Error ? err.message : err
+    );
+    return null;
+  }
 }
 
 /* --------------------------- anonymous id -------------------------- */
@@ -148,11 +158,19 @@ export interface Visitor {
   freshAnon: boolean;
 }
 
+/** Ids minted when the database rests (cloud without DATABASE_URL).
+    Library writes recognise them and rest quietly instead of knocking. */
+export const STATELESS_PREFIX = "stateless:";
+
 /**
  * The free threshold. Every visitor passes — anonymous or signed in —
  * and every visitor carries an identity their cosmic library can rest on.
  * Anonymous visitors are given a User row keyed to their random cookie;
  * nothing personal is ever stored for them.
+ *
+ * When the database itself is unreachable (a cloud deployment without
+ * DATABASE_URL), the visitor still passes — stateless. The mirror
+ * answers; the library simply rests until a database arrives.
  */
 export async function resolveVisitor(req: NextRequest): Promise<Visitor> {
   const signedIn = await getSessionUser(req);
@@ -163,16 +181,34 @@ export async function resolveVisitor(req: NextRequest): Promise<Visitor> {
 
   const existing = readAnonId(req);
   const anonId = existing ?? randomUUID();
-  const user = await db.user.upsert({
-    where: { email: anonEmail(anonId) },
-    create: { email: anonEmail(anonId), name: null, passwordHash: null, provider: "anon" },
-    update: {},
-  });
-  return {
-    user: { id: user.id, email: user.email, name: user.name, tier: "crystalline", anon: true },
-    anonId,
-    freshAnon: !existing,
-  };
+  try {
+    const user = await db.user.upsert({
+      where: { email: anonEmail(anonId) },
+      create: { email: anonEmail(anonId), name: null, passwordHash: null, provider: "anon" },
+      update: {},
+    });
+    return {
+      user: { id: user.id, email: user.email, name: user.name, tier: "crystalline", anon: true },
+      anonId,
+      freshAnon: !existing,
+    };
+  } catch (err) {
+    console.error(
+      "[access] database unreachable — passing the visitor stateless:",
+      err instanceof Error ? err.message : err
+    );
+    return {
+      user: {
+        id: `${STATELESS_PREFIX}${anonId}`,
+        email: anonEmail(anonId),
+        name: null,
+        tier: "crystalline",
+        anon: true,
+      },
+      anonId,
+      freshAnon: !existing,
+    };
+  }
 }
 
 /** Attaches the freshly minted anon cookie to a response, if one is due. */
@@ -227,7 +263,7 @@ export async function saveLibrary(
   content: unknown,
   maxLen = 60000
 ): Promise<string | null> {
-  if (!userId) return null;
+  if (!userId || userId.startsWith(STATELESS_PREFIX)) return null;
   try {
     const entry = await db.libraryEntry.create({
       data: {
@@ -254,7 +290,7 @@ export async function updateLibrary(
   content: unknown,
   maxLen = 60000
 ): Promise<void> {
-  if (!userId || !entryId) return;
+  if (!userId || !entryId || userId.startsWith(STATELESS_PREFIX)) return;
   try {
     await db.libraryEntry.update({
       where: { id: entryId },
