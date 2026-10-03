@@ -8,6 +8,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/mirror/theme-provider";
+import { Analytics } from "@vercel/analytics/next";
 
 const jakartaSans = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
@@ -76,6 +77,7 @@ export default function RootLayout({
           {/* sonner — the voice of every toast in the Laboratory */}
           <SonnerToaster position="top-center" />
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );
