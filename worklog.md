@@ -1997,3 +1997,16 @@ Stage Summary:
 - Vercel now answers with Z.ai GLM by default: user adds ZAI_API_KEY env var → redeploy → done. Models: ZAI_MODEL (default glm-4.5-flash, free), ZAI_VISION_MODEL (glm-4.6v), ZAI_IMAGE_MODEL (cogview-3-flash, free).
 - Commit 0add30f awaits push (needs fresh GitHub token from user) — then Vercel auto-redeploys.
 - Fixed latent cloud bug: image painting would crash on Vercel's read-only FS; now serves hosted urls in cloud mode.
+
+---
+Task ID: ZAIVER-PUSH
+Agent: Z.ai Code (main)
+Task: Complete the blocked push of the Z.ai cloud bridge.
+
+Work Log:
+- User supplied fresh GitHub tokens; first two (fine-grained, then classic) failed 403 — API header check showed empty x-oauth-scopes (repo box unticked).
+- Third classic token carried `repo` scope (verified via X-OAuth-Scopes before pushing).
+- Pushed with one-shot credential helper: ad2daa5..0591903 main -> main. Vercel auto-deploy triggered by the push.
+
+Stage Summary:
+- Z.ai cloud bridge is live on GitHub; Vercel redeploys automatically. Remaining user step: add ZAI_API_KEY (from z.ai) in Vercel env vars -> Redeploy -> /api/chat status light should show provider "zai-cloud".
