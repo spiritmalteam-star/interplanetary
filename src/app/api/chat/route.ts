@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import ZAI from "@/lib/zai-client";
+import ZAI, { resolveProvider } from "@/lib/zai-client";
 import {
   generateImage,
+  isZaiCloudConfigured,
   isOpenAiConfigured,
   type ImageQuality,
 } from "@/lib/image-engine";
@@ -202,6 +203,8 @@ export async function GET() {
     endpoint: "POST /api/chat",
     contract:
       "{ text, hasImage, image?: { url, revisedPrompt, originalPrompt, engine } }",
+    provider: resolveProvider(),
+    zaiCloudConfigured: isZaiCloudConfigured(),
     openaiConfigured: isOpenAiConfigured(),
   });
 }

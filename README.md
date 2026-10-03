@@ -42,19 +42,27 @@ gitignored as well.
 The worlds speak through a provider bridge (`src/lib/zai-client.ts`):
 
 - **In this sandbox** — the z-ai-web-dev-sdk atelier answers (default provider `zai`).
-- **On Vercel** — set `OPENAI_API_KEY` in the Vercel project's Environment
-  Variables and every world automatically switches to the OpenAI-compatible
-  endpoint (default model `gpt-4o-mini`, override with `OPENAI_MODEL`).
-  `LLM_PROVIDER` can force `openai` or `zai` explicitly.
+- **On Vercel** — the Z.ai sky is the default: set `ZAI_API_KEY` in the Vercel
+  project's Environment Variables and every world speaks with the same GLM
+  brains as the laboratory (chat model `glm-4.5-flash` — free; override with
+  `ZAI_MODEL`, vision with `ZAI_VISION_MODEL`, painter with `ZAI_IMAGE_MODEL`).
+  With only `OPENAI_API_KEY` present the bridge switches to the OpenAI
+  endpoint instead. `LLM_PROVIDER` can force `zai-cloud`, `openai` or `zai`
+  explicitly.
 
 ```bash
 # after deploying, the cloud sky needs one key:
-# Vercel → Project → Settings → Environment Variables → OPENAI_API_KEY
+# 1. create a key at https://z.ai/manage-apikey/apikey-list
+# 2. Vercel → Project → Settings → Environment Variables → ZAI_API_KEY
+# 3. Deployments → ⋯ → Redeploy
 ```
 
 Notes:
-- Images flow through the dual-brush engine (`src/lib/image-engine.ts`):
-  DALL·E 3 first, Z.ai atelier as fallback.
+- Images flow through the multi-brush engine (`src/lib/image-engine.ts`):
+  the lead brush follows the chat brain — CogView (Z.ai) first in the Z.ai
+  sky, DALL·E 3 first in the OpenAI sky — and the other brush plus the Z.ai
+  atelier serve as fallbacks. On Vercel (read-only filesystem) paintings are
+  served from the painter's hosted url instead of the local gallery.
 - Voice (TTS/ASR) currently speaks only through the z-ai atelier
   (`LLM_PROVIDER=zai`); in the cloud the Listen button rests quietly.
 - The cosmic library and accounts need a database (`DATABASE_URL`);
