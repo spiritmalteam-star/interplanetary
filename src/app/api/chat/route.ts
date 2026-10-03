@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import ZAI from "z-ai-web-dev-sdk";
+import ZAI from "@/lib/zai-client";
 import {
   generateImage,
   isOpenAiConfigured,
@@ -205,3 +205,6 @@ export async function GET() {
     openaiConfigured: isOpenAiConfigured(),
   });
 }
+
+/* the long weavings need room in the cloud sky */
+export const maxDuration = 300;

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import ZAI from "z-ai-web-dev-sdk";
+import ZAI from "@/lib/zai-client";
 import {
   describeImage,
   documentBlock,
@@ -368,3 +368,6 @@ ${replyLine} Write the next page of this same record now, in your hand.${deskLin
     );
   }
 }
+
+/* the long weavings need room in the cloud sky */
+export const maxDuration = 300;

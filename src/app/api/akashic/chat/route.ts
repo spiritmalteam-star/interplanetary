@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import ZAI from "z-ai-web-dev-sdk";
+import ZAI from "@/lib/zai-client";
 import {
   extractRecord,
   extractRecordLoose,
@@ -156,3 +156,6 @@ Open the seeker's own book now and inscribe the long, true record of their timel
     );
   }
 }
+
+/* the long weavings need room in the cloud sky */
+export const maxDuration = 300;

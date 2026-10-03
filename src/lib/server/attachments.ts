@@ -1,4 +1,4 @@
-import type ZAI from "z-ai-web-dev-sdk";
+import type ZAI from "@/lib/zai-client";
 
 /* ------------------------------------------------------------------ */
 /*  Attachment intelligence — the Mirror can receive more than words.  */

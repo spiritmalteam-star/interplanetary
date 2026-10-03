@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import ZAI from "z-ai-web-dev-sdk";
+import ZAI from "@/lib/zai-client";
 import { resolveVisitor, saveLibrary, updateLibrary, withAnonCookie } from "@/lib/server/access";
 import { LANGUAGE_NAMES, isLanguageCode } from "@/lib/i18n/core";
 
@@ -715,3 +715,6 @@ THE NAME LAW WAS BROKEN: your reply used the forbidden stock name(s): ${violatio
     );
   }
 }
+
+/* the long weavings need room in the cloud sky */
+export const maxDuration = 300;

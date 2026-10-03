@@ -36,3 +36,26 @@ Open the preview panel and transmit your first question to the mirror.
 Never commit `.env` — it holds API keys. The generated artwork gallery
 (`.visualizations/`) and the local database (`db/`) are runtime data and are
 gitignored as well.
+
+## Deploy to Vercel
+
+The worlds speak through a provider bridge (`src/lib/zai-client.ts`):
+
+- **In this sandbox** — the z-ai-web-dev-sdk atelier answers (default provider `zai`).
+- **On Vercel** — set `OPENAI_API_KEY` in the Vercel project's Environment
+  Variables and every world automatically switches to the OpenAI-compatible
+  endpoint (default model `gpt-4o-mini`, override with `OPENAI_MODEL`).
+  `LLM_PROVIDER` can force `openai` or `zai` explicitly.
+
+```bash
+# after deploying, the cloud sky needs one key:
+# Vercel → Project → Settings → Environment Variables → OPENAI_API_KEY
+```
+
+Notes:
+- Images flow through the dual-brush engine (`src/lib/image-engine.ts`):
+  DALL·E 3 first, Z.ai atelier as fallback.
+- Voice (TTS/ASR) currently speaks only through the z-ai atelier
+  (`LLM_PROVIDER=zai`); in the cloud the Listen button rests quietly.
+- The cosmic library and accounts need a database (`DATABASE_URL`);
+  point it at a hosted provider to use them in the cloud.

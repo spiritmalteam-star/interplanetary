@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import ZAI from "z-ai-web-dev-sdk";
+import ZAI from "@/lib/zai-client";
 import { REMEDY_KINDS, type RemedyKind } from "@/lib/data/remedy";
 
 /* ------------------------------------------------------------------ */
@@ -165,3 +165,6 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
+/* the long weavings need room in the cloud sky */
+export const maxDuration = 300;

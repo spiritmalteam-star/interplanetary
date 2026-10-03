@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 import crypto from "crypto";
-import ZAI from "z-ai-web-dev-sdk";
+import ZAI from "@/lib/zai-client";
 import {
   isVisualizationMode,
   type VisualizationMode,
@@ -524,3 +524,6 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
+/* the long weavings need room in the cloud sky */
+export const maxDuration = 300;
