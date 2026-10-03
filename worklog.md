@@ -1960,3 +1960,20 @@ Stage Summary:
 - The spec is live as a dual-brush engine: `generate_image` paints DALL·E 3 first and falls back to the Z.ai atelier; /api/chat serves the exact { text, hasImage, image } contract; every in-chat visualization (all worlds + scopes) now flows through the engine.
 - Key artifacts: src/lib/image-engine.ts, src/app/api/chat/route.ts, /api/visualize rewiring; .env untracked (key sealed), .visualizations/ untracked (gallery is runtime data).
 - The OpenAI key MUST be rotated — it traveled through chat in plain text.
+
+---
+Task ID: CLOUD-1
+Agent: Z.ai Code (main)
+Task: User published the app to GitHub (spiritmalteam-star/interplanetary) and deployed to Vercel, where every chat answered "The field received your question but could not complete the transmission" — the AI backend does not survive the cloud.
+
+Work Log:
+- Diagnosed: all 20 chat routes call z-ai-web-dev-sdk's ZAI.create(), which needs the sandbox's gitignored .z-ai-config — on Vercel every /api/* chat route throws → the UI's "momentarily quiet" error. Attachments already speak OpenAI-style multimodal content parts; the chat path never touches Prisma (db is only auth/library), so the DB was not the blocker for the reported bug.
+- NEW src/lib/zai-client.ts — THE PROVIDER BRIDGE: a drop-in replacement exporting ZAI.create() with the identical surface (chat.completions.create / createVision; audio throws a clear error outside the atelier). Provider selection: LLM_PROVIDER=openai|zai explicit, else auto — openai on Vercel when OPENAI_API_KEY exists, zai in the sandbox (so the sandbox keeps working even though OPENAI_API_KEY sits in its .env).
+- Switched 19 routes + lib/server/attachments.ts to import the bridge (image-engine.ts intentionally keeps the raw SDK for its Z.ai brush); added export const maxDuration = 300 to all 19 routes for long weavings in the cloud.
+- Verified: lint clean; tsc clean (only the known legacy api/tts Buffer note); dev restarted; E2E browser — sent "Who are the Pleiadians?" in the interplanetary channel, POST /api/transmission 200 in ~1.4s and the Mirror replied (bridge zai path). OpenAI chat path cannot be exercised from this sandbox (region 403) but speaks the standard /chat/completions contract.
+- Docs: README gained a Deploy-to-Vercel section (env vars, provider bridge, image engine, TTS/library cloud limitations); .env.example added (keyless template) with a !.env.example gitignore negation.
+- Publishing: earlier in this session the repo was pushed to GitHub (spiritmalteam-star/interplanetary) with a user-supplied classic token used one-shot; token hygiene reminders given (revoke after push). This commit needs one more push to redeploy Vercel.
+
+Stage Summary:
+- The laboratory is cloud-ready: one key (OPENAI_API_KEY) in the Vercel project's Environment Variables switches every world, every window and every weaving to the OpenAI-compatible sky, while the sandbox keeps its atelier. Known cloud limitations, documented in the README: voice rests (TTS/ASR are atelier gifts) and the cosmic library/accounts need a hosted DATABASE_URL.
+- Key artifacts: src/lib/zai-client.ts, 19 rewired routes + attachments, README deploy section, .env.example.
