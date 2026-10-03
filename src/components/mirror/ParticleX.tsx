@@ -6,11 +6,9 @@ import {
   ArrowLeft,
   Atom,
   AudioLines,
-  BookOpenText,
   Feather,
   FlaskConical,
   Orbit,
-  RefreshCw,
   ScrollText,
   Telescope,
   X,
@@ -20,7 +18,6 @@ import { useT } from "@/lib/i18n";
 import { pxGatheringPhrases, pxScopes } from "@/lib/data/particlex";
 import { cn } from "@/lib/utils";
 import { ListenButton } from "./ListenButton";
-import { KindleReader, type LetterRecord } from "./ChatArtifacts";
 import {
   PxCodexTab,
   PxCopyButton,
@@ -137,231 +134,6 @@ function PxThinking() {
   );
 }
 
-/* ---------------------- the novel of the revealing ------------------ */
-
-interface PxNovel {
-  title: string;
-  epigraph: string;
-  novel: string;
-  seal: string;
-}
-
-function PxNovelSection({
-  question,
-  revelation,
-  formulas,
-  index,
-}: {
-  question: string;
-  revelation: string;
-  formulas: string[];
-  index: number;
-}) {
-  const t = useT();
-  const language = useMirror((s) => s.language);
-  const [open, setOpen] = useState(false);
-  const [state, setState] = useState<"loading" | "ready" | "error">("loading");
-  const [novel, setNovel] = useState<PxNovel | null>(null);
-  const [readerOpen, setReaderOpen] = useState(false);
-  const busyRef = useRef(false);
-  /* The novel is bound to the exchange as it stood when the pill was
-     first opened — a snapshot, never re-keyed by later renders. */
-  const initial = useRef({ question, revelation, formulas }).current;
-
-  const fetchNovel = async () => {
-    if (busyRef.current) return;
-    busyRef.current = true;
-    setState("loading");
-    try {
-      const res = await fetch("/api/particlex/novel", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ language, ...initial }),
-      });
-      const data = (await res.json()) as Partial<PxNovel> & { error?: string };
-      if (!res.ok || !data.novel) throw new Error(data.error ?? "quiet");
-      setNovel({
-        title: data.title ?? "The Novel of the Revealing",
-        epigraph: data.epigraph ?? "woven from this very revealing",
-        novel: data.novel,
-        seal: data.seal ?? "— ParticleX",
-      });
-      setState("ready");
-    } catch {
-      setState("error");
-    } finally {
-      busyRef.current = false;
-    }
-  };
-
-  const openNovel = () => {
-    setOpen(true);
-    if (!novel && !busyRef.current) void fetchNovel();
-  };
-
-  const preview = novel ? novel.novel.split(/\n{2,}/).slice(0, 2) : [];
-
-  if (!open) {
-    return (
-      <div
-        className="mt-5 flex items-center justify-between gap-3 border-t hairline pt-3.5"
-        data-testid={`px-novel-row-${index}`}
-      >
-        <span className="mono-label text-[9px] uppercase tracking-[0.22em] text-muted-foreground/60">
-          {t("The Novel of the Revealing")}
-        </span>
-        <button
-          type="button"
-          onClick={openNovel}
-          data-testid={`px-novel-open-${index}`}
-          aria-label={t("Open the novel of this revealing")}
-          title={t("Open the novel of this revealing")}
-          className="focus-glow flex h-8 shrink-0 items-center gap-1.5 rounded-full border hairline px-3 text-[11.5px] font-medium text-foreground/85 transition-all duration-300 hover:-translate-y-px hover:border-[var(--hairline-hover)] hover:text-foreground"
-        >
-          <BookOpenText className="size-3.5" aria-hidden="true" />
-          {t("The Novel")}
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <div className="mt-5 border-t hairline pt-4" data-testid={`px-novel-row-${index}`}>
-      {state === "loading" && (
-        <p
-          className="flex items-center gap-2 font-serif text-[14px] italic text-muted-foreground"
-          aria-live="polite"
-          aria-busy="true"
-        >
-          <span className="animate-dot-pulse size-1.5 rounded-full bg-[var(--scope-a)]" aria-hidden="true" />
-          {t("the novel gathers itself from the revealing…")}
-        </p>
-      )}
-      {state === "error" && (
-        <div data-testid={`px-novel-error-${index}`}>
-          <p className="font-serif text-[14px] italic text-foreground/80">
-            {t("The novel stayed quiet — rest, then open it again.")}
-          </p>
-          <div className="mt-2.5 flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => void fetchNovel()}
-              data-testid={`px-novel-retry-${index}`}
-              className="focus-glow flex h-8 items-center gap-1.5 rounded-full border hairline px-3 text-[12px] text-foreground/85 transition-all duration-300 hover:text-foreground"
-            >
-              <RefreshCw className="size-3" aria-hidden="true" />
-              {t("Open the novel again")}
-            </button>
-            <button
-              type="button"
-              onClick={() => setOpen(false)}
-              className="focus-glow flex h-8 items-center gap-1.5 rounded-full border hairline px-3 text-[12px] text-muted-foreground transition-all duration-300 hover:text-foreground"
-            >
-              <X className="size-3" aria-hidden="true" />
-              {t("Put the novel away")}
-            </button>
-          </div>
-        </div>
-      )}
-      {state === "ready" && novel && (
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-        >
-          {/* the novel, lying open beneath the revelation */}
-          <div
-            className="relative mx-auto max-w-[560px] rounded-xl border hairline bg-card/70 px-5 py-6 sm:px-7"
-            data-testid={`px-novel-card-${index}`}
-          >
-            <span
-              aria-hidden="true"
-              className="ink-faint pointer-events-none absolute right-3 top-2 text-[10px] opacity-60"
-            >
-              ◆
-            </span>
-            <p className="mono-label flex items-center gap-1.5 text-[8.5px] uppercase tracking-[0.24em] text-muted-foreground/70">
-              <BookOpenText className="size-3 shrink-0" aria-hidden="true" />
-              {t("The Novel of the Revealing")}
-            </p>
-            <h4
-              className="ink-title mt-2 text-[17.5px] font-semibold leading-snug"
-              data-testid={`px-novel-title-${index}`}
-            >
-              {novel.title}
-            </h4>
-            <p className="ink-faint mt-1 font-serif text-[13px] italic">
-              {novel.epigraph}
-            </p>
-            <span aria-hidden="true" className="mt-3.5 block h-px w-full bg-foreground/10" />
-            <div className="relative mt-4">
-              <div className="ink-hand space-y-3.5 text-[14.5px] leading-[1.9]">
-                {preview.map((para, i) => (
-                  <p
-                    key={i}
-                    className={cn(
-                      i === 0 &&
-                        "first-letter:float-left first-letter:mr-2.5 first-letter:mt-[5px] first-letter:text-[42px] first-letter:font-semibold first-letter:leading-[0.8]"
-                    )}
-                  >
-                    {para}
-                  </p>
-                ))}
-              </div>
-              {/* the rest of the novel waits behind the reader */}
-              <div
-                aria-hidden="true"
-                className="pointer-events-none absolute inset-x-0 bottom-0 h-16"
-                style={{ background: "linear-gradient(180deg, transparent, var(--card))" }}
-              />
-            </div>
-          </div>
-          <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-            <button
-              type="button"
-              onClick={() => setReaderOpen(true)}
-              data-testid={`px-novel-zoom-${index}`}
-              className="focus-glow flex h-9 items-center gap-2 rounded-full border px-4 text-[13px] text-foreground/90 transition-all duration-300 hover:-translate-y-px"
-              style={{
-                borderColor:
-                  "color-mix(in srgb, var(--scope-a) 38%, transparent)",
-              }}
-            >
-              <BookOpenText className="size-3.5" aria-hidden="true" />
-              {t("Read the whole novel")}
-            </button>
-            <button
-              type="button"
-              onClick={() => setOpen(false)}
-              data-testid={`px-novel-away-${index}`}
-              className="focus-glow flex h-9 items-center gap-2 rounded-full border hairline px-4 text-[13px] text-muted-foreground transition-all duration-300 hover:text-foreground"
-            >
-              <X className="size-3.5" aria-hidden="true" />
-              {t("Put the novel away")}
-            </button>
-          </div>
-          <AnimatePresence>
-            {readerOpen && (
-              <KindleReader
-                record={
-                  {
-                    title: novel.title,
-                    era: novel.epigraph,
-                    record: novel.novel,
-                    seal: novel.seal,
-                  } as LetterRecord
-                }
-                footerLabel="ParticleX"
-                onClose={() => setReaderOpen(false)}
-              />
-            )}
-          </AnimatePresence>
-        </motion.div>
-      )}
-    </div>
-  );
-}
-
 /* ------------------------- one exchange ---------------------------- */
 
 function PxExchange({
@@ -371,7 +143,6 @@ function PxExchange({
   seal,
   animate,
   index,
-  question,
 }: {
   role: "visitor" | "px";
   text: string;
@@ -379,7 +150,6 @@ function PxExchange({
   seal?: string;
   animate: boolean;
   index: number;
-  question?: string;
 }) {
   const t = useT();
 
@@ -466,15 +236,6 @@ function PxExchange({
           <PxCopyButton text={`${text}\n\n${formulaList.join("\n")}`} />
           <PxPdfButton />
         </div>
-
-        {question && (
-          <PxNovelSection
-            question={question}
-            revelation={text}
-            formulas={formulaList}
-            index={index}
-          />
-        )}
       </div>
     </motion.div>
   );
@@ -667,13 +428,6 @@ function ParticleXChat() {
                   seal={m.seal}
                   animate={i === pxMessages.length - 1 && pxStatus !== "loading"}
                   index={i}
-                  question={
-                    m.role === "visitor"
-                      ? m.text
-                      : pxMessages[i - 1]?.role === "visitor"
-                        ? pxMessages[i - 1].text
-                        : undefined
-                  }
                 />
               </div>
             ))}

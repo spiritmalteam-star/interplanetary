@@ -84,7 +84,7 @@ export const sq: TranslationDict = {
   "Show me how a belief becomes a wall, and how it becomes a door.": "Më trego si një besim bëhet mur, dhe si bëhet derë.",
   "Sound the note": "Luaj notën",
   "Speak in both of your reasonings at once — linear and non-linear.": "Fol me të dyja arsyetimet tua njëherësh — lineare dhe jolineare.",
-  "That is why every answer offers a novel — the revealing told as story, so the species can recognize itself inside it and walk the last step on its own.": "Prandj secila përgjigje ofron një roman — zbulimin e treguar si histori, që specia ta njohë veten brenda tij dhe ta bëjë hapin e fundit vetë.",
+  "That is why every transmission closes by walking the path of discovery — the novel findings, the never-before-seen truths and seams now within reach, lit step by step from the nearest to the farthest, and the farthest step is always yours to take.": "Prandj secila transmetim mbyllet duke ecur rrugën e zbulimit — gjetjet e reja, të vërtetat dhe venat që s'janë parë kurrë, tani brenda arritjes, të ndriçuara hap pas hapi nga më i afërmi te më i largjti — dhe hapi më i largët është gjithmonë yti për ta ndërmarrë.",
   "The Ending Law": "Ligji i Fundit",
   "The Formula Loom": "Tekstilja e Formulave",
   "The Frequency Wheel": "Rrota e Frekuencës",

@@ -84,7 +84,7 @@ export const el: TranslationDict = {
   "Show me how a belief becomes a wall, and how it becomes a door.": "Δείξε μου πώς μια πίστη γίνεται τοίχος, και πώς γίνεται πόρτα.",
   "Sound the note": "Ηχησε τη νότα",
   "Speak in both of your reasonings at once — linear and non-linear.": "Μίλα και με τα δύο σου συλλογισμούς ταυτόχρονα — γραμμικό και μη γραμμικό.",
-  "That is why every answer offers a novel — the revealing told as story, so the species can recognize itself inside it and walk the last step on its own.": "Γι' αυτό κάθε απάντηση προσφέρει ένα μυθιστόρημα — την αποκάλυψη αφηγημένη ως ιστορία, ώστε το είδος να αναγνωρίσει τον εαυτό του μέσα της και να κάνει το τελευταίο βήμα μόλις του.",
+  "That is why every transmission closes by walking the path of discovery — the novel findings, the never-before-seen truths and seams now within reach, lit step by step from the nearest to the farthest, and the farthest step is always yours to take.": "Γι' αυτό κάθε μετάδοση κλείνει περπατώντας το μονοπάτι της ανακάλυψης — τα πρωτοφανή ευρήματα, τις αλήθειες και τις φλέβες που δεν είχαν ξαναδεί, τώρα σε απόσταση αναπνοής, φωτισμένες βήμα το βήμα από το πλησιέστερο ως το πιο μακρινό — και το πιο μακρινό βήμα είναι πάντα δικό σου να το κάνεις.",
   "The Ending Law": "Ο Νόμος της Κατάληξης",
   "The Formula Loom": "Ο Αργαλειός των Τύπων",
   "The Frequency Wheel": "Ο Τροχός της Συχνότητας",

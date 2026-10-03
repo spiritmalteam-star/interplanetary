@@ -879,10 +879,11 @@ export function DreamBookView() {
         </div>
       </header>
 
-      {/* the book itself — one page at a time, sliding */}
+      {/* the book itself — one page at a time, sliding, each page
+          stretching the full height of the screen once revealed */}
       <div className="nice-scroll relative z-10 min-h-0 flex-1 overflow-y-auto overscroll-contain">
-        <div className="mx-auto flex min-h-full w-full max-w-[760px] items-start justify-center px-3 pb-24 pt-4 sm:px-8 sm:pb-28">
-          <div className="relative w-full max-w-[640px]">
+        <div className="mx-auto flex h-full w-full max-w-[760px] items-stretch justify-center px-3 pb-7 pt-3 sm:px-8 sm:pb-9">
+          <div className="relative flex min-h-full w-full max-w-[640px] flex-col">
             {/* the slide buttons — desktop */}
             {canPrev && (
               <button
@@ -914,10 +915,11 @@ export function DreamBookView() {
                 animate="center"
                 exit="exit"
                 transition={{ duration: 0.38, ease: "easeOut" }}
+                className="flex min-h-0 flex-1 flex-col"
               >
                 {showChoice ? (
                   /* the crossroads — the tale can go on */
-                  <div className="dream-page dream-page-single mx-auto flex max-w-[460px] flex-col items-center justify-center px-8 py-14 text-center">
+                  <div className="dream-page dream-page-single mx-auto my-auto flex max-w-[460px] flex-col items-center justify-center px-8 py-14 text-center">
                     <span
                       className="font-[family-name(var(--font-literata))] text-3xl text-[var(--dream-ink-faint)]"
                       aria-hidden="true"
@@ -954,7 +956,7 @@ export function DreamBookView() {
                   </div>
                 ) : showEnd ? (
                   /* the last page of the book */
-                  <div className="dream-page dream-page-single mx-auto flex max-w-[460px] flex-col items-center justify-center px-8 py-16 text-center">
+                  <div className="dream-page dream-page-single mx-auto my-auto flex max-w-[460px] flex-col items-center justify-center px-8 py-16 text-center">
                     <span
                       className="font-[family-name(var(--font-literata))] text-4xl text-[var(--dream-ink-soft)]"
                       aria-hidden="true"
@@ -977,8 +979,9 @@ export function DreamBookView() {
                     </button>
                   </div>
                 ) : pageIdx === 0 ? (
-                  /* the title page — the Liminal Threshold, one leaf */
-                  <div className="dream-page dream-page-single mx-auto flex min-h-[420px] w-full max-w-[560px] flex-col items-center justify-between px-8 py-12 text-center sm:px-12">
+                  /* the title page — the Liminal Threshold, one leaf,
+                     tall as the screen itself */
+                  <div className="dream-page dream-page-single mx-auto flex min-h-0 w-full flex-1 flex-col items-center justify-between px-8 py-10 text-center sm:px-12">
                     <div className="flex flex-col items-center pt-4 text-center sm:pt-8">
                       <span
                         className="font-[family-name(var(--font-literata))] text-2xl text-[var(--dream-ink-faint)]"
@@ -1381,8 +1384,7 @@ function BookPage({
   return (
     <div
       className={cn(
-        "dream-page dream-page-single nice-scroll mx-auto flex w-full max-w-[560px] flex-col px-6 py-8 sm:px-10",
-        "max-h-[62vh] md:max-h-[68vh]"
+        "dream-page dream-page-single nice-scroll mx-auto flex min-h-0 w-full flex-1 flex-col px-6 py-8 sm:px-10"
       )}
     >
       {page ? (

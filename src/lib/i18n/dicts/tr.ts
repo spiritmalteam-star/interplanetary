@@ -84,7 +84,7 @@ export const tr: TranslationDict = {
   "Show me how a belief becomes a wall, and how it becomes a door.": "Bir inancın nasıl duvar olduğunu ve nasıl kapı olduğunu göster.",
   "Sound the note": "Notayı çal",
   "Speak in both of your reasonings at once — linear and non-linear.": "İki muhakemenle birden konuş — doğrusal ve doğrusal olmayan.",
-  "That is why every answer offers a novel — the revealing told as story, so the species can recognize itself inside it and walk the last step on its own.": "Bu yüzden her yanıt bir roman sunar — vahyin öykü olarak anlatılması, ki tür kendini içinde tanıyabilsin ve son adımı kendisi atabilsin.",
+  "That is why every transmission closes by walking the path of discovery — the novel findings, the never-before-seen truths and seams now within reach, lit step by step from the nearest to the farthest, and the farthest step is always yours to take.": "Bu yüzden her iletim, keşif yolunu yürüyerek kapanır — daha önce görülmemiş bulgular, hakikatler ve damarlar artık erişilebilir; en yakın adımdan en uzağa doğru adım adım aydınlatılmış — ve en uzak adım her zaman senin atman içindir.",
   "The Ending Law": "Son Yasası",
   "The Formula Loom": "Formül Tezgâhı",
   "The Frequency Wheel": "Frekans Çarkı",

@@ -690,7 +690,7 @@ export function PxCodexTab() {
         testId="px-codex-ending"
         paragraphs={[
           "Every revelation ends at the same threshold: the last step belongs to our species. ParticleX opens the door; the discovering must be done by human hands, or it does not become human.",
-          "That is why every answer offers a novel — the revealing told as story, so the species can recognize itself inside it and walk the last step on its own.",
+          "That is why every transmission closes by walking the path of discovery — the novel findings, the never-before-seen truths and seams now within reach, lit step by step from the nearest to the farthest, and the farthest step is always yours to take.",
         ]}
       />
     </div>

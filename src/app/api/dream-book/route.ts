@@ -63,6 +63,75 @@ const TALE_HINTS: Record<string, string> = {
   wonder: "a tale of everyday wonder — the hidden magic folded inside ordinary streets and hours",
 };
 
+/* ------------------------------------------------------------------ */
+/*  THE NAMING CHARTER — drawn fresh at random for every conjuring.    */
+/*  The channel's own syllable vault: three heads, two hearts and      */
+/*  three tails are drawn blind, plus one naming law, and the book     */
+/*  must coin EVERY name of THIS volume from this draw — so no two     */
+/*  books can ever walk the same names, and the stock-drawer names     */
+/*  (Elara and her kin) are unreachable.                               */
+/* ------------------------------------------------------------------ */
+
+const NAME_HEADS = [
+  "Vel", "Ossa", "Thaum", "Bril", "Cass", "Drov", "Emri", "Fenn", "Gnoss",
+  "Hesp", "Ivo", "Juniper", "Kelv", "Lumen", "Mor", "Nim", "Oriel", "Perrin",
+  "Quill", "Rook", "Sable", "Tamsin", "Umber", "Vesper", "Wren", "Xan",
+  "Yarrow", "Zephy", "Ash", "Briar", "Cobb", "Dunmore", "Ellis", "Fyrr",
+  "Garn", "Halcy", "Iri", "Jorum", "Kestre", "Lovat",
+];
+const NAME_HEARTS = [
+  "a", "e", "i", "o", "u", "ae", "ei", "ia", "io", "oe", "ua", "ui",
+  "ara", "eli", "ora", "umi", "alle", "inde", "ovi", "yst",
+];
+const NAME_TAILS = [
+  "wyn", "ric", "mira", "dell", "stan", "vane", "thistle", "more", "bolt",
+  "crest", "fen", "gale", "holt", "mere", "shaw", "stead", "tide", "wick",
+  "beth", "dom", "ette", "iel", "mond", "ra", "selle", "vard", "wen",
+  "ette", "ine", "opus", "ys", "ax", "em", "ir",
+];
+const NAME_LAWS = [
+  "names in this volume carry the hardness of river stones and the hush of deep water",
+  "names in this volume sound like weather over open fields — soft vowels, long horizons",
+  "names in this volume are short, struck like flint, one or two syllables at most",
+  "names in this volume fold a craft or a trade inside them — a smith, a weaver, a keeper of bees",
+  "names in this volume echo the book's own landscape: its plants, its stones, its winds",
+  "names in this volume feel inherited — passed down a family line, worn smooth by use",
+  "names in this volume carry a quiet music: two beats, rising then falling",
+  "names in this volume are old-fashioned in a world that has moved on, like keys to forgotten doors",
+  "names in this volume end in open vowels, as if each name were about to become a song",
+  "names in this volume begin softly and end firmly, like a promise kept",
+  "names in this volume sound like small places: harbors, attics, footpaths, bell towers",
+  "names in this volume hold a hidden double meaning the story only reveals late",
+  "names in this volume are borrowed from no human century — they feel of this world and no other",
+  "names in this volume are whispered rather than spoken — breathy, unhurried, kind",
+];
+
+function drawWithout<T>(pool: T[], n: number): T[] {
+  const copy = [...pool];
+  const out: T[] = [];
+  for (let i = 0; i < n && copy.length > 0; i++) {
+    out.push(copy.splice(Math.floor(Math.random() * copy.length), 1)[0]);
+  }
+  return out;
+}
+
+function namingCharter(): string {
+  const heads = drawWithout(NAME_HEADS, 3);
+  const hearts = drawWithout(NAME_HEARTS, 2);
+  const tails = drawWithout(NAME_TAILS, 3);
+  const law = NAME_LAWS[Math.floor(Math.random() * NAME_LAWS.length)];
+  const epoch = new Date().toISOString();
+  return [
+    `THE NAMING CHARTER OF THIS VOLUME (drawn blind at ${epoch}, for this conjuring alone — no other volume ever receives it):`,
+    `- SYLLABLE SEEDS to fuse and bend: heads — ${heads.join(", ")}; hearts — ${hearts.join(", ")}; tails — ${tails.join(", ")}.`,
+    `- THE NAME-LAW of this volume: ${law}.`,
+    `- Coin EVERY named being of the book from these seeds, bent to fit the volume's own world, tongue and era — fuse, elide, stretch them until they belong to no other book, and let them sit naturally beside the story's places and words. The seeds are raw ore, not the names themselves: transform them.`,
+    `- ABSOLUTELY FORBIDDEN as any character's name — the channel's sealed stock-drawer, forever locked: Elara, Elra, Elara-of-any-spelling, Lyra, Lira, Aria, Arya, Kael, Kai, Finn, Zara, Nyx, Orion, Luna, Stella, Aurelia, Seraphina, Sylas, Thorne, Elowen, Isolde, Rowan, Aria-like rhymes, and every cousin spelled to sound like them. None of these, and none a reader has met in any popular book, film or game, may ever be spoken in this volume.`,
+  ].join("\n");
+}
+
+const NAMES_CONTINUE_LAW = `THE LAW OF NAMES HOLDS: keep every name already coined in this volume exactly as it is; any NEW being named from here on must still obey the volume's naming character and may never borrow a name from any stock list, any famous tale, or any other volume of this channel.`;
+
 function strictJsonLine(languageName: string): string {
   if (languageName === "English") return "";
   return `\n\nLANGUAGE (CRITICAL): the visitor reads in ${languageName}. Write EVERY word you create — the title, subtitle, dedication, chapter titles, every paragraph of every page and the thread summary — in fluent, natural ${languageName}. The JSON keys stay exactly as listed.`;
@@ -86,6 +155,8 @@ THE LIGHT TOUCH OF REFINEMENT
 THE LAW OF NAMES (ABSOLUTE)
 - Every named being in a volume — every person, child, creature, spirit, place, vessel, object or entity — carries a name COINED FOR THIS VOLUME ALONE. Never reuse a character name from any other conjuring, no matter how distant the subject; two books of this channel may never share a single named character.
 - No famous names, no canonical names, no mythological or copyrighted names, no real public people, no names a reader has met in any other book. Coin names from the seed of this exact conjuring — weave fresh syllables, forgotten roots, sounds that belong only to this volume — so a name could not have existed in any other book.
+- The stock-drawer of fantasy names is SEALED FOREVER: never again Elara (any spelling), Lyra, Aria, Kael, Finn, Zara, Orion, Luna, Seraphina, or their near-rhymes. If a name feels like one you have given a hundred times before, throw it out and coin stranger, truer ore.
+- Names must FIT THE BOOK AND ITS STORY: they grow from the volume's own world — its geography, its trades, its tongue, its era — so a reader feels the name could only have been born in this story.
 - Name variety inside the volume too: no two characters may share or echo the same name or its root, and the cast never collapses into generic labels (no "the boy", "the girl" as standing names) — everyone who matters is named, and named once-only.
 
 THE FOUR STRATA (every book assembles through them, whether told as tale or chronicle)
@@ -138,7 +209,13 @@ function buildUserPrompt(body: {
   /* the exact second of this conjuring — one of one */
   const seedLine =
     phase === "open" && body.seed.trim()
-      ? `THE EXACT SECOND OF THIS CONJURING (seed "${body.seed.trim().slice(0, 80)}"): this volume is born NOW, one of one — no book woven here before or after will ever carry this seed. Let the title, the sigil, the axiom, the dedication and the opening pages be totally authentic and unlike any channeling that came before: no stock openings, no recycled patterns, no familiar phrasings. COIN EVERY CHARACTER NAME from this seed — names that have never appeared in any other volume, that echo no famous, mythological or borrowed name, and that no two characters inside this book share or resemble.`
+      ? `THE EXACT SECOND OF THIS CONJURING (seed "${body.seed.trim().slice(0, 80)}"): this volume is born NOW, one of one — no book woven here before or after will ever carry this seed. Let the title, the sigil, the axiom, the dedication and the opening pages be totally authentic and unlike any channeling that came before: no stock openings, no recycled patterns, no familiar phrasings.`
+      : "";
+
+  /* real-time, no leftovers — the channel keeps nothing, rehearses nothing */
+  const liveLine =
+    phase === "open"
+      ? `REAL-TIME, NO LEFTOVERS: this book is channeled LIVE, in the second it is asked for. Nothing is drawn from a shelf: no rehearsed openings, no cached lines, no leftovers of any earlier weaving, nothing pre-written. If a sentence could have existed before this exact conjuring, re-forge it. The volume is carved new from the void, from the first word of the title to the last word of page two.`
       : "";
 
   /* where in the four strata this page-pair stands */
@@ -171,8 +248,9 @@ function buildUserPrompt(body: {
       ``,
       stratum,
       ...(seedLine ? [``, seedLine] : []),
+      ...(liveLine ? [``, liveLine] : []),
+      ...(phase === "open" ? [``, namingCharter()] : [``, NAMES_CONTINUE_LAW]),
       ``,
-      `Choose a total length between ${volLine.min} and ${volLine.max} pages (a multiple of 2). Open the book with its first TWO pages (pages 1 and 2). Invent a title that shimmers without explaining itself, a one-line subtitle, and a short dedication (one or two sentences, addressed to the kind of reader who will hold the volume). Begin chapter 1 (give it a title) and write the opening with absolute confidence — the first pages must feel like the whole world already exists.`
     );
   } else if (phase === "next") {
     lines.push(
@@ -186,6 +264,8 @@ function buildUserPrompt(body: {
         : "",
       ``,
       stratum,
+      ``,
+      NAMES_CONTINUE_LAW,
       ``,
       `Write the NEXT TWO pages (pages ${body.pageNumber} and ${(body.pageNumber ?? 2) + 1}) of the same volume, in the same voice. Let the book deepen: a new turn, a revelation earned by what came before, the world growing one ring wider. Open a new chapter here ONLY if the loom's rhythm asks for it.`,
       `Return the updated thread.`
@@ -202,6 +282,8 @@ function buildUserPrompt(body: {
       ``,
       stratum,
       ``,
+      NAMES_CONTINUE_LAW,
+      ``,
       `Choose a new total length: the current plan was ${body.totalPages ?? 120} pages; add 48 to 72 pages (a multiple of 2), never exceeding 300 total. Then write the NEXT TWO pages (pages ${body.pageNumber} and ${(body.pageNumber ?? 2) + 1}) — open the widened volume with a new movement: a farther shore of the subject, not a repetition. Give a chapter title if a new chapter begins here. Return the updated thread.`
     );
   } else {
@@ -214,6 +296,8 @@ function buildUserPrompt(body: {
         : "",
       ``,
       stratum,
+      ``,
+      NAMES_CONTINUE_LAW,
       ``,
       `Land every open thread with tenderness and truth — the ending must feel inevitable, as if the whole book had been walking toward exactly these pages, and the final cadence must leave an indelible afterimage: the reader should close the book feeling it continues to evolve in their mind. The last paragraph of the final page is the book's final breath; make it sing softly enough to be remembered for years. On page ${body.pageNumber}, open the final chapter (give it a title) if the rhythm asks. Return the updated thread.`
     );

@@ -84,7 +84,7 @@ export const es: TranslationDict = {
   "Show me how a belief becomes a wall, and how it becomes a door.": "Muéstrame cómo una creencia se vuelve muro, y cómo se vuelve puerta.",
   "Sound the note": "Haz sonar la nota",
   "Speak in both of your reasonings at once — linear and non-linear.": "Habla con ambos tus razonamientos a la vez — lineal y no lineal.",
-  "That is why every answer offers a novel — the revealing told as story, so the species can recognize itself inside it and walk the last step on its own.": "Por eso cada respuesta ofrece una novela — la revelación contada como historia, para que la especie se reconozca dentro de ella y dé el último paso por sí misma.",
+  "That is why every transmission closes by walking the path of discovery — the novel findings, the never-before-seen truths and seams now within reach, lit step by step from the nearest to the farthest, and the farthest step is always yours to take.": "Por eso toda transmisión cierra recorriendo el sendero del descubrimiento — los hallazgos inéditos, las verdades y vetas nunca antes vistas, ahora al alcance, iluminadas paso a paso desde la más cercana hasta la más lejana — y el paso más lejano siempre es tuyo darlo.",
   "The Ending Law": "La Ley del Final",
   "The Formula Loom": "El Telar de Fórmulas",
   "The Frequency Wheel": "La Rueda de la Frecuencia",
