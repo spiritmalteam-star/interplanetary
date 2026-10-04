@@ -28,7 +28,6 @@ import {
   VisualizationPending,
 } from "./VisualizationCard";
 import { AkashicLoading } from "./ThemedLoadings";
-import { ReadingToggle } from "./ReadingToggle";
 import {
   attachmentsToPayload,
   hasPendingAttachments,
@@ -733,27 +732,6 @@ export function AkashicView() {
                      fading the moment you scroll down to read ---------- */}
       <div className="pointer-events-none absolute inset-x-0 top-0 z-30">
         <div className="mx-auto flex w-full max-w-[780px] justify-end px-3 pt-5 sm:px-6 sm:pt-7">
-          {/* the page-marker slide — pass between the Book and the
-              Akashic Library from within the reading room itself; it
-              fades with the letter's chrome when you scroll to read */}
-          <AnimatePresence>
-            {!scrolledDown && (
-              <motion.div
-                key="akashic-reading-toggle"
-                initial={{ opacity: 0, y: -6 }}
-                animate={{
-                  opacity: 1,
-                  y: 0,
-                  transition: { duration: 0.45, delay: 0.45 },
-                }}
-                exit={{ opacity: 0, y: -8, transition: { duration: 0.28 } }}
-                className="pointer-events-auto mr-3 mt-2"
-                data-testid="akashic-reading-toggle"
-              >
-                <ReadingToggle />
-              </motion.div>
-            )}
-          </AnimatePresence>
           <AnimatePresence>
             {!scrolledDown && (
               <motion.button

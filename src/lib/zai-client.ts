@@ -330,6 +330,42 @@ export function resolveProvider(): Provider {
   return "zai";
 }
 
+/* ------------------------- the bridge ---------------------------- */
+
+/* ---- the patient messenger --------------------------------------- */
+/*  The shared skies sometimes answer 429 ("too many requests") or a
+    brief 5xx storm. Instead of letting every chat die on the first
+    refusal, we wait a breath and ask again — three patient retries
+    with growing pauses, so the channels stay alive.               */
+const RETRY_DELAYS_MS = [1400, 3200, 6400];
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function isTransientError(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message : String(err);
+  return /\b429\b|too many requests|rate.?limit|\b50[234]\b|overloaded|temporarily unavailable|ECONNRESET|ECONNABORTED|ETIMEDOUT|network|fetch failed/i.test(
+    msg
+  );
+}
+
+async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
+  let lastError: unknown = null;
+  for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastError = err;
+      if (attempt === RETRY_DELAYS_MS.length || !isTransientError(err)) {
+        throw err;
+      }
+      await sleep(RETRY_DELAYS_MS[attempt]);
+    }
+  }
+  throw lastError ?? new Error("the sky never answered");
+}
+
 /* ------------------------- the cloud sky --------------------------- */
 
 class CloudBackend implements ZAIClient {
@@ -377,14 +413,21 @@ class CloudBackend implements ZAIClient {
     return (await res.json()) as ChatCompletion;
   }
 
+  private completeWithPatience(
+    params: ChatParams,
+    modelOverride?: string
+  ): Promise<ChatCompletion> {
+    return withRetry(() => this.complete(params, modelOverride));
+  }
+
   chat = {
     completions: {
-      create: (params: ChatParams) => this.complete(params),
+      create: (params: ChatParams) => this.completeWithPatience(params),
       /* the vision call rides the same endpoint on the dedicated
          vision model (glm-4.6v on the Z.ai sky, the chat model
          itself on OpenAI) */
       createVision: (params: ChatParams) =>
-        this.complete(params, this.cfg.visionModel),
+        this.completeWithPatience(params, this.cfg.visionModel),
     },
   };
 
@@ -407,9 +450,23 @@ class CloudBackend implements ZAIClient {
 
 async function atelierBackend(): Promise<ZAIClient> {
   const sdk = await import("z-ai-web-dev-sdk");
-  const client = await sdk.default.create();
-  /* the atelier's client is the original shape — trust it */
-  return client as unknown as ZAIClient;
+  const client = (await sdk.default.create()) as unknown as ZAIClient;
+  /* the patient messenger — the atelier's shared sky sometimes answers
+     429 (too many requests); we wait a breath and ask again so every
+     channel keeps responding */
+  const originalCreate = client.chat.completions.create.bind(
+    client.chat.completions
+  );
+  const originalVision = client.chat.completions.createVision?.bind(
+    client.chat.completions
+  );
+  client.chat.completions.create = (params: ChatParams) =>
+    withRetry(() => originalCreate(params));
+  if (originalVision) {
+    client.chat.completions.createVision = (params: ChatParams) =>
+      withRetry(() => originalVision(params));
+  }
+  return client;
 }
 
 /* --------------------------- the bridge ---------------------------- */

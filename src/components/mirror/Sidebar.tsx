@@ -78,7 +78,7 @@ function NavRow({
       className="focus-glow group flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left transition-colors duration-200 hover:bg-[color-mix(in_srgb,var(--cy)_8%,transparent)]"
     >
       {sigil ? (
-        <span className="flex size-6 shrink-0 items-center justify-center text-foreground/75 transition-all duration-300 group-hover:scale-110 group-hover:text-[var(--cy)]">
+        <span className="flex size-7 shrink-0 items-center justify-center text-foreground/75 transition-all duration-300 group-hover:scale-110 group-hover:text-[var(--cy)]">
           <WorldSigil world={sigil} />
         </span>
       ) : (
