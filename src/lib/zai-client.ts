@@ -337,7 +337,7 @@ export function resolveProvider(): Provider {
     brief 5xx storm. Instead of letting every chat die on the first
     refusal, we wait a breath and ask again — three patient retries
     with growing pauses, so the channels stay alive.               */
-const RETRY_DELAYS_MS = [1400, 3200, 6400];
+const RETRY_DELAYS_MS = [1500, 3500, 7000, 12000];
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -471,6 +471,45 @@ async function atelierBackend(): Promise<ZAIClient> {
 
 /* --------------------------- the bridge ---------------------------- */
 
+/* ---- the chained skies -------------------------------------------- */
+/*  When the first sky has spent every patient retry on a rate limit
+    or a quota wall, a second configured sky carries the words so the
+    channel never dies. The first sky always stays the voice of the
+    house; the second only catches what would otherwise be silence. */
+const FALLBACK_TRIGGER =
+  /\b429\b|too many requests|rate.?limit|quota|exceeded|\b50[034]\b|overloaded/i;
+
+function skyRefused(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message : String(err);
+  return FALLBACK_TRIGGER.test(msg);
+}
+
+function chainChatBackends(primary: ZAIClient, fallback: ZAIClient): ZAIClient {
+  const withFallback = async (
+    run: (sky: ZAIClient) => Promise<ChatCompletion>
+  ): Promise<ChatCompletion> => {
+    try {
+      return await run(primary);
+    } catch (err) {
+      if (skyRefused(err)) return run(fallback);
+      throw err;
+    }
+  };
+  return {
+    chat: {
+      completions: {
+        create: (params: ChatParams) =>
+          withFallback((sky) => sky.chat.completions.create(params)),
+        createVision: (params: ChatParams) =>
+          withFallback((sky) => sky.chat.completions.createVision(params)),
+      },
+    },
+    audio: primary.audio,
+  };
+}
+
+/* the bridge */
+
 export default class ZAI {
   static async create(): Promise<ZAIClient> {
     const provider = resolveProvider();
@@ -478,13 +517,39 @@ export default class ZAI {
     const audioCfg = openaiConfig();
     if (provider === "zai-cloud") {
       const cfg = zaiCloudConfig();
-      if (cfg) return new CloudBackend(cfg, audioCfg);
+      if (cfg) {
+        const primary = new CloudBackend(cfg, audioCfg);
+        /* the quiet second brain — when Z.ai's quota is spent after
+           every patient retry, the OpenAI-compatible sky (if a key
+           exists) carries the words so the chats keep responding */
+        const secondSky = openaiConfig();
+        if (secondSky) {
+          return chainChatBackends(primary, new CloudBackend(secondSky, null));
+        }
+        return primary;
+      }
     }
     if (provider === "openai") {
       const cfg = openaiConfig();
-      if (cfg) return new CloudBackend(cfg, null);
+      if (cfg) {
+        const primary = new CloudBackend(cfg, null);
+        const secondSky = zaiCloudConfig();
+        if (secondSky) {
+          return chainChatBackends(primary, new CloudBackend(secondSky, audioCfg));
+        }
+        return primary;
+      }
     }
-    if (!process.env.VERCEL) return atelierBackend();
+    if (!process.env.VERCEL) {
+      /* the atelier — and, when the laboratory holds a cloud key, the
+         quiet second sky behind it for the exhausted-quota moments */
+      const atelier = await atelierBackend();
+      const secondSky = zaiCloudConfig() ?? openaiConfig();
+      if (secondSky) {
+        return chainChatBackends(atelier, new CloudBackend(secondSky, audioCfg));
+      }
+      return atelier;
+    }
     /* the cloud can only live from a key — say clearly which one */
     throw new Error(
       "No AI provider is configured on this deployment. Add ZAI_API_KEY (Z.ai — the same GLM brains as the laboratory) or OPENAI_API_KEY in Vercel → Settings → Environment Variables, then redeploy."
