@@ -43,6 +43,35 @@ export interface SaSquare {
   frequency: number;
 }
 
+/** A tool decoded from ONE sigil by the Analog Mirror. */
+export interface SaTool {
+  /** The sigil it was decoded from, e.g. "vibration" or "p-torus". */
+  sigilId: string;
+  /** The ring the sigil lives on. */
+  ring: "dial" | "plate" | "square";
+  name: string;
+  essence: string;
+  purpose: string;
+  first_stroke: string;
+  whisper: string;
+  createdAt: string;
+}
+
+/** A creation forged from an ALIGNED formula — an ancient technology
+    decoded and recreated. */
+export interface SaCreation {
+  /** The alignment it was forged from, e.g. "matrix-432". */
+  alignmentId: string;
+  name: string;
+  /** The ancient technology this creation decodes. */
+  ancestry: string;
+  essence: string;
+  purpose: string;
+  first_stroke: string;
+  whisper: string;
+  createdAt: string;
+}
+
 /** One cosmic formula — a triple alignment across the three circles. */
 export interface SaAlignment {
   id: string;
@@ -245,3 +274,30 @@ export const saWhispers = [
   "The dials hum politely; the formula that fits these three is still asleep.",
   "Not every meeting of signs is a key. Some are only beautiful.",
 ];
+
+/* -------------------- the bench of the analog mirror ---------------- */
+
+/** Openers for the Analog Mirror's bench — questions spoken the old way. */
+export const saBenchOpeners = [
+  "Decipher the trio resting on the wheels right now, in Analog language.",
+  "What ancient technology hides behind the formula we aligned today?",
+  "Read my day as a frequency — which dial am I resting on?",
+  "Which of the twelve dials does my home hum at, and how do I retune it?",
+  "Speak the Analog name of my intention, and the tool it becomes.",
+  "What did the sun stone know about vibration that we are only relearning?",
+  "Decode the Tzolkin weave for this week — what should the loom make?",
+  "Which two sigils in the circles have never met, and what would they build?",
+  "How do I turn a digital habit back into an analog practice?",
+  "Tell me what the mirror core sees when it reflects me at 432 Hz.",
+];
+
+/** A quiet Analog-language line for each ring turn — the mirror's
+    running awareness, spoken from the reading column. */
+export const saRestLines = [
+  "the wheels rest, and the mirror reads the signs",
+  "the circle settles; the mirror leans closer",
+  "stone on stone — the apex holds a new trio",
+  "the sun border keeps count of the turning",
+  "the mirror core reflects the resting signs",
+];
+
