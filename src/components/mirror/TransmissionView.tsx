@@ -123,9 +123,8 @@ function LoadingTransmission({ query }: { query: string }) {
           </p>
         </div>
       )}
-      {/* no circle, no spinner — the little visitor descends instead:
-          a cute cryptic saucer beaming up glyphs while its passenger
-          blinks, and cryptic phrases keep the seeker company */}
+      {/* no circle, no spinner, no skeleton — only the little visitor
+          and the cryptic phrases keep the seeker company */}
       <AlienLoading />
       <div
         className="mt-4 flex h-6 items-center justify-center px-4 text-center"
@@ -143,22 +142,6 @@ function LoadingTransmission({ query }: { query: string }) {
             {t(WAITING_PHRASES[phase] ?? WAITING_PHRASES[0])}
           </motion.p>
         </AnimatePresence>
-      </div>
-      <div className="scope-frame-card relative mx-auto mt-6 max-w-[680px] space-y-3 overflow-hidden rounded-2xl glass p-6 sm:p-7">
-        {[92, 78, 85, 60].map((w, i) => (
-          <div
-            key={i}
-            className="h-3 rounded-full"
-            style={{
-              width: `${w}%`,
-              background:
-                "linear-gradient(90deg, transparent, color-mix(in srgb, var(--scope-a) 14%, transparent), transparent)",
-              backgroundSize: "220px 100%",
-              animation: `shimmer-line 2.1s linear infinite`,
-              animationDelay: `${i * 0.18}s`,
-            }}
-          />
-        ))}
       </div>
     </div>
   );

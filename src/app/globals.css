@@ -669,6 +669,127 @@ html:not(.dark) .scope-evolvemed {
 .alien-skin { fill: color-mix(in srgb, currentColor 9%, transparent); }
 .alien-glint { fill: var(--background); }
 
+/* ---------- the little keepers — one themed ink companion per world,
+   drawn in the same quiet ink as the little visitor above ---------- */
+
+/* AKASHIC — the record-keeper's tome: an open book, a knowing eye
+   hovering above it, old runes rising like incense. */
+@keyframes ak-eye {
+  0%, 86%, 100% { transform: scaleY(1); }
+  92% { transform: scaleY(0.06); }
+  96% { transform: scaleY(1); }
+}
+.ak-eye { transform-box: fill-box; transform-origin: center; animation: ak-eye 5.4s ease-in-out infinite; }
+@keyframes ak-rune {
+  0% { transform: translateY(0); opacity: 0; }
+  16% { opacity: 0.7; }
+  62% { opacity: 0.45; }
+  100% { transform: translateY(-30px); opacity: 0; }
+}
+.ak-rune { animation: ak-rune 4.4s linear infinite; }
+.ak-rune-2 { animation-delay: 1.45s; }
+.ak-rune-3 { animation-delay: 2.9s; }
+@keyframes ak-line {
+  0%, 100% { opacity: 0.18; }
+  50% { opacity: 0.65; }
+}
+.ak-line { animation: ak-line 2.7s ease-in-out infinite; }
+.ak-line-2 { animation-delay: 0.45s; }
+.ak-line-3 { animation-delay: 0.9s; }
+.ak-line-4 { animation-delay: 1.35s; }
+@keyframes ak-turn {
+  0%, 100% { opacity: 0.1; }
+  50% { opacity: 0.55; }
+}
+.ak-turn { animation: ak-turn 3.8s ease-in-out infinite; }
+
+/* MANIFEST — the hand mirror: a tiny presence lives in the glass,
+   a sheen of light keeps crossing it, sparks keep watch around. */
+@keyframes mf-sheen {
+  0% { transform: translateX(-16px); opacity: 0; }
+  35% { opacity: 0.85; }
+  100% { transform: translateX(16px); opacity: 0; }
+}
+.mf-sheen { animation: mf-sheen 2.7s ease-in-out infinite; }
+@keyframes mf-pulse {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 0.9; }
+}
+.mf-pulse { animation: mf-pulse 2.1s ease-in-out infinite; }
+.mf-pulse-2 { animation-delay: 0.7s; }
+
+/* QUANTUM — the atom: a breathing nucleus, three orbits of
+   electrons, each on its own line and its own time. */
+@keyframes qc-orbit {
+  to { transform: rotate(360deg); }
+}
+.qc-orbit { animation: qc-orbit 4.6s linear infinite; }
+.qc-orbit-2 { animation-duration: 7.2s; animation-direction: reverse; }
+.qc-orbit-3 { animation-duration: 10.4s; }
+@keyframes qc-nucleus {
+  0%, 100% { transform: scale(1); opacity: 0.85; }
+  50% { transform: scale(1.22); opacity: 1; }
+}
+.qc-nucleus { transform-box: fill-box; transform-origin: center; animation: qc-nucleus 1.9s ease-in-out infinite; }
+@keyframes qc-wave {
+  0% { stroke-dashoffset: 0; opacity: 0.25; }
+  50% { opacity: 0.55; }
+  100% { stroke-dashoffset: -26px; opacity: 0.25; }
+}
+.qc-wave { animation: qc-wave 2.8s linear infinite; }
+.qc-wave-2 { animation-duration: 3.9s; animation-direction: reverse; }
+
+/* EVOLVE MED — the helix of life: two strands breathing around a
+   quiet pulse, little cells drifting past, rungs catching light. */
+@keyframes hx-rung {
+  0%, 100% { opacity: 0.14; }
+  50% { opacity: 0.85; }
+}
+.hx-rung { animation: hx-rung 2.3s ease-in-out infinite; }
+.hx-rung-2 { animation-delay: 0.26s; }
+.hx-rung-3 { animation-delay: 0.52s; }
+.hx-rung-4 { animation-delay: 0.78s; }
+.hx-rung-5 { animation-delay: 1.04s; }
+@keyframes hx-beat {
+  0%, 30%, 100% { transform: scale(1); }
+  12% { transform: scale(1.24); }
+  21% { transform: scale(1.08); }
+}
+.hx-beat { transform-box: fill-box; transform-origin: center; animation: hx-beat 2.4s ease-in-out infinite; }
+@keyframes hx-cell {
+  0%, 100% { transform: translateY(0); opacity: 0.2; }
+  50% { transform: translateY(-9px); opacity: 0.6; }
+}
+.hx-cell { animation: hx-cell 4.6s ease-in-out infinite; }
+.hx-cell-2 { animation-delay: 1.7s; }
+
+/* INVENT — the little forge: a hammer tapping a patient anvil,
+   sparks leaping at every strike, an ember breathing below. */
+@keyframes fg-tap {
+  0%, 24% { transform: rotate(0deg); }
+  32% { transform: rotate(-26deg); }
+  42% { transform: rotate(7deg); }
+  50%, 100% { transform: rotate(0deg); }
+}
+.fg-tap { transform-box: fill-box; transform-origin: 88% 90%; animation: fg-tap 2.4s ease-in-out infinite; }
+@keyframes fg-spark {
+  0% { transform: translate(0, 0) scale(1); opacity: 0; }
+  14% { opacity: 1; }
+  100% { transform: translate(var(--fg-dx, 4px), -26px) scale(0.4); opacity: 0; }
+}
+.fg-spark { animation: fg-spark 1.15s ease-out infinite; }
+.fg-spark-2 { animation-delay: 0.13s; --fg-dx: -5px; }
+.fg-spark-3 { animation-delay: 0.26s; --fg-dx: 7px; }
+@keyframes fg-ember {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 0.95; }
+}
+.fg-ember { animation: fg-ember 1.25s ease-in-out infinite; }
+@keyframes fg-gear {
+  to { transform: rotate(360deg); }
+}
+.fg-gear { transform-box: fill-box; transform-origin: center; animation: fg-gear 9s linear infinite; }
+
 /* ------------------------------------------------------------------ */
 /*  The book reader draws no color — even glyphs. Any emoji used as    */
 /*  an ornament is rendered in ink only, and the toast voices (sonner) */
@@ -841,7 +962,23 @@ html:not(.dark) .scope-evolvemed {
   .communion-halo,
   .communion-ring,
   .communion-star,
-  .tarot-glare {
+  .tarot-glare,
+  .ak-eye,
+  .ak-rune,
+  .ak-line,
+  .ak-turn,
+  .mf-sheen,
+  .mf-pulse,
+  .qc-orbit,
+  .qc-nucleus,
+  .qc-wave,
+  .hx-rung,
+  .hx-beat,
+  .hx-cell,
+  .fg-tap,
+  .fg-spark,
+  .fg-ember,
+  .fg-gear {
     animation: none !important;
   }
   *,
