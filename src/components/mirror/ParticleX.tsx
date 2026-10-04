@@ -16,7 +16,6 @@ import {
   ScrollText,
   StickyNote,
   Telescope,
-  Waves,
   X,
 } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
@@ -29,7 +28,6 @@ import { ListenButton } from "./ListenButton";
 import { ScopeNotes } from "./ScopeNotes";
 import { QuantumLoading } from "./ThemedLoadings";
 import { PxBioMech } from "./PxBioMech";
-import { PxSynthAnalog } from "./PxSynthAnalog";
 import {
   PxCodexTab,
   PxCopyButton,
@@ -39,7 +37,7 @@ import {
   PX_SCOPE_ICONS,
 } from "./ParticleXChambers";
 
-type PxPlace = "chat" | "biomech" | "synth" | "scopes" | "tools" | "codex";
+type PxPlace = "chat" | "biomech" | "scopes" | "tools" | "codex";
 
 const PX_PLACES: {
   id: Exclude<PxPlace, "chat">;
@@ -47,7 +45,6 @@ const PX_PLACES: {
   icon: typeof Telescope;
 }[] = [
   { id: "biomech", label: "Bio Mechanics", icon: Dna },
-  { id: "synth", label: "Synth Analog", icon: Waves },
   { id: "scopes", label: "Scopes", icon: Telescope },
   { id: "tools", label: "Tools", icon: FlaskConical },
   { id: "codex", label: "Codex", icon: ScrollText },
@@ -830,14 +827,6 @@ export function ParticleX() {
                   </div>
 
                   {place === "biomech" && <PxBioMech />}
-                  {place === "synth" && (
-                    <PxSynthAnalog
-                      onAskCore={(question) => {
-                        setPlace("chat");
-                        void askPX(question);
-                      }}
-                    />
-                  )}
                   {place === "scopes" && (
                     <PxScopesTab
                       onOpenInCore={(scopeId) => {

@@ -15,6 +15,7 @@ import { StillCompanion } from "./StillCompanion";
 import { TransmissionView } from "./TransmissionView";
 import { MirrorOS } from "./MirrorOS";
 import { ParticleX } from "./ParticleX";
+import { SynthAnalog } from "./SynthAnalog";
 import { EvolveMed } from "./EvolveMed";
 import { LibraryView } from "./LibraryView";
 import { AuthModal } from "./PassageModal";
@@ -209,6 +210,19 @@ export default function AppShell() {
         <CosmicBackdrop />
         <StarField />
         <ParticleX />
+        {passageModals}
+      </div>
+    );
+  }
+
+  /* Synth Analog — the cosmic frequency interface is its own world:
+     a category of ParticleX, but never a chamber of the quantum view. */
+  if (view === "synth") {
+    return (
+      <div className={`relative h-[var(--app-h,100dvh)] overflow-hidden ${FRAME_LIFT}`}>
+        <CosmicBackdrop />
+        <StarField />
+        <SynthAnalog />
         {passageModals}
       </div>
     );

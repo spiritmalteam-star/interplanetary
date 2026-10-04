@@ -27,6 +27,7 @@ import {
   Sparkles,
   Orbit,
   Atom,
+  Waves,
   Users,
   X,
 } from "lucide-react";
@@ -528,6 +529,7 @@ export function SidebarContent() {
   const setMobileNavOpen = useMirror((s) => s.setMobileNavOpen);
   const openMirrorOS = useMirror((s) => s.openMirrorOS);
   const openParticleX = useMirror((s) => s.openParticleX);
+  const openSynth = useMirror((s) => s.openSynth);
   const openEvolveMed = useMirror((s) => s.openEvolveMed);
   const me = useMirror((s) => s.me);
   const openProfile = useMirror((s) => s.openProfile);
@@ -683,7 +685,7 @@ export function SidebarContent() {
         <nav aria-label={t("Light Codes")} className="flex flex-col">
           <NavRow
             icon={AudioLines}
-            sigil="lightcodes" as WorldSigilKey
+            sigil="lightcodes"
             label={t("Light Codes")}
             aria={t("Open Light Codes — sound transmissions through Mirror Entity")}
             onClick={() => {
@@ -696,14 +698,17 @@ export function SidebarContent() {
       </div>
 
       {/* ParticleX — its own category, outside the worlds: the quantum
-          narrator with its eight scopes and its instruments — and below
-          it, its medical twin: Evolve Med, the evolutionary nexus. */}
+          narrator with its eight scopes and its instruments; beside it,
+          its sibling category Synth Analog (the analog world drawn in
+          the digital realm — its own world, never a chamber of the
+          quantum view) and below them, the medical twin: Evolve Med,
+          the evolutionary nexus. */}
       <div className="shrink-0 px-3">
         <SectionLabel>{t("ParticleX")}</SectionLabel>
         <nav aria-label={t("ParticleX")} className="flex flex-col">
           <NavRow
             icon={Atom}
-            sigil="particlex" as WorldSigilKey
+            sigil="particlex"
             label={t("Quantum World")}
             aria={t("Open ParticleX — the quantum narrator of the laboratory")}
             onClick={() => {
@@ -713,8 +718,19 @@ export function SidebarContent() {
             testId="particlex-open"
           />
           <NavRow
+            icon={Waves}
+            sigil="synth"
+            label={t("Synth Analog")}
+            aria={t("Open Synth Analog — the cosmic frequency interface of the laboratory")}
+            onClick={() => {
+              openSynth();
+              setMobileNavOpen(false);
+            }}
+            testId="synth-open"
+          />
+          <NavRow
             icon={Dna}
-            sigil="evolvemed" as WorldSigilKey
+            sigil="evolvemed"
             label={t("Evolve Med")}
             aria={t("Open Evolve Med — the evolutionary medical nexus of the laboratory")}
             onClick={() => {

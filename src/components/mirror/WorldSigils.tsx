@@ -20,6 +20,7 @@ export type WorldSigilKey =
   | "dreambook"
   | "lightcodes"
   | "particlex"
+  | "synth"
   | "evolvemed";
 
 const PNG_SIGILS: Record<WorldSigilKey, [string, string]> = {
@@ -50,6 +51,12 @@ const PNG_SIGILS: Record<WorldSigilKey, [string, string]> = {
   particlex: [
     "/images/sigils/world-particlex-dark.png",
     "/images/sigils/world-particlex-light.png",
+  ],
+  /* Synth Analog wears the gifted golden sigil itself — the same
+     emblem that holds the Quantum Mirror Core of the instrument. */
+  synth: [
+    "/images/synth-analog/core-dark.png",
+    "/images/synth-analog/core-light.png",
   ],
   evolvemed: [
     "/images/sigils/world-evolvemed-dark.png",

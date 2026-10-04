@@ -143,19 +143,3 @@ export type {
   BxSliderMeta,
 } from "./particlex-bio";
 
-/* The Synth Analog chamber — the cosmic frequency interface.
-   Its data lives in particlex-synth.ts and is re-exported here. */
-export {
-  saAlignments,
-  saChamber,
-  saDials,
-  saPlates,
-  saSquares,
-  saWhispers,
-} from "./particlex-synth";
-export type {
-  SaAlignment,
-  SaDial,
-  SaPlate,
-  SaSquare,
-} from "./particlex-synth";

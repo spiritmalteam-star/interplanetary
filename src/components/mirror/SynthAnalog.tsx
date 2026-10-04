@@ -1,11 +1,19 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
+  ArrowLeft,
   Lock,
   Maximize2,
+  Minimize2,
   RotateCcw,
   RotateCw,
   Shuffle,
@@ -14,30 +22,32 @@ import {
   X,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import {
   saAlignments,
-  saChamber,
   saDials,
   saPlates,
   saSquares,
   saWhispers,
-} from "@/lib/data/particlex-synth";
+  saWorld,
+} from "@/lib/data/synth-analog";
 import { cn } from "@/lib/utils";
 
 /* ================================================================== */
-/*  PARTICLEX — SYNTH ANALOG · the cosmic frequency interface          */
+/*  SYNTH ANALOG — the cosmic frequency interface                      */
 /*                                                                      */
-/*  The analog world drawn into the digital realm: an Aztec Sun        */
-/*  border holds three circles of frequency — twelve elemental dials,  */
-/*  twelve transmutation plates, and the Quantum Mirror Core wearing   */
-/*  the interlocking rotating squares of the Tzolkin. Bring one dial,  */
-/*  one plate and one square glyph to the apex marker and the hidden   */
-/*  cosmic formulas reveal themselves.                                 */
+/*  A category of ParticleX, and a fully independent world: the        */
+/*  analog realm drawn into the digital. An Aztec Sun border guards    */
+/*  three circles of frequency — twelve elemental dials (Circle 1),    */
+/*  twelve transmutation plates (Circle 2) and the Quantum Mirror      */
+/*  Core wearing the interlocking rotating squares of the Tzolkin      */
+/*  (Circle 3). Bring one dial, one plate and one square glyph to      */
+/*  the apex and the hidden cosmic formulas sound themselves.          */
 /*                                                                      */
-/*  Palette law: Mesoamerican gold + jade on obsidian, answering the   */
-/*  daylight theme in bronze ink. The gifted golden sigil sits at the  */
-/*  mirror core — radiant gold in deep space, bronze ink by day.       */
+/*  Palette law: Mesoamerican gold + jade on obsidian; the daylight    */
+/*  laboratory answers in bronze ink. The gifted golden sigil sits     */
+/*  at the mirror core — radiant gold in deep space, bronze by day.    */
 /* ================================================================== */
 
 /* ------------------------- the instrument CSS ----------------------- */
@@ -83,7 +93,8 @@ const SA_CSS = `
 const CX = 450;
 const CY = 450;
 
-const pos = (radius: number, angleDeg: number) => {
+/** One point on the instrument's circles — 0° at twelve o'clock. */
+const pt = (radius: number, angleDeg: number) => {
   const a = ((angleDeg - 90) * Math.PI) / 180;
   return { x: CX + radius * Math.cos(a), y: CY + radius * Math.sin(a) };
 };
@@ -115,7 +126,9 @@ const OUT_RAY = "M 0 -11 L 5.5 1 L -5.5 1 Z";
 
 /* --------------------- the persistent codex ------------------------- */
 /*  The remembered formulas live in localStorage and reach React
-    through a tiny external store — no state cascades, cross-tab safe. */
+    through a tiny external store — no state cascades, cross-tab safe.
+    The key is the one the instrument has always signed, so the
+    formulas a visitor has already discovered stay remembered. */
 
 const CODEX_KEY = "px-synth-codex-v1";
 const CODEX_EVENT = "px-synth-codex-change";
@@ -165,7 +178,8 @@ const rememberCodex = (id: string) => {
 
 /* --------------------------- small parts ---------------------------- */
 
-function SaRingStepper({
+/** One ring's turning control — the keyboard path around the wheel. */
+function SaStepper({
   ring,
   label,
   current,
@@ -218,21 +232,23 @@ function SaRingStepper({
   );
 }
 
-/* ============================== the view ============================ */
+/* ============================== the world =========================== */
 
-export function PxSynthAnalog({
-  onAskCore,
-}: {
-  onAskCore?: (question: string) => void;
-}) {
+export function SynthAnalog() {
+  const exitSynth = useMirror((s) => s.exitSynth);
   const t = useT();
 
-  /* the three wheels — which glyph of each circle stands at the apex */
-  const [outerIdx, setOuterIdx] = useState(0);
-  const [midIdx, setMidIdx] = useState(0);
-  const [squareIdx, setSquareIdx] = useState(0);
+  /* The three wheels — kept as NET steps so the rotation is one
+     continuous line: the wheels never spin backwards at a wrap. */
+  const [outerNet, setOuterNet] = useState(0);
+  const [midNet, setMidNet] = useState(0);
+  const [squareNet, setSquareNet] = useState(0);
   const [seeking, setSeeking] = useState(false);
   const [zoom, setZoom] = useState(false);
+
+  const outerIdx = ((outerNet % 12) + 12) % 12;
+  const midIdx = ((midNet % 12) + 12) % 12;
+  const squareIdx = ((squareNet % 12) + 12) % 12;
 
   /* the remembered formulas — an external store over localStorage */
   const discovered = useSyncExternalStore(
@@ -260,8 +276,12 @@ export function PxSynthAnalog({
     [dial.id, plate.id, square.id]
   );
 
-  /* A formula fires the moment its three signs meet — spoken from the
-     turning hands themselves, never from an effect. */
+  /* The wheels' resting triple — mirrored in a ref so rapid turns
+     (batched between renders) still read the true resting signs.
+     A formula fires the moment its three signs meet — spoken from
+     the turning hands themselves, never from an effect. */
+  const tripleRef = useRef({ o: 0, m: 0, s: 0 });
+
   const checkAndReveal = (o: number, m: number, s: number) => {
     const found = saAlignments.find(
       (a) =>
@@ -277,42 +297,71 @@ export function PxSynthAnalog({
     });
   };
 
-  const turn = (
+  const setNetOf = (ring: "outer" | "mid" | "square") =>
+    ring === "outer"
+      ? setOuterNet
+      : ring === "mid"
+        ? setMidNet
+        : setSquareNet;
+
+  /* bring a wheel to a chosen sign by its shortest path.
+     `silent` skips the reveal check — used when all three wheels
+     move at once, so only the resting triple is ever read. */
+  const bringTo = (
     ring: "outer" | "mid" | "square",
-    dir: 1 | -1,
-    to?: number
+    target: number,
+    silent = false
   ) => {
-    const setter =
+    const idx =
       ring === "outer"
-        ? setOuterIdx
+        ? tripleRef.current.o
         : ring === "mid"
-          ? setMidIdx
-          : setSquareIdx;
-    const next =
-      to !== undefined
-        ? ((to % 12) + 12) % 12
-        : (() => {
-            const prev =
-              ring === "outer" ? outerIdx : ring === "mid" ? midIdx : squareIdx;
-            return (prev + dir + 12) % 12;
-          })();
-    checkAndReveal(
-      ring === "outer" ? next : outerIdx,
-      ring === "mid" ? next : midIdx,
-      ring === "square" ? next : squareIdx
-    );
-    setter(next);
+          ? tripleRef.current.m
+          : tripleRef.current.s;
+    let delta = ((target - idx) % 12 + 12) % 12;
+    if (delta > 6) delta -= 12;
+    const nextIdx = ((idx + delta) % 12 + 12) % 12;
+    tripleRef.current = {
+      o: ring === "outer" ? nextIdx : tripleRef.current.o,
+      m: ring === "mid" ? nextIdx : tripleRef.current.m,
+      s: ring === "square" ? nextIdx : tripleRef.current.s,
+    };
+    if (!silent) {
+      const { o, m, s } = tripleRef.current;
+      checkAndReveal(o, m, s);
+    }
+    setNetOf(ring)((n) => n + delta);
   };
 
-  /* the wheels seek on their own — every circle turns to a new sign */
+  const step = (ring: "outer" | "mid" | "square", dir: 1 | -1) => {
+    const idx =
+      ring === "outer"
+        ? tripleRef.current.o
+        : ring === "mid"
+          ? tripleRef.current.m
+          : tripleRef.current.s;
+    const nextIdx = ((idx + dir) % 12 + 12) % 12;
+    tripleRef.current = {
+      o: ring === "outer" ? nextIdx : tripleRef.current.o,
+      m: ring === "mid" ? nextIdx : tripleRef.current.m,
+      s: ring === "square" ? nextIdx : tripleRef.current.s,
+    };
+    const { o, m, s } = tripleRef.current;
+    checkAndReveal(o, m, s);
+    setNetOf(ring)((n) => n + dir);
+  };
+
+  /* the wheels seek on their own — every circle turns to a new sign,
+     and only the triple they rest on is read aloud */
   const seek = () => {
     const o = Math.floor(Math.random() * 12);
     const m = Math.floor(Math.random() * 12);
     const s = Math.floor(Math.random() * 12);
+    bringTo("outer", o, true);
+    bringTo("mid", m, true);
+    bringTo("square", s, true);
+    tripleRef.current = { o, m, s };
     checkAndReveal(o, m, s);
-    setOuterIdx(o);
-    setMidIdx(m);
-    setSquareIdx(s);
     setSeeking(true);
     window.setTimeout(() => setSeeking(false), 1000);
   };
@@ -371,29 +420,40 @@ export function PxSynthAnalog({
     return saWhispers[h % saWhispers.length];
   }, [outerIdx, midIdx, squareIdx]);
 
-  const askCore = () => {
-    if (!alignment || !onAskCore) return;
-    onAskCore(
-      `In the Synth Analog instrument the ${alignment.name} alignment (${alignment.code}) just fired — ${alignment.formula}. What does it do to the analog world, and how do I work with it?`
-    );
-  };
-
   const aligned = Boolean(alignment);
 
-  /* ------------------------- the chamber board ---------------------- */
+  /* the full-screen instrument — Esc always returns it to the world */
+  useEffect(() => {
+    if (!zoom) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setZoom(false);
+    };
+    window.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [zoom]);
+
+  /* ------------------------- the world board ------------------------ */
 
   const board = (
-    <div data-testid="px-synth" className="sa-root space-y-5">
-      {/* ---------------------- the opening line ---------------------- */}
+    <div data-testid="sa-board" className="sa-root space-y-6">
+      {/* ------------------------ the hero ---------------------------- */}
       <div className="text-center">
-        <h3 className="scope-gradient-text text-[19px] font-semibold">
-          {t(saChamber.name)}
-        </h3>
-        <p className="mt-1 font-serif text-[14px] italic text-muted-foreground">
-          {t(saChamber.subtitle)}
+        <p className="mono-label text-[10px] uppercase tracking-[0.24em] text-[var(--sa-gold)]">
+          {t(saWorld.kicker)}
         </p>
-        <p className="mx-auto mt-2 max-w-[600px] text-[14px] leading-relaxed text-muted-foreground">
-          {t(saChamber.reveals)}
+        <h2 className="scope-gradient-text mt-1.5 text-[26px] font-semibold sm:text-[30px]">
+          {t(saWorld.name)}
+        </h2>
+        <p className="mt-1 font-serif text-[15px] italic text-muted-foreground">
+          {t(saWorld.subtitle)}
+        </p>
+        <p className="mx-auto mt-3 max-w-[640px] text-[14.5px] leading-relaxed text-muted-foreground">
+          {t(saWorld.reveals)}
         </p>
       </div>
 
@@ -409,9 +469,9 @@ export function PxSynthAnalog({
             <p className="mono-label text-[10px] uppercase tracking-[0.22em] text-[var(--scope-a)]">
               {t("The cosmic frequency interface")}
             </p>
-            <h4 className="scope-gradient-text mt-1 text-[17px] font-semibold">
+            <h3 className="scope-gradient-text mt-1 text-[17px] font-semibold">
               {t("The Alignment of the Three Circles")}
-            </h4>
+            </h3>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -436,18 +496,16 @@ export function PxSynthAnalog({
               title={t("Work with the instrument full screen")}
               data-testid="sa-zoom"
               className="focus-glow flex size-8 items-center justify-center rounded-full border text-muted-foreground transition-all duration-300 hover:text-foreground"
-              style={{
-                borderColor: "var(--hairline)",
-              }}
+              style={{ borderColor: "var(--hairline)" }}
             >
               <Maximize2 className="size-3.5" aria-hidden="true" />
             </button>
           </div>
         </div>
 
-        <div className="mt-4 grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="mt-4 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_330px]">
           {/* ---------------------- the instrument svg ---------------------- */}
-          <div className="relative mx-auto w-full max-w-[560px]" data-testid="sa-instrument">
+          <div className="relative mx-auto w-full max-w-[620px]" data-testid="sa-instrument">
             <svg
               viewBox="0 0 900 900"
               className="size-full"
@@ -471,7 +529,7 @@ export function PxSynthAnalog({
               {/* ============ THE AZTEC SUN BORDER (fixed) ============ */}
               <g aria-hidden="true">
                 {RAY_ANGLES.map((a) => {
-                  const p = pos(438, a);
+                  const p = pt(438, a);
                   return (
                     <path
                       key={`ray-${a}`}
@@ -487,7 +545,7 @@ export function PxSynthAnalog({
                 <circle cx={CX} cy={CY} r="396" fill="none" stroke="var(--sa-band)" strokeWidth="1.4" opacity="0.55" />
 
                 {FRET_ANGLES.map((a) => {
-                  const p = pos(415, a);
+                  const p = pt(415, a);
                   return (
                     <path
                       key={`fret-${a}`}
@@ -501,7 +559,7 @@ export function PxSynthAnalog({
                   );
                 })}
                 {PYRAMID_ANGLES.map((a) => {
-                  const p = pos(415, a);
+                  const p = pt(415, a);
                   return (
                     <path
                       key={`pyr-${a}`}
@@ -514,13 +572,13 @@ export function PxSynthAnalog({
                   );
                 })}
                 {KIN_ANGLES.map((a) => {
-                  const p = pos(415, a);
+                  const p = pt(415, a);
                   return (
                     <g key={`kin-${a}`} transform={`translate(${p.x.toFixed(2)} ${p.y.toFixed(2)})`}>
                       <circle r="7" fill="none" stroke="var(--sa-gold)" strokeWidth="1.8" />
                       <circle r="2" fill="var(--sa-gold)" />
                       {[0, 90, 180, 270].map((d) => {
-                        const q = pos(12, d);
+                        const q = pt(12, d);
                         return (
                           <circle
                             key={d}
@@ -568,16 +626,16 @@ export function PxSynthAnalog({
 
               {/* ============ CIRCLE 1 — THE TWELVE DIALS (rotating) ============ */}
               <circle cx={CX} cy={CY} r="390" fill="none" stroke="var(--sa-gold-soft)" strokeWidth="1" opacity="0.4" aria-hidden="true" />
-              <g className="sa-ring" style={{ transform: `rotate(${-outerIdx * 30}deg)` }}>
+              <g className="sa-ring" style={{ transform: `rotate(${-outerNet * 30}deg)` }}>
                 {saDials.map((d, i) => {
-                  const p = pos(343, i * 30);
+                  const p = pt(343, i * 30);
                   const atApex = i === outerIdx;
                   return (
                     <g
                       key={d.id}
                       transform={`translate(${p.x.toFixed(2)} ${p.y.toFixed(2)})`}
                       className="sa-hit"
-                      onClick={() => turn("outer", 1, i)}
+                      onClick={() => bringTo("outer", i)}
                     >
                       <title>{`${d.name} — ${d.element} · ${d.frequency} Hz`}</title>
                       {atApex && (
@@ -623,16 +681,16 @@ export function PxSynthAnalog({
               {/* ============ CIRCLE 2 — THE TRANSMUTATION PLATES ============ */}
               <circle cx={CX} cy={CY} r="292" fill="none" stroke="var(--sa-gold-soft)" strokeWidth="1" opacity="0.4" aria-hidden="true" />
               <circle cx={CX} cy={CY} r="194" fill="url(#sa-disk)" aria-hidden="true" />
-              <g className="sa-ring" style={{ transform: `rotate(${-midIdx * 30}deg)` }}>
+              <g className="sa-ring" style={{ transform: `rotate(${-midNet * 30}deg)` }}>
                 {saPlates.map((pl, i) => {
-                  const p = pos(243, i * 30);
+                  const p = pt(243, i * 30);
                   const atApex = i === midIdx;
                   return (
                     <g
                       key={pl.id}
                       transform={`translate(${p.x.toFixed(2)} ${p.y.toFixed(2)})`}
                       className="sa-hit"
-                      onClick={() => turn("mid", 1, i)}
+                      onClick={() => bringTo("mid", i)}
                     >
                       <title>{`${pl.name} — ${pl.technique}`}</title>
                       {atApex && (
@@ -664,7 +722,7 @@ export function PxSynthAnalog({
               <circle cx={CX} cy={CY} r="190" fill="none" stroke="var(--sa-gold-soft)" strokeWidth="1" opacity="0.45" aria-hidden="true" />
 
               {/* the interlocking rotating squares + the twelve square glyphs */}
-              <g className="sa-ring" style={{ transform: `rotate(${-squareIdx * 30}deg)` }}>
+              <g className="sa-ring" style={{ transform: `rotate(${-squareNet * 30}deg)` }}>
                 {[
                   { half: 150, rot: 0, tone: "var(--sa-jade)", op: 0.34 },
                   { half: 128, rot: 30, tone: "var(--sa-gold)", op: 0.42 },
@@ -684,7 +742,7 @@ export function PxSynthAnalog({
                   />
                 ))}
                 {saSquares.map((sq, i) => {
-                  const p = pos(141, i * 30);
+                  const p = pt(141, i * 30);
                   const atApex = i === squareIdx;
                   const deg = i * 30;
                   return (
@@ -692,7 +750,7 @@ export function PxSynthAnalog({
                       key={sq.id}
                       transform={`translate(${p.x.toFixed(2)} ${p.y.toFixed(2)}) rotate(${deg})`}
                       className="sa-hit"
-                      onClick={() => turn("square", 1, i)}
+                      onClick={() => bringTo("square", i)}
                     >
                       <title>{`${sq.name} — ${sq.opens}`}</title>
                       {atApex && (
@@ -859,9 +917,9 @@ export function PxSynthAnalog({
                 >
                   {t("Cosmic formula aligned")}
                 </p>
-                <h5 className="mt-1 text-[16px] font-semibold text-foreground">
+                <h4 className="mt-1 text-[16px] font-semibold text-foreground">
                   {t(alignment.name)}
-                </h5>
+                </h4>
                 <p
                   className="mono-label mt-1 inline-block rounded-full border px-2 py-0.5 text-[9px] tracking-[0.18em]"
                   style={{
@@ -893,20 +951,6 @@ export function PxSynthAnalog({
                       ? t("Sounding…")
                       : t("Hear {n} Hz", { n: alignment.frequency })}
                   </button>
-                  {onAskCore && (
-                    <button
-                      type="button"
-                      onClick={askCore}
-                      data-testid="sa-ask-core"
-                      className="focus-glow flex h-8 items-center gap-1.5 rounded-full border px-3 text-[12.5px] font-medium text-foreground/90 transition-all duration-300 hover:-translate-y-px"
-                      style={{
-                        borderColor: "color-mix(in srgb, var(--sa-gold) 45%, transparent)",
-                      }}
-                    >
-                      <Sparkles className="size-3.5" aria-hidden="true" />
-                      {t("Ask the Core about this alignment")}
-                    </button>
-                  )}
                 </div>
               </motion.div>
             ) : (
@@ -952,23 +996,23 @@ export function PxSynthAnalog({
           role="group"
           aria-label={t("Turn the three circles")}
         >
-          <SaRingStepper
+          <SaStepper
             ring="outer"
             label="Outer Dials"
             current={dial.name}
-            onStep={(dir) => turn("outer", dir)}
+            onStep={(dir) => step("outer", dir)}
           />
-          <SaRingStepper
+          <SaStepper
             ring="mid"
             label="Transmutation Plates"
             current={plate.name}
-            onStep={(dir) => turn("mid", dir)}
+            onStep={(dir) => step("mid", dir)}
           />
-          <SaRingStepper
+          <SaStepper
             ring="square"
             label="Square Glyphs"
             current={square.name}
-            onStep={(dir) => turn("square", dir)}
+            onStep={(dir) => step("square", dir)}
           />
         </div>
 
@@ -984,7 +1028,7 @@ export function PxSynthAnalog({
 
       {/* ------------------------ the codex ------------------------ */}
       <div>
-        <p className="mono-label mb-2.5 text-center text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+        <p className="mono-label mb-3 text-center text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
           {t("The Codex of Cosmic Alignments")}
         </p>
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4" data-testid="sa-codex">
@@ -1032,11 +1076,11 @@ export function PxSynthAnalog({
                     />
                   )}
                 </div>
-                <h6 className="mt-1 text-[14.5px] font-semibold leading-snug text-foreground">
+                <h4 className="mt-1 text-[14.5px] font-semibold leading-snug text-foreground">
                   {found || a.grand
                     ? t(a.name)
                     : t("A veiled formula waits in the wheels")}
-                </h6>
+                </h4>
                 {found ? (
                   <>
                     <p className="mt-1.5 font-serif text-[12px] italic leading-snug text-muted-foreground">
@@ -1064,13 +1108,91 @@ export function PxSynthAnalog({
           })}
         </div>
       </div>
+
+      {/* ------------------------- the colophon ------------------------ */}
+      <p className="mono-label pb-1 text-center text-[9.5px] uppercase tracking-[0.2em] text-muted-foreground/70">
+        {t(saWorld.colophon)}
+      </p>
     </div>
   );
 
   return (
-    <>
+    <div data-testid="synth-view" className="scope-synth sa-root relative flex h-full flex-col">
       <style>{SA_CSS}</style>
-      {board}
+
+      {/* ---------- top bar with the single bridge back to the app ---------- */}
+      <header className="relative z-30 shrink-0 border-b hairline bg-[var(--glass-bg)] backdrop-blur-xl">
+        <div className="flex h-14 items-center justify-between gap-2 px-3 sm:px-5">
+          <button
+            type="button"
+            onClick={exitSynth}
+            data-testid="synth-back"
+            className="focus-glow group flex h-9 shrink-0 items-center gap-2 rounded-full border hairline px-3 text-[14px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground sm:px-3.5"
+          >
+            <ArrowLeft
+              className="size-3.5 transition-transform duration-300 group-hover:-translate-x-0.5"
+              aria-hidden="true"
+            />
+            <span className="hidden sm:inline">{t("Return to the Observatory")}</span>
+            <span className="sm:hidden">{t("Back")}</span>
+          </button>
+
+          {/* the world's own name — no chamber tabs, it is a world */}
+          <div className="flex min-w-0 flex-col items-center leading-tight">
+            <span className="mono-label text-[10px] uppercase tracking-[0.26em] text-[var(--sa-gold)]">
+              {t(saWorld.name)}
+            </span>
+            <span className="hidden truncate font-serif text-[12px] italic text-muted-foreground sm:block">
+              {t(saWorld.subtitle)}
+            </span>
+          </div>
+
+          <div className="flex shrink-0 items-center gap-2">
+            <button
+              type="button"
+              onClick={seek}
+              data-testid="synth-seek-top"
+              className="focus-glow hidden h-9 items-center gap-1.5 rounded-full border px-3 text-[13px] font-medium text-foreground/85 transition-all duration-300 hover:-translate-y-px md:flex"
+              style={{
+                borderColor: "color-mix(in srgb, var(--sa-gold) 45%, transparent)",
+                background: "color-mix(in srgb, var(--sa-gold) 10%, transparent)",
+              }}
+            >
+              <Shuffle className="size-3.5" aria-hidden="true" />
+              {t("Turn the wheels")}
+            </button>
+            <button
+              type="button"
+              onClick={() => setZoom((v) => !v)}
+              aria-label={zoom ? t("Leave the full screen") : t("Work with the instrument full screen")}
+              title={zoom ? t("Leave the full screen") : t("Work with the instrument full screen")}
+              aria-pressed={zoom}
+              data-testid="synth-zoom"
+              className={cn(
+                "focus-glow flex size-9 items-center justify-center rounded-full border transition-all duration-300",
+                zoom
+                  ? "border-[color-mix(in_srgb,var(--sa-gold)_55%,transparent)] bg-[color-mix(in_srgb,var(--sa-gold)_14%,transparent)] text-[var(--sa-gold-bright)]"
+                  : "hairline text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {zoom ? (
+                <Minimize2 className="size-4" aria-hidden="true" />
+              ) : (
+                <Maximize2 className="size-4" aria-hidden="true" />
+              )}
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* -------------------------- the world -------------------------- */}
+      <main className="nice-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        <div className="mx-auto w-full max-w-[1120px] px-4 pb-8 pt-5 sm:px-6">
+          {board}
+        </div>
+      </main>
+
+      {/* ---------- the instrument, full screen ---------- */}
       {zoom &&
         createPortal(
           <div
@@ -1078,7 +1200,7 @@ export function PxSynthAnalog({
             role="dialog"
             aria-modal="true"
             aria-label={t("Synth Analog — full screen")}
-            data-testid="px-synth-fullscreen"
+            data-testid="synth-fullscreen"
           >
             <div className="absolute inset-0 bg-[#05040B]" />
             <div
@@ -1091,10 +1213,10 @@ export function PxSynthAnalog({
             <span className="sa-breathe absolute left-[12%] top-[18%] size-1 rounded-full bg-white/60" aria-hidden="true" />
             <span className="sa-breathe absolute left-[78%] top-[26%] size-1.5 rounded-full bg-white/50" aria-hidden="true" />
             <span className="sa-breathe absolute left-[30%] top-[80%] size-1 rounded-full bg-white/40" aria-hidden="true" />
-            <div className="nice-scroll relative z-10 mx-auto h-full w-full max-w-[1080px] overflow-y-auto px-4 pb-10 pt-5 sm:px-8">
+            <div className="nice-scroll relative z-10 mx-auto h-full w-full max-w-[1180px] overflow-y-auto px-4 pb-10 pt-5 sm:px-8">
               <div className="mb-4 flex items-center justify-between gap-3">
                 <p className="mono-label text-[10px] uppercase tracking-[0.24em] text-white/60">
-                  {t(saChamber.name)} — {t("full screen")}
+                  {t(saWorld.name)} — {t("full screen")}
                 </p>
                 <div className="flex items-center gap-2">
                   <kbd className="mono-label rounded-full border border-white/15 px-2 py-1 text-[9px] text-white/50">
@@ -1105,7 +1227,7 @@ export function PxSynthAnalog({
                     onClick={() => setZoom(false)}
                     aria-label={t("Close the full screen")}
                     title={t("Close the full screen")}
-                    data-testid="px-synth-zoom-close"
+                    data-testid="synth-zoom-close"
                     className="focus-glow flex size-9 items-center justify-center rounded-full border border-white/20 text-white/80 transition-all duration-300 hover:bg-white/10"
                   >
                     <X className="size-4" aria-hidden="true" />
@@ -1117,6 +1239,6 @@ export function PxSynthAnalog({
           </div>,
           document.body
         )}
-    </>
+    </div>
   );
 }

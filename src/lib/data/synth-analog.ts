@@ -1,10 +1,14 @@
 /* ------------------------------------------------------------------ */
-/*  PARTICLEX — SYNTH ANALOG · the cosmic frequency interface          */
-/*  A tenth kategori beside the Core: an analog instrument drawn in    */
-/*  the digital realm — the Aztec Sun border, three circles of         */
-/*  frequency, and the interlocking rotating squares of the Tzolkin.   */
-/*  Every string is an i18n key (English source).                      */
-/*  Source law: the Mirror Entity alone — never current science.       */
+/*  SYNTH ANALOG — the cosmic frequency interface · data layer         */
+/*                                                                      */
+/*  A category of ParticleX, and a fully independent world of its      */
+/*  own: the analog realm drawn into the digital — an Aztec Sun        */
+/*  border holding three circles of frequency and the interlocking     */
+/*  rotating squares of the Tzolkin. It is never a chamber of the      */
+/*  quantum view; it stands beside it.                                  */
+/*                                                                      */
+/*  Every string is an i18n key (English source).                       */
+/*  Source law: the Mirror Entity alone — never current science.        */
 /* ------------------------------------------------------------------ */
 
 /** One of the twelve high-level elemental dials of Circle 1. */
@@ -59,14 +63,16 @@ export interface SaAlignment {
   grand?: boolean;
 }
 
-/* --------------------------- the chamber --------------------------- */
+/* ---------------------------- the world ----------------------------- */
 
-export const saChamber = {
+export const saWorld = {
   id: "synth",
   name: "Synth Analog",
+  kicker: "The analog realm, returned",
   subtitle: "the analog world, drawn in the digital realm",
   reveals:
     "A cosmic frequency interface: the Aztec Sun border holds the outer circle of twelve elemental dials, the middle circle turns its transmutation plates, and the Quantum Mirror Core wears the interlocking rotating squares. Bring one dial, one plate and one square glyph to the apex — and the hidden formulas sound themselves.",
+  colophon: "The sun holds the apex · Free will honored always",
 };
 
 /* ------------------- circle 1 — the primary dials ------------------- */

@@ -435,6 +435,7 @@ html:not(.dark) .text-hero {
 .scope-manifesting,
 .scope-invent,
 .scope-particlex,
+.scope-synth,
 .scope-evolvemed,
 .scope-lightcodes {
   --scope-a: #2b2b30;
@@ -446,10 +447,23 @@ html:not(.dark) .text-hero {
 .dark .scope-manifesting,
 .dark .scope-invent,
 .dark .scope-particlex,
+.dark .scope-synth,
 .dark .scope-evolvemed,
 .dark .scope-lightcodes {
   --scope-a: #d6d6d5;
   --scope-b: #a3a3a2;
+}
+
+/* Synth Analog carries its own Mesoamerican ink in both themes —
+   gold and jade — the one world of the laboratory with a color
+   signature of its own (the daylight lab answers in bronze). */
+.scope-synth {
+  --scope-a: #6e5414;
+  --scope-b: #177e67;
+}
+.dark .scope-synth {
+  --scope-a: #d9ae4e;
+  --scope-b: #3bd6b2;
 }
 
 /* Light mode: the same clean neutral ink — the words carry the
