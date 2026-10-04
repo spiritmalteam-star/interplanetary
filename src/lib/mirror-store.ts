@@ -32,6 +32,10 @@ import {
   detectArtifactIntent,
   type SideArtifactRef,
 } from "@/lib/artifact-intent";
+import {
+  blendVisualRequest,
+  isVisualIntent,
+} from "@/lib/visual-intent";
 import type { RemedyKind } from "@/lib/data/remedy";
 import { pxScopes } from "@/lib/data/particlex";
 import { emVectors } from "@/lib/data/evolvemed";
@@ -239,6 +243,10 @@ export interface EmMessage {
   /** When set, this thread item is a pinned cluster of the vector's
       note stickers (illustrated sections inside the chat flow). */
   notesVector?: string;
+  /* the Universal Visualization Engine — the nexus also answers in images */
+  artifact?: VisualizationArtifact;
+  visual?: "pending" | "error";
+  visualRequest?: string;
 }
 
 interface MirrorState {
@@ -341,6 +349,21 @@ interface MirrorState {
   toolError: string | null;
   setForgeDraft: (value: string) => void;
   askForge: (question: string, attachments?: ChatAttachment[]) => Promise<void>;
+  /** IMAGE CRYSTALLIZATION in the forge — the last channel of the
+      forge thread crystallized at once. `display` is what the exchange
+      shows as the visitor's words; `question` may be the blended
+      request. `regenerateOf` repaints one artifact in place. */
+  askForgeVisual: (
+    question: string,
+    display?: string,
+    regenerateOf?: {
+      id: string;
+      request?: string;
+      prompt?: string;
+      subject?: string;
+      mode?: VisualizationMode;
+    } | null
+  ) => Promise<void>;
   setMysteryDial: (group: keyof ForgeDials, id: string) => void;
   strikeMystery: () => Promise<void>;
   setToolId: (id: string) => void;
@@ -473,6 +496,21 @@ interface MirrorState {
   pinEmNotes: (vectorId: string) => void;
   setEmFusion: (ids: string[] | ((prev: string[]) => string[])) => void;
   askEM: (question: string) => Promise<void>;
+  /** IMAGE CRYSTALLIZATION in the Evolve Med nexus — the last channel
+      of the nexus thread crystallized at once. `display` is what the
+      visitor's bubble shows (the raw words); `question` may be the
+      blended request. `regenerateOf` repaints one artifact in place. */
+  askEMVisual: (
+    question: string,
+    display?: string,
+    regenerateOf?: {
+      id: string;
+      request?: string;
+      prompt?: string;
+      subject?: string;
+      mode?: VisualizationMode;
+    } | null
+  ) => Promise<void>;
 
   openLab: () => void;
   exitLab: () => void;
@@ -486,7 +524,9 @@ interface MirrorState {
   setOsDraft: (v: string) => void;
   askOS: (question: string, attachments?: ChatAttachment[]) => Promise<void>;
   /** The Universal Visualization Engine — the OS paints what is asked to
-      be seen. `regenerateOf` repaints one existing artifact in place. */
+      be seen. `display` is what the visitor's bubble shows (the raw
+      words) when `question` carries a blended request. `regenerateOf`
+      repaints one existing artifact in place. */
   askOSVisual: (
     question: string,
     context?: { subject: string; mode: VisualizationMode } | null,
@@ -496,7 +536,8 @@ interface MirrorState {
       prompt?: string;
       subject?: string;
       mode?: VisualizationMode;
-    } | null
+    } | null,
+    display?: string
   ) => Promise<void>;
   /** Drop one artifact message entirely (the visitor may clear it). */
   dismissOsVisual: (id: string) => void;
@@ -550,6 +591,164 @@ function guessLightCodesMode(query: string): LightCodesMode {
     return "reprogramming";
   }
   return "light-transmission";
+}
+
+/* ------------------------------------------------------------------ */
+/*  IMAGE CRYSTALLIZATION — the shared plumbing. When the visitor      */
+/*  asks for an image by name, no LLM round-trip travels: the last     */
+/*  channel is crystallized at once through the SAME /api/visualize    */
+/*  pipeline the scope visuals ride, painting inside that thread.      */
+/*  The scope channels and the forge share one ScopeSession shape —    */
+/*  one helper serves both.                                            */
+/* ------------------------------------------------------------------ */
+
+type CrystallizeTarget = Mode | "forge";
+
+type CrystallizeRegenerate = {
+  id: string;
+  request?: string;
+  prompt?: string;
+  subject?: string;
+  mode?: VisualizationMode;
+} | null;
+
+function crystallizeSession(target: CrystallizeTarget): ScopeSession {
+  const s = useMirror.getState();
+  return target === "forge" ? s.forgeSession : s.sessions[target];
+}
+
+function patchCrystallizeSession(
+  target: CrystallizeTarget,
+  patch: (session: ScopeSession) => ScopeSession
+): void {
+  useMirror.setState((s) =>
+    target === "forge"
+      ? { forgeSession: patch(s.forgeSession) }
+      : { sessions: { ...s.sessions, [target]: patch(s.sessions[target]) } }
+  );
+}
+
+/** The last spoken reply of a thread — the "last channel" an image
+    crystallizes from. Artifact-only and pending entries never count. */
+function lastChannelReply(messages: ChatMessage[]): string {
+  return [...messages].reverse().find((m) => m.text.trim())?.text ?? "";
+}
+
+async function crystallizeVisual(
+  target: CrystallizeTarget,
+  userText: string,
+  request: string,
+  regenerateOf?: CrystallizeRegenerate
+): Promise<void> {
+  if (crystallizeSession(target).status === "loading") return;
+  const visualId = regenerateOf ? regenerateOf.id : nextMessageId();
+
+  patchCrystallizeSession(target, (session) => ({
+    ...session,
+    status: "loading",
+    activeQuery: userText,
+    draft: "",
+    error: null,
+    messages: regenerateOf
+      ? session.messages.map((m) =>
+          m.id === regenerateOf.id
+            ? { ...m, visual: "pending" as const }
+            : m
+        )
+      : [
+          ...session.messages,
+          {
+            id: visualId,
+            query: userText,
+            text: "",
+            classification: "WORLD_BUILDING",
+            createdAt: new Date().toISOString(),
+            visual: "pending" as const,
+            visualRequest: request,
+          },
+        ],
+  }));
+
+  try {
+    const history = crystallizeSession(target)
+      .messages.filter(
+        (m) => m.id !== visualId && !m.visual && !m.artifact && m.text
+      )
+      .slice(-6)
+      .map((m) => ({ q: m.query, a: m.text }));
+
+    const res = await fetch("/api/visualize", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        language: useMirror.getState().language,
+        message: regenerateOf ? regenerateOf.request ?? request : request,
+        history,
+        ...(regenerateOf
+          ? {
+              regenerate: true,
+              previousPrompt: regenerateOf.prompt,
+              contextSubject: regenerateOf.subject,
+              previousMode: regenerateOf.mode,
+            }
+          : {}),
+      }),
+    });
+    const data = (await res.json().catch(() => null)) as {
+      artifact?: VisualizationArtifact;
+      error?: string;
+    } | null;
+    if (!res.ok || !data?.artifact) {
+      throw new Error(
+        (data && data.error) ||
+          "The atelier is quiet — the vision could not be composed."
+      );
+    }
+
+    const artifact = data.artifact;
+    patchCrystallizeSession(target, (session) => ({
+      ...session,
+      status: "ready",
+      activeQuery: "",
+      messages: session.messages.map((m) =>
+        m.id === visualId ? { ...m, visual: undefined, artifact } : m
+      ),
+    }));
+
+    /* the same one silent repaint the scope visuals keep — when the
+       brushes rested before the canvas took the paint, the visitor
+       waits once more, not forever */
+    if (!regenerateOf && !artifact.imageUrl && artifact.slides.length === 0) {
+      window.setTimeout(() => {
+        const msg = crystallizeSession(target).messages.find(
+          (m) => m.id === visualId
+        );
+        if (
+          msg?.artifact &&
+          !msg.artifact.imageUrl &&
+          msg.artifact.slides.length === 0 &&
+          !msg.visual
+        ) {
+          void crystallizeVisual(target, userText, msg.visualRequest ?? artifact.subject, {
+            id: visualId,
+            request: msg.visualRequest ?? artifact.subject,
+            prompt: artifact.prompt,
+            subject: artifact.subject,
+            mode: artifact.mode,
+          });
+        }
+      }, 1200);
+    }
+  } catch {
+    patchCrystallizeSession(target, (session) => ({
+      ...session,
+      status: "ready",
+      activeQuery: "",
+      messages: session.messages.map((m) =>
+        m.id === visualId ? { ...m, visual: "error" as const } : m
+      ),
+    }));
+  }
 }
 
 /** Opens the chamber with the Mirror's interpretation already written. */
@@ -1143,6 +1342,16 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     }
   },
 
+  /* ---- IMAGE CRYSTALLIZATION — the forge's own line ---- */
+  askForgeVisual: async (question, display, regenerateOf) => {
+    await crystallizeVisual(
+      "forge",
+      display ?? question,
+      question,
+      regenerateOf
+    );
+  },
+
   /* ---- the random mystery creation — one strike, one conception ---- */
   setMysteryDial: (group, id) =>
     set((s) => ({
@@ -1255,6 +1464,19 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     const mode = get().activeMode;
     const session = get().sessions[mode];
     if (!query || session.status === "loading") return;
+
+    /* IMAGE CRYSTALLIZATION — the visitor asked for an image by name:
+       no LLM round-trip travels. The last channel (this thread's most
+       recent reply) is crystallized at once, shaped by the visitor's
+       own words; with an empty thread, the words themselves crystallize. */
+    if (isVisualIntent(query)) {
+      await crystallizeVisual(
+        mode,
+        query,
+        blendVisualRequest(query, lastChannelReply(session.messages))
+      );
+      return;
+    }
 
     /* A side activity riding with this question? The Librarian, the
        deck, the chamber and the forge all keep their doors open — the
@@ -1819,6 +2041,111 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     }
   },
 
+  /* ------- IMAGE CRYSTALLIZATION — the Evolve Med nexus ------- */
+
+  askEMVisual: async (question, display, regenerateOf) => {
+    if (get().emStatus === "loading") return;
+    const visualId = regenerateOf ? regenerateOf.id : nextMessageId();
+
+    set((s) => ({
+      emStatus: "loading",
+      emError: null,
+      emDraft: "",
+      emMessages: regenerateOf
+        ? s.emMessages.map((m) =>
+            m.id === regenerateOf.id ? { ...m, visual: "pending" as const } : m
+          )
+        : [
+            ...s.emMessages,
+            {
+              id: nextMessageId(),
+              role: "visitor" as const,
+              text: display ?? question,
+            },
+            {
+              id: visualId,
+              role: "em" as const,
+              text: "",
+              visual: "pending" as const,
+              visualRequest: question,
+            },
+          ],
+    }));
+
+    try {
+      const history = get()
+        .emMessages.filter(
+          (m) => m.id !== visualId && !m.visual && !m.artifact && m.text
+        )
+        .slice(-6)
+        .map((m) => ({ role: m.role, text: m.text }));
+
+      const res = await fetch("/api/visualize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          language: get().language,
+          message: regenerateOf ? regenerateOf.request ?? question : question,
+          history,
+          ...(regenerateOf
+            ? {
+                regenerate: true,
+                previousPrompt: regenerateOf.prompt,
+                contextSubject: regenerateOf.subject,
+                previousMode: regenerateOf.mode,
+              }
+            : {}),
+        }),
+      });
+      const data = (await res.json().catch(() => null)) as {
+        artifact?: VisualizationArtifact;
+        error?: string;
+      } | null;
+      if (!res.ok || !data?.artifact) {
+        throw new Error(
+          (data && data.error) ||
+            "The atelier is quiet — the vision could not be composed."
+        );
+      }
+
+      const artifact = data.artifact;
+      set((s) => ({
+        emStatus: "ready",
+        emMessages: s.emMessages.map((m) =>
+          m.id === visualId ? { ...m, visual: undefined, artifact } : m
+        ),
+      }));
+
+      /* the same one silent repaint — the brushes rest once, not forever */
+      if (!regenerateOf && !artifact.imageUrl && artifact.slides.length === 0) {
+        window.setTimeout(() => {
+          const msg = get().emMessages.find((m) => m.id === visualId);
+          if (
+            msg?.artifact &&
+            !msg.artifact.imageUrl &&
+            msg.artifact.slides.length === 0 &&
+            !msg.visual
+          ) {
+            void get().askEMVisual(msg.visualRequest ?? artifact.subject, undefined, {
+              id: visualId,
+              request: msg.visualRequest ?? artifact.subject,
+              prompt: artifact.prompt,
+              subject: artifact.subject,
+              mode: artifact.mode,
+            });
+          }
+        }, 1200);
+      }
+    } catch {
+      set((s) => ({
+        emStatus: "ready",
+        emMessages: s.emMessages.map((m) =>
+          m.id === visualId ? { ...m, visual: "error" as const } : m
+        ),
+      }));
+    }
+  },
+
   /** Kept for the Forge section inside the OS. */
   openLab: () => useMirror.getState().openMirrorOS(),
 
@@ -1910,7 +2237,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
 
   /* ------- Mirror Entity OS — the visualization engine ------- */
 
-  askOSVisual: async (question, context, regenerateOf) => {
+  askOSVisual: async (question, context, regenerateOf, display) => {
     if (get().osStatus === "loading") return;
     const visualId = regenerateOf ? regenerateOf.id : nextMessageId();
 
@@ -1927,7 +2254,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
             {
               id: nextMessageId(),
               role: "visitor" as const,
-              text: question,
+              text: display ?? question,
             },
             {
               id: visualId,
@@ -2080,6 +2407,22 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   chargeIntention: async () => {
     const intention = get().labIntention.trim();
     if (!intention || get().labStage === "charging") return;
+
+    /* IMAGE CRYSTALLIZATION — an image is asked for by name: the
+       chamber rests and the current channel crystallizes instead, from
+       the intention's own words (and its last reply, when one exists). */
+    if (isVisualIntent(intention)) {
+      const mode = get().activeMode;
+      await crystallizeVisual(
+        mode,
+        intention,
+        blendVisualRequest(
+          intention,
+          lastChannelReply(get().sessions[mode].messages)
+        )
+      );
+      return;
+    }
 
     set({
       labStage: "charging",

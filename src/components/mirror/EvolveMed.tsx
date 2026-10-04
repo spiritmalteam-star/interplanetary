@@ -10,18 +10,29 @@ import {
   Feather,
   FlaskConical,
   Microscope,
+  RefreshCw,
   ScrollText,
   StickyNote,
   X,
 } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
+import { ContextSuggestionStrip } from "./SuggestionStrip";
 import { emGatheringPhrases, emVectors } from "@/lib/data/evolvemed";
 import { emNoteSets } from "@/lib/data/scope-notes";
 import { cn } from "@/lib/utils";
+import {
+  blendVisualRequest,
+  isVisualIntent,
+} from "@/lib/visual-intent";
 import { ListenButton } from "./ListenButton";
 import { ScopeNotes } from "./ScopeNotes";
 import { HelixLoading } from "./ThemedLoadings";
+import {
+  PreparedPromptFallback,
+  VisualizationCard,
+  VisualizationPending,
+} from "./VisualizationCard";
 import {
   EM_VECTOR_ICONS,
   EmCodexTab,
@@ -126,6 +137,106 @@ function EmThinking() {
 
 /* ------------------------- one exchange ---------------------------- */
 
+/* ---------- the crystallized image — one visual block per exchange --- */
+
+/** The visualization slot of one nexus exchange: the pending animation,
+    the atelier-quiet fallback with one retry, the prepared-prompt
+    fallback, or the completed card — the same idiom as the OS line. */
+function EmVisualBlock({
+  messageId,
+  visualRequest,
+  accent,
+  testIdPrefix,
+}: {
+  messageId: string;
+  visualRequest?: string;
+  accent: string;
+  testIdPrefix: string;
+}) {
+  const t = useT();
+  const askEMVisual = useMirror((s) => s.askEMVisual);
+  const artifact = useMirror(
+    (s) => s.emMessages.find((m) => m.id === messageId)?.artifact
+  );
+  const visual = useMirror(
+    (s) => s.emMessages.find((m) => m.id === messageId)?.visual
+  );
+
+  if (visual === "pending" && artifact) {
+    return (
+      <VisualizationCard
+        artifact={artifact}
+        accent={accent}
+        testIdPrefix={testIdPrefix}
+        regenerating
+      />
+    );
+  }
+  if (visual === "pending") {
+    return <VisualizationPending accent={accent} testIdPrefix={testIdPrefix} />;
+  }
+  if (visual === "error") {
+    return (
+      <div
+        className="glass rounded-2xl border border-[color-mix(in_srgb,var(--hairline)_65%,transparent)] px-4 py-3.5"
+        data-testid={`${testIdPrefix}-error`}
+      >
+        <p className="text-[14px] italic leading-relaxed text-foreground/80">
+          {t(
+            "The atelier is quiet — the vision could not be composed. Rest a breath, then ask again."
+          )}
+        </p>
+        {visualRequest && (
+          <button
+            type="button"
+            onClick={() => void askEMVisual(visualRequest)}
+            data-testid={`${testIdPrefix}-retry`}
+            className="focus-glow mt-2.5 flex h-9 items-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--scope-a)_35%,transparent)] px-4 text-[13px] text-foreground/90 transition-all duration-300 hover:-translate-y-px"
+          >
+            <RefreshCw className="size-3.5" aria-hidden="true" />
+            {t("Be still and receive")}
+          </button>
+        )}
+      </div>
+    );
+  }
+  if (!artifact) return null;
+  if (!artifact.imageUrl && artifact.slides.length === 0) {
+    return (
+      <PreparedPromptFallback
+        artifact={artifact}
+        accent={accent}
+        testIdPrefix={testIdPrefix}
+        onPaint={() =>
+          void askEMVisual(visualRequest ?? artifact.subject, undefined, {
+            id: messageId,
+            request: visualRequest ?? artifact.subject,
+            prompt: artifact.prompt,
+            subject: artifact.subject,
+            mode: artifact.mode,
+          })
+        }
+      />
+    );
+  }
+  return (
+    <VisualizationCard
+      artifact={artifact}
+      accent={accent}
+      testIdPrefix={testIdPrefix}
+      onRegenerate={() =>
+        void askEMVisual(visualRequest ?? artifact.subject, undefined, {
+          id: messageId,
+          request: visualRequest ?? artifact.subject,
+          prompt: artifact.prompt,
+          subject: artifact.subject,
+          mode: artifact.mode,
+        })
+      }
+    />
+  );
+}
+
 function EmExchange({
   role,
   text,
@@ -133,6 +244,9 @@ function EmExchange({
   seal,
   animate,
   index,
+  hasVisual,
+  messageId,
+  visualRequest,
 }: {
   role: "visitor" | "em";
   text: string;
@@ -140,6 +254,9 @@ function EmExchange({
   seal?: string;
   animate: boolean;
   index: number;
+  hasVisual?: boolean;
+  messageId?: string;
+  visualRequest?: string;
 }) {
   const t = useT();
 
@@ -176,57 +293,79 @@ function EmExchange({
       </span>
       <div className="min-w-0 max-w-[85%]">
         <p className="mono-label text-[9.5px] text-[var(--scope-a)]">EVOLVE MED</p>
-        <div className="mt-1.5 space-y-3 rounded-2xl rounded-tl-md glass px-4 py-3">
-          {text.split(/\n{2,}/).map((p, i) => (
-            <p key={i} className="text-[15px] leading-[1.8] text-foreground/88">
-              {p}
-            </p>
-          ))}
-        </div>
-
-        {formulaList.length > 0 && (
-          <div className="px-formula relative mt-2.5 overflow-hidden rounded-xl px-4 py-3" data-testid={`em-formulas-${index}`}>
-            <span
-              aria-hidden="true"
-              className="px-seam absolute inset-x-0 top-0 h-px"
-              style={{
-                background:
-                  "linear-gradient(90deg, transparent, var(--scope-a), transparent)",
-              }}
+        {hasVisual && messageId ? (
+          <div className="mt-1.5">
+            {text.trim() && (
+              <div className="space-y-3 rounded-2xl rounded-tl-md glass px-4 py-3">
+                {text.split(/\n{2,}/).map((p, i) => (
+                  <p key={i} className="text-[15px] leading-[1.8] text-foreground/88">
+                    {p}
+                  </p>
+                ))}
+              </div>
+            )}
+            <EmVisualBlock
+              messageId={messageId}
+              visualRequest={visualRequest}
+              accent="var(--scope-a)"
+              testIdPrefix="em-visual"
             />
-            <p className="mono-label flex items-center gap-1.5 text-[9px] uppercase tracking-[0.22em] text-muted-foreground">
-              <Microscope className="size-3" aria-hidden="true" />
-              {t("The mechanisms that run it")}
-            </p>
-            <div className="mt-2 space-y-1.5">
-              {formulaList.map((f, i) => (
-                <p
-                  key={i}
-                  className="px-formula-line text-center font-serif text-[15.5px] italic leading-relaxed text-foreground/90"
-                >
-                  {f}
+          </div>
+        ) : (
+          <>
+            <div className="mt-1.5 space-y-3 rounded-2xl rounded-tl-md glass px-4 py-3">
+              {text.split(/\n{2,}/).map((p, i) => (
+                <p key={i} className="text-[15px] leading-[1.8] text-foreground/88">
+                  {p}
                 </p>
               ))}
             </div>
-          </div>
-        )}
 
-        {seal && (
-          <p className="ink-soft mt-2.5 text-center font-serif text-[14px] italic">
-            {seal}
-          </p>
-        )}
+            {formulaList.length > 0 && (
+              <div className="px-formula relative mt-2.5 overflow-hidden rounded-xl px-4 py-3" data-testid={`em-formulas-${index}`}>
+                <span
+                  aria-hidden="true"
+                  className="px-seam absolute inset-x-0 top-0 h-px"
+                  style={{
+                    background:
+                      "linear-gradient(90deg, transparent, var(--scope-a), transparent)",
+                  }}
+                />
+                <p className="mono-label flex items-center gap-1.5 text-[9px] uppercase tracking-[0.22em] text-muted-foreground">
+                  <Microscope className="size-3" aria-hidden="true" />
+                  {t("The mechanisms that run it")}
+                </p>
+                <div className="mt-2 space-y-1.5">
+                  {formulaList.map((f, i) => (
+                    <p
+                      key={i}
+                      className="px-formula-line text-center font-serif text-[15.5px] italic leading-relaxed text-foreground/90"
+                    >
+                      {f}
+                    </p>
+                  ))}
+                </div>
+              </div>
+            )}
 
-        <div className="mt-2 flex flex-nowrap items-center gap-1.5 sm:gap-2">
-          <ListenButton
-            text={`${text}. ${formulaList.join(". ")}`}
-            cacheKey={`em-${text.slice(0, 24)}-${text.length}-${index}`}
-            voice="regent"
-            className="shrink-0 whitespace-nowrap"
-          />
-          <EmCopyButton text={`${text}\n\n${formulaList.join("\n")}`} />
-          <EmPdfButton />
-        </div>
+            {seal && (
+              <p className="ink-soft mt-2.5 text-center font-serif text-[14px] italic">
+                {seal}
+              </p>
+            )}
+
+            <div className="mt-2 flex flex-nowrap items-center gap-1.5 sm:gap-2">
+              <ListenButton
+                text={`${text}. ${formulaList.join(". ")}`}
+                cacheKey={`em-${text.slice(0, 24)}-${text.length}-${index}`}
+                voice="regent"
+                className="shrink-0 whitespace-nowrap"
+              />
+              <EmCopyButton text={`${text}\n\n${formulaList.join("\n")}`} />
+              <EmPdfButton />
+            </div>
+          </>
+        )}
       </div>
     </motion.div>
   );
@@ -313,6 +452,7 @@ function EvolveMedChat() {
   const emDraft = useMirror((s) => s.emDraft);
   const setEmDraft = useMirror((s) => s.setEmDraft);
   const askEM = useMirror((s) => s.askEM);
+  const askEMVisual = useMirror((s) => s.askEMVisual);
   const emVector = useMirror((s) => s.emVector);
   const setEmVector = useMirror((s) => s.setEmVector);
   const emFusion = useMirror((s) => s.emFusion);
@@ -374,6 +514,18 @@ function EvolveMedChat() {
   const submit = () => {
     const query = emDraft.trim();
     if (!query || emStatus === "loading") return;
+    /* IMAGE CRYSTALLIZATION — an image is asked for by name: the last
+       channel (the nexus's most recent revelation) crystallizes at
+       once, shaped by the visitor's words; with an empty thread, the
+       words themselves crystallize. */
+    if (isVisualIntent(query)) {
+      const lastReply =
+        [...emMessages]
+          .reverse()
+          .find((m) => m.role === "em" && m.text.trim())?.text ?? "";
+      void askEMVisual(blendVisualRequest(query, lastReply), query);
+      return;
+    }
     void askEM(query);
   };
 
@@ -460,6 +612,9 @@ function EvolveMedChat() {
                     seal={m.seal}
                     animate={i === emMessages.length - 1 && emStatus !== "loading"}
                     index={i}
+                    hasVisual={Boolean(m.artifact || m.visual)}
+                    messageId={m.id}
+                    visualRequest={m.visualRequest}
                   />
                 )}
               </div>
@@ -561,6 +716,22 @@ function EvolveMedChat() {
           </div>
         </div>
       )}
+
+      {/* the living whispers — six invitations at a time, closest to
+          the unfolding conversation first, fresh every five minutes */}
+      <div className="shrink-0 px-3 pb-1 sm:px-5">
+        <ContextSuggestionStrip
+          poolId="evolvemed"
+          contextText={emMessages
+            .slice(-6)
+            .map((m) => `${m.query}\n${m.text}`)
+            .join("\n")}
+          onPick={(q) => {
+            if (emStatus !== "loading") void askEM(q);
+          }}
+          testIdPrefix="em-suggestion"
+        />
+      </div>
 
       {/* composer */}
       <div className="shrink-0 border-t hairline bg-[var(--glass-bg)] px-3 py-2.5 backdrop-blur-xl sm:px-4">

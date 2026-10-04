@@ -127,3 +127,18 @@ export const pxGatheringPhrases = [
   "Aligning both reasonings — the line and the field…",
   "Lifting the seam between the visible and the woven…",
 ];
+
+/* The Bio Mechanics chamber — the living engines, drawn kindly.
+   Its data lives in particlex-bio.ts and is re-exported here so the
+   world reads as one data layer. */
+export {
+  bxSliderMeta,
+  pxBioChamber,
+  pxBioMechanisms,
+} from "./particlex-bio";
+export type {
+  BxMechanism,
+  BxPanel,
+  BxSliderKey,
+  BxSliderMeta,
+} from "./particlex-bio";

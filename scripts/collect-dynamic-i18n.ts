@@ -5,7 +5,7 @@
    removed Interplanetary Biology vocabulary). */
 import { readFileSync, writeFileSync } from "node:fs";
 import { scopeSuggestionPools } from "../src/lib/data/suggestions.ts";
-import { giftLines, labFrequencies, schools, veils, modeContext } from "../src/lib/data/metaphysics.ts";
+import { giftLines, labFrequencies, modeContext } from "../src/lib/data/metaphysics.ts";
 import { LIVE_SCOPES } from "../src/lib/live-scopes.ts";
 import { federationBodies, federationTreaties, federationPrinciples } from "../src/lib/data/federation.ts";
 import { SCOPE_META } from "../src/lib/entity-utils.ts";
@@ -39,6 +39,13 @@ import {
   toolPhases,
   TOOL_LINE_LABELS,
 } from "../src/lib/data/invent.ts";
+import { chatSuggestionPools } from "../src/lib/data/suggestions-pools.ts";
+import { LEXICON } from "../src/lib/data/lexicon.ts";
+import {
+  bxSliderMeta,
+  pxBioChamber,
+  pxBioMechanisms,
+} from "../src/lib/data/particlex-bio.ts";
 
 const dynPath = "/home/z/my-project/scripts/i18n-keys-dynamic.json";
 const existing: string[] = JSON.parse(readFileSync(dynPath, "utf8"));
@@ -310,7 +317,7 @@ for (const f of labFrequencies) {
 }
 
 /* the metaphysics veil rail — schools and veils (labels) */
-for (const p of [...schools, ...veils]) set.add(p.label);
+
 
 /* live-call scope identity + per-scope meta labels/taglines + per-mode
    context lines (all rendered through dynamic t(value) call sites) */
@@ -401,6 +408,32 @@ for (const tool of inventTools) {
 }
 for (const p of toolPhases) set.add(p);
 for (const label of Object.values(TOOL_LINE_LABELS)) set.add(label);
+
+/* the living suggestion pools — 300 invitations per chat world */
+for (const arr of Object.values(chatSuggestionPools)) for (const q of arr) set.add(q);
+
+/* the lexicon — the glowing terms and their short meanings */
+for (const e of LEXICON) {
+  set.add(e.term);
+  set.add(e.meaning);
+}
+
+/* the Bio Mechanics chamber — sliders, chamber voice, mechanisms,
+   their roles + engine lines and the four-panel storyboards */
+for (const s of Object.values(bxSliderMeta)) set.add(s.label);
+set.add(pxBioChamber.name);
+set.add(pxBioChamber.subtitle);
+for (const r of pxBioChamber.reveals) set.add(r);
+for (const m of pxBioMechanisms) {
+  set.add(m.name);
+  set.add(m.role);
+  set.add(m.engine);
+  for (const p of m.panels) {
+    set.add(p.title);
+    set.add(p.sub);
+    set.add(p.caption);
+  }
+}
 
 const out = [...set].sort((a, b) => a.localeCompare(b));
 writeFileSync(dynPath, JSON.stringify(out, null, 2));

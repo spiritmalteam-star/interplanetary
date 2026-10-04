@@ -1368,6 +1368,25 @@ html:not(.dark) .scope-lightcodes {
 .ink-faint { color: color-mix(in srgb, var(--foreground) 58%, transparent); }
 .ink-soft { color: var(--muted-foreground); }
 
+/* the glowing terms — the words that carry a field. A whisper of an
+   underline in the accent light; on hover the light rises. The card
+   of meaning itself lives in TermPopover. */
+.term-glow {
+  border-bottom: 1px dotted
+    color-mix(in srgb, var(--scope-a, var(--foreground)) 55%, transparent);
+  padding-bottom: 1px;
+  transition:
+    border-color 0.3s ease,
+    background 0.3s ease;
+  cursor: help;
+}
+.term-glow:hover,
+.term-glow:focus-visible {
+  border-bottom-color: var(--scope-a, var(--foreground));
+  background: color-mix(in srgb, var(--scope-a, var(--foreground)) 9%, transparent);
+  border-radius: 3px 3px 0 0;
+}
+
 /* a quiet ink button on the sheet itself */
 .papyrus-btn {
   font-family: var(--font-literata), Georgia, "Times New Roman", serif;

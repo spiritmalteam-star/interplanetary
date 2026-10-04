@@ -37,6 +37,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { ModalShell } from "./ModalShell";
+import { ReadingToggle } from "./ReadingToggle";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { READERS, TALES, VOLUMES } from "@/lib/data/book-options";
@@ -83,20 +84,11 @@ interface BookMeta {
   totalPages: number;
 }
 
-interface AtelierLine {
-  id: string;
-  from: "weaver" | "visitor";
-  text: string;
-}
-
 /* The narrator voice each book speaks with — THE KIND LADY READER,
    one warm woman's voice for every volume (never the man). */
 const BOOK_VOICE: VoiceId = "reader";
 
 const ZOOM_STEPS = [15.5, 17.5, 19.5, 21.5, 24];
-
-let lineCounter = 0;
-const nextLineId = () => `l-${Date.now().toString(36)}-${(lineCounter++).toString(36)}`;
 
 const pageText = (p: WeavePage) => p.paragraphs.join(" ");
 
@@ -120,14 +112,15 @@ export function DreamBookView() {
     "atelier"
   );
 
-  /* ---- the atelier ---- */
-  const [lines, setLines] = useState<AtelierLine[]>([]);
-  const [age, setAge] = useState("timeless");
-  const [tale, setTale] = useState("wonder");
-  const [volume, setVolume] = useState("classic");
+  /* ---- the atelier ----
+     NO shape is pre-selected: the loom starts with an empty hand.
+     Every thread below may be chosen — and let go — freely, and
+     the channeling waits until at least one thread is held. */
+  const [age, setAge] = useState("");
+  const [tale, setTale] = useState("");
+  const [volume, setVolume] = useState("");
   const [topic, setTopic] = useState("");
   const [topicDraft, setTopicDraft] = useState("");
-  const threadRef = useRef<HTMLDivElement | null>(null);
   const [phaseIdx, setPhaseIdx] = useState(0);
 
   const WEAVING_PHASES = useMemo(
@@ -188,10 +181,6 @@ export function DreamBookView() {
     configRef.current = { age, tale, volume, topic };
   }, [age, tale, volume, topic]);
 
-  const pushLine = useCallback((from: AtelierLine["from"], text: string) => {
-    setLines((prev) => [...prev, { id: nextLineId(), from, text }]);
-  }, []);
-
   /* -------- a volume brought back from the cosmic library --------
      The DreamBookView mounts fresh when the library hands a volume
      over: the whole book — its pages, its thread, its voice config —
@@ -226,12 +215,8 @@ export function DreamBookView() {
     setSlideDir(1);
     setZoom(1);
     setStage("reading");
-    pushLine(
-      "weaver",
-      t("The volume returns from your library — exactly where it was left.")
-    );
     clearDreamResume();
-  }, [dreamResume, clearDreamResume, pushLine, t]);
+  }, [dreamResume, clearDreamResume]);
 
   /* the rewriting hand — wishes that bend the pages yet to come */
   const addRewrite = useCallback((text: string) => {
@@ -245,12 +230,6 @@ export function DreamBookView() {
     rewritesRef.current = rewritesRef.current.filter((_, i) => i !== idx);
     setRewrites(rewritesRef.current);
   }, []);
-
-  /* keep the atelier thread pinned to its newest line */
-  useEffect(() => {
-    const el = threadRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
-  }, [lines, stage]);
 
   /* drift the weaving phrases while the loom works */
   useEffect(() => {
@@ -453,21 +432,15 @@ export function DreamBookView() {
 
   /* ---------------- the atelier ---------------- */
 
+  /* one thread held or let go — every shape toggles freely, and the
+     selection may empty itself again before the channeling begins */
   const choose = useCallback(
-    (kind: "reader" | "tale" | "volume", id: string, label: string) => {
-      if (kind === "reader") setAge(id);
-      if (kind === "tale") setTale(id);
-      if (kind === "volume") setVolume(id);
-      pushLine("visitor", label);
-      const next =
-        kind === "reader"
-          ? t("The reader is held. Now the tale.")
-          : kind === "tale"
-            ? t("A fine shape for a tale. And the book itself?")
-            : t("The loom is set. Whisper anything you wish — or let me weave.");
-      pushLine("weaver", next);
+    (kind: "reader" | "tale" | "volume", id: string) => {
+      if (kind === "reader") setAge((cur) => (cur === id ? "" : id));
+      if (kind === "tale") setTale((cur) => (cur === id ? "" : id));
+      if (kind === "volume") setVolume((cur) => (cur === id ? "" : id));
     },
-    [pushLine, t]
+    []
   );
 
   const openBook = useCallback(async () => {
@@ -492,15 +465,15 @@ export function DreamBookView() {
     (e?: FormEvent) => {
       e?.preventDefault();
       const text = topicDraft.trim().slice(0, 600);
-      if (!text || weavingRef.current) return;
+      /* the final gate — at least one thread must be held before the
+         loom may begin; nothing beyond that is ever forced */
+      if (!text || weavingRef.current || !(age || tale || volume)) return;
       setTopicDraft("");
       setTopic(text);
       configRef.current = { ...configRef.current, topic: text };
-      pushLine("visitor", text);
-      pushLine("weaver", t("The loom is tuned. The channeling begins."));
       void openBook();
     },
-    [topicDraft, pushLine, t, openBook]
+    [topicDraft, age, tale, volume, openBook]
   );
 
   /* ---------------- the reader's logic ----------------
@@ -578,11 +551,7 @@ export function DreamBookView() {
     setTopic("");
     setTopicDraft("");
     setStage("atelier");
-    pushLine(
-      "weaver",
-      t("A new book waits in the loom. Speak anything below, and the channeling begins.")
-    );
-  }, [pushLine, stopNarration, t]);
+  }, [stopNarration]);
 
   const weaveOnward = useCallback(async () => {
     const ok = await weave("extend", pagesRef.current.length + 1);
@@ -764,22 +733,22 @@ export function DreamBookView() {
             </div>
           </div>
 
-          {/* the thread — the weaver and the visitor */}
-          <div
-            ref={threadRef}
-            className="nice-scroll mt-5 max-h-[32vh] min-h-[110px] space-y-2.5 overflow-y-auto rounded-2xl border border-border bg-card/40 p-3 sm:p-4"
-            aria-live="polite"
-          >
-            <AtelierBubble from="weaver">
+          {/* the welcome — the room's own greeting, set in the reading
+              hand. No transcript, no bubbles: one page of prose that
+              waits like a dedication, and the input below begins the
+              tale exactly as it always has. */}
+          <div className="mx-auto mt-7 max-w-[440px]">
+            <p className="ink-hand text-[16.5px] leading-[1.95] first-letter:float-left first-letter:mr-3 first-letter:mt-[7px] first-letter:text-[50px] first-letter:font-semibold first-letter:leading-[0.78] sm:text-[18px]">
               {t(
                 "Welcome, keeper of wishes. Speak anything — a subject, a wish, a whole world — and the book begins."
               )}
-            </AtelierBubble>
-            {lines.map((l) => (
-              <AtelierBubble key={l.id} from={l.from}>
-                {l.text}
-              </AtelierBubble>
-            ))}
+            </p>
+          </div>
+
+          {/* the page-marker slide — pass between the Book and the
+              Akashic Library without ever leaving the reading rooms */}
+          <div className="mt-7 flex justify-center">
+            <ReadingToggle />
           </div>
 
           {/* the shapes — reader / tale / book */}
@@ -788,19 +757,19 @@ export function DreamBookView() {
               label={t("The reader")}
               options={READERS}
               active={age}
-              onPick={(id, label) => choose("reader", id, label)}
+              onPick={(id) => choose("reader", id)}
             />
             <ShapeMenu
               label={t("The tale")}
               options={TALES}
               active={tale}
-              onPick={(id, label) => choose("tale", id, label)}
+              onPick={(id) => choose("tale", id)}
             />
             <ShapeRow
               label={t("The book")}
               options={VOLUMES}
               active={volume}
-              onPick={(id, label) => choose("volume", id, label)}
+              onPick={(id) => choose("volume", id)}
             />
           </div>
           <div aria-hidden="true" className="h-4" />
@@ -810,6 +779,23 @@ export function DreamBookView() {
       {/* the one input — speak, send, and the channeling begins */}
       <div className="relative z-10 shrink-0 border-t border-border bg-background px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2.5 sm:px-6">
         <div className="mx-auto w-full max-w-[680px]">
+          {/* the one gentle gate — the loom only asks for a single
+              thread before it may begin; nothing more is ever forced */}
+          <AnimatePresence>
+            {topicDraft.trim() && !(age || tale || volume) && (
+              <motion.p
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 2 }}
+                transition={{ duration: 0.3 }}
+                className="ink-hand ink-soft mb-2 text-center text-[12.5px] italic"
+              >
+                {t(
+                  "The loom waits for a thread — choose the reader, the tale, or the book below."
+                )}
+              </motion.p>
+            )}
+          </AnimatePresence>
           <form
             onSubmit={channelBook}
             className="flex items-center gap-2 rounded-full border border-border bg-card py-1 pl-4 pr-1 transition-all duration-300 focus-within:border-foreground/35"
@@ -824,7 +810,7 @@ export function DreamBookView() {
             />
             <button
               type="submit"
-              disabled={!topicDraft.trim()}
+              disabled={!topicDraft.trim() || !(age || tale || volume)}
               aria-label={t("Channel the book")}
               title={t("Channel the book")}
               className="akashic-btn focus-glow flex size-8 shrink-0 items-center justify-center rounded-full disabled:opacity-40"
@@ -1060,6 +1046,13 @@ export function DreamBookView() {
           >
             <ZoomIn className="size-4" aria-hidden="true" />
           </button>
+          {/* the page-marker slide — it rests among the reading's own
+              instruments and vanishes with the whole top bar the moment
+              the reading immerses; narrow hands keep the bar uncluttered
+              and change rooms from the atelier instead */}
+          <div className="hidden md:block">
+            <ReadingToggle />
+          </div>
         </div>
       </header>
 
@@ -1518,31 +1511,6 @@ function DreamEmblem() {
 /*  Small pieces                                                       */
 /* ------------------------------------------------------------------ */
 
-function AtelierBubble({
-  from,
-  children,
-}: {
-  from: "weaver" | "visitor";
-  children: React.ReactNode;
-}) {
-  if (from === "weaver") {
-    return (
-      <div className="flex justify-start">
-        <p className="ink-hand max-w-[92%] rounded-2xl rounded-tl-md border border-border bg-card px-3.5 py-2.5 text-[13.5px] leading-relaxed sm:text-sm">
-          {children}
-        </p>
-      </div>
-    );
-  }
-  return (
-    <div className="flex justify-end">
-      <p className="max-w-[92%] rounded-2xl rounded-tr-md border border-border/70 bg-background px-3.5 py-2.5 text-[13px] leading-relaxed text-foreground/85 sm:text-[13.5px]">
-        {children}
-      </p>
-    </div>
-  );
-}
-
 function ShapeMenu({
   label,
   options,
@@ -1552,10 +1520,10 @@ function ShapeMenu({
   label: string;
   options: { id: string; label: string }[];
   active: string;
-  onPick: (id: string, label: string) => void;
+  onPick: (id: string) => void;
 }) {
   const t = useT();
-  const current = options.find((o) => o.id === active) ?? options[0];
+  const current = options.find((o) => o.id === active);
   return (
     <div>
       <p className="mono-label mb-2 text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
@@ -1566,10 +1534,16 @@ function ShapeMenu({
           <button
             type="button"
             data-testid="tale-menu-trigger"
-            aria-label={`${label}: ${t(current.label)}`}
+            aria-label={current ? `${label}: ${t(current.label)}` : label}
             className="focus-glow flex min-w-[190px] items-center justify-between gap-3 rounded-full border border-border bg-card px-4 py-2 text-[13px] text-foreground transition-all duration-300 hover:border-foreground/40"
           >
-            <span className="truncate">{t(current.label)}</span>
+            {current ? (
+              <span className="truncate">{t(current.label)}</span>
+            ) : (
+              <span className="truncate font-[family-name(var(--font-literata))] italic text-muted-foreground/70">
+                {t("Choose the tale")}
+              </span>
+            )}
             <ChevronsUpDown className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
           </button>
         </DropdownMenuTrigger>
@@ -1582,7 +1556,7 @@ function ShapeMenu({
             return (
               <DropdownMenuItem
                 key={o.id}
-                onSelect={() => onPick(o.id, t(o.label))}
+                onSelect={() => onPick(o.id)}
                 data-testid={`tale-option-${o.id}`}
                 className={cn(
                   "cursor-pointer justify-between gap-3 text-[13px]",
@@ -1609,7 +1583,7 @@ function ShapeRow({
   label: string;
   options: { id: string; label: string }[];
   active: string;
-  onPick: (id: string, label: string) => void;
+  onPick: (id: string) => void;
 }) {
   const t = useT();
   return (
@@ -1624,7 +1598,7 @@ function ShapeRow({
             <button
               key={o.id}
               type="button"
-              onClick={() => onPick(o.id, t(o.label))}
+              onClick={() => onPick(o.id)}
               aria-pressed={isActive}
               className={cn(
                 "focus-glow rounded-full border px-3 py-1.5 text-[12px] transition-all duration-300",

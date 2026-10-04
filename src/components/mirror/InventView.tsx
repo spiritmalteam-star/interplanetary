@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useMirror, type ChatMessage } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
+import { ContextSuggestionStrip } from "./SuggestionStrip";
 import {
   forgeChatPhases,
   forgeDomains,
@@ -23,9 +24,18 @@ import {
   toolPhases,
 } from "@/lib/data/invent";
 import type { ForgeDialOption } from "@/lib/mirror-types";
+import {
+  blendVisualRequest,
+  isVisualIntent,
+} from "@/lib/visual-intent";
 import { cn } from "@/lib/utils";
 import { ForgeLoading } from "./ThemedLoadings";
 import { ListenButton } from "./ListenButton";
+import {
+  PreparedPromptFallback,
+  VisualizationCard,
+  VisualizationPending,
+} from "./VisualizationCard";
 import { SigilForIntent } from "./MirrorOSForge";
 
 /* ------------------------------------------------------------------ */
@@ -848,6 +858,90 @@ function ForgeBody({ text }: { text: string }) {
   );
 }
 
+/* ---------- the crystallized image — one visual block per stroke ----- */
+
+/** The visualization slot of one forge exchange: the pending animation,
+    the atelier-quiet fallback with one repaint, the prepared-prompt
+    fallback, or the completed card — the forge's own accent light. */
+function ForgeVisualBlock({ m }: { m: ChatMessage }) {
+  const t = useT();
+  const askForgeVisual = useMirror((s) => s.askForgeVisual);
+
+  if (m.visual === "pending") {
+    return <VisualizationPending accent="var(--scope-a)" testIdPrefix="forge-visual" repaint />;
+  }
+  if (m.visual === "error") {
+    return (
+      <div
+        className="glass mt-3 rounded-2xl border border-[color-mix(in_srgb,var(--hairline)_65%,transparent)] px-4 py-3.5"
+        data-testid="forge-visual-error"
+      >
+        <p className="text-[14px] italic leading-relaxed text-foreground/80">
+          {t(
+            "The atelier is quiet — the vision could not be composed. Rest a breath, then ask again."
+          )}
+        </p>
+        {m.visualRequest && (
+          <button
+            type="button"
+            onClick={() =>
+              void askForgeVisual(m.visualRequest ?? "", undefined, {
+                id: m.id,
+                request: m.visualRequest,
+              })
+            }
+            data-testid="forge-visual-retry"
+            className="focus-glow mt-2.5 flex h-9 items-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--scope-a)_35%,transparent)] px-4 text-[13px] text-foreground/90 transition-all duration-300 hover:-translate-y-px"
+          >
+            <RotateCcw className="size-3.5" aria-hidden="true" />
+            {t("Be still and receive")}
+          </button>
+        )}
+      </div>
+    );
+  }
+  if (!m.artifact) return null;
+  const artifact = m.artifact;
+  if (!artifact.imageUrl && artifact.slides.length === 0) {
+    return (
+      <div className="mt-3">
+        <PreparedPromptFallback
+          artifact={artifact}
+          accent="var(--scope-a)"
+          testIdPrefix="forge-visual"
+          onPaint={() =>
+            void askForgeVisual(m.visualRequest ?? artifact.subject, undefined, {
+              id: m.id,
+              request: m.visualRequest ?? artifact.subject,
+              prompt: artifact.prompt,
+              subject: artifact.subject,
+              mode: artifact.mode,
+            })
+          }
+        />
+      </div>
+    );
+  }
+  return (
+    <div className="mt-3">
+      <VisualizationCard
+        artifact={artifact}
+        accent="var(--scope-a)"
+        testIdPrefix="forge-visual"
+        onRegenerate={() =>
+          void askForgeVisual(m.visualRequest ?? artifact.subject, undefined, {
+            id: m.id,
+            request: m.visualRequest ?? artifact.subject,
+            prompt: artifact.prompt,
+            subject: artifact.subject,
+            mode: artifact.mode,
+          })
+        }
+      />
+    </div>
+  );
+}
+
 function ForgeExchange({
   m,
   animate,
@@ -871,6 +965,7 @@ function ForgeExchange({
       <div className="mt-2.5">
         <ForgeBody text={m.text} />
       </div>
+      {(m.visual || m.artifact) && <ForgeVisualBlock m={m} />}
     </motion.article>
   );
 }
@@ -879,6 +974,7 @@ function ForgeChat() {
   const forgeSession = useMirror((s) => s.forgeSession);
   const setForgeDraft = useMirror((s) => s.setForgeDraft);
   const askForge = useMirror((s) => s.askForge);
+  const askForgeVisual = useMirror((s) => s.askForgeVisual);
   const clearChannel = useMirror((s) => s.clearChannel);
   const t = useT();
   const threadRef = useRef<HTMLDivElement | null>(null);
@@ -906,6 +1002,16 @@ function ForgeChat() {
   const send = (text?: string) => {
     const q = (text ?? draft).trim();
     if (!q || loading) return;
+    /* IMAGE CRYSTALLIZATION — an image is asked for by name: the last
+       channel (the forge's most recent stroke) crystallizes at once,
+       shaped by the visitor's words; with an empty thread, the words
+       themselves crystallize. */
+    if (isVisualIntent(q)) {
+      const lastReply =
+        [...messages].reverse().find((m) => m.text.trim())?.text ?? "";
+      void askForgeVisual(blendVisualRequest(q, lastReply), q);
+      return;
+    }
     void askForge(q);
   };
 
@@ -989,23 +1095,20 @@ function ForgeChat() {
         )}
       </div>
 
-      {/* suggestion sparks — one tap speaks the whole line */}
-      <div className="flex flex-wrap gap-1.5 border-t hairline px-4 pt-3 sm:px-5">
-        {forgeSuggestions.map((s) => (
-          <button
-            key={s}
-            type="button"
-            disabled={loading}
-            onClick={() => send(s)}
-            data-testid="forge-suggestion"
-            className={cn(
-              "focus-glow max-w-full truncate rounded-full border px-2.5 py-1 text-[12px] text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground",
-              loading && "cursor-not-allowed opacity-50"
-            )}
-          >
-            {t(s)}
-          </button>
-        ))}
+      {/* suggestion sparks — now a living strip: six at a time, closest
+          to the bench conversation first, fresh every five minutes */}
+      <div className="border-t hairline px-3 pt-2 sm:px-4">
+        <ContextSuggestionStrip
+          poolId="invent"
+          contextText={messages
+            .slice(-6)
+            .map((m) => `${m.query}\n${m.text}`)
+            .join("\n")}
+          onPick={(s) => {
+            if (!loading) send(s);
+          }}
+          testIdPrefix="forge-suggestion"
+        />
       </div>
 
       {/* composer */}

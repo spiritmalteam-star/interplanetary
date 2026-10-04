@@ -16,8 +16,10 @@ import { useTheme } from "next-themes";
 import { useT } from "@/lib/i18n";
 import type { Scope } from "@/lib/mirror-types";
 import { cn } from "@/lib/utils";
+import { findTerms } from "@/lib/data/lexicon";
 import { ListenButton } from "./ListenButton";
 import { AlienLoading } from "./AlienLoading";
+import { TermPopover } from "./TermPopover";
 import { SideArtifact } from "./ChatArtifacts";
 import {
   PreparedPromptFallback,
@@ -28,7 +30,6 @@ import {
 /* ---------- parsing the transmission into rich blocks ---------- */
 
 type Block =
-  | { kind: "opening"; text: string }
   | { kind: "para"; text: string }
   | { kind: "list"; items: string[] }
   | { kind: "signature"; text: string };
@@ -57,14 +58,44 @@ function parseBlocks(text: string): Block[] {
       });
       return;
     }
-    if (i === 0) {
-      blocks.push({ kind: "opening", text: p });
-      return;
-    }
+    /* ONE single format: the opening line is prose like every other
+       line — no second style, no parted voice — the whole reply reads
+       as one continuous, classic, hand-held page. */
     blocks.push({ kind: "para", text: p });
   });
 
   return blocks;
+}
+
+/* ---------- one reading voice — prose with the glowing terms -------- */
+
+/**
+ * Render one block of prose in the Mirror's single hand. The most
+ * important terms carry a soft glow — double-click (or double-tap)
+ * one and its meaning opens; at most two glow per block so the page
+ * stays a pleasure, never a test.
+ */
+function TermProse({ text }: { text: string }) {
+  const hits = useMemo(() => findTerms(text, 2), [text]);
+  if (hits.length === 0) return <>{text}</>;
+
+  const parts: React.ReactNode[] = [];
+  let cursor = 0;
+  hits.forEach((hit, i) => {
+    if (hit.start > cursor) parts.push(text.slice(cursor, hit.start));
+    parts.push(
+      <span
+        key={`${hit.entry.term}-${i}`}
+        data-term={hit.entry.term}
+        className="term-glow cursor-help"
+      >
+        {text.slice(hit.start, hit.end)}
+      </span>
+    );
+    cursor = hit.end;
+  });
+  if (cursor < text.length) parts.push(text.slice(cursor));
+  return <>{parts}</>;
 }
 
 /* ---------- small themed pieces ---------- */
@@ -165,27 +196,13 @@ const stillItem = {
 
 function TransmissionBody({ text }: { text: string }) {
   const blocks = useMemo(() => parseBlocks(text), [text]);
-  /* the akashic hand — the first plain paragraph opens with a drop cap,
+  /* the akashic hand — the first paragraph opens with a drop cap,
      exactly as the records of the Library are written */
   const firstParaIndex = blocks.findIndex((b) => b.kind === "para");
 
   return (
     <div>
       {blocks.map((b, i) => {
-        if (b.kind === "opening") {
-          return (
-            <motion.p
-              key={i}
-              custom={i}
-              variants={staggerItem}
-              initial="hidden"
-              animate="show"
-              className="ink-title text-[21px] font-semibold leading-[1.7] sm:text-[23px]"
-            >
-              {b.text}
-            </motion.p>
-          );
-        }
         if (b.kind === "signature") {
           return (
             <motion.div
@@ -247,7 +264,7 @@ function TransmissionBody({ text }: { text: string }) {
                 "first-letter:float-left first-letter:mr-3 first-letter:mt-[7px] first-letter:text-[50px] first-letter:font-semibold first-letter:leading-[0.8]"
             )}
           >
-            {b.text}
+            <TermProse text={b.text} />
           </motion.p>
         );
       })}
@@ -665,6 +682,9 @@ export function TransmissionView() {
         "mx-auto w-full max-w-[760px] px-1 pb-6 pt-6 sm:pt-8"
       )}
     >
+      {/* the meaning-carrier — one quiet portal for every glowing term */}
+      <TermPopover />
+
       {/* beginning anchor — opening a channel keeps the thread here */}
       <div ref={topRef} aria-hidden="true" className="h-px" />
 

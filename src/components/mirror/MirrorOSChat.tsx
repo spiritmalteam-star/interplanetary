@@ -5,8 +5,13 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Feather, Orbit, RefreshCw } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
+import { ContextSuggestionStrip } from "./SuggestionStrip";
 import { osOpeners } from "@/lib/data/mirroros";
 import { detectVisualIntent } from "@/lib/visualization";
+import {
+  blendVisualRequest,
+  isVisualIntent,
+} from "@/lib/visual-intent";
 import { ListenButton } from "./ListenButton";
 import {
   PreparedPromptFallback,
@@ -411,6 +416,22 @@ export function MirrorOSChat() {
     if (!query || osStatus === "loading" || hasPendingAttachments(attachments))
       return;
     const carried = attachments.length > 0 ? attachments : undefined;
+
+    /* IMAGE CRYSTALLIZATION — an image is asked for by name: no LLM
+       round-trip travels. The last channel (the OS's most recent reply)
+       crystallizes at once, shaped by the visitor's words; with an
+       empty line, the words themselves crystallize. */
+    if (isVisualIntent(query)) {
+      const lastReply =
+        [...osMessages]
+          .reverse()
+          .find((m) => m.role === "os" && m.text.trim())?.text ?? "";
+      setAttachments([]);
+      if (useMirror.getState().osDraft.trim() === query) setOsDraft("");
+      void askOSVisual(blendVisualRequest(query, lastReply), null, null, query);
+      return;
+    }
+
     /* No button, no wand — a request to see simply is one. Ordinary
        words never wake the atelier. */
     const intent = detectVisualIntent(query);
@@ -531,6 +552,22 @@ export function MirrorOSChat() {
             )}
           </>
         )}
+      </div>
+
+      {/* the living whispers — six invitations at a time, closest to
+          the unfolding conversation first, fresh every five minutes */}
+      <div className="shrink-0 px-3 pb-1 sm:px-5">
+        <ContextSuggestionStrip
+          poolId="mirroros"
+          contextText={osMessages
+            .slice(-6)
+            .map((m) => `${m.query}\n${m.text}`)
+            .join("\n")}
+          onPick={(q) => {
+            if (osStatus !== "loading") void askOS(q);
+          }}
+          testIdPrefix="os-suggestion"
+        />
       </div>
 
       {/* composer */}

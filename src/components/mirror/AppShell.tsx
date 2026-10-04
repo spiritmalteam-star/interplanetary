@@ -33,6 +33,11 @@ import { StarPlayModal } from "./StarPlayModal";
 import { TechnologyModal } from "./TechnologyModal";
 import { SpeciesModal } from "./SpeciesModal";
 
+/* The frame-lift class: every top-level application frame lifts itself
+   by the visual viewport's offset so the keyboard can never bury the
+   composer (iOS pans the visible band; the frame follows it). */
+const FRAME_LIFT = "[transform:translateY(calc(var(--app-shift,0px)*-1))]";
+
 /* The quiet welcome — nothing at all. The page is a clean white
    sheet; the conversation owns every pixel. The identity lives in
    the top bar's simple cosmic mark. In total stillness the little
@@ -56,13 +61,21 @@ export default function AppShell() {
 
   /* The frame fits every device: when the on-screen keyboard (or any
      visual-viewport change) reshapes the window, the whole application
-     re-fits to the VISIBLE viewport, so the composer is never lost
-     below the fold and nothing ever needs scrolling to be reached. */
+     re-fits to the VISIBLE viewport AND re-centers itself on the
+     visible band — iOS pans the visual viewport downward when the
+     keyboard rises, so without the shift the composer hides BEHIND
+     the keys. The offset is applied as --app-shift and every top
+     frame lifts itself by exactly that amount. */
   useEffect(() => {
     const vv = window.visualViewport;
     if (!vv) return;
-    const apply = () =>
+    const apply = () => {
       document.documentElement.style.setProperty("--app-h", `${vv.height}px`);
+      document.documentElement.style.setProperty(
+        "--app-shift",
+        `${vv.offsetTop}px`
+      );
+    };
     apply();
     vv.addEventListener("resize", apply);
     vv.addEventListener("scroll", apply);
@@ -70,7 +83,43 @@ export default function AppShell() {
       vv.removeEventListener("resize", apply);
       vv.removeEventListener("scroll", apply);
       document.documentElement.style.removeProperty("--app-h");
+      document.documentElement.style.removeProperty("--app-shift");
     };
+  }, []);
+
+  /* Wherever words are typed, the caret must stay in sight: when any
+     field receives focus, gently bring it to the middle of its own
+     scrolling ancestor once the keyboard has settled (twice — the
+     first pass while the viewport still moves, the second after it
+     rests). This guards every composer in every world. */
+  useEffect(() => {
+    const onFocusIn = (e: FocusEvent) => {
+      const el = e.target as HTMLElement | null;
+      if (!el) return;
+      const tag = el.tagName;
+      if (
+        tag !== "TEXTAREA" &&
+        tag !== "INPUT" &&
+        !(el as HTMLTextAreaElement).isContentEditable
+      )
+        return;
+      const show = () => {
+        try {
+          el.scrollIntoView({ block: "center", behavior: "smooth" });
+        } catch {
+          /* older engines — silent */
+        }
+      };
+      const t1 = window.setTimeout(show, 280);
+      const t2 = window.setTimeout(show, 650);
+      const clear = () => {
+        window.clearTimeout(t1);
+        window.clearTimeout(t2);
+      };
+      el.addEventListener("blur", clear, { once: true });
+    };
+    window.addEventListener("focusin", onFocusIn);
+    return () => window.removeEventListener("focusin", onFocusIn);
   }, []);
 
   /* The floating handles read the reader, not the reverse: on mobile
@@ -129,7 +178,7 @@ export default function AppShell() {
 
   if (communionOpen) {
     return (
-      <div className="relative h-[var(--app-h,100dvh)] overflow-hidden">
+      <div className={`relative h-[var(--app-h,100dvh)] overflow-hidden ${FRAME_LIFT}`}>
         <CosmicBackdrop />
         <StarField />
         <CommunionView />
@@ -143,7 +192,7 @@ export default function AppShell() {
      button connecting it to the rest of the application. */
   if (view === "mirroros") {
     return (
-      <div className="relative h-[var(--app-h,100dvh)] overflow-hidden">
+      <div className={`relative h-[var(--app-h,100dvh)] overflow-hidden ${FRAME_LIFT}`}>
         <CosmicBackdrop />
         <StarField />
         <MirrorOS />
@@ -156,7 +205,7 @@ export default function AppShell() {
      like the manifest: one top bar, chamber tabs, one full-height core. */
   if (view === "particlex") {
     return (
-      <div className="relative h-[var(--app-h,100dvh)] overflow-hidden">
+      <div className={`relative h-[var(--app-h,100dvh)] overflow-hidden ${FRAME_LIFT}`}>
         <CosmicBackdrop />
         <StarField />
         <ParticleX />
@@ -169,7 +218,7 @@ export default function AppShell() {
      one top bar, chamber tabs, one full-height nexus core. */
   if (view === "evolvemed") {
     return (
-      <div className="relative h-[var(--app-h,100dvh)] overflow-hidden">
+      <div className={`relative h-[var(--app-h,100dvh)] overflow-hidden ${FRAME_LIFT}`}>
         <CosmicBackdrop />
         <StarField />
         <EvolveMed />
@@ -182,7 +231,7 @@ export default function AppShell() {
      quantum shift of their spirit through the portal. */
   if (view === "library") {
     return (
-      <div className="relative h-[var(--app-h,100dvh)] overflow-hidden">
+      <div className={`relative h-[var(--app-h,100dvh)] overflow-hidden ${FRAME_LIFT}`}>
         <LibraryView />
         {passageModals}
       </div>
@@ -194,7 +243,7 @@ export default function AppShell() {
      ink as the rest of the book. */
   if (view === "akashic") {
     return (
-      <div className="relative h-[var(--app-h,100dvh)] overflow-hidden">
+      <div className={`relative h-[var(--app-h,100dvh)] overflow-hidden ${FRAME_LIFT}`}>
         <AkashicView />
       </div>
     );
@@ -205,7 +254,7 @@ export default function AppShell() {
      one back button returns to the laboratory. */
   if (view === "dreambook") {
     return (
-      <div className="relative h-[var(--app-h,100dvh)] overflow-hidden">
+      <div className={`relative h-[var(--app-h,100dvh)] overflow-hidden ${FRAME_LIFT}`}>
         <DreamBookView />
       </div>
     );
@@ -215,7 +264,7 @@ export default function AppShell() {
      intention in, transmission out — one back button returns. */
   if (view === "lightcodes") {
     return (
-      <div className="relative h-[var(--app-h,100dvh)] overflow-hidden">
+      <div className={`relative h-[var(--app-h,100dvh)] overflow-hidden ${FRAME_LIFT}`}>
         <CosmicBackdrop />
         <StarField />
         <LightCodesView />
@@ -228,7 +277,7 @@ export default function AppShell() {
      workshop — blueprints, bench and rail — one back button returns. */
   if (view === "invent") {
     return (
-      <div className="relative h-[var(--app-h,100dvh)] overflow-hidden">
+      <div className={`relative h-[var(--app-h,100dvh)] overflow-hidden ${FRAME_LIFT}`}>
         <CosmicBackdrop />
         <StarField />
         <InventView />
