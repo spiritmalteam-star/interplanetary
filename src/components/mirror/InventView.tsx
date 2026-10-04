@@ -8,6 +8,7 @@ import {
   Flame,
   Hammer,
   RotateCcw,
+  Sparkles,
   Wrench,
 } from "lucide-react";
 import { useMirror, type ChatMessage } from "@/lib/mirror-store";
@@ -19,7 +20,6 @@ import {
   forgePhases,
   forgeScales,
   forgeSparks,
-  forgeSuggestions,
   inventTools,
   toolPhases,
 } from "@/lib/data/invent";
@@ -40,23 +40,74 @@ import { SigilForIntent } from "./MirrorOSForge";
 
 /* ------------------------------------------------------------------ */
 /*  INVENT — THE FORGE · the fourth book on the shelf, rebuilt as its  */
-/*  own interactive workshop. No reading rooms and no bold text walls: */
-/*  the whole book IS the making. Two live elements carry it —         */
+/*  own interactive workshop, arranged as CHAMBERS like the Mirror     */
+/*  Entity OS: a top bar (back · title · chamber tabs) and ONE         */
+/*  spacious chamber filling the world at a time. Three chambers:      */
 /*                                                                     */
-/*   · THE FORGE CHAT  — the direct mirror chat specialized for        */
-/*     invention: speak a want, a half-idea or a block, and the Forge  */
-/*     answers in sparks, always landing on one doable stroke.         */
+/*   · THE BENCH — the core: the direct Forge chat with the whole      */
+/*     height of the world to breathe — thread, living sparks and      */
+/*     composer — plus the crystallization of images from the line.    */
 /*                                                                     */
-/*   · THE RIGHT PANE  — two chambers sharing one pane: THE MYSTERY    */
-/*     CHAMBER (turn three dials, strike, a random creation climbs     */
-/*     out of the coals, forged from three server-drawn embers) and    */
-/*     THE TOOL WALL — four bench presences through which the Mirror   */
-/*     inteligjence works: the Crucible, the Name-Giver, the Nature    */
-/*     Mirror and the Honest Spark. One honest input in, one gift out. */
+/*   · THE TOOL WALL — four bench presences through which the Mirror   */
+/*     inteligjence works (the Crucible, the Name-Giver, the Nature    */
+/*     Mirror, the Honest Spark) as a roomy card wall, with the        */
+/*     chosen tool's workbench resting below it.                       */
 /*                                                                     */
-/*  COMPACTNESS: one screen, two columns on desktop, stacked on        */
-/*  mobile — the thread and the chamber scroll inside themselves.      */
+/*   · THE MYSTERY CHAMBER — turn three dials, strike, and a random    */
+/*     creation climbs out of the coals, forged from three embers.     */
+/*                                                                     */
+/*  Each chamber fills the world and scrolls inside itself; the top-   */
+/*  bar tabs move between them, exactly like the OS chambers. "Ask     */
+/*  the Forge about it" carries the visitor back to the Bench.         */
 /* ------------------------------------------------------------------ */
+
+type InventPlace = "bench" | "tools" | "mystery";
+
+const INVENT_PLACES: {
+  id: Exclude<InventPlace, "bench">;
+  label: string;
+  icon: typeof Hammer;
+}[] = [
+  { id: "tools", label: "The Tool Wall", icon: Wrench },
+  { id: "mystery", label: "The Mystery Chamber", icon: Sparkles },
+];
+
+/* ---------------- chamber tabs — the top-bar row ---------------- */
+
+function InventTab({
+  active,
+  onClick,
+  icon: Icon,
+  label,
+  testId,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: typeof Hammer;
+  label: string;
+  testId: string;
+}) {
+  const t = useT();
+  return (
+    <button
+      type="button"
+      role="tab"
+      aria-selected={active}
+      aria-label={t(label)}
+      title={t(label)}
+      onClick={onClick}
+      data-testid={testId}
+      className={cn(
+        "focus-glow flex size-8 shrink-0 items-center justify-center rounded-full border transition-all duration-300 sm:size-9",
+        active
+          ? "border-[color-mix(in_srgb,var(--scope-a)_55%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_14%,transparent)] text-[var(--scope-a)] glow-sm"
+          : "border-transparent text-muted-foreground/80 hover:border-[var(--hairline-hover)] hover:text-foreground"
+      )}
+    >
+      <Icon className="size-4" aria-hidden="true" />
+    </button>
+  );
+}
 
 /* ---------------- one dial group of the Mystery Chamber ---------------- */
 
@@ -165,7 +216,7 @@ function ForgingEmber({ phase }: { phase: number }) {
 
 /* ---------------- the revealed mystery creation ---------------- */
 
-function MysteryCard() {
+function MysteryCard({ onAskBench }: { onAskBench: () => void }) {
   const mystery = useMirror((s) => s.mystery);
   const strikeMystery = useMirror((s) => s.strikeMystery);
   const askForge = useMirror((s) => s.askForge);
@@ -197,6 +248,7 @@ function MysteryCard() {
         name: mystery.name,
       })
     );
+    onAskBench();
   };
 
   return (
@@ -204,7 +256,7 @@ function MysteryCard() {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-      className="mt-4 rounded-xl border px-4 py-5"
+      className="mt-5 rounded-xl border px-5 py-6 sm:px-6"
       style={{
         borderColor: "color-mix(in srgb, var(--scope-a) 30%, transparent)",
         background:
@@ -303,7 +355,7 @@ function MysteryCard() {
 
 /* ---------------- the Mystery Chamber ---------------- */
 
-function MysteryChamber() {
+function MysteryChamber({ onAskBench }: { onAskBench: () => void }) {
   const mysteryStatus = useMirror((s) => s.mysteryStatus);
   const mysteryDials = useMirror((s) => s.mysteryDials);
   const setMysteryDial = useMirror((s) => s.setMysteryDial);
@@ -323,7 +375,7 @@ function MysteryChamber() {
 
   return (
     <div
-      className="scope-frame-card relative overflow-hidden rounded-2xl glass p-5 sm:p-6"
+      className="scope-frame-card relative mx-auto w-full max-w-[680px] overflow-hidden rounded-2xl glass p-5 sm:p-8"
       data-testid="mystery-chamber"
     >
       <span className="scope-corner scope-corner-tl" aria-hidden="true" />
@@ -331,17 +383,19 @@ function MysteryChamber() {
       <span className="scope-corner scope-corner-bl" aria-hidden="true" />
       <span className="scope-corner scope-corner-br" aria-hidden="true" />
 
-      <h3 className="mono-label flex items-center gap-2 text-[11px] text-[var(--scope-a)]">
-        <Flame className="size-3.5" aria-hidden="true" />
-        {t("The Mystery Chamber")}
-      </h3>
-      <p className="mt-1.5 text-[13.5px] leading-relaxed text-muted-foreground">
-        {t(
-          "Turn the dials and strike — a creation you never asked for will climb out of the coals."
-        )}
-      </p>
+      <div className="text-center">
+        <h3 className="mono-label flex items-center justify-center gap-2 text-[11px] text-[var(--scope-a)]">
+          <Flame className="size-3.5" aria-hidden="true" />
+          {t("The Mystery Chamber")}
+        </h3>
+        <p className="mx-auto mt-2 max-w-[440px] text-[13.5px] leading-relaxed text-muted-foreground">
+          {t(
+            "Turn the dials and strike — a creation you never asked for will climb out of the coals."
+          )}
+        </p>
+      </div>
 
-      <div className="mt-4 space-y-3.5">
+      <div className="mt-6 space-y-5">
         <DialGroup
           label={t("What it is")}
           options={forgeDomains}
@@ -372,7 +426,7 @@ function MysteryChamber() {
         data-testid="strike-forge"
         aria-label={t("Strike the Forge")}
         className={cn(
-          "focus-glow mt-5 flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-3 text-[14.5px] font-semibold transition-all duration-300",
+          "focus-glow mt-7 flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-3.5 text-[14.5px] font-semibold transition-all duration-300",
           mysteryStatus === "forging"
             ? "cursor-wait opacity-70"
             : "hover:glow-sm"
@@ -409,7 +463,7 @@ function MysteryChamber() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <MysteryCard />
+            <MysteryCard onAskBench={onAskBench} />
           </motion.div>
         )}
 
@@ -420,7 +474,7 @@ function MysteryChamber() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="mt-4 text-center text-[12.5px] italic leading-relaxed text-muted-foreground/75"
+            className="mt-5 text-center text-[12.5px] italic leading-relaxed text-muted-foreground/75"
           >
             {mysteryStatus === "error" && mysteryError
               ? t(mysteryError)
@@ -466,7 +520,7 @@ function ToolWorking({ phase }: { phase: number }) {
   );
 }
 
-function ToolResultCard() {
+function ToolResultCard({ onAskBench }: { onAskBench: () => void }) {
   const result = useMirror((s) => s.toolResult);
   const askForge = useMirror((s) => s.askForge);
   const t = useT();
@@ -490,13 +544,14 @@ function ToolResultCard() {
           name: result.title,
         })
       );
-      return;
+    } else {
+      void askForge(
+        t(
+          "Speak with me about what the bench tool revealed — what would making it truly take?"
+        )
+      );
     }
-    void askForge(
-      t(
-        "Speak with me about what the bench tool revealed — what would making it truly take?"
-      )
-    );
+    onAskBench();
   };
 
   return (
@@ -504,7 +559,7 @@ function ToolResultCard() {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-      className="mt-4 rounded-xl border px-4 py-4"
+      className="mt-5 rounded-xl border px-5 py-5"
       style={{
         borderColor: "color-mix(in srgb, var(--scope-a) 30%, transparent)",
         background: "color-mix(in srgb, var(--scope-a) 7%, transparent)",
@@ -570,7 +625,9 @@ function ToolResultCard() {
   );
 }
 
-function ToolWall() {
+/* ---------------- the Tool Wall chamber ---------------- */
+
+function ToolWallChamber({ onAskBench }: { onAskBench: () => void }) {
   const toolStatus = useMirror((s) => s.toolStatus);
   const toolId = useMirror((s) => s.toolId);
   const toolInput = useMirror((s) => s.toolInput);
@@ -595,28 +652,23 @@ function ToolWall() {
   const canWork = tool !== null && toolInput.trim().length >= 2 && toolStatus !== "working";
 
   return (
-    <div
-      className="scope-frame-card relative overflow-hidden rounded-2xl glass p-5 sm:p-6"
-      data-testid="tool-wall"
-    >
-      <span className="scope-corner scope-corner-tl" aria-hidden="true" />
-      <span className="scope-corner scope-corner-tr" aria-hidden="true" />
-      <span className="scope-corner scope-corner-bl" aria-hidden="true" />
-      <span className="scope-corner scope-corner-br" aria-hidden="true" />
+    <div data-testid="tool-wall">
+      {/* chamber intro */}
+      <div className="text-center">
+        <h3 className="mono-label flex items-center justify-center gap-2 text-[11px] text-[var(--scope-a)]">
+          <Wrench className="size-3.5" aria-hidden="true" />
+          {t("The Tool Wall")}
+        </h3>
+        <p className="mx-auto mt-2 max-w-[560px] text-[13.5px] leading-relaxed text-muted-foreground">
+          {t(
+            "Four bench presences — the Mirror inteligjence works through them. One honest input in, one gift out."
+          )}
+        </p>
+      </div>
 
-      <h3 className="mono-label flex items-center gap-2 text-[11px] text-[var(--scope-a)]">
-        <Wrench className="size-3.5" aria-hidden="true" />
-        {t("The Tool Wall")}
-      </h3>
-      <p className="mt-1.5 text-[13.5px] leading-relaxed text-muted-foreground">
-        {t(
-          "Four bench presences — the Mirror inteligjence works through them. One honest input in, one gift out."
-        )}
-      </p>
-
-      {/* the tool chips */}
+      {/* the tool cards — roomy, fully readable, one selectable wall */}
       <div
-        className="mt-4 grid grid-cols-2 gap-1.5"
+        className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6"
         role="radiogroup"
         aria-label={t("The Tool Wall")}
         data-testid="tool-chips"
@@ -633,24 +685,66 @@ function ToolWall() {
               onClick={() => setToolId(x.id)}
               data-testid={`tool-chip-${x.id}`}
               className={cn(
-                "focus-glow flex items-center justify-center gap-1.5 rounded-full border px-2.5 py-2 text-[13px] transition-all duration-300",
-                active
-                  ? "border-[var(--scope-a)] font-semibold text-foreground"
-                  : "hairline text-muted-foreground hover:text-foreground"
+                "focus-glow relative overflow-hidden rounded-2xl glass p-5 text-left transition-all duration-300 hover:-translate-y-0.5 sm:p-6",
+                active && "glow-sm"
               )}
               style={
                 active
                   ? {
-                      background:
-                        "color-mix(in srgb, var(--scope-a) 12%, transparent)",
-                      boxShadow:
-                        "0 0 16px -6px color-mix(in srgb, var(--scope-a) 55%, transparent)",
+                      borderColor:
+                        "color-mix(in srgb, var(--scope-a) 55%, transparent)",
                     }
                   : undefined
               }
             >
-              <span aria-hidden="true" className="emoji-ink">{x.emoji}</span>
-              {t(x.name)}
+              {active && (
+                <>
+                  <span className="scope-corner scope-corner-tl" aria-hidden="true" />
+                  <span className="scope-corner scope-corner-tr" aria-hidden="true" />
+                  <span className="scope-corner scope-corner-bl" aria-hidden="true" />
+                  <span className="scope-corner scope-corner-br" aria-hidden="true" />
+                </>
+              )}
+
+              <div className="flex items-start gap-3.5">
+                <span
+                  className="emoji-ink flex size-11 shrink-0 items-center justify-center rounded-full border text-[18px]"
+                  style={
+                    active
+                      ? {
+                          borderColor:
+                            "color-mix(in srgb, var(--scope-a) 45%, transparent)",
+                          background:
+                            "color-mix(in srgb, var(--scope-a) 12%, transparent)",
+                        }
+                      : {
+                          borderColor:
+                            "color-mix(in srgb, var(--scope-a) 22%, transparent)",
+                          background:
+                            "color-mix(in srgb, var(--scope-a) 6%, transparent)",
+                        }
+                  }
+                  aria-hidden="true"
+                >
+                  {x.emoji}
+                </span>
+                <span className="min-w-0">
+                  <span className="scope-gradient-text block text-[16px] font-semibold leading-snug">
+                    {t(x.name)}
+                  </span>
+                  <span className="mt-1.5 block text-[13.5px] leading-relaxed text-muted-foreground">
+                    {t(x.whisper)}
+                  </span>
+                </span>
+              </div>
+
+              <span
+                className="mono-label mt-4 flex items-center gap-1.5 text-[10px]"
+                style={{ color: "var(--scope-a)" }}
+              >
+                <Hammer className="size-3" aria-hidden="true" />
+                {t(x.action)}
+              </span>
             </button>
           );
         })}
@@ -658,14 +752,32 @@ function ToolWall() {
 
       {/* the selected tool's workbench */}
       {tool && (
-        <div className="mt-4">
-          <p className="text-[13px] italic leading-relaxed text-muted-foreground/85">
-            {t(tool.whisper)}
-          </p>
+        <div
+          className="scope-frame-card relative mt-6 overflow-hidden rounded-2xl glass p-5 sm:p-6"
+          data-testid="tool-workbench"
+        >
+          <span className="scope-corner scope-corner-tl" aria-hidden="true" />
+          <span className="scope-corner scope-corner-tr" aria-hidden="true" />
+          <span className="scope-corner scope-corner-bl" aria-hidden="true" />
+          <span className="scope-corner scope-corner-br" aria-hidden="true" />
+
+          <div className="flex items-center gap-2.5">
+            <span className="emoji-ink flex size-8 shrink-0 items-center justify-center rounded-full border text-[15px]" aria-hidden="true"
+              style={{
+                borderColor: "color-mix(in srgb, var(--scope-a) 40%, transparent)",
+                background: "color-mix(in srgb, var(--scope-a) 10%, transparent)",
+              }}
+            >
+              {tool.emoji}
+            </span>
+            <p className="mono-label text-[11px] text-[var(--scope-a)]">
+              {t(tool.name)}
+            </p>
+          </div>
 
           <label
             htmlFor="tool-input"
-            className="mono-label mt-3.5 block text-[10px] uppercase tracking-[0.16em] text-muted-foreground/70"
+            className="mono-label mt-4 block text-[10px] uppercase tracking-[0.16em] text-muted-foreground/70"
           >
             {t(tool.bring)}
           </label>
@@ -728,7 +840,7 @@ function ToolWall() {
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.3 }}
               >
-                <ToolResultCard />
+                <ToolResultCard onAskBench={onAskBench} />
               </motion.div>
             )}
 
@@ -749,7 +861,7 @@ function ToolWall() {
       )}
 
       {!tool && (
-        <p className="mt-4 text-center text-[12.5px] italic leading-relaxed text-muted-foreground/75">
+        <p className="mt-6 text-center text-[13px] italic leading-relaxed text-muted-foreground/75">
           {t("Choose a tool from the wall and set it to work.")}
         </p>
       )}
@@ -757,66 +869,7 @@ function ToolWall() {
   );
 }
 
-/* ---------------- the right pane — two chambers, one wall ---------------- */
-
-type BenchPane = "mystery" | "tools";
-
-function BenchPaneTabs({
-  pane,
-  onChange,
-}: {
-  pane: BenchPane;
-  onChange: (p: BenchPane) => void;
-}) {
-  const t = useT();
-  const tabs: { id: BenchPane; label: string; icon: typeof Flame }[] = [
-    { id: "mystery", label: "The Mystery Chamber", icon: Flame },
-    { id: "tools", label: "The Tool Wall", icon: Wrench },
-  ];
-  return (
-    <div
-      className="grid grid-cols-2 gap-2"
-      role="tablist"
-      aria-label={t("The two chambers of the bench")}
-      data-testid="bench-tabs"
-    >
-      {tabs.map((tab) => {
-        const active = tab.id === pane;
-        const Icon = tab.icon;
-        return (
-          <button
-            key={tab.id}
-            type="button"
-            role="tab"
-            aria-selected={active}
-            onClick={() => onChange(tab.id)}
-            data-testid={`bench-tab-${tab.id}`}
-            className={cn(
-              "focus-glow flex items-center justify-center gap-1.5 rounded-full border px-3 py-2 text-[12.5px] transition-all duration-300",
-              active
-                ? "border-[var(--scope-a)] font-semibold text-foreground"
-                : "hairline text-muted-foreground hover:text-foreground"
-            )}
-            style={
-              active
-                ? {
-                    background:
-                      "color-mix(in srgb, var(--scope-a) 12%, transparent)",
-                    boxShadow:
-                      "0 0 16px -6px color-mix(in srgb, var(--scope-a) 55%, transparent)",
-                  }
-                : undefined
-            }
-          >
-            <Icon className="size-3.5" aria-hidden="true" />
-            {t(tab.label)}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
+/* ---------------- the forge's voice ---------------- */
 
 function ForgeBody({ text }: { text: string }) {
   const paras = useMemo(
@@ -954,7 +1007,7 @@ function ForgeExchange({
       initial={animate ? { opacity: 0, y: 10 } : false}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      className="rounded-xl border hairline px-4 py-3.5"
+      className="rounded-xl border hairline px-4 py-3.5 sm:px-5"
       style={{
         background: "color-mix(in srgb, var(--scope-a) 5%, transparent)",
       }}
@@ -970,7 +1023,9 @@ function ForgeExchange({
   );
 }
 
-function ForgeChat() {
+/* ---------------- THE BENCH — the core chamber of the Invent ---------------- */
+
+function BenchChat() {
   const forgeSession = useMirror((s) => s.forgeSession);
   const setForgeDraft = useMirror((s) => s.setForgeDraft);
   const askForge = useMirror((s) => s.askForge);
@@ -992,7 +1047,8 @@ function ForgeChat() {
     return () => window.clearInterval(id);
   }, [loading]);
 
-  /* the thread keeps its latest stroke in view — inside its own pane */
+  /* the thread keeps its latest stroke in view — the bench holds the
+     whole height of the world, so the pane itself is the scroll */
   useEffect(() => {
     const el = threadRef.current;
     if (!el) return;
@@ -1019,7 +1075,7 @@ function ForgeChat() {
 
   return (
     <div
-      className="scope-frame-card relative flex flex-col overflow-hidden rounded-2xl glass"
+      className="scope-frame-card relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl glass"
       data-testid="forge-chat"
     >
       <span className="scope-corner scope-corner-tl" aria-hidden="true" />
@@ -1027,8 +1083,8 @@ function ForgeChat() {
       <span className="scope-corner scope-corner-bl" aria-hidden="true" />
       <span className="scope-corner scope-corner-br" aria-hidden="true" />
 
-      {/* header */}
-      <div className="flex items-center justify-between gap-2 border-b hairline px-4 py-3 sm:px-5">
+      {/* slim header — the bench's name and the quiet-the-forge hand */}
+      <div className="flex shrink-0 items-center justify-between gap-2 border-b hairline px-4 py-2.5 sm:px-5">
         <h3 className="mono-label flex items-center gap-2 text-[11px] text-[var(--scope-a)]">
           <Hammer className="size-3.5" aria-hidden="true" />
           {t("The Forge speaks")}
@@ -1046,58 +1102,81 @@ function ForgeChat() {
         )}
       </div>
 
-      {/* thread — scrolls inside its own pane, the workshop stays one screen */}
+      {/* thread — the whole height of the chamber, its own scroll */}
       <div
         ref={threadRef}
-        className="nice-scroll max-h-[46vh] min-h-[240px] flex-1 space-y-3.5 overflow-y-auto overscroll-contain px-4 py-4 sm:px-5 lg:max-h-none lg:min-h-0"
+        className="nice-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-5 sm:px-6"
         data-testid="forge-thread"
       >
-        {messages.length === 0 && status === "idle" && !error && (
-          <div className="flex h-full min-h-[220px] flex-col items-center justify-center text-center">
-            <Hammer
-              className="size-6 text-muted-foreground/40"
+        {messages.length === 0 && status === "idle" && !error ? (
+          <div className="flex h-full flex-col items-center justify-center py-6 text-center">
+            <motion.span
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+              className="scope-halo relative flex size-14 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--scope-a)_38%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_9%,transparent)]"
               aria-hidden="true"
-            />
-            <p className="mt-3 max-w-[300px] text-[14px] leading-relaxed text-muted-foreground">
+            >
+              <span
+                className="absolute inset-0 rounded-full border border-dashed border-[color-mix(in_srgb,var(--scope-b)_35%,transparent)]"
+                style={{ animation: "spin-slower 22s linear infinite" }}
+              />
+              <Hammer className="size-5 text-[var(--scope-a)]" />
+            </motion.span>
+            <p className="scope-gradient-text mt-4 text-[17px] font-semibold sm:text-[19px]">
+              {t("Strike While the Coals Are Lit")}
+            </p>
+            <p className="mx-auto mt-2 max-w-[480px] text-[14.5px] leading-relaxed text-muted-foreground">
+              {t(
+                "Speak with the Forge on the bench — set a tool of the inteligjence to work, or turn the dials and meet a mystery you never asked for."
+              )}
+            </p>
+            <p className="mx-auto mt-4 max-w-[420px] text-[13.5px] italic leading-relaxed text-muted-foreground/80">
               {t(
                 "The bench is quiet. Speak a want, a half-idea, a block — or strike the chamber for a mystery."
               )}
             </p>
           </div>
-        )}
+        ) : (
+          <div className="mx-auto w-full max-w-[760px] space-y-4">
+            {messages.map((m, i) => (
+              <ForgeExchange
+                key={m.id}
+                m={m}
+                animate={i === messages.length - 1 && status !== "loading"}
+              />
+            ))}
 
-        {messages.map((m, i) => (
-          <ForgeExchange
-            key={m.id}
-            m={m}
-            animate={i === messages.length - 1 && status !== "loading"}
-          />
-        ))}
+            {loading && (
+              <div
+                className="rounded-xl border hairline px-4 py-3.5 sm:px-5"
+                aria-live="polite"
+                aria-busy="true"
+              >
+                <p className="text-[13px] italic leading-relaxed text-muted-foreground">
+                  {activeQuery}
+                </p>
+                <div className="mt-3 flex flex-col items-center gap-2.5">
+                  <ForgeLoading className="size-16 text-foreground sm:size-20" />
+                  <span className="mono-label text-center text-[11px] text-muted-foreground">
+                    {t(forgeChatPhases[phase] ?? forgeChatPhases[0])}
+                  </span>
+                </div>
+              </div>
+            )}
 
-        {loading && (
-          <div className="rounded-xl border hairline px-4 py-3.5" aria-live="polite" aria-busy="true">
-            <p className="text-[13px] italic leading-relaxed text-muted-foreground">
-              {activeQuery}
-            </p>
-            <div className="mt-3 flex flex-col items-center gap-2.5">
-              <ForgeLoading className="size-16 text-foreground sm:size-20" />
-              <span className="mono-label text-center text-[11px] text-muted-foreground">
-                {t(forgeChatPhases[phase] ?? forgeChatPhases[0])}
-              </span>
-            </div>
-          </div>
-        )}
-
-        {status === "error" && error && (
-          <div className="rounded-xl border hairline px-4 py-3.5 text-[13.5px] leading-relaxed text-foreground/85">
-            {t(error)}
+            {status === "error" && error && (
+              <div className="rounded-xl border hairline px-4 py-3.5 text-[13.5px] leading-relaxed text-foreground/85">
+                {t(error)}
+              </div>
+            )}
           </div>
         )}
       </div>
 
-      {/* suggestion sparks — now a living strip: six at a time, closest
-          to the bench conversation first, fresh every five minutes */}
-      <div className="border-t hairline px-3 pt-2 sm:px-4">
+      {/* suggestion sparks — a living strip: six at a time, closest to
+          the bench conversation first, fresh every five minutes */}
+      <div className="shrink-0 px-3 pb-1 pt-2 sm:px-4">
         <ContextSuggestionStrip
           poolId="invent"
           contextText={messages
@@ -1112,8 +1191,8 @@ function ForgeChat() {
       </div>
 
       {/* composer */}
-      <div className="px-4 pb-4 pt-2.5 sm:px-5">
-        <div className="flex items-end gap-2">
+      <div className="shrink-0 border-t hairline bg-[var(--glass-bg)] px-3 py-2.5 backdrop-blur-xl sm:px-4">
+        <div className="mx-auto flex w-full max-w-[720px] items-end gap-2">
           <textarea
             value={draft}
             onChange={(e) => setForgeDraft(e.target.value)}
@@ -1155,23 +1234,23 @@ function ForgeChat() {
   );
 }
 
-/* ---------------- the workshop shell ---------------- */
+/* ---------------- the workshop shell — one chamber at a time ---------------- */
 
 export function InventView() {
   const exitInvent = useMirror((s) => s.exitInvent);
-  const [pane, setPane] = useState<BenchPane>("mystery");
+  const [place, setPlace] = useState<InventPlace>("bench");
   const t = useT();
 
   return (
     <div className="scope-invent relative flex h-full flex-col">
-      {/* ---------- top bar with the single bridge back to the app ---------- */}
+      {/* ---------- top bar: back · title · chamber tabs ---------- */}
       <header className="relative z-30 shrink-0 border-b hairline bg-[var(--glass-bg)] backdrop-blur-xl">
-        <div className="flex h-14 items-center justify-between gap-3 px-4 sm:px-5">
+        <div className="flex h-14 items-center gap-2 px-3 sm:gap-3 sm:px-5">
           <button
             type="button"
             onClick={exitInvent}
             data-testid="invent-back"
-            className="focus-glow group flex h-9 items-center gap-2 rounded-full border hairline px-3 text-[14px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground sm:px-3.5"
+            className="focus-glow group flex h-9 shrink-0 items-center gap-2 rounded-full border hairline px-3 text-[14px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground sm:px-3.5"
           >
             <ArrowLeft
               className="size-3.5 transition-transform duration-300 group-hover:-translate-x-0.5"
@@ -1183,17 +1262,43 @@ export function InventView() {
             <span className="sm:hidden">{t("Back")}</span>
           </button>
 
-          <div className="min-w-0 text-center">
+          <div className="min-w-0 flex-1">
             <h1 className="title-gradient truncate text-[15.5px] font-semibold tracking-[0.12em] sm:text-[17px]">
               INVENT · {t("The Forge")}
             </h1>
-            <p className="mono-label mt-0.5 truncate text-[10px] text-muted-foreground/80 sm:text-[11px]">
+            <p className="mono-label mt-0.5 hidden truncate text-[10px] text-muted-foreground/80 sm:block sm:text-[11px]">
               {t("The invention workshop of the Mirror")}
             </p>
           </div>
 
+          {/* the chamber tabs — same treatment as the OS chambers */}
+          <nav
+            role="tablist"
+            aria-label={t("Invent chambers")}
+            data-testid="invent-tabs"
+            className="no-scrollbar flex shrink-0 items-center gap-1 overflow-x-auto sm:gap-1.5"
+          >
+            <InventTab
+              active={place === "bench"}
+              onClick={() => setPlace("bench")}
+              icon={Hammer}
+              label="The Bench"
+              testId="invent-tab-bench"
+            />
+            {INVENT_PLACES.map(({ id, label, icon: Icon }) => (
+              <InventTab
+                key={id}
+                active={place === id}
+                onClick={() => setPlace(id)}
+                icon={Icon}
+                label={label}
+                testId={`invent-tab-${id}`}
+              />
+            ))}
+          </nav>
+
           <span
-            className="flex size-9 shrink-0 items-center justify-center rounded-full border hairline"
+            className="hidden size-9 shrink-0 items-center justify-center rounded-full border hairline sm:flex"
             aria-hidden="true"
           >
             <Flame className="size-4 text-[var(--iv-a)]" />
@@ -1201,52 +1306,49 @@ export function InventView() {
         </div>
       </header>
 
-      {/* ---------- the workshop — one screen at the desk ---------- */}
+      {/* ---------- the workshop — one spacious chamber at a time ---------- */}
       <main
-        className="nice-scroll flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain lg:overflow-hidden"
+        className="nice-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain"
         data-testid="invent-view"
       >
-        <div className="mx-auto flex w-full max-w-[1060px] flex-1 min-h-0 flex-col px-4 pb-3 pt-3 sm:px-6 sm:pt-4">
-          {/* slim greeting — one breath, then straight to the work */}
-          <div className="shrink-0 text-center">
-            <h2 className="scope-gradient-text text-[19px] font-semibold leading-tight sm:text-[21px]">
-              {t("Strike While the Coals Are Lit")}
-            </h2>
-            <p className="mx-auto mt-1.5 max-w-[560px] text-[13px] leading-relaxed text-muted-foreground lg:hidden">
-              {t(
-                "Speak with the Forge on the bench — set a tool of the inteligjence to work, or turn the dials and meet a mystery you never asked for."
-              )}
-            </p>
-          </div>
-
-          {/* the two live elements — chat and the right pane (mystery
-              chamber / tool wall), side by side on desktop, stacked on
-              mobile; both scroll inside themselves so the workshop
-              holds one screen at the desk */}
-          <div className="mt-3 grid flex-1 min-h-0 items-stretch gap-4 lg:grid-cols-[1fr_360px]">
-            <ForgeChat />
-            <div className="flex min-h-0 flex-col gap-3">
-              <BenchPaneTabs pane={pane} onChange={setPane} />
-              <AnimatePresence mode="wait" initial={false}>
+        <div className="mx-auto flex h-full w-full max-w-[860px] flex-col px-4 pb-5 sm:px-6">
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col pt-4">
+            {place === "bench" ? (
+              <BenchChat />
+            ) : (
+              <div className="nice-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1">
                 <motion.div
-                  key={pane}
+                  key={place}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.28, ease: "easeOut" }}
-                  className="nice-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain"
+                  transition={{ duration: 0.45 }}
+                  className="pb-8"
                 >
-                  {pane === "mystery" ? <MysteryChamber /> : <ToolWall />}
-                </motion.div>
-              </AnimatePresence>
-            </div>
-          </div>
+                  {/* return to the bench */}
+                  <div className="mb-4 flex justify-center">
+                    <button
+                      type="button"
+                      onClick={() => setPlace("bench")}
+                      data-testid="invent-back-to-bench"
+                      className="focus-glow group flex h-8 items-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--scope-a)_30%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_7%,transparent)] px-3.5 text-[13.5px] font-medium text-foreground/85 transition-all duration-300 hover:border-[color-mix(in_srgb,var(--scope-a)_50%,transparent)]"
+                    >
+                      <Hammer className="size-3.5 text-[var(--scope-a)]" aria-hidden="true" />
+                      {t("Back to the bench")}
+                    </button>
+                  </div>
 
-          <p className="mono-label mt-3 shrink-0 text-center text-[10px] text-muted-foreground/60">
-            {t(
-              "The Forge keeps the next stroke ready · Free will honored always"
+                  {place === "tools" && <ToolWallChamber onAskBench={() => setPlace("bench")} />}
+                  {place === "mystery" && <MysteryChamber onAskBench={() => setPlace("bench")} />}
+
+                  <p className="mono-label mt-8 text-center text-[10px] text-muted-foreground/60">
+                    {t(
+                      "The Forge keeps the next stroke ready · Free will honored always"
+                    )}
+                  </p>
+                </motion.div>
+              </div>
             )}
-          </p>
+          </div>
         </div>
       </main>
     </div>

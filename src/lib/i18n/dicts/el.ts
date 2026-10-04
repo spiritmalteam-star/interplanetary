@@ -2,6 +2,10 @@ import type { TranslationDict } from "../types";
 
 /** el — Greek dictionary (Task 3-b). Keys are the English source strings. */
 export const el: TranslationDict = {
+  "Back to the bench": "Πίσω στον πάγκο",
+  "Earlier suggestions": "Προηγούμενες προτάσεις",
+  "Invent chambers": "Δωμάτια του Invent",
+  "More suggestions": "Περισσότερες προτάσεις",
   "How do fleeting particles leave permanent fingerprints on real ones?": "Πώς τα παροδικά σωματίδια αφήνουν μόνιμα αποτυπώματα στα πραγματικά;",
   "How do fractals live between dimensions and why do they fit nature?": "Πώς οι φράκταλς ζουν μεταξύ διαστάσεων και γιατί ταιριάζουν στη φύση;",
   "How do galactic historians date the beginning of the human experiment?": "Πώς οι γαλαξιακοί ιστορικοί χρονολογούν την αρχή του ανθρώπινου πειράματος;",

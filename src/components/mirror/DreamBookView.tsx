@@ -37,7 +37,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { ModalShell } from "./ModalShell";
-import { ReadingToggle } from "./ReadingToggle";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { READERS, TALES, VOLUMES } from "@/lib/data/book-options";
@@ -748,7 +747,6 @@ export function DreamBookView() {
           {/* the page-marker slide — pass between the Book and the
               Akashic Library without ever leaving the reading rooms */}
           <div className="mt-7 flex justify-center">
-            <ReadingToggle />
           </div>
 
           {/* the shapes — reader / tale / book */}
@@ -1051,7 +1049,6 @@ export function DreamBookView() {
               the reading immerses; narrow hands keep the bar uncluttered
               and change rooms from the atelier instead */}
           <div className="hidden md:block">
-            <ReadingToggle />
           </div>
         </div>
       </header>

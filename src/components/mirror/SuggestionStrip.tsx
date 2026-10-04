@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
   chatSuggestionPools,
   type PoolId,
@@ -84,7 +85,7 @@ function rankPool(pool: string[], vocab: Map<string, number>): string[] {
     .map((x) => x.s);
 }
 
-/** One chip — a whisper in angle marks on the PC, a clean pill on mobile. */
+/** One chip — a clean whisper; the angle marks live at the strip's sides. */
 function SuggestionChip({
   text,
   onPick,
@@ -106,74 +107,36 @@ function SuggestionChip({
       aria-disabled={disabled}
       data-testid={testId ?? "suggestion-chip"}
       title={label}
-      className="focus-glow group shrink-0 whitespace-nowrap rounded-full border hairline bg-[var(--glass-bg)] px-3.5 py-1.5 leading-snug text-muted-foreground backdrop-blur-xl transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+      className="focus-glow shrink-0 whitespace-nowrap rounded-full border hairline bg-[var(--glass-bg)] px-3.5 py-1.5 font-serif text-[12.5px] italic leading-snug text-muted-foreground backdrop-blur-xl transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50 sm:text-[13px]"
     >
-      {/* the PC marks — the whisper wears its angle brackets */}
-      <span
-        aria-hidden="true"
-        className="mr-1 hidden font-mono text-[11px] text-muted-foreground/45 transition-colors duration-300 group-hover:text-[var(--cy)]/70 md:inline"
-      >
-        &lt;
-      </span>
-      <span className="font-serif text-[12.5px] italic sm:text-[13px]">
-        {label}
-      </span>
-      <span
-        aria-hidden="true"
-        className="ml-1 hidden font-mono text-[11px] text-muted-foreground/45 transition-colors duration-300 group-hover:text-[var(--cy)]/70 md:inline"
-      >
-        &gt;
-      </span>
+      {label}
     </button>
   );
 }
 
-/** The reload handle — one quiet arrow, spinning on every draw. */
-function ReloadHandle({
-  onReload,
-  disabled,
-  spin,
+/** One slide handle — the angle mark living at the strip's side. */
+function SlideHandle({
+  dir,
+  onSlide,
+  label,
   testId,
-  ariaLabel,
 }: {
-  onReload: () => void;
-  disabled: boolean;
-  spin: number;
-  testId?: string;
-  ariaLabel: string;
+  dir: "prev" | "next";
+  onSlide: () => void;
+  label: string;
+  testId: string;
 }) {
+  const Icon = dir === "prev" ? ChevronLeft : ChevronRight;
   return (
     <button
       type="button"
-      onClick={onReload}
-      disabled={disabled}
-      aria-label={ariaLabel}
-      title={ariaLabel}
-      data-testid={testId ?? "suggestion-reload"}
-      className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground/70 transition-colors duration-300 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+      onClick={onSlide}
+      aria-label={label}
+      title={label}
+      data-testid={testId}
+      className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground/70 transition-all duration-300 hover:bg-[color-mix(in_srgb,var(--cy)_10%,transparent)] hover:text-foreground"
     >
-      <motion.span
-        aria-hidden="true"
-        animate={{ rotate: spin * 180 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-        className="flex"
-      >
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="size-3.5"
-          aria-hidden="true"
-        >
-          <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
-          <path d="M21 3v5h-5" />
-          <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
-          <path d="M8 16H3v5" />
-        </svg>
-      </motion.span>
+      <Icon className="size-4" aria-hidden="true" />
     </button>
   );
 }
@@ -211,7 +174,6 @@ export function ContextSuggestionStrip({
      first render so server and client agree; the wandering draw (for
      the still room) happens in a client effect after hydration. */
   const [windowIdx, setWindowIdx] = useState(0);
-  const [spin, setSpin] = useState(0);
   const seeded = useRef(false);
 
   useEffect(() => {
@@ -242,7 +204,6 @@ export function ContextSuggestionStrip({
   useEffect(() => {
     const id = window.setInterval(() => {
       setWindowIdx((w) => w + 1);
-      setSpin((n) => n + 1);
     }, ROTATE_MS);
     return () => window.clearInterval(id);
   }, []);
@@ -254,10 +215,8 @@ export function ContextSuggestionStrip({
     (_, i) => ranked[(start + i) % ranked.length]
   );
 
-  const advance = () => {
-    setWindowIdx((w) => w + 1);
-    setSpin((n) => n + 1);
-  };
+  const advance = () => setWindowIdx((w) => w + 1);
+  const retreat = () => setWindowIdx((w) => Math.max(0, w - 1));
 
   return (
     <div
@@ -266,37 +225,50 @@ export function ContextSuggestionStrip({
       aria-label={ariaLabel ?? t("Suggested questions")}
       data-testid={testIdPrefix ? `${testIdPrefix}-strip` : "suggestion-strip"}
     >
-      <AnimatePresence mode="wait" initial={false}>
-        <motion.div
-          key={`${poolId}-${windowIdx}-${hasContext}`}
-          initial={{ opacity: 0, y: 4 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -4 }}
-          transition={{ duration: 0.22, ease: "easeOut" }}
-          className="no-scrollbar flex items-center gap-1.5 overflow-x-auto px-1 py-1 sm:gap-2"
-        >
-          {visible.map((q) => (
-            <SuggestionChip
-              key={q}
-              text={q}
-              disabled={false}
-              onPick={() => onPick(q)}
-              testId={testIdPrefix ? `${testIdPrefix}-chip` : "suggestion-chip"}
-            />
-          ))}
-          <ReloadHandle
-            onReload={advance}
-            disabled={false}
-            spin={spin}
-            ariaLabel={t("Reload suggestions")}
-            testId={testIdPrefix ? `${testIdPrefix}-reload` : "suggestion-reload"}
-          />
-        </motion.div>
-      </AnimatePresence>
+      <div className="flex items-center gap-1">
+        {/* the left angle — slide back toward what was shown before */}
+        <SlideHandle
+          dir="prev"
+          onSlide={retreat}
+          label={t("Earlier suggestions")}
+          testId={testIdPrefix ? `${testIdPrefix}-prev` : "suggestion-prev"}
+        />
+
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={`${poolId}-${windowIdx}-${hasContext}`}
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.22, ease: "easeOut" }}
+            className="no-scrollbar flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto px-1 py-1 sm:gap-2"
+          >
+            {visible.map((q) => (
+              <SuggestionChip
+                key={q}
+                text={q}
+                disabled={false}
+                onPick={() => onPick(q)}
+                testId={
+                  testIdPrefix ? `${testIdPrefix}-chip` : "suggestion-chip"
+                }
+              />
+            ))}
+          </motion.div>
+        </AnimatePresence>
+
+        {/* the right angle — slide the next six into the light */}
+        <SlideHandle
+          dir="next"
+          onSlide={advance}
+          label={t("More suggestions")}
+          testId={testIdPrefix ? `${testIdPrefix}-reload` : "suggestion-reload"}
+        />
+      </div>
       {/* edge fade — the strip dissolves instead of clipping */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-[var(--background)] to-transparent"
+        className="pointer-events-none absolute inset-y-0 right-10 w-6 bg-gradient-to-l from-[var(--background)] to-transparent"
       />
     </div>
   );

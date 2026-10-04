@@ -39,6 +39,7 @@ import { innerEarth, type InnerEarthSpecies } from "@/lib/data/inner-earth";
 import { archiveTotals, useMirror } from "@/lib/mirror-store";
 import { LANGUAGES, useT } from "@/lib/i18n";
 import { entityImage, searchEntities } from "@/lib/entity-utils";
+import { WorldSigil, type WorldSigilKey } from "./WorldSigils";
 import { ThemeToggle } from "./ThemeToggle";
 import { cn } from "@/lib/utils";
 import type { CivilizationGroup, InterdimGroup } from "@/lib/mirror-types";
@@ -56,18 +57,17 @@ function NavRow({
   aria,
   onClick,
   testId,
-  image,
+  sigil,
 }: {
   icon: typeof BookOpen;
   label: string;
   aria?: string;
   onClick: () => void;
   testId?: string;
-  /** The world's own little painting — worn in place of the icon
-      when it exists; the icon stays as the graceful fallback. */
-  image?: string;
+  /** The world's light-language sigil — worn in place of the icon;
+      the Lucide mark stays as the graceful fallback. */
+  sigil?: WorldSigilKey;
 }) {
-  const [imgFailed, setImgFailed] = useState(false);
   return (
     <button
       type="button"
@@ -77,18 +77,9 @@ function NavRow({
       data-testid={testId}
       className="focus-glow group flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left transition-colors duration-200 hover:bg-[color-mix(in_srgb,var(--cy)_8%,transparent)]"
     >
-      {image && !imgFailed ? (
-        <span
-          className="relative size-6 shrink-0 overflow-hidden rounded-lg border hairline transition-all duration-300 group-hover:scale-105"
-          aria-hidden="true"
-        >
-          <img
-            src={image}
-            alt=""
-            loading="lazy"
-            className="size-full object-cover"
-            onError={() => setImgFailed(true)}
-          />
+      {sigil ? (
+        <span className="flex size-6 shrink-0 items-center justify-center text-foreground/75 transition-all duration-300 group-hover:scale-110 group-hover:text-[var(--cy)]">
+          <WorldSigil world={sigil} />
         </span>
       ) : (
         <Icon
@@ -577,7 +568,7 @@ export function SidebarContent() {
     label: string;
     aria: string;
     action: () => void;
-    image?: string;
+    sigil?: WorldSigilKey;
   }[] = [
     {
       key: "mirroros",
@@ -585,7 +576,7 @@ export function SidebarContent() {
       label: t("Manifest"),
       aria: t("Open the Mirror OS — Reality Guidance"),
       action: openMirrorOS,
-      image: "/images/ai/world-manifest.jpg",
+      sigil: "mirroros" as WorldSigilKey,
     },
     {
       key: "akashic",
@@ -593,7 +584,7 @@ export function SidebarContent() {
       label: t("Akashic"),
       aria: t("Open the Akashic Library — records of the ancient one"),
       action: openAkashic,
-      image: "/images/ai/world-akashic.jpg",
+      sigil: "akashic" as WorldSigilKey,
     },
     {
       key: "starplay",
@@ -601,7 +592,7 @@ export function SidebarContent() {
       label: t("Star Play"),
       aria: t("Open Star Play — the Mirror's arcana deck"),
       action: () => openModal({ type: "starplay" }),
-      image: "/images/ai/world-starplay.jpg",
+      sigil: "starplay" as WorldSigilKey,
     },
     {
       key: "invent",
@@ -609,7 +600,7 @@ export function SidebarContent() {
       label: t("Invent"),
       aria: t("Open Invent — the Forge, the invention workshop of the Mirror"),
       action: openInvent,
-      image: "/images/ai/world-invent.jpg",
+      sigil: "invent" as WorldSigilKey,
     },
     {
       key: "dreambook",
@@ -617,7 +608,7 @@ export function SidebarContent() {
       label: t("Dream Book"),
       aria: t("Open the Dream Book — tales woven from resonance"),
       action: openDreamBook,
-      image: "/images/ai/world-dreambook.jpg",
+      sigil: "dreambook" as WorldSigilKey,
     },
   ];
 
@@ -673,7 +664,7 @@ export function SidebarContent() {
             <NavRow
               key={w.key}
               icon={w.icon}
-              image={w.image}
+              sigil={w.sigil}
               label={w.label}
               aria={w.aria}
               onClick={() => {
@@ -692,7 +683,7 @@ export function SidebarContent() {
         <nav aria-label={t("Light Codes")} className="flex flex-col">
           <NavRow
             icon={AudioLines}
-            image="/images/ai/world-lightcodes.jpg"
+            sigil="lightcodes" as WorldSigilKey
             label={t("Light Codes")}
             aria={t("Open Light Codes — sound transmissions through Mirror Entity")}
             onClick={() => {
@@ -712,7 +703,7 @@ export function SidebarContent() {
         <nav aria-label={t("ParticleX")} className="flex flex-col">
           <NavRow
             icon={Atom}
-            image="/images/ai/world-particlex.jpg"
+            sigil="particlex" as WorldSigilKey
             label={t("Quantum World")}
             aria={t("Open ParticleX — the quantum narrator of the laboratory")}
             onClick={() => {
@@ -723,7 +714,7 @@ export function SidebarContent() {
           />
           <NavRow
             icon={Dna}
-            image="/images/ai/world-evolvemed.jpg"
+            sigil="evolvemed" as WorldSigilKey
             label={t("Evolve Med")}
             aria={t("Open Evolve Med — the evolutionary medical nexus of the laboratory")}
             onClick={() => {

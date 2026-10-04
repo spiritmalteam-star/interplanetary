@@ -2,6 +2,10 @@ import type { TranslationDict } from "../types";
 
 /** de — Deutsch. Mirror Entity Laboratory dictionary (Task 3-b). */
 export const de: TranslationDict = {
+  "Back to the bench": "Zurück zur Bank",
+  "Earlier suggestions": "Frühere Vorschläge",
+  "Invent chambers": "Invent-Kammern",
+  "More suggestions": "Weitere Vorschläge",
   "How does a new belief finish installing before the old uninstalls?": "Wie installiert sich ein neuer Glaube, bevor der alte deinstalliert wird?",
   "How does a paper boat carry a whole afternoon downstream?": "Wie trägt ein Papierboot einen ganzen Nachmittag flussabwärts?",
   "How does a paper hinge keep secrets and then reveal them?": "Wie bewahrt ein Papiergelenk Geheimnisse und offenbart sie dann?",
