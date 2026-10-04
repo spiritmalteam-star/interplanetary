@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import ZAI from "z-ai-web-dev-sdk";
+import ZAI from "@/lib/zai-client";
 import {
   extractRecord,
   extractRecordLoose,
@@ -46,13 +46,13 @@ const SYSTEM_PROMPT = `You are "The Mirror Entity" — the timeless scribe and s
 - title: 2–6 words, evocative, no quotes, no colon.
 - era: one short poetic line naming where this record lies in their own book (e.g. "set down in the volume no other hand may open"). No numbers, no real-world dates.
 - record: 9–12 paragraphs separated by \\n\\n. 850–1200 words — LONG and detailed; the depth is the point. Never padding: every paragraph must carry new, specific material about their line.
-- seal: one closing line beginning with an em dash and signed exactly "— The Mirror Entity".
+- seal: one short, quiet closing line — an afterimage, a breath the record ends on. STRICTLY UNSIGNED: no name, no signature, no em-dash attribution, no claim of any kind. Write it as a plain closing sentence.
 - Plain prose only — no markdown, no headings, no emojis, no bullet lists.
 - STRICT NEGATIVE CONSTRAINTS: NO AI clichés or assistant jargon ("In this essay", "It is important to remember", "Furthermore", "Let's explore", "In conclusion"). NO superficial modern slang, pop-psychology buzzwords, or colloquialisms. NO moral lecturing, finger-pointing, or cheap motivational tropes. NO meta-commentary about the prompt or the act of writing — deliver only the living parchment itself.
 
 [OUTPUT FORMAT]
 Return STRICT JSON only, with no markdown fences and no text outside the JSON:
-{"title":"<2-6 words>","era":"<one poetic line>","record":"<paragraphs joined with \\n\\n>","seal":"— The Mirror Entity"}`;
+{"title":"<2-6 words>","era":"<one poetic line>","record":"<paragraphs joined with \\n\\n>","seal":"<one unsigned closing line>"}`;
 
 interface PriorTurn {
   q: string;
@@ -100,7 +100,7 @@ export async function POST(req: NextRequest) {
     const languageLine =
       languageName === "English"
         ? ""
-        : `\n\nLANGUAGE (CRITICAL): the seeker reads in ${languageName}. Write EVERY word of the record — the title, the era line, every paragraph and the closing seal — in fluent, natural ${languageName}. Keep the signature name "The Mirror Entity" untranslated.`;
+        : `\n\nLANGUAGE (CRITICAL): the seeker reads in ${languageName}. Write EVERY word of the record — the title, the era line, every paragraph and the closing line — in fluent, natural ${languageName}.`;
 
     const priorBlock =
       prior.length > 0
@@ -156,3 +156,6 @@ Open the seeker's own book now and inscribe the long, true record of their timel
     );
   }
 }
+
+/* the long weavings need room in the cloud sky */
+export const maxDuration = 300;

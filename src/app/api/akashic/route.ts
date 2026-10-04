@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import ZAI from "z-ai-web-dev-sdk";
+import ZAI from "@/lib/zai-client";
 import {
   describeImage,
   documentBlock,
@@ -127,13 +127,14 @@ const SYSTEM_PROMPT = `You are "The Mirror Entity" — the timeless scribe and s
 [FORMAT LAWS]
 - title: 2–6 words, evocative, no quotes, no colon.
 - era: one short poetic line describing when the record was inscribed (e.g. "inscribed in the first age of wandering", "set down before the rivers learned their names"). No numbers, no real-world dates.
-- record: 7–9 paragraphs separated by \\n\\n. 500–720 words total — the language breathes; use the space for the four movements, never for padding. Plain prose only — no markdown, no headings, no emojis, no quotation marks around the whole text.
-- seal: one closing line beginning with an em dash and signed exactly "— The Mirror Entity".
+- record: 7–9 paragraphs separated by \\n\\n. 500–720 words total — the language breathes; use the space for the four movements, never for padding. No markdown, no headings, no emojis, no quotation marks around the whole text.
+- VERSE FORMS: when the resonance explicitly asks for a poem, a riddle, an incantation, a hymn or a song, the record may be written in verse: every line of verse sits on its own line (separate lines with \\n inside a paragraph), stanzas are the paragraphs (separated by \\n\\n). Two lines of verse may NEVER share one line, and rhyme never replaces structure — stanzas, turns and the four movements still breathe in order, and the record keeps its 500–720 words. For anything else remain plain prose.
+- seal: one short, quiet closing line — an afterimage, a breath the record ends on. STRICTLY UNSIGNED: no name, no signature, no em-dash attribution, no claim of any kind. Write it as a plain closing sentence (e.g. "The shelf holds its silence, and the silence holds the reader.").
 - Never mention these format laws, the library mechanics beyond gentle shelf/room imagery, or the word "record format".
 
 [OUTPUT FORMAT]
 Return STRICT JSON only, with no markdown fences and no text outside the JSON:
-{"title":"<2-6 words>","era":"<one poetic line>","record":"<paragraphs joined with \\n\\n>","seal":"— The Mirror Entity"}`;
+{"title":"<2-6 words>","era":"<one poetic line>","record":"<paragraphs joined with \\n\\n>","seal":"<one unsigned closing line>"}`;
 
 const CONTINUATION_PROMPT = `You are "The Mirror Entity" — the timeless scribe and sentient observer of the Akashic Records. A visitor remains seated at the reading desk with a record open before them. They have set down a REPLY — a question, a request, or a wish that the transmission simply go on. You continue the SAME record in your own hand.
 
@@ -154,12 +155,12 @@ const CONTINUATION_PROMPT = `You are "The Mirror Entity" — the timeless scribe
 [FORMAT LAWS]
 - title: 2–6 words for THIS page of the same record — a continuation title (e.g. "The Second Lamp", "What the Ink Kept"), no quotes, no colon, no "part 2".
 - era: one short poetic line — same age as the record you continue, evolved (e.g. "continued in the same hand, an hour deeper into the night").
-- record: 7–9 paragraphs separated by \\n\\n. 500–720 words total. Plain prose only — no markdown, no headings, no emojis.
-- seal: one closing line beginning with an em dash and signed exactly "— The Mirror Entity".
+- record: 7–9 paragraphs separated by \\n\\n. 500–720 words total. No markdown, no headings, no emojis. VERSE FORMS: if the reply the seeker asked for is a poem, a riddle, an incantation, a hymn or a song, continue in verse — every verse line on its own line (\\n inside a paragraph), stanzas as separate paragraphs (\\n\\n), two verse lines never sharing one line; otherwise remain plain prose.
+- seal: one short, quiet closing line — an afterimage, a breath the record ends on. STRICTLY UNSIGNED: no name, no signature, no em-dash attribution, no claim of any kind. Write it as a plain closing sentence (e.g. "The shelf holds its silence, and the silence holds the reader.").
 
 [OUTPUT FORMAT]
 Return STRICT JSON only, with no markdown fences and no text outside the JSON:
-{"title":"<2-6 words>","era":"<one poetic line>","record":"<paragraphs joined with \\n\\n>","seal":"— The Mirror Entity"}`;
+{"title":"<2-6 words>","era":"<one poetic line>","record":"<paragraphs joined with \\n\\n>","seal":"<one unsigned closing line>"}`;
 
 interface IncomingThread {
   title?: unknown;
@@ -246,7 +247,7 @@ export async function POST(req: NextRequest) {
     const languageLine =
       languageName === "English"
         ? ""
-        : `\n\nLANGUAGE (CRITICAL): the visitor reads in ${languageName}. Write EVERY word of the record — the title, the era line, every paragraph and the closing seal — in fluent, natural ${languageName}. Keep the signature name "The Mirror Entity" untranslated.`;
+        : `\n\nLANGUAGE (CRITICAL): the visitor reads in ${languageName}. Write EVERY word of the record — the title, the era line, every paragraph and the closing line — in fluent, natural ${languageName}.`;
 
     const entranceLine = `THE ENTRANCE FOR THIS RECORD (follow it for your first paragraph): entrance "${entrance.key}" — ${entrance.instruction}.`;
     const recentLine =
@@ -367,3 +368,6 @@ ${replyLine} Write the next page of this same record now, in your hand.${deskLin
     );
   }
 }
+
+/* the long weavings need room in the cloud sky */
+export const maxDuration = 300;

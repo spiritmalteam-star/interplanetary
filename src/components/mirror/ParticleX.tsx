@@ -10,14 +10,17 @@ import {
   FlaskConical,
   Orbit,
   ScrollText,
+  StickyNote,
   Telescope,
   X,
 } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { pxGatheringPhrases, pxScopes } from "@/lib/data/particlex";
+import { pxNoteSets } from "@/lib/data/scope-notes";
 import { cn } from "@/lib/utils";
 import { ListenButton } from "./ListenButton";
+import { ScopeNotes } from "./ScopeNotes";
 import {
   PxCodexTab,
   PxCopyButton,
@@ -242,6 +245,76 @@ function PxExchange({
   );
 }
 
+/* ------------------- the window's note stickers -------------------- */
+
+/** The pinned cluster of one window's notes, resolved for the thread. */
+function PxNotesBlock({ scopeId }: { scopeId: string }) {
+  const set = pxNoteSets[scopeId];
+  const scope = pxScopes.find((s) => s.id === scopeId);
+  if (!set || !scope) return null;
+  return <ScopeNotes glyph={scope.glyph} name={scope.name} notes={set.notes} />;
+}
+
+/** The eight window pills — press one to orient the scope AND pin its
+    notes into the conversation. Shared by the empty state and the
+    quiet re-invitation above the composer. */
+function PxWindowPills({ centered = false }: { centered?: boolean }) {
+  const pxScope = useMirror((s) => s.pxScope);
+  const setPxScope = useMirror((s) => s.setPxScope);
+  const pinPxNotes = useMirror((s) => s.pinPxNotes);
+  const t = useT();
+  return (
+    <div
+      className={cn(
+        "flex flex-wrap gap-1.5",
+        centered ? "justify-center" : "justify-start"
+      )}
+    >
+      {pxScopes.map((scope) => {
+        const Icon = PX_SCOPE_ICONS[scope.id] ?? Atom;
+        const active = pxScope === scope.id;
+        return (
+          <button
+            key={scope.id}
+            type="button"
+            aria-pressed={active}
+            onClick={() => {
+              /* orient the scope AND pin the window's notes
+                 into the conversation — both, in one touch */
+              setPxScope(scope.id);
+              pinPxNotes(scope.id);
+            }}
+            data-testid={`px-pill-${scope.id}`}
+            title={t(scope.tagline)}
+            className={cn(
+              "focus-glow flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] transition-all duration-300",
+              active
+                ? "font-semibold text-foreground"
+                : "hairline text-muted-foreground hover:text-foreground"
+            )}
+            style={
+              active
+                ? {
+                    borderColor:
+                      "color-mix(in srgb, var(--scope-a) 55%, transparent)",
+                    background:
+                      "color-mix(in srgb, var(--scope-a) 12%, transparent)",
+                  }
+                : undefined
+            }
+          >
+            <Icon
+              className="size-3 text-[var(--scope-a)]"
+              aria-hidden="true"
+            />
+            {t(scope.name)}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 /* --------------------------- the core chat -------------------------- */
 
 function ParticleXChat() {
@@ -255,6 +328,7 @@ function ParticleXChat() {
   const setPxScope = useMirror((s) => s.setPxScope);
   const pxFusion = useMirror((s) => s.pxFusion);
   const setPxFusion = useMirror((s) => s.setPxFusion);
+  const pinPxNotes = useMirror((s) => s.pinPxNotes);
   const t = useT();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -368,43 +442,8 @@ function ParticleXChat() {
                 <p className="mono-label text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">
                   {t("Choose a window")}
                 </p>
-                <div className="mt-2.5 flex flex-wrap justify-center gap-1.5">
-                  {pxScopes.map((scope) => {
-                    const Icon = PX_SCOPE_ICONS[scope.id] ?? Atom;
-                    const active = pxScope === scope.id;
-                    return (
-                      <button
-                        key={scope.id}
-                        type="button"
-                        aria-pressed={active}
-                        onClick={() => setPxScope(active ? null : scope.id)}
-                        data-testid={`px-pill-${scope.id}`}
-                        title={t(scope.tagline)}
-                        className={cn(
-                          "focus-glow flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] transition-all duration-300",
-                          active
-                            ? "font-semibold text-foreground"
-                            : "hairline text-muted-foreground hover:text-foreground"
-                        )}
-                        style={
-                          active
-                            ? {
-                                borderColor:
-                                  "color-mix(in srgb, var(--scope-a) 55%, transparent)",
-                                background:
-                                  "color-mix(in srgb, var(--scope-a) 12%, transparent)",
-                              }
-                            : undefined
-                        }
-                      >
-                        <Icon
-                          className="size-3 text-[var(--scope-a)]"
-                          aria-hidden="true"
-                        />
-                        {t(scope.name)}
-                      </button>
-                    );
-                  })}
+                <div className="mt-2.5">
+                  <PxWindowPills centered />
                 </div>
               </div>
             </div>
@@ -422,14 +461,18 @@ function ParticleXChat() {
                     : undefined
                 }
               >
-                <PxExchange
-                  role={m.role}
-                  text={m.text}
-                  formulas={m.formulas}
-                  seal={m.seal}
-                  animate={i === pxMessages.length - 1 && pxStatus !== "loading"}
-                  index={i}
-                />
+                {m.notesScope ? (
+                  <PxNotesBlock scopeId={m.notesScope} />
+                ) : (
+                  <PxExchange
+                    role={m.role}
+                    text={m.text}
+                    formulas={m.formulas}
+                    seal={m.seal}
+                    animate={i === pxMessages.length - 1 && pxStatus !== "loading"}
+                    index={i}
+                  />
+                )}
               </div>
             ))}
             {pxStatus === "loading" && (
@@ -473,6 +516,16 @@ function ParticleXChat() {
                 {t(activeScope.name)}
                 <button
                   type="button"
+                  onClick={() => pinPxNotes(activeScope.id)}
+                  aria-label={t("Show the window's notes")}
+                  title={t("Show the window's notes")}
+                  data-testid="px-experience-active"
+                  className="focus-glow rounded-full text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  <StickyNote className="size-3" aria-hidden="true" />
+                </button>
+                <button
+                  type="button"
                   onClick={() => setPxScope(null)}
                   aria-label={t("Clear the scope")}
                   title={t("Clear the scope")}
@@ -503,6 +556,19 @@ function ParticleXChat() {
                 </button>
               </span>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* the quiet re-invitation — the conversation alive, no window
+          open: the eight pills wait right above the composer */}
+      {!hasWindow && pxMessages.length > 0 && (
+        <div className="shrink-0 px-4 pt-2 sm:px-6">
+          <div className="mx-auto w-full max-w-[720px]">
+            <p className="mono-label mb-1.5 text-[9.5px] uppercase tracking-[0.2em] text-muted-foreground/70">
+              {t("Choose a window")}
+            </p>
+            <PxWindowPills />
           </div>
         </div>
       )}
@@ -590,14 +656,16 @@ function HeaderTab({
 export function ParticleX() {
   const exitParticleX = useMirror((s) => s.exitParticleX);
   const setPxScope = useMirror((s) => s.setPxScope);
+  const pinPxNotes = useMirror((s) => s.pinPxNotes);
   const pxMessages = useMirror((s) => s.pxMessages);
   const [place, setPlace] = useState<PxPlace>("chat");
   const t = useT();
 
   /* The voice button narrates the latest revelation with the
-     gentleman narrator — a man, gentle and natural. */
+     gentleman narrator — a man, gentle and natural. Note stickers
+     carry no words for the voice to read. */
   const latest = useMemo(
-    () => [...pxMessages].reverse().find((m) => m.role === "px"),
+    () => [...pxMessages].reverse().find((m) => m.role === "px" && !m.notesScope),
     [pxMessages]
   );
   const voiceText = latest
@@ -705,7 +773,10 @@ export function ParticleX() {
                   {place === "scopes" && (
                     <PxScopesTab
                       onOpenInCore={(scopeId) => {
-                        if (scopeId) setPxScope(scopeId);
+                        if (scopeId) {
+                          setPxScope(scopeId);
+                          pinPxNotes(scopeId);
+                        }
                         setPlace("chat");
                       }}
                     />

@@ -90,7 +90,7 @@ export function extractRecordLoose(raw: string): AkashicRecord | null {
     title: unescape(title).trim() || "A Record Set Aside",
     era: unescape(era).trim() || "inscribed in an age the shelves remember",
     record: record.trim(),
-    seal: unescape(seal).trim() || "— The Mirror Entity",
+    seal: unescape(seal).trim(),
   };
 }
 

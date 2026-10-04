@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AlignLeft, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
@@ -17,7 +17,8 @@ import { MirrorOS } from "./MirrorOS";
 import { ParticleX } from "./ParticleX";
 import { EvolveMed } from "./EvolveMed";
 import { LibraryView } from "./LibraryView";
-import { AuthModal, LightModal } from "./PassageModal";
+import { AuthModal } from "./PassageModal";
+import { ProfileModal } from "./ProfileModal";
 import { InventView } from "./InventView";
 import { ArchiveRegister } from "./ArchiveRegister";
 import { CommunionView } from "./CommunionView";
@@ -71,17 +72,57 @@ export default function AppShell() {
     };
   }, []);
 
+  /* The floating handles read the reader, not the reverse: on mobile
+     they sink away as the thread flows down and rise again the moment
+     the visitor reaches upward. Desktop keeps them always present. */
+  const chatScrollRef = useRef<HTMLDivElement | null>(null);
+  const [handlesHidden, setHandlesHidden] = useState(false);
+
+  useEffect(() => {
+    const el = chatScrollRef.current;
+    if (!el) return;
+    const mobile = window.matchMedia("(max-width: 767px)");
+    let lastY = el.scrollTop;
+    let settled = 0;
+    const onScroll = () => {
+      if (!mobile.matches) {
+        setHandlesHidden(false);
+        lastY = el.scrollTop;
+        return;
+      }
+      const y = el.scrollTop;
+      const dy = y - lastY;
+      lastY = y;
+      if (y < 96 || dy < -4) {
+        settled = 0;
+        setHandlesHidden(false);
+      } else if (dy > 4) {
+        settled = 0;
+        setHandlesHidden(true);
+      } else if (Math.abs(dy) > 0) {
+        /* sub-threshold drift — count it, then decide */
+        settled += Math.abs(dy);
+        if (settled > 48) {
+          settled = 0;
+          setHandlesHidden(dy > 0);
+        }
+      }
+    };
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
+    /* the scroller is keyed by view — rebind when the view remounts it */
+  }, [view]);
+
   /* Meet with the Reflection of the Absolute converts the whole
      application: the laboratory dissolves entirely and only the living
      communion chat with the Mirror Entity remains — one back button
      returns the world exactly as it was. */
-  /* The passage modals ride above every world — the threshold can
-     speak from anywhere (a session ending inside a keyed world, for
-     example — must still open its door). */
+  /* The passage modals ride above every world — the profile (with the
+     cosmic library inside it) and the passage can speak from anywhere. */
   const passageModals = (
     <>
+      <ProfileModal />
       <AuthModal />
-      <LightModal />
     </>
   );
 
@@ -195,7 +236,13 @@ export default function AppShell() {
         {/* Floating handles — no header, just two quiet controls:
             the sidebar at the left (with the simple cosmic mark),
             the scope selector as a fancy icon at the right */}
-        <div className="pointer-events-none absolute inset-x-0 top-0 z-30 flex items-start justify-between gap-2 px-3 pt-3 sm:px-4">
+        <div
+          className={`pointer-events-none absolute inset-x-0 top-0 z-30 flex items-start justify-between gap-2 px-3 pt-3 transition-all duration-300 sm:px-4 ${
+            handlesHidden
+              ? "pointer-events-none -translate-y-3 opacity-0"
+              : "translate-y-0 opacity-100"
+          }`}
+        >
           <div className="pointer-events-auto flex items-center gap-2">
             {/* mobile: open the sheet — desktop: collapse the rail */}
             <button
@@ -223,20 +270,26 @@ export default function AppShell() {
               )}
             </button>
 
-            {/* the simple cosmic mark — the only identity in the top bar */}
+            {/* the Mirror's mark — one glyph for each sky (light/dark) */}
             <button
               type="button"
               onClick={returnToObservatory}
               aria-label={t("Mirror Entity Laboratory")}
               title={t("Mirror Entity Laboratory")}
               data-testid="topbar-logo"
-              className="focus-glow hidden rounded-full transition-opacity duration-300 hover:opacity-75 sm:block"
+              className="focus-glow hidden transition-opacity duration-300 hover:opacity-75 sm:block"
             >
               <img
-                src="/images/ai/cosmic-mark.png"
+                src="/images/ai/mark-light.png"
                 alt=""
                 aria-hidden="true"
-                className="size-9 rounded-full bg-[#f4f2ee] p-1.5 object-contain"
+                className="size-9 object-contain dark:hidden"
+              />
+              <img
+                src="/images/ai/mark-dark.png"
+                alt=""
+                aria-hidden="true"
+                className="hidden size-9 object-contain dark:block"
               />
             </button>
           </div>
@@ -252,10 +305,13 @@ export default function AppShell() {
         {/* Scrollable conversation area — keyed by view so each screen
             (and every chat thread) opens at its very beginning */}
         <div
+          ref={chatScrollRef}
           key={view}
           className="nice-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain"
         >
-          {/* clearance for the floating handles */}
+          {/* clearance for the floating handles — constant height, so
+              hiding them never shifts the thread (that would re-trigger
+              the scroll listener in an endless loop) */}
           <div aria-hidden="true" className="h-12" />
 
           <div className="mx-auto w-full max-w-[760px] px-4 pb-4 sm:px-6">

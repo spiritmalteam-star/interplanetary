@@ -86,10 +86,12 @@ export function translate(
 
 
 /* ------------------------------------------------------------------ */
-/*  Transcript voices — one male presence, seven registers.            */
-/*  Every voice of the Laboratory is THE SAME MAN: the synthesis       */
-/*  engine is "xiaochen" (a measured, low, male voice — measured at    */
-/*  ~123 Hz), and each register below differs only in pace and use.    */
+/*  Transcript voices — one male presence, one kind lady, registers.   */
+/*  Every voice of the Laboratory's transmissions is THE SAME MAN:     */
+/*  the synthesis engine is "xiaochen" (a measured, low, male voice —  */
+/*  measured at ~123 Hz), and each register below differs only in      */
+/*  pace and use. The ONE exception is "reader" — the kind lady who    */
+/*  reads the Dream Books aloud (engine "tongtong", warm and gentle).  */
 /* ------------------------------------------------------------------ */
 
 export type VoiceId =
@@ -99,10 +101,14 @@ export type VoiceId =
   | "harbor"
   | "nova"
   | "pixie"
-  | "lumen";
+  | "lumen"
+  | "reader";
 
-/** The one male engine every register speaks through. */
+/** The one male engine every transmission register speaks through. */
 const MALE_ENGINE = "xiaochen";
+
+/** The kind lady reader of the books — warm, gentle, patient. */
+export const FEMALE_ENGINE = "tongtong";
 
 export interface VoiceMeta {
   id: VoiceId;
@@ -154,6 +160,12 @@ export const VOICES: VoiceMeta[] = [
     name: "Lumen",
     character: "A man · clear, precise signal",
     engine: MALE_ENGINE,
+  },
+  {
+    id: "reader",
+    name: "Reader",
+    character: "A woman · the kind lady reader of the books",
+    engine: FEMALE_ENGINE,
   },
 ];
 

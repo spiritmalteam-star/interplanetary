@@ -1,21 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { getSessionUser } from "@/lib/server/access";
+import { resolveVisitor, withAnonCookie } from "@/lib/server/access";
 
 /** GET /api/library — the visitor's own cosmic library: every saved
-    transmission of every sector, newest first, read by its one owner. */
+    transmission of every sector, newest first, read by its one owner.
+    Everything is free — the library opens for every visitor, kept by
+    their signed passage or by their anonymous cookie. */
 export async function GET(req: NextRequest) {
   try {
-    const user = await getSessionUser(req);
-    if (!user) {
-      return NextResponse.json(
-        { code: "auth", error: "The cosmic library opens with the Crystalline key." },
-        { status: 401 }
-      );
-    }
+    const visitor = await resolveVisitor(req);
 
     const rows = await db.libraryEntry.findMany({
-      where: { userId: user.id },
+      where: { userId: visitor.user.id },
       orderBy: { createdAt: "desc" },
       take: 300,
     });
@@ -40,7 +36,7 @@ export async function GET(req: NextRequest) {
     const counts: Record<string, number> = {};
     for (const e of entries) counts[e.sector] = (counts[e.sector] ?? 0) + 1;
 
-    return NextResponse.json({ entries, counts });
+    return withAnonCookie(NextResponse.json({ entries, counts }), visitor);
   } catch (err) {
     console.error("[library] failed:", err);
     return NextResponse.json(

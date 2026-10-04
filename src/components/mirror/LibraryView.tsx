@@ -10,7 +10,9 @@ import {
   LibraryBig,
   LoaderCircle,
   MoonStar,
+  NotebookPen,
   Sparkles,
+  BookMarked,
 } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
@@ -41,6 +43,16 @@ interface LibraryEntry {
     dedication?: string;
     topic?: string;
     firstPage?: { paragraphs?: string[] } | null;
+    /* the living volumes — a dream book kept whole, so it can be
+       brought back and continued exactly where it was left */
+    pages?: { n: number; chapter?: string; paragraphs: string[] }[];
+    threads?: string;
+    ended?: boolean;
+    config?: { age?: string; tale?: string; volume?: string; topic?: string };
+    title?: string;
+    sigil?: string;
+    subtitle?: string;
+    totalPages?: number;
   } | null;
   createdAt: string;
 }
@@ -48,8 +60,9 @@ interface LibraryEntry {
 const SECTORS: { id: string; label: string; icon: typeof Atom }[] = [
   { id: "observatory", label: "The Observatory", icon: Sparkles },
   { id: "manifest", label: "The Manifest", icon: BookOpen },
+  { id: "invent", label: "Invent", icon: NotebookPen },
   { id: "dreambook", label: "The Dream Book", icon: MoonStar },
-  { id: "quantum", label: "The Quantum World", icon: Atom },
+  { id: "quantum", label: "ParticleX", icon: Atom },
   { id: "evolvemed", label: "Evolve Med", icon: Activity },
 ];
 
@@ -76,6 +89,8 @@ export function LibraryView() {
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [failed, setFailed] = useState(false);
   const [reading, setReading] = useState<LibraryEntry | null>(null);
+  const resumeDreamBook = useMirror((s) => s.resumeDreamBook);
+  const tEntry = useT();
 
   useEffect(() => {
     let alive = true;
@@ -224,25 +239,75 @@ export function LibraryView() {
                           </span>
                         </div>
                         <div className="mt-3 space-y-2">
-                          {items.map((e) => (
-                            <button
-                              key={e.id}
-                              type="button"
-                              onClick={() => setReading(e)}
-                              data-testid="library-entry"
-                              className="focus-glow group block w-full rounded-xl border hairline bg-[var(--glass-bg-soft)] px-4 py-3 text-left transition-all duration-300 hover:border-[var(--hairline-hover)]"
-                            >
-                              <div className="flex items-baseline justify-between gap-3">
-                                <span className="truncate text-[14px] font-medium text-foreground/90">{e.title}</span>
-                                <span className="mono-label shrink-0 text-[9px] text-muted-foreground/70">
-                                  {DAYFmt.format(new Date(e.createdAt))} · {TIMEFmt.format(new Date(e.createdAt))}
-                                </span>
+                          {items.map((e) => {
+                            const bookPages = e.content?.pages ?? [];
+                            const continuable =
+                              e.sector === "dreambook" && bookPages.length > 0;
+                            return (
+                              <div
+                                key={e.id}
+                                className="group block w-full rounded-xl border hairline bg-[var(--glass-bg-soft)] px-4 py-3 transition-all duration-300 hover:border-[var(--hairline-hover)]"
+                              >
+                                <button
+                                  type="button"
+                                  onClick={() => setReading(e)}
+                                  data-testid="library-entry"
+                                  className="block w-full text-left"
+                                >
+                                  <div className="flex items-baseline justify-between gap-3">
+                                    <span className="truncate text-[14px] font-medium text-foreground/90">{e.title}</span>
+                                    <span className="mono-label shrink-0 text-[9px] text-muted-foreground/70">
+                                      {DAYFmt.format(new Date(e.createdAt))} · {TIMEFmt.format(new Date(e.createdAt))}
+                                    </span>
+                                  </div>
+                                  <p className="mt-1 line-clamp-2 text-[13px] leading-relaxed text-muted-foreground">
+                                    {e.excerpt}
+                                  </p>
+                                </button>
+                                {continuable && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setReading(null);
+                                      resumeDreamBook({
+                                        bookId: e.id,
+                                        config: {
+                                          age: e.content?.config?.age ?? "timeless",
+                                          tale: e.content?.config?.tale ?? "wonder",
+                                          volume: e.content?.config?.volume ?? "classic",
+                                          topic: e.content?.config?.topic ?? e.content?.topic ?? "",
+                                        },
+                                        meta: {
+                                          title: e.content?.title ?? e.title,
+                                          subtitle: e.content?.subtitle ?? "",
+                                          sigil: e.content?.sigil ?? "",
+                                          axiom: e.content?.axiom ?? e.excerpt,
+                                          dedication: e.content?.dedication ?? "",
+                                          totalPages: e.content?.totalPages ?? Math.max(8, bookPages.length + 8),
+                                        },
+                                        pages: bookPages,
+                                        threads: e.content?.threads ?? "",
+                                        ended: Boolean(e.content?.ended),
+                                      });
+                                    }}
+                                    data-testid="library-continue"
+                                    className="focus-glow mt-2 inline-flex items-center gap-1.5 rounded-full border hairline px-2.5 py-1 text-[11px] font-medium text-foreground/85 transition-all duration-300 hover:border-[var(--hairline-active)] hover:glow-sm"
+                                  >
+                                    <BookMarked className="size-3" aria-hidden="true" />
+                                    {tEntry(e.content?.ended ? "Read again" : "Continue the story")}
+                                    {!e.content?.ended && (
+                                      <span className="mono-label text-[9px] text-muted-foreground/70">
+                                        {tEntry("page {n} of {m}", {
+                                          n: bookPages.length,
+                                          m: e.content?.totalPages ?? "…",
+                                        })}
+                                      </span>
+                                    )}
+                                  </button>
+                                )}
                               </div>
-                              <p className="mt-1 line-clamp-2 text-[13px] leading-relaxed text-muted-foreground">
-                                {e.excerpt}
-                              </p>
-                            </button>
-                          ))}
+                            );
+                          })}
                         </div>
                       </section>
                     );
@@ -383,9 +448,15 @@ export function LibraryView() {
                   ))}
               </div>
             )}
-            {reading.content?.firstPage?.paragraphs?.length ? (
+            {(reading.content?.firstPage?.paragraphs?.length
+              ? reading.content.firstPage.paragraphs
+              : (reading.content?.pages?.[0]?.paragraphs ?? [])
+            ).length ? (
               <div className="mt-4 space-y-3">
-                {reading.content.firstPage.paragraphs.map((p, i) => (
+                {(reading.content?.firstPage?.paragraphs?.length
+                  ? reading.content.firstPage.paragraphs
+                  : (reading.content?.pages?.[0]?.paragraphs ?? [])
+                ).map((p, i) => (
                   <p key={i} className="whitespace-pre-wrap font-serif text-[14.5px] leading-[1.85] text-foreground/88">
                     {p}
                   </p>

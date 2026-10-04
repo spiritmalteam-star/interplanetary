@@ -10,9 +10,15 @@ import {
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
+  BookMarked,
   BookOpen,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsUpDown,
   Hammer,
   LoaderCircle,
+  Maximize2,
   Minus,
   NotebookText,
   Plus,
@@ -21,10 +27,17 @@ import {
   Sparkles,
   X,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import type { SideArtifactKind } from "@/lib/artifact-intent";
+import { READERS, TALES, VERSE_FORMS } from "@/lib/data/book-options";
 import {
   drawStarPlayCards,
   STAR_PLAY_POSITIONS,
@@ -276,7 +289,7 @@ export function KindleReader({
               <p
                 key={i}
                 className={cn(
-                  "ink-hand leading-[1.95]",
+                  "ink-hand whitespace-pre-wrap leading-[1.95]",
                   i === 0 &&
                     "first-letter:float-left first-letter:mr-3 first-letter:mt-[7px] first-letter:text-[54px] first-letter:font-semibold first-letter:leading-[0.78]"
                 )}
@@ -1163,12 +1176,632 @@ function ForgeStrike() {
 }
 
 /* ================================================================== */
+/*  THE BOOK WEAVER — a volume woven inside the conversation.          */
+/*  The mirror asks about the book (what it breathes, who reads it,    */
+/*  what shape the tale takes), then the loom binds it right here:     */
+/*  pages readable in the chat box, onward and rest, and a full        */
+/*  screen reader. No journey to any other room is ever needed.        */
+/* ================================================================== */
+
+interface WeaverPage {
+  n: number;
+  chapter?: string;
+  paragraphs: string[];
+}
+
+interface WeaverMeta {
+  title?: string;
+  subtitle?: string;
+  sigil?: string;
+  axiom?: string;
+  dedication?: string;
+  totalPages?: number;
+}
+
+const WEAVE_INK_LINE =
+  "linear-gradient(90deg, transparent, color-mix(in srgb, var(--foreground) 28%, transparent), transparent)";
+
+function BookWeaver({ resonance }: { resonance: string }) {
+  const t = useT();
+  const language = useMirror((s) => s.language);
+
+  const [stage, setStage] = useState<"ask" | "weaving" | "reading">("ask");
+  const [step, setStep] = useState(0);
+  const [topic, setTopic] = useState("");
+  const [topicDraft, setTopicDraft] = useState(() => {
+    /* carry the visitor's own words in, lightly unhooked from the ask */
+    const stripped = resonance
+      .replace(
+        /\b(please\s+)?(can|could|would)\s+you\b/i,
+        ""
+      )
+      .replace(
+        /\b(make|create|craft|write|weave|compose|manifest|start|begin|open)\b[^.?!]{0,32}\b(a|an|the|my|me|us)?\s*(book|storybook|volume|tale|story|novel)\b/i,
+        ""
+      )
+      .replace(/^\s*(about|on|of|for)\s+/i, "")
+      .replace(/[\s.!?]+$/, "")
+      .trim();
+    return stripped.slice(0, 300);
+  });
+  const [age, setAge] = useState("timeless");
+  const [tale, setTale] = useState("wonder");
+
+  const [meta, setMeta] = useState<WeaverMeta | null>(null);
+  const [pages, setPages] = useState<WeaverPage[]>([]);
+  const [spread, setSpread] = useState(0);
+  const [ended, setEnded] = useState(false);
+  const [weaving, setWeaving] = useState(false);
+  const [weaveFailed, setWeaveFailed] = useState(false);
+  const [fullOpen, setFullOpen] = useState(false);
+  const [fontSize, setFontSize] = useState(1);
+  const weaveToken = useRef(0);
+  const bookIdRef = useRef("");
+
+  const readerLabel = READERS.find((r) => r.id === age)?.label ?? "";
+  const taleLabel = TALES.find((tl) => tl.id === tale)?.label ?? "";
+
+  const stripTopic = () => {
+    const v = topicDraft.trim();
+    if (!v) return;
+    setTopic(v.slice(0, 600));
+    setStep(1);
+  };
+
+  const weave = useCallback(
+    async (phase: "open" | "next" | "close") => {
+      const token = ++weaveToken.current;
+      setWeaving(true);
+      setWeaveFailed(false);
+      try {
+        const body =
+          phase === "open"
+            ? {
+                phase,
+                language,
+                config: { age, tale, volume: "classic", topic },
+              }
+            : {
+                phase,
+                language,
+                config: { age, tale, volume: "classic", topic },
+                /* the loom remembers the volume it already bound */
+                bookId: bookIdRef.current,
+                bookMeta: meta ?? {},
+                bookConfig: { age, tale, volume: "classic", topic },
+                threads: threadsRef.current,
+                bookPages: pagesRef.current,
+                pageNumber: pagesRef.current.length + 1,
+                totalPages: meta?.totalPages ?? 120,
+                recentPages: pagesRef.current
+                  .slice(-2)
+                  .map((p) => p.paragraphs.join(" ")),
+                rewrites: [],
+              };
+        const res = await fetch("/api/dream-book", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        const data = await res.json().catch(() => null);
+        if (!res.ok || !data?.pages?.length) {
+          throw new Error(data?.error || "the loom fell silent");
+        }
+        if (token !== weaveToken.current) return;
+        if (typeof data.threads === "string") threadsRef.current = data.threads;
+        if (typeof data.libraryId === "string" && data.libraryId) {
+          bookIdRef.current = data.libraryId;
+        }
+        if (phase === "open") {
+          setMeta({
+            title: data.title,
+            subtitle: data.subtitle,
+            sigil: data.sigil,
+            axiom: data.axiom,
+            dedication: data.dedication,
+            totalPages: data.totalPages,
+          });
+          setPages(data.pages as WeaverPage[]);
+          setSpread(0);
+          setStage("reading");
+        } else {
+          setPages((prev) => [...prev, ...(data.pages as WeaverPage[])]);
+          setMeta((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  totalPages:
+                    typeof data.totalPages === "number"
+                      ? data.totalPages
+                      : prev.totalPages,
+                }
+              : prev
+          );
+          setSpread((prev) => prev + 1);
+          if (phase === "close") setEnded(true);
+        }
+      } catch {
+        if (token === weaveToken.current) setWeaveFailed(true);
+      } finally {
+        if (token === weaveToken.current) setWeaving(false);
+      }
+    },
+    [age, tale, topic, language, meta]
+  );
+
+  const pagesRef = useRef<WeaverPage[]>([]);
+  const threadsRef = useRef("");
+  useEffect(() => {
+    pagesRef.current = pages;
+  }, [pages]);
+
+  const spreadCount = Math.max(1, Math.ceil(pages.length / 2));
+  const spreadPages = pages.slice(spread * 2, spread * 2 + 2);
+
+  /* ---------------- the asking ---------------- */
+  if (stage === "ask") {
+    return (
+      <div className="mt-1" data-testid="book-weaver">
+        {/* settled answers — the shape already chosen */}
+        <div className="mb-3 space-y-1.5">
+          {topic && (
+            <p className="ink-hand text-[14px] italic text-muted-foreground">
+              <span className="mono-label mr-2 text-[8.5px] uppercase tracking-[0.2em] not-italic">
+                {t("The subject")}
+              </span>
+              {topic}
+            </p>
+          )}
+          {step > 1 && (
+            <p className="ink-hand text-[14px] italic text-muted-foreground">
+              <span className="mono-label mr-2 text-[8.5px] uppercase tracking-[0.2em] not-italic">
+                {t("The reader")}
+              </span>
+              {t(readerLabel)}
+            </p>
+          )}
+          {step > 2 && (
+            <p className="ink-hand text-[14px] italic text-muted-foreground">
+              <span className="mono-label mr-2 text-[8.5px] uppercase tracking-[0.2em] not-italic">
+                {t("The shape")}
+              </span>
+              {t(taleLabel)}
+            </p>
+          )}
+        </div>
+
+        {step === 0 && (
+          <div>
+            <p className="ink-hand text-[15.5px] leading-relaxed text-foreground/90">
+              {t(
+                "A volume, woven right here. What shall it breathe — name the subject, the world, the wish it carries?"
+              )}
+            </p>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                stripTopic();
+              }}
+              className="mt-3 flex items-center gap-2 rounded-full border border-border bg-card py-1 pl-4 pr-1 transition-all duration-300 focus-within:border-foreground/35"
+            >
+              <input
+                value={topicDraft}
+                onChange={(e) => setTopicDraft(e.target.value)}
+                autoFocus
+                maxLength={600}
+                data-testid="book-topic-input"
+                placeholder={t("A book about…")}
+                aria-label={t("The subject of the book")}
+                className="min-w-0 flex-1 bg-transparent py-1.5 text-[14px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
+              />
+              <button
+                type="submit"
+                disabled={!topicDraft.trim()}
+                aria-label={t("Continue")}
+                className="focus-glow flex size-8 shrink-0 items-center justify-center rounded-full bg-foreground text-background transition-all duration-300 disabled:opacity-40"
+              >
+                <ChevronRight className="size-3.5" aria-hidden="true" />
+              </button>
+            </form>
+          </div>
+        )}
+
+        {step === 1 && (
+          <div>
+            <p className="ink-hand text-[15.5px] leading-relaxed text-foreground/90">
+              {t("And who will hold it — whose eyes are these pages for?")}
+            </p>
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {READERS.map((r) => (
+                <button
+                  key={r.id}
+                  type="button"
+                  onClick={() => {
+                    setAge(r.id);
+                    setStep(2);
+                  }}
+                  data-testid={`book-reader-${r.id}`}
+                  className="focus-glow rounded-full border border-border px-3 py-1.5 text-[12px] text-muted-foreground transition-all duration-300 hover:border-foreground/40 hover:text-foreground"
+                >
+                  {t(r.label)}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {step === 2 && (
+          <div>
+            <p className="ink-hand text-[15.5px] leading-relaxed text-foreground/90">
+              {t("And what shape shall the tale take?")}
+            </p>
+            <div className="mt-3">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    data-testid="book-tale-trigger"
+                    className="focus-glow flex min-w-[190px] items-center justify-between gap-3 rounded-full border border-border bg-card px-4 py-2 text-[13px] text-foreground transition-all duration-300 hover:border-foreground/40"
+                  >
+                    <span className="truncate">{t(taleLabel)}</span>
+                    <ChevronsUpDown
+                      className="size-3.5 shrink-0 text-muted-foreground"
+                      aria-hidden="true"
+                    />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="start"
+                  className="nice-scroll max-h-[290px] w-[220px] overflow-y-auto"
+                >
+                  {TALES.map((tl) => (
+                    <DropdownMenuItem
+                      key={tl.id}
+                      onSelect={() => {
+                        setTale(tl.id);
+                        setStep(3);
+                      }}
+                      data-testid={`book-tale-${tl.id}`}
+                      className={cn(
+                        "cursor-pointer justify-between gap-3 text-[13px]",
+                        tl.id === tale &&
+                          "bg-foreground/8 font-medium text-foreground"
+                      )}
+                    >
+                      <span className="truncate">{t(tl.label)}</span>
+                      {tl.id === tale && (
+                        <Check className="size-3.5 shrink-0" aria-hidden="true" />
+                      )}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+        )}
+
+        {step === 3 && (
+          <div>
+            <p className="ink-hand text-[15.5px] leading-relaxed text-foreground/90">
+              {t("So it is set:")}{" "}
+              <span className="italic">
+                {t(taleLabel)} · {t(readerLabel)}
+              </span>
+              {topic ? (
+                <>
+                  {" — "}
+                  <span className="italic">{topic}</span>
+                </>
+              ) : null}
+              . {t("Shall I begin the weaving?")}
+            </p>
+            <div className="mt-3.5 flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => void weave("open")}
+                data-testid="book-weave-btn"
+                className="focus-glow flex h-9 items-center gap-2 rounded-full bg-foreground px-4 text-[13px] font-medium text-background transition-all duration-300 hover:-translate-y-px"
+              >
+                <BookMarked className="size-3.5" aria-hidden="true" />
+                {t("Weave the book")}
+              </button>
+              <button
+                type="button"
+                onClick={() => setStep(0)}
+                className="focus-glow flex h-9 items-center gap-2 rounded-full border border-border px-4 text-[13px] text-muted-foreground transition-all duration-300 hover:text-foreground"
+              >
+                <RotateCcw className="size-3.5" aria-hidden="true" />
+                {t("Adjust the shape")}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  /* ---------------- the weaving ---------------- */
+  if (stage === "weaving") {
+    return (
+      <div
+        className="mt-1 flex flex-col items-center gap-3 py-10 text-center"
+        data-testid="book-weaving"
+      >
+        <LoaderCircle className="size-5 animate-spin text-muted-foreground" aria-hidden="true" />
+        <p className="ink-hand text-[14.5px] italic text-muted-foreground">
+          {t("The loom weaves the first pages…")}
+        </p>
+      </div>
+    );
+  }
+
+  /* ---------------- the reading ---------------- */
+  return (
+    <div className="mt-1" data-testid="book-reader">
+      {/* the book's face */}
+      {meta?.title && (
+        <div className="mb-4 text-center">
+          <p className="ink-title text-[19px] font-semibold leading-snug">
+            {meta.title}
+          </p>
+          {meta.subtitle && (
+            <p className="ink-hand ink-faint mt-1 text-[13px] italic">
+              {meta.subtitle}
+            </p>
+          )}
+          {meta.sigil && (
+            <p className="ink-hand ink-faint mt-1.5 text-[12.5px] italic">
+              ✦ {meta.sigil}
+            </p>
+          )}
+          <span
+            aria-hidden="true"
+            className="mx-auto mt-3 block h-px w-32"
+            style={{ background: WEAVE_INK_LINE }}
+          />
+        </div>
+      )}
+
+      {/* the spread — two pages at rest */}
+      <div className="nice-scroll max-h-[440px] space-y-5 overflow-y-auto rounded-xl border border-border bg-card/40 px-4 py-5 sm:px-6">
+        {spreadPages.map((p) => (
+          <div key={p.n}>
+            {p.chapter && (
+              <p className="ink-hand mb-2.5 text-center text-[14px] italic text-muted-foreground">
+                {p.chapter}
+              </p>
+            )}
+            <div className="space-y-3">
+              {p.paragraphs.map((para, i) => (
+                <p
+                  key={i}
+                  className="ink-hand whitespace-pre-wrap text-[15.5px] leading-[1.9] text-foreground/92"
+                >
+                  {para}
+                </p>
+              ))}
+            </div>
+            <p className="mt-3 text-center text-[10.5px] text-muted-foreground/60">
+              {p.n}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      {/* the sheet navigation */}
+      {pages.length > 0 && (
+        <div className="mt-2.5 flex items-center justify-center gap-3">
+          <button
+            type="button"
+            onClick={() => setSpread((s) => Math.max(0, s - 1))}
+            disabled={spread === 0}
+            aria-label={t("The page before")}
+            className="focus-glow flex size-8 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:text-foreground disabled:opacity-30"
+          >
+            <ChevronLeft className="size-3.5" aria-hidden="true" />
+          </button>
+          <span className="mono-label text-[9.5px] tracking-[0.18em] text-muted-foreground">
+            {t("page")} {spread * 2 + 1}
+            {spreadPages[1] ? `–${spreadPages[1].n}` : ""} /{" "}
+            {meta?.totalPages ?? pages.length}
+          </span>
+          <button
+            type="button"
+            onClick={() => setSpread((s) => Math.min(spreadCount - 1, s + 1))}
+            disabled={spread >= spreadCount - 1}
+            aria-label={t("The next page")}
+            className="focus-glow flex size-8 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:text-foreground disabled:opacity-30"
+          >
+            <ChevronRight className="size-3.5" aria-hidden="true" />
+          </button>
+        </div>
+      )}
+
+      {/* the loom's row */}
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setFullOpen(true)}
+          data-testid="book-fullscreen"
+          className="focus-glow flex h-8 items-center gap-1.5 rounded-full border border-border px-3.5 text-[12px] text-muted-foreground transition-all duration-300 hover:border-foreground/40 hover:text-foreground"
+        >
+          <Maximize2 className="size-3" aria-hidden="true" />
+          {t("Full screen")}
+        </button>
+        {!ended && (
+          <>
+            <button
+              type="button"
+              onClick={() => void weave("next")}
+              disabled={weaving}
+              data-testid="book-continue"
+              className="focus-glow flex h-8 items-center gap-1.5 rounded-full bg-foreground px-3.5 text-[12px] font-medium text-background transition-all duration-300 hover:-translate-y-px disabled:opacity-40"
+            >
+              <BookOpen className="size-3" aria-hidden="true" />
+              {weaving ? t("The loom weaves the next pages…") : t("Weave onward")}
+            </button>
+            <button
+              type="button"
+              onClick={() => void weave("close")}
+              disabled={weaving}
+              className="focus-glow flex h-8 items-center gap-1.5 rounded-full border border-border px-3.5 text-[12px] text-muted-foreground transition-all duration-300 hover:text-foreground disabled:opacity-40"
+            >
+              {t("Let the story rest")}
+            </button>
+          </>
+        )}
+        {weaving && (
+          <LoaderCircle
+            className="size-3.5 animate-spin text-muted-foreground"
+            aria-hidden="true"
+          />
+        )}
+      </div>
+
+      {weaveFailed && (
+        <p className="ink-hand mt-2.5 text-[13.5px] italic text-muted-foreground">
+          {t("The loom fell silent for a moment. Breathe, then weave again.")}{" "}
+          <button
+            type="button"
+            onClick={() => void weave("next")}
+            className="focus-glow underline underline-offset-4 hover:text-foreground"
+          >
+            {t("Weave again")}
+          </button>
+        </p>
+      )}
+      {ended && (
+        <p className="ink-hand mt-3 text-center text-[14px] italic text-muted-foreground">
+          ❧ {t("The end")}
+        </p>
+      )}
+
+      {/* the full screen reader — one portal, the whole volume */}
+      {fullOpen &&
+        createPortal(
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="fixed inset-0 z-[90] flex flex-col bg-background"
+            data-testid="book-fullscreen-reader"
+            role="dialog"
+            aria-modal="true"
+            aria-label={meta?.title ?? t("The weaving instrument")}
+          >
+            <div className="flex shrink-0 items-center gap-3 border-b border-border px-4 py-3 sm:px-6">
+              <BookMarked
+                className="size-4 shrink-0 text-muted-foreground"
+                aria-hidden="true"
+              />
+              <div className="min-w-0 flex-1">
+                <p className="ink-title truncate text-[15px] font-semibold leading-tight">
+                  {meta?.title}
+                </p>
+                {meta?.subtitle && (
+                  <p className="ink-faint truncate text-[11.5px] italic">
+                    {meta.subtitle}
+                  </p>
+                )}
+              </div>
+              <div className="flex shrink-0 items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setFontSize((i) => Math.max(0, i - 1))}
+                  disabled={fontSize === 0}
+                  aria-label={t("Smaller text")}
+                  className="focus-glow flex size-8 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:text-foreground disabled:opacity-35"
+                >
+                  <Minus className="size-3.5" aria-hidden="true" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFontSize((i) => Math.min(2, i + 1))}
+                  disabled={fontSize === 2}
+                  aria-label={t("Larger text")}
+                  className="focus-glow flex size-8 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:text-foreground disabled:opacity-35"
+                >
+                  <Plus className="size-3.5" aria-hidden="true" />
+                </button>
+              </div>
+              <button
+                type="button"
+                onClick={() => setFullOpen(false)}
+                aria-label={t("Close the full reader")}
+                data-testid="book-fullscreen-close"
+                className="focus-glow flex size-9 shrink-0 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <X className="size-4" aria-hidden="true" />
+              </button>
+            </div>
+
+            <div className="nice-scroll flex-1 overflow-y-auto">
+              <div className="mx-auto max-w-[680px] px-6 py-10 sm:px-8 sm:py-14">
+                <h1 className="ink-title text-center text-[26px] font-semibold leading-tight tracking-[0.03em] sm:text-[30px]">
+                  {meta?.title}
+                </h1>
+                {meta?.sigil && (
+                  <p className="ink-hand ink-faint mt-2 text-center text-[14px] italic">
+                    ✦ {meta.sigil}
+                  </p>
+                )}
+                {meta?.axiom && (
+                  <p className="ink-hand ink-faint mt-1.5 text-center text-[13.5px] italic">
+                    {meta.axiom}
+                  </p>
+                )}
+                <span
+                  aria-hidden="true"
+                  className="mx-auto mt-6 block h-px w-40"
+                  style={{ background: WEAVE_INK_LINE }}
+                />
+                <div className="mt-8 space-y-7">
+                  {pages.map((p) => (
+                    <div key={p.n}>
+                      {p.chapter && (
+                        <p className="ink-hand mb-2.5 text-center text-[15px] italic text-muted-foreground">
+                          {p.chapter}
+                        </p>
+                      )}
+                      <div className="space-y-3">
+                        {p.paragraphs.map((para, i) => (
+                          <p
+                            key={i}
+                            className="ink-hand whitespace-pre-wrap leading-[1.95] text-foreground/92"
+                            style={{ fontSize: [16.5, 18.5, 20.5][fontSize] }}
+                          >
+                            {para}
+                          </p>
+                        ))}
+                      </div>
+                      <p className="mt-3 text-center text-[10.5px] text-muted-foreground/50">
+                        {p.n}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+                {ended && (
+                  <p className="ink-hand ink-soft mt-10 text-center text-[15.5px] italic">
+                    ❧ {t("The end")}
+                  </p>
+                )}
+              </div>
+            </div>
+          </motion.div>,
+          document.body
+        )}
+    </div>
+  );
+}
+
+/* ================================================================== */
 /*  THE DISPATCHER — one artifact, mounted beneath the reply.          */
 /* ================================================================== */
 
 export function SideArtifact({ kind, resonance }: { kind: SideArtifactKind; resonance: string }) {
   const t = useT();
-  const icon = kind === "akashic" ? ScrollText : kind === "forge" ? Hammer : Sparkles;
+  const icon = kind === "akashic" ? ScrollText : kind === "forge" ? Hammer : kind === "book" ? BookMarked : Sparkles;
   const Icon = icon;
   const label =
     kind === "akashic"
@@ -1177,7 +1810,9 @@ export function SideArtifact({ kind, resonance }: { kind: SideArtifactKind; reso
         ? t("Dealt from the Star Play")
         : kind === "manifest"
           ? t("The Manifesting Chamber")
-          : t("Struck from the Forge");
+          : kind === "book"
+            ? t("The weaving instrument")
+            : t("Struck from the Forge");
 
   return (
     <div className="mt-6 border-t hairline pt-5" data-testid={`chat-artifact-${kind}`}>
@@ -1190,6 +1825,7 @@ export function SideArtifact({ kind, resonance }: { kind: SideArtifactKind; reso
       {kind === "star" && <StarDraw />}
       {kind === "manifest" && <ManifestRitual resonance={resonance} />}
       {kind === "forge" && <ForgeStrike />}
+      {kind === "book" && <BookWeaver resonance={resonance} />}
     </div>
   );
 }

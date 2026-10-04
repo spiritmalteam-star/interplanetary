@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { setSessionCookie } from "@/lib/server/access";
+import { mergeAnonLibrary, readAnonId, setSessionCookie } from "@/lib/server/access";
 
 /* ------------------------------------------------------------------ */
 /*  GET /api/auth/google/callback — the return of the Google passage. */
@@ -63,6 +63,8 @@ export async function GET(req: NextRequest) {
 
     const res = NextResponse.redirect(origin);
     setSessionCookie(res, user.id);
+    /* everything the anonymous cookie kept comes with the visitor */
+    await mergeAnonLibrary(readAnonId(req), user.id);
     res.cookies.set("mirror_g_state", "", { path: "/", maxAge: 0 });
     return res;
   } catch (err) {

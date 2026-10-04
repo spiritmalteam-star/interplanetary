@@ -80,6 +80,8 @@ export interface VisualizationArtifact {
   } | null;
   annotations: VisualizationAnnotation[];
   slides: VisualizationSlide[];
+  /** why the brushes rested — the last words of each painter that failed */
+  paintErrors?: string[];
   createdAt: string;
 }
 

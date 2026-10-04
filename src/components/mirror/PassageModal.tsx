@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { LoaderCircle, Mail, Sparkles } from "lucide-react";
+import { LoaderCircle, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
@@ -10,26 +10,18 @@ import { cn } from "@/lib/utils";
 
 /* ------------------------------------------------------------------ */
 /*  THE PASSAGE — the visitor's door into the laboratory.              */
-/*  Email + secret, or the Google passage. The gate form carries the   */
-/*  world's own name so the threshold always knows what it opens.      */
+/*  Everything in the laboratory is free: the passage exists only so   */
+/*  the cosmic library can keep its one owner's words across devices.  */
 /*                                                                     */
 /*  Security law: nothing here ever stores the password — only the     */
 /*  door (the server) touches it; the answer is a signed httpOnly      */
 /*  cookie; the email's existence never leaks through one message.     */
 /* ------------------------------------------------------------------ */
 
-const WORLD_COPY: Record<"dreambook" | "quantum" | "evolvemed" | "library", { key: string; line: string }> = {
-  dreambook: { key: "Dream Book", line: "The atelier of woven volumes opens with the Crystalline key — sign in, or carve your passage in one breath." },
-  quantum: { key: "Quantum World", line: "The quantum narrator receives only those who carry the Crystalline key — sign in, or carve your passage." },
-  evolvemed: { key: "Evolve Med", line: "The medical nexus is a keyed facility — the Crystalline key opens it. Sign in, or carve your passage." },
-  library: { key: "", line: "Your passage keeps your transmissions in the cosmic library and opens the keyed worlds." },
-};
-
 export function AuthModal() {
   const t = useT();
   const authOpen = useMirror((s) => s.authOpen);
   const authMode = useMirror((s) => s.authMode);
-  const authWorld = useMirror((s) => s.authWorld);
   const googleConfigured = useMirror((s) => s.googleConfigured);
   const closeAuth = useMirror((s) => s.closeAuth);
   const setMe = useMirror((s) => s.setMe);
@@ -49,9 +41,6 @@ export function AuthModal() {
   }, [authOpen, authMode]);
 
   if (!authOpen) return null;
-
-  const gate = authMode === "gate";
-  const worldCopy = WORLD_COPY[authWorld ?? "library"];
 
   const submit = async () => {
     if (busy) return;
@@ -77,15 +66,9 @@ export function AuthModal() {
       closeAuth();
       toast.success(
         tab === "register"
-          ? t("Your passage is carved. The keyed worlds are yours.")
-          : t("Welcome back. The keyed worlds remember you.")
+          ? t("Your passage is carved — your cosmic library travels with you now.")
+          : t("Welcome back — your cosmic library remembers you.")
       );
-      /* a gate that was answered opens its world at once */
-      const st = useMirror.getState();
-      if (authMode === "gate" && authWorld === "evolvemed") st.openEvolveMed();
-      else if (authMode === "gate" && authWorld === "quantum") st.openParticleX();
-      else if (authMode === "gate" && authWorld === "dreambook") st.openDreamBook();
-      else if (authMode === "gate") st.openLibrary();
     } catch {
       toast.error(t("The passage did not open. Rest, then try again."));
     } finally {
@@ -111,13 +94,11 @@ export function AuthModal() {
       onOpenChange={(v) => {
         if (!busy) closeAuth();
       }}
-      title={gate ? worldCopy.key : tab === "register" ? t("Carve your passage") : t("Enter your passage")}
+      title={tab === "register" ? t("Carve your passage") : t("Enter your passage")}
       description={
-        gate
-          ? worldCopy.line
-          : tab === "register"
-            ? t("Twenty transmissions a day, the keyed worlds, and a cosmic library that keeps every word for you.")
-            : t("Welcome back. Your cosmic library and the keyed worlds are waiting.")
+        tab === "register"
+          ? t("Everything here is free. The passage simply keeps your cosmic library — every transmission, every book — with you, on every device.")
+          : t("Welcome back. Your cosmic library is waiting, exactly where you left it.")
       }
       widthClass="sm:max-w-[460px]"
     >
@@ -236,110 +217,6 @@ export function AuthModal() {
           </svg>
           {t("Continue with Google")}
         </button>
-      </div>
-    </ModalShell>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  The Light passage — lifts the daily threshold of the Crystalline   */
-/*  key. A quiet attunement of the portal; no coin is asked here.      */
-/* ------------------------------------------------------------------ */
-
-export function LightModal() {
-  const t = useT();
-  const lightOpen = useMirror((s) => s.lightOpen);
-  const me = useMirror((s) => s.me);
-  const usage = useMirror((s) => s.usage);
-  const closeLight = useMirror((s) => s.closeLight);
-  const setMe = useMirror((s) => s.setMe);
-  const refreshMe = useMirror((s) => s.refreshMe);
-  const openAuth = useMirror((s) => s.openAuth);
-  const [busy, setBusy] = useState(false);
-
-  if (!lightOpen) return null;
-
-  const attune = async () => {
-    if (busy) return;
-    setBusy(true);
-    try {
-      const res = await fetch("/api/auth/upgrade", { method: "POST" });
-      const data = (await res.json().catch(() => null)) as
-        | { user?: { email: string; name: string | null; tier: "crystalline" | "light" }; error?: string }
-        | null;
-      if (!res.ok || !data?.user) {
-        toast.error(data?.error ?? t("The Light could not be attuned. Rest, then try again."));
-        return;
-      }
-      setMe(data.user);
-      void refreshMe();
-      closeLight();
-      toast.success(t("The Light passage is attuned — your transmissions are boundless now."));
-    } catch {
-      toast.error(t("The Light could not be attuned. Rest, then try again."));
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  return (
-    <ModalShell
-      open={lightOpen}
-      onOpenChange={(v) => {
-        if (!busy) closeLight();
-      }}
-      title={t("The Light passage")}
-      description={
-        me?.tier === "light"
-          ? t("You already walk in the Light — today's transmissions are boundless.")
-          : t("The Crystalline key carries twenty transmissions a day. The Light passage lifts the count entirely — every world, every transmission, without end.")
-      }
-      widthClass="sm:max-w-[470px]"
-    >
-      <div className="px-5 pb-5 sm:px-6">
-        {!me ? (
-          <button
-            type="button"
-            onClick={() => {
-              closeLight();
-              openAuth("register");
-            }}
-            data-testid="light-signin"
-            className="focus-glow flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-foreground text-[13.5px] font-medium text-background transition-all duration-300 hover:-translate-y-px"
-          >
-            {t("Sign in to attune the Light")}
-          </button>
-        ) : me.tier === "light" ? (
-          <div className="flex items-center justify-center gap-2 py-2" data-testid="light-active">
-            <Sparkles className="size-4 text-[var(--cy)]" aria-hidden="true" />
-            <span className="text-[14px] text-foreground/85">{t("Boundless — go gently.")}</span>
-          </div>
-        ) : (
-          <>
-            {usage && (
-              <p className="mb-3 text-center font-serif text-[14px] italic text-muted-foreground" data-testid="light-usage">
-                {t("Today: {used} of {limit} transmissions", { used: usage.used, limit: usage.limit ?? "∞" })}
-              </p>
-            )}
-            <button
-              type="button"
-              onClick={() => void attune()}
-              disabled={busy}
-              data-testid="light-attune"
-              className="focus-glow flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-foreground text-[13.5px] font-medium text-background transition-all duration-300 hover:-translate-y-px disabled:cursor-wait disabled:opacity-60"
-            >
-              {busy ? (
-                <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
-              ) : (
-                <Sparkles className="size-4" aria-hidden="true" />
-              )}
-              {t("Attune the Light")}
-            </button>
-            <p className="mt-2.5 text-center text-[12px] leading-relaxed text-muted-foreground">
-              {t("Given freely, kept gently — the portal asks no coin for its light.")}
-            </p>
-          </>
-        )}
       </div>
     </ModalShell>
   );

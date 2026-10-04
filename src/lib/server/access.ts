@@ -3,14 +3,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 
 /* ------------------------------------------------------------------ */
-/*  THE PASSAGE-KEEPERS — access, quotas and the cosmic library.       */
+/*  THE PASSAGE-KEEPERS — identity and the cosmic library.             */
+/*                                                                     */
+/*  THE FREE LAW: everything in the laboratory is free. There are      */
+/*  no tiers, no keys, no daily thresholds — every world opens to      */
+/*  every visitor.                                                     */
 /*                                                                     */
 /*  Security & privacy law of the Laboratory (the gentle guide):       */
 /*  - passwords are stored ONLY as scrypt hashes (random salt,         */
 /*    timing-safe comparison) — never in plain text, never logged;     */
 /*  - sessions are signed httpOnly cookies (HMAC-SHA256), same-site;   */
 /*  - anonymous visitors are remembered only by a random UUID cookie   */
-/*    that carries no personal information at all;                     */
+/*    that carries no personal information at all — yet even their     */
+/*    transmissions are kept in their own cosmic library, and when     */
+/*    they later sign in, everything they made comes with them;        */
 /*  - the cosmic library belongs to its one owner: every entry is      */
 /*    written under the visitor's own id and read back only to them;   */
 /*  - error messages never leak whether an email exists.               */
@@ -28,6 +34,8 @@ export interface SessionUser {
   email: string;
   name: string | null;
   tier: Tier;
+  /** True when this identity is the anonymous cookie's quiet keeper. */
+  anon?: boolean;
 }
 
 /* ---------------------------- the secret --------------------------- */
@@ -111,9 +119,19 @@ export function clearSessionCookie(res: NextResponse): void {
 export async function getSessionUser(req: NextRequest): Promise<SessionUser | null> {
   const uid = readSessionToken(req.cookies.get(SESSION_COOKIE)?.value);
   if (!uid) return null;
-  const user = await db.user.findUnique({ where: { id: uid } });
-  if (!user) return null;
-  return { id: user.id, email: user.email, name: user.name, tier: user.tier === "light" ? "light" : "crystalline" };
+  try {
+    const user = await db.user.findUnique({ where: { id: uid } });
+    if (!user) return null;
+    return { id: user.id, email: user.email, name: user.name, tier: user.tier === "light" ? "light" : "crystalline" };
+  } catch (err) {
+    /* the cloud without a database — a signed-in cookie is received
+       but cannot be looked up; the visitor passes as anonymous */
+    console.error(
+      "[access] session lookup failed (database unreachable):",
+      err instanceof Error ? err.message : err
+    );
+    return null;
+  }
 }
 
 /* --------------------------- anonymous id -------------------------- */
@@ -124,156 +142,166 @@ export function readAnonId(req: NextRequest): string | null {
   return raw && /^[\w-]{8,64}$/.test(raw) ? raw : null;
 }
 
-/** Attaches a fresh anonymous id to the response when none existed. */
-export function giveAnonId(res: NextResponse): string {
-  const id = randomUUID();
-  res.cookies.set(ANON_COOKIE, id, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: 365 * 24 * 60 * 60,
-  });
-  return id;
+/** The email-shaped key under which an anonymous visitor's library rests. */
+export function anonEmail(anonId: string): string {
+  return `anon:${anonId}`;
 }
 
-/* ------------------------------ quotas ----------------------------- */
+/* --------------------------- the visitor --------------------------- */
 
-export type Sector = "main" | "manifest" | "dreambook" | "quantum" | "evolvemed";
-
-export const DAILY_LIMITS = {
-  anon: 10, // per pool: the main scopes AND the manifest each get 10/day
-  crystalline: 20, // one shared daily pool across the whole portal
-  light: Number.POSITIVE_INFINITY, // the Light passage — boundless
-} as const;
-
-const WORLD_SECTORS: Sector[] = ["dreambook", "quantum", "evolvemed"];
-
-function todayUTC(): string {
-  return new Date().toISOString().slice(0, 10);
+export interface Visitor {
+  /** The signed-in account — or the anonymous cookie's quiet keeper. */
+  user: SessionUser;
+  anonId: string;
+  /** True when the anon cookie was minted on THIS request and must be
+      attached to the response (see withAnonCookie). */
+  freshAnon: boolean;
 }
 
-export interface GateInfo {
-  user: SessionUser | null;
-  anonId: string | null;
-  used: number;
-  limit: number;
-  remaining: number;
+/** Ids minted when the database rests (cloud without DATABASE_URL).
+    Library writes recognise them and rest quietly instead of knocking. */
+export const STATELESS_PREFIX = "stateless:";
+
+/**
+ * The free threshold. Every visitor passes — anonymous or signed in —
+ * and every visitor carries an identity their cosmic library can rest on.
+ * Anonymous visitors are given a User row keyed to their random cookie;
+ * nothing personal is ever stored for them.
+ *
+ * When the database itself is unreachable (a cloud deployment without
+ * DATABASE_URL), the visitor still passes — stateless. The mirror
+ * answers; the library simply rests until a database arrives.
+ */
+export async function resolveVisitor(req: NextRequest): Promise<Visitor> {
+  const signedIn = await getSessionUser(req);
+  if (signedIn) {
+    const anonId = readAnonId(req) ?? "";
+    return { user: signedIn, anonId, freshAnon: false };
+  }
+
+  const existing = readAnonId(req);
+  const anonId = existing ?? randomUUID();
+  try {
+    const user = await db.user.upsert({
+      where: { email: anonEmail(anonId) },
+      create: { email: anonEmail(anonId), name: null, passwordHash: null, provider: "anon" },
+      update: {},
+    });
+    return {
+      user: { id: user.id, email: user.email, name: user.name, tier: "crystalline", anon: true },
+      anonId,
+      freshAnon: !existing,
+    };
+  } catch (err) {
+    console.error(
+      "[access] database unreachable — passing the visitor stateless:",
+      err instanceof Error ? err.message : err
+    );
+    return {
+      user: {
+        id: `${STATELESS_PREFIX}${anonId}`,
+        email: anonEmail(anonId),
+        name: null,
+        tier: "crystalline",
+        anon: true,
+      },
+      anonId,
+      freshAnon: !existing,
+    };
+  }
 }
 
-async function usedToday(key: string, sector: Sector | "all"): Promise<number> {
-  const rows = await db.usage.findMany({
-    where: { key, day: todayUTC(), ...(sector === "all" ? {} : { sector }) },
-  });
-  return rows.reduce((n, r) => n + r.count, 0);
+/** Attaches the freshly minted anon cookie to a response, if one is due. */
+export function withAnonCookie<T extends NextResponse>(res: T, visitor: Visitor): T {
+  if (visitor.freshAnon) {
+    res.cookies.set(ANON_COOKIE, visitor.anonId, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: 365 * 24 * 60 * 60,
+    });
+  }
+  return res;
 }
 
 /**
- * The gate of the threshold. Returns "ok" when the transmission may
- * pass, "auth" when a world needs the Crystalline key, "quota" when
- * today's limit is reached (Light lifts it).
+ * When a visitor signs in (or registers), everything their anonymous
+ * cookie kept — every transmission, every book — comes with them.
  */
-export async function checkGate(
-  req: NextRequest,
-  sector: Sector
-): Promise<
-  | { status: "ok"; gate: GateInfo & { key: string } }
-  | { status: "auth"; gate: GateInfo }
-  | { status: "quota"; gate: GateInfo }
-> {
-  const user = await getSessionUser(req);
-  const anonId = readAnonId(req);
-
-  if (!user) {
-    if (WORLD_SECTORS.includes(sector)) {
-      return { status: "auth", gate: { user, anonId, used: 0, limit: 0, remaining: 0 } };
-    }
-    const key = anonId ? `anon:${anonId}` : "";
-    const used = key ? await usedToday(key, sector) : 0;
-    const limit = DAILY_LIMITS.anon;
-    if (used >= limit) {
-      return { status: "quota", gate: { user, anonId, used, limit, remaining: 0 } };
-    }
-    return { status: "ok", gate: { user, anonId, used, limit, remaining: limit - used, key } };
-  }
-
-  // signed-in — the Crystalline (or Light) passage
-  const key = `user:${user.id}`;
-  const limit = user.tier === "light" ? DAILY_LIMITS.light : DAILY_LIMITS.crystalline;
-  const used = await usedToday(key, "all");
-  if (used >= limit) {
-    return { status: "quota", gate: { user, anonId, used, limit, remaining: 0 } };
-  }
-  return { status: "ok", gate: { user, anonId, used, limit, remaining: limit - used, key } };
-}
-
-/** Records one passing transmission (after it succeeded). */
-export async function recordUsage(key: string, sector: Sector): Promise<void> {
-  if (!key) return;
-  const day = todayUTC();
+export async function mergeAnonLibrary(anonId: string | null | undefined, userId: string): Promise<void> {
+  if (!anonId) return;
   try {
-    await db.usage.upsert({
-      where: { key_day_sector: { key, day, sector } },
-      create: { key, day, sector, count: 1 },
-      update: { count: { increment: 1 } },
+    const anonUser = await db.user.findUnique({ where: { email: anonEmail(anonId) } });
+    if (!anonUser || anonUser.id === userId) return;
+    await db.libraryEntry.updateMany({
+      where: { userId: anonUser.id },
+      data: { userId },
     });
+    await db.user.delete({ where: { id: anonUser.id } }).catch(() => undefined);
   } catch (err) {
-    console.error("[access] usage record failed:", err);
+    console.error("[access] anon merge failed:", err);
   }
-}
-
-/* ------------------------- gate responses -------------------------- */
-
-export function gateError(
-  status: "auth" | "quota",
-  gate: GateInfo
-): NextResponse {
-  if (status === "auth") {
-    return NextResponse.json(
-      {
-        code: "auth",
-        error:
-          "This world opens with the Crystalline key — sign in or create your passage, and it receives you.",
-      },
-      { status: 401 }
-    );
-  }
-  const light = gate.user?.tier !== "light";
-  return NextResponse.json(
-    {
-      code: "quota",
-      used: gate.used,
-      limit: gate.limit,
-      error: light
-        ? "Today's transmissions are complete — the Light passage lifts every limit."
-        : "Today's transmissions are complete. Rest, and return with the morning.",
-    },
-    { status: 402 }
-  );
 }
 
 /* --------------------------- the library --------------------------- */
 
+export type LibrarySector =
+  | "observatory" // the main scopes — interplanetary & healing
+  | "manifest" // the Mirror OS
+  | "invent" // the Forge
+  | "dreambook" // the Dream Book volumes
+  | "quantum" // ParticleX — the quantum world
+  | "evolvemed"; // the evolutionary medical nexus
+
+/** Lays a transmission in its sector. Returns the entry's id. */
 export async function saveLibrary(
   userId: string | null | undefined,
-  sector: "observatory" | "manifest" | "dreambook" | "quantum" | "evolvemed",
+  sector: LibrarySector,
   title: string,
   excerpt: string,
-  content: unknown
-): Promise<void> {
-  if (!userId) return;
+  content: unknown,
+  maxLen = 60000
+): Promise<string | null> {
+  if (!userId || userId.startsWith(STATELESS_PREFIX)) return null;
   try {
-    await db.libraryEntry.create({
+    const entry = await db.libraryEntry.create({
       data: {
         userId,
         sector,
         title: title.slice(0, 140) || "A transmission",
         excerpt: excerpt.slice(0, 280),
-        content: JSON.stringify(content).slice(0, 60000),
+        content: JSON.stringify(content).slice(0, maxLen),
+      },
+    });
+    return entry.id;
+  } catch (err) {
+    console.error("[access] library save failed:", err);
+    return null;
+  }
+}
+
+/** Keeps a saved transmission current — a book that grows, a thread that continues. */
+export async function updateLibrary(
+  userId: string | null | undefined,
+  entryId: string | null | undefined,
+  title: string,
+  excerpt: string,
+  content: unknown,
+  maxLen = 60000
+): Promise<void> {
+  if (!userId || !entryId || userId.startsWith(STATELESS_PREFIX)) return;
+  try {
+    await db.libraryEntry.update({
+      where: { id: entryId },
+      data: {
+        title: title.slice(0, 140) || "A transmission",
+        excerpt: excerpt.slice(0, 280),
+        content: JSON.stringify(content).slice(0, maxLen),
       },
     });
   } catch (err) {
-    console.error("[access] library save failed:", err);
+    console.error("[access] library update failed:", err);
   }
 }
 

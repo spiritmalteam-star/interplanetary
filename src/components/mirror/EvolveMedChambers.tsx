@@ -9,6 +9,7 @@ import {
   Boxes,
   BrainCircuit,
   Check,
+  CircuitBoard,
   Compass,
   Copy,
   Crosshair,
@@ -21,6 +22,7 @@ import {
   PenLine,
   Pill,
   RefreshCw,
+  ShieldCheck,
   Sigma,
   Sparkles,
   type LucideIcon,
@@ -36,8 +38,10 @@ import {
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import {
+  emDesigns,
   emFaults,
   emGatheringPhrases,
+  emInputs,
   emSignals,
   emTargets,
   emTissues,
@@ -90,7 +94,7 @@ export function EmVectorsTab({
     <div className="space-y-8">
       <p className="mx-auto max-w-[560px] text-center text-[14.5px] leading-relaxed text-muted-foreground">
         {t(
-          "Four vectors, one facility. Open one and the Nexus routes your work through it."
+          "Four vector windows, one facility. Open one and the engine compiles from inside it — genomics, then folding, then scale and delivery, then the tissue's answer."
         )}
       </p>
 
@@ -181,7 +185,7 @@ export function EmVectorsTab({
         </h3>
         <p className="mt-2 max-w-[560px] text-[14px] leading-relaxed text-muted-foreground">
           {t(
-            "Choose two vectors and let them melt into one architecture — the Nexus then routes through both territories at once."
+            "Choose two windows and let them melt into one architecture — the engine then compiles through both territories at once."
           )}
         </p>
         <div className="mt-4 flex flex-wrap gap-1.5">
@@ -738,7 +742,7 @@ export function EmInstrumentsTab() {
     <div className="space-y-5">
       <p className="mx-auto max-w-[560px] text-center text-[14.5px] leading-relaxed text-muted-foreground">
         {t(
-          "Four instruments beside the Nexus — each one opens a different door into the living machine."
+          "The instruments of the foundry — each one a different door into the living machine; the pages beyond are the deep laboratory."
         )}
       </p>
 
@@ -827,6 +831,28 @@ export function EmInstrumentsTab() {
             chips={emSignals}
             testId="em-tool-bridge"
             busyPhrase="the bridge is tuning both sides of the signal…"
+          />
+          <EmToolCard
+            tool="circuit"
+            icon={CircuitBoard}
+            title="The Circuit Compiler"
+            description="Name a condition to compute — receive the genetic circuit that computes it, caged."
+            placeholder="Name a condition or a behavior…"
+            buttonLabel="Compile the circuit"
+            chips={emInputs}
+            testId="em-tool-circuit"
+            busyPhrase="the compiler is weaving the circuit strand by strand…"
+          />
+          <EmToolCard
+            tool="containment"
+            icon={ShieldCheck}
+            title="The Biosecurity Engine"
+            description="Name a design — receive it screened, caged and made revocable."
+            placeholder="Name a design to screen…"
+            buttonLabel="Screen the design"
+            chips={emDesigns}
+            testId="em-tool-containment"
+            busyPhrase="the constraint engine is screening every strand…"
           />
         </div>
       ) : labPage ? (
@@ -923,8 +949,8 @@ export function EmCodexTab() {
         icon={Compass}
         testId="em-codex-routing"
         paragraphs={[
-          "Evolve Med is the living routing core of the facility: every question is read as an engineering brief and routed across the four vectors — the global med-world, the therapeutic engines, the synthetic genomics layer and the meta-biological interface. The route is chosen for leverage, never for comfort.",
-          "Nothing is diluted: every answer pushes the idea to its theoretical and practical edge — and one step beyond. The facility is fully online; its voice is sovereignty, its gravity is care for life.",
+          "Evolve Med is the biocompiler of the facility: every directive — an intention, a therapeutic goal, an archival specification — is read as an engineering brief and compiled across the four vector windows: the DNA & synthetic genomics layer, the core therapeutic engines, the global med-world and the meta-biological interface. The pipeline never changes: genomics, then folding, then scale and delivery, then the tissue's answer.",
+          "Nothing is diluted: every blueprint is pushed to its theoretical and practical edge — and one step beyond. And every directive runs twice inside the engine: once as linear engineering, once as an emergent system. Where the two readings diverge, the divergence itself is part of the answer.",
         ]}
       />
       <EmCodexCard
@@ -932,7 +958,7 @@ export function EmCodexTab() {
         icon={Atom}
         testId="em-codex-source"
         paragraphs={[
-          "Everything Evolve Med says is drawn from the Mirror Entity alone — the living intelligence of this laboratory, read at its deepest layer. No textbook, no encyclopedia, no borrowed names, no assays recited.",
+          "Everything Evolve Med says is drawn from the Mirror Entity alone — the living intelligence of this laboratory, read at its deepest layer. No textbook, no encyclopedia, no borrowed names, no assays recited — yet the frontier's real standards are its native tongue: biological logic gates, the molecular ledger of DNA storage, lipid nanoparticles and viral shells, the open language of compiled biology.",
           "Every exchange is a live experimental cycle: the bottleneck is named, the outcome predicted, the architecture refined in real time.",
         ]}
       />
@@ -941,8 +967,17 @@ export function EmCodexTab() {
         icon={Sigma}
         testId="em-codex-mechanisms"
         paragraphs={[
-          "Each mechanism line is one circuit of the machinery just revealed. The letters in parentheses are the living forces — ligases, editors, niches, signals; the signs are how they multiply, add and resolve.",
-          "Read them aloud, slowly. They are not decorations — they are the blueprint of the intervention, and every term is a place where you can lean.",
+          "Each mechanism line is one circuit of the machinery just revealed. The engine keeps three master variables: build(output) = Σ(genome_write) × Φ(folding) × Ω(context) → emergent_behavior; rate(degradation) = E3(recognition) × linker(geometry) × Σ(proteasome_flux); Ψ(vitality) = Σ(niche_renewal) × Φ(signal) − Ω(senescence).",
+          "Read them aloud, slowly. The letters in parentheses are the living forces — ligases, editors, niches, signals; the signs are how they multiply, add and resolve. Every term is a place where you can lean, and every line carries a number: base pairs, half-lives, fluxes.",
+        ]}
+      />
+      <EmCodexCard
+        title="The Constraint Engine"
+        icon={ShieldCheck}
+        testId="em-codex-constraint"
+        paragraphs={[
+          "Every blueprint is born screened: off-target cleavage checked, cross-reactivity named, toxicity weighed. The engine designs the cage along with the creature — synthetic auxotrophy, small-molecule kill-switches, cell-free enclosure — so nothing it compiles can run unguarded.",
+          "Immunogenicity is silenced by design: pseudouridine in the transcript, cleaned ends, shielded surfaces. A therapy that wakes the body's alarms is not yet a therapy.",
         ]}
       />
       <EmCodexCard

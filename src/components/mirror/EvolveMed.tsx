@@ -11,13 +11,16 @@ import {
   FlaskConical,
   Microscope,
   ScrollText,
+  StickyNote,
   X,
 } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { emGatheringPhrases, emVectors } from "@/lib/data/evolvemed";
+import { emNoteSets } from "@/lib/data/scope-notes";
 import { cn } from "@/lib/utils";
 import { ListenButton } from "./ListenButton";
+import { ScopeNotes } from "./ScopeNotes";
 import {
   EM_VECTOR_ICONS,
   EmCodexTab,
@@ -239,6 +242,78 @@ function EmExchange({
   );
 }
 
+/* ------------------- the vector's note stickers --------------------- */
+
+/** The pinned cluster of one vector's notes, resolved for the thread. */
+function EmNotesBlock({ vectorId }: { vectorId: string }) {
+  const set = emNoteSets[vectorId];
+  const vector = emVectors.find((v) => v.id === vectorId);
+  if (!set || !vector) return null;
+  return (
+    <ScopeNotes glyph={vector.glyph} name={vector.name} notes={set.notes} />
+  );
+}
+
+/** The four vector pills — press one to route the directive AND pin its
+    notes into the conversation. Shared by the empty state and the
+    quiet re-invitation above the composer. */
+function EmWindowPills({ centered = false }: { centered?: boolean }) {
+  const emVector = useMirror((s) => s.emVector);
+  const setEmVector = useMirror((s) => s.setEmVector);
+  const pinEmNotes = useMirror((s) => s.pinEmNotes);
+  const t = useT();
+  return (
+    <div
+      className={cn(
+        "flex flex-wrap gap-1.5",
+        centered ? "justify-center" : "justify-start"
+      )}
+    >
+      {emVectors.map((vector) => {
+        const Icon = EM_VECTOR_ICONS[vector.id] ?? Activity;
+        const active = emVector === vector.id;
+        return (
+          <button
+            key={vector.id}
+            type="button"
+            aria-pressed={active}
+            onClick={() => {
+              /* route the directive AND pin the vector's
+                 notes into the conversation — both, in one touch */
+              setEmVector(vector.id);
+              pinEmNotes(vector.id);
+            }}
+            data-testid={`em-pill-${vector.id}`}
+            title={t(vector.tagline)}
+            className={cn(
+              "focus-glow flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] transition-all duration-300",
+              active
+                ? "font-semibold text-foreground"
+                : "hairline text-muted-foreground hover:text-foreground"
+            )}
+            style={
+              active
+                ? {
+                    borderColor:
+                      "color-mix(in srgb, var(--scope-a) 55%, transparent)",
+                    background:
+                      "color-mix(in srgb, var(--scope-a) 12%, transparent)",
+                  }
+                : undefined
+            }
+          >
+            <Icon
+              className="size-3 text-[var(--scope-a)]"
+              aria-hidden="true"
+            />
+            {t(vector.name)}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 /* --------------------------- the core chat -------------------------- */
 
 function EvolveMedChat() {
@@ -252,6 +327,7 @@ function EvolveMedChat() {
   const setEmVector = useMirror((s) => s.setEmVector);
   const emFusion = useMirror((s) => s.emFusion);
   const setEmFusion = useMirror((s) => s.setEmFusion);
+  const pinEmNotes = useMirror((s) => s.pinEmNotes);
   const t = useT();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -352,56 +428,21 @@ function EvolveMedChat() {
                 <EmEmblem className="size-16" />
               </motion.div>
               <p className="scope-gradient-text mt-4 text-[17px] font-semibold">
-                {t("The medical nexus is online")}
+                {t("The biocompiler is online")}
               </p>
               <p className="mx-auto mt-2 max-w-[460px] text-[14.5px] leading-relaxed text-muted-foreground">
                 {t(
-                  "Ask anything of the healing frontier — Evolve Med routes your question across the four vectors of the facility, in prose and in the mechanisms that run the living machine."
+                  "Bring a directive — an intention, a therapeutic goal, an archive to keep — and Evolve Med compiles it into a living blueprint, routed across the four vector windows, in prose and in the mechanisms that run the living machine."
                 )}
               </p>
 
               {/* the four vector windows */}
               <div className="mt-5 w-full max-w-[560px]">
                 <p className="mono-label text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">
-                  {t("Choose a vector")}
+                  {t("Choose a vector window")}
                 </p>
-                <div className="mt-2.5 flex flex-wrap justify-center gap-1.5">
-                  {emVectors.map((vector) => {
-                    const Icon = EM_VECTOR_ICONS[vector.id] ?? Activity;
-                    const active = emVector === vector.id;
-                    return (
-                      <button
-                        key={vector.id}
-                        type="button"
-                        aria-pressed={active}
-                        onClick={() => setEmVector(active ? null : vector.id)}
-                        data-testid={`em-pill-${vector.id}`}
-                        title={t(vector.tagline)}
-                        className={cn(
-                          "focus-glow flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] transition-all duration-300",
-                          active
-                            ? "font-semibold text-foreground"
-                            : "hairline text-muted-foreground hover:text-foreground"
-                        )}
-                        style={
-                          active
-                            ? {
-                                borderColor:
-                                  "color-mix(in srgb, var(--scope-a) 55%, transparent)",
-                                background:
-                                  "color-mix(in srgb, var(--scope-a) 12%, transparent)",
-                              }
-                            : undefined
-                        }
-                      >
-                        <Icon
-                          className="size-3 text-[var(--scope-a)]"
-                          aria-hidden="true"
-                        />
-                        {t(vector.name)}
-                      </button>
-                    );
-                  })}
+                <div className="mt-2.5">
+                  <EmWindowPills centered />
                 </div>
               </div>
             </div>
@@ -419,14 +460,18 @@ function EvolveMedChat() {
                     : undefined
                 }
               >
-                <EmExchange
-                  role={m.role}
-                  text={m.text}
-                  formulas={m.formulas}
-                  seal={m.seal}
-                  animate={i === emMessages.length - 1 && emStatus !== "loading"}
-                  index={i}
-                />
+                {m.notesVector ? (
+                  <EmNotesBlock vectorId={m.notesVector} />
+                ) : (
+                  <EmExchange
+                    role={m.role}
+                    text={m.text}
+                    formulas={m.formulas}
+                    seal={m.seal}
+                    animate={i === emMessages.length - 1 && emStatus !== "loading"}
+                    index={i}
+                  />
+                )}
               </div>
             ))}
             {emStatus === "loading" && (
@@ -470,6 +515,16 @@ function EvolveMedChat() {
                 {t(activeVector.name)}
                 <button
                   type="button"
+                  onClick={() => pinEmNotes(activeVector.id)}
+                  aria-label={t("Show the window's notes")}
+                  title={t("Show the window's notes")}
+                  data-testid="em-experience-active"
+                  className="focus-glow rounded-full text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  <StickyNote className="size-3" aria-hidden="true" />
+                </button>
+                <button
+                  type="button"
                   onClick={() => setEmVector(null)}
                   aria-label={t("Clear the scope")}
                   title={t("Clear the scope")}
@@ -500,6 +555,19 @@ function EvolveMedChat() {
                 </button>
               </span>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* the quiet re-invitation — the conversation alive, no vector
+          open: the four pills wait right above the composer */}
+      {!hasWindow && emMessages.length > 0 && (
+        <div className="shrink-0 px-4 pt-2 sm:px-6">
+          <div className="mx-auto w-full max-w-[720px]">
+            <p className="mono-label mb-1.5 text-[9.5px] uppercase tracking-[0.2em] text-muted-foreground/70">
+              {t("Choose a vector window")}
+            </p>
+            <EmWindowPills />
           </div>
         </div>
       )}
@@ -587,14 +655,16 @@ function HeaderTab({
 export function EvolveMed() {
   const exitEvolveMed = useMirror((s) => s.exitEvolveMed);
   const setEmVector = useMirror((s) => s.setEmVector);
+  const pinEmNotes = useMirror((s) => s.pinEmNotes);
   const emMessages = useMirror((s) => s.emMessages);
   const [place, setPlace] = useState<EmPlace>("chat");
   const t = useT();
 
   /* The voice button narrates the latest revelation with the
-     gentleman narrator — a man, gentle and natural. */
+     gentleman narrator — a man, gentle and natural. Note stickers
+     carry no words for the voice to read. */
   const latest = useMemo(
-    () => [...emMessages].reverse().find((m) => m.role === "em"),
+    () => [...emMessages].reverse().find((m) => m.role === "em" && !m.notesVector),
     [emMessages]
   );
   const voiceText = latest
@@ -702,7 +772,10 @@ export function EvolveMed() {
                   {place === "vectors" && (
                     <EmVectorsTab
                       onOpenInNexus={(vectorId) => {
-                        if (vectorId) setEmVector(vectorId);
+                        if (vectorId) {
+                          setEmVector(vectorId);
+                          pinEmNotes(vectorId);
+                        }
                         setPlace("chat");
                       }}
                     />

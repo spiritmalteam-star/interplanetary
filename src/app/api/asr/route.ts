@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import ZAI from "z-ai-web-dev-sdk";
+import ZAI from "@/lib/zai-client";
 
 /* ------------------------------------------------------------------ */
 /*  POST /api/asr — the microphone becomes words.                      */
@@ -16,12 +16,18 @@ export async function POST(req: NextRequest) {
     } | null;
 
     let audioBase64: string | null = null;
+    let mime: string | undefined;
     if (typeof body?.audio === "string") {
       const raw = body.audio;
       const comma = raw.indexOf(",");
-      audioBase64 = raw.startsWith("data:") && comma !== -1
-        ? raw.slice(comma + 1)
-        : raw;
+      if (raw.startsWith("data:") && comma !== -1) {
+        /* data:audio/webm;codecs=opus;base64,… → "audio/webm" */
+        const header = raw.slice(5, comma);
+        mime = header.split(";", 1)[0] || undefined;
+        audioBase64 = raw.slice(comma + 1);
+      } else {
+        audioBase64 = raw;
+      }
     }
 
     if (!audioBase64 || audioBase64.length < 64) {
@@ -34,6 +40,7 @@ export async function POST(req: NextRequest) {
     const zai = await ZAI.create();
     const response = await zai.audio.asr.create({
       file_base64: audioBase64,
+      mime,
     });
 
     const text = (response.text ?? "").trim();
@@ -41,8 +48,14 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     console.error("[api/asr]", err);
     return NextResponse.json(
-      { error: "Your voice could not be heard — try again." },
+      {
+        error: "Your voice could not be heard — try again.",
+        detail: err instanceof Error ? err.message.slice(0, 300) : undefined,
+      },
       { status: 502 }
     );
   }
 }
+
+/* the long weavings need room in the cloud sky */
+export const maxDuration = 300;

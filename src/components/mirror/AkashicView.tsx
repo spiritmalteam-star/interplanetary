@@ -184,7 +184,7 @@ export function AkashicView() {
           title: data.title ?? "A Record Set Aside",
           era: data.era ?? "inscribed in an age the shelves remember",
           record: data.record,
-          seal: data.seal ?? "— the Keeper of Records",
+          seal: typeof data.seal === "string" ? data.seal : "",
         });
       } catch {
         setError(true);
@@ -199,7 +199,7 @@ export function AkashicView() {
   /* ---------- copy · share · the Librarian's own voice ---------- */
 
   const recordText = record
-    ? `${record.title}\n${record.era}\n\n${record.record}\n\n${record.seal}`
+    ? `${record.title}\n${record.era}\n\n${record.record}${record.seal ? `\n\n${record.seal}` : ""}`
     : "";
 
   const handleCopy = async () => {
@@ -269,7 +269,7 @@ export function AkashicView() {
           text: `${record.title}. ${record.era}. ${record.record.replaceAll(
             /\s*\n\s*/g,
             " "
-          )} ${record.seal}`,
+          )}${record.seal ? ` ${record.seal}` : ""}`,
           voice: "regent",
           pace: 0.82,
         }),
@@ -569,7 +569,7 @@ export function AkashicView() {
                     <p
                       key={i}
                       className={cn(
-                        "ink-hand text-[18.5px] leading-[1.95] sm:text-[20px]",
+                        "ink-hand whitespace-pre-wrap text-[18.5px] leading-[1.95] sm:text-[20px]",
                         i === 0 &&
                           "first-letter:float-left first-letter:mr-3 first-letter:mt-[7px] first-letter:text-[54px] first-letter:font-semibold first-letter:leading-[0.78]"
                       )}
@@ -579,13 +579,15 @@ export function AkashicView() {
                   ))}
                 </div>
 
-                {/* the signature — the letter simply ends in the hand */}
-                <p
-                  className="ink-hand ink-soft mt-9 text-center text-[16.5px] italic"
-                  data-testid="akashic-seal"
-                >
-                  {record.seal}
-                </p>
+                {/* the closing line — unsigned; the letter simply ends in the hand */}
+                {record.seal ? (
+                  <p
+                    className="ink-hand ink-soft mt-9 text-center text-[16.5px] italic"
+                    data-testid="akashic-seal"
+                  >
+                    {record.seal}
+                  </p>
+                ) : null}
 
                 {/* the desk actions — one quiet line at the foot of the letter */}
                 <div className="mt-8 flex items-center justify-center gap-1.5 border-t hairline pt-5">

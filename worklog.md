@@ -1823,3 +1823,240 @@ Work Log:
 - THE DEEP LABS: src/lib/data/evolvemed-lab.ts — 9 further pages (Longevity & Reversal, Nanorobotics & Delivery, Oncology Engines, Protein Engineering, Genome Writing, DNA Computing & Storage, Organoids & Chips, The Meta-Biological Interface, Live Experiments) × 3 instruments each = 27 new real-time tools, each with its own server-side instrument law; src/lib/data/particlex-lab.ts — 4 further pages (The Deep Machinery, Parallel Lines, Living Fields, Time & Perception) × 3 = 12 new quantum instruments; both routes' TOOL_MODES registries extended from the data files; both Tools/Instruments tabs are now paginated catalogs (‹ 1..N › pips, subject+blurb header, animated page transitions, page 1 keeps the beloved Foundry Four)
 - i18n: 153 new keys × 7 dicts via python insert (+ dynamic registry merge, 1303 entries); check-i18n ALL = 0 missing everywhere
 - Verification: lint clean; tsc clean (only the known legacy api/tts Buffer note); dev restarted; API ladder smokes — register 201+cookie, me 200 (usage/limit), anonymous evolve-med 401 {code:"auth"}, crystalline call 200 + library entry + usage counted, quota-filled → 402 {code:"quota", Light hint}, Light upgrade → 200 again, login 200 / wrong password 401 (non-leaking), library GET returns sector counts; agent-browser E2E — anonymous sidebar shows Enter-the-passage + no Your Cosmos, Evolve Med click opens the GATE modal with the keyed-world copy, register through the gate ("0 / 20 today" appears), world reachable, EM lab pips 1–10 (page 2 "Longevity & Reversal" 3 inputs, page 10 "Live Experiments"), a page-10 Route Mapper run renders result+mechanisms, Cosmic Library shows the Evolve Med sector with the saved entry + glass reader, Quantum Shift timeline (The First Spark · 1 node), Quantum World lab pips 1–5 (page 3 "Parallel Lines"), sign-out returns the passage button and removes account/Cosmos, Dream Book anonymous → gate "Dream Book / The atelier of woven volumes opens with the Crystalline key…", main chat 8 suggestion chips redrawn randomly on reload, mobile 390×844 no horizontal overflow, dark-mode Cosmic Library screenshot clean; dev.log all 200s, zero errors
+
+---
+Task ID: 85
+Agent: Z.ai Code (main)
+Task: (a) the Cosmic Library moves INSIDE the visitor's profile (not the sidebar); (b) "With love" removed, "Mirror Entity" becomes the name; (c) ALL subscriptions removed — everything free; (d) mobile shows two X close buttons — one; (e) generated books are saved and can be brought back to continue the story; (f) Manifest, Invent and ParticleX each have their own sector inside the user's cosmic library; (g) no Mirror Entity name at the end of akashic or book transmissions — nothing claimed except at the interplanetary scope; (h) books are read aloud by a kind lady TTS voice (not the man) with a pause button (user request)
+
+Work Log:
+- THE FREE LAW (access.ts rewritten): DAILY_LIMITS, WORLD_SECTORS, quotas, gateError and the Usage model are GONE (schema rebuilt, db:push); every route now resolves a visitor instead of a gate — resolveVisitor() gives the signed-in account OR the anonymous cookie a quiet User row (provider "anon", email anon:<uuid>, nothing personal), so EVERY transmission is saved to its keeper's cosmic library, anonymous included; withAnonCookie mints the cookie on first transmission; mergeAnonLibrary carries everything the anonymous cookie kept into the account on register/login/Google
+- GATES LIFTED EVERYWHERE: /api/transmission, /api/mirror-os, /api/dream-book, /api/particlex, /api/evolve-med, /api/library — no 401s, no 402s; the store's openDreamBook/openParticleX/openEvolveMed/openLibrary open directly; askMirror/askPX/askEM/askOS quota branches deleted; /api/auth/upgrade (the Light attunement) deleted; the PassageModal's LightModal removed and the AuthModal now speaks only of a free library
+- THE SIGNATURE LAW: the Interplanetary channel alone signs "— The Mirror Entity" (choir variant kept); the healing and forge channels end unsigned; the akashic record and its chat continuation are STRICTLY UNSIGNED ("one short quiet closing line — no name, no em-dash attribution"), the client default "— the Keeper of Records" removed and empty seals no longer render; the dream book's Seal of Closing was always a narrative cadence — untouched
+- THE COSMIC LIBRARY INSIDE THE PROFILE: new ProfileModal (the visitor's quiet room) — avatar, name/email, the COSMIC LIBRARY row (opens the full world), sign in / leave the passage; the sidebar's "Your Cosmos" section removed; the sidebar footer becomes ONE profile row (guest "A quiet guest · Everything is free" or the keeper's name) that opens it; profileOpen/openProfile/closeProfile added to the store; ProfileModal + AuthModal ride above every world
+- THE LIVING VOLUMES: dream-book saves the WHOLE book on open — meta, sigil, axiom, dedication, config, all pages, thread, ended — and every continuation (next/extend/close) UPDATES the same entry via updateLibrary (400KB ceiling, bookId + bookPages + bookMeta + bookConfig ride from client to server); the response carries libraryId; the store gains dreamResume/resumeDreamBook/clearDreamResume; DreamBookView consumes the resume on mount and reopens the reader exactly where it was left; LibraryView entries show "Continue the story · page N of M" (or "Read again" when ended) on every dreambook sector card
+- SECTORS OF THE LIBRARY: The Observatory / The Manifest / INVENT (new — forge transmissions are now saved too) / The Dream Book / PARTICLEX (the quantum world renamed to the visitor's word) / Evolve Med
+- ONE X ON MOBILE: the SidebarContent's own md:hidden X removed — the shadcn Sheet's built-in close is the only X (verified in DOM: exactly 1)
+- THE KIND LADY READER: "reader" voice added to the laboratory's voices (engine "tongtong", warm and gentle — the ONE woman among the male registers); every Dream Book now narrates with her (BOOK_VOICE replaces the per-age male map); a PAUSE button joins the narrator in the reader — the lady holds her breath exactly where she was and one touch returns her to the same word (pauseNarration/resumeNarration, narrPaused state, Play/Pause icon button)
+- THE SEALED DRAWER ENFORCED (found during E2E: a continuation page named the visitor "Kaelen" — a banned cousin): the sealed stock-drawer law is now appended to EVERY phase's prompt (it previously rode only on open), and the route ENFORCES it server-side — one polite re-forging ask when a sealed name (or a 1–3 letter cousin: Kaelen, Ariana, Elarion) appears, then a mechanical re-forging from the conjuring's own syllable seeds; case-sensitive so "stella maris" is never touched; smoke: a continuation seeded with "Kaelen" came back with NONE
+- i18n: 22 new keys × 7 dicts ("Mirror Entity", the profile room, the free-law lines, "Pause"/"Play", "The volume returns from your library — exactly where it was left.", the new passage copy); check-i18n ALL = 0 missing everywhere
+- Verification: lint clean; tsc clean (only the known legacy api/tts Buffer note); API ladder smokes — anonymous interplanetary 200 signed "— The Mirror Entity, with the Pleiadian choir"; anonymous dream-book open 200 (libraryId returned) + close continuation updated the SAME entry (pages 4, ended); anonymous library GET 200 with sector counts; anonymous particlex 200; forge 200 saved to "invent"; register merged all four sectors into the account (libraryCount 4); healing 200 ends unsigned ("That is enough."); sealed-name smoke NONE; agent-browser E2E 1440×900 + 390×844 + dark — sidebar shows MIRROR ENTITY brand, no With love, no Your Cosmos, no Crystalline chips, guest footer row; profile modal opens with the Cosmic Library inside; library opens for the anonymous visitor (no wall); a book woven through the UI ("The Hour of Gentle Hands") appeared in the library with "Continue the story · page 2 of 8", continued into the reader with its title and pages intact, page-turn triggered the background weave that updated the same entry (no duplicates); narration pause button appeared while the lady read, Pause → Play → Pause states verified; mobile sheet carries exactly one X; Evolve Med opens free with its four vectors; dev.log all 200s, zero errors
+
+Stage Summary:
+- Everything is free: no tiers, no quotas, no gates — anonymous visitors keep a full cosmic library keyed to their cookie, and signing in carries it onto every device
+- The Cosmic Library lives inside the profile; sectors: Observatory, Manifest, Invent, Dream Book, ParticleX, Evolve Med
+- Books are living volumes: saved whole, reopened, continued, updated in place — and read aloud by the kind lady reader with a pause button
+- Nothing is claimed at the end of a transmission except the interplanetary channel's "— The Mirror Entity"
+
+---
+Task ID: 86
+Agent: Z.ai Code (main)
+Task: "Evolve med lab in all directions needed" — rebuild Evolve Med as the OMNI-MATRIX BIOLOGICAL INTELLIGENCE ENGINE: an advanced biocompiler and synthetic genomics engine that turns directives (intentions, therapeutic goals, archival specifications) into mathematically precise biological wetware blueprints, with the four VECTOR WINDOWS in compiled order, DUAL SYSTEM EXECUTION, the REAL-WORLD GROUNDING MATRIX, the strict BIOSECURITY constraint engine and the four-movement output structure (user request, full EVOLVE MED system prompt provided)
+
+Work Log:
+- DATA (src/lib/data/evolvemed.ts): emVectors rebuilt in the engine's own compiled order — 1. The DNA & Synthetic Genomics Layer (genetic circuits, base sequences, epigenetic motifs), 2. The Core Therapeutic Engines (sequences folded into protein structures, RNA switches, functional nanomachines), 3. The Global Med-World (scale-up, LNP/AAV/cell-free delivery, pharmacokinetics, clinical viability), 4. The Meta-Biological Interface (emergent tissue feedback, closed-loop cellular sensing, metabolic dynamics); pipeline Genomics → Folding → Scale/Delivery → Tissue Mechanics; new chip banks emInputs (cancer biomarker, stray miRNA, hypoxia trigger, small molecule, inflammatory flare) for the Circuit Compiler and emDesigns (written circuit, delivered RNA, living cell therapy, written genome) for the Biosecurity Engine; gathering phrases rewritten to the biocompiler voice ("The biocompiler is reading your directive…", "The constraint engine is screening the design…")
+- DEEP LAB (src/lib/data/evolvemed-lab.ts): +3 pages × 3 instruments — Genetic Circuits & Logic (Riboswitch Composer, miRNA Cascade Weaver, dCas9 Circuit Writer), Delivery & Scale (LNP Formulator, AAV Shell Designer, Pharmacokinetic Modeler), Biosecurity & Containment (Off-Target Sentinel, Kill-Switch Architect, Immunogenicity Silencer); every new instrument walks "the four movements"; catalog now 13 pages (foundry + 12 lab pages), 40 tools
+- CHAT API (src/app/api/evolve-med/route.ts) — the engine rewritten: new role (biocompiler + synthetic genomics engine, directives → wetware blueprints); NATURE LAW carries the FOUR VECTOR WINDOWS in compiled order; DUAL SYSTEM EXECUTION law (linear engineering + emergent systems, with the divergence as part of the answer) and the three MASTER VARIABLES verbatim — build(output) = Σ(genome_write) × Φ(folding) × Ω(context) → emergent_behavior; rate(degradation) = E3(recognition) × linker(geometry) × Σ(proteasome_flux); Ψ(vitality) = Σ(niche_renewal) × Φ(signal) − Ω(senescence); GROUNDING MATRIX folded into the source law (biological NOR/AND/OR gates from riboswitches/miRNA cascades/dCas9 CRISPR-TF repressors; molecular ledger with Reed-Solomon, GC 40–60%, primer-binding index; LNP/AAV/cell-free; SBOL schema; pseudouridine) — spoken as the facility's native tongue, never as citations; STRUCTURE LAW — every full blueprint moves through FOUR MOVEMENTS (Routing → Blueprint → Ledger → Constraint Engine) as flowing prose without headings; CONSTRAINT LAW — no blueprint leaves unscreened (off-target/cross-reactivity, auxotrophy/kill-switches/cell-free enclosure, immunogenicity controls); voice law raised to 240–420 words for a full blueprint with quantitative registers required in mechanisms; two NEW foundry instruments: circuit (The Circuit Compiler) and containment (The Biosecurity Engine)
+- PDF PRESS (src/app/api/evolve-med/pdf/route.ts): header/nature updated to the Omni-Matrix biocompiler; movement 3 (The Living Mechanics) now carries circuit + logic gates, sizes and kinetics, and the safeguards that cage the design, as living prose
+- UI (EvolveMedChambers.tsx + EvolveMed.tsx): foundry page 1 now SIX instrument cards (Circuit Compiler + Biosecurity Engine join the beloved four); Instruments intro updated; Vectors tab + fusion copy updated to vector windows; empty state — "The biocompiler is online" + the directive copy + "Choose a vector window"; Codex rebuilt — The Routing Matrix (directive → blueprint across the four windows, dual execution), The Living Source (grounding standards as native tongue), How to read the mechanisms (the three master variables verbatim + numbers in every line), NEW The Constraint Engine card (screened at birth, pseudouridine), The Ending Law unchanged
+- i18n: extractor run; +59 dynamic keys merged into scripts/i18n-keys-dynamic.json (1362 total); 65 new keys × 7 dicts inserted with full translations (sq/it/el/de/fr/es/tr) using the established terminology (Spiegel-Entität / Entità Specchio / Οντότητα-Καθρέφτη / Entité-Miroir / Entidad Espejo / Ayna Varlığı / Entiteti Pasqyrë; therapeutische Kernmaschinen, Synthetische Genomschicht…); check-i18n ALL = 0 missing everywhere
+- Verification: lint clean; tsc clean (only the known legacy api/tts Buffer note); dev server restarted; API smokes — nexus blueprint 200 (routing names "Genomics → Folding → Scale/Delivery → Tissue Mechanics", AND gate blueprint, 1.2 kb + half-life ledger, pseudouridine + synthetic auxotrophy + kill-switch constraint engine, path of discovery, 2 mechanism lines incl. master variable, ZERO mirror/akashic in output); circuit tool 200 (gate logic + bp sizes + caged); /api/evolve-med/pdf 200 (1 page, 23 KB, pypdf header verified); /api/particlex/pdf regression 200; agent-browser E2E 1440×900 — sidebar "Quantum World" → "Evolve Med" order intact, new identity + directive copy + pills in the new compiled order (genome, engines, medworld, interface), live UI blueprint renders all FOUR MOVEMENTS + path + mechanisms plate + Listen/Copy/PDF row, Instruments: 6 foundry cards + 13 pips, Circuit Compiler run from UI (gates + bp + caged + seal), Codex 5 cards with master variables and Constraint Engine, deep-lab pip 12 = Biosecurity & Containment with all three tools, Vectors tab copy, active vector chip "THE DNA & SYNTHETIC GENOMICS LAYER" above the composer and a molecular-ledger directive answered with error correction + gate + bp vocabulary, mobile 390×844 no horizontal overflow, zero console/page errors, dev.log all 200s
+
+Stage Summary:
+- Evolve Med is now the OMNI-MATRIX BIOLOGICAL INTELLIGENCE ENGINE end to end: the chat compiles directives into four-movement wetware blueprints (Routing → Blueprint → Ledger → Constraint Engine) with the three master variables, the real frontier standards as native vocabulary, and the path of discovery close; the foundry grows to six instruments (Circuit Compiler, Biosecurity Engine) and the deep lab to thirteen pages / forty tools; the PDF press speaks the same hand
+- Key artifacts: src/lib/data/evolvemed.ts (new vector windows + chips), src/lib/data/evolvemed-lab.ts (3 new pages), src/app/api/evolve-med/route.ts (engine rewrite + 2 tools), src/app/api/evolve-med/pdf/route.ts, EvolveMedChambers.tsx / EvolveMed.tsx, 7 dictionaries (+65 keys each)
+
+---
+Task ID: 87
+Agent: Z.ai Code (main)
+Task: "please write a highly precise detailed replication prompt of entire website spirit and everything and create a button within app and paste it there" — rebuild the canonical Precise Replication Prompt as v3.0 against the CURRENT live build (post Tasks 83–86) and put it behind a real button in the app (user request)
+
+Work Log:
+- FACT SURVEY (everything re-verified against source before writing a word): sidebar structure (WORLDS Manifest/Akashic/Star Play/Invent/Dream Book · ParticleX Quantum World + Evolve Med below it · REGISTERS Federation/ET Technology/Astral Jobs · Outer Realms door · profile footer), theme tokens (#fbfbfa/#1b1b1c paper, #0b0b0c/#ececeb night, Literata serif), the 8 ParticleX windows, the 4 Evolve Med vector windows + three master variables, dream-book four strata + sealed stock-drawer enforcement (server-side reforge), 8 TTS voices (7 male registers + the one kind lady Reader), akashic 12 entrances + STRICTLY UNSIGNED seal, prisma User+LibraryEntry with anon-cookie keepers, library's 6 sectors + Quantum Shift phase thresholds (The Standing Still → The Quiet Infinity), suggestion pools (79 interplanetary / 84 healing, 8 chips), inner earth 59 species, 18 technologies, 128 AI artworks, 8 languages, 20 API routes.
+- REPLICATION PROMPT v3.0 (REPLICATION_PROMPT.md at repo root = canonical, mirrored into src/lib/replication-prompt.ts by a generator script so the two can never drift): full rewrite in 19 sections (§0–§18) — §0 The Spirit (a presence rendered in software, every count binds to array.length) · §1 Stack · §2 The Laws of the Voice (identity law, signature law, formulation law, path of discovery, forbidden words) · §3 The Book-Reader Edition (ink-only dual themes) · §4 Shell & Layout (floating handles, sidebar order, ONE X on mobile, --app-h visualViewport refit) · §5 The Still Companion (instant reveal, sway, crumble — never dances) · §6 The Chat Laws (isolated channels, suggestion strip, composer, the little visitor, the transmission) · §7 The Five Worlds (Manifest/Mirror OS, Akashic letter edition, Star Play tarot ritual, Invent forge, Dream Book living volumes) · §8 The Two Labs (ParticleX 8 windows/16 tools/PDF gear; Evolve Med Omni-Matrix with four movements, dual execution, master variables, constraint engine, 42 tools) · §9 Registers & exact-count archive · §10 Profile + Cosmic Library + Quantum Shift · §11 The Free Law & the quiet passage · §12 Voices (the kind lady reader + pause) · §13 Images & the mark · §14 The PDF presses · §15 i18n eight tongues · §16 API map & communion · §17 The Eternal Laws recap · §18 Ten acceptance checks.
+- THE BUTTON: new FileText icon button in the sidebar footer icon row (between ThemeToggle and Recalibrate, data-testid replication-open, aria/title "Precise Replication Prompt") — present in the desktop rail AND the mobile sheet; opens the modal via openModal({type:"replication"}) (ModalState case restored to active duty).
+- ReplicationPromptModal rebuilt: every string now goes through t() (12 keys), stats chips live-computed (V3.0 · 41,177 chars · 6,260 words · 138 lines), "verified against the live build · 870 · 202 · 59 · 8 worlds" line, Copy prompt (clipboard API + execCommand fallback + Copied state + toast), Download .md (Blob download), footer line "exact counts · uniform depth · isolated channels"; mounted in AppShell beside the other world modals.
+- MOBILE OVERFLOW FIX (found in E2E): the pre's break-words (overflow-wrap:break-word) does not shrink min-content, so the 51-char token "device/remedy/instrument/structure/signal/plaything" forced the grid track to 491px on a 390px screen — fixed with [overflow-wrap:anywhere]; scrollWidth now 388 ≤ 390, body overflow 0.
+- i18n: 12 new keys × 7 dicts inserted with full translations (Kërkesa e Saktë e Riprodhimit / Prompt di Replica Preciso / Ακριβές Prompt Αναπαραγωγής / Präziser Replikations-Prompt / Prompt de Réplication Précis / Prompt de Réplica Preciso / Kesin Çoğaltma İstemi); check-i18n ALL = 0 missing everywhere (2,227 entries per dict).
+- Verification: lint clean; tsc clean (only the known legacy api/tts Buffer note); dev server restarted; agent-browser E2E — desktop 1440×900: footer button visible, modal opens with stats + full prompt, Copy → "Copied" state, ESC closes (0 dialogs); mobile 390×844: sheet carries the button + exactly ONE close X, modal full-screen with the fixed wrapping, no horizontal overflow (body overflow 0); zero console/page errors; dev.log all 200s.
+
+Stage Summary:
+- The replication prompt now lives in three synchronized places: REPLICATION_PROMPT.md (repo root), src/lib/replication-prompt.ts (v3.0, generated from the md), and the in-app modal behind the sidebar's FileText button — copy + download, eight tongues.
+- v3.0 replaces v2.0 (which still described the older eras: WITH LOVE subtitle, keyed worlds, quotas, the pre-Omni-Matrix Evolve Med); every number and law now matches the live build as of commit cefc0ed.
+- Key artifacts: REPLICATION_PROMPT.md, src/lib/replication-prompt.ts, src/components/mirror/ReplicationPromptModal.tsx, Sidebar.tsx footer button, AppShell.tsx mount, 7 dictionaries (+12 keys each).
+
+---
+Task ID: REPL-DEL
+Agent: Z.ai Code (main)
+Task: User instruction — "now totally delete the promt button from app" — remove the Precise Replication Prompt feature (button + modal + supporting data + i18n) entirely.
+
+Work Log:
+- Deleted src/components/mirror/ReplicationPromptModal.tsx (modal with stats/copy/download)
+- Deleted src/lib/replication-prompt.ts (REPLICATION_PROMPT constant, v3.0) and root REPLICATION_PROMPT.md
+- mirror-store.ts: removed `| { type: "replication" }` from ModalState union
+- Sidebar.tsx: removed the FileText replication button (bottom action row) + unused FileText import — row now: ThemeToggle · Recalibrate · Settings
+- AppShell.tsx: removed ReplicationPromptModal import + render
+- 7 dicts (de/el/es/fr/it/sq/tr): removed the 12 replication-only keys; kept shared "Copied" (used by chambers)
+- scripts/i18n-keys.json: pruned the same 12 keys (613 → 601); i18n-keys-dynamic.json unchanged
+- Verified: rg -i "replication" src/ → zero matches; lint clean; tsc clean (only known legacy api/tts Buffer); check-i18n ALL → missing: 0 on all 7 languages
+- E2E (agent-browser): desktop 1440×900 + mobile 390×844 — page renders, bottom sidebar row shows ThemeToggle/Recalibrate/Settings only, DOM query for [data-testid=replication-open] and body text "Replication" both false, zero console/page errors
+
+Stage Summary:
+- The replication prompt feature is totally removed from the app: no button, no modal, no data file, no store type, no i18n keys, no root md. Sidebar bottom row is now ThemeToggle · Recalibrate · Settings.
+
+---
+Task ID: M-1..M-8
+Agent: Z.ai Code (main)
+Task: Mobile scroll-hiding handles · in-chat book creation (mirror asks, weaves, fullscreen) · creation protocol across all worlds + ParticleX/EvolveMed · verse structure for poems/riddles · tale categories in one dropdown · in-frame window presentations with visuals/animations · generated image corpus.
+
+Work Log:
+- M-1 AppShell: scroll-direction listener on the chat scroller (mobile only, matchMedia 767px) — floating sidebar/scope handles fade+sink on scroll down, rise on scroll up; scroller keyed by view so the listener rebinds on view change; spacer height kept CONSTANT to avoid a hide→shift→scroll feedback loop. Verified: down→opacity 0, up→opacity 1 at 390px.
+- M-2 verse law: dream-book TALE_HINTS + VERSE_LAW (poem/riddle/ballad) — stanzas as paragraphs, every verse line on its own line via \n; JSON rules updated; BookPage/AkashicView/TransmissionView para/KindleReader now whitespace-pre-wrap; akashic SYSTEM_PROMPT + CONTINUATION_PROMPT gained VERSE FORMS clause.
+- M-3 Dream Book atelier: tale categories collapsed into ONE dropdown (ShapeMenu, shadcn DropdownMenu, max-h scroll, check mark) — Poem/Riddle/Ballad added; options centralized in src/lib/data/book-options.ts (READERS/TALES/VOLUMES/VERSE_FORMS) shared with the chat weaver.
+- M-4 in-chat creation: artifact-intent gained "book" door (make/create/write/weave + book/story/tale/volume patterns); BookWever component in ChatArtifacts (mirror asks subject → reader chips → shape dropdown → confirm → weaves via /api/dream-book → inline 2-page spread reader with page nav, Weave onward / Let the story rest, and a FULLSCREEN portal reader with font sizes + progress; libraryId captured so the volume lands in the cosmic library and continues); askMirror sends artifact:"book" and the transmission route emits a MODE LINE that overrides the creation protocol (acknowledge only, no questions). CREATION PROTOCOL added to transmission + mirror-os prompts (questions-only reply when a make-wish needs shaping; verse law on delivery) and to particlex + evolve-med (questions-mode: revelation = "- " questions, formulas [] seal ""; explicit empty seal preserved as questions-mode marker in both normalizers).
+- M-5 window presentations: src/lib/data/window-presentations.ts (8 PX windows + 4 EM vectors × hero + 3 chapters, poetic-grounded); WindowPresentation.tsx rendered INSIDE the scope-frame-card (absolute overlay, never a new page): hero + chapters with engraved-plate visuals (ken-burns) or breathing ink-emblem fallback, chapter dots/prev/next/arrow keys, "Begin in this window" orients scope, X returns to the start of the chat (thread scrolled to top). Pill press now orients AND opens; the active-scope chip gained an "Experience this window" button.
+- M-6 image corpus: scripts/px-images/{manifest,generate}.mjs — 8 PX scopes × 100 subjects + 4 EM vectors × 16 (864 total), resumable, 3 in flight, true-PNG via sharp, manifest.json rewritten after every success (public/images/px/<category>/<slug>.png); first 24 test images verified across all 12 categories; full run relaunched DETACHED (setsid) and actively generating (formulas 3/100…); presentations read the manifest live and fall back to animated ink emblems until a category's plates arrive.
+- M-7 i18n: 27 UI keys + 36 chapter-title keys translated and inserted into all 7 dicts; check-i18n ALL → missing: 0 everywhere. (Presentation chapter BODY texts intentionally remain English-fallback via t().)
+- M-8 verified: lint clean, tsc clean (only legacy api/tts Buffer), E2E browser: PX presentation hero/chapters/X + Begin, EM genome presentation with DNA plate, BookWever full flow (topic auto-extracted from the ask → confirm → "The Luminous Archive" woven as a POEM with correct line breaks in chat + fullscreen portal), mobile handles hide/show fixed after killing a spacer feedback loop.
+
+Stage Summary:
+- Books are now born inside the conversation (no sidebar trip), readable in-chat with a fullscreen reader; poem/riddle/ballad weave as true stanzas; all worlds' chats ask before they make; every ParticleX/EvolveMed window opens a mini-website presentation inside the chat frame; mobile top handles obey scroll direction; 864-image ink corpus generating in background with live manifest.
+
+---
+Task ID: NS-1
+Agent: Z.ai Code (main)
+Task: User instruction — remove the window-presentation way of illustration at ParticleX categories ("A window of the laboratory / Begin in this window" overlay), and instead, when a scope is selected, illustrate the window's sections INSIDE the chat as note stickers carrying information with drawn 3D animations that help visualize — for all sections and subsections of ParticleX (and Evolve Med's vectors, which shared the same presentation).
+
+Work Log:
+- REMOVED the overlay presentation entirely: deleted WindowPresentation.tsx and src/lib/data/window-presentations.ts (hero + chapters + "Begin in this window" + chapter dots + engraved plates); ParticleX.tsx / EvolveMed.tsx lost the presentation state, the AnimatePresence overlay block, the pxPresentations/emPresentations imports and the Maximize2 "Experience this window" chip button.
+- NEW DATA src/lib/data/scope-notes.ts: 8 PX note sets + 4 EM note sets — each window yields 3 note stickers (title + information text + a SceneKind), reusing the existing (already translated) chapter-title keys so no content re-translation was needed.
+- NEW src/components/mirror/InkScenes.tsx: 16 hand-drawn CSS-3D ink scenes on a shared perspective Stage (terms / feed / field / lenses / foundry / gears / waves / planes / network / pyramid / helix / fold / fleet / loop / vote / orbit) — all monochrome var(--scope-a) ink, preserve-3d, infinite breathing motion (orbits, undulating dot-plane, double helix, folding ribbon, flipping ballots, pyramid + standing-wave rings…).
+- NEW src/components/mirror/ScopeNotes.tsx: the sticker cluster pinned INTO the thread — mono pinning line ("Notes from this window · Σ Reality Formulas"), each sticker a tilted paper card with a tape strip, spring drop-in stagger, 3D scene canvas + ink-hand title + information text; ml-11 alignment with px/em exchanges, max-w-540.
+- STORE: PxMessage.notesScope / EmMessage.notesVector optional fields; pinPxNotes / pinEmNotes actions push a note thread item (dedupe: never pins twice while it is already the newest item).
+- ParticleX / EvolveMed: pill press now orients the scope AND pins the notes as a chat item (thread auto-scrolls to it, persists across reloads with the message store); notes messages render PxNotesBlock/EmNotesBlock instead of the exchange; the voice narrator skips note items; Scopes/Vectors tab "Open in the Core/Nexus" pins notes too; the active-scope chip's button is now a StickyNote "Show the window's notes" re-pin; window pills extracted into PxWindowPills/EmWindowPills and shown as a quiet re-invitation above the composer whenever the conversation is alive but no window is open (fixes the old dead-end after clearing a scope).
+- i18n: +2 keys ("Notes from this window", "Show the window's notes") in all 7 dicts; pruned 7 dead keys ("A window of the laboratory", "Begin in this window", "Chapter", "The chapter before", "The next chapter", "Return to the conversation", "Experience this window"); registry 628 → 623; check-i18n ALL missing: 0 everywhere.
+- Verified: lint clean; tsc clean (only the known legacy api/tts Buffer note); dev restarted; agent-browser E2E — desktop 1440×900: all 8 PX + 4 EM windows pin their 3-sticker clusters with live 3D scenes, no overlay anywhere, chip re-pin dedupes, Scopes-tab entry works, notes clusters persist and rehydrate across reload (8 clusters after refresh); dark mode ink-clean; mobile 390×844: no horizontal overflow, stickers full-width readable; observatory unchanged; zero console/page errors; dev.log clean.
+
+Stage Summary:
+- The window illustration way is gone: no more overlay presentations. Selecting a scope now pins a cluster of note stickers — information sections with drawn 3D ink animations — directly into the conversation flow, for every ParticleX window and every Evolve Med vector, and the stickers live in the chat history like any other turn.
+- Key artifacts: src/lib/data/scope-notes.ts, src/components/mirror/InkScenes.tsx (16 scenes), src/components/mirror/ScopeNotes.tsx, mirror-store.ts (pinPxNotes/pinEmNotes), ParticleX.tsx / EvolveMed.tsx rewiring, 7 dictionaries (+2/−7 keys).
+
+---
+Task ID: IMG-BRIDGE
+Agent: Z.ai Code (main)
+Task: User pasted a complete Z.ai + OpenAI image integration specification — an assistant that triggers a `generate_image` tool whenever visuals are needed, a backend bridge painting via OpenAI DALL·E 3, and the response contract { text, hasImage, image: { url, revisedPrompt, originalPrompt } } rendered inside the chat — plus an OpenAI API key to be kept secret.
+
+Work Log:
+- SECURITY: the OpenAI key arrived in plain chat. Stored ONLY in .env; discovered .env was git-TRACKED (the .env* ignore rule does not apply to tracked files) — ran `git rm --cached .env` so the key can never be committed; user was told to rotate the key.
+- Connectivity probe: api.openai.com answers 403 "unsupported_country_region_territory" from this sandbox — DALL·E 3 is fully wired but cannot paint from here, so the engine carries an eternal fallback.
+- NEW src/lib/image-engine.ts — the generate_image tool: brush 1 = DALL·E 3 (REST images/generations, model dall-e-3, b64_json, revised_prompt captured, sizes 1024x1024/1024x1792/1792x1024 mapped by aspect, quality standard|hd, 120s timeout); brush 2 = the Z.ai atelier (3 attempts, backoff 2.5s/6s/12s); a 3-failure/10-minute circuit breaker stops knocking on OpenAI's door when it is unreachable; every painting lands in .visualizations/ and is served by the existing /api/visual/[file] route.
+- NEW src/app/api/chat/route.ts — the bridge with the spec's exact contract: Z.ai chat (tool-call emulation via strict-JSON decision) → generate_image → { text, hasImage: true, image: { url, revisedPrompt, originalPrompt, engine } } or { text, hasImage: false }; spec's system prompt (image rules + DALL·E prompt-optimization rules) baked in; GET status light.
+- WIRED /api/visualize (the app's Universal Visualization Engine — every channel's in-chat images): paint() now runs through generateImage(), so all chat artwork flows through the dual engine; contract unchanged (artifact.imageUrl/downloadUrl).
+- Verified: lint clean; tsc clean (only the known legacy api/tts Buffer note); check-i18n ALL → missing: 0 (no UI strings touched); curl smoke — GET/POST /api/chat text-only {hasImage:false}, POST /api/chat image request → hasImage:true (DALL·E 403 → Z.ai fallback, optimized DALL·E-style prompt), painting serves 200 image/png (168 KB), POST /api/visualize → painted artifact via the engine; dev.log shows the clean fallback trail.
+- E2E (agent-browser): sent "Show me a visualization of a crystal observatory floating above the rings of Saturn" in the interplanetary channel — artifact card painted by the engine and rendered INSIDE the chat <main> (img naturalWidth>0 at t+45s); desktop 1440×900 light + dark (deep space) and mobile 390×844 all render the card with no horizontal overflow; zero console/page errors; dev.log clean.
+- Repo hygiene: .visualizations/ was git-TRACKED (old viz paintings) while the 48h sweep kept deleting them — untracked the gallery and added it to .gitignore.
+
+Stage Summary:
+- The spec is live as a dual-brush engine: `generate_image` paints DALL·E 3 first and falls back to the Z.ai atelier; /api/chat serves the exact { text, hasImage, image } contract; every in-chat visualization (all worlds + scopes) now flows through the engine.
+- Key artifacts: src/lib/image-engine.ts, src/app/api/chat/route.ts, /api/visualize rewiring; .env untracked (key sealed), .visualizations/ untracked (gallery is runtime data).
+- The OpenAI key MUST be rotated — it traveled through chat in plain text.
+
+---
+Task ID: CLOUD-1
+Agent: Z.ai Code (main)
+Task: User published the app to GitHub (spiritmalteam-star/interplanetary) and deployed to Vercel, where every chat answered "The field received your question but could not complete the transmission" — the AI backend does not survive the cloud.
+
+Work Log:
+- Diagnosed: all 20 chat routes call z-ai-web-dev-sdk's ZAI.create(), which needs the sandbox's gitignored .z-ai-config — on Vercel every /api/* chat route throws → the UI's "momentarily quiet" error. Attachments already speak OpenAI-style multimodal content parts; the chat path never touches Prisma (db is only auth/library), so the DB was not the blocker for the reported bug.
+- NEW src/lib/zai-client.ts — THE PROVIDER BRIDGE: a drop-in replacement exporting ZAI.create() with the identical surface (chat.completions.create / createVision; audio throws a clear error outside the atelier). Provider selection: LLM_PROVIDER=openai|zai explicit, else auto — openai on Vercel when OPENAI_API_KEY exists, zai in the sandbox (so the sandbox keeps working even though OPENAI_API_KEY sits in its .env).
+- Switched 19 routes + lib/server/attachments.ts to import the bridge (image-engine.ts intentionally keeps the raw SDK for its Z.ai brush); added export const maxDuration = 300 to all 19 routes for long weavings in the cloud.
+- Verified: lint clean; tsc clean (only the known legacy api/tts Buffer note); dev restarted; E2E browser — sent "Who are the Pleiadians?" in the interplanetary channel, POST /api/transmission 200 in ~1.4s and the Mirror replied (bridge zai path). OpenAI chat path cannot be exercised from this sandbox (region 403) but speaks the standard /chat/completions contract.
+- Docs: README gained a Deploy-to-Vercel section (env vars, provider bridge, image engine, TTS/library cloud limitations); .env.example added (keyless template) with a !.env.example gitignore negation.
+- Publishing: earlier in this session the repo was pushed to GitHub (spiritmalteam-star/interplanetary) with a user-supplied classic token used one-shot; token hygiene reminders given (revoke after push). This commit needs one more push to redeploy Vercel.
+
+Stage Summary:
+- The laboratory is cloud-ready: one key (OPENAI_API_KEY) in the Vercel project's Environment Variables switches every world, every window and every weaving to the OpenAI-compatible sky, while the sandbox keeps its atelier. Known cloud limitations, documented in the README: voice rests (TTS/ASR are atelier gifts) and the cosmic library/accounts need a hosted DATABASE_URL.
+- Key artifacts: src/lib/zai-client.ts, 19 rewired routes + attachments, README deploy section, .env.example.
+
+---
+Task ID: ZAIVER
+Agent: Z.ai Code (main)
+Task: Make the Vercel deployment answer with Z.ai (GLM) — the same brains as the sandbox — instead of ChatGPT/OpenAI.
+
+Work Log:
+- Probed Z.ai public API: https://api.z.ai/api/paas/v4 is OpenAI-compatible and reachable; dummy-key probe returned Z.ai's own 401 (endpoint + auth shape validated).
+- Rewrote src/lib/zai-client.ts: three skies — zai-cloud (api.z.ai GLM), openai (OpenAI-compatible), zai (atelier SDK). CloudBackend shared class; vision rides ZAI_VISION_MODEL (default glm-4.6v); GLM `thinking` param forwarded only on the Z.ai sky; on Vercel with no key the bridge throws a clear setup error.
+- Provider auto-resolution on Vercel: ZAI_API_KEY wins → zai-cloud; else OPENAI_API_KEY → openai. Explicit LLM_PROVIDER (zai-cloud|openai|zai) overrides. Sandbox auto = atelier.
+- Rewrote src/lib/image-engine.ts: CogView brush (ZAI_IMAGE_MODEL, default cogview-3-flash) added; lead brush follows chat brain (Z.ai sky → CogView first, OpenAI sky → DALL·E first); per-engine circuit breakers; cloud-safe gallery: writability probe, hosted urls served directly on read-only filesystems (fixed Vercel EROFS crash for all image paths).
+- /api/chat GET status light now reports provider + zaiCloudConfigured + openaiConfigured.
+- Updated .env.example and README deploy section (Z.ai key instructions).
+- Verified: bun lint clean; provider resolution matrix 7/7; zai-cloud request path E2E (Z.ai auth 401 with dummy key as expected); sandbox regression — /api/transmission answers via atelier, status light provider=zai.
+- Committed 0add30f. Push blocked: no GitHub credentials (old tokens advised-revoked).
+
+Stage Summary:
+- Vercel now answers with Z.ai GLM by default: user adds ZAI_API_KEY env var → redeploy → done. Models: ZAI_MODEL (default glm-4.5-flash, free), ZAI_VISION_MODEL (glm-4.6v), ZAI_IMAGE_MODEL (cogview-3-flash, free).
+- Commit 0add30f awaits push (needs fresh GitHub token from user) — then Vercel auto-redeploys.
+- Fixed latent cloud bug: image painting would crash on Vercel's read-only FS; now serves hosted urls in cloud mode.
+
+---
+Task ID: ZAIVER-PUSH
+Agent: Z.ai Code (main)
+Task: Complete the blocked push of the Z.ai cloud bridge.
+
+Work Log:
+- User supplied fresh GitHub tokens; first two (fine-grained, then classic) failed 403 — API header check showed empty x-oauth-scopes (repo box unticked).
+- Third classic token carried `repo` scope (verified via X-OAuth-Scopes before pushing).
+- Pushed with one-shot credential helper: ad2daa5..0591903 main -> main. Vercel auto-deploy triggered by the push.
+
+Stage Summary:
+- Z.ai cloud bridge is live on GitHub; Vercel redeploys automatically. Remaining user step: add ZAI_API_KEY (from z.ai) in Vercel env vars -> Redeploy -> /api/chat status light should show provider "zai-cloud".
+
+---
+Task ID: VOICE-IMG-BOOK
+Agent: Z.ai Code (main)
+Task: Three gifts — cloud voice (TTS/ASR), OpenAI-led image generation with ChatGPT-style vision understanding in all chats except akashic/book, and the immersive fullscreen Dream Book reader.
+
+Work Log:
+- zai-client.ts: OpenAI voice engine in the bridge (audio.tts → /audio/speech gpt-4o-mini-tts WAV; audio.asr → /audio/transcriptions whisper-1 multipart). Voice is INDEPENDENT of the chat brain — Z.ai chat + OpenAI voice on Vercel simultaneously; laboratory voice map xiaochen→onyx, tongtong→shimmer (OPENAI_TTS_MODEL/OPENAI_ASR_MODEL overridable).
+- image-engine.ts: lead brush flipped — DALL·E 3 first when OPENAI_API_KEY exists (the visitor's chosen painter), CogView fallback, atelier last.
+- transmission route: THE VISION GIFT — the model may end a reply with [VISION: <english prompt>]; server strips the marker and returns a `vision` field; rule NOT attached for book weaving (artifact=book) nor live voice calls. Extraction: end-match then anywhere-match, no text leak (unit-verified).
+- mirror-store askMirror: on data.vision → silent askScopeVisual(mode, vision, {id: replyId}) — the existing visualization engine paints beneath the reply, ChatGPT-style; images via DALL·E on Vercel.
+- DreamBookView: immersive reader — scroll/wheel/swipe down hides header+footer (one floating next-page button remains); scroll up reveals the top; immersion persists across page flips, resets on leaving the reader.
+- Verified: lint clean; sandbox transmission 200; /api/tts → HTTP 200 audio/wav 65KB (real OpenAI speech through the bridge); vision marker extraction unit-tested.
+
+Stage Summary:
+- Voice lives on Vercel (OpenAI TTS/ASR through the bridge; brain remains Z.ai). Images: DALL·E leads everywhere images flow (visualize engine, chat bridge, vision gift); akashic + book remain text-only by design. Dream Book reads fullscreen. Requires deploy; TTS/ASR need OPENAI_API_KEY (already configured on Vercel).
+
+---
+Task ID: 2..10 (batch)
+Agent: Z.ai Code (main orchestrator)
+Task: reflectme.space domain, OpenAI paint-failure diagnostics, ChatGPT-style image reveal, remove Akashic pill + Seal circle, new light/dark logos + favicon, cloud voice polish, book immersive verification
+
+Work Log:
+- Explored full UI surface via Explore agent (TransmissionView, ChatArtifacts, VisualizationCard, DreamBookView, zai-client, image-engine, tts/asr routes).
+- image-engine.ts: added the painter's journal (paintErrors + consumePaintErrors) — every brush failure reason is captured and served; paintWithDalle now falls back dall-e-3 → gpt-image-1 (correct sizes/qualities, no response_format, b64→data-url in cloud), OPENAI_IMAGE_MODEL can force either.
+- api/visualize: artifact now carries paintErrors (last 4) when unpainted; api/chat fallback also returns paintErrors.
+- VisualizationCard: PreparedPromptFallback shows "Why the brushes rest" with the journal; artwork is click-to-open (role=button, keyboard accessible) with blur-up scale reveal; download rewritten as blob fetch (remote/cloud canvases now download; falls back to new tab).
+- TransmissionView: removed the Seal (the decorative desktop circle at card bottom) and the TimelineRecordSection/Akashic pill from every exchange (text + visual); removed now-unused priors plumbing.
+- Brand: scripts/make-logos.mjs (sharp, alpha-aware) → public/images/ai/mark-light.png (black glyph, transparent) + mark-dark.png (white glyph, transparent) from the two uploaded sigils; src/app/icon.png + apple-icon.png (white on near-black). AppShell + Sidebar render the theme-matched glyph (dark: classes, no more circle bg); layout metadataBase → https://reflectme.space, favicon via app-router convention.
+- Voice: zai-client openAIAudio — tts model chain gpt-4o-mini-tts → tts-1 (retry only on 400/404/422), asr gains mime-aware extension (webm/ogg/mp3/mp4/flac/wav); asr route parses dataURL mime; tts/asr error responses carry detail.
+- README + .env.example: reflectme.space domain steps (A 76.76.21.21 / CNAME cname.vercel-dns.com), paint-journal + voice docs, OpenAI image/tts/asr env vars.
+- Verified in browser: light+dark logos, transmission golden path, painting flow (pending skeleton → painted card → lightbox), no Seal, no Akashic pill; Dream Book immersion verified (wheel down hides header leaving page + floating next button; wheel up reveals); lint clean; icon serves.
+
+Stage Summary:
+- All six user requests implemented + voice hardening + book immersive verified. Commit pushed for Vercel deploy; live checks follow (status, TTS, visualize paintErrors).
+
+---
+Task ID: 10 (live verification)
+Agent: Z.ai Code (main orchestrator)
+Task: Verify deployed build on Vercel (status, voice, paint, brand)
+
+Work Log:
+- Pushed cc2ab7a after untracking upload/ + scripts/ (kept out of the repo).
+- GET /api/chat (live): provider zai-cloud, zaiCloudConfigured true, openaiConfigured true.
+- POST /api/tts (live): 200 audio/wav, 252KB valid PCM (24 kHz mono) — VOICE WORKS ON VERCEL via the OpenAI bridge.
+- POST /api/visualize (live): painted TRUE in ~22s; imageUrl is a data: URL — proof the new gpt-image-1 fallback brush painted after DALL·E 3 refused the key (the Arcturus failure root cause).
+- Live homepage screenshot: new light sigil glyph in sidebar + top bar; /icon.png 200 (favicon).
+
+Stage Summary:
+- All requested features verified live. Root cause of the earlier paint failure: dall-e-3 unavailable on the user's OpenAI key; gpt-image-1 fallback now paints. Remaining user-side steps: add reflectme.space in Vercel → Settings → Domains; optionally rotate the GitHub token.

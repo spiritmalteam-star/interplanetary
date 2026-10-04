@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import ZAI from "z-ai-web-dev-sdk";
-import { checkGate, gateError, recordUsage, saveLibrary } from "@/lib/server/access";
+import ZAI from "@/lib/zai-client";
+import { resolveVisitor, saveLibrary, withAnonCookie } from "@/lib/server/access";
 import { PX_LAB_PAGES } from "@/lib/data/particlex-lab";
 
 /* ------------------------------------------------------------------ */
@@ -67,6 +67,10 @@ const VOICE_LAW = `VOICE & STYLE:
 - 140–260 words of prose for the revelation itself, THEN the closing path-of-discovery paragraph (see THE PATH OF DISCOVERY). Every paragraph earns its place.
 - Enchant the curious: name concrete things, never generic wisdom. If a line could be printed in any answer, cut it.`;
 
+const CREATION_PROTOCOL_LAW = `THE CREATION PROTOCOL (authoritative):
+- When the visitor asks you to CREATE, CRAFT, DESIGN, BUILD, WRITE or MAKE something — a being, a machine, an instrument, a world, a design, a text of any kind — and the wish still leaves room to shape it, do NOT reveal it in the same breath. Your whole reply is the QUESTIONS: "revelation" holds ONLY 2–3 short questions, each on its own line beginning with "- ", asked warmly in your voice, with no other prose; "formulas" is [] and "seal" is "".
+- If the wish is already fully specified, or the visitor answers your questions or says "just make it", reveal the FULL creation at once — never ask twice.`;
+
 const JSON_LAW = `OUTPUT FORMAT (STRICT):
 Return STRICT JSON only, with no markdown fences and no text outside the JSON:
 {"revelation":"<the prose INCLUDING the final path-of-discovery paragraph, paragraphs joined with \\n\\n>","formulas":["<formula line>","<formula line>"],"seal":"<one short closing line signed — ParticleX>"}
@@ -87,6 +91,8 @@ ${KNOWLEDGE_LAW}
 ${DISCOVERY_LAW}
 
 ${VOICE_LAW}
+
+${CREATION_PROTOCOL_LAW}
 
 CONVERSATION MEMORY
 The earlier turns of THIS conversation are provided. You remember them: build on what was revealed, refer back to earlier formulas, and never restart from zero.
@@ -169,7 +175,7 @@ function normalize(parsed: Record<string, unknown>): PxReply | null {
         .slice(0, 5)
     : [];
   const seal =
-    typeof parsed.seal === "string" && parsed.seal.trim()
+    typeof parsed.seal === "string"
       ? parsed.seal.trim()
       : "— ParticleX";
   return { revelation, formulas, seal };
@@ -203,10 +209,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    /* the quantum world opens only with the Crystalline key */
-    const gate = await checkGate(req, "quantum");
-    if (gate.status !== "ok") return gateError(gate.status, gate.gate);
-    const { key: usageKey, user: gateUser } = gate.gate;
+    /* everything is free — the visitor is only named, so the revelation
+       can rest in their own cosmic library */
+    const visitor = await resolveVisitor(req);
 
     const zai = await ZAI.create();
 
@@ -278,16 +283,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    await recordUsage(usageKey, "quantum");
     await saveLibrary(
-      gateUser?.id ?? null,
+      visitor.user.id,
       "quantum",
       query.trim().slice(0, 140),
       reply.revelation.slice(0, 280),
       { query: query.trim().slice(0, 4000), reply: reply.revelation, formulas: reply.formulas, seal: reply.seal }
     );
 
-    return NextResponse.json(reply);
+    return withAnonCookie(NextResponse.json(reply), visitor);
   } catch (err) {
     console.error("[particlex] failed:", err);
     return NextResponse.json(
@@ -296,3 +300,6 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
+/* the long weavings need room in the cloud sky */
+export const maxDuration = 300;

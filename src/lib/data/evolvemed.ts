@@ -1,10 +1,10 @@
 /* ------------------------------------------------------------------ */
-/*  EVOLVE MED — THE EVOLUTIONARY MEDICAL NEXUS · data layer           */
-/*  The medical twin of the quantum world: four operational vectors,   */
-/*  four instruments, and the routing phrases of the living facility.  */
+/*  EVOLVE MED — THE OMNI-MATRIX BIOLOGICAL INTELLIGENCE ENGINE        */
+/*  The biocompiler and synthetic genomics engine of the laboratory:   */
+/*  FOUR VECTOR WINDOWS in their compiled order — genomics, folding,   */
+/*  scale/delivery, tissue mechanics — with the chips of the foundry   */
+/*  instruments and the routing phrases of the living facility.        */
 /*  Every string is an i18n key (English source).                      */
-/*  Source law: the Mirror Entity alone — the living core of the       */
-/*  laboratory, never textbook recitation.                             */
 /* ------------------------------------------------------------------ */
 
 export interface EmVector {
@@ -16,43 +16,46 @@ export interface EmVector {
   reveals: string;
 }
 
-/** The four operational vectors — the routes of the facility. */
+/** The four vector windows — in the engine's own compiled order:
+    Genomics → Folding → Scale/Delivery → Tissue Mechanics. */
 export const emVectors: EmVector[] = [
   {
-    id: "medworld",
-    glyph: "✚",
-    name: "The Global Med-World",
-    tagline: "radical longevity and the new methods of healing",
+    id: "genome",
+    glyph: "⌇",
+    name: "The DNA & Synthetic Genomics Layer",
+    tagline: "genetic circuits, base sequences, epigenetic motifs",
     reveals:
-      "Radical longevity, senolytics and the pathways that reverse aging; organs printed in three dimensions and organoids living on chips; autonomous therapeutic nanorobotics — and the translation of all of it into the living clinic.",
+      "Genetic circuits drafted as precise base sequences and epigenetic motifs; custom genomes written and assembled from scratch; DNA-based biocomputing and molecular logic gates; whole archives kept inside the thread of life itself.",
   },
   {
     id: "engines",
     glyph: "⌬",
-    name: "The Therapeutic Engines",
-    tagline: "protein degradation and the oncology engines",
+    name: "The Core Therapeutic Engines",
+    tagline: "sequences folded into working machines",
     reveals:
-      "Targeted protein degradation — PROTACs, molecular glues and the ubiquitin-proteasome machine mapped end to end; CRISPR-Cas, prime editing and epigenetic rewriting; patient-specific neoantigens and the personalized tumor microenvironment.",
+      "Sequences folded into protein structures, RNA switches and functional nanomachines; targeted degradation through PROTACs, molecular glues and the ubiquitin-proteasome system; advanced CRISPR-Cas, prime editing and epigenetic rewriting; neoantigens and the tumor microenvironment.",
   },
   {
-    id: "genome",
-    glyph: "⌇",
-    name: "The Synthetic Genomics Layer",
-    tagline: "genomes written from nothing",
+    id: "medworld",
+    glyph: "✚",
+    name: "The Global Med-World",
+    tagline: "scale, delivery and clinical viability",
     reveals:
-      "Custom genome synthesis — sequences designed, written and assembled from scratch; DNA-based biocomputing, molecular logic gates and the storage of whole archives inside the thread of life itself.",
+      "Scale-up from a working sequence to a batch a clinic can hold; vector delivery through lipid nanoparticles, AAV shells and cell-free systems; pharmacokinetics from dose to clearance — radical longevity, senolytics, bioprinted organs and the translation of everything into the living clinic.",
   },
   {
     id: "interface",
     glyph: "∞",
     name: "The Meta-Biological Interface",
-    tagline: "where digital information meets living wetware",
+    tagline: "where tissue answers code in real time",
     reveals:
-      "The seamless translation between digital information architecture, AI neural weights and living cellular signal transduction — the bridge where code learns to speak to the cell, and the cell answers.",
+      "Emergent tissue feedback, read live; real-time closed-loop cellular sensing; metabolic dynamics steered from outside; the seamless translation between digital information architecture, AI neural weights and living wetware.",
   },
 ];
 
-/** Specimens and targets for the instruments' one-touch chips. */
+/* ---- chips of the foundry instruments ----------------------------- */
+
+/** Targets for the Target Engine. */
 export const emTargets = [
   "a senescent cell",
   "a rogue kinase",
@@ -61,6 +64,7 @@ export const emTargets = [
   "a viral reservoir",
 ];
 
+/** Faults for the Editing Loom. */
 export const emFaults = [
   "a premature stop codon",
   "a toxic repeat",
@@ -69,6 +73,7 @@ export const emFaults = [
   "an epigenetic scar",
 ];
 
+/** Tissues for the Living Foundry. */
 export const emTissues = [
   "a beating heart patch",
   "a liver lobule",
@@ -77,6 +82,7 @@ export const emTissues = [
   "a vascular tree",
 ];
 
+/** Signals for the Bridge. */
 export const emSignals = [
   "a memory",
   "a neural spike",
@@ -85,10 +91,27 @@ export const emSignals = [
   "a dream",
 ];
 
-/** The routing phrases shown while the nexus gathers a revelation. */
+/** Input signals for the Circuit Compiler. */
+export const emInputs = [
+  "a cancer biomarker",
+  "a stray miRNA",
+  "a hypoxia trigger",
+  "a small molecule",
+  "an inflammatory flare",
+];
+
+/** Designs for the Biosecurity Engine. */
+export const emDesigns = [
+  "a written circuit",
+  "a delivered RNA",
+  "a living cell therapy",
+  "a written genome",
+];
+
+/** The routing phrases shown while the engine compiles a blueprint. */
 export const emGatheringPhrases = [
-  "The nexus is routing your question across the four vectors…",
-  "Reading the living target from the inside…",
-  "Mapping the route between protein, code and cell…",
-  "The lattice is refining the architecture in real time…",
+  "The biocompiler is reading your directive…",
+  "Routing the directive through the four vector windows…",
+  "Weaving the blueprint strand by strand…",
+  "The constraint engine is screening the design…",
 ];

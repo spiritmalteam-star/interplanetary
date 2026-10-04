@@ -9,32 +9,22 @@ datasource db {
 
 // ---------------------------------------------------------------------------
 // The Laboratory's passage-keepers. Nothing here carries more than the
-// minimum: an email, a name the visitor chose, a tier — and their own
-// cosmic library. Passwords live only as scrypt hashes; sessions live
-// only as signed cookies; nothing is ever sold, shared or read by hand.
+// minimum: an email, a name the visitor chose — and their own cosmic
+// library. Passwords live only as scrypt hashes; sessions live only as
+// signed cookies; anonymous visitors carry only a random UUID cookie.
+// Everything in the laboratory is free — no tiers, no thresholds.
 // ---------------------------------------------------------------------------
 
 model User {
   id           String         @id @default(cuid())
   email        String         @unique
   name         String?
-  passwordHash String? // null → the visitor arrived through Google
-  provider     String         @default("email") // email | google
-  tier         String         @default("crystalline") // crystalline | light
+  passwordHash String? // null → the visitor arrived through Google, or anonymously
+  provider     String         @default("email") // email | google | anon
+  tier         String         @default("crystalline") // kept for gentle history; every world is free
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
   entries      LibraryEntry[]
-}
-
-model Usage {
-  id     String @id @default(cuid())
-  key    String // "user:<id>" or "anon:<uuid>"
-  day    String // YYYY-MM-DD (UTC)
-  sector String // main | manifest | dreambook | quantum | evolvemed
-  count  Int    @default(0)
-
-  @@unique([key, day, sector])
-  @@index([key, day])
 }
 
 model LibraryEntry {

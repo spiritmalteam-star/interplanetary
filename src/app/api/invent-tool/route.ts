@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import ZAI from "z-ai-web-dev-sdk";
+import ZAI from "@/lib/zai-client";
 import type { InventToolLine, InventToolResult } from "@/lib/mirror-types";
 import { TOOL_LINE_LABELS } from "@/lib/data/invent";
 
@@ -220,3 +220,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: FALLBACK_ERROR }, { status: 500 });
   }
 }
+
+/* the long weavings need room in the cloud sky */
+export const maxDuration = 300;

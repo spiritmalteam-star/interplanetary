@@ -18,7 +18,7 @@ import type { Scope } from "@/lib/mirror-types";
 import { cn } from "@/lib/utils";
 import { ListenButton } from "./ListenButton";
 import { AlienLoading } from "./AlienLoading";
-import { SideArtifact, TimelineRecordSection, type PriorExchange } from "./ChatArtifacts";
+import { SideArtifact } from "./ChatArtifacts";
 import {
   PreparedPromptFallback,
   VisualizationCard,
@@ -242,7 +242,7 @@ function TransmissionBody({ text }: { text: string }) {
             initial="hidden"
             animate="show"
             className={cn(
-              "ink-hand text-[16.5px] leading-[1.95] text-foreground/92",
+              "ink-hand whitespace-pre-wrap text-[16.5px] leading-[1.95] text-foreground/92",
               i === firstParaIndex &&
                 "first-letter:float-left first-letter:mr-3 first-letter:mt-[7px] first-letter:text-[50px] first-letter:font-semibold first-letter:leading-[0.8]"
             )}
@@ -251,35 +251,6 @@ function TransmissionBody({ text }: { text: string }) {
           </motion.p>
         );
       })}
-    </div>
-  );
-}
-
-/* ---------- seal ---------- */
-
-function Seal() {
-  return (
-    <div
-      className="pointer-events-none absolute bottom-5 right-5 hidden size-16 sm:block"
-      aria-hidden="true"
-    >
-      <div
-        className="scope-halo-rev absolute inset-0 rounded-full border border-dashed"
-        style={{ borderColor: "color-mix(in srgb, var(--scope-b) 32%, transparent)" }}
-      />
-      <div
-        className="absolute inset-2 rounded-full border"
-        style={{ borderColor: "color-mix(in srgb, var(--scope-a) 28%, transparent)" }}
-      />
-      <div className="flex h-full w-full items-center justify-center">
-        <span
-          className="block size-2 rotate-45"
-          style={{
-            background: "color-mix(in srgb, var(--scope-a) 75%, white)",
-            boxShadow: "0 0 10px color-mix(in srgb, var(--scope-a) 60%, transparent)",
-          }}
-        />
-      </div>
     </div>
   );
 }
@@ -376,13 +347,11 @@ function Exchange({
   index,
   animate,
   scope,
-  prior,
 }: {
   message: ChatMessage;
   index: number;
   animate: boolean;
   scope: Scope;
-  prior: PriorExchange[];
 }) {
   const scopeMeta = SCOPE_META[scope];
   const [copied, setCopied] = useState(false);
@@ -536,20 +505,7 @@ function Exchange({
               resonance={message.sideArtifact.resonance}
             />
           )}
-          {/* the notebook at the end of every transmission — the Librarian
-              opens the seeker's OWN book: the question and the words above
-              are the key, the record is their timeline's trajectory.
-              (Quiet when the exchange already carries an akashic letter.) */}
-          {message.sideArtifact?.kind !== "akashic" && (
-            <TimelineRecordSection
-              question={message.query}
-              transmission={message.text}
-              prior={prior}
-              index={index}
-            />
-          )}
         </div>
-        <Seal />
       </div>
     </motion.article>
   );
@@ -619,18 +575,6 @@ export function TransmissionView() {
         ? (session.messages.at(-1)?.query ?? null)
         : null,
     [scope, session.messages]
-  );
-
-  /* The key to each seeker's own record: the thread behind every
-     exchange — up to two earlier turns, held stable per message. */
-  const priors = useMemo(
-    () =>
-      session.messages.map((m, i) =>
-        session.messages
-          .slice(Math.max(0, i - 2), i)
-          .map((p) => ({ q: p.query.slice(0, 300), t: p.text.slice(0, 800) }))
-      ),
-    [session.messages]
   );
 
   /* The thread begins where it begins: opening, reloading or switching
@@ -759,7 +703,6 @@ export function TransmissionView() {
             message={m}
             index={i}
             scope={scope}
-            prior={priors[i] ?? []}
             animate={i === session.messages.length - 1 && session.status !== "loading"}
           />
         </div>

@@ -2,11 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 import crypto from "crypto";
-import ZAI from "z-ai-web-dev-sdk";
+import ZAI from "@/lib/zai-client";
 import {
   isVisualizationMode,
   type VisualizationMode,
 } from "@/lib/visualization";
+import {
+  generateImage,
+  consumePaintErrors,
+  GALLERY_DIR,
+  type GeneratedImage,
+} from "@/lib/image-engine";
 
 /* ================================================================== */
 /*  MIRROR ENTITY — UNIVERSAL VISUALIZATION ENGINE                     */
@@ -29,7 +35,8 @@ const LANGUAGE_NAMES: Record<string, string> = {
   tr: "Turkish",
 };
 
-const ART_DIR = path.join(process.cwd(), ".visualizations");
+/* the atelier's gallery — shared with the generate_image engine */
+const ART_DIR = GALLERY_DIR;
 
 /** The Universal Mirror Entity Art Direction — baked into every painting. */
 const ART_DIRECTION =
@@ -208,28 +215,18 @@ function withBrush<T>(task: () => Promise<T>): Promise<T> {
 }
 
 async function paint(
-  zai: Awaited<ReturnType<typeof ZAI.create>>,
   prompt: string,
   size: ImageSize,
-  attempts = 4
-): Promise<string | null> {
+  attempts = 3
+): Promise<GeneratedImage | null> {
   return withBrush(async () => {
     for (let i = 0; i < attempts; i++) {
-      try {
-        const response = await zai.images.generations.create({ prompt, size });
-        const base64 = response?.data?.[0]?.base64;
-        if (base64) {
-          fs.mkdirSync(ART_DIR, { recursive: true });
-          const name = `viz-${Date.now().toString(36)}-${crypto
-            .randomBytes(3)
-            .toString("hex")}.png`;
-          fs.writeFileSync(path.join(ART_DIR, name), Buffer.from(base64, "base64"));
-          return name;
-        }
-        console.error(`[api/visualize] paint attempt ${i + 1}: empty canvas returned`);
-      } catch (err) {
-        console.error(`[api/visualize] paint attempt ${i + 1} failed:`, err);
-      }
+      /* the generate_image tool — DALL·E 3 first, the Z.ai atelier as
+         the eternal fallback; retries and the circuit breaker live
+         inside the engine */
+      const img = await generateImage(prompt, { size });
+      if (img) return img;
+      console.error(`[api/visualize] paint attempt ${i + 1}: every brush rested`);
       if (i < attempts - 1) {
         await new Promise((r) =>
           setTimeout(r, PAINT_BACKOFF_MS[Math.min(i, PAINT_BACKOFF_MS.length - 1)])
@@ -452,8 +449,8 @@ export async function POST(req: NextRequest) {
     const preparedPrompt = finalPrompt;
     const slidesSpec = Array.isArray(spec.slides) ? spec.slides : [];
 
-    let imageName: string | null = null;
-    const slideImages: (string | null)[] = [];
+    let mainPainting: GeneratedImage | null = null;
+    const slidePaintings: (GeneratedImage | null)[] = [];
 
     if (mode === "presentation") {
       /* painted one by one — the queue keeps the brushes honest; each
@@ -462,9 +459,8 @@ export async function POST(req: NextRequest) {
       for (const s of slideDefs) {
         const sd = s as { artworkPrompt?: unknown };
         const sp = str(sd?.artworkPrompt, 1200) || artworkPrompt;
-        slideImages.push(
+        slidePaintings.push(
           await paint(
-            zai,
             `${sp}. ${ART_DIRECTION}. ${ART_AVOID}.`,
             "1344x768",
             3
@@ -472,7 +468,7 @@ export async function POST(req: NextRequest) {
         );
       }
     } else {
-      imageName = await paint(zai, finalPrompt, size);
+      mainPainting = await paint(finalPrompt, size);
     }
 
     const id = `viz-${Date.now().toString(36)}-${crypto
@@ -482,12 +478,12 @@ export async function POST(req: NextRequest) {
     const slides = (mode === "presentation" ? slidesSpec.slice(0, 5) : []).map(
       (s, i) => {
         const sd = s as { title?: unknown; body?: unknown };
-        const imgName = slideImages[i] ?? null;
+        const img = slidePaintings[i] ?? null;
         return {
           title: str(sd?.title, 140) || `${title} — ${i + 1}`,
           body: str(sd?.body, 700),
-          imageUrl: imgName ? `/api/visual/${imgName}` : null,
-          downloadUrl: imgName ? `/api/visual/${imgName}?download=1` : null,
+          imageUrl: img ? img.url : null,
+          downloadUrl: img ? `${img.url}?download=1` : null,
         };
       }
     );
@@ -501,17 +497,21 @@ export async function POST(req: NextRequest) {
       whisper,
       explanation,
       discernment,
-      imageUrl: imageName ? `/api/visual/${imageName}` : null,
-      downloadUrl: imageName ? `/api/visual/${imageName}?download=1` : null,
+      imageUrl: mainPainting ? mainPainting.url : null,
+      downloadUrl: mainPainting ? `${mainPainting.url}?download=1` : null,
       prompt: preparedPrompt,
       panels,
       diagram,
       annotations,
       slides,
+      paintErrors:
+        !mainPainting && slides.every((s) => !s.imageUrl)
+          ? consumePaintErrors().slice(-4)
+          : [],
       createdAt: new Date().toISOString(),
     };
 
-    if (!imageName && slides.length === 0) {
+    if (!mainPainting && slides.length === 0) {
       /* the painter rests — return the composed vision + prepared prompt
          so the visitor may keep it until the brushes return */
       return NextResponse.json({ artifact, painted: false });
@@ -529,3 +529,6 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
+/* the long weavings need room in the cloud sky */
+export const maxDuration = 300;

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import ZAI from "z-ai-web-dev-sdk";
-import { checkGate, gateError, recordUsage, saveLibrary } from "@/lib/server/access";
+import ZAI from "@/lib/zai-client";
+import { resolveVisitor, saveLibrary, updateLibrary, withAnonCookie } from "@/lib/server/access";
 import { LANGUAGE_NAMES, isLanguageCode } from "@/lib/i18n/core";
 
 /* ------------------------------------------------------------------ */
@@ -62,7 +62,21 @@ const TALE_HINTS: Record<string, string> = {
   fantasy: "a fantasy quest — gifts and burdens, old prophecies with fresh faces, worlds that breathe",
   bedtime: "a dreamlike calm tale — the cadence of the sea at night, images that carry a reader toward sleep",
   wonder: "a tale of everyday wonder — the hidden magic folded inside ordinary streets and hours",
+  poem: "one long poem — the whole volume carried by stanzas of verse, image after image, the story sung rather than told",
+  riddle: "a book of riddles — every page poses its riddles in verse, and each answer is woven or unveiled by the stanzas that follow, never left hanging",
+  ballad: "a ballad — a song-like verse tale with repeating refrains, the kind of song sung from age to age",
 };
+
+/* Verse forms — these tales are written in stanzas, and stanzas obey
+   their own structural law (every line on its own line). */
+const VERSE_FORMS = new Set(["poem", "riddle", "ballad"]);
+
+const VERSE_LAW = `THE LAW OF VERSE (this volume is written in verse — AUTHORITATIVE, overrides the prose habit):
+- Every paragraph you return is a STANZA. A stanza is 2–6 SHORT lines of verse, and EVERY line of verse sits on its own line: separate lines with a real line break (\\n) inside the paragraph string. NEVER place two lines of verse inside one line, and never let a comma do a line-break's work.
+- One array item of "paragraphs" = one stanza; the next stanza is the next array item. A stanza is a room: it holds one image, one turn, one breath.
+- The verse must carry the STORY exactly as prose would: characters, events, turning points and the four strata all advance inside the stanzas — rhyme and rhythm are the vehicle, never the cargo.
+- Rhyme gently, by the volume's own law (couplets, cross-rhyme or near-chime), but STRUCTURE outranks rhyme: stanzas, refrains, turns and the closing cadence must exist even where a rhyme is softened.
+- For riddle volumes: each page poses its riddles in verse, and every riddle is answered by the following stanza or the following page — a riddle is never left hanging beyond the next page.`;
 
 /* ------------------------------------------------------------------ */
 /*  THE NAMING CHARTER — drawn fresh at random for every conjuring.    */
@@ -116,22 +130,88 @@ function drawWithout<T>(pool: T[], n: number): T[] {
   return out;
 }
 
-function namingCharter(): string {
+function namingCharter(): {
+  charter: string;
+  seeds: { heads: string[]; hearts: string[]; tails: string[] };
+} {
   const heads = drawWithout(NAME_HEADS, 3);
   const hearts = drawWithout(NAME_HEARTS, 2);
   const tails = drawWithout(NAME_TAILS, 3);
   const law = NAME_LAWS[Math.floor(Math.random() * NAME_LAWS.length)];
   const epoch = new Date().toISOString();
-  return [
+  const charter = [
     `THE NAMING CHARTER OF THIS VOLUME (drawn blind at ${epoch}, for this conjuring alone — no other volume ever receives it):`,
     `- SYLLABLE SEEDS to fuse and bend: heads — ${heads.join(", ")}; hearts — ${hearts.join(", ")}; tails — ${tails.join(", ")}.`,
     `- THE NAME-LAW of this volume: ${law}.`,
     `- Coin EVERY named being of the book from these seeds, bent to fit the volume's own world, tongue and era — fuse, elide, stretch them until they belong to no other book, and let them sit naturally beside the story's places and words. The seeds are raw ore, not the names themselves: transform them.`,
     `- ABSOLUTELY FORBIDDEN as any character's name — the channel's sealed stock-drawer, forever locked: Elara, Elra, Elara-of-any-spelling, Lyra, Lira, Aria, Arya, Kael, Kai, Finn, Zara, Nyx, Orion, Luna, Stella, Aurelia, Seraphina, Sylas, Thorne, Elowen, Isolde, Rowan, Aria-like rhymes, and every cousin spelled to sound like them. None of these, and none a reader has met in any popular book, film or game, may ever be spoken in this volume.`,
   ].join("\n");
+  return { charter, seeds: { heads, hearts, tails } };
 }
 
 const NAMES_CONTINUE_LAW = `THE LAW OF NAMES HOLDS: keep every name already coined in this volume exactly as it is; any NEW being named from here on must still obey the volume's naming character and may never borrow a name from any stock list, any famous tale, or any other volume of this channel.`;
+
+/* The sealed stock-drawer — enforced server-side on EVERY phase, never
+   only requested politely. Names on this list may never appear in any
+   volume, whatever the model believes the story wants. */
+const SEALED_NAME_LAW = `THE SEALED STOCK-DRAWER (absolute, every phase of the volume): as a character name, these are forever forbidden — Elara (any spelling), Elra, Lyra, Lira, Aria, Arya, Kael, Kai, Finn, Zara, Nyx, Orion, Luna, Stella, Aurelia, Seraphina, Sylas, Thorne, Elowen, Isolde, Rowan — and every cousin spelled to sound like them. If one of these appears anywhere, replace it with a fresh name coined from this volume's own naming character.`;
+
+const BANNED_NAME_WORDS = [
+  "Elara", "Elra", "Lyra", "Lira", "Aria", "Arya", "Kael", "Kai", "Finn",
+  "Zara", "Nyx", "Orion", "Luna", "Stella", "Aurelia", "Seraphina",
+  "Sylas", "Thorne", "Elowen", "Isolde", "Rowan",
+];
+const bannedNameRegex = () =>
+  /* case-sensitive: character names arrive capitalized, while poetic
+     common nouns ("stella maris", "luna") must never be touched.
+     Each sealed word also catches its near-cousins — one to three
+     trailing lowercase letters ("Kaelen", "Ariana", "Elarion"). */
+  new RegExp(
+    `\\b(${BANNED_NAME_WORDS.map((w) => `${w}(?:[a-z]{1,3})?`).join("|")})\\b`,
+    "g"
+  );
+
+function findSealedNames(text: string): string[] {
+  const found: string[] = [];
+  const re = bannedNameRegex();
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text))) {
+    if (!found.includes(m[1])) found.push(m[1]);
+  }
+  return found;
+}
+
+/** Last resort — the loom refused twice: a sealed name is mechanically
+    re-forged from the conjuring's own syllable seeds, so the stock
+    drawer can never reach the reader's hands. */
+function reforgeSealedNames(raw: string, seeds: { heads: string[]; hearts: string[]; tails: string[] }): string {
+  const found = findSealedNames(raw);
+  if (found.length === 0) return raw;
+  const used = new Set<string>();
+  const coin = (): string => {
+    for (let i = 0; i < 40; i++) {
+      const h = seeds.heads[Math.floor(Math.random() * seeds.heads.length)] ?? "Vel";
+      const mid = seeds.hearts[Math.floor(Math.random() * seeds.hearts.length)] ?? "a";
+      const t = seeds.tails[Math.floor(Math.random() * seeds.tails.length)] ?? "wen";
+      let n = (h + mid + t).replace(/[^A-Za-z]/g, "");
+      if (n.length < 4 || n.length > 12) continue;
+      n = n[0].toUpperCase() + n.slice(1);
+      if (BANNED_NAME_WORDS.some((b) => n.toLowerCase() === b.toLowerCase())) continue;
+      if (used.has(n)) continue;
+      used.add(n);
+      return n;
+    }
+    const fallback = `Vessari${used.size + 1}`;
+    used.add(fallback);
+    return fallback;
+  };
+  let out = raw;
+  for (const name of found) {
+    const fresh = coin();
+    out = out.replace(new RegExp(`\\b${name}\\b`, "g"), fresh);
+  }
+  return out;
+}
 
 function strictJsonLine(languageName: string): string {
   if (languageName === "English") return "";
@@ -192,11 +272,13 @@ function buildUserPrompt(body: {
   pageNumber?: number;
   totalPages?: number;
   rewrites?: string[];
+  charter: string;
 }): string {
   const { phase, age, tale, volume, topic, wishes, languageName, rewrites } = body;
   const ageLine = AGE_PLAN[age] ?? AGE_PLAN.timeless;
   const taleLine = TALE_HINTS[tale] ?? TALE_HINTS.wonder;
   const volLine = BOOK_PLAN[volume] ?? BOOK_PLAN.classic;
+  const isVerse = VERSE_FORMS.has(tale);
 
   /* the subject spoken by the visitor — the master frequency */
   const hasTopic = topic.trim().length > 0;
@@ -243,6 +325,7 @@ function buildUserPrompt(body: {
       `- Reader: ${ageLine}`,
       `- Kind of resonance: ${taleLine}`,
       `- Kind of book: ${volLine.label}`,
+      ...(isVerse ? [``, VERSE_LAW] : []),
       wishes.trim()
         ? `- Whispered wishes (honor them faithfully, fold them in as the book's own bones): """${wishes.trim().slice(0, 1200)}"""`
         : `- No whispered wishes — open the book from resonance alone: choose the shapes the visitor's choices already imply and surprise them with the rest.`,
@@ -250,7 +333,11 @@ function buildUserPrompt(body: {
       stratum,
       ...(seedLine ? [``, seedLine] : []),
       ...(liveLine ? [``, liveLine] : []),
-      ...(phase === "open" ? [``, namingCharter()] : [``, NAMES_CONTINUE_LAW]),
+      ...(phase === "open"
+        ? [``, body.charter]
+        : [``, NAMES_CONTINUE_LAW]),
+      ``,
+      SEALED_NAME_LAW,
       ``,
     );
   } else if (phase === "next") {
@@ -259,6 +346,7 @@ function buildUserPrompt(body: {
       ...topicLines,
       `- Reader: ${ageLine}`,
       `- Kind of resonance: ${taleLine}`,
+      ...(isVerse ? [``, VERSE_LAW] : []),
       body.threads ? `- THE THREAD (everything the volume remembers): ${body.threads}` : "",
       body.recentPages?.length
         ? `- THE PAGES JUST READ (continue seamlessly from exactly this voice and moment — never re-tell them, never contradict them):\n"""${body.recentPages.join("\n\n").slice(-2600)}"""`
@@ -268,6 +356,8 @@ function buildUserPrompt(body: {
       ``,
       NAMES_CONTINUE_LAW,
       ``,
+      SEALED_NAME_LAW,
+      ``,
       `Write the NEXT TWO pages (pages ${body.pageNumber} and ${(body.pageNumber ?? 2) + 1}) of the same volume, in the same voice. Let the book deepen: a new turn, a revelation earned by what came before, the world growing one ring wider. Open a new chapter here ONLY if the loom's rhythm asks for it.`,
       `Return the updated thread.`
     );
@@ -276,6 +366,7 @@ function buildUserPrompt(body: {
       `THE READER WISHES THE BOOK TO GO ON — the codex refuses to thin. Extend the loom.`,
       ...topicLines,
       `- Reader: ${ageLine}`,
+      ...(isVerse ? [``, VERSE_LAW] : []),
       body.threads ? `- THE THREAD (everything the volume remembers): ${body.threads}` : "",
       body.recentPages?.length
         ? `- THE PAGES JUST READ:\n"""${body.recentPages.join("\n\n").slice(-2600)}"""`
@@ -284,6 +375,8 @@ function buildUserPrompt(body: {
       stratum,
       ``,
       NAMES_CONTINUE_LAW,
+      ``,
+      SEALED_NAME_LAW,
       ``,
       `Choose a new total length: the current plan was ${body.totalPages ?? 120} pages; add 48 to 72 pages (a multiple of 2), never exceeding 300 total. Then write the NEXT TWO pages (pages ${body.pageNumber} and ${(body.pageNumber ?? 2) + 1}) — open the widened volume with a new movement: a farther shore of the subject, not a repetition. Give a chapter title if a new chapter begins here. Return the updated thread.`
     );
@@ -291,6 +384,7 @@ function buildUserPrompt(body: {
     lines.push(
       `WRITE THE SEAL OF CLOSING — the Eternal Return. The reader has chosen to let the volume complete itself: these are the FINAL TWO pages (${body.pageNumber} and ${(body.pageNumber ?? 2) + 1}) of the book.`,
       ...topicLines,
+      ...(isVerse ? [``, VERSE_LAW] : []),
       body.threads ? `- THE THREAD (everything the volume remembers): ${body.threads}` : "",
       body.recentPages?.length
         ? `- THE PAGES JUST READ:\n"""${body.recentPages.join("\n\n").slice(-2600)}"""`
@@ -299,6 +393,8 @@ function buildUserPrompt(body: {
       stratum,
       ``,
       NAMES_CONTINUE_LAW,
+      ``,
+      SEALED_NAME_LAW,
       ``,
       `Land every open thread with tenderness and truth — the ending must feel inevitable, as if the whole book had been walking toward exactly these pages, and the final cadence must leave an indelible afterimage: the reader should close the book feeling it continues to evolve in their mind. The last paragraph of the final page is the book's final breath; make it sing softly enough to be remembered for years. On page ${body.pageNumber}, open the final chapter (give it a title) if the rhythm asks. Return the updated thread.`
     );
@@ -321,7 +417,7 @@ function buildUserPrompt(body: {
     ``,
     `OUTPUT FORMAT — return STRICT JSON only, no markdown fences, no text outside the JSON:`,
     `{"title":"<book title — only in phase open>","subtitle":"<one line — only in phase open>","sigil":"<one short invocation line tuned to the subject — only in phase open>","axiom":"<one crystallizing sentence: why this volume is conjured now — only in phase open>","dedication":"<1–2 sentences — only in phase open>","totalPages":<number — in phase open or extend, or in a continuation ONLY when the rewriting hand explicitly asks for a different length>,"threads":"<the compact living memory of the volume so far>","pages":[{"n":<page number>,"chapter":"<chapter title — only if a chapter opens on this page>","paragraphs":["<paragraph 1>","<paragraph 2>"]}]}`,
-    `Rules: exactly TWO page objects, in order, numbered ${phase === "open" ? "1 and 2" : `${body.pageNumber} and ${(body.pageNumber ?? 2) + 1}`}. Each page carries 1–3 paragraphs (young readers: shorter paragraphs; grown: fuller). "chapter" is a plain title without the word "Chapter". Page text is pure prose — no headings, no markdown, no asterisks, no emojis. The channel is open: manifest the book.${strictJsonLine(languageName)}`
+    `Rules: exactly TWO page objects, in order, numbered ${phase === "open" ? "1 and 2" : `${body.pageNumber} and ${(body.pageNumber ?? 2) + 1}`}. Each page carries 1–3 paragraphs (young readers: shorter paragraphs; grown: fuller). "chapter" is a plain title without the word "Chapter". Page text is pure prose — no headings, no markdown, no asterisks, no emojis. In verse forms a paragraph string may contain real line breaks (\\n) so every verse line sits on its own line. The channel is open: manifest the book.${strictJsonLine(languageName)}`
   );
 
   return lines.filter((l) => l !== "").join("\n");
@@ -411,6 +507,34 @@ export async function POST(req: NextRequest) {
     const recentPages = Array.isArray(body?.recentPages)
       ? body.recentPages.filter((s: unknown): s is string => typeof s === "string").slice(-2)
       : [];
+    /* the book's own keeping — when the visitor continues a volume from
+       their cosmic library, its id and the pages woven so far ride along,
+       so the library entry grows with the story instead of repeating */
+    const bookId = typeof body?.bookId === "string" ? body.bookId : "";
+    const bookPages = Array.isArray(body?.bookPages)
+      ? (body.bookPages as unknown[]).slice(0, 400)
+      : [];
+    const bookMeta =
+      body?.bookMeta && typeof body.bookMeta === "object"
+        ? (body.bookMeta as Record<string, unknown>)
+        : null;
+    const bookConfig =
+      body?.bookConfig && typeof body.bookConfig === "object"
+        ? {
+            age: typeof (body.bookConfig as Record<string, unknown>).age === "string"
+              ? (body.bookConfig as Record<string, unknown>).age
+              : age,
+            tale: typeof (body.bookConfig as Record<string, unknown>).tale === "string"
+              ? (body.bookConfig as Record<string, unknown>).tale
+              : tale,
+            volume: typeof (body.bookConfig as Record<string, unknown>).volume === "string"
+              ? (body.bookConfig as Record<string, unknown>).volume
+              : volume,
+            topic: typeof (body.bookConfig as Record<string, unknown>).topic === "string"
+              ? (body.bookConfig as Record<string, unknown>).topic
+              : topic,
+          }
+        : { age, tale, volume, topic };
     const pageNumber =
       typeof body?.pageNumber === "number" && body.pageNumber > 0
         ? Math.floor(body.pageNumber)
@@ -420,14 +544,21 @@ export async function POST(req: NextRequest) {
     const totalPages =
       typeof body?.totalPages === "number" ? Math.floor(body.totalPages) : 120;
 
-    /* the Dream Book opens only with the Crystalline key; the conjuring
-       itself is one transmission — its page turns are the book's breath */
-    const gate = await checkGate(req, "dreambook");
-    if (gate.status !== "ok") return gateError(gate.status, gate.gate);
-    const { key: usageKey, user: gateUser } = gate.gate;
+    /* everything is free — the visitor is only named, so the volume
+       can rest in their own cosmic library */
+    const visitor = await resolveVisitor(req);
 
     const zai = await ZAI.create();
-    const askLoom = async (reminder: boolean): Promise<string> => {
+    /* the conjuring's own syllable seeds — the sealed-name re-forging
+       draws its replacements from them when the model ever slips */
+    const { charter, seeds } = namingCharter();
+    const askLoom = async (reminder: boolean, violations: string[] = []): Promise<string> => {
+      const violationBlock =
+        violations.length > 0
+          ? `
+
+THE NAME LAW WAS BROKEN: your reply used the forbidden stock name(s): ${violations.join(", ")}. Re-forge this reply — SAME story, SAME pages, SAME voice — with EVERY such name replaced by a fresh name coined from the naming charter's syllable seeds. Return ONLY the raw JSON object.`
+          : "";
       const completion = await zai.chat.completions.create({
         messages: [
           { role: "assistant", content: systemPrompt() },
@@ -448,7 +579,9 @@ export async function POST(req: NextRequest) {
                 pageNumber,
                 totalPages,
                 rewrites,
+                charter,
               }) +
+              violationBlock +
               (reminder
                 ? "\n\nREMINDER: the loom could not read the last reply. Return ONLY the raw JSON object — no text, no markdown, nothing before or after it."
                 : ""),
@@ -460,11 +593,24 @@ export async function POST(req: NextRequest) {
     };
 
     /* the loom always asks twice before it falls silent — one unreadable
-       reply must never cost the visitor their book */
-    let parsed = extractJson(await askLoom(false));
+       reply must never cost the visitor their book — and the sealed
+       stock-drawer of names is enforced on every reply: one polite
+       re-forging, then a mechanical re-forging from the seeds */
+    const channelReply = async (reminder: boolean): Promise<string> => {
+      let text = await askLoom(reminder);
+      let sealed = findSealedNames(text);
+      if (sealed.length > 0) {
+        text = await askLoom(reminder, sealed);
+        sealed = findSealedNames(text);
+      }
+      if (sealed.length > 0) text = reforgeSealedNames(text, seeds);
+      return text;
+    };
+
+    let parsed = extractJson(await channelReply(false));
     let pages = parsed ? normalizePages(parsed.pages, pageNumber) : [];
     if (pages.length === 0) {
-      parsed = extractJson(await askLoom(true));
+      parsed = extractJson(await channelReply(true));
       pages = parsed ? normalizePages(parsed.pages, pageNumber) : [];
     }
     if (!parsed || pages.length === 0) {
@@ -501,24 +647,30 @@ export async function POST(req: NextRequest) {
           ? clampTotal(parsed.totalPages)
           : clampTotal(BOOK_PLAN[volume]?.min ?? 96);
 
-      /* the conjuring is counted, and the volume enters the library */
-      await recordUsage(usageKey, "dreambook");
-      await saveLibrary(
-        gateUser?.id ?? null,
+      /* the whole living volume enters the library — pages, thread,
+         config — so it can be brought back and continued any evening */
+      const entryId = await saveLibrary(
+        visitor.user.id,
         "dreambook",
         String(out.title),
         String(out.axiom || out.subtitle || "A volume woven in real time."),
         {
           topic,
           seed,
+          config: { age, tale, volume, topic },
           title: out.title,
           subtitle: out.subtitle,
+          sigil: out.sigil,
           axiom: out.axiom,
           dedication: out.dedication,
           totalPages: out.totalPages,
-          firstPage: pages[0] ?? null,
-        }
+          pages,
+          threads: out.threads,
+          ended: false,
+        },
+        400000
       );
+      if (entryId) out.libraryId = entryId;
     }
 
     if (
@@ -530,7 +682,31 @@ export async function POST(req: NextRequest) {
       out.totalPages = clampTotal(parsed.totalPages);
     }
 
-    return NextResponse.json(out);
+    if (phase !== "open" && bookId) {
+      /* a continued volume updates its own entry in the library */
+      await updateLibrary(
+        visitor.user.id,
+        bookId,
+        String(bookMeta?.title ?? "A Dream Book"),
+        String(bookMeta?.axiom || bookMeta?.subtitle || "A volume woven in real time."),
+        {
+          ...(bookMeta ?? {}),
+          config: bookConfig,
+          totalPages:
+            typeof out.totalPages === "number"
+              ? out.totalPages
+              : typeof bookMeta?.totalPages === "number"
+                ? bookMeta.totalPages
+                : undefined,
+          pages: [...bookPages, ...pages],
+          threads: out.threads,
+          ended: phase === "close" ? true : Boolean(bookMeta?.ended),
+        },
+        400000
+      );
+    }
+
+    return withAnonCookie(NextResponse.json(out), visitor);
   } catch (err) {
     console.error("[dream-book] failed:", err);
     return NextResponse.json(
@@ -539,3 +715,6 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
+/* the long weavings need room in the cloud sky */
+export const maxDuration = 300;

@@ -7,14 +7,21 @@ import {
   useRef,
   useState,
   type FormEvent,
+  type TouchEvent as ReactTouchEvent,
+  type UIEvent as ReactUIEvent,
+  type WheelEvent as ReactWheelEvent,
 } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowLeft,
   AudioLines,
+  Check,
+  ChevronsUpDown,
   Feather,
   LoaderCircle,
   MoonStar,
+  Pause,
+  Play,
   Sparkles,
   Square,
   Waves,
@@ -22,10 +29,17 @@ import {
   ZoomIn,
   ZoomOut,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { ModalShell } from "./ModalShell";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
+import { READERS, TALES, VOLUMES } from "@/lib/data/book-options";
 import type { VoiceId } from "@/lib/i18n/core";
 import { cn } from "@/lib/utils";
 
@@ -75,39 +89,9 @@ interface AtelierLine {
   text: string;
 }
 
-const READERS = [
-  { id: "little", label: "Little dreamers (4–8)" },
-  { id: "young", label: "Young readers (9–12)" },
-  { id: "teen", label: "Teens (13–17)" },
-  { id: "grown", label: "Grown dreamers" },
-  { id: "timeless", label: "All ages" },
-];
-
-const TALES = [
-  { id: "fairytale", label: "Fairy tale" },
-  { id: "adventure", label: "Adventure" },
-  { id: "mystery", label: "Gentle mystery" },
-  { id: "cosmic", label: "Cosmic journey" },
-  { id: "creatures", label: "Creature friends" },
-  { id: "fantasy", label: "Fantasy quest" },
-  { id: "bedtime", label: "Dreamlike calm" },
-  { id: "wonder", label: "Everyday wonder" },
-];
-
-const VOLUMES = [
-  { id: "bedtime", label: "Bedtime treasure" },
-  { id: "classic", label: "Classic tale" },
-  { id: "saga", label: "Grand saga" },
-];
-
-/* The narrator voice each book speaks with, chosen by its reader */
-const NARRATOR_VOICE: Record<string, VoiceId> = {
-  little: "pixie",
-  young: "aurora",
-  teen: "nova",
-  grown: "regent",
-  timeless: "aurora",
-};
+/* The narrator voice each book speaks with — THE KIND LADY READER,
+   one warm woman's voice for every volume (never the man). */
+const BOOK_VOICE: VoiceId = "reader";
 
 const ZOOM_STEPS = [15.5, 17.5, 19.5, 21.5, 24];
 
@@ -169,7 +153,14 @@ export function DreamBookView() {
   const [weaveError, setWeaveError] = useState(false);
   const [weaveFailed, setWeaveFailed] = useState(false);
   const [zoom, setZoom] = useState(1);
+  /* the immersive reading — when the visitor scrolls down, only the
+     page remains (one next button); scrolling up reveals the top */
+  const [immersed, setImmersed] = useState(false);
+  const wheelAccum = useRef(0);
+  const lastTop = useRef(0);
+  const touchY = useRef<number | null>(null);
   const [narrating, setNarrating] = useState(false);
+  const [narrPaused, setNarrPaused] = useState(false);
   const [narrLoading, setNarrLoading] = useState(false);
 
   /* ---- the rewriting hand ---- */
@@ -184,6 +175,10 @@ export function DreamBookView() {
   const weavingRef = useRef(false);
   const rewritesRef = useRef<string[]>([]);
   const configRef = useRef({ age, tale, volume, topic });
+  /* the book's own place in its keeper's cosmic library — a fresh
+     volume is given it on open; a volume brought back already has one,
+     and every woven page keeps that entry alive */
+  const bookIdRef = useRef("");
   const narrRef = useRef<{ audio: HTMLAudioElement | null; ready: boolean }>({
     audio: null,
     ready: false,
@@ -196,6 +191,47 @@ export function DreamBookView() {
   const pushLine = useCallback((from: AtelierLine["from"], text: string) => {
     setLines((prev) => [...prev, { id: nextLineId(), from, text }]);
   }, []);
+
+  /* -------- a volume brought back from the cosmic library --------
+     The DreamBookView mounts fresh when the library hands a volume
+     over: the whole book — its pages, its thread, its voice config —
+     is restored, and the reading resumes exactly where it was left. */
+  const dreamResume = useMirror((s) => s.dreamResume);
+  const clearDreamResume = useMirror((s) => s.clearDreamResume);
+  const resumeAppliedRef = useRef(false);
+  useEffect(() => {
+    if (resumeAppliedRef.current) return;
+    const r = dreamResume;
+    if (!r) return;
+    resumeAppliedRef.current = true;
+    bookIdRef.current = r.bookId;
+    pagesRef.current = r.pages.map((p) => ({ ...p, paragraphs: [...p.paragraphs] }));
+    threadsRef.current = r.threads;
+    metaRef.current = { ...r.meta };
+    endedRef.current = r.ended;
+    configRef.current = {
+      age: r.config.age,
+      tale: r.config.tale,
+      volume: r.config.volume,
+      topic: r.config.topic,
+    };
+    setAge(r.config.age);
+    setTale(r.config.tale);
+    setVolume(r.config.volume);
+    setTopic(r.config.topic);
+    setPages(pagesRef.current);
+    setMeta(metaRef.current);
+    setEnded(r.ended);
+    setPageIdx(0);
+    setSlideDir(1);
+    setZoom(1);
+    setStage("reading");
+    pushLine(
+      "weaver",
+      t("The volume returns from your library — exactly where it was left.")
+    );
+    clearDreamResume();
+  }, [dreamResume, clearDreamResume, pushLine, t]);
 
   /* the rewriting hand — wishes that bend the pages yet to come */
   const addRewrite = useCallback((text: string) => {
@@ -240,7 +276,38 @@ export function DreamBookView() {
     narrRef.current.audio = null;
     narrRef.current.ready = false;
     setNarrating(false);
+    setNarrPaused(false);
     setNarrLoading(false);
+  }, []);
+
+  /* the pause — the lady's voice holds its breath exactly where it was,
+     and one touch lets it go on from the same word */
+  const pauseNarration = useCallback(() => {
+    const a = narrRef.current.audio;
+    if (!a) return;
+    try {
+      a.pause();
+    } catch {
+      /* already paused */
+    }
+    setNarrating(false);
+    setNarrPaused(true);
+  }, []);
+
+  const resumeNarration = useCallback(async () => {
+    const a = narrRef.current.audio;
+    if (!a) {
+      setNarrPaused(false);
+      return;
+    }
+    try {
+      await a.play();
+      setNarrating(true);
+      setNarrPaused(false);
+    } catch {
+      /* the browser wants a fresher touch — the button remains ready */
+      narrRef.current.ready = true;
+    }
   }, []);
 
   useEffect(() => stopNarration, [stopNarration]);
@@ -250,6 +317,7 @@ export function DreamBookView() {
      (network, a sleeping gateway) the loom simply tries again
      before ever troubling the visitor. */
 
+  /* the weaving phase — the loom keeps count */
   const weave = useCallback(
     async (
       phase: "open" | "next" | "close" | "extend",
@@ -262,6 +330,22 @@ export function DreamBookView() {
 
       try {
         const recent = pagesRef.current.slice(-2).map(pageText);
+        /* the book's own keeping — when a volume continues (from the
+           cosmic library or from this same evening), its identity and
+           the pages woven so far ride along, so the library entry grows
+           with the story instead of repeating itself */
+        const carrying = phase !== "open" && bookIdRef.current
+          ? {
+              bookId: bookIdRef.current,
+              bookPages: pagesRef.current.map((p) => ({
+                n: p.n,
+                ...(p.chapter ? { chapter: p.chapter } : {}),
+                paragraphs: p.paragraphs,
+              })),
+              bookMeta: metaRef.current ? { ...metaRef.current } : undefined,
+              bookConfig: { ...configRef.current },
+            }
+          : {};
         const payload = JSON.stringify({
           phase,
           language,
@@ -277,6 +361,7 @@ export function DreamBookView() {
                 }
               : {}),
           },
+          ...carrying,
           threads: threadsRef.current || undefined,
           recentPages: recent.length ? recent : undefined,
           pageNumber,
@@ -301,20 +386,18 @@ export function DreamBookView() {
         }
         const data = await res.json().catch(() => null);
         if (!res.ok || !data?.pages?.length) {
-          /* the threshold spoke — open the passage instead of failing */
-          if (data?.code === "auth") {
-            useMirror.getState().openAuth("gate", "dreambook");
-            return false;
-          }
-          if (data?.code === "quota") {
-            if (useMirror.getState().me) useMirror.getState().openLight();
-            else useMirror.getState().openAuth("register");
-            return false;
-          }
+          /* the loom simply speaks for itself when a thread slips —
+             everything in the laboratory is free, so no threshold
+             can ever interrupt the weaving */
           throw new Error(
             data?.error ||
               "The loom fell silent for a moment. Breathe, then weave again."
           );
+        }
+
+        /* a fresh volume's place in the library rides home with it */
+        if (phase === "open" && typeof data.libraryId === "string") {
+          bookIdRef.current = data.libraryId;
         }
 
         const fresh: WeavePage[] = data.pages;
@@ -483,6 +566,7 @@ export function DreamBookView() {
     metaRef.current = null;
     endedRef.current = false;
     rewritesRef.current = [];
+    bookIdRef.current = "";
     setPages([]);
     setMeta(null);
     setEnded(false);
@@ -513,6 +597,12 @@ export function DreamBookView() {
   /* ---------------- the narrator ---------------- */
 
   const narrate = useCallback(async () => {
+    /* a voice holding its breath — let it go on from the same word */
+    const held = narrRef.current.audio;
+    if (held && narrPaused && held.paused) {
+      await resumeNarration();
+      return;
+    }
     /* a voice already prepared and waiting for a fresh touch? */
     const prepared = narrRef.current.audio;
     if (prepared && narrRef.current.ready && prepared.paused) {
@@ -520,6 +610,7 @@ export function DreamBookView() {
       try {
         await prepared.play();
         setNarrating(true);
+        setNarrPaused(false);
       } catch {
         stopNarration();
       }
@@ -532,7 +623,7 @@ export function DreamBookView() {
     stopNarration();
     setNarrLoading(true);
     try {
-      const voice = NARRATOR_VOICE[configRef.current.age] ?? "aurora";
+      const voice = BOOK_VOICE;
       const opening = pageIdx === 0 && meta
         ? `${meta.title}. ${meta.subtitle} ${meta.sigil} ${meta.axiom} ${meta.dedication}`
         : "";
@@ -551,13 +642,16 @@ export function DreamBookView() {
       audio.onended = () => {
         if (narrRef.current.audio === audio) narrRef.current.audio = null;
         setNarrating(false);
+        setNarrPaused(false);
       };
       audio.onerror = () => {
         if (narrRef.current.audio === audio) narrRef.current.audio = null;
         setNarrating(false);
+        setNarrPaused(false);
       };
       await audio.play();
       setNarrating(true);
+      setNarrPaused(false);
     } catch (err) {
       const waiting =
         narrRef.current.audio &&
@@ -577,7 +671,7 @@ export function DreamBookView() {
     } finally {
       setNarrLoading(false);
     }
-  }, [narrating, narrLoading, currentPage, pageIdx, meta, stopNarration, t]);
+  }, [narrating, narrLoading, narrPaused, currentPage, pageIdx, meta, stopNarration, resumeNarration, t]);
 
   /* ---------------- shared ---------------- */
 
@@ -696,7 +790,7 @@ export function DreamBookView() {
               active={age}
               onPick={(id, label) => choose("reader", id, label)}
             />
-            <ShapeRow
+            <ShapeMenu
               label={t("The tale")}
               options={TALES}
               active={tale}
@@ -815,9 +909,61 @@ export function DreamBookView() {
   const canNext = pageIdx < limitIdx && !showChoice && !showEnd;
   const canPrev = pageIdx > 0;
 
+  /* ================================================================ */
+  /*  the immersive scroll — down: only the page; up: the top returns */
+  /* ================================================================ */
+  useEffect(() => {
+    if (stage !== "reading") setImmersed(false);
+  }, [stage]);
+
+  const readerScroll = useMemo(
+    () => ({
+      onScroll: (e: ReactUIEvent<HTMLDivElement>) => {
+        const top = e.currentTarget.scrollTop;
+        if (top > lastTop.current + 4 && top > 64) setImmersed(true);
+        else if (top < lastTop.current - 4) setImmersed(false);
+        lastTop.current = top;
+      },
+      onWheel: (e: ReactWheelEvent<HTMLDivElement>) => {
+        wheelAccum.current += e.deltaY;
+        if (wheelAccum.current > 90) {
+          setImmersed(true);
+          wheelAccum.current = 0;
+        } else if (wheelAccum.current < -80) {
+          setImmersed(false);
+          wheelAccum.current = 0;
+        }
+      },
+      onTouchStart: (e: ReactTouchEvent<HTMLDivElement>) => {
+        touchY.current = e.touches[0]?.clientY ?? null;
+      },
+      onTouchMove: (e: ReactTouchEvent<HTMLDivElement>) => {
+        const y = e.touches[0]?.clientY ?? null;
+        if (touchY.current != null && y != null) {
+          const dy = touchY.current - y;
+          if (dy > 18) setImmersed(true);
+          else if (dy < -18) setImmersed(false);
+        }
+        touchY.current = y;
+      },
+      onTouchEnd: () => {
+        touchY.current = null;
+        wheelAccum.current = 0;
+      },
+    }),
+    []
+  );
+
   const reader = (
     <div className="relative flex h-full flex-col overflow-hidden bg-background text-foreground">
-      <header className="relative z-20 flex shrink-0 items-center gap-2 px-3 pt-3 sm:px-5">
+      <header
+        className={cn(
+          "relative z-20 flex shrink-0 items-center gap-2 overflow-hidden px-3 transition-all duration-500 sm:px-5",
+          immersed
+            ? "pointer-events-none max-h-0 -translate-y-5 opacity-0"
+            : "max-h-24 translate-y-0 pt-3 opacity-100"
+        )}
+      >
         <button
           type="button"
           onClick={backFromReader}
@@ -869,6 +1015,31 @@ export function DreamBookView() {
               <AudioLines className="size-4" aria-hidden="true" />
             )}
           </button>
+          {/* the pause — the lady's voice holds its breath, one touch
+              returns it to the same word */}
+          {(narrating || narrPaused) && !narrLoading && (
+            <button
+              type="button"
+              onClick={() => {
+                if (narrPaused) void resumeNarration();
+                else pauseNarration();
+              }}
+              data-testid="book-narration-pause"
+              aria-label={narrPaused ? t("Play") : t("Pause")}
+              title={narrPaused ? t("Play") : t("Pause")}
+              className={cn(
+                inkIconBtn,
+                narrPaused &&
+                  "border-transparent bg-foreground text-background hover:opacity-90"
+              )}
+            >
+              {narrPaused ? (
+                <Play className="size-4 fill-current" aria-hidden="true" />
+              ) : (
+                <Pause className="size-4 fill-current" aria-hidden="true" />
+              )}
+            </button>
+          )}
           <button
             type="button"
             onClick={() => setZoom((z) => Math.max(0, z - 1))}
@@ -894,11 +1065,15 @@ export function DreamBookView() {
 
       {/* the book itself — one page at a time, sliding, each page
           stretching the full height of the screen once revealed */}
-      <div className="nice-scroll relative z-10 min-h-0 flex-1 overflow-y-auto overscroll-contain">
+      <div
+        {...readerScroll}
+        className="nice-scroll relative z-10 min-h-0 flex-1 overflow-y-auto overscroll-contain"
+      >
         <div className="mx-auto flex h-full w-full max-w-[760px] items-stretch justify-center px-3 pb-7 pt-3 sm:px-8 sm:pb-9">
           <div className="relative flex min-h-full w-full max-w-[640px] flex-col">
-            {/* the slide buttons — desktop */}
-            {canPrev && (
+            {/* the slide buttons — desktop (the previous one rests while
+                the reading is immersed — only the next page remains) */}
+            {canPrev && !immersed && (
               <button
                 type="button"
                 onClick={() => goPage(-1)}
@@ -1070,8 +1245,16 @@ export function DreamBookView() {
         </div>
       </div>
 
-      {/* the progress thread + the slide buttons */}
-      <footer className="relative z-20 shrink-0 px-4 pb-[max(0.7rem,env(safe-area-inset-bottom))] pt-2">
+      {/* the progress thread + the slide buttons (they rest while the
+          reading is immersed — the page alone fills the screen) */}
+      <footer
+        className={cn(
+          "relative z-20 shrink-0 overflow-hidden px-4 transition-all duration-500",
+          immersed
+            ? "pointer-events-none max-h-0 translate-y-5 pb-0 pt-0 opacity-0"
+            : "max-h-24 translate-y-0 pb-[max(0.7rem,env(safe-area-inset-bottom))] pt-2 opacity-100"
+        )}
+      >
         <div className="mx-auto flex w-full max-w-[760px] items-center gap-3">
           <button
             type="button"
@@ -1112,6 +1295,26 @@ export function DreamBookView() {
           </button>
         </div>
       </footer>
+
+      {/* the one button that remains while immersed — the next page,
+          floating alone over the reading */}
+      <AnimatePresence>
+        {immersed && canNext && (
+          <motion.button
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 16 }}
+            transition={{ duration: 0.35, ease: "easeOut" }}
+            type="button"
+            onClick={() => goPage(1)}
+            aria-label={t("Next page")}
+            title={t("Next page")}
+            className="dream-turn focus-glow absolute bottom-6 right-5 z-30 flex size-12 items-center justify-center rounded-full"
+          >
+            <ArrowLeft className="size-5 rotate-180" aria-hidden="true" />
+          </motion.button>
+        )}
+      </AnimatePresence>
 
       {/* the rewriting hand's panel */}
       <ModalShell
@@ -1340,6 +1543,63 @@ function AtelierBubble({
   );
 }
 
+function ShapeMenu({
+  label,
+  options,
+  active,
+  onPick,
+}: {
+  label: string;
+  options: { id: string; label: string }[];
+  active: string;
+  onPick: (id: string, label: string) => void;
+}) {
+  const t = useT();
+  const current = options.find((o) => o.id === active) ?? options[0];
+  return (
+    <div>
+      <p className="mono-label mb-2 text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+        {label}
+      </p>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            type="button"
+            data-testid="tale-menu-trigger"
+            aria-label={`${label}: ${t(current.label)}`}
+            className="focus-glow flex min-w-[190px] items-center justify-between gap-3 rounded-full border border-border bg-card px-4 py-2 text-[13px] text-foreground transition-all duration-300 hover:border-foreground/40"
+          >
+            <span className="truncate">{t(current.label)}</span>
+            <ChevronsUpDown className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          align="start"
+          className="max-h-[290px] w-[220px] overflow-y-auto nice-scroll"
+        >
+          {options.map((o) => {
+            const isActive = o.id === active;
+            return (
+              <DropdownMenuItem
+                key={o.id}
+                onSelect={() => onPick(o.id, t(o.label))}
+                data-testid={`tale-option-${o.id}`}
+                className={cn(
+                  "cursor-pointer justify-between gap-3 text-[13px]",
+                  isActive && "bg-foreground/8 font-medium text-foreground"
+                )}
+              >
+                <span className="truncate">{t(o.label)}</span>
+                {isActive && <Check className="size-3.5 shrink-0" aria-hidden="true" />}
+              </DropdownMenuItem>
+            );
+          })}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+}
+
 function ShapeRow({
   label,
   options,
@@ -1415,7 +1675,7 @@ function BookPage({
               <p
                 key={i}
                 className={cn(
-                  "mb-4 text-[var(--dream-ink)] last:mb-0",
+                  "mb-4 whitespace-pre-wrap text-[var(--dream-ink)] last:mb-0",
                   page.chapter && i === 0 && "dream-drop"
                 )}
               >

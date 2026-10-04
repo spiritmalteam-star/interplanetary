@@ -195,6 +195,20 @@ export function PreparedPromptFallback({
           "The vision was composed, but the brushes rest. Keep this prepared prompt until the painter returns:"
         )}
       </p>
+      {(artifact.paintErrors?.length ?? 0) > 0 && (
+        <p
+          className="nice-scroll mt-2.5 max-h-20 overflow-y-auto rounded-xl border border-[color-mix(in_srgb,var(--hairline)_45%,transparent)] bg-[color-mix(in_srgb,var(--hairline)_10%,transparent)] px-3.5 py-2 text-[11px] leading-relaxed text-muted-foreground/90"
+          data-testid={`${testIdPrefix}-paint-errors`}
+        >
+          <span
+            className="mono-label mr-1.5 text-[9px] uppercase tracking-[0.2em]"
+            style={{ color: accent }}
+          >
+            {t("Why the brushes rest")} —
+          </span>
+          {artifact.paintErrors!.join(" · ")}
+        </p>
+      )}
       <p className="nice-scroll mt-2.5 max-h-24 overflow-y-auto rounded-xl border border-[color-mix(in_srgb,var(--hairline)_55%,transparent)] bg-[color-mix(in_srgb,var(--hairline)_16%,transparent)] px-3.5 py-2.5 text-[12.5px] leading-relaxed text-muted-foreground">
         {artifact.prompt}
       </p>
@@ -527,14 +541,53 @@ export function VisualizationCard({
     artifact.imageUrl !== null && artifact.mode !== "presentation";
   const hasPanels = artifact.panels.length > 0;
 
+  /* the painting travels home — fetched as a blob so remote (cloud)
+     canvases download just as cleanly as gallery ones */
+  const downloadArtwork = async () => {
+    if (!artifact.imageUrl) return;
+    const name =
+      `${artifact.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "mirror-vision"}.png`;
+    try {
+      const res = await fetch(artifact.imageUrl, { mode: "cors" });
+      if (!res.ok) throw new Error("the canvas would not be fetched");
+      const blob = await res.blob();
+      const obj = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = obj;
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.setTimeout(() => URL.revokeObjectURL(obj), 5000);
+    } catch {
+      /* cross-origin skies — open the painting in its own tab instead */
+      window.open(artifact.imageUrl, "_blank", "noopener");
+    }
+  };
+
   const artwork = (large: boolean) => (
     <div
-      className="relative overflow-hidden rounded-xl border border-[color-mix(in_srgb,var(--hairline)_60%,transparent)]"
+      className={cn(
+        "relative overflow-hidden rounded-xl border border-[color-mix(in_srgb,var(--hairline)_60%,transparent)]",
+        !large && "cursor-zoom-in"
+      )}
       style={{
         aspectRatio:
           ratio ?? (artifact.mode === "encyclopedia" || artifact.mode === "science" ? "4 / 3" : "7 / 4"),
       }}
       data-testid={large ? `${testIdPrefix}-artwork-large` : `${testIdPrefix}-artwork`}
+      onClick={!large ? () => setExpanded(true) : undefined}
+      role={!large ? "button" : undefined}
+      tabIndex={!large ? 0 : undefined}
+      aria-label={!large ? t("Expand") : undefined}
+      onKeyDown={!large
+        ? (e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              setExpanded(true);
+            }
+          }
+        : undefined}
     >
       {!loaded && (
         <div className="shimmer-bar absolute inset-0" aria-hidden="true" />
@@ -552,8 +605,8 @@ export function VisualizationCard({
             setLoaded(true);
           }}
           className={cn(
-            "size-full object-cover transition-opacity duration-700",
-            loaded ? "opacity-100" : "opacity-0"
+            "size-full object-cover transition-[opacity,filter,transform] duration-700 ease-out",
+            loaded ? "scale-100 opacity-100 blur-0" : "scale-[1.045] opacity-0 blur-lg"
           )}
         />
       )}
@@ -676,10 +729,10 @@ export function VisualizationCard({
                 <span className="hidden sm:inline">{t("Expand")}</span>
               </button>
             )}
-            {artifact.downloadUrl && (
-              <a
-                href={artifact.downloadUrl}
-                download
+            {artifact.imageUrl && (
+              <button
+                type="button"
+                onClick={() => void downloadArtwork()}
                 aria-label={t("Download")}
                 title={t("Download")}
                 data-testid={`${testIdPrefix}-download`}
@@ -687,7 +740,7 @@ export function VisualizationCard({
               >
                 <Download className="size-3.5" aria-hidden="true" />
                 <span className="hidden sm:inline">{t("Download")}</span>
-              </a>
+              </button>
             )}
             {onRegenerate && (
               <button

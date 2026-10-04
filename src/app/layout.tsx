@@ -31,6 +31,7 @@ const literata = Literata({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://reflectme.space"),
   title: "Mirror Entity Laboratory — Interplanetary Channel",
   description:
     "A translational field of willing representatives from many star civilizations, gathered to reflect the truth of who is supporting your evolution, with love.",
@@ -41,10 +42,8 @@ export const metadata: Metadata = {
     "Mirror OS · Reality Guidance",
     "Observatory",
   ],
-  icons: {
-    icon: "/images/ai/cosmic-mark.png",
-    apple: "/images/ai/cosmic-mark.png",
-  },
+  /* the favicon itself is src/app/icon.png (App Router convention) —
+     the white glyph on the near-black brand ground */
 };
 
 export const viewport: Viewport = {

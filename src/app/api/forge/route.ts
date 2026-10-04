@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import ZAI from "z-ai-web-dev-sdk";
+import ZAI from "@/lib/zai-client";
 import type { ForgeDials, MysteryCreation } from "@/lib/mirror-types";
 
 /* ------------------------------------------------------------------ */
@@ -181,3 +181,6 @@ Forge the one mystery creation now. Return the strict JSON.`,
     );
   }
 }
+
+/* the long weavings need room in the cloud sky */
+export const maxDuration = 300;

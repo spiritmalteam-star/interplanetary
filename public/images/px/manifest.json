@@ -1,0 +1,102 @@
+{
+  "generatedAt": "2026-10-03T19:45:51.467Z",
+  "categories": {
+    "formulas": {
+      "label": "Reality Formulas",
+      "count": 3,
+      "images": [
+        "formulas/a-colossal-balance-scale-weighing-a-star-against-a-single-dr.png",
+        "formulas/a-vast-orrery-of-brass-planets-locked-in-perfect-gear-ratios.png",
+        "formulas/a-river-forking-into-symmetric-branches-each-branch-a-life-n.png"
+      ]
+    },
+    "perception": {
+      "label": "Perception Fields",
+      "count": 2,
+      "images": [
+        "perception/the-world-through-a-bee-s-eyes-a-garden-exploding-into-hexag.png",
+        "perception/the-world-through-a-cat-s-senses-a-dim-room-lit-by-rivers-of.png"
+      ]
+    },
+    "emotions": {
+      "label": "The Making of Emotions",
+      "count": 2,
+      "images": [
+        "emotions/a-vast-underground-foundry-where-small-glowing-hearts-are-ha.png",
+        "emotions/a-crucible-pouring-molten-golden-light-into-a-mould-shaped-l.png"
+      ]
+    },
+    "belief": {
+      "label": "Belief Systems",
+      "count": 2,
+      "images": [
+        "belief/a-colossal-invisible-engine-revealed-only-by-the-steam-risin.png",
+        "belief/a-cathedral-nave-whose-pillars-are-being-voted-into-place-by.png"
+      ]
+    },
+    "quantum": {
+      "label": "Quantum Reality",
+      "count": 2,
+      "images": [
+        "quantum/a-cat-rendered-half-in-midnight-ink-and-half-in-daylight-asl.png",
+        "quantum/two-dice-on-opposite-horizons-showing-the-same-face-at-the-s.png"
+      ]
+    },
+    "parallel": {
+      "label": "Parallel Formulas",
+      "count": 2,
+      "images": [
+        "parallel/the-same-copper-kettle-steaming-on-twelve-different-stoves-a.png",
+        "parallel/a-single-wooden-chair-repeated-down-a-long-hall-of-parallel.png"
+      ]
+    },
+    "mycelia": {
+      "label": "The Mycelial Origin",
+      "count": 2,
+      "images": [
+        "mycelia/a-vast-underground-fungal-web-glowing-faintly-beneath-a-slee.png",
+        "mycelia/a-single-spore-drifting-down-from-a-constellation-to-land-on.png"
+      ]
+    },
+    "vibration": {
+      "label": "Vibration & Monuments",
+      "count": 2,
+      "images": [
+        "vibration/a-great-pyramid-emitting-slow-concentric-rings-of-stone-hum.png",
+        "vibration/a-standing-stone-humming-with-visible-ripples-spreading-acro.png"
+      ]
+    },
+    "genome": {
+      "label": "The DNA & Synthetic Genomics Layer",
+      "count": 2,
+      "images": [
+        "genome/a-double-helix-drawn-as-a-braided-river-of-light-between-two.png",
+        "genome/a-genetic-circuit-rendered-as-a-garden-of-branching-living-w.png"
+      ]
+    },
+    "engines": {
+      "label": "The Core Therapeutic Engines",
+      "count": 2,
+      "images": [
+        "engines/a-protein-folding-like-an-origami-crane-taking-shape-from-a.png",
+        "engines/an-rna-switch-shown-as-a-hinge-of-light-opening-a-tiny-gate.png"
+      ]
+    },
+    "medworld": {
+      "label": "The Global Med-World",
+      "count": 2,
+      "images": [
+        "medworld/a-lipid-nanoparticle-as-a-soap-bubble-ferry-docking-at-a-cel.png",
+        "medworld/a-tiny-icosahedral-shell-drawn-as-a-lantern-drifting-between.png"
+      ]
+    },
+    "interface": {
+      "label": "The Meta-Biological Interface",
+      "count": 2,
+      "images": [
+        "interface/a-neural-lattice-answering-a-beam-of-code-filaments-lighting.png",
+        "interface/a-tissue-culture-plate-as-a-garden-plot-where-spikes-of-ligh.png"
+      ]
+    }
+  }
+}
