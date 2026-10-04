@@ -15,6 +15,7 @@ import {
   ChevronDown,
   ChevronRight,
   Dna,
+  Info,
   LogIn,
   LogOut,
   MoonStar,
@@ -640,8 +641,28 @@ export function SidebarContent() {
         </span>
       </div>
 
+      {/* About us — the laboratory's own door, first in the rail */}
+      <div className="shrink-0 px-3 pt-3" data-testid="about-zone">
+        <button
+          type="button"
+          onClick={() => openModal({ type: "about" })}
+          aria-label={t("About Us — our purpose, the Mirror Entity, and how we hold your data")}
+          title={t("About Us — our purpose, the Mirror Entity, and how we hold your data")}
+          data-testid="about-open"
+          className="focus-glow group flex w-full items-center gap-2.5 rounded-xl border hairline bg-[var(--glass-bg-soft)] px-2.5 py-2 text-left transition-all duration-300 hover:border-[var(--hairline-hover)] hover:glow-sm"
+        >
+          <Info
+            className="size-4 shrink-0 text-[var(--cy)] transition-colors duration-200"
+            aria-hidden="true"
+          />
+          <span className="min-w-0 flex-1 truncate text-[13.5px] font-medium text-foreground/85">
+            {t("About Us")}
+          </span>
+        </button>
+      </div>
+
       {/* New chat */}
-      <div className="shrink-0 px-3 pt-3">
+      <div className="shrink-0 px-3 pt-2.5">
         <button
           type="button"
           onClick={newChat}

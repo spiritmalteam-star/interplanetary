@@ -44,3 +44,47 @@ export const VOLUMES: BookOption[] = [
 
 /** The verse forms — books written in stanzas, not prose paragraphs. */
 export const VERSE_FORMS = new Set(["poem", "riddle", "ballad"]);
+
+/** The level of lecture — how deep and multidimensional the writing
+    reads. A depth gauge of four strata: from the most luminous
+    clarity (angel readers) down to the ancient legacy voice whose
+    paragraphs run in several dimensions at once. */
+export interface LectureLevel {
+  id: string;
+  label: string;
+  /** Roman numeral of the stratum — shown on the depth bar. */
+  numeral: string;
+  /** What the level does to the writing (i18n dynamic content). */
+  depth: string;
+}
+
+export const LECTURE_LEVELS: LectureLevel[] = [
+  {
+    id: "angel",
+    label: "Angel readers",
+    numeral: "I",
+    depth:
+      "the most luminous clarity — every word rests open like daylight; the deeper strata still shimmer beneath, gentle as wings",
+  },
+  {
+    id: "cryptic",
+    label: "Cryptics",
+    numeral: "II",
+    depth:
+      "veiled speech — symbols, silences and meanings folded beneath the surface, felt before they are understood",
+  },
+  {
+    id: "decipher",
+    label: "Decyphres",
+    numeral: "III",
+    depth:
+      "writing as code — ciphers, riddles and layered registers the reader unlocks page by page",
+  },
+  {
+    id: "legacy",
+    label: "Legacy reading",
+    numeral: "IV",
+    depth:
+      "the deepest stratum — an ancient legacy voice whose paragraphs run in several dimensions at once, the book quietly reading its reader",
+  },
+];

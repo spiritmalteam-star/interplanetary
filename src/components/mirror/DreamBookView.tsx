@@ -39,7 +39,7 @@ import { toast } from "sonner";
 import { ModalShell } from "./ModalShell";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
-import { READERS, TALES, VOLUMES } from "@/lib/data/book-options";
+import { LECTURE_LEVELS, READERS, TALES, VOLUMES } from "@/lib/data/book-options";
 import type { VoiceId } from "@/lib/i18n/core";
 import { cn } from "@/lib/utils";
 
@@ -118,6 +118,7 @@ export function DreamBookView() {
   const [age, setAge] = useState("");
   const [tale, setTale] = useState("");
   const [volume, setVolume] = useState("");
+  const [level, setLevel] = useState("");
   const [topic, setTopic] = useState("");
   const [topicDraft, setTopicDraft] = useState("");
   const [phaseIdx, setPhaseIdx] = useState(0);
@@ -166,7 +167,7 @@ export function DreamBookView() {
   const endedRef = useRef(false);
   const weavingRef = useRef(false);
   const rewritesRef = useRef<string[]>([]);
-  const configRef = useRef({ age, tale, volume, topic });
+  const configRef = useRef({ age, tale, volume, level, topic });
   /* the book's own place in its keeper's cosmic library — a fresh
      volume is given it on open; a volume brought back already has one,
      and every woven page keeps that entry alive */
@@ -177,8 +178,8 @@ export function DreamBookView() {
   });
 
   useEffect(() => {
-    configRef.current = { age, tale, volume, topic };
-  }, [age, tale, volume, topic]);
+    configRef.current = { age, tale, volume, level, topic };
+  }, [age, tale, volume, level, topic]);
 
   /* -------- a volume brought back from the cosmic library --------
      The DreamBookView mounts fresh when the library hands a volume
@@ -201,11 +202,13 @@ export function DreamBookView() {
       age: r.config.age,
       tale: r.config.tale,
       volume: r.config.volume,
+      level: r.config.level ?? "",
       topic: r.config.topic,
     };
     setAge(r.config.age);
     setTale(r.config.tale);
     setVolume(r.config.volume);
+    setLevel(r.config.level ?? "");
     setTopic(r.config.topic);
     setPages(pagesRef.current);
     setMeta(metaRef.current);
@@ -434,10 +437,11 @@ export function DreamBookView() {
   /* one thread held or let go — every shape toggles freely, and the
      selection may empty itself again before the channeling begins */
   const choose = useCallback(
-    (kind: "reader" | "tale" | "volume", id: string) => {
+    (kind: "reader" | "tale" | "volume" | "level", id: string) => {
       if (kind === "reader") setAge((cur) => (cur === id ? "" : id));
       if (kind === "tale") setTale((cur) => (cur === id ? "" : id));
       if (kind === "volume") setVolume((cur) => (cur === id ? "" : id));
+      if (kind === "level") setLevel((cur) => (cur === id ? "" : id));
     },
     []
   );
@@ -466,13 +470,13 @@ export function DreamBookView() {
       const text = topicDraft.trim().slice(0, 600);
       /* the final gate — at least one thread must be held before the
          loom may begin; nothing beyond that is ever forced */
-      if (!text || weavingRef.current || !(age || tale || volume)) return;
+      if (!text || weavingRef.current || !(age || tale || volume || level)) return;
       setTopicDraft("");
       setTopic(text);
       configRef.current = { ...configRef.current, topic: text };
       void openBook();
     },
-    [topicDraft, age, tale, volume, openBook]
+    [topicDraft, age, tale, volume, level, openBook]
   );
 
   /* ---------------- the reader's logic ----------------
@@ -549,6 +553,7 @@ export function DreamBookView() {
     setWeaveFailed(false);
     setTopic("");
     setTopicDraft("");
+    setLevel("");
     setStage("atelier");
   }, [stopNarration]);
 
@@ -661,6 +666,12 @@ export function DreamBookView() {
   const readPageOf = meta ? Math.min(pageIdx, meta.totalPages) : 0;
   const progress = meta ? Math.min(1, readPageOf / meta.totalPages) : 0;
 
+  /* the chosen level of lecture — the depth the book reads at */
+  const levelMeta = useMemo(
+    () => LECTURE_LEVELS.find((l) => l.id === level) ?? null,
+    [level]
+  );
+
   /* the rewriting hand — starters the visitor may lean on */
   const REWRITE_STARTERS = [
     t("Let the coming events turn toward…"),
@@ -770,6 +781,77 @@ export function DreamBookView() {
               onPick={(id) => choose("volume", id)}
             />
           </div>
+
+          {/* the level bar — the depth of lecture, four strata of reading */}
+          <div className="mt-7" data-testid="dream-level-bar">
+            <p className="mono-label mb-2.5 text-center text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+              {t("The level of lecture")}
+            </p>
+            <div className="flex items-end gap-1.5">
+              {LECTURE_LEVELS.map((lv, i) => {
+                const active = level === lv.id;
+                const intensities = [0.14, 0.32, 0.58, 0.92];
+                return (
+                  <button
+                    key={lv.id}
+                    type="button"
+                    onClick={() => choose("level", lv.id)}
+                    aria-pressed={active}
+                    aria-label={`${t(lv.label)} — ${lv.numeral}`}
+                    data-testid={`dream-level-${lv.id}`}
+                    className="focus-glow group flex min-w-0 flex-1 flex-col items-center gap-1.5"
+                  >
+                    <span
+                      className={cn(
+                        "relative flex h-7 w-full items-end overflow-hidden rounded-md border transition-all duration-300",
+                        active && "glow-sm"
+                      )}
+                      style={{
+                        borderColor: active
+                          ? "var(--foreground)"
+                          : "var(--border)",
+                        background: `color-mix(in srgb, var(--foreground) ${intensities[i]}%, transparent)`,
+                      }}
+                    >
+                      <span
+                        className="absolute inset-x-0 top-0 flex justify-center pt-0.5 font-[family-name(var(--font-literata))] text-[9px] tracking-[0.14em]"
+                        style={{
+                          color:
+                            i >= 2
+                              ? "var(--background)"
+                              : "var(--muted-foreground)",
+                        }}
+                      >
+                        {lv.numeral}
+                      </span>
+                      {active && (
+                        <motion.span
+                          layoutId="dream-level-marker"
+                          className="absolute inset-x-0 bottom-0 h-[3px] bg-foreground"
+                          transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                        />
+                      )}
+                    </span>
+                    <span
+                      className={cn(
+                        "w-full truncate text-center font-[family-name(var(--font-literata))] text-[10.5px] italic leading-tight transition-colors duration-300",
+                        active
+                          ? "text-foreground"
+                          : "text-muted-foreground/75 group-hover:text-foreground"
+                      )}
+                    >
+                      {t(lv.label)}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            <p className="ink-hand ink-soft mt-2.5 min-h-[2.6em] text-center text-[12px] italic leading-relaxed">
+              {levelMeta
+                ? t(levelMeta.depth)
+                : t("Choose how deep the book reads — from the clearest daylight to the multidimensional legacy voice.")}
+            </p>
+          </div>
           <div aria-hidden="true" className="h-4" />
         </div>
       </div>
@@ -789,7 +871,7 @@ export function DreamBookView() {
                 className="ink-hand ink-soft mb-2 text-center text-[12.5px] italic"
               >
                 {t(
-                  "The loom waits for a thread — choose the reader, the tale, or the book below."
+                  "The loom waits for a thread — choose the reader, the tale, the book, or the level below."
                 )}
               </motion.p>
             )}
@@ -808,7 +890,7 @@ export function DreamBookView() {
             />
             <button
               type="submit"
-              disabled={!topicDraft.trim() || !(age || tale || volume)}
+              disabled={!topicDraft.trim() || !(age || tale || volume || level)}
               aria-label={t("Channel the book")}
               title={t("Channel the book")}
               className="akashic-btn focus-glow flex size-8 shrink-0 items-center justify-center rounded-full disabled:opacity-40"
@@ -1196,6 +1278,14 @@ export function DreamBookView() {
                       <p className="max-w-[300px] font-[family-name(var(--font-literata))] text-[12px] italic leading-relaxed text-[var(--dream-ink-soft)]">
                         {meta?.dedication}
                       </p>
+                      {levelMeta && (
+                        <p
+                          className="mono-label mt-3 text-[9px] uppercase tracking-[0.24em] text-[var(--dream-ink-faint)]"
+                          data-testid="dream-reading-level-badge"
+                        >
+                          {levelMeta.numeral} · {t(levelMeta.label)}
+                        </p>
+                      )}
                     </div>
                     <p className="pb-2 font-[family-name(var(--font-literata))] text-[10.5px] uppercase tracking-[0.24em] text-[var(--dream-ink-faint)]">
                       {t("woven for you, this very hour")}

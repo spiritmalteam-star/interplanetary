@@ -17,12 +17,14 @@ import {
   Maximize2,
   Minimize2,
   Orbit,
+  Play,
   RotateCcw,
   RotateCw,
   Shuffle,
   Sparkles,
   Sun,
   Volume2,
+  Wand2,
   Wrench,
   X,
 } from "lucide-react";
@@ -33,6 +35,7 @@ import {
   saAlignments,
   saBenchOpeners,
   saDials,
+  saOracle,
   saPlates,
   saRestLines,
   saSquares,
@@ -40,6 +43,8 @@ import {
   saWorld,
   type SaAlignment,
   type SaCreation,
+  type SaOracleKind,
+  type SaOracleReading,
   type SaTool,
 } from "@/lib/data/synth-analog";
 import { SaSigil, saSquareHasFace, type SaRingId } from "./SaSigils";
@@ -106,9 +111,26 @@ const SA_CSS = `
 }
 .sa-hit { cursor: pointer; }
 .sa-hit:hover .sa-hit-shape { stroke: var(--sa-gold-bright); stroke-width: 2.4; }
+/* the tools' demonstrations — small living engines */
+@keyframes sa-demo-spin { to { transform: rotate(360deg); } }
+@keyframes sa-demo-spin-rev { to { transform: rotate(-360deg); } }
+@keyframes sa-demo-sweep { 0% { transform: translateX(-26px); } 100% { transform: translateX(26px); } }
+@keyframes sa-demo-pulse { 0%, 100% { opacity: 0.3; transform: scale(0.9); } 50% { opacity: 1; transform: scale(1.1); } }
+@keyframes sa-demo-flicker { 0%, 100% { opacity: 0.45; } 38% { opacity: 1; } 46% { opacity: 0.55; } 62% { opacity: 0.95; } }
+@keyframes sa-demo-flash { 0% { opacity: 0; } 14% { opacity: 1; } 44% { opacity: 0.25; } 100% { opacity: 0; } }
+@keyframes sa-demo-part { 0%, 100% { transform: translateX(-7px); } 50% { transform: translateX(7px); } }
+.sa-demo-spin { animation: sa-demo-spin 5.5s linear infinite; transform-box: fill-box; transform-origin: center; }
+.sa-demo-spin-rev { animation: sa-demo-spin-rev 5.5s linear infinite; transform-box: fill-box; transform-origin: center; }
+.sa-demo-sweep { animation: sa-demo-sweep 2.6s ease-in-out infinite alternate; transform-box: fill-box; }
+.sa-demo-pulse { animation: sa-demo-pulse 2.2s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.sa-demo-flicker { animation: sa-demo-flicker 2.4s linear infinite; }
+.sa-demo-flash { animation: sa-demo-flash 2.4s linear infinite; }
+.sa-demo-part { animation: sa-demo-part 2.8s ease-in-out infinite; transform-box: fill-box; }
 @media (prefers-reduced-motion: reduce) {
   .sa-ring { transition: none !important; }
   .sa-breathe { animation: none !important; opacity: 0.7; }
+  .sa-demo-spin, .sa-demo-spin-rev, .sa-demo-sweep, .sa-demo-pulse,
+  .sa-demo-flicker, .sa-demo-flash, .sa-demo-part { animation: none !important; opacity: 0.8; }
 }
 `;
 
@@ -245,6 +267,79 @@ const creationStore = makeLocalMap<SaCreation>(
   "px-synth-creations-v1",
   "px-synth-creations-change"
 );
+
+/* ---------------------- the resonance tone -------------------------- */
+/*  A soft sung partial chord at a given Hz — shared by the circles,
+    the manual and every tool demonstration. */
+
+function playSaTone(freq: number) {
+  try {
+    const Ctx =
+      window.AudioContext ??
+      (
+        window as unknown as {
+          webkitAudioContext?: typeof AudioContext;
+        }
+      ).webkitAudioContext;
+    if (!Ctx) return;
+    const ctx = new Ctx();
+    const now = ctx.currentTime;
+    const master = ctx.createGain();
+    master.gain.setValueAtTime(0.0001, now);
+    master.gain.exponentialRampToValueAtTime(0.2, now + 0.14);
+    master.gain.exponentialRampToValueAtTime(0.0001, now + 4.2);
+    master.connect(ctx.destination);
+    const partials: [number, number][] = [
+      [1, 1],
+      [2, 0.26],
+      [3, 0.09],
+      [0.5, 0.13],
+    ];
+    for (const [mult, g] of partials) {
+      const osc = ctx.createOscillator();
+      osc.type = "sine";
+      osc.frequency.value = freq * mult;
+      const og = ctx.createGain();
+      og.gain.value = g;
+      osc.connect(og);
+      og.connect(master);
+      osc.start(now);
+      osc.stop(now + 4.4);
+    }
+    window.setTimeout(() => {
+      void ctx.close();
+    }, 4600);
+  } catch {
+    /* the tone stays silent when the browser refuses */
+  }
+}
+
+/** The frequency a sigil's tool sounds, when its sign carries one. */
+const saSigilFrequency = (ring: SaRingId, id: string): number | null => {
+  if (ring === "dial") return saDials.find((d) => d.id === id)?.frequency ?? null;
+  if (ring === "square") return saSquares.find((s) => s.id === id)?.frequency ?? null;
+  return null;
+};
+
+/* -------------------- the kind of each oracle fruit ------------------ */
+
+const SA_KIND_LABEL: Record<SaOracleKind, string> = {
+  technology: "a technology",
+  question: "a question",
+  illumination: "an illumination",
+  practice: "a practice",
+  tone: "a tone to keep",
+  cipher: "a cipher",
+};
+
+const SA_KIND_TONE: Record<SaOracleKind, string> = {
+  technology: "var(--sa-gold-bright)",
+  question: "var(--sa-jade)",
+  illumination: "var(--sa-gold)",
+  practice: "var(--sa-jade)",
+  tone: "var(--sa-gold-bright)",
+  cipher: "var(--sa-gold-soft)",
+};
 
 /* --------------------------- small parts ---------------------------- */
 
@@ -512,6 +607,10 @@ export function SynthAnalog() {
   const [fetchingTools, setFetchingTools] = useState<string[]>([]);
   const [fetchingCreation, setFetchingCreation] = useState<string | null>(null);
   const fetchingRef = useRef<Set<string>>(new Set());
+  /* the great awakening — all thirty-six tools waking in one patient
+     procession, each one asked of the core in turn */
+  const [awakening, setAwakening] = useState(false);
+  const awakeningRef = useRef(false);
 
   /* the wheels' resting triple — mirrored in a ref so rapid turns
      (batched between renders) still read the true resting signs. */
@@ -872,6 +971,15 @@ export function SynthAnalog() {
     return saWhispers[h % saWhispers.length];
   }, [outerIdx, midIdx, squareIdx]);
 
+  /* the manual of combinations — every resting trio produces something:
+     a technology, a question, an illumination, a practice, a tone or a
+     cipher, deterministic per combination, 1,728 pages deep. */
+  const oracle = useMemo(() => saOracle(outerIdx, midIdx, squareIdx), [
+    outerIdx,
+    midIdx,
+    squareIdx,
+  ]);
+
   const restMotto = useMemo(
     () => saRestLines[restCountRef.current % saRestLines.length],
     [outerIdx, midIdx, squareIdx]
@@ -912,6 +1020,53 @@ export function SynthAnalog() {
   );
 
   const aligned = Boolean(alignment);
+
+  /* the great awakening — every sigil on the wall asked of the core,
+     one after another, until all thirty-six tools stand awake */
+  const awakenAllTools = useCallback(async () => {
+    if (awakeningRef.current) return;
+    awakeningRef.current = true;
+    setAwakening(true);
+    const rest = (ms: number) =>
+      new Promise<void>((r) => window.setTimeout(r, ms));
+    try {
+      for (const d of saDials) {
+        if (!toolStore.get()[d.id]) {
+          await decipherTool("dial", {
+            id: d.id,
+            name: d.name,
+            detail: d.element,
+            frequency: d.frequency,
+          });
+          await rest(260);
+        }
+      }
+      for (const p of saPlates) {
+        if (!toolStore.get()[p.id]) {
+          await decipherTool("plate", {
+            id: p.id,
+            name: p.name,
+            detail: p.technique,
+          });
+          await rest(260);
+        }
+      }
+      for (const s of saSquares) {
+        if (!toolStore.get()[s.id]) {
+          await decipherTool("square", {
+            id: s.id,
+            name: s.name,
+            detail: s.opens,
+            frequency: s.frequency,
+          });
+          await rest(260);
+        }
+      }
+    } finally {
+      awakeningRef.current = false;
+      setAwakening(false);
+    }
+  }, [decipherTool]);
 
   /* ------------------------- the shell ------------------------------ */
 
@@ -1011,6 +1166,7 @@ export function SynthAnalog() {
                 alignment={alignment}
                 aligned={aligned}
                 whisper={whisper}
+                oracle={oracle}
                 restMotto={restMotto}
                 burst={burst}
                 discovered={discovered}
@@ -1023,6 +1179,8 @@ export function SynthAnalog() {
                 onBringTo={bringTo}
                 onRetryTool={retryTool}
                 onForgeCreation={forgeCreation}
+                onAwakenAll={awakenAllTools}
+                awakening={awakening}
                 onOpenWall={() => setPlace("tools")}
                 onOpenBench={() => setPlace("bench")}
               />
@@ -1052,7 +1210,11 @@ export function SynthAnalog() {
                 tools={tools}
                 creations={creations}
                 fetchingCreation={fetchingCreation}
+                fetchingTools={fetchingTools}
                 onForgeCreation={forgeCreation}
+                onRetryTool={retryTool}
+                onAwakenAll={awakenAllTools}
+                awakening={awakening}
                 onOpenCircles={() => setPlace("circles")}
                 onOpenBench={() => setPlace("bench")}
               />
@@ -1119,6 +1281,7 @@ function CirclesChamber({
   alignment,
   aligned,
   whisper,
+  oracle,
   restMotto,
   burst,
   discovered,
@@ -1131,6 +1294,8 @@ function CirclesChamber({
   onBringTo,
   onRetryTool,
   onForgeCreation,
+  onAwakenAll,
+  awakening,
   onOpenWall,
   onOpenBench,
 }: {
@@ -1147,6 +1312,7 @@ function CirclesChamber({
   alignment: SaAlignment | null;
   aligned: boolean;
   whisper: string;
+  oracle: SaOracleReading;
   restMotto: string;
   burst: number;
   discovered: string[];
@@ -1159,6 +1325,8 @@ function CirclesChamber({
   onBringTo: (ring: "outer" | "mid" | "square", target: number, silent?: boolean) => void;
   onRetryTool: (ring: SaRingId, id: string) => void;
   onForgeCreation: (a: SaAlignment) => void;
+  onAwakenAll: () => void;
+  awakening: boolean;
   onOpenWall: () => void;
   onOpenBench: () => void;
 }) {
@@ -1166,53 +1334,14 @@ function CirclesChamber({
   const [zoom, setZoom] = useState(false);
 
   /* the resonance tone — a soft sung partial chord at the formula's Hz */
-  const audioRef = useRef<AudioContext | null>(null);
   const [sounding, setSounding] = useState<number | null>(null);
 
   const playTone = (freq: number) => {
-    try {
-      const Ctx =
-        window.AudioContext ??
-        (
-          window as unknown as {
-            webkitAudioContext?: typeof AudioContext;
-          }
-        ).webkitAudioContext;
-      if (!Ctx) return;
-      void audioRef.current?.close();
-      const ctx = new Ctx();
-      audioRef.current = ctx;
-      const now = ctx.currentTime;
-      const master = ctx.createGain();
-      master.gain.setValueAtTime(0.0001, now);
-      master.gain.exponentialRampToValueAtTime(0.2, now + 0.14);
-      master.gain.exponentialRampToValueAtTime(0.0001, now + 4.2);
-      master.connect(ctx.destination);
-      const partials: [number, number][] = [
-        [1, 1],
-        [2, 0.26],
-        [3, 0.09],
-        [0.5, 0.13],
-      ];
-      for (const [mult, g] of partials) {
-        const osc = ctx.createOscillator();
-        osc.type = "sine";
-        osc.frequency.value = freq * mult;
-        const og = ctx.createGain();
-        og.gain.value = g;
-        osc.connect(og);
-        og.connect(master);
-        osc.start(now);
-        osc.stop(now + 4.4);
-      }
-      setSounding(freq);
-      window.setTimeout(() => {
-        setSounding((f) => (f === freq ? null : f));
-        void ctx.close();
-      }, 4600);
-    } catch {
-      /* the tone stays silent when the browser refuses */
-    }
+    playSaTone(freq);
+    setSounding(freq);
+    window.setTimeout(() => {
+      setSounding((f) => (f === freq ? null : f));
+    }, 4600);
   };
 
   /* the full-screen instrument — Esc always returns it to the world */
@@ -1804,16 +1933,39 @@ function CirclesChamber({
               }}
               data-testid="sa-status"
               data-aligned="false"
+              data-oracle-kind={oracle.kind}
             >
-              <p className="mono-label text-[9.5px] uppercase tracking-[0.2em] text-muted-foreground">
-                {t("Unwritten combination")}
+              {/* the manual of combinations — every trio produces something */}
+              <div className="flex items-center justify-between gap-2">
+                <p className="mono-label text-[9.5px] uppercase tracking-[0.2em] text-muted-foreground">
+                  {t("The wheels speak")}
+                </p>
+                <span
+                  className="mono-label shrink-0 rounded-full border px-2 py-0.5 text-[8.5px] uppercase tracking-[0.16em]"
+                  style={{
+                    borderColor: `color-mix(in srgb, ${SA_KIND_TONE[oracle.kind]} 42%, transparent)`,
+                    color: SA_KIND_TONE[oracle.kind],
+                  }}
+                  data-testid="sa-oracle-kind"
+                >
+                  {t(SA_KIND_LABEL[oracle.kind])}
+                </span>
+              </div>
+              <p
+                className="mt-1.5 font-serif text-[14.5px] font-semibold italic text-foreground/95"
+                data-testid="sa-oracle-name"
+              >
+                {oracle.name}
               </p>
-              <p className="mt-2 font-serif text-[14px] italic leading-relaxed text-muted-foreground">
-                {t(whisper)}
+              <p
+                className="mt-1.5 text-[13.5px] leading-relaxed text-foreground/85"
+                data-testid="sa-oracle-reading"
+              >
+                {oracle.reading}
               </p>
-              <p className="mt-2.5 text-[12.5px] leading-relaxed text-muted-foreground/80">
+              <p className="mt-2.5 border-t pt-2 text-[12px] leading-relaxed text-muted-foreground/80" style={{ borderColor: "color-mix(in srgb, var(--sa-gold) 18%, transparent)" }}>
                 {t(
-                  "Turn the three circles until one dial, one plate and one square glyph meet at the apex — each sign the mirror deciphers becomes a tool, and every formula that aligns climbs out as a creation."
+                  "Every combination is a page of the manual — turn the wheels for another. Align a written formula and an ancient technology climbs out as a creation."
                 )}
               </p>
             </div>
@@ -2270,6 +2422,333 @@ function SaBench({
 }
 
 /* ================================================================== */
+/*  THE TOOLS' DEMONSTRATIONS — every tool shows its purpose           */
+/* ================================================================== */
+
+/** One small living engine per sigil — the tool performing its own
+    purpose inside a 132×44 window. */
+function SaDemoEngine({ id, ring }: { id: string; ring: SaRingId }) {
+  const ink = "var(--sa-gold)";
+  const jade = "var(--sa-jade)";
+  const key = ring === "plate" ? id : id;
+
+  if (ring === "square") {
+    /* a tone bar — the sign's own sound, held as a standing wave */
+    const num = saSquares.find((s) => s.id === id)?.face ?? "";
+    return (
+      <g>
+        <line x1="16" y1="22" x2="116" y2="22" stroke={ink} strokeWidth="1" opacity="0.5" />
+        {[0, 1, 2, 3, 4].map((i) => (
+          <circle
+            key={i}
+            cx={26 + i * 20}
+            cy="22"
+            r={5 - Math.abs(i - 2) * 1.2}
+            fill={i % 2 ? jade : ink}
+            className="sa-demo-pulse"
+            style={{ animationDelay: `${i * 0.28}s` }}
+          />
+        ))}
+        <text x="66" y="40" textAnchor="middle" fontSize="9" fontWeight="600" fill={ink} opacity="0.85">
+          {num}
+        </text>
+      </g>
+    );
+  }
+
+  switch (key) {
+    case "vibration":
+      return (
+        <g>
+          <circle cx="66" cy="22" r="10" fill="none" stroke={ink} strokeWidth="1.6" className="sa-demo-pulse" />
+          <circle cx="66" cy="22" r="3" fill={ink} className="sa-demo-pulse" style={{ animationDelay: "0.4s" }} />
+          <path d="M 30 22 h 14 M 88 22 h 14" stroke={ink} strokeWidth="1.4" className="sa-demo-flicker" />
+        </g>
+      );
+    case "intention":
+      return (
+        <g>
+          <path d="M 34 22 H 86 M 78 15 L 88 22 L 78 29" fill="none" stroke={ink} strokeWidth="1.8" strokeLinecap="round" />
+          <circle cx="42" cy="22" r="3" fill={jade} className="sa-demo-pulse" />
+        </g>
+      );
+    case "harmonics":
+      return (
+        <g fill="none" stroke={ink}>
+          {[8, 14, 20].map((r, i) => (
+            <circle key={r} cx="66" cy="22" r={r} strokeWidth="1.3" className="sa-demo-pulse" style={{ animationDelay: `${i * 0.5}s` }} />
+          ))}
+        </g>
+      );
+    case "mirror-matrix":
+      return (
+        <g>
+          {Array.from({ length: 8 }, (_, i) => (
+            <rect
+              key={i}
+              x={36 + (i % 4) * 16}
+              y={14 + Math.floor(i / 4) * 16}
+              width="9"
+              height="9"
+              fill="none"
+              stroke={i % 2 ? jade : ink}
+              strokeWidth="1.2"
+              className="sa-demo-pulse"
+              style={{ animationDelay: `${(i % 4) * 0.3}s` }}
+            />
+          ))}
+        </g>
+      );
+    case "resonance":
+      return (
+        <g fill="none" strokeWidth="1.6">
+          <circle cx="46" cy="22" r="9" stroke={ink} className="sa-demo-pulse" />
+          <circle cx="86" cy="22" r="9" stroke={jade} className="sa-demo-pulse" style={{ animationDelay: "1.1s" }} />
+          <line x1="55" y1="22" x2="77" y2="22" stroke={ink} strokeWidth="1" opacity="0.5" className="sa-demo-flicker" />
+        </g>
+      );
+    case "scalar-wave":
+    case "p-scalar":
+    case "p-quetzal":
+      return (
+        <g>
+          <path
+            d={key === "p-quetzal"
+              ? "M 26 22 C 36 8, 46 36, 56 22 S 76 8, 86 22 S 100 32, 106 22"
+              : "M 26 22 Q 36 10 46 22 T 66 22 T 86 22 T 106 22"}
+            fill="none"
+            stroke={ink}
+            strokeWidth="1.5"
+          />
+          <circle r="3.4" fill={jade} cy="22" cx="26" className="sa-demo-sweep" />
+        </g>
+      );
+    case "chymic-gold":
+      return (
+        <g>
+          <circle cx="66" cy="22" r="12" fill={ink} opacity="0.35" className="sa-demo-pulse" />
+          <circle cx="66" cy="22" r="5" fill={ink} className="sa-demo-flicker" />
+          <circle cx="66" cy="22" r="16" fill="none" stroke={ink} strokeWidth="0.8" opacity="0.5" />
+        </g>
+      );
+    case "aether-dial":
+    case "p-aether":
+      return (
+        <g fill="none" stroke={ink} strokeWidth="1.4">
+          <path d="M 42 30 A 26 26 0 0 1 90 30" className="sa-demo-flicker" />
+          <path d="M 48 24 A 20 20 0 0 1 84 24" className="sa-demo-flicker" style={{ animationDelay: "0.7s" }} />
+          <circle cx="66" cy="14" r="2.4" fill={jade} stroke="none" className="sa-demo-pulse" />
+        </g>
+      );
+    case "biophoton":
+      return (
+        <g>
+          <circle cx="66" cy="22" r="11" fill="none" stroke={jade} strokeWidth="1.2" opacity="0.7" />
+          <circle cx="66" cy="22" r="4.5" fill={ink} className="sa-demo-flicker" />
+        </g>
+      );
+    case "torus-core":
+    case "p-torus":
+      return (
+        <g fill="none" strokeWidth="1.5">
+          <ellipse cx="66" cy="22" rx="17" ry="7" stroke={ink} className="sa-demo-spin" />
+          <ellipse cx="66" cy="22" rx="17" ry="7" stroke={jade} className="sa-demo-spin-rev" opacity="0.8" />
+          <circle cx="66" cy="22" r="2.6" fill={ink} stroke="none" />
+        </g>
+      );
+    case "tachyonic-field":
+      return (
+        <g>
+          <path d="M 34 22 H 84 M 77 15 L 87 22 L 77 29" fill="none" stroke={ink} strokeWidth="1.6" strokeLinecap="round" />
+          <circle cx="92" cy="22" r="4" fill={jade} className="sa-demo-flash" />
+        </g>
+      );
+    case "solfeggio":
+      return (
+        <g stroke={ink} strokeWidth="1.2">
+          {[0, 1, 2, 3, 4, 5].map((i) => (
+            <g key={i} className="sa-demo-pulse" style={{ animationDelay: `${i * 0.32}s` }}>
+              <line x1={34 + i * 13} y1={26 - (i % 3) * 4} x2={34 + i * 13} y2={12 - (i % 3) * 4} />
+              <circle cx={32 + i * 13} cy={27 - (i % 3) * 4} r="2.6" fill={ink} stroke="none" />
+            </g>
+          ))}
+        </g>
+      );
+    case "p-merkaba":
+      return (
+        <g fill="none" strokeWidth="1.5">
+          <path d="M 66 8 L 80 30 L 52 30 Z" stroke={ink} className="sa-demo-spin" />
+          <path d="M 66 36 L 52 14 L 80 14 Z" stroke={jade} className="sa-demo-spin-rev" opacity="0.85" />
+        </g>
+      );
+    case "p-phi":
+      return (
+        <g fill={ink}>
+          {Array.from({ length: 6 }, (_, i) => {
+            const a = i * 1.05;
+            const r = 4 + i * 3.4;
+            return (
+              <circle
+                key={i}
+                cx={66 + r * Math.cos(a)}
+                cy={22 + r * Math.sin(a) * 0.7}
+                r={1.6 + i * 0.5}
+                className="sa-demo-pulse"
+                style={{ animationDelay: `${i * 0.24}s` }}
+                opacity={0.9 - i * 0.08}
+              />
+            );
+          })}
+        </g>
+      );
+    case "p-obsidian":
+      return (
+        <g stroke={ink} strokeWidth="1.6" fill="none">
+          <rect x="46" y="10" width="16" height="24" className="sa-demo-part" />
+          <rect x="70" y="10" width="16" height="24" className="sa-demo-part" style={{ animationDelay: "1.4s" }} />
+          <line x1="66" y1="8" x2="66" y2="36" stroke={jade} strokeWidth="0.9" strokeDasharray="3 4" />
+        </g>
+      );
+    case "p-tzolkin":
+      return (
+        <g fill={ink}>
+          {Array.from({ length: 10 }, (_, i) => (
+            <circle
+              key={i}
+              cx={36 + (i % 5) * 15}
+              cy={15 + Math.floor(i / 5) * 14}
+              r="2.6"
+              className="sa-demo-pulse"
+              style={{ animationDelay: `${(i % 5) * 0.26 + Math.floor(i / 5) * 0.6}s` }}
+            />
+          ))}
+        </g>
+      );
+    case "p-prism":
+      return (
+        <g stroke={ink} fill="none" strokeWidth="1.4">
+          <line x1="28" y1="22" x2="56" y2="22" />
+          <path d="M 56 14 L 70 22 L 56 30 Z" stroke={jade} />
+          <line x1="70" y1="22" x2="104" y2="12" className="sa-demo-flicker" />
+          <line x1="70" y1="22" x2="104" y2="22" className="sa-demo-flicker" style={{ animationDelay: "0.5s" }} />
+          <line x1="70" y1="22" x2="104" y2="32" className="sa-demo-flicker" style={{ animationDelay: "1s" }} />
+        </g>
+      );
+    case "p-sol":
+      return (
+        <g stroke={ink} strokeWidth="1.4">
+          <circle cx="66" cy="22" r="8" fill="none" className="sa-demo-pulse" />
+          {Array.from({ length: 8 }, (_, i) => {
+            const a = (i * Math.PI) / 4;
+            return (
+              <line
+                key={i}
+                x1={66 + 12 * Math.cos(a)}
+                y1={22 + 12 * Math.sin(a)}
+                x2={66 + 17 * Math.cos(a)}
+                y2={22 + 17 * Math.sin(a)}
+                className="sa-demo-flicker"
+                style={{ animationDelay: `${i * 0.2}s` }}
+              />
+            );
+          })}
+        </g>
+      );
+    case "p-nodal":
+      return (
+        <g fill="none" strokeWidth="1.5">
+          <circle cx="58" cy="22" r="11" stroke={ink} />
+          <circle cx="74" cy="22" r="11" stroke={jade} className="sa-demo-pulse" />
+        </g>
+      );
+    case "p-silica":
+      return (
+        <g fill="none" stroke={ink} strokeWidth="1.2">
+          <path d="M 66 8 L 80 22 L 66 36 L 52 22 Z" className="sa-demo-flicker" />
+          <path d="M 66 8 L 66 36 M 52 22 L 80 22" opacity="0.5" />
+          <circle cx="66" cy="22" r="2.4" fill={jade} stroke="none" className="sa-demo-pulse" />
+        </g>
+      );
+    default:
+      return (
+        <g fill="none" stroke={ink} strokeWidth="1.4">
+          <circle cx="66" cy="22" r="12" className="sa-demo-spin" strokeDasharray="6 5" />
+          <circle cx="66" cy="22" r="3" fill={ink} stroke="none" />
+        </g>
+      );
+  }
+}
+
+/** One tool's demonstration strip — the living engine, its purpose and
+    first stroke, and the sign's own tone when it carries one. */
+function SaToolDemo({ ring, sigilId, tool }: { ring: SaRingId; sigilId: string; tool: SaTool }) {
+  const t = useT();
+  const [sounding, setSounding] = useState(false);
+  const freq = saSigilFrequency(ring, sigilId);
+
+  const tone = () => {
+    if (!freq) return;
+    playSaTone(freq);
+    setSounding(true);
+    window.setTimeout(() => setSounding(false), 4600);
+  };
+
+  return (
+    <div
+      className="mt-2 rounded-xl border px-3 py-2.5"
+      style={{
+        borderColor: "color-mix(in srgb, var(--sa-gold) 30%, transparent)",
+        background: "color-mix(in srgb, var(--sa-gold) 6%, transparent)",
+      }}
+      data-testid={`synth-tool-demo-strip-${sigilId}`}
+    >
+      <div className="flex items-center gap-3">
+        <svg
+          viewBox="0 0 132 44"
+          className="h-11 w-[132px] shrink-0"
+          aria-hidden="true"
+          role="img"
+        >
+          <SaDemoEngine id={sigilId} ring={ring} />
+        </svg>
+        <div className="min-w-0 flex-1">
+          <p className="mono-label text-[8px] uppercase tracking-[0.18em] text-muted-foreground">
+            {t("demonstration")}
+          </p>
+          {tool.purpose && (
+            <p className="mt-0.5 line-clamp-2 text-[12px] leading-snug text-foreground/85">
+              {tool.purpose}
+            </p>
+          )}
+        </div>
+        {freq && (
+          <button
+            type="button"
+            onClick={tone}
+            data-testid={`synth-tool-tone-${sigilId}`}
+            className="focus-glow flex h-7 shrink-0 items-center gap-1 rounded-full border px-2 text-[11px] font-medium text-foreground/90 transition-all duration-300 hover:-translate-y-px"
+            style={{
+              borderColor: "color-mix(in srgb, var(--sa-gold) 42%, transparent)",
+            }}
+          >
+            <Volume2 className="size-3" aria-hidden="true" />
+            {sounding ? t("Sounding…") : `${freq} Hz`}
+          </button>
+        )}
+      </div>
+      {tool.first_stroke && (
+        <p className="mt-1.5 border-t pt-1.5 text-[11.5px] leading-snug text-muted-foreground" style={{ borderColor: "color-mix(in srgb, var(--sa-gold) 18%, transparent)" }}>
+          <span className="mono-label mr-1.5 text-[8.5px] uppercase tracking-[0.16em] text-[var(--sa-gold)]">
+            {t("first stroke")}
+          </span>
+          {tool.first_stroke}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/* ================================================================== */
 /*  CHAMBER III — THE TOOL WALL (what the circles have birthed)        */
 /* ================================================================== */
 
@@ -2278,7 +2757,11 @@ function ToolWallChamber({
   tools,
   creations,
   fetchingCreation,
+  fetchingTools,
   onForgeCreation,
+  onRetryTool,
+  onAwakenAll,
+  awakening,
   onOpenCircles,
   onOpenBench,
 }: {
@@ -2286,15 +2769,22 @@ function ToolWallChamber({
   tools: Record<string, SaTool>;
   creations: Record<string, SaCreation>;
   fetchingCreation: string | null;
+  fetchingTools: string[];
   onForgeCreation: (a: SaAlignment) => void;
+  onRetryTool: (ring: SaRingId, id: string) => void;
+  onAwakenAll: () => void;
+  awakening: boolean;
   onOpenCircles: () => void;
   onOpenBench: () => void;
 }) {
   const t = useT();
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
+  const [demoOpen, setDemoOpen] = useState<string | null>(null);
 
   const tool = selectedTool ? tools[selectedTool] : undefined;
   const foundCount = discovered.length;
+  const awakeCount = Object.keys(tools).length;
+  const TOTAL_TOOLS = saDials.length + saPlates.length + saSquares.length;
 
   const groups: {
     ring: SaRingId;
@@ -2328,17 +2818,47 @@ function ToolWallChamber({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45 }}
       >
-        {/* return to the circles */}
-        <div className="mb-4 flex justify-center">
-          <button
-            type="button"
-            onClick={onOpenCircles}
-            data-testid="synth-back-to-circles-top"
-            className="focus-glow group flex h-8 items-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--sa-gold)_30%,transparent)] bg-[color-mix(in_srgb,var(--sa-gold)_7%,transparent)] px-3.5 text-[13.5px] font-medium text-foreground/85 transition-all duration-300 hover:border-[color-mix(in_srgb,var(--sa-gold)_50%,transparent)]"
+        {/* the awakening of all tools — compact, functional, one procession */}
+        <div
+          className="mb-6 flex flex-col items-center gap-2"
+          data-testid="synth-awaken-zone"
+        >
+          <p
+            className="mono-label text-[10px] uppercase tracking-[0.2em] text-muted-foreground"
+            data-testid="synth-awaken-count"
           >
-            <Orbit className="size-3.5 text-[var(--sa-gold)]" aria-hidden="true" />
-            {t("Back to the circles")}
-          </button>
+            {t("{n} of {total} tools awake", { n: awakeCount, total: TOTAL_TOOLS })}
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <button
+              type="button"
+              onClick={onAwakenAll}
+              disabled={awakening || awakeCount >= TOTAL_TOOLS}
+              data-testid="synth-awaken-all"
+              className="focus-glow flex h-8 items-center gap-1.5 rounded-full border px-3.5 text-[13px] font-medium text-foreground/90 transition-all duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-45"
+              style={{
+                borderColor: "color-mix(in srgb, var(--sa-gold) 45%, transparent)",
+                background: "color-mix(in srgb, var(--sa-gold) 10%, transparent)",
+              }}
+            >
+              <Wand2
+                className={cn("size-3.5", awakening && "sa-breathe")}
+                aria-hidden="true"
+              />
+              {awakening
+                ? t("the tools wake…")
+                : t("Awaken all tools")}
+            </button>
+            <button
+              type="button"
+              onClick={onOpenCircles}
+              data-testid="synth-back-to-circles-top"
+              className="focus-glow group flex h-8 items-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--sa-gold)_30%,transparent)] bg-[color-mix(in_srgb,var(--sa-gold)_7%,transparent)] px-3.5 text-[13.5px] font-medium text-foreground/85 transition-all duration-300 hover:border-[color-mix(in_srgb,var(--sa-gold)_50%,transparent)]"
+            >
+              <Orbit className="size-3.5 text-[var(--sa-gold)]" aria-hidden="true" />
+              {t("Back to the circles")}
+            </button>
+          </div>
         </div>
 
         {/* ============ the creations of the alignments ============ */}
@@ -2471,9 +2991,9 @@ function ToolWallChamber({
           </p>
         </div>
 
-        {/* ============ the tools of the sigils ============ */}
+        {/* ============ the tools of the sigils — compact, functional ============ */}
         {groups.map((group) => (
-          <div key={group.ring} className="mb-8">
+          <div key={group.ring} className="mb-7">
             <p className="mono-label mb-3 text-center text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
               {t(group.title)}
             </p>
@@ -2484,16 +3004,15 @@ function ToolWallChamber({
               {group.items.map((item) => {
                 const itemTool = tools[item.id];
                 const selected = selectedTool === item.id;
+                const demoOpenHere = demoOpen === item.id;
+                const busy = fetchingTools.includes(item.id);
                 return (
-                  <button
+                  <div
                     key={item.id}
-                    type="button"
-                    onClick={() => setSelectedTool(selected ? null : item.id)}
-                    aria-pressed={selected}
                     data-testid={`synth-tool-card-${item.id}`}
                     className={cn(
-                      "focus-glow flex items-center gap-2.5 rounded-xl border p-3 text-left transition-all duration-300",
-                      !itemTool && "hover:-translate-y-px"
+                      "rounded-xl border p-2.5 transition-all duration-300",
+                      selected && "glow-sm"
                     )}
                     style={{
                       borderColor: selected
@@ -2508,41 +3027,104 @@ function ToolWallChamber({
                           : "var(--glass-bg)",
                     }}
                   >
-                    <SaSigil
-                      id={item.id}
-                      ring={group.ring}
-                      className="size-6 shrink-0"
+                    {/* the compact face — click opens the workbench below */}
+                    <button
+                      type="button"
+                      onClick={() => setSelectedTool(selected ? null : item.id)}
+                      aria-pressed={selected}
+                      data-testid={`synth-tool-face-${item.id}`}
+                      className="focus-glow flex w-full items-center gap-2.5 text-left"
+                    >
+                      <SaSigil
+                        id={item.id}
+                        ring={group.ring}
+                        className={cn("size-5 shrink-0", busy && "sa-breathe")}
+                        style={{
+                          color: itemTool ? "var(--sa-gold)" : "var(--sa-gold-soft)",
+                          opacity: itemTool ? 1 : 0.6,
+                        }}
+                      />
+                      <span className="min-w-0 flex-1 leading-tight">
+                        <span className="mono-label block truncate text-[8px] uppercase tracking-[0.16em] text-muted-foreground">
+                          {t(item.name)}
+                        </span>
+                        <span
+                          className="block truncate text-[12px] font-medium text-foreground/90"
+                          data-testid={`synth-tool-card-${item.id}-state`}
+                        >
+                          {itemTool
+                            ? itemTool.name
+                            : busy
+                              ? t("the core deciphers…")
+                              : t("not yet deciphered")}
+                        </span>
+                      </span>
+                      {itemTool ? (
+                        <Sparkles
+                          className="size-3.5 shrink-0"
+                          style={{ color: "var(--sa-gold-bright)" }}
+                          aria-hidden="true"
+                        />
+                      ) : (
+                        <Lock
+                          className="size-3 shrink-0 text-muted-foreground/50"
+                          aria-hidden="true"
+                        />
+                      )}
+                    </button>
+
+                    {/* the function row — every tool awake and demonstrable */}
+                    <div
+                      className="mt-1.5 flex items-center gap-1.5 border-t pt-1.5"
                       style={{
-                        color: itemTool ? "var(--sa-gold)" : "var(--sa-gold-soft)",
-                        opacity: itemTool ? 1 : 0.6,
+                        borderColor:
+                          "color-mix(in srgb, var(--sa-gold) 18%, transparent)",
                       }}
-                    />
-                    <span className="min-w-0 flex-1 leading-tight">
-                      <span className="mono-label block truncate text-[8.5px] uppercase tracking-[0.16em] text-muted-foreground">
-                        {t(item.name)}
-                      </span>
-                      <span
-                        className="block truncate text-[12.5px] font-medium text-foreground/90"
-                        data-testid={`synth-tool-card-${item.id}-state`}
-                      >
-                        {itemTool
-                          ? itemTool.name
-                          : t("not yet deciphered — bring it to the apex")}
-                      </span>
-                    </span>
-                    {itemTool ? (
-                      <Sparkles
-                        className="size-3.5 shrink-0"
-                        style={{ color: "var(--sa-gold-bright)" }}
-                        aria-hidden="true"
-                      />
-                    ) : (
-                      <Lock
-                        className="size-3 shrink-0 text-muted-foreground/50"
-                        aria-hidden="true"
-                      />
+                    >
+                      {itemTool ? (
+                        <button
+                          type="button"
+                          onClick={() => setDemoOpen(demoOpenHere ? null : item.id)}
+                          aria-pressed={demoOpenHere}
+                          data-testid={`synth-tool-demo-${item.id}`}
+                          className="focus-glow flex h-6.5 flex-1 items-center justify-center gap-1 rounded-full border px-2 text-[11px] font-medium text-foreground/90 transition-all duration-300 hover:-translate-y-px"
+                          style={{
+                            borderColor:
+                              "color-mix(in srgb, var(--sa-gold) 40%, transparent)",
+                            background: demoOpenHere
+                              ? "color-mix(in srgb, var(--sa-gold) 14%, transparent)"
+                              : undefined,
+                          }}
+                        >
+                          {demoOpenHere ? (
+                            <Minimize2 className="size-3" aria-hidden="true" />
+                          ) : (
+                            <Play className="size-3" aria-hidden="true" />
+                          )}
+                          {t("Demonstrate")}
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => onRetryTool(group.ring, item.id)}
+                          disabled={busy}
+                          data-testid={`synth-tool-activate-${item.id}`}
+                          className="focus-glow flex h-6.5 flex-1 items-center justify-center gap-1 rounded-full border px-2 text-[11px] font-medium text-foreground/85 transition-all duration-300 hover:-translate-y-px disabled:cursor-wait disabled:opacity-60"
+                          style={{
+                            borderColor: "var(--hairline)",
+                          }}
+                        >
+                          <Wand2 className="size-3" aria-hidden="true" />
+                          {busy ? t("the core deciphers…") : t("Activate")}
+                        </button>
+                      )}
+                    </div>
+
+                    {/* the demonstration — the tool showing its own purpose */}
+                    {demoOpenHere && itemTool && (
+                      <SaToolDemo ring={group.ring} sigilId={item.id} tool={itemTool} />
                     )}
-                  </button>
+                  </div>
                 );
               })}
             </div>

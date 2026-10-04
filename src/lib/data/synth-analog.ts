@@ -301,3 +301,120 @@ export const saRestLines = [
   "the mirror core reflects the resting signs",
 ];
 
+/* ------------- the manual of combinations (the oracle) -------------- */
+/*  The circle acts as a manual of suggestions: EVERY resting trio —
+    written formula or not — produces something. Six kinds of fruit,
+    deterministic per combination, so the same trio always speaks the
+    same truth while the 1,728 rooms of the manual never run dry.     */
+
+export type SaOracleKind =
+  | "technology"
+  | "question"
+  | "illumination"
+  | "practice"
+  | "tone"
+  | "cipher";
+
+export interface SaOracleReading {
+  kind: SaOracleKind;
+  /** The Analog name of what the combination produces. */
+  name: string;
+  /** The reading itself — composed from the resting signs. */
+  reading: string;
+}
+
+const ORACLE_KINDS: SaOracleKind[] = [
+  "technology",
+  "question",
+  "illumination",
+  "practice",
+  "tone",
+  "cipher",
+];
+
+const ORACLE_ADJ = [
+  "Obsidian",
+  "Jade",
+  "Sun-Struck",
+  "Tidal",
+  "Star-Woven",
+  "Amber",
+  "Silent",
+  "Gilded",
+  "Ashen",
+  "Ember",
+  "Veiled",
+  "Feathered",
+];
+
+const ORACLE_NOUN = [
+  "Loom",
+  "Bell",
+  "Lamp",
+  "Bridge",
+  "Compass",
+  "Chalice",
+  "Lantern",
+  "Key",
+  "Mirror",
+  "Drum",
+  "Gate",
+  "Seed",
+];
+
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+/** The manual of combinations — what one resting trio produces.
+    Deterministic: the same three signs always open the same page. */
+export function saOracle(o: number, m: number, s: number): SaOracleReading {
+  const dial = saDials[o];
+  const plate = saPlates[m];
+  const square = saSquares[s];
+  const h = ((o * 12 + m) * 12 + s) * 2654435761;
+  const kind = ORACLE_KINDS[h % 6];
+  /* no bitwise shifts here — h exceeds the int32 range and the JS
+     bitwise family would wrap it into negative indexes */
+  const adj = ORACLE_ADJ[Math.floor(h / 32) % 12];
+  const noun = ORACLE_NOUN[Math.floor(h / 1024) % 12];
+  const name = `The ${adj} ${noun}`;
+
+  switch (kind) {
+    case "technology":
+      return {
+        kind,
+        name,
+        reading: `${adj} ${noun} — pour ${dial.name} through ${plate.name} until it ${plate.technique}, and seal it at ${square.name}: ${square.opens}. What rises is a working tool of the analog world.`,
+      };
+    case "question":
+      return {
+        kind,
+        name,
+        reading: `What does ${dial.name} remember that ${plate.name} has folded away? If ${square.name} could speak — ${square.opens} — what would it ask of you tonight?`,
+      };
+    case "illumination":
+      return {
+        kind,
+        name,
+        reading: `${cap(dial.element)} is not a metaphor. Sounded through ${plate.name}, it ${plate.technique} — and at ${square.name} the day agrees: ${square.opens}.`,
+      };
+    case "practice":
+      return {
+        kind,
+        name,
+        reading: `Sit where ${dial.name} hums. Let ${plate.name} ${plate.technique} for nine slow breaths, then close the circle at ${square.name}. This is the old way of ${dial.element}.`,
+      };
+    case "tone":
+      return {
+        kind,
+        name,
+        reading: `Keep ${square.frequency} Hz close today — ${square.opens}. Sounded through ${plate.name}, it teaches the body what ${dial.name} already knows.`,
+      };
+    default:
+      return {
+        kind,
+        name,
+        reading: `Left in the stone: ${dial.glyph} · ${plate.glyph} · ${square.face}. Read it three times — once as ${dial.name}, once as ${plate.name}, once as ${square.name} — and the fourth reading is yours alone.`,
+      };
+  }
+}
+

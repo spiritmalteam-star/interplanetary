@@ -26,6 +26,7 @@ import { ArchiveRegister } from "./ArchiveRegister";
 import { CommunionView } from "./CommunionView";
 import { AkashicView } from "./AkashicView";
 import { DreamBookView } from "./DreamBookView";
+import { AboutModal } from "./AboutModal";
 import { FederationModal } from "./FederationModal";
 import { AstralJobsModal } from "./AstralJobsModal";
 import { DossierModal } from "./DossierModal";
@@ -392,6 +393,7 @@ export default function AppShell() {
       </main>
 
       <FederationModal />
+      <AboutModal />
       <AstralJobsModal />
       <DossierModal />
       <SettingsModal />

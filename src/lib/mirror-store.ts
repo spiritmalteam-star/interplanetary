@@ -51,6 +51,7 @@ export type ModalState =
   | { type: "astral" }
   | { type: "starplay" }
   | { type: "technology" }
+  | { type: "about" }
   | { type: "dossier"; kind: DossierKind; id: string }
   | { type: "entity"; kind: DossierKind; id: string }
   | { type: "species"; id: string }
@@ -175,7 +176,14 @@ export interface DreamBookResumePage {
 export interface DreamBookResume {
   /** The library entry the volume lives in — updates ride to it. */
   bookId: string;
-  config: { age: string; tale: string; volume: string; topic: string };
+  config: {
+    age: string;
+    tale: string;
+    volume: string;
+    /** The level of lecture the volume was woven at (older volumes may not carry one). */
+    level?: string;
+    topic: string;
+  };
   meta: {
     title: string;
     subtitle: string;

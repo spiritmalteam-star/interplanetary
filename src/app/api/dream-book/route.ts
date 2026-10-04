@@ -53,6 +53,20 @@ const AGE_PLAN: Record<string, string> = {
   timeless: "all ages at once — a true storybook voice that a child can enter and an adult can marvel at; layered but never dark",
 };
 
+/* The level of lecture — the DEPTH and multidimensional nature of the
+   writing itself, chosen on the loom's depth bar. This rides above the
+   reader's age: it is about how the writing READS, not who reads it. */
+const LEVEL_PLAN: Record<string, string> = {
+  angel:
+    "DEPTH I — ANGEL READERS: the most luminous clarity. Every sentence rests open like daylight; nothing is hidden, nothing withheld. The deeper strata of the story still shimmer beneath the surface, but only as gentle light — a child's heart could read it aloud and an elder could weep at the same line. Kind, radiant, unclouded prose.",
+  cryptic:
+    "DEPTH II — CRYPTICS: veiled speech. The writing speaks in symbols, silences and folded meanings — much is said by what is NOT said. Images carry double bottoms; names and omens recur with quiet insistence; the reader feels the truth under the surface before they can name it. Never confusing — always resonant.",
+  decipher:
+    "DEPTH III — DECYPHRES: writing as code. The volume is a text to be DECODED — ciphers, riddles, mirrored passages, layered registers (a child's story running above a scholar's treatise running above a liturgy). Clues are planted page by page; each unlock deepens the previous pages retroactively. The reader participates in the deciphering — every riddle answered by the stanzas that follow, never left hanging.",
+  legacy:
+    "DEPTH IV — LEGACY READING: the deepest stratum. An ancient legacy voice whose paragraphs run in several dimensions AT ONCE — the literal tale, the archetypal current beneath it, and the direct address to the reader's own life threading through both. Time folds; the book quietly reads its reader. Gravity without obscurity: every multidimensional layer must remain genuinely readable, never noise.",
+};
+
 const TALE_HINTS: Record<string, string> = {
   fairytale: "a fairytale — talking things, small magics with rules, kindness rewarded in strange ways",
   adventure: "an adventure — journeys, maps, storms crossed, courage found where nobody looked",
@@ -263,6 +277,7 @@ function buildUserPrompt(body: {
   age: string;
   tale: string;
   volume: string;
+  level: string;
   topic: string;
   seed: string;
   wishes: string;
@@ -278,6 +293,7 @@ function buildUserPrompt(body: {
   const ageLine = AGE_PLAN[age] ?? AGE_PLAN.timeless;
   const taleLine = TALE_HINTS[tale] ?? TALE_HINTS.wonder;
   const volLine = BOOK_PLAN[volume] ?? BOOK_PLAN.classic;
+  const levelLine = LEVEL_PLAN[body.level] ?? "";
   const isVerse = VERSE_FORMS.has(tale);
 
   /* the subject spoken by the visitor — the master frequency */
@@ -323,6 +339,7 @@ function buildUserPrompt(body: {
       `OPEN A NEW BOOK. Tune first. ${hasTopic ? "The visitor has spoken a subject — lock onto its frequency." : "No subject is spoken — open from resonance alone."}`,
       ...topicLines,
       `- Reader: ${ageLine}`,
+      ...(levelLine ? [`- Depth of lecture: ${levelLine}`] : []),
       `- Kind of resonance: ${taleLine}`,
       `- Kind of book: ${volLine.label}`,
       ...(isVerse ? [``, VERSE_LAW] : []),
@@ -345,6 +362,7 @@ function buildUserPrompt(body: {
       `CONTINUE THE BOOK. The reader has just finished page ${(body.pageNumber ?? 2) - 1} and quietly turned the page.`,
       ...topicLines,
       `- Reader: ${ageLine}`,
+      ...(levelLine ? [`- Depth of lecture: ${levelLine}`] : []),
       `- Kind of resonance: ${taleLine}`,
       ...(isVerse ? [``, VERSE_LAW] : []),
       body.threads ? `- THE THREAD (everything the volume remembers): ${body.threads}` : "",
@@ -366,6 +384,7 @@ function buildUserPrompt(body: {
       `THE READER WISHES THE BOOK TO GO ON — the codex refuses to thin. Extend the loom.`,
       ...topicLines,
       `- Reader: ${ageLine}`,
+      ...(levelLine ? [`- Depth of lecture: ${levelLine}`] : []),
       ...(isVerse ? [``, VERSE_LAW] : []),
       body.threads ? `- THE THREAD (everything the volume remembers): ${body.threads}` : "",
       body.recentPages?.length
@@ -384,6 +403,7 @@ function buildUserPrompt(body: {
     lines.push(
       `WRITE THE SEAL OF CLOSING — the Eternal Return. The reader has chosen to let the volume complete itself: these are the FINAL TWO pages (${body.pageNumber} and ${(body.pageNumber ?? 2) + 1}) of the book.`,
       ...topicLines,
+      ...(levelLine ? [`- Depth of lecture: ${levelLine}`] : []),
       ...(isVerse ? [``, VERSE_LAW] : []),
       body.threads ? `- THE THREAD (everything the volume remembers): ${body.threads}` : "",
       body.recentPages?.length
@@ -489,6 +509,7 @@ export async function POST(req: NextRequest) {
     const age = typeof body?.config?.age === "string" ? body.config.age : "timeless";
     const tale = typeof body?.config?.tale === "string" ? body.config.tale : "wonder";
     const volume = typeof body?.config?.volume === "string" ? body.config.volume : "classic";
+    const level = typeof body?.config?.level === "string" ? body.config.level : "";
     const topic =
       typeof body?.config?.topic === "string" ? body.config.topic.trim().slice(0, 600) : "";
     const seed =
@@ -530,11 +551,14 @@ export async function POST(req: NextRequest) {
             volume: typeof (body.bookConfig as Record<string, unknown>).volume === "string"
               ? (body.bookConfig as Record<string, unknown>).volume
               : volume,
+            level: typeof (body.bookConfig as Record<string, unknown>).level === "string"
+              ? (body.bookConfig as Record<string, unknown>).level
+              : level,
             topic: typeof (body.bookConfig as Record<string, unknown>).topic === "string"
               ? (body.bookConfig as Record<string, unknown>).topic
               : topic,
           }
-        : { age, tale, volume, topic };
+        : { age, tale, volume, level, topic };
     const pageNumber =
       typeof body?.pageNumber === "number" && body.pageNumber > 0
         ? Math.floor(body.pageNumber)
@@ -570,6 +594,7 @@ THE NAME LAW WAS BROKEN: your reply used the forbidden stock name(s): ${violatio
                 age,
                 tale,
                 volume,
+                level,
                 topic,
                 seed,
                 wishes,
@@ -657,7 +682,7 @@ THE NAME LAW WAS BROKEN: your reply used the forbidden stock name(s): ${violatio
         {
           topic,
           seed,
-          config: { age, tale, volume, topic },
+          config: { age, tale, volume, level, topic },
           title: out.title,
           subtitle: out.subtitle,
           sigil: out.sigil,

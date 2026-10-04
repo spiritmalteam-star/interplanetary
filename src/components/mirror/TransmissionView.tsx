@@ -462,8 +462,10 @@ function Exchange({
 
       {/* themed frame */}
       <div className="scope-frame-card relative mt-6 overflow-hidden rounded-2xl">
+        {/* the scope's own image behind the words — kept for deep space
+            only; the light theme reads on clean daylight, as asked */}
         <div
-          className="pointer-events-none absolute inset-0 opacity-[0.13]"
+          className="pointer-events-none absolute inset-0 opacity-[0.13] hidden dark:block"
           aria-hidden="true"
           style={{
             backgroundImage: `url(${sectionImage(scopeMeta.imageKey)})`,

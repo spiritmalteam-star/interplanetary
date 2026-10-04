@@ -48,7 +48,13 @@ interface LibraryEntry {
     pages?: { n: number; chapter?: string; paragraphs: string[] }[];
     threads?: string;
     ended?: boolean;
-    config?: { age?: string; tale?: string; volume?: string; topic?: string };
+    config?: {
+      age?: string;
+      tale?: string;
+      volume?: string;
+      level?: string;
+      topic?: string;
+    };
     title?: string;
     sigil?: string;
     subtitle?: string;
@@ -275,6 +281,7 @@ export function LibraryView() {
                                           age: e.content?.config?.age ?? "timeless",
                                           tale: e.content?.config?.tale ?? "wonder",
                                           volume: e.content?.config?.volume ?? "classic",
+                                          level: e.content?.config?.level ?? "",
                                           topic: e.content?.config?.topic ?? e.content?.topic ?? "",
                                         },
                                         meta: {
