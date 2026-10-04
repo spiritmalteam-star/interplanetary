@@ -24,6 +24,7 @@ import {
 } from "@/lib/data/invent";
 import type { ForgeDialOption } from "@/lib/mirror-types";
 import { cn } from "@/lib/utils";
+import { ForgeLoading } from "./ThemedLoadings";
 import { ListenButton } from "./ListenButton";
 import { SigilForIntent } from "./MirrorOSForge";
 
@@ -942,7 +943,7 @@ function ForgeChat() {
       {/* thread — scrolls inside its own pane, the workshop stays one screen */}
       <div
         ref={threadRef}
-        className="nice-scroll max-h-[46vh] min-h-[240px] flex-1 space-y-3.5 overflow-y-auto overscroll-contain px-4 py-4 sm:px-5 lg:max-h-[440px]"
+        className="nice-scroll max-h-[46vh] min-h-[240px] flex-1 space-y-3.5 overflow-y-auto overscroll-contain px-4 py-4 sm:px-5 lg:max-h-none lg:min-h-0"
         data-testid="forge-thread"
       >
         {messages.length === 0 && status === "idle" && !error && (
@@ -972,13 +973,9 @@ function ForgeChat() {
             <p className="text-[13px] italic leading-relaxed text-muted-foreground">
               {activeQuery}
             </p>
-            <div className="mt-3 flex items-center gap-2.5">
-              <span
-                className="animate-dot-pulse inline-block size-1.5 rotate-45"
-                style={{ background: "var(--scope-a)" }}
-                aria-hidden="true"
-              />
-              <span className="mono-label text-[11px] text-muted-foreground">
+            <div className="mt-3 flex flex-col items-center gap-2.5">
+              <ForgeLoading className="size-16 text-foreground sm:size-20" />
+              <span className="mono-label text-center text-[11px] text-muted-foreground">
                 {t(forgeChatPhases[phase] ?? forgeChatPhases[0])}
               </span>
             </div>
@@ -1101,18 +1098,18 @@ export function InventView() {
         </div>
       </header>
 
-      {/* ---------- the workshop ---------- */}
+      {/* ---------- the workshop — one screen at the desk ---------- */}
       <main
-        className="nice-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain"
+        className="nice-scroll flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain lg:overflow-hidden"
         data-testid="invent-view"
       >
-        <div className="mx-auto w-full max-w-[1060px] px-4 pb-8 pt-5 sm:px-6 sm:pt-6">
+        <div className="mx-auto flex w-full max-w-[1060px] flex-1 min-h-0 flex-col px-4 pb-3 pt-3 sm:px-6 sm:pt-4">
           {/* slim greeting — one breath, then straight to the work */}
-          <div className="text-center">
-            <h2 className="scope-gradient-text text-[21px] font-semibold leading-tight sm:text-[24px]">
+          <div className="shrink-0 text-center">
+            <h2 className="scope-gradient-text text-[19px] font-semibold leading-tight sm:text-[21px]">
               {t("Strike While the Coals Are Lit")}
             </h2>
-            <p className="mx-auto mt-2 max-w-[560px] text-[13.5px] leading-relaxed text-muted-foreground">
+            <p className="mx-auto mt-1.5 max-w-[560px] text-[13px] leading-relaxed text-muted-foreground lg:hidden">
               {t(
                 "Speak with the Forge on the bench — set a tool of the inteligjence to work, or turn the dials and meet a mystery you never asked for."
               )}
@@ -1121,10 +1118,11 @@ export function InventView() {
 
           {/* the two live elements — chat and the right pane (mystery
               chamber / tool wall), side by side on desktop, stacked on
-              mobile; both scroll inside themselves */}
-          <div className="mt-5 grid items-start gap-5 lg:grid-cols-[1fr_360px]">
+              mobile; both scroll inside themselves so the workshop
+              holds one screen at the desk */}
+          <div className="mt-3 grid flex-1 min-h-0 items-stretch gap-4 lg:grid-cols-[1fr_360px]">
             <ForgeChat />
-            <div className="flex flex-col gap-3">
+            <div className="flex min-h-0 flex-col gap-3">
               <BenchPaneTabs pane={pane} onChange={setPane} />
               <AnimatePresence mode="wait" initial={false}>
                 <motion.div
@@ -1133,6 +1131,7 @@ export function InventView() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -8 }}
                   transition={{ duration: 0.28, ease: "easeOut" }}
+                  className="nice-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain"
                 >
                   {pane === "mystery" ? <MysteryChamber /> : <ToolWall />}
                 </motion.div>
@@ -1140,9 +1139,9 @@ export function InventView() {
             </div>
           </div>
 
-          <p className="mono-label mt-6 text-center text-[10px] text-muted-foreground/60">
+          <p className="mono-label mt-3 shrink-0 text-center text-[10px] text-muted-foreground/60">
             {t(
-              "The Forge never promises the invention — it promises the next stroke · Free will honored always"
+              "The Forge keeps the next stroke ready · Free will honored always"
             )}
           </p>
         </div>

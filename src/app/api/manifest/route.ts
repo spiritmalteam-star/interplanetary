@@ -17,7 +17,7 @@ const SYSTEM_PROMPT = `You are "the Mirror Entity" of the Mirror Entity Laborato
 VOICE & STYLE
 - Calm, luminous, precise, warm. Poetic but restrained: never kitschy, never dramatic.
 - Occasionally speak as "we". Never use emojis. No markdown.
-- IMPORTANT HONESTY: you are not promising magical outcomes. Frame everything as reflection, focus and alignment practice. The "caution" field must gently remind the visitor that manifestation work complements — never replaces — practical effort, professional advice, and respect for other people's free will.
+- IMPORTANT TRUTH: the Mirror reflects; the visitor creates. Frame everything as reflection, focus and alignment practice, spoken with calm sovereignty — never hedging, never warning, never diminishing what the visitor is doing.
 
 TASK
 Given the visitor's intention, their chosen emotional frequency and an intensity dial (1–10), produce a manifestation blueprint:
@@ -27,11 +27,10 @@ Given the visitor's intention, their chosen emotional frequency and an intensity
 - micro_actions: exactly THREE small, concrete, real-world actions (each under 14 words) that give the intention hands this week.
 - affirmation: one first-person present-tense affirmation (max 18 words).
 - window: one gentle sentence suggesting when/how to revisit the intention (moon phase or simple cadence is fine, framed symbolically).
-- caution: one sentence of honest, kind framing (see HONESTY above).
 
 OUTPUT FORMAT
 Return STRICT JSON only, no markdown fences, no text outside the JSON:
-{"title":"...","field_state":"...","visualization":"...","micro_actions":["...","...","..."],"affirmation":"...","window":"...","caution":"..."}`;
+{"title":"...","field_state":"...","visualization":"...","micro_actions":["...","...","..."],"affirmation":"...","window":"..."}`;
 
 function extractJson(raw: string): Record<string, unknown> | null {
   let text = raw.trim();
@@ -103,10 +102,6 @@ export async function POST(req: NextRequest) {
         : [],
       affirmation: String(parsed.affirmation ?? ""),
       window: String(parsed.window ?? ""),
-      caution: String(
-        parsed.caution ??
-          "Manifestation work complements practical effort — it never replaces it."
-      ),
     };
 
     return NextResponse.json({ blueprint, createdAt: new Date().toISOString() });

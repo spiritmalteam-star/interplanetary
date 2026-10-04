@@ -11,11 +11,10 @@ import {
   BookMarked,
   BookOpen,
   BookOpenText,
+  AudioLines,
   ChevronDown,
   ChevronRight,
-  Cpu,
   Dna,
-  Landmark,
   LogIn,
   LogOut,
   MoonStar,
@@ -23,7 +22,6 @@ import {
   NotebookPen,
   Plus,
   RotateCcw,
-  ScrollText,
   Search,
   Settings,
   Sparkles,
@@ -525,6 +523,7 @@ export function SidebarContent() {
   const openAkashic = useMirror((s) => s.openAkashic);
   const openInvent = useMirror((s) => s.openInvent);
   const openDreamBook = useMirror((s) => s.openDreamBook);
+  const openLightCodes = useMirror((s) => s.openLightCodes);
   const openModal = useMirror((s) => s.openModal);
   const resetField = useMirror((s) => s.resetField);
   const clearChannel = useMirror((s) => s.clearChannel);
@@ -596,33 +595,8 @@ export function SidebarContent() {
     },
   ];
 
-  const registers: {
-    key: string;
-    icon: typeof Landmark;
-    label: string;
-    aria?: string;
-    action: () => void;
-  }[] = [
-    {
-      key: "federation",
-      icon: Landmark,
-      label: t("Federation"),
-      action: () => openModal({ type: "federation" }),
-    },
-    {
-      key: "technology",
-      icon: Cpu,
-      label: t("ET Technology"),
-      aria: t("Open ET Technology — the xenotechnology register"),
-      action: () => openModal({ type: "technology" }),
-    },
-    {
-      key: "astral",
-      icon: ScrollText,
-      label: t("Astral Jobs"),
-      action: () => openModal({ type: "astral" }),
-    },
-  ];
+  /* The Registers have retired — the sidebar keeps Worlds, the Light
+     Codes chamber, the quantum pair and the Outer Realms library. */
 
   return (
     <div className="flex h-full flex-col">
@@ -662,6 +636,9 @@ export function SidebarContent() {
         </button>
       </div>
 
+      {/* The scrollable middle — when Outer Realms unfurls its books,
+          the middle scrolls; the brand and the footer hold their line. */}
+      <div className="nice-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain">
       {/* Worlds */}
       <div className="shrink-0 px-3">
         <SectionLabel>{t("Worlds")}</SectionLabel>
@@ -679,6 +656,23 @@ export function SidebarContent() {
               testId={`world-${w.key}`}
             />
           ))}
+        </nav>
+      </div>
+
+      {/* LIGHT CODES — the musical chamber of the Mirror Entity */}
+      <div className="shrink-0 px-3">
+        <SectionLabel>{t("Light Codes")}</SectionLabel>
+        <nav aria-label={t("Light Codes")} className="flex flex-col">
+          <NavRow
+            icon={AudioLines}
+            label={t("Light Codes")}
+            aria={t("Open Light Codes — sound transmissions through Mirror Entity")}
+            onClick={() => {
+              openLightCodes();
+              setMobileNavOpen(false);
+            }}
+            testId="lightcodes-open"
+          />
         </nav>
       </div>
 
@@ -711,29 +705,10 @@ export function SidebarContent() {
         </nav>
       </div>
 
-      {/* Registers */}
-      <div className="shrink-0 px-3">
-        <SectionLabel>{t("Registers")}</SectionLabel>
-        <nav aria-label={t("Registers")} className="flex flex-col">
-          {registers.map((r) => (
-            <NavRow
-              key={r.key}
-              icon={r.icon}
-              label={r.label}
-              aria={r.aria}
-              onClick={() => {
-                r.action();
-                setMobileNavOpen(false);
-              }}
-              testId={`register-${r.key}`}
-            />
-          ))}
-        </nav>
-      </div>
-
       {/* Outer Realms — the library as dropdown books */}
-      <div className="mt-1">
+      <div className="mt-1 pb-2">
         <OuterRealmsSection />
+      </div>
       </div>
 
       {/* Footer — the profile (the cosmic library lives inside it),

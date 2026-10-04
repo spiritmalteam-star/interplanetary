@@ -21,6 +21,7 @@ import { emNoteSets } from "@/lib/data/scope-notes";
 import { cn } from "@/lib/utils";
 import { ListenButton } from "./ListenButton";
 import { ScopeNotes } from "./ScopeNotes";
+import { HelixLoading } from "./ThemedLoadings";
 import {
   EM_VECTOR_ICONS,
   EmCodexTab,
@@ -106,18 +107,7 @@ function EmThinking() {
       aria-live="polite"
       aria-busy="true"
     >
-      <span className="flex items-center gap-1.5">
-        {[0, 1, 2].map((i) => (
-          <span
-            key={i}
-            className="animate-dot-pulse size-1.5 rounded-full"
-            style={{
-              background: "var(--scope-a)",
-              animationDelay: `${i * 0.35}s`,
-            }}
-          />
-        ))}
-      </span>
+      <HelixLoading className="size-16 text-foreground sm:size-20" />
       <AnimatePresence mode="wait" initial={false}>
         <motion.span
           key={phraseIdx}

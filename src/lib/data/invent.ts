@@ -126,7 +126,6 @@ export const TOOL_LINE_LABELS = {
   material: "The material",
   mechanism: "The mechanism",
   firstStroke: "The first stroke",
-  caution: "The gentle caution",
   altName: "A second name",
   why: "Why this name",
   reason: "The honest reason",

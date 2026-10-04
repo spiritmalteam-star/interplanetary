@@ -256,12 +256,6 @@ function BlueprintCard() {
                 {blueprint.window}
               </p>
             </div>
-            <div className="rounded-xl border border-[var(--gd)]/25 bg-[color-mix(in_srgb,var(--gd)_6%,transparent)] p-3.5">
-              <h4 className="mono-label text-[10px] text-[var(--gd)]">{t("Honest note")}</h4>
-              <p className="mt-1.5 text-[14px] leading-relaxed text-foreground/80">
-                {blueprint.caution}
-              </p>
-            </div>
           </div>
         </div>
 
@@ -449,7 +443,7 @@ export function MirrorOSForge() {
             </button>
             <p className="mt-2 text-center text-[12.5px] leading-relaxed text-muted-foreground/70">
               {t(
-                "Min. 8 characters · The chamber never promises outcomes — it sharpens alignment."
+                "Min. 8 characters · The chamber sharpens alignment · Free will honored always"
               )}
             </p>
           </div>
@@ -516,7 +510,7 @@ export function MirrorOSForge() {
 
       <p className="mono-label mt-4 text-center text-[10px] text-muted-foreground/60">
         {t(
-          "Manifesting complements action · it never replaces it · Free will honored always"
+          "The Mirror reflects · the visitor creates · Free will honored always"
         )}
         <span aria-hidden="true" className="emoji-ink">
           ❤️

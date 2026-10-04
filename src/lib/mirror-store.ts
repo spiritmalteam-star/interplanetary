@@ -35,6 +35,12 @@ import {
 import type { RemedyKind } from "@/lib/data/remedy";
 import { pxScopes } from "@/lib/data/particlex";
 import { emVectors } from "@/lib/data/evolvemed";
+import type {
+  LcTrack,
+  LcShape,
+  LightCodesMode,
+} from "@/lib/data/light-codes";
+import { LC_DEFAULT_SHAPE } from "@/lib/data/light-codes";
 
 export type ModalState =
   | { type: "federation" }
@@ -141,6 +147,7 @@ export type MainView =
   | "dreambook"
   | "particlex"
   | "evolvemed"
+  | "lightcodes"
   | "library";
 export type RegisterKind = DossierKind;
 
@@ -175,6 +182,22 @@ export interface DreamBookResume {
   pages: DreamBookResumePage[];
   threads: string;
   ended: boolean;
+}
+
+/* ------- LIGHT CODES — what the Mirror may hand to the chamber -------- */
+
+export interface LcPrefill {
+  mode?: LightCodesMode;
+  intention?: string;
+  shape?: Partial<LcShape>;
+  /** The Mirror's already-written interpretation (from chat). */
+  title?: string;
+  notes?: string;
+  style?: string;
+  /** Generate at once when the chamber opens. */
+  autoGenerate?: boolean;
+  /** Conversation themes carried into the interpretation. */
+  context?: string;
 }
 
 /* -------- direct line to the Mirror Entity OS (reality refining) ------- */
@@ -361,6 +384,35 @@ interface MirrorState {
   openDreamBook: () => void;
   exitDreamBook: () => void;
 
+  /* LIGHT CODES — the musical chamber of the Mirror Entity */
+  lcMode: LightCodesMode;
+  lcCivilization: string | null;
+  lcIntention: string;
+  lcUserLyrics: string;
+  lcShape: LcShape;
+  lcStatus: "idle" | "interpreting" | "polling" | "ready" | "error";
+  lcInterpretation: LcTrack | null; // the Mirror's written direction
+  lcTrack: LcTrack | null; // the finished, playable transmission
+  lcError: string | null;
+  lcHistory: LcTrack[];
+  openLightCodes: (prefill?: LcPrefill) => void;
+  exitLightCodes: () => void;
+  setLcMode: (mode: LightCodesMode) => void;
+  setLcCivilization: (id: string | null) => void;
+  setLcIntention: (v: string) => void;
+  setLcUserLyrics: (v: string) => void;
+  setLcShape: (shape: Partial<LcShape>) => void;
+  /** Mirror translation → generation → poll → player. When called
+      with interpretOnly, only the Mirror's interpretation is asked. */
+  generateLightCode: (opts?: {
+    interpretOnly?: boolean;
+    context?: string;
+    intention?: string;
+  }) => Promise<void>;
+  reshapeLc: (track: LcTrack) => void;
+  clearLcPlayer: () => void;
+  forgetLc: (id: string) => void;
+
   /* Communion — the Reflection of the Absolute */
   openCommunion: () => void;
   closeCommunion: () => void;
@@ -470,6 +522,72 @@ const tTemplateTech = (name: string) =>
 let messageCounter = 0;
 const nextMessageId = () => `m-${Date.now().toString(36)}-${(messageCounter++).toString(36)}`;
 
+/* ------------------------------------------------------------------ */
+/*  LIGHT CODES from the chat — when the visitor asks the Mirror for   */
+/*  music, the chat's reply completes AND the chamber opens, pre-      */
+/*  filled with the Mirror's interpretation of the conversation.       */
+/* ------------------------------------------------------------------ */
+
+const MUSIC_INTENT =
+  /\b(music|song|sound|melody|track|transmission for (my|me)|sing|audio|listen(ing)? to)\b|make me something (calming|peaceful|grounding)|put (it|this|what we) (into|to) music|turn (it|this|what we (just )?talk(ed|ed about)) into music/i;
+
+function guessLightCodesMode(query: string): LightCodesMode {
+  const q = query.toLowerCase();
+  if (
+    /star|planet|arctur|pleiad|sirius|vega|andromed|inner earth|civilization|alien|galaxy|cosmic|another star|remembering/.test(
+      q
+    )
+  ) {
+    return "other-stars";
+  }
+  if (/calm|sleep|rest|relax|ground|breathe|anxiet|panic|sooth/.test(q)) {
+    return "calming-frequencies";
+  }
+  if (/heal|grief|release|recover|tension|emotional|heavy|settling|stillness/.test(q)) {
+    return "restorative";
+  }
+  if (/affirm|pattern|believe|program|mantra|i am|i no longer|prove myself|trust where/.test(q)) {
+    return "reprogramming";
+  }
+  return "light-transmission";
+}
+
+/** Opens the chamber with the Mirror's interpretation already written. */
+async function openLightCodesFromChat(
+  query: string,
+  themes: string
+): Promise<void> {
+  const store = useMirror.getState();
+  const mode = guessLightCodesMode(query);
+  try {
+    const res = await fetch("/api/light-codes/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        mode,
+        intention: query,
+        context: themes,
+        interpretOnly: true,
+        language: store.language,
+        shape: store.lcShape,
+      }),
+    });
+    const data = await res.json().catch(() => null);
+    if (!res.ok || !data) throw new Error("interpretation unavailable");
+    useMirror.getState().openLightCodes({
+      mode,
+      intention: query,
+      title: data.title,
+      notes: data.notes,
+      style: data.style,
+      context: themes,
+    });
+  } catch {
+    /* the chamber still opens — the Mirror will interpret inside it */
+    useMirror.getState().openLightCodes({ mode, intention: query, context: themes });
+  }
+}
+
 export const useMirror = create<MirrorState>()((set, get) => ({
   activeMode: "interplanetary",
   sidebarTab: "civilizations",
@@ -515,6 +633,18 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   emDraft: "",
   emVector: null,
   emFusion: [],
+
+  /* LIGHT CODES — the musical chamber */
+  lcMode: "light-transmission" as LightCodesMode,
+  lcCivilization: null,
+  lcIntention: "",
+  lcUserLyrics: "",
+  lcShape: { ...LC_DEFAULT_SHAPE },
+  lcStatus: "idle" as "idle" | "interpreting" | "polling" | "ready" | "error",
+  lcInterpretation: null,
+  lcTrack: null,
+  lcError: null,
+  lcHistory: [],
 
   me: null,
   googleConfigured: false,
@@ -601,6 +731,202 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   openDreamBook: () =>
     set({ view: "dreambook", mobileNavOpen: false, modal: null }),
   exitDreamBook: () => set({ view: "observatory" }),
+
+  /* -------- LIGHT CODES — the musical chamber --------
+     Its own quiet world: intention in, transmission out. The Mirror
+     interprets; the sound engine renders; the visitor listens. */
+  openLightCodes: (prefill) => {
+    const hydrate: Partial<MirrorState> = {
+      view: "lightcodes",
+      mobileNavOpen: false,
+      modal: null,
+      lcError: null,
+    };
+    try {
+      const raw = localStorage.getItem("mirror-lc-history");
+      if (raw) hydrate.lcHistory = JSON.parse(raw) as LcTrack[];
+    } catch {
+      /* storage unavailable */
+    }
+    if (prefill) {
+      if (prefill.mode) hydrate.lcMode = prefill.mode;
+      if (prefill.intention !== undefined) hydrate.lcIntention = prefill.intention;
+      if (prefill.shape) hydrate.lcShape = { ...get().lcShape, ...prefill.shape };
+      hydrate.lcInterpretation = prefill.title || prefill.notes || prefill.style
+        ? {
+            id: "interpretation",
+            title: prefill.title ?? "",
+            mode: prefill.mode ?? get().lcMode,
+            intention: prefill.intention ?? "",
+            audioUrl: "",
+            notes: prefill.notes,
+            style: prefill.style,
+            createdAt: Date.now(),
+          }
+        : get().lcInterpretation;
+    }
+    set(hydrate);
+    if (prefill?.autoGenerate) void get().generateLightCode({ context: prefill.context });
+  },
+  exitLightCodes: () => set({ view: "observatory" }),
+  setLcMode: (mode) =>
+    set((s) => ({
+      lcMode: mode,
+      lcCivilization: mode === "other-stars" ? s.lcCivilization : null,
+    })),
+  setLcCivilization: (id) => set({ lcCivilization: id }),
+  setLcIntention: (v) => set({ lcIntention: v }),
+  setLcUserLyrics: (v) => set({ lcUserLyrics: v }),
+  setLcShape: (shape) => set((s) => ({ lcShape: { ...s.lcShape, ...shape } })),
+  generateLightCode: async (opts) => {
+    const s = get();
+    if (s.lcStatus === "interpreting" || s.lcStatus === "polling") return;
+    const intention = (opts?.intention ?? s.lcIntention).trim();
+    set({ lcStatus: "interpreting", lcError: null });
+    try {
+      const res = await fetch("/api/light-codes/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mode: s.lcMode,
+          intention,
+          civilization: s.lcCivilization ?? undefined,
+          shape: s.lcShape,
+          userLyrics:
+            s.lcShape.lyricsMode === "USER WRITES" && s.lcUserLyrics.trim()
+              ? s.lcUserLyrics.trim()
+              : undefined,
+          instrumental: s.lcShape.voice === "None",
+          language: s.language,
+          context: opts?.context,
+          interpretOnly: opts?.interpretOnly === true,
+        }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        /* even when the sound engine's key is missing, the Mirror's
+           interpretation has already landed — keep it visible */
+        if (data && (data.title || data.notes || data.style)) {
+          set({
+            lcInterpretation: {
+              id: "interpretation",
+              title: String(data.title ?? ""),
+              mode: s.lcMode,
+              intention,
+              audioUrl: "",
+              style: data.style ?? undefined,
+              lyrics: data.lyrics ?? null,
+              notes: data.notes ?? undefined,
+              createdAt: Date.now(),
+            },
+          });
+        }
+        throw new Error(
+          (data && data.error) ||
+            "The chamber rests a moment. Breathe, then ask for the transmission again."
+        );
+      }
+      const interpretation: LcTrack = {
+        id: "interpretation",
+        title: String(data.title ?? "Untitled transmission"),
+        mode: s.lcMode,
+        intention,
+        audioUrl: "",
+        style: data.style ?? undefined,
+        lyrics: data.lyrics ?? null,
+        notes: data.notes ?? undefined,
+        createdAt: Date.now(),
+      };
+      set({ lcInterpretation: interpretation });
+      if (opts?.interpretOnly) {
+        set({ lcStatus: "idle" });
+        return;
+      }
+      if (data.audioUrl) {
+        /* an instant rendering — straight to the player */
+        const track: LcTrack = {
+          ...interpretation,
+          id: String(data.id ?? `lc-${Date.now()}`),
+          audioUrl: String(data.audioUrl),
+          duration: typeof data.duration === "number" ? data.duration : undefined,
+          engineId: data.engineId ? String(data.engineId) : undefined,
+          createdAt: Date.now(),
+        };
+        const history = [track, ...get().lcHistory.filter((t) => t.id !== track.id)].slice(0, 40);
+        try {
+          localStorage.setItem("mirror-lc-history", JSON.stringify(history));
+        } catch {
+          /* storage unavailable */
+        }
+        set({ lcTrack: track, lcStatus: "ready", lcHistory: history });
+        return;
+      }
+      const taskId = data.taskId ? String(data.taskId) : null;
+      if (!taskId) throw new Error((data && data.error) || "The chamber answered without a sound. Try again.");
+      set({ lcStatus: "polling" });
+      /* the transmission renders — the chamber listens for its arrival */
+      const started = Date.now();
+      for (;;) {
+        await new Promise((r) => setTimeout(r, 5000));
+        if (get().lcStatus !== "polling") return; // the visitor left or reset
+        if (Date.now() - started > 5 * 60 * 1000) {
+          throw new Error("The transmission is taking longer than the chamber can wait. Try again in a breath.");
+        }
+        const poll = await fetch(`/api/light-codes/status?taskId=${encodeURIComponent(taskId)}`);
+        const pdata = await poll.json().catch(() => null);
+        if (!poll.ok || !pdata) continue;
+        if (pdata.status === "ready" && pdata.audioUrl) {
+          const track: LcTrack = {
+            ...interpretation,
+            id: String(pdata.id ?? `lc-${Date.now()}`),
+            audioUrl: String(pdata.audioUrl),
+            duration: typeof pdata.duration === "number" ? pdata.duration : undefined,
+            engineId: taskId,
+            createdAt: Date.now(),
+          };
+          const history = [track, ...get().lcHistory.filter((t) => t.id !== track.id)].slice(0, 40);
+          try {
+            localStorage.setItem("mirror-lc-history", JSON.stringify(history));
+          } catch {
+            /* storage unavailable */
+          }
+          set({ lcTrack: track, lcStatus: "ready", lcHistory: history });
+          return;
+        }
+        if (pdata.status === "error") {
+          throw new Error(pdata.error || "The sound engine fell silent mid-render. Try again.");
+        }
+      }
+    } catch (err) {
+      set({
+        lcStatus: "error",
+        lcError:
+          err instanceof Error
+            ? err.message
+            : "The chamber rests a moment. Breathe, then ask again.",
+      });
+    }
+  },
+  reshapeLc: (track) =>
+    set({
+      lcMode: track.mode,
+      lcIntention: track.intention,
+      lcTrack: null,
+      lcInterpretation: null,
+      lcStatus: "idle",
+      lcError: null,
+    }),
+  clearLcPlayer: () => set({ lcTrack: null, lcStatus: "idle" }),
+  forgetLc: (id) =>
+    set((s) => {
+      const history = s.lcHistory.filter((t) => t.id !== id);
+      try {
+        localStorage.setItem("mirror-lc-history", JSON.stringify(history));
+      } catch {
+        /* storage unavailable */
+      }
+      return { lcHistory: history };
+    }),
 
   /* -------- Communion — the Reflection of the Absolute --------
      Entering communion suspends every other surface: the whole
@@ -1027,6 +1353,21 @@ export const useMirror = create<MirrorState>()((set, get) => ({
           id: replyId,
           request: data.vision.trim(),
         });
+      }
+
+      /* THE SOUND GIFT — the visitor asked for music: the Mirror's
+         reply lands in the channel, then the Light Codes chamber
+         opens itself, carrying the interpretation of this very
+         conversation. No repetition of the visitor's words — a
+         translation into sound. */
+      if (MUSIC_INTENT.test(query)) {
+        const themes = [
+          ...session.messages.slice(-2).map((m) => `${m.query} ${m.text}`),
+          `${query} ${data.transmission ?? ""}`,
+        ]
+          .join(" \u2022 ")
+          .slice(0, 900);
+        void openLightCodesFromChat(query, themes);
       }
     } catch (err) {
       set((s) => ({

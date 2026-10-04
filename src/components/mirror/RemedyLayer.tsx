@@ -196,27 +196,6 @@ function RemedyCard() {
           </ol>
         </section>
 
-        {remedy.cautions.length > 0 && (
-          <section className="mt-4" aria-label={t("Gentle cautions")}>
-            <p className="mono-label text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">
-              {t("Gentle cautions")}
-            </p>
-            <ul className="mt-2 space-y-1.5">
-              {remedy.cautions.map((item, i) => (
-                <li key={i} className="flex items-start gap-2.5">
-                  <span
-                    className="mt-[7px] inline-block size-1.5 shrink-0 rotate-45"
-                    style={{ background: `color-mix(in srgb, ${GOLD} 70%, transparent)` }}
-                    aria-hidden="true"
-                  />
-                  <span className="text-[13px] italic leading-relaxed text-muted-foreground">
-                    {item}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
       </div>
     </motion.div>
   );

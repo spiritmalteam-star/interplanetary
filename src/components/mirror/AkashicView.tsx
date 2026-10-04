@@ -27,6 +27,7 @@ import {
   VisualizationCard,
   VisualizationPending,
 } from "./VisualizationCard";
+import { AkashicLoading } from "./ThemedLoadings";
 import {
   attachmentsToPayload,
   hasPendingAttachments,
@@ -442,7 +443,8 @@ export function AkashicView() {
               </motion.div>
             )}
 
-            {/* the ink forming — the Librarian walks the shelves */}
+            {/* the ink forming — the record-keeper's tome opens, the
+                knowing eye hovers, runes rise while the Librarian walks */}
             {seeking && (
               <motion.div
                 key="seeking"
@@ -455,21 +457,7 @@ export function AkashicView() {
                 aria-busy="true"
                 data-testid="akashic-seeking"
               >
-                <span
-                  aria-hidden="true"
-                  className="ink-soft mb-6 block text-center text-[22px] leading-none"
-                >
-                  ❧
-                </span>
-                <div className="mx-auto flex max-w-[480px] flex-col gap-3.5">
-                  {[86, 70, 92, 60, 78].map((w, i) => (
-                    <div
-                      key={i}
-                      className="ink-shimmer h-[11px] rounded-full"
-                      style={{ width: `${w}%`, animationDelay: `${i * 0.16}s` }}
-                    />
-                  ))}
-                </div>
+                <AkashicLoading className="mx-auto size-24 text-foreground sm:size-28" />
                 <p className="ink-hand ink-faint mt-8 text-center text-[16px] italic">
                   {replyAttempt
                     ? t("the Librarian weighs your reply...")

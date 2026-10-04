@@ -43,10 +43,9 @@ WHAT YOU RETURN (ONE body, never a list of options)
 - material: 1–2 sentences. What it is made of — real, findable materials, named plainly (brass, salt, wire, glass, spring, membrane…).
 - mechanism: 1–2 sentences. How it works — the parts and joints, what moves or holds or resonates, in plain causal words.
 - first_stroke: ONE sentence. The smallest first making step — doable in one evening.
-- caution: ONE short sentence. The gentle warning — where the making could go wrong, or where the seeker should be patient. Not a legal disclaimer.
 
 OUTPUT — strict JSON only, no markdown fences, no text outside the JSON:
-{"conception":"<2–3 sentences>","material":"<1–2 sentences>","mechanism":"<1–2 sentences>","first_stroke":"<one sentence>","caution":"<one short sentence>"}`,
+{"conception":"<2–3 sentences>","material":"<1–2 sentences>","mechanism":"<1–2 sentences>","first_stroke":"<one sentence>"}`,
     userIntro: "THE SEEKER POURS INTO THE CRUCIBLE:",
   },
 
@@ -133,7 +132,6 @@ function normalize(tool: string, j: Record<string, string>): InventToolResult | 
         line(TOOL_LINE_LABELS.material, j.material),
         line(TOOL_LINE_LABELS.mechanism, j.mechanism),
         line(TOOL_LINE_LABELS.firstStroke, j.first_stroke, true),
-        line(TOOL_LINE_LABELS.caution, j.caution),
       ].filter((l): l is InventToolLine => l !== null);
       return j.conception && lines.length >= 2 ? { title: "", lines } : null;
     }

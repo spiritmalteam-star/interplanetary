@@ -20,6 +20,7 @@ import { LibraryView } from "./LibraryView";
 import { AuthModal } from "./PassageModal";
 import { ProfileModal } from "./ProfileModal";
 import { InventView } from "./InventView";
+import { LightCodesView } from "./LightCodesView";
 import { ArchiveRegister } from "./ArchiveRegister";
 import { CommunionView } from "./CommunionView";
 import { AkashicView } from "./AkashicView";
@@ -210,6 +211,19 @@ export default function AppShell() {
     );
   }
 
+  /* LIGHT CODES — the musical chamber is its own quiet world:
+     intention in, transmission out — one back button returns. */
+  if (view === "lightcodes") {
+    return (
+      <div className="relative h-[var(--app-h,100dvh)] overflow-hidden">
+        <CosmicBackdrop />
+        <StarField />
+        <LightCodesView />
+        {passageModals}
+      </div>
+    );
+  }
+
   /* The Invent studio is its own bound world: the inventor's compact
      workshop — blueprints, bench and rail — one back button returns. */
   if (view === "invent") {
@@ -270,28 +284,8 @@ export default function AppShell() {
               )}
             </button>
 
-            {/* the Mirror's mark — one glyph for each sky (light/dark) */}
-            <button
-              type="button"
-              onClick={returnToObservatory}
-              aria-label={t("Mirror Entity Laboratory")}
-              title={t("Mirror Entity Laboratory")}
-              data-testid="topbar-logo"
-              className="focus-glow hidden transition-opacity duration-300 hover:opacity-75 sm:block"
-            >
-              <img
-                src="/images/ai/mark-light.png"
-                alt=""
-                aria-hidden="true"
-                className="size-9 object-contain dark:hidden"
-              />
-              <img
-                src="/images/ai/mark-dark.png"
-                alt=""
-                aria-hidden="true"
-                className="hidden size-9 object-contain dark:block"
-              />
-            </button>
+            {/* The chat keeps only the sidebar's mark — the top bar
+                here stays clear, as asked. */}
           </div>
 
           <div className="pointer-events-auto">

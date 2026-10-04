@@ -1005,7 +1005,6 @@ function ManifestRitual({ resonance }: { resonance: string }) {
           </ol>
           <p className="ink-hand mt-4 text-center text-[15px] font-medium italic leading-[1.8]">“{blueprint.affirmation}”</p>
           <p className="ink-faint mt-3 text-center text-[12px] italic">{blueprint.window}</p>
-          <p className="mt-3 border-t hairline pt-3 text-[11.5px] italic leading-relaxed text-muted-foreground/80">{blueprint.caution}</p>
           <div className="mt-4 flex justify-center">
             <button
               type="button"

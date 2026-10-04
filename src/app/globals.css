@@ -435,7 +435,8 @@ html:not(.dark) .text-hero {
 .scope-manifesting,
 .scope-invent,
 .scope-particlex,
-.scope-evolvemed {
+.scope-evolvemed,
+.scope-lightcodes {
   --scope-a: #2b2b30;
   --scope-b: #6b6b74;
 }
@@ -445,7 +446,8 @@ html:not(.dark) .text-hero {
 .dark .scope-manifesting,
 .dark .scope-invent,
 .dark .scope-particlex,
-.dark .scope-evolvemed {
+.dark .scope-evolvemed,
+.dark .scope-lightcodes {
   --scope-a: #d6d6d5;
   --scope-b: #a3a3a2;
 }
@@ -458,7 +460,8 @@ html:not(.dark) .scope-healing,
 html:not(.dark) .scope-manifesting,
 html:not(.dark) .scope-invent,
 html:not(.dark) .scope-particlex,
-html:not(.dark) .scope-evolvemed {
+html:not(.dark) .scope-evolvemed,
+html:not(.dark) .scope-lightcodes {
   --scope-a: #2b2b30;
   --scope-b: #6b6b74;
 }
@@ -789,6 +792,12 @@ html:not(.dark) .scope-evolvemed {
   to { transform: rotate(360deg); }
 }
 .fg-gear { transform-box: fill-box; transform-origin: center; animation: fg-gear 9s linear infinite; }
+
+/* LIGHT CODES — the chamber's breath: gentle waveform bars. */
+@keyframes lc-wave {
+  0%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(0.55); }
+}
 
 /* ------------------------------------------------------------------ */
 /*  The book reader draws no color — even glyphs. Any emoji used as    */

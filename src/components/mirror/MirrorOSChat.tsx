@@ -14,6 +14,7 @@ import {
   VisualizationPending,
 } from "./VisualizationCard";
 import { AttachmentChips, ChatInputExtras } from "./ChatInputExtras";
+import { ManifestLoading } from "./ThemedLoadings";
 import {
   hasPendingAttachments,
   type ChatAttachment,
@@ -100,19 +101,12 @@ function OpenerOrbs() {
 function OsThinking() {
   const t = useT();
   return (
-    <div className="flex items-center gap-2.5" aria-live="polite" aria-busy="true">
-      <span className="flex items-center gap-1.5">
-        {[0, 1, 2].map((i) => (
-          <span
-            key={i}
-            className="animate-dot-pulse size-1.5 rounded-full"
-            style={{
-              background: "var(--scope-a)",
-              animationDelay: `${i * 0.35}s`,
-            }}
-          />
-        ))}
-      </span>
+    <div
+      className="flex flex-col items-center gap-2 py-1"
+      aria-live="polite"
+      aria-busy="true"
+    >
+      <ManifestLoading className="size-16 text-foreground sm:size-20" />
       <span className="mono-label text-[11px] text-muted-foreground">
         {t("the OS is refining its answer")}
       </span>
