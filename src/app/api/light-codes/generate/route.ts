@@ -110,36 +110,51 @@ async function interpret(b: LcBody): Promise<{
 }> {
   const zai = await ZAI.create();
   const languageName = LANG_NAMES[b.language ?? "en"] ?? "English";
-  const completion = await zai.chat.completions.create({
-    messages: [
-      { role: "system", content: interpreterPrompt(b, languageName) },
-      {
-        role: "user",
-        content: b.intention?.trim() || "The Mirror chooses what this transmission holds.",
-      },
-    ],
-    temperature: 0.85,
-    max_tokens: 900,
-  });
-  const raw = completion.choices?.[0]?.message?.content ?? "";
-  const match = raw.match(/\{[\s\S]*\}/);
-  if (!match) throw new Error("The Mirror's interpretation dissolved before it landed. Try again.");
-  try {
-    const parsed = JSON.parse(match[0]) as {
-      title?: string;
-      style?: string;
-      lyrics?: string | null;
-      notes?: string;
-    };
-    return {
-      title: (parsed.title ?? "Untitled transmission").slice(0, 90),
-      style: (parsed.style ?? "").slice(0, 1200),
-      lyrics: parsed.lyrics ? String(parsed.lyrics).slice(0, 600) : null,
-      notes: (parsed.notes ?? "").slice(0, 600),
-    };
-  } catch {
-    throw new Error("The Mirror's interpretation dissolved before it landed. Try again.");
+  /* one quiet retry — the interpreter must never come back empty-handed */
+  let lastRaw = "";
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const completion = await zai.chat.completions.create({
+      messages: [
+        { role: "system", content: interpreterPrompt(b, languageName) },
+        {
+          role: "user",
+          content:
+            b.intention?.trim() ||
+            "The Mirror chooses what this transmission holds.",
+        },
+      ],
+      temperature: 0.85,
+      max_tokens: 1200,
+      thinking: { type: "disabled" },
+    });
+    const raw = completion.choices?.[0]?.message?.content ?? "";
+    lastRaw = raw;
+    const match = raw.match(/\{[\s\S]*\}/);
+    if (!match) continue;
+    try {
+      const parsed = JSON.parse(match[0]) as {
+        title?: string;
+        style?: string;
+        lyrics?: string | null;
+        notes?: string;
+      };
+      return {
+        title: (parsed.title ?? "Untitled transmission").slice(0, 90),
+        style: (parsed.style ?? "").slice(0, 1200),
+        lyrics: parsed.lyrics ? String(parsed.lyrics).slice(0, 600) : null,
+        notes: (parsed.notes ?? "").slice(0, 600),
+      };
+    } catch {
+      /* one more breath */
+    }
   }
+  console.error(
+    "[light-codes] interpreter returned no JSON:",
+    lastRaw.slice(0, 200)
+  );
+  throw new Error(
+    "The Mirror's interpretation dissolved before it landed. Try again."
+  );
 }
 
 function sunoHeaders(): HeadersInit | null {
