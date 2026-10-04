@@ -16,6 +16,7 @@ import {
   ScrollText,
   StickyNote,
   Telescope,
+  Waves,
   X,
 } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
@@ -28,6 +29,7 @@ import { ListenButton } from "./ListenButton";
 import { ScopeNotes } from "./ScopeNotes";
 import { QuantumLoading } from "./ThemedLoadings";
 import { PxBioMech } from "./PxBioMech";
+import { PxSynthAnalog } from "./PxSynthAnalog";
 import {
   PxCodexTab,
   PxCopyButton,
@@ -37,7 +39,7 @@ import {
   PX_SCOPE_ICONS,
 } from "./ParticleXChambers";
 
-type PxPlace = "chat" | "biomech" | "scopes" | "tools" | "codex";
+type PxPlace = "chat" | "biomech" | "synth" | "scopes" | "tools" | "codex";
 
 const PX_PLACES: {
   id: Exclude<PxPlace, "chat">;
@@ -45,6 +47,7 @@ const PX_PLACES: {
   icon: typeof Telescope;
 }[] = [
   { id: "biomech", label: "Bio Mechanics", icon: Dna },
+  { id: "synth", label: "Synth Analog", icon: Waves },
   { id: "scopes", label: "Scopes", icon: Telescope },
   { id: "tools", label: "Tools", icon: FlaskConical },
   { id: "codex", label: "Codex", icon: ScrollText },
@@ -577,7 +580,7 @@ function ParticleXChat() {
           poolId="particlex"
           contextText={pxMessages
             .slice(-6)
-            .map((m) => `${m.query}\n${m.text}`)
+            .map((m) => m.text)
             .join("\n")}
           onPick={(q) => {
             if (pxStatus !== "loading") void askPX(q);
@@ -671,6 +674,7 @@ export function ParticleX() {
   const setPxScope = useMirror((s) => s.setPxScope);
   const pinPxNotes = useMirror((s) => s.pinPxNotes);
   const pxMessages = useMirror((s) => s.pxMessages);
+  const askPX = useMirror((s) => s.askPX);
   const [place, setPlace] = useState<PxPlace>("chat");
   const [chatFull, setChatFull] = useState(false);
   const t = useT();
@@ -826,6 +830,14 @@ export function ParticleX() {
                   </div>
 
                   {place === "biomech" && <PxBioMech />}
+                  {place === "synth" && (
+                    <PxSynthAnalog
+                      onAskCore={(question) => {
+                        setPlace("chat");
+                        void askPX(question);
+                      }}
+                    />
+                  )}
                   {place === "scopes" && (
                     <PxScopesTab
                       onOpenInCore={(scopeId) => {
