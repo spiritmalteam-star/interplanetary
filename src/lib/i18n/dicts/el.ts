@@ -2824,4 +2824,11 @@ export const el: TranslationDict = {
   "Energy & field": "Ενέργεια και πεδίο",
   "Boundaries & worth": "Όρια και αξία",
   "Aimed intentions": "Στοχευμένες προθέσεις",
+  "Woven as a poem": "Υφανμένο ως ποίημα",
+  "the loom is writing your poem...": "ο αργαλειός γράφει το ποίημά σου...",
+  "The loom fell silent — the poem could not be woven. Rest a breath, then reach again.": "Ο αργαλειός σώπασε — το ποίημα δεν μπόρεσε να υφανθεί. Πάρε μια ανάσα, και φτάσε ξανά.",
+  "Weave another poem": "Ύφανε άλλο ποίημα",
+  "the forge heard your words — shaping them now": "το καμίνι άκουσε τα λόγια σου — τα διαμορφώνει τώρα",
+  "turn the dials instead": "γύρνα αντ' αυτού τους δίσκους",
+  "Strike again": "Χτύπα ξανά",
 };

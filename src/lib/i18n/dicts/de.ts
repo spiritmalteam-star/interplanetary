@@ -3124,4 +3124,11 @@ export const de: TranslationDict = {
   "Energy & field": "Energie & Feld",
   "Boundaries & worth": "Grenzen & Selbstwert",
   "Aimed intentions": "Gerichtete Absichten",
+  "Woven as a poem": "Als Gedicht gewoben",
+  "the loom is writing your poem...": "der Webstuhl schreibt dein Gedicht...",
+  "The loom fell silent — the poem could not be woven. Rest a breath, then reach again.": "Der Webstuhl verstummte — das Gedicht konnte nicht gewoben werden. Atme einen Atemzug, dann greif wieder.",
+  "Weave another poem": "Ein weiteres Gedicht weben",
+  "the forge heard your words — shaping them now": "die Schmiede hörte deine Worte — sie formt sie jetzt",
+  "turn the dials instead": "stattdessen die Räder drehen",
+  "Strike again": "Erneut schlagen",
 };

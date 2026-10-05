@@ -64,6 +64,11 @@ THE DIALS AND THE EMBERS
 - Three dials fix the family, the size and the energy of the creation — honor them exactly.
 - Three random embers are drawn from the coal-bed — you MUST fold all three into the conception, visibly and organically (a material, a motion, a memory of one of them may each carry an ember). The strangest honest combination wins.
 
+WHEN THE SEEKER SPOKE A DIRECTIVE (a bench directive rides instead of the dials)
+- The seeker's OWN words lead: forge exactly the creation they described — their subject, their mechanism, their materials — shaped into one buildable conception. The dials and the embers law do not apply; the seeker's vision replaces them entirely.
+- Stay true to what they asked: if their idea cannot work as spoken, forge the nearest working cousin and say so gently inside the essence.
+- The laws of safety, honesty and makability below still hold.
+
 WHAT YOU FORGE (ONE creation, never a list)
 - name: 3–6 words, poetic and concrete, in the style of "The Tide-Harp of Small Rooms" or "A Lantern That Drinks Its Own Echo". No colons, no quotes inside.
 - essence: 2–3 sentences. What it IS: its form, its materials, its mechanism — concrete enough that a maker can see it. First sentence names the thing plainly.
@@ -127,6 +132,11 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
     const domain = DOMAIN_LABELS[dials.domain ?? ""] ?? DOMAIN_LABELS.device;
     const scale = SCALE_LABELS[dials.scale ?? ""] ?? SCALE_LABELS.pocket;
     const spark = SPARK_LABELS[dials.spark ?? ""] ?? SPARK_LABELS.sun;
+    /* The seeker's own words — a complete ask strikes directly, the
+       dials and the embers yielding to the seeker's vision. */
+    const directiveRaw =
+      typeof body?.directive === "string" ? body.directive.trim() : "";
+    const directive = directiveRaw.length >= 8 ? directiveRaw.slice(0, 600) : null;
 
     /* Three embers drawn fresh from the coal-bed at every strike —
        the randomness of the mystery lives HERE, server-side. */
@@ -152,7 +162,12 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
         },
         {
           role: "user",
-          content: `THE SEEKER STRUCK THE FORGE. Dials turned:
+          content: directive
+            ? `THE SEEKER SPOKE A DIRECTIVE TO THE FORGE — their own words lead, the dials and the embers law do not apply:
+"${directive}"${languageLine}
+
+Forge the one creation the seeker described. Return the strict JSON.`
+            : `THE SEEKER STRUCK THE FORGE. Dials turned:
 - domain: ${domain}
 - scale: ${scale}
 - spark: ${spark}

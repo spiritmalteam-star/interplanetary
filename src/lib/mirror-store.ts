@@ -33,6 +33,7 @@ import {
   detectQuantumTool,
   isBookResume,
   MUSIC_INTENT,
+  type SideArtifactKind,
   type SideArtifactRef,
 } from "@/lib/artifact-intent";
 import {
@@ -1579,6 +1580,66 @@ export const useMirror = create<MirrorState>()((set, get) => ({
        questions — the chamber carries the whole translation). */
     const soundGift = sideKind === null && MUSIC_INTENT.test(query);
 
+    /* THE DIRECT GENERATION LAW — when the visitor's words ask a world
+       to MAKE something (an akashic record, a card, an intention, a
+       forging, a book, a poem, a sound transmission, a revelation, a
+       remedy), no mirror speech travels and nothing waits at the
+       bottom: the channel opens STRAIGHT into the making itself. The
+       artifact is the reply — it mounts at once and conducts its own
+       generation; where a making needs the visitor's hand (the forge's
+       dials, the loom's shaping, the intention's charge), its own
+       bench asks within the generation, and the strike follows. */
+    if (sideKind || soundGift) {
+      const kind: SideArtifactKind = sideKind ?? "codes";
+      const artifact: SideArtifactRef = {
+        kind,
+        resonance: query,
+        ...(kind === "book" && isBookResume(query) ? { resume: true } : {}),
+        ...(kind === "codes" && themesForCodes ? { themes: themesForCodes } : {}),
+        ...(kind === "quantum"
+          ? { tool: detectQuantumTool(query) ?? undefined }
+          : {}),
+      };
+      set((s) => ({
+        view: "transmission",
+        mobileNavOpen: false,
+        sessions: {
+          ...s.sessions,
+          [mode]: {
+            ...s.sessions[mode],
+            status: "ready",
+            activeQuery: "",
+            draft: "",
+            error: null,
+            messages: [
+              ...s.sessions[mode].messages,
+              {
+                id: nextMessageId(),
+                query,
+                text: "",
+                classification: "WORLD_BUILDING" as const,
+                createdAt: new Date().toISOString(),
+                sideArtifact: artifact,
+                ...(attachments
+                  ? {
+                      attachments: {
+                        images: attachments.filter((a) => a.kind === "image")
+                          .length,
+                        docNames: attachments
+                          .filter((a) => a.kind === "document")
+                          .map((a) => a.name),
+                      },
+                    }
+                  : {}),
+              },
+            ],
+          },
+        },
+      }));
+      void get().refreshMe();
+      return;
+    }
+
     set((s) => ({
       view: "transmission",
       mobileNavOpen: false,
@@ -1610,9 +1671,6 @@ export const useMirror = create<MirrorState>()((set, get) => ({
           mode,
           language: get().language,
           history,
-          ...(sideKind || soundGift
-            ? { artifact: sideKind ?? "codes" }
-            : {}),
           ...(payload ?? {}),
         }),
       });
@@ -1645,28 +1703,6 @@ export const useMirror = create<MirrorState>()((set, get) => ({
                 text: data.transmission,
                 classification: data.classification,
                 createdAt: data.createdAt ?? new Date().toISOString(),
-                ...(sideKind
-                  ? {
-                      sideArtifact: {
-                        kind: sideKind,
-                        resonance: query,
-                        /* the book door remembers a return: the visitor
-                           asked for their paused volume back */
-                        ...(sideKind === "book" && isBookResume(query)
-                          ? { resume: true }
-                          : {}),
-                        /* the Light Codes door tunes THIS conversation */
-                        ...(sideKind === "codes" && themesForCodes
-                          ? { themes: themesForCodes }
-                          : {}),
-                        /* the Quantum World door reads through its
-                           own instruments */
-                        ...(sideKind === "quantum"
-                          ? { tool: detectQuantumTool(query) ?? undefined }
-                          : {}),
-                      },
-                    }
-                  : {}),
                 ...(attachments
                   ? {
                       attachments: {
@@ -1692,41 +1728,6 @@ export const useMirror = create<MirrorState>()((set, get) => ({
           id: replyId,
           request: data.vision.trim(),
         });
-      }
-
-      /* THE SOUND GIFT — the visitor asked for music: the reply lands
-         in the channel, and a Light Codes transmission is tuned right
-         here beneath it, carrying the interpretation of this very
-         conversation — revealed inside the channel itself, never by
-         pulling the visitor out of it. No repetition of the visitor's
-         words — a translation into sound. */
-      if (sideKind !== "codes" && MUSIC_INTENT.test(query)) {
-        const themes = [
-          ...session.messages.slice(-2).map((m) => `${m.query} ${m.text}`),
-          `${query} ${data.transmission ?? ""}`,
-        ]
-          .join(" \u2022 ")
-          .slice(0, 900);
-        set((s) => ({
-          sessions: {
-            ...s.sessions,
-            [mode]: {
-              ...s.sessions[mode],
-              messages: s.sessions[mode].messages.map((m) =>
-                m.id === replyId && !m.sideArtifact
-                  ? {
-                      ...m,
-                      sideArtifact: {
-                        kind: "codes" as const,
-                        resonance: query,
-                        themes,
-                      },
-                    }
-                  : m
-              ),
-            },
-          },
-        }));
       }
     } catch (err) {
       set((s) => ({

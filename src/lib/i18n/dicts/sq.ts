@@ -4842,4 +4842,11 @@ export const sq: TranslationDict = {
   "Energy & field": "Energjia dhe fusha",
   "Boundaries & worth": "Kufijtë dhe vlera",
   "Aimed intentions": "Qëllimet e synuara",
+  "Woven as a poem": "E endur si poemë",
+  "the loom is writing your poem...": "tehu po shkruan poemën tënde...",
+  "The loom fell silent — the poem could not be woven. Rest a breath, then reach again.": "Tehu ra në heshtje — poemës nuk iu end prova. Merr frymën, dhe preke sërish.",
+  "Weave another poem": "Thur një poemë tjetër",
+  "the forge heard your words — shaping them now": "farku i dëgjoi fjalët e tua — po u jep formë tani",
+  "turn the dials instead": "rrotullo rrathët në vend të kësaj",
+  "Strike again": "Godit sërish",
 };

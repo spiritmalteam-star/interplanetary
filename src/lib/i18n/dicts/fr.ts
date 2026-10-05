@@ -3123,4 +3123,11 @@ export const fr: TranslationDict = {
   "Energy & field": "Énergie et champ",
   "Boundaries & worth": "Limites et valeur",
   "Aimed intentions": "Intentions dirigées",
+  "Woven as a poem": "Tissé comme un poème",
+  "the loom is writing your poem...": "le métier écrit ton poème...",
+  "The loom fell silent — the poem could not be woven. Rest a breath, then reach again.": "Le métier s'est tu — le poème n'a pu être tissé. Reprends un souffle, puis tends la main à nouveau.",
+  "Weave another poem": "Tisser un autre poème",
+  "the forge heard your words — shaping them now": "la forge a entendu tes mots — elle les façonne maintenant",
+  "turn the dials instead": "tourner les molettes à la place",
+  "Strike again": "Frapper à nouveau",
 };

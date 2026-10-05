@@ -20,6 +20,7 @@ export const COSTS: Record<string, number> = {
   manifest: cost("manifest", 15),
   mirror_os: cost("mirror_os", 15),
   forge: cost("forge", 25),
+  poem: cost("poem", 15),
   invent_tool: cost("invent_tool", 15),
   remedy: cost("remedy", 15),
   visualize: cost("visualize", 30),

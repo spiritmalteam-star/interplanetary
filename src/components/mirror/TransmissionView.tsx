@@ -493,8 +493,9 @@ function Exchange({
         />
 
         <div className="relative px-6 py-6 sm:px-10 sm:py-8">
-          {/* listen + copy — the only actions, one quiet row (words only) */}
-          {!hasVisual && (
+          {/* listen + copy — the only actions, one quiet row (words only;
+              a direct-generation artifact carries no words of its own) */}
+          {!hasVisual && message.text.trim() && (
             <div className="mb-4 flex items-center justify-end gap-2">
               <ListenButton text={message.text} cacheKey={message.id} />
               <button

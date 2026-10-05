@@ -27,6 +27,7 @@ export type SideArtifactKind =
   | "manifest"
   | "forge"
   | "book"
+  | "poem"
   | "codes"
   | "quantum"
   | "remedy";
@@ -58,10 +59,10 @@ export interface SideArtifactRef {
     ("please explain quantum entanglement") and must not open doors. */
 const REQUEST_FRAME: RegExp = new RegExp(
   [
-    "\\b(?:can|could|will|would)\\s+you\\s+(?:please\\s+)?(?:open|show|give|bring|create|make|build|draw|read|tune|play|prepare|weave|write|channel|summon|reveal|visit|enter)\\b",
-    "\\b(?:please\\s+)?(?:open|show|give|bring|bring\\s+me|create|make|draw|read|tune|play|prepare|weave|write|channel|summon|reveal)\\s+(?:me\\s+)?(?:a|an|the|my|some|us|another)\\b",
+    "\\b(?:can|could|will|would)\\s+you\\s+(?:please\\s+)?(?:open|show|give|bring|create|make|build|draw|read|tune|play|prepare|weave|write|channel|summon|reveal|visit|enter|invent|design|devise|forge)\\b",
+    "\\b(?:please\\s+)?(?:open|show|give|bring|bring\\s+me|create|make|draw|read|tune|play|prepare|weave|write|channel|summon|reveal|invent|design|devise|forge|build)\\s+(?:me\\s+)?(?:a|an|the|my|some|us|another)\\b",
     "\\bi\\s+(?:want|wish|need|would\\s+like|'d\\s+like)\\s+(?:to\\s+)?(?:open|see|hear|read|visit|enter|create|make|draw|receive|have|a|an|the|my|some)\\b",
-    "\\b(?:let'?s|let\\s+us)\\s+(?:open|enter|visit|create|make|draw|read|begin|start|weave|play)\\b",
+    "\\b(?:let'?s|let\\s+us)\\s+(?:open|enter|visit|create|make|draw|read|begin|start|weave|play|invent|build|design|forge)\\b",
     "\\b(?:take|bring)\\s+me\\s+(?:to|into|inside)\\b",
   ].join("|"),
   "i"
@@ -208,15 +209,33 @@ const MANIFEST_PATTERNS: RegExp[] = [
   /\bmanifest\s+(a|an|the|my|more|calm|love|wealth|health|peace|joy|abundance)\b/i,
 ];
 
-/* The Forge door — mysteries struck from the coals. */
+/* The Forge door — mysteries struck from the coals, and the visitor's
+   own conceptions forged to their words. A complete ask ("invent a new
+   way of receiving light signals from leafs") strikes directly; a bare
+   naming ("the forge") opens the dial bench. */
 const FORGE_PATTERNS: RegExp[] = [
   /\bforge\b/i,
-  /\binvent\b/i,
+  /\binvent(s?|ion|ions|ing|ed)?\b/i,
   /\bmystery\s+(creation|card|device|me|something|object)\b/i,
   /\bbuild\s+(me|us)\b/i,
   /\bdesign\s+(me\s+)?(a|an|something)\b/i,
+  /\bconceive\b[^.?!]{0,16}\b(device|machine|instrument|way|method)\b/i,
+  /\bdevise\b[^.?!]{0,16}\b(a|an|the|something)\b/i,
   /\bstrike\b[^.?!]{0,16}\bforge\b/i,
   /\bsomething\s+(strange|wonderful|new|playful)\b[^.?!]{0,24}\b(make|build|create|invent)\b/i,
+  /\bnew\s+way\s+of\b/i,
+];
+
+/* The Poem door — a poem woven as its own artifact, straight into
+   the channel: no mirror speech around it, the ink itself is the
+   reply. Text verbs only — a lullaby SUNG belongs to the Light
+   Codes chamber, a lullaby WRITTEN belongs to the loom. */
+const POEM_PATTERNS: RegExp[] = [
+  /\b(write|compose|pen|jot|weave|craft)\b[^.?!]{0,24}\b(me\s+|us\s+)?(a|an|the|us)?\s*(poem|poetry|verse|verses|haiku|sonnet|limerick|rhyme|lullaby)\b/i,
+  /\b(a|an)\s+(poem|haiku|sonnet|lullaby)\s+(about|for|of|on)\b/i,
+  /\bpoem\b[^.?!]{0,20}\b(about|for|of|on)\b/i,
+  /\bhaiku\b/i,
+  /\bsonnet\b/i,
 ];
 
 /* The Light Codes door — sound transmissions through the Mirror
@@ -276,6 +295,7 @@ const DOORS: {
   { kind: "star", patterns: STAR_PATTERNS },
   { kind: "manifest", patterns: MANIFEST_PATTERNS },
   { kind: "forge", patterns: FORGE_PATTERNS },
+  { kind: "poem", patterns: POEM_PATTERNS },
   { kind: "codes", patterns: CODES_PATTERNS },
   { kind: "quantum", patterns: QUANTUM_PATTERNS, ungated: QUANTUM_INSTRUMENTS },
   { kind: "remedy", patterns: REMEDY_PATTERNS },
@@ -312,10 +332,58 @@ export function detectArtifactIntent(text: string): SideArtifactKind | null {
     const m = firstMatch(v, door.patterns);
     if (!m) continue;
     if (isRequested(v, m)) return door.kind;
+    /* the forge hears a spoken directive — the vision is the ask */
+    if (door.kind === "forge" && FORGE_ASK_VERB.test(v) && forgeDirective(v)) {
+      return door.kind;
+    }
     /* a passing mention falls through to the next doors — the reply
        stays an ordinary reply */
   }
   return null;
+}
+
+/* ------------------------------------------------------------------ */
+/*  THE FORGE DIRECTIVE — "invent a new way of receiving light         */
+/*  signals from leafs" is a COMPLETE ask: the forge strikes it        */
+/*  directly, no dials to turn. "Open the forge" is bare: the dial     */
+/*  bench waits for the visitor's hand. The residual words after the   */
+/*  request scaffolding is stripped decide which one it is.            */
+/* ------------------------------------------------------------------ */
+
+const FORGE_STRIP: RegExp[] = [
+  /\b(?:please\s+)?(?:can|could|would|will)\s+you\s+(?:please\s+)?/gi,
+  /\bi\s+(?:want|wish|need|would\s+like)\s+(?:you\s+)?(?:to\s+)?/gi,
+  /\bplease\b/gi,
+  /\b(?:invent|build|design|make|create|forge|construct|devise|imagine|conceive|strike)\b/gi,
+  /\b(?:for|with)\s+(?:me|us)\b/gi,
+  /\bthe\s+forge\b/gi,
+  /\bsomething\s+(?:strange|wonderful|new|playful|beautiful|curious)\b/gi,
+];
+
+/* A forge ask that carries its own vision — the creation verb plus
+    enough of the seeker's words. A complete ask is itself the request:
+    it opens the forge without the gate, however long the words run. */
+const FORGE_ASK_VERB: RegExp =
+  /\b(invent|build|design|devise|conceive|forge|strike|construct)\b/i;
+
+/**
+ * The forge directive — the visitor's words carry a complete creation
+ * ask (three or more meaningful words remain once the request
+ * scaffolding is stripped). The returned string is the visitor's OWN
+ * words, carried to the forge verbatim; null means the bench waits
+ * for the dials.
+ */
+export function forgeDirective(text: string): string | null {
+  const raw = text.trim();
+  if (raw.length < 3) return null;
+  let v = raw;
+  for (const re of FORGE_STRIP) v = v.replace(re, " ");
+  const words = v
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((w) => w.toLowerCase().replace(/[^a-z']/g, ""))
+    .filter((w) => w.length > 1);
+  return words.length >= 3 ? raw.slice(0, 400) : null;
 }
 
 /**

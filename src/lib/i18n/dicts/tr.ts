@@ -2618,4 +2618,11 @@ export const tr: TranslationDict = {
   "Energy & field": "Enerji ve alan",
   "Boundaries & worth": "Sınırlar ve değer",
   "Aimed intentions": "Yöneltilmiş niyetler",
+  "Woven as a poem": "Bir şiir olarak dokundu",
+  "the loom is writing your poem...": "dokuma tezgahı şiirini yazıyor...",
+  "The loom fell silent — the poem could not be woven. Rest a breath, then reach again.": "Tezgah sustu — şiir dokunamadı. Bir nefes al, sonra yeniden uzan.",
+  "Weave another poem": "Başka bir şiir dokula",
+  "the forge heard your words — shaping them now": "ocak sözlerini duydu — şimdi onlara şekil veriyor",
+  "turn the dials instead": "bunun yerine kadranları çevir",
+  "Strike again": "Yeniden vur",
 };

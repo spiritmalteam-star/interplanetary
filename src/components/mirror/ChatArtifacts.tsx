@@ -46,7 +46,7 @@ import { cn } from "@/lib/utils";
 import { bookToText, dedupeChapters } from "@/lib/book-text";
 import { toast } from "@/hooks/use-toast";
 import type { SideArtifactKind } from "@/lib/artifact-intent";
-import { guessLightCodesMode } from "@/lib/artifact-intent";
+import { forgeDirective, guessLightCodesMode } from "@/lib/artifact-intent";
 import type { LightCodesMode } from "@/lib/data/light-codes";
 import { WorldSigil, type WorldSigilKey } from "./WorldSigils";
 import { READERS, TALES, VERSE_FORMS } from "@/lib/data/book-options";
@@ -1051,9 +1051,14 @@ function pick<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-function ForgeStrike() {
+function ForgeStrike({ resonance }: { resonance: string }) {
   const t = useT();
   const language = useMirror((s) => s.language);
+  /* The seeker's own words — a complete ask strikes directly, the
+     dial bench yielding to the vision already spoken. A bare naming
+     ("the forge") keeps the bench: the dials wait for the hand. */
+  const directive = useMemo(() => forgeDirective(resonance), [resonance]);
+  const [manual, setManual] = useState(false);
   const [dials, setDials] = useState({
     domain: pick(forgeDomains).id,
     scale: pick(forgeScales).id,
@@ -1062,23 +1067,37 @@ function ForgeStrike() {
   const [stage, setStage] = useState<"idle" | "forging" | "ready" | "error">("idle");
   const [mystery, setMystery] = useState<MiniMystery | null>(null);
   const [phase, setPhase] = useState(0);
+  const struckRef = useRef(false);
 
-  const strike = async () => {
+  const strike = async (directiveOverride?: string | null) => {
     if (stage === "forging") return;
+    const useDirective =
+      directiveOverride === undefined ? directive : directiveOverride;
     setStage("forging");
     setMystery(null);
-    const cycle = window.setInterval(() => setPhase((p) => (p + 1) % forgePhases.length), 650);
+    const cycle = window.setInterval(
+      () => setPhase((p) => (p + 1) % forgePhases.length),
+      650,
+    );
     try {
       const [res] = await Promise.all([
         fetch("/api/forge", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ dials, language }),
+          body: JSON.stringify({
+            dials,
+            language,
+            ...(useDirective ? { directive: useDirective } : {}),
+          }),
         }),
         new Promise((r) => window.setTimeout(r, 2000)), /* let the embers breathe */
       ]);
-      const data = (await (res as Response).json()) as { mystery?: MiniMystery; error?: string };
-      if (!(res as Response).ok || !data.mystery) throw new Error(data.error ?? "quiet");
+      const data = (await (res as Response).json()) as {
+        mystery?: MiniMystery;
+        error?: string;
+      };
+      if (!(res as Response).ok || !data.mystery)
+        throw new Error(data.error ?? "quiet");
       window.clearInterval(cycle);
       setMystery(data.mystery);
       setStage("ready");
@@ -1088,7 +1107,20 @@ function ForgeStrike() {
     }
   };
 
-  const dialRow = (label: string, options: typeof forgeDomains, key: "domain" | "scale" | "spark", testid: string) => (
+  /* the directive strikes the moment the bench is mounted — the ask
+     was already complete, nothing waits for another click */
+  useEffect(() => {
+    if (!directive || manual || struckRef.current) return;
+    struckRef.current = true;
+    void strike();
+  }, [directive, manual]);
+
+  const dialRow = (
+    label: string,
+    options: typeof forgeDomains,
+    key: "domain" | "scale" | "spark",
+    testid: string,
+  ) => (
     <div>
       <p className="mono-label text-[9.5px] uppercase tracking-[0.2em] text-[var(--scope-a)]">{label}</p>
       <div className="mt-1.5 flex flex-wrap gap-1.5">
@@ -1098,7 +1130,11 @@ function ForgeStrike() {
             <button
               key={o.id}
               type="button"
-              onClick={() => { setDials((d) => ({ ...d, [key]: o.id })); setStage("idle"); setMystery(null); }}
+              onClick={() => {
+                setDials((d) => ({ ...d, [key]: o.id }));
+                setStage("idle");
+                setMystery(null);
+              }}
               aria-pressed={active}
               title={t(o.hint)}
               data-testid={`${testid}-${o.id}`}
@@ -1106,9 +1142,13 @@ function ForgeStrike() {
                 "focus-glow flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[12px] transition-all duration-300",
                 active
                   ? "border-[var(--scope-a)] font-semibold text-foreground"
-                  : "hairline text-muted-foreground hover:text-foreground"
+                  : "hairline text-muted-foreground hover:text-foreground",
               )}
-              style={active ? { background: "color-mix(in srgb, var(--scope-a) 12%, transparent)" } : undefined}
+              style={
+                active
+                  ? { background: "color-mix(in srgb, var(--scope-a) 12%, transparent)" }
+                  : undefined
+              }
             >
               <span aria-hidden="true" className="emoji-ink">{o.emoji}</span>
               {t(o.label)}
@@ -1121,19 +1161,48 @@ function ForgeStrike() {
 
   return (
     <div className="mx-auto max-w-[560px]" data-testid="chat-forge">
-      {dialRow(t("What it is"), forgeDomains, "domain", "chat-forge-domain")}
-      <div className="mt-3">{dialRow(t("How much world"), forgeScales, "scale", "chat-forge-scale")}</div>
-      <div className="mt-3">{dialRow(t("Which energy"), forgeSparks, "spark", "chat-forge-spark")}</div>
+      {directive && !manual ? (
+        <div className="text-center">
+          <p className="mono-label text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+            {t("the forge heard your words — shaping them now")}
+          </p>
+          {stage === "idle" && (
+            <button
+              type="button"
+              onClick={() => setManual(true)}
+              data-testid="chat-forge-manual"
+              className="mono-label mt-2 text-[9px] uppercase tracking-[0.2em] text-muted-foreground/70 underline-offset-2 transition-colors duration-300 hover:text-foreground hover:underline"
+            >
+              {t("turn the dials instead")}
+            </button>
+          )}
+        </div>
+      ) : (
+        <>
+          {dialRow(t("What it is"), forgeDomains, "domain", "chat-forge-domain")}
+          <div className="mt-3">{dialRow(t("How much world"), forgeScales, "scale", "chat-forge-scale")}</div>
+          <div className="mt-3">{dialRow(t("Which energy"), forgeSparks, "spark", "chat-forge-spark")}</div>
 
-      <div className="mt-4 flex justify-center">
-        <button type="button" onClick={() => void strike()} disabled={stage === "forging"} data-testid="chat-forge-strike" className={btnSolid}>
-          <Hammer className="size-3.5" aria-hidden="true" />
-          {t("Strike the Forge")}
-        </button>
-      </div>
+          <div className="mt-4 flex justify-center">
+            <button
+              type="button"
+              onClick={() => void strike(null)}
+              disabled={stage === "forging"}
+              data-testid="chat-forge-strike"
+              className={btnSolid}
+            >
+              <Hammer className="size-3.5" aria-hidden="true" />
+              {t("Strike the Forge")}
+            </button>
+          </div>
+        </>
+      )}
 
       {stage === "forging" && (
-        <p className="mono-label mt-4 flex items-center justify-center gap-2 text-[10px] text-muted-foreground" aria-busy="true">
+        <p
+          className="mono-label mt-4 flex items-center justify-center gap-2 text-[10px] text-muted-foreground"
+          aria-busy="true"
+        >
           <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
           {t(forgePhases[phase])}
         </p>
@@ -1142,6 +1211,19 @@ function ForgeStrike() {
         <p className="mt-4 text-center text-[13px] italic text-muted-foreground">
           {t("The forge stayed quiet — strike again.")}
         </p>
+      )}
+      {stage === "error" && (
+        <div className="mt-3 flex justify-center">
+          <button
+            type="button"
+            onClick={() => void strike(manual || !directive ? null : directive)}
+            data-testid="chat-forge-retry"
+            className={btnGhost}
+          >
+            <RotateCcw className="size-3.5" aria-hidden="true" />
+            {t("Strike again")}
+          </button>
+        </div>
       )}
 
       <AnimatePresence>
@@ -1182,6 +1264,156 @@ function ForgeStrike() {
           </motion.div>
         )}
       </AnimatePresence>
+    </div>
+  );
+}
+
+/* ================================================================== */
+/*  THE POOM CARD — a poem woven as its own artifact, straight into    */
+/*  the channel. No mirror speech around it: the ink itself is the     */
+/*  reply. The visitor's words are the loom's tuning; the poem weaves  */
+/*  the moment the card mounts, and another can be woven at will.      */
+/* ================================================================== */
+
+interface WovenPoem {
+  title: string;
+  epigraph: string;
+  stanzas: string[][];
+  seal: string;
+}
+
+function PoemCard({ resonance }: { resonance: string }) {
+  const t = useT();
+  const language = useMirror((s) => s.language);
+  const [state, setState] = useState<"loading" | "ready" | "error">("loading");
+  const [poem, setPoem] = useState<WovenPoem | null>(null);
+  const [copied, setCopied] = useState(false);
+  const busyRef = useRef(false);
+
+  const weave = useCallback(async () => {
+    if (busyRef.current) return;
+    busyRef.current = true;
+    setState("loading");
+    setCopied(false);
+    try {
+      const res = await fetch("/api/poem", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ resonance, language }),
+      });
+      const data = (await res.json()) as { poem?: WovenPoem; error?: string };
+      if (!res.ok || !data.poem) throw new Error(data.error ?? "quiet");
+      setPoem(data.poem);
+      setState("ready");
+    } catch {
+      setState("error");
+    } finally {
+      busyRef.current = false;
+    }
+  }, [language, resonance]);
+
+  useEffect(() => {
+    void weave();
+  }, [weave]);
+
+  const copyPoem = async () => {
+    if (!poem) return;
+    const text = [
+      poem.title,
+      ...(poem.epigraph ? [poem.epigraph] : []),
+      ...poem.stanzas.map((s) => s.join("\n")),
+      ...(poem.seal ? [`— ${poem.seal}`] : []),
+    ].join("\n\n");
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      toast({ description: t("copied") });
+    } catch {
+      /* the clipboard may be sealed — the poem remains on the page */
+    }
+  };
+
+  return (
+    <div className="mx-auto max-w-[560px]" data-testid="chat-poem">
+      {state === "loading" && (
+        <ArtifactLoading phrase={t("the loom is writing your poem...")} bars={4} />
+      )}
+      {state === "error" && (
+        <ArtifactError
+          message={t("The loom fell silent — the poem could not be woven. Rest a breath, then reach again.")}
+          onRetry={() => void weave()}
+          retryLabel={t("Weave again")}
+          testid="chat-poem-retry"
+        />
+      )}
+      {state === "ready" && poem && (
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          data-testid="chat-poem-body"
+        >
+          <div className="text-center">
+            <h4 className="ink-title text-[17px] font-semibold leading-snug">
+              {poem.title}
+            </h4>
+            {poem.epigraph && (
+              <p className="ink-faint mt-1.5 text-[12.5px] italic">{poem.epigraph}</p>
+            )}
+          </div>
+          <div
+            className="mx-auto mt-4 h-px w-24"
+            style={{
+              background:
+                "linear-gradient(90deg, transparent, color-mix(in srgb, var(--scope-a) 55%, transparent), transparent)",
+            }}
+            aria-hidden="true"
+          />
+          <div className="mt-5 space-y-5">
+            {poem.stanzas.map((stanza, i) => (
+              <div key={i} className="space-y-1 text-center">
+                {stanza.map((line, j) => (
+                  <p
+                    key={j}
+                    className="ink-hand text-[14.5px] leading-[1.9] text-foreground/90"
+                  >
+                    {line}
+                  </p>
+                ))}
+              </div>
+            ))}
+          </div>
+          {poem.seal && (
+            <p className="ink-faint mt-5 text-right text-[12.5px] italic">
+              — {poem.seal}
+            </p>
+          )}
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+            <button
+              type="button"
+              onClick={() => void copyPoem()}
+              data-testid="chat-poem-copy"
+              className={btnGhost}
+            >
+              {copied ? (
+                <Check className="size-3.5" aria-hidden="true" />
+              ) : (
+                <Copy className="size-3.5" aria-hidden="true" />
+              )}
+              {copied ? t("copied") : t("copy")}
+            </button>
+            <button
+              type="button"
+              onClick={() => void weave()}
+              data-testid="chat-poem-again"
+              className={btnGhost}
+            >
+              <RotateCcw className="size-3.5" aria-hidden="true" />
+              {t("Weave another poem")}
+            </button>
+          </div>
+        </motion.div>
+      )}
     </div>
   );
 }
@@ -1280,8 +1512,10 @@ function BookWeaver({
   const [stage, setStage] = useState<"ask" | "weaving" | "reading">("ask");
   const [step, setStep] = useState(0);
   const [topic, setTopic] = useState("");
+  /* carry the visitor's own words in, lightly unhooked from the ask —
+     when they hold a subject, the boot below begins the weaving at
+     once, so the loom's first question never waits */
   const [topicDraft, setTopicDraft] = useState(() => {
-    /* carry the visitor's own words in, lightly unhooked from the ask */
     const stripped = resonance
       .replace(
         /\b(please\s+)?(can|could|would)\s+you\b/i,
@@ -2606,6 +2840,7 @@ const KIND_SIGIL: Record<SideArtifactKind, WorldSigilKey> = {
   manifest: "mirroros",
   forge: "invent",
   book: "dreambook",
+  poem: "dreambook",
   codes: "lightcodes",
   quantum: "particlex",
   remedy: "evolvemed",
@@ -2641,13 +2876,15 @@ export function SideArtifact({
           ? t("The Manifesting Chamber")
           : kind === "book"
             ? t("The weaving instrument")
-            : kind === "codes"
-              ? t("Tuned in the Light Codes chamber")
-              : kind === "quantum"
-                ? t("Revealed by ParticleX")
-                : kind === "remedy"
-                  ? t("Routed through Evolve Med")
-                  : t("Struck from the Forge");
+            : kind === "poem"
+              ? t("Woven as a poem")
+              : kind === "codes"
+                ? t("Tuned in the Light Codes chamber")
+                : kind === "quantum"
+                  ? t("Revealed by ParticleX")
+                  : kind === "remedy"
+                    ? t("Routed through Evolve Med")
+                    : t("Struck from the Forge");
 
   return (
     <div className="mt-6 border-t hairline pt-5" data-testid={`chat-artifact-${kind}`}>
@@ -2661,8 +2898,9 @@ export function SideArtifact({
       {kind === "akashic" && <AkashicLetter resonance={resonance} />}
       {kind === "star" && <StarDraw />}
       {kind === "manifest" && <ManifestRitual resonance={resonance} />}
-      {kind === "forge" && <ForgeStrike />}
+      {kind === "forge" && <ForgeStrike resonance={resonance} />}
       {kind === "book" && <BookWeaver resonance={resonance} resume={resume} />}
+      {kind === "poem" && <PoemCard resonance={resonance} />}
       {kind === "codes" && <CodesTransmission resonance={resonance} themes={themes} />}
       {kind === "quantum" && (
         <NexusReveal
