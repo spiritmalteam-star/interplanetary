@@ -2419,3 +2419,21 @@ Work Log:
 
 Stage Summary:
 - The hydration crash is dead at its root: the first paint is deterministic everywhere, and the learning memory is applied only where it is legal. The suggestion tree is no longer a bounded strip-world: it is a sphere — infinite up and down through identical-but-freshening groves, rich echo fields to both sides that turn as you walk, momentum that answers instantly in every direction, and a quiet keeper that always drifts you home. No wall, no wait, no emptiness, no repeat — in either theme, on desktop and mobile. The upstream Z.ai 429 quota wall remains the only failure path (graceful, pre-existing).
+
+---
+Task ID: VERCEL-FIX-1
+Agent: Z.ai Code (main)
+Task: Fix Vercel deployment failure (Cannot find module scripts/postinstall.mjs) + make the app use only the Z.ai voice reader (remove OpenAI voice from tts/asr)
+
+Work Log:
+- Diagnosed MODULE_NOT_FOUND: package.json postinstall references scripts/postinstall.mjs, but .gitignore ignores the whole scripts/ folder and both postinstall.mjs and select-schema.mjs were created after that rule, so they were never committed — Vercel's bun install crashed at postinstall
+- Fix: git add -f scripts/postinstall.mjs scripts/select-schema.mjs (force-tracked past gitignore; both contain no secrets; prisma/schema.postgres.prisma already tracked so Vercel generates the postgres client via DATABASE_URL)
+- Voice change in src/lib/zai-client.ts: removed openAIAudio engine, OPENAI_VOICE_MAP, OPENAI_TTS_MODELS and the audioCfg constructor param; CloudBackend.get audio() now serves ONLY the Z.ai house voice (CogTTS xiaochen/tongtong + GLM-ASR) and politely declines with a "set ZAI_API_KEY" message otherwise; OpenAI remains only as the chat-text fallback sky (429/quota rescue), never as a voice
+- Verified: tsc clean, eslint clean, postinstall smoke-tested locally (schema selection + prisma generate OK)
+- Committed 0773617 and pushed to main (cc502d8..0773617) — Vercel auto-deploy triggered
+- Dev server restarted in background, homepage HTTP 200, fresh log free of errors
+
+Stage Summary:
+- Vercel bun install will now find scripts/postinstall.mjs and scripts/select-schema.mjs; prisma generate runs against prisma/schema.postgres.prisma in the cloud
+- Voice on www.reflectme.space is now 100% Z.ai (house reader); OpenAI voice path deleted from the codebase
+- No Vercel env changes required; OPENAI_API_KEY may stay (it still backs up chat text only)
