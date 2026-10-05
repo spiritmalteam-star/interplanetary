@@ -151,7 +151,6 @@ export type MainView =
   | "invent"
   | "dreambook"
   | "particlex"
-  | "synth"
   | "evolvemed"
   | "lightcodes"
   | "library";
@@ -490,10 +489,6 @@ interface MirrorState {
   openParticleX: () => void;
   exitParticleX: () => void;
 
-  /* Synth Analog — the cosmic frequency interface (its own world,
-     a category of ParticleX, never a chamber of the quantum view) */
-  openSynth: () => void;
-  exitSynth: () => void;
   setPxDraft: (v: string) => void;
   setPxScope: (id: string | null) => void;
   /** Pin a window's note stickers into the conversation flow. */
@@ -1833,17 +1828,6 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     set({ view: "particlex", mobileNavOpen: false, modal: null }),
 
   exitParticleX: () => set({ view: "observatory" }),
-
-  /* ------------ Synth Analog — the cosmic frequency interface -------------
-
-     Synth Analog is its own world: the analog realm drawn into the
-     digital — the Aztec Sun border, the three circles of frequency and
-     the interlocking squares of the Tzolkin. It is listed as a category
-     of ParticleX in the sidebar, but it is never a chamber of the
-     quantum view. Free for everyone. */
-  openSynth: () => set({ view: "synth", mobileNavOpen: false, modal: null }),
-
-  exitSynth: () => set({ view: "observatory" }),
 
   setPxDraft: (v) => set({ pxDraft: v }),
   setPxScope: (id) => set({ pxScope: id }),

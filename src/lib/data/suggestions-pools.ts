@@ -13,8 +13,7 @@ export type PoolId =
   | "particlex"
   | "invent"
   | "evolvemed"
-  | "mirroros"
-  | "synth";
+  | "mirroros";
 
 export const chatSuggestionPools: Record<PoolId, string[]> = {
   interplanetary: [
@@ -1526,32 +1525,6 @@ export const chatSuggestionPools: Record<PoolId, string[]> = {
     "What would a small plaque that says made slowly, on purpose add?",
     "How does the delivery of a finished thing begin the next blueprint?",
     "Why does the Forge keep the next stroke ready for the returning hand?",
-  ],
-  synth: [
-    "Decipher the trio resting on the wheels right now, in Analog language.",
-    "What ancient technology hides inside the formula we aligned today?",
-    "Read my day as a frequency — which dial am I resting on?",
-    "Which of the twelve dials does my home hum at, and how do I retune it?",
-    "Speak the Analog name of my intention, and the tool it becomes.",
-    "What did the sun stone know about vibration that we are only relearning?",
-    "Decode the Tzolkin weave for this week — what should the loom make?",
-    "Which two sigils in the circles have never met, and what would they build?",
-    "How do I turn a digital habit back into an analog practice?",
-    "Tell me what the mirror core sees when it reflects me at 432 Hz.",
-    "What is the Analog language, and how do I learn to read it?",
-    "Why did the old builders tune everything — stones, looms, temples, water?",
-    "Which sigil should I engage next, and what tool is waiting inside it?",
-    "How does a transmutation plate change a signal that passes through it?",
-    "What is my voice's standing frequency, and which square glyph answers it?",
-    "Explain the Mirror Matrix as if I were holding it in my hands.",
-    "What would a scalar wave feel like if I could run my fingers through it?",
-    "Teach me the first stroke of decoding any ancient technology myself.",
-    "If the three circles aligned for my week, which formula should sound?",
-    "What is the difference between a tool and a creation in this world?",
-    "Where does the mirror core go when the wheels stop turning?",
-    "How do biophotons carry a word from one living cell to another?",
-    "Which of the twelve plates cuts the doorway, and when may it be used?",
-    "Help me keep a small analog ritual at sunrise — where do I begin?",
   ],
   evolvemed: [
     "How do cells decide what to become without a single command center?",
