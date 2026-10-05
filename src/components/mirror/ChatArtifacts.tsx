@@ -13,6 +13,8 @@ import {
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
+  ArrowUpRight,
+  AudioLines,
   BookMarked,
   Bookmark,
   BookOpen,
@@ -44,6 +46,9 @@ import { cn } from "@/lib/utils";
 import { bookToText, dedupeChapters } from "@/lib/book-text";
 import { toast } from "@/hooks/use-toast";
 import type { SideArtifactKind } from "@/lib/artifact-intent";
+import { guessLightCodesMode } from "@/lib/artifact-intent";
+import type { LightCodesMode } from "@/lib/data/light-codes";
+import { WorldSigil, type WorldSigilKey } from "./WorldSigils";
 import { READERS, TALES, VERSE_FORMS } from "@/lib/data/book-options";
 import {
   drawStarPlayCards,
@@ -2231,23 +2236,402 @@ function BookWeaver({
 }
 
 /* ================================================================== */
-/*  THE DISPATCHER — one artifact, mounted beneath the reply.          */
+/*  6 · THE LIGHT CODES TRANSMISSION — the chamber tunes a sound       */
+/*      transmission OF THIS CONVERSATION, right inside the channel:   */
+/*      its golden waveform, its title, the Mirror's transmission      */
+/*      notes — and one touch sounds it fully in the chamber.          */
 /* ================================================================== */
+
+interface CodesInterp {
+  title: string;
+  style: string;
+  lyrics: string | null;
+  notes: string;
+}
+
+/* the tuned transmission's own waveform — deterministic, golden */
+function codesWaveBars(seed: string, bars = 36): number[] {
+  const rnd = mulberry32(hash32(seed.trim() || "light-codes"));
+  return Array.from({ length: bars }, (_, i) => {
+    const envelope = 0.35 + 0.65 * Math.sin((i / (bars - 1)) * Math.PI);
+    return Math.max(0.12, Math.min(1, envelope * (0.35 + rnd() * 0.85)));
+  });
+}
+
+function CodesTransmission({
+  resonance,
+  themes,
+}: {
+  resonance: string;
+  themes?: string;
+}) {
+  const t = useT();
+  const language = useMirror((s) => s.language);
+  const openLightCodes = useMirror((s) => s.openLightCodes);
+  const [state, setState] = useState<"loading" | "ready" | "error">("loading");
+  const [interp, setInterp] = useState<
+    (CodesInterp & { mode: LightCodesMode }) | null
+  >(null);
+  const busyRef = useRef(false);
+
+  const tune = useCallback(async () => {
+    if (busyRef.current) return;
+    busyRef.current = true;
+    setState("loading");
+    const mode = guessLightCodesMode(resonance);
+    try {
+      const res = await fetch("/api/light-codes/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mode,
+          intention: resonance,
+          context: themes || undefined,
+          interpretOnly: true,
+          language,
+        }),
+      });
+      const data = (await res.json()) as Partial<CodesInterp> & {
+        error?: string;
+      };
+      if (!res.ok || !data.title || !data.notes)
+        throw new Error(data.error ?? "quiet");
+      setInterp({
+        title: data.title,
+        style: data.style ?? "",
+        lyrics: data.lyrics ?? null,
+        notes: data.notes,
+        mode,
+      });
+      setState("ready");
+    } catch {
+      setState("error");
+    } finally {
+      busyRef.current = false;
+    }
+  }, [language, resonance, themes]);
+
+  useEffect(() => {
+    void tune();
+  }, [tune]);
+
+  return (
+    <div>
+      {state === "loading" && (
+        <ArtifactLoading
+          phrase={t("the chamber is tuning a transmission from your words...")}
+          bars={4}
+        />
+      )}
+      {state === "error" && (
+        <ArtifactError
+          message="The transmission could not be tuned — rest, then ask again."
+          onRetry={() => void tune()}
+          retryLabel="Tune it again"
+          testid="chat-codes-retry"
+        />
+      )}
+      {state === "ready" && interp && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <div
+            className="mx-auto max-w-[560px] rounded-xl border hairline bg-card/70 px-5 py-6 sm:px-7"
+            data-testid="chat-codes-card"
+          >
+            {/* the transmission's own golden waveform */}
+            <div
+              className="flex h-14 items-end justify-center gap-[3px]"
+              aria-hidden="true"
+              data-testid="chat-codes-wave"
+            >
+              {codesWaveBars(interp.title + resonance).map((h, i) => (
+                <span
+                  key={i}
+                  className="w-[3px] rounded-full"
+                  style={{
+                    height: `${Math.round(h * 100)}%`,
+                    background:
+                      "linear-gradient(180deg, var(--scope-a), color-mix(in srgb, var(--scope-a) 30%, transparent))",
+                    opacity: 0.3 + h * 0.6,
+                  }}
+                />
+              ))}
+            </div>
+            <h4
+              className="ink-title mt-4 text-center text-[17px] font-semibold leading-snug"
+              data-testid="chat-codes-title"
+            >
+              {interp.title}
+            </h4>
+            <span
+              aria-hidden="true"
+              className="mt-3.5 block h-px w-full"
+              style={{ background: inkLine }}
+            />
+            <p
+              className="ink-hand mt-3.5 text-[14px] leading-[1.85]"
+              data-testid="chat-codes-notes"
+            >
+              {interp.notes}
+            </p>
+            {interp.lyrics && (
+              <p className="ink-hand ink-faint mt-3 border-t hairline pt-3 text-[13.5px] italic leading-relaxed">
+                {interp.lyrics}
+              </p>
+            )}
+          </div>
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+            <button
+              type="button"
+              onClick={() =>
+                openLightCodes({
+                  mode: interp.mode,
+                  intention: resonance,
+                  title: interp.title,
+                  notes: interp.notes,
+                  style: interp.style,
+                  context: themes,
+                  autoGenerate: true,
+                })
+              }
+              data-testid="chat-codes-sound"
+              className={btnSolid}
+            >
+              <AudioLines className="size-3.5" aria-hidden="true" />
+              {t("Sound it in the chamber")}
+            </button>
+            <button
+              type="button"
+              onClick={() => void tune()}
+              data-testid="chat-codes-another"
+              className={btnGhost}
+            >
+              <RotateCcw className="size-3.5" aria-hidden="true" />
+              {t("Another transmission")}
+            </button>
+          </div>
+        </motion.div>
+      )}
+    </div>
+  );
+}
+
+/* ================================================================== */
+/*  7 · THE NEXUS REVEALS — ParticleX and Evolve Med speak in their    */
+/*      own voices right inside the channel: a revelation, the         */
+/*      formulas that run it, a signed seal — and a door into each     */
+/*      world for those who wish to walk further.                      */
+/* ================================================================== */
+
+interface NexusReply {
+  revelation: string;
+  formulas: string[];
+  seal: string;
+}
+
+function NexusReveal({
+  endpoint,
+  resonance,
+  tool,
+  testid,
+  loadingPhrase,
+  errorText,
+  retryLabel,
+  againLabel,
+  doorLabel,
+  onDoor,
+}: {
+  endpoint: string;
+  resonance: string;
+  tool?: string;
+  testid: string;
+  loadingPhrase: string;
+  errorText: string;
+  retryLabel: string;
+  againLabel: string;
+  doorLabel?: string;
+  onDoor?: () => void;
+}) {
+  const t = useT();
+  const language = useMirror((s) => s.language);
+  const [state, setState] = useState<"loading" | "ready" | "error">("loading");
+  const [reply, setReply] = useState<NexusReply | null>(null);
+  const busyRef = useRef(false);
+
+  const reveal = useCallback(async () => {
+    if (busyRef.current) return;
+    busyRef.current = true;
+    setState("loading");
+    try {
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query: resonance,
+          language,
+          ...(tool ? { tool } : {}),
+        }),
+      });
+      const data = (await res.json()) as Partial<NexusReply> & {
+        error?: string;
+      };
+      if (!res.ok || !data.revelation) throw new Error(data.error ?? "quiet");
+      setReply({
+        revelation: data.revelation,
+        formulas: Array.isArray(data.formulas) ? data.formulas : [],
+        seal: data.seal ?? "",
+      });
+      setState("ready");
+    } catch {
+      setState("error");
+    } finally {
+      busyRef.current = false;
+    }
+  }, [endpoint, language, resonance, tool]);
+
+  useEffect(() => {
+    void reveal();
+  }, [reveal]);
+
+  const paragraphs = reply
+    ? reply.revelation.split(/\n{2,}/).filter((p) => p.trim())
+    : [];
+
+  return (
+    <div>
+      {state === "loading" && <ArtifactLoading phrase={t(loadingPhrase)} bars={4} />}
+      {state === "error" && (
+        <ArtifactError
+          message={errorText}
+          onRetry={() => void reveal()}
+          retryLabel={retryLabel}
+          testid={`${testid}-retry`}
+        />
+      )}
+      {state === "ready" && reply && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <div
+            className="mx-auto max-w-[600px] rounded-xl border hairline bg-card/70 px-5 py-6 sm:px-7"
+            data-testid={`${testid}-card`}
+          >
+            {paragraphs.map((para, i) => (
+              <p
+                key={i}
+                className={cn(
+                  "ink-hand text-[14.5px] leading-[1.9]",
+                  i > 0 && "mt-3.5",
+                  i === paragraphs.length - 1 &&
+                    paragraphs.length > 1 &&
+                    "ink-faint border-t hairline pt-3.5 italic"
+                )}
+              >
+                {para}
+              </p>
+            ))}
+            {reply.formulas.length > 0 && (
+              <div
+                className="mt-4 border-t hairline pt-4"
+                data-testid={`${testid}-formulas`}
+              >
+                <p className="mono-label text-[8.5px] uppercase tracking-[0.24em] text-muted-foreground/70">
+                  {t("The formulas beneath it")}
+                </p>
+                <div className="mt-2.5 space-y-2">
+                  {reply.formulas.map((f, i) => (
+                    <p
+                      key={i}
+                      className="rounded-lg border hairline bg-background/40 px-3.5 py-2.5 text-center font-mono text-[13px] leading-relaxed"
+                      style={{ color: "var(--scope-a)" }}
+                    >
+                      {f}
+                    </p>
+                  ))}
+                </div>
+              </div>
+            )}
+            {reply.seal && (
+              <p className="ink-faint mt-4 text-right text-[12.5px] italic">
+                {reply.seal}
+              </p>
+            )}
+          </div>
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+            <button
+              type="button"
+              onClick={() => void reveal()}
+              data-testid={`${testid}-again`}
+              className={btnGhost}
+            >
+              <RotateCcw className="size-3.5" aria-hidden="true" />
+              {t(againLabel)}
+            </button>
+            {onDoor && doorLabel && (
+              <button
+                type="button"
+                onClick={onDoor}
+                data-testid={`${testid}-door`}
+                className={btnGhost}
+                style={{
+                  borderColor:
+                    "color-mix(in srgb, var(--scope-a) 38%, transparent)",
+                }}
+              >
+                <ArrowUpRight className="size-3.5" aria-hidden="true" />
+                {t(doorLabel)}
+              </button>
+            )}
+          </div>
+        </motion.div>
+      )}
+    </div>
+  );
+}
+
+/* ================================================================== */
+/*  THE DISPATCHER — one artifact, mounted beneath the reply. Each     */
+/*  door wears its world's own golden sigil — the whole sidebar        */
+/*  living inside the chat, revealed when asked, never parked below.   */
+/* ================================================================== */
+
+const KIND_SIGIL: Record<SideArtifactKind, WorldSigilKey> = {
+  akashic: "akashic",
+  star: "starplay",
+  manifest: "mirroros",
+  forge: "invent",
+  book: "dreambook",
+  codes: "lightcodes",
+  quantum: "particlex",
+  remedy: "evolvemed",
+};
 
 export function SideArtifact({
   kind,
   resonance,
   resume,
+  themes,
+  tool,
 }: {
   kind: SideArtifactKind;
   resonance: string;
   /** The book door only: the visitor asked for their paused volume
       back — the weaver mounts open at the page where it rested. */
   resume?: boolean;
+  /** The Light Codes door: the thread's themes, carried into the
+      chamber's interpretation. */
+  themes?: string;
+  /** The Quantum World door: the narrator instrument reading through. */
+  tool?: string;
 }) {
   const t = useT();
-  const icon = kind === "akashic" ? ScrollText : kind === "forge" ? Hammer : kind === "book" ? BookMarked : Sparkles;
-  const Icon = icon;
+  const openParticleX = useMirror((s) => s.openParticleX);
+  const openEvolveMed = useMirror((s) => s.openEvolveMed);
   const label =
     kind === "akashic"
       ? t("Brought from the Akashic Library")
@@ -2257,12 +2641,20 @@ export function SideArtifact({
           ? t("The Manifesting Chamber")
           : kind === "book"
             ? t("The weaving instrument")
-            : t("Struck from the Forge");
+            : kind === "codes"
+              ? t("Tuned in the Light Codes chamber")
+              : kind === "quantum"
+                ? t("Revealed by ParticleX")
+                : kind === "remedy"
+                  ? t("Routed through Evolve Med")
+                  : t("Struck from the Forge");
 
   return (
     <div className="mt-6 border-t hairline pt-5" data-testid={`chat-artifact-${kind}`}>
       <div className="mb-4 flex items-center gap-2.5">
-        <Icon className="size-3.5 shrink-0" style={{ color: "var(--scope-a)" }} aria-hidden="true" />
+        <span className="relative block size-[18px] shrink-0">
+          <WorldSigil world={KIND_SIGIL[kind]} />
+        </span>
         <span className="mono-label text-[9px] uppercase tracking-[0.24em] text-muted-foreground/75">{label}</span>
         <span className="h-px flex-1" style={{ background: "linear-gradient(90deg, color-mix(in srgb, var(--scope-a) 22%, transparent), transparent)" }} aria-hidden="true" />
       </div>
@@ -2271,6 +2663,34 @@ export function SideArtifact({
       {kind === "manifest" && <ManifestRitual resonance={resonance} />}
       {kind === "forge" && <ForgeStrike />}
       {kind === "book" && <BookWeaver resonance={resonance} resume={resume} />}
+      {kind === "codes" && <CodesTransmission resonance={resonance} themes={themes} />}
+      {kind === "quantum" && (
+        <NexusReveal
+          endpoint="/api/particlex"
+          resonance={resonance}
+          tool={tool}
+          testid="chat-quantum"
+          loadingPhrase="ParticleX is opening the underside of things..."
+          errorText="ParticleX stayed quiet — rest, then reach again."
+          retryLabel="Reach again"
+          againLabel="Reveal it again"
+          doorLabel="Enter the Quantum World"
+          onDoor={openParticleX}
+        />
+      )}
+      {kind === "remedy" && (
+        <NexusReveal
+          endpoint="/api/evolve-med"
+          resonance={resonance}
+          testid="chat-remedy"
+          loadingPhrase="the nexus is routing your question..."
+          errorText="The nexus stayed quiet — rest, then reach again."
+          retryLabel="Reach again"
+          againLabel="Ask the nexus again"
+          doorLabel="Enter Evolve Med"
+          onDoor={openEvolveMed}
+        />
+      )}
     </div>
   );
 }

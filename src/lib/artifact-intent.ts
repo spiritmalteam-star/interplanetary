@@ -2,16 +2,25 @@
 /*  MIRROR ENTITY — the Generative Side-Activity Engine                */
 /*  Detects, from one chat message, when a side activity should be     */
 /*  brought INTO the channel as a living artifact: the Akashic letter, */
-/*  the Star Play draw, the Manifesting ritual or the Forge strike.    */
-/*  Safe on client and server: no imports, no I/O.                     */
+/*  the Star Play draw, the Manifesting ritual, the Forge strike, the  */
+/*  woven book — and the whole remaining sidebar: the Light Codes      */
+/*  chamber, the Quantum World's narrator and the Evolve Med nexus.    */
+/*  Their content is revealed when asked into the chat, much like      */
+/*  generative chat — never as buttons waiting at the bottom.          */
+/*  Safe on client and server: type imports only, no I/O.              */
 /* ------------------------------------------------------------------ */
+
+import type { LightCodesMode } from "@/lib/data/light-codes";
 
 export type SideArtifactKind =
   | "akashic"
   | "star"
   | "manifest"
   | "forge"
-  | "book";
+  | "book"
+  | "codes"
+  | "quantum"
+  | "remedy";
 
 export interface SideArtifactRef {
   kind: SideArtifactKind;
@@ -21,6 +30,13 @@ export interface SideArtifactRef {
       back ("bring back my book") — the weaver mounts at the exact
       page where it was paused. */
   resume?: boolean;
+  /** For the Light Codes door: the thread's earlier themes, so the
+      chamber tunes a transmission of THIS conversation. */
+  themes?: string;
+  /** For the Quantum World door: the narrator instrument to read
+      through ("formula" — the Formula Loom; "perception" — the
+      Perception Glass). */
+  tool?: string;
 }
 
 /* The Akashic door — records, past lives, the Library itself. */
@@ -89,6 +105,44 @@ const BOOK_RESUME_PATTERNS: RegExp[] = [
   /\b(where\s+(i|we)\s+(paused|left\s+off|stopped))\b/i,
 ];
 
+/* The Light Codes door — sound transmissions through the Mirror
+   Entity: named transmissions, sound healing, the singing tones. */
+const CODES_PATTERNS: RegExp[] = [
+  /\blight\s*codes?\b/i,
+  /\bsound\s+(transmission|bath|healing|code)s?\b/i,
+  /\bsolfeggio\b/i,
+  /\b(432|528|639|741|852|963)\s*h?z\b/i,
+  /\bschumann\b/i,
+  /\bfrequenc(y|ies)\b[^.?!]{0,28}\b(transmission|healing|session|bath|tone)\b/i,
+];
+
+/* The Quantum World door — ParticleX, the narrator of what is beneath
+   and beside the visible. */
+const QUANTUM_PATTERNS: RegExp[] = [
+  /\bquantum\b/i,
+  /\bparticle\s*x\b/i,
+  /\bentangle(ment|d)?\b/i,
+  /\bsuperposition\b/i,
+  /\bwave\s+function\b/i,
+  /\bmultiverse\b/i,
+  /\bparallel\s+(lines?|worlds?|realit(y|ies)|self|selves)\b/i,
+  /\bformula\s+(that\s+runs|of|behind|beneath)\b/i,
+  /\bthe\s+formula\s+loom\b/i,
+  /\bthe\s+perception\s+glass\b/i,
+  /\bthe\s+frequency\s+wheel\b/i,
+  /\bthe\s+parallel\s+catalog\b/i,
+];
+
+/* The Evolve Med door — the evolutionary medical nexus, the apothecary
+   of the future, a remedy prepared in the channel itself. */
+const REMEDY_PATTERNS: RegExp[] = [
+  /\bevolve\s*med\b/i,
+  /\b(evolutionary\s+)?(medical|medicine)\s+nexus\b/i,
+  /\bremed(y|ies)\b/i,
+  /\bapothecar(y|ies)\b/i,
+  /\bhealing\s+(protocol|vector|route)\b/i,
+];
+
 /**
  * One pass, most specific doors first. Returns the artifact kind that
  * should ride along with the mirror's reply — or null for ordinary
@@ -106,6 +160,9 @@ export function detectArtifactIntent(text: string): SideArtifactKind | null {
   if (STAR_PATTERNS.some((re) => re.test(v))) return "star";
   if (MANIFEST_PATTERNS.some((re) => re.test(v))) return "manifest";
   if (FORGE_PATTERNS.some((re) => re.test(v))) return "forge";
+  if (CODES_PATTERNS.some((re) => re.test(v))) return "codes";
+  if (QUANTUM_PATTERNS.some((re) => re.test(v))) return "quantum";
+  if (REMEDY_PATTERNS.some((re) => re.test(v))) return "remedy";
   return null;
 }
 
@@ -117,4 +174,47 @@ export function isBookResume(text: string): boolean {
   const v = text.trim();
   if (v.length < 3) return false;
   return BOOK_RESUME_PATTERNS.some((re) => re.test(v));
+}
+
+/**
+ * The Quantum World's reading instrument — "formula" names the Formula
+ * Loom (the machinery beneath a named thing), "perception" the
+ * Perception Glass (reality as another being perceives it).
+ */
+export function detectQuantumTool(text: string): string | null {
+  const v = text.trim();
+  if (v.length < 3) return null;
+  if (/\bformula\b/i.test(v)) return "formula";
+  if (/\bperceiv(es?|ing|ed)\b|\bperception\b/i.test(v)) return "perception";
+  return null;
+}
+
+/* ------------------------------------------------------------------ */
+/*  THE SOUND GIFT — the visitor asked for music. The reply completes  */
+/*  AND a Light Codes transmission is tuned right inside the channel,  */
+/*  carrying the interpretation of this very conversation.              */
+/* ------------------------------------------------------------------ */
+
+export const MUSIC_INTENT =
+  /\b(music|song|sound|melody|track|transmission for (my|me)|sing|audio|listen(ing)? to)\b|make me something (calming|peaceful|grounding)|put (it|this|what we) (into|to) music|turn (it|this|what we (just )?talk(ed|ed about)) into music/i;
+
+export function guessLightCodesMode(query: string): LightCodesMode {
+  const q = query.toLowerCase();
+  if (
+    /star|planet|arctur|pleiad|sirius|vega|andromed|inner earth|civilization|alien|galaxy|cosmic|another star|remembering/.test(
+      q
+    )
+  ) {
+    return "other-stars";
+  }
+  if (/calm|sleep|rest|relax|ground|breathe|anxiet|panic|sooth/.test(q)) {
+    return "calming-frequencies";
+  }
+  if (/heal|grief|release|recover|tension|emotional|heavy|settling|stillness/.test(q)) {
+    return "restorative";
+  }
+  if (/affirm|pattern|believe|program|mantra|i am|i no longer|prove myself|trust where/.test(q)) {
+    return "reprogramming";
+  }
+  return "light-transmission";
 }

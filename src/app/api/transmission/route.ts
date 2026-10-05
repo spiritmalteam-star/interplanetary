@@ -318,6 +318,36 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    /* When the Light Codes chamber rides beneath this reply, the mirror
+       acknowledges in one breath — the chamber itself tunes the
+       transmission of this conversation, right inside the channel. */
+    if (body?.artifact === "codes") {
+      userLines.push(
+        "",
+        `MODE LINE — THE LIGHT CODES CHAMBER (OVERRIDES THE CREATION PROTOCOL FOR THIS REPLY): a sound transmission is being tuned by the chamber that rests directly beneath this reply, inside the channel. This transmission must contain NO questions of any kind and must NOT itself write the music or the interpretation. Write ONLY a warm acknowledgment of ONE or TWO sentences — as if lighting the lamps of the chamber — then stop. Never repeat the visitor's words; the chamber below translates them into sound.`
+      );
+    }
+
+    /* When ParticleX rides beneath this reply, the mirror points
+       gently downward — the quantum narrator reveals the underside of
+       things in its own voice, with its own formulas. */
+    if (body?.artifact === "quantum") {
+      userLines.push(
+        "",
+        `MODE LINE — PARTICLEX, THE QUANTUM NARRATOR (OVERRIDES THE CREATION PROTOCOL FOR THIS REPLY): the revelation itself is spoken by ParticleX, the quantum narrator resting directly beneath this reply, inside the channel. This transmission must contain NO questions of any kind and must NOT attempt the revelation, the formulas or any explanation — the narrator below carries all of it. Write ONLY a warm acknowledgment of ONE or TWO sentences — as if drawing a curtain aside — then stop.`
+      );
+    }
+
+    /* When the Evolve Med nexus rides beneath this reply, the mirror
+       acknowledges softly — the nexus routes the reading itself, and
+       no medical claim ever travels in the mirror's own words. */
+    if (body?.artifact === "remedy") {
+      userLines.push(
+        "",
+        `MODE LINE — THE EVOLVE MED NEXUS (OVERRIDES THE CREATION PROTOCOL FOR THIS REPLY): the reading is routed by the evolutionary nexus resting directly beneath this reply, inside the channel. This transmission must contain NO questions of any kind, NO diagnosis, NO medical advice and must NOT attempt the reading itself. Write ONLY a warm acknowledgment of ONE or TWO sentences — as if opening the nexus doors — then stop. The nexus below carries the whole reading.`
+      );
+    }
+
     const completion = await zai.chat.completions.create({
       messages: [
         {

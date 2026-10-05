@@ -30,7 +30,9 @@ import type {
 } from "@/lib/visualization";
 import {
   detectArtifactIntent,
+  detectQuantumTool,
   isBookResume,
+  MUSIC_INTENT,
   type SideArtifactRef,
 } from "@/lib/artifact-intent";
 import {
@@ -638,36 +640,6 @@ let messageCounter = 0;
 const nextMessageId = () => `m-${Date.now().toString(36)}-${(messageCounter++).toString(36)}`;
 
 /* ------------------------------------------------------------------ */
-/*  LIGHT CODES from the chat — when the visitor asks the Mirror for   */
-/*  music, the chat's reply completes AND the chamber opens, pre-      */
-/*  filled with the Mirror's interpretation of the conversation.       */
-/* ------------------------------------------------------------------ */
-
-const MUSIC_INTENT =
-  /\b(music|song|sound|melody|track|transmission for (my|me)|sing|audio|listen(ing)? to)\b|make me something (calming|peaceful|grounding)|put (it|this|what we) (into|to) music|turn (it|this|what we (just )?talk(ed|ed about)) into music/i;
-
-function guessLightCodesMode(query: string): LightCodesMode {
-  const q = query.toLowerCase();
-  if (
-    /star|planet|arctur|pleiad|sirius|vega|andromed|inner earth|civilization|alien|galaxy|cosmic|another star|remembering/.test(
-      q
-    )
-  ) {
-    return "other-stars";
-  }
-  if (/calm|sleep|rest|relax|ground|breathe|anxiet|panic|sooth/.test(q)) {
-    return "calming-frequencies";
-  }
-  if (/heal|grief|release|recover|tension|emotional|heavy|settling|stillness/.test(q)) {
-    return "restorative";
-  }
-  if (/affirm|pattern|believe|program|mantra|i am|i no longer|prove myself|trust where/.test(q)) {
-    return "reprogramming";
-  }
-  return "light-transmission";
-}
-
-/* ------------------------------------------------------------------ */
 /*  IMAGE CRYSTALLIZATION — the shared plumbing. When the visitor      */
 /*  asks for an image by name, no LLM round-trip travels: the last     */
 /*  channel is crystallized at once through the SAME /api/visualize    */
@@ -822,42 +794,6 @@ async function crystallizeVisual(
         m.id === visualId ? { ...m, visual: "error" as const } : m
       ),
     }));
-  }
-}
-
-/** Opens the chamber with the Mirror's interpretation already written. */
-async function openLightCodesFromChat(
-  query: string,
-  themes: string
-): Promise<void> {
-  const store = useMirror.getState();
-  const mode = guessLightCodesMode(query);
-  try {
-    const res = await fetch("/api/light-codes/generate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        mode,
-        intention: query,
-        context: themes,
-        interpretOnly: true,
-        language: store.language,
-        shape: store.lcShape,
-      }),
-    });
-    const data = await res.json().catch(() => null);
-    if (!res.ok || !data) throw new Error("interpretation unavailable");
-    useMirror.getState().openLightCodes({
-      mode,
-      intention: query,
-      title: data.title,
-      notes: data.notes,
-      style: data.style,
-      context: themes,
-    });
-  } catch {
-    /* the chamber still opens — the Mirror will interpret inside it */
-    useMirror.getState().openLightCodes({ mode, intention: query, context: themes });
   }
 }
 
@@ -1555,9 +1491,27 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     }
 
     /* A side activity riding with this question? The Librarian, the
-       deck, the chamber and the forge all keep their doors open — the
-       artifact is born beneath the reply, inside the channel. */
+       deck, the chamber, the forge, the sound table, the quantum
+       narrator and the nexus all keep their doors open — the artifact
+       is born beneath the reply, inside the channel. */
     const sideKind = detectArtifactIntent(query);
+    /* The Light Codes door carries the thread's own themes, so the
+       chamber tunes a transmission of THIS conversation. */
+    const themesForCodes =
+      sideKind === "codes"
+        ? [
+            ...session.messages.slice(-2).map((m) => `${m.query} ${m.text}`),
+            query,
+          ]
+            .join(" \u2022 ")
+            .slice(0, 900)
+        : "";
+
+    /* The Sound Gift ask — no door matched by name, but the visitor
+       asked for music: the chamber tunes beneath the reply, so the
+       reply itself stays a brief acknowledgment (no shaping
+       questions — the chamber carries the whole translation). */
+    const soundGift = sideKind === null && MUSIC_INTENT.test(query);
 
     set((s) => ({
       view: "transmission",
@@ -1590,7 +1544,9 @@ export const useMirror = create<MirrorState>()((set, get) => ({
           mode,
           language: get().language,
           history,
-          ...(sideKind ? { artifact: sideKind } : {}),
+          ...(sideKind || soundGift
+            ? { artifact: sideKind ?? "codes" }
+            : {}),
           ...(payload ?? {}),
         }),
       });
@@ -1633,6 +1589,15 @@ export const useMirror = create<MirrorState>()((set, get) => ({
                         ...(sideKind === "book" && isBookResume(query)
                           ? { resume: true }
                           : {}),
+                        /* the Light Codes door tunes THIS conversation */
+                        ...(sideKind === "codes" && themesForCodes
+                          ? { themes: themesForCodes }
+                          : {}),
+                        /* the Quantum World door reads through its
+                           own instruments */
+                        ...(sideKind === "quantum"
+                          ? { tool: detectQuantumTool(query) ?? undefined }
+                          : {}),
                       },
                     }
                   : {}),
@@ -1663,19 +1628,39 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         });
       }
 
-      /* THE SOUND GIFT — the visitor asked for music: the Mirror's
-         reply lands in the channel, then the Light Codes chamber
-         opens itself, carrying the interpretation of this very
-         conversation. No repetition of the visitor's words — a
-         translation into sound. */
-      if (MUSIC_INTENT.test(query)) {
+      /* THE SOUND GIFT — the visitor asked for music: the reply lands
+         in the channel, and a Light Codes transmission is tuned right
+         here beneath it, carrying the interpretation of this very
+         conversation — revealed inside the channel itself, never by
+         pulling the visitor out of it. No repetition of the visitor's
+         words — a translation into sound. */
+      if (sideKind !== "codes" && MUSIC_INTENT.test(query)) {
         const themes = [
           ...session.messages.slice(-2).map((m) => `${m.query} ${m.text}`),
           `${query} ${data.transmission ?? ""}`,
         ]
           .join(" \u2022 ")
           .slice(0, 900);
-        void openLightCodesFromChat(query, themes);
+        set((s) => ({
+          sessions: {
+            ...s.sessions,
+            [mode]: {
+              ...s.sessions[mode],
+              messages: s.sessions[mode].messages.map((m) =>
+                m.id === replyId && !m.sideArtifact
+                  ? {
+                      ...m,
+                      sideArtifact: {
+                        kind: "codes" as const,
+                        resonance: query,
+                        themes,
+                      },
+                    }
+                  : m
+              ),
+            },
+          },
+        }));
       }
     } catch (err) {
       set((s) => ({
