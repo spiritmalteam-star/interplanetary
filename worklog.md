@@ -2457,3 +2457,26 @@ Stage Summary:
 - Local main == origin/main == 829a13e; working tree clean; old snapshot kept in stash "old snapshot 63d7d16 + dirty synth-analog files (discarded per user request)" for safety
 - Sandbox preview and www.reflectme.space now both serve the newest experience: the grove camera (fast, never-stuck, infinite branch navigation), Z.ai-only voice, books in chat, SaaS scaffold
 - Lesson recorded: in this sandbox, start the dev server with `( setsid bun run dev & )` so it orphans to PID 1 and survives between tool calls
+
+---
+Task ID: DIRECT-GEN-1
+Agent: Z.ai Code (main)
+Task: "When we say create an image, or make a book, or a poem or akashic etcetera do not give mirror speech and at bottom generate the request but go directly into generation; or if it's invent or something that needs interaction we click and select within the SDK of generation for more detailed instruction and then proceed; or if asked to proceed directly we proceed directly with result (e.g. invent a new way of receiving light signals from leafs)"
+
+Work Log:
+- Traced the old flow: artifact intents rode /api/transmission — a full LLM round-trip wrote a mirror acknowledgment (1-2 sentences for book/codes/quantum/remedy, a FULL speech for akashic/forge/manifest/star) and the artifact mounted beneath the words
+- THE DIRECT GENERATION LAW (mirror-store.ts askMirror): when detectArtifactIntent (or the Sound Gift) fires, the store now pushes the reply AT ONCE with text:"" + sideArtifact — zero transmission round-trip; the artifact IS the reply and conducts its own generation (most artifacts already auto-generate on mount); /api/transmission no longer receives an artifact param; dead sideArtifact/soundGift branches removed from the reply path
+- NEW POEM DOOR (artifact-intent.ts): SideArtifactKind "poem" + POEM_PATTERNS (write/compose/pen/weave a poem|haiku|sonnet|verse|lullaby; a poem about/for) — text verbs only, a lullaby SUNG still belongs to Light Codes; door placed before codes
+- NEW /api/poem route: the Loom's poem hand — strict JSON {title, epigraph, stanzas[][], seal}; meterRoute("poem") registered in costs.ts (15 credits); PoemCard artifact in ChatArtifacts: centered ink stanzas, epigraph, seal, copy + "Weave another poem", auto-weaves on mount
+- THE FORGE DIRECTIVE (artifact-intent.ts): forgeDirective() strips request scaffolding (can you/please/invent/build/design/for me...) — ≥3 residual words = a complete ask; FORGE_ASK_VERB + a forge exception in detectArtifactIntent open the forge ungated however long the words run; REQUEST_FRAME learned invent|design|devise|forge|build so "invent a new way…" passes the gate too
+- ForgeStrike rebuilt: takes resonance; a complete ask AUTO-STRIKES on mount (directive mode — "the forge heard your words — shaping them now", dials hidden, "turn the dials instead" escape hatch) — /api/forge extended with directive mode (seeker's words lead, embers/dials law suspended); a bare naming ("open the forge") keeps the dial bench: 15 dials + Strike, click-select-proceed
+- TransmissionView: the listen/copy row is hidden for text-less artifact replies (query echo → artifact, nothing between); books keep their existing at-once boot; manifest keeps its prefilled intention + charge SDK
+- i18n: 7 new keys ("Woven as a poem", "the loom is writing your poem...", "Weave another poem", "the forge heard your words — shaping them now", "turn the dials instead", "Strike again", loom error line) added to all 7 dictionaries; extract-i18n + check-i18n pass (hard gate complete)
+- Fixed en route: forge never opened for "invent …" (verb missing from REQUEST_FRAME + 10-word ask over the ≤8-word bare-naming cap) — the user's exact example was falling through to an ordinary reply
+- Verified in browser E2E: "write me a poem about the sea of stars" → poem "Star Sea" woven directly (no speech); "invent a new way of receiving light signals from leafs" → forge auto-struck "The Leaf-Whisper Listener" with zero clicks; "open the forge" → dial bench → manual strike "The Humming Glass of Pollen Tides"; akashic → "Venusian Echoes" directly; book → loom weaving at once; manifest → prefilled SDK; "make me music for stargazing" → "Celestial Cartography" directly; "tell me about the Pleiades…" → ordinary transmission (regression clean); tsc clean, eslint clean, no 4xx/5xx in dev.log
+- Committed e29c8cb and pushed (829a13e..e29c8cb) → Vercel redeployed; new chunk with api/poem + forge-directive verified live on www.reflectme.space
+
+Stage Summary:
+- The chat's creation asks now open straight into the making: no mirror speech, no waiting for a text round-trip before the artifact breathes — the response is also FASTER (one LLM call saved per artifact ask)
+- Two forge modes per the user's law: complete ask → direct result; interaction needed → the generation's own SDK (dials) for click-select-then-proceed; images already rode the direct path (crystallizeVisual)
+- www.reflectme.space serves the direct generation law; ordinary questions unchanged
