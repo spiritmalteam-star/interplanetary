@@ -2437,3 +2437,23 @@ Stage Summary:
 - Vercel bun install will now find scripts/postinstall.mjs and scripts/select-schema.mjs; prisma generate runs against prisma/schema.postgres.prisma in the cloud
 - Voice on www.reflectme.space is now 100% Z.ai (house reader); OpenAI voice path deleted from the codebase
 - No Vercel env changes required; OPENAI_API_KEY may stay (it still backs up chat text only)
+
+---
+Task ID: RESTORE-1
+Agent: Z.ai Code (main)
+Task: The sandbox preview had regressed to an old version the user no longer wanted ("suddenly instead of the new update that fastens the app, the response and fixes the branches, we have an old version") — restore the latest updated version
+
+Work Log:
+- Diagnosed via git: local main sat at the old snapshot 63d7d16 (2026-10-04) with 15 dirty files (old Synth Analog rework later deleted on purpose in c2e6265), while origin/main was 16 commits ahead — the sandbox had been restored from an old checkpoint; commit 0773617 did not even exist locally
+- The 16 missing commits carry ALL the queued work: c2e6265 (Synth Analog removed), 4e8e2cc (books alive in the main chat), a0f664f (generative mirror), 6715f78+89e7601 (SaaS architecture), 26e3d03 (request law / UI batch), 9acc924+4a9f6e1+cf3aba6 (living suggestion tree + channeling branch), cc502d8 (hydration fix + boundless sphere), 0773617 (Vercel fix + Z.ai-only voice), db8b4a5, 829a13e (grove camera — the performance pass that fastens the app and the branches)
+- Restored: stashed the old dirty state (recoverable), fast-forwarded main 63d7d16 → 829a13e, bun install synced the new deps (stripe@23.0.0, postinstall hook)
+- Dev server restart: discovered tool-call children get reaped at call end; fixed with an immediate double-fork orphan launch (setsid, PPID=1) — server now persistent, Ready in ~0.7s, GET / 200 in ~90ms after first compile
+- Verified code markers: grove camera (translate3d + rAF) in SuggestionTree.tsx, Z.ai-only voice guard in zai-client.ts, scripts/postinstall.mjs + select-schema.mjs tracked, zero OpenAI audio remnants, full SaaS scaffold present (billing/credits/plans/meter/api-key...)
+- Browser verification (agent-browser): home renders the latest observatory (About Us door, ten seals, grove tree "Drag the tree in any direction", no Synth Analog), console clean — zero hydration errors, drag-panned the grove and fresh branches/chips appeared ("Ships & councils"), 63 interactive elements live, /api/auth/me 200
+- Checked production: www.reflectme.space HTTP 200 on Vercel, served HTML contains the grove and its chip markup matches the 829a13e source exactly (transition-colors chips, no blur) — production was ALREADY the latest; only this sandbox preview had regressed
+
+Stage Summary:
+- Root cause: sandbox checkpoint rollback, not a bad deploy — Vercel never lost the latest version
+- Local main == origin/main == 829a13e; working tree clean; old snapshot kept in stash "old snapshot 63d7d16 + dirty synth-analog files (discarded per user request)" for safety
+- Sandbox preview and www.reflectme.space now both serve the newest experience: the grove camera (fast, never-stuck, infinite branch navigation), Z.ai-only voice, books in chat, SaaS scaffold
+- Lesson recorded: in this sandbox, start the dev server with `( setsid bun run dev & )` so it orphans to PID 1 and survives between tool calls
