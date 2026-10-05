@@ -20,9 +20,9 @@
 /*  max_tokens, and { choices: [{ message, finish_reason }] } replies.*/
 /*  Z.ai's endpoint is OpenAI-compatible, so one class serves both.   */
 /*                                                                    */
-/*  Audio (tts/asr) sings on the Z.ai sky first (CogTTS / GLM-ASR —    */
-/*  the house voices xiaochen and tongtong are its own), with the      */
-/*  OpenAI choir standing silently behind it whenever its key exists.  */
+/*  Audio (tts/asr) sings ONLY on the Z.ai sky (CogTTS / GLM-ASR —     */
+/*  the house voices xiaochen and tongtong are its own). The house     */
+/*  voice is the one and only reader — no other choir stands behind.   */
 /* ================================================================== */
 
 interface ChatParams {
@@ -65,7 +65,7 @@ interface TTSParams {
 
 interface ASRParams {
   file_base64: string;
-  /** e.g. "audio/webm" — decides the extension whispered to OpenAI */
+  /** e.g. "audio/webm" — decides the extension of the uploaded file */
   mime?: string;
   [key: string]: unknown;
 }
@@ -79,23 +79,8 @@ interface AudioEngine {
   };
 }
 
-/* the laboratory's voices mapped onto OpenAI's choir:
-   xiaochen (the warm documentary male) → onyx,
-   tongtong (the kind lady reader)      → shimmer.
-   On the Z.ai sky the very same names are native — CogTTS speaks
-   xiaochen and tongtong directly, no mapping needed. */
-const OPENAI_VOICE_MAP: Record<string, string> = {
-  xiaochen: "onyx",
-  tongtong: "shimmer",
-};
-
 const ZAI_TTS_MODEL = process.env.ZAI_TTS_MODEL ?? "cogtts";
 const ZAI_ASR_MODEL = process.env.ZAI_ASR_MODEL ?? "glm-asr";
-
-const OPENAI_TTS_MODELS = [
-  process.env.OPENAI_TTS_MODEL ?? "gpt-4o-mini-tts",
-  "tts-1", /* the veteran — tried when the modern voice is refused */
-].filter((m, i, a) => a.indexOf(m) === i);
 
 /** audio/webm → webm, audio/mpeg → mp3 … wav is the house default */
 function audioExtension(mime?: string): string {
@@ -108,72 +93,7 @@ function audioExtension(mime?: string): string {
   return "wav";
 }
 
-function openAIAudio(cfg: CloudConfig): AudioEngine {
-  return {
-    tts: {
-      create: async (params: TTSParams) => {
-        const voice =
-          OPENAI_VOICE_MAP[params.voice] ?? params.voice ?? "onyx";
-        const speed = typeof params.speed === "number" ? params.speed : 1;
-        const input = String(params.input ?? "").slice(0, 4096);
-        let lastError: unknown = null;
-
-        for (const model of OPENAI_TTS_MODELS) {
-          const res = await fetch(`${cfg.baseUrl}/audio/speech`, {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${cfg.apiKey}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              model,
-              input,
-              voice,
-              response_format: "wav",
-              speed,
-            }),
-            signal: AbortSignal.timeout(180_000),
-          });
-          if (res.ok) {
-            const buf = await res.arrayBuffer();
-            return { arrayBuffer: async () => buf };
-          }
-          const detail = (await res.text()).slice(0, 300);
-          lastError = new Error(
-            `OpenAI tts (${model}) ${res.status}: ${detail}`
-          );
-          /* a refused model may be answered by the veteran — anything
-             else (auth, quota) is the same door for every model */
-          if (![400, 404, 422].includes(res.status)) throw lastError;
-        }
-        throw lastError ?? new Error("OpenAI tts could not sing");
-      },
-    },
-    asr: {
-      create: async (params: ASRParams) => {
-        const bytes = Buffer.from(params.file_base64, "base64");
-        const ext = audioExtension(params.mime);
-        const mime = params.mime || "audio/wav";
-        const form = new FormData();
-        form.append("file", new Blob([bytes], { type: mime }), `audio.${ext}`);
-        form.append("model", process.env.OPENAI_ASR_MODEL ?? "whisper-1");
-        const res = await fetch(`${cfg.baseUrl}/audio/transcriptions`, {
-          method: "POST",
-          headers: { Authorization: `Bearer ${cfg.apiKey}` },
-          body: form,
-          signal: AbortSignal.timeout(180_000),
-        });
-        if (!res.ok) {
-          const detail = (await res.text()).slice(0, 300);
-          throw new Error(`OpenAI asr ${res.status}: ${detail}`);
-        }
-        return (await res.json()) as { text?: string };
-      },
-    },
-  };
-}
-
-/* -------- the Z.ai voice (CogTTS / GLM-ASR) — the preferred sky ---- */
+/* ------- the Z.ai voice (CogTTS / GLM-ASR) — the ONLY voice -------- */
 
 function zaiAudio(cfg: CloudConfig): AudioEngine {
   return {
@@ -237,9 +157,8 @@ function zaiAudio(cfg: CloudConfig): AudioEngine {
   };
 }
 
-/* the voice chain — every configured sky is tried in order; the first
-   that sings wins. Z.ai first (the house voice), OpenAI as the quiet
-   safety net so the LISTEN never dies. */
+/* the voice chain — one sky only: the house voice. The first that
+   sings wins, and only Z.ai is invited to sing. */
 function chainAudio(engines: AudioEngine[]): AudioEngine {
   return {
     tts: {
@@ -369,13 +288,10 @@ async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
 /* ------------------------- the cloud sky --------------------------- */
 
 class CloudBackend implements ZAIClient {
-  /* the voice rides the Z.ai sky first (CogTTS — the house voices
-     xiaochen and tongtong are its own), and OpenAI stands behind it
-     as the quiet safety net — independent of which brain chats */
-  constructor(
-    private readonly cfg: CloudConfig,
-    private readonly audioCfg: CloudConfig | null
-  ) {}
+  /* the voice rides the Z.ai sky alone (CogTTS — the house voices
+     xiaochen and tongtong are its own) — independent of which brain
+     chats */
+  constructor(private readonly cfg: CloudConfig) {}
 
   private async complete(
     params: ChatParams,
@@ -432,17 +348,14 @@ class CloudBackend implements ZAIClient {
   };
 
   get audio(): AudioEngine {
-    const engines: AudioEngine[] = [];
-    /* the Z.ai sky sings first whenever it is the brain itself */
-    if (this.cfg.label === "Z.ai") engines.push(zaiAudio(this.cfg));
-    if (this.audioCfg && this.audioCfg !== this.cfg)
-      engines.push(openAIAudio(this.audioCfg));
-    else if (this.cfg.label === "OpenAI") engines.push(openAIAudio(this.cfg));
-    if (engines.length === 0)
+    /* the house voice is the ONLY reader — when the Z.ai sky is not
+       the one behind this brain, the voice politely declines rather
+       than letting a stranger's choir sing */
+    if (this.cfg.label !== "Z.ai")
       throw new Error(
-        "Voice (tts/asr) on the cloud needs a key — set ZAI_API_KEY (CogTTS, the house voice) or OPENAI_API_KEY in Vercel's Environment Variables."
+        "Voice (tts/asr) speaks only through Z.ai — set ZAI_API_KEY (CogTTS, the house voice) in Vercel's Environment Variables."
       );
-    return chainAudio(engines);
+    return chainAudio([zaiAudio(this.cfg)]);
   }
 }
 
@@ -513,18 +426,18 @@ function chainChatBackends(primary: ZAIClient, fallback: ZAIClient): ZAIClient {
 export default class ZAI {
   static async create(): Promise<ZAIClient> {
     const provider = resolveProvider();
-    /* the OpenAI key stands BEHIND the Z.ai voice, never in front */
-    const audioCfg = openaiConfig();
     if (provider === "zai-cloud") {
       const cfg = zaiCloudConfig();
       if (cfg) {
-        const primary = new CloudBackend(cfg, audioCfg);
+        const primary = new CloudBackend(cfg);
         /* the quiet second brain — when Z.ai's quota is spent after
            every patient retry, the OpenAI-compatible sky (if a key
-           exists) carries the words so the chats keep responding */
+           exists) carries the words so the chats keep responding.
+           The voice never rides this second sky — only the house
+           voice (Z.ai) reads aloud. */
         const secondSky = openaiConfig();
         if (secondSky) {
-          return chainChatBackends(primary, new CloudBackend(secondSky, null));
+          return chainChatBackends(primary, new CloudBackend(secondSky));
         }
         return primary;
       }
@@ -532,10 +445,10 @@ export default class ZAI {
     if (provider === "openai") {
       const cfg = openaiConfig();
       if (cfg) {
-        const primary = new CloudBackend(cfg, null);
+        const primary = new CloudBackend(cfg);
         const secondSky = zaiCloudConfig();
         if (secondSky) {
-          return chainChatBackends(primary, new CloudBackend(secondSky, audioCfg));
+          return chainChatBackends(primary, new CloudBackend(secondSky));
         }
         return primary;
       }
@@ -546,7 +459,7 @@ export default class ZAI {
       const atelier = await atelierBackend();
       const secondSky = zaiCloudConfig() ?? openaiConfig();
       if (secondSky) {
-        return chainChatBackends(atelier, new CloudBackend(secondSky, audioCfg));
+        return chainChatBackends(atelier, new CloudBackend(secondSky));
       }
       return atelier;
     }
