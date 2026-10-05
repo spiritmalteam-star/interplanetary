@@ -572,6 +572,7 @@ export const tr: TranslationDict = {
   "The tale can go on": "Hikâye devam edebilir",
   "the title page": "başlık sayfası",
   "The voice is ready — press once more.": "Ses hazır — bir kez daha dokun.",
+  "The house voice rests — your browser reads in its stead.": "Evin sesi dinleniyor — tarayıcın onun yerine okuyor.",
   "The voice is quiet — the mirror answers in text": "Ses susuyor — ayna yazıyla yanıt veriyor",
   "The voice of the book is resting.": "Kitabın sesi dinleniyor.",
   "Waking the characters one by one…": "Karakterleri tek tek uyandırıyorum…",

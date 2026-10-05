@@ -6,6 +6,10 @@ import { toast } from "sonner";
 import { ModalShell } from "./ModalShell";
 import { useMirror } from "@/lib/mirror-store";
 import { LANGUAGES, PACES, VOICES, useT, type VoiceId } from "@/lib/i18n";
+import {
+  noteBrowserVoiceFallback,
+  speakWithBrowserVoice,
+} from "@/lib/browser-voice";
 import { cn } from "@/lib/utils";
 
 const SAMPLE_TEXT_KEY =
@@ -86,6 +90,22 @@ export function SettingsModal() {
       audio.onerror = () => setPreviewing(null);
       await audio.play();
     } catch {
+      /* the house voice could not travel — the browser's own voice
+         previews in its stead */
+      const handle = speakWithBrowserVoice({
+        text: t(SAMPLE_TEXT_KEY),
+        lang: language,
+        rate: pace,
+        onEnd: () => setPreviewing(null),
+        onError: () => setPreviewing(null),
+      });
+      if (handle) {
+        previewRef.current = null;
+        noteBrowserVoiceFallback(() =>
+          toast.info(t("The house voice rests — your browser reads in its stead."))
+        );
+        return;
+      }
       setPreviewing(null);
       toast.error(t("The voice field is momentarily quiet."), {
         description: t("Rest, then listen again."),

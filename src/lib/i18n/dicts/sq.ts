@@ -2796,6 +2796,7 @@ export const sq: TranslationDict = {
   "The tale can go on": "Tregimi mund të vazhdojë",
   "the title page": "faqja e titullit",
   "The voice is ready — press once more.": "Zëri është gati — shtyp edhe një herë.",
+  "The house voice rests — your browser reads in its stead.": "Zëri i shtëpisë pushon — shfletuesi yt lexon në vend të tij.",
   "The voice is quiet — the mirror answers in text": "Zëri është i qetë — pasqyra përgjigjet me tekst",
   "The voice of the book is resting.": "Zëri i librit po pushon.",
   "Waking the characters one by one…": "Zgjaj personazhet një nga një…",

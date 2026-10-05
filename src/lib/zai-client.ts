@@ -275,10 +275,13 @@ function zaiAudio(cfg: CloudConfig): AudioEngine {
           });
         };
 
-        /* THE LADDER — same law as the voice:
-           1. the SDK contract: /audio/asr, no model code
-           2. /audio/asr naming the house codes (glm-asr-2512, glm-asr)
-           3. the documented public multipart path with a code
+        /* THE LADDER — same law as the voice. The OFFICIAL public
+           contract (verified against docs.z.ai) comes first:
+           1. multipart /audio/transcriptions with model glm-asr-2512
+              — the one door the public sky documents and serves
+           2. the SDK contract: /audio/asr, no model code (the
+              internal sky's own door)
+           3. /audio/asr naming the house codes
            ZAI_ASR_MODEL overrides every code. */
         const codeA = asrModel ?? "glm-asr-2512";
         const codeB = asrModel ?? "glm-asr";
@@ -289,10 +292,10 @@ function zaiAudio(cfg: CloudConfig): AudioEngine {
           body?: Record<string, unknown>;
           form?: () => Promise<Response>;
         }[] = [
+          { label: "/audio/transcriptions", form: multipart(codeA) },
           json("/audio/asr", { file_base64: params.file_base64 }),
           json("/audio/asr", { file_base64: params.file_base64, model: codeA }),
           json("/audio/asr", { file_base64: params.file_base64, model: codeB }),
-          { label: "/audio/transcriptions", form: multipart(codeB) },
         ];
 
         const errors: string[] = [];
@@ -300,8 +303,8 @@ function zaiAudio(cfg: CloudConfig): AudioEngine {
         for (let i = 0; i < candidates.length; i++) {
           const c = candidates[i];
           const res =
-            i === 0 && c.body
-              ? await withRetry(() => postJson(c.label, c.body), AUDIO_RETRY_DELAYS_MS)
+            i === 0 && c.form
+              ? await withRetry(c.form, AUDIO_RETRY_DELAYS_MS)
               : c.body
                 ? await postJson(c.label, c.body)
                 : await c.form!();

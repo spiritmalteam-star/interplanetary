@@ -772,6 +772,7 @@ export const el: TranslationDict = {
   "The tale can go on": "Η ιστορία μπορεί να συνεχιστεί",
   "the title page": "η σελίδα του τίτλου",
   "The voice is ready — press once more.": "Η φωνή είναι έτοιμη — πάτησε άλλη μία φορά.",
+  "The house voice rests — your browser reads in its stead.": "Η φωνή του σπιτιού αναπαύεται — ο browser σου διαβάζει στη θέση της.",
   "The voice is quiet — the mirror answers in text": "Η φωνή σιγεί — ο καθρέφτης απαντά με κείμενο",
   "The voice of the book is resting.": "Η φωνή του βιβλίου ξεκουράζεται.",
   "Waking the characters one by one…": "Ξυπνώ τους ήρωες έναν έναν…",

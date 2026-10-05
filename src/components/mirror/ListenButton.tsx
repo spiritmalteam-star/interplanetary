@@ -6,6 +6,12 @@ import { toast } from "sonner";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import type { VoiceId } from "@/lib/i18n/core";
+import {
+  browserVoiceAvailable,
+  noteBrowserVoiceFallback,
+  speakWithBrowserVoice,
+  stopBrowserVoice,
+} from "@/lib/browser-voice";
 import { cn } from "@/lib/utils";
 
 /* ------------------------------------------------------------------ */
@@ -17,13 +23,13 @@ import { cn } from "@/lib/utils";
 const audioCache = new Map<string, string>();
 const MAX_CACHE = 24;
 
-type ActiveHandle = { key: string; audio: HTMLAudioElement; reset: () => void };
+type ActiveHandle = { key: string; stop: () => void; reset: () => void };
 let active: ActiveHandle | null = null;
 
 function stopActive() {
   if (!active) return;
   try {
-    active.audio.pause();
+    active.stop();
   } catch {
     /* already stopped */
   }
@@ -76,6 +82,35 @@ export function ListenButton({
     };
   }, [cacheKey, voice]);
 
+  /* THE TRAVELER'S VOICE — when the house voice cannot travel (a sky
+     without a tongue, a fallen wire), the visitor's own browser reads
+     in its stead. No Listen button ever falls silent. */
+  const speakWithTravelerVoice = useCallback(
+    (spoken: string, key: string) => {
+      if (!browserVoiceAvailable()) return false;
+      stopBrowserVoice();
+      const handle = speakWithBrowserVoice({
+        text: spoken,
+        lang: language,
+        rate: pace,
+        onEnd: () => {
+          if (active?.key === key) {
+            active = null;
+            setSafe("idle");
+          }
+        },
+      });
+      if (!handle) return false;
+      noteBrowserVoiceFallback(() =>
+        toast.info(t("The house voice rests — your browser reads in its stead."))
+      );
+      active = { key, stop: handle.stop, reset: () => setSafe("idle") };
+      setSafe("playing");
+      return true;
+    },
+    [language, pace, setSafe, t]
+  );
+
   const toggle = useCallback(async () => {
     if (stateRef.current === "loading") return;
     if (stateRef.current === "playing") {
@@ -90,16 +125,17 @@ export function ListenButton({
     const ready = prepared.current;
     if (ready && ready.key === key) {
       prepared.current = null;
+      const audio = ready.audio;
       const handle: ActiveHandle = {
         key,
-        audio: ready.audio,
+        stop: () => audio.pause(),
         reset: () => setSafe("idle"),
       };
-      ready.audio.onended = () => {
+      audio.onended = () => {
         if (active === handle) active = null;
         setSafe("idle");
       };
-      ready.audio.onerror = () => {
+      audio.onerror = () => {
         if (active === handle) active = null;
         setSafe("idle");
       };
@@ -143,7 +179,11 @@ export function ListenButton({
         audioCache.set(key, url);
       }
       const audio = new Audio(url);
-      const handle: ActiveHandle = { key, audio, reset: () => setSafe("idle") };
+      const handle: ActiveHandle = {
+        key,
+        stop: () => audio.pause(),
+        reset: () => setSafe("idle"),
+      };
       audio.onended = () => {
         if (active === handle) active = null;
         setSafe("idle");
@@ -168,14 +208,16 @@ export function ListenButton({
         throw playErr;
       }
     } catch {
-      /* every refusal speaks — nothing is swallowed silently, not even
-         the browser's NotSupportedError for a voice it cannot decode */
+      /* every refusal speaks — nothing is swallowed silently. The
+         traveler's voice stands in first; only a browser without a
+         voice at all hears the quiet note. */
       setSafe("idle");
+      if (speakWithTravelerVoice(text, key)) return;
       toast.error(t("The voice field is momentarily quiet."), {
         description: t("Rest, then listen again."),
       });
     }
-  }, [text, cacheKey, voice, pace, language, t, setSafe]);
+  }, [text, cacheKey, voice, pace, language, t, setSafe, speakWithTravelerVoice]);
 
   const playing = state === "playing";
   const loading = state === "loading";

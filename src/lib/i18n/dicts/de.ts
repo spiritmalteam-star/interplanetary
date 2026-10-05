@@ -1072,6 +1072,7 @@ export const de: TranslationDict = {
   "The tale can go on": "Die Geschichte kann weitergehen",
   "the title page": "die Titelseite",
   "The voice is ready — press once more.": "Die Stimme ist bereit — drücke noch einmal.",
+  "The house voice rests — your browser reads in its stead.": "Die Haustimme ruht — dein Browser liest an ihrer Stelle.",
   "The voice is quiet — the mirror answers in text": "Die Stimme schweigt — der Spiegel antwortet in Text",
   "The voice of the book is resting.": "Die Stimme des Buchs ruht.",
   "Waking the characters one by one…": "Die Figuren einer nach dem anderen erwecken…",

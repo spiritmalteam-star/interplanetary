@@ -17,6 +17,10 @@ import {
 import { toast } from "sonner";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
+import {
+  noteBrowserVoiceFallback,
+  speakWithBrowserVoice,
+} from "@/lib/browser-voice";
 import { cn } from "@/lib/utils";
 import { detectVisualIntent, type VisualizationArtifact } from "@/lib/visualization";
 import { AttachmentChips, ChatInputExtras } from "./ChatInputExtras";
@@ -288,10 +292,26 @@ export function AkashicView() {
       await audio.play();
       setVoiceState("playing");
     } catch {
+      /* the house voice could not travel — the browser reads the
+         record in its stead, the Librarian is never mute */
+      const handle = speakWithBrowserVoice({
+        text: `${record.title}. ${record.era}. ${record.record.replaceAll(/\s*\n\s*/g, " ")}`,
+        lang: language,
+        rate: 0.82,
+        onEnd: () => setVoiceState("idle"),
+        onError: () => setVoiceState("idle"),
+      });
+      if (handle) {
+        noteBrowserVoiceFallback(() =>
+          toast.info(t("The house voice rests — your browser reads in its stead."))
+        );
+        setVoiceState("playing");
+        return;
+      }
       setVoiceState("idle");
       toast.error(t("The Librarian is quiet. Rest, then listen again."));
     }
-  }, [record, voiceState, stopVoice, t]);
+  }, [record, voiceState, stopVoice, t, language]);
 
   /* ---------------------------------------------------------------- */
   /*  The Universal Visualization Engine — a request to SEE becomes    */

@@ -1072,6 +1072,7 @@ export const es: TranslationDict = {
   "The tale can go on": "La historia puede continuar",
   "the title page": "la portada",
   "The voice is ready — press once more.": "La voz está lista — pulsa una vez más.",
+  "The house voice rests — your browser reads in its stead.": "La voz de la casa descansa — tu browser lee en su lugar.",
   "The voice is quiet — the mirror answers in text": "La voz guarda silencio — el espejo responde en texto",
   "The voice of the book is resting.": "La voz del libro está descansando.",
   "Waking the characters one by one…": "Despertando a los personajes uno a uno…",

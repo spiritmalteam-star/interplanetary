@@ -39,6 +39,10 @@ import { toast } from "sonner";
 import { ModalShell } from "./ModalShell";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
+import {
+  noteBrowserVoiceFallback,
+  speakWithBrowserVoice,
+} from "@/lib/browser-voice";
 import { LECTURE_LEVELS, READERS, TALES, VOLUMES } from "@/lib/data/book-options";
 import { dedupeChapters } from "@/lib/book-text";
 import type { VoiceId } from "@/lib/i18n/core";
@@ -602,13 +606,13 @@ export function DreamBookView() {
     }
     stopNarration();
     setNarrLoading(true);
+    const opening = pageIdx === 0 && meta
+      ? `${meta.title}. ${meta.subtitle} ${meta.sigil} ${meta.axiom} ${meta.dedication}`
+      : "";
+    const body = currentPage ? pageText(currentPage) : "";
+    const text = (opening || body).trim();
     try {
       const voice = BOOK_VOICE;
-      const opening = pageIdx === 0 && meta
-        ? `${meta.title}. ${meta.subtitle} ${meta.sigil} ${meta.axiom} ${meta.dedication}`
-        : "";
-      const body = currentPage ? pageText(currentPage) : "";
-      const text = (opening || body).trim();
       if (!text) return;
       const res = await fetch("/api/tts", {
         method: "POST",
@@ -643,6 +647,31 @@ export function DreamBookView() {
         narrRef.current.ready = true;
         toast(t("The voice is ready — press once more."));
       } else {
+        /* the house voice could not travel — the browser reads the
+           page aloud in its stead */
+        const handle = speakWithBrowserVoice({
+          text,
+          lang: language,
+          rate: 0.85,
+          onEnd: () => {
+            narrRef.current.audio = null;
+            setNarrating(false);
+            setNarrPaused(false);
+          },
+          onError: () => {
+            narrRef.current.audio = null;
+            setNarrating(false);
+            setNarrPaused(false);
+          },
+        });
+        if (handle) {
+          noteBrowserVoiceFallback(() =>
+            toast.info(t("The house voice rests — your browser reads in its stead."))
+          );
+          setNarrating(true);
+          setNarrPaused(false);
+          return;
+        }
         narrRef.current.audio = null;
         toast.error(t("The voice of the book is resting."), {
           description: t("Rest, then listen again."),
