@@ -2,6 +2,15 @@ import type { TranslationDict } from "../types";
 
 /** el — Greek dictionary (Task 3-b). Keys are the English source strings. */
 export const el: TranslationDict = {
+  "Deepen": "Βάθυνε",
+  "Connect": "Σύνδεση",
+  "Contrast": "Αντίθεση",
+  "Apply": "Εφάρμοσε",
+  "Create": "Δημιούργησε",
+  "Reflect": "Στοχάσου",
+  "Pause & integrate": "Παύση και ενσωμάτωση",
+  "Branches of this exchange": "Κλαδιά αυτής της ανταλλαγής",
+  "Find them on the tree": "Βρείτε τα στο δέντρο",
   "Back to the bench": "Πίσω στον πάγκο",
   "Earlier suggestions": "Προηγούμενες προτάσεις",
   "Invent chambers": "Δωμάτια του Invent",

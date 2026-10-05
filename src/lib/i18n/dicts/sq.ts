@@ -2,6 +2,15 @@ import type { TranslationDict } from "../types";
 
 /** sq — Shqip. Mirror Entity Laboratory dictionary (Task 3-a). */
 export const sq: TranslationDict = {
+  "Deepen": "Ztheje",
+  "Connect": "Lidh",
+  "Contrast": "Kundraza",
+  "Apply": "Zbato",
+  "Create": "Krijo",
+  "Reflect": "Reflekto",
+  "Pause & integrate": "Ndale dhe përvetëso",
+  "Branches of this exchange": "Degët e këtij shkëmbimi",
+  "Find them on the tree": "Gjiejini në pemë",
   "Back to the bench": "Mbrapsht te ballkoni",
   "Earlier suggestions": "Sugjerimet e mëparshme",
   "Invent chambers": "Dhomat e Shpikjes",

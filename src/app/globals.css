@@ -1762,3 +1762,32 @@ html:not(.dark) .scope-lightcodes {
 }
 
 /* task-29 css refresh marker */
+
+/* ------------------------------------------------------------------ */
+/*  THE RESONANCE REVEAL — a whisper that has just become connected    */
+/*  to the conversation shimmers once, gold, and then simply belongs.  */
+/* ------------------------------------------------------------------ */
+@keyframes resonance-reveal {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--gd) 0%, transparent);
+    border-color: color-mix(in srgb, var(--gd) 38%, transparent);
+  }
+  35% {
+    box-shadow: 0 0 18px 2px color-mix(in srgb, var(--gd) 30%, transparent);
+    border-color: color-mix(in srgb, var(--gd) 75%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 12px 0 color-mix(in srgb, var(--gd) 16%, transparent);
+    border-color: color-mix(in srgb, var(--gd) 38%, transparent);
+  }
+}
+
+.resonance-reveal {
+  animation: resonance-reveal 1.8s ease-in-out 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .resonance-reveal {
+    animation: none;
+  }
+}

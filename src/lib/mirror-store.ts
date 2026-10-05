@@ -40,6 +40,7 @@ import {
   isVisualIntent,
 } from "@/lib/visual-intent";
 import type { RemedyKind } from "@/lib/data/remedy";
+import type { LearnedBranch } from "@/lib/learning-branches";
 import { pxScopes } from "@/lib/data/particlex";
 import { emVectors } from "@/lib/data/evolvemed";
 import type {
@@ -87,6 +88,9 @@ export interface ChatMessage {
      INTO the channel: the akashic letter, the star draw, the manifesting
      ritual or the forge strike, living beneath the mirror's words. */
   sideArtifact?: SideArtifactRef;
+  /* the learning branches grown at the reply's foot — typed, reasoned,
+     connected to this very exchange and to the living tree's hub. */
+  branches?: LearnedBranch[];
 }
 
 export interface ScopeSession {
@@ -529,6 +533,13 @@ interface MirrorState {
     question: string,
     attachments?: ChatAttachment[]
   ) => Promise<void>;
+  /** The learning branches grown for one landed reply — attached once,
+      quietly, so they persist with the exchange. */
+  attachBranches: (
+    mode: Mode,
+    messageId: string,
+    branches: LearnedBranch[]
+  ) => void;
   /** The Universal Visualization Engine in the scope channels — the
       Interplanetary, Metaphysics, Quantum and Healing mirrors also answer
       in images when the visitor asks to see. `regenerateOf` repaints
@@ -1473,6 +1484,21 @@ export const useMirror = create<MirrorState>()((set, get) => ({
             : "The tool is quiet — the work could not be done. Rest a breath, then try again.",
       });
     }
+  },
+
+  attachBranches: (mode, messageId, branches) => {
+    if (branches.length === 0) return;
+    set((s) => ({
+      sessions: {
+        ...s.sessions,
+        [mode]: {
+          ...s.sessions[mode],
+          messages: s.sessions[mode].messages.map((m) =>
+            m.id === messageId && !m.branches ? { ...m, branches } : m
+          ),
+        },
+      },
+    }));
   },
 
   askMirror: async (question, attachments) => {

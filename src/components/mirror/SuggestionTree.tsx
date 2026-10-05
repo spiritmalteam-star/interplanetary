@@ -26,6 +26,16 @@ import {
   buildSuggestionTree,
   type BranchId,
 } from "@/lib/data/suggestion-tree";
+import {
+  BRANCH_TYPE_LABELS,
+  TREE_DRIFT_EVENT,
+  loadSeen,
+  parseBranchesPayload,
+  recordOpened,
+  recordSeen,
+  type BranchType,
+  type LearnedBranch,
+} from "@/lib/learning-branches";
 
 /* ------------------------------------------------------------------ */
 /*  THE LIVING SUGGESTION TREE                                         */
@@ -91,6 +101,10 @@ interface LeafPos {
   score: number;
   y: number;
   isBud: boolean;
+  /** A grown branch's movement — the seventh, the pause, rests open. */
+  type?: BranchType;
+  /** Why this branch grew here — its honest reason. */
+  reason?: string;
 }
 
 interface ScopePos {
@@ -100,6 +114,8 @@ interface ScopePos {
   leaves: LeafPos[];
   bloomable: boolean;
   connected: boolean;
+  /** The leading scope's continuation is revealed one whisper further. */
+  continuation?: boolean;
 }
 
 interface BranchPos {
@@ -142,16 +158,41 @@ function TreeLeafChip({
       disabled={disabled}
       aria-disabled={disabled}
       data-testid={testId}
-      title={label}
+      title={leaf.reason ? `${label} — ${leaf.reason}` : label}
       style={{ width: LEAF_W }}
-      className={`focus-glow line-clamp-2 rounded-full border px-3 py-1 text-left text-[11.5px] leading-[1.25] transition-all duration-300 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50 ${
+      className={`focus-glow relative line-clamp-2 rounded-full border px-3 py-1 text-left text-[11.5px] leading-[1.25] transition-all duration-300 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50 ${
         leaf.isBud
           ? "border-[color-mix(in_srgb,var(--gd)_55%,transparent)] bg-[color-mix(in_srgb,var(--gd)_10%,var(--glass-bg))] text-foreground/90"
           : connected
             ? "border-[color-mix(in_srgb,var(--gd)_38%,transparent)] bg-[var(--glass-bg)] text-foreground/85 backdrop-blur-xl"
             : "hairline bg-[var(--glass-bg)] text-muted-foreground backdrop-blur-xl"
-      } ${leading && connected ? "shadow-[0_0_12px_color-mix(in_srgb,var(--gd)_16%,transparent)]" : ""}`}
+      } ${
+        leading && connected
+          ? "shadow-[0_0_12px_color-mix(in_srgb,var(--gd)_16%,transparent)]"
+          : ""
+      }`}
     >
+      {/* the resonance reveal — when the conversation moves and this
+          whisper arrives (or re-arrives) at the tip, it shimmers once,
+          gold, and then simply belongs. The keyed remount plays the
+          animation exactly once per arrival. */}
+      {leading && connected && (
+        <span
+          key={`reveal-${leaf.text}`}
+          aria-hidden="true"
+          className="resonance-reveal pointer-events-none absolute inset-0 rounded-full"
+        />
+      )}
+      {leaf.isBud && leaf.type && leaf.type !== "pause" && (
+        <span
+          className="mono-label mr-1.5 inline-block rounded-full px-1.5 align-middle text-[8px] uppercase tracking-[0.14em] leading-[1.6] text-[var(--gd)]"
+          style={{
+            border: "1px solid color-mix(in srgb, var(--gd) 34%, transparent)",
+          }}
+        >
+          {t(BRANCH_TYPE_LABELS[leaf.type])}
+        </span>
+      )}
       {label}
     </button>
   );
@@ -183,8 +224,9 @@ export function SuggestionTree({
   /* ---------------- the living tree, ranked by the conversation ---- */
   const ranked = useMemo(() => buildSuggestionTree(contextText), [contextText]);
 
-  /* buds grown from the conversation itself, per branch */
-  const [buds, setBuds] = useState<Map<BranchId, string[]>>(new Map());
+  /* buds grown from the conversation itself, per branch — typed,
+     reasoned, and sometimes the seventh movement: the pause */
+  const [buds, setBuds] = useState<Map<BranchId, LearnedBranch[]>>(new Map());
   const [budState, setBudState] = useState<"idle" | "loading" | "error">(
     "idle"
   );
@@ -209,40 +251,76 @@ export function SuggestionTree({
 
   /* ---------------- geometry ---------------------------------------- */
   const layout: TreeLayout = useMemo(() => {
+    type ScopeDefLeaf = {
+      text: string;
+      score: number;
+      isBud?: boolean;
+      type?: BranchType;
+      reason?: string;
+    };
+    /* the leading scope of the leading branch — its continuation
+       breathes one whisper further open, revealed by resonance */
+    const leadingBranch = ranked.find((b) => b.id === leadingId);
+    let leadingScopeKey: string | null = null;
+    if (leadingBranch) {
+      let best = -1;
+      for (const s of leadingBranch.scopes) {
+        const top = s.leaves[0]?.score ?? 0;
+        if (top > best) {
+          best = top;
+          leadingScopeKey = s.key;
+        }
+      }
+    }
     const branches: BranchPos[] = [];
     let y = 10;
     for (const branch of ranked) {
       const top = y;
       const scopes: ScopePos[] = [];
       const branchBuds = buds.get(branch.id);
-      const scopeDefs = branchBuds
+      const scopeDefs: {
+        key: string;
+        label: string;
+        leaves: ScopeDefLeaf[];
+        bloomable: boolean;
+      }[] = branchBuds
         ? [
             {
               key: "bud",
               label: t("From this conversation"),
-              leaves: branchBuds.map((text) => ({
-                text,
+              leaves: branchBuds.map((b) => ({
+                text: b.question,
                 score: 1,
                 isBud: true,
+                type: b.type,
+                reason: b.reason,
               })),
               bloomable: false,
             },
             ...branch.scopes.map((s) => ({
               key: s.key,
               label: t(s.label),
-              leaves: s.leaves,
+              leaves: s.leaves as ScopeDefLeaf[],
               bloomable: true,
             })),
           ]
         : branch.scopes.map((s) => ({
             key: s.key,
             label: t(s.label),
-            leaves: s.leaves,
+            leaves: s.leaves as ScopeDefLeaf[],
             bloomable: true,
           }));
       for (const scope of scopeDefs) {
         const offset = offsets.get(scope.key) ?? 0;
-        const count = scope.bloomable ? SHOWN : scope.leaves.length;
+        const revealContinuation =
+          branch.id === leadingId &&
+          scope.key === leadingScopeKey &&
+          scope.leaves.length > SHOWN;
+        const count = scope.bloomable
+          ? revealContinuation
+            ? SHOWN + 1
+            : SHOWN
+          : scope.leaves.length;
         const shown: LeafPos[] = [];
         for (let i = 0; i < count; i++) {
           const idx =
@@ -256,6 +334,8 @@ export function SuggestionTree({
               score: leaf.score,
               y: y + LABEL_H + i * LEAF_ROW_H,
               isBud: scope.key === "bud",
+              type: leaf.type,
+              reason: leaf.reason,
             });
         }
         scopes.push({
@@ -265,6 +345,7 @@ export function SuggestionTree({
           leaves: shown,
           bloomable: scope.bloomable,
           connected: shown.some((l) => l.score > 0),
+          continuation: revealContinuation,
         });
         y += LABEL_H + count * LEAF_ROW_H + BLOCK_GAP;
       }
@@ -346,8 +427,10 @@ export function SuggestionTree({
         x.set(tx);
         yv.set(ty);
       } else {
-        animate(x, tx, { duration: 0.75, ease: "easeOut" });
-        animate(yv, ty, { duration: 0.75, ease: "easeOut" });
+        /* the drift is a breath, not a snap — the house ease carries
+           the window the whole way so the movement reads as one glide */
+        animate(x, tx, { duration: 1.05, ease: [0.22, 1, 0.36, 1] });
+        animate(yv, ty, { duration: 1.05, ease: [0.22, 1, 0.36, 1] });
       }
     },
     [layout.branches, minX, minY, vp.w, vp.h, reduceMotion, x, yv]
@@ -378,20 +461,20 @@ export function SuggestionTree({
         body: JSON.stringify({
           branch: leadingId,
           context: contextText.slice(-2400),
+          /* the tree never repeats itself — what was offered before
+             travels along so the engine grows only fresh branches */
+          seen: loadSeen().slice(0, 24),
         }),
       });
       const data = await res.json().catch(() => null);
-      const grown: string[] = Array.isArray(data?.buds)
-        ? data.buds
-            .filter((b: unknown): b is string => typeof b === "string" && b.trim().length > 0)
-            .slice(0, 3)
-        : [];
+      const grown = parseBranchesPayload(data).slice(0, 5);
       if (grown.length === 0) throw new Error("empty");
       setBuds((prev) => {
         const next = new Map(prev);
         next.set(leadingId, grown);
         return next;
       });
+      recordSeen(grown.map((b) => b.question));
       /* the window's next drift goes straight to the new bud */
       budDriftRef.current = leadingId;
       lastPanRef.current = 0;
@@ -402,6 +485,59 @@ export function SuggestionTree({
       window.setTimeout(() => setBudState("idle"), 2500);
     }
   }, [budState, leadingId, contextText, t]);
+
+  /* ---------------- wheel panning ------------------------------------
+     the canvas answers the wheel too — smooth, and only while there is
+     somewhere to go: at an edge the page keeps its own scroll */
+  useEffect(() => {
+    const el = viewportRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      if (vp.w === 0) return;
+      const k = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 400 : 1;
+      const dx = -(e.shiftKey ? e.deltaY : e.deltaX) * k;
+      const dy = e.shiftKey ? 0 : -e.deltaY * k;
+      const cx = x.get();
+      const cy = yv.get();
+      const canPanX =
+        dx !== 0 && ((dx < 0 && cx > minX) || (dx > 0 && cx < 0));
+      const canPanY =
+        dy !== 0 && ((dy < 0 && cy > minY) || (dy > 0 && cy < 0));
+      if (!canPanX && !canPanY) return; /* the page keeps its scroll */
+      e.preventDefault();
+      lastPanRef.current = Date.now();
+      setHintSeen(true);
+      window.localStorage.setItem(HINT_KEY, "seen");
+      const nx = Math.max(minX, Math.min(0, cx + dx));
+      const ny = Math.max(minY, Math.min(0, cy + dy));
+      if (reduceMotion) {
+        x.set(nx);
+        yv.set(ny);
+        return;
+      }
+      animate(x, nx, { duration: 0.45, ease: "easeOut" });
+      animate(yv, ny, { duration: 0.45, ease: "easeOut" });
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, [vp.w, minX, minY, reduceMotion, x, yv]);
+
+  /* ---------------- the hub link -------------------------------------
+     the branches grown at a reply's foot are linked with the tree: the
+     drift event opens the resting line and glides to their branch */
+  useEffect(() => {
+    const onDrift = (e: Event) => {
+      const detail = (e as CustomEvent<{ branch?: string }>).detail;
+      const id = detail?.branch as BranchId | undefined;
+      if (!id) return;
+      if (state === "rest") setState("grove");
+      lastPanRef.current = 0;
+      /* one breath for the window to take its size again */
+      window.setTimeout(() => centerOn(id), 80);
+    };
+    window.addEventListener(TREE_DRIFT_EVENT, onDrift);
+    return () => window.removeEventListener(TREE_DRIFT_EVENT, onDrift);
+  }, [state, centerOn]);
 
   /* ---------------- keyboard panning --------------------------------- */
   const onKeyPan = (e: React.KeyboardEvent) => {
@@ -418,8 +554,14 @@ export function SuggestionTree({
     setHintSeen(true);
     const nx = Math.max(minX, Math.min(0, x.get() + dx));
     const ny = Math.max(minY, Math.min(0, yv.get() + dy));
-    x.set(nx);
-    yv.set(ny);
+    if (reduceMotion) {
+      x.set(nx);
+      yv.set(ny);
+      return;
+    }
+    /* the keys glide like the drag — never a jump */
+    animate(x, nx, { duration: 0.38, ease: "easeOut" });
+    animate(yv, ny, { duration: 0.38, ease: "easeOut" });
   };
 
   const prefix = testIdPrefix;
@@ -526,6 +668,14 @@ export function SuggestionTree({
           drag
           dragConstraints={{ left: minX, right: 0, top: minY, bottom: 0 }}
           dragMomentum
+          /* the glide after the hand lifts — a long, quiet tail of
+             momentum with soft walls, so the movement never stops dead */
+          dragTransition={{
+            power: 0.32,
+            timeConstant: 260,
+            bounceStiffness: 160,
+            bounceDamping: 22,
+          }}
           dragElastic={0.07}
           onDragStart={() => {
             draggingRef.current = true;
@@ -666,24 +816,49 @@ export function SuggestionTree({
                 >
                   {s.label}
                 </span>
-                {s.leaves.map((leaf, i) => (
-                  <div
-                    key={`${b.id}-${s.key}-${i}`}
-                    className="absolute flex items-center"
-                    style={{ left: LEAF_X, top: leaf.y }}
-                  >
-                    <TreeLeafChip
-                      leaf={leaf}
-                      leading={b.leading}
-                      disabled={disabled}
-                      onPick={() => {
-                        if (draggingRef.current) return;
-                        onPick(leaf.text);
-                      }}
-                      testId={`${prefix}-chip`}
-                    />
-                  </div>
-                ))}
+                {s.leaves.map((leaf, i) =>
+                  leaf.type === "pause" ? (
+                    /* the seventh movement — the pause is not another
+                       click: it rests open as an invitation to stay
+                       with what has just been understood */
+                    <div
+                      key={`${b.id}-${s.key}-${i}-pause`}
+                      role="note"
+                      aria-label={t("Pause & integrate")}
+                      style={{ left: LEAF_X, top: leaf.y, width: LEAF_W }}
+                      className="absolute rounded-2xl border border-dashed border-[color-mix(in_srgb,var(--gd)_30%,transparent)] bg-[color-mix(in_srgb,var(--gd)_5%,transparent)] px-3 py-1"
+                    >
+                      <span className="mono-label mr-1.5 inline-block rounded-full px-1.5 align-middle text-[8px] uppercase tracking-[0.14em] leading-[1.6] text-[var(--gd)]">
+                        {t("Pause & integrate")}
+                      </span>
+                      <span className="line-clamp-2 align-middle text-[11.5px] italic leading-[1.25] text-foreground/80">
+                        {t(leaf.text)}
+                      </span>
+                    </div>
+                  ) : (
+                    <div
+                      key={`${b.id}-${s.key}-${i}`}
+                      className="absolute flex items-center"
+                      style={{ left: LEAF_X, top: leaf.y }}
+                    >
+                      <TreeLeafChip
+                        leaf={leaf}
+                        leading={b.leading}
+                        disabled={disabled}
+                        onPick={() => {
+                          if (draggingRef.current) return;
+                          /* the learning memory: what was walked is
+                             remembered, so the tree never repeats itself */
+                          if (leaf.isBud && leaf.type)
+                            recordOpened(leaf.type);
+                          recordSeen([leaf.text]);
+                          onPick(leaf.text);
+                        }}
+                        testId={`${prefix}-chip`}
+                      />
+                    </div>
+                  )
+                )}
                 {s.bloomable && (
                   <button
                     type="button"

@@ -14,13 +14,14 @@ import { SCOPE_META, sectionImage } from "@/lib/entity-utils";
 import { auraFor, INK_AURA, type Aura } from "@/lib/aura";
 import { useTheme } from "next-themes";
 import { useT } from "@/lib/i18n";
-import type { Scope } from "@/lib/mirror-types";
+import type { Mode, Scope } from "@/lib/mirror-types";
 import { cn } from "@/lib/utils";
 import { findTerms } from "@/lib/data/lexicon";
 import { ListenButton } from "./ListenButton";
 import { AlienLoading } from "./AlienLoading";
 import { TermPopover } from "./TermPopover";
 import { SideArtifact } from "./ChatArtifacts";
+import { ReplyBranches } from "./ReplyBranches";
 import {
   PreparedPromptFallback,
   VisualizationCard,
@@ -514,7 +515,18 @@ function Exchange({
           {hasVisual ? (
             <ExchangeVisual message={message} />
           ) : (
-            <TransmissionBody text={message.text} />
+            <>
+              <TransmissionBody text={message.text} />
+              {/* the branches where the signature used to live — grown
+                  from this very exchange, linked with the tree's hub */}
+              <ReplyBranches
+                message={message}
+                mode={scope as Mode}
+                active={animate}
+                disabled={!animate}
+                onPick={() => {}}
+              />
+            </>
           )}
           {/* the side activities — a whole world brought into the channel,
               living quietly beneath the mirror's words */}

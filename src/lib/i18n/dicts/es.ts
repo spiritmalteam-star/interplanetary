@@ -2,6 +2,15 @@ import type { TranslationDict } from "../types";
 
 /** es — Español. Mirror Entity Laboratory dictionary (Task 3-b). */
 export const es: TranslationDict = {
+  "Deepen": "Profundizar",
+  "Connect": "Conectar",
+  "Contrast": "Contrastar",
+  "Apply": "Aplicar",
+  "Create": "Crear",
+  "Reflect": "Reflexionar",
+  "Pause & integrate": "Pausa e integración",
+  "Branches of this exchange": "Ramas de este intercambio",
+  "Find them on the tree": "Encuéntralos en el árbol",
   "Back to the bench": "Volver al banco",
   "Earlier suggestions": "Sugerencias anteriores",
   "Invent chambers": "Cámaras de Invent",

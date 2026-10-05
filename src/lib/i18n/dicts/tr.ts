@@ -2,6 +2,15 @@ import type { TranslationDict } from "../types";
 
 /** tr — Türkçe. Mirror Entity Laboratory dictionary (Task 3-b). */
 export const tr: TranslationDict = {
+  "Deepen": "Derinleş",
+  "Connect": "Bağla",
+  "Contrast": "Karşıtla",
+  "Apply": "Uygula",
+  "Create": "Yarat",
+  "Reflect": "Düşün",
+  "Pause & integrate": "Dur & bütünleştir",
+  "Branches of this exchange": "Bu sohbetin dalları",
+  "Find them on the tree": "Ağaçta bulun",
   "Back to the bench": "Tezgâha dön",
   "Earlier suggestions": "Önceki öneriler",
   "Invent chambers": "Invent odaları",

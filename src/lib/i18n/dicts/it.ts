@@ -2,6 +2,15 @@ import type { TranslationDict } from "../types";
 
 /** it — Italian dictionary (Task 3-b). Keys are the English source strings. */
 export const it: TranslationDict = {
+  "Deepen": "Approfondisci",
+  "Connect": "Collega",
+  "Contrast": "Contrasta",
+  "Apply": "Applica",
+  "Create": "Crea",
+  "Reflect": "Rifletti",
+  "Pause & integrate": "Pausa e integrazione",
+  "Branches of this exchange": "Rami di questo scambio",
+  "Find them on the tree": "Trovali sull'albero",
   "Back to the bench": "Torna alla bancale",
   "Earlier suggestions": "Suggerimenti precedenti",
   "Invent chambers": "Camere di Invent",
