@@ -430,6 +430,13 @@ function sleep(ms: number): Promise<void> {
 
 function isTransientError(err: unknown): boolean {
   const msg = err instanceof Error ? err.message : String(err);
+  /* gateway code 1113 — "insufficient balance" — is a word, not a
+     storm: retrying it only keeps the visitor waiting. The same for
+     every model the sky does not know. */
+  if (/1113|insufficient balance|no resource package|recharge|1211|unknown model|1214/i.test(
+    msg
+  ))
+    return false;
   return /\b429\b|too many requests|rate.?limit|\b50[234]\b|overloaded|temporarily unavailable|ECONNRESET|ECONNABORTED|ETIMEDOUT|network|fetch failed/i.test(
     msg
   );
