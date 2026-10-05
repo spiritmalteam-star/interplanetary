@@ -66,6 +66,7 @@ interface EmThreadTurn {
   role: "visitor" | "em";
   text: string;
   formulas?: string[];
+  sections?: { heading: string; body: string }[];
 }
 
 function extractTransmission(raw: string): Transmission | null {
@@ -120,11 +121,17 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
         ? body.focus.trim().slice(0, 400)
         : null;
 
-    /* the thread — the whole conversation, read with its mechanisms */
+    /* the thread — the whole conversation, read with its mechanisms
+       and its structured movements */
     const rawThread = Array.isArray(body?.thread) ? (body.thread as unknown[]) : [];
     const thread: EmThreadTurn[] = rawThread
       .map((turn) => {
-        const t = turn as { role?: unknown; text?: unknown; formulas?: unknown };
+        const t = turn as {
+          role?: unknown;
+          text?: unknown;
+          formulas?: unknown;
+          sections?: unknown;
+        };
         const text = typeof t?.text === "string" ? t.text.trim().slice(0, 6000) : "";
         if (!text) return null;
         const role = t?.role === "visitor" ? "visitor" : "em";
@@ -134,7 +141,20 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
               .slice(0, 4)
               .map((f) => f.trim().slice(0, 200))
           : undefined;
-        return { role, text, formulas } as EmThreadTurn;
+        const sections = Array.isArray(t?.sections)
+          ? (t.sections as unknown[])
+              .map((s) => {
+                const rec = (s ?? {}) as { heading?: unknown; body?: unknown };
+                const heading =
+                  typeof rec.heading === "string" ? rec.heading.trim().slice(0, 120) : "";
+                const body =
+                  typeof rec.body === "string" ? rec.body.trim().slice(0, 900) : "";
+                return heading && body ? { heading, body } : null;
+              })
+              .filter((s): s is { heading: string; body: string } => s !== null)
+              .slice(0, 6)
+          : undefined;
+        return { role, text, formulas, sections } as EmThreadTurn;
       })
       .filter((t): t is EmThreadTurn => t !== null)
       .slice(-14);
@@ -151,6 +171,10 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
         [
           turn.role === "visitor" ? `THE VISITOR ASKED:` : `EVOLVE MED REVEALED:`,
           turn.text,
+          turn.sections?.length
+            ? `THE REVEALED MOVEMENTS (the structure of that revelation):
+${turn.sections.map((s) => `· ${s.heading} — ${s.body}`).join("\n")}`
+            : "",
           turn.formulas?.length
             ? `THE MECHANISMS THAT RAN IT:\n${turn.formulas.join("\n")}`
             : "",

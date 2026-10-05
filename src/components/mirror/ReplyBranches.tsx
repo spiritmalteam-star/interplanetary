@@ -9,6 +9,7 @@ import type { BranchId } from "@/lib/data/suggestion-tree";
 import {
   BRANCH_TYPE_LABELS,
   driftTreeTo,
+  journeyDepth,
   loadSeen,
   parseBranchesPayload,
   recordJourney,
@@ -162,6 +163,9 @@ export function ReplyBranches({
             /* the visitor's own fields of expansion ride along —
                coherent ones grow branches of their own */
             seeds,
+            /* THE DNA DEEPENING: the deeper the walk, the deeper the
+               branches the engine grows */
+            depth: journeyDepth(),
           }),
         });
         const data = await res.json().catch(() => null);

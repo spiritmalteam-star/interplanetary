@@ -64,6 +64,7 @@ import {
   forgeSparks,
 } from "@/lib/data/invent";
 import { labFrequencies } from "@/lib/data/metaphysics";
+import { RevelationProse, RevelationSections } from "./RevelationBody";
 
 /* ================================================================== */
 /*  THE GENERATIVE SIDE-ACTIVITY ARTIFACTS                             */
@@ -2813,6 +2814,7 @@ function CodesTransmission({
 
 interface NexusReply {
   revelation: string;
+  sections?: { heading: string; body: string }[];
   formulas: string[];
   seal: string;
 }
@@ -2866,6 +2868,14 @@ function NexusReveal({
       if (!res.ok || !data.revelation) throw new Error(data.error ?? "quiet");
       setReply({
         revelation: data.revelation,
+        sections: Array.isArray(data.sections)
+          ? data.sections.filter(
+              (s) =>
+                s &&
+                typeof s.heading === "string" &&
+                typeof s.body === "string"
+            )
+          : undefined,
         formulas: Array.isArray(data.formulas) ? data.formulas : [],
         seal: data.seal ?? "",
       });
@@ -2880,10 +2890,6 @@ function NexusReveal({
   useEffect(() => {
     void reveal();
   }, [reveal]);
-
-  const paragraphs = reply
-    ? reply.revelation.split(/\n{2,}/).filter((p) => p.trim())
-    : [];
 
   return (
     <div>
@@ -2906,20 +2912,16 @@ function NexusReveal({
             className="mx-auto max-w-[600px] rounded-xl border hairline bg-card/70 px-5 py-6 sm:px-7"
             data-testid={`${testid}-card`}
           >
-            {paragraphs.map((para, i) => (
-              <p
-                key={i}
-                className={cn(
-                  "ink-hand text-[14.5px] leading-[1.9]",
-                  i > 0 && "mt-3.5",
-                  i === paragraphs.length - 1 &&
-                    paragraphs.length > 1 &&
-                    "ink-faint border-t hairline pt-3.5 italic"
-                )}
-              >
-                {para}
-              </p>
-            ))}
+            <RevelationProse
+              text={reply.revelation}
+              className="space-y-3.5"
+              paragraphClassName="ink-hand text-[14.5px] leading-[1.9]"
+            />
+            <RevelationSections
+              sections={reply.sections}
+              boxed={false}
+              className="mt-4 border-t hairline pt-4"
+            />
             {reply.formulas.length > 0 && (
               <div
                 className="mt-4 border-t hairline pt-4"

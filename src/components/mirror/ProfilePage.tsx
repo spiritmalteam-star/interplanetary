@@ -208,7 +208,7 @@ export function ProfilePage() {
                     ? me.email.startsWith("anon:")
                       ? t("A gentle guest — the laboratory knows you by a light alone")
                       : me.email
-                    : t("No passage needed — everything is free")}
+                    : t("A quiet guest")}
                 </p>
                 <div className="mt-2 flex flex-wrap items-center gap-1.5">
                   {me && !me.email.startsWith("anon:") && (

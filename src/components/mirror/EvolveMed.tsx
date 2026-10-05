@@ -27,12 +27,14 @@ import {
 } from "@/lib/visual-intent";
 import { ListenButton } from "./ListenButton";
 import { ScopeNotes } from "./ScopeNotes";
+import { WorldNewChat } from "./WorldNewChat";
 import { HelixLoading } from "./ThemedLoadings";
 import {
   PreparedPromptFallback,
   VisualizationCard,
   VisualizationPending,
 } from "./VisualizationCard";
+import { RevelationProse, RevelationSections } from "./RevelationBody";
 import {
   EM_VECTOR_ICONS,
   EmCodexTab,
@@ -43,6 +45,15 @@ import {
 } from "./EvolveMedChambers";
 
 type EmPlace = "chat" | "vectors" | "instruments" | "codex";
+
+/** em vector window id → the living tree's Evolve Med scope key (the
+    window "genome" is the tree's "genomics"; the rest speak alike). */
+const EM_VECTOR_TO_TREE: Record<string, string> = {
+  genome: "genomics",
+  engines: "engines",
+  medworld: "medworld",
+  interface: "interface",
+};
 
 /** The visitor line an em reply answered — the exchange's first half. */
 function emVisitorBefore(
@@ -251,6 +262,7 @@ function EmExchange({
   role,
   text,
   formulas,
+  sections,
   seal,
   animate,
   index,
@@ -261,6 +273,7 @@ function EmExchange({
   role: "visitor" | "em";
   text: string;
   formulas?: string[];
+  sections?: { heading: string; body: string }[];
   seal?: string;
   animate: boolean;
   index: number;
@@ -306,14 +319,11 @@ function EmExchange({
         {hasVisual && messageId ? (
           <div className="mt-1.5">
             {text.trim() && (
-              <div className="space-y-3 rounded-2xl rounded-tl-md glass px-4 py-3">
-                {text.split(/\n{2,}/).map((p, i) => (
-                  <p key={i} className="text-[15px] leading-[1.8] text-foreground/88">
-                    {p}
-                  </p>
-                ))}
+              <div className="rounded-2xl rounded-tl-md glass px-4 py-3">
+                <RevelationProse text={text} />
               </div>
             )}
+            <RevelationSections sections={sections} className="mt-2.5" />
             <EmVisualBlock
               messageId={messageId}
               visualRequest={visualRequest}
@@ -323,13 +333,11 @@ function EmExchange({
           </div>
         ) : (
           <>
-            <div className="mt-1.5 space-y-3 rounded-2xl rounded-tl-md glass px-4 py-3">
-              {text.split(/\n{2,}/).map((p, i) => (
-                <p key={i} className="text-[15px] leading-[1.8] text-foreground/88">
-                  {p}
-                </p>
-              ))}
+            <div className="mt-1.5 rounded-2xl rounded-tl-md glass px-4 py-3">
+              <RevelationProse text={text} />
             </div>
+
+            <RevelationSections sections={sections} className="mt-2.5" />
 
             {formulaList.length > 0 && (
               <div className="px-formula relative mt-2.5 overflow-hidden rounded-xl px-4 py-3" data-testid={`em-formulas-${index}`}>
@@ -480,6 +488,20 @@ function EvolveMedChat() {
     [emMessages]
   );
 
+  /* the tree scope keys that lead the Evolve Med branch — the active
+     vector window (and its fusions) stand at the branch's tip */
+  const emTreeScopes = useMemo(() => {
+    const keys: string[] = [];
+    const push = (id: string | null) => {
+      if (!id) return;
+      const key = EM_VECTOR_TO_TREE[id];
+      if (key && !keys.includes(key)) keys.push(key);
+    };
+    push(emVector);
+    for (const id of emFusion) push(id);
+    return keys;
+  }, [emVector, emFusion]);
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const latestRef = useRef<HTMLDivElement | null>(null);
   const loadingRef = useRef<HTMLDivElement | null>(null);
@@ -628,6 +650,7 @@ function EvolveMedChat() {
                     role={m.role}
                     text={m.text}
                     formulas={m.formulas}
+                    sections={m.sections}
                     seal={m.seal}
                     animate={i === emMessages.length - 1 && emStatus !== "loading"}
                     index={i}
@@ -759,11 +782,15 @@ function EvolveMedChat() {
         </div>
       )}
 
-      {/* the living tree — every branch of the laboratory on one canvas,
-          resting on the Evolve Med branch, drifting to what is spoken */}
+      {/* the living tree — the Evolve Med branch only, resting on the
+          active vector window, drifting to what is spoken */}
       <div className="shrink-0 px-3 pb-1 sm:px-5">
         <SuggestionTree
           focusBranch="evolvemed"
+          /* THE CATEGORIZATION LAW: the branches of suggestions belong
+             to the kategory we are at — Evolve Med only. */
+          lockedBranch="evolvemed"
+          prioritizeScopes={emTreeScopes}
           contextText={emMessages
             .slice(-6)
             .map((m) => m.text)
@@ -905,6 +932,10 @@ export function EvolveMed() {
               />
             ))}
           </nav>
+
+          <div className="flex shrink-0 items-center gap-2">
+            <WorldNewChat world="evolvemed" />
+          </div>
         </div>
       </header>
 

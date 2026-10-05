@@ -8,7 +8,6 @@ import {
   Dna,
   Feather,
   FlaskConical,
-  Orbit,
   ScrollText,
   StickyNote,
   Telescope,
@@ -23,8 +22,10 @@ import { pxNoteSets } from "@/lib/data/scope-notes";
 import { cn } from "@/lib/utils";
 import { ListenButton } from "./ListenButton";
 import { ScopeNotes } from "./ScopeNotes";
+import { WorldNewChat } from "./WorldNewChat";
 import { QuantumLoading } from "./ThemedLoadings";
 import { PxBioMech } from "./PxBioMech";
+import { RevelationProse, RevelationSections } from "./RevelationBody";
 import {
   PxCodexTab,
   PxCopyButton,
@@ -35,6 +36,20 @@ import {
 } from "./ParticleXChambers";
 
 type PxPlace = "chat" | "biomech" | "scopes" | "tools" | "codex";
+
+/** px scope window id → the living tree's quantum scope key (the two
+    taxonomies grew apart: the window "quantum" is the tree's "reality",
+    the window "mycelia" is the tree's "mycelial"). */
+const PX_SCOPE_TO_TREE: Record<string, string> = {
+  formulas: "formulas",
+  perception: "perception",
+  emotions: "emotions",
+  belief: "belief",
+  quantum: "reality",
+  parallel: "parallel",
+  mycelia: "mycelial",
+  vibration: "vibration",
+};
 
 /** The visitor line a px reply answered — the exchange's first half. */
 function pxVisitorBefore(
@@ -147,6 +162,7 @@ function PxExchange({
   role,
   text,
   formulas,
+  sections,
   seal,
   animate,
   index,
@@ -154,6 +170,7 @@ function PxExchange({
   role: "visitor" | "px";
   text: string;
   formulas?: string[];
+  sections?: { heading: string; body: string }[];
   seal?: string;
   animate: boolean;
   index: number;
@@ -193,13 +210,11 @@ function PxExchange({
       </span>
       <div className="min-w-0 max-w-[85%]">
         <p className="mono-label text-[9.5px] text-[var(--scope-a)]">PARTICLEX</p>
-        <div className="mt-1.5 space-y-3 rounded-2xl rounded-tl-md glass px-4 py-3">
-          {text.split(/\n{2,}/).map((p, i) => (
-            <p key={i} className="text-[15px] leading-[1.8] text-foreground/88">
-              {p}
-            </p>
-          ))}
+        <div className="mt-1.5 rounded-2xl rounded-tl-md glass px-4 py-3">
+          <RevelationProse text={text} />
         </div>
+
+        <RevelationSections sections={sections} className="mt-2.5" />
 
         {formulaList.length > 0 && (
           <div className="px-formula relative mt-2.5 overflow-hidden rounded-xl px-4 py-3" data-testid={`px-formulas-${index}`}>
@@ -345,6 +360,20 @@ function ParticleXChat() {
     [pxMessages]
   );
 
+  /* the tree scope keys that lead the quantum branch — the active
+     scope window (and its fusions) stand at the branch's tip */
+  const pxTreeScopes = useMemo(() => {
+    const keys: string[] = [];
+    const push = (id: string | null) => {
+      if (!id) return;
+      const key = PX_SCOPE_TO_TREE[id];
+      if (key && !keys.includes(key)) keys.push(key);
+    };
+    push(pxScope);
+    for (const id of pxFusion) push(id);
+    return keys;
+  }, [pxScope, pxFusion]);
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const latestRef = useRef<HTMLDivElement | null>(null);
   const loadingRef = useRef<HTMLDivElement | null>(null);
@@ -481,6 +510,7 @@ function ParticleXChat() {
                     role={m.role}
                     text={m.text}
                     formulas={m.formulas}
+                    sections={m.sections}
                     seal={m.seal}
                     animate={i === pxMessages.length - 1 && pxStatus !== "loading"}
                     index={i}
@@ -607,11 +637,15 @@ function ParticleXChat() {
         </div>
       )}
 
-      {/* the living tree — every branch of the laboratory on one canvas,
-          resting on the quantum branch, drifting to what is spoken */}
+      {/* the living tree — the quantum branch only, resting on the
+          active scope window, drifting to what is spoken */}
       <div className="shrink-0 px-3 pb-1 sm:px-5">
         <SuggestionTree
           focusBranch="quantum"
+          /* THE CATEGORIZATION LAW: the branches of suggestions belong
+             to the kategory we are at — quantum only. */
+          lockedBranch="quantum"
+          prioritizeScopes={pxTreeScopes}
           contextText={pxMessages
             .slice(-6)
             .map((m) => m.text)
@@ -755,12 +789,7 @@ export function ParticleX() {
           </nav>
 
           <div className="flex shrink-0 items-center gap-2">
-            <span
-              className="hidden size-9 items-center justify-center rounded-full border hairline sm:flex"
-              aria-hidden="true"
-            >
-              <Orbit className="size-4 text-[var(--gd)]" />
-            </span>
+            <WorldNewChat world="quantum" />
           </div>
         </div>
       </header>

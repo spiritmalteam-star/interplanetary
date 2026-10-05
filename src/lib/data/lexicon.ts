@@ -33,7 +33,7 @@ export const LEXICON: TermEntry[] = [
   {
     term: "starseed",
     meaning:
-      "A soul whose origin memory reaches beyond Earth, come here with a gift of remembrance for the collective.",
+      "A consciousness that forgets less who they are — a human being whose remembering reaches further, carrying the memory of life's wider family. Never another species: a depth of human remembrance.",
   },
   {
     term: "light body",

@@ -596,11 +596,14 @@ export function MirrorOSChat() {
         )}
       </div>
 
-      {/* the living tree — every branch of the laboratory on one canvas,
-          resting on the Manifesting branch, drifting to what is spoken */}
+      {/* the living tree — the Manifesting branch only, resting on the
+          manifesting formulas, drifting to what is spoken */}
       <div className="shrink-0 px-3 pb-1 sm:px-5">
         <SuggestionTree
           focusBranch="manifesting"
+          /* THE CATEGORIZATION LAW: the branches of suggestions belong
+             to the kategory we are at — manifesting only. */
+          lockedBranch="manifesting"
           contextText={osMessages
             .slice(-6)
             .map((m) => m.text)

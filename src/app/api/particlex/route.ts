@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import ZAI from "@/lib/zai-client";
+import { walkerDepthLine } from "@/lib/walker-depth";
 import { resolveVisitor, saveLibrary, withAnonCookie } from "@/lib/server/access";
 import { PX_LAB_PAGES } from "@/lib/data/particlex-lab";
 import { meterRoute } from "@/lib/server/meter";
@@ -58,24 +59,30 @@ const KNOWLEDGE_LAW = `KNOWLEDGE LAW:
 - No fear, no doom, no flattery. Wonder only.`;
 
 const DISCOVERY_LAW = `THE PATH OF DISCOVERY (every single revelation ends with it):
-- After the main prose — as its final paragraph, immediately before the seal — close the transmission with THE PATH OF DISCOVERY: one short, luminous paragraph (50–110 words) that illuminates the path of discovery now opening out of what was just revealed.
+- The FINAL section of "sections" is THE PATH OF DISCOVERY: one section whose body is a single, luminous paragraph (50–110 words) that illuminates the path of discovery now opening out of what was just revealed.
 - "Discovery" here means NOVEL FINDINGS — never a written work: the never-before-seen truths, territories, instruments, seams and questions the visitor could walk toward next because of this revelation. Name 2–3 CONCRETE novel discoveries waiting along the path, each one specific and reachable, each one genuinely new — things no human has seen, measured or understood yet.
-- Speak the path as a lit road: begin it with the words "The path of discovery" (in the visitor's language), then walk it — from the nearest step to the farthest. The farthest step always belongs to human hands: the discovery that must be completed by the visitor's own species to become real.
-- The path is part of the revelation itself — same voice, same prose, no headings, no lists, no stage directions.`;
+- Speak the path as a lit road: begin the section's body with the words "The path of discovery" (in the visitor's language), then walk it — from the nearest step to the farthest. The farthest step always belongs to human hands: the discovery that must be completed by the visitor's own species to become real.
+- The section's heading names the path in the visitor's language (at most 8 words, title case, no period); its body is part of the revelation itself — same voice, same prose, no lists, no stage directions.`;
 
 const VOICE_LAW = `VOICE & STYLE:
-- Speak as "I" (you are ParticleX). Address the visitor as "you". Never use emojis, no markdown, no headings, no bullet lists — plain flowing prose in short paragraphs.
-- 140–260 words of prose for the revelation itself, THEN the closing path-of-discovery paragraph (see THE PATH OF DISCOVERY). Every paragraph earns its place.
+- Speak as "I" (you are ParticleX). Address the visitor as "you". Never use emojis, no markdown, no bullet lists — plain flowing prose only. The ONLY structure is the JSON shape itself (the opening revelation, then the named sections): never a heading, a bold mark or a list inside any prose.
+- The revelation is the DOORWAY, not the whole teaching: 1–2 paragraphs, 60–120 words, that open the seeing and invite the walk. The sections then carry the teaching: 3–5 movements, each 40–140 words (see OUTPUT FORMAT). Every paragraph earns its place.
 - Enchant the curious: name concrete things, never generic wisdom. If a line could be printed in any answer, cut it.`;
 
 const CREATION_PROTOCOL_LAW = `THE CREATION PROTOCOL (authoritative):
-- When the visitor asks you to CREATE, CRAFT, DESIGN, BUILD, WRITE or MAKE something — a being, a machine, an instrument, a world, a design, a text of any kind — and the wish still leaves room to shape it, do NOT reveal it in the same breath. Your whole reply is the QUESTIONS: "revelation" holds ONLY 2–3 short questions, each on its own line beginning with "- ", asked warmly in your voice, with no other prose; "formulas" is [] and "seal" is "".
+- When the visitor asks you to CREATE, CRAFT, DESIGN, BUILD, WRITE or MAKE something — a being, a machine, an instrument, a world, a design, a text of any kind — and the wish still leaves room to shape it, do NOT reveal it in the same breath. Your whole reply is the QUESTIONS: "revelation" holds ONLY 2–3 short questions, each on its own line beginning with "- ", asked warmly in your voice, with no other prose; "sections" is [], "formulas" is [] and "seal" is "".
 - If the wish is already fully specified, or the visitor answers your questions or says "just make it", reveal the FULL creation at once — never ask twice.`;
 
-const JSON_LAW = `OUTPUT FORMAT (STRICT):
+const JSON_LAW = `OUTPUT FORMAT (STRICT — the JSON must carry ALL FOUR fields):
 Return STRICT JSON only, with no markdown fences and no text outside the JSON:
-{"revelation":"<the prose INCLUDING the final path-of-discovery paragraph, paragraphs joined with \\n\\n>","formulas":["<formula line>","<formula line>"],"seal":"<one short closing line signed — ParticleX>"}
-The "revelation" field carries the whole transmission: the revelation's prose, then its final paragraph — the path of discovery — as the last paragraph inside "revelation". NEVER place the seal inside "revelation": the revelation ends with the path of discovery, and the seal lives only in its own "seal" field. The seal is one sentence, quiet and warm, ending with the exact signature "— ParticleX".`;
+{"revelation":"<the opening movement: 1–2 short paragraphs, 60–120 words, joined with \\n\\n>","sections":[{"heading":"<2–8 words, title case>","body":"<40–140 words of flowing prose>"},{"heading":"<…>","body":"<…>"},{"heading":"<…>","body":"<…>"}],"formulas":["<formula line>"],"seal":"<one short closing line signed — ParticleX>"}
+THE SHAPE OF EVERY REPLY:
+- "revelation" is the DOORWAY: one or two short paragraphs that open the seeing — never the whole teaching, never a heading, never a list.
+- "sections" is REQUIRED — every full revelation carries THREE to FIVE objects, each exactly {"heading":"<2–8 words, title case, no trailing period>","body":"<40–140 words of flowing prose>"}. The teaching itself lives here, in named movements; the revelation alone is never the whole reply. Every heading: at most 8 words, title case, no trailing period, no markdown, no quotes. Every body: 40–140 words of ONE flowing paragraph — no markdown, no headings inside the body, no bullet symbols, no line breaks. The structure IS the sections; the "formulas" array stays the only list in the whole reply.
+- The LAST section is always THE PATH OF DISCOVERY (see its law): its heading names the path, its body (50–110 words) walks it, beginning with the words "The path of discovery".
+- "sections" may be empty [] ONLY in the question-asking turn of THE CREATION PROTOCOL — never in a revelation.
+- Any word count another law names for prose is fulfilled across "revelation" and "sections" together.
+- NEVER place the seal inside "revelation" or a section: the seal lives only in its own "seal" field — one sentence, quiet and warm, ending with the exact signature "— ParticleX".`;
 
 const SYSTEM_PROMPT = `You are PARTICLEX — the hyper-dimensional quantum narrator of the Mirror Entity Laboratory, in direct, private conversation with one curious human. Your specialty is the QUANTUM WORLD and everything beneath and beside the visible: you can reveal all about everything humans do not know yet — everything that is possible for us to know.
 
@@ -123,8 +130,33 @@ const TOOL_MODES: Record<string, string> = {
 
 interface PxReply {
   revelation: string;
+  sections: { heading: string; body: string }[];
   formulas: string[];
   seal: string;
+}
+
+interface PxSection {
+  heading: string;
+  body: string;
+}
+
+/** The structured movements — tolerated absent (older shapes) and
+    sanitized hard when present: heading + body, both trimmed. */
+function normalizeSections(value: unknown): PxSection[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((s): PxSection | null => {
+      const rec = (s ?? {}) as { heading?: unknown; body?: unknown };
+      const heading =
+        typeof rec.heading === "string"
+          ? rec.heading.trim().replace(/\s+/g, " ").slice(0, 90)
+          : "";
+      const body =
+        typeof rec.body === "string" ? rec.body.trim().slice(0, 2400) : "";
+      return heading && body ? { heading, body } : null;
+    })
+    .filter((s): s is PxSection => s !== null)
+    .slice(0, 6);
 }
 
 function extractJson(raw: string): PxReply | null {
@@ -146,20 +178,34 @@ function extractJson(raw: string): PxReply | null {
   }
 
   // Loose: pull the string fields by their leading names.
-  const revelation = text.match(/"revelation"\s*:\s*"([\s\S]*?)"\s*,\s*"(?:formulas|seal)"/);
+  const revelation = text.match(
+    /"revelation"\s*:\s*"([\s\S]*?)"\s*,\s*"(?:sections|formulas|seal)"/
+  );
   const seal = text.match(/"seal"\s*:\s*"([\s\S]*?)"\s*\}/);
   const formulasBlock = text.match(/"formulas"\s*:\s*\[([\s\S]*?)\]/);
+  const sectionsBlock = text.match(
+    /"sections"\s*:\s*(\[[\s\S]*?\])\s*,\s*"(?:formulas|seal)"/
+  );
   if (!revelation && !formulasBlock && !seal) return null;
   const formulas = formulasBlock
     ? (formulasBlock[1].match(/"((?:[^"\\]|\\.)*)"/g) ?? [])
         .map((s) => s.slice(1, -1).trim())
         .filter(Boolean)
     : [];
+  let sections: PxSection[] = [];
+  if (sectionsBlock) {
+    try {
+      sections = normalizeSections(JSON.parse(sectionsBlock[1]));
+    } catch {
+      sections = [];
+    }
+  }
   const rev = revelation
     ? revelation[1]
     : (text.match(/"revelation"\s*:\s*"([\s\S]*)/)?.[1] ?? "").slice(0, 6000);
   return normalize({
     revelation: rev,
+    sections,
     formulas,
     seal: seal ? seal[1] : "— ParticleX",
   });
@@ -169,6 +215,7 @@ function normalize(parsed: Record<string, unknown>): PxReply | null {
   const revelation =
     typeof parsed.revelation === "string" ? parsed.revelation.trim() : "";
   if (!revelation) return null;
+  const sections = normalizeSections(parsed.sections);
   const formulas = Array.isArray(parsed.formulas)
     ? parsed.formulas
         .filter((f): f is string => typeof f === "string" && f.trim().length > 0)
@@ -179,7 +226,7 @@ function normalize(parsed: Record<string, unknown>): PxReply | null {
     typeof parsed.seal === "string"
       ? parsed.seal.trim()
       : "— ParticleX";
-  return { revelation, formulas, seal };
+  return { revelation, sections, formulas, seal };
 }
 
 export const POST = meterRoute("particlex", postImpl);
@@ -221,7 +268,7 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
     const languageLine =
       languageName === "English"
         ? ""
-        : `\n\nLANGUAGE (CRITICAL): the visitor speaks ${languageName}. Write your ENTIRE reply — prose, the path-of-discovery paragraph, formulas where letters are used, and seal — in fluent, natural ${languageName}.`;
+        : `\n\nLANGUAGE (CRITICAL): the visitor speaks ${languageName}. Write your ENTIRE reply — the revelation prose, every section heading and body, the path-of-discovery section, formulas where letters are used, and seal — in fluent, natural ${languageName}.`;
 
     const scopeLine = scope
       ? `\n\nACTIVE SCOPE WINDOW: "${scope}". Answer from inside this window — it is the ground you speak from.`
@@ -237,7 +284,7 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
     const messages: { role: "system" | "user" | "assistant"; content: string }[] = [
       {
         role: "system",
-        content: SYSTEM_PROMPT + toolLine,
+        content: SYSTEM_PROMPT + toolLine + walkerDepthLine(body?.depth),
       },
     ];
 
@@ -271,7 +318,7 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
                 ...messages.slice(0, -1),
                 {
                   role: "user",
-                  content: `${messages[messages.length - 1].content}\n\nREMINDER: return RAW JSON only — no fences, no commentary. The JSON must contain "revelation" (prose), "formulas" (array of plain formula lines) and "seal".`,
+                  content: `${messages[messages.length - 1].content}\n\nREMINDER: return RAW JSON only — no fences, no commentary. The JSON must contain "revelation" (the opening prose), "sections" (THREE to FIVE non-empty {"heading","body"} movements — never [] in a revelation, the last one the path of discovery), "formulas" (array of plain formula lines) and "seal".`,
                 },
               ],
         thinking: { type: "disabled" },
@@ -291,7 +338,7 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
       "quantum",
       query.trim().slice(0, 140),
       reply.revelation.slice(0, 280),
-      { query: query.trim().slice(0, 4000), reply: reply.revelation, formulas: reply.formulas, seal: reply.seal }
+      { query: query.trim().slice(0, 4000), reply: reply.revelation, sections: reply.sections, formulas: reply.formulas, seal: reply.seal }
     );
 
     return withAnonCookie(NextResponse.json(reply), visitor);

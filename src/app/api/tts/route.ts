@@ -131,11 +131,22 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
       );
     }
 
-    const chunks = chunkText(text).slice(0, MAX_CHUNKS);
+    const allChunks = chunkText(text);
+    const originalChars = text.replace(/\s+/g, " ").trim().length;
+    const chunks = allChunks.slice(0, MAX_CHUNKS);
+    const truncated = allChunks.length > MAX_CHUNKS;
     if (chunks.length === 0) {
       return NextResponse.json(
         { error: "Nothing was given to narrate." },
         { status: 400 }
+      );
+    }
+    if (truncated) {
+      /* the silent truncation is over — the client is told, and the
+         laboratory log carries the weight of every dropped word */
+      console.warn(
+        `[tts] truncation: ${allChunks.length} chunks → ${MAX_CHUNKS} ` +
+          `(${originalChars} chars requested, voice ends early)`
       );
     }
 
@@ -173,22 +184,33 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
 
     const buffer = buildWav(mergeMeta, Buffer.concat(pcmParts));
 
+    const headers: Record<string, string> = {
+      "Content-Type": "audio/wav",
+      "Content-Length": buffer.length.toString(),
+      "Cache-Control": "no-store",
+    };
+    if (truncated) {
+      headers["X-Voice-Truncated"] = String(originalChars);
+    }
+
     return new NextResponse(new Uint8Array(buffer), {
       status: 200,
-      headers: {
-        "Content-Type": "audio/wav",
-        "Content-Length": buffer.length.toString(),
-        "Cache-Control": "no-store",
-      },
+      headers,
     });
   } catch (err) {
     console.error("[tts] failed:", err);
+    /* upstream voices (4xx/5xx from the sky, unparseable audio) ride
+       502 — a bad gate, not a broken house; the poetic line carries a
+       `detail` that names the true cause for the keeper of the keys. */
+    const detail =
+      err instanceof Error ? err.message.slice(0, 300) : undefined;
+    const upstream = detail ? /\b[45]\d\d\b|Z\.ai|sky|voice/.test(detail) : false;
     return NextResponse.json(
       {
         error: "The voice field is momentarily quiet. Rest, then listen again.",
-        detail: err instanceof Error ? err.message.slice(0, 300) : undefined,
+        detail,
       },
-      { status: 500 }
+      { status: upstream ? 502 : 500 }
     );
   }
 }

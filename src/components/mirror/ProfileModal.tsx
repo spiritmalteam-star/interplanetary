@@ -58,7 +58,7 @@ export function ProfileModal() {
           </span>
           <span className="min-w-0 flex-1">
             <span className="block truncate text-[13.5px] font-medium text-foreground/85">
-              {me ? me.email : t("No passage needed — everything is free")}
+              {me ? me.email : t("A quiet guest")}
             </span>
             <span className="mono-label block text-[8.5px] uppercase tracking-[0.16em] text-muted-foreground">
               {me

@@ -50,6 +50,7 @@ import {
 import { EM_LAB_PAGES } from "@/lib/data/evolvemed-lab";
 import { cn } from "@/lib/utils";
 import { ListenButton } from "./ListenButton";
+import { RevelationProse, RevelationSections } from "./RevelationBody";
 
 /* ------------------------------------------------------------------ */
 /*  EVOLVE MED — the chambers beyond the Nexus: the four operational   */
@@ -262,6 +263,7 @@ type ToolState = "idle" | "busy" | "ready" | "error";
 
 interface ToolResult {
   revelation: string;
+  sections?: { heading: string; body: string }[];
   formulas: string[];
   seal: string;
 }
@@ -314,6 +316,14 @@ function EmToolCard({
       }
       setResult({
         revelation: data.revelation,
+        sections: Array.isArray(data.sections)
+          ? data.sections.filter(
+              (s) =>
+                s &&
+                typeof s.heading === "string" &&
+                typeof s.body === "string"
+            )
+          : undefined,
         formulas: Array.isArray(data.formulas) ? data.formulas : [],
         seal: data.seal || "— Evolve Med",
       });
@@ -430,13 +440,8 @@ function EmToolCard({
           className="mt-4 space-y-3"
           data-testid={`${testId}-result`}
         >
-          <div className="space-y-2.5">
-            {result.revelation.split(/\n{2,}/).map((p, i) => (
-              <p key={i} className="text-[14px] leading-[1.8] text-foreground/88">
-                {p}
-              </p>
-            ))}
-          </div>
+          <RevelationProse text={result.revelation} size="sm" className="space-y-2.5" />
+          <RevelationSections sections={result.sections} size="sm" />
           {result.formulas.length > 0 && (
             <div className="px-formula rounded-xl px-4 py-3">
               <p className="mono-label flex items-center gap-1.5 text-[9px] uppercase tracking-[0.22em] text-muted-foreground">
@@ -550,6 +555,7 @@ export function EmPdfButton() {
             role: m.role,
             text: m.text,
             formulas: m.formulas,
+            sections: m.sections,
           })),
         }),
       });

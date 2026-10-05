@@ -267,7 +267,17 @@ export function LiveCall({
         setTurns(withReply);
         setRevealedChars(0);
         if (seq !== turnSeqRef.current) return;
-        await speak(reply);
+        try {
+          await speak(reply);
+        } catch {
+          /* the voice went quiet mid-call — the call does NOT die:
+             the mirror's words stay on the line as text, the orb
+             returns to rest, and the conversation continues */
+          if (seq !== turnSeqRef.current) return;
+          setRevealedChars(Infinity);
+          setPhaseSafe("idle");
+          toast.info(t("The voice is quiet — the mirror answers in text"));
+        }
       } catch (err) {
         if (seq !== turnSeqRef.current) return;
         setPhaseSafe("idle");

@@ -8,6 +8,8 @@ import {
 } from "@/lib/server/attachments";
 import { resolveVisitor, saveLibrary, withAnonCookie } from "@/lib/server/access";
 import { meterRoute } from "@/lib/server/meter";
+import { REMEMBRANCE_LAW } from "@/lib/remembrance-law";
+import { walkerDepthLine } from "@/lib/walker-depth";
 
 const CLASSIFICATIONS = [
   "DOCUMENTED_SCIENCE",
@@ -357,6 +359,8 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
           role: "assistant",
           content:
             SYSTEM_PROMPT +
+            REMEMBRANCE_LAW +
+            walkerDepthLine(body?.depth) +
             (body?.live === true
               ? LIVE_CALL_BLOCK
               : body?.artifact === "book"

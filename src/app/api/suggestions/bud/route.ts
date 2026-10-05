@@ -3,6 +3,7 @@ import ZAI from "@/lib/zai-client";
 import { meterRoute, type MeterContext } from "@/lib/server/meter";
 import { tokenize } from "@/lib/suggestion-resonance";
 import { isBranchType, isBait, type BranchType } from "@/lib/learning-branches";
+import { walkerBranchLaw } from "@/lib/walker-depth";
 
 /* ------------------------------------------------------------------ */
 /*  POST /api/suggestions/bud — THE LEARNING BRANCH ENGINE             */
@@ -150,6 +151,7 @@ async function postImpl(req: NextRequest, _ctx: MeterContext) {
     context?: unknown;
     seen?: unknown;
     seeds?: unknown;
+    depth?: unknown;
   } | null;
 
   const branch =
@@ -186,6 +188,8 @@ async function postImpl(req: NextRequest, _ctx: MeterContext) {
         {
           role: "user",
           content: `BRANCH: ${branch} — speak as ${BRANCH_VOICES[branch]}.
+
+${walkerBranchLaw(body?.depth)}
 
 ALREADY OFFERED (never repeat or paraphrase):
 ${

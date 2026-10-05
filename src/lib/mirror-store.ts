@@ -50,6 +50,7 @@ import type {
   LightCodesMode,
 } from "@/lib/data/light-codes";
 import { LC_DEFAULT_SHAPE } from "@/lib/data/light-codes";
+import { journeyDepth } from "@/lib/learning-branches";
 
 export type ModalState =
   | { type: "federation" }
@@ -302,6 +303,9 @@ export interface PxMessage {
   text: string;
   /** The formulas that ran this revelation (ParticleX notation). */
   formulas?: string[];
+  /** The structured movements of the teaching — the named sections
+      between the opening revelation and the formulas block. */
+  sections?: { heading: string; body: string }[];
   seal?: string;
   /** When set, this thread item is a pinned cluster of the window's
       note stickers (illustrated sections inside the chat flow). */
@@ -319,6 +323,9 @@ export interface EmMessage {
   text: string;
   /** The mechanisms that ran this revelation (nexus notation). */
   formulas?: string[];
+  /** The structured movements of the blueprint — the named sections
+      between the opening revelation and the formulas block. */
+  sections?: { heading: string; body: string }[];
   seal?: string;
   /** When set, this thread item is a pinned cluster of the vector's
       note stickers (illustrated sections inside the chat flow). */
@@ -593,6 +600,9 @@ interface MirrorState {
   /* Mirror OS — Reality Guidance (fully independent) */
   openMirrorOS: () => void;
   exitMirrorOS: () => void;
+  /** A fresh chat inside one world: the manifest core, the quantum
+      core or the med nexus returns to its quiet origin. */
+  clearWorldChat: (world: "manifest" | "quantum" | "evolvemed") => void;
 
   /* ParticleX — the quantum narrator (fully independent) */
   openParticleX: () => void;
@@ -1243,6 +1253,36 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       ...emptyLab,
     }),
 
+  /** A fresh chat inside one world — the manifest core (with its
+      blueprint bench), the quantum core or the med nexus returns to
+      its quiet origin. */
+  clearWorldChat: (world) =>
+    set(() => {
+      if (world === "manifest") {
+        return {
+          osMessages: [],
+          osStatus: "idle" as TransmissionStatus,
+          osError: null,
+          osDraft: "",
+          ...emptyLab,
+        };
+      }
+      if (world === "quantum") {
+        return {
+          pxMessages: [],
+          pxStatus: "idle" as TransmissionStatus,
+          pxError: null,
+          pxDraft: "",
+        };
+      }
+      return {
+        emMessages: [],
+        emStatus: "idle" as TransmissionStatus,
+        emError: null,
+        emDraft: "",
+      };
+    }),
+
   /** Wipe the current channel (or an explicit one) back to a quiet state. */
   clearChannel: (mode) =>
     set((s) => {
@@ -1357,6 +1397,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
           mode: "forge",
           language: get().language,
           history,
+          depth: journeyDepth(),
           ...(payload ?? {}),
         }),
       });
@@ -1689,6 +1730,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
           mode,
           language: get().language,
           history,
+          depth: journeyDepth(),
           ...(payload ?? {}),
         }),
       });
@@ -2069,10 +2111,12 @@ export const useMirror = create<MirrorState>()((set, get) => ({
           language: get().language,
           scope: scopeName,
           fusion: fusionNames.length === 2 ? fusionNames : [],
+          depth: journeyDepth(),
         }),
       });
       const data = (await res.json().catch(() => null)) as {
         revelation?: string;
+        sections?: { heading: string; body: string }[];
         formulas?: string[];
         seal?: string;
         code?: string;
@@ -2096,6 +2140,14 @@ export const useMirror = create<MirrorState>()((set, get) => ({
             role: "px" as const,
             text: data?.revelation ?? "",
             formulas: Array.isArray(data?.formulas) ? data.formulas : [],
+            sections: Array.isArray(data?.sections)
+              ? data.sections.filter(
+                  (s) =>
+                    s &&
+                    typeof s.heading === "string" &&
+                    typeof s.body === "string"
+                )
+              : undefined,
             seal: typeof data?.seal === "string" ? data.seal : "— ParticleX",
           },
         ],
@@ -2184,10 +2236,12 @@ export const useMirror = create<MirrorState>()((set, get) => ({
           language: get().language,
           scope: vectorName,
           fusion: fusionNames.length === 2 ? fusionNames : [],
+          depth: journeyDepth(),
         }),
       });
       const data = (await res.json().catch(() => null)) as {
         revelation?: string;
+        sections?: { heading: string; body: string }[];
         formulas?: string[];
         seal?: string;
         code?: string;
@@ -2211,6 +2265,14 @@ export const useMirror = create<MirrorState>()((set, get) => ({
             role: "em" as const,
             text: data?.revelation ?? "",
             formulas: Array.isArray(data?.formulas) ? data.formulas : [],
+            sections: Array.isArray(data?.sections)
+              ? data.sections.filter(
+                  (s) =>
+                    s &&
+                    typeof s.heading === "string" &&
+                    typeof s.body === "string"
+                )
+              : undefined,
             seal: typeof data?.seal === "string" ? data.seal : "— Evolve Med",
           },
         ],
@@ -2389,6 +2451,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
           query,
           history,
           language: get().language,
+          depth: journeyDepth(),
           ...(payload ?? {}),
         }),
       });

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import ZAI from "@/lib/zai-client";
+import { walkerDepthLine } from "@/lib/walker-depth";
+import { REMEMBRANCE_LAW } from "@/lib/remembrance-law";
 import {
   describeImage,
   documentBlock,
@@ -100,7 +102,7 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
     const messages: { role: "system" | "user" | "assistant"; content: string }[] = [
       {
         role: "system",
-        content: SYSTEM_PROMPT + (body?.live === true ? LIVE_CALL_BLOCK : ""),
+        content: SYSTEM_PROMPT + REMEMBRANCE_LAW + walkerDepthLine(body?.depth) + (body?.live === true ? LIVE_CALL_BLOCK : ""),
       },
     ];
 

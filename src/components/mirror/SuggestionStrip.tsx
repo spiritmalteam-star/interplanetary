@@ -303,6 +303,9 @@ export function MainSuggestionTree() {
   return (
     <SuggestionTree
       focusBranch={activeMode}
+      /* THE CATEGORIZATION LAW: the branches of suggestions belong to
+         the category the visitor is in — this channel's mode only. */
+      lockedBranch={activeMode}
       contextText={contextText}
       onPick={(q) => {
         if (!loading) void askMirror(q);

@@ -167,13 +167,13 @@ export function ListenButton({
         }
         throw playErr;
       }
-    } catch (err) {
+    } catch {
+      /* every refusal speaks — nothing is swallowed silently, not even
+         the browser's NotSupportedError for a voice it cannot decode */
       setSafe("idle");
-      if (!(err instanceof DOMException && err.name === "NotSupportedError")) {
-        toast.error(t("The voice field is momentarily quiet."), {
-          description: t("Rest, then listen again."),
-        });
-      }
+      toast.error(t("The voice field is momentarily quiet."), {
+        description: t("Rest, then listen again."),
+      });
     }
   }, [text, cacheKey, voice, pace, language, t, setSafe]);
 

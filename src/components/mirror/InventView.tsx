@@ -38,6 +38,7 @@ import {
   VisualizationPending,
 } from "./VisualizationCard";
 import { SigilForIntent } from "./MirrorOSForge";
+import { WorldNewChat } from "./WorldNewChat";
 
 /* ------------------------------------------------------------------ */
 /*  INVENT — THE FORGE · the fourth book on the shelf, rebuilt as its  */
@@ -1203,11 +1204,14 @@ function BenchChat() {
         )}
       </div>
 
-      {/* the living tree — every branch of the laboratory on one canvas,
-          resting on the Invent branch, drifting to what is spoken */}
+      {/* the living tree — the Invent branch only, resting on the forge,
+          drifting to what is spoken */}
       <div className="shrink-0 px-3 pb-1 pt-2 sm:px-4">
         <SuggestionTree
           focusBranch="invent"
+          /* THE CATEGORIZATION LAW: the branches of suggestions belong
+             to the kategory we are at — invent only. */
+          lockedBranch="invent"
           contextText={messages
             .slice(-6)
             .map((m) => `${m.query}\n${m.text}`)
@@ -1329,12 +1333,7 @@ export function InventView() {
             ))}
           </nav>
 
-          <span
-            className="hidden size-9 shrink-0 items-center justify-center rounded-full border hairline sm:flex"
-            aria-hidden="true"
-          >
-            <Flame className="size-4 text-[var(--iv-a)]" />
-          </span>
+          <WorldNewChat world="invent" />
         </div>
       </header>
 

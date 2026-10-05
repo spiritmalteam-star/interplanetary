@@ -759,7 +759,7 @@ export function SidebarContent() {
               className="mono-label block text-[8.5px] uppercase tracking-[0.16em] text-muted-foreground"
               data-testid="passage-profile-hint"
             >
-              {me ? t("Your profile · cosmic library") : t("Everything is free")}
+              {me ? t("Your profile · cosmic library") : t("Open the passage")}
             </span>
           </span>
           {me ? (

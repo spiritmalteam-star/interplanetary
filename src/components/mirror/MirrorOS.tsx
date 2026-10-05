@@ -31,6 +31,7 @@ import {
 import { cn } from "@/lib/utils";
 import { ListenButton } from "./ListenButton";
 import { MirrorOSForge } from "./MirrorOSForge";
+import { WorldNewChat } from "./WorldNewChat";
 import { MirrorOSChat } from "./MirrorOSChat";
 
 type OsPlace = "chat" | "formulas" | "higher" | "tools" | "forge";
@@ -601,12 +602,7 @@ export function MirrorOS() {
             ))}
           </nav>
 
-          <span
-            className="flex size-9 shrink-0 items-center justify-center rounded-full border hairline"
-            aria-hidden="true"
-          >
-            <Orbit className="size-4 text-[var(--gd)]" />
-          </span>
+          <WorldNewChat world="manifest" />
         </div>
       </header>
 

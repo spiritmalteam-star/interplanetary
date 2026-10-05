@@ -97,7 +97,7 @@ export function AuthModal() {
       title={tab === "register" ? t("Carve your passage") : t("Enter your passage")}
       description={
         tab === "register"
-          ? t("Everything here is free. The passage simply keeps your cosmic library — every transmission, every book — with you, on every device.")
+          ? t("The passage simply keeps your cosmic library — every transmission, every book — with you, on every device.")
           : t("Welcome back. Your cosmic library is waiting, exactly where you left it.")
       }
       widthClass="sm:max-w-[460px]"

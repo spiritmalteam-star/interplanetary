@@ -291,6 +291,8 @@ function EchoChip({
 
 export function SuggestionTree({
   focusBranch,
+  lockedBranch,
+  prioritizeScopes,
   contextText,
   onPick,
   disabled = false,
@@ -302,6 +304,13 @@ export function SuggestionTree({
 }: {
   /** The branch the window rests on when nothing is being spoken yet. */
   focusBranch?: BranchId;
+  /** THE CATEGORIZATION LAW: when set, the tree grows only this
+      branch — the branches of suggestions belong to the category the
+      visitor is walking in (the channel's mode, the world's branch). */
+  lockedBranch?: BranchId;
+  /** Tree scope keys that lead the locked branch when a window is
+      open — quantum's active scope, the med nexus' active vector. */
+  prioritizeScopes?: string[];
   contextText: string;
   onPick: (suggestion: string) => void;
   disabled?: boolean;
@@ -342,8 +351,14 @@ export function SuggestionTree({
 
   /* ---------------- the living tree, ranked by the conversation ---- */
   const ranked = useMemo(
-    () => buildSuggestionTree(contextText, mounted ? loadSeen() : undefined),
-    [contextText, seenNonce, mounted]
+    () =>
+      buildSuggestionTree(
+        contextText,
+        mounted ? loadSeen() : undefined,
+        lockedBranch,
+        prioritizeScopes
+      ),
+    [contextText, seenNonce, mounted, lockedBranch, prioritizeScopes]
   );
   const rankedRef = useRef(ranked);
   useEffect(() => {

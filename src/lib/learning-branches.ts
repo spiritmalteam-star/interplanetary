@@ -11,6 +11,8 @@
 /*  learning memory all speak through it.                              */
 /* ------------------------------------------------------------------ */
 
+import { tierForSteps } from "./walker-depth";
+
 /** The six learning movements — and the seventh state, the pause. */
 export type BranchType =
   | "deepen"
@@ -297,6 +299,14 @@ export function recordJourney(step: { b: string; s?: string }): void {
 /** The event the tree listens to — the helix redraws on every step. */
 export const DNA_UPDATE_EVENT = JOURNEY_EVENT;
 export const LEARNING_IDENTITY_EVENT = IDENTITY_EVENT;
+
+/** How deep the walk has gone — the DNA's present reach, fed back into
+    the branches and the channeling: the deeper the walk, the deeper
+    the laboratory answers. See walker-depth.ts for the tiers. */
+export function journeyDepth(): { steps: number; tier: number } {
+  const steps = loadJourney().length;
+  return { steps, tier: tierForSteps(steps) };
+}
 
 /* ------------------- the hub link ----------------------------------- */
 /*  The reply branches are linked with the big hub of branches: this    */

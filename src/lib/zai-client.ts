@@ -79,8 +79,8 @@ interface AudioEngine {
   };
 }
 
-const ZAI_TTS_MODEL = process.env.ZAI_TTS_MODEL ?? "cogtts";
-const ZAI_ASR_MODEL = process.env.ZAI_ASR_MODEL ?? "glm-asr";
+/* The voice model knobs — see zaiAudio(): unset by default (the
+   SDK-contract paths let the sky serve its own default model). */
 
 /** audio/webm → webm, audio/mpeg → mp3 … wav is the house default */
 function audioExtension(mime?: string): string {
@@ -94,8 +94,83 @@ function audioExtension(mime?: string): string {
 }
 
 /* ------- the Z.ai voice (CogTTS / GLM-ASR) — the ONLY voice -------- */
+/*  CONTRACT — verified against the z-ai-web-dev-sdk (the source of
+    truth, it sings in the laboratory):
+      tts → POST {base}/audio/tts   JSON {input, voice, speed,
+            response_format, stream} — the model is the sky's OWN
+            default (the SDK sends none); the answer is raw WAV bytes.
+      asr → POST {base}/audio/asr   JSON {file_base64} — the answer is
+            JSON {text}.
+    The old OpenAI-style paths (/audio/speech, /audio/transcriptions)
+    still exist on some skies, but only with explicit model codes —
+    and the house codes (cogtts / glm-asr) are UNKNOWN there, which
+    silenced the production voice (gateway error 1211). So: the SDK
+    contract sings first; the OpenAI-compatible paths remain only as
+    a stepped-down fallback for a sky that lacks the SDK paths.     */
+
+const AUDIO_RETRY_DELAYS_MS = [800, 2000];
+
+/** gateway code 1211 — "this sky does not know that model code" */
+function isUnknownModel(status: number, detail: string): boolean {
+  return status === 400 && /1211|unknown model/i.test(detail);
+}
+
+/** a path the sky itself does not serve (router said so) */
+function isMissingPath(status: number): boolean {
+  return status === 404 || status === 405;
+}
 
 function zaiAudio(cfg: CloudConfig): AudioEngine {
+  /* the knobs — unset by default; the SDK-contract paths need no
+     model. Set ZAI_TTS_MODEL / ZAI_ASR_MODEL only when a sky demands
+     an explicit code. */
+  const ttsModel = process.env.ZAI_TTS_MODEL?.trim() || null;
+  const asrModel = process.env.ZAI_ASR_MODEL?.trim() || null;
+
+  const baseHeaders: Record<string, string> = {
+    Authorization: `Bearer ${cfg.apiKey}`,
+    "X-Z-AI-From": "Z", // the SDK marks every request this way
+  };
+
+  function postJson(path: string, body: unknown): Promise<Response> {
+    return fetch(`${cfg.baseUrl}${path}`, {
+      method: "POST",
+      headers: { ...baseHeaders, "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(180_000),
+    });
+  }
+
+  async function errorDetail(res: Response): Promise<string> {
+    return (await res.text()).slice(0, 300);
+  }
+
+  /* Most skies answer the voice as raw WAV bytes; some wrap the same
+     bytes as base64 inside JSON. Accept both, hand back bytes. */
+  async function voiceBytes(res: Response): Promise<ArrayBuffer> {
+    const ct = (res.headers.get("content-type") ?? "").toLowerCase();
+    if (ct.includes("application/json")) {
+      const data = (await res.json().catch(() => null)) as Record<string, any>;
+      const inner = data?.data;
+      const b64 =
+        (Array.isArray(inner) ? inner[0]?.b64 ?? inner[0]?.audio : undefined) ??
+        data?.audio ??
+        data?.b64 ??
+        data?.base64 ??
+        (typeof data?.data === "string" ? data.data : undefined);
+      if (typeof b64 === "string" && b64.length > 0) {
+        const bytes = Buffer.from(b64.replace(/^data:[^,]*,/, ""), "base64");
+        /* a true ArrayBuffer slice — the route reads it with Uint8Array */
+        return bytes.buffer.slice(
+          bytes.byteOffset,
+          bytes.byteOffset + bytes.byteLength
+        ) as ArrayBuffer;
+      }
+      throw new Error("the synthesis answered without audio bytes");
+    }
+    return res.arrayBuffer();
+  }
+
   return {
     tts: {
       create: async (params: TTSParams) => {
@@ -110,26 +185,49 @@ function zaiAudio(cfg: CloudConfig): AudioEngine {
             : params.voice === "xiaochen"
               ? "xiaochen"
               : "xiaochen";
-        const res = await fetch(`${cfg.baseUrl}/audio/speech`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${cfg.apiKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: ZAI_TTS_MODEL,
+
+        const attemptTts = (withModel: boolean) => {
+          const body: Record<string, unknown> = {
             input,
             voice,
             speed,
             response_format: "wav",
-          }),
-          signal: AbortSignal.timeout(180_000),
-        });
+            stream: false,
+          };
+          const model = withModel
+            ? (ttsModel ?? "cogtts")
+            : ttsModel;
+          if (model) body.model = model;
+          return withRetry(() => postJson("/audio/tts", body), AUDIO_RETRY_DELAYS_MS);
+        };
+
+        /* 1st — the SDK's own contract, no forced model code */
+        let res = await attemptTts(false);
         if (!res.ok) {
-          const detail = (await res.text()).slice(0, 300);
-          throw new Error(`Z.ai tts ${res.status}: ${detail}`);
+          const detail = await errorDetail(res);
+          if (isMissingPath(res.status)) {
+            /* stepped-down sky: the OpenAI-compatible speech path,
+               which speaks only by explicit model code */
+            res = await withRetry(
+              () =>
+                postJson("/audio/speech", {
+                  model: ttsModel ?? "cogtts",
+                  input,
+                  voice,
+                  speed,
+                  response_format: "wav",
+                }),
+              AUDIO_RETRY_DELAYS_MS
+            );
+          } else if (isUnknownModel(res.status, detail)) {
+            /* the path exists but this sky wants a model code named */
+            res = await attemptTts(true);
+          }
+          if (!res.ok) {
+            throw new Error(`Z.ai tts ${res.status}: ${await errorDetail(res)}`);
+          }
         }
-        const buf = await res.arrayBuffer();
+        const buf = await voiceBytes(res);
         return { arrayBuffer: async () => buf };
       },
     },
@@ -138,20 +236,54 @@ function zaiAudio(cfg: CloudConfig): AudioEngine {
         const bytes = Buffer.from(params.file_base64, "base64");
         const ext = audioExtension(params.mime);
         const mime = params.mime || "audio/wav";
-        const form = new FormData();
-        form.append("file", new Blob([bytes], { type: mime }), `audio.${ext}`);
-        form.append("model", ZAI_ASR_MODEL);
-        const res = await fetch(`${cfg.baseUrl}/audio/transcriptions`, {
-          method: "POST",
-          headers: { Authorization: `Bearer ${cfg.apiKey}` },
-          body: form,
-          signal: AbortSignal.timeout(180_000),
-        });
+
+        const parseText = async (r: Response): Promise<{ text?: string }> => {
+          const data = (await r.json().catch(() => null)) as {
+            text?: string;
+          } | null;
+          return { text: data?.text ?? "" };
+        };
+
+        const attemptAsr = (withModel: boolean) => {
+          const body: Record<string, unknown> = {
+            file_base64: params.file_base64,
+          };
+          const model = withModel ? (asrModel ?? "glm-asr-2512") : asrModel;
+          if (model) body.model = model;
+          return withRetry(() => postJson("/audio/asr", body), AUDIO_RETRY_DELAYS_MS);
+        };
+
+        /* 1st — the SDK's own contract: JSON, base64 inside, no forced
+           model code */
+        let res = await attemptAsr(false);
         if (!res.ok) {
-          const detail = (await res.text()).slice(0, 300);
-          throw new Error(`Z.ai asr ${res.status}: ${detail}`);
+          const detail = await errorDetail(res);
+          if (isMissingPath(res.status)) {
+            /* stepped-down sky: the documented public transcription
+               path (multipart, explicit model code) */
+            const form = new FormData();
+            form.append("file", new Blob([bytes], { type: mime }), `audio.${ext}`);
+            form.append("model", asrModel ?? "glm-asr-2512");
+            form.append("stream", "false");
+            res = await withRetry(
+              () =>
+                fetch(`${cfg.baseUrl}/audio/transcriptions`, {
+                  method: "POST",
+                  headers: baseHeaders, // the form carries its own boundary
+                  body: form,
+                  signal: AbortSignal.timeout(180_000),
+                }),
+              AUDIO_RETRY_DELAYS_MS
+            );
+          } else if (isUnknownModel(res.status, detail)) {
+            /* the path exists but this sky wants a model code named */
+            res = await attemptAsr(true);
+          }
         }
-        return (await res.json()) as { text?: string };
+        if (!res.ok) {
+          throw new Error(`Z.ai asr ${res.status}: ${await errorDetail(res)}`);
+        }
+        return await parseText(res);
       },
     },
   };
@@ -269,17 +401,20 @@ function isTransientError(err: unknown): boolean {
   );
 }
 
-async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  delays: number[] = RETRY_DELAYS_MS
+): Promise<T> {
   let lastError: unknown = null;
-  for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt++) {
+  for (let attempt = 0; attempt <= delays.length; attempt++) {
     try {
       return await fn();
     } catch (err) {
       lastError = err;
-      if (attempt === RETRY_DELAYS_MS.length || !isTransientError(err)) {
+      if (attempt === delays.length || !isTransientError(err)) {
         throw err;
       }
-      await sleep(RETRY_DELAYS_MS[attempt]);
+      await sleep(delays[attempt]);
     }
   }
   throw lastError ?? new Error("the sky never answered");
@@ -378,6 +513,19 @@ async function atelierBackend(): Promise<ZAIClient> {
   if (originalVision) {
     client.chat.completions.createVision = (params: ChatParams) =>
       withRetry(() => originalVision(params));
+  }
+  /* the voice gets the same patience — the shared atelier sky 429s on
+     bursts of long narrations; two short retries (never on validation
+     errors) keep a 14-chunk transmission from dying on one breath */
+  const originalTts = client.audio?.tts?.create?.bind(client.audio.tts);
+  const originalAsr = client.audio?.asr?.create?.bind(client.audio.asr);
+  if (originalTts) {
+    client.audio.tts.create = (params: TTSParams) =>
+      withRetry(() => originalTts(params), AUDIO_RETRY_DELAYS_MS);
+  }
+  if (originalAsr) {
+    client.audio.asr.create = (params: ASRParams) =>
+      withRetry(() => originalAsr(params), AUDIO_RETRY_DELAYS_MS);
   }
   return client;
 }

@@ -557,7 +557,15 @@ export interface RankedBranch extends BranchNode {
 
 export function buildSuggestionTree(
   contextText: string,
-  seen?: string[]
+  seen?: string[],
+  /** THE CATEGORIZATION LAW: when set, the tree grows ONLY this
+   *  branch — the branches of suggestions belong to the category the
+   *  visitor is walking in, and to no other. */
+  only?: BranchId,
+  /** Tree scope keys that lead the branch when a window is open
+   *  (quantum's active scope, the med nexus' active vector): their
+   *  whispers stand at the branch's tip and bloom first. */
+  prioritize?: string[]
 ): RankedBranch[] {
   const vocab = contextVocabulary(contextText);
   /* the memory of what was already offered — the tree never repeats
@@ -579,9 +587,17 @@ export function buildSuggestionTree(
     const opening = norm.split(/\s+/).slice(0, 5).join(" ");
     return opening.split(" ").length >= 4 && seenOpenings.has(opening);
   };
-  return STATIC_TREE.map((branch) => {
-    let resonance = 0;
-    const scopes: RankedScope[] = branch.scopes.map((scope) => {
+  return STATIC_TREE.filter((branch) => !only || branch.id === only).map(
+    (branch) => {
+      let branchScopes = branch.scopes;
+      if (prioritize && prioritize.length > 0) {
+        branchScopes = [
+          ...branchScopes.filter((s) => prioritize.includes(s.key)),
+          ...branchScopes.filter((s) => !prioritize.includes(s.key)),
+        ];
+      }
+      let resonance = 0;
+      const scopes: RankedScope[] = branchScopes.map((scope) => {
       /* the memory withholds what was already heard — but it never
          starves a scope: if every whisper was already offered, the
          rotation returns whole. The tree prefers a repeated whisper
