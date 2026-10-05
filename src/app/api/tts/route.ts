@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import ZAI from "@/lib/zai-client";
 import { voiceEngine, isVoiceId, type VoiceId } from "@/lib/i18n/core";
+import { meterRoute } from "@/lib/server/meter";
 
 /* ------------------------------------------------------------------ */
 /*  POST /api/tts — documentary-grade narration for transmissions.     */
@@ -113,7 +114,9 @@ function buildWav(meta: WavMeta, pcm: Buffer): Buffer {
 
 /* ---- route -------------------------------------------------------- */
 
-export async function POST(req: NextRequest) {
+export const POST = meterRoute("tts", postImpl);
+
+async function postImpl(req: NextRequest): Promise<NextResponse> {
   try {
     const body = await req.json().catch(() => null);
     const text: unknown = body?.text;
@@ -170,7 +173,7 @@ export async function POST(req: NextRequest) {
 
     const buffer = buildWav(mergeMeta, Buffer.concat(pcmParts));
 
-    return new NextResponse(buffer, {
+    return new NextResponse(new Uint8Array(buffer), {
       status: 200,
       headers: {
         "Content-Type": "audio/wav",

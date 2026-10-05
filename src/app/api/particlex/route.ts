@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import ZAI from "@/lib/zai-client";
 import { resolveVisitor, saveLibrary, withAnonCookie } from "@/lib/server/access";
 import { PX_LAB_PAGES } from "@/lib/data/particlex-lab";
+import { meterRoute } from "@/lib/server/meter";
 
 /* ------------------------------------------------------------------ */
 /*  POST /api/particlex — THE QUANTUM NARRATOR.                        */
@@ -181,7 +182,9 @@ function normalize(parsed: Record<string, unknown>): PxReply | null {
   return { revelation, formulas, seal };
 }
 
-export async function POST(req: NextRequest) {
+export const POST = meterRoute("particlex", postImpl);
+
+async function postImpl(req: NextRequest): Promise<NextResponse> {
   try {
     const body = await req.json().catch(() => null);
     const query: unknown = body?.query;

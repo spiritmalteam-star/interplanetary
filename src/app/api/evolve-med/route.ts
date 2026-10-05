@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import ZAI from "@/lib/zai-client";
 import { resolveVisitor, saveLibrary, withAnonCookie } from "@/lib/server/access";
 import { EM_LAB_PAGES } from "@/lib/data/evolvemed-lab";
+import { meterRoute } from "@/lib/server/meter";
 
 /* ------------------------------------------------------------------ */
 /*  POST /api/evolve-med — EVOLVE MED, THE OMNI-MATRIX BIOLOGICAL      */
@@ -223,7 +224,9 @@ function normalize(parsed: Record<string, unknown>): EmReply | null {
   return { revelation, formulas, seal };
 }
 
-export async function POST(req: NextRequest) {
+export const POST = meterRoute("evolve_med", postImpl);
+
+async function postImpl(req: NextRequest): Promise<NextResponse> {
   try {
     const body = await req.json().catch(() => null);
     const query: unknown = body?.query;

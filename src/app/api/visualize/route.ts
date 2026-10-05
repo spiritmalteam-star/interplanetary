@@ -13,6 +13,7 @@ import {
   GALLERY_DIR,
   type GeneratedImage,
 } from "@/lib/image-engine";
+import { meterRoute } from "@/lib/server/meter";
 
 /* ================================================================== */
 /*  MIRROR ENTITY — UNIVERSAL VISUALIZATION ENGINE                     */
@@ -276,7 +277,9 @@ function historyLines(raw: unknown): string {
     : "";
 }
 
-export async function POST(req: NextRequest) {
+export const POST = meterRoute("visualize", postImpl);
+
+async function postImpl(req: NextRequest): Promise<NextResponse> {
   try {
     const body = await req.json().catch(() => null);
     const requestedLanguage: string =

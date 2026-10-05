@@ -12,19 +12,31 @@ datasource db {
 // minimum: an email, a name the visitor chose — and their own cosmic
 // library. Passwords live only as scrypt hashes; sessions live only as
 // signed cookies; anonymous visitors carry only a random UUID cookie.
-// Everything in the laboratory is free — no tiers, no thresholds.
+// ---------------------------------------------------------------------------
+// SaaS extension (additive only — the free law of the laboratory stands
+// until the keeper flips CREDITS_ENFORCED):
+//  - Workspace  → the tenancy root (credits, subscriptions, keys, usage)
+//  - CreditAccount / CreditTransaction → ledger-backed balance; the ledger
+//    is the truth, the balance is a bucket, deductions are atomic
+//  - UsageEvent → every AI operation recorded server-side, never client-told
+//  - Subscription / Payment → Stripe is the source of truth for money
+//  - ApiKey → hashed at rest, prefix shown, full secret seen once
+//  - ProcessedEvent → webhook idempotency; the same event never pays twice
 // ---------------------------------------------------------------------------
 
 model User {
-  id           String         @id @default(cuid())
-  email        String         @unique
-  name         String?
-  passwordHash String? // null → the visitor arrived through Google, or anonymously
-  provider     String         @default("email") // email | google | anon
-  tier         String         @default("crystalline") // kept for gentle history; every world is free
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
-  entries      LibraryEntry[]
+  id              String   @id @default(cuid())
+  email           String   @unique
+  name            String?
+  passwordHash    String? // null → the visitor arrived through Google, or anonymously
+  provider        String   @default("email") // email | google | anon
+  tier            String   @default("crystalline") // kept for gentle history; every world is free
+  emailVerifiedAt DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  entries         LibraryEntry[]
+  memberships     WorkspaceMember[]
+  ownedWorkspaces Workspace[] @relation("OwnedWorkspaces")
 }
 
 model LibraryEntry {
@@ -38,4 +50,158 @@ model LibraryEntry {
   createdAt DateTime @default(now())
 
   @@index([userId, createdAt])
+}
+
+// ------------------------------- tenancy ---------------------------------
+
+model Workspace {
+  id        String   @id @default(cuid())
+  name      String
+  ownerId   String
+  owner     User     @relation("OwnedWorkspaces", fields: [ownerId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  members       WorkspaceMember[]
+  creditAccount CreditAccount?
+  subscriptions Subscription[]
+  apiKeys       ApiKey[]
+
+  @@index([ownerId])
+}
+
+model WorkspaceMember {
+  id          String   @id @default(cuid())
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role        String   @default("owner") // owner | admin | member
+  createdAt   DateTime @default(now())
+
+  @@unique([workspaceId, userId])
+  @@index([userId])
+}
+
+// --------------------------- email tokens --------------------------------
+
+model VerificationToken {
+  id          String    @id @default(cuid())
+  identifier  String // the email the token belongs to
+  tokenHash   String    @unique // scrypt hash — the raw token is never stored
+  type        String // verify_email | password_reset
+  expiresAt   DateTime
+  usedAt      DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([identifier, type])
+}
+
+// ------------------------------- credits ---------------------------------
+
+model CreditAccount {
+  id           String   @id @default(cuid())
+  workspaceId  String   @unique
+  workspace    Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  balance      Int      @default(0) // ledger-backed; deductions are atomic (balance >= amount)
+  monthlyGrant Int      @default(10000) // the FREE plan's monthly gift
+  periodStart  DateTime @default(now())
+  periodEnd    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  transactions CreditTransaction[]
+
+  @@index([workspaceId])
+}
+
+model CreditTransaction {
+  id          String   @id @default(cuid())
+  accountId   String
+  account     CreditAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  amount      Int // + grant | purchase | refund | renewal — − consumption
+  type        String // subscription_grant | renewal | purchase | consumption | refund | admin
+  source      String // stripe | system | api | admin
+  referenceId String? // unique per source — the same webhook never grants twice
+  description String
+  createdAt   DateTime @default(now())
+
+  @@unique([source, referenceId])
+  @@index([accountId, createdAt])
+}
+
+model UsageEvent {
+  id             String   @id @default(cuid())
+  userId         String
+  workspaceId    String?
+  operation      String // chat | transmission | dream_book | image | tts | asr | v1_chat …
+  provider       String // zai | openai | dalle | none
+  model          String?
+  inputTokens    Int?
+  outputTokens   Int?
+  creditsCharged Int      @default(0)
+  latencyMs      Int?
+  success        Boolean  @default(true)
+  error          String?
+  createdAt      DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([workspaceId, createdAt])
+  @@index([operation, createdAt])
+}
+
+// ------------------------------- billing ---------------------------------
+
+model Subscription {
+  id                   String   @id @default(cuid())
+  workspaceId          String
+  workspace            Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  plan                 String   @default("FREE") // FREE | PRO | PRO_PLUS | BUSINESS
+  status               String   @default("active") // active | trialing | past_due | canceled | incomplete
+  stripeCustomerId     String?
+  stripeSubscriptionId String?  @unique
+  stripePriceId        String?
+  currentPeriodStart   DateTime?
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean  @default(false)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@index([workspaceId])
+  @@index([stripeCustomerId])
+}
+
+model Payment {
+  id          String   @id @default(cuid())
+  workspaceId String?
+  userId      String?
+  stripeId    String   @unique // checkout session / payment intent / invoice id
+  type        String // subscription | credit_pack
+  amountCents Int
+  currency    String   @default("usd")
+  status      String
+  description String?
+  createdAt   DateTime @default(now())
+
+  @@index([workspaceId])
+}
+
+// ------------------------------ developer --------------------------------
+
+model ApiKey {
+  id          String    @id @default(cuid())
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  name        String
+  prefix      String // shown in the dashboard — e.g. mir_live_ab12cd
+  keyHash     String    @unique // scrypt hash — the raw key is never stored
+  lastUsedAt  DateTime?
+  revokedAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([workspaceId])
+}
+
+model ProcessedEvent {
+  id         String   @id // the provider's event id (e.g. Stripe evt_…)
+  type       String
+  receivedAt DateTime @default(now())
 }

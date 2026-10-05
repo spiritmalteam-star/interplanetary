@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import ZAI from "@/lib/zai-client";
 import { renderTransmissionPdf, type Transmission } from "@/lib/transmission-pdf";
+import { meterRoute } from "@/lib/server/meter";
 
 /* ------------------------------------------------------------------ */
 /*  POST /api/particlex/pdf — THE QUICK TRANSMISSION PRESS.            */
@@ -103,7 +104,9 @@ function extractTransmission(raw: string): Transmission | null {
   }
 }
 
-export async function POST(req: NextRequest) {
+export const POST = meterRoute("pdf", postImpl);
+
+async function postImpl(req: NextRequest): Promise<NextResponse> {
   try {
     const body = await req.json().catch(() => null);
     const requestedLanguage: string =

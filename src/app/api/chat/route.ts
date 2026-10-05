@@ -7,6 +7,8 @@ import {
   isOpenAiConfigured,
   type ImageQuality,
 } from "@/lib/image-engine";
+import { meterRoute, type MeterContext } from "@/lib/server/meter";
+import { costOf } from "@/lib/server/costs";
 
 /* ================================================================== */
 /*  THE BRIDGE — Z.ai chat with the generate_image tool                */
@@ -96,7 +98,9 @@ function parseDecision(raw: string): {
   return { tool: null, text: raw.trim(), args: {} };
 }
 
-export async function POST(req: NextRequest) {
+export const POST = meterRoute("chat", postImpl);
+
+async function postImpl(req: NextRequest, ctx: MeterContext): Promise<NextResponse> {
   try {
     const body = (await req.json().catch(() => null)) as {
       messages?: IncomingMessage[];
@@ -162,6 +166,8 @@ export async function POST(req: NextRequest) {
       });
 
       if (image) {
+        /* a painted vision weighs more than words — the ledger knows */
+        ctx.chargeExtra(costOf("image"), "image");
         return NextResponse.json({
           text: decision.text || "Here is the visual requested:",
           hasImage: true,

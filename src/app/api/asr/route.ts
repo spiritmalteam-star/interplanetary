@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import ZAI from "@/lib/zai-client";
+import { meterRoute } from "@/lib/server/meter";
 
 /* ------------------------------------------------------------------ */
 /*  POST /api/asr — the microphone becomes words.                      */
@@ -9,7 +10,9 @@ import ZAI from "@/lib/zai-client";
 
 export const runtime = "nodejs";
 
-export async function POST(req: NextRequest) {
+export const POST = meterRoute("asr", postImpl);
+
+async function postImpl(req: NextRequest): Promise<NextResponse> {
   try {
     const body = (await req.json().catch(() => null)) as {
       audio?: unknown;

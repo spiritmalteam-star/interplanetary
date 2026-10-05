@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { meterRoute } from "@/lib/server/meter";
 
 /* ------------------------------------------------------------------ */
 /*  POST /api/parse-doc — one file becomes faithful text.              */
@@ -56,7 +57,9 @@ async function parseExcel(buffer: Buffer): Promise<string> {
   return sheets.join("\n\n").trim();
 }
 
-export async function POST(req: NextRequest) {
+export const POST = meterRoute("parse_doc", postImpl);
+
+async function postImpl(req: NextRequest): Promise<NextResponse> {
   try {
     const form = await req.formData().catch(() => null);
     const file = form?.get("file");

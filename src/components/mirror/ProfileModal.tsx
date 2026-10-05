@@ -1,6 +1,6 @@
 "use client";
 
-import { BookMarked, LibraryBig, LogIn, LogOut, Sparkles } from "lucide-react";
+import { BookMarked, CreditCard, LibraryBig, LogIn, LogOut, Sparkles } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { ModalShell } from "./ModalShell";
@@ -22,6 +22,7 @@ export function ProfileModal() {
   const me = useMirror((s) => s.me);
   const openLibrary = useMirror((s) => s.openLibrary);
   const openAuth = useMirror((s) => s.openAuth);
+  const openAccount = useMirror((s) => s.openAccount);
   const signOut = useMirror((s) => s.signOut);
 
   if (!profileOpen) return null;
@@ -84,6 +85,29 @@ export function ProfileModal() {
           </span>
           <BookMarked className="size-3.5 shrink-0 text-muted-foreground/60" aria-hidden="true" />
         </button>
+
+        {/* the account chamber — plan, credits, usage, keys, security */}
+        {me && !me.email.startsWith("anon:") && (
+          <button
+            type="button"
+            onClick={() => {
+              closeProfile();
+              openAccount();
+            }}
+            data-testid="profile-account"
+            className="focus-glow mt-2 flex w-full items-center gap-3 rounded-xl border hairline bg-[var(--glass-bg-soft)] px-4 py-3 text-left transition-all duration-300 hover:border-[var(--hairline-hover)] hover:glow-sm"
+          >
+            <CreditCard className="size-4.5 shrink-0 text-[var(--mg)]" aria-hidden="true" />
+            <span className="min-w-0 flex-1">
+              <span className="block text-[14px] font-medium text-foreground/90">
+                {t("Account & Credits")}
+              </span>
+              <span className="block text-[12px] leading-relaxed text-muted-foreground">
+                {t("Your chamber — plan, credits, usage, keys and security, all in one place.")}
+              </span>
+            </span>
+          </button>
+        )}
 
         {/* the passage row — sign in, or leave */}
         {me ? (

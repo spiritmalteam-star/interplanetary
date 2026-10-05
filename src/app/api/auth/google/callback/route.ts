@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { mergeAnonLibrary, readAnonId, setSessionCookie } from "@/lib/server/access";
+import { ensureVisitorProvisions } from "@/lib/server/workspace";
 
 /* ------------------------------------------------------------------ */
 /*  GET /api/auth/google/callback — the return of the Google passage. */
@@ -49,6 +50,10 @@ export async function GET(req: NextRequest) {
     };
     const email = profile.email?.toLowerCase();
     if (!email) return fail("profile");
+    /* a Google passage may only take over (or link to) an existing
+       passage when Google itself vouches the email is verified —
+       otherwise a fresh passage is carved instead of a hijack */
+    if (profile.verified_email === false) return fail("unverified");
 
     const user = await db.user.upsert({
       where: { email },
@@ -63,6 +68,8 @@ export async function GET(req: NextRequest) {
 
     const res = NextResponse.redirect(origin);
     setSessionCookie(res, user.id);
+    /* the passage carries its workspace, ledger and gift */
+    await ensureVisitorProvisions(user.id);
     /* everything the anonymous cookie kept comes with the visitor */
     await mergeAnonLibrary(readAnonId(req), user.id);
     res.cookies.set("mirror_g_state", "", { path: "/", maxAge: 0 });

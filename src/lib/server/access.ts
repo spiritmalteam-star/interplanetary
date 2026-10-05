@@ -40,12 +40,30 @@ export interface SessionUser {
 
 /* ---------------------------- the secret --------------------------- */
 
+/*  Security law: the signing secret must NEVER be a public constant —
+    this file lives in a public repository, and a known secret would
+    let anyone forge a session cookie. In production the secret comes
+    from AUTH_SECRET (set it in the Vercel vault). If it is missing,
+    a random secret is minted per cold start: sessions simply rest
+    (visitors sign in again) instead of the gates standing open.      */
+
+const coldStartSecret = randomBytes(32).toString("hex");
+let warnedAboutSecret = false;
+
 function secret(): string {
-  return (
-    process.env.AUTH_SECRET ||
-    process.env.NEXTAUTH_SECRET ||
-    "mirror-entity-laboratory-passage-secret"
-  );
+  const fromEnv = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;
+  if (fromEnv && fromEnv.length >= 16) return fromEnv;
+  if (process.env.NODE_ENV === "production" && !warnedAboutSecret) {
+    warnedAboutSecret = true;
+    console.warn(
+      "[access] AUTH_SECRET is not set in production — minting a cold-start " +
+        "secret. Sessions reset when instances sleep. Set AUTH_SECRET in the " +
+        "environment vault for stable passages."
+    );
+  }
+  return process.env.NODE_ENV === "production"
+    ? coldStartSecret
+    : "mirror-entity-laboratory-passage-secret";
 }
 
 /* --------------------------- passwords ----------------------------- */

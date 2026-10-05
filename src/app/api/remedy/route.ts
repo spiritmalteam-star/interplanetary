@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import ZAI from "@/lib/zai-client";
 import { REMEDY_KINDS, type RemedyKind } from "@/lib/data/remedy";
+import { meterRoute } from "@/lib/server/meter";
 
 /* ------------------------------------------------------------------ */
 /*  The Healing Apothecary — a mini atelier beside the Healing channel. */
@@ -100,7 +101,9 @@ function extractRemedy(raw: string): {
   }
 }
 
-export async function POST(req: NextRequest) {
+export const POST = meterRoute("remedy", postImpl);
+
+async function postImpl(req: NextRequest): Promise<NextResponse> {
   try {
     const body = await req.json().catch(() => null);
     const concern: unknown = body?.concern;

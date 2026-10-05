@@ -389,12 +389,15 @@ interface MirrorState {
   authOpen: boolean;
   authMode: "signin" | "register";
   profileOpen: boolean;
+  accountOpen: boolean;
   refreshMe: () => Promise<void>;
   setMe: (user: MeUser | null) => void;
   openAuth: (mode?: "signin" | "register") => void;
   closeAuth: () => void;
   openProfile: () => void;
   closeProfile: () => void;
+  openAccount: () => void;
+  closeAccount: () => void;
   signOut: () => Promise<void>;
   openLibrary: () => void;
 
@@ -857,6 +860,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
 
   me: null,
   googleConfigured: false,
+  accountOpen: false,
   authOpen: false,
   authMode: "signin" as const,
   profileOpen: false,
@@ -1864,6 +1868,9 @@ export const useMirror = create<MirrorState>()((set, get) => ({
 
   openProfile: () => set({ profileOpen: true, authOpen: false, mobileNavOpen: false }),
   closeProfile: () => set({ profileOpen: false }),
+
+  openAccount: () => set({ accountOpen: true, profileOpen: false, mobileNavOpen: false }),
+  closeAccount: () => set({ accountOpen: false }),
 
   signOut: async () => {
     try {

@@ -6,6 +6,7 @@ import {
   imageBlock,
   parseAttachments,
 } from "@/lib/server/attachments";
+import { meterRoute } from "@/lib/server/meter";
 
 const LANGUAGE_NAMES: Record<string, string> = {
   en: "English",
@@ -246,7 +247,9 @@ function historyMessages(raw: unknown): {
   return out;
 }
 
-export async function POST(req: NextRequest) {
+export const POST = meterRoute("communion", postImpl);
+
+async function postImpl(req: NextRequest): Promise<NextResponse> {
   try {
     const body = await req.json().catch(() => null);
     const requestedLanguage: string =

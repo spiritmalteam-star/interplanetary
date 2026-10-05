@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import ZAI from "@/lib/zai-client";
 import type { InventToolLine, InventToolResult } from "@/lib/mirror-types";
 import { TOOL_LINE_LABELS } from "@/lib/data/invent";
+import { meterRoute } from "@/lib/server/meter";
 
 /* ------------------------------------------------------------------ */
 /*  THE TOOL WALL — four bench presences of the Forge, each one a way  */
@@ -168,7 +169,9 @@ function normalize(tool: string, j: Record<string, string>): InventToolResult | 
 const FALLBACK_ERROR =
   "The tool is quiet — the work could not be done. Rest a breath, then try again.";
 
-export async function POST(req: NextRequest) {
+export const POST = meterRoute("invent_tool", postImpl);
+
+async function postImpl(req: NextRequest): Promise<NextResponse> {
   try {
     const body = await req.json().catch(() => null);
     const requestedLanguage: string =

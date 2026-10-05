@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import ZAI from "@/lib/zai-client";
+import { meterRoute } from "@/lib/server/meter";
 
 export const maxDuration = 60;
 
@@ -213,7 +214,9 @@ async function sunoSubmit(b: LcBody, interp: {
   throw new Error("The sound engine answered without a task. Try again in a breath.");
 }
 
-export async function POST(req: NextRequest) {
+export const POST = meterRoute("light_codes", postImpl);
+
+async function postImpl(req: NextRequest): Promise<NextResponse> {
   const b = (await req.json().catch(() => null)) as LcBody | null;
   if (!b) {
     return NextResponse.json({ error: "The chamber received nothing to interpret." }, { status: 400 });

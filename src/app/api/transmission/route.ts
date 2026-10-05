@@ -7,6 +7,7 @@ import {
   parseAttachments,
 } from "@/lib/server/attachments";
 import { resolveVisitor, saveLibrary, withAnonCookie } from "@/lib/server/access";
+import { meterRoute } from "@/lib/server/meter";
 
 const CLASSIFICATIONS = [
   "DOCUMENTED_SCIENCE",
@@ -268,7 +269,9 @@ function historyMessages(raw: unknown): { role: "user" | "assistant"; content: s
   return out;
 }
 
-export async function POST(req: NextRequest) {
+export const POST = meterRoute("transmission", postImpl);
+
+async function postImpl(req: NextRequest): Promise<NextResponse> {
   try {
     const body = await req.json().catch(() => null);
     const query: unknown = body?.query;

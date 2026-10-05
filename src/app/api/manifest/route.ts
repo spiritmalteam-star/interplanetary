@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import ZAI from "@/lib/zai-client";
+import { meterRoute } from "@/lib/server/meter";
 
 const LANGUAGE_NAMES: Record<string, string> = {
   en: "English",
@@ -46,7 +47,9 @@ function extractJson(raw: string): Record<string, unknown> | null {
   }
 }
 
-export async function POST(req: NextRequest) {
+export const POST = meterRoute("manifest", postImpl);
+
+async function postImpl(req: NextRequest): Promise<NextResponse> {
   try {
     const body = await req.json().catch(() => null);
     const intention: unknown = body?.intention;

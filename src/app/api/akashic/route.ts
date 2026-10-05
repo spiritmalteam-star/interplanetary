@@ -13,6 +13,7 @@ import {
   stripEmbeddedSeal,
   type AkashicRecord,
 } from "@/lib/server/akashic-record";
+import { meterRoute } from "@/lib/server/meter";
 
 /* ------------------------------------------------------------------ */
 /*  POST /api/akashic — the Akashic Library.                          */
@@ -192,7 +193,9 @@ OUTPUT FORMAT: Return STRICT JSON only, no markdown fences, no text outside the 
 {"title":"","era":"","record":"<one short spoken passage>","seal":""}
 "title", "era" and "seal" may be empty strings.`;
 
-export async function POST(req: NextRequest) {
+export const POST = meterRoute("akashic", postImpl);
+
+async function postImpl(req: NextRequest): Promise<NextResponse> {
   try {
     const body = await req.json().catch(() => null);
     const requestedLanguage: string =

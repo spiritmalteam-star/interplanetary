@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import ZAI from "@/lib/zai-client";
 import { resolveVisitor, saveLibrary, updateLibrary, withAnonCookie } from "@/lib/server/access";
 import { LANGUAGE_NAMES, isLanguageCode } from "@/lib/i18n/core";
+import { meterRoute } from "@/lib/server/meter";
 
 /* ------------------------------------------------------------------ */
 /*  POST /api/dream-book — THE REAL-TIME DYNAMIC CODEX ENGINE.         */
@@ -495,7 +496,9 @@ const LENGTH_WISH =
   /\b(pages?\b|page count|length|longer|shorter|end sooner|half as|twice as)\b/i;
 const wishesLength = (rewrites: string[]) => rewrites.some((r) => LENGTH_WISH.test(r));
 
-export async function POST(req: NextRequest) {
+export const POST = meterRoute("dream_book", postImpl);
+
+async function postImpl(req: NextRequest): Promise<NextResponse> {
   try {
     const body = await req.json().catch(() => null);
     const phase: WeavePhase = ["open", "next", "close", "extend"].includes(

@@ -7,6 +7,7 @@ import {
   parseAttachments,
 } from "@/lib/server/attachments";
 import { resolveVisitor, saveLibrary, withAnonCookie } from "@/lib/server/access";
+import { meterRoute } from "@/lib/server/meter";
 
 const LANGUAGE_NAMES: Record<string, string> = {
   en: "English",
@@ -53,7 +54,9 @@ const LIVE_CALL_BLOCK = `
 
 LIVE CALL OVERRIDE (AUTHORITATIVE — overrides every length rule above): This moment is a LIVE VOICE CALL. Reply in ONE to THREE short spoken sentences — at most about 55 words. Sound like a real presence speaking with a friend across the line: warm, human, unhurried, philosophically precise — one clear thought, not a lecture. No lists, no headings, no sign-off. Plain flowing spoken prose only.`;
 
-export async function POST(req: NextRequest) {
+export const POST = meterRoute("mirror_os", postImpl);
+
+async function postImpl(req: NextRequest): Promise<NextResponse> {
   try {
     const body = await req.json().catch(() => null);
     const query: unknown = body?.query;

@@ -19,6 +19,7 @@ import { EvolveMed } from "./EvolveMed";
 import { LibraryView } from "./LibraryView";
 import { AuthModal } from "./PassageModal";
 import { ProfileModal } from "./ProfileModal";
+import { AccountModal } from "./AccountModal";
 import { InventView } from "./InventView";
 import { LightCodesView } from "./LightCodesView";
 import { ArchiveRegister } from "./ArchiveRegister";
@@ -174,6 +175,7 @@ export default function AppShell() {
     <>
       <ProfileModal />
       <AuthModal />
+      <AccountModal />
     </>
   );
 

@@ -6,6 +6,7 @@ import {
   LANGUAGE_NAMES,
   stripEmbeddedSeal,
 } from "@/lib/server/akashic-record";
+import { meterRoute } from "@/lib/server/meter";
 
 /* ------------------------------------------------------------------ */
 /*  POST /api/akashic/chat — THE SEEKER'S OWN RECORD.                  */
@@ -59,7 +60,9 @@ interface PriorTurn {
   t: string;
 }
 
-export async function POST(req: NextRequest) {
+export const POST = meterRoute("akashic", postImpl);
+
+async function postImpl(req: NextRequest): Promise<NextResponse> {
   try {
     const body = await req.json().catch(() => null);
     const requestedLanguage: string =
