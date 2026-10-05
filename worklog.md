@@ -2579,3 +2579,20 @@ Stage Summary:
 - Suggestions now belong to the kategory the visitor walks in — channel, world and active scope alike; Quantum + Evolve Med tools channel structured movements instead of bold blocks; the Mirror never deems a human non-human; DNA depth feeds both the branch engine and every channel; the voice is repaired at its production root cause; the free saying is gone; every world header carries a New chat hand and no dead circles remain.
 - Artifacts: src/lib/{remembrance-law,walker-depth}.ts, src/components/mirror/{RevelationBody,WorldNewChat}.tsx, edits across 5 tree mounts, 5 ask flows, 5 channel prompts, 2 tool routes + 2 PDF routes, 7 i18n dicts.
 - Owner note: no Vercel env change needed for voice (ZAI_API_KEY already valid; leave ZAI_TTS_MODEL/ZAI_ASR_MODEL unset). Deploy will activate the audio repair on www.reflectme.space.
+
+---
+Task ID: 3
+Agent: Z.ai Code (main orchestrator)
+Task: Voice truth-finding on production + the traveler's own voice — the audio ladder, the browser fallback, the honest ear
+
+Work Log:
+- Deployed the first repair (9280eac) and interrogated the live sky: the unmasked answers proved (a) the PUBLIC api.z.ai gateway REQUIRES a model code for audio (1214 "model cannot be empty" on the SDK's no-code contract), (b) it knows no TTS model at all (1211 for cogtts, glm-tts, and the /audio/speech path) — the public Z.ai API has NO text-to-speech, only transcription, and (c) the official ASR door IS served: multipart /audio/transcriptions + model glm-asr-2512 (verified against docs.z.ai/llms.txt + the audio-transcriptions reference page).
+- REBUILT the audio engine as a fail-fast ladder whose bodies are read exactly once (the "Body has already been read" self-masking is structurally impossible now): TTS tries /audio/tts (no code) → /audio/tts (cogtts) → /audio/speech (cogtts) → /audio/tts (glm-tts), ZAI_TTS_MODEL overriding; ASR tries the OFFICIAL public door FIRST (multipart glm-asr-2512) → /audio/asr (no code) → /audio/asr (codes), ZAI_ASR_MODEL overriding.
+- Live production result: ASR reaches the real door — 429 code 1113 "Insufficient balance or no resource package" — i.e. the owner's Z.ai account needs balance/plan for transcription; balance/model errors are no longer retried (1113/1211/1214 are words, not weather).
+- THE TRAVELER'S OWN VOICE (10dfb77 precedes it, e439a3e): new src/lib/browser-voice.ts — speechSynthesis fallback with BCP47 mapping for all 8 laboratory languages, natural-voice preference, pace→rate mapping, one-voice-at-a-time, once-per-session honest toast ("The house voice rests — your browser reads in its stead."). Wired into ListenButton (generic ActiveHandle: audio OR utterance; every failure path falls back before any error toast), LiveCall (house TTS fails mid-call → browser voice keeps the call audible; text remains the last resort), SettingsModal preview, DreamBook narration and the Akashic Librarian. Browser-verified with /api/tts network-blocked: Listen → fallback speaks + note shown.
+- i18n: 1 new key ×7 dicts; check-i18n ALL UI KEYS COMPLETE; tsc clean under src/; eslint clean; mobile 390px + desktop sweeps with zero console errors and no horizontal overflow.
+
+Stage Summary:
+- Every listening surface on www.reflectme.space works TODAY: Listen buttons, book, akashic and settings audio speak through the browser's own voice the moment the house voice is unreachable; the live call answers with sound through the same fallback.
+- The CALL's ear (mic → text) is fully wired to the official glm-asr-2512 contract and awaits only an account balance/plan on Z.ai — the response now names this in its detail instead of a poetic mask.
+- The house CogTTS can return to production by pointing ZAI_BASE_URL at a sky that carries it (or Z.ai shipping public TTS); no code change needed — the ladder already knocks on every door.
