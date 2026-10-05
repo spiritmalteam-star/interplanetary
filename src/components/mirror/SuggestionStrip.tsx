@@ -7,6 +7,11 @@ import {
   chatSuggestionPools,
   type PoolId,
 } from "@/lib/data/suggestions-pools";
+import {
+  contextVocabulary,
+  scoreSuggestion,
+} from "@/lib/suggestion-resonance";
+import { SuggestionTree } from "./SuggestionTree";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 
@@ -28,48 +33,9 @@ const WINDOW = 6;
 /** The window advances itself every five minutes. */
 const ROTATE_MS = 5 * 60 * 1000;
 
-/* the small words that carry no meaning of their own */
-const STOPWORDS = new Set(
-  ("a an and are as at be but by can do does for from has have how i " +
-    "in is it its me my not of on or our so that the their them then " +
-    "there these they this to us was we what when where which who why " +
-    "will with would you your about into over really truly just very")
-    .split(" ")
-);
-
-/** Lowercase content-words of a phrase — the tokens that can resonate. */
-function tokenize(text: string): string[] {
-  return text
-    .toLowerCase()
-    .replace(/[^a-zà-ž\s'-]/gi, " ")
-    .split(/[\s'-]+/)
-    .filter((w) => w.length > 2 && !STOPWORDS.has(w));
-}
-
-/** The context's resonant vocabulary — word → weight (rarity bonus). */
-function contextVocabulary(context: string): Map<string, number> {
-  const weights = new Map<string, number>();
-  for (const w of tokenize(context)) {
-    const next = (weights.get(w) ?? 0) + 1;
-    weights.set(w, next);
-  }
-  /* repeated words are the conversation's center of gravity — but a
-     word repeated too often stops being signal, so the weight cools */
-  for (const [w, n] of weights) {
-    weights.set(w, 1 + Math.min(3, Math.log2(n + 1)) + Math.min(1.5, w.length / 12));
-  }
-  return weights;
-}
-
-/** One suggestion's resonance with the conversation. */
-function scoreSuggestion(s: string, vocab: Map<string, number>): number {
-  let score = 0;
-  for (const w of tokenize(s)) {
-    const weight = vocab.get(w);
-    if (weight) score += weight;
-  }
-  return score;
-}
+/* the resonance engine itself — the vocabulary of a conversation and
+   the scoring of a whisper against it — lives in
+   src/lib/suggestion-resonance.ts, shared with the living tree       */
 
 /**
  * The ranked pool: suggestions closest to the conversation first.
@@ -303,6 +269,40 @@ export function SuggestionStrip() {
       }}
       testIdPrefix="suggestion"
       className={loading ? "pointer-events-none opacity-70" : undefined}
+    />
+  );
+}
+
+/**
+ * The main conversation's tree — the living suggestion tree fed by the
+ * channel's own thread. Every branch of the laboratory rides it
+ * (Interplanetary, Healing, Quantum, Evolve Med, Invent, Manifesting);
+ * the window rests on the active mode's branch and drifts to whichever
+ * branch the conversation's last topic brings closest.
+ */
+export function MainSuggestionTree() {
+  const activeMode = useMirror((s) => s.activeMode);
+  const status = useMirror((s) => s.sessions[s.activeMode].status);
+  const messages = useMirror((s) => s.sessions[s.activeMode].messages);
+  const askMirror = useMirror((s) => s.askMirror);
+
+  const contextText = useMemo(() => {
+    const recent = messages.slice(-6);
+    return recent.map((m) => `${m.query}\n${m.text}`).join("\n");
+  }, [messages]);
+
+  const loading = status === "loading";
+
+  return (
+    <SuggestionTree
+      focusBranch={activeMode}
+      contextText={contextText}
+      onPick={(q) => {
+        if (!loading) void askMirror(q);
+      }}
+      disabled={loading}
+      testIdPrefix="suggestion"
+      className={loading ? "opacity-70" : undefined}
     />
   );
 }

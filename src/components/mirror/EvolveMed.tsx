@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
-import { ContextSuggestionStrip } from "./SuggestionStrip";
+import { SuggestionTree } from "./SuggestionTree";
 import { emGatheringPhrases, emVectors } from "@/lib/data/evolvemed";
 import { emNoteSets } from "@/lib/data/scope-notes";
 import { cn } from "@/lib/utils";
@@ -716,18 +716,19 @@ function EvolveMedChat() {
         </div>
       )}
 
-      {/* the living whispers — six invitations at a time, closest to
-          the unfolding conversation first, fresh every five minutes */}
+      {/* the living tree — every branch of the laboratory on one canvas,
+          resting on the Evolve Med branch, drifting to what is spoken */}
       <div className="shrink-0 px-3 pb-1 sm:px-5">
-        <ContextSuggestionStrip
-          poolId="evolvemed"
+        <SuggestionTree
+          focusBranch="evolvemed"
           contextText={emMessages
             .slice(-6)
-            .map((m) => `${m.query}\n${m.text}`)
+            .map((m) => m.text)
             .join("\n")}
           onPick={(q) => {
             if (emStatus !== "loading") void askEM(q);
           }}
+          disabled={emStatus === "loading"}
           testIdPrefix="em-suggestion"
         />
       </div>

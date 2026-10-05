@@ -34,6 +34,7 @@ export const COSTS: Record<string, number> = {
   parse_doc: cost("parse_doc", 5),
   pdf: cost("pdf", 10),
   v1_chat: cost("v1_chat", 10),
+  suggestion_bud: cost("suggestion_bud", 2),
 };
 
 export function costOf(operation: string): number {

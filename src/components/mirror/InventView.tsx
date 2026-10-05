@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { useMirror, type ChatMessage } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
-import { ContextSuggestionStrip } from "./SuggestionStrip";
+import { SuggestionTree } from "./SuggestionTree";
 import {
   forgeChatPhases,
   forgeDomains,
@@ -1174,11 +1174,11 @@ function BenchChat() {
         )}
       </div>
 
-      {/* suggestion sparks — a living strip: six at a time, closest to
-          the bench conversation first, fresh every five minutes */}
+      {/* the living tree — every branch of the laboratory on one canvas,
+          resting on the Invent branch, drifting to what is spoken */}
       <div className="shrink-0 px-3 pb-1 pt-2 sm:px-4">
-        <ContextSuggestionStrip
-          poolId="invent"
+        <SuggestionTree
+          focusBranch="invent"
           contextText={messages
             .slice(-6)
             .map((m) => `${m.query}\n${m.text}`)
@@ -1186,6 +1186,7 @@ function BenchChat() {
           onPick={(s) => {
             if (!loading) send(s);
           }}
+          disabled={loading}
           testIdPrefix="forge-suggestion"
         />
       </div>

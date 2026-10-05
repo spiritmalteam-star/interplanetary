@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
-import { ContextSuggestionStrip } from "./SuggestionStrip";
+import { SuggestionTree } from "./SuggestionTree";
 import { pxGatheringPhrases, pxScopes } from "@/lib/data/particlex";
 import { pxNoteSets } from "@/lib/data/scope-notes";
 import { cn } from "@/lib/utils";
@@ -566,11 +566,11 @@ function ParticleXChat() {
         </div>
       )}
 
-      {/* the living whispers — six invitations at a time, closest to
-          the unfolding conversation first, fresh every five minutes */}
+      {/* the living tree — every branch of the laboratory on one canvas,
+          resting on the Quantum branch, drifting to what is spoken */}
       <div className="shrink-0 px-3 pb-1 sm:px-5">
-        <ContextSuggestionStrip
-          poolId="particlex"
+        <SuggestionTree
+          focusBranch="quantum"
           contextText={pxMessages
             .slice(-6)
             .map((m) => m.text)
@@ -578,6 +578,7 @@ function ParticleXChat() {
           onPick={(q) => {
             if (pxStatus !== "loading") void askPX(q);
           }}
+          disabled={pxStatus === "loading"}
           testIdPrefix="px-suggestion"
         />
       </div>

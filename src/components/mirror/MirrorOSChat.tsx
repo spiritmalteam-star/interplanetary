@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Feather, Orbit, RefreshCw } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
-import { ContextSuggestionStrip } from "./SuggestionStrip";
+import { SuggestionTree } from "./SuggestionTree";
 import { osOpeners } from "@/lib/data/mirroros";
 import { detectVisualIntent } from "@/lib/visualization";
 import {
@@ -554,18 +554,19 @@ export function MirrorOSChat() {
         )}
       </div>
 
-      {/* the living whispers — six invitations at a time, closest to
-          the unfolding conversation first, fresh every five minutes */}
+      {/* the living tree — every branch of the laboratory on one canvas,
+          resting on the Manifesting branch, drifting to what is spoken */}
       <div className="shrink-0 px-3 pb-1 sm:px-5">
-        <ContextSuggestionStrip
-          poolId="mirroros"
+        <SuggestionTree
+          focusBranch="manifesting"
           contextText={osMessages
             .slice(-6)
-            .map((m) => `${m.query}\n${m.text}`)
+            .map((m) => m.text)
             .join("\n")}
           onPick={(q) => {
             if (osStatus !== "loading") void askOS(q);
           }}
+          disabled={osStatus === "loading"}
           testIdPrefix="os-suggestion"
         />
       </div>

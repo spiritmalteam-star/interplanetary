@@ -9,7 +9,7 @@ import { StarField } from "./StarField";
 import Sidebar from "./Sidebar";
 import { MobileSidebar } from "./MobileSidebar";
 import { ScopeSelector } from "./ScopeSelector";
-import { SuggestionStrip } from "./SuggestionStrip";
+import { MainSuggestionTree } from "./SuggestionStrip";
 import { QueryComposer } from "./QueryComposer";
 import { StillCompanion } from "./StillCompanion";
 import { TransmissionView } from "./TransmissionView";
@@ -376,7 +376,7 @@ export default function AppShell() {
             inside the channel when asked — the generative doors. */}
         {inConversation && (
           <div className="shrink-0 px-3 pb-0.5 sm:px-6">
-            <SuggestionStrip />
+            <MainSuggestionTree />
           </div>
         )}
         <QueryComposer />
