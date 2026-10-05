@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomBytes } from "crypto";
+import { publicOrigin } from "./callback/route";
 
 /* ------------------------------------------------------------------ */
 /*  GET /api/auth/google — the Google passage.                         */
@@ -23,7 +24,7 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  const origin = req.nextUrl.origin;
+  const origin = publicOrigin(req.nextUrl.origin);
   const state = randomBytes(16).toString("hex");
   const params = new URLSearchParams({
     client_id: clientId,

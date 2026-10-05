@@ -31,6 +31,7 @@ model User {
   passwordHash    String? // null → the visitor arrived through Google, or anonymously
   provider        String   @default("email") // email | google | anon
   tier            String   @default("crystalline") // kept for gentle history; every world is free
+  settings        Json? // the visitor's own tuning: language, voice, pace, theme, fields of expansion
   emailVerifiedAt DateTime?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt

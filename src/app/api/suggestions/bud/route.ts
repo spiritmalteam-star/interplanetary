@@ -149,6 +149,7 @@ async function postImpl(req: NextRequest, _ctx: MeterContext) {
     branch?: unknown;
     context?: unknown;
     seen?: unknown;
+    seeds?: unknown;
   } | null;
 
   const branch =
@@ -159,6 +160,15 @@ async function postImpl(req: NextRequest, _ctx: MeterContext) {
     typeof body?.context === "string" ? body.context.slice(0, 4000) : "";
   const seen = Array.isArray(body?.seen)
     ? body.seen.filter((s): s is string => typeof s === "string").slice(0, 30)
+    : [];
+  /* the visitor's fields of expansion — coherent phrases become seeds
+     for new branches in all fields (the LLM itself weighs coherence) */
+  const seeds = Array.isArray(body?.seeds)
+    ? body.seeds
+        .filter((s): s is string => typeof s === "string")
+        .map((s) => s.trim().slice(0, 160))
+        .filter(Boolean)
+        .slice(0, 6)
     : [];
 
   if (!context.trim()) {
@@ -175,9 +185,18 @@ async function postImpl(req: NextRequest, _ctx: MeterContext) {
         { role: "system", content: SYSTEM_PROMPT },
         {
           role: "user",
-          content: `BRANCH: ${branch} — speak as ${BRANCH_VOICES[branch]}.\n\nALREADY OFFERED (never repeat or paraphrase):\n${
-            seen.length ? seen.map((s) => `- ${s}`).join("\n") : "(nothing yet)"
-          }\n\nTHE CONVERSATION'S LAST BREATHS:\n${context}`,
+          content: `BRANCH: ${branch} — speak as ${BRANCH_VOICES[branch]}.
+
+ALREADY OFFERED (never repeat or paraphrase):
+${
+  seen.length ? seen.map((s) => `- ${s}`).join("\n") : "(nothing yet)"
+}${
+  seeds.length
+    ? `\n\nTHE SEEKER'S FIELDS OF EXPANSION (from their profile): the visitor wishes to be more informed and expansive in — ${seeds
+        .map((s) => `"${s}"`)
+        .join(", ")}. For each seed that is COHERENT and RELEVANT — a real field of inquiry, sensibly phrased — grow at most ONE branch that opens that field wider THROUGH THIS CONVERSATION'S lens (any movement may carry it). A seed that is incoherent, irrelevant or noise grows NOTHING — leave it out entirely.`
+    : ""
+}\n\nTHE CONVERSATION'S LAST BREATHS:\n${context}`,
         },
       ],
       thinking: { type: "disabled" },

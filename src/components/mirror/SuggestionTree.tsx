@@ -384,13 +384,40 @@ export function SuggestionTree({
     return focusBranch ?? ranked[0]?.id ?? "interplanetary";
   }, [ranked, focusBranch]);
 
-  /* bloom offsets — which whispers each scope shows */
+  /* bloom offsets — which whispers each scope shows.
+     THE VARIETY LAW: the FIRST rotation of every scope is drawn fresh
+     per visit (a stable random offset per scope), so no visitor — and
+     no visit — begins at the same fragment of the Absolute; the walk
+     then keeps turning the fields, and the per-identity memory
+     withholds everything already offered. */
   const [offsets, setOffsets] = useState<Map<string, number>>(new Map());
   const offsetsRef = useRef(offsets);
   const setOffsetsBoth = useCallback((next: Map<string, number>) => {
     offsetsRef.current = next;
     setOffsets(next);
   }, []);
+
+  /* THE VARIETY LAW — dealt AFTER the first paint (hydration stays
+     deterministic): one gentle re-deal per visit gives every scope a
+     fresh starting fragment, so no visitor — and no visit — begins at
+     the same whispers; the walk then keeps turning the fields and the
+     per-identity memory withholds everything already offered. */
+  const dealtRef = useRef(false);
+  useEffect(() => {
+    if (dealtRef.current) return;
+    dealtRef.current = true;
+    const next = new Map(offsetsRef.current);
+    let changed = false;
+    for (const b of ranked) {
+      for (const s of b.scopes) {
+        if (!next.has(s.key) && s.leaves.length > 1) {
+          next.set(s.key, Math.floor(Math.random() * s.leaves.length));
+          changed = true;
+        }
+      }
+    }
+    if (changed) setOffsetsBoth(next);
+  }, [ranked, setOffsetsBoth]);
 
   /* the layout is computed ONLY when the graph's structure changes —
      never during a pan. Panning moves the camera; the graph stands. */

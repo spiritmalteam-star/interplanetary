@@ -18,10 +18,22 @@ export async function GET(req: NextRequest) {
 
     const entries = await db.libraryEntry.count({ where: { userId: user.id } });
 
+    /* the visitor's own tuning comes home with them — language, voice,
+       pace, theme and their fields of expansion, on every device */
+    let settings: unknown = null;
+    if (!user.email.startsWith("anon:")) {
+      const row = await db.user.findUnique({
+        where: { id: user.id },
+        select: { settings: true },
+      });
+      settings = row?.settings ?? null;
+    }
+
     return NextResponse.json({
       user,
       googleConfigured,
       libraryCount: entries,
+      settings,
     });
   } catch (err) {
     console.error("[auth/me] failed:", err);

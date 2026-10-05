@@ -473,6 +473,22 @@ interface MirrorState {
   /** Restore persisted preferences (called once after mount). */
   bootPreferences: () => void;
 
+  /* the visitor's own tuning — settings belong to the PASSAGE, not the
+     device: every sign-in re-tunes the laboratory to its keeper */
+  /** The fields of expansion — coherent phrases become seeds for new
+      branches in all fields of the living tree. */
+  expansionSeeds: string[];
+  setExpansionSeeds: (seeds: string[]) => void;
+  /** Apply a signed-in visitor's tuning (from /api/auth/me). */
+  applyRemoteSettings: (settings: unknown) => void;
+  /** Push the current tuning to the passage (debounced, signed-in only). */
+  pushSettings: () => Promise<void>;
+
+  /* the full-screen profile room */
+  profilePageOpen: boolean;
+  openProfilePage: () => void;
+  closeProfilePage: () => void;
+
   setMode: (mode: Mode) => void;
   setSidebarTab: (tab: SidebarTab) => void;
   setSearch: (value: string) => void;
@@ -887,6 +903,8 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   authOpen: false,
   authMode: "signin" as const,
   profileOpen: false,
+  profilePageOpen: false,
+  expansionSeeds: [],
   dreamResume: null,
   /* the chat's paused volume — the browser's own keeping, read once */
   chatBook: loadChatBook(),
@@ -1914,11 +1932,20 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       const data = (await res.json().catch(() => null)) as {
         user?: MeUser | null;
         googleConfigured?: boolean;
+        settings?: unknown;
       } | null;
       set({
         me: data?.user ?? null,
         googleConfigured: Boolean(data?.googleConfigured),
       });
+      /* the passage's own tuning comes home — language, voice, pace,
+         the fields of expansion — on every device, every sign-in */
+      if (data?.settings) get().applyRemoteSettings(data.settings);
+      /* and when the vault has not met this visitor's tuning yet (the
+         first sign-in), what they shaped as a guest travels up to it */
+      if (data?.user && !data.user.email.startsWith("anon:") && !data.settings) {
+        void get().pushSettings();
+      }
     } catch {
       /* the passage keeps its silence — the laboratory stays open */
     }
@@ -1931,6 +1958,11 @@ export const useMirror = create<MirrorState>()((set, get) => ({
 
   openProfile: () => set({ profileOpen: true, authOpen: false, mobileNavOpen: false }),
   closeProfile: () => set({ profileOpen: false }),
+
+  /* the full-screen profile room */
+  openProfilePage: () =>
+    set({ profilePageOpen: true, profileOpen: false, authOpen: false, mobileNavOpen: false }),
+  closeProfilePage: () => set({ profilePageOpen: false }),
 
   openAccount: () => set({ accountOpen: true, profileOpen: false, mobileNavOpen: false }),
   closeAccount: () => set({ accountOpen: false }),
@@ -2518,6 +2550,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     } catch {
       /* storage unavailable */
     }
+    void get().pushSettings();
   },
 
   setVoice: (id) => {
@@ -2527,6 +2560,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     } catch {
       /* storage unavailable */
     }
+    void get().pushSettings();
   },
 
   setPace: (value) => {
@@ -2537,6 +2571,88 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     } catch {
       /* storage unavailable */
     }
+    void get().pushSettings();
+  },
+
+  setExpansionSeeds: (seeds) => {
+    const clean = Array.from(
+      new Set(
+        seeds
+          .map((s) => s.trim().replace(/\s+/g, " ").slice(0, 160))
+          .filter((s) => s.length >= 2)
+      )
+    ).slice(0, 6);
+    set({ expansionSeeds: clean });
+    try {
+      localStorage.setItem("mirror-entity-seeds", JSON.stringify(clean));
+    } catch {
+      /* storage unavailable */
+    }
+    void get().pushSettings();
+  },
+
+  applyRemoteSettings: (settings) => {
+    if (!settings || typeof settings !== "object") return;
+    const s = settings as {
+      language?: string;
+      voice?: string;
+      pace?: number;
+      seeds?: string[];
+    };
+    if (s.language && isLanguageCode(s.language)) {
+      set({ language: s.language });
+      try {
+        localStorage.setItem("mirror-entity-language", s.language);
+      } catch {
+        /* storage unavailable */
+      }
+    }
+    if (s.voice && isVoiceId(s.voice)) {
+      set({ voice: s.voice });
+      try {
+        localStorage.setItem("mirror-entity-voice", s.voice);
+      } catch {
+        /* storage unavailable */
+      }
+    }
+    if (typeof s.pace === "number" && Number.isFinite(s.pace)) {
+      const clamped = Math.min(2, Math.max(0.5, s.pace));
+      set({ pace: clamped });
+      try {
+        localStorage.setItem("mirror-entity-pace", String(clamped));
+      } catch {
+        /* storage unavailable */
+      }
+    }
+    if (Array.isArray(s.seeds)) {
+      const clean = s.seeds
+        .filter((x): x is string => typeof x === "string")
+        .map((x) => x.trim().slice(0, 160))
+        .filter((x) => x.length >= 2)
+        .slice(0, 6);
+      set({ expansionSeeds: clean });
+      try {
+        localStorage.setItem("mirror-entity-seeds", JSON.stringify(clean));
+      } catch {
+        /* storage unavailable */
+      }
+    }
+  },
+
+  pushSettings: async () => {
+    const { me, language, voice, pace, expansionSeeds } = get();
+    if (!me || me.email.startsWith("anon:")) return;
+    try {
+      await fetch("/api/account/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          settings: { language, voice, pace, seeds: expansionSeeds },
+        }),
+      });
+    } catch {
+      /* the vault keeps its silence — the tuning stays local for now */
+    }
   },
 
   bootPreferences: () => {
@@ -2545,12 +2661,19 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       const lang = localStorage.getItem("mirror-entity-language");
       const voice = localStorage.getItem("mirror-entity-voice");
       const pace = Number(localStorage.getItem("mirror-entity-pace"));
+      const rawSeeds = localStorage.getItem("mirror-entity-seeds");
+      const seeds = rawSeeds
+        ? (JSON.parse(rawSeeds) as unknown[]).filter(
+            (s): s is string => typeof s === "string" && s.trim().length >= 2
+          )
+        : [];
       set({
         ...(isLanguageCode(lang) ? { language: lang } : {}),
         ...(isVoiceId(voice) ? { voice } : {}),
         ...(Number.isFinite(pace) && pace >= 0.5 && pace <= 2
           ? { pace }
           : {}),
+        ...(seeds.length > 0 ? { expansionSeeds: seeds.slice(0, 6) } : {}),
       });
     } catch {
       /* storage unavailable */

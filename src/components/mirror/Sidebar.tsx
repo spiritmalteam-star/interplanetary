@@ -520,7 +520,7 @@ export function SidebarContent() {
   const openParticleX = useMirror((s) => s.openParticleX);
   const openEvolveMed = useMirror((s) => s.openEvolveMed);
   const me = useMirror((s) => s.me);
-  const openProfile = useMirror((s) => s.openProfile);
+  const openProfilePage = useMirror((s) => s.openProfilePage);
   const openAkashic = useMirror((s) => s.openAkashic);
   const openInvent = useMirror((s) => s.openInvent);
   const openDreamBook = useMirror((s) => s.openDreamBook);
@@ -738,7 +738,7 @@ export function SidebarContent() {
         <button
           type="button"
           onClick={() => {
-            openProfile();
+            openProfilePage();
             setMobileNavOpen(false);
           }}
           data-testid={me ? "passage-account" : "passage-guest"}

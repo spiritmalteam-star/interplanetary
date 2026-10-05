@@ -20,6 +20,7 @@ import { EvolveMed } from "./EvolveMed";
 import { LibraryView } from "./LibraryView";
 import { AuthModal } from "./PassageModal";
 import { ProfileModal } from "./ProfileModal";
+import { ProfilePage } from "./ProfilePage";
 import { AccountModal } from "./AccountModal";
 import { InventView } from "./InventView";
 import { LightCodesView } from "./LightCodesView";
@@ -182,6 +183,7 @@ export default function AppShell() {
   const passageModals = (
     <>
       <ProfileModal />
+      <ProfilePage />
       <AuthModal />
       <AccountModal />
     </>

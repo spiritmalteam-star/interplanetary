@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
-import { motion } from "framer-motion";
-import { ListTree } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { ChevronDown, ListTree } from "lucide-react";
 import { chatSuggestionPools, type PoolId } from "@/lib/data/suggestions-pools";
 import { contextVocabulary, scoreSuggestion } from "@/lib/suggestion-resonance";
 import type { BranchId } from "@/lib/data/suggestion-tree";
@@ -109,12 +109,22 @@ export function ReplyBranches({
   const t = useT();
   const askMirror = useMirror((s) => s.askMirror);
   const attachBranches = useMirror((s) => s.attachBranches);
+  /* the visitor's fields of expansion — coherent ones seed new branches */
+  const seeds = useMirror((s) => s.expansionSeeds);
+  /* the dropdown — the branches rest folded until the hand asks for them,
+     so they never lay themselves out directly beneath the transmission */
+  const [open, setOpen] = useState(false);
 
   /* the instant stand-in — the pool's closest whispers to THIS reply
-     alone, so the foot is never empty while the engine thinks */
+     alone, so the foot is never empty while the engine thinks.
+     THE VARIETY LAW: the pool is rotated by a fresh offset every mount,
+     so equal-scoring whispers never repeat in the same order — different
+     fragments of the Absolute surface on different visits. */
   const fallback = useMemo(() => {
     const pool = poolFor(kind);
     if (!message.text || pool.length === 0) return [] as string[];
+    const rotateBy = Math.floor(Math.random() * pool.length);
+    const rotated = [...pool.slice(rotateBy), ...pool.slice(0, rotateBy)];
     /* the reply's own breath is the context — closer than the whole
        thread ever is: this is what makes these branches more
        connected to the context than the tree's standing whispers */
@@ -122,7 +132,7 @@ export function ReplyBranches({
       `${contextQuery ?? message.query}\n${message.text}`.slice(-1800)
     );
     const seen = new Set(loadSeen().map((s) => s.toLowerCase()));
-    return pool
+    return rotated
       .map((s, i) => ({ s, i, score: scoreSuggestion(s, vocab) }))
       .filter((x) => x.score > 0 && !seen.has(x.s.toLowerCase()))
       .sort((a, b) => b.score - a.score || a.i - b.i)
@@ -149,6 +159,9 @@ export function ReplyBranches({
                resonance the laboratory can hear */
             context: `${contextQuery ?? message.query}\n${message.text}`.slice(-2400),
             seen: loadSeen().slice(0, 24),
+            /* the visitor's own fields of expansion ride along —
+               coherent ones grow branches of their own */
+            seeds,
           }),
         });
         const data = await res.json().catch(() => null);
@@ -164,13 +177,13 @@ export function ReplyBranches({
       }
     }, 650);
     return () => window.clearTimeout(id);
-  }, [active, message.id, message.text, message.query, message.branches, kind, contextQuery, attachBranches]);
+  }, [active, message.id, message.text, message.query, message.branches, kind, contextQuery, seeds, attachBranches]);
 
   const branches = message.branches;
   /* nothing to stand on yet and nothing grown — the foot rests empty */
   const showFallback = !branches || branches.length === 0;
-  if (!branches && fallback.length === 0) return null;
-  if (branches && branches.length === 0 && fallback.length === 0) return null;
+  const chipCount = (branches?.length ?? 0) + (showFallback ? fallback.length : 0);
+  if (chipCount === 0) return null;
 
   const pick = (s: string) => {
     if (disabled) return;
@@ -186,30 +199,53 @@ export function ReplyBranches({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.55, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
-      className="mt-5 border-t pt-4 first-letter:content-['']"
+      className="mt-5 border-t pt-4"
       style={{
         borderColor:
           "color-mix(in srgb, var(--scope-a) 22%, transparent)",
       }}
       data-testid="reply-branches"
     >
-      <div className="mb-2.5 flex items-center justify-between gap-2">
-        <span className="mono-label text-[9px] uppercase tracking-[0.22em] text-muted-foreground/60">
-          {t("Branches of this exchange")}
+      {/* THE DROPDOWN — one quiet door. The branches never lay themselves
+          out directly; they drop down only when the door is pressed. */}
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        data-testid="reply-branches-toggle"
+        className="focus-glow flex w-full items-center justify-between gap-2 rounded-full border border-[color-mix(in_srgb,var(--gd)_26%,transparent)] bg-[color-mix(in_srgb,var(--gd)_4%,transparent)] px-3.5 py-1.5 text-left transition-all duration-300 hover:border-[color-mix(in_srgb,var(--gd)_44%,transparent)]"
+      >
+        <span className="flex min-w-0 items-center gap-2">
+          <ListTree className="size-3.5 shrink-0 text-[var(--gd)]" aria-hidden="true" />
+          <span className="mono-label truncate text-[9px] uppercase tracking-[0.22em] text-muted-foreground/70">
+            {t("Branches of this exchange")}
+          </span>
         </span>
-        <button
-          type="button"
-          onClick={() => driftTreeTo(branchFor(kind))}
-          aria-label={t("Find them on the tree")}
-          title={t("Find them on the tree")}
-          data-testid="reply-branches-hub"
-          className="focus-glow flex size-6 shrink-0 items-center justify-center rounded-full text-muted-foreground/60 transition-all duration-300 hover:bg-[color-mix(in_srgb,var(--gd)_10%,transparent)] hover:text-foreground"
-        >
-          <ListTree className="size-3.5" aria-hidden="true" />
-        </button>
-      </div>
+        <span className="flex shrink-0 items-center gap-2">
+          <span
+            className="mono-label rounded-full px-1.5 text-[8px] uppercase tracking-[0.14em] leading-[1.6] text-[var(--gd)]"
+            style={{ border: "1px solid color-mix(in srgb, var(--gd) 30%, transparent)" }}
+          >
+            {chipCount}
+          </span>
+          <ChevronDown
+            className={`size-3.5 text-muted-foreground/70 transition-transform duration-300 ${open ? "rotate-180" : ""}`}
+            aria-hidden="true"
+          />
+        </span>
+      </button>
 
-      <div className="flex flex-wrap gap-1.5">
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.34, ease: [0.22, 1, 0.36, 1] }}
+            className="overflow-hidden"
+            data-testid="reply-branches-panel"
+          >
+            <div className="flex flex-wrap gap-1.5 pt-2.5">
         {(branches ?? []).map((b, i) =>
           b.type === "pause" ? (
             /* the seventh movement — rest here, integrate; not a click */
@@ -267,7 +303,25 @@ export function ReplyBranches({
               {t(s)}
             </button>
           ))}
-      </div>
+            </div>
+
+            {/* the way to the living tree — one quiet step inside the
+                dropdown, never parked where the chips used to wait */}
+            <div className="flex justify-end pt-2">
+              <button
+                type="button"
+                onClick={() => driftTreeTo(branchFor(kind))}
+                aria-label={t("Find them on the tree")}
+                data-testid="reply-branches-hub"
+                className="mono-label flex items-center gap-1.5 rounded-full px-2 py-1 text-[8.5px] uppercase tracking-[0.18em] text-muted-foreground/60 transition-colors duration-300 hover:text-foreground"
+              >
+                <ListTree className="size-3" aria-hidden="true" />
+                {t("Find them on the tree")}
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

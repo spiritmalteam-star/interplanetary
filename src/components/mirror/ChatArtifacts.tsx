@@ -27,11 +27,13 @@ import {
   LoaderCircle,
   Maximize2,
   Minus,
+  Moon,
   NotebookText,
   Plus,
   RotateCcw,
   ScrollText,
   Sparkles,
+  Sun,
   X,
 } from "lucide-react";
 import {
@@ -92,7 +94,79 @@ function mulberry32(seed: number) {
   };
 }
 
-export function InkSigil({ text, size = 44 }: { text: string; size?: number }) {
+export /* ---------- the reader's own light — paper and night, at will -------
+   The reading surfaces carry their OWN ink, independent of the app's
+   theme: warm daylight paper, or night ink for the dark hours. The
+   whole surface re-tunes at once because the ink variables live on
+   the wrapper — every child (title, hand, faint) follows.             */
+const READER_INK = {
+  day: {
+    background: "linear-gradient(180deg, #faf6ec 0%, #f4efe2 100%)",
+    color: "#2c2822",
+    "--foreground": "#2c2822",
+    "--muted-foreground": "#6f6659",
+    "--hairline": "rgba(44, 40, 34, 0.16)",
+    "--scope-a": "#8a6d3b",
+  },
+  night: {
+    background: "linear-gradient(180deg, #16130e 0%, #0f0d09 100%)",
+    color: "#e9e2d2",
+    "--foreground": "#e9e2d2",
+    "--muted-foreground": "#a29a89",
+    "--hairline": "rgba(233, 226, 210, 0.16)",
+    "--scope-a": "#c9a86a",
+  },
+} as unknown as { day: React.CSSProperties; night: React.CSSProperties };
+
+function readerInkStyle(night: boolean): React.CSSProperties {
+  return night ? READER_INK.night : READER_INK.day;
+}
+
+/** The ink toggle — a small floating lamp. It fades away when the
+    reader drifts down and returns when the hand lifts (shown prop). */
+function ReaderInkToggle({
+  night,
+  onToggle,
+  shown,
+  testid = "reader-ink-toggle",
+}: {
+  night: boolean;
+  onToggle: () => void;
+  shown: boolean;
+  testid?: string;
+}) {
+  const t = useT();
+  const label = night ? t("Read in daylight") : t("Read by night");
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-label={label}
+      aria-pressed={night}
+      title={label}
+      data-testid={testid}
+      className={cn(
+        "focus-glow fixed bottom-5 right-5 z-[96] flex size-10 items-center justify-center rounded-full border shadow-[0_8px_28px_-10px_rgba(0,0,0,0.45)] backdrop-blur transition-all duration-500",
+        shown
+          ? "translate-y-0 opacity-100"
+          : "pointer-events-none translate-y-3 opacity-0"
+      )}
+      style={
+        night
+          ? { borderColor: "rgba(233,226,210,0.28)", background: "rgba(22,19,14,0.88)", color: "#e9e2d2" }
+          : { borderColor: "rgba(44,40,34,0.22)", background: "rgba(250,246,236,0.92)", color: "#2c2822" }
+      }
+    >
+      {night ? (
+        <Sun className="size-4" aria-hidden="true" />
+      ) : (
+        <Moon className="size-4" aria-hidden="true" />
+      )}
+    </button>
+  );
+}
+
+function InkSigil({ text, size = 44 }: { text: string; size?: number }) {
   const svg = useMemo(() => {
     const rnd = mulberry32(hash32(text.trim() || "mirror"));
     const c = 60;
@@ -203,6 +277,11 @@ export function KindleReader({
   const t = useT();
   const [sizeIdx, setSizeIdx] = useState(1);
   const [progress, setProgress] = useState(0);
+  /* the reader's own light — the visitor switches at will */
+  const [night, setNight] = useState(false);
+  /* the lamp fades when the reader drifts down, returns on a lift */
+  const [lampShown, setLampShown] = useState(true);
+  const lampTop = useRef(0);
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -221,7 +300,8 @@ export function KindleReader({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.3 }}
-      className="fixed inset-0 z-[90] flex flex-col bg-background"
+      className="fixed inset-0 z-[90] flex flex-col transition-colors duration-500"
+      style={readerInkStyle(night)}
       data-testid="kindle-reader"
       role="dialog"
       aria-modal="true"
@@ -284,6 +364,12 @@ export function KindleReader({
           if (!el) return;
           const max = el.scrollHeight - el.clientHeight;
           setProgress(max > 0 ? Math.min(100, (el.scrollTop / max) * 100) : 100);
+          /* the lamp: down hides it, up — or rest at the top — reveals it */
+          const top = el.scrollTop;
+          if (top < 12) setLampShown(true);
+          else if (top > lampTop.current + 6) setLampShown(false);
+          else if (top < lampTop.current - 6) setLampShown(true);
+          lampTop.current = top;
         }}
         className="nice-scroll flex-1 overflow-y-auto"
       >
@@ -317,6 +403,12 @@ export function KindleReader({
           </p>
         </div>
       </div>
+      <ReaderInkToggle
+        night={night}
+        onToggle={() => setNight((n) => !n)}
+        shown={lampShown}
+        testid="kindle-ink-toggle"
+      />
     </motion.div>,
     document.body
   );
@@ -1540,6 +1632,8 @@ function BookWeaver({
   const [weaving, setWeaving] = useState(false);
   const [weaveFailed, setWeaveFailed] = useState(false);
   const [fullOpen, setFullOpen] = useState(false);
+  /* the reader's own light — paper and night, at the visitor's will */
+  const [night, setNight] = useState(false);
   const [fontSize, setFontSize] = useState(1);
   const [copied, setCopied] = useState(false);
 
@@ -2094,8 +2188,34 @@ function BookWeaver({
 
   /* ---------------- the reading ---------------- */
   return (
-    <div className="mt-1" data-testid="book-reader">
-      {/* the book's face */}
+    <div
+      className="mt-1 rounded-2xl transition-colors duration-500"
+      style={{ ...readerInkStyle(night), padding: "18px 16px 14px" }}
+      data-testid="book-reader"
+    >
+      {/* the book's face — with its own small lamp */}
+      <div className="mb-2 flex justify-end">
+        <button
+          type="button"
+          onClick={() => setNight((n) => !n)}
+          aria-label={night ? t("Read in daylight") : t("Read by night")}
+          aria-pressed={night}
+          title={night ? t("Read in daylight") : t("Read by night")}
+          data-testid="book-chat-ink-toggle"
+          className="mono-label flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[8.5px] uppercase tracking-[0.16em] transition-all duration-300"
+          style={{
+            borderColor: night ? "rgba(233,226,210,0.24)" : "rgba(44,40,34,0.2)",
+            color: "inherit",
+          }}
+        >
+          {night ? (
+            <Sun className="size-3" aria-hidden="true" />
+          ) : (
+            <Moon className="size-3" aria-hidden="true" />
+          )}
+          {night ? t("Daylight") : t("Night")}
+        </button>
+      </div>
       {meta?.title && (
         <div className="mb-4 text-center">
           <p className="ink-title text-[19px] font-semibold leading-snug">
@@ -2303,7 +2423,8 @@ function BookWeaver({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-[90] flex flex-col bg-background"
+            className="fixed inset-0 z-[90] flex flex-col transition-colors duration-500"
+            style={readerInkStyle(night)}
             data-testid="book-fullscreen-reader"
             role="dialog"
             aria-modal="true"
@@ -2438,30 +2559,60 @@ function BookWeaver({
                     ❧ {t("The end")}
                   </p>
                 ) : (
-                  <div className="mt-10 flex flex-col items-center gap-2.5">
-                    <button
-                      type="button"
-                      onClick={turnPage}
-                      disabled={weaving}
-                      data-testid="book-fullscreen-turn"
-                      className="focus-glow flex h-10 items-center gap-2 rounded-full bg-foreground px-5 text-[13px] font-medium text-background transition-all duration-300 hover:-translate-y-px disabled:opacity-40"
-                    >
-                      <BookOpen className="size-3.5" aria-hidden="true" />
-                      {buffer
-                        ? t("Turn the page")
-                        : weaving
-                          ? t("The loom weaves the next pages…")
-                          : t("Weave onward")}
-                    </button>
-                    <p className="h-5 text-[12px] italic text-muted-foreground/70">
-                      {buffering && !buffer
-                        ? t("The loom weaves the next pages…")
-                        : ""}
-                    </p>
-                  </div>
+                  <p className="mono-label mt-10 text-center text-[9px] uppercase tracking-[0.22em] text-muted-foreground/50">
+                    {buffering
+                      ? t("The loom weaves the next pages…")
+                      : t("the next pages rest below the fold")}
+                  </p>
                 )}
               </div>
             </div>
+
+            {/* the NEXT PAGE door — fixed at the foot of the full reader,
+                always one touch away while the volume still has pages */}
+            {!ended && (
+              <div
+                className={cn(
+                  "shrink-0 overflow-hidden border-t transition-all duration-500 ease-out",
+                  readerChromeShown
+                    ? "max-h-24 translate-y-0 opacity-100"
+                    : "pointer-events-none max-h-0 translate-y-4 opacity-0"
+                )}
+                style={{ borderColor: "var(--hairline)" }}
+                data-testid="book-fullscreen-nextbar"
+              >
+                <div className="flex items-center justify-center px-4 py-3">
+                  <button
+                    type="button"
+                    onClick={turnPage}
+                    disabled={weaving}
+                    data-testid="book-fullscreen-next"
+                    className="focus-glow flex h-11 items-center gap-2 rounded-full px-7 text-[13.5px] font-medium shadow-[0_10px_30px_-12px_rgba(0,0,0,0.5)] transition-all duration-300 hover:-translate-y-px disabled:opacity-60"
+                    style={{
+                      background: "var(--foreground)",
+                      color: night ? "#16130e" : "#faf6ec",
+                    }}
+                  >
+                    {weaving || buffering ? (
+                      <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
+                    ) : (
+                      <BookOpen className="size-4" aria-hidden="true" />
+                    )}
+                    {weaving
+                      ? t("The loom weaves the next pages…")
+                      : buffering
+                        ? t("The loom weaves the next pages…")
+                        : t("Next page")}
+                  </button>
+                </div>
+              </div>
+            )}
+            <ReaderInkToggle
+              night={night}
+              onToggle={() => setNight((n) => !n)}
+              shown={readerChromeShown}
+              testid="book-ink-toggle"
+            />
           </motion.div>,
           document.body
         )}

@@ -7,10 +7,24 @@ import { ensureVisitorProvisions } from "@/lib/server/workspace";
 /*  GET /api/auth/google/callback — the return of the Google passage. */
 /* ------------------------------------------------------------------ */
 
+/* The origin the outside world knows — the registered redirect lands
+   here. On serverless platforms the request's own origin can be a
+   deployment alias; the vault's APP_URL (or Vercel's production
+   domain) is the truth the Google passage was registered against. */
+export function publicOrigin(requestOrigin: string): string {
+  const fromEnv =
+    process.env.APP_URL ||
+    process.env.NEXT_PUBLIC_APP_URL ||
+    (process.env.VERCEL_PROJECT_PRODUCTION_URL
+      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+      : "");
+  return (fromEnv || requestOrigin).replace(/\/$/, "");
+}
+
 export async function GET(req: NextRequest) {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-  const origin = req.nextUrl.origin;
+  const origin = publicOrigin(req.nextUrl.origin);
 
   const fail = (reason: string) =>
     NextResponse.redirect(`${origin}/?google=${encodeURIComponent(reason)}`);

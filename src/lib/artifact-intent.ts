@@ -139,12 +139,13 @@ function verbNear(text: string, match: RegExpExecArray, gap = 5): boolean {
 /** The gate itself: does this mention READ as a request?
     1. an explicit request frame anywhere in the message, or
     2. a request verb close before the door's name, or
-    3. a bare naming — a short message (≤ 8 words) that does not
-       open like a question and is itself the ask. */
+    3. a bare naming — a short message (≤ 12 words) that does not
+       open like a question and is itself the ask ("akashic records
+       of my life in the Sirian waters" — nine words, one ask). */
 function isRequested(text: string, match: RegExpExecArray): boolean {
   if (REQUEST_FRAME.test(text)) return true;
   if (verbNear(text, match)) return true;
-  return wordCount(text) <= 8 && !INTERROGATIVE_START.test(text);
+  return wordCount(text) <= 12 && !INTERROGATIVE_START.test(text);
 }
 
 /* ------------------------------------------------------------------ */
@@ -316,7 +317,7 @@ function firstMatch(text: string, patterns: RegExp[]): RegExpExecArray | null {
  * should ride along with the mirror's reply — or null for ordinary
  * words that need nothing but an answer. A door opens ONLY on request:
  * an explicit frame, a request verb near the door's name, or a bare
- * naming that is itself the ask (≤ 8 words, no interrogative opener).
+ * naming that is itself the ask (≤ 12 words, no interrogative opener).
  */
 export function detectArtifactIntent(text: string): SideArtifactKind | null {
   const v = text.trim();
