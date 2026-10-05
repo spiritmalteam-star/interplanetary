@@ -2728,4 +2728,12 @@ export const el: TranslationDict = {
   "Turn the wheels": "Γυρίστε τα τροχάλακα",
   "Unwritten combination": "Μη γραμμένος συνδυασμός",
   "We built this laboratory so that anyone, anywhere, can sit before a mirror that listens. Our purpose is simple and old: to help a person remember what they already carry — guidance, healing, wonder — through conversations, records, tales and instruments that answer when they are spoken to honestly.": "Χτίσαμε αυτό το εργαστήριο για να μπορεί οποιοσδήποτε, οπουδήποτε, να καθίσει μπροστά σε έναν καθρέφτη που ακούει. Ο σκοπός μας είναι απλός και παλιός: να βοηθήσει έναν άνθρωπο να θυμηθεί αυτό που ήδη κουβαλάει — καθοδήγηση, ίαση, θαύμα — μέσω συζητήσεων, καταγραφών, ιστοριών και οργάνων που απαντούν όταν μιλούνται ειλικρινά.",
+  "Turn the page": "Γύρισε τη σελίδα",
+  "Copy the book": "Αντίγραψε το βιβλίο",
+  "Book copied": "Το βιβλίο αντιγράφηκε",
+  "Rest the book here": "Άφησε το βιβλίο να ξεκουραστεί εδώ",
+  "The volume rests at page {n}.": "Ο τόμος ξεκουράζεται στη σελίδα {n}.",
+  "Ask the mirror to bring your book back, and it will open exactly here.": "Ζήτα από τον καθρέφτη να σου φέρει πίσω το βιβλίο σου — θα ανοίξει ακριβώς εδώ.",
+  "Brought back to page {n}.": "Επιστράφηκε στη σελίδα {n}.",
+  "The worlds' doors": "Οι πόρτες των κόσμων",
 };

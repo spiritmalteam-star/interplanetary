@@ -2258,3 +2258,26 @@ Stage Summary:
 - Synth Analog is fully removed from the laboratory: no component, no data, no API, no images, no store view, no nav entry, no i18n strings, no styles — 4,485 lines deleted.
 - Production (WWW.REFLECTME.SPACE) is live and verified: the ParticleX category now holds only Quantum World and Evolve Med.
 - All previously pending work (golden sidebar sigils, About Us door, chat retry/fallback, dream book lecture levels, clean light transmissions) is now deployed to production together with this removal.
+
+---
+Task ID: 9
+Agent: Z.ai Code (main orchestrator)
+Task: Books fully alive inside the main chat — creation, fullscreen, copy, save/pause & resume, prefetch, clean fading pages, coherent drop caps, and the worlds' doors inside the chat
+
+Work Log:
+- Verified the existing flow first in the browser: the book artifact appeared but the visitor had to walk a 4-step ask before any page existed — and found the real bug: `topic` state only filled on Continue, so no weaving could ever begin from the visitor's own words.
+- BOOK CREATION (src/components/mirror/ChatArtifacts.tsx, BookWeaver rework): the visitor's spoken subject now begins the weaving AT ONCE on mount (boot effect passes the stripped topic as a `topicOverride` through `bodyFor`/`weave`), the ask flow remains only when no subject was spoken; the weaving stage gained a weave-again thread when the loom falls silent.
+- FULLSCREEN: kept + upgraded — fading header on scroll (reveals up / hides down), copy button inside, Turn-the-page at the foot, Escape closes.
+- COPY: new "Copy the book" button in the loom's row and the fullscreen head — copies front matter + every page via `bookToText` (new src/lib/book-text.ts), with copied-check feedback.
+- SAVE / PAUSE & RESUME: new "Rest the book here" — stores the whole volume (meta, pages, threads, config, spread, ended) via `pauseChatBook` into the store + localStorage (`mirror-chat-book`, hydrated at boot). New BOOK_RESUME_PATTERNS + `isBookResume` in src/lib/artifact-intent.ts: "bring back my book" / "continue my book" / "where I left off"… rides the reply as `sideArtifact.resume` → the weaver mounts open at the exact saved spread with a "✦ Brought back to page {n}." note. Browser-verified end-to-end: saved at page 3 → new chat → "bring back my book please" → reader opened at pages 3–4.
+- PREFETCH: a background buffer — when the reader stands on the last ready spread, the loom quietly weaves the next two pages (one silent attempt per spread, no infinite retry); "Turn the page" applies the buffer instantly, or waits for the in-flight weave and turns the moment it lands; the chevron next button shares the same logic. Verified: PAGE 3–4 appeared with zero wait and the next pair was already preparing.
+- CLEAN PAGES / FADING BUTTONS: `useScrollReveal` (scroll + wheel + touch, armed only when the room overflows) drives the chrome — sheet navigation + all buttons fade away on the drift down and return on the scroll up, in both the spread and the fullscreen reader. Verified opacity 0 ⇄ 1 in the browser.
+- COHERENT DROP CAPS: `dedupeChapters` (src/lib/book-text.ts) lets only the FIRST page of each distinct chapter title carry the chapter (and the great letter); applied in the chat weaver (spread + fullscreen, drop caps on true chapter openings only) and in DreamBookView's BookPage rendering; the dream-book API prompt now forbids repeated chapter titles and demands most page-pairs carry none.
+- WORLDS' DOORS (src/components/mirror/WorldDoors.tsx, wired in AppShell above the suggestion strip): all eight sidebar worlds — Manifest/Akashic/Star Play/Invent/Dream Book/Light Codes/ParticleX/Evolve Med — as a slim golden-sigil pill row inside the main chat, one touch opening each world; verified in both themes (sigils wrapped in a constrained size-6 span after the first render came out oversized).
+- i18n: 8 new strings ("Turn the page", "Copy the book", "Book copied", "Rest the book here", "The volume rests at page {n}.", "Ask the mirror to bring your book back…", "Brought back to page {n}.", "The worlds' doors") translated into de/it/sq/es/tr/el/fr.
+- Verification: eslint clean; browser end-to-end (auto-weave → turn 3–4 instant → prefetch armed → copy → save → resume at page 3 → fullscreen fade + drop caps → doors in light and dark).
+
+Stage Summary:
+- Books in the main chat are now real: spoken subject → weaving begins immediately; fullscreen, copy, save-and-return-at-the-same-page, prefetched page turns, self-fading clean pages, and chapters that open with a great letter only where a chapter truly begins.
+- The whole sidebar lives inside the chat as the worlds' doors row.
+- All changes verified in the browser across both themes; lint clean.

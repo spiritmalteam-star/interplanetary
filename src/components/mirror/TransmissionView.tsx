@@ -522,6 +522,7 @@ function Exchange({
             <SideArtifact
               kind={message.sideArtifact.kind}
               resonance={message.sideArtifact.resonance}
+              resume={message.sideArtifact.resume}
             />
           )}
         </div>

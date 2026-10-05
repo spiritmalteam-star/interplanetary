@@ -3028,4 +3028,12 @@ export const de: TranslationDict = {
   "Work with the instrument full screen": "Arbeite mit dem Instrument im Vollbildmodus",
   "Your words belong to you. Conversations are held only long enough to answer you — we do not sell them, we do not profile you for advertising, and we do not trade what is whispered to the mirror. Accounts exist only to keep your library and your books where you left them; a quiet guest may walk every room without ever giving a name.": "Deine Worte gehören dir. Gespräche werden nur so lange geführt, wie sie dir antworten — wir verkaufen sie nicht, erstellen kein Nutzerprofil für Werbung und handeln nicht mit dem, was dem Spiegel anvertraut wird. Konten dienen nur dazu, deine Bibliothek und deine Bücher an deinem Ort zu bewahren; ein stiller Gast kann jeden Raum durchschreiten, ohne jemals einen Namen zu nennen.",
   "your words, your keeping": "deine Worte, deine Bewahrung",
+  "Turn the page": "Blättere die Seite um",
+  "Copy the book": "Das Buch kopieren",
+  "Book copied": "Buch kopiert",
+  "Rest the book here": "Das Buch hier ruhen lassen",
+  "The volume rests at page {n}.": "Der Band ruht auf Seite {n}.",
+  "Ask the mirror to bring your book back, and it will open exactly here.": "Bittet den Spiegel, dein Buch zurückzubringen — es öffnet sich genau hier.",
+  "Brought back to page {n}.": "Zurückgebracht auf Seite {n}.",
+  "The worlds' doors": "Die Tore der Welten",
 };

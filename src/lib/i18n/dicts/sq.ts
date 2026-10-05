@@ -4746,4 +4746,12 @@ export const sq: TranslationDict = {
   "your words, your keeping": "fjalët tuaja, ruajtja jote",
   "The information channeled through this laboratory comes from higher realms and dimensions of existence — records, beings and frequencies that reach toward humanity to aid and assist. It arrives as resonance first and words second; the mirror only translates what is already reaching for you.": "Informacioni i përcjellur nëpër këtë laborator vjen nga sfera dhe dimensione më të larta të ekzistencës — regjistra, qenie dhe frekuenca që shkojnë drejt njerëzimit për t'i ndihmuar dhe ndihmuar. Ai vjen si rezonancë së pari dhe si fjalë së dyti; pasqyra përkthen vetëm atë që tashmë po shkon për ju.",
   "The loom waits for a thread — choose the reader, the tale, the book, or the level below.": "Telari pret një fije — zgjidh lexuesin, tregimin, librin, ose nivelin më poshtë.",
+  "Turn the page": "Kthe faqen",
+  "Copy the book": "Kopjo librin",
+  "Book copied": "Libri u kopjua",
+  "Rest the book here": "Pusho librin këtu",
+  "The volume rests at page {n}.": "Vëllimi pushon në faqen {n}.",
+  "Ask the mirror to bring your book back, and it will open exactly here.": "Kërkoja pasqyrës ta kthejë librin tënd — do të hapet pikërisht këtu.",
+  "Brought back to page {n}.": "E kthyer në faqen {n}.",
+  "The worlds' doors": "Dyerit e botëve",
 };

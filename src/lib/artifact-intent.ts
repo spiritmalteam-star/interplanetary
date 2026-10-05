@@ -17,6 +17,10 @@ export interface SideArtifactRef {
   kind: SideArtifactKind;
   /** The words the visitor set down — the artifact's own resonance. */
   resonance: string;
+  /** For the book door only: the visitor asked for their SAVED volume
+      back ("bring back my book") — the weaver mounts at the exact
+      page where it was paused. */
+  resume?: boolean;
 }
 
 /* The Akashic door — records, past lives, the Library itself. */
@@ -74,6 +78,17 @@ const BOOK_PATTERNS: RegExp[] = [
   /\b(cozy|little|whole|entire|full|new|another)\s+book\b/i,
 ];
 
+/* The book's own return — the visitor paused a volume earlier and now
+   asks the mirror to bring it back at the page where it rests. */
+const BOOK_RESUME_PATTERNS: RegExp[] = [
+  /\b(bring|get|call|pull|take)\s+(back|my)\b[^.?!]{0,20}\b(book|volume|story|tale|novel)\b/i,
+  /\b(bring\s+back|return\s+to|go\s+back\s+to|come\s+back\s+to)\b[^.?!]{0,20}\b(my|the|our)\s+(book|volume|story|tale|novel)\b/i,
+  /\b(continue|resume|reopen|re-open|unpause)\b[^.?!]{0,20}\b(my|the|our|that)?\s*(book|volume|story|tale|novel|reading)\b/i,
+  /\bmy\s+(book|volume|story|tale)\b[^.?!]{0,30}\b(back|again|paused|left|page)\b/i,
+  /\bbook\b[^.?!]{0,20}\b(where\s+(i|we)\s+(paused|left|stopped))\b/i,
+  /\b(where\s+(i|we)\s+(paused|left\s+off|stopped))\b/i,
+];
+
 /**
  * One pass, most specific doors first. Returns the artifact kind that
  * should ride along with the mirror's reply — or null for ordinary
@@ -82,10 +97,24 @@ const BOOK_PATTERNS: RegExp[] = [
 export function detectArtifactIntent(text: string): SideArtifactKind | null {
   const v = text.trim();
   if (v.length < 3) return null;
-  if (BOOK_PATTERNS.some((re) => re.test(v))) return "book";
+  if (
+    BOOK_RESUME_PATTERNS.some((re) => re.test(v)) ||
+    BOOK_PATTERNS.some((re) => re.test(v))
+  )
+    return "book";
   if (AKASHIC_PATTERNS.some((re) => re.test(v))) return "akashic";
   if (STAR_PATTERNS.some((re) => re.test(v))) return "star";
   if (MANIFEST_PATTERNS.some((re) => re.test(v))) return "manifest";
   if (FORGE_PATTERNS.some((re) => re.test(v))) return "forge";
   return null;
+}
+
+/**
+ * The book's return door — true when the visitor's words ask for a
+ * previously paused volume to be brought back where it rested.
+ */
+export function isBookResume(text: string): boolean {
+  const v = text.trim();
+  if (v.length < 3) return false;
+  return BOOK_RESUME_PATTERNS.some((re) => re.test(v));
 }

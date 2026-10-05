@@ -10,6 +10,7 @@ import Sidebar from "./Sidebar";
 import { MobileSidebar } from "./MobileSidebar";
 import { ScopeSelector } from "./ScopeSelector";
 import { SuggestionStrip } from "./SuggestionStrip";
+import { WorldDoors } from "./WorldDoors";
 import { QueryComposer } from "./QueryComposer";
 import { StillCompanion } from "./StillCompanion";
 import { TransmissionView } from "./TransmissionView";
@@ -369,9 +370,11 @@ export default function AppShell() {
           </div>
         </div>
 
-        {/* Bottom — small suggestion bars sliding above the input */}
+        {/* Bottom — the worlds' doors (the whole sidebar, one touch
+            away) and the small suggestion bars sliding above the input */}
         {inConversation && (
           <div className="shrink-0 px-3 pb-0.5 sm:px-6">
+            <WorldDoors />
             <SuggestionStrip />
           </div>
         )}

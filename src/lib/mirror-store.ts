@@ -30,6 +30,7 @@ import type {
 } from "@/lib/visualization";
 import {
   detectArtifactIntent,
+  isBookResume,
   type SideArtifactRef,
 } from "@/lib/artifact-intent";
 import {
@@ -196,6 +197,64 @@ export interface DreamBookResume {
   ended: boolean;
 }
 
+/* ------- the chat's own paused volume — the weaving instrument ------
+
+   A book woven inside the main chat can be laid to rest at the exact
+   page where the visitor paused; the mirror holds it (and keeps it in
+   the browser's own keeping) until the visitor asks for it back —
+   then it returns open at the very same spread. */
+
+export interface ChatBookPausePage {
+  n: number;
+  chapter?: string;
+  paragraphs: string[];
+}
+
+export interface ChatBookPause {
+  bookId: string;
+  config: { age: string; tale: string; topic: string };
+  meta: {
+    title?: string;
+    subtitle?: string;
+    sigil?: string;
+    axiom?: string;
+    dedication?: string;
+    totalPages?: number;
+  };
+  pages: ChatBookPausePage[];
+  threads: string;
+  /** The spread (two-page view) the visitor paused at. */
+  spread: number;
+  ended: boolean;
+  savedAt: string;
+}
+
+const CHAT_BOOK_KEY = "mirror-chat-book";
+
+function loadChatBook(): ChatBookPause | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(CHAT_BOOK_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as ChatBookPause;
+    if (!parsed || !Array.isArray(parsed.pages) || parsed.pages.length === 0)
+      return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function storeChatBook(book: ChatBookPause | null) {
+  if (typeof window === "undefined") return;
+  try {
+    if (book) window.localStorage.setItem(CHAT_BOOK_KEY, JSON.stringify(book));
+    else window.localStorage.removeItem(CHAT_BOOK_KEY);
+  } catch {
+    /* the browser's keeping is full — the session copy still holds */
+  }
+}
+
 /* ------- LIGHT CODES — what the Mirror may hand to the chamber -------- */
 
 export interface LcPrefill {
@@ -342,6 +401,12 @@ interface MirrorState {
   dreamResume: DreamBookResume | null;
   resumeDreamBook: (resume: DreamBookResume) => void;
   clearDreamResume: () => void;
+
+  /* The chat's own paused volume — the weaving instrument's keeping.
+     `chatBook` is hydrated from the browser's own keeping on boot. */
+  chatBook: ChatBookPause | null;
+  pauseChatBook: (book: ChatBookPause) => void;
+  clearChatBook: () => void;
 
   /* THE FORGE — the Invent book's own direct chat + mystery creation */
   forgeSession: ScopeSession;
@@ -860,6 +925,8 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   authMode: "signin" as const,
   profileOpen: false,
   dreamResume: null,
+  /* the chat's paused volume — the browser's own keeping, read once */
+  chatBook: loadChatBook(),
 
   forgeSession: emptySession(),
   mysteryStatus: "idle" as MysteryStatus,
@@ -1557,7 +1624,17 @@ export const useMirror = create<MirrorState>()((set, get) => ({
                 classification: data.classification,
                 createdAt: data.createdAt ?? new Date().toISOString(),
                 ...(sideKind
-                  ? { sideArtifact: { kind: sideKind, resonance: query } }
+                  ? {
+                      sideArtifact: {
+                        kind: sideKind,
+                        resonance: query,
+                        /* the book door remembers a return: the visitor
+                           asked for their paused volume back */
+                        ...(sideKind === "book" && isBookResume(query)
+                          ? { resume: true }
+                          : {}),
+                      },
+                    }
                   : {}),
                 ...(attachments
                   ? {
@@ -1819,6 +1896,18 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   resumeDreamBook: (resume) =>
     set({ dreamResume: resume, view: "dreambook", profileOpen: false, modal: null, mobileNavOpen: false }),
   clearDreamResume: () => set({ dreamResume: null }),
+
+  /* -------- the chat's own paused volume — the weaving instrument ------ */
+
+  pauseChatBook: (book) => {
+    storeChatBook(book);
+    set({ chatBook: book });
+  },
+
+  clearChatBook: () => {
+    storeChatBook(null);
+    set({ chatBook: null });
+  },
 
   /* ---------------- ParticleX — the quantum narrator ---------------- */
 

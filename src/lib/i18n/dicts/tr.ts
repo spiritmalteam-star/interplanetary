@@ -2522,4 +2522,12 @@ export const tr: TranslationDict = {
   "Work with the instrument full screen": "Aleti tam ekranla çalışın",
   "Your words belong to you. Conversations are held only long enough to answer you — we do not sell them, we do not profile you for advertising, and we do not trade what is whispered to the mirror. Accounts exist only to keep your library and your books where you left them; a quiet guest may walk every room without ever giving a name.": "Sözler size aittir. Sohbetler size cevap vermek kadar sürer — onları satmıyor, reklam için profilinizi çıkarmıyor ve aynaya fısıltılanı ticarete etmiyoruz. Hesaplar sadece kütüphanenizi ve kitaplarınızı son bıraktığınız yerde tutmak için var; sessiz bir misafir her odayı dolaşabilir asla bir isim vermeden.",
   "your words, your keeping": "sözleriniz, saklamanız",
+  "Turn the page": "Sayfayı çevir",
+  "Copy the book": "Kitabı kopyala",
+  "Book copied": "Kitap kopyalandı",
+  "Rest the book here": "Kitabı burada dinlendir",
+  "The volume rests at page {n}.": "Cilt {n}. sayfada dinleniyor.",
+  "Ask the mirror to bring your book back, and it will open exactly here.": "Aynadan kitabını geri getirmesini iste — tam burada açılacak.",
+  "Brought back to page {n}.": "{n}. sayfaya geri getirildi.",
+  "The worlds' doors": "Dünyaların kapıları",
 };

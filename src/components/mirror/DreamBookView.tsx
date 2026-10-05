@@ -40,6 +40,7 @@ import { ModalShell } from "./ModalShell";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { LECTURE_LEVELS, READERS, TALES, VOLUMES } from "@/lib/data/book-options";
+import { dedupeChapters } from "@/lib/book-text";
 import type { VoiceId } from "@/lib/i18n/core";
 import { cn } from "@/lib/utils";
 
@@ -484,9 +485,15 @@ export function DreamBookView() {
      ONE page is revealed at a time — the next button slides it
      away and draws the following one out of the loom. */
 
+  /* the coherent chapter — only the first page of each distinct
+     chapter title keeps its chapter (and with it the great letter);
+     the loom sometimes repeats a title on every page it returns, and
+     a book where every page opens with a big letter is no book */
+  const displayPages = useMemo(() => dedupeChapters(pages), [pages]);
+
   const currentPage = useMemo(
-    () => (pageIdx >= 1 ? pages.find((p) => p.n === pageIdx) : undefined),
-    [pages, pageIdx]
+    () => (pageIdx >= 1 ? displayPages.find((p) => p.n === pageIdx) : undefined),
+    [displayPages, pageIdx]
   );
 
   const maxIdx = pages.length;

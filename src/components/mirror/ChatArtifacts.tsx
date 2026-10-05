@@ -6,16 +6,21 @@ import {
   useMemo,
   useRef,
   useState,
+  type UIEvent as ReactUIEvent,
+  type TouchEvent as ReactTouchEvent,
+  type WheelEvent as ReactWheelEvent,
 } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   BookMarked,
+  Bookmark,
   BookOpen,
   Check,
   ChevronLeft,
   ChevronRight,
   ChevronsUpDown,
+  Copy,
   Hammer,
   LoaderCircle,
   Maximize2,
@@ -36,6 +41,8 @@ import {
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import { bookToText, dedupeChapters } from "@/lib/book-text";
+import { toast } from "@/hooks/use-toast";
 import type { SideArtifactKind } from "@/lib/artifact-intent";
 import { READERS, TALES, VERSE_FORMS } from "@/lib/data/book-options";
 import {
@@ -1200,9 +1207,70 @@ interface WeaverMeta {
 const WEAVE_INK_LINE =
   "linear-gradient(90deg, transparent, color-mix(in srgb, var(--foreground) 28%, transparent), transparent)";
 
-function BookWeaver({ resonance }: { resonance: string }) {
+/**
+ * The clean page — scroll-reveal handlers for a reading room: drift
+ * down and the buttons fade away; drift up and they return. The
+ * reveal only arms when the room actually overflows, so a short
+ * page keeps its buttons steady.
+ */
+function useScrollReveal(setVisible: (v: boolean) => void) {
+  const lastTop = useRef(0);
+  const touchY = useRef<number | null>(null);
+  return useMemo(
+    () => ({
+      onScroll: (e: ReactUIEvent<HTMLDivElement>) => {
+        const el = e.currentTarget;
+        const top = el.scrollTop;
+        const scrollable = el.scrollHeight > el.clientHeight + 8;
+        if (top <= 2) {
+          setVisible(true);
+        } else if (scrollable) {
+          if (top > lastTop.current + 4 && top > 48) setVisible(false);
+          else if (top < lastTop.current - 4) setVisible(true);
+        }
+        lastTop.current = top;
+      },
+      onWheel: (e: ReactWheelEvent<HTMLDivElement>) => {
+        const el = e.currentTarget;
+        if (el.scrollHeight <= el.clientHeight + 8) return;
+        if (e.deltaY > 10) setVisible(false);
+        else if (e.deltaY < -10) setVisible(true);
+      },
+      onTouchStart: (e: ReactTouchEvent<HTMLDivElement>) => {
+        touchY.current = e.touches[0]?.clientY ?? null;
+      },
+      onTouchMove: (e: ReactTouchEvent<HTMLDivElement>) => {
+        const el = e.currentTarget;
+        if (el.scrollHeight <= el.clientHeight + 8) return;
+        const y = e.touches[0]?.clientY ?? null;
+        if (touchY.current != null && y != null) {
+          const dy = touchY.current - y;
+          if (dy > 14) setVisible(false);
+          else if (dy < -14) setVisible(true);
+        }
+        touchY.current = y;
+      },
+      onTouchEnd: () => {
+        touchY.current = null;
+      },
+    }),
+    [setVisible]
+  );
+}
+
+function BookWeaver({
+  resonance,
+  resume,
+}: {
+  resonance: string;
+  /** The visitor asked for their paused volume back — the weaver
+      mounts open at the exact spread where the book was laid to rest. */
+  resume?: boolean;
+}) {
   const t = useT();
   const language = useMirror((s) => s.language);
+  const pauseChatBook = useMirror((s) => s.pauseChatBook);
+  const savedBook = useMirror((s) => s.chatBook);
 
   const [stage, setStage] = useState<"ask" | "weaving" | "reading">("ask");
   const [step, setStep] = useState(0);
@@ -1234,6 +1302,24 @@ function BookWeaver({ resonance }: { resonance: string }) {
   const [weaveFailed, setWeaveFailed] = useState(false);
   const [fullOpen, setFullOpen] = useState(false);
   const [fontSize, setFontSize] = useState(1);
+  const [copied, setCopied] = useState(false);
+
+  /* the pages already woven AHEAD of the turn — when the reader
+     reaches the last ready spread, the loom quietly prepares the
+     next two pages in the background, so the turn is instant */
+  const [buffer, setBuffer] = useState<{
+    pages: WeaverPage[];
+    threads: string;
+  } | null>(null);
+  const [buffering, setBuffering] = useState(false);
+  const [awaitingBuffer, setAwaitingBuffer] = useState(false);
+
+  /* the clean page — the buttons reveal when the reader drifts up
+     and fade away when they drift down, the words alone remaining */
+  const [chromeShown, setChromeShown] = useState(true);
+  const [readerChromeShown, setReaderChromeShown] = useState(true);
+  const [resumed, setResumed] = useState(false);
+
   const weaveToken = useRef(0);
   const bookIdRef = useRef("");
 
@@ -1247,77 +1333,116 @@ function BookWeaver({ resonance }: { resonance: string }) {
     setStep(1);
   };
 
+  const pagesRef = useRef<WeaverPage[]>([]);
+  const threadsRef = useRef("");
+  const metaRef = useRef<WeaverMeta | null>(null);
+  const endedRef = useRef(false);
+  const bufferRef = useRef<{
+    pages: WeaverPage[];
+    threads: string;
+  } | null>(null);
+  const prefetchBlocked = useRef(false);
+  useEffect(() => {
+    bufferRef.current = buffer;
+  }, [buffer]);
+
+  const bodyFor = useCallback(
+    (phase: "open" | "next" | "close", topicOverride?: string) => {
+      const theTopic = topicOverride ?? topic;
+      return phase === "open"
+        ? {
+            phase,
+            language,
+            config: { age, tale, volume: "classic", topic: theTopic },
+          }
+        : {
+            phase,
+            language,
+            config: { age, tale, volume: "classic", topic: theTopic },
+            /* the loom remembers the volume it already bound */
+            bookId: bookIdRef.current,
+            bookMeta: metaRef.current ?? {},
+            bookConfig: { age, tale, volume: "classic", topic: theTopic },
+            threads: threadsRef.current,
+            bookPages: pagesRef.current,
+            pageNumber: pagesRef.current.length + 1,
+            totalPages: metaRef.current?.totalPages ?? 120,
+            recentPages: pagesRef.current
+              .slice(-2)
+              .map((p) => p.paragraphs.join(" ")),
+            rewrites: [],
+          };
+    },
+    [age, tale, topic, language]
+  );
+
   const weave = useCallback(
-    async (phase: "open" | "next" | "close") => {
+    async (phase: "open" | "next" | "close", topicOverride?: string) => {
       const token = ++weaveToken.current;
       setWeaving(true);
       setWeaveFailed(false);
       try {
-        const body =
-          phase === "open"
-            ? {
-                phase,
-                language,
-                config: { age, tale, volume: "classic", topic },
-              }
-            : {
-                phase,
-                language,
-                config: { age, tale, volume: "classic", topic },
-                /* the loom remembers the volume it already bound */
-                bookId: bookIdRef.current,
-                bookMeta: meta ?? {},
-                bookConfig: { age, tale, volume: "classic", topic },
-                threads: threadsRef.current,
-                bookPages: pagesRef.current,
-                pageNumber: pagesRef.current.length + 1,
-                totalPages: meta?.totalPages ?? 120,
-                recentPages: pagesRef.current
-                  .slice(-2)
-                  .map((p) => p.paragraphs.join(" ")),
-                rewrites: [],
-              };
         const res = await fetch("/api/dream-book", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
+          body: JSON.stringify(bodyFor(phase, topicOverride)),
         });
         const data = await res.json().catch(() => null);
         if (!res.ok || !data?.pages?.length) {
           throw new Error(data?.error || "the loom fell silent");
         }
         if (token !== weaveToken.current) return;
-        if (typeof data.threads === "string") threadsRef.current = data.threads;
+        if (typeof data.threads === "string" && data.threads)
+          threadsRef.current = data.threads;
         if (typeof data.libraryId === "string" && data.libraryId) {
           bookIdRef.current = data.libraryId;
         }
         if (phase === "open") {
-          setMeta({
+          const m: WeaverMeta = {
             title: data.title,
             subtitle: data.subtitle,
             sigil: data.sigil,
             axiom: data.axiom,
             dedication: data.dedication,
             totalPages: data.totalPages,
-          });
-          setPages(data.pages as WeaverPage[]);
+          };
+          metaRef.current = m;
+          setMeta(m);
+          pagesRef.current = data.pages as WeaverPage[];
+          setPages(pagesRef.current);
           setSpread(0);
+          setEnded(false);
+          endedRef.current = false;
+          setBuffer(null);
+          setBuffering(false);
+          bufferToken.current += 1;
+          setResumed(false);
           setStage("reading");
+          setChromeShown(true);
         } else {
-          setPages((prev) => [...prev, ...(data.pages as WeaverPage[])]);
-          setMeta((prev) =>
-            prev
-              ? {
-                  ...prev,
-                  totalPages:
-                    typeof data.totalPages === "number"
-                      ? data.totalPages
-                      : prev.totalPages,
-                }
-              : prev
-          );
+          const next = [...pagesRef.current, ...(data.pages as WeaverPage[])];
+          pagesRef.current = next;
+          setPages(next);
+          if (
+            typeof data.totalPages === "number" &&
+            metaRef.current
+          ) {
+            metaRef.current = {
+              ...metaRef.current,
+              totalPages: data.totalPages,
+            };
+            setMeta(metaRef.current);
+          }
+          if (phase === "close") {
+            endedRef.current = true;
+            setEnded(true);
+            /* any pages still waiting in the loom's hands are let go —
+               the seal of closing supersedes them */
+            bufferToken.current += 1;
+            setBuffer(null);
+          }
           setSpread((prev) => prev + 1);
-          if (phase === "close") setEnded(true);
+          setChromeShown(true);
         }
       } catch {
         if (token === weaveToken.current) setWeaveFailed(true);
@@ -1325,17 +1450,193 @@ function BookWeaver({ resonance }: { resonance: string }) {
         if (token === weaveToken.current) setWeaving(false);
       }
     },
-    [age, tale, topic, language, meta]
+    [bodyFor]
   );
 
-  const pagesRef = useRef<WeaverPage[]>([]);
-  const threadsRef = useRef("");
-  useEffect(() => {
-    pagesRef.current = pages;
-  }, [pages]);
+  /* the loom's quiet hands — the next two pages prepared in the
+     background the moment the reader reaches the last ready spread,
+     so turning the page never waits for the weaving */
+  const bufferToken = useRef(0);
+  const prefetch = useCallback(async () => {
+    if (bufferRef.current || endedRef.current) return;
+    const token = ++bufferToken.current;
+    setBuffering(true);
+    try {
+      const res = await fetch("/api/dream-book", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(bodyFor("next")),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.pages?.length) return;
+      if (token !== bufferToken.current) return;
+      setBuffer({
+        pages: data.pages as WeaverPage[],
+        threads:
+          typeof data.threads === "string" && data.threads
+            ? data.threads
+            : threadsRef.current,
+      });
+    } catch {
+      /* silent — the turn itself will call the loom aloud */
+      prefetchBlocked.current = true;
+    } finally {
+      if (token === bufferToken.current) setBuffering(false);
+    }
+  }, [bodyFor]);
 
+  /** Lay the waiting pages into the book and advance one spread. */
+  const applyBuffer = useCallback(() => {
+    const buf = bufferRef.current;
+    if (!buf) return;
+    bufferRef.current = null;
+    setBuffer(null);
+    if (buf.threads) threadsRef.current = buf.threads;
+    const next = [...pagesRef.current, ...buf.pages];
+    pagesRef.current = next;
+    setPages(next);
+    setSpread((s) => s + 1);
+    setChromeShown(true);
+  }, []);
+
+  const turnPage = useCallback(() => {
+    if (!ended && spread < Math.max(1, Math.ceil(pages.length / 2)) - 1) {
+      setSpread((s) => s + 1);
+      return;
+    }
+    if (bufferRef.current) {
+      applyBuffer();
+      return;
+    }
+    if (buffering) {
+      /* the loom is already at work — turn the moment it lands */
+      setAwaitingBuffer(true);
+      return;
+    }
+    void weave("next");
+  }, [applyBuffer, buffering, ended, pages.length, spread, weave]);
+
+  /* the waiting turn — the visitor asked for the next page while the
+     loom was still preparing it: the moment the pages land, the
+     page turns by itself */
+  useEffect(() => {
+    if (awaitingBuffer && buffer) {
+      setAwaitingBuffer(false);
+      applyBuffer();
+    }
+  }, [awaitingBuffer, buffer, applyBuffer]);
+
+  /* the ready hands — viewing the last ready spread wakes the loom's
+     quiet preparation of the next two pages (one attempt per spread:
+     a silent loom must never spin in the dark forever) */
   const spreadCount = Math.max(1, Math.ceil(pages.length / 2));
-  const spreadPages = pages.slice(spread * 2, spread * 2 + 2);
+  useEffect(() => {
+    prefetchBlocked.current = false;
+  }, [spread]);
+  useEffect(() => {
+    if (stage !== "reading" || ended || weaving || buffering || buffer) return;
+    if (prefetchBlocked.current) return;
+    if (spread < spreadCount - 1) return;
+    void prefetch();
+  }, [stage, ended, weaving, buffering, buffer, spread, spreadCount, prefetch]);
+
+  /* the latest weaving, callable from the one-time boot */
+  const weaveRef = useRef(weave);
+  useEffect(() => {
+    weaveRef.current = weave;
+  }, [weave]);
+
+  /* -------- the boot: a returned volume opens where it rested;
+     a spoken subject begins the weaving at once — the book is
+     created from the visitor's own words, no further steps -------- */
+  const bootRef = useRef(false);
+  useEffect(() => {
+    if (bootRef.current) return;
+    bootRef.current = true;
+    if (resume && savedBook && savedBook.pages.length > 0) {
+      bookIdRef.current = savedBook.bookId;
+      setAge(savedBook.config.age);
+      setTale(savedBook.config.tale);
+      setTopic(savedBook.config.topic);
+      setTopicDraft(savedBook.config.topic);
+      metaRef.current = { ...savedBook.meta };
+      setMeta(metaRef.current);
+      pagesRef.current = savedBook.pages.map((p) => ({
+        ...p,
+        paragraphs: [...p.paragraphs],
+      }));
+      setPages(pagesRef.current);
+      threadsRef.current = savedBook.threads;
+      endedRef.current = savedBook.ended;
+      setEnded(savedBook.ended);
+      setSpread(
+        Math.min(
+          savedBook.spread,
+          Math.max(0, Math.ceil(pagesRef.current.length / 2) - 1)
+        )
+      );
+      setStage("reading");
+      setResumed(true);
+      return;
+    }
+    /* the visitor's own words are the thread — the subject they spoke
+       is already unhooked from the ask: the loom begins at once */
+    const firstTopic = topicDraft.trim();
+    if (firstTopic) {
+      setTopic(firstTopic.slice(0, 600));
+      setStage("weaving");
+      void weaveRef.current("open", firstTopic.slice(0, 600));
+    }
+  }, []);
+
+  /* the chrome revealers — the clean page law of this reading room */
+  const spreadScroll = useScrollReveal(setChromeShown);
+  const readerScroll = useScrollReveal(setReaderChromeShown);
+
+  /* the whole volume, ready to travel — the copy button's cargo */
+  const copyBook = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(bookToText(metaRef.current, pagesRef.current));
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2200);
+    } catch {
+      /* clipboard unavailable — quiet fail */
+    }
+  }, []);
+
+  /* the pause — the volume laid to rest at the exact spread the
+     visitor stands on; asking the mirror brings it back here */
+  const saveBook = useCallback(() => {
+    pauseChatBook({
+      bookId: bookIdRef.current,
+      config: { age, tale, topic },
+      meta: metaRef.current ?? {},
+      pages: pagesRef.current,
+      threads: threadsRef.current,
+      spread,
+      ended,
+      savedAt: new Date().toISOString(),
+    });
+    toast({
+      title: t("The volume rests at page {n}.", { n: String(spread * 2 + 1) }),
+      description: t(
+        "Ask the mirror to bring your book back, and it will open exactly here."
+      ),
+    });
+  }, [age, ended, pauseChatBook, spread, t, tale, topic]);
+
+  /* escape leaves the full reader, as every quiet room does */
+  useEffect(() => {
+    if (!fullOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setFullOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [fullOpen]);
+
+  const displayPages = useMemo(() => dedupeChapters(pages), [pages]);
+  const spreadPages = displayPages.slice(spread * 2, spread * 2 + 2);
 
   /* ---------------- the asking ---------------- */
   if (stage === "ask") {
@@ -1497,7 +1798,10 @@ function BookWeaver({ resonance }: { resonance: string }) {
             <div className="mt-3.5 flex flex-wrap items-center gap-2">
               <button
                 type="button"
-                onClick={() => void weave("open")}
+                onClick={() => {
+                  setStage("weaving");
+                  void weave("open");
+                }}
                 data-testid="book-weave-btn"
                 className="focus-glow flex h-9 items-center gap-2 rounded-full bg-foreground px-4 text-[13px] font-medium text-background transition-all duration-300 hover:-translate-y-px"
               >
@@ -1530,6 +1834,21 @@ function BookWeaver({ resonance }: { resonance: string }) {
         <p className="ink-hand text-[14.5px] italic text-muted-foreground">
           {t("The loom weaves the first pages…")}
         </p>
+        {weaveFailed && (
+          <p className="ink-hand text-[13.5px] italic text-muted-foreground">
+            {t(
+              "The loom fell silent for a moment. Breathe, then weave again."
+            )}{" "}
+            <button
+              type="button"
+              onClick={() => void weave("open")}
+              data-testid="book-weaving-retry"
+              className="focus-glow underline underline-offset-4 hover:text-foreground"
+            >
+              {t("Weave again")}
+            </button>
+          </p>
+        )}
       </div>
     );
   }
@@ -1561,8 +1880,22 @@ function BookWeaver({ resonance }: { resonance: string }) {
         </div>
       )}
 
+      {/* the returned volume — one quiet line telling the reader
+          exactly where the book came back to them */}
+      {resumed && (
+        <p
+          className="ink-hand mb-3 text-center text-[13px] italic text-muted-foreground"
+          data-testid="book-resumed-note"
+        >
+          ✦ {t("Brought back to page {n}.", { n: String(spread * 2 + 1) })}
+        </p>
+      )}
+
       {/* the spread — two pages at rest */}
-      <div className="nice-scroll max-h-[440px] space-y-5 overflow-y-auto rounded-xl border border-border bg-card/40 px-4 py-5 sm:px-6">
+      <div
+        {...spreadScroll}
+        className="nice-scroll max-h-[440px] space-y-5 overflow-y-auto rounded-xl border border-border bg-card/40 px-4 py-5 sm:px-6"
+      >
         {spreadPages.map((p) => (
           <div key={p.n}>
             {p.chapter && (
@@ -1574,7 +1907,14 @@ function BookWeaver({ resonance }: { resonance: string }) {
               {p.paragraphs.map((para, i) => (
                 <p
                   key={i}
-                  className="ink-hand whitespace-pre-wrap text-[15.5px] leading-[1.9] text-foreground/92"
+                  className={cn(
+                    "ink-hand whitespace-pre-wrap text-[15.5px] leading-[1.9] text-foreground/92",
+                    /* the great letter rises only where a chapter truly
+                       opens — most pages begin as plain, clean prose */
+                    p.chapter &&
+                      i === 0 &&
+                      "first-letter:float-left first-letter:mr-3 first-letter:mt-[6px] first-letter:text-[42px] first-letter:font-semibold first-letter:leading-[0.8]"
+                  )}
                 >
                   {para}
                 </p>
@@ -1587,58 +1927,98 @@ function BookWeaver({ resonance }: { resonance: string }) {
         ))}
       </div>
 
-      {/* the sheet navigation */}
-      {pages.length > 0 && (
-        <div className="mt-2.5 flex items-center justify-center gap-3">
-          <button
-            type="button"
-            onClick={() => setSpread((s) => Math.max(0, s - 1))}
-            disabled={spread === 0}
-            aria-label={t("The page before")}
-            className="focus-glow flex size-8 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:text-foreground disabled:opacity-30"
-          >
-            <ChevronLeft className="size-3.5" aria-hidden="true" />
-          </button>
-          <span className="mono-label text-[9.5px] tracking-[0.18em] text-muted-foreground">
-            {t("page")} {spread * 2 + 1}
-            {spreadPages[1] ? `–${spreadPages[1].n}` : ""} /{" "}
-            {meta?.totalPages ?? pages.length}
-          </span>
-          <button
-            type="button"
-            onClick={() => setSpread((s) => Math.min(spreadCount - 1, s + 1))}
-            disabled={spread >= spreadCount - 1}
-            aria-label={t("The next page")}
-            className="focus-glow flex size-8 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:text-foreground disabled:opacity-30"
-          >
-            <ChevronRight className="size-3.5" aria-hidden="true" />
-          </button>
-        </div>
-      )}
-
-      {/* the loom's row */}
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        <button
-          type="button"
-          onClick={() => setFullOpen(true)}
-          data-testid="book-fullscreen"
-          className="focus-glow flex h-8 items-center gap-1.5 rounded-full border border-border px-3.5 text-[12px] text-muted-foreground transition-all duration-300 hover:border-foreground/40 hover:text-foreground"
-        >
-          <Maximize2 className="size-3" aria-hidden="true" />
-          {t("Full screen")}
-        </button>
-        {!ended && (
-          <>
+      {/* the fading chrome — the clean page law: drifting down lets the
+          buttons fade away, drifting up reveals them again */}
+      <div
+        data-testid="book-chrome"
+        className={cn(
+          "overflow-hidden transition-all duration-500 ease-out",
+          chromeShown
+            ? "max-h-56 translate-y-0 opacity-100"
+            : "pointer-events-none max-h-0 -translate-y-2 opacity-0"
+        )}
+      >
+        {/* the sheet navigation */}
+        {pages.length > 0 && (
+          <div className="mt-2.5 flex items-center justify-center gap-3">
             <button
               type="button"
-              onClick={() => void weave("next")}
+              onClick={() => setSpread((s) => Math.max(0, s - 1))}
+              disabled={spread === 0}
+              aria-label={t("The page before")}
+              className="focus-glow flex size-8 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:text-foreground disabled:opacity-30"
+            >
+              <ChevronLeft className="size-3.5" aria-hidden="true" />
+            </button>
+            <span className="mono-label text-[9.5px] tracking-[0.18em] text-muted-foreground">
+              {t("page")} {spread * 2 + 1}
+              {spreadPages[1] ? `–${spreadPages[1].n}` : ""} /{" "}
+              {meta?.totalPages ?? pages.length}
+            </span>
+            <button
+              type="button"
+              onClick={turnPage}
+              disabled={ended}
+              aria-label={t("The next page")}
+              className="focus-glow flex size-8 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:text-foreground disabled:opacity-30"
+            >
+              <ChevronRight className="size-3.5" aria-hidden="true" />
+            </button>
+          </div>
+        )}
+
+        {/* the loom's row — full screen, the turn, the copy, the pause */}
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setFullOpen(true)}
+            data-testid="book-fullscreen"
+            className="focus-glow flex h-8 items-center gap-1.5 rounded-full border border-border px-3.5 text-[12px] text-muted-foreground transition-all duration-300 hover:border-foreground/40 hover:text-foreground"
+          >
+            <Maximize2 className="size-3" aria-hidden="true" />
+            {t("Full screen")}
+          </button>
+          {!ended && (
+            <button
+              type="button"
+              onClick={turnPage}
               disabled={weaving}
-              data-testid="book-continue"
+              data-testid="book-turn"
               className="focus-glow flex h-8 items-center gap-1.5 rounded-full bg-foreground px-3.5 text-[12px] font-medium text-background transition-all duration-300 hover:-translate-y-px disabled:opacity-40"
             >
               <BookOpen className="size-3" aria-hidden="true" />
-              {weaving ? t("The loom weaves the next pages…") : t("Weave onward")}
+              {buffer
+                ? t("Turn the page")
+                : weaving
+                  ? t("The loom weaves the next pages…")
+                  : t("Weave onward")}
             </button>
+          )}
+          <button
+            type="button"
+            onClick={() => void copyBook()}
+            data-testid="book-copy"
+            aria-label={copied ? t("Book copied") : t("Copy the book")}
+            title={copied ? t("Book copied") : t("Copy the book")}
+            className="focus-glow flex h-8 items-center gap-1.5 rounded-full border border-border px-3.5 text-[12px] text-muted-foreground transition-all duration-300 hover:border-foreground/40 hover:text-foreground"
+          >
+            {copied ? (
+              <Check className="size-3" aria-hidden="true" />
+            ) : (
+              <Copy className="size-3" aria-hidden="true" />
+            )}
+            {copied ? t("Book copied") : t("Copy the book")}
+          </button>
+          <button
+            type="button"
+            onClick={saveBook}
+            data-testid="book-save"
+            className="focus-glow flex h-8 items-center gap-1.5 rounded-full border border-border px-3.5 text-[12px] text-muted-foreground transition-all duration-300 hover:border-foreground/40 hover:text-foreground"
+          >
+            <Bookmark className="size-3" aria-hidden="true" />
+            {t("Rest the book here")}
+          </button>
+          {!ended && (
             <button
               type="button"
               onClick={() => void weave("close")}
@@ -1647,14 +2027,14 @@ function BookWeaver({ resonance }: { resonance: string }) {
             >
               {t("Let the story rest")}
             </button>
-          </>
-        )}
-        {weaving && (
-          <LoaderCircle
-            className="size-3.5 animate-spin text-muted-foreground"
-            aria-hidden="true"
-          />
-        )}
+          )}
+          {(weaving || buffering) && (
+            <LoaderCircle
+              className="size-3.5 animate-spin text-muted-foreground"
+              aria-hidden="true"
+            />
+          )}
+        </div>
       </div>
 
       {weaveFailed && (
@@ -1675,7 +2055,8 @@ function BookWeaver({ resonance }: { resonance: string }) {
         </p>
       )}
 
-      {/* the full screen reader — one portal, the whole volume */}
+      {/* the full screen reader — one portal, the whole volume, the
+          same clean page law: drift down and the head fades away */}
       {fullOpen &&
         createPortal(
           <motion.div
@@ -1689,53 +2070,79 @@ function BookWeaver({ resonance }: { resonance: string }) {
             aria-modal="true"
             aria-label={meta?.title ?? t("The weaving instrument")}
           >
-            <div className="flex shrink-0 items-center gap-3 border-b border-border px-4 py-3 sm:px-6">
-              <BookMarked
-                className="size-4 shrink-0 text-muted-foreground"
-                aria-hidden="true"
-              />
-              <div className="min-w-0 flex-1">
-                <p className="ink-title truncate text-[15px] font-semibold leading-tight">
-                  {meta?.title}
-                </p>
-                {meta?.subtitle && (
-                  <p className="ink-faint truncate text-[11.5px] italic">
-                    {meta.subtitle}
+            <div
+              className={cn(
+                "shrink-0 overflow-hidden border-b border-border transition-all duration-500 ease-out",
+                readerChromeShown
+                  ? "max-h-24 translate-y-0 opacity-100"
+                  : "pointer-events-none max-h-0 -translate-y-4 opacity-0"
+              )}
+            >
+              <div className="flex items-center gap-3 px-4 py-3 sm:px-6">
+                <BookMarked
+                  className="size-4 shrink-0 text-muted-foreground"
+                  aria-hidden="true"
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="ink-title truncate text-[15px] font-semibold leading-tight">
+                    {meta?.title}
                   </p>
-                )}
-              </div>
-              <div className="flex shrink-0 items-center gap-1">
+                  {meta?.subtitle && (
+                    <p className="ink-faint truncate text-[11.5px] italic">
+                      {meta.subtitle}
+                    </p>
+                  )}
+                </div>
+                <div className="flex shrink-0 items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setFontSize((i) => Math.max(0, i - 1))}
+                    disabled={fontSize === 0}
+                    aria-label={t("Smaller text")}
+                    className="focus-glow flex size-8 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:text-foreground disabled:opacity-35"
+                  >
+                    <Minus className="size-3.5" aria-hidden="true" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFontSize((i) => Math.min(2, i + 1))}
+                    disabled={fontSize === 2}
+                    aria-label={t("Larger text")}
+                    className="focus-glow flex size-8 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:text-foreground disabled:opacity-35"
+                  >
+                    <Plus className="size-3.5" aria-hidden="true" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void copyBook()}
+                    data-testid="book-fullscreen-copy"
+                    aria-label={copied ? t("Book copied") : t("Copy the book")}
+                    title={copied ? t("Book copied") : t("Copy the book")}
+                    className="focus-glow flex size-8 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    {copied ? (
+                      <Check className="size-3.5" aria-hidden="true" />
+                    ) : (
+                      <Copy className="size-3.5" aria-hidden="true" />
+                    )}
+                  </button>
+                </div>
                 <button
                   type="button"
-                  onClick={() => setFontSize((i) => Math.max(0, i - 1))}
-                  disabled={fontSize === 0}
-                  aria-label={t("Smaller text")}
-                  className="focus-glow flex size-8 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:text-foreground disabled:opacity-35"
+                  onClick={() => setFullOpen(false)}
+                  aria-label={t("Close the full reader")}
+                  data-testid="book-fullscreen-close"
+                  className="focus-glow flex size-9 shrink-0 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:text-foreground"
                 >
-                  <Minus className="size-3.5" aria-hidden="true" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFontSize((i) => Math.min(2, i + 1))}
-                  disabled={fontSize === 2}
-                  aria-label={t("Larger text")}
-                  className="focus-glow flex size-8 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:text-foreground disabled:opacity-35"
-                >
-                  <Plus className="size-3.5" aria-hidden="true" />
+                  <X className="size-4" aria-hidden="true" />
                 </button>
               </div>
-              <button
-                type="button"
-                onClick={() => setFullOpen(false)}
-                aria-label={t("Close the full reader")}
-                data-testid="book-fullscreen-close"
-                className="focus-glow flex size-9 shrink-0 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:text-foreground"
-              >
-                <X className="size-4" aria-hidden="true" />
-              </button>
             </div>
 
-            <div className="nice-scroll flex-1 overflow-y-auto">
+            <div
+              {...readerScroll}
+              className="nice-scroll flex-1 overflow-y-auto"
+            >
               <div className="mx-auto max-w-[680px] px-6 py-10 sm:px-8 sm:py-14">
                 <h1 className="ink-title text-center text-[26px] font-semibold leading-tight tracking-[0.03em] sm:text-[30px]">
                   {meta?.title}
@@ -1756,7 +2163,7 @@ function BookWeaver({ resonance }: { resonance: string }) {
                   style={{ background: WEAVE_INK_LINE }}
                 />
                 <div className="mt-8 space-y-7">
-                  {pages.map((p) => (
+                  {displayPages.map((p) => (
                     <div key={p.n}>
                       {p.chapter && (
                         <p className="ink-hand mb-2.5 text-center text-[15px] italic text-muted-foreground">
@@ -1767,7 +2174,14 @@ function BookWeaver({ resonance }: { resonance: string }) {
                         {p.paragraphs.map((para, i) => (
                           <p
                             key={i}
-                            className="ink-hand whitespace-pre-wrap leading-[1.95] text-foreground/92"
+                            className={cn(
+                              "ink-hand whitespace-pre-wrap leading-[1.95] text-foreground/92",
+                              /* the great letter only at a true chapter
+                                 opening — every other page stays clean */
+                              p.chapter &&
+                                i === 0 &&
+                                "first-letter:float-left first-letter:mr-3 first-letter:mt-[6px] first-letter:text-[46px] first-letter:font-semibold first-letter:leading-[0.8]"
+                            )}
                             style={{ fontSize: [16.5, 18.5, 20.5][fontSize] }}
                           >
                             {para}
@@ -1780,10 +2194,32 @@ function BookWeaver({ resonance }: { resonance: string }) {
                     </div>
                   ))}
                 </div>
-                {ended && (
+                {ended ? (
                   <p className="ink-hand ink-soft mt-10 text-center text-[15.5px] italic">
                     ❧ {t("The end")}
                   </p>
+                ) : (
+                  <div className="mt-10 flex flex-col items-center gap-2.5">
+                    <button
+                      type="button"
+                      onClick={turnPage}
+                      disabled={weaving}
+                      data-testid="book-fullscreen-turn"
+                      className="focus-glow flex h-10 items-center gap-2 rounded-full bg-foreground px-5 text-[13px] font-medium text-background transition-all duration-300 hover:-translate-y-px disabled:opacity-40"
+                    >
+                      <BookOpen className="size-3.5" aria-hidden="true" />
+                      {buffer
+                        ? t("Turn the page")
+                        : weaving
+                          ? t("The loom weaves the next pages…")
+                          : t("Weave onward")}
+                    </button>
+                    <p className="h-5 text-[12px] italic text-muted-foreground/70">
+                      {buffering && !buffer
+                        ? t("The loom weaves the next pages…")
+                        : ""}
+                    </p>
+                  </div>
                 )}
               </div>
             </div>
@@ -1798,7 +2234,17 @@ function BookWeaver({ resonance }: { resonance: string }) {
 /*  THE DISPATCHER — one artifact, mounted beneath the reply.          */
 /* ================================================================== */
 
-export function SideArtifact({ kind, resonance }: { kind: SideArtifactKind; resonance: string }) {
+export function SideArtifact({
+  kind,
+  resonance,
+  resume,
+}: {
+  kind: SideArtifactKind;
+  resonance: string;
+  /** The book door only: the visitor asked for their paused volume
+      back — the weaver mounts open at the page where it rested. */
+  resume?: boolean;
+}) {
   const t = useT();
   const icon = kind === "akashic" ? ScrollText : kind === "forge" ? Hammer : kind === "book" ? BookMarked : Sparkles;
   const Icon = icon;
@@ -1824,7 +2270,7 @@ export function SideArtifact({ kind, resonance }: { kind: SideArtifactKind; reso
       {kind === "star" && <StarDraw />}
       {kind === "manifest" && <ManifestRitual resonance={resonance} />}
       {kind === "forge" && <ForgeStrike />}
-      {kind === "book" && <BookWeaver resonance={resonance} />}
+      {kind === "book" && <BookWeaver resonance={resonance} resume={resume} />}
     </div>
   );
 }
