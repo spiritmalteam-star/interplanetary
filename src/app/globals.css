@@ -1791,3 +1791,26 @@ html:not(.dark) .scope-lightcodes {
     animation: none;
   }
 }
+
+/* the elastic line — the channeling branch's golden thread breathing
+   between itself and the general branch it hangs from */
+@keyframes elastic-breathe {
+  0%,
+  100% {
+    stroke-opacity: 0.55;
+  }
+  50% {
+    stroke-opacity: 0.9;
+  }
+}
+
+.elastic-line {
+  animation: elastic-breathe 3.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .elastic-line {
+    animation: none;
+    stroke-opacity: 0.7;
+  }
+}

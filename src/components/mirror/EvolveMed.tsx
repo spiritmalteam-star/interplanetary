@@ -17,6 +17,7 @@ import {
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { SuggestionTree } from "./SuggestionTree";
+import { ReplyBranches } from "./ReplyBranches";
 import { emGatheringPhrases, emVectors } from "@/lib/data/evolvemed";
 import { emNoteSets } from "@/lib/data/scope-notes";
 import { cn } from "@/lib/utils";
@@ -42,6 +43,16 @@ import {
 } from "./EvolveMedChambers";
 
 type EmPlace = "chat" | "vectors" | "instruments" | "codex";
+
+/** The visitor line an em reply answered — the exchange's first half. */
+function emVisitorBefore(
+  arr: { role: "visitor" | "em"; text: string }[],
+  idx: number
+): string {
+  for (let i = idx - 1; i >= 0; i--)
+    if (arr[i].role === "visitor") return arr[i].text;
+  return "";
+}
 
 const EM_PLACES: {
   id: Exclude<EmPlace, "chat">;
@@ -460,6 +471,15 @@ function EvolveMedChat() {
   const t = useT();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  /* the channeling branch — the exchanges' own grown branches */
+  const emChanneling = useMemo(
+    () =>
+      [...emMessages]
+        .reverse()
+        .find((m) => m.role === "em" && m.branches?.length)?.branches,
+    [emMessages]
+  );
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const latestRef = useRef<HTMLDivElement | null>(null);
   const loadingRef = useRef<HTMLDivElement | null>(null);
@@ -616,6 +636,29 @@ function EvolveMedChat() {
                     visualRequest={m.visualRequest}
                   />
                 )}
+                {/* the branches of this exchange — connected with the
+                    Evolve Med branch of the living tree */}
+                {m.role === "em" &&
+                  m.text.trim() &&
+                  !m.notesVector &&
+                  !m.artifact &&
+                  !m.visual && (
+                    <div className="mt-1 pl-11">
+                      <ReplyBranches
+                        message={m}
+                        kind="em"
+                        active={
+                          i === emMessages.length - 1 && emStatus !== "loading"
+                        }
+                        disabled={emStatus === "loading"}
+                        onPick={() => {}}
+                        contextQuery={emVisitorBefore(emMessages, i)}
+                        askFn={(q) => {
+                          if (emStatus !== "loading") void askEM(q);
+                        }}
+                      />
+                    </div>
+                  )}
               </div>
             ))}
             {emStatus === "loading" && (
@@ -730,6 +773,8 @@ function EvolveMedChat() {
           }}
           disabled={emStatus === "loading"}
           testIdPrefix="em-suggestion"
+          channeling={emChanneling}
+          transmitting={emStatus === "loading"}
         />
       </div>
 

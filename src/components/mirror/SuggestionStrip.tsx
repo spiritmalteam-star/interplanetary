@@ -293,6 +293,13 @@ export function MainSuggestionTree() {
 
   const loading = status === "loading";
 
+  /* the channeling branch — the branches grown at this thread's
+     replies hang at the top of the tree, tied to the general branch */
+  const channeling = useMemo(
+    () => [...messages].reverse().find((m) => m.branches?.length)?.branches,
+    [messages]
+  );
+
   return (
     <SuggestionTree
       focusBranch={activeMode}
@@ -303,6 +310,8 @@ export function MainSuggestionTree() {
       disabled={loading}
       testIdPrefix="suggestion"
       className={loading ? "opacity-70" : undefined}
+      channeling={channeling}
+      transmitting={loading}
     />
   );
 }

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import { motion } from "framer-motion";
 import { ListTree } from "lucide-react";
-import { chatSuggestionPools } from "@/lib/data/suggestions-pools";
+import { chatSuggestionPools, type PoolId } from "@/lib/data/suggestions-pools";
 import { contextVocabulary, scoreSuggestion } from "@/lib/suggestion-resonance";
 import type { BranchId } from "@/lib/data/suggestion-tree";
 import {
@@ -11,10 +11,10 @@ import {
   driftTreeTo,
   loadSeen,
   parseBranchesPayload,
+  recordJourney,
   recordSeen,
   type LearnedBranch,
 } from "@/lib/learning-branches";
-import type { ChatMessage } from "@/lib/mirror-store";
 import { useMirror } from "@/lib/mirror-store";
 import type { Mode } from "@/lib/mirror-types";
 import { useT } from "@/lib/i18n";
@@ -27,7 +27,12 @@ import { useT } from "@/lib/i18n";
 /*  grown from this very exchange, each belonging to one of the        */
 /*  Mirror Entity's learning movements, each carrying its reason.      */
 /*  They are linked with the big hub of branches — one touch and the   */
-/*  living tree opens and drifts to their branch.                      */
+/*  living tree opens and drifts to their general branch.              */
+/*                                                                     */
+/*  Every thread of the laboratory is served: the scope channels, the  */
+/*  forge (Invent), the OS (Manifesting), ParticleX (Quantum) and      */
+/*  Evolve Med — each reply's branches connect to their own general    */
+/*  branch of the tree.                                                */
 /*                                                                     */
 /*  Honest by law: while the branch engine is thinking, the closest    */
 /*  pool whispers (ranked against THIS reply alone) stand in; if the   */
@@ -37,28 +42,69 @@ import { useT } from "@/lib/i18n";
 /** Branches grown per message — one quiet fetch per landed reply. */
 const inflight = new Set<string>();
 
-function poolFor(mode: Mode): string[] {
-  const pool = chatSuggestionPools[mode as keyof typeof chatSuggestionPools];
-  return pool ?? [];
+/** The smallest shape of a landed reply every thread can offer. */
+interface ReplyBranchMessage {
+  id: string;
+  text: string;
+  query?: string;
+  branches?: LearnedBranch[];
 }
 
-function branchFor(mode: Mode): BranchId {
-  return mode as BranchId;
+/** Every thread kind the branches can grow in. */
+export type BranchThread = Mode | "forge" | "os" | "px" | "em";
+
+/** The thread kind's own general branch of the living tree. */
+function branchFor(kind: BranchThread): BranchId {
+  switch (kind) {
+    case "forge":
+      return "invent";
+    case "os":
+      return "manifesting";
+    case "px":
+      return "quantum";
+    case "em":
+      return "evolvemed";
+    default:
+      return kind as BranchId;
+  }
+}
+
+/** The stand-in pool a thread's whispers rise from while the engine thinks. */
+function poolFor(kind: BranchThread): string[] {
+  const poolId: PoolId =
+    kind === "forge"
+      ? "invent"
+      : kind === "os"
+        ? "mirroros"
+        : kind === "px"
+          ? "particlex"
+          : kind === "em"
+            ? "evolvemed"
+            : (kind as PoolId);
+  return chatSuggestionPools[poolId] ?? [];
 }
 
 export function ReplyBranches({
   message,
-  mode,
+  kind,
   active,
   disabled,
   onPick,
+  contextQuery,
+  askFn,
 }: {
-  message: ChatMessage;
-  mode: Mode;
+  message: ReplyBranchMessage;
+  /** Which thread this reply lives in — decides its general branch. */
+  kind: BranchThread;
   /** True when this is the thread's latest reply and it has landed. */
   active: boolean;
   disabled: boolean;
   onPick: (suggestion: string) => void;
+  /** Threads whose messages carry no query (os/px/em) pass the paired
+      visitor line here — the exchange the reply answered. */
+  contextQuery?: string;
+  /** How a picked branch is asked — defaults to the main mirror. */
+  askFn?: (q: string) => void;
 }) {
   const t = useT();
   const askMirror = useMirror((s) => s.askMirror);
@@ -67,13 +113,13 @@ export function ReplyBranches({
   /* the instant stand-in — the pool's closest whispers to THIS reply
      alone, so the foot is never empty while the engine thinks */
   const fallback = useMemo(() => {
-    const pool = poolFor(mode);
+    const pool = poolFor(kind);
     if (!message.text || pool.length === 0) return [] as string[];
     /* the reply's own breath is the context — closer than the whole
        thread ever is: this is what makes these branches more
        connected to the context than the tree's standing whispers */
     const vocab = contextVocabulary(
-      `${message.query}\n${message.text}`.slice(-1800)
+      `${contextQuery ?? message.query}\n${message.text}`.slice(-1800)
     );
     const seen = new Set(loadSeen().map((s) => s.toLowerCase()));
     return pool
@@ -82,7 +128,7 @@ export function ReplyBranches({
       .sort((a, b) => b.score - a.score || a.i - b.i)
       .slice(0, 3)
       .map((x) => x.s);
-  }, [message.text, message.query, mode]);
+  }, [message.text, message.query, contextQuery, kind]);
 
   /* the grown branches — one quiet call per landed reply */
   const growRef = useRef(false);
@@ -98,17 +144,17 @@ export function ReplyBranches({
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            branch: branchFor(mode),
+            branch: branchFor(kind),
             /* the last breaths are THIS exchange — the freshest
                resonance the laboratory can hear */
-            context: `${message.query}\n${message.text}`.slice(-2400),
+            context: `${contextQuery ?? message.query}\n${message.text}`.slice(-2400),
             seen: loadSeen().slice(0, 24),
           }),
         });
         const data = await res.json().catch(() => null);
         const grown: LearnedBranch[] = parseBranchesPayload(data).slice(0, 5);
         if (grown.length > 0) {
-          attachBranches(mode, message.id, grown);
+          attachBranches(kind, message.id, grown);
           recordSeen(grown.map((b) => b.question));
         }
       } catch {
@@ -118,7 +164,7 @@ export function ReplyBranches({
       }
     }, 650);
     return () => window.clearTimeout(id);
-  }, [active, message.id, message.text, message.query, message.branches, mode, attachBranches]);
+  }, [active, message.id, message.text, message.query, message.branches, kind, contextQuery, attachBranches]);
 
   const branches = message.branches;
   /* nothing to stand on yet and nothing grown — the foot rests empty */
@@ -128,7 +174,10 @@ export function ReplyBranches({
 
   const pick = (s: string) => {
     if (disabled) return;
-    void askMirror(s);
+    /* the walk is kept — the helix reflects the branch this step took */
+    recordJourney({ b: branchFor(kind) });
+    if (askFn) askFn(s);
+    else void askMirror(s);
     onPick(s);
   };
 
@@ -150,7 +199,7 @@ export function ReplyBranches({
         </span>
         <button
           type="button"
-          onClick={() => driftTreeTo(branchFor(mode))}
+          onClick={() => driftTreeTo(branchFor(kind))}
           aria-label={t("Find them on the tree")}
           title={t("Find them on the tree")}
           data-testid="reply-branches-hub"

@@ -1,8 +1,9 @@
 "use client";
 
-import { BookMarked, CreditCard, LibraryBig, LogIn, LogOut, Sparkles } from "lucide-react";
+import { BookMarked, CreditCard, Dna, LibraryBig, LogIn, LogOut, Sparkles } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
+import { DnaHelix, useJourney } from "./DnaTimeline";
 import { ModalShell } from "./ModalShell";
 
 /* ------------------------------------------------------------------ */
@@ -24,6 +25,9 @@ export function ProfileModal() {
   const openAuth = useMirror((s) => s.openAuth);
   const openAccount = useMirror((s) => s.openAccount);
   const signOut = useMirror((s) => s.signOut);
+
+  /* the walk's helix — the DNA evolutionary timeline of the visit */
+  const journey = useJourney();
 
   if (!profileOpen) return null;
 
@@ -63,6 +67,25 @@ export function ProfileModal() {
             </span>
           </span>
         </div>
+
+        {/* the DNA evolutionary timeline — the shape of the walk,
+            one rung per branch chased, kept here in the profile */}
+        {journey.length > 0 && (
+          <div
+            className="mt-5 rounded-xl border hairline bg-[var(--glass-bg-soft)] px-4 py-3"
+            data-testid="profile-timeline"
+          >
+            <div className="flex items-center gap-2">
+              <Dna className="size-3.5 shrink-0 text-[var(--gd)]" aria-hidden="true" />
+              <span className="mono-label text-[9px] uppercase tracking-[0.2em] text-muted-foreground/60">
+                {t("The path you have walked")}
+              </span>
+            </div>
+            <div className="no-scrollbar mt-1.5 overflow-x-auto">
+              <DnaHelix steps={journey} />
+            </div>
+          </div>
+        )}
 
         {/* the cosmic library — inside the profile, where it belongs */}
         <button

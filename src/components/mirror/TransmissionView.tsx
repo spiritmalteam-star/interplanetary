@@ -521,7 +521,7 @@ function Exchange({
                   from this very exchange, linked with the tree's hub */}
               <ReplyBranches
                 message={message}
-                mode={scope as Mode}
+                kind={scope as Mode}
                 active={animate}
                 disabled={!animate}
                 onPick={() => {}}

@@ -14,13 +14,11 @@ import {
   Dna,
   HeartPulse,
   ListTree,
-  Loader2,
   NotebookPen,
   Orbit,
   Sparkle,
   Sparkles,
 } from "lucide-react";
-import { toast } from "@/hooks/use-toast";
 import { useT } from "@/lib/i18n";
 import {
   buildSuggestionTree,
@@ -28,9 +26,10 @@ import {
 } from "@/lib/data/suggestion-tree";
 import {
   BRANCH_TYPE_LABELS,
+  LEARNING_IDENTITY_EVENT,
   TREE_DRIFT_EVENT,
   loadSeen,
-  parseBranchesPayload,
+  recordJourney,
   recordOpened,
   recordSeen,
   type BranchType,
@@ -43,17 +42,26 @@ import {
 /*  The suggestions stop being a strip and become a tree: every        */
 /*  branch first belongs to a scope of the laboratory — Interplanetary,*/
 /*  Healing, Quantum, Evolve Med, Invent, Manifesting — and every      */
-/*  branch opens its own scopes, each scope holding a small rotation   */
+/*  branch opens its own scopes, each scope holding a deep rotation    */
 /*  of whispers ranked against the conversation's last topic.          */
 /*                                                                     */
 /*  The whole tree could never fit, so it lives on a wide canvas       */
 /*  behind a small window — about two centimetres tall — that can be   */
 /*  dragged in ALL directions, up, down, left and right, to reveal     */
-/*  the branches connected to what is being spoken. The branch nearest */
-/*  the conversation's last topic glows and the window drifts to it.   */
-/*  A ✦ on every scope blooms more whispers; a golden bud can be       */
-/*  grown straight from the conversation itself. And the whole line    */
-/*  can be dropped down (or rested away) whenever the visitor wishes.  */
+/*  the whispers nearest the last topic. The movement is near-         */
+/*  instant in every direction, and every first move renders NEW       */
+/*  branches — never a repeat of what was already heard.               */
+/*                                                                     */
+/*  At the top hangs the CHANNELING branch — the conversation's own    */
+/*  branch, grown from the exchanges themselves — tied to the leading  */
+/*  general branch by an elastic golden line that stretches and        */
+/*  draws itself as the connection deepens.                            */
+/*                                                                     */
+/*  While a transmission loads, the whole line drops down to rest;     */
+/*  it lifts again only when the visitor wishes to jump to another     */
+/*  branch. And the walk itself is kept — quietly, one step at a       */
+/*  time — so the visitor's profile can draw its DNA evolutionary      */
+/*  helix: the tree stays a tree, the walk lives in the profile.       */
 /* ------------------------------------------------------------------ */
 
 type TreeState = "rest" | "grove" | "canopy";
@@ -79,22 +87,27 @@ const LABEL_H = 30;
 const LEAF_ROW_H = 42;
 const BLOCK_GAP = 10;
 const BRANCH_GAP = 22;
-/** Whispers shown per scope before the ✦ blooms more. */
+/** Whispers shown per scope before a bloom (or a pan) reveals more. */
 const SHOWN = 2;
+/** Pan distance that renders the next breath of new branches. */
+const REVEAL_STEP = 150;
 
-const BRANCH_ICONS: Record<BranchId, typeof Atom> = {
+const BRANCH_ICONS: Record<BranchId | "channeling", typeof Atom> = {
   interplanetary: Orbit,
   healing: HeartPulse,
   quantum: Atom,
   evolvemed: Dna,
   invent: NotebookPen,
   manifesting: Sparkles,
+  channeling: Sparkle,
 };
 
 const STORE_KEY = "mirror-suggestion-tree";
 const HINT_KEY = "mirror-suggestion-tree-hint";
 
 /* ------------------------------ layout ------------------------------ */
+
+type TreeNodeId = BranchId | "channeling";
 
 interface LeafPos {
   text: string;
@@ -105,6 +118,8 @@ interface LeafPos {
   type?: BranchType;
   /** Why this branch grew here — its honest reason. */
   reason?: string;
+  /** The channel's resting note — before anything has been grown. */
+  quiet?: boolean;
 }
 
 interface ScopePos {
@@ -119,7 +134,7 @@ interface ScopePos {
 }
 
 interface BranchPos {
-  id: BranchId;
+  id: TreeNodeId;
   label: string;
   y: number;
   top: number;
@@ -208,6 +223,8 @@ export function SuggestionTree({
   testIdPrefix = "tree",
   ariaLabel,
   className,
+  channeling,
+  transmitting,
 }: {
   /** The branch the window rests on when nothing is being spoken yet. */
   focusBranch?: BranchId;
@@ -217,24 +234,34 @@ export function SuggestionTree({
   testIdPrefix?: string;
   ariaLabel?: string;
   className?: string;
+  /** The branches grown from THIS conversation — they hang at the top
+      as the channeling branch, tied to the general branch by an
+      elastic line. Grown quietly with every exchange; no button. */
+  channeling?: LearnedBranch[];
+  /** True while a transmission is being revealed — the tree drops
+      down to rest and lifts only when the visitor reaches for it. */
+  transmitting?: boolean;
 }) {
   const t = useT();
   const reduceMotion = useReducedMotion();
 
-  /* ---------------- the living tree, ranked by the conversation ---- */
-  const ranked = useMemo(() => buildSuggestionTree(contextText), [contextText]);
+  /* ---------------- the never-repeating memory ---------------------- */
+  /*  The whispers already offered (per identity) are withheld from
+      every rotation — the tree renders new branches as it is walked. */
+  const [seenNonce, setSeenNonce] = useState(0);
+  useEffect(() => {
+    const onIdentity = () => setSeenNonce((n) => n + 1);
+    window.addEventListener(LEARNING_IDENTITY_EVENT, onIdentity);
+    return () => window.removeEventListener(LEARNING_IDENTITY_EVENT, onIdentity);
+  }, []);
 
-  /* buds grown from the conversation itself, per branch — typed,
-     reasoned, and sometimes the seventh movement: the pause */
-  const [buds, setBuds] = useState<Map<BranchId, LearnedBranch[]>>(new Map());
-  const [budState, setBudState] = useState<"idle" | "loading" | "error">(
-    "idle"
+  /* ---------------- the living tree, ranked by the conversation ---- */
+  const ranked = useMemo(
+    () => buildSuggestionTree(contextText, loadSeen()),
+    [contextText, seenNonce]
   );
 
-  /* bloom offsets — which two whispers each scope shows */
-  const [offsets, setOffsets] = useState<Map<string, number>>(new Map());
-
-  /* the leading branch — the one most connected to the last topic */
+  /* ---------------- geometry ---------------------------------------- */
   const leadingId: BranchId = useMemo(() => {
     let best: BranchId | null = null;
     let bestScore = 0;
@@ -249,7 +276,9 @@ export function SuggestionTree({
     return focusBranch ?? ranked[0]?.id ?? "interplanetary";
   }, [ranked, focusBranch]);
 
-  /* ---------------- geometry ---------------------------------------- */
+  /* bloom offsets — which whispers each scope shows */
+  const [offsets, setOffsets] = useState<Map<string, number>>(new Map());
+
   const layout: TreeLayout = useMemo(() => {
     type ScopeDefLeaf = {
       text: string;
@@ -257,6 +286,7 @@ export function SuggestionTree({
       isBud?: boolean;
       type?: BranchType;
       reason?: string;
+      quiet?: boolean;
     };
     /* the leading scope of the leading branch — its continuation
        breathes one whisper further open, revealed by resonance */
@@ -274,42 +304,72 @@ export function SuggestionTree({
     }
     const branches: BranchPos[] = [];
     let y = 10;
+
+    /* ---- the channeling branch — the conversation's own branch ---- */
+    const grownLeaves: ScopeDefLeaf[] = (channeling ?? []).map((b) => ({
+      text: b.question,
+      score: 1,
+      isBud: true,
+      type: b.type,
+      reason: b.reason,
+    }));
+    const chLeaves: ScopeDefLeaf[] =
+      grownLeaves.length > 0
+        ? grownLeaves
+        : [
+            {
+              text: "Speak, and branches grow from your words",
+              score: 0,
+              quiet: true,
+            },
+          ];
+    {
+      const top = y;
+      const shown: LeafPos[] = chLeaves.map((leaf, i) => ({
+        text: leaf.text,
+        score: leaf.score,
+        y: y + LABEL_H + i * LEAF_ROW_H,
+        isBud: !!leaf.isBud,
+        type: leaf.type,
+        reason: leaf.reason,
+        quiet: leaf.quiet,
+      }));
+      y += LABEL_H + shown.length * LEAF_ROW_H + BLOCK_GAP;
+      branches.push({
+        id: "channeling",
+        label: t("Channeling"),
+        y: (top + y - BLOCK_GAP) / 2,
+        top,
+        bottom: y - BLOCK_GAP,
+        leading: false,
+        scopes: [
+          {
+            key: "channeling",
+            label: t("From this conversation"),
+            y: top + LABEL_H / 2,
+            leaves: shown,
+            bloomable: false,
+            connected: grownLeaves.length > 0,
+          },
+        ],
+      });
+      y += BRANCH_GAP;
+    }
+
     for (const branch of ranked) {
       const top = y;
       const scopes: ScopePos[] = [];
-      const branchBuds = buds.get(branch.id);
       const scopeDefs: {
         key: string;
         label: string;
         leaves: ScopeDefLeaf[];
         bloomable: boolean;
-      }[] = branchBuds
-        ? [
-            {
-              key: "bud",
-              label: t("From this conversation"),
-              leaves: branchBuds.map((b) => ({
-                text: b.question,
-                score: 1,
-                isBud: true,
-                type: b.type,
-                reason: b.reason,
-              })),
-              bloomable: false,
-            },
-            ...branch.scopes.map((s) => ({
-              key: s.key,
-              label: t(s.label),
-              leaves: s.leaves as ScopeDefLeaf[],
-              bloomable: true,
-            })),
-          ]
-        : branch.scopes.map((s) => ({
-            key: s.key,
-            label: t(s.label),
-            leaves: s.leaves as ScopeDefLeaf[],
-            bloomable: true,
-          }));
+      }[] = branch.scopes.map((s) => ({
+        key: s.key,
+        label: t(s.label),
+        leaves: s.leaves as ScopeDefLeaf[],
+        bloomable: true,
+      }));
       for (const scope of scopeDefs) {
         const offset = offsets.get(scope.key) ?? 0;
         const revealContinuation =
@@ -333,9 +393,7 @@ export function SuggestionTree({
               text: leaf.text,
               score: leaf.score,
               y: y + LABEL_H + i * LEAF_ROW_H,
-              isBud: scope.key === "bud",
-              type: leaf.type,
-              reason: leaf.reason,
+              isBud: false,
             });
         }
         scopes.push({
@@ -361,22 +419,55 @@ export function SuggestionTree({
       y += BRANCH_GAP;
     }
     return { height: Math.max(y - BRANCH_GAP + 14, 400), branches };
-  }, [ranked, buds, offsets, leadingId, t]);
+  }, [ranked, offsets, leadingId, channeling, t]);
 
   /* ---------------- the window -------------------------------------- */
   const [state, setState] = useState<TreeState>("grove");
+  const stateRef = useRef<TreeState>("grove");
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
   const viewportRef = useRef<HTMLDivElement>(null);
   const [vp, setVp] = useState({ w: 0, h: 0 });
   const [hintSeen, setHintSeen] = useState(false);
 
   useEffect(() => {
     const saved = window.localStorage.getItem(STORE_KEY) as TreeState | null;
-    if (saved === "rest" || saved === "grove" || saved === "canopy")
-      setState(saved);
-    if (window.localStorage.getItem(HINT_KEY)) setHintSeen(true);
+    const hasHint = !!window.localStorage.getItem(HINT_KEY);
+    /* deferred — the saved resting size returns after the first paint */
+    const id = window.setTimeout(() => {
+      if (saved === "rest" || saved === "grove" || saved === "canopy")
+        setState(saved);
+      if (hasHint) setHintSeen(true);
+    }, 0);
+    return () => window.clearTimeout(id);
   }, []);
 
+  /* ---------------- the transmission law ----------------------------- */
+  /*  When a transmission starts loading, every branch drops down —
+      the reveal deserves the whole frame. The line lifts only when
+      the visitor wants to jump to another branch. */
+  const programmaticDrop = useRef(false);
+  const prevTransmitRef = useRef(false);
   useEffect(() => {
+    const now = !!transmitting;
+    const was = prevTransmitRef.current;
+    prevTransmitRef.current = now;
+    if (now && !was && stateRef.current !== "rest") {
+      programmaticDrop.current = true;
+      /* deferred — the drop lands after this render settles */
+      const id = window.setTimeout(() => setState("rest"), 0);
+      return () => window.clearTimeout(id);
+    }
+  }, [transmitting]);
+
+  useEffect(() => {
+    /* the transmission law — an auto-drop is never the visitor's choice,
+       so it is never saved as their preferred resting size */
+    if (programmaticDrop.current) {
+      programmaticDrop.current = false;
+      return;
+    }
     window.localStorage.setItem(STORE_KEY, state);
   }, [state]);
 
@@ -400,29 +491,21 @@ export function SuggestionTree({
   /* dragging bookkeeping — the last pan, and tap-vs-drag on the chips */
   const lastPanRef = useRef(0);
   const draggingRef = useRef(false);
-  /* set when a bud is grown — the next drift goes to the bud itself */
-  const budDriftRef = useRef<BranchId | null>(null);
+  /* the walk's last reveal point — panning renders new branches */
+  const lastRevealRef = useRef({ x: 0, y: 0 });
 
   /* the window drifts to the leading branch — unless the visitor is
      walking the tree themselves at this moment */
   const centerOn = useCallback(
-    (id: BranchId) => {
+    (id: TreeNodeId) => {
       if (vp.w === 0) return;
       const branch = layout.branches.find((b) => b.id === id);
       const tx = Math.max(
         minX,
         Math.min(0, -(LEAF_X - vp.w * 0.12))
       );
-      /* after a bud is grown the window drifts to the bud itself —
-         the golden scope waiting at the top of its branch */
-      const goingToBud = budDriftRef.current === id;
-      const targetY = branch
-        ? goingToBud
-          ? branch.top + 78
-          : (branch.top + branch.bottom) / 2
-        : 0;
+      const targetY = branch ? (branch.top + branch.bottom) / 2 : 0;
       const ty = Math.max(minY, Math.min(0, vp.h / 2 - targetY));
-      if (goingToBud) budDriftRef.current = null;
       if (reduceMotion) {
         x.set(tx);
         yv.set(ty);
@@ -437,58 +520,96 @@ export function SuggestionTree({
   );
 
   useEffect(() => {
-    if (Date.now() - lastPanRef.current < 9000) return;
+    if (Date.now() - lastPanRef.current < 6000) return;
     centerOn(leadingId);
     /* re-center on branch change, resize and window-size change */
   }, [leadingId, vp.w, vp.h, state, centerOn]);
-  const bloom = (scopeKey: string, total: number) => {
+
+  /* ---------------- the walk ----------------------------------------- */
+  /*  The DNA evolutionary timeline — every arrival at a leading branch
+      is one rung of the helix. The helix itself rests in the visitor's
+      profile; the tree only keeps the walk. */
+  useEffect(() => {
+    recordJourney({ b: leadingId });
+  }, [leadingId]);
+
+  /* ---------------- render new branches on the move ------------------
+     Each significant stretch of panning advances the visible scopes'
+     rotations — fresh whispers render as the visitor moves, and what
+     was shown is remembered so nothing ever repeats. */
+  const revealOnMove = useCallback(() => {
+    if (state === "rest" || vp.h === 0) return;
+    const cx = x.get();
+    const cy = yv.get();
+    const last = lastRevealRef.current;
+    if (Math.hypot(cx - last.x, cy - last.y) < REVEAL_STEP) return;
+    lastRevealRef.current = { x: cx, y: cy };
+    const top = -cy - 40;
+    const bottom = -cy + vp.h + 40;
+    const touched: { scopeKey: string; total: number; branch: TreeNodeId; label: string }[] = [];
+    for (const b of layout.branches) {
+      if (b.id === "channeling") continue;
+      for (const s of b.scopes) {
+        if (!s.bloomable) continue;
+        if (s.y < top || s.y > bottom) continue;
+        const total =
+          ranked
+            .find((rb) => rb.id === b.id)
+            ?.scopes.find((rs) => rs.key === s.key)?.leaves.length ?? 0;
+        if (total <= SHOWN) continue;
+        touched.push({ scopeKey: s.key, total, branch: b.id, label: s.label });
+      }
+    }
+    if (touched.length === 0) return;
+    /* the next offsets are computed from the offsets we already hold —
+       the whispers about to stand at the tips are remembered at once,
+       so what was shown is never offered again */
+    const nextOffsets = new Map(offsets);
+    const freshTexts: string[] = [];
+    for (const tScope of touched) {
+      const nextOffset =
+        ((nextOffsets.get(tScope.scopeKey) ?? 0) + SHOWN) % tScope.total;
+      nextOffsets.set(tScope.scopeKey, nextOffset);
+      const leaves =
+        ranked
+          .find((rb) => rb.id === tScope.branch)
+          ?.scopes.find((rs) => rs.key === tScope.scopeKey)?.leaves ?? [];
+      for (let i = 0; i < SHOWN; i++) {
+        const leaf = leaves[(nextOffset + i) % leaves.length];
+        if (leaf) freshTexts.push(leaf.text);
+      }
+    }
+    setOffsets(nextOffsets);
+    recordSeen(freshTexts);
+    /* the memory is NOT re-read here — the whispers that just appeared
+       stay on their tips; the filtering applies from the next exchange */
+    recordJourney({ b: touched[0].branch, s: touched[0].label });
+  }, [state, vp.h, layout.branches, ranked, offsets, x, yv]);
+
+  const bloom = (scopeKey: string, total: number, branch: TreeNodeId, label: string) => {
     if (total <= SHOWN) return;
-    setOffsets((prev) => {
-      const next = new Map(prev);
-      next.set(scopeKey, ((prev.get(scopeKey) ?? 0) + SHOWN) % total);
-      return next;
-    });
+    const nextOffset = ((offsets.get(scopeKey) ?? 0) + SHOWN) % total;
+    const nextOffsets = new Map(offsets);
+    nextOffsets.set(scopeKey, nextOffset);
+    setOffsets(nextOffsets);
+    /* what the bloom reveals is remembered too — never a repeat */
+    const leaves =
+      ranked
+        .find((rb) => rb.id === branch)
+        ?.scopes.find((rs) => rs.key === scopeKey)?.leaves ?? [];
+    const freshTexts: string[] = [];
+    for (let i = 0; i < SHOWN; i++) {
+      const leaf = leaves[(nextOffset + i) % leaves.length];
+      if (leaf) freshTexts.push(leaf.text);
+    }
+    recordSeen(freshTexts);
+    recordJourney({ b: branch, s: label });
   };
 
-  /* ---------------- the bud ------------------------------------------ */
-  const growBud = useCallback(async () => {
-    if (budState === "loading") return;
-    setBudState("loading");
-    try {
-      const res = await fetch("/api/suggestions/bud", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          branch: leadingId,
-          context: contextText.slice(-2400),
-          /* the tree never repeats itself — what was offered before
-             travels along so the engine grows only fresh branches */
-          seen: loadSeen().slice(0, 24),
-        }),
-      });
-      const data = await res.json().catch(() => null);
-      const grown = parseBranchesPayload(data).slice(0, 5);
-      if (grown.length === 0) throw new Error("empty");
-      setBuds((prev) => {
-        const next = new Map(prev);
-        next.set(leadingId, grown);
-        return next;
-      });
-      recordSeen(grown.map((b) => b.question));
-      /* the window's next drift goes straight to the new bud */
-      budDriftRef.current = leadingId;
-      lastPanRef.current = 0;
-      setBudState("idle");
-    } catch {
-      setBudState("error");
-      toast({ description: t("The bud could not open just now") });
-      window.setTimeout(() => setBudState("idle"), 2500);
-    }
-  }, [budState, leadingId, contextText, t]);
-
   /* ---------------- wheel panning ------------------------------------
-     the canvas answers the wheel too — smooth, and only while there is
-     somewhere to go: at an edge the page keeps its own scroll */
+     the canvas answers the wheel too — NEARLY INSTANT in every
+     direction: the window follows the hand at once, and at an edge
+     the page keeps its own scroll */
   useEffect(() => {
     const el = viewportRef.current;
     if (!el) return;
@@ -508,19 +629,13 @@ export function SuggestionTree({
       lastPanRef.current = Date.now();
       setHintSeen(true);
       window.localStorage.setItem(HINT_KEY, "seen");
-      const nx = Math.max(minX, Math.min(0, cx + dx));
-      const ny = Math.max(minY, Math.min(0, cy + dy));
-      if (reduceMotion) {
-        x.set(nx);
-        yv.set(ny);
-        return;
-      }
-      animate(x, nx, { duration: 0.45, ease: "easeOut" });
-      animate(yv, ny, { duration: 0.45, ease: "easeOut" });
+      x.set(Math.max(minX, Math.min(0, cx + dx)));
+      yv.set(Math.max(minY, Math.min(0, cy + dy)));
+      revealOnMove();
     };
     el.addEventListener("wheel", onWheel, { passive: false });
     return () => el.removeEventListener("wheel", onWheel);
-  }, [vp.w, minX, minY, reduceMotion, x, yv]);
+  }, [vp.w, minX, minY, x, yv, revealOnMove]);
 
   /* ---------------- the hub link -------------------------------------
      the branches grown at a reply's foot are linked with the tree: the
@@ -528,12 +643,12 @@ export function SuggestionTree({
   useEffect(() => {
     const onDrift = (e: Event) => {
       const detail = (e as CustomEvent<{ branch?: string }>).detail;
-      const id = detail?.branch as BranchId | undefined;
+      const id = detail?.branch;
       if (!id) return;
       if (state === "rest") setState("grove");
       lastPanRef.current = 0;
       /* one breath for the window to take its size again */
-      window.setTimeout(() => centerOn(id), 80);
+      window.setTimeout(() => centerOn(id as TreeNodeId), 80);
     };
     window.addEventListener(TREE_DRIFT_EVENT, onDrift);
     return () => window.removeEventListener(TREE_DRIFT_EVENT, onDrift);
@@ -557,11 +672,12 @@ export function SuggestionTree({
     if (reduceMotion) {
       x.set(nx);
       yv.set(ny);
-      return;
+    } else {
+      /* the keys answer almost instantly — never a jump, never a wait */
+      animate(x, nx, { duration: 0.14, ease: "easeOut" });
+      animate(yv, ny, { duration: 0.14, ease: "easeOut" });
     }
-    /* the keys glide like the drag — never a jump */
-    animate(x, nx, { duration: 0.38, ease: "easeOut" });
-    animate(yv, ny, { duration: 0.38, ease: "easeOut" });
+    revealOnMove();
   };
 
   const prefix = testIdPrefix;
@@ -590,35 +706,29 @@ export function SuggestionTree({
     );
   }
 
+  /* the elastic line — the channeling branch hangs from the leading
+     general branch: the further apart they stand, the more the golden
+     thread stretches; each new growth draws it again */
+  const elastic = (() => {
+    const ch = layout.branches.find((b) => b.id === "channeling");
+    const lead = layout.branches.find((b) => b.id === leadingId);
+    if (!ch || !lead) return null;
+    const y1 = ch.y;
+    const y2 = lead.y;
+    const dist = Math.abs(y2 - y1);
+    const bow = Math.min(96, 30 + dist * 0.24);
+    return `M ${TRUNK_X} ${y1.toFixed(1)} C ${(TRUNK_X + bow).toFixed(1)} ${(y1 + (y2 - y1) * 0.3).toFixed(1)}, ${(TRUNK_X + bow).toFixed(1)} ${(y2 - (y2 - y1) * 0.3).toFixed(1)}, ${TRUNK_X} ${y2.toFixed(1)}`;
+  })();
+  const grownCount = channeling?.length ?? 0;
+
   /* ---------------- the tree ------------------------------------------ */
   return (
     <div
       className={`relative mx-auto w-full max-w-[780px] ${className ?? ""}`}
       data-testid={`${prefix}-tree`}
     >
-      {/* the control row — the bud, the rest, the canopy */}
-      <div className="mb-1 flex items-center justify-between px-1">
-        <button
-          type="button"
-          onClick={() => void growBud()}
-          disabled={disabled || budState === "loading"}
-          data-testid={`${prefix}-bud`}
-          aria-label={t("Grow a bud")}
-          title={t("Grow a bud")}
-          className="focus-glow flex h-6 items-center gap-1.5 rounded-full border border-[color-mix(in_srgb,var(--gd)_32%,transparent)] bg-[var(--glass-bg)] px-2.5 text-[10.5px] text-muted-foreground backdrop-blur-xl transition-all duration-300 hover:text-foreground disabled:opacity-60"
-        >
-          {budState === "loading" ? (
-            <Loader2 className="size-3 animate-spin" aria-hidden="true" />
-          ) : (
-            <Sparkle
-              className={`size-3 ${budState === "error" ? "text-muted-foreground/50" : "text-[var(--gd)]"}`}
-              aria-hidden="true"
-            />
-          )}
-          <span className="whitespace-nowrap">
-            {budState === "loading" ? t("Growing a bud…") : t("Grow a bud")}
-          </span>
-        </button>
+      {/* the control row — the rest and the canopy */}
+      <div className="mb-1 flex items-center justify-end px-1">
         <div className="flex items-center gap-0.5">
           <button
             type="button"
@@ -668,13 +778,13 @@ export function SuggestionTree({
           drag
           dragConstraints={{ left: minX, right: 0, top: minY, bottom: 0 }}
           dragMomentum
-          /* the glide after the hand lifts — a long, quiet tail of
-             momentum with soft walls, so the movement never stops dead */
+          /* the glide after the hand lifts — short and light now, so a
+             change of direction answers at once, almost without delay */
           dragTransition={{
-            power: 0.32,
-            timeConstant: 260,
-            bounceStiffness: 160,
-            bounceDamping: 22,
+            power: 0.18,
+            timeConstant: 120,
+            bounceStiffness: 220,
+            bounceDamping: 26,
           }}
           dragElastic={0.07}
           onDragStart={() => {
@@ -682,6 +792,10 @@ export function SuggestionTree({
             lastPanRef.current = Date.now();
             setHintSeen(true);
             window.localStorage.setItem(HINT_KEY, "seen");
+          }}
+          onDrag={() => {
+            lastPanRef.current = Date.now();
+            revealOnMove();
           }}
           onDragEnd={() => {
             lastPanRef.current = Date.now();
@@ -715,44 +829,61 @@ export function SuggestionTree({
               strokeOpacity={0.4}
               strokeWidth={1.5}
             />
-            {layout.branches.map((b) => (
-              <g key={b.id}>
-                <line
-                  x1={TRUNK_X}
-                  y1={b.y}
-                  x2={ROOT_X - 12}
-                  y2={b.y}
-                  stroke="var(--gd)"
-                  strokeOpacity={b.leading ? 0.8 : 0.35}
-                  strokeWidth={b.leading ? 1.6 : 1}
-                />
-                {b.scopes.map((s) => (
-                  <g key={s.key}>
-                    <path
-                      d={`M ${ROOT_X + 12} ${b.y} C ${(ROOT_X + 12 + SCOPE_DOT_X - 8) / 2} ${b.y}, ${(ROOT_X + 12 + SCOPE_DOT_X - 8) / 2} ${s.y}, ${SCOPE_DOT_X - 8} ${s.y}`}
-                      fill="none"
-                      stroke="var(--gd)"
-                      strokeOpacity={
-                        b.leading && s.connected ? 0.7 : b.leading ? 0.5 : 0.26
-                      }
-                      strokeWidth={b.leading ? 1.2 : 1}
-                    />
-                    {s.leaves.map((leaf, i) => (
+            {elastic && (
+              <motion.path
+                key={`elastic-${leadingId}-${grownCount}`}
+                d={elastic}
+                fill="none"
+                stroke="var(--gd)"
+                strokeOpacity={0.7}
+                strokeWidth={1.6}
+                strokeLinecap="round"
+                className="elastic-line"
+                initial={reduceMotion ? false : { pathLength: 0, opacity: 0 }}
+                animate={{ pathLength: 1, opacity: 1 }}
+                transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
+              />
+            )}
+            {layout.branches
+              .filter((b) => b.id !== "channeling")
+              .map((b) => (
+                <g key={b.id}>
+                  <line
+                    x1={TRUNK_X}
+                    y1={b.y}
+                    x2={ROOT_X - 12}
+                    y2={b.y}
+                    stroke="var(--gd)"
+                    strokeOpacity={b.leading ? 0.8 : 0.35}
+                    strokeWidth={b.leading ? 1.6 : 1}
+                  />
+                  {b.scopes.map((s) => (
+                    <g key={s.key}>
                       <path
-                        key={`${s.key}-${i}`}
-                        d={`M ${SCOPE_DOT_X + 3} ${s.y} C ${(SCOPE_DOT_X + 3 + LEAF_X - 8) / 2} ${s.y}, ${(SCOPE_DOT_X + 3 + LEAF_X - 8) / 2} ${leaf.y + 19}, ${LEAF_X - 8} ${leaf.y + 19}`}
+                        d={`M ${ROOT_X + 12} ${b.y} C ${(ROOT_X + 12 + SCOPE_DOT_X - 8) / 2} ${b.y}, ${(ROOT_X + 12 + SCOPE_DOT_X - 8) / 2} ${s.y}, ${SCOPE_DOT_X - 8} ${s.y}`}
                         fill="none"
                         stroke="var(--gd)"
                         strokeOpacity={
-                          b.leading && leaf.score > 0 ? 0.65 : 0.24
+                          b.leading && s.connected ? 0.7 : b.leading ? 0.5 : 0.26
                         }
-                        strokeWidth={leaf.score > 0 && b.leading ? 1.2 : 1}
+                        strokeWidth={b.leading ? 1.2 : 1}
                       />
-                    ))}
-                  </g>
-                ))}
-              </g>
-            ))}
+                      {s.leaves.map((leaf, i) => (
+                        <path
+                          key={`${s.key}-${i}`}
+                          d={`M ${SCOPE_DOT_X + 3} ${s.y} C ${(SCOPE_DOT_X + 3 + LEAF_X - 8) / 2} ${s.y}, ${(SCOPE_DOT_X + 3 + LEAF_X - 8) / 2} ${leaf.y + 19}, ${LEAF_X - 8} ${leaf.y + 19}`}
+                          fill="none"
+                          stroke="var(--gd)"
+                          strokeOpacity={
+                            b.leading && leaf.score > 0 ? 0.65 : 0.24
+                          }
+                          strokeWidth={leaf.score > 0 && b.leading ? 1.2 : 1}
+                        />
+                      ))}
+                    </g>
+                  ))}
+                </g>
+              ))}
           </svg>
 
           {/* the branch roots */}
@@ -768,18 +899,26 @@ export function SuggestionTree({
                     className={`flex size-6 items-center justify-center rounded-full border bg-[var(--glass-bg)] backdrop-blur-xl transition-all duration-500 ${
                       b.leading
                         ? "border-[color-mix(in_srgb,var(--gd)_60%,transparent)] shadow-[0_0_14px_color-mix(in_srgb,var(--gd)_22%,transparent)]"
-                        : "hairline"
+                        : b.id === "channeling"
+                          ? "border-[color-mix(in_srgb,var(--gd)_42%,transparent)] shadow-[0_0_10px_color-mix(in_srgb,var(--gd)_14%,transparent)]"
+                          : "hairline"
                     }`}
                   >
                     <Icon
-                      className={`size-3 ${b.leading ? "text-foreground" : "text-muted-foreground"}`}
+                      className={`size-3 ${
+                        b.leading || b.id === "channeling"
+                          ? "text-foreground"
+                          : "text-muted-foreground"
+                      }`}
                       aria-hidden="true"
                     />
                   </span>
                 </div>
                 <span
                   className={`absolute whitespace-nowrap text-[11.5px] font-medium leading-6 transition-colors duration-500 ${
-                    b.leading ? "text-foreground" : "text-muted-foreground/80"
+                    b.leading || b.id === "channeling"
+                      ? "text-foreground"
+                      : "text-muted-foreground/80"
                   }`}
                   style={{ left: ROOT_LABEL_X, top: b.y - 12 }}
                   data-testid={`${prefix}-root-${b.id}`}
@@ -817,20 +956,26 @@ export function SuggestionTree({
                   {s.label}
                 </span>
                 {s.leaves.map((leaf, i) =>
-                  leaf.type === "pause" ? (
+                  leaf.type === "pause" || leaf.quiet ? (
                     /* the seventh movement — the pause is not another
                        click: it rests open as an invitation to stay
-                       with what has just been understood */
+                       with what has just been understood. Before any
+                       branch has grown, the channel rests as a quiet
+                       note with the same honesty. */
                     <div
                       key={`${b.id}-${s.key}-${i}-pause`}
                       role="note"
-                      aria-label={t("Pause & integrate")}
+                      aria-label={
+                        leaf.quiet ? t(leaf.text) : t("Pause & integrate")
+                      }
                       style={{ left: LEAF_X, top: leaf.y, width: LEAF_W }}
                       className="absolute rounded-2xl border border-dashed border-[color-mix(in_srgb,var(--gd)_30%,transparent)] bg-[color-mix(in_srgb,var(--gd)_5%,transparent)] px-3 py-1"
                     >
-                      <span className="mono-label mr-1.5 inline-block rounded-full px-1.5 align-middle text-[8px] uppercase tracking-[0.14em] leading-[1.6] text-[var(--gd)]">
-                        {t("Pause & integrate")}
-                      </span>
+                      {!leaf.quiet && (
+                        <span className="mono-label mr-1.5 inline-block rounded-full px-1.5 align-middle text-[8px] uppercase tracking-[0.14em] leading-[1.6] text-[var(--gd)]">
+                          {t("Pause & integrate")}
+                        </span>
+                      )}
                       <span className="line-clamp-2 align-middle text-[11.5px] italic leading-[1.25] text-foreground/80">
                         {t(leaf.text)}
                       </span>
@@ -852,6 +997,11 @@ export function SuggestionTree({
                           if (leaf.isBud && leaf.type)
                             recordOpened(leaf.type);
                           recordSeen([leaf.text]);
+                          setSeenNonce((n) => n + 1);
+                          recordJourney({
+                            b: b.id,
+                            s: b.id === "channeling" ? undefined : s.label,
+                          });
                           onPick(leaf.text);
                         }}
                         testId={`${prefix}-chip`}
@@ -868,7 +1018,7 @@ export function SuggestionTree({
                           .find((rb) => rb.id === b.id)
                           ?.scopes.find((rs) => rs.key === s.key)?.leaves
                           .length ?? 0;
-                      bloom(s.key, total);
+                      bloom(s.key, total, b.id, s.label);
                     }}
                     data-testid={`${prefix}-bloom`}
                     aria-label={t("More whispers")}

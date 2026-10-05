@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Feather, Orbit, RefreshCw } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { SuggestionTree } from "./SuggestionTree";
+import { ReplyBranches } from "./ReplyBranches";
 import { osOpeners } from "@/lib/data/mirroros";
 import { detectVisualIntent } from "@/lib/visualization";
 import {
@@ -27,6 +28,16 @@ import {
 import { cn } from "@/lib/utils";
 /** Openers visible at once (wrap-around window). */
 const WINDOW = 4;
+
+/** The visitor line an os reply answered — the exchange's first half. */
+function visitorBefore(
+  arr: { role: "visitor" | "os"; text: string }[],
+  idx: number
+): string {
+  for (let i = idx - 1; i >= 0; i--)
+    if (arr[i].role === "visitor") return arr[i].text;
+  return "";
+}
 
 function OpenerOrbs() {
   const osStatus = useMirror((s) => s.osStatus);
@@ -344,6 +355,15 @@ export function MirrorOSChat() {
     null
   );
 
+  /* the channeling branch — the exchanges' own grown branches */
+  const osChanneling = useMemo(
+    () =>
+      [...osMessages]
+        .reverse()
+        .find((m) => m.role === "os" && m.branches?.length)?.branches,
+    [osMessages]
+  );
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const latestRef = useRef<HTMLDivElement | null>(null);
   const loadingRef = useRef<HTMLDivElement | null>(null);
@@ -528,6 +548,28 @@ export function MirrorOSChat() {
                   hasVisual={Boolean(m.artifact || m.visual)}
                   messageId={m.id}
                 />
+                {/* the branches of this exchange — connected with the
+                    manifesting branch of the living tree */}
+                {m.role === "os" &&
+                  m.text.trim() &&
+                  !m.artifact &&
+                  !m.visual && (
+                    <div className="mt-1 pl-11">
+                      <ReplyBranches
+                        message={m}
+                        kind="os"
+                        active={
+                          i === osMessages.length - 1 && osStatus !== "loading"
+                        }
+                        disabled={osStatus === "loading"}
+                        onPick={() => {}}
+                        contextQuery={visitorBefore(osMessages, i)}
+                        askFn={(q) => {
+                          if (osStatus !== "loading") void askOS(q);
+                        }}
+                      />
+                    </div>
+                  )}
               </div>
             ))}
             {osStatus === "loading" && (
@@ -568,6 +610,8 @@ export function MirrorOSChat() {
           }}
           disabled={osStatus === "loading"}
           testIdPrefix="os-suggestion"
+          channeling={osChanneling}
+          transmitting={osStatus === "loading"}
         />
       </div>
 

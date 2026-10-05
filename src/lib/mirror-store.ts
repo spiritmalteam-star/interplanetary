@@ -288,6 +288,9 @@ export interface OsMessage {
   artifact?: VisualizationArtifact;
   visual?: "pending" | "error";
   visualRequest?: string;
+  /* the learning branches grown at the reply's foot — connected to the
+     manifesting branch of the living tree */
+  branches?: LearnedBranch[];
 }
 
 /* -------- the quantum narrator — ParticleX's own line --------- */
@@ -302,6 +305,9 @@ export interface PxMessage {
   /** When set, this thread item is a pinned cluster of the window's
       note stickers (illustrated sections inside the chat flow). */
   notesScope?: string;
+  /* the learning branches grown at the reply's foot — connected to the
+     quantum branch of the living tree */
+  branches?: LearnedBranch[];
 }
 
 /* -------- the evolutionary medical nexus — Evolve Med's own line -------- */
@@ -320,6 +326,9 @@ export interface EmMessage {
   artifact?: VisualizationArtifact;
   visual?: "pending" | "error";
   visualRequest?: string;
+  /* the learning branches grown at the reply's foot — connected to the
+     Evolve Med branch of the living tree */
+  branches?: LearnedBranch[];
 }
 
 interface MirrorState {
@@ -534,9 +543,11 @@ interface MirrorState {
     attachments?: ChatAttachment[]
   ) => Promise<void>;
   /** The learning branches grown for one landed reply — attached once,
-      quietly, so they persist with the exchange. */
+      quietly, so they persist with the exchange. Every thread of the
+      laboratory is served: the scope channels, the forge, and the
+      OS / ParticleX / Evolve Med lines. */
   attachBranches: (
-    mode: Mode,
+    target: Mode | "forge" | "os" | "px" | "em",
     messageId: string,
     branches: LearnedBranch[]
   ) => void;
@@ -1486,14 +1497,39 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     }
   },
 
-  attachBranches: (mode, messageId, branches) => {
+  attachBranches: (target, messageId, branches) => {
     if (branches.length === 0) return;
+    if (target === "os" || target === "px" || target === "em") {
+      set((s) => {
+        const grown = <T extends { id: string; branches?: LearnedBranch[] }>(
+          list: T[]
+        ): T[] =>
+          list.map((m) =>
+            m.id === messageId && !m.branches ? { ...m, branches } : m
+          );
+        if (target === "os") return { osMessages: grown(s.osMessages) };
+        if (target === "px") return { pxMessages: grown(s.pxMessages) };
+        return { emMessages: grown(s.emMessages) };
+      });
+      return;
+    }
+    if (target === "forge") {
+      set((s) => ({
+        forgeSession: {
+          ...s.forgeSession,
+          messages: s.forgeSession.messages.map((m) =>
+            m.id === messageId && !m.branches ? { ...m, branches } : m
+          ),
+        },
+      }));
+      return;
+    }
     set((s) => ({
       sessions: {
         ...s.sessions,
-        [mode]: {
-          ...s.sessions[mode],
-          messages: s.sessions[mode].messages.map((m) =>
+        [target]: {
+          ...s.sessions[target],
+          messages: s.sessions[target].messages.map((m) =>
             m.id === messageId && !m.branches ? { ...m, branches } : m
           ),
         },

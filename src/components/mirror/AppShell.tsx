@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { AlignLeft, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
+import { setLearningIdentity } from "@/lib/learning-branches";
 import { useT } from "@/lib/i18n";
 import { CosmicBackdrop } from "./CosmicBackdrop";
 import { StarField } from "./StarField";
@@ -52,6 +53,7 @@ export default function AppShell() {
   const setMobileNavOpen = useMirror((s) => s.setMobileNavOpen);
   const returnToObservatory = useMirror((s) => s.returnToObservatory);
   const refreshMe = useMirror((s) => s.refreshMe);
+  const meEmail = useMirror((s) => s.me?.email ?? null);
   const t = useT();
 
   /* Restore persisted preferences and greet the passage (the visitor's
@@ -60,6 +62,12 @@ export default function AppShell() {
     useMirror.getState().bootPreferences();
     void refreshMe();
   }, [refreshMe]);
+
+  /* The learning memory is identity-keyed — a signed-in visitor keeps
+     their own grove, so the tree never repeats itself for them. */
+  useEffect(() => {
+    setLearningIdentity(meEmail ?? "anon");
+  }, [meEmail]);
 
   /* The frame fits every device: when the on-screen keyboard (or any
      visual-viewport change) reshapes the window, the whole application

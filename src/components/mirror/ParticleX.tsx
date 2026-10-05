@@ -17,6 +17,7 @@ import {
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { SuggestionTree } from "./SuggestionTree";
+import { ReplyBranches } from "./ReplyBranches";
 import { pxGatheringPhrases, pxScopes } from "@/lib/data/particlex";
 import { pxNoteSets } from "@/lib/data/scope-notes";
 import { cn } from "@/lib/utils";
@@ -34,6 +35,16 @@ import {
 } from "./ParticleXChambers";
 
 type PxPlace = "chat" | "biomech" | "scopes" | "tools" | "codex";
+
+/** The visitor line a px reply answered — the exchange's first half. */
+function pxVisitorBefore(
+  arr: { role: "visitor" | "px"; text: string }[],
+  idx: number
+): string {
+  for (let i = idx - 1; i >= 0; i--)
+    if (arr[i].role === "visitor") return arr[i].text;
+  return "";
+}
 
 const PX_PLACES: {
   id: Exclude<PxPlace, "chat">;
@@ -325,6 +336,15 @@ function ParticleXChat() {
   const t = useT();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  /* the channeling branch — the exchanges' own grown branches */
+  const pxChanneling = useMemo(
+    () =>
+      [...pxMessages]
+        .reverse()
+        .find((m) => m.role === "px" && m.branches?.length)?.branches,
+    [pxMessages]
+  );
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const latestRef = useRef<HTMLDivElement | null>(null);
   const loadingRef = useRef<HTMLDivElement | null>(null);
@@ -466,6 +486,27 @@ function ParticleXChat() {
                     index={i}
                   />
                 )}
+                {/* the branches of this exchange — connected with the
+                    quantum branch of the living tree */}
+                {m.role === "px" &&
+                  m.text.trim() &&
+                  !m.notesScope && (
+                    <div className="mt-1 pl-11">
+                      <ReplyBranches
+                        message={m}
+                        kind="px"
+                        active={
+                          i === pxMessages.length - 1 && pxStatus !== "loading"
+                        }
+                        disabled={pxStatus === "loading"}
+                        onPick={() => {}}
+                        contextQuery={pxVisitorBefore(pxMessages, i)}
+                        askFn={(q) => {
+                          if (pxStatus !== "loading") void askPX(q);
+                        }}
+                      />
+                    </div>
+                  )}
               </div>
             ))}
             {pxStatus === "loading" && (
@@ -567,7 +608,7 @@ function ParticleXChat() {
       )}
 
       {/* the living tree — every branch of the laboratory on one canvas,
-          resting on the Quantum branch, drifting to what is spoken */}
+          resting on the quantum branch, drifting to what is spoken */}
       <div className="shrink-0 px-3 pb-1 sm:px-5">
         <SuggestionTree
           focusBranch="quantum"
@@ -580,6 +621,8 @@ function ParticleXChat() {
           }}
           disabled={pxStatus === "loading"}
           testIdPrefix="px-suggestion"
+          channeling={pxChanneling}
+          transmitting={pxStatus === "loading"}
         />
       </div>
 

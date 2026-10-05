@@ -14,6 +14,7 @@ import {
 import { useMirror, type ChatMessage } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { SuggestionTree } from "./SuggestionTree";
+import { ReplyBranches } from "./ReplyBranches";
 import {
   forgeChatPhases,
   forgeDomains,
@@ -1038,6 +1039,12 @@ function BenchChat() {
   const { status, messages, draft, error, activeQuery } = forgeSession;
   const loading = status === "loading";
 
+  /* the channeling branch — the strokes' own grown branches */
+  const forgeChanneling = useMemo(
+    () => [...messages].reverse().find((m) => m.branches?.length)?.branches,
+    [messages]
+  );
+
   useEffect(() => {
     if (!loading) return;
     const id = window.setInterval(
@@ -1140,11 +1147,33 @@ function BenchChat() {
         ) : (
           <div className="mx-auto w-full max-w-[760px] space-y-4">
             {messages.map((m, i) => (
-              <ForgeExchange
-                key={m.id}
-                m={m}
-                animate={i === messages.length - 1 && status !== "loading"}
-              />
+              <div key={m.id}>
+                <ForgeExchange
+                  m={m}
+                  animate={i === messages.length - 1 && status !== "loading"}
+                />
+                {/* the branches of this stroke — connected with the
+                    Invent branch of the living tree */}
+                {!m.artifact &&
+                  !m.visual &&
+                  m.text.trim() &&
+                  (m.branches?.length || i === messages.length - 1) && (
+                    <div className="pl-6">
+                      <ReplyBranches
+                        message={m}
+                        kind="forge"
+                        active={
+                          i === messages.length - 1 && status !== "loading"
+                        }
+                        disabled={status === "loading"}
+                        onPick={() => {}}
+                        askFn={(q) => {
+                          if (!loading) send(q);
+                        }}
+                      />
+                    </div>
+                  )}
+              </div>
             ))}
 
             {loading && (
@@ -1188,6 +1217,8 @@ function BenchChat() {
           }}
           disabled={loading}
           testIdPrefix="forge-suggestion"
+          channeling={forgeChanneling}
+          transmitting={loading}
         />
       </div>
 

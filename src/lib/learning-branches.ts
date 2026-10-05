@@ -116,9 +116,14 @@ export function isBait(text: string): boolean {
 /*  movements the visitor walked — used ONLY to avoid repetition and    */
 /*  to prefer what serves understanding next. Never a profile, never    */
 /*  a diagnosis: the visitor decides what anything means.               */
+/*                                                                     */
+/*  The memory is IDENTITY-KEYED: a signed-in visitor keeps their own   */
+/*  grove (so the tree never repeats itself for them), a guest keeps    */
+/*  the anonymous one. Guests' heard whispers merge into the signed-in  */
+/*  memory, so nothing is ever offered twice.                           */
 
 const LEARNING_KEY = "mirror-learning-state";
-const SEEN_CAP = 48;
+const SEEN_CAP = 240;
 const OPENED_CAP = 80;
 
 interface StoredLearning {
@@ -126,10 +131,44 @@ interface StoredLearning {
   opened: { type: BranchType; at: number }[];
 }
 
+/* the current identity — "anon" until the visitor signs in */
+let CURRENT_UID = "anon";
+const IDENTITY_EVENT = "mirror-learning-identity";
+
+/** Called once the app knows who the visitor is (their email, or anon). */
+export function setLearningIdentity(uid: string): void {
+  if (typeof window === "undefined") return;
+  const next = uid.trim() ? uid : "anon";
+  if (next === CURRENT_UID) return;
+  CURRENT_UID = next;
+  /* guests' heard whispers carry into the signed-in memory */
+  if (next !== "anon") {
+    try {
+      const guestRaw = window.localStorage.getItem(keyFor("anon"));
+      if (guestRaw) {
+        const guest = JSON.parse(guestRaw) as Partial<StoredLearning>;
+        if (Array.isArray(guest.seen) && guest.seen.length > 0)
+          recordSeen(guest.seen);
+      }
+    } catch {
+      /* quiet */
+    }
+  }
+  window.dispatchEvent(new CustomEvent(IDENTITY_EVENT));
+}
+
+export function getLearningIdentity(): string {
+  return CURRENT_UID;
+}
+
+function keyFor(uid: string): string {
+  return `${LEARNING_KEY}:${uid}`;
+}
+
 export function loadSeen(): string[] {
   if (typeof window === "undefined") return [];
   try {
-    const raw = window.localStorage.getItem(LEARNING_KEY);
+    const raw = window.localStorage.getItem(keyFor(CURRENT_UID));
     if (!raw) return [];
     const parsed = JSON.parse(raw) as Partial<StoredLearning>;
     return Array.isArray(parsed.seen) ? parsed.seen.filter((s) => typeof s === "string") : [];
@@ -157,7 +196,7 @@ export function recordSeen(texts: string[]): void {
     }
     const opened = loadOpened();
     window.localStorage.setItem(
-      LEARNING_KEY,
+      keyFor(CURRENT_UID),
       JSON.stringify({ seen: unique, opened } satisfies StoredLearning)
     );
   } catch {
@@ -167,7 +206,7 @@ export function recordSeen(texts: string[]): void {
 
 function loadOpened(): { type: BranchType; at: number }[] {
   try {
-    const raw = window.localStorage.getItem(LEARNING_KEY);
+    const raw = window.localStorage.getItem(keyFor(CURRENT_UID));
     if (!raw) return [];
     const parsed = JSON.parse(raw) as Partial<StoredLearning>;
     return Array.isArray(parsed.opened)
@@ -187,7 +226,7 @@ export function recordOpened(type: BranchType): void {
     const opened = [{ type, at: Date.now() }, ...loadOpened()].slice(0, OPENED_CAP);
     const seen = loadSeen();
     window.localStorage.setItem(
-      LEARNING_KEY,
+      keyFor(CURRENT_UID),
       JSON.stringify({ seen, opened } satisfies StoredLearning)
     );
   } catch {
@@ -195,11 +234,77 @@ export function recordOpened(type: BranchType): void {
   }
 }
 
+/* ------------------- the DNA evolutionary timeline ------------------- */
+/*  While the visitor chases the branches — every leading branch the    */
+/*  conversation arrives at, every scope bloomed, every whisper picked  */
+/*  — the walk is kept as a quiet line of steps. The tree renders it    */
+/*  as a double helix: each rung one moment of the journey, colored     */
+/*  by the branch it belonged to. Never a profile: a map of the walk,   */
+/*  kept so the visitor can see the shape of their own curiosity.       */
+
+export interface JourneyStep {
+  /** The branch id (or "channeling") of the step. */
+  b: string;
+  /** The scope's label key, when the step happened inside a scope. */
+  s?: string;
+  at: number;
+}
+
+const JOURNEY_KEY = "mirror-dna-timeline";
+const JOURNEY_CAP = 72;
+const JOURNEY_EVENT = "mirror-dna-update";
+
+export function loadJourney(): JourneyStep[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(JOURNEY_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter(
+        (p): p is JourneyStep =>
+          !!p && typeof p === "object" && typeof (p as JourneyStep).b === "string" && typeof (p as JourneyStep).at === "number"
+      )
+      .slice(0, JOURNEY_CAP);
+  } catch {
+    return [];
+  }
+}
+
+/** One step of the walk — consecutive repeats inside a minute rest as one. */
+export function recordJourney(step: { b: string; s?: string }): void {
+  if (typeof window === "undefined" || !step.b) return;
+  try {
+    const walk = loadJourney();
+    const last = walk[0];
+    const fresh: JourneyStep = { b: step.b, s: step.s, at: Date.now() };
+    if (
+      last &&
+      last.b === fresh.b &&
+      (last.s ?? "") === (fresh.s ?? "") &&
+      fresh.at - last.at < 90_000
+    )
+      return;
+    const next = [fresh, ...walk].slice(0, JOURNEY_CAP);
+    window.localStorage.setItem(JOURNEY_KEY, JSON.stringify(next));
+    window.dispatchEvent(new CustomEvent(JOURNEY_EVENT));
+  } catch {
+    /* quiet */
+  }
+}
+
+/** The event the tree listens to — the helix redraws on every step. */
+export const DNA_UPDATE_EVENT = JOURNEY_EVENT;
+export const LEARNING_IDENTITY_EVENT = IDENTITY_EVENT;
+
 /* ------------------- the hub link ----------------------------------- */
 /*  The reply branches are linked with the big hub of branches: this    */
 /*  event asks the living tree to drift its window to a branch.         */
 
 export const TREE_DRIFT_EVENT = "mirror:tree-drift";
+/** A drift may also name the channeling branch itself. */
+export const CHANNELING_BRANCH = "channeling" as const;
 
 export function driftTreeTo(branch: string): void {
   if (typeof window === "undefined") return;

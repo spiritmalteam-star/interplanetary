@@ -41,8 +41,9 @@ export interface SuggestionBranch {
   scopes: SuggestionScope[];
 }
 
-/** How many whispers each scope keeps in rotation. */
-const ROTATION = 6;
+/** How many whispers each scope keeps in rotation — deep enough that
+ *  panning keeps rendering fresh branches long before a bloom repeats. */
+const ROTATION = 24;
 
 export const SUGGESTION_TREE: SuggestionBranch[] = [
   {
@@ -554,12 +555,37 @@ export interface RankedBranch extends BranchNode {
   resonance: number;
 }
 
-export function buildSuggestionTree(contextText: string): RankedBranch[] {
+export function buildSuggestionTree(
+  contextText: string,
+  seen?: string[]
+): RankedBranch[] {
   const vocab = contextVocabulary(contextText);
+  /* the memory of what was already offered — the tree never repeats
+     itself: exact whispers and close siblings (same opening words)
+     are withheld from every rotation before the ranking begins */
+  const seenSet = new Set<string>();
+  const seenOpenings = new Set<string>();
+  if (seen && seen.length > 0) {
+    for (const s of seen) {
+      const norm = s.trim().toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, "");
+      if (norm) seenSet.add(norm);
+      const opening = norm.split(/\s+/).slice(0, 5).join(" ");
+      if (opening.split(" ").length >= 4) seenOpenings.add(opening);
+    }
+  }
+  const isSeen = (text: string): boolean => {
+    const norm = text.trim().toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, "");
+    if (seenSet.has(norm)) return true;
+    const opening = norm.split(/\s+/).slice(0, 5).join(" ");
+    return opening.split(" ").length >= 4 && seenOpenings.has(opening);
+  };
   return STATIC_TREE.map((branch) => {
     let resonance = 0;
     const scopes: RankedScope[] = branch.scopes.map((scope) => {
-      const ranked = scope.rotation
+      const pool = isSeen
+        ? scope.rotation.filter((text) => !isSeen(text))
+        : scope.rotation;
+      const ranked = pool
         .map((text, i) => ({ text, i, score: scoreSuggestion(text, vocab) }))
         .sort((a, b) => b.score - a.score || a.i - b.i)
         .map(({ text, score }) => ({ text, score }));
