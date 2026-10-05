@@ -110,16 +110,6 @@ function audioExtension(mime?: string): string {
 
 const AUDIO_RETRY_DELAYS_MS = [800, 2000];
 
-/** gateway code 1211 — "this sky does not know that model code" */
-function isUnknownModel(status: number, detail: string): boolean {
-  return status === 400 && /1211|unknown model/i.test(detail);
-}
-
-/** a path the sky itself does not serve (router said so) */
-function isMissingPath(status: number): boolean {
-  return status === 404 || status === 405;
-}
-
 function zaiAudio(cfg: CloudConfig): AudioEngine {
   /* the knobs — unset by default; the SDK-contract paths need no
      model. Set ZAI_TTS_MODEL / ZAI_ASR_MODEL only when a sky demands
@@ -171,6 +161,47 @@ function zaiAudio(cfg: CloudConfig): AudioEngine {
     return res.arrayBuffer();
   }
 
+  /* Every response body is read EXACTLY ONCE — either as voice bytes
+     (ok) or as an error detail (not ok). The ladder tries each known
+     door of the house sky in turn and gathers the true reasons, so a
+     silent failure can never again mask its own cause. */
+  async function ladderTts(
+    candidates: { label: string; body: Record<string, unknown> }[],
+    input: string,
+    voice: string,
+    speed: number
+  ): Promise<ArrayBuffer> {
+    const errors: string[] = [];
+    for (let i = 0; i < candidates.length; i++) {
+      const c = candidates[i];
+      /* the first door earns the patient retries; the rest stay
+         single-shot so a closed ladder never keeps the visitor long */
+      const res =
+        i === 0
+          ? await withRetry(() => postJson(c.label, c.body), AUDIO_RETRY_DELAYS_MS)
+          : await postJson(c.label, c.body);
+      if (res.ok) {
+        try {
+          return await voiceBytes(res);
+        } catch (err) {
+          errors.push(
+            `Z.ai ${c.label} unreadable voice: ${
+              err instanceof Error ? err.message.slice(0, 120) : "?"
+            }`
+          );
+          continue;
+        }
+      }
+      errors.push(`Z.ai ${c.label} ${res.status}: ${await errorDetail(res)}`);
+      /* a validation error about the model means this sky wants a
+         code named — later candidates carry them; other errors just
+         move down the ladder */
+    }
+    throw new Error(
+      `${errors.join(" | ").slice(0, 420)} (asked for ${input.length} chars, voice ${voice}, speed ${speed})`
+    );
+  }
+
   return {
     tts: {
       create: async (params: TTSParams) => {
@@ -186,48 +217,35 @@ function zaiAudio(cfg: CloudConfig): AudioEngine {
               ? "xiaochen"
               : "xiaochen";
 
-        const attemptTts = (withModel: boolean) => {
-          const body: Record<string, unknown> = {
-            input,
-            voice,
-            speed,
-            response_format: "wav",
-            stream: false,
-          };
-          const model = withModel
-            ? (ttsModel ?? "cogtts")
-            : ttsModel;
-          if (model) body.model = model;
-          return withRetry(() => postJson("/audio/tts", body), AUDIO_RETRY_DELAYS_MS);
+        const base: Record<string, unknown> = {
+          input,
+          voice,
+          speed,
+          response_format: "wav",
+          stream: false,
         };
 
-        /* 1st — the SDK's own contract, no forced model code */
-        let res = await attemptTts(false);
-        if (!res.ok) {
-          const detail = await errorDetail(res);
-          if (isMissingPath(res.status)) {
-            /* stepped-down sky: the OpenAI-compatible speech path,
-               which speaks only by explicit model code */
-            res = await withRetry(
-              () =>
-                postJson("/audio/speech", {
-                  model: ttsModel ?? "cogtts",
-                  input,
-                  voice,
-                  speed,
-                  response_format: "wav",
-                }),
-              AUDIO_RETRY_DELAYS_MS
-            );
-          } else if (isUnknownModel(res.status, detail)) {
-            /* the path exists but this sky wants a model code named */
-            res = await attemptTts(true);
-          }
-          if (!res.ok) {
-            throw new Error(`Z.ai tts ${res.status}: ${await errorDetail(res)}`);
-          }
-        }
-        const buf = await voiceBytes(res);
+        /* THE LADDER — every door the house skies are known to serve:
+           1. the SDK contract: /audio/tts, no model code (the SDK
+              sends none; the sky uses its own default)
+           2. /audio/tts naming the house code (cogtts)
+           3. the OpenAI-compatible /audio/speech with the house code
+              (some skies serve only the stepped-down path)
+           4. /audio/tts naming the public GLM code (glm-tts)
+           ZAI_TTS_MODEL overrides every code when a sky demands a
+           private name. */
+        const code1 = ttsModel ?? "cogtts";
+        const code2 = ttsModel ?? "glm-tts";
+        const candidates = [
+          { label: "/audio/tts", body: { ...base } },
+          { label: "/audio/tts", body: { ...base, model: code1 } },
+          {
+            label: "/audio/speech",
+            body: { model: code1, input, voice, speed, response_format: "wav" },
+          },
+          { label: "/audio/tts", body: { ...base, model: code2 } },
+        ];
+        const buf = await ladderTts(candidates, input, voice, speed);
         return { arrayBuffer: async () => buf };
       },
     },
@@ -244,46 +262,59 @@ function zaiAudio(cfg: CloudConfig): AudioEngine {
           return { text: data?.text ?? "" };
         };
 
-        const attemptAsr = (withModel: boolean) => {
-          const body: Record<string, unknown> = {
-            file_base64: params.file_base64,
-          };
-          const model = withModel ? (asrModel ?? "glm-asr-2512") : asrModel;
-          if (model) body.model = model;
-          return withRetry(() => postJson("/audio/asr", body), AUDIO_RETRY_DELAYS_MS);
+        const multipart = (model: string) => () => {
+          const form = new FormData();
+          form.append("file", new Blob([bytes], { type: mime }), `audio.${ext}`);
+          form.append("model", model);
+          form.append("stream", "false");
+          return fetch(`${cfg.baseUrl}/audio/transcriptions`, {
+            method: "POST",
+            headers: baseHeaders, // the form carries its own boundary
+            body: form,
+            signal: AbortSignal.timeout(180_000),
+          });
         };
 
-        /* 1st — the SDK's own contract: JSON, base64 inside, no forced
-           model code */
-        let res = await attemptAsr(false);
-        if (!res.ok) {
-          const detail = await errorDetail(res);
-          if (isMissingPath(res.status)) {
-            /* stepped-down sky: the documented public transcription
-               path (multipart, explicit model code) */
-            const form = new FormData();
-            form.append("file", new Blob([bytes], { type: mime }), `audio.${ext}`);
-            form.append("model", asrModel ?? "glm-asr-2512");
-            form.append("stream", "false");
-            res = await withRetry(
-              () =>
-                fetch(`${cfg.baseUrl}/audio/transcriptions`, {
-                  method: "POST",
-                  headers: baseHeaders, // the form carries its own boundary
-                  body: form,
-                  signal: AbortSignal.timeout(180_000),
-                }),
-              AUDIO_RETRY_DELAYS_MS
-            );
-          } else if (isUnknownModel(res.status, detail)) {
-            /* the path exists but this sky wants a model code named */
-            res = await attemptAsr(true);
+        /* THE LADDER — same law as the voice:
+           1. the SDK contract: /audio/asr, no model code
+           2. /audio/asr naming the house codes (glm-asr-2512, glm-asr)
+           3. the documented public multipart path with a code
+           ZAI_ASR_MODEL overrides every code. */
+        const codeA = asrModel ?? "glm-asr-2512";
+        const codeB = asrModel ?? "glm-asr";
+        const json = (label: string, body: Record<string, unknown>) =>
+          ({ label, body } as const);
+        const candidates: {
+          label: string;
+          body?: Record<string, unknown>;
+          form?: () => Promise<Response>;
+        }[] = [
+          json("/audio/asr", { file_base64: params.file_base64 }),
+          json("/audio/asr", { file_base64: params.file_base64, model: codeA }),
+          json("/audio/asr", { file_base64: params.file_base64, model: codeB }),
+          { label: "/audio/transcriptions", form: multipart(codeB) },
+        ];
+
+        const errors: string[] = [];
+        let answered: { text?: string } | null = null;
+        for (let i = 0; i < candidates.length; i++) {
+          const c = candidates[i];
+          const res =
+            i === 0 && c.body
+              ? await withRetry(() => postJson(c.label, c.body), AUDIO_RETRY_DELAYS_MS)
+              : c.body
+                ? await postJson(c.label, c.body)
+                : await c.form!();
+          if (res.ok) {
+            const parsed = await parseText(res);
+            if (parsed.text) return parsed;
+            answered = parsed; /* an empty ear still answers */
+            continue;
           }
+          errors.push(`Z.ai ${c.label} ${res.status}: ${await errorDetail(res)}`);
         }
-        if (!res.ok) {
-          throw new Error(`Z.ai asr ${res.status}: ${await errorDetail(res)}`);
-        }
-        return await parseText(res);
+        if (answered) return answered;
+        throw new Error(errors.join(" | ").slice(0, 420));
       },
     },
   };
