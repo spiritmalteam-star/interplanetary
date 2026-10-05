@@ -37,7 +37,7 @@ import {
 } from "@/lib/learning-branches";
 
 /* ------------------------------------------------------------------ */
-/*  THE LIVING SUGGESTION TREE                                         */
+/*  THE LIVING SUGGESTION TREE — the boundless grove                   */
 /*                                                                     */
 /*  The suggestions stop being a strip and become a tree: every        */
 /*  branch first belongs to a scope of the laboratory — Interplanetary,*/
@@ -45,12 +45,15 @@ import {
 /*  branch opens its own scopes, each scope holding a deep rotation    */
 /*  of whispers ranked against the conversation's last topic.          */
 /*                                                                     */
-/*  The whole tree could never fit, so it lives on a wide canvas       */
-/*  behind a small window — about two centimetres tall — that can be   */
-/*  dragged in ALL directions, up, down, left and right, to reveal     */
-/*  the whispers nearest the last topic. The movement is near-         */
-/*  instant in every direction, and every first move renders NEW       */
-/*  branches — never a repeat of what was already heard.               */
+/*  The grove is a SPHERE, not a box: there are no walls anywhere.     */
+/*  The tree is drawn three times, one grove above and one below,      */
+/*  and the three are identical — so when the walk passes the tree's   */
+/*  end (or its beginning) the canvas is silently re-anchored by       */
+/*  exactly one period and the walk continues without a pause,         */
+/*  forever, in both directions. On either side stretch the ECHO       */
+/*  FIELDS — lanes of distant whispers that turn as the visitor        */
+/*  walks sideways, fresh with every stretch. Every gesture meets      */
+/*  something new to ask about, in every direction, always.            */
 /*                                                                     */
 /*  At the top hangs the CHANNELING branch — the conversation's own    */
 /*  branch, grown from the exchanges themselves — tied to the leading  */
@@ -62,6 +65,10 @@ import {
 /*  branch. And the walk itself is kept — quietly, one step at a       */
 /*  time — so the visitor's profile can draw its DNA evolutionary      */
 /*  helix: the tree stays a tree, the walk lives in the profile.       */
+/*                                                                     */
+/*  HYDRATION LAW: the first paint (server and client alike) is        */
+/*  deterministic — the learning memory is applied only after the      */
+/*  mount, so the rendered tree never disagrees with its own shadow.   */
 /* ------------------------------------------------------------------ */
 
 type TreeState = "rest" | "grove" | "canopy";
@@ -73,8 +80,12 @@ const HEIGHTS: Record<TreeState, number> = {
   canopy: 264,
 };
 
-/** The canvas the tree is drawn on — far larger than the window. */
-const CANVAS_W = 780;
+/** The tree itself — trunk, scopes, whispers — exactly as it always was. */
+const TREE_W = 780;
+/** The echo fields on either side — the tree reflected into the distance. */
+const ECHO_W = 400;
+/** The whole canvas: an echo field, the tree, an echo field. */
+const CANVAS_W = ECHO_W + TREE_W + ECHO_W;
 const TRUNK_X = 22;
 const ROOT_X = 44;
 const ROOT_LABEL_X = 62;
@@ -87,10 +98,18 @@ const LABEL_H = 30;
 const LEAF_ROW_H = 42;
 const BLOCK_GAP = 10;
 const BRANCH_GAP = 22;
-/** Whispers shown per scope before a bloom (or a pan) reveals more. */
+/** Whispers shown per scope before a bloom (or a walk) reveals more. */
 const SHOWN = 2;
-/** Pan distance that renders the next breath of new branches. */
+/** Walk distance that renders the next breath of new branches. */
 const REVEAL_STEP = 150;
+/** The vertical period — past the tree's end, the next grove begins. */
+const WRAP_GAP = 200;
+/** The echo lanes: two fields of distant whispers on each side. */
+const ECHO_LANE_X = [12, 100, ECHO_W + TREE_W + 12, ECHO_W + TREE_W + 100];
+const ECHO_ROW = 110;
+const ECHO_CHIP_W = 290;
+/** Lane seeds — each lane wanders its own face of the pool. */
+const ECHO_SEEDS = [53, 211, 977, 1613];
 
 const BRANCH_ICONS: Record<BranchId | "channeling", typeof Atom> = {
   interplanetary: Orbit,
@@ -156,12 +175,15 @@ function TreeLeafChip({
   onPick,
   disabled,
   testId,
+  blurred = true,
 }: {
   leaf: LeafPos;
   leading: boolean;
   onPick: () => void;
   disabled: boolean;
-  testId: string;
+  testId?: string;
+  /** The far groves rest without their blur — lighter on the hand. */
+  blurred?: boolean;
 }) {
   const t = useT();
   const label = t(leaf.text);
@@ -176,11 +198,13 @@ function TreeLeafChip({
       title={leaf.reason ? `${label} — ${leaf.reason}` : label}
       style={{ width: LEAF_W }}
       className={`focus-glow relative line-clamp-2 rounded-full border px-3 py-1 text-left text-[11.5px] leading-[1.25] transition-all duration-300 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50 ${
+        blurred ? "backdrop-blur-xl" : ""
+      } ${
         leaf.isBud
           ? "border-[color-mix(in_srgb,var(--gd)_55%,transparent)] bg-[color-mix(in_srgb,var(--gd)_10%,var(--glass-bg))] text-foreground/90"
           : connected
-            ? "border-[color-mix(in_srgb,var(--gd)_38%,transparent)] bg-[var(--glass-bg)] text-foreground/85 backdrop-blur-xl"
-            : "hairline bg-[var(--glass-bg)] text-muted-foreground backdrop-blur-xl"
+            ? "border-[color-mix(in_srgb,var(--gd)_38%,transparent)] bg-[var(--glass-bg)] text-foreground/85"
+            : "hairline bg-[var(--glass-bg)] text-muted-foreground"
       } ${
         leading && connected
           ? "shadow-[0_0_12px_color-mix(in_srgb,var(--gd)_16%,transparent)]"
@@ -208,6 +232,36 @@ function TreeLeafChip({
           {t(BRANCH_TYPE_LABELS[leaf.type])}
         </span>
       )}
+      {label}
+    </button>
+  );
+}
+
+/** One echo whisper — a distant star of the far field. */
+function EchoChip({
+  text,
+  onPick,
+  disabled,
+  testId,
+}: {
+  text: string;
+  onPick: () => void;
+  disabled: boolean;
+  testId?: string;
+}) {
+  const t = useT();
+  const label = t(text);
+  return (
+    <button
+      type="button"
+      onClick={onPick}
+      disabled={disabled}
+      aria-disabled={disabled}
+      data-testid={testId}
+      title={label}
+      style={{ width: ECHO_CHIP_W }}
+      className="focus-glow line-clamp-2 rounded-full border border-[color-mix(in_srgb,var(--gd)_16%,var(--hairline))] bg-[color-mix(in_srgb,var(--glass-bg)_55%,transparent)] px-3 py-1 text-left text-[10.5px] leading-[1.25] text-muted-foreground/70 transition-all duration-300 hover:border-[color-mix(in_srgb,var(--gd)_34%,transparent)] hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+    >
       {label}
     </button>
   );
@@ -245,6 +299,17 @@ export function SuggestionTree({
   const t = useT();
   const reduceMotion = useReducedMotion();
 
+  /* ---------------- the hydration law ------------------------------- */
+  /*  The first render — on the server and on the client alike — must
+      be one deterministic tree. The learning memory (a browser thing)
+      joins only after the mount; a plain re-render, never a mismatch. */
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    /* deferred — the learning memory joins after the first paint */
+    const id = window.setTimeout(() => setMounted(true), 0);
+    return () => window.clearTimeout(id);
+  }, []);
+
   /* ---------------- the never-repeating memory ---------------------- */
   /*  The whispers already offered (per identity) are withheld from
       every rotation — the tree renders new branches as it is walked. */
@@ -257,9 +322,23 @@ export function SuggestionTree({
 
   /* ---------------- the living tree, ranked by the conversation ---- */
   const ranked = useMemo(
-    () => buildSuggestionTree(contextText, loadSeen()),
-    [contextText, seenNonce]
+    () => buildSuggestionTree(contextText, mounted ? loadSeen() : null),
+    [contextText, seenNonce, mounted]
   );
+
+  /* ---------------- the echo fields --------------------------------- */
+  /*  Every whisper of the tree, flattened — the far fields wander
+      this pool with their own strides, so walking sideways always
+      meets another face of the laboratory's questions. */
+  const echoPool = useMemo(() => {
+    const texts: string[] = [];
+    for (const b of ranked)
+      for (const s of b.scopes)
+        for (const l of s.leaves)
+          if (l.text && !texts.includes(l.text)) texts.push(l.text);
+    return texts;
+  }, [ranked]);
+  const [echoPhase, setEchoPhase] = useState(0);
 
   /* ---------------- geometry ---------------------------------------- */
   const leadingId: BranchId = useMemo(() => {
@@ -421,6 +500,16 @@ export function SuggestionTree({
     return { height: Math.max(y - BRANCH_GAP + 14, 400), branches };
   }, [ranked, offsets, leadingId, channeling, t]);
 
+  /* ---------------- the period and the refs ------------------------- */
+  /*  One grove's height — the tree plus the air between groves. The
+      three groves are identical, so any shift by a whole period is
+      pixel for pixel the same view: the law the endless walk lives by. */
+  const period = layout.height + WRAP_GAP;
+  const periodRef = useRef(period);
+  useEffect(() => {
+    periodRef.current = period;
+  }, [period]);
+
   /* ---------------- the window -------------------------------------- */
   const [state, setState] = useState<TreeState>("grove");
   const stateRef = useRef<TreeState>("grove");
@@ -429,6 +518,10 @@ export function SuggestionTree({
   }, [state]);
   const viewportRef = useRef<HTMLDivElement>(null);
   const [vp, setVp] = useState({ w: 0, h: 0 });
+  const vpRef = useRef(vp);
+  useEffect(() => {
+    vpRef.current = vp;
+  }, [vp]);
   const [hintSeen, setHintSeen] = useState(false);
 
   useEffect(() => {
@@ -485,6 +578,8 @@ export function SuggestionTree({
   const x = useMotionValue(0);
   const yv = useMotionValue(0);
 
+  /* the soft field edges — used only for homing and resting, never
+     as walls: the walk itself answers to no boundary at all */
   const minX = Math.min(0, vp.w - CANVAS_W);
   const minY = Math.min(0, vp.h - layout.height);
 
@@ -494,21 +589,44 @@ export function SuggestionTree({
   /* the walk's last reveal point — panning renders new branches */
   const lastRevealRef = useRef({ x: 0, y: 0 });
 
-  /* the window drifts to the leading branch — unless the visitor is
-     walking the tree themselves at this moment */
+  /* ---------------- the drift home ----------------------------------- */
+  /*  After a glide settles, a window that hangs beyond the echo
+      fields drifts gently back into the grove — a breath, not a snap.
+      Vertically no homing is needed: the groves are periodic, and the
+      re-anchoring below keeps the walk inside the field forever. */
+  const settleX = useCallback(() => {
+    if (draggingRef.current) return;
+    const w = vpRef.current.w;
+    if (w === 0) return;
+    const lo = Math.min(0, w - CANVAS_W);
+    const cx = x.get();
+    const clamped = Math.max(lo, Math.min(0, cx));
+    if (Math.abs(clamped - cx) < 8) return;
+    animate(x, clamped, { duration: 0.7, ease: [0.22, 1, 0.36, 1] });
+  }, [x]);
+
+  /* ---------------- the window drifts to the leading branch ---------- */
+  /*  The window drifts to the leading branch — unless the visitor is
+      walking the tree themselves at this moment */
+  const firstCenterRef = useRef(true);
   const centerOn = useCallback(
     (id: TreeNodeId) => {
       if (vp.w === 0) return;
       const branch = layout.branches.find((b) => b.id === id);
-      const tx = Math.max(
-        minX,
-        Math.min(0, -(LEAF_X - vp.w * 0.12))
-      );
+      /* wide windows see the whole tree, trunk to whispers; narrow
+         windows rest on the leaf field, as they always have */
+      const tx =
+        vp.w >= TREE_W - 8
+          ? -ECHO_W
+          : Math.max(minX, Math.min(0, -(ECHO_W + LEAF_X - vp.w * 0.12)));
       const targetY = branch ? (branch.top + branch.bottom) / 2 : 0;
       const ty = Math.max(minY, Math.min(0, vp.h / 2 - targetY));
-      if (reduceMotion) {
+      if (firstCenterRef.current || reduceMotion) {
+        /* the first rest lands without a journey — no load-time slide */
+        firstCenterRef.current = false;
         x.set(tx);
         yv.set(ty);
+        lastRevealRef.current = { x: tx, y: ty };
       } else {
         /* the drift is a breath, not a snap — the house ease carries
            the window the whole way so the movement reads as one glide */
@@ -534,18 +652,49 @@ export function SuggestionTree({
   }, [leadingId]);
 
   /* ---------------- render new branches on the move ------------------
-     Each significant stretch of panning advances the visible scopes'
+     Each significant stretch of walking advances the visible scopes'
      rotations — fresh whispers render as the visitor moves, and what
-     was shown is remembered so nothing ever repeats. */
+     was shown is remembered so nothing ever repeats. The echo fields
+     turn with the horizontal walk, their own faces of the pool. */
   const revealOnMove = useCallback(() => {
-    if (state === "rest" || vp.h === 0) return;
+    if (stateRef.current === "rest" || vpRef.current.h === 0) return;
     const cx = x.get();
     const cy = yv.get();
     const last = lastRevealRef.current;
-    if (Math.hypot(cx - last.x, cy - last.y) < REVEAL_STEP) return;
+    const dx = cx - last.x;
+    const dy = cy - last.y;
+    if (Math.hypot(dx, dy) < REVEAL_STEP) return;
     lastRevealRef.current = { x: cx, y: cy };
-    const top = -cy - 40;
-    const bottom = -cy + vp.h + 40;
+
+    /* the echo fields turn with the sideways walk */
+    if (Math.abs(dx) >= REVEAL_STEP * 0.6 && echoPool.length > 0) {
+      const steps = Math.max(
+        1,
+        Math.min(4, Math.round(Math.abs(dx) / REVEAL_STEP))
+      );
+      const dir = dx < 0 ? steps : -steps;
+      const nextPhase = echoPhase + dir;
+      setEchoPhase(nextPhase);
+      /* a sample of what the turn reveals is remembered too */
+      const len = echoPool.length;
+      const fresh: string[] = [];
+      for (let n = 0; n < 4; n++) {
+        for (const r of [0, 1]) {
+          const idx =
+            (((nextPhase + ECHO_SEEDS[n] + r * 7) % len) + len) % len;
+          const text = echoPool[idx];
+          if (text) fresh.push(text);
+        }
+      }
+      recordSeen(fresh);
+    }
+
+    /* the vertical walk — which scopes the window rests over, folded
+       back into the home grove no matter which grove is on stage */
+    const h = periodRef.current;
+    const cyM = h > 0 ? ((cy % h) + h) % h : cy;
+    const top = -cyM - 40;
+    const bottom = -cyM + vpRef.current.h + 40;
     const touched: { scopeKey: string; total: number; branch: TreeNodeId; label: string }[] = [];
     for (const b of layout.branches) {
       if (b.id === "channeling") continue;
@@ -584,7 +733,12 @@ export function SuggestionTree({
     /* the memory is NOT re-read here — the whispers that just appeared
        stay on their tips; the filtering applies from the next exchange */
     recordJourney({ b: touched[0].branch, s: touched[0].label });
-  }, [state, vp.h, layout.branches, ranked, offsets, x, yv]);
+  }, [layout.branches, ranked, offsets, x, yv, echoPool, echoPhase]);
+
+  const revealRef = useRef(revealOnMove);
+  useEffect(() => {
+    revealRef.current = revealOnMove;
+  }, [revealOnMove]);
 
   const bloom = (scopeKey: string, total: number, branch: TreeNodeId, label: string) => {
     if (total <= SHOWN) return;
@@ -606,36 +760,64 @@ export function SuggestionTree({
     recordJourney({ b: branch, s: label });
   };
 
+  /* ---------------- the endless walk ----------------------------------
+     The three groves are identical, so crossing a seam is a pure re-
+     anchoring: when the window passes the tree's end (or beginning) the
+     canvas shifts by exactly one period — pixel for pixel the same view
+     — and the walk continues without a pause. Forever. A quiet keeper
+     re-anchors at rest as well, and drifts a window that hangs beyond
+     the echo fields gently home. */
+  useEffect(() => {
+    const wrapY = () => {
+      const h = periodRef.current;
+      if (h <= 0) return;
+      const cy = yv.get();
+      if (cy <= -h || cy >= h) {
+        const rebased = ((cy % h) + h) % h;
+        yv.set(rebased);
+        lastRevealRef.current = { x: x.get(), y: rebased };
+      }
+    };
+    const unY = yv.on("change", wrapY);
+    const unX = x.on("change", () => revealRef.current());
+    const keeper = window.setInterval(() => {
+      wrapY();
+      settleX();
+    }, 280);
+    return () => {
+      unY();
+      unX();
+      window.clearInterval(keeper);
+    };
+  }, [x, yv, settleX]);
+
   /* ---------------- wheel panning ------------------------------------
      the canvas answers the wheel too — NEARLY INSTANT in every
-     direction: the window follows the hand at once, and at an edge
-     the page keeps its own scroll */
+     direction, unbounded: the window follows the hand at once, the
+     groves re-anchor beneath it, and the echo fields turn sideways */
   useEffect(() => {
     const el = viewportRef.current;
     if (!el) return;
     const onWheel = (e: WheelEvent) => {
-      if (vp.w === 0) return;
+      if (vpRef.current.w === 0) return;
       const k = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 400 : 1;
       const dx = -(e.shiftKey ? e.deltaY : e.deltaX) * k;
       const dy = e.shiftKey ? 0 : -e.deltaY * k;
-      const cx = x.get();
-      const cy = yv.get();
-      const canPanX =
-        dx !== 0 && ((dx < 0 && cx > minX) || (dx > 0 && cx < 0));
-      const canPanY =
-        dy !== 0 && ((dy < 0 && cy > minY) || (dy > 0 && cy < 0));
-      if (!canPanX && !canPanY) return; /* the page keeps its scroll */
+      if (dx === 0 && dy === 0) return;
       e.preventDefault();
       lastPanRef.current = Date.now();
       setHintSeen(true);
       window.localStorage.setItem(HINT_KEY, "seen");
-      x.set(Math.max(minX, Math.min(0, cx + dx)));
-      yv.set(Math.max(minY, Math.min(0, cy + dy)));
-      revealOnMove();
+      x.set(x.get() + dx);
+      yv.set(yv.get() + dy);
+      revealRef.current();
+      /* the wheel's glide ends in stillness — the keeper homing lands
+         a breath after the last turn */
+      window.setTimeout(settleX, 500);
     };
     el.addEventListener("wheel", onWheel, { passive: false });
     return () => el.removeEventListener("wheel", onWheel);
-  }, [vp.w, minX, minY, x, yv, revealOnMove]);
+  }, [x, yv, settleX]);
 
   /* ---------------- the hub link -------------------------------------
      the branches grown at a reply's foot are linked with the tree: the
@@ -667,20 +849,34 @@ export function SuggestionTree({
     e.preventDefault();
     lastPanRef.current = Date.now();
     setHintSeen(true);
-    const nx = Math.max(minX, Math.min(0, x.get() + dx));
-    const ny = Math.max(minY, Math.min(0, yv.get() + dy));
     if (reduceMotion) {
-      x.set(nx);
-      yv.set(ny);
+      x.set(x.get() + dx);
+      yv.set(yv.get() + dy);
     } else {
       /* the keys answer almost instantly — never a jump, never a wait */
-      animate(x, nx, { duration: 0.14, ease: "easeOut" });
-      animate(yv, ny, { duration: 0.14, ease: "easeOut" });
+      animate(x, x.get() + dx, { duration: 0.14, ease: "easeOut" });
+      animate(yv, yv.get() + dy, { duration: 0.14, ease: "easeOut" });
     }
-    revealOnMove();
+    revealRef.current();
   };
 
   const prefix = testIdPrefix;
+
+  /* ---------------- the echo field texts ------------------------------ */
+  const echoRows = Math.max(
+    1,
+    Math.floor((layout.height - 70) / ECHO_ROW)
+  );
+  const echoText = useCallback(
+    (lane: number, r: number): string | null => {
+      const len = echoPool.length;
+      if (len === 0) return null;
+      const idx =
+        (((echoPhase + ECHO_SEEDS[lane % 4] + r * 7) % len) + len) % len;
+      return echoPool[idx] ?? null;
+    },
+    [echoPool, echoPhase]
+  );
 
   /* ---------------- the rested line ---------------------------------- */
   if (state === "rest") {
@@ -721,102 +917,55 @@ export function SuggestionTree({
   })();
   const grownCount = channeling?.length ?? 0;
 
-  /* ---------------- the tree ------------------------------------------ */
-  return (
-    <div
-      className={`relative mx-auto w-full max-w-[780px] ${className ?? ""}`}
-      data-testid={`${prefix}-tree`}
-    >
-      {/* the control row — the rest and the canopy */}
-      <div className="mb-1 flex items-center justify-end px-1">
-        <div className="flex items-center gap-0.5">
-          <button
-            type="button"
-            onClick={() => setState("rest")}
-            data-testid={`${prefix}-rest`}
-            aria-label={t("Rest the tree")}
-            title={t("Rest the tree")}
-            className="focus-glow flex size-6 items-center justify-center rounded-full text-muted-foreground/70 transition-all duration-300 hover:bg-[color-mix(in_srgb,var(--gd)_10%,transparent)] hover:text-foreground"
-          >
-            <ChevronDown className="size-3.5" aria-hidden="true" />
-          </button>
-          <button
-            type="button"
-            onClick={() => setState(state === "canopy" ? "grove" : "canopy")}
-            data-testid={`${prefix}-canopy`}
-            aria-label={
-              state === "canopy" ? t("Lower the canopy") : t("Open the canopy")
-            }
-            title={
-              state === "canopy" ? t("Lower the canopy") : t("Open the canopy")
-            }
-            className="focus-glow flex size-6 items-center justify-center rounded-full text-muted-foreground/70 transition-all duration-300 hover:bg-[color-mix(in_srgb,var(--gd)_10%,transparent)] hover:text-foreground"
-          >
-            {state === "canopy" ? (
-              <ChevronDown className="size-3.5" aria-hidden="true" />
-            ) : (
-              <ChevronUp className="size-3.5" aria-hidden="true" />
-            )}
-          </button>
-        </div>
-      </div>
+  /* one grove — the tree exactly where it always stood, ringed by its
+     echo fields. Every grove is identical; the walk never notices. */
+  const grove = (tile: -1 | 0 | 1) => {
+    const main = tile === 0;
+    const tid = (name: string) => (main ? `${prefix}-${name}` : undefined);
+    return (
+      <>
+        {/* the echo fields — distant whispers on both sides */}
+        {echoPool.length > 0 &&
+          ECHO_LANE_X.map((lx, n) => (
+            <div key={`echo-${n}`}>
+              {Array.from({ length: echoRows }, (_, r) => {
+                const text = echoText(n, r);
+                if (!text) return null;
+                return (
+                  <div
+                    key={r}
+                    className="absolute"
+                    style={{
+                      left: lx,
+                      top: 14 + r * ECHO_ROW + (n % 2) * (ECHO_ROW / 2),
+                    }}
+                  >
+                    <EchoChip
+                      text={text}
+                      disabled={disabled}
+                      onPick={() => {
+                        if (draggingRef.current) return;
+                        recordSeen([text]);
+                        setSeenNonce((v) => v + 1);
+                        onPick(text);
+                      }}
+                      testId={tid("echo-chip")}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          ))}
 
-      {/* the window — two centimetres of a far larger tree */}
-      <div
-        ref={viewportRef}
-        role="group"
-        aria-label={ariaLabel ?? t("The living tree")}
-        tabIndex={0}
-        onKeyDown={onKeyPan}
-        data-testid={`${prefix}-viewport`}
-        style={{ height: HEIGHTS[state] }}
-        className={`no-scrollbar relative overflow-hidden rounded-2xl border hairline bg-[color-mix(in_srgb,var(--glass-bg)_72%,transparent)] backdrop-blur-xl transition-[height] duration-300 ${
-          disabled ? "pointer-events-none opacity-70" : ""
-        }`}
-      >
-        <motion.div
-          drag
-          dragConstraints={{ left: minX, right: 0, top: minY, bottom: 0 }}
-          dragMomentum
-          /* the glide after the hand lifts — short and light now, so a
-             change of direction answers at once, almost without delay */
-          dragTransition={{
-            power: 0.18,
-            timeConstant: 120,
-            bounceStiffness: 220,
-            bounceDamping: 26,
-          }}
-          dragElastic={0.07}
-          onDragStart={() => {
-            draggingRef.current = true;
-            lastPanRef.current = Date.now();
-            setHintSeen(true);
-            window.localStorage.setItem(HINT_KEY, "seen");
-          }}
-          onDrag={() => {
-            lastPanRef.current = Date.now();
-            revealOnMove();
-          }}
-          onDragEnd={() => {
-            lastPanRef.current = Date.now();
-            window.setTimeout(() => {
-              draggingRef.current = false;
-            }, 150);
-          }}
-          style={{
-            x,
-            y: yv,
-            width: CANVAS_W,
-            height: layout.height,
-            touchAction: "none",
-          }}
-          className="absolute left-0 top-0 will-change-transform"
-          data-testid={`${prefix}-canvas`}
+        {/* the tree itself */}
+        <div
+          className="absolute top-0"
+          style={{ left: ECHO_W, width: TREE_W, height: layout.height }}
         >
           {/* the connectors */}
           <svg
             className="absolute inset-0"
-            width={CANVAS_W}
+            width={TREE_W}
             height={layout.height}
             aria-hidden="true"
           >
@@ -921,7 +1070,7 @@ export function SuggestionTree({
                       : "text-muted-foreground/80"
                   }`}
                   style={{ left: ROOT_LABEL_X, top: b.y - 12 }}
-                  data-testid={`${prefix}-root-${b.id}`}
+                  data-testid={tid(`root-${b.id}`)}
                 >
                   {b.label}
                 </span>
@@ -990,6 +1139,7 @@ export function SuggestionTree({
                         leaf={leaf}
                         leading={b.leading}
                         disabled={disabled}
+                        blurred={main}
                         onPick={() => {
                           if (draggingRef.current) return;
                           /* the learning memory: what was walked is
@@ -1004,7 +1154,7 @@ export function SuggestionTree({
                           });
                           onPick(leaf.text);
                         }}
-                        testId={`${prefix}-chip`}
+                        testId={tid("chip")}
                       />
                     </div>
                   )
@@ -1020,7 +1170,7 @@ export function SuggestionTree({
                           .length ?? 0;
                       bloom(s.key, total, b.id, s.label);
                     }}
-                    data-testid={`${prefix}-bloom`}
+                    data-testid={tid("bloom")}
                     aria-label={t("More whispers")}
                     title={t("More whispers")}
                     className="focus-glow absolute flex size-5 items-center justify-center rounded-full text-[var(--gd)]/70 transition-all duration-300 hover:rotate-45 hover:text-[var(--gd)]"
@@ -1032,6 +1182,115 @@ export function SuggestionTree({
               </div>
             ))
           )}
+        </div>
+      </>
+    );
+  };
+
+  /* ---------------- the tree ------------------------------------------ */
+  return (
+    <div
+      className={`relative mx-auto w-full max-w-[780px] ${className ?? ""}`}
+      data-testid={`${prefix}-tree`}
+    >
+      {/* the control row — the rest and the canopy */}
+      <div className="mb-1 flex items-center justify-end px-1">
+        <div className="flex items-center gap-0.5">
+          <button
+            type="button"
+            onClick={() => setState("rest")}
+            data-testid={`${prefix}-rest`}
+            aria-label={t("Rest the tree")}
+            title={t("Rest the tree")}
+            className="focus-glow flex size-6 items-center justify-center rounded-full text-muted-foreground/70 transition-all duration-300 hover:bg-[color-mix(in_srgb,var(--gd)_10%,transparent)] hover:text-foreground"
+          >
+            <ChevronDown className="size-3.5" aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            onClick={() => setState(state === "canopy" ? "grove" : "canopy")}
+            data-testid={`${prefix}-canopy`}
+            aria-label={
+              state === "canopy" ? t("Lower the canopy") : t("Open the canopy")
+            }
+            title={
+              state === "canopy" ? t("Lower the canopy") : t("Open the canopy")
+            }
+            className="focus-glow flex size-6 items-center justify-center rounded-full text-muted-foreground/70 transition-all duration-300 hover:bg-[color-mix(in_srgb,var(--gd)_10%,transparent)] hover:text-foreground"
+          >
+            {state === "canopy" ? (
+              <ChevronDown className="size-3.5" aria-hidden="true" />
+            ) : (
+              <ChevronUp className="size-3.5" aria-hidden="true" />
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* the window — two centimetres of a boundless sphere */}
+      <div
+        ref={viewportRef}
+        role="group"
+        aria-label={ariaLabel ?? t("The living tree")}
+        tabIndex={0}
+        onKeyDown={onKeyPan}
+        data-testid={`${prefix}-viewport`}
+        style={{ height: HEIGHTS[state] }}
+        className={`no-scrollbar relative overflow-hidden rounded-2xl border hairline bg-[color-mix(in_srgb,var(--glass-bg)_72%,transparent)] backdrop-blur-xl transition-[height] duration-300 ${
+          disabled ? "pointer-events-none opacity-70" : ""
+        }`}
+      >
+        <motion.div
+          drag
+          dragMomentum
+          /* the glide after the hand lifts — a long, light breath across
+             the open field; the endless re-anchoring keeps every grove
+             within reach, so a change of direction answers at once */
+          dragTransition={{
+            power: 0.26,
+            timeConstant: 190,
+          }}
+          onDragStart={() => {
+            draggingRef.current = true;
+            lastPanRef.current = Date.now();
+            setHintSeen(true);
+            window.localStorage.setItem(HINT_KEY, "seen");
+          }}
+          onDrag={() => {
+            lastPanRef.current = Date.now();
+            revealRef.current();
+          }}
+          onDragEnd={() => {
+            lastPanRef.current = Date.now();
+            window.setTimeout(() => {
+              draggingRef.current = false;
+            }, 150);
+          }}
+          style={{
+            x,
+            y: yv,
+            width: CANVAS_W,
+            height: layout.height + period * 2,
+            touchAction: "none",
+          }}
+          className="absolute left-0 top-0 will-change-transform [&_*]:touch-none"
+          data-testid={`${prefix}-canvas`}
+        >
+          {/* three identical groves — above, here, and below. Crossing
+              a seam is a silent re-anchor: the sphere has no edges. */}
+          {([-1, 0, 1] as const).map((tile) => (
+            <div
+              key={tile}
+              className="absolute left-0"
+              style={{
+                top: tile * period,
+                width: CANVAS_W,
+                height: layout.height,
+              }}
+            >
+              {grove(tile)}
+            </div>
+          ))}
         </motion.div>
 
         {/* the window's breath — edge fades and the first hint */}

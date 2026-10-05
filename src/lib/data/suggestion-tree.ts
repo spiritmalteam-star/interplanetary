@@ -582,9 +582,15 @@ export function buildSuggestionTree(
   return STATIC_TREE.map((branch) => {
     let resonance = 0;
     const scopes: RankedScope[] = branch.scopes.map((scope) => {
-      const pool = isSeen
-        ? scope.rotation.filter((text) => !isSeen(text))
-        : scope.rotation;
+      /* the memory withholds what was already heard — but it never
+         starves a scope: if every whisper was already offered, the
+         rotation returns whole. The tree prefers a repeated whisper
+         to an empty branch; there is always something to ask. */
+      const kept =
+        seen && seen.length > 0
+          ? scope.rotation.filter((text) => !isSeen(text))
+          : scope.rotation;
+      const pool = kept.length > 0 ? kept : scope.rotation;
       const ranked = pool
         .map((text, i) => ({ text, i, score: scoreSuggestion(text, vocab) }))
         .sort((a, b) => b.score - a.score || a.i - b.i)
