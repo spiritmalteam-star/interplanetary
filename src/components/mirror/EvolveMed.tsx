@@ -5,7 +5,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   Activity,
   ArrowLeft,
-  AudioLines,
   Compass,
   Feather,
   FlaskConical,
@@ -817,20 +816,8 @@ export function EvolveMed() {
   const exitEvolveMed = useMirror((s) => s.exitEvolveMed);
   const setEmVector = useMirror((s) => s.setEmVector);
   const pinEmNotes = useMirror((s) => s.pinEmNotes);
-  const emMessages = useMirror((s) => s.emMessages);
   const [place, setPlace] = useState<EmPlace>("chat");
   const t = useT();
-
-  /* The voice button narrates the latest revelation with the
-     gentleman narrator — a man, gentle and natural. Note stickers
-     carry no words for the voice to read. */
-  const latest = useMemo(
-    () => [...emMessages].reverse().find((m) => m.role === "em" && !m.notesVector),
-    [emMessages]
-  );
-  const voiceText = latest
-    ? `${latest.text}${latest.formulas?.length ? `. ${latest.formulas.join(". ")}` : ""}`
-    : "";
 
   return (
     <div className="scope-evolvemed relative flex h-full flex-col">
@@ -872,34 +859,6 @@ export function EvolveMed() {
               />
             ))}
           </nav>
-
-          <div className="flex shrink-0 items-center gap-2">
-            {/* the voice — narrates the latest revelation, a man's gentle
-                natural voice, at the very top as asked */}
-            {voiceText ? (
-              <ListenButton
-                text={voiceText}
-                cacheKey="em-top-narration"
-                variant="icon"
-                className="size-9"
-                voice="regent"
-              />
-            ) : (
-              <span
-                className="flex size-9 items-center justify-center rounded-full border hairline text-muted-foreground/40"
-                aria-hidden="true"
-                title={t("The voice waits for the first revelation")}
-              >
-                <AudioLines className="size-4" />
-              </span>
-            )}
-            <span
-              className="flex size-9 items-center justify-center rounded-full border hairline"
-              aria-hidden="true"
-            >
-              <Microscope className="size-4 text-[var(--gd)]" />
-            </span>
-          </div>
         </div>
       </header>
 

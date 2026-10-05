@@ -39,6 +39,9 @@ interface ChatInputExtrasProps {
   disabled?: boolean;
   /** Button diameter — md = size-11, sm = size-9, xs = size-8, 2xs = size-7. */
   size?: "md" | "sm" | "xs" | "2xs";
+  /** Mobile emphasis — on phones the side buttons sit one step larger
+      (so the thumb finds them), returning to `size` on sm+ screens. */
+  mobileLarger?: boolean;
   /** Accent CSS variable for the hairline buttons. */
   accentVar?: string;
   attachments: ChatAttachment[];
@@ -51,6 +54,7 @@ export function ChatInputExtras({
   scope,
   disabled = false,
   size = "md",
+  mobileLarger = false,
   accentVar = "var(--scope-a)",
   attachments,
   onAttachmentsChange,
@@ -154,7 +158,9 @@ export function ChatInputExtras({
         ? "size-9"
         : size === "xs"
           ? "size-8"
-          : "size-7";
+          : mobileLarger
+            ? "size-8 sm:size-7"
+            : "size-7";
   const iconSize =
     size === "md" ? "size-4" : size === "sm" ? "size-3.5" : "size-3.5";
 

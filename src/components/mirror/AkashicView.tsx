@@ -10,11 +10,9 @@ import {
   Feather,
   LoaderCircle,
   Orbit,
-  PenTool,
   RotateCcw,
   Share2,
   Square,
-  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useMirror } from "@/lib/mirror-store";
@@ -68,9 +66,9 @@ export function AkashicView() {
   const [copied, setCopied] = useState(false);
   const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
 
-  /* the inkwell — one small door for every wish */
-  const [wishOpen, setWishOpen] = useState(false);
-  const wishInputRef = useRef<HTMLInputElement | null>(null);
+  /* the ask bar — the visitor's own line to the Librarian, always at
+     the foot of the room: a request makes the next transmission an
+     asked-for one, an empty send lets the Library choose unasked */
 
   /* the letter's corner back door — it hides once you scroll to read */
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -368,7 +366,6 @@ export function AkashicView() {
         (intent.followUp && visualContextRef.current !== null));
     setDraft("");
     setAttachments([]);
-    setWishOpen(false);
     if (wantsVisual) {
       void requestVisualization(val);
     } else {
@@ -381,19 +378,13 @@ export function AkashicView() {
     sendText(draft);
   };
 
-  /* the inkwell opens with the field ready; escape puts it away */
-  useEffect(() => {
-    if (!wishOpen) return;
-    const id = window.setTimeout(() => wishInputRef.current?.focus(), 140);
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setWishOpen(false);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => {
-      window.clearTimeout(id);
-      window.removeEventListener("keydown", onKey);
-    };
-  }, [wishOpen]);
+  /* receive unasked — the Library chooses, no words set down */
+  const receiveUnasked = () => {
+    if (seekingRef.current) return;
+    setDraft("");
+    setAttachments([]);
+    void seek(null, false);
+  };
 
   const handleScroll = () => {
     const el = scrollRef.current;
@@ -757,113 +748,79 @@ export function AkashicView() {
         </div>
       </div>
 
-      {/* ---------- the inkwell — one small door for every wish ---------- */}
+      {/* ---------- the ask bar — the visitor's own line to the Librarian,
+          always waiting at the foot of the room: write a request and the
+          next transmission is a asked-for one, pressed send with nothing
+          set down and the Library chooses unasked ---------- */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-40 flex justify-center px-3 pb-[max(0.85rem,env(safe-area-inset-bottom))] sm:px-5">
-        <AnimatePresence mode="wait" initial={false}>
-          {wishOpen ? (
-            <motion.form
-              key="wish-sheet"
-              onSubmit={send}
-              initial={{ opacity: 0, y: 14, scale: 0.985 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 14, scale: 0.985 }}
-              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-              className="pointer-events-auto relative w-full max-w-[640px] rounded-2xl border hairline bg-card/95 p-3 shadow-[0_24px_60px_-28px_rgba(0,0,0,0.42)] backdrop-blur-md"
-              data-testid="akashic-wish-sheet"
+        <form
+          onSubmit={send}
+          className="pointer-events-auto relative w-full max-w-[640px] rounded-2xl border hairline bg-card/95 p-2.5 shadow-[0_24px_60px_-28px_rgba(0,0,0,0.42)] backdrop-blur-md"
+          data-testid="akashic-ask-bar"
+        >
+          <AttachmentChips
+            attachments={attachments}
+            onRemove={(id) =>
+              setAttachments((prev) => prev.filter((a) => a.id !== id))
+            }
+            accentVar="var(--foreground)"
+            testId="akashic-attachments"
+          />
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              placeholder={
+                replying
+                  ? t(
+                      "Reply — ask the Librarian anything, or let the story go on"
+                    )
+                  : t("What do you wish to read about?")
+              }
+              aria-label={
+                replying
+                  ? t("Reply to the record")
+                  : t("What do you wish to read about?")
+              }
+              data-testid="akashic-wish-input"
+              className="focus-glow h-11 min-w-0 flex-1 rounded-full border hairline bg-background/70 px-4 text-[15px] text-foreground placeholder:text-muted-foreground/60 transition-all duration-300"
+            />
+            <ChatInputExtras
+              scope="akashic"
+              size="2xs"
+              mobileLarger
+              accentVar="var(--foreground)"
+              disabled={seeking}
+              attachments={attachments}
+              onAttachmentsChange={setAttachments}
+            />
+            <button
+              type="submit"
+              disabled={
+                seeking ||
+                (!draft.trim() && attachments.length === 0) ||
+                hasPendingAttachments(attachments)
+              }
+              aria-label={replying ? t("Send the reply") : t("Receive by resonance")}
+              data-testid="akashic-wish-send"
+              className="akashic-btn focus-glow flex size-11 shrink-0 items-center justify-center rounded-full transition-all duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-35"
             >
-              <button
-                type="button"
-                onClick={() => setWishOpen(false)}
-                aria-label={t("Put the ink away")}
-                title={t("Put the ink away")}
-                data-testid="akashic-wish-close"
-                className="focus-glow absolute -right-2 -top-2 flex size-6 items-center justify-center rounded-full border hairline bg-background text-muted-foreground shadow-sm transition-colors duration-300 hover:text-foreground"
-              >
-                <X className="size-3" aria-hidden="true" />
-              </button>
-              <AttachmentChips
-                attachments={attachments}
-                onRemove={(id) =>
-                  setAttachments((prev) => prev.filter((a) => a.id !== id))
-                }
-                accentVar="var(--foreground)"
-                testId="akashic-attachments"
-              />
-              <div className="flex items-center gap-2">
-                <input
-                  ref={wishInputRef}
-                  type="text"
-                  value={draft}
-                  onChange={(e) => setDraft(e.target.value)}
-                  placeholder={
-                    replying
-                      ? t(
-                          "Reply — ask the Librarian anything, or let the story go on"
-                        )
-                      : t("What do you wish to read about?")
-                  }
-                  aria-label={
-                    replying
-                      ? t("Reply to the record")
-                      : t("What do you wish to read about?")
-                  }
-                  data-testid="akashic-wish-input"
-                  className="focus-glow h-11 min-w-0 flex-1 rounded-full border hairline bg-background/70 px-4 text-[14.5px] text-foreground placeholder:text-muted-foreground/60 transition-all duration-300"
-                />
-                <ChatInputExtras
-                  scope="akashic"
-                  accentVar="var(--foreground)"
-                  disabled={seeking}
-                  attachments={attachments}
-                  onAttachmentsChange={setAttachments}
-                />
-                <button
-                  type="submit"
-                  disabled={
-                    seeking ||
-                    (!draft.trim() && attachments.length === 0) ||
-                    hasPendingAttachments(attachments)
-                  }
-                  aria-label={replying ? t("Send the reply") : t("Receive by resonance")}
-                  data-testid="akashic-wish-send"
-                  className="akashic-btn focus-glow flex size-11 shrink-0 items-center justify-center rounded-full transition-all duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-35"
-                >
-                  <Feather className="size-4" aria-hidden="true" />
-                </button>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setWishOpen(false);
-                  void seek(null, false);
-                }}
-                disabled={seeking}
-                title={t("Receive unasked")}
-                data-testid="akashic-unasked"
-                className="mono-label mx-auto mt-2 flex h-7 items-center justify-center gap-1.5 text-[9.5px] uppercase tracking-[0.22em] text-muted-foreground/70 transition-colors duration-300 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                <Orbit className="size-3" aria-hidden="true" />
-                {t("or leave it empty — receive unasked")}
-              </button>
-            </motion.form>
-          ) : (
-            <motion.button
-              key="wish-door"
-              type="button"
-              onClick={() => setWishOpen(true)}
-              aria-label={t("What do you wish to read about?")}
-              title={t("What do you wish to read about?")}
-              data-testid="akashic-wish"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
-              transition={{ duration: 0.3 }}
-              className="pointer-events-auto flex size-12 items-center justify-center rounded-full border hairline bg-card/90 text-foreground shadow-[0_16px_36px_-16px_rgba(0,0,0,0.42)] backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:border-[var(--hairline-hover)]"
-            >
-              <PenTool className="size-[18px]" aria-hidden="true" />
-            </motion.button>
-          )}
-        </AnimatePresence>
+              <Feather className="size-4" aria-hidden="true" />
+            </button>
+          </div>
+          <button
+            type="button"
+            onClick={receiveUnasked}
+            disabled={seeking}
+            title={t("Receive unasked")}
+            data-testid="akashic-unasked"
+            className="mono-label mx-auto mt-1.5 flex h-6 items-center justify-center gap-1.5 text-[9.5px] uppercase tracking-[0.22em] text-muted-foreground/70 transition-colors duration-300 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <Orbit className="size-3" aria-hidden="true" />
+            {t("or leave it empty — receive unasked")}
+          </button>
+        </form>
       </div>
     </div>
   );

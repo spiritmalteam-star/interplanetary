@@ -40,7 +40,6 @@ import { innerEarth, type InnerEarthSpecies } from "@/lib/data/inner-earth";
 import { archiveTotals, useMirror } from "@/lib/mirror-store";
 import { LANGUAGES, useT } from "@/lib/i18n";
 import { entityImage, searchEntities } from "@/lib/entity-utils";
-import { WorldSigil, type WorldSigilKey } from "./WorldSigils";
 import { ThemeToggle } from "./ThemeToggle";
 import { cn } from "@/lib/utils";
 import type { CivilizationGroup, InterdimGroup } from "@/lib/mirror-types";
@@ -58,16 +57,12 @@ function NavRow({
   aria,
   onClick,
   testId,
-  sigil,
 }: {
   icon: typeof BookOpen;
   label: string;
   aria?: string;
   onClick: () => void;
   testId?: string;
-  /** The world's light-language sigil — worn in place of the icon;
-      the Lucide mark stays as the graceful fallback. */
-  sigil?: WorldSigilKey;
 }) {
   return (
     <button
@@ -78,16 +73,10 @@ function NavRow({
       data-testid={testId}
       className="focus-glow group flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left transition-colors duration-200 hover:bg-[color-mix(in_srgb,var(--cy)_8%,transparent)]"
     >
-      {sigil ? (
-        <span className="flex size-7 shrink-0 items-center justify-center text-foreground/75 transition-all duration-300 group-hover:scale-110 group-hover:text-[var(--cy)]">
-          <WorldSigil world={sigil} />
-        </span>
-      ) : (
-        <Icon
-          className="size-4 shrink-0 text-muted-foreground transition-colors duration-200 group-hover:text-[var(--cy)]"
-          aria-hidden="true"
-        />
-      )}
+      <Icon
+        className="size-4 shrink-0 text-muted-foreground transition-colors duration-200 group-hover:text-[var(--cy)]"
+        aria-hidden="true"
+      />
       <span className="min-w-0 flex-1 truncate text-[13.5px] font-medium text-foreground/80 transition-colors duration-200 group-hover:text-foreground">
         {label}
       </span>
@@ -569,7 +558,6 @@ export function SidebarContent() {
     label: string;
     aria: string;
     action: () => void;
-    sigil?: WorldSigilKey;
   }[] = [
     {
       key: "mirroros",
@@ -577,7 +565,6 @@ export function SidebarContent() {
       label: t("Manifest"),
       aria: t("Open the Mirror OS — Reality Guidance"),
       action: openMirrorOS,
-      sigil: "mirroros" as WorldSigilKey,
     },
     {
       key: "akashic",
@@ -585,7 +572,6 @@ export function SidebarContent() {
       label: t("Akashic"),
       aria: t("Open the Akashic Library — records of the ancient one"),
       action: openAkashic,
-      sigil: "akashic" as WorldSigilKey,
     },
     {
       key: "starplay",
@@ -593,7 +579,6 @@ export function SidebarContent() {
       label: t("Star Play"),
       aria: t("Open Star Play — the Mirror's arcana deck"),
       action: () => openModal({ type: "starplay" }),
-      sigil: "starplay" as WorldSigilKey,
     },
     {
       key: "invent",
@@ -601,7 +586,6 @@ export function SidebarContent() {
       label: t("Invent"),
       aria: t("Open Invent — the Forge, the invention workshop of the Mirror"),
       action: openInvent,
-      sigil: "invent" as WorldSigilKey,
     },
     {
       key: "dreambook",
@@ -609,7 +593,6 @@ export function SidebarContent() {
       label: t("Dream Book"),
       aria: t("Open the Dream Book — tales woven from resonance"),
       action: openDreamBook,
-      sigil: "dreambook" as WorldSigilKey,
     },
   ];
 
@@ -685,7 +668,6 @@ export function SidebarContent() {
             <NavRow
               key={w.key}
               icon={w.icon}
-              sigil={w.sigil}
               label={w.label}
               aria={w.aria}
               onClick={() => {
@@ -704,7 +686,6 @@ export function SidebarContent() {
         <nav aria-label={t("Light Codes")} className="flex flex-col">
           <NavRow
             icon={AudioLines}
-            sigil="lightcodes"
             label={t("Light Codes")}
             aria={t("Open Light Codes — sound transmissions through Mirror Entity")}
             onClick={() => {
@@ -724,7 +705,6 @@ export function SidebarContent() {
         <nav aria-label={t("ParticleX")} className="flex flex-col">
           <NavRow
             icon={Atom}
-            sigil="particlex"
             label={t("Quantum World")}
             aria={t("Open ParticleX — the quantum narrator of the laboratory")}
             onClick={() => {
@@ -735,7 +715,6 @@ export function SidebarContent() {
           />
           <NavRow
             icon={Dna}
-            sigil="evolvemed"
             label={t("Evolve Med")}
             aria={t("Open Evolve Med — the evolutionary medical nexus of the laboratory")}
             onClick={() => {

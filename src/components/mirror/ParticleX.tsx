@@ -1,17 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowLeft,
   Atom,
-  AudioLines,
   Dna,
   Feather,
   FlaskConical,
-  Maximize2,
-  Minimize2,
   Orbit,
   ScrollText,
   StickyNote,
@@ -670,38 +666,8 @@ export function ParticleX() {
   const exitParticleX = useMirror((s) => s.exitParticleX);
   const setPxScope = useMirror((s) => s.setPxScope);
   const pinPxNotes = useMirror((s) => s.pinPxNotes);
-  const pxMessages = useMirror((s) => s.pxMessages);
-  const askPX = useMirror((s) => s.askPX);
   const [place, setPlace] = useState<PxPlace>("chat");
-  const [chatFull, setChatFull] = useState(false);
   const t = useT();
-
-  /* the thread may be worked with full screen — Esc or the same
-     button always returns it to its chamber */
-  useEffect(() => {
-    if (!chatFull) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setChatFull(false);
-    };
-    window.addEventListener("keydown", onKey);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prev;
-    };
-  }, [chatFull]);
-
-  /* The voice button narrates the latest revelation with the
-     gentleman narrator — a man, gentle and natural. Note stickers
-     carry no words for the voice to read. */
-  const latest = useMemo(
-    () => [...pxMessages].reverse().find((m) => m.role === "px" && !m.notesScope),
-    [pxMessages]
-  );
-  const voiceText = latest
-    ? `${latest.text}${latest.formulas?.length ? `. ${latest.formulas.join(". ")}` : ""}`
-    : "";
 
   return (
     <div className="scope-particlex relative flex h-full flex-col">
@@ -745,46 +711,6 @@ export function ParticleX() {
           </nav>
 
           <div className="flex shrink-0 items-center gap-2">
-            {/* the full-screen thread — work with the chat expanded */}
-            <button
-              type="button"
-              onClick={() => setChatFull((v) => !v)}
-              aria-label={chatFull ? t("Leave the full screen") : t("Work with the chat full screen")}
-              title={chatFull ? t("Leave the full screen") : t("Work with the chat full screen")}
-              aria-pressed={chatFull}
-              data-testid="px-chat-zoom"
-              className={cn(
-                "focus-glow flex size-9 items-center justify-center rounded-full border transition-all duration-300",
-                chatFull
-                  ? "border-[color-mix(in_srgb,var(--scope-a)_55%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_14%,transparent)] text-[var(--scope-a)]"
-                  : "hairline text-muted-foreground hover:text-foreground"
-              )}
-            >
-              {chatFull ? (
-                <Minimize2 className="size-4" aria-hidden="true" />
-              ) : (
-                <Maximize2 className="size-4" aria-hidden="true" />
-              )}
-            </button>
-            {/* the voice — narrates the latest revelation, a man's gentle
-                natural voice, at the very top as asked */}
-            {voiceText ? (
-              <ListenButton
-                text={voiceText}
-                cacheKey="px-top-narration"
-                variant="icon"
-                className="size-9"
-                voice="regent"
-              />
-            ) : (
-              <span
-                className="flex size-9 items-center justify-center rounded-full border hairline text-muted-foreground/40"
-                aria-hidden="true"
-                title={t("The voice waits for the first revelation")}
-              >
-                <AudioLines className="size-4" />
-              </span>
-            )}
             <span
               className="hidden size-9 items-center justify-center rounded-full border hairline sm:flex"
               aria-hidden="true"
@@ -800,11 +726,7 @@ export function ParticleX() {
         <div className="mx-auto flex h-full w-full max-w-[1020px] flex-col px-4 pb-5 sm:px-6">
           <div className="flex min-h-0 min-w-0 flex-1 flex-col pt-4">
             {place === "chat" ? (
-              chatFull ? (
-                <div className="flex-1" aria-hidden="true" />
-              ) : (
-                <ParticleXChat />
-              )
+              <ParticleXChat />
             ) : (
               <div className="nice-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1">
                 <motion.div
@@ -846,58 +768,6 @@ export function ParticleX() {
           </div>
         </div>
       </main>
-
-      {/* ---------- the thread, full screen ---------- */}
-      {chatFull &&
-        createPortal(
-          <div
-            className="fixed inset-0 z-[80]"
-            role="dialog"
-            aria-modal="true"
-            aria-label={t("ParticleX thread — full screen")}
-            data-testid="px-chat-fullscreen"
-          >
-            <div className="absolute inset-0 bg-[#05040B]" />
-            <div
-              className="absolute inset-0"
-              style={{
-                background:
-                  "radial-gradient(58% 46% at 50% 0%, rgba(53,224,210,0.08), transparent 70%), radial-gradient(46% 38% at 82% 96%, rgba(230,181,74,0.07), transparent 70%), radial-gradient(40% 34% at 12% 82%, rgba(255,122,92,0.06), transparent 70%)",
-              }}
-            />
-            <span className="alien-star absolute left-[14%] top-[16%] size-1 rounded-full bg-white/60" aria-hidden="true" />
-            <span className="absolute left-[80%] top-[24%] size-1.5 rounded-full bg-white/50 animate-dot-pulse" aria-hidden="true" />
-            <span className="absolute left-[28%] top-[82%] size-1 rounded-full bg-white/40 animate-dot-pulse" aria-hidden="true" />
-            <span className="absolute left-[66%] top-[70%] size-1 rounded-full bg-white/40 animate-dot-pulse" aria-hidden="true" />
-
-            <div className="relative z-10 mx-auto flex h-full w-full max-w-[880px] flex-col gap-3 px-3 pb-4 pt-4 sm:px-6 sm:pb-6">
-              <div className="flex items-center justify-between gap-3">
-                <p className="mono-label text-[10px] uppercase tracking-[0.24em] text-white/60">
-                  {t("The Core")} — {t("full screen")}
-                </p>
-                <div className="flex items-center gap-2">
-                  <kbd className="mono-label rounded-full border border-white/15 px-2 py-1 text-[9px] text-white/50">
-                    ESC
-                  </kbd>
-                  <button
-                    type="button"
-                    onClick={() => setChatFull(false)}
-                    aria-label={t("Leave the full screen")}
-                    title={t("Leave the full screen")}
-                    data-testid="px-chat-zoom-close"
-                    className="focus-glow flex size-9 items-center justify-center rounded-full border border-white/20 text-white/80 transition-all duration-300 hover:bg-white/10"
-                  >
-                    <X className="size-4" aria-hidden="true" />
-                  </button>
-                </div>
-              </div>
-              <div className="flex min-h-0 flex-1 flex-col">
-                <ParticleXChat />
-              </div>
-            </div>
-          </div>,
-          document.body
-        )}
     </div>
   );
 }

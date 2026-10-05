@@ -115,7 +115,7 @@ export function QueryComposer() {
           testId="composer-attachments"
         />
         <div
-          className={`glass-strong flex items-end gap-1 rounded-[16px] p-1 pl-2.5 transition-all duration-300 focus-within:border-[color-mix(in_srgb,var(--cy)_38%,transparent)] ${
+          className={`glass-strong flex items-end gap-1 rounded-[16px] p-1.5 pl-3 transition-all duration-300 focus-within:border-[color-mix(in_srgb,var(--cy)_38%,transparent)] sm:gap-1 sm:p-1 sm:pl-2.5 ${
             status === "loading" ? "opacity-80" : ""
           }`}
         >
@@ -130,11 +130,12 @@ export function QueryComposer() {
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={onKeyDown}
             placeholder={t("Ask the mirror...")}
-            className="nice-scroll max-h-[96px] min-h-[22px] flex-1 resize-none bg-transparent py-[2px] text-[14px] leading-snug text-foreground placeholder:text-muted-foreground/60 focus:outline-none sm:text-[14.5px]"
+            className="nice-scroll max-h-[96px] min-h-[24px] flex-1 resize-none bg-transparent py-1 text-[15px] leading-snug text-foreground placeholder:text-muted-foreground/60 focus:outline-none sm:min-h-[22px] sm:py-[2px] sm:text-[14.5px]"
           />
           <ChatInputExtras
             scope={activeMode as LiveScopeKey}
             size="2xs"
+            mobileLarger
             disabled={status === "loading"}
             attachments={attachments}
             onAttachmentsChange={setAttachments}
@@ -143,9 +144,9 @@ export function QueryComposer() {
             type="submit"
             disabled={!canSend}
             aria-label={t("Transmit question to the mirror")}
-            className="focus-glow mb-0 flex size-7 shrink-0 items-center justify-center rounded-full bg-[var(--foreground)] text-[var(--background)] transition-all duration-300 hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-30"
+            className="focus-glow mb-0 flex size-9 shrink-0 items-center justify-center rounded-full bg-[var(--foreground)] text-[var(--background)] transition-all duration-300 hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-30 sm:size-7"
           >
-            <Feather className="size-3.5" aria-hidden="true" />
+            <Feather className="size-4 sm:size-3.5" aria-hidden="true" />
           </button>
         </div>
       </form>
