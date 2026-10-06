@@ -145,12 +145,13 @@ function zaiAudio(cfg: CloudConfig): AudioEngine {
   const innerBase = (
     process.env.ZAI_INTERNAL_BASE_URL ?? "https://internal-api.z.ai/v1"
   ).replace(/\/$/, "");
-  /* the inner doors, in preference order: a dedicated session token
-     first; then the platform key itself as a long-shot token (some
-     platform keys answer the inner sky); deduplicated. */
+  /* the inner doors, in preference order — they exist ONLY when a
+     session token is carried in ZAI_TOKEN. The inner sky lives inside
+     the platform's own perimeter (its very name resolves to private
+     addresses), so no public cloud can reach it — the doors stay
+     closed unless a token is explicitly given. */
   const innerTokens: string[] = [];
   if (process.env.ZAI_TOKEN?.trim()) innerTokens.push(process.env.ZAI_TOKEN.trim());
-  if (cfg.apiKey && !innerTokens.includes(cfg.apiKey)) innerTokens.push(cfg.apiKey);
 
   function innerHeaders(token: string): Record<string, string> {
     /* exactly the SDK's shape — Bearer placeholder, X-Z-AI-From, and
@@ -218,12 +219,23 @@ function zaiAudio(cfg: CloudConfig): AudioEngine {
     const errors: string[] = [];
     for (let i = 0; i < candidates.length; i++) {
       const c = candidates[i];
-      /* the first door earns the patient retries; the rest stay
-         single-shot so a closed ladder never keeps the visitor long */
-      const res =
-        i === 0
-          ? await withRetry(() => runDoor(c), AUDIO_RETRY_DELAYS_MS)
-          : await runDoor(c);
+      /* a door that cannot be REACHED (a fallen wire, a gated sky)
+         is walked past, not died upon: the ladder gathers its reason
+         and continues to the next door */
+      let res: Response;
+      try {
+        res =
+          i === 0
+            ? await withRetry(() => runDoor(c), AUDIO_RETRY_DELAYS_MS)
+            : await runDoor(c);
+      } catch (err) {
+        errors.push(
+          `Z.ai ${c.label} unreachable: ${
+            err instanceof Error ? err.message.slice(0, 120) : "?"
+          }`
+        );
+        continue;
+      }
       if (res.ok) {
         try {
           return await voiceBytes(res);
@@ -399,10 +411,22 @@ function zaiAudio(cfg: CloudConfig): AudioEngine {
         let answered: { text?: string } | null = null;
         for (let i = 0; i < candidates.length; i++) {
           const c = candidates[i];
-          const res =
-            i === 0
-              ? await withRetry(() => runDoor(c), AUDIO_RETRY_DELAYS_MS)
-              : await runDoor(c);
+          /* a door that cannot be REACHED is walked past — the ear
+             still tries the next door of the ladder */
+          let res: Response;
+          try {
+            res =
+              i === 0
+                ? await withRetry(() => runDoor(c), AUDIO_RETRY_DELAYS_MS)
+                : await runDoor(c);
+          } catch (err) {
+            errors.push(
+              `Z.ai ${c.label} unreachable: ${
+                err instanceof Error ? err.message.slice(0, 120) : "?"
+              }`
+            );
+            continue;
+          }
           if (res.ok) {
             const parsed = await parseText(res);
             if (parsed.text) return parsed;
