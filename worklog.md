@@ -2614,3 +2614,21 @@ Stage Summary:
 - The vector/window chooser is one drop-down and the composer owns the space again; the grove never swaps a whisper under a resting hand (only entering scopes turn, before they are drawn); the profile is a working frontier room with six sections and honest account numbers; the sidebar is one door lighter.
 - Artifacts: src/components/mirror/WindowSelect.tsx (new), ProfilePage.tsx (rebuilt), SuggestionTree.tsx (stability law), ParticleX.tsx + EvolveMed.tsx (dropdown wiring), Sidebar.tsx (retirement), scripts/i18n-keys.json (re-extracted).
 - Owner note: no env changes; deploy is automatic from main.
+
+---
+Task ID: DEPLOY-1
+Agent: Z.ai Code (main orchestrator)
+Task: "Please push to vercel" — sync local main to GitHub so Vercel ships the latest state
+
+Work Log:
+- Inspected git state: local main was 1 commit ahead of origin/main — 0caa571 (auto-commit touching only db/custom.db); 0204dbc (batch-3 features) + 737da4a (worklog) were already pushed earlier and origin/main had moved 829a13e..737da4a on fetch.
+- Working tree: only .zscripts/dev.pid dirty (runtime artifact — deliberately left uncommitted); stash@{0} left untouched (old discarded snapshot).
+- Fingerprint pre-check: downloaded the 11 live static assets of www.reflectme.space and grepped for 'profilepage-seed-add' (unique testid of the rebuilt ProfilePage in 0204dbc) — FOUND, proving the batch-3 feature build was already live before this push.
+- Pushed 737da4a..0caa571 to main (token URL), verified via ls-remote that remote HEAD == local HEAD == 0caa571.
+- Polled the live site 8 min for a chunk-signature change — none, which is EXPECTED for a db-only commit (content-hashed bundles identical).
+- Verified via GitHub commit status API: Vercel status for 0caa571 = "success / Deployment has completed" (deployment 53i1UxqvJ7Q6K8CH4A7yfCLzWqKP).
+- Final health check: HTTP/2 200; etag CHANGED (2185d9a1... -> b23fb5e1...) proving the new build is served; live bundle still carries the batch-3 fingerprint; x-vercel-cache HIT.
+
+Stage Summary:
+- www.reflectme.space now serves main @ 0caa571 — the full latest state: batch-2 (category-locked branches, structured Quantum/Evolve Med channeling, remembrance law, DNA-deepening, voice repair ladder + browser-voice fallback, free-saying removal, per-world New chat, dead circles removed) and batch-3 (vector windows as one drop-down, grove stability law, frontier profile room, sidebar New chat retired).
+- No code or env changes were needed for this push; local and origin are fully in sync.
