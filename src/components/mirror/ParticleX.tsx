@@ -27,6 +27,7 @@ import { QuantumLoading } from "./ThemedLoadings";
 import { PxBioMech } from "./PxBioMech";
 import { RevelationProse, RevelationSections } from "./RevelationBody";
 import { WindowSelect } from "./WindowSelect";
+import { useFloatingBarAutoHide } from "./useFloatingBar";
 import {
   PxCodexTab,
   PxCopyButton,
@@ -682,11 +683,32 @@ export function ParticleX() {
   const [place, setPlace] = useState<PxPlace>("chat");
   const t = useT();
 
+  /* the reading bar law — the floating controls sink away with the
+     stillness or the downward flow, rise at the first upward breath */
+  const worldRootRef = useRef<HTMLDivElement | null>(null);
+  const topBarRef = useRef<HTMLElement | null>(null);
+  const [toolsOpen, setToolsOpen] = useState(false);
+  const topBarHidden = useFloatingBarAutoHide({
+    rootRef: worldRootRef,
+    barRef: topBarRef,
+    hold: toolsOpen,
+  });
+
   return (
-    <div className="scope-particlex relative flex h-full flex-col">
+    <div
+      ref={worldRootRef}
+      className="scope-particlex relative flex h-full flex-col"
+    >
       {/* ---------- floating top controls over the chat — back, every
-          chamber behind one tools button, and the fresh hand ---------- */}
-      <header className="pointer-events-none absolute inset-x-0 top-0 z-30 bg-gradient-to-b from-[var(--background)]/85 via-[var(--background)]/30 to-transparent">
+          chamber behind one tools button, and the fresh hand — they
+          sink away as the visitor reads and rise when reached for ---------- */}
+      <header
+        ref={topBarRef}
+        className={cn(
+          "pointer-events-none absolute inset-x-0 top-0 z-30 bg-gradient-to-b from-[var(--background)]/85 via-[var(--background)]/30 to-transparent transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform",
+          topBarHidden ? "invisible -translate-y-4 opacity-0" : "translate-y-0 opacity-100"
+        )}
+      >
         <div className="flex h-14 items-center justify-between gap-2 px-3 sm:gap-3 sm:px-5">
           <button
             type="button"
@@ -710,6 +732,7 @@ export function ParticleX() {
               onSelect={(id) => setPlace(id as PxPlace)}
               testIdPrefix="px-tools"
               triggerClassName="bg-[var(--glass-bg)]/80 backdrop-blur-xl"
+              onOpenChange={setToolsOpen}
             />
           </div>
 

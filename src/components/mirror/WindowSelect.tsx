@@ -37,6 +37,7 @@ export function WindowSelect({
   accentVar = "--scope-a",
   className,
   triggerClassName,
+  onOpenChange,
 }: {
   items: WindowSelectItem[];
   activeId: string | null;
@@ -51,6 +52,9 @@ export function WindowSelect({
   /** Extra classes for the trigger itself — used when the select floats
       over the chat and needs its own glass to stay legible. */
   triggerClassName?: string;
+  /** Raised when the menu opens or closes — the floating bar holds
+      itself visible while its own menu stands open. */
+  onOpenChange?: (open: boolean) => void;
 }) {
   const t = useT();
   const active = activeId ? items.find((s) => s.id === activeId) ?? null : null;
@@ -58,7 +62,7 @@ export function WindowSelect({
 
   return (
     <div className={cn("flex", centered ? "justify-center" : "justify-start", className)}>
-      <DropdownMenu modal={false}>
+      <DropdownMenu modal={false} onOpenChange={onOpenChange}>
         <DropdownMenuTrigger
           data-testid={`${testIdPrefix}-trigger`}
           aria-label={active ? `${t(placeholder)}: ${t(active.name)}` : t(placeholder)}

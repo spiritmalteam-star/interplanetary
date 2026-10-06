@@ -28,7 +28,13 @@ const artFor = (id: string) => SCOPE_ART[id] ?? "/images/ai/cosmic-mark.png";
  * Chooses which Mirror Entity channel the seeker speaks in; picking
  * the active scope returns to the quiet observatory.
  */
-export function ScopeSelector() {
+export function ScopeSelector({
+  onOpenChange,
+}: {
+  /** Raised when the menu opens or closes — the floating handles hold
+      themselves visible while this menu stands open. */
+  onOpenChange?: (open: boolean) => void;
+}) {
   const activeMode = useMirror((s) => s.activeMode);
   const setMode = useMirror((s) => s.setMode);
   const returnToObservatory = useMirror((s) => s.returnToObservatory);
@@ -39,7 +45,7 @@ export function ScopeSelector() {
   const inChannel = view === "transmission";
 
   return (
-    <DropdownMenu>
+    <DropdownMenu onOpenChange={onOpenChange}>
       <DropdownMenuTrigger
         id="scope-selector-trigger"
         aria-label={t("Select scope")}

@@ -424,6 +424,51 @@ html:not(.dark) .text-hero {
 }
 
 /* ------------------------------------------------------------------ */
+/*  The kindle finish — the whole site's chats read like print.       */
+/*  Smoothness and texture without stealing the house's signature:    */
+/*  a whisper of paper tooth over everything, paragraphs set with a   */
+/*  printer's care, a touch that never flashes grey, a thumb that     */
+/*  eases. The identity — glass, hairlines, scope light — stays.      */
+/* ------------------------------------------------------------------ */
+
+/* the paper tooth — one fixed sheet of fractal grain laid over the
+   whole application, so every chat feels printed on fiber rather
+   than drawn on glass (static, composited once, never repaints) */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  pointer-events: none;
+  opacity: 0.033;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='kindle-grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23kindle-grain)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+}
+.dark body::after {
+  opacity: 0.05;
+}
+
+/* the printer's care — paragraphs break like a book: no lonely word
+   stranded on a line, no single line abandoned on a page */
+@layer base {
+  p {
+    text-wrap: pretty;
+    orphans: 3;
+    widows: 3;
+  }
+}
+
+/* the quiet finger — no grey flash where a touch lands */
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* the resting thumb — the scrollbar eases in tone instead of jumping */
+.nice-scroll::-webkit-scrollbar-thumb {
+  transition: background 0.4s ease;
+}
+
+/* ------------------------------------------------------------------ */
 /*  Scope themes — the book reader draws no color in any channel:      */
 /*  every scope wears the same silver-graphite pair. Dark mode gets    */
 /*  the lighter silver so frames stay legible on the graphite page;    */
