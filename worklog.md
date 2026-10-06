@@ -2753,3 +2753,19 @@ Stage Summary:
 - Google login is code-verified and activates the instant GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET are visible to the deployment; production currently answers "not configured", and this session holds no Vercel or GitHub credentials — the two local commits (5a4a087, fe7ea73) must be pushed to main (Vercel then redeploys automatically), and the two keys must be in the Vercel vault (with APP_URL=https://www.reflectme.space so the redirect URI matches the registered one).
 - Artifacts: src/lib/book-resonance.ts (new), src/app/api/dream-book/route.ts, src/components/mirror/DreamBookView.tsx, src/components/mirror/AppShell.tsx, 7 i18n dicts.
 - Owner note: no env changes possible from this sandbox; the push is pending credentials.
+
+---
+Task ID: 11
+Agent: Z.ai Code (main orchestrator)
+Task: "I linked google at vercel please try again the log in Google and push it please" — re-verify the Google passage, probe production, push the pending six commits
+
+Work Log:
+- GIT STATE: fetched origin — local main is 6 commits ahead of origin/main (3286050), 0 behind. The six carry: 1a21183 (db+worklog), 35a82b6 (the transmission-reveal flicker fix + TransmissionView), 5a4a087 (the resonance skeleton — the book anti-repetition law), fe7ea73 (the Google passage toasts in 7 tongues), 988ccdc (worklog), 52a33ef (db+dev.pid). The anti-repetition fix and the passage toasts are NOT yet in production until this push lands.
+- PRODUCTION PROBE: www.reflectme.space/api/auth/me → {"user":null,"googleConfigured":false}; /api/auth/google → 501. Verified from origin/main with git cat-file: src/app/api/auth/google/route.ts and callback/route.ts are ALREADY on origin/main — so the running deployment contains the full Google flow; it answers unconfigured purely because the two keys were placed (per the user) AFTER that deployment was built. Vercel env vars never reach an already-built deployment: a REDEPLOY is the missing breath.
+- LOCAL E2E RE-VERIFIED: dev server healthy; with keys present in .env.local (previous session's placeholders, gitignored — confirmed via git check-ignore) /api/auth/me → googleConfigured:true; /api/auth/google → 307 to accounts.google.com/o/oauth2/v2/auth with correct client_id/redirect_uri/state + mirror_g_state cookie set; agent-browser click "Continue with Google" in the passage modal → landed on real Google OAuth (error page only because the placeholder client id is fake — expected). Wiring is complete; real keys will open the real consent.
+- KEY INVENTORY (for the keeper of the vault): exactly GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET must be visible to the PRODUCTION environment; publicOrigin resolves APP_URL → NEXT_PUBLIC_APP_URL → VERCEL_PROJECT_PRODUCTION_URL (automatic on Vercel) → request origin, so redirect_uri = https://www.reflectme.space/api/auth/google/callback must be the registered one in the Google Cloud console.
+- PUSH BLOCKED: no GitHub credential exists in this sandbox (no helper, no .netrc, no gh, no token env, no deploy key) — the established pattern holds: a user-supplied one-shot classic token (repo scope) is required; prior tokens were advised-revoked and none stored.
+
+Stage Summary:
+- The Google passage is code-complete on production and activates the moment a redeploy sees GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET (exact names, Production environment) — either the user clicks Redeploy in the Vercel dashboard, or grants a one-shot GitHub token and my push triggers the redeploy AND ships the resonance skeleton (no book ever repeats) plus the reveal-flicker smoothing plus the passage toasts.
+- Six commits await the token; .env.local verified gitignored (no secret can leak through the push).
