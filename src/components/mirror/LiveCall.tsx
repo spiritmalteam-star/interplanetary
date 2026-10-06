@@ -17,8 +17,11 @@ import { cn } from "@/lib/utils";
 import { useVoiceRecorder } from "@/hooks/use-voice-recorder";
 import { LIVE_SCOPES, type LiveScopeKey } from "@/lib/live-scopes";
 import {
+  listenWithBrowserEar,
+  browserEarAvailable,
   speakWithBrowserVoice,
   stopBrowserVoice,
+  type BrowserEarHandle,
   type BrowserVoiceHandle,
 } from "@/lib/browser-voice";
 import { readFileAsDataUrl } from "./attachments";
@@ -161,6 +164,10 @@ export function LiveCall({
   /* the traveler's voice — the browser stands in when the house voice
      cannot reach this sky; it stops with every orb press */
   const browserVoiceRef = useRef<BrowserVoiceHandle | null>(null);
+  /* the traveler's ear — once the house ear cannot hear this sky (no
+     balance, no service), the session listens through the browser */
+  const browserEarRef = useRef<BrowserEarHandle | null>(null);
+  const earModeRef = useRef(false);
   const transcriptEndRef = useRef<HTMLDivElement | null>(null);
   /* the generation counter of the spoken exchange — beginning to listen
      again invalidates every turn still in flight, so the orb answers
@@ -181,6 +188,8 @@ export function LiveCall({
         /* already quiet */
       }
       audioRef.current = null;
+      browserEarRef.current?.stop();
+      browserEarRef.current = null;
       stopBrowserVoice();
     };
   }, []);
@@ -337,8 +346,41 @@ export function LiveCall({
   const beginListening = useCallback(async () => {
     /* a new listening invalidates any turn still thinking or speaking */
     turnSeqRef.current += 1;
+    const seq = turnSeqRef.current;
     stopSpeaking();
     setRevealedChars(Infinity);
+    browserEarRef.current?.stop();
+    browserEarRef.current = null;
+
+    /* the browser ear needs no recording wire — the orb holds a live
+       recognition session, and release takes the words it heard */
+    if (earModeRef.current && browserEarAvailable()) {
+      const handle = listenWithBrowserEar({
+        lang: language,
+        onResult: (words) => {
+          browserEarRef.current = null;
+          /* release passes through "transcribing" before the ear's own
+             end arrives — both phases carry a legitimate result */
+          if (seq !== turnSeqRef.current) return;
+          if (phaseRef.current !== "listening" && phaseRef.current !== "transcribing") return;
+          setPhaseSafe("transcribing");
+          void sendTurn(words);
+        },
+        onError: () => {
+          browserEarRef.current = null;
+          if (seq !== turnSeqRef.current) return;
+          setPhaseSafe("idle");
+          toast.error(t("Your voice could not be heard — try again"));
+        },
+      });
+      if (handle) {
+        browserEarRef.current = handle;
+        setPhaseSafe("listening");
+        return;
+      }
+      /* no ear after all — the recorder still gets its chance */
+    }
+
     const ok = await recorder.start();
     if (ok) {
       setPhaseSafe("listening");
@@ -346,10 +388,17 @@ export function LiveCall({
       setPhaseSafe("idle");
       toast.error(t("The microphone is unavailable"));
     }
-  }, [recorder, setPhaseSafe, stopSpeaking, t]);
+  }, [language, recorder, sendTurn, setPhaseSafe, stopSpeaking, t]);
 
   const releaseOrb = useCallback(async () => {
     if (phaseRef.current !== "listening") return;
+    /* the browser ear answers on release — its own stop gathers the
+       words and walks them into the turn */
+    if (earModeRef.current && browserEarRef.current) {
+      setPhaseSafe("transcribing");
+      browserEarRef.current.stop();
+      return;
+    }
     try {
       const result = await recorder.stop();
       if (!result || result.durationMs < 250) {
@@ -371,12 +420,30 @@ export function LiveCall({
       } | null;
       const words = data?.text?.trim();
       if (!res.ok || !words) {
+        /* the house ear cannot hear this sky — the session listens
+           through the browser's own ear from here on */
+        if (browserEarAvailable()) {
+          earModeRef.current = true;
+          setPhaseSafe("idle");
+          toast.info(
+            t("The house ear rests — hold the orb and speak once more; your browser listens now.")
+          );
+          return;
+        }
         setPhaseSafe("idle");
         toast.error(t("Your voice could not be heard — try again"));
         return;
       }
       await sendTurn(words);
     } catch {
+      if (browserEarAvailable()) {
+        earModeRef.current = true;
+        setPhaseSafe("idle");
+        toast.info(
+          t("The house ear rests — hold the orb and speak once more; your browser listens now.")
+        );
+        return;
+      }
       setPhaseSafe("idle");
       toast.error(t("Your voice could not be heard — try again"));
     }

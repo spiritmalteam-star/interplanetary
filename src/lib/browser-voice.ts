@@ -108,6 +108,107 @@ export function stopBrowserVoice(): void {
   }
 }
 
+/* ------------------------------------------------------------------ */
+/*  THE TRAVELER'S OWN EAR — the browser's speech recognition as the   */
+/*  quiet fallback of the house ear. The house ear (Z.ai GLM-ASR)      */
+/*  hears through the laboratory's own sky; when that sky cannot       */
+/*  serve (no balance, no service, a fallen wire), the visitor's       */
+/*  browser listens in its stead — so a held orb always finds an ear.  */
+/* ------------------------------------------------------------------ */
+
+interface SpeechRecognitionLike {
+  lang: string;
+  interimResults: boolean;
+  continuous: boolean;
+  maxAlternatives: number;
+  onresult: ((e: unknown) => void) | null;
+  onerror: ((e: unknown) => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+}
+
+type RecognitionCtor = new () => SpeechRecognitionLike;
+
+export function browserEarAvailable(): boolean {
+  if (typeof window === "undefined") return false;
+  const w = window as unknown as Record<string, unknown>;
+  return (
+    typeof w.SpeechRecognition === "function" ||
+    typeof w.webkitSpeechRecognition === "function"
+  );
+}
+
+export interface BrowserEarHandle {
+  stop: () => void;
+}
+
+/** Listen once with the browser's own ear: resolve the words the
+    visitor spoke (final transcript wins, the latest interim stands
+    in when the engine ends without a final). Returns null when the
+    browser has no ear to lend. */
+export function listenWithBrowserEar(opts: {
+  /** The laboratory's language code ("en", "sq", …). */
+  lang?: string;
+  onResult: (text: string) => void;
+  /** The ear heard nothing it could trust, or failed. */
+  onError: () => void;
+}): BrowserEarHandle | null {
+  if (!browserEarAvailable()) return null;
+  const w = window as unknown as Record<string, unknown>;
+  const Ctor = (w.SpeechRecognition ?? w.webkitSpeechRecognition) as
+    | RecognitionCtor
+    | undefined;
+  if (!Ctor) return null;
+  try {
+    const rec = new Ctor();
+    rec.lang = LANG_TO_BCP47[opts.lang ?? "en"] ?? "en-US";
+    rec.interimResults = true;
+    rec.continuous = false;
+    rec.maxAlternatives = 1;
+
+    let settled = false;
+    let finalText = "";
+    let liveText = "";
+    rec.onresult = (e: unknown) => {
+      const ev = e as {
+        resultIndex: number;
+        results: { length: number; [i: number]: { isFinal: boolean; 0?: { transcript?: string } } };
+      };
+      for (let i = ev.resultIndex; i < ev.results.length; i++) {
+        const r = ev.results[i];
+        const text = r?.[0]?.transcript ?? "";
+        if (r.isFinal) finalText += text;
+        else liveText = text;
+      }
+    };
+    rec.onerror = () => {
+      if (settled) return;
+      settled = true;
+      opts.onError();
+    };
+    rec.onend = () => {
+      if (settled) return;
+      settled = true;
+      const text = (finalText || liveText).trim();
+      if (text) opts.onResult(text);
+      else opts.onError();
+    };
+    rec.start();
+    return {
+      stop: () => {
+        try {
+          rec.stop();
+        } catch {
+          /* already ended */
+        }
+      },
+    };
+  } catch {
+    return null;
+  }
+}
+
 /** A gentle note shown once per session the first time the traveler's
     voice stands in for the house voice — honesty without noise. */
 let fallbackNoted = false;

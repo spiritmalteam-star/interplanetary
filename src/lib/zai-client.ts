@@ -329,6 +329,19 @@ function zaiAudio(cfg: CloudConfig): AudioEngine {
             body: { ...base, model: code2 },
           }
         );
+        /* the dated shapings of the house voice — the public sky names
+           its ear by a dated code (glm-asr-2512), so it may one day
+           name the voice the same way. An error 1113 (no balance)
+           would mean the model EXISTS and waits only for credit;
+           1211 means the sky still keeps no tongue. */
+        for (const dated of ["glm-tts-2512", "glm-4-voice", "cogtts-2512"]) {
+          candidates.push({
+            label: `/audio/tts ${dated}`,
+            url: `${cfg.baseUrl}/audio/tts`,
+            headers: baseHeaders,
+            body: { ...base, model: dated },
+          });
+        }
         const buf = await ladderTts(candidates, input, voice, speed);
         return { arrayBuffer: async () => buf };
       },
