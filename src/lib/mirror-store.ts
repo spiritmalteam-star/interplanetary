@@ -161,6 +161,7 @@ export type MainView =
   | "dreambook"
   | "particlex"
   | "evolvemed"
+  | "artx"
   | "lightcodes"
   | "library";
 export type RegisterKind = DossierKind;
@@ -295,6 +296,22 @@ export interface OsMessage {
   branches?: LearnedBranch[];
 }
 
+/* -------- the atelier — Art X's own line --------- */
+
+export interface AxMessage {
+  id: string;
+  role: "visitor" | "ax";
+  text: string;
+  attachments?: { images: number; docNames: string[] };
+  /* the Universal Visualization Engine — the atelier also paints */
+  artifact?: VisualizationArtifact;
+  visual?: "pending" | "error";
+  visualRequest?: string;
+  /* the learning branches grown at the reply's foot — connected to the
+     Art X branch of the living tree */
+  branches?: LearnedBranch[];
+}
+
 /* -------- the quantum narrator — ParticleX's own line --------- */
 
 export interface PxMessage {
@@ -402,6 +419,14 @@ interface MirrorState {
   emVector: string | null;
   /** Vector fusion — up to two vector ids melted into one architecture. */
   emFusion: string[];
+
+  /* Art X — the atelier (fully independent) */
+  axMessages: AxMessage[];
+  axStatus: TransmissionStatus;
+  axError: string | null;
+  axDraft: string;
+  /** The active window id (an axWindows id) or null. */
+  axScope: string | null;
 
   /* The passage — the visitor's account and modals. Everything is free:
      the passage only keeps the cosmic library with its one owner. */
@@ -571,7 +596,7 @@ interface MirrorState {
       laboratory is served: the scope channels, the forge, and the
       OS / ParticleX / Evolve Med lines. */
   attachBranches: (
-    target: Mode | "forge" | "os" | "px" | "em",
+    target: Mode | "forge" | "os" | "px" | "em" | "ax",
     messageId: string,
     branches: LearnedBranch[]
   ) => void;
@@ -602,7 +627,7 @@ interface MirrorState {
   exitMirrorOS: () => void;
   /** A fresh chat inside one world: the manifest core, the quantum
       core or the med nexus returns to its quiet origin. */
-  clearWorldChat: (world: "manifest" | "quantum" | "evolvemed") => void;
+  clearWorldChat: (world: "manifest" | "quantum" | "evolvemed" | "artx") => void;
 
   /* ParticleX — the quantum narrator (fully independent) */
   openParticleX: () => void;
@@ -638,6 +663,30 @@ interface MirrorState {
       subject?: string;
       mode?: VisualizationMode;
     } | null
+  ) => Promise<void>;
+
+  /* Art X — the atelier (fully independent) */
+  openArtX: () => void;
+  exitArtX: () => void;
+  setAxDraft: (v: string) => void;
+  /** Open one of the atelier's windows (an axWindows id) or close it. */
+  setAxScope: (id: string | null) => void;
+  askArtX: (question: string, attachments?: ChatAttachment[]) => Promise<void>;
+  /** IMAGE CRYSTALLIZATION in the atelier — the Mirror Entity paints
+      what is asked to be seen. `display` is what the visitor's bubble
+      shows (the raw words) when `question` carries a blended request.
+      `regenerateOf` repaints one existing artifact in place. */
+  askArtXVisual: (
+    question: string,
+    context?: { subject: string; mode: VisualizationMode } | null,
+    regenerateOf?: {
+      id: string;
+      request?: string;
+      prompt?: string;
+      subject?: string;
+      mode?: VisualizationMode;
+    } | null,
+    display?: string
   ) => Promise<void>;
 
   openLab: () => void;
@@ -894,6 +943,12 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   emDraft: "",
   emVector: null,
   emFusion: [],
+
+  axMessages: [],
+  axStatus: "idle" as TransmissionStatus,
+  axError: null,
+  axDraft: "",
+  axScope: null,
 
   /* LIGHT CODES — the musical chamber */
   lcMode: "light-transmission" as LightCodesMode,
@@ -1275,6 +1330,14 @@ export const useMirror = create<MirrorState>()((set, get) => ({
           pxDraft: "",
         };
       }
+      if (world === "artx") {
+        return {
+          axMessages: [],
+          axStatus: "idle" as TransmissionStatus,
+          axError: null,
+          axDraft: "",
+        };
+      }
       return {
         emMessages: [],
         emStatus: "idle" as TransmissionStatus,
@@ -1559,7 +1622,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
 
   attachBranches: (target, messageId, branches) => {
     if (branches.length === 0) return;
-    if (target === "os" || target === "px" || target === "em") {
+    if (target === "os" || target === "px" || target === "em" || target === "ax") {
       set((s) => {
         const grown = <T extends { id: string; branches?: LearnedBranch[] }>(
           list: T[]
@@ -1569,6 +1632,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
           );
         if (target === "os") return { osMessages: grown(s.osMessages) };
         if (target === "px") return { pxMessages: grown(s.pxMessages) };
+        if (target === "ax") return { axMessages: grown(s.axMessages) };
         return { emMessages: grown(s.emMessages) };
       });
       return;
@@ -2047,6 +2111,15 @@ export const useMirror = create<MirrorState>()((set, get) => ({
 
   exitParticleX: () => set({ view: "observatory" }),
 
+  /* ---------------- Art X — the atelier ---------------- */
+
+  /** Art X is its own world: opening it suspends every other surface,
+      exactly like the Manifest OS and ParticleX do. Free for everyone. */
+  openArtX: () =>
+    set({ view: "artx", mobileNavOpen: false, modal: null }),
+
+  exitArtX: () => set({ view: "observatory" }),
+
   setPxDraft: (v) => set({ pxDraft: v }),
   setPxScope: (id) => set({ pxScope: id }),
   pinPxNotes: (scopeId) =>
@@ -2395,6 +2468,205 @@ export const useMirror = create<MirrorState>()((set, get) => ({
 
   /** Kept for the Forge section inside the OS. */
   openLab: () => useMirror.getState().openMirrorOS(),
+
+  /* ---------------- Art X — the atelier's direct chat ---------------- */
+
+  setAxDraft: (v) => set({ axDraft: v }),
+  setAxScope: (id) => set({ axScope: id }),
+
+  askArtX: async (question, attachments) => {
+    const query = question.trim();
+    if (!query || get().axStatus === "loading") return;
+
+    const visitorId = nextMessageId();
+    set((s) => ({
+      axStatus: "loading",
+      axError: null,
+      axDraft: "",
+      axMessages: [
+        ...s.axMessages,
+        {
+          id: visitorId,
+          role: "visitor" as const,
+          text: query,
+          ...(attachments
+            ? {
+                attachments: {
+                  images: attachments.filter((a) => a.kind === "image").length,
+                  docNames: attachments
+                    .filter((a) => a.kind === "document")
+                    .map((a) => a.name),
+                },
+              }
+            : {}),
+        },
+      ],
+    }));
+
+    try {
+      const history = get()
+        .axMessages.filter((m) => m.id !== visitorId)
+        .slice(-10)
+        .map((m) => ({ role: m.role, text: m.text }));
+
+      const payload = attachments ? attachmentsToPayload(attachments) : null;
+      const res = await fetch("/api/artx", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query,
+          history,
+          language: get().language,
+          depth: journeyDepth(),
+          window: get().axScope ?? undefined,
+          ...(payload ?? {}),
+        }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        throw new Error(
+          (data && data.error) ||
+            "The atelier is momentarily quiet. Rest, then reach again."
+        );
+      }
+
+      void get().refreshMe();
+
+      set((s) => ({
+        axStatus: "ready",
+        axMessages: [
+          ...s.axMessages,
+          { id: nextMessageId(), role: "ax" as const, text: data.reply },
+        ],
+      }));
+    } catch (err) {
+      set({
+        axStatus: "error",
+        axError:
+          err instanceof Error
+            ? err.message
+            : "The atelier is momentarily quiet. Rest, then reach again.",
+      });
+    }
+  },
+
+  /* ------- Art X — the visualization engine (the atelier paints) ------- */
+
+  askArtXVisual: async (question, context, regenerateOf, display) => {
+    if (get().axStatus === "loading") return;
+    const visualId = regenerateOf ? regenerateOf.id : nextMessageId();
+
+    set((s) => ({
+      axStatus: "loading",
+      axError: null,
+      axDraft: "",
+      axMessages: regenerateOf
+        ? s.axMessages.map((m) =>
+            m.id === regenerateOf.id ? { ...m, visual: "pending" as const } : m
+          )
+        : [
+            ...s.axMessages,
+            {
+              id: nextMessageId(),
+              role: "visitor" as const,
+              text: display ?? question,
+            },
+            {
+              id: visualId,
+              role: "ax" as const,
+              text: "",
+              visual: "pending" as const,
+              visualRequest: question,
+            },
+          ],
+    }));
+
+    try {
+      const history = get()
+        .axMessages.filter((m) => !m.visual && m.id !== visualId)
+        .slice(-10)
+        .map((m) => ({
+          role: m.role,
+          text: m.artifact
+            ? `[a vision was created: "${m.artifact.title}" — ${m.artifact.subject}]`
+            : m.text,
+        }));
+
+      const res = await fetch("/api/visualize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          language: get().language,
+          message: regenerateOf ? regenerateOf.request ?? question : question,
+          history,
+          ...(regenerateOf
+            ? {
+                regenerate: true,
+                previousPrompt: regenerateOf.prompt,
+                contextSubject: regenerateOf.subject,
+                previousMode: regenerateOf.mode,
+              }
+            : context
+              ? {
+                  contextSubject: context.subject,
+                  previousMode: context.mode,
+                }
+              : {}),
+        }),
+      });
+      const data = (await res.json().catch(() => null)) as {
+        artifact?: VisualizationArtifact;
+        painted?: boolean;
+        error?: string;
+      } | null;
+      if (!res.ok || !data?.artifact) {
+        throw new Error(
+          (data && data.error) ||
+            "The atelier is quiet — the vision could not be composed."
+        );
+      }
+
+      const artifact = data.artifact;
+      set((s) => ({
+        axStatus: "ready",
+        axMessages: s.axMessages.map((m) =>
+          m.id === visualId
+            ? { ...m, visual: undefined, artifact, text: "" }
+            : m
+        ),
+      }));
+
+      /* The atelier rested before the brush touched the canvas — one
+         silent repaint is set in motion before the prepared prompt is
+         shown. The visitor waits once more, not forever. */
+      if (!regenerateOf && !artifact.imageUrl && artifact.slides.length === 0) {
+        window.setTimeout(() => {
+          const msg = get().axMessages.find((m) => m.id === visualId);
+          if (
+            msg?.artifact &&
+            !msg.artifact.imageUrl &&
+            msg.artifact.slides.length === 0 &&
+            !msg.visual
+          ) {
+            void get().askArtXVisual(artifact.subject, null, {
+              id: visualId,
+              request: msg.visualRequest ?? artifact.subject,
+              prompt: artifact.prompt,
+              subject: artifact.subject,
+              mode: artifact.mode,
+            });
+          }
+        }, 1200);
+      }
+    } catch {
+      set((s) => ({
+        axStatus: "ready",
+        axMessages: s.axMessages.map((m) =>
+          m.id === visualId ? { ...m, visual: "error" as const } : m
+        ),
+      }));
+    }
+  },
 
   exitLab: () => set({ view: "observatory" }),
 

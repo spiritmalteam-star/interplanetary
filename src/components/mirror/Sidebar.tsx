@@ -21,6 +21,7 @@ import {
   MoonStar,
   Mountain,
   NotebookPen,
+  Palette,
   RotateCcw,
   Search,
   Settings,
@@ -518,6 +519,7 @@ export function SidebarContent() {
   const openMirrorOS = useMirror((s) => s.openMirrorOS);
   const openParticleX = useMirror((s) => s.openParticleX);
   const openEvolveMed = useMirror((s) => s.openEvolveMed);
+  const openArtX = useMirror((s) => s.openArtX);
   const me = useMirror((s) => s.me);
   const openProfilePage = useMirror((s) => s.openProfilePage);
   const openAkashic = useMirror((s) => s.openAkashic);
@@ -696,6 +698,25 @@ export function SidebarContent() {
               setMobileNavOpen(false);
             }}
             testId="evolvemed-open"
+          />
+        </nav>
+      </div>
+
+      {/* Art X — its own category below ParticleX: the atelier of the
+          Mirror Entity — art making on the interplanetary,
+          interdimensional and multi-dimensional levels of imagination. */}
+      <div className="shrink-0 px-3">
+        <SectionLabel>{t("Art X")}</SectionLabel>
+        <nav aria-label={t("Art X")} className="flex flex-col">
+          <NavRow
+            icon={Palette}
+            label={t("Art X — the Atelier")}
+            aria={t("Open Art X — the atelier of interplanetary, interdimensional and multi-dimensional art")}
+            onClick={() => {
+              openArtX();
+              setMobileNavOpen(false);
+            }}
+            testId="artx-open"
           />
         </nav>
       </div>

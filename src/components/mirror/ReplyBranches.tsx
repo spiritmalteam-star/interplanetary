@@ -52,7 +52,7 @@ interface ReplyBranchMessage {
 }
 
 /** Every thread kind the branches can grow in. */
-export type BranchThread = Mode | "forge" | "os" | "px" | "em";
+export type BranchThread = Mode | "forge" | "os" | "px" | "em" | "ax";
 
 /** The thread kind's own general branch of the living tree. */
 function branchFor(kind: BranchThread): BranchId {
@@ -65,6 +65,8 @@ function branchFor(kind: BranchThread): BranchId {
       return "quantum";
     case "em":
       return "evolvemed";
+    case "ax":
+      return "artx";
     default:
       return kind as BranchId;
   }
@@ -81,7 +83,9 @@ function poolFor(kind: BranchThread): string[] {
           ? "particlex"
           : kind === "em"
             ? "evolvemed"
-            : (kind as PoolId);
+            : kind === "ax"
+              ? "artx"
+              : (kind as PoolId);
   return chatSuggestionPools[poolId] ?? [];
 }
 

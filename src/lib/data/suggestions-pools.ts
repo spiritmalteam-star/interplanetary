@@ -13,7 +13,8 @@ export type PoolId =
   | "particlex"
   | "invent"
   | "evolvemed"
-  | "mirroros";
+  | "mirroros"
+  | "artx";
 
 export const chatSuggestionPools: Record<PoolId, string[]> = {
   interplanetary: [
@@ -1827,6 +1828,42 @@ export const chatSuggestionPools: Record<PoolId, string[]> = {
     "What does the rise of myopia in screen generations whisper about adaptation?",
     "Why does the body carry lessons from ancestors it never met?",
     "What might the next hundred thousand years of walking bodies become?",
+  ],
+  artx: [
+    "Paint me the light of a Pleiadian morning — and show me how to mix it.",
+    "How would a Sirian artist paint the ocean — with water, sound or both?",
+    "What colors would an Arcturian architect choose for a hall of healing?",
+    "How do I paint the doubled shadows of a world with two suns?",
+    "What would a sunset look like through the amber haze of a gas giant?",
+    "Teach me to paint alien weather — rust winds, diamond rain, silent snow.",
+    "How would an artist of the nine skies compose a sky that never repeats?",
+    "What does a Pleiadian garden painting grow when tended with sound?",
+    "How do I make a threshold piece — a doorway that feels like the veil?",
+    "What does liminal lighting teach a room that wants to hold presences?",
+    "How do I paint a dream I keep returning to without breaking it?",
+    "What would an interface to the unseen world look like, drawn honestly?",
+    "How does one sculpt a presence without giving it a face?",
+    "What sound fills an empty room with company — and how do I compose it?",
+    "Help me design a room that could only exist in four dimensions.",
+    "What would a canvas woven from time look like, and how do I begin one?",
+    "How do I draw the fourth axis — the shadow, the unfolding, the slice?",
+    "What does a non-Euclidean room do to the body that walks it?",
+    "How would I model a hyperbolic garden — coral, tiling, tangled light?",
+    "Teach me to make a bioluminescent painting that glows at night.",
+    "What do cymatic figures teach a painter about sound made visible?",
+    "How do I keep algae light alive as a medium — fed, tended, coaxed?",
+    "What would a wind organ sound like tuned to a canyon's own note?",
+    "Give me an impossible pigment and its honest Earthly cousin.",
+    "How would memory-clay behave in the kiln of a long afternoon?",
+    "What does gravity-ink teach about the fall of every written line?",
+    "If sound could be fired into ceramic, what vessel would hold a voice?",
+    "What would I paint with a fourth primary color no eye has met?",
+    "Help me turn my recurring dream into a series of twelve works.",
+    "What symbols keep knocking on my sketchbook's door?",
+    "How do I find the private palette my life has been mixing for years?",
+    "What series plan turns one obsession into a body of work?",
+    "What daily sketch ritual keeps an inner gallery alive and growing?",
+    "How do I study like the artists of another world would study us?",
   ],
   mirroros: [
     "What is my outer world rehearsing back to me about my inner one?",

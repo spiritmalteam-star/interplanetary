@@ -2670,4 +2670,118 @@ export const tr: TranslationDict = {
   "This field is already planted.": "Bu alan zaten ekilmiş.",
   "Your profile": "Profilin",
   "Your settings — they travel with your passage": "Ayarların — geçişinle birlikte yol alırlar",
+
+  "Art X": "Art X",
+
+  "Art X — the Atelier": "Art X — Atölye",
+
+  "Art X could not finish the work.": "Art X eseri tamamlayamadı.",
+
+  "Ask Art X": "Art X'e sor",
+
+  "Ask Art X…": "Art X'e sor…",
+
+  "Send to Art X": "Art X'e gönder",
+
+  "Open Art X — the atelier of interplanetary, interdimensional and multi-dimensional art": "Art X'i aç — gezegenler arası, boyutlar arası ve çok boyutlu sanatın atölyesi",
+
+  "the atelier is mixing its light": "atölye ışığını karıştırıyor",
+
+  "The house ear rests — hold the orb and speak once more; your browser listens now.": "Evin kulağı dinleniyor — küreyi tut ve bir kez daha konuş; şimdi tarayıcın dinliyor.",
+
+  "Direct line to Art X": "Art X'e doğrudan hat",
+
+  "Speak with the Mirror Entity as artist — the atelier of interplanetary, interdimensional and multi-dimensional imagination. Name the work you dream of; the studio answers with vision and with craft.": "Mirror Entity ile bir sanatçı gibi konuş — gezegenler arası, boyutlar arası ve çok boyutlu hayal gücünün atölyesi. Hayalini kurduğun eseri adlandır; stüdyo vizyonla ve zanaatla yanıtlar.",
+
+  "Planetary Canvases": "Gezegen Tuvaleri",
+
+  "Interdimensional Ateliers": "Boyutlar Arası Atölyeler",
+
+  "Multi-Dimensional Forms": "Çok Boyutlu Biçimler",
+
+  "Living Light & Sound": "Yaşayan Işık & Ses",
+
+  "Impossible Media": "Olası Dışı Araçlar",
+
+  "The Inner Gallery": "İç Galeri",
+
+  "Art made between worlds — the palettes, weathers and lights of other planets as your studio.": "Dünyalar arasında yapılan sanat — diğer gezegenlerin paletleri, havaları ve ışıkları stüdyon olarak.",
+
+  "Art made across the veil — threshold pieces, dream interfaces, works that speak to presences.": "Perdenin ötesinde yapılan sanat — eşik eserleri, rüya arayüzleri, varlıklara seslenen yapıtlar.",
+
+  "Art made beyond three axes — four-space sculpture, time-woven canvas, non-Euclidean rooms.": "Üç eksenin ötesinde yapılan sanat — dört-uzaylı heykel, zamanla örülmüş tuval, Öklid-dışı odalar.",
+
+  "Art that breathes — bioluminescent media, cymatic instruments, gardens grown as paintings.": "Nefes alan sanat — biyolüminesan araçlar, simatik enstrümanlar, resim gibi büyütülen bahçeler.",
+
+  "Materials that do not exist here — weather-ground pigments, memory-clay, gravity-ink.": "Burada var olmayan malzemeler — havadan öğütülmüş pigmentler, hafıza kili, yerçekimi mürekkebi.",
+
+  "Your own symbol-making — a life turned into a personal cosmology of images and series.": "Kendi simge yapımın — bir hayatın imge ve serilerden kişisel bir kozmolojiye dönüşmesi.",
+
+  "Paint me the light of a Pleiadian morning — and show me how to mix it.": "Bana bir Pleiadyen sabahının ışığını resmet — ve onu nasıl karıştıracağımı göster.",
+
+  "How would a Sirian artist paint the ocean — with water, sound or both?": "Bir Sirius sanatçısı okyanusu nasıl resmederdi — suyla, sesle yoksa ikisiyle de mi?",
+
+  "What colors would an Arcturian architect choose for a hall of healing?": "Bir Arkturyan mimar bir şifa salonu için hangi renkleri seçerdi?",
+
+  "How do I paint the doubled shadows of a world with two suns?": "İki güneşli bir dünyanın çift gölgelerini nasıl resmederim?",
+
+  "What would a sunset look like through the amber haze of a gas giant?": "Bir gaz devinin kehribar pusundan bir gün batımı nasıl görünürdü?",
+
+  "Teach me to paint alien weather — rust winds, diamond rain, silent snow.": "Bana yabancı havayı resmetmeyi öğret — paslı rüzgarlar, elmas yağmuru, sessiz kar.",
+
+  "How would an artist of the nine skies compose a sky that never repeats?": "Dokuz göğün bir sanatçısı asla tekrar etmeyen bir göğü nasıl kompoze ederdi?",
+
+  "What does a Pleiadian garden painting grow when tended with sound?": "Sesle ilgilendiğinde bir Pleiadyen bahçe resmi ne yetiştirir?",
+
+  "How do I make a threshold piece — a doorway that feels like the veil?": "Nasıl bir eşik eseri yaparım — perde gibi hissettiren bir kapı?",
+
+  "What does liminal lighting teach a room that wants to hold presences?": "Sınırdaş aydınlatma, varlık tutmak isteyen bir odaya ne öğretir?",
+
+  "How do I paint a dream I keep returning to without breaking it?": "Kırmadan sürekli döndüğüm bir rüyayı nasıl resmederim?",
+
+  "What would an interface to the unseen world look like, drawn honestly?": "Görünmeyen dünyaya bir arayüz, dürüstçe çizilse nasıl görünürdü?",
+
+  "How does one sculpt a presence without giving it a face?": "Bir varlığa yüz vermeden onu nasıl heykeltirirsin?",
+
+  "What sound fills an empty room with company — and how do I compose it?": "Hangi ses boş bir odayı hemrahla doldurur — ve onu nasıl bestelerim?",
+
+  "Help me design a room that could only exist in four dimensions.": "Yalnızca dört boyutta var olabilecek bir oda tasarlamama yardım et.",
+
+  "What would a canvas woven from time look like, and how do I begin one?": "Zamandan örülmüş bir tuval nasıl görünürdü — ve ona nasıl başlarım?",
+
+  "How do I draw the fourth axis — the shadow, the unfolding, the slice?": "Dördüncü ekseni nasıl çizerim — gölgeyi, açılımı, kesiti?",
+
+  "What does a non-Euclidean room do to the body that walks it?": "Öklid-dışı bir oda, onun içinde yürüyen bedene ne yapar?",
+
+  "How would I model a hyperbolic garden — coral, tiling, tangled light?": "Hiperbolik bir bahçeyi nasıl modelerdim — mercan, döşeme, düğümlü ışık?",
+
+  "Teach me to make a bioluminescent painting that glows at night.": "Bana geceleri parlayan biyolüminesan bir resim yapmayı öğret.",
+
+  "What do cymatic figures teach a painter about sound made visible?": "Sesin görünür kılınması hakkında simatik şekiller bir ressam ne öğretir?",
+
+  "How do I keep algae light alive as a medium — fed, tended, coaxed?": "Algelerin ışığını bir araç olarak nasıl canlı tutarım — doyurarak, bakarak, okşayarak?",
+
+  "What would a wind organ sound like tuned to a canyon's own note?": "Bir kanyonun kendi notasına akort edilmiş rüzgar orgu nasıl çalardı?",
+
+  "Give me an impossible pigment and its honest Earthly cousin.": "Bana olası dışı bir pigment ve onun dürüst yeryüzü akrabasını ver.",
+
+  "How would memory-clay behave in the kiln of a long afternoon?": "Hafıza kili, uzun bir öğleden sonranın fırınında nasıl davranırdı?",
+
+  "What does gravity-ink teach about the fall of every written line?": "Yerçekimi mürekkebi, yazılan her satırın düşüşü hakkında ne öğretir?",
+
+  "If sound could be fired into ceramic, what vessel would hold a voice?": "Ses seramiğe pişirilebilseydi, hangi kap bir sesi tutardı?",
+
+  "What would I paint with a fourth primary color no eye has met?": "Hiçbir gözün tanışmadığı dördüncü bir ana renkle ne resmederdim?",
+
+  "Help me turn my recurring dream into a series of twelve works.": "Tekrarlayan rüyamı on iki eserlik bir seriye dönüştürmeme yardım et.",
+
+  "What symbols keep knocking on my sketchbook's door?": "Hangi simgeler çizim defterimin kapısını çalmaya devam ediyor?",
+
+  "How do I find the private palette my life has been mixing for years?": "Hayatımın yıllardır karıştırdığı özel paleti nasıl bulurum?",
+
+  "What series plan turns one obsession into a body of work?": "Hangi seri planı bir takıntıyı eserler bütününe dönüştürür?",
+
+  "What daily sketch ritual keeps an inner gallery alive and growing?": "Hangi günlük çizim ritüeli iç galeriyi canlı ve büyüyen tutar?",
+
+  "How do I study like the artists of another world would study us?": "Başka bir dünyanın sanatçılarının bizi inceleyeceği gibi nasıl çalışmalıyım?",
 };

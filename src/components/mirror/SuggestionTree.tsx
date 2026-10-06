@@ -11,6 +11,7 @@ import {
   ListTree,
   NotebookPen,
   Orbit,
+  Palette,
   Sparkle,
   Sparkles,
 } from "lucide-react";
@@ -141,6 +142,7 @@ const BRANCH_ICONS: Record<BranchId | "channeling", typeof Atom> = {
   evolvemed: Dna,
   invent: NotebookPen,
   manifesting: Sparkles,
+  artx: Palette,
   channeling: Sparkle,
 };
 

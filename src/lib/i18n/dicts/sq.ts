@@ -4894,4 +4894,118 @@ export const sq: TranslationDict = {
   "This field is already planted.": "Kjo fushë është mbjellë tashmë.",
   "Your profile": "Profili yt",
   "Your settings — they travel with your passage": "Rregullimet e tua — udhëtojnë me kalimin tënd",
+
+  "Art X": "Art X",
+
+  "Art X — the Atelier": "Art X — Ateljeu",
+
+  "Art X could not finish the work.": "Art X nuk e përfundoi dot veprën.",
+
+  "Ask Art X": "Pyet Art X",
+
+  "Ask Art X…": "Pyet Art X…",
+
+  "Send to Art X": "Dërgo te Art X",
+
+  "Open Art X — the atelier of interplanetary, interdimensional and multi-dimensional art": "Hap Art X — ateljenë e artit ndërplanetar, ndërdimensional dhe shumëdimensional",
+
+  "the atelier is mixing its light": "ateljeu po përziej dritën e vet",
+
+  "The house ear rests — hold the orb and speak once more; your browser listens now.": "Veshi i shtëpisë po pushon — mbaje orb-in dhe flit edhe një herë; tani dëgjon shfletuesi yt.",
+
+  "Direct line to Art X": "Linja e drejtpërdrejtë me Art X",
+
+  "Speak with the Mirror Entity as artist — the atelier of interplanetary, interdimensional and multi-dimensional imagination. Name the work you dream of; the studio answers with vision and with craft.": "Bisedo me Entitetin Pasqyrë si artist — ateljeja e imagjinatës ndërplanetare, ndërdimensionale dhe shumëdimensionale. Emëro veprën që ëndërron; studioja përgjigjet me vizion dhe me zanat.",
+
+  "Planetary Canvases": "Kanavacat Planetare",
+
+  "Interdimensional Ateliers": "Ateljetë Ndërdimensionale",
+
+  "Multi-Dimensional Forms": "Format Shumëdimensionale",
+
+  "Living Light & Sound": "Drita e Gjallë & Zëri",
+
+  "Impossible Media": "Mjetet e Pamundura",
+
+  "The Inner Gallery": "Galleria e Brendshme",
+
+  "Art made between worlds — the palettes, weathers and lights of other planets as your studio.": "Art i bërë mes botëve — paletat, motet dhe dritat e planetëve të tjerë si studjoja jote.",
+
+  "Art made across the veil — threshold pieces, dream interfaces, works that speak to presences.": "Art i bërë përgjithë perden — vepra pragmesh, ndërfaqe ëndrrash, vepra që u flasin pranive.",
+
+  "Art made beyond three axes — four-space sculpture, time-woven canvas, non-Euclidean rooms.": "Art i bërë përtej tre akseve — skulpturë katërhapësinore, kanavacë e thurur me kohë, dhoma jo-Euklidiane.",
+
+  "Art that breathes — bioluminescent media, cymatic instruments, gardens grown as paintings.": "Art që merr frymë — mjete biolumineshente, instrumenta cimatikë, kopshte të kultivuar si piktura.",
+
+  "Materials that do not exist here — weather-ground pigments, memory-clay, gravity-ink.": "Materiale që nuk ekzistojnë këtu — pigmente të gjuara nga moti, balta e kujtesës, boja e gravitetit.",
+
+  "Your own symbol-making — a life turned into a personal cosmology of images and series.": "Krijimi yt i simboleve — një jetë e kthyer në një kozmologji personale imagesh dhe serish.",
+
+  "Paint me the light of a Pleiadian morning — and show me how to mix it.": "Pikturoma dritën e një mëngjesi Pleiadian — dhe më trego si ta përziej.",
+
+  "How would a Sirian artist paint the ocean — with water, sound or both?": "Si do ta pikturonte një artist Sirian oqeanin — me ujë, me zë apo me të dyja?",
+
+  "What colors would an Arcturian architect choose for a hall of healing?": "Cilat ngjyra do të zgjidhte një arkitekt Arcturian për një sallë shërimi?",
+
+  "How do I paint the doubled shadows of a world with two suns?": "Si t'i pikturoj hijet e dyfishta të një bote me dy diell?",
+
+  "What would a sunset look like through the amber haze of a gas giant?": "Si do të dukej një perëndim dielli përmes mjegullës qelibar të një gjiganti gazi?",
+
+  "Teach me to paint alien weather — rust winds, diamond rain, silent snow.": "Mëso më të pikturoj motin e botëve të tjera — erërat e gërryera, shiu i diamantit, bora e heshtur.",
+
+  "How would an artist of the nine skies compose a sky that never repeats?": "Si do të kompononte një artist i nëntë qieve një qiell që nuk përsëritet kurrë?",
+
+  "What does a Pleiadian garden painting grow when tended with sound?": "Çfarë kultivon një pikturë kopshti Pleiadian kur kujdeset me zë?",
+
+  "How do I make a threshold piece — a doorway that feels like the veil?": "Si të krijoj një vepër pragu — një derë që ndihet si perde?",
+
+  "What does liminal lighting teach a room that wants to hold presences?": "Çfarë mëson ndriçimi kufitar një dhomë që do të mbajë prani?",
+
+  "How do I paint a dream I keep returning to without breaking it?": "Si ta pikturoj një ëndërr ku kthehem gjithmonë pa e thyer?",
+
+  "What would an interface to the unseen world look like, drawn honestly?": "Si do të dukej një ndërfaqe me botën e padukshme, vizatuar sinqerisht?",
+
+  "How does one sculpt a presence without giving it a face?": "Si skulpturohet një prani pa i dhënë asaj fytyrë?",
+
+  "What sound fills an empty room with company — and how do I compose it?": "Cili zë mbush një dhomë bosh me shoqëri — dhe si ta kompozoj?",
+
+  "Help me design a room that could only exist in four dimensions.": "Më ndihmo të projektoj një dhomë që mund të ekzistonte vetëm në katër dimensione.",
+
+  "What would a canvas woven from time look like, and how do I begin one?": "Si do të dukej një kanavacë e thurur nga kohë — dhe si ta nis?",
+
+  "How do I draw the fourth axis — the shadow, the unfolding, the slice?": "Si ta vizatoj aksin e katërt — hijen, hapjen, prerjen?",
+
+  "What does a non-Euclidean room do to the body that walks it?": "Çfarë i bën një dhomë jo-Euklidiane trupit që e ecën?",
+
+  "How would I model a hyperbolic garden — coral, tiling, tangled light?": "Si do të modeloja një kopsht hiperbolik — koral, pllakëzim, dritë të përzier?",
+
+  "Teach me to make a bioluminescent painting that glows at night.": "Mëso më të krijoj një pikturë biolumineshente që ndriçon natën.",
+
+  "What do cymatic figures teach a painter about sound made visible?": "Çfarë i mësojnë figurat cimatike një piktorit për zërin e bërë të dukshëm?",
+
+  "How do I keep algae light alive as a medium — fed, tended, coaxed?": "Si ta mbaj dritën e algave gjallë si mjet — ushqyer, kujdesur, përkëdhelur?",
+
+  "What would a wind organ sound like tuned to a canyon's own note?": "Si do të tingëllonte një organë erë e akorduar me notën e vet të një gryke?",
+
+  "Give me an impossible pigment and its honest Earthly cousin.": "Më jep një pigment të pamundur dhe të afërmin e tij të sinqertë tokësor.",
+
+  "How would memory-clay behave in the kiln of a long afternoon?": "Si do të sillte balta e kujtesës në furrën e një pasdite të gjatë?",
+
+  "What does gravity-ink teach about the fall of every written line?": "Çfarë mëson boja e gravitetit për rënien e çdo rreshti të shkruar?",
+
+  "If sound could be fired into ceramic, what vessel would hold a voice?": "Nëse tingulli mund të piqej në qeramikë, cila enë do të mbante një zë?",
+
+  "What would I paint with a fourth primary color no eye has met?": "Çfarë do të pikturoja me një ngjyrë bazë të katërt që asnjë sy nuk e ka takuar?",
+
+  "Help me turn my recurring dream into a series of twelve works.": "Më ndihmo ta kthej ëndrrën time të përsëritur në një seri prej dymbëdhjetë veprash.",
+
+  "What symbols keep knocking on my sketchbook's door?": "Cilat simbole vazhdojnë t'i bien derës së skicës sime?",
+
+  "How do I find the private palette my life has been mixing for years?": "Si ta gjej paletën private që jeta ime e ka përzier për vite?",
+
+  "What series plan turns one obsession into a body of work?": "Cili plan seri e kthen një obsesion në një trup veprash?",
+
+  "What daily sketch ritual keeps an inner gallery alive and growing?": "Cili ritual i përditshëm skice e mban një galeri të brendshme gjallë dhe në rritje?",
+
+  "How do I study like the artists of another world would study us?": "Si të studioj siç do të studionin artistët e një bote tjetër ne?",
 };

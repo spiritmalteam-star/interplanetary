@@ -481,6 +481,7 @@ html {
 .scope-invent,
 .scope-particlex,
 .scope-evolvemed,
+.scope-artx,
 .scope-lightcodes {
   --scope-a: #2b2b30;
   --scope-b: #6b6b74;
@@ -492,6 +493,7 @@ html {
 .dark .scope-invent,
 .dark .scope-particlex,
 .dark .scope-evolvemed,
+.dark .scope-artx,
 .dark .scope-lightcodes {
   --scope-a: #d6d6d5;
   --scope-b: #a3a3a2;
@@ -506,6 +508,7 @@ html:not(.dark) .scope-manifesting,
 html:not(.dark) .scope-invent,
 html:not(.dark) .scope-particlex,
 html:not(.dark) .scope-evolvemed,
+html:not(.dark) .scope-artx,
 html:not(.dark) .scope-lightcodes {
   --scope-a: #2b2b30;
   --scope-b: #6b6b74;

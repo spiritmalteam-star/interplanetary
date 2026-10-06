@@ -5,7 +5,7 @@ import { toast } from "@/hooks/use-toast";
 import { useT } from "@/lib/i18n";
 import { useMirror } from "@/lib/mirror-store";
 
-type WorldChat = "manifest" | "quantum" | "evolvemed" | "invent";
+type WorldChat = "manifest" | "quantum" | "evolvemed" | "artx" | "invent";
 
 /** The fresh-chat hand of a world: one press and that world's own
     conversation returns to its quiet origin — the manifest core (with

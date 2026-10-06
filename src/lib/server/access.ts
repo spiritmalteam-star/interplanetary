@@ -270,7 +270,8 @@ export type LibrarySector =
   | "invent" // the Forge
   | "dreambook" // the Dream Book volumes
   | "quantum" // ParticleX — the quantum world
-  | "evolvemed"; // the evolutionary medical nexus
+  | "evolvemed" // the evolutionary medical nexus
+  | "artx"; // the atelier — Art X
 
 /** Lays a transmission in its sector. Returns the entry's id. */
 export async function saveLibrary(

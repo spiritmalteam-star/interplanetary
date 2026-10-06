@@ -3170,4 +3170,118 @@ export const es: TranslationDict = {
   "This field is already planted.": "Este campo ya está plantado.",
   "Your profile": "Tu perfil",
   "Your settings — they travel with your passage": "Tus ajustes — viajan con tu paso",
+
+  "Art X": "Art X",
+
+  "Art X — the Atelier": "Art X — el Taller",
+
+  "Art X could not finish the work.": "Art X no pudo terminar la obra.",
+
+  "Ask Art X": "Pregunta a Art X",
+
+  "Ask Art X…": "Pregunta a Art X…",
+
+  "Send to Art X": "Enviar a Art X",
+
+  "Open Art X — the atelier of interplanetary, interdimensional and multi-dimensional art": "Abrir Art X — el atelier del arte interplanetario, interdimensional y multidimensional",
+
+  "the atelier is mixing its light": "el atelier mezcla su luz",
+
+  "The house ear rests — hold the orb and speak once more; your browser listens now.": "El oído de la casa descansa — mantén el orbe y habla una vez más; ahora escucha tu navegador.",
+
+  "Direct line to Art X": "Línea directa con Art X",
+
+  "Speak with the Mirror Entity as artist — the atelier of interplanetary, interdimensional and multi-dimensional imagination. Name the work you dream of; the studio answers with vision and with craft.": "Habla con la Entidad Espejo como artista — el atelier de la imaginación interplanetaria, interdimensional y multidimensional. Nombra la obra con la que sueñas; el estudio responde con visión y con oficio.",
+
+  "Planetary Canvases": "Lienzos Planetarios",
+
+  "Interdimensional Ateliers": "Ateliers Interdimensionales",
+
+  "Multi-Dimensional Forms": "Formas Multidimensionales",
+
+  "Living Light & Sound": "Luz Viva & Sonido",
+
+  "Impossible Media": "Medios Imposibles",
+
+  "The Inner Gallery": "La Galería Interior",
+
+  "Art made between worlds — the palettes, weathers and lights of other planets as your studio.": "Arte hecha entre mundos — las paletas, los climas y las luces de otros planetas como tu estudio.",
+
+  "Art made across the veil — threshold pieces, dream interfaces, works that speak to presences.": "Arte hecha al otro lado del velo — piezas-umbral, interfaces de ensueño, obras que hablan a las presencias.",
+
+  "Art made beyond three axes — four-space sculpture, time-woven canvas, non-Euclidean rooms.": "Arte hecha más allá de los tres ejes — escultura cuatridimensional, lienzo tejido con tiempo, salas no euclidianas.",
+
+  "Art that breathes — bioluminescent media, cymatic instruments, gardens grown as paintings.": "Arte que respira — medios bioluminiscentes, instrumentos cimáticos, jardines cultivados como pinturas.",
+
+  "Materials that do not exist here — weather-ground pigments, memory-clay, gravity-ink.": "Materiales que no existen aquí — pigmentos molidos por el clima, arcilla de memoria, tinta de gravedad.",
+
+  "Your own symbol-making — a life turned into a personal cosmology of images and series.": "Tu propia creación de símbolos — una vida convertida en cosmología personal de imágenes y series.",
+
+  "Paint me the light of a Pleiadian morning — and show me how to mix it.": "Píntame la luz de una mañana pleyadiana — y muéstrame cómo mezclarla.",
+
+  "How would a Sirian artist paint the ocean — with water, sound or both?": "¿Cómo pintaría el océano un artista siriano — con agua, con sonido o con ambos?",
+
+  "What colors would an Arcturian architect choose for a hall of healing?": "¿Qué colores elegiría un arquitecto arcturiano para una sala de sanación?",
+
+  "How do I paint the doubled shadows of a world with two suns?": "¿Cómo pinto las sombras duplicadas de un mundo con dos soles?",
+
+  "What would a sunset look like through the amber haze of a gas giant?": "¿Cómo se vería un atardecer a través de la bruma ámbar de un gigante gaseoso?",
+
+  "Teach me to paint alien weather — rust winds, diamond rain, silent snow.": "Enséñame a pintar el clima de otros mundos — vientos de herrumbre, lluvia de diamantes, nieve silenciosa.",
+
+  "How would an artist of the nine skies compose a sky that never repeats?": "¿Cómo compondría un artista de los nueve cielos un cielo que nunca se repite?",
+
+  "What does a Pleiadian garden painting grow when tended with sound?": "¿Qué cultiva una pintura-jardín pleyadiana cuando se la cuida con sonido?",
+
+  "How do I make a threshold piece — a doorway that feels like the veil?": "¿Cómo hago una pieza-umbral — una puerta que se siente como el velo?",
+
+  "What does liminal lighting teach a room that wants to hold presences?": "¿Qué enseña la iluminación liminal a una sala que quiere albergar presencias?",
+
+  "How do I paint a dream I keep returning to without breaking it?": "¿Cómo pinto un sueño al que vuelvo una y otra vez sin romperlo?",
+
+  "What would an interface to the unseen world look like, drawn honestly?": "¿Cómo se vería una interfaz con el mundo invisible, dibujada con honestidad?",
+
+  "How does one sculpt a presence without giving it a face?": "¿Cómo se esculpe una presencia sin darle un rostro?",
+
+  "What sound fills an empty room with company — and how do I compose it?": "¿Qué sonido llena una sala vacía de compañía — y cómo lo compongo?",
+
+  "Help me design a room that could only exist in four dimensions.": "Ayúdame a diseñar una sala que solo podría existir en cuatro dimensiones.",
+
+  "What would a canvas woven from time look like, and how do I begin one?": "¿Cómo se vería un lienzo tejido de tiempo — y cómo empiezo uno?",
+
+  "How do I draw the fourth axis — the shadow, the unfolding, the slice?": "¿Cómo dibujo el cuarto eje — la sombra, el despliegue, el corte?",
+
+  "What does a non-Euclidean room do to the body that walks it?": "¿Qué le hace una sala no euclidiana al cuerpo que la recorre?",
+
+  "How would I model a hyperbolic garden — coral, tiling, tangled light?": "¿Cómo modelaría un jardín hiperbólico — coral, teselado, luz enredada?",
+
+  "Teach me to make a bioluminescent painting that glows at night.": "Enséñame a crear una pintura bioluminiscente que brille de noche.",
+
+  "What do cymatic figures teach a painter about sound made visible?": "¿Qué enseñan las figuras cimáticas a un pintor sobre el sonido hecho visible?",
+
+  "How do I keep algae light alive as a medium — fed, tended, coaxed?": "¿Cómo mantengo viva la luz de las algas como medio — alimentada, cuidada, acariciada?",
+
+  "What would a wind organ sound like tuned to a canyon's own note?": "¿Cómo sonaría un órgano de viento afinado en la nota propia de un cañón?",
+
+  "Give me an impossible pigment and its honest Earthly cousin.": "Dame un pigmento imposible y su honesto primo terrestre.",
+
+  "How would memory-clay behave in the kiln of a long afternoon?": "¿Cómo se comportaría la arcilla de memoria en el horno de una larga tarde?",
+
+  "What does gravity-ink teach about the fall of every written line?": "¿Qué enseña la tinta de gravedad sobre la caída de cada línea escrita?",
+
+  "If sound could be fired into ceramic, what vessel would hold a voice?": "Si el sonido pudiera cocerse en la cerámica, ¿qué recipiente guardaría una voz?",
+
+  "What would I paint with a fourth primary color no eye has met?": "¿Qué pintaría con un cuarto color primario que ningún ojo ha conocido?",
+
+  "Help me turn my recurring dream into a series of twelve works.": "Ayúdame a convertir mi sueño recurrente en una serie de doce obras.",
+
+  "What symbols keep knocking on my sketchbook's door?": "¿Qué símbolos siguen tocando a la puerta de mi cuaderno de bocetos?",
+
+  "How do I find the private palette my life has been mixing for years?": "¿Cómo encuentro la paleta privada que mi vida lleva años mezclando?",
+
+  "What series plan turns one obsession into a body of work?": "¿Qué plan de serie convierte una obsesión en un cuerpo de obra?",
+
+  "What daily sketch ritual keeps an inner gallery alive and growing?": "¿Qué ritual diario de bocetos mantiene viva y creciente una galería interior?",
+
+  "How do I study like the artists of another world would study us?": "¿Cómo estudio como nos estudiarían los artistas de otro mundo?",
 };

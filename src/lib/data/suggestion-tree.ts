@@ -20,7 +20,8 @@ export type BranchId =
   | "quantum"
   | "evolvemed"
   | "invent"
-  | "manifesting";
+  | "manifesting"
+  | "artx";
 
 export interface SuggestionScope {
   /** Stable key (test ids, bloom offsets). */
@@ -438,6 +439,113 @@ export const SUGGESTION_TREE: SuggestionBranch[] = [
           "ritual",
         ],
         pool: "manifest",
+      },
+    ],
+  },
+  {
+    id: "artx",
+    label: "Art X",
+    pool: "artx",
+    scopes: [
+      {
+        key: "starcanvases",
+        label: "Planetary Canvases",
+        match: [
+          "pleiadian",
+          "sirian",
+          "arcturian",
+          "planet",
+          "solar",
+          "sun",
+          "mars",
+          "neptune",
+          "gas giant",
+          "alien",
+          "sky",
+          "star",
+          "ocean",
+          "garden painting",
+        ],
+      },
+      {
+        key: "veilworks",
+        label: "Interdimensional Ateliers",
+        match: [
+          "veil",
+          "threshold",
+          "door",
+          "dream",
+          "presence",
+          "unseen",
+          "spirit",
+          "liminal",
+          "interface",
+          "room that",
+        ],
+      },
+      {
+        key: "fourthaxis",
+        label: "Multi-Dimensional Forms",
+        match: [
+          "four",
+          "dimension",
+          "axis",
+          "time",
+          "euclidean",
+          "hyperbolic",
+          "geometry",
+          "sculpt",
+          "model",
+          "unfolding",
+        ],
+      },
+      {
+        key: "biolume",
+        label: "Living Light & Sound",
+        match: [
+          "biolum",
+          "algae",
+          "glow",
+          "cymatic",
+          "sound",
+          "wind organ",
+          "light",
+          "garden",
+          "alive",
+          "moss",
+        ],
+      },
+      {
+        key: "impossible",
+        label: "Impossible Media",
+        match: [
+          "pigment",
+          "clay",
+          "ink",
+          "ceramic",
+          "material",
+          "medium",
+          "impossible",
+          "primary",
+          "color",
+          "kiln",
+        ],
+      },
+      {
+        key: "innergallery",
+        label: "The Inner Gallery",
+        match: [
+          "dream",
+          "symbol",
+          "series",
+          "sketch",
+          "palette",
+          "my life",
+          "obsession",
+          "ritual",
+          "gallery",
+          "study",
+        ],
       },
     ],
   },

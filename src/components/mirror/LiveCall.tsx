@@ -118,6 +118,28 @@ async function askScope(
     return data.reply;
   }
 
+  if (scope === "artx") {
+    const res = await fetch("/api/artx", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query: message,
+        language,
+        live: true,
+        history: history.map((h) => ({
+          role: h.role === "visitor" ? "visitor" : "ax",
+          text: h.text,
+        })),
+      }),
+    });
+    const data = (await res.json().catch(() => null)) as {
+      reply?: string;
+      error?: string;
+    } | null;
+    if (!res.ok || !data?.reply) throw new Error(data?.error ?? "quiet");
+    return data.reply;
+  }
+
   /* interplanetary · healing */
   const res = await fetch("/api/transmission", {
     method: "POST",

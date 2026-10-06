@@ -11,6 +11,7 @@ import {
   LoaderCircle,
   MoonStar,
   NotebookPen,
+  Palette,
   Sparkles,
   BookMarked,
 } from "lucide-react";
@@ -70,6 +71,7 @@ const SECTORS: { id: string; label: string; icon: typeof Atom }[] = [
   { id: "dreambook", label: "The Dream Book", icon: MoonStar },
   { id: "quantum", label: "ParticleX", icon: Atom },
   { id: "evolvemed", label: "Evolve Med", icon: Activity },
+  { id: "artx", label: "Art X", icon: Palette },
 ];
 
 /** The spirit's phases — thresholds on the quantum shift. */

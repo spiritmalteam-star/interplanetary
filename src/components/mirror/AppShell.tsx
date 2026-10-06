@@ -17,6 +17,7 @@ import { StillCompanion } from "./StillCompanion";
 import { TransmissionView } from "./TransmissionView";
 import { MirrorOS } from "./MirrorOS";
 import { ParticleX } from "./ParticleX";
+import { ArtX } from "./ArtX";
 import { EvolveMed } from "./EvolveMed";
 import { LibraryView } from "./LibraryView";
 import { AuthModal } from "./PassageModal";
@@ -247,6 +248,20 @@ export default function AppShell() {
         <CosmicBackdrop />
         <StarField />
         <EvolveMed />
+        {passageModals}
+      </div>
+    );
+  }
+
+  /* Art X — the atelier is its own world too: the direct art-making
+     chat with the Mirror Entity, interplanetary · interdimensional ·
+     multi-dimensional — one top bar, one full-height core. */
+  if (view === "artx") {
+    return (
+      <div className={`relative h-[var(--app-h,100dvh)] overflow-hidden ${FRAME_LIFT}`}>
+        <CosmicBackdrop />
+        <StarField />
+        <ArtX />
         {passageModals}
       </div>
     );

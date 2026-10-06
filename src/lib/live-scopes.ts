@@ -12,7 +12,8 @@ export type LiveScopeKey =
   | "interplanetary"
   | "healing"
   | "mirroros"
-  | "akashic";
+  | "akashic"
+  | "artx";
 
 export interface LiveScopeConfig {
   /** The being on the other end of the line. */
@@ -75,5 +76,14 @@ export const LIVE_SCOPES: Record<LiveScopeKey, LiveScopeConfig> = {
     wrapperClass: null,
     accentA: "var(--gd)",
     accentB: "var(--pk)",
+  },
+  artx: {
+    nameKey: "Art X",
+    specializationKey: "art-making on interplanetary, interdimensional and multi-dimensional levels",
+    voice: "nova",
+    pace: 0.95,
+    wrapperClass: "scope-artx",
+    accentA: "var(--scope-a)",
+    accentB: "var(--scope-b)",
   },
 };

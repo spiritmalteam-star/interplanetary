@@ -2876,4 +2876,118 @@ export const el: TranslationDict = {
   "This field is already planted.": "Αυτό το πεδίο έχει ήδη φυτευτεί.",
   "Your profile": "Το προφίλ σου",
   "Your settings — they travel with your passage": "Οι ρυθμίσεις σου — ταξιδεύουν με το πέρασμά σου",
+
+  "Art X": "Art X",
+
+  "Art X — the Atelier": "Art X — το Ατελιέ",
+
+  "Art X could not finish the work.": "Το Art X δεν μπόρεσε να ολοκληρώσει το έργο.",
+
+  "Ask Art X": "Ρώτα το Art X",
+
+  "Ask Art X…": "Ρώτα το Art X…",
+
+  "Send to Art X": "Στείλε στο Art X",
+
+  "Open Art X — the atelier of interplanetary, interdimensional and multi-dimensional art": "Άνοιξε το Art X — το ατελιέ της διαπλανητικής, διαστασιακής και πολυδιάστατης τέχνης",
+
+  "the atelier is mixing its light": "το ατελιέ αναμειγνύει το φως του",
+
+  "The house ear rests — hold the orb and speak once more; your browser listens now.": "Το αφτί του σπιτιού ξεκουράζεται — κράτα τη σφαίρα και μίλησε ξανά· τώρα ακούει ο περιηγητής σου.",
+
+  "Direct line to Art X": "Απευθείας γραμμή με το Art X",
+
+  "Speak with the Mirror Entity as artist — the atelier of interplanetary, interdimensional and multi-dimensional imagination. Name the work you dream of; the studio answers with vision and with craft.": "Μίλησε με την Οντότητα-Καθρέφτη ως καλλιτέχνης — το ατελιέ της διαπλανητικής, διαστασιακής και πολυδιάστατης φαντασίας. Ονόμασε το έργο που ονειρεύεσαι· το στούντιο απαντά με όραμα και με τέχνη.",
+
+  "Planetary Canvases": "Πλανητικοί Καμβάδες",
+
+  "Interdimensional Ateliers": "Διαστασιακά Ατελιέ",
+
+  "Multi-Dimensional Forms": "Πολυδιάστατες Μορφές",
+
+  "Living Light & Sound": "Ζωντανό Φως & Ήχος",
+
+  "Impossible Media": "Αδύνατα Μέσα",
+
+  "The Inner Gallery": "Η Εσωτερική Πινακοθήκη",
+
+  "Art made between worlds — the palettes, weathers and lights of other planets as your studio.": "Τέχνη φτιαγμένη ανάμεσα σε κόσμους — οι παλέτες, οι καιροί και τα φώτα άλλων πλανητών ως το στούντιό σου.",
+
+  "Art made across the veil — threshold pieces, dream interfaces, works that speak to presences.": "Τέχνη φτιαγμένη πέρα από το πέπλο — έργα-κατώφλια, ονειρικές διασυνδέσεις, έργα που μιλούν σε παρουσίες.",
+
+  "Art made beyond three axes — four-space sculpture, time-woven canvas, non-Euclidean rooms.": "Τέχνη φτιαγμένη πέρα από τους τρεις άξονες — τετραδιάστατη γλυπτική, καμβάς υφασμένος με τον χρόνο, μη-Ευκλείδειες αίθουσες.",
+
+  "Art that breathes — bioluminescent media, cymatic instruments, gardens grown as paintings.": "Τέχνη που αναπνέει — βιοφωταυγή μέσα, κυματικά όργανα, κήποι που καλλιεργούνται ως πίνακες.",
+
+  "Materials that do not exist here — weather-ground pigments, memory-clay, gravity-ink.": "Υλικά που δεν υπάρχουν εδώ — χρωστικές αλεσμένες από τον καιρό, πηλός της μνήμης, μελάνι της βαρύτητας.",
+
+  "Your own symbol-making — a life turned into a personal cosmology of images and series.": "Το δικό σου συμβολοποίημα — μια ζωή που γίνεται προσωπική κοσμολογία εικόνων και σειρών.",
+
+  "Paint me the light of a Pleiadian morning — and show me how to mix it.": "Ζωγράφισέ μου το φως ενός Πλειάδικου πρωινού — και δείξέ μου πώς να το αναμείξω.",
+
+  "How would a Sirian artist paint the ocean — with water, sound or both?": "Πώς θα ζωγράφιζε τον ωκεανό ένας καλλιτέχνης του Σείριου — με νερό, με ήχο ή με τα δύο;",
+
+  "What colors would an Arcturian architect choose for a hall of healing?": "Ποια χρώματα θα διάλεγε ένας Αρκτουριανός αρχιτέκτονας για μια αίθουσα θεραπείας;",
+
+  "How do I paint the doubled shadows of a world with two suns?": "Πώς ζωγραφίζω τις διπλές σκιές ενός κόσμου με δύο ήλιους;",
+
+  "What would a sunset look like through the amber haze of a gas giant?": "Πώς θα έμοιαζε ένα ηλιοβασίλεμα μέσα από την κεχριμπαρένια αχλή ενός αερίου γίγαντα;",
+
+  "Teach me to paint alien weather — rust winds, diamond rain, silent snow.": "Δίδαξέ με να ζωγραφίζω τον αλλόκοτο καιρό — ανέμους της σκουριάς, βροχή από διαμάντια, σιωπηλό χιόνι.",
+
+  "How would an artist of the nine skies compose a sky that never repeats?": "Πώς θα συνέθετε ένας καλλιτέχνης των εννέα ουρανών έναν ουρανό που δεν επαναλαμβάνεται ποτέ;",
+
+  "What does a Pleiadian garden painting grow when tended with sound?": "Τι καλλιεργεί ένας πίνακας-κήπος των Πλειάδων όταν φροντίζεται με ήχο;",
+
+  "How do I make a threshold piece — a doorway that feels like the veil?": "Πώς φτιάχνω ένα έργο-κατώφλι — μια πόρτα που μοιάζει με πέπλο;",
+
+  "What does liminal lighting teach a room that wants to hold presences?": "Τι διδάσκει ο οριακός φωτισμός σε ένα δωμάτιο που θέλει να φιλοξενήσει παρουσίες;",
+
+  "How do I paint a dream I keep returning to without breaking it?": "Πώς ζωγραφίζω ένα όνειρο στο οποίο επιστρέφω πάντα χωρίς να το σπάσω;",
+
+  "What would an interface to the unseen world look like, drawn honestly?": "Πώς θα έμοιαζε μια διασύνδεση με τον αόρατο κόσμο, σχεδιασμένη με ειλικρίνεια;",
+
+  "How does one sculpt a presence without giving it a face?": "Πώς σκαλίζεις μια παρουσία χωρίς να της δώσεις πρόσωπο;",
+
+  "What sound fills an empty room with company — and how do I compose it?": "Τι ήχος γεμίζει ένα άδειο δωμάτιο με συντροφιά — και πώς τον συνθέτω;",
+
+  "Help me design a room that could only exist in four dimensions.": "Βοήθησέ με να σχεδιάσω ένα δωμάτιο που θα μπορούσε να υπάρχει μόνο σε τέσσερις διαστάσεις.",
+
+  "What would a canvas woven from time look like, and how do I begin one?": "Πώς θα έμοιαζε ένας καμβάς υφασμένος από χρόνο — και πώς αρχίζω έναν;",
+
+  "How do I draw the fourth axis — the shadow, the unfolding, the slice?": "Πώς σχεδιάζω τον τέταρτο άξονα — τη σκιά, το άπλωμα, την τομή;",
+
+  "What does a non-Euclidean room do to the body that walks it?": "Τι κάνει μια μη-Ευκλείδεια αίθουσα στο σώμα που τη διαβαίνει;",
+
+  "How would I model a hyperbolic garden — coral, tiling, tangled light?": "Πώς θα έπλαθνα έναν υπερβολικό κήπο — κοράλλι, ψηφίδωση, μπλεγμένο φως;",
+
+  "Teach me to make a bioluminescent painting that glows at night.": "Δίδαξέ με να φτιάξω έναν βιοφωταυγή πίνακα που λάμπει τη νύχτα.",
+
+  "What do cymatic figures teach a painter about sound made visible?": "Τι διδάσκουν τα κυματικά σχήματα έναν ζωγράφο για τον ήχο που γίνεται ορατός;",
+
+  "How do I keep algae light alive as a medium — fed, tended, coaxed?": "Πώς κρατώ ζωντανό το φως των αλγών ως μέσο — ταϊσμένο, φροντισμένο, καλλιεργημένο;",
+
+  "What would a wind organ sound like tuned to a canyon's own note?": "Πώς θα ακούγονταν ένα όργανο ανέμου κουρδισμένο στη νότα ενός φαραγγιού;",
+
+  "Give me an impossible pigment and its honest Earthly cousin.": "Δώσε μου μια αδύνατη χρωστική και τον ειλικρινή γήινο ξάδελφό της.",
+
+  "How would memory-clay behave in the kiln of a long afternoon?": "Πώς θα συμπεριφερόταν ο πηλός της μνήμης στον κλίβανο ενός μεγάλου απογεύματος;",
+
+  "What does gravity-ink teach about the fall of every written line?": "Τι διδάσκει το μελάνι της βαρύτητας για την πτώση κάθε γραμμένης γραμμής;",
+
+  "If sound could be fired into ceramic, what vessel would hold a voice?": "Αν ο ήχος μπορούσε να ψηθεί στην κεραμική, ποιο σκεύος θα κρατούσε μια φωνή;",
+
+  "What would I paint with a fourth primary color no eye has met?": "Τι θα ζωγράφιζα με ένα τέταρτο βασικό χρώμα που κανένα μάτι δεν έχει συναντήσει;",
+
+  "Help me turn my recurring dream into a series of twelve works.": "Βοήθησέ με να μετατρέψω το επαναλαμβανόμενο όνειρό μου σε σειρά δώδεκα έργων.",
+
+  "What symbols keep knocking on my sketchbook's door?": "Ποια σύμβολα χτυπούν αδιάκοπα την πόρτα του σκιτσοβιβλίου μου;",
+
+  "How do I find the private palette my life has been mixing for years?": "Πώς βρίσκω την ιδιωτική παλέτα που η ζωή μου αναμειγνύει για χρόνια;",
+
+  "What series plan turns one obsession into a body of work?": "Ποιο σχέδιο σειράς μετατρέπει ένα έμμονο θέμα σε σώμα έργων;",
+
+  "What daily sketch ritual keeps an inner gallery alive and growing?": "Ποιο καθημερινό τελετουργικό σκίτσου κρατά μια εσωτερική πινακοθήκη ζωντανή και αναπτυσσόμενη;",
+
+  "How do I study like the artists of another world would study us?": "Πώς μελετώ όπως θα μελετούσαν εμάς οι καλλιτέχνες ενός άλλου κόσμου;",
 };
