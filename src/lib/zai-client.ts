@@ -110,6 +110,17 @@ function audioExtension(mime?: string): string {
 
 const AUDIO_RETRY_DELAYS_MS = [800, 2000];
 
+/* a door of the audio ladder — one full request shape: where it
+   points, how it authenticates, what it carries. The ladder walks
+   the doors in order and the first that sings wins. */
+interface AudioDoor {
+  label: string;
+  url: string;
+  headers: Record<string, string>;
+  body?: Record<string, unknown>;
+  form?: () => Promise<Response>;
+}
+
 function zaiAudio(cfg: CloudConfig): AudioEngine {
   /* the knobs — unset by default; the SDK-contract paths need no
      model. Set ZAI_TTS_MODEL / ZAI_ASR_MODEL only when a sky demands
@@ -122,13 +133,46 @@ function zaiAudio(cfg: CloudConfig): AudioEngine {
     "X-Z-AI-From": "Z", // the SDK marks every request this way
   };
 
-  function postJson(path: string, body: unknown): Promise<Response> {
-    return fetch(`${cfg.baseUrl}${path}`, {
+  /* THE INNER SKY — the platform gateway the SDK itself sings
+     through (internal-api.z.ai/v1). It serves the house voice
+     (CogTTS) with NO model code — the SDK sends none — and it
+     authenticates by X-Token, not by Bearer. The public sky
+     (api.z.ai) has no TTS service at all (every model code answers
+     1211 "Unknown Model", and the bare path demands a code with
+     1214), so on the cloud the voice travels through this inner
+     sky. Its credential is a session token carried in ZAI_TOKEN —
+     never in the code. */
+  const innerBase = (
+    process.env.ZAI_INTERNAL_BASE_URL ?? "https://internal-api.z.ai/v1"
+  ).replace(/\/$/, "");
+  /* the inner doors, in preference order: a dedicated session token
+     first; then the platform key itself as a long-shot token (some
+     platform keys answer the inner sky); deduplicated. */
+  const innerTokens: string[] = [];
+  if (process.env.ZAI_TOKEN?.trim()) innerTokens.push(process.env.ZAI_TOKEN.trim());
+  if (cfg.apiKey && !innerTokens.includes(cfg.apiKey)) innerTokens.push(cfg.apiKey);
+
+  function innerHeaders(token: string): Record<string, string> {
+    /* exactly the SDK's shape — Bearer placeholder, X-Z-AI-From, and
+       the real credential in X-Token */
+    return {
+      Authorization: "Bearer Z.ai",
+      "X-Z-AI-From": "Z",
+      "X-Token": token,
+    };
+  }
+
+  function postDoor(door: AudioDoor): Promise<Response> {
+    return fetch(door.url, {
       method: "POST",
-      headers: { ...baseHeaders, "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+      headers: { ...door.headers, "Content-Type": "application/json" },
+      body: JSON.stringify(door.body),
       signal: AbortSignal.timeout(180_000),
     });
+  }
+
+  function runDoor(door: AudioDoor): Promise<Response> {
+    return door.form ? door.form() : postDoor(door);
   }
 
   async function errorDetail(res: Response): Promise<string> {
@@ -166,7 +210,7 @@ function zaiAudio(cfg: CloudConfig): AudioEngine {
      door of the house sky in turn and gathers the true reasons, so a
      silent failure can never again mask its own cause. */
   async function ladderTts(
-    candidates: { label: string; body: Record<string, unknown> }[],
+    candidates: AudioDoor[],
     input: string,
     voice: string,
     speed: number
@@ -178,8 +222,8 @@ function zaiAudio(cfg: CloudConfig): AudioEngine {
          single-shot so a closed ladder never keeps the visitor long */
       const res =
         i === 0
-          ? await withRetry(() => postJson(c.label, c.body), AUDIO_RETRY_DELAYS_MS)
-          : await postJson(c.label, c.body);
+          ? await withRetry(() => runDoor(c), AUDIO_RETRY_DELAYS_MS)
+          : await runDoor(c);
       if (res.ok) {
         try {
           return await voiceBytes(res);
@@ -226,8 +270,10 @@ function zaiAudio(cfg: CloudConfig): AudioEngine {
         };
 
         /* THE LADDER — every door the house skies are known to serve:
-           1. the SDK contract: /audio/tts, no model code (the SDK
-              sends none; the sky uses its own default)
+           0. the INNER sky (the SDK's own gateway): /audio/tts, no
+              model code — the house voice's true home door
+           1. the public sky: /audio/tts, no model code (the SDK
+              contract; kept for skies that serve the default)
            2. /audio/tts naming the house code (cogtts)
            3. the OpenAI-compatible /audio/speech with the house code
               (some skies serve only the stepped-down path)
@@ -236,15 +282,41 @@ function zaiAudio(cfg: CloudConfig): AudioEngine {
            private name. */
         const code1 = ttsModel ?? "cogtts";
         const code2 = ttsModel ?? "glm-tts";
-        const candidates = [
-          { label: "/audio/tts", body: { ...base } },
-          { label: "/audio/tts", body: { ...base, model: code1 } },
+        const candidates: AudioDoor[] = [];
+        for (const token of innerTokens) {
+          candidates.push({
+            label: "inner /audio/tts",
+            url: `${innerBase}/audio/tts`,
+            headers: innerHeaders(token),
+            body: { ...base },
+          });
+        }
+        candidates.push(
+          {
+            label: "/audio/tts",
+            url: `${cfg.baseUrl}/audio/tts`,
+            headers: baseHeaders,
+            body: { ...base },
+          },
+          {
+            label: "/audio/tts",
+            url: `${cfg.baseUrl}/audio/tts`,
+            headers: baseHeaders,
+            body: { ...base, model: code1 },
+          },
           {
             label: "/audio/speech",
+            url: `${cfg.baseUrl}/audio/speech`,
+            headers: baseHeaders,
             body: { model: code1, input, voice, speed, response_format: "wav" },
           },
-          { label: "/audio/tts", body: { ...base, model: code2 } },
-        ];
+          {
+            label: "/audio/tts",
+            url: `${cfg.baseUrl}/audio/tts`,
+            headers: baseHeaders,
+            body: { ...base, model: code2 },
+          }
+        );
         const buf = await ladderTts(candidates, input, voice, speed);
         return { arrayBuffer: async () => buf };
       },
@@ -275,39 +347,62 @@ function zaiAudio(cfg: CloudConfig): AudioEngine {
           });
         };
 
-        /* THE LADDER — same law as the voice. The OFFICIAL public
-           contract (verified against docs.z.ai) comes first:
+        /* THE LADDER — same law as the voice. The INNER sky (the
+           SDK's own gateway) is the ear's home door; the public
+           documented door follows:
+           0. the inner sky: /audio/asr {file_base64}, no model code
+              — the SDK contract on its own gateway (X-Token)
            1. multipart /audio/transcriptions with model glm-asr-2512
               — the one door the public sky documents and serves
-           2. the SDK contract: /audio/asr, no model code (the
-              internal sky's own door)
+           2. the public sky: /audio/asr, no model code
            3. /audio/asr naming the house codes
            ZAI_ASR_MODEL overrides every code. */
         const codeA = asrModel ?? "glm-asr-2512";
         const codeB = asrModel ?? "glm-asr";
-        const json = (label: string, body: Record<string, unknown>) =>
-          ({ label, body } as const);
-        const candidates: {
-          label: string;
-          body?: Record<string, unknown>;
-          form?: () => Promise<Response>;
-        }[] = [
-          { label: "/audio/transcriptions", form: multipart(codeA) },
-          json("/audio/asr", { file_base64: params.file_base64 }),
-          json("/audio/asr", { file_base64: params.file_base64, model: codeA }),
-          json("/audio/asr", { file_base64: params.file_base64, model: codeB }),
-        ];
+        const candidates: AudioDoor[] = [];
+        for (const token of innerTokens) {
+          candidates.push({
+            label: "inner /audio/asr",
+            url: `${innerBase}/audio/asr`,
+            headers: innerHeaders(token),
+            body: { file_base64: params.file_base64 },
+          });
+        }
+        candidates.push({
+          label: "/audio/transcriptions",
+          url: `${cfg.baseUrl}/audio/transcriptions`,
+          headers: baseHeaders,
+          form: multipart(codeA),
+        });
+        candidates.push(
+          {
+            label: "/audio/asr",
+            url: `${cfg.baseUrl}/audio/asr`,
+            headers: baseHeaders,
+            body: { file_base64: params.file_base64 },
+          },
+          {
+            label: "/audio/asr",
+            url: `${cfg.baseUrl}/audio/asr`,
+            headers: baseHeaders,
+            body: { file_base64: params.file_base64, model: codeA },
+          },
+          {
+            label: "/audio/asr",
+            url: `${cfg.baseUrl}/audio/asr`,
+            headers: baseHeaders,
+            body: { file_base64: params.file_base64, model: codeB },
+          }
+        );
 
         const errors: string[] = [];
         let answered: { text?: string } | null = null;
         for (let i = 0; i < candidates.length; i++) {
           const c = candidates[i];
           const res =
-            i === 0 && c.form
-              ? await withRetry(c.form, AUDIO_RETRY_DELAYS_MS)
-              : c.body
-                ? await postJson(c.label, c.body)
-                : await c.form!();
+            i === 0
+              ? await withRetry(() => runDoor(c), AUDIO_RETRY_DELAYS_MS)
+              : await runDoor(c);
           if (res.ok) {
             const parsed = await parseText(res);
             if (parsed.text) return parsed;
