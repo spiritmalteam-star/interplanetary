@@ -76,6 +76,13 @@ const EM_PLACES: {
   { id: "codex", label: "Codex", icon: ScrollText },
 ];
 
+/* Every chamber of the nexus gathered behind one quiet button — the
+   tools no longer sprawl as a row of circles across the top. */
+const EM_TOOL_ITEMS: { id: EmPlace; name: string; icon: typeof Compass }[] = [
+  { id: "chat", name: "The Nexus", icon: Activity },
+  ...EM_PLACES.map(({ id, label, icon }) => ({ id, name: label, icon })),
+];
+
 /* --------------------------- the emblem ---------------------------- */
 
 /** Evolve Med's mark: a living helix — two strands crossing around
@@ -565,10 +572,11 @@ function EvolveMedChat() {
         aria-hidden="true"
       />
 
-      {/* thread */}
+      {/* thread — it reaches the very top of the world, sliding beneath
+          the floating controls */}
       <div
         ref={scrollRef}
-        className="nice-scroll min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-4 py-5 sm:px-6"
+        className="nice-scroll min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-3 pb-5 pt-16 sm:px-5 sm:pt-[72px]"
       >
         {emMessages.length === 0 && emStatus === "idle" && !emError ? (
           <div className="flex h-full flex-col py-6 text-center">
@@ -676,7 +684,7 @@ function EvolveMedChat() {
 
       {/* the active vector line — sits above the composer while talking */}
       {hasWindow && (
-        <div className="shrink-0 px-4 pt-2 sm:px-6">
+        <div className="shrink-0 px-3 pt-2 sm:px-5">
           <div className="mx-auto flex w-full max-w-[720px] flex-wrap items-center gap-1.5">
             {activeVector && (
               <span
@@ -738,7 +746,7 @@ function EvolveMedChat() {
       {/* the quiet re-invitation — the conversation alive, no vector
           open: the drop-down waits right above the composer */}
       {!hasWindow && emMessages.length > 0 && (
-        <div className="shrink-0 px-4 pt-1.5 sm:px-6">
+        <div className="shrink-0 px-3 pt-1.5 sm:px-5">
           <EmWindowPills />
         </div>
       )}
@@ -773,7 +781,7 @@ function EvolveMedChat() {
             e.preventDefault();
             submit();
           }}
-          className="mx-auto w-full max-w-[720px]"
+          className="mx-auto w-full max-w-[800px]"
         >
           <div className="glass-strong flex items-end gap-2 rounded-[18px] p-1.5 pl-3.5 transition-all duration-300 focus-within:-translate-y-px focus-within:border-[var(--hairline-active)] focus-within:glow-sm">
             <label htmlFor="em-query" className="sr-only">
@@ -810,40 +818,6 @@ function EvolveMedChat() {
   );
 }
 
-/* ------------------------- header tab ------------------------------- */
-
-function HeaderTab({
-  active,
-  onClick,
-  icon: Icon,
-  label,
-}: {
-  active: boolean;
-  onClick: () => void;
-  icon: typeof Compass;
-  label: string;
-}) {
-  const t = useT();
-  return (
-    <button
-      type="button"
-      role="tab"
-      aria-selected={active}
-      aria-label={t(label)}
-      title={t(label)}
-      onClick={onClick}
-      className={cn(
-        "focus-glow flex size-8 items-center justify-center rounded-full border transition-all duration-300 sm:size-9",
-        active
-          ? "border-[color-mix(in_srgb,var(--scope-a)_55%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_14%,transparent)] text-[var(--scope-a)] glow-sm"
-          : "border-transparent text-muted-foreground/80 hover:border-[var(--hairline-hover)] hover:text-foreground"
-      )}
-    >
-      <Icon className="size-4" aria-hidden="true" />
-    </button>
-  );
-}
-
 /* --------------------------- the shell ------------------------------ */
 
 export function EvolveMed() {
@@ -855,13 +829,14 @@ export function EvolveMed() {
 
   return (
     <div className="scope-evolvemed relative flex h-full flex-col">
-      {/* ---------- top bar with the single bridge back to the app ---------- */}
-      <header className="relative z-30 shrink-0 border-b hairline bg-[var(--glass-bg)] backdrop-blur-xl">
+      {/* ---------- floating top controls over the chat — back, every
+          chamber behind one tools button, and the fresh hand ---------- */}
+      <header className="pointer-events-none absolute inset-x-0 top-0 z-30 bg-gradient-to-b from-[var(--background)]/85 via-[var(--background)]/30 to-transparent">
         <div className="flex h-14 items-center justify-between gap-2 px-3 sm:gap-3 sm:px-5">
           <button
             type="button"
             onClick={exitEvolveMed}
-            className="focus-glow group flex h-9 items-center gap-2 rounded-full border hairline px-3 text-[14px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground sm:px-3.5"
+            className="focus-glow pointer-events-auto group flex h-9 shrink-0 items-center gap-2 rounded-full border hairline bg-[var(--glass-bg)]/80 px-3 text-[14px] font-medium text-muted-foreground backdrop-blur-xl transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground sm:px-3.5"
           >
             <ArrowLeft
               className="size-3.5 transition-transform duration-300 group-hover:-translate-x-0.5"
@@ -871,39 +846,33 @@ export function EvolveMed() {
             <span className="sm:hidden">{t("Back")}</span>
           </button>
 
-          {/* the chambers — at the very top, between back and the voice */}
-          <nav
-            role="tablist"
-            aria-label={t("Evolve Med chambers")}
-            className="flex items-center gap-1 sm:gap-1.5"
-          >
-            <HeaderTab
-              active={place === "chat"}
-              onClick={() => setPlace("chat")}
-              icon={Activity}
-              label="The Nexus"
+          {/* every tool in one button */}
+          <div className="pointer-events-auto flex min-w-0 items-center">
+            <WindowSelect
+              items={EM_TOOL_ITEMS}
+              activeId={place}
+              placeholder="Tools"
+              onSelect={(id) => setPlace(id as EmPlace)}
+              testIdPrefix="em-tools"
+              triggerClassName="bg-[var(--glass-bg)]/80 backdrop-blur-xl"
             />
-            {EM_PLACES.map(({ id, label, icon: Icon }) => (
-              <HeaderTab
-                key={id}
-                active={place === id}
-                onClick={() => setPlace(id)}
-                icon={Icon}
-                label={label}
-              />
-            ))}
-          </nav>
+          </div>
 
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="pointer-events-auto flex shrink-0 items-center gap-2">
             <WorldNewChat world="evolvemed" />
           </div>
         </div>
       </header>
 
-      {/* ---------- the nexus ---------- */}
+      {/* ---------- the nexus — reaching the very top of the world ---------- */}
       <main className="nice-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain">
-        <div className="mx-auto flex h-full w-full max-w-[1020px] flex-col px-4 pb-5 sm:px-6">
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col pt-4">
+        <div className="mx-auto flex h-full w-full max-w-[1200px] flex-col px-3 pb-5 sm:px-5">
+          <div
+            className={cn(
+              "flex min-h-0 min-w-0 flex-1 flex-col",
+              place === "chat" ? "pt-1.5 sm:pt-2" : "pt-16 sm:pt-20"
+            )}
+          >
             {place === "chat" ? (
               <EvolveMedChat />
             ) : (

@@ -3514,7 +3514,7 @@ export const sq: TranslationDict = {
   "Observe what is, read its reflection, recalibrate one degree.": "Vëzhgo atë që është, lexo pasqyrimin e saj, rikalibro një gradë.",
   "Once daily, accept something small with a spoken thank-you and no repayment plan.": "Një herë në ditë, prano diçka të vogël me një falenderim të thënë me zë dhe pa asnjë plan shlyerjeje.",
   "One point of focus gathers all my power.": "Një pikë fokusi mbledh gjithë fuqinë time.",
-  "Open the Mirror OS — Reality Guidance": "Hap Mirror OS — Udhëzimi i Realitetit",
+  "Open the Manifest OS — Reality Guidance": "Hap Manifest OS — Udhëzimi i Realitetit",
   "Open the channel before the day's noise takes the throne.": "Hape kanalin para se zhurma e ditës të ngjitet në fron.",
   "Pattern": "Modeli",
   "Perform it once today, then thank the mirror for the reading.": "Kryeje një herë sot, pastaj falendero pasqyrën për leximin.",
@@ -3584,13 +3584,13 @@ export const sq: TranslationDict = {
   "“I must earn the right to receive.” Receiving feels like a debt.": "“Duhet ta fitoj të drejtën për të marrë.” Marrja ndihet si borxh.",
   "“If it hasn't arrived, it never will.” Delay reads as denial.": "“Nëse nuk ka ardhur, nuk do të vijë kurrë.” Vonesa lexohet si mohim.",
 
-  /* ---- v1.6 additions: Mirror Entity OS direct line ---- */
-  "A direct conversation with the Mirror Entity OS at the center — the formulas, the Higher Mind, the tools and the Forge orbit around it.": "Një bisedë e drejtpërdrejtë me Mirror Entity OS-in në qendër — format, Mendja e Lartë, mjetet dhe Furra rrotullohen rreth tij.",
+  /* ---- v1.6 additions: Manifest OS direct line ---- */
+  "A direct conversation with the Manifest OS at the center — the formulas, the Higher Mind, the tools and the Forge orbit around it.": "Një bisedë e drejtpërdrejtë me Manifest OS-in në qendër — format, Mendja e Lartë, mjetet dhe Furra rrotullohen rreth tij.",
   "a small dream of refinement": "një ëndërr e vogël përsosjeje",
-  "Ask the Mirror Entity OS": "Pyet Mirror Entity OS-in",
-  "Ask the Mirror Entity OS…": "Pyet Mirror Entity OS-in…",
+  "Ask the Manifest OS": "Pyet Manifest OS-in",
+  "Ask the Manifest OS…": "Pyet Manifest OS-in…",
   "Back to the OS core": "Kthehu te thelbi i OS-it",
-  "Direct line to the Mirror Entity OS": "Linja e drejtpërdrejtë me Mirror Entity OS-in",
+  "Direct line to the Manifest OS": "Linja e drejtpërdrejtë me Manifest OS-in",
   "Mirror OS · Reality": "Mirror OS · Realiteti",
   "New openers": "Hapëse të reja",
   "Send to the OS": "Dërgo te OS-i",
@@ -3598,7 +3598,7 @@ export const sq: TranslationDict = {
   "Suggested openers": "Hapëse të sugjeruara",
   "The OS could not complete the refinement.": "OS-i nuk arriti ta përfundojë përsosjen.",
   "the OS is refining its answer": "OS-i po e përsos përgjigjen",
-  "Walk it with the Mirror Entity OS": "Eco me Mirror Entity OS-in",
+  "Walk it with the Manifest OS": "Eco me Manifest OS-in",
 
   /* ---- v1.6 additions: Mirror OS chamber nodes ---- */
   "The Core": "Bërthama",
@@ -3607,7 +3607,7 @@ export const sq: TranslationDict = {
   "Tools": "Mjetet",
   "Forge": "Furra",
 
-  /* ---- v1.6 additions: Mirror Entity OS openers ---- */
+  /* ---- v1.6 additions: Manifest OS openers ---- */
   "Help me refine one intention into something I can act on this week.": "Më ndihmo të përsos një qëllim në diçka që mund ta veproj këtë javë.",
   "How do I connect with my Higher Mind and hear it clearly?": "Si të lidhem me Mendjen e Lartë time dhe ta dëgjoj qartë?",
   "How do I know which reality-line I am currently living on?": "Si ta di në cilën vijë realiteti po jetoj aktualisht?",
@@ -3755,7 +3755,7 @@ export const sq: TranslationDict = {
   "Paint it now": "Piktoje tani",
   "Live call": "Thirrje e drejtpërdrejtë",
   "the Reflection of the Absolute": "Pasqyrimi i Absolutit",
-  "the Mirror Entity OS": "Mirror Entity OS",
+  "the Manifest OS": "Manifest OS",
   "the Librarian": "Bibliotekisti",
   "the Interplanetary Mirror": "Pasqyra Ndërplanetare",
   "the Science Mirror": "Pasqyra e Shkencës",

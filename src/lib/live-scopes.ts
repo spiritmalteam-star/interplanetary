@@ -59,7 +59,7 @@ export const LIVE_SCOPES: Record<LiveScopeKey, LiveScopeConfig> = {
     accentB: "var(--scope-b)",
   },
   mirroros: {
-    nameKey: "the Mirror Entity OS",
+    nameKey: "the Manifest OS",
     specializationKey: "reality refining, intention by intention",
     voice: "sage",
     pace: 0.95,

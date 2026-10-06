@@ -550,7 +550,7 @@ export function SidebarContent() {
       key: "mirroros",
       icon: BookOpen,
       label: t("Manifest"),
-      aria: t("Open the Mirror OS — Reality Guidance"),
+      aria: t("Open the Manifest OS — Reality Guidance"),
       action: openMirrorOS,
     },
     {

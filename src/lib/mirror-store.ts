@@ -279,7 +279,7 @@ export interface LcPrefill {
   context?: string;
 }
 
-/* -------- direct line to the Mirror Entity OS (reality refining) ------- */
+/* -------- direct line to the Manifest OS (reality refining) ------- */
 
 export interface OsMessage {
   id: string;
@@ -377,7 +377,7 @@ interface MirrorState {
   labBlueprint: ManifestBlueprint | null;
   labError: string | null;
 
-  /* Mirror Entity OS — the direct reality-refining chat */
+  /* Manifest OS — the direct reality-refining chat */
   osMessages: OsMessage[];
   osStatus: TransmissionStatus;
   osError: string | null;
@@ -648,7 +648,7 @@ interface MirrorState {
   chargeIntention: () => Promise<void>;
   resetLabDraft: () => void;
 
-  /* Mirror Entity OS — direct chat */
+  /* Manifest OS — direct chat */
   setOsDraft: (v: string) => void;
   askOS: (question: string, attachments?: ChatAttachment[]) => Promise<void>;
   /** The Universal Visualization Engine — the OS paints what is asked to
@@ -2404,7 +2404,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
 
   resetLabDraft: () => set({ ...emptyLab }),
 
-  /* ---------------- Mirror Entity OS — direct chat ---------------- */
+  /* ---------------- Manifest OS — direct chat ---------------- */
 
   setOsDraft: (v) => set({ osDraft: v }),
 
@@ -2483,7 +2483,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     }
   },
 
-  /* ------- Mirror Entity OS — the visualization engine ------- */
+  /* ------- Manifest OS — the visualization engine ------- */
 
   askOSVisual: async (question, context, regenerateOf, display) => {
     if (get().osStatus === "loading") return;

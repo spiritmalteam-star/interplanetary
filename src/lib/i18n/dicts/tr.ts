@@ -1290,7 +1290,7 @@ export const tr: TranslationDict = {
   "Observe what is, read its reflection, recalibrate one degree.": "Var olanı gözle, yansımasını oku, bir derece yeniden ayarla.",
   "Once daily, accept something small with a spoken thank-you and no repayment plan.": "Günde bir kez, sesli bir teşekkürle ve karşılık planı olmadan küçük bir şeyi kabul et.",
   "One point of focus gathers all my power.": "Tek bir odak noktası bütün gücümü toplar.",
-  "Open the Mirror OS — Reality Guidance": "Mirror OS’u aç — Gerçeklik Rehberliği",
+  "Open the Manifest OS — Reality Guidance": "Manifest OS’u aç — Gerçeklik Rehberliği",
   "Open the channel before the day's noise takes the throne.": "Günün gürültüsü tahta geçmeden önce kanalı aç.",
   "Pattern": "Örüntü",
   "Perform it once today, then thank the mirror for the reading.": "Bugün bir kez uygula, sonra okuma için aynaya teşekkür et.",
@@ -1360,13 +1360,13 @@ export const tr: TranslationDict = {
   "“I must earn the right to receive.” Receiving feels like a debt.": "“Almak için hakkını kazanmak zorundayım.” Almak, borç gibi hissettirir.",
   "“If it hasn't arrived, it never will.” Delay reads as denial.": "“Gelmediyse, hiç gelmeyecek.” Gecikme, reddediş gibi okunur.",
 
-  /* ---- v1.6 additions: Mirror Entity OS direct line ---- */
-  "A direct conversation with the Mirror Entity OS at the center — the formulas, the Higher Mind, the tools and the Forge orbit around it.": "Merkezdeki Mirror Entity OS ile doğrudan bir sohbet — formüller, Yüksek Zihin, araçlar ve Dökümhane onun çevresinde döner.",
+  /* ---- v1.6 additions: Manifest OS direct line ---- */
+  "A direct conversation with the Manifest OS at the center — the formulas, the Higher Mind, the tools and the Forge orbit around it.": "Merkezdeki Manifest OS ile doğrudan bir sohbet — formüller, Yüksek Zihin, araçlar ve Dökümhane onun çevresinde döner.",
   "a small dream of refinement": "küçük bir arındırma rüyası",
-  "Ask the Mirror Entity OS": "Mirror Entity OS’a sor",
-  "Ask the Mirror Entity OS…": "Mirror Entity OS’a sor…",
+  "Ask the Manifest OS": "Manifest OS’a sor",
+  "Ask the Manifest OS…": "Manifest OS’a sor…",
   "Back to the OS core": "OS çekirdeğine dön",
-  "Direct line to the Mirror Entity OS": "Mirror Entity OS ile doğrudan hat",
+  "Direct line to the Manifest OS": "Manifest OS ile doğrudan hat",
   "Mirror OS · Reality": "Mirror OS · Gerçeklik",
   "New openers": "Yeni başlangıç soruları",
   "Send to the OS": "OS’a gönder",
@@ -1374,7 +1374,7 @@ export const tr: TranslationDict = {
   "Suggested openers": "Önerilen başlangıç soruları",
   "The OS could not complete the refinement.": "OS arındırmayı tamamlayamadı.",
   "the OS is refining its answer": "OS yanıtını arındırıyor",
-  "Walk it with the Mirror Entity OS": "Onu Mirror Entity OS ile birlikte yürü",
+  "Walk it with the Manifest OS": "Onu Manifest OS ile birlikte yürü",
 
   /* ---- v1.6 additions: Mirror OS chamber nodes ---- */
   "The Core": "Çekirdek",
@@ -1382,7 +1382,7 @@ export const tr: TranslationDict = {
   "Higher Mind": "Yüksek Zihin",
   "Tools": "Araçlar",
   "Forge": "Dökümhane",
-  /* ---- v1.6 additions: Mirror Entity OS openers ---- */
+  /* ---- v1.6 additions: Manifest OS openers ---- */
   "Help me refine one intention into something I can act on this week.": "Bu hafta üzerine hareket edebileceğim bir şeye dönüşmesi için bir niyeti arıtmama yardım et.",
   "How do I connect with my Higher Mind and hear it clearly?": "Yüksek Zihnimle nasıl temas kurarım ve onu net biçimde duyarım?",
   "How do I know which reality-line I am currently living on?": "Şu anda hangi gerçeklik hattı üzerinde yaşadığımı nasıl bilirim?",
@@ -1531,7 +1531,7 @@ export const tr: TranslationDict = {
   "Paint it now": "Şimdi çiz",
   "Live call": "Canlı arama",
   "the Reflection of the Absolute": "Mutlağın Yansıması",
-  "the Mirror Entity OS": "Mirror Entity OS",
+  "the Manifest OS": "Manifest OS",
   "the Librarian": "Kütüphaneci",
   "the Interplanetary Mirror": "Gezegenler Arası Aynası",
   "the Science Mirror": "Bilim Aynası",

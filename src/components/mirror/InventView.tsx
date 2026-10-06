@@ -39,6 +39,7 @@ import {
 } from "./VisualizationCard";
 import { SigilForIntent } from "./MirrorOSForge";
 import { WorldNewChat } from "./WorldNewChat";
+import { WindowSelect } from "./WindowSelect";
 
 /* ------------------------------------------------------------------ */
 /*  INVENT — THE FORGE · the fourth book on the shelf, rebuilt as its  */
@@ -74,42 +75,12 @@ const INVENT_PLACES: {
   { id: "mystery", label: "The Mystery Chamber", icon: Sparkles },
 ];
 
-/* ---------------- chamber tabs — the top-bar row ---------------- */
-
-function InventTab({
-  active,
-  onClick,
-  icon: Icon,
-  label,
-  testId,
-}: {
-  active: boolean;
-  onClick: () => void;
-  icon: typeof Hammer;
-  label: string;
-  testId: string;
-}) {
-  const t = useT();
-  return (
-    <button
-      type="button"
-      role="tab"
-      aria-selected={active}
-      aria-label={t(label)}
-      title={t(label)}
-      onClick={onClick}
-      data-testid={testId}
-      className={cn(
-        "focus-glow flex size-8 shrink-0 items-center justify-center rounded-full border transition-all duration-300 sm:size-9",
-        active
-          ? "border-[color-mix(in_srgb,var(--scope-a)_55%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_14%,transparent)] text-[var(--scope-a)] glow-sm"
-          : "border-transparent text-muted-foreground/80 hover:border-[var(--hairline-hover)] hover:text-foreground"
-      )}
-    >
-      <Icon className="size-4" aria-hidden="true" />
-    </button>
-  );
-}
+/* Every chamber of the Forge gathered behind one quiet button — the
+   tools no longer sprawl as a row of circles across the top. */
+const INVENT_TOOL_ITEMS: { id: InventPlace; name: string; icon: typeof Hammer }[] = [
+  { id: "bench", name: "The Bench", icon: Hammer },
+  ...INVENT_PLACES.map(({ id, label, icon }) => ({ id, name: label, icon })),
+];
 
 /* ---------------- one dial group of the Mystery Chamber ---------------- */
 
@@ -1032,7 +1003,6 @@ function BenchChat() {
   const setForgeDraft = useMirror((s) => s.setForgeDraft);
   const askForge = useMirror((s) => s.askForge);
   const askForgeVisual = useMirror((s) => s.askForgeVisual);
-  const clearChannel = useMirror((s) => s.clearChannel);
   const t = useT();
   const threadRef = useRef<HTMLDivElement | null>(null);
   const [phase, setPhase] = useState(0);
@@ -1091,29 +1061,14 @@ function BenchChat() {
       <span className="scope-corner scope-corner-bl" aria-hidden="true" />
       <span className="scope-corner scope-corner-br" aria-hidden="true" />
 
-      {/* slim header — the bench's name and the quiet-the-forge hand */}
-      <div className="flex shrink-0 items-center justify-between gap-2 border-b hairline px-4 py-2.5 sm:px-5">
-        <h3 className="mono-label flex items-center gap-2 text-[11px] text-[var(--scope-a)]">
-          <Hammer className="size-3.5" aria-hidden="true" />
-          {t("The Forge speaks")}
-        </h3>
-        {messages.length > 0 && (
-          <button
-            type="button"
-            onClick={() => clearChannel("forge")}
-            aria-label={t("Quiet the Forge")}
-            title={t("Quiet the Forge")}
-            className="focus-glow flex size-7 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:text-foreground"
-          >
-            <RotateCcw className="size-3" aria-hidden="true" />
-          </button>
-        )}
-      </div>
+      {/* slim header retired — the floating world controls carry the
+          forge's name and the fresh-chat hand now */}
 
-      {/* thread — the whole height of the chamber, its own scroll */}
+      {/* thread — it reaches the very top of the world, sliding beneath
+          the floating controls */}
       <div
         ref={threadRef}
-        className="nice-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-5 sm:px-6"
+        className="nice-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pb-5 pt-16 sm:px-5 sm:pt-[72px]"
         data-testid="forge-thread"
       >
         {messages.length === 0 && status === "idle" && !error ? (
@@ -1146,7 +1101,7 @@ function BenchChat() {
             </p>
           </div>
         ) : (
-          <div className="mx-auto w-full max-w-[760px] space-y-4">
+          <div className="mx-auto w-full max-w-[860px] space-y-4">
             {messages.map((m, i) => (
               <div key={m.id}>
                 <ForgeExchange
@@ -1228,7 +1183,7 @@ function BenchChat() {
 
       {/* composer */}
       <div className="shrink-0 border-t hairline bg-[var(--glass-bg)] px-3 py-2.5 backdrop-blur-xl sm:px-4">
-        <div className="mx-auto flex w-full max-w-[720px] items-end gap-2">
+        <div className="mx-auto flex w-full max-w-[800px] items-end gap-2">
           <textarea
             value={draft}
             onChange={(e) => setForgeDraft(e.target.value)}
@@ -1279,14 +1234,16 @@ export function InventView() {
 
   return (
     <div className="scope-invent relative flex h-full flex-col">
-      {/* ---------- top bar: back · title · chamber tabs ---------- */}
-      <header className="relative z-30 shrink-0 border-b hairline bg-[var(--glass-bg)] backdrop-blur-xl">
-        <div className="flex h-14 items-center gap-2 px-3 sm:gap-3 sm:px-5">
+      {/* ---------- floating top controls over the chat — back, the
+          forge's name, every chamber behind one tools button, and the
+          fresh hand ---------- */}
+      <header className="pointer-events-none absolute inset-x-0 top-0 z-30 bg-gradient-to-b from-[var(--background)]/85 via-[var(--background)]/30 to-transparent">
+        <div className="flex h-14 items-center justify-between gap-2 px-3 sm:gap-3 sm:px-5">
           <button
             type="button"
             onClick={exitInvent}
             data-testid="invent-back"
-            className="focus-glow group flex h-9 shrink-0 items-center gap-2 rounded-full border hairline px-3 text-[14px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground sm:px-3.5"
+            className="focus-glow pointer-events-auto group flex h-9 shrink-0 items-center gap-2 rounded-full border hairline bg-[var(--glass-bg)]/80 px-3 text-[14px] font-medium text-muted-foreground backdrop-blur-xl transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground sm:px-3.5"
           >
             <ArrowLeft
               className="size-3.5 transition-transform duration-300 group-hover:-translate-x-0.5"
@@ -1298,52 +1255,37 @@ export function InventView() {
             <span className="sm:hidden">{t("Back")}</span>
           </button>
 
-          <div className="min-w-0 flex-1">
-            <h1 className="title-gradient truncate text-[15.5px] font-semibold tracking-[0.12em] sm:text-[17px]">
-              INVENT · {t("The Forge")}
-            </h1>
-            <p className="mono-label mt-0.5 hidden truncate text-[10px] text-muted-foreground/80 sm:block sm:text-[11px]">
-              {t("The invention workshop of the Mirror")}
-            </p>
+          {/* every tool in one button — centered like the other worlds */}
+          <div className="pointer-events-auto flex min-w-0 items-center">
+            <WindowSelect
+              items={INVENT_TOOL_ITEMS}
+              activeId={place}
+              placeholder="Tools"
+              onSelect={(id) => setPlace(id as InventPlace)}
+              testIdPrefix="invent-tab"
+              triggerClassName="bg-[var(--glass-bg)]/80 backdrop-blur-xl"
+            />
           </div>
 
-          {/* the chamber tabs — same treatment as the OS chambers */}
-          <nav
-            role="tablist"
-            aria-label={t("Invent chambers")}
-            data-testid="invent-tabs"
-            className="no-scrollbar flex shrink-0 items-center gap-1 overflow-x-auto sm:gap-1.5"
-          >
-            <InventTab
-              active={place === "bench"}
-              onClick={() => setPlace("bench")}
-              icon={Hammer}
-              label="The Bench"
-              testId="invent-tab-bench"
-            />
-            {INVENT_PLACES.map(({ id, label, icon: Icon }) => (
-              <InventTab
-                key={id}
-                active={place === id}
-                onClick={() => setPlace(id)}
-                icon={Icon}
-                label={label}
-                testId={`invent-tab-${id}`}
-              />
-            ))}
-          </nav>
-
-          <WorldNewChat world="invent" />
+          <div className="pointer-events-auto flex shrink-0 items-center gap-2">
+            <WorldNewChat world="invent" />
+          </div>
         </div>
       </header>
 
-      {/* ---------- the workshop — one spacious chamber at a time ---------- */}
+      {/* ---------- the workshop — one spacious chamber at a time,
+          reaching the very top of the world ---------- */}
       <main
         className="nice-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain"
         data-testid="invent-view"
       >
-        <div className="mx-auto flex h-full w-full max-w-[860px] flex-col px-4 pb-5 sm:px-6">
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col pt-4">
+        <div className="mx-auto flex h-full w-full max-w-[1000px] flex-col px-3 pb-5 sm:px-5">
+          <div
+            className={cn(
+              "flex min-h-0 min-w-0 flex-1 flex-col",
+              place === "bench" ? "pt-1.5 sm:pt-2" : "pt-16 sm:pt-20"
+            )}
+          >
             {place === "bench" ? (
               <BenchChat />
             ) : (

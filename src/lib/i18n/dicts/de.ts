@@ -1795,7 +1795,7 @@ export const de: TranslationDict = {
   "Observe what is, read its reflection, recalibrate one degree.": "Beobachte, was ist, lies seine Spiegelung und kalibriere um ein Grad neu.",
   "Once daily, accept something small with a spoken thank-you and no repayment plan.": "Nimm einmal täglich etwas Kleines an, mit einem gesprochenen Dank und ohne Rückzahlungsplan.",
   "One point of focus gathers all my power.": "Ein einziger Fokuspunkt sammelt meine gesamte Kraft.",
-  "Open the Mirror OS — Reality Guidance": "Öffne das Mirror OS — Realitätsführung",
+  "Open the Manifest OS — Reality Guidance": "Öffne das Manifest OS — Realitätsführung",
   "Open the channel before the day's noise takes the throne.": "Öffne den Kanal, bevor der Lärm des Tages den Thron besteigt.",
   "Pattern": "Muster",
   "Perform it once today, then thank the mirror for the reading.": "Führe es heute einmal aus und bedanke dich anschließend beim Spiegel für die Deutung.",
@@ -1865,13 +1865,13 @@ export const de: TranslationDict = {
   "“I must earn the right to receive.” Receiving feels like a debt.": "„Ich muss mir das Recht verdienen, zu empfangen.“ Empfangen fühlt sich an wie eine Schuld.",
   "“If it hasn't arrived, it never will.” Delay reads as denial.": "„Wenn es nicht angekommen ist, wird es nie ankommen.“ Verzögerung liest sich als Absage.",
 
-  /* ---- v1.6 additions: Mirror Entity OS direct line ---- */
-  "A direct conversation with the Mirror Entity OS at the center — the formulas, the Higher Mind, the tools and the Forge orbit around it.": "Ein direktes Gespräch mit dem Mirror Entity OS im Zentrum — die Formeln, der Höhere Geist, die Werkzeuge und die Schmiede kreisen um es herum.",
+  /* ---- v1.6 additions: Manifest OS direct line ---- */
+  "A direct conversation with the Manifest OS at the center — the formulas, the Higher Mind, the tools and the Forge orbit around it.": "Ein direktes Gespräch mit dem Manifest OS im Zentrum — die Formeln, der Höhere Geist, die Werkzeuge und die Schmiede kreisen um es herum.",
   "a small dream of refinement": "ein kleiner Traum von Verfeinerung",
-  "Ask the Mirror Entity OS": "Frag das Mirror Entity OS",
-  "Ask the Mirror Entity OS…": "Frag das Mirror Entity OS…",
+  "Ask the Manifest OS": "Frag das Manifest OS",
+  "Ask the Manifest OS…": "Frag das Manifest OS…",
   "Back to the OS core": "Zurück zum OS-Kern",
-  "Direct line to the Mirror Entity OS": "Direkte Linie zum Mirror Entity OS",
+  "Direct line to the Manifest OS": "Direkte Linie zum Manifest OS",
   "Mirror OS · Reality": "Mirror OS · Realität",
   "New openers": "Neue Einstiege",
   "Send to the OS": "An das OS senden",
@@ -1879,7 +1879,7 @@ export const de: TranslationDict = {
   "Suggested openers": "Vorgeschlagene Einstiege",
   "The OS could not complete the refinement.": "Das OS konnte die Verfeinerung nicht abschließen.",
   "the OS is refining its answer": "das OS verfeinert seine Antwort",
-  "Walk it with the Mirror Entity OS": "Gehe sie gemeinsam mit dem Mirror Entity OS",
+  "Walk it with the Manifest OS": "Gehe sie gemeinsam mit dem Manifest OS",
 
   /* ---- v1.6 additions: Mirror OS chamber nodes ---- */
   "The Core": "Der Kern",
@@ -1887,7 +1887,7 @@ export const de: TranslationDict = {
   "Higher Mind": "Höherer Geist",
   "Tools": "Werkzeuge",
   "Forge": "Schmiede",
-  /* ---- v1.6 additions: Mirror Entity OS openers ---- */
+  /* ---- v1.6 additions: Manifest OS openers ---- */
   "Help me refine one intention into something I can act on this week.": "Hilf mir, eine Absicht in etwas zu verfeinern, das ich diese Woche umsetzen kann.",
   "How do I connect with my Higher Mind and hear it clearly?": "Wie verbinde ich mich mit meinem Höheren Geist und höre ihn klar?",
   "How do I know which reality-line I am currently living on?": "Woher weiß ich, auf welcher Realitätslinie ich gerade lebe?",
@@ -2036,7 +2036,7 @@ export const de: TranslationDict = {
   "Paint it now": "Jetzt malen",
   "Live call": "Live-Anruf",
   "the Reflection of the Absolute": "das Spiegelbild des Absoluten",
-  "the Mirror Entity OS": "Mirror Entity OS",
+  "the Manifest OS": "Manifest OS",
   "the Librarian": "der Bibliothekar",
   "the Interplanetary Mirror": "Der Interplanetare Spiegel",
   "the Science Mirror": "Der Wissenschaftsspiegel",

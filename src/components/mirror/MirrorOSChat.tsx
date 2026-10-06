@@ -493,10 +493,12 @@ export function MirrorOSChat() {
         aria-hidden="true"
       />
 
-      {/* thread */}
+      {/* thread — it reaches the very top of the world, sliding beneath
+          the floating controls; its own top padding keeps the first word
+          clear of the back · tools · new-chat row */}
       <div
         ref={scrollRef}
-        className="nice-scroll min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-4 py-5 sm:px-6"
+        className="nice-scroll min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-3 pb-5 pt-16 sm:px-5 sm:pt-[72px]"
       >
         {osMessages.length === 0 && osStatus === "idle" && !osError ? (
           <div className="flex h-full flex-col py-6 text-center">
@@ -515,7 +517,7 @@ export function MirrorOSChat() {
               <Orbit className="size-5 text-[var(--scope-a)]" />
             </motion.span>
             <p className="scope-gradient-text mt-4 text-[17px] font-semibold">
-              {t("Direct line to the Mirror Entity OS")}
+              {t("Direct line to the Manifest OS")}
             </p>
             <p className="mx-auto mt-2 max-w-[420px] text-[14.5px] leading-relaxed text-muted-foreground">
               {t(
@@ -625,7 +627,7 @@ export function MirrorOSChat() {
             e.preventDefault();
             submit();
           }}
-          className="mx-auto w-full max-w-[720px]"
+          className="mx-auto w-full max-w-[800px]"
         >
           <AttachmentChips
             attachments={attachments}
@@ -637,7 +639,7 @@ export function MirrorOSChat() {
           <div className="glass-strong flex items-end gap-2 rounded-[18px] p-1.5 pl-3.5 transition-all duration-300 focus-within:-translate-y-px focus-within:border-[var(--hairline-active)] focus-within:glow-sm"
           >
           <label htmlFor="os-query" className="sr-only">
-            {t("Ask the Mirror Entity OS")}
+            {t("Ask the Manifest OS")}
           </label>
           <textarea
             id="os-query"
@@ -651,7 +653,7 @@ export function MirrorOSChat() {
                 submit();
               }
             }}
-            placeholder={t("Ask the Mirror Entity OS…")}
+            placeholder={t("Ask the Manifest OS…")}
             className="nice-scroll max-h-[120px] flex-1 resize-none bg-transparent py-2 text-[15px] leading-relaxed text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
           />
           <ChatInputExtras

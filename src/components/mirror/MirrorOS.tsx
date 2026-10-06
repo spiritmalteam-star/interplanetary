@@ -33,6 +33,7 @@ import { ListenButton } from "./ListenButton";
 import { MirrorOSForge } from "./MirrorOSForge";
 import { WorldNewChat } from "./WorldNewChat";
 import { MirrorOSChat } from "./MirrorOSChat";
+import { WindowSelect } from "./WindowSelect";
 
 type OsPlace = "chat" | "formulas" | "higher" | "tools" | "forge";
 
@@ -45,6 +46,13 @@ const OS_PLACES: {
   { id: "higher", label: "Higher Mind", icon: Orbit },
   { id: "tools", label: "Tools", icon: HeartHandshake },
   { id: "forge", label: "Forge", icon: FlaskConical },
+];
+
+/* Every chamber of the OS gathered behind one quiet button — the tools
+   no longer sprawl as a row of circles across the top of the chat. */
+const OS_TOOL_ITEMS: { id: OsPlace; name: string; icon: typeof Compass }[] = [
+  { id: "chat", name: "The Core", icon: MessagesSquare },
+  ...OS_PLACES.map(({ id, label, icon }) => ({ id, name: label, icon })),
 ];
 
 /* ---------------- formula card (expandable) ---------------- */
@@ -520,40 +528,6 @@ function ToolsTab() {
 }
 
 
-/* ---------------- top-bar chamber tabs ---------------- */
-
-function HeaderTab({
-  active,
-  onClick,
-  icon: Icon,
-  label,
-}: {
-  active: boolean;
-  onClick: () => void;
-  icon: typeof Compass;
-  label: string;
-}) {
-  const t = useT();
-  return (
-    <button
-      type="button"
-      role="tab"
-      aria-selected={active}
-      aria-label={t(label)}
-      title={t(label)}
-      onClick={onClick}
-      className={cn(
-        "focus-glow flex size-8 items-center justify-center rounded-full border transition-all duration-300 sm:size-9",
-        active
-          ? "border-[color-mix(in_srgb,var(--scope-a)_55%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_14%,transparent)] text-[var(--scope-a)] glow-sm"
-          : "border-transparent text-muted-foreground/80 hover:border-[var(--hairline-hover)] hover:text-foreground"
-      )}
-    >
-      <Icon className="size-4" aria-hidden="true" />
-    </button>
-  );
-}
-
 /* ---------------- the OS shell ---------------- */
 
 export function MirrorOS() {
@@ -563,13 +537,15 @@ export function MirrorOS() {
 
   return (
     <div className="scope-manifesting relative flex h-full flex-col">
-      {/* ---------- top bar with the single bridge back to the app ---------- */}
-      <header className="relative z-30 shrink-0 border-b hairline bg-[var(--glass-bg)] backdrop-blur-xl">
-        <div className="flex h-14 items-center justify-between gap-3 px-4 sm:px-5">
+      {/* ---------- floating top controls over the chat — the chat now
+          extends to the very top and the controls rest upon it: back,
+          every chamber behind one tools button, and the fresh hand ---------- */}
+      <header className="pointer-events-none absolute inset-x-0 top-0 z-30 bg-gradient-to-b from-[var(--background)]/85 via-[var(--background)]/30 to-transparent">
+        <div className="flex h-14 items-center justify-between gap-2 px-3 sm:gap-3 sm:px-5">
           <button
             type="button"
             onClick={exitMirrorOS}
-            className="focus-glow group flex h-9 items-center gap-2 rounded-full border hairline px-3 text-[14px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground sm:px-3.5"
+            className="focus-glow pointer-events-auto group flex h-9 shrink-0 items-center gap-2 rounded-full border hairline bg-[var(--glass-bg)]/80 px-3 text-[14px] font-medium text-muted-foreground backdrop-blur-xl transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground sm:px-3.5"
           >
             <ArrowLeft
               className="size-3.5 transition-transform duration-300 group-hover:-translate-x-0.5"
@@ -579,38 +555,35 @@ export function MirrorOS() {
             <span className="sm:hidden">{t("Back")}</span>
           </button>
 
-          {/* the OS tools — chambers at the very top, between back and the orbit */}
-          <nav
-            role="tablist"
-            aria-label={t("Mirror OS chambers")}
-            className="flex items-center gap-1 sm:gap-1.5"
-          >
-            <HeaderTab
-              active={place === "chat"}
-              onClick={() => setPlace("chat")}
-              icon={MessagesSquare}
-              label="The Core"
+          {/* every tool in one button */}
+          <div className="pointer-events-auto flex min-w-0 items-center">
+            <WindowSelect
+              items={OS_TOOL_ITEMS}
+              activeId={place}
+              placeholder="Tools"
+              onSelect={(id) => setPlace(id as OsPlace)}
+              testIdPrefix="os-tools"
+              triggerClassName="bg-[var(--glass-bg)]/80 backdrop-blur-xl"
             />
-            {OS_PLACES.map(({ id, label, icon: Icon }) => (
-              <HeaderTab
-                key={id}
-                active={place === id}
-                onClick={() => setPlace(id)}
-                icon={Icon}
-                label={label}
-              />
-            ))}
-          </nav>
+          </div>
 
-          <WorldNewChat world="manifest" />
+          <div className="pointer-events-auto flex shrink-0 items-center gap-2">
+            <WorldNewChat world="manifest" />
+          </div>
         </div>
       </header>
 
-      {/* ---------- the OS core ---------- */}
+      {/* ---------- the OS core — reaching the very top of the world ---------- */}
       <main className="nice-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain">
-        <div className="mx-auto flex h-full w-full max-w-[1020px] flex-col px-4 pb-5 sm:px-6">
-          {/* the core — one column, top to bottom */}
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col pt-4">
+        <div className="mx-auto flex h-full w-full max-w-[1200px] flex-col px-3 pb-5 sm:px-5">
+          {/* the core — one column, top to bottom; the chat place reaches
+              the very top, the other chambers clear the floating controls */}
+          <div
+            className={cn(
+              "flex min-h-0 min-w-0 flex-1 flex-col",
+              place === "chat" ? "pt-1.5 sm:pt-2" : "pt-16 sm:pt-20"
+            )}
+          >
               {place === "chat" ? (
                 <MirrorOSChat />
               ) : (
@@ -652,7 +625,7 @@ export function MirrorOS() {
                             className="dream-btn focus-glow group flex h-10 items-center gap-2.5 rounded-full px-5 text-[14.5px] font-medium text-foreground transition-all duration-300 hover:-translate-y-px"
                           >
                             <Orbit className="size-3.5 text-[var(--gd)]" aria-hidden="true" />
-                            {t("Walk it with the Mirror Entity OS")}
+                            {t("Walk it with the Manifest OS")}
                             <span
                               className="transition-transform duration-300 group-hover:translate-x-0.5"
                               aria-hidden="true"

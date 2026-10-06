@@ -36,6 +36,7 @@ export function WindowSelect({
   centered = false,
   accentVar = "--scope-a",
   className,
+  triggerClassName,
 }: {
   items: WindowSelectItem[];
   activeId: string | null;
@@ -47,6 +48,9 @@ export function WindowSelect({
   /** The accent variable the active state breathes in. */
   accentVar?: string;
   className?: string;
+  /** Extra classes for the trigger itself — used when the select floats
+      over the chat and needs its own glass to stay legible. */
+  triggerClassName?: string;
 }) {
   const t = useT();
   const active = activeId ? items.find((s) => s.id === activeId) ?? null : null;
@@ -63,7 +67,8 @@ export function WindowSelect({
             "focus-glow flex h-8 max-w-full items-center gap-1.5 rounded-full border px-3 text-[12.5px] transition-all duration-300",
             active
               ? "font-semibold text-foreground"
-              : "hairline text-muted-foreground hover:text-foreground"
+              : "hairline text-muted-foreground hover:text-foreground",
+            triggerClassName
           )}
           style={
             active

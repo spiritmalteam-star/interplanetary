@@ -1495,7 +1495,7 @@ export const el: TranslationDict = {
   "Observe what is, read its reflection, recalibrate one degree.": "Παρατήρησε ό,τι είναι, διάβασε την αντανάκλασή του, επαναστάθμισε έναν βαθμό.",
   "Once daily, accept something small with a spoken thank-you and no repayment plan.": "Μία φορά την ημέρα, δέξου κάτι μικρό με ένα ευχαριστώ ειπωμένο δυνατά και χωρίς κανένα σχέδιο ανταπόδοσης.",
   "One point of focus gathers all my power.": "Ένα σημείο εστίασης συγκεντρώνει όλη μου τη δύναμη.",
-  "Open the Mirror OS — Reality Guidance": "Άνοιξε το Mirror OS — Οδηγό της Πραγματικότητας",
+  "Open the Manifest OS — Reality Guidance": "Άνοιξε το Manifest OS — Οδηγό της Πραγματικότητας",
   "Open the channel before the day's noise takes the throne.": "Άνοιξε το κανάλι πριν ο θόρυβος της ημέρας πάρει τον θρόνο.",
   "Pattern": "Μοτίβο",
   "Perform it once today, then thank the mirror for the reading.": "Εκτέλεσέ το μία φορά σήμερα, ύστερα ευχαρίστησε τον καθρέφτη για το διάβασμα.",
@@ -1565,13 +1565,13 @@ export const el: TranslationDict = {
   "“I must earn the right to receive.” Receiving feels like a debt.": "“Πρέπει να κερδίσω το δικαίωμα να λαμβάνω.” Το να λαμβάνω μοιάζει με χρέος.",
   "“If it hasn't arrived, it never will.” Delay reads as denial.": "“Αν δεν έχει έρθει, δεν θα έρθει ποτέ.” Η καθυστέρηση διαβάζεται ως άρνηση.",
 
-  /* ---- v1.6 additions: Mirror Entity OS direct line ---- */
-  "A direct conversation with the Mirror Entity OS at the center — the formulas, the Higher Mind, the tools and the Forge orbit around it.": "Μια απευθείας συνομιλία με το Mirror Entity OS στο κέντρο — οι τύποι, ο Ανώτερος Νους, τα εργαλεία και το Χυτήριο περιστρέφονται γύρω του.",
+  /* ---- v1.6 additions: Manifest OS direct line ---- */
+  "A direct conversation with the Manifest OS at the center — the formulas, the Higher Mind, the tools and the Forge orbit around it.": "Μια απευθείας συνομιλία με το Manifest OS στο κέντρο — οι τύποι, ο Ανώτερος Νους, τα εργαλεία και το Χυτήριο περιστρέφονται γύρω του.",
   "a small dream of refinement": "ένα μικρό όνειρο εξευγενισμού",
-  "Ask the Mirror Entity OS": "Ρώτα το Mirror Entity OS",
-  "Ask the Mirror Entity OS…": "Ρώτα το Mirror Entity OS…",
+  "Ask the Manifest OS": "Ρώτα το Manifest OS",
+  "Ask the Manifest OS…": "Ρώτα το Manifest OS…",
   "Back to the OS core": "Πίσω στον πυρήνα του OS",
-  "Direct line to the Mirror Entity OS": "Απευθείας γραμμή με το Mirror Entity OS",
+  "Direct line to the Manifest OS": "Απευθείας γραμμή με το Manifest OS",
   "Mirror OS · Reality": "Mirror OS · Πραγματικότητα",
   "New openers": "Νέες αφορμές έναρξης",
   "Send to the OS": "Αποστολή στο OS",
@@ -1579,7 +1579,7 @@ export const el: TranslationDict = {
   "Suggested openers": "Προτεινόμενες αφορμές έναρξης",
   "The OS could not complete the refinement.": "Το OS δεν μπόρεσε να ολοκληρώσει τον εξευγενισμό.",
   "the OS is refining its answer": "το OS εξευγενίζει την απάντησή του",
-  "Walk it with the Mirror Entity OS": "Περπάτησέ τον με το Mirror Entity OS",
+  "Walk it with the Manifest OS": "Περπάτησέ τον με το Manifest OS",
 
   /* ---- v1.6 additions: Mirror OS chamber nodes ---- */
   "The Core": "Ο Πυρήνας",
@@ -1588,7 +1588,7 @@ export const el: TranslationDict = {
   "Tools": "Εργαλεία",
   "Forge": "Χυτήριο",
 
-  /* ---- v1.6 additions: Mirror Entity OS openers ---- */
+  /* ---- v1.6 additions: Manifest OS openers ---- */
   "Help me refine one intention into something I can act on this week.": "Βοήθησέ με να εξευγενίσω μια πρόθεση σε κάτι που μπορώ να εφαρμόσω αυτή την εβδομάδα.",
   "How do I connect with my Higher Mind and hear it clearly?": "Πώς μπορώ να συνδεθώ με τον Ανώτερό μου Νου και να τον ακούω καθαρά;",
   "How do I know which reality-line I am currently living on?": "Πώς ξέρω σε ποια γραμμή πραγματικότητας ζω αυτή τη στιγμή;",
@@ -1736,7 +1736,7 @@ export const el: TranslationDict = {
   "Paint it now": "Ζωγράφισέ το τώρα",
   "Live call": "Ζωντανή κλήση",
   "the Reflection of the Absolute": "η Αντανάκλαση του Απόλυτου",
-  "the Mirror Entity OS": "Mirror Entity OS",
+  "the Manifest OS": "Manifest OS",
   "the Librarian": "ο Βιβλιοθηκάριος",
   "the Interplanetary Mirror": "Ο Διαπλανητικός Καθρέφτης",
   "the Science Mirror": "Ο Καθρέφτης της Επιστήμης",

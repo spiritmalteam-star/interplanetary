@@ -257,7 +257,7 @@ export const vibrationStates: VibrationState[] = [
 
 /* ---------------- daily protocol (deterministic by date) ---------------- */
 
-/** Openers for the direct line to the Mirror Entity OS. */
+/** Openers for the direct line to the Manifest OS. */
 export const osOpeners = [
   "How do I know which reality-line I am currently living on?",
   "Walk me through the Two-Glass Shift, step by step.",
