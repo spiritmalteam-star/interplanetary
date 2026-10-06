@@ -63,7 +63,43 @@ export default function AppShell() {
   useEffect(() => {
     useMirror.getState().bootPreferences();
     void refreshMe();
-  }, [refreshMe]);
+    /* the return of the Google passage — when it could not open, the
+       callback sends the visitor home with the reason; speak it gently
+       and clean the window, so no silent query string remains */
+    const params = new URLSearchParams(window.location.search);
+    const reason = params.get("google");
+    if (reason) {
+      window.history.replaceState(null, "", window.location.pathname);
+      const notes: Record<string, [string, string]> = {
+        state: [
+          "The Google passage lost its key mid-crossing.",
+          "Nothing was harmed — try the Google door once more.",
+        ],
+        unconfigured: [
+          "The Google passage is not yet keyed.",
+          "Place GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in the vault, then it opens.",
+        ],
+        token: [
+          "Google did not hand over the passage token.",
+          "Rest a breath, then try the Google door again.",
+        ],
+        profile: [
+          "Google kept the profile closed.",
+          "Grant the email permission, or pass by the email door.",
+        ],
+        unverified: [
+          "Google could not vouch for that email.",
+          "Verify the address with Google first, or pass by the email door.",
+        ],
+        error: [
+          "The Google passage stumbled.",
+          "Rest a breath, then try again — the email door always serves.",
+        ],
+      };
+      const [title, body] = notes[reason] ?? notes.error;
+      import("sonner").then(({ toast }) => toast.error(t(title), { description: t(body) }));
+    }
+  }, [refreshMe, t]);
 
   /* The learning memory is identity-keyed — a signed-in visitor keeps
      their own grove, so the tree never repeats itself for them. */
