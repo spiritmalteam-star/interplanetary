@@ -176,10 +176,6 @@ export function EmVectorsTab({
 
       {/* the fusion instrument */}
       <div className="scope-frame-card relative overflow-hidden rounded-2xl glass p-5 sm:p-6">
-        <span className="scope-corner scope-corner-tl" aria-hidden="true" />
-        <span className="scope-corner scope-corner-tr" aria-hidden="true" />
-        <span className="scope-corner scope-corner-bl" aria-hidden="true" />
-        <span className="scope-corner scope-corner-br" aria-hidden="true" />
         <h3 className="mono-label flex items-center gap-2 text-[11px] text-[var(--scope-a)]">
           <Sparkles className="size-3.5" aria-hidden="true" />
           {t("Vector Fusion")}
@@ -337,10 +333,6 @@ function EmToolCard({
 
   return (
     <div className="scope-frame-card relative overflow-hidden rounded-2xl glass p-5" data-testid={testId}>
-      <span className="scope-corner scope-corner-tl" aria-hidden="true" />
-      <span className="scope-corner scope-corner-tr" aria-hidden="true" />
-      <span className="scope-corner scope-corner-bl" aria-hidden="true" />
-      <span className="scope-corner scope-corner-br" aria-hidden="true" />
       <div className="flex items-center gap-2.5">
         <span
           className="flex size-9 shrink-0 items-center justify-center rounded-full border"
@@ -928,10 +920,6 @@ function EmCodexCard({
   const t = useT();
   return (
     <div className="scope-frame-card relative overflow-hidden rounded-2xl glass p-5 sm:p-6" data-testid={testId}>
-      <span className="scope-corner scope-corner-tl" aria-hidden="true" />
-      <span className="scope-corner scope-corner-tr" aria-hidden="true" />
-      <span className="scope-corner scope-corner-bl" aria-hidden="true" />
-      <span className="scope-corner scope-corner-br" aria-hidden="true" />
       <h3 className="mono-label flex items-center gap-2 text-[11px] text-[var(--scope-a)]">
         <Icon className="size-3.5" aria-hidden="true" />
         {t(title)}

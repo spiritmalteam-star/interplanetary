@@ -1762,6 +1762,9 @@ export function SuggestionTree({
         onKeyDown={onKeyPan}
         onPointerDown={onPointerDown}
         data-testid={`${prefix}-viewport`}
+        /* the branches are deaf to the floating bar — their wheel and
+           their drag belong to the tree alone, never to the top reveal */
+        data-bar-deaf="true"
         style={{
           height: HEIGHTS[state],
           touchAction: "none",

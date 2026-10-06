@@ -352,10 +352,6 @@ function MysteryChamber({ onAskBench }: { onAskBench: () => void }) {
       className="scope-frame-card relative mx-auto w-full max-w-[680px] overflow-hidden rounded-2xl glass p-5 sm:p-8"
       data-testid="mystery-chamber"
     >
-      <span className="scope-corner scope-corner-tl" aria-hidden="true" />
-      <span className="scope-corner scope-corner-tr" aria-hidden="true" />
-      <span className="scope-corner scope-corner-bl" aria-hidden="true" />
-      <span className="scope-corner scope-corner-br" aria-hidden="true" />
 
       <div className="text-center">
         <h3 className="mono-label flex items-center justify-center gap-2 text-[11px] text-[var(--scope-a)]">
@@ -673,10 +669,6 @@ function ToolWallChamber({ onAskBench }: { onAskBench: () => void }) {
             >
               {active && (
                 <>
-                  <span className="scope-corner scope-corner-tl" aria-hidden="true" />
-                  <span className="scope-corner scope-corner-tr" aria-hidden="true" />
-                  <span className="scope-corner scope-corner-bl" aria-hidden="true" />
-                  <span className="scope-corner scope-corner-br" aria-hidden="true" />
                 </>
               )}
 
@@ -730,10 +722,6 @@ function ToolWallChamber({ onAskBench }: { onAskBench: () => void }) {
           className="scope-frame-card relative mt-6 overflow-hidden rounded-2xl glass p-5 sm:p-6"
           data-testid="tool-workbench"
         >
-          <span className="scope-corner scope-corner-tl" aria-hidden="true" />
-          <span className="scope-corner scope-corner-tr" aria-hidden="true" />
-          <span className="scope-corner scope-corner-bl" aria-hidden="true" />
-          <span className="scope-corner scope-corner-br" aria-hidden="true" />
 
           <div className="flex items-center gap-2.5">
             <span className="emoji-ink flex size-8 shrink-0 items-center justify-center rounded-full border text-[15px]" aria-hidden="true"
@@ -1057,10 +1045,6 @@ function BenchChat() {
       className="scope-frame-card relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl glass"
       data-testid="forge-chat"
     >
-      <span className="scope-corner scope-corner-tl" aria-hidden="true" />
-      <span className="scope-corner scope-corner-tr" aria-hidden="true" />
-      <span className="scope-corner scope-corner-bl" aria-hidden="true" />
-      <span className="scope-corner scope-corner-br" aria-hidden="true" />
 
       {/* slim header retired — the floating world controls carry the
           forge's name and the fresh-chat hand now */}

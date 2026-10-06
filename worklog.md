@@ -2670,3 +2670,22 @@ Stage Summary:
 - The whole site's chats gained the kindle finish — paper tooth over everything, book-set paragraphs, quiet touches, eased thumbs — without moving the house's glass, hairlines, scope light or voice one inch.
 - Artifacts: src/components/mirror/useFloatingBar.ts (new); WindowSelect.tsx + ScopeSelector.tsx (+onOpenChange); AppShell.tsx / MirrorOS.tsx / ParticleX.tsx / EvolveMed.tsx / InventView.tsx (hook wiring + header classes + scrim); globals.css (kindle finish).
 - Owner note: no env changes; deploy is automatic from main.
+
+---
+Task ID: 7
+Agent: Z.ai Code (main orchestrator)
+Task: The brackets retire, the breath must travel, the branches fall deaf — the four worlds lose their capture corners, the top bars no longer rise at a twitch, and the grove's panning never speaks to the reveal again
+
+Work Log:
+- RECON: batches 4+5 were already live at e5aa50e; the local-only commit 414d129 proved to be a sandbox auto-commit (db snapshot + worklog) — harmless, left in place. The "capture brackets" were identified as the .scope-corner spans (22×22 viewfinder L-marks in globals.css), and the reveal law lived in useFloatingBar.ts with instant triggers (dy < -2 scroll, ANY wheel-up, 6px touch).
+- CAPTURE-BRACKETS-REMOVE: deleted all 16 .scope-corner span sets across the four worlds and their chambers — MirrorOS, MirrorOSChat, MirrorOSForge (Manifest); ParticleX, ParticleXChambers, PxBioMech (Quantum); EvolveMed, EvolveMedChambers (Evolve Med); InventView ×4 (Invent). TransmissionView (main chat) keeps its brackets untouched — the user named only the four worlds. The .scope-corner CSS stays (still used by the main chat).
+- REVEAL-THRESHOLD (useFloatingBar.ts): the upward breath must now TRAVEL before the bar rises. New shared accumulator (upTravelRef) + continuity window (700ms — a pause longer than that starts the breath anew, so slow drips never add up). Scroll: dy < -2 accumulates, reveal at 120px (REVEAL_TRAVEL_PX); dy > 2 still sinks and forgets the breath. Wheel: deltaMode-normalized (lines ×16, pages ×400), accumulates into the same breath, downward wheel only forgets (the scroll itself sinks). Touch: a drawn pull accumulates, reveals at 96px (TOUCH_REVEAL_TRAVEL_PX). show()/sink() reset the accumulator. Small adjustments (−40 wheel, 15px scroll) stay unheard — the user's exact complaint.
+- BRANCH-SCROLL-ISOLATION: the grove viewport in SuggestionTree.tsx is marked data-bar-deaf — one attribute covers every chat (main channel + all four worlds use the same component). The hook grows a deaf ear (isDeaf via closest): scroll, wheel and touch events born inside the deaf zone never reach the bar — the grove's wheel pan (preventDefault'ed but still bubbling to the world roots) and its touch drag can no longer reveal or sink the top controls.
+- VERIFIED — agent-browser E2E at 1440px + 390px. Main chat: bar sinks after 1.4s stillness; one −40 wheel tilt stays hidden; 3×−40 in one breath RISES (and a >700ms gap between batches correctly reset the breath — observed live). Manifest world: 0 scope-corner, 1 deaf zone; grove wheel −500 stays hidden; grove synthetic touch drag +360px stays hidden; injected 2400px spacer then scrollTop law — down 500 sinks, 15px up STAYS HIDDEN (the complaint), 185px up RISES. Quantum / Evolve Med / Invent: 0 corners, grove wheel −500 stays hidden, full breath −120 on the thread RISES. Mobile 390px: no horizontal overflow, corners 0, touch pull 140px on the thread RISES. Console: no errors, no page errors (dev.log only clean 200s).
+- Gates: bunx tsc --noEmit clean under src/ (0 errors); bun run lint exit 0. No i18n keys touched; no env changes.
+- Pushed 414d129..<this> to main; Vercel deployment verified (etag change + fingerprint below).
+
+Stage Summary:
+- The four worlds stand without their capture corners; the reading bar rises only for a real upward breath (120px scroll/wheel, 96px finger travel, one continuous gesture), and the branches are deaf — panning the grove never moves the top controls in any chat.
+- Artifacts: useFloatingBar.ts (travel law + deaf ear), SuggestionTree.tsx (data-bar-deaf on the grove viewport), 9 world files stripped of .scope-corner spans.
+- Owner note: no env changes; deploy is automatic from main.

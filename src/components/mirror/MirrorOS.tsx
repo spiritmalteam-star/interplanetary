@@ -81,10 +81,6 @@ function FormulaCard({ index, formulaId }: { index: number; formulaId: string })
       transition={{ duration: 0.5, delay: index * 0.05, ease: [0.22, 1, 0.36, 1] }}
       className="scope-frame-card relative overflow-hidden rounded-2xl glass"
     >
-      <span className="scope-corner scope-corner-tl" aria-hidden="true" />
-      <span className="scope-corner scope-corner-tr" aria-hidden="true" />
-      <span className="scope-corner scope-corner-bl" aria-hidden="true" />
-      <span className="scope-corner scope-corner-br" aria-hidden="true" />
 
       <button
         type="button"

@@ -1158,10 +1158,6 @@ export function PxBioMech() {
 
       {/* the storyboard card */}
       <div className="scope-frame-card relative overflow-hidden rounded-2xl glass p-5 sm:p-6">
-        <span className="scope-corner scope-corner-tl" aria-hidden="true" />
-        <span className="scope-corner scope-corner-tr" aria-hidden="true" />
-        <span className="scope-corner scope-corner-bl" aria-hidden="true" />
-        <span className="scope-corner scope-corner-br" aria-hidden="true" />
 
         <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
           <div>

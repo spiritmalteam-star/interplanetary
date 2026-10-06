@@ -6,16 +6,29 @@ import { useCallback, useEffect, useRef, useState } from "react";
 /*  THE READING BAR LAW — the floating controls read the reader,       */
 /*  never the reverse. They appear when a world opens, then quietly    */
 /*  sink away: after one second of stillness, or the moment the        */
-/*  thread flows downward beneath them. A single upward breath — a     */
-/*  scroll toward the beginning, a wheel tilted toward the sky, a      */
-/*  finger drawn down the glass — and they rise again. While the       */
-/*  hand or the keyboard rests upon them, or one of their own menus    */
-/*  stands open, they hold their place.                                */
+/*  thread flows downward beneath them. An upward breath — a scroll    */
+/*  toward the beginning, a wheel tilted toward the sky, a finger      */
+/*  drawn down the glass — and they rise again, but the breath must    */
+/*  TRAVEL: a real turn of distance, not a small adjustment, lest a    */
+/*  twitch pop the bar back into the eye. While the hand or the        */
+/*  keyboard rests upon them, or one of their own menus stands open,   */
+/*  they hold their place. And the branches are deaf: anything         */
+/*  marked data-bar-deaf (the grove's panning window) never speaks     */
+/*  to the bar at all.                                                 */
 /*                                                                     */
 /*  One hook serves every chamber: the main channel's floating         */
 /*  handles and the four worlds' floating top bars (Manifest,          */
 /*  Quantum, Evolve Med, Invent).                                      */
 /* ------------------------------------------------------------------ */
+
+/* the upward breath must travel this far before the bar rises — a
+   real turn toward the beginning, not a small adjustment */
+const REVEAL_TRAVEL_PX = 120;
+/* the finger's version of the same law — a drawn pull, not a nudge */
+const TOUCH_REVEAL_TRAVEL_PX = 96;
+/* a pause longer than this between upward movements starts a new
+   breath — slow drips never add up into a reveal */
+const UP_CONTINUITY_MS = 700;
 
 export function useFloatingBarAutoHide({
   /** An ancestor of every scroller whose movement should hide the bar —
@@ -54,6 +67,8 @@ export function useFloatingBarAutoHide({
   }, [hold]);
   const lastTopsRef = useRef(new Map<Element, number>());
   const touchYRef = useRef<number | null>(null);
+  const upTravelRef = useRef(0);
+  const lastUpAtRef = useRef(0);
 
   const clearTimer = useCallback(() => {
     if (timerRef.current !== null) {
@@ -77,6 +92,7 @@ export function useFloatingBarAutoHide({
 
   const show = useCallback(() => {
     clearTimer();
+    upTravelRef.current = 0;
     setSank(false);
     arm();
   }, [clearTimer, arm]);
@@ -87,6 +103,7 @@ export function useFloatingBarAutoHide({
     if (holdRef.current || hoverRef.current) return;
     clearTimer();
     edgeRef.current = false;
+    upTravelRef.current = 0;
     setSank(true);
   }, [clearTimer]);
 
@@ -94,39 +111,75 @@ export function useFloatingBarAutoHide({
     const root = rootRef.current;
     if (!root) return;
 
+    /* the deaf ear — the branches (the grove's panning window and all
+       it holds) never speak to the bar: their wheel, their drag and
+       their every gesture belong to the tree alone */
+    const isDeaf = (target: EventTarget | null): boolean =>
+      target instanceof Element && target.closest("[data-bar-deaf]") !== null;
+
+    /* an upward breath accumulates: small adjustments stay unheard, a
+       real turn toward the beginning crosses the threshold and the bar
+       rises. A pause longer than a blink starts the breath anew. */
+    const breathe = (amount: number, threshold: number) => {
+      const now = Date.now();
+      if (now - lastUpAtRef.current > UP_CONTINUITY_MS) upTravelRef.current = 0;
+      lastUpAtRef.current = now;
+      upTravelRef.current += amount;
+      if (upTravelRef.current >= threshold) show();
+    };
+    const forgetBreath = () => {
+      upTravelRef.current = 0;
+    };
+
     /* the thread flows — direction decides */
     const onScroll = (e: Event) => {
       const el = e.target;
-      if (!(el instanceof Element) || typeof (el as HTMLElement).scrollTop !== "number")
-        return;
+      if (!(el instanceof Element) || isDeaf(el)) return;
+      if (typeof (el as HTMLElement).scrollTop !== "number") return;
       const tops = lastTopsRef.current;
       const prev = tops.get(el);
       const y = (el as HTMLElement).scrollTop;
       tops.set(el, y);
       if (prev === undefined) return; /* first sight — take inventory only */
       const dy = y - prev;
-      if (dy > 2) sink();
-      else if (dy < -2) show();
+      if (dy > 2) {
+        forgetBreath();
+        sink();
+      } else if (dy < -2) {
+        breathe(-dy, REVEAL_TRAVEL_PX);
+      }
     };
 
-    /* a wheel tilted toward the sky raises the bar even at the very top */
+    /* a wheel tilted toward the sky — but the tilt must travel too;
+       a downward wheel only forgets the breath (the scroll itself
+       will do the sinking) */
     const onWheel = (e: WheelEvent) => {
-      if (e.deltaY < 0) show();
-      else if (e.deltaY > 0) sink();
+      if (isDeaf(e.target)) return;
+      const k = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 400 : 1;
+      const up = -e.deltaY * k;
+      if (up > 0) breathe(up, REVEAL_TRAVEL_PX);
+      else if (up < 0) forgetBreath();
     };
 
-    /* a finger drawn down the glass is an upward breath */
+    /* a finger drawn down the glass is an upward breath — a drawn
+       pull, not a nudge */
     const onTouchStart = (e: TouchEvent) => {
+      if (isDeaf(e.target)) return;
       touchYRef.current = e.touches[0]?.clientY ?? null;
     };
     const onTouchMove = (e: TouchEvent) => {
+      if (isDeaf(e.target)) return;
       const y = e.touches[0]?.clientY;
       const start = touchYRef.current;
       if (y == null || start == null) return;
       const dy = y - start;
       touchYRef.current = y;
-      if (dy > 6) show();
-      else if (dy < -6) sink();
+      if (dy > 0) {
+        breathe(dy, TOUCH_REVEAL_TRAVEL_PX);
+      } else if (dy < -6) {
+        forgetBreath();
+        sink();
+      }
     };
 
     /* the hand or the keyboard upon the bar holds it in place */

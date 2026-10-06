@@ -420,10 +420,6 @@ function ParticleXChat() {
 
   return (
     <div className="scope-frame-card relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl">
-      <span className="scope-corner scope-corner-tl" aria-hidden="true" />
-      <span className="scope-corner scope-corner-tr" aria-hidden="true" />
-      <span className="scope-corner scope-corner-bl" aria-hidden="true" />
-      <span className="scope-corner scope-corner-br" aria-hidden="true" />
       <div
         className="animate-line-breathe h-px w-full"
         style={{

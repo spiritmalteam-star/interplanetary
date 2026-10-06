@@ -182,10 +182,6 @@ function BlueprintCard() {
           mixBlendMode: "screen",
         }}
       />
-      <span className="scope-corner scope-corner-tl" aria-hidden="true" />
-      <span className="scope-corner scope-corner-tr" aria-hidden="true" />
-      <span className="scope-corner scope-corner-bl" aria-hidden="true" />
-      <span className="scope-corner scope-corner-br" aria-hidden="true" />
 
       <div className="relative px-5 py-6 sm:px-8 sm:py-8">
         <div className="flex items-center justify-center gap-2">
