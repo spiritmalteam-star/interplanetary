@@ -2769,3 +2769,20 @@ Work Log:
 Stage Summary:
 - The Google passage is code-complete on production and activates the moment a redeploy sees GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET (exact names, Production environment) — either the user clicks Redeploy in the Vercel dashboard, or grants a one-shot GitHub token and my push triggers the redeploy AND ships the resonance skeleton (no book ever repeats) plus the reveal-flicker smoothing plus the passage toasts.
 - Six commits await the token; .env.local verified gitignored (no secret can leak through the push).
+
+---
+Task ID: 12
+Agent: Z.ai Code (main orchestrator)
+Task: The push with the user's fresh token — ship all seven commits, verify the Vercel deploy, test the Google passage live on production
+
+Work Log:
+- TOKEN VERIFIED one-shot (never stored): HTTP 200, X-OAuth-Scopes: repo, login spiritmalteam-star.
+- PUSHED 3286050..48669d3 main → main — all seven commits landed: the transmission-reveal flicker fix, the resonance skeleton (no book ever repeats, nothing from the database), the Google passage toasts in seven tongues, and the worklogs.
+- VERCEL DEPLOY SUCCESS (GitHub status API, ~75s build): production www.reflectme.space now runs 48669d3.
+- PRODUCTION GOOGLE PROBE: /api/auth/me → googleConfigured:true (the keys the user linked at Vercel are now visible to the deployment); /api/auth/google → 307 to accounts.google.com with the REAL client id 440316906960-637156gn2olnkipahs1kqp4huqo6jmbr.apps.googleusercontent.com and redirect_uri https://www.reflectme.space/api/auth/google/callback, state cookie set.
+- LIVE BROWSER E2E: production passage modal opens, "Continue with Google" click → lands on Google's redirect_uri_mismatch page. Decoded the authError: Google received the flow correctly but the OAuth client does not yet REGISTER the authorized redirect URI https://www.reflectme.space/api/auth/google/callback — this last step lives only in the user's Google Cloud Console (Credentials → OAuth 2.0 Client → Authorized redirect URIs). Everything server-side is correct and live.
+- PRODUCTION HEALTH: homepage 200, title renders, zero page errors; remote HEAD == local HEAD == 48669d3.
+
+Stage Summary:
+- Every requested fix is now LIVE on www.reflectme.space: books drawn by resonance can never repeat; the reveal is smooth; the passage speaks its reasons in every tongue. Google login is fully activated on the app side (keys live, consent flow opens) — the sole remaining step is the user registering https://www.reflectme.space/api/auth/google/callback in the Google Cloud Console's Authorized redirect URIs, after which the passage opens end to end.
+- The one-shot token must be revoked by the user now that the push is complete.
