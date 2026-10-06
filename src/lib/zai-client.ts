@@ -177,7 +177,7 @@ function zaiAudio(cfg: CloudConfig): AudioEngine {
   }
 
   async function errorDetail(res: Response): Promise<string> {
-    return (await res.text()).slice(0, 300);
+    return (await res.text()).slice(0, 500);
   }
 
   /* Most skies answer the voice as raw WAV bytes; some wrap the same
@@ -254,7 +254,7 @@ function zaiAudio(cfg: CloudConfig): AudioEngine {
          move down the ladder */
     }
     throw new Error(
-      `${errors.join(" | ").slice(0, 420)} (asked for ${input.length} chars, voice ${voice}, speed ${speed})`
+      `${errors.join(" | ").slice(0, 1200)} (asked for ${input.length} chars, voice ${voice}, speed ${speed})`
     );
   }
 
@@ -449,7 +449,7 @@ function zaiAudio(cfg: CloudConfig): AudioEngine {
           errors.push(`Z.ai ${c.label} ${res.status}: ${await errorDetail(res)}`);
         }
         if (answered) return answered;
-        throw new Error(errors.join(" | ").slice(0, 420));
+        throw new Error(errors.join(" | ").slice(0, 1200));
       },
     },
   };

@@ -203,7 +203,7 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
        502 — a bad gate, not a broken house; the poetic line carries a
        `detail` that names the true cause for the keeper of the keys. */
     const detail =
-      err instanceof Error ? err.message.slice(0, 300) : undefined;
+      err instanceof Error ? err.message.slice(0, 1200) : undefined;
     const upstream = detail ? /\b[45]\d\d\b|Z\.ai|sky|voice/.test(detail) : false;
     return NextResponse.json(
       {

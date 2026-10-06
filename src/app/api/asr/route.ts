@@ -53,7 +53,7 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json(
       {
         error: "Your voice could not be heard — try again.",
-        detail: err instanceof Error ? err.message.slice(0, 300) : undefined,
+        detail: err instanceof Error ? err.message.slice(0, 1200) : undefined,
       },
       { status: 502 }
     );
