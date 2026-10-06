@@ -26,6 +26,7 @@ import { WorldNewChat } from "./WorldNewChat";
 import { QuantumLoading } from "./ThemedLoadings";
 import { PxBioMech } from "./PxBioMech";
 import { RevelationProse, RevelationSections } from "./RevelationBody";
+import { WindowSelect } from "./WindowSelect";
 import {
   PxCodexTab,
   PxCopyButton,
@@ -274,63 +275,33 @@ function PxNotesBlock({ scopeId }: { scopeId: string }) {
   return <ScopeNotes glyph={scope.glyph} name={scope.name} notes={set.notes} />;
 }
 
-/** The eight window pills — press one to orient the scope AND pin its
-    notes into the conversation. Shared by the empty state and the
-    quiet re-invitation above the composer. */
+/** The eight window pills as one quiet drop-down — press it, choose
+    the window, and the scope orients AND its notes pin into the
+    conversation. Shared by the empty state and the quiet
+    re-invitation above the composer. The chat keeps its air. */
 function PxWindowPills({ centered = false }: { centered?: boolean }) {
   const pxScope = useMirror((s) => s.pxScope);
   const setPxScope = useMirror((s) => s.setPxScope);
   const pinPxNotes = useMirror((s) => s.pinPxNotes);
-  const t = useT();
   return (
-    <div
-      className={cn(
-        "flex flex-wrap gap-1.5",
-        centered ? "justify-center" : "justify-start"
-      )}
-    >
-      {pxScopes.map((scope) => {
-        const Icon = PX_SCOPE_ICONS[scope.id] ?? Atom;
-        const active = pxScope === scope.id;
-        return (
-          <button
-            key={scope.id}
-            type="button"
-            aria-pressed={active}
-            onClick={() => {
-              /* orient the scope AND pin the window's notes
-                 into the conversation — both, in one touch */
-              setPxScope(scope.id);
-              pinPxNotes(scope.id);
-            }}
-            data-testid={`px-pill-${scope.id}`}
-            title={t(scope.tagline)}
-            className={cn(
-              "focus-glow flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] transition-all duration-300",
-              active
-                ? "font-semibold text-foreground"
-                : "hairline text-muted-foreground hover:text-foreground"
-            )}
-            style={
-              active
-                ? {
-                    borderColor:
-                      "color-mix(in srgb, var(--scope-a) 55%, transparent)",
-                    background:
-                      "color-mix(in srgb, var(--scope-a) 12%, transparent)",
-                  }
-                : undefined
-            }
-          >
-            <Icon
-              className="size-3 text-[var(--scope-a)]"
-              aria-hidden="true"
-            />
-            {t(scope.name)}
-          </button>
-        );
-      })}
-    </div>
+    <WindowSelect
+      items={pxScopes.map((scope) => ({
+        id: scope.id,
+        name: scope.name,
+        tagline: scope.tagline,
+        icon: PX_SCOPE_ICONS[scope.id] ?? Atom,
+      }))}
+      activeId={pxScope}
+      placeholder="Choose a window"
+      onSelect={(id) => {
+        /* orient the scope AND pin the window's notes
+           into the conversation — both, in one touch */
+        setPxScope(id);
+        pinPxNotes(id);
+      }}
+      testIdPrefix="px-window"
+      centered={centered}
+    />
   );
 }
 
@@ -479,14 +450,9 @@ function ParticleXChat() {
                 )}
               </p>
 
-              {/* the eight scope windows */}
-              <div className="mt-5 w-full max-w-[560px]">
-                <p className="mono-label text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">
-                  {t("Choose a window")}
-                </p>
-                <div className="mt-2.5">
-                  <PxWindowPills centered />
-                </div>
+              {/* the eight scope windows — one drop-down, more chat */}
+              <div className="mt-5 flex justify-center">
+                <PxWindowPills centered />
               </div>
             </div>
           </div>
@@ -625,15 +591,10 @@ function ParticleXChat() {
       )}
 
       {/* the quiet re-invitation — the conversation alive, no window
-          open: the eight pills wait right above the composer */}
+          open: the drop-down waits right above the composer */}
       {!hasWindow && pxMessages.length > 0 && (
-        <div className="shrink-0 px-4 pt-2 sm:px-6">
-          <div className="mx-auto w-full max-w-[720px]">
-            <p className="mono-label mb-1.5 text-[9.5px] uppercase tracking-[0.2em] text-muted-foreground/70">
-              {t("Choose a window")}
-            </p>
-            <PxWindowPills />
-          </div>
+        <div className="shrink-0 px-4 pt-1.5 sm:px-6">
+          <PxWindowPills />
         </div>
       )}
 

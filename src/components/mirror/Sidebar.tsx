@@ -21,7 +21,6 @@ import {
   MoonStar,
   Mountain,
   NotebookPen,
-  Plus,
   RotateCcw,
   Search,
   Settings,
@@ -527,21 +526,9 @@ export function SidebarContent() {
   const openLightCodes = useMirror((s) => s.openLightCodes);
   const openModal = useMirror((s) => s.openModal);
   const resetField = useMirror((s) => s.resetField);
-  const clearChannel = useMirror((s) => s.clearChannel);
-  const returnToObservatory = useMirror((s) => s.returnToObservatory);
   const language = useMirror((s) => s.language);
   const t = useT();
   const langMeta = LANGUAGES.find((l) => l.code === language);
-
-  const newChat = () => {
-    clearChannel();
-    returnToObservatory();
-    setMobileNavOpen(false);
-    toast({
-      title: t("New chat"),
-      description: t("The channel returns to its quiet origin."),
-    });
-  };
 
   const recalibrate = () => {
     resetField();
@@ -642,23 +629,10 @@ export function SidebarContent() {
         </button>
       </div>
 
-      {/* New chat */}
-      <div className="shrink-0 px-3 pt-2.5">
-        <button
-          type="button"
-          onClick={newChat}
-          data-testid="new-chat"
-          className="focus-glow flex h-9 w-full items-center gap-2.5 rounded-xl border hairline bg-[var(--glass-bg-soft)] px-3 text-left transition-all duration-300 hover:border-[var(--hairline-hover)] hover:glow-sm"
-        >
-          <Plus className="size-4 shrink-0 text-[var(--cy)]" aria-hidden="true" />
-          <span className="text-[13.5px] font-medium text-foreground/85">
-            {t("New chat")}
-          </span>
-        </button>
-      </div>
-
       {/* The scrollable middle — when Outer Realms unfurls its books,
-          the middle scrolls; the brand and the footer hold their line. */}
+          the middle scrolls; the brand and the footer hold their line.
+          (The sidebar's own New chat has retired — every world's
+          header now carries its own New chat hand.) */}
       <div className="nice-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain">
       {/* Worlds */}
       <div className="shrink-0 px-3">

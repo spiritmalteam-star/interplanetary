@@ -98,8 +98,6 @@ const BLOCK_GAP = 10;
 const BRANCH_GAP = 22;
 /** Whispers shown per scope before a bloom (or a walk) reveals more. */
 const SHOWN = 2;
-/** Settled-walk distance that renders the next breath of new branches. */
-const REVEAL_STEP = 150;
 /** The vertical period — past the tree's end, the next grove begins. */
 const WRAP_GAP = 200;
 /** The echo lanes: two fields of distant whispers on each side. */
@@ -377,12 +375,7 @@ export function SuggestionTree({
           if (l.text && !texts.includes(l.text)) texts.push(l.text);
     return texts;
   }, [ranked]);
-  const echoPoolRef = useRef(echoPool);
-  useEffect(() => {
-    echoPoolRef.current = echoPool;
-  }, [echoPool]);
-  const [echoPhase, setEchoPhase] = useState(0);
-  const echoPhaseRef = useRef(0);
+  const [echoPhase] = useState(0);
 
   /* ---------------- geometry ---------------------------------------- */
   const leadingId: BranchId = useMemo(() => {
@@ -754,56 +747,32 @@ export function SuggestionTree({
 
   /* ---------------- the settle --------------------------------------- */
   /*  The walk has rested. Now — and only now — the heavy work: the
-      fresh whispers, the memory, the re-anchor, the drawn band. Once. */
-  const runSettle = useCallback(() => {
-    settleTimerRef.current = null;
-    if (stateRef.current === "rest" || vpRef.current.h === 0) return;
-    if (modeRef.current !== "idle") return;
+      stability reconciliation, the memory, the re-anchor, the drawn
+      band. Once. */
 
-    /* --- the walk's rotations — fresh whispers where the visitor sat --- */
-    const cx = cam.current.x;
-    const cy = cam.current.y;
-    const last = lastRevealRef.current;
-    const dx = cx - last.x;
-    const dy = cy - last.y;
-
-    /* the echo fields turn with the sideways walk */
-    if (Math.abs(dx) >= REVEAL_STEP * 0.6 && echoPoolRef.current.length > 0) {
-      const steps = Math.max(
-        1,
-        Math.min(4, Math.round(Math.abs(dx) / REVEAL_STEP))
-      );
-      const dir = dx < 0 ? steps : -steps;
-      const nextPhase = echoPhaseRef.current + dir;
-      echoPhaseRef.current = nextPhase;
-      setEchoPhase(nextPhase);
-      /* a sample of what the turn reveals is remembered too */
-      const pool = echoPoolRef.current;
-      const len = pool.length;
-      const fresh: string[] = [];
-      for (let n = 0; n < 4; n++) {
-        for (const r of [0, 1]) {
-          const idx = (((nextPhase + ECHO_SEEDS[n] + r * 7) % len) + len) % len;
-          const text = pool[idx];
-          if (text) fresh.push(text);
-        }
-      }
-      recordSeen(fresh);
-    }
-
-    /* the vertical walk — which scopes the window rests over, folded
-       back into the home grove no matter which grove is on stage */
+  /* --- THE STABILITY LAW ---------------------------------------------
+     The whispers under the resting hand never swap. When the walk
+     draws a new stretch of the grove, only the scopes that are
+     ENTERING the window turn their fields — and they turn BEFORE they
+     are drawn, so the fresh face is the first face the visitor sees.
+     A scope that stays visible through the walk keeps its whispers
+     exactly where they stood: the visitor who stops to choose is
+     never answered with a moving target. A scope that leaves and
+     returns meets a fresh face — the grove still turns, but only
+     where the visitor is not. (The echo fields hold still for the
+     same reason; their rows are fresh by their own stride.) */
+  const prevVisibleRef = useRef<Set<string> | null>(null);
+  const rotateEnteringScopes = useCallback(() => {
     const v = vpRef.current;
-    const buf = bandBuffer(v.h);
-    const bandTop = -cy - buf;
-    const bandBottom = -cy + v.h + buf;
+    if (v.h === 0) return;
     const h = periodRef.current;
-    const cyM = h > 0 ? ((cy % h) + h) % h : cy;
+    if (h <= 0) return;
+    const cyM = ((cam.current.y % h) + h) % h;
     const homeTop = -cyM - 40;
     const homeBottom = -cyM + v.h + 40;
     const rankedNow = rankedRef.current;
     const layoutNow = layoutRef.current;
-    const touched: {
+    const visible: {
       scopeKey: string;
       total: number;
       branch: TreeNodeId;
@@ -820,36 +789,54 @@ export function SuggestionTree({
             .find((rb) => rb.id === b.id)
             ?.scopes.find((rs) => rs.key === s.key)?.leaves.length ?? 0;
         if (total <= SHOWN) continue;
-        touched.push({ scopeKey: s.key, total, branch: b.id, label: s.label });
+        visible.push({ scopeKey: s.key, total, branch: b.id, label: s.label });
       }
     }
-    if (touched.length > 0) {
-      /* the next offsets are computed from the offsets we already hold —
-         the whispers about to stand at the tips are remembered at once,
-         so what was shown is never offered again */
-      const nextOffsets = new Map(offsetsRef.current);
-      const freshTexts: string[] = [];
-      for (const tScope of touched) {
-        const nextOffset =
-          ((nextOffsets.get(tScope.scopeKey) ?? 0) + SHOWN) % tScope.total;
-        nextOffsets.set(tScope.scopeKey, nextOffset);
-        const leaves =
-          rankedNow
-            .find((rb) => rb.id === tScope.branch)
-            ?.scopes.find((rs) => rs.key === tScope.scopeKey)?.leaves ?? [];
-        for (let i = 0; i < SHOWN; i++) {
-          const leaf = leaves[(nextOffset + i) % leaves.length];
-          if (leaf) freshTexts.push(leaf.text);
-        }
+    const visibleKeys = new Set(visible.map((s) => s.scopeKey));
+    const prev = prevVisibleRef.current;
+    prevVisibleRef.current = visibleKeys;
+    /* the first inventory only takes note — nothing turns yet */
+    if (!prev) return;
+    const entering = visible.filter((s) => !prev.has(s.scopeKey));
+    if (entering.length === 0) return;
+    /* the next offsets are computed from the offsets we already hold —
+       the whispers about to stand at the tips are remembered at once,
+       so what was shown is never offered again */
+    const nextOffsets = new Map(offsetsRef.current);
+    const freshTexts: string[] = [];
+    for (const tScope of entering) {
+      const nextOffset =
+        ((nextOffsets.get(tScope.scopeKey) ?? 0) + SHOWN) % tScope.total;
+      nextOffsets.set(tScope.scopeKey, nextOffset);
+      const leaves =
+        rankedNow
+          .find((rb) => rb.id === tScope.branch)
+          ?.scopes.find((rs) => rs.key === tScope.scopeKey)?.leaves ?? [];
+      for (let i = 0; i < SHOWN; i++) {
+        const leaf = leaves[(nextOffset + i) % leaves.length];
+        if (leaf) freshTexts.push(leaf.text);
       }
-      offsetsRef.current = nextOffsets;
-      setOffsets(nextOffsets);
-      recordSeen(freshTexts);
-      recordJourney({ b: touched[0].branch, s: touched[0].label });
     }
+    offsetsRef.current = nextOffsets;
+    setOffsets(nextOffsets);
+    recordSeen(freshTexts);
+    recordJourney({ b: entering[0].branch, s: entering[0].label });
+  }, []);
+
+  const runSettle = useCallback(() => {
+    settleTimerRef.current = null;
+    if (stateRef.current === "rest" || vpRef.current.h === 0) return;
+    if (modeRef.current !== "idle") return;
+
+    /* --- the stability reconciliation — scopes that entered the
+       window during the last stretch of the walk turn their fields
+       now; scopes that were already visible keep their whispers --- */
+    rotateEnteringScopes();
 
     /* --- the seam — past the tree's end, the next grove begins. A
        shift by one whole period is pixel for pixel the same view. --- */
+    const cy = cam.current.y;
+    const h = periodRef.current;
     if (h > 0) {
       const rebased = ((cy % h) + h) % h;
       if (rebased !== cy) {
@@ -857,7 +844,7 @@ export function SuggestionTree({
         paint();
       }
     }
-    lastRevealRef.current = { x: cx, y: cam.current.y };
+    lastRevealRef.current = { x: cam.current.x, y: cam.current.y };
 
     /* --- the elastic homing — a window hanging beyond the echo fields
        drifts gently back into the grove; a breath, not a snap --- */
@@ -873,12 +860,14 @@ export function SuggestionTree({
     /* --- the drawn band — computed around where the camera NOW rests
        (after the re-anchor), so the culled rows are exactly the rows
        the window will see --- */
+    const v = vpRef.current;
+    const buf = bandBuffer(v.h);
     const bandTopNow = -cam.current.y - buf;
     const bandBottomNow = -cam.current.y + v.h + buf;
     setBand({ top: bandTopNow, bottom: bandBottomNow });
     bandBucketRef.current = Math.round(-cam.current.y / BAND_BUCKET);
     checkTiles();
-  }, [paint, checkTiles]);
+  }, [paint, checkTiles, rotateEnteringScopes]);
 
   const scheduleSettle = useCallback(() => {
     if (settleTimerRef.current != null)
@@ -907,19 +896,23 @@ export function SuggestionTree({
 
   /* the drawn band in wide steps — a structural refresh at most once
      every BAND_BUCKET pixels of travel, so rows rise while the walk
-     is still moving without ever rerendering per pixel */
+     is still moving without ever rerendering per pixel. The stability
+     law rides the same moment: scopes entering the band turn their
+     fields BEFORE the band is drawn, so their fresh face is the first
+     face the visitor sees — never a swap after the hand rests. */
   const syncBand = useCallback(() => {
     const v = vpRef.current;
     if (v.h === 0) return;
     const bucket = Math.round(-cam.current.y / BAND_BUCKET);
     if (bucket === bandBucketRef.current) return;
     bandBucketRef.current = bucket;
+    rotateEnteringScopes();
     const buf = bandBuffer(v.h);
     setBand({
       top: -cam.current.y - buf,
       bottom: -cam.current.y + v.h + buf,
     });
-  }, []);
+  }, [rotateEnteringScopes]);
 
   /* ---------------- the glide ---------------------------------------- */
   /*  A short, finite journey — homing, centering, the arrow keys.

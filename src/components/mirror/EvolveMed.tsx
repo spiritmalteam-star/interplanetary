@@ -28,6 +28,7 @@ import {
 import { ListenButton } from "./ListenButton";
 import { ScopeNotes } from "./ScopeNotes";
 import { WorldNewChat } from "./WorldNewChat";
+import { WindowSelect } from "./WindowSelect";
 import { HelixLoading } from "./ThemedLoadings";
 import {
   PreparedPromptFallback,
@@ -401,63 +402,33 @@ function EmNotesBlock({ vectorId }: { vectorId: string }) {
   );
 }
 
-/** The four vector pills — press one to route the directive AND pin its
-    notes into the conversation. Shared by the empty state and the
-    quiet re-invitation above the composer. */
+/** The four vector windows as one quiet drop-down — press it, choose
+    the vector, and the directive routes AND the vector's notes pin
+    into the conversation. Shared by the empty state and the quiet
+    re-invitation above the composer. The chat keeps its air. */
 function EmWindowPills({ centered = false }: { centered?: boolean }) {
   const emVector = useMirror((s) => s.emVector);
   const setEmVector = useMirror((s) => s.setEmVector);
   const pinEmNotes = useMirror((s) => s.pinEmNotes);
-  const t = useT();
   return (
-    <div
-      className={cn(
-        "flex flex-wrap gap-1.5",
-        centered ? "justify-center" : "justify-start"
-      )}
-    >
-      {emVectors.map((vector) => {
-        const Icon = EM_VECTOR_ICONS[vector.id] ?? Activity;
-        const active = emVector === vector.id;
-        return (
-          <button
-            key={vector.id}
-            type="button"
-            aria-pressed={active}
-            onClick={() => {
-              /* route the directive AND pin the vector's
-                 notes into the conversation — both, in one touch */
-              setEmVector(vector.id);
-              pinEmNotes(vector.id);
-            }}
-            data-testid={`em-pill-${vector.id}`}
-            title={t(vector.tagline)}
-            className={cn(
-              "focus-glow flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] transition-all duration-300",
-              active
-                ? "font-semibold text-foreground"
-                : "hairline text-muted-foreground hover:text-foreground"
-            )}
-            style={
-              active
-                ? {
-                    borderColor:
-                      "color-mix(in srgb, var(--scope-a) 55%, transparent)",
-                    background:
-                      "color-mix(in srgb, var(--scope-a) 12%, transparent)",
-                  }
-                : undefined
-            }
-          >
-            <Icon
-              className="size-3 text-[var(--scope-a)]"
-              aria-hidden="true"
-            />
-            {t(vector.name)}
-          </button>
-        );
-      })}
-    </div>
+    <WindowSelect
+      items={emVectors.map((vector) => ({
+        id: vector.id,
+        name: vector.name,
+        tagline: vector.tagline,
+        icon: EM_VECTOR_ICONS[vector.id] ?? Activity,
+      }))}
+      activeId={emVector}
+      placeholder="Choose a vector window"
+      onSelect={(id) => {
+        /* route the directive AND pin the vector's
+           notes into the conversation — both, in one touch */
+        setEmVector(id);
+        pinEmNotes(id);
+      }}
+      testIdPrefix="em-window"
+      centered={centered}
+    />
   );
 }
 
@@ -619,14 +590,9 @@ function EvolveMedChat() {
                 )}
               </p>
 
-              {/* the four vector windows */}
-              <div className="mt-5 w-full max-w-[560px]">
-                <p className="mono-label text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">
-                  {t("Choose a vector window")}
-                </p>
-                <div className="mt-2.5">
-                  <EmWindowPills centered />
-                </div>
+              {/* the four vector windows — one drop-down, more chat */}
+              <div className="mt-5 flex justify-center">
+                <EmWindowPills centered />
               </div>
             </div>
           </div>
@@ -770,15 +736,10 @@ function EvolveMedChat() {
       )}
 
       {/* the quiet re-invitation — the conversation alive, no vector
-          open: the four pills wait right above the composer */}
+          open: the drop-down waits right above the composer */}
       {!hasWindow && emMessages.length > 0 && (
-        <div className="shrink-0 px-4 pt-2 sm:px-6">
-          <div className="mx-auto w-full max-w-[720px]">
-            <p className="mono-label mb-1.5 text-[9.5px] uppercase tracking-[0.2em] text-muted-foreground/70">
-              {t("Choose a vector window")}
-            </p>
-            <EmWindowPills />
-          </div>
+        <div className="shrink-0 px-4 pt-1.5 sm:px-6">
+          <EmWindowPills />
         </div>
       )}
 
