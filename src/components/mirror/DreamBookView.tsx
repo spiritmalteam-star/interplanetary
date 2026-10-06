@@ -998,6 +998,13 @@ export function DreamBookView() {
             <div className="mt-4 h-px w-40 overflow-hidden rounded-full bg-foreground/10">
               <div className="ink-shimmer h-full w-full" />
             </div>
+            {/* the resonance law — the book is drawn from this second
+                alone: no shelf, no record, no remembering */}
+            <p className="ink-hand ink-faint mt-6 max-w-[360px] text-center text-[12px] italic">
+              {t(
+                "The mirror listens by resonance — drawn fresh from this very second, kept by no one."
+              )}
+            </p>
           </>
         )}
       </motion.div>

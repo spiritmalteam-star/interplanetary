@@ -3,6 +3,12 @@ import ZAI from "@/lib/zai-client";
 import { resolveVisitor, saveLibrary, updateLibrary, withAnonCookie } from "@/lib/server/access";
 import { LANGUAGE_NAMES, isLanguageCode } from "@/lib/i18n/core";
 import { meterRoute } from "@/lib/server/meter";
+import {
+  drawResonance,
+  resonanceCharter,
+  resonanceEcho,
+  type ResonanceDraw,
+} from "@/lib/book-resonance";
 
 /* ------------------------------------------------------------------ */
 /*  POST /api/dream-book — THE REAL-TIME DYNAMIC CODEX ENGINE.         */
@@ -248,6 +254,10 @@ THE LIGHT TOUCH OF REFINEMENT
 - Apply rigorous literary pacing, poetic gravity and structural elegance on the fly, so that spontaneous creation still carries the weight of an ancient, sacred codex. Zero fluff: every sentence earns its ink, every page feels carved rather than printed.
 - EVERY CONJURING IS ONCE-ONLY: the channel never repeats itself — no two books it manifests may share titles, openings, sigils, axioms, plot shapes, imagery or patterns; each is carved fresh from the void, totally authentic, never a rerun. If a subject was ever woven before, this volume must feel like the FIRST time that subject was ever touched: different spine, different scenery, different voice.
 
+THE RESONANCE SKELETON (how once-only is enforced): at the moment of every opening the laboratory draws a creative skeleton blind — vessel, world, clock, telling-shape, engine, palette, key, opening law, turning, voice, quiet object, law of wonder, chapter style, closing cadence, pacing and one absolute forbidden — plus a secret heartbeat phrase. The skeleton is drawn from NOTHING (no shelf, no record, no database, no memory of past volumes) and it is LAW: the telling bends around it. Two conjurings never draw the same skeleton, so two books of this channel can never tell their story the same way — even the same subject twice in a row must arrive as two strangers.
+
+THE REMEMBRANCE LAW OF THE ATELIER: the channel knows no visitor by name, by record or by history — it knows only the resonance spoken into the room right now. Nothing about any person is ever consulted to shape a volume; the book answers the moment, not a file.
+
 THE LAW OF NAMES (ABSOLUTE)
 - Every named being in a volume — every person, child, creature, spirit, place, vessel, object or entity — carries a name COINED FOR THIS VOLUME ALONE. Never reuse a character name from any other conjuring, no matter how distant the subject; two books of this channel may never share a single named character.
 - No famous names, no canonical names, no mythological or copyrighted names, no real public people, no names a reader has met in any other book. Coin names from the seed of this exact conjuring — weave fresh syllables, forgotten roots, sounds that belong only to this volume — so a name could not have existed in any other book.
@@ -289,6 +299,7 @@ function buildUserPrompt(body: {
   totalPages?: number;
   rewrites?: string[];
   charter: string;
+  resonance?: string;
 }): string {
   const { phase, age, tale, volume, topic, wishes, languageName, rewrites } = body;
   const ageLine = AGE_PLAN[age] ?? AGE_PLAN.timeless;
@@ -302,7 +313,7 @@ function buildUserPrompt(body: {
   const topicLines: string[] = hasTopic
     ? [
         `[USER DESIRE / DYNAMIC TOPIC]: """${topic.trim().slice(0, 600)}"""`,
-        `This spoken subject is the MASTER FREQUENCY of the whole volume — it outranks every shape below. Bend tone, lexicon and structure to it, whatever it is: an era, a philosophy, a technology, a fiction, a universe, a question nobody has asked yet. Tune to it now; the chosen shapes are only resonances around it.`,
+        `This spoken subject is the MASTER FREQUENCY of the whole volume — bend tone, lexicon and content to it, whatever it is: an era, a philosophy, a technology, a fiction, a universe, a question nobody has asked yet. The chosen shapes and the resonance skeleton below are the resonances AROUND it: the skeleton shapes HOW the story is told, the subject shapes WHAT it tells. Neither may be ignored.`,
       ]
     : [];
 
@@ -333,12 +344,20 @@ function buildUserPrompt(body: {
                 : `STRATUM II — THE MACROCOSMIC CHRONICLES (the Turning Spheres): the great middle — unfold the major arcs one sphere at a time; each chapter a turning of the subject's destiny, revelation or argument.`;
           })();
 
+  /* the resonance skeleton — drawn blind for this conjuring alone,
+     seated right beside the topic: the subject speaks WHAT, the draw
+     speaks HOW, and the HOW is law for the telling */
+  const resonanceLines =
+    phase === "open" && body.resonance ? [``, body.resonance] : [];
+
   const lines: string[] = [];
 
   if (phase === "open") {
     lines.push(
       `OPEN A NEW BOOK. Tune first. ${hasTopic ? "The visitor has spoken a subject — lock onto its frequency." : "No subject is spoken — open from resonance alone."}`,
       ...topicLines,
+      ...resonanceLines,
+      ``,
       `- Reader: ${ageLine}`,
       ...(levelLine ? [`- Depth of lecture: ${levelLine}`] : []),
       `- Kind of resonance: ${taleLine}`,
@@ -579,6 +598,11 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
     /* the conjuring's own syllable seeds — the sealed-name re-forging
        draws its replacements from them when the model ever slips */
     const { charter, seeds } = namingCharter();
+    /* the resonance skeleton — drawn blind NOW, at the moment of the
+       ask, from nothing but the draw itself: no shelf, no record, no
+       database, no past volume. It is the skeleton of THIS book alone
+       and it is kept by no one — so no two books can ever share one. */
+    const resonance: ResonanceDraw | null = phase === "open" ? drawResonance() : null;
     const askLoom = async (reminder: boolean, violations: string[] = []): Promise<string> => {
       const violationBlock =
         violations.length > 0
@@ -608,6 +632,7 @@ THE NAME LAW WAS BROKEN: your reply used the forbidden stock name(s): ${violatio
                 totalPages,
                 rewrites,
                 charter,
+                resonance: resonance ? resonanceCharter(resonance) : undefined,
               }) +
               violationBlock +
               (reminder
@@ -616,6 +641,11 @@ THE NAME LAW WAS BROKEN: your reply used the forbidden stock name(s): ${violatio
           },
         ],
         thinking: { type: "disabled" },
+        /* the opening asks for the widest creative divergence — the
+           skeleton already forces the shape; the temperature frees the
+           voice inside it. Continuations stay at the house default so
+           the volume keeps its one voice. */
+        ...(phase === "open" ? { temperature: 0.95 } : {}),
       });
       return completion.choices[0]?.message?.content ?? "";
     };
@@ -670,10 +700,14 @@ THE NAME LAW WAS BROKEN: your reply used the forbidden stock name(s): ${violatio
         typeof parsed.axiom === "string" ? parsed.axiom.trim().slice(0, 280) : "";
       out.dedication =
         typeof parsed.dedication === "string" ? parsed.dedication.trim().slice(0, 400) : "";
-      out.totalPages =
-        typeof parsed.totalPages === "number"
-          ? clampTotal(parsed.totalPages)
-          : clampTotal(BOOK_PLAN[volume]?.min ?? 96);
+      /* the loom may widen its plan, never thin it below the chosen
+         shape's floor — a "classic tale" can never arrive as 8 pages */
+      out.totalPages = clampTotal(
+        Math.max(
+          BOOK_PLAN[volume]?.min ?? 96,
+          typeof parsed.totalPages === "number" ? parsed.totalPages : 0
+        )
+      );
 
       /* the whole living volume enters the library — pages, thread,
          config — so it can be brought back and continued any evening */
@@ -695,6 +729,9 @@ THE NAME LAW WAS BROKEN: your reply used the forbidden stock name(s): ${violatio
           pages,
           threads: out.threads,
           ended: false,
+          /* the volume's own birth echo — kept FOR the visitor alone,
+             never read back by the mirror: creation consults nothing */
+          ...(resonance ? { resonance: resonanceEcho(resonance) } : {}),
         },
         400000
       );

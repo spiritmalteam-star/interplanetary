@@ -604,6 +604,7 @@ export const el: TranslationDict = {
   "Tune the book toward…": "Συντόνισε το βιβλίο προς…",
   "Tune the loom": "Συντόνισε τον αργαλειό",
   "Tuning the loom to your frequency…": "Ο αργαλειός συντονίζεται στη συχνότητά σου…",
+  "The mirror listens by resonance — drawn fresh from this very second, kept by no one.": "ο καθρέφτης ακούει μέσω συντονισμού — αντλημένη φρέσκια από αυτή τη στιγμή, δεν την κρατά κανείς.",
   "Untune the frequency": "Απελευθέρωσε τη συχνότητα",
   "Whisper what must change — the coming events, the number of pages, the chapters, the very voice of the writing, even the frequency of the subject itself. The loom will bend the book to your hand.": "Ψιθύισε τι πρέπει να αλλάξει — τα επερχόμενα γεγονότα, τον αριθμό των σελίδων, τα κεφάλαια, την ίδια τη φωνή του γραψίματος, ακόμη και τη συχνότητα του ίδιου του θέματος. Ο αργαλειός θα λυγίσει το βιβλίο στο χέρι σου.",
   "A great revelation walks the line first, then steps off it: and seen from the side, this is what it really is.": "Μια μεγάλη αποκάλυψη περπατά πρώτα τη γραμμή, ύστερα βγαίνει απ' αυτήν: και ιδωμένη από το πλάι, αυτό είναι στην πραγματικότητα.",

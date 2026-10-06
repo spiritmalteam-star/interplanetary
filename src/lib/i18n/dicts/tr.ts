@@ -404,6 +404,7 @@ export const tr: TranslationDict = {
   "Tune the book toward…": "Kitabı şuna doğru akort et…",
   "Tune the loom": "Tezgâhı akort et",
   "Tuning the loom to your frequency…": "Tezgâh frekansına akort oluyor…",
+  "The mirror listens by resonance — drawn fresh from this very second, kept by no one.": "ayna rezonansla dinler — tam bu anda taze çekildi, kimse tutmuyor.",
   "Untune the frequency": "Frekansı bırak",
   "Whisper what must change — the coming events, the number of pages, the chapters, the very voice of the writing, even the frequency of the subject itself. The loom will bend the book to your hand.": "Ne değişmeliyse fısılda — gelecek olaylar, sayfa sayısı, bölümler, yazının kendisi olan ses, hatta konunun kendi frekansı. Tezgâh kitabı eline göre bükecek.",
   "A great revelation walks the line first, then steps off it: and seen from the side, this is what it really is.": "Büyük bir vahy önce çizgide yürür, sonra ondan ayrılır: ve yandan bakıldığında, işte gerçekte budur.",

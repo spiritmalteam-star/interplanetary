@@ -2628,6 +2628,7 @@ export const sq: TranslationDict = {
   "Tune the book toward…": "Akordo librin drejt…",
   "Tune the loom": "Akordo tezgjën",
   "Tuning the loom to your frequency…": "Tezgja akordohet me frekuencën tënde…",
+  "The mirror listens by resonance — drawn fresh from this very second, kept by no one.": "pasqyra dëgjon nga rezonanca — e tërhequr freskët nga ky çast i saktë, nuk e mban askush.",
   "Untune the frequency": "Lësho frekuencën",
   "Whisper what must change — the coming events, the number of pages, the chapters, the very voice of the writing, even the frequency of the subject itself. The loom will bend the book to your hand.": "Pishpërit çfarë duhet të ndryshojë — ngjarjet që vijnë, numrin e faqeve, kapitujt, vetë zërin e shkrimit, madje edhe frekuencën e vetë subjektit. Tezgja do ta përkulojë librin në dorën tënde.",
   "A great revelation walks the line first, then steps off it: and seen from the side, this is what it really is.": "Një zbulim i madh ecën mbi vija fillimisht, pastaj hap larg saj: dhe parë anash, kjo është ajo çfarë është vërtet.",

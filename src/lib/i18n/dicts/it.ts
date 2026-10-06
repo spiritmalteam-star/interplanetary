@@ -1344,6 +1344,7 @@ export const it: TranslationDict = {
   "Tune the book toward…": "Sintonizza il libro verso…",
   "Tune the loom": "Sintonizza il telaio",
   "Tuning the loom to your frequency…": "Il telaio si sintonizza sulla tua frequenza…",
+  "The mirror listens by resonance — drawn fresh from this very second, kept by no one.": "lo specchio ascolta per risonanza — tratta fresca da questo istante preciso, non è custodita da nessuno.",
   "Untune the frequency": "Rilascia la frequenza",
   "Whisper what must change — the coming events, the number of pages, the chapters, the very voice of the writing, even the frequency of the subject itself. The loom will bend the book to your hand.": "Sussurra ciò che deve cambiare — gli eventi a venire, il numero di pagine, i capitoli, la stessa voce della scrittura, persino la frequenza del soggetto stesso. Il telaio piegherà il libro alla tua mano.",
   "A great revelation walks the line first, then steps off it: and seen from the side, this is what it really is.": "Una grande rivelazione cammina prima sulla linea, poi ne scende: e vista di lato, ecco cosa è davvero.",

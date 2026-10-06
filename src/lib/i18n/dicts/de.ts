@@ -904,6 +904,7 @@ export const de: TranslationDict = {
   "Tune the book toward…": "Stimme das Buch um auf…",
   "Tune the loom": "Stimme den Webstuhl",
   "Tuning the loom to your frequency…": "Der Webstuhl stimmt sich auf deine Frequenz…",
+  "The mirror listens by resonance — drawn fresh from this very second, kept by no one.": "der Spiegel hört auf Resonanz — frisch aus genau dieser Sekunde gezogen, von niemandem verwahrt.",
   "Untune the frequency": "Entlasse die Frequenz",
   "Whisper what must change — the coming events, the number of pages, the chapters, the very voice of the writing, even the frequency of the subject itself. The loom will bend the book to your hand.": "Flüstere, was sich ändern soll — die kommenden Ereignisse, die Anzahl der Seiten, die Kapitel, die eigentliche Stimme des Schreibens, sogar die Frequenz des Themas selbst. Der Webstuhl wird das Buch nach deiner Hand biegen.",
   "A great revelation walks the line first, then steps off it: and seen from the side, this is what it really is.": "Eine große Offenbarung geht zuerst die Linie entlang, dann tritt sie ab: und von der Seite gesehen — dies ist, was sie wirklich ist.",
