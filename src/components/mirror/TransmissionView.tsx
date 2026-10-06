@@ -120,19 +120,22 @@ function useAura(seed: string): Aura {
 
 /* ---------- loading ---------- */
 
-function LoadingTransmission({ query }: { query: string }) {
-  const [phase, setPhase] = useState(0);
+/**
+ * The forming view — the visitor's question, the little visitor and
+ * one cryptic phrase. Purely presentational: the phrase index is
+ * owned by the channel, so the moment of reveal can freeze exactly
+ * what was on stage and dissolve it without a single changed pixel.
+ */
+function LoadingTransmission({
+  query,
+  phase,
+}: {
+  query: string;
+  phase: number;
+}) {
   const t = useT();
   /* The forming card already glows with the light it will carry. */
   const aura = useAura(`forming-${query}-${phase}`);
-
-  useEffect(() => {
-    const id = window.setInterval(
-      () => setPhase((p) => (p + 1) % WAITING_PHRASES.length),
-      2400
-    );
-    return () => window.clearInterval(id);
-  }, []);
 
   return (
     <div
@@ -162,6 +165,9 @@ function LoadingTransmission({ query }: { query: string }) {
         className="mt-4 flex h-6 items-center justify-center px-4 text-center"
         aria-hidden="true"
       >
+        {/* initial={false} — the first phrase is on stage at once, so
+            the reveal's dissolving echo is pixel-identical from its
+            very first frame */}
         <AnimatePresence mode="wait" initial={false}>
           <motion.p
             key={phase}
@@ -612,6 +618,62 @@ export function TransmissionView() {
     [scope, session.messages]
   );
 
+  /* The unhurried forming phrases — their rhythm is owned here so the
+     reveal can freeze the exact phrase that was on stage. */
+  const messagesLength = session.messages.length;
+  const status = session.status;
+  const [formingPhase, setFormingPhase] = useState(0);
+
+  useEffect(() => {
+    if (status !== "loading") return;
+    const id = window.setInterval(
+      () => setFormingPhase((p) => (p + 1) % WAITING_PHRASES.length),
+      2400
+    );
+    return () => window.clearInterval(id);
+  }, [status]);
+
+  /* THE SMOOTH REVEAL — when the reply lands, the forming view must
+     not vanish in a hard cut (that one-frame blank is the flicker the
+     visitor sees before the transmission card layers in). Instead the
+     forming view remains on stage for one breath as a weightless echo,
+     pinned exactly where it stood, dissolving while the card rises
+     beneath it. The echo's question and phrase are frozen from the
+     loading moment, and the echo is derived during render (React's
+     sanctioned state-adjustment pattern) — so it joins the very same
+     committed render as the landed reply, before the browser paints:
+     the first frame of the reveal is pixel-identical to the last frame
+     of the wait. Not one blank frame, not one jump. */
+  const [revealing, setRevealing] = useState<{
+    mode: Mode;
+    query: string;
+  } | null>(null);
+  const [watched, setWatched] = useState({ status, mode: activeMode });
+  /* Seeded from the live session: a channel that mounts MID-RECEPTION
+     (a suggestion was struck from the observatory) must already carry
+     the forming record, or its reveal would lose the echo. */
+  const [forming, setForming] = useState(() => ({
+    query: session.activeQuery,
+    visible: session.messages.at(-1)?.visual !== "pending",
+  }));
+
+  if (watched.status !== status || watched.mode !== activeMode) {
+    const prev = watched;
+    setWatched({ status, mode: activeMode });
+    if (status === "loading") {
+      /* The forming view is on stage only while the newest message is
+         not itself a pending visualization — that card conducts its
+         own reception inside the frame. */
+      setForming({
+        query: session.activeQuery || forming.query,
+        visible: session.messages.at(-1)?.visual !== "pending",
+      });
+      if (prev.status !== "loading") setFormingPhase(0);
+    } else if (prev.status === "loading" && forming.visible) {
+      setRevealing({ mode: activeMode, query: forming.query });
+    }
+  }
+
   /* The thread begins where it begins: opening, reloading or switching
      into a channel keeps the thread at its BEGINNING. New generations
      load from the TOP — the newest exchange settles its first line at
@@ -623,8 +685,6 @@ export function TransmissionView() {
   const latestRef = useRef<HTMLDivElement | null>(null);
   const loadingRef = useRef<HTMLDivElement | null>(null);
   const errorRef = useRef<HTMLDivElement | null>(null);
-  const messagesLength = session.messages.length;
-  const status = session.status;
   const baseline = useRef({
     mode: activeMode,
     len: messagesLength,
@@ -736,6 +796,9 @@ export function TransmissionView() {
                 }
               : undefined
           }
+          className={
+            i === session.messages.length - 1 ? "relative" : undefined
+          }
         >
           <Exchange
             message={m}
@@ -743,6 +806,27 @@ export function TransmissionView() {
             scope={scope}
             animate={i === session.messages.length - 1 && session.status !== "loading"}
           />
+          {/* the dissolving echo — the forming view's final breath,
+              overlaid on the rising transmission so the handoff reads
+              as one continuous dissolve instead of a flicker */}
+          {i === session.messages.length - 1 &&
+            revealing &&
+            revealing.mode === activeMode && (
+              <motion.div
+                data-reveal-echo=""
+                initial={{ opacity: 1, y: 0 }}
+                animate={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.46, ease: "easeOut" }}
+                onAnimationComplete={() => setRevealing(null)}
+                className="pointer-events-none absolute inset-x-0 top-0 z-10"
+                aria-hidden="true"
+              >
+                <LoadingTransmission
+                  query={revealing.query}
+                  phase={formingPhase}
+                />
+              </motion.div>
+            )}
         </div>
       ))}
 
@@ -758,13 +842,26 @@ export function TransmissionView() {
             loadingRef.current = node;
           }}
         >
-          <LoadingTransmission query={session.activeQuery} />
+          {/* the forming view arrives softly — never a hard pop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.45, ease: "easeOut" }}
+          >
+            <LoadingTransmission
+              query={session.activeQuery}
+              phase={formingPhase}
+            />
+          </motion.div>
         </div>
       )}
 
       {session.status === "error" && (
-        <div
+        <motion.div
           ref={errorRef}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] as const }}
           className="scope-frame-card mt-8 rounded-2xl glass p-6 text-center"
         >
           <p className="text-[16px] leading-relaxed text-foreground/85">
@@ -775,7 +872,7 @@ export function TransmissionView() {
           <p className="mt-2 text-[14.5px] italic text-muted-foreground">
             {session.error}
           </p>
-        </div>
+        </motion.div>
       )}
 
       {/* new generations settle at the TOP of this anchor — the reader
