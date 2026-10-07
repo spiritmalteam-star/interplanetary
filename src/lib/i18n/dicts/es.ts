@@ -3284,4 +3284,19 @@ export const es: TranslationDict = {
   "What daily sketch ritual keeps an inner gallery alive and growing?": "¿Qué ritual diario de bocetos mantiene viva y creciente una galería interior?",
 
   "How do I study like the artists of another world would study us?": "¿Cómo estudio como nos estudiarían los artistas de otro mundo?",
+
+  "Write the lyrics for a song that has never been sung — half starlight, half human.": "Escribe la letra de una canción que nunca se ha cantado — mitad luz de estrellas, mitad humana.",
+  "Give me a chorus that carries the ache of leaving one planet for another.": "Dame un estribillo que lleve el dolor de dejar un planeta por otro.",
+  "Compose a lullaby for a world with two moons.": "Compone una nana para un mundo con dos lunas.",
+  "Write a poem a distant civilization might send home across the dark.": "Escribe un poema que una civilización lejana podría enviar a casa a través de la oscuridad.",
+  "Turn my idea into a full art prompt — subject, light, palette, mood, medium.": "Convierte mi idea en un prompt de arte completo — sujeto, luz, paleta, ánimo, medio.",
+  "Give me a daily art prompt to train my imagination like a muscle.": "Dame un prompt de arte diario para entrenar mi imaginación como un músculo.",
+  "Write the artist statement for a show opening on three planets at once.": "Escribe la declaración del artista para una muestra que se abre en tres planetas a la vez.",
+  "Design an album concept — title, story, colors and sound — I can build from.": "Diseña un concepto de álbum — título, historia, colores y sonido — desde el que pueda construir.",
+  "Compose an anthem for the first city built between worlds.": "Compone un himno para la primera ciudad construida entre los mundos.",
+  "Name my unfinished work — and write the one-line inscription it carries.": "Nombra mi obra inconclusa — y escribe la inscripción de una sola línea que lleva.",
+  "Write me the lyrics for a song about coming home between two worlds.": "Escríbeme la letra de una canción sobre volver a casa entre dos mundos.",
+  "Give me an art prompt I can paste into any image engine — and its Earthly studio twin.": "Dame un prompt de arte que pueda pegar en cualquier motor de imágenes — y su gemelo terrestre de estudio.",
+  "Compose the anthem of the first city built between worlds.": "Compone el himno de la primera ciudad construida entre los mundos.",
+  "Lyrics & Prompts": "Letras & Prompts",
 };

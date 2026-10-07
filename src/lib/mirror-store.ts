@@ -453,6 +453,13 @@ interface MirrorState {
   resumeDreamBook: (resume: DreamBookResume) => void;
   clearDreamResume: () => void;
 
+  /* The birth echo of the visitor's LAST conjured volume — carried in
+     the session's own keeping (never persisted, never shelved) so the
+     NEXT conjuring's resonance draw can refuse every one of its bones:
+     no two books asked back to back may share a single axis. */
+  lastBookResonance: Record<string, string> | null;
+  setLastBookResonance: (echo: Record<string, string> | null) => void;
+
   /* The chat's own paused volume — the weaving instrument's keeping.
      `chatBook` is hydrated from the browser's own keeping on boot. */
   chatBook: ChatBookPause | null;
@@ -971,6 +978,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   profilePageOpen: false,
   expansionSeeds: [],
   dreamResume: null,
+  lastBookResonance: null,
   /* the chat's paused volume — the browser's own keeping, read once */
   chatBook: loadChatBook(),
 
@@ -2089,6 +2097,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   resumeDreamBook: (resume) =>
     set({ dreamResume: resume, view: "dreambook", profileOpen: false, modal: null, mobileNavOpen: false }),
   clearDreamResume: () => set({ dreamResume: null }),
+  setLastBookResonance: (echo) => set({ lastBookResonance: echo }),
 
   /* -------- the chat's own paused volume — the weaving instrument ------ */
 

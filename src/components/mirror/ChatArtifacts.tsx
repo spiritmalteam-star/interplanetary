@@ -1688,6 +1688,11 @@ function BookWeaver({
             phase,
             language,
             config: { age, tale, volume: "classic", topic: theTopic },
+            /* the birth echo of the LAST volume this session conjured —
+               carried by the visitor alone, so the new draw refuses it
+               bone by bone and no two books share a single axis */
+            priorResonance:
+              useMirror.getState().lastBookResonance ?? undefined,
           }
         : {
             phase,
@@ -1742,6 +1747,13 @@ function BookWeaver({
           };
           metaRef.current = m;
           setMeta(m);
+          /* the new volume's birth echo enters the session's keeping —
+             the next conjuring will refuse every one of its bones */
+          if (data.resonance && typeof data.resonance === "object") {
+            useMirror
+              .getState()
+              .setLastBookResonance(data.resonance as Record<string, string>);
+          }
           pagesRef.current = data.pages as WeaverPage[];
           setPages(pagesRef.current);
           setSpread(0);

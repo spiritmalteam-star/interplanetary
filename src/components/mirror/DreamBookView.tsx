@@ -347,6 +347,12 @@ export function DreamBookView() {
                 }
               : {}),
           },
+          /* the birth echo of the LAST volume this session conjured —
+             carried by the visitor alone, so the new draw refuses it
+             bone by bone and no two books share a single axis */
+          ...(phase === "open"
+            ? { priorResonance: useMirror.getState().lastBookResonance ?? undefined }
+            : {}),
           ...carrying,
           threads: threadsRef.current || undefined,
           recentPages: recent.length ? recent : undefined,
@@ -402,6 +408,13 @@ export function DreamBookView() {
             totalPages: data.totalPages ?? 96,
           };
           setMeta(metaRef.current);
+          /* the new volume's birth echo enters the session's keeping —
+             the next conjuring will refuse every one of its bones */
+          if (data.resonance && typeof data.resonance === "object") {
+            useMirror.getState().setLastBookResonance(
+              data.resonance as Record<string, string>
+            );
+          }
         }
         if (
           phase !== "open" &&

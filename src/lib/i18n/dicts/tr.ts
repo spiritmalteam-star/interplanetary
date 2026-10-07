@@ -2784,4 +2784,19 @@ export const tr: TranslationDict = {
   "What daily sketch ritual keeps an inner gallery alive and growing?": "Hangi günlük çizim ritüeli iç galeriyi canlı ve büyüyen tutar?",
 
   "How do I study like the artists of another world would study us?": "Başka bir dünyanın sanatçılarının bizi inceleyeceği gibi nasıl çalışmalıyım?",
+
+  "Write the lyrics for a song that has never been sung — half starlight, half human.": "Hiç söylenmemiş bir şarkının sözlerini yaz — yarı yıldız ışığı, yarı insan.",
+  "Give me a chorus that carries the ache of leaving one planet for another.": "Bir gezegeni bırakıp ötekine gitmenin acısını taşıyan bir nakarat ver bana.",
+  "Compose a lullaby for a world with two moons.": "İki ayı olan bir dünya için bir ninni bestele.",
+  "Write a poem a distant civilization might send home across the dark.": "Uzak bir uygarlığın karanlığın içinden eve gönderebileceği bir şiir yaz.",
+  "Turn my idea into a full art prompt — subject, light, palette, mood, medium.": "Fikrimi eksiksiz bir sanat istemine dönüştür — konu, ışık, palet, duygu, ortam.",
+  "Give me a daily art prompt to train my imagination like a muscle.": "Hayal gücümü bir kas gibi çalıştırmak için günlük bir sanat istemi ver bana.",
+  "Write the artist statement for a show opening on three planets at once.": "Aynı anda üç gezegende açılan bir serginin sanatçı beyanını yaz.",
+  "Design an album concept — title, story, colors and sound — I can build from.": "Üzerine inşa edebileceğim bir albüm konsepti tasarla — başlık, hikâye, renkler ve ses.",
+  "Compose an anthem for the first city built between worlds.": "Dünyalar arasında kurulan ilk kent için bir marş bestele.",
+  "Name my unfinished work — and write the one-line inscription it carries.": "Bitmemiş eserime ad ver — ve taşıdığı tek satırlık yazıyı kaleme al.",
+  "Write me the lyrics for a song about coming home between two worlds.": "İki dünya arasında eve dönmek üzerine bir şarkının sözlerini yaz bana.",
+  "Give me an art prompt I can paste into any image engine — and its Earthly studio twin.": "Herhangi bir görsel motoruna yapıştırabileceğim bir sanat istemi ver — ve onun yerküredeki atölye ikizini.",
+  "Compose the anthem of the first city built between worlds.": "Dünyalar arasında kurulan ilk kentin marşını bestele.",
+  "Lyrics & Prompts": "Şarkı Sözleri & İstemler",
 };

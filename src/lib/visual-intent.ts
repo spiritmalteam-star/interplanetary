@@ -37,13 +37,25 @@ const VISUAL_INTENT_PATTERN = new RegExp(
 );
 
 /**
+ * The ask FOR a prompt is never an ask for an image. "Art prompt",
+ * "image prompt", "a prompt I can paste into any image engine" — the
+ * visitor wants WORDS to carry elsewhere (the atelier's text forms),
+ * not a crystallization of their own. This guard keeps the gate deaf
+ * to every prompt-shaped ask, whatever engine it names.
+ */
+const PROMPT_ASK_PATTERN =
+  /\b(?:art|image|picture|photo|video|writing)\s+prompts?\b|\bprompts?\b[^.!?]{0,32}\b(?:paste|image engine|generat|midjourney|dall|stable diffusion|firefly)\b/i;
+
+/**
  * True when the visitor's words ask for an image to be crystallized.
  * Tolerant of the common misspellings, deaf to "imagine" — to imagine
- * is to dream, not to ask for a picture.
+ * is to dream, not to ask for a picture — and deaf to prompt-asks:
+ * the atelier answers those with a text form, not an image.
  */
 export function isVisualIntent(text: string): boolean {
   const v = text.trim();
   if (!v || v.length < 3) return false;
+  if (PROMPT_ASK_PATTERN.test(v)) return false;
   return VISUAL_INTENT_PATTERN.test(v);
 }
 

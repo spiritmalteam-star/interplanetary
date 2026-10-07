@@ -40,6 +40,7 @@ import {
   TOOL_LINE_LABELS,
 } from "../src/lib/data/invent.ts";
 import { chatSuggestionPools } from "../src/lib/data/suggestions-pools.ts";
+import { axOpeners } from "../src/lib/data/artx.ts";
 import { LEXICON } from "../src/lib/data/lexicon.ts";
 import {
   bxSliderMeta,
@@ -411,6 +412,7 @@ for (const label of Object.values(TOOL_LINE_LABELS)) set.add(label);
 
 /* the living suggestion pools — 300 invitations per chat world */
 for (const arr of Object.values(chatSuggestionPools)) for (const q of arr) set.add(q);
+for (const q of axOpeners) set.add(q);
 
 /* the lexicon — the glowing terms and their short meanings */
 for (const e of LEXICON) {

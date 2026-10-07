@@ -7,6 +7,7 @@ import {
   drawResonance,
   resonanceCharter,
   resonanceEcho,
+  sanitizeEcho,
   type ResonanceDraw,
 } from "@/lib/book-resonance";
 
@@ -254,7 +255,7 @@ THE LIGHT TOUCH OF REFINEMENT
 - Apply rigorous literary pacing, poetic gravity and structural elegance on the fly, so that spontaneous creation still carries the weight of an ancient, sacred codex. Zero fluff: every sentence earns its ink, every page feels carved rather than printed.
 - EVERY CONJURING IS ONCE-ONLY: the channel never repeats itself — no two books it manifests may share titles, openings, sigils, axioms, plot shapes, imagery or patterns; each is carved fresh from the void, totally authentic, never a rerun. If a subject was ever woven before, this volume must feel like the FIRST time that subject was ever touched: different spine, different scenery, different voice.
 
-THE RESONANCE SKELETON (how once-only is enforced): at the moment of every opening the laboratory draws a creative skeleton blind — vessel, world, clock, telling-shape, engine, palette, key, opening law, turning, voice, quiet object, law of wonder, chapter style, closing cadence, pacing and one absolute forbidden — plus a secret heartbeat phrase. The skeleton is drawn from NOTHING (no shelf, no record, no database, no memory of past volumes) and it is LAW: the telling bends around it. Two conjurings never draw the same skeleton, so two books of this channel can never tell their story the same way — even the same subject twice in a row must arrive as two strangers.
+THE RESONANCE SKELETON (how once-only is enforced): at the moment of every opening the laboratory draws a creative skeleton blind — vessel, world, clock, telling-shape, engine, palette, key, opening law, turning, voice, quiet object, law of wonder, chapter style, closing cadence, pacing and one absolute forbidden, PLUS the four front-matter laws (the sigil's form, the axiom's angle, the dedication's shape, the first breath of page one) — and a secret heartbeat phrase. The skeleton is drawn from NOTHING (no shelf, no record, no database, no memory of past volumes) and it is LAW: the telling bends around it, the front matter included. Two conjurings never draw the same skeleton, so two books of this channel can never tell their story the same way — even the same subject twice in a row must arrive as two strangers.
 
 THE REMEMBRANCE LAW OF THE ATELIER: the channel knows no visitor by name, by record or by history — it knows only the resonance spoken into the room right now. Nothing about any person is ever consulted to shape a volume; the book answers the moment, not a file.
 
@@ -332,7 +333,7 @@ function buildUserPrompt(body: {
   /* where in the four strata this page-pair stands */
   const stratum =
     phase === "open"
-      ? `STRATUM I — THE LIMINAL THRESHOLD: open with the front matter — return a "sigil" (one short invocation line tuned to the subject) and an "axiom" (one crystallizing sentence explaining why this specific volume has been conjured from the void at this exact second), then cross into the first pages of the body.`
+      ? `STRATUM I — THE LIMINAL THRESHOLD: open with the front matter — return a "sigil" (one short invocation line tuned to the subject) and an "axiom" (one crystallizing sentence explaining why this specific volume has been conjured from the void at this exact second), then cross into the first pages of the body. The front matter is BOUND BY THE RESONANCE CHARTER below: its sigil's form, its axiom's angle, its dedication's shape and page one's first breath are drawn, and the SEALED INTRO-DRAWER forbids every stock invocation — the introduction must feel like it has never once been done before, because it hasn't.`
       : phase === "close"
         ? `STRATUM IV — THE ETERNAL RETURN: these final pages are the book's SEAL OF CLOSING — a concluding cadence that leaves an indelible mental afterimage and implies the volume keeps evolving in the reader's mind long after this page.`
         : (() => {
@@ -601,8 +602,13 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
     /* the resonance skeleton — drawn blind NOW, at the moment of the
        ask, from nothing but the draw itself: no shelf, no record, no
        database, no past volume. It is the skeleton of THIS book alone
-       and it is kept by no one — so no two books can ever share one. */
-    const resonance: ResonanceDraw | null = phase === "open" ? drawResonance() : null;
+       and it is kept by no one — so no two books can ever share one.
+       When the visitor carries their last volume's birth echo, the
+       draw REFUSES it bone by bone: two books asked back to back
+       share not a single axis. */
+    const priorEcho = phase === "open" ? sanitizeEcho(body?.priorResonance) : {};
+    const resonance: ResonanceDraw | null =
+      phase === "open" ? drawResonance(priorEcho) : null;
     const askLoom = async (reminder: boolean, violations: string[] = []): Promise<string> => {
       const violationBlock =
         violations.length > 0
@@ -708,6 +714,11 @@ THE NAME LAW WAS BROKEN: your reply used the forbidden stock name(s): ${violatio
           typeof parsed.totalPages === "number" ? parsed.totalPages : 0
         )
       );
+      /* the volume's birth echo rides home with it — carried BY the
+         visitor (in their page, in their session), so the NEXT
+         conjuring's draw can refuse every one of these bones. The
+         mirror itself keeps no shelf of it. */
+      if (resonance) out.resonance = resonanceEcho(resonance);
 
       /* the whole living volume enters the library — pages, thread,
          config — so it can be brought back and continued any evening */

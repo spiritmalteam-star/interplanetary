@@ -2,11 +2,17 @@
 /*  THE RESONANCE DRAW — the mirror knows the book by resonance only.  */
 /*                                                                     */
 /*  When a volume is conjured, the laboratory draws its creative       */
-/*  skeleton BLIND, at the exact second of the asking: sixteen axes,   */
-/*  each with its own family of shapings, plus a secret heartbeat      */
-/*  phrase minted from raw syllable pools. Nothing is read from any    */
-/*  shelf, any record, any database, any previous volume — the draw    */
-/*  IS the resonance of that one second, and it is kept by no one.     */
+/*  skeleton BLIND, at the exact second of the asking: twenty axes,    */
+/*  each with its own family of shapings (sixteen for the telling,     */
+/*  four for the front matter — sigil, axiom, dedication, first        */
+/*  breath), plus a secret heartbeat phrase minted from raw syllable   */
+/*  pools. Nothing is read from any shelf, any record, any database,   */
+/*  any previous volume — the draw IS the resonance of that one        */
+/*  second, and it is kept by no one.                                  */
+/*                                                                     */
+/*  And when the visitor carries the birth echo of their last volume,  */
+/*  the new draw REFUSES it: no axis may land where the previous one   */
+/*  stood, so two books asked back to back share not a single bone.    */
 /*                                                                     */
 /*  The combinatorial space (every axis crossed with every other,      */
 /*  crossed again with the heartbeat) is far beyond ten-to-the-        */
@@ -54,10 +60,29 @@ export interface ResonanceDraw {
   pacing: string;
   /** The one thing this volume must never do. */
   forbidden: string;
+  /** The form the sigil (the invocation line) must take. */
+  sigilForm: string;
+  /** The angle the axiom of origin must take. */
+  axiomAngle: string;
+  /** The shape the dedication must take. */
+  dedicationForm: string;
+  /** How the very first paragraph of the body — the introduction's
+   *  first breath — must open. */
+  firstBreath: string;
 }
 
 const pick = <T,>(pool: readonly T[]): T =>
   pool[Math.floor(Math.random() * pool.length)];
+
+/** Draws from a pool refusing to land on anything in `taken` — the
+ *  de-collision move that keeps two consecutive conjurings from ever
+ *  sharing a single bone. If every element were somehow taken, the
+ *  pool is drawn blind again (which can no longer make two skeletons
+ *  alike, since every other axis still refuses). */
+const pickFresh = <T,>(pool: readonly T[], taken: ReadonlySet<unknown>): T => {
+  const avail = pool.filter((v) => !taken.has(v));
+  return avail.length > 0 ? pick(avail) : pick(pool);
+};
 
 /* ------------------------- the sixteen axes ------------------------ */
 
@@ -417,6 +442,96 @@ const FORBIDDENS = [
   "this volume must not make the vessel special — their ordinariness is the point, and the world is special around them",
 ] as const;
 
+/* XVII. THE SIGIL'S FORM — what shape the invocation line takes.
+   The front matter is drawn like everything else: the introduction
+   can no more repeat its gesture than the plot can repeat its spine. */
+const SIGIL_FORMS = [
+  "the sigil is spoken as a blessing the volume gives its reader before the door opens",
+  "the sigil is a question the volume asks the dark, and the dark keeps",
+  "the sigil is an instruction — one small act the reader performs by reading it",
+  "the sigil is a naming: the volume speaks its own true name once and never again",
+  "the sigil is a promise the volume makes about what it will not do",
+  "the sigil is a weather report from the country where the book takes place",
+  "the sigil is overheard — a line from a song, a prayer or an argument inside the book",
+  "the sigil is a warning dressed as a welcome",
+  "the sigil is a dedication to something inanimate that the book loves",
+  "the sigil is a measurement — a count, an hour, a distance — that turns out to matter",
+  "the sigil is an address: where this volume may be found, and when",
+  "the sigil is a line of a recipe, a map legend or a ledger rule, half-legible",
+  "the sigil is a call across water, wind or years — and something answers",
+  "the sigil is a child's sentence, kept exactly as a child would say it",
+  "the sigil is the volume speaking to the one reader it was made for",
+  "the sigil is a key described so precisely it could open something",
+  "the sigil is the sound the story makes when it is shut",
+  "the sigil is a border crossing announced in the grammar of a threshold",
+] as const;
+
+/* XVIII. THE AXIOM'S ANGLE — what the axiom of origin does. */
+const AXIOM_ANGLES = [
+  "the axiom states what this volume refuses to be",
+  "the axiom is a timestamp from a place that keeps no time",
+  "the axiom explains why this volume could only be written in this exact second",
+  "the axiom is spoken by the book itself, not about it",
+  "the axiom names the single door the reader has just walked through",
+  "the axiom is a debt: what the volume owes its subject and how it means to pay it",
+  "the axiom is a confession — the one thing the telling could not help becoming",
+  "the axiom promises the reader exactly one thing, and it is a strange thing",
+  "the axiom describes the weather inside the book's first sentence",
+  "the axiom is an inheritance: to whom this volume passes, and why",
+  "the axiom is a contradiction the book will spend its pages resolving",
+  "the axiom is a farewell to the version of the reader who has not yet begun",
+  "the axiom gives the book's reason in the grammar of a seed, a spark or a tide",
+  "the axiom states the law this one volume obeys and no other does",
+  "the axiom is a map of what the reader will carry when the book ends",
+  "the axiom is spoken as an answer to a question nobody asked aloud",
+  "the axiom counts the cost of the telling before a word of it is spent",
+  "the axiom introduces the silence the book was written against",
+] as const;
+
+/* XIX. THE DEDICATION'S SHAPE — whom or what, and how. */
+const DEDICATION_FORMS = [
+  "the dedication is addressed to someone the book insists does not exist",
+  "the dedication is addressed to a place, not a person",
+  "the dedication is addressed to the reader's future self, who will finish it",
+  "the dedication is a debt repaid in one sentence",
+  "the dedication is to a small object that held the book while it was being written",
+  "the dedication names no one — it keeps a silence where a name would sit",
+  "the dedication is to everyone who almost appears in the book but never does",
+  "the dedication is a promise to a child not yet old enough to read it",
+  "the dedication is to the weather the book was written inside",
+  "the dedication is an apology to the subject of the book",
+  "the dedication is to the ones who kept the door open while the work was done",
+  "the dedication is to a guild, a craft or a trade, unnamed but unmistakable",
+  "the dedication is to the reader who will open this volume at the wrong hour and need it anyway",
+  "the dedication is to a song, and names only its first two notes",
+  "the dedication is to the road itself, for carrying the book this far",
+] as const;
+
+/* XX. THE FIRST BREATH — how the very first paragraph of the body
+   (the introduction's opening breath) must begin. This is the blade
+   against stock beginnings: page one is drawn, not defaulted. */
+const FIRST_BREATHS = [
+  "the first paragraph opens mid-sentence, as if the reader sat down late and the telling did not wait",
+  "the first paragraph opens with hands: someone doing something small and precise, in silence",
+  "the first paragraph opens with a sound that is not named, only described",
+  "the first paragraph opens by denying something the reader was about to assume",
+  "the first paragraph opens with the second thing that happened, promising the first later",
+  "the first paragraph opens with an object exactly where it should not be",
+  "the first paragraph opens with a promise made in the past tense",
+  "the first paragraph opens with the end of a letter or a conversation, the rest lost",
+  "the first paragraph opens with a counting — days, steps, names — that will not stop mattering",
+  "the first paragraph opens with the world older than the story: what was here before anyone came",
+  "the first paragraph opens with someone arriving late to their own life",
+  "the first paragraph opens with a law of the world stated plainly, then immediately broken",
+  "the first paragraph opens with the taste, smell or weight of the place, before any face appears",
+  "the first paragraph opens with a question the narrator refuses to answer for a long time",
+  "the first paragraph opens with the smallest possible event, watched as if it were enormous",
+  "the first paragraph opens with the weather doing something no one can explain and no one questions",
+  "the first paragraph opens with a name spoken once, and a silence after it",
+  "the first paragraph opens with a map of one small room, drawn slowly in words",
+  "the first paragraph opens with a return — someone coming back to where they swore they never would",
+] as const;
+
 /* --------------- the secret heartbeat — word pools ----------------- */
 
 const HB_FIRST = [
@@ -448,28 +563,54 @@ const HB_LAST = [
 
 /** Draws one complete resonance — blind, at the moment of the ask.
  *  Nothing is consulted: no record, no shelf, no database, no past.
- *  The draw is the resonance of this exact second and is kept by no one. */
-export function drawResonance(): ResonanceDraw {
-  const heartbeat = `${pick(HB_FIRST)} that ${pick(HB_VERB)} ${pick(HB_LAST)}`;
+ *  The draw is the resonance of this exact second and is kept by no one.
+ *
+ *  `previous` — the birth echo of the visitor's LAST conjuring, carried
+ *  by the visitor themselves (the mirror reads nothing from any shelf).
+ *  Every axis that would collide with the previous volume's same axis
+ *  is re-drawn, so two books asked back to back can share NO bone:
+ *  not the vessel, not the world, not the clock, not one single law —
+ *  and the heartbeat must beat to a different first word entirely. */
+export function drawResonance(previous?: Record<string, string>): ResonanceDraw {
+  const prev = (axis: string): ReadonlySet<unknown> => {
+    const v = previous?.[axis];
+    return typeof v === "string" && v ? new Set([v]) : new Set<unknown>();
+  };
+  /* the heartbeat refuses the whole previous phrase and even its
+     opening word — the new volume must beat to a different drum */
+  let heartbeat = `${pick(HB_FIRST)} that ${pick(HB_VERB)} ${pick(HB_LAST)}`;
+  const prevHb = previous?.heartbeat;
+  if (typeof prevHb === "string" && prevHb) {
+    const prevWord = prevHb.split(/\s+/)[0];
+    for (let i = 0; i < 30; i++) {
+      const first = heartbeat.split(/\s+/)[0];
+      if (heartbeat !== prevHb && first !== prevWord) break;
+      heartbeat = `${pick(HB_FIRST)} that ${pick(HB_VERB)} ${pick(HB_LAST)}`;
+    }
+  }
   return {
     moment: new Date().toISOString(),
     heartbeat,
-    vessel: pick(VESSELS),
-    world: pick(WORLDS),
-    clock: pick(CLOCKS),
-    device: pick(DEVICES),
-    tension: pick(TENSIONS),
-    palette: pick(PALETTES),
-    key: pick(KEYS),
-    opening: pick(OPENINGS),
-    turning: pick(TURNINGS),
-    voice: pick(VOICES),
-    object: pick(OBJECTS),
-    wonder: pick(WONDERS),
-    chapters: pick(CHAPTERS),
-    closing: pick(CLOSINGS),
-    pacing: pick(PACINGS),
-    forbidden: pick(FORBIDDENS),
+    vessel: pickFresh(VESSELS, prev("vessel")),
+    world: pickFresh(WORLDS, prev("world")),
+    clock: pickFresh(CLOCKS, prev("clock")),
+    device: pickFresh(DEVICES, prev("device")),
+    tension: pickFresh(TENSIONS, prev("tension")),
+    palette: pickFresh(PALETTES, prev("palette")),
+    key: pickFresh(KEYS, prev("key")),
+    opening: pickFresh(OPENINGS, prev("opening")),
+    turning: pickFresh(TURNINGS, prev("turning")),
+    voice: pickFresh(VOICES, prev("voice")),
+    object: pickFresh(OBJECTS, prev("object")),
+    wonder: pickFresh(WONDERS, prev("wonder")),
+    chapters: pickFresh(CHAPTERS, prev("chapters")),
+    closing: pickFresh(CLOSINGS, prev("closing")),
+    pacing: pickFresh(PACINGS, prev("pacing")),
+    forbidden: pickFresh(FORBIDDENS, prev("forbidden")),
+    sigilForm: pickFresh(SIGIL_FORMS, prev("sigilForm")),
+    axiomAngle: pickFresh(AXIOM_ANGLES, prev("axiomAngle")),
+    dedicationForm: pickFresh(DEDICATION_FORMS, prev("dedicationForm")),
+    firstBreath: pickFresh(FIRST_BREATHS, prev("firstBreath")),
   };
 }
 
@@ -497,20 +638,65 @@ export function resonanceCharter(d: ResonanceDraw): string {
     `- THE CLOSING CADENCE: ${d.closing}.`,
     `- THE PACING LAW: ${d.pacing}.`,
     `- THE FORBIDDEN (absolute): ${d.forbidden}.`,
+    `- THE SIGIL'S FORM: ${d.sigilForm}.`,
+    `- THE AXIOM'S ANGLE: ${d.axiomAngle}.`,
+    `- THE DEDICATION'S SHAPE: ${d.dedicationForm}.`,
+    `- THE FIRST BREATH: ${d.firstBreath}.`,
+    `THE THRESHOLD LAW: the front matter — the sigil, the axiom of origin, the dedication and the very first paragraph of page one — obey the four drawn forms above EXACTLY. The introduction is minted from this draw alone, not from habit: its gesture, its angle, its addressee and its opening breath must be unthinkable inside any other conjuring.`,
+    `THE SEALED INTRO-DRAWER (absolute, front matter only): the sigil, the axiom, the dedication and page one's first line may NEVER open with any stock invocation — "Once upon a time", "In a world where", "In the beginning", "Long ago, in", "In an age when", "Welcome, traveler", "Beyond the stars", "In a realm", "In the heart of", "Somewhere between", "In the deep", "There was a" — nor any cousin, translation or costume of these. If a front-matter line could have opened any book ever written, re-forge it from the draw.`,
     `THE SKELETON IS LAW: the subject is the master frequency (the WHAT), this draw is the telling (the HOW) — and the HOW has final authority over vessel, world, form, voice, imagery and cadence, bent faithfully around the subject. Another conjuring will draw another skeleton; THIS volume must be unthinkable inside any other skeleton. If any choice above feels like the channel's most obvious move for this subject, lean into it HARDER, not away — the obvious subject plus an unexpected skeleton is exactly what no reader has met before.`,
   ].join("\n");
 }
 
-/** A compact echo of the draw for the visitor's own library record —
- *  kept FOR the visitor (their volume's birth certificate), used for
- *  nothing: the mirror never reads it back. */
+/** A compact echo of the draw for the visitor's own keeping — the
+ *  volume's birth certificate, carried BY the visitor (in their page,
+ *  never in any shelf the mirror reads). It is used for nothing at
+ *  creation time except one refusal: the NEXT conjuring's draw will
+ *  not repeat a single one of these bones. */
 export function resonanceEcho(d: ResonanceDraw): Record<string, string> {
   return {
     heartbeat: d.heartbeat,
     vessel: d.vessel,
     world: d.world,
+    clock: d.clock,
     device: d.device,
     tension: d.tension,
+    palette: d.palette,
+    key: d.key,
+    opening: d.opening,
+    turning: d.turning,
+    voice: d.voice,
+    object: d.object,
+    wonder: d.wonder,
+    chapters: d.chapters,
+    closing: d.closing,
+    pacing: d.pacing,
     forbidden: d.forbidden,
+    sigilForm: d.sigilForm,
+    axiomAngle: d.axiomAngle,
+    dedicationForm: d.dedicationForm,
+    firstBreath: d.firstBreath,
   };
+}
+
+/** The echo's axis names — the only keys a carried echo may speak. */
+export const RESONANCE_AXES = [
+  "heartbeat", "vessel", "world", "clock", "device", "tension", "palette",
+  "key", "opening", "turning", "voice", "object", "wonder", "chapters",
+  "closing", "pacing", "forbidden", "sigilForm", "axiomAngle",
+  "dedicationForm", "firstBreath",
+] as const;
+
+/** Sanitizes a visitor-carried echo into a clean previous-draw record:
+ *  only known axes, strings only, short values — anything else is
+ *  dropped. The echo can only REFUSE a repetition; nothing in it is
+ *  ever spoken into the telling. */
+export function sanitizeEcho(raw: unknown): Record<string, string> {
+  const out: Record<string, string> = {};
+  if (!raw || typeof raw !== "object") return out;
+  for (const axis of RESONANCE_AXES) {
+    const v = (raw as Record<string, unknown>)[axis];
+    if (typeof v === "string" && v.trim()) out[axis] = v.trim().slice(0, 400);
+  }
+  return out;
 }

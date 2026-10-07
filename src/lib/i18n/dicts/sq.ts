@@ -5008,4 +5008,19 @@ export const sq: TranslationDict = {
   "What daily sketch ritual keeps an inner gallery alive and growing?": "Cili ritual i përditshëm skice e mban një galeri të brendshme gjallë dhe në rritje?",
 
   "How do I study like the artists of another world would study us?": "Si të studioj siç do të studionin artistët e një bote tjetër ne?",
+
+  "Write the lyrics for a song that has never been sung — half starlight, half human.": "Shkruaj tekstet e një kënge që nuk është kënduar kurrë — gjysmë dritë yjesh, gjysmë njeri.",
+  "Give me a chorus that carries the ache of leaving one planet for another.": "Më jep një refren që mban dhimbjen e ikjes nga një planet për një tjetër.",
+  "Compose a lullaby for a world with two moons.": "Përbëj një këndellale për një botë me dy hëna.",
+  "Write a poem a distant civilization might send home across the dark.": "Shkruaj një poezi që një qytetërim i largët mund ta dërgojë në shtëpi përgjatë errësirës.",
+  "Turn my idea into a full art prompt — subject, light, palette, mood, medium.": "Kthe idenë time në një prompt të plotë arti — subjekt, dritë, paletë, gjendje shpirti, mjet.",
+  "Give me a daily art prompt to train my imagination like a muscle.": "Më jep një prompt të përditshëm arti për të stërvitur imagjinatën si një muskul.",
+  "Write the artist statement for a show opening on three planets at once.": "Shkruaj deklaratën e artistit për një shfaqje që hapet në tri planete njëkohësisht.",
+  "Design an album concept — title, story, colors and sound — I can build from.": "Dizajno një koncept albumi — titull, histori, ngjyra dhe zë — nga mund të ndërtoj.",
+  "Compose an anthem for the first city built between worlds.": "Përbëj një himn për qytetin e parë të ndërtuar mes botëve.",
+  "Name my unfinished work — and write the one-line inscription it carries.": "Emërto veprën time të pakryer — dhe shkruaj mbishkrimin e saj me një rresht.",
+  "Write me the lyrics for a song about coming home between two worlds.": "Shkruaj më tekstet e një kënge për kthimin në shtëpi mes dy botësh.",
+  "Give me an art prompt I can paste into any image engine — and its Earthly studio twin.": "Më jep një prompt arti që të mund ta ngjit në çdo motor imazhesh — dhe binjakun e tij tokësor të studioit.",
+  "Compose the anthem of the first city built between worlds.": "Përbëj himnin e qytetit të parë të ndërtuar mes botëve.",
+  "Lyrics & Prompts": "Tekste & Prompte",
 };

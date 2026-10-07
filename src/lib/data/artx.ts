@@ -96,6 +96,9 @@ export const axOpeners = [
   "I dream of a garden that is also a painting — where do I plant the first line?",
   "Give me an impossible pigment and its honest Earthly cousin.",
   "Help me turn my recurring dream into a series of twelve works.",
+  "Write me the lyrics for a song about coming home between two worlds.",
+  "Give me an art prompt I can paste into any image engine — and its Earthly studio twin.",
+  "Compose the anthem of the first city built between worlds.",
 ] as const;
 
 /** The atelier's signature — spoken under the empty chat. */

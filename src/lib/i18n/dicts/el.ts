@@ -2990,4 +2990,19 @@ export const el: TranslationDict = {
   "What daily sketch ritual keeps an inner gallery alive and growing?": "Ποιο καθημερινό τελετουργικό σκίτσου κρατά μια εσωτερική πινακοθήκη ζωντανή και αναπτυσσόμενη;",
 
   "How do I study like the artists of another world would study us?": "Πώς μελετώ όπως θα μελετούσαν εμάς οι καλλιτέχνες ενός άλλου κόσμου;",
+
+  "Write the lyrics for a song that has never been sung — half starlight, half human.": "Γράψε τους στίχους ενός τραγουδιού που δεν έχει τραγουδηθεί ποτέ — μισό φως αστεριών, μισό ανθρώπινο.",
+  "Give me a chorus that carries the ache of leaving one planet for another.": "Δώσε μου ένα ρεφρέν που κουβαλά τον πόνο του να αφήνεις έναν πλανήτη για άλλον.",
+  "Compose a lullaby for a world with two moons.": "Σύνθεσε ένα νανούρισμα για έναν κόσμο με δύο φεγγάρια.",
+  "Write a poem a distant civilization might send home across the dark.": "Γράψε ένα ποίημα που ένας μακρινός πολιτισμός θα μπορούσε να στείλει σπίτι μέσα από το σκοτάδι.",
+  "Turn my idea into a full art prompt — subject, light, palette, mood, medium.": "Μετέτρεψε την ιδέα μου σε ένα πλήρες prompt τέχνης — θέμα, φως, παλέτα, διάθεση, μέσο.",
+  "Give me a daily art prompt to train my imagination like a muscle.": "Δώσε μου ένα καθημερινό prompt τέχνης για να γυμνάζω τη φαντασία μου σαν μυ.",
+  "Write the artist statement for a show opening on three planets at once.": "Γράψε την καλλιτεχνική δήλωση για μια έκθεση που ανοίγει σε τρεις πλανήτες ταυτόχρονα.",
+  "Design an album concept — title, story, colors and sound — I can build from.": "Σχεδίασε μια έννοια άλμπουμ — τίτλο, ιστορία, χρώματα και ήχο — από την οποία να χτίσω.",
+  "Compose an anthem for the first city built between worlds.": "Σύνθεσε έναν ύμνο για την πρώτη πόλη χτισμένη ανάμεσα σε κόσμους.",
+  "Name my unfinished work — and write the one-line inscription it carries.": "Ονόμασε το ημιτελές έργο μου — και γράψε την επιγραφή του σε μία γραμμή.",
+  "Write me the lyrics for a song about coming home between two worlds.": "Γράψε μου τους στίχους ενός τραγουδιού για το να γυρίζει κανείς σπίτι ανάμεσα σε δύο κόσμους.",
+  "Give me an art prompt I can paste into any image engine — and its Earthly studio twin.": "Δώσε μου ένα prompt τέχνης που να μπορώ να επικολλήσω σε οποιαδήποτε μηχανή εικόνων — και το γήινο δίδυμό του για μελέτη.",
+  "Compose the anthem of the first city built between worlds.": "Σύνθεσε τον ύμνο της πρώτης πόλης χτισμένης ανάμεσα σε κόσμους.",
+  "Lyrics & Prompts": "Στίχοι & Prompts",
 };
