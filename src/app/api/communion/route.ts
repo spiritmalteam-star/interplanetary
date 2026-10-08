@@ -305,6 +305,8 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
         { role: "user", content: finalUserContent },
       ],
       thinking: { type: "disabled" },
+      /* the speed law — the answer arrives swiftly, never unbounded */
+      max_tokens: 1000,
     });
 
     const rawContent = (completion.choices[0]?.message?.content ?? "").trim();

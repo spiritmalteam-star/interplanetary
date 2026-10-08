@@ -84,6 +84,8 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
         },
       ],
       thinking: { type: "disabled" },
+      /* the speed law — the answer arrives swiftly, never unbounded */
+      max_tokens: 1200,
     });
 
     const raw = completion.choices[0]?.message?.content ?? "";

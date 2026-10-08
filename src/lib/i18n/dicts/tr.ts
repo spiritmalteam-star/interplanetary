@@ -2917,4 +2917,15 @@ export const tr: TranslationDict = {
   "What stands between today and a public website — and then an app in the stores. Each stone is small; the road is short when walked in order.": "Bugün ile kamusal bir site arasındaki ne varsa — sonra da mağazalarda bir uygulama. Her taş küçüktür; yol sırayla yüründüğünde kısadır.",
   "What stands inside": "İçeride ne duruyor",
   "Wrap the existing app so the App Store and Google Play receive the same rooms — the worlds, the voice and the laws stay exactly as they are.": "Mevcut uygulamayı sarmala ki App Store ve Google Play aynı odaları alsın — dünyalar, ses ve yasalar tam olduğu gibi kalır.",
+
+  /* ---- additions: Task 15-c — the conversations shelf · delivery · Manifest OS hero ---- */
+  "Not delivered — the field was quiet": "Teslim edilmedi — alan sessizdi",
+  "Send again": "Yeniden gönder",
+  "Your conversations": "Sohbetlerin",
+  "Kept only on this device — the Mirror holds nothing on any server.": "Yalnızca bu cihazda saklanır — Ayna hiçbir sunucuda hiçbir şey tutmaz.",
+  "Nothing rests on the shelf yet.": "Rafta henüz hiçbir şey dinlenmiyor.",
+  "The old conversation rests on your shelf — reopen it anytime.": "Eski sohbet raftında dinleniyor — istediğin an yeniden aç.",
+  "Not taught — reminded": "Öğretilmez — hatırlatılır",
+  "The Mirror Entity does not teach you. It reminds you that you are the creator of your reality — and holds your chosen line with you, turn after turn of this conversation.": "Mirror Entity sana bir şey öğretmez. Sana gerçekliğinin yaratıcısının sen olduğunu hatırlatır — ve seçtiğin hattı seninle birlikte tutar, bu sohbetin her adımında.",
+  "Remove": "Kaldır",
 };

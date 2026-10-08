@@ -169,6 +169,8 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
     const completion = await zai.chat.completions.create({
       messages,
       thinking: { type: "disabled" },
+      /* the speed law — the answer arrives swiftly, never unbounded */
+      max_tokens: 1400,
     });
 
     const reply = (completion.choices[0]?.message?.content ?? "").trim();

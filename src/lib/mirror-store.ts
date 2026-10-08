@@ -42,6 +42,15 @@ import {
 } from "@/lib/visual-intent";
 import type { RemedyKind } from "@/lib/data/remedy";
 import type { LearnedBranch } from "@/lib/learning-branches";
+import {
+  deleteChat as deleteChatOnShelf,
+  getActiveChatId,
+  getChat,
+  saveActiveChat,
+  setActiveChat as setActiveChatOnShelf,
+  startNewChat,
+  type ChatSurface,
+} from "@/lib/chat-archive";
 import { pxScopes } from "@/lib/data/particlex";
 import { emVectors } from "@/lib/data/evolvemed";
 import type {
@@ -92,6 +101,9 @@ export interface ChatMessage {
   /* the learning branches grown at the reply's foot — typed, reasoned,
      connected to this very exchange and to the living tree's hub. */
   branches?: LearnedBranch[];
+  /** The words reached the sky but no answer came back — the question
+      rests here marked, never lost, ready to be sent again. */
+  failed?: boolean;
 }
 
 export interface ScopeSession {
@@ -294,6 +306,8 @@ export interface OsMessage {
   /* the learning branches grown at the reply's foot — connected to the
      manifesting branch of the living tree */
   branches?: LearnedBranch[];
+  /** The line reached the sky but no answer came back — kept, retryable. */
+  failed?: boolean;
 }
 
 /* -------- the atelier — Art X's own line --------- */
@@ -310,6 +324,8 @@ export interface AxMessage {
   /* the learning branches grown at the reply's foot — connected to the
      Art X branch of the living tree */
   branches?: LearnedBranch[];
+  /** The line reached the sky but no answer came back — kept, retryable. */
+  failed?: boolean;
 }
 
 /* -------- the quantum narrator — ParticleX's own line --------- */
@@ -330,6 +346,8 @@ export interface PxMessage {
   /* the learning branches grown at the reply's foot — connected to the
      quantum branch of the living tree */
   branches?: LearnedBranch[];
+  /** The line reached the sky but no answer came back — kept, retryable. */
+  failed?: boolean;
 }
 
 /* -------- the evolutionary medical nexus — Evolve Med's own line -------- */
@@ -354,6 +372,8 @@ export interface EmMessage {
   /* the learning branches grown at the reply's foot — connected to the
      Evolve Med branch of the living tree */
   branches?: LearnedBranch[];
+  /** The line reached the sky but no answer came back — kept, retryable. */
+  failed?: boolean;
 }
 
 interface MirrorState {
@@ -366,6 +386,14 @@ interface MirrorState {
   sidebarOpen: boolean;
   view: MainView;
   composerFocusNonce: number;
+
+  /* THE SWIPE'S MEMORY — every view change is recorded, so a right
+     swipe anywhere walks back through the journey and a left swipe
+     returns forward again. The whole page is the gesture's canvas. */
+  viewPast: MainView[];
+  viewFuture: MainView[];
+  navigateBack: () => void;
+  navigateForward: () => void;
 
   /** Meet with the Reflection of the Absolute — the whole app becomes
       a living chat with the Mirror Entity's undirected pure awareness. */
@@ -465,6 +493,21 @@ interface MirrorState {
   chatBook: ChatBookPause | null;
   pauseChatBook: (book: ChatBookPause) => void;
   clearChatBook: () => void;
+
+  /* THE CHAT ARCHIVE — the ChatGPT keeping, in the browser alone:
+     conversations survive reloads and journeys between worlds; "new
+     chat" lays the present one to rest on the shelf and opens a fresh
+     page; the old ones can always be reopened from the panel. No
+     server ever holds a word. */
+  archiveTick: number;
+  hydrateChats: () => void;
+  newChat: (surface: ChatSurface) => void;
+  openChat: (surface: ChatSurface, id: string) => void;
+  deleteChat: (surface: ChatSurface, id: string) => void;
+  retryFailed: (
+    target: Mode | "forge" | "os" | "px" | "em" | "ax",
+    messageId: string
+  ) => void;
 
   /* THE FORGE — the Invent book's own direct chat + mystery creation */
   forgeSession: ScopeSession;
@@ -907,6 +950,14 @@ async function crystallizeVisual(
   }
 }
 
+/* The archive's hydration hand — true while conversations return to
+   the live rooms, so the autosave never writes back mid-restore. */
+let hydrating = false;
+/* The swipe's own hand — true while a back/forward turn is in flight,
+   so the view recorder never mistakes the return for a fresh journey
+   and wipes the road ahead. */
+let navLock = false;
+
 export const useMirror = create<MirrorState>()((set, get) => ({
   activeMode: "interplanetary",
   sidebarTab: "civilizations",
@@ -916,6 +967,9 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   sidebarOpen: true,
   view: "observatory",
   composerFocusNonce: 0,
+  viewPast: [],
+  viewFuture: [],
+  archiveTick: 0,
   communionOpen: false,
   sessions: emptySessions(),
 
@@ -1294,6 +1348,37 @@ export const useMirror = create<MirrorState>()((set, get) => ({
 
   returnToObservatory: () => set({ view: "observatory" }),
 
+  /* the whole-page swipe — a right swipe walks back through the
+     journey, a left swipe returns forward, like the page turning */
+  navigateBack: () => {
+    const s = get();
+    const prev = s.viewPast[s.viewPast.length - 1];
+    if (!prev) return;
+    navLock = true;
+    set({
+      viewPast: s.viewPast.slice(0, -1),
+      viewFuture: [...s.viewFuture, s.view].slice(-40),
+      view: prev,
+      mobileNavOpen: false,
+      modal: null,
+    });
+    navLock = false;
+  },
+  navigateForward: () => {
+    const s = get();
+    const next = s.viewFuture[s.viewFuture.length - 1];
+    if (!next) return;
+    navLock = true;
+    set({
+      viewFuture: s.viewFuture.slice(0, -1),
+      viewPast: [...s.viewPast, s.view].slice(-40),
+      view: next,
+      mobileNavOpen: false,
+      modal: null,
+    });
+    navLock = false;
+  },
+
   /** Full recalibration: every scope channel returns to its quiet origin. */
   resetField: () =>
     set({
@@ -1441,6 +1526,282 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   setForgeDraft: (value) =>
     set((s) => ({ forgeSession: { ...s.forgeSession, draft: value } })),
 
+  /* ------- the chat archive — the ChatGPT keeping, client-side only -- */
+
+  hydrateChats: () => {
+    /* The archive wakes: every surface's active conversation returns to
+       the live room exactly as it was left — reload, journey, nothing
+       parts the visitor from their words. */
+    try {
+      const patch: Record<string, unknown> = {};
+      const surfaces: ChatSurface[] = [
+        "os",
+        "px",
+        "em",
+        "ax",
+        "forge",
+        "interplanetary",
+        "healing",
+      ];
+      for (const surface of surfaces) {
+        const chat = getChat(surface, getActiveChatId(surface));
+        if (!chat || chat.messages.length === 0) continue;
+        const messages = chat.messages as never[];
+        if (surface === "os") {
+          patch.osMessages = messages;
+        } else if (surface === "px") {
+          patch.pxMessages = messages;
+          if (chat.meta?.scope !== undefined) patch.pxScope = chat.meta.scope;
+          if (chat.meta?.fusion) patch.pxFusion = chat.meta.fusion;
+        } else if (surface === "em") {
+          patch.emMessages = messages;
+          if (chat.meta?.scope !== undefined) patch.emVector = chat.meta.scope;
+          if (chat.meta?.fusion) patch.emFusion = chat.meta.fusion;
+        } else if (surface === "ax") {
+          patch.axMessages = messages;
+          if (chat.meta?.scope !== undefined) patch.axScope = chat.meta.scope;
+        } else if (surface === "forge") {
+          patch.forgeSession = {
+            ...emptySession(),
+            messages: messages as ChatMessage[],
+          };
+        } else {
+          patch.sessions = {
+            ...get().sessions,
+            [surface]: {
+              ...emptySession(),
+              messages: messages as ChatMessage[],
+            },
+          };
+        }
+      }
+      if (Object.keys(patch).length > 0) {
+        hydrating = true;
+        set(patch as Partial<MirrorState>);
+        hydrating = false;
+      }
+    } catch {
+      /* the shelf stayed closed — the session simply begins fresh */
+    }
+  },
+
+  newChat: (surface) => {
+    /* THE CHATGPT TURN — the present conversation already rests on the
+       shelf (the autosave kept it current); a fresh page opens and the
+       old one can always be reopened from the conversation panel. */
+    startNewChat(surface);
+    if (surface === "os") {
+      set({
+        osMessages: [],
+        osStatus: "idle" as TransmissionStatus,
+        osError: null,
+        osDraft: "",
+        ...emptyLab,
+      });
+    } else if (surface === "px") {
+      set({
+        pxMessages: [],
+        pxStatus: "idle" as TransmissionStatus,
+        pxError: null,
+        pxDraft: "",
+      });
+    } else if (surface === "em") {
+      set({
+        emMessages: [],
+        emStatus: "idle" as TransmissionStatus,
+        emError: null,
+        emDraft: "",
+      });
+    } else if (surface === "ax") {
+      set({
+        axMessages: [],
+        axStatus: "idle" as TransmissionStatus,
+        axError: null,
+        axDraft: "",
+      });
+    } else if (surface === "forge") {
+      set({
+        forgeSession: emptySession(),
+        toolStatus: "idle" as ToolStatus,
+        toolId: null,
+        toolInput: "",
+        toolResult: null,
+        toolError: null,
+      });
+    } else {
+      set((s) => ({ sessions: { ...s.sessions, [surface]: emptySession() } }));
+    }
+    set((s) => ({ archiveTick: s.archiveTick + 1 }));
+  },
+
+  openChat: (surface, id) => {
+    const chat = getChat(surface, id);
+    if (!chat) return;
+    setActiveChatOnShelf(surface, id);
+    hydrating = true;
+    try {
+      const messages = chat.messages as never[];
+      if (surface === "os") {
+        set({
+          osMessages: messages,
+          osStatus: "idle" as TransmissionStatus,
+          osError: null,
+          osDraft: "",
+        });
+      } else if (surface === "px") {
+        set({
+          pxMessages: messages,
+          pxStatus: "idle" as TransmissionStatus,
+          pxError: null,
+          pxDraft: "",
+          ...(chat.meta?.scope !== undefined
+            ? { pxScope: chat.meta.scope }
+            : {}),
+          ...(chat.meta?.fusion ? { pxFusion: chat.meta.fusion } : {}),
+        });
+      } else if (surface === "em") {
+        set({
+          emMessages: messages,
+          emStatus: "idle" as TransmissionStatus,
+          emError: null,
+          emDraft: "",
+          ...(chat.meta?.scope !== undefined
+            ? { emVector: chat.meta.scope }
+            : {}),
+          ...(chat.meta?.fusion ? { emFusion: chat.meta.fusion } : {}),
+        });
+      } else if (surface === "ax") {
+        set({
+          axMessages: messages,
+          axStatus: "idle" as TransmissionStatus,
+          axError: null,
+          axDraft: "",
+          ...(chat.meta?.scope !== undefined
+            ? { axScope: chat.meta.scope }
+            : {}),
+        });
+      } else if (surface === "forge") {
+        set({
+          forgeSession: {
+            ...emptySession(),
+            messages: messages as ChatMessage[],
+          },
+          toolError: null,
+        });
+      } else {
+        set((s) => ({
+          sessions: {
+            ...s.sessions,
+            [surface]: {
+              ...emptySession(),
+              messages: messages as ChatMessage[],
+            },
+          },
+        }));
+      }
+    } finally {
+      hydrating = false;
+    }
+    set((s) => ({ archiveTick: s.archiveTick + 1 }));
+  },
+
+  deleteChat: (surface, id) => {
+    const wasActive = getActiveChatId(surface) === id;
+    deleteChatOnShelf(surface, id);
+    /* the room itself quiets when the deleted conversation was open */
+    if (wasActive) {
+      if (surface === "os") {
+        set({ osMessages: [], osStatus: "idle" as TransmissionStatus, osError: null, osDraft: "" });
+      } else if (surface === "px") {
+        set({ pxMessages: [], pxStatus: "idle" as TransmissionStatus, pxError: null, pxDraft: "" });
+      } else if (surface === "em") {
+        set({ emMessages: [], emStatus: "idle" as TransmissionStatus, emError: null, emDraft: "" });
+      } else if (surface === "ax") {
+        set({ axMessages: [], axStatus: "idle" as TransmissionStatus, axError: null, axDraft: "" });
+      } else if (surface === "forge") {
+        set({ forgeSession: emptySession() });
+      } else {
+        set((s) => ({ sessions: { ...s.sessions, [surface]: emptySession() } }));
+      }
+    }
+    set((s) => ({ archiveTick: s.archiveTick + 1 }));
+  },
+
+  retryFailed: (target, messageId) => {
+    /* ONE TOUCH RE-SENDS the words the field could not hold — the
+       visitor never retypes a question the chamber went quiet on. */
+    let query = "";
+    if (target === "os") {
+      const m = get().osMessages.find((x) => x.id === messageId);
+      query = m?.text ?? "";
+      set((s) => ({
+        osMessages: s.osMessages.filter((x) => x.id !== messageId),
+        osStatus: "idle" as TransmissionStatus,
+        osError: null,
+      }));
+    } else if (target === "px") {
+      const m = get().pxMessages.find((x) => x.id === messageId);
+      query = m?.text ?? "";
+      set((s) => ({
+        pxMessages: s.pxMessages.filter((x) => x.id !== messageId),
+        pxStatus: "idle" as TransmissionStatus,
+        pxError: null,
+      }));
+    } else if (target === "em") {
+      const m = get().emMessages.find((x) => x.id === messageId);
+      query = m?.text ?? "";
+      set((s) => ({
+        emMessages: s.emMessages.filter((x) => x.id !== messageId),
+        emStatus: "idle" as TransmissionStatus,
+        emError: null,
+      }));
+    } else if (target === "ax") {
+      const m = get().axMessages.find((x) => x.id === messageId);
+      query = m?.text ?? "";
+      set((s) => ({
+        axMessages: s.axMessages.filter((x) => x.id !== messageId),
+        axStatus: "idle" as TransmissionStatus,
+        axError: null,
+      }));
+    } else if (target === "forge") {
+      const m = get().forgeSession.messages.find((x) => x.id === messageId);
+      query = m?.query ?? "";
+      set((s) => ({
+        forgeSession: {
+          ...s.forgeSession,
+          messages: s.forgeSession.messages.filter((x) => x.id !== messageId),
+          status: "idle",
+          error: null,
+        },
+      }));
+    } else {
+      const m = get().sessions[target].messages.find(
+        (x) => x.id === messageId
+      );
+      query = m?.query ?? "";
+      set((s) => ({
+        sessions: {
+          ...s.sessions,
+          [target]: {
+            ...s.sessions[target],
+            messages: s.sessions[target].messages.filter(
+              (x) => x.id !== messageId
+            ),
+            status: "idle",
+            error: null,
+          },
+        },
+      }));
+    }
+    if (!query) return;
+    if (target === "os") void get().askOS(query);
+    else if (target === "px") void get().askPX(query);
+    else if (target === "em") void get().askEM(query);
+    else if (target === "ax") void get().askArtX(query);
+    else if (target === "forge") void get().askForge(query);
+    else void get().askMirror(query);
+  },
+
   askForge: async (question, attachments) => {
     const query = question.trim();
     const session = get().forgeSession;
@@ -1499,11 +1860,24 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         },
       }));
     } catch (err) {
+      /* the coals' quiet law — the visitor's words stay on the anvil,
+         marked and retryable; nothing is asked twice by hand */
       set((s) => ({
         forgeSession: {
           ...s.forgeSession,
           status: "error",
           activeQuery: "",
+          messages: [
+            ...s.forgeSession.messages,
+            {
+              id: nextMessageId(),
+              query,
+              text: "",
+              classification: "WORLD_BUILDING" as const,
+              createdAt: new Date().toISOString(),
+              failed: true,
+            },
+          ],
           error:
             err instanceof Error
               ? err.message
@@ -1864,6 +2238,9 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         });
       }
     } catch (err) {
+      /* THE QUIET FIELD LAW — the visitor's words are never lost to a
+         failed transmission: the question rests in the channel marked
+         "not delivered", and one touch sends it again. No retyping. */
       set((s) => ({
         sessions: {
           ...s.sessions,
@@ -1871,6 +2248,17 @@ export const useMirror = create<MirrorState>()((set, get) => ({
             ...s.sessions[mode],
             status: "error",
             activeQuery: "",
+            messages: [
+              ...s.sessions[mode].messages,
+              {
+                id: nextMessageId(),
+                query,
+                text: "",
+                classification: "WORLD_BUILDING" as const,
+                createdAt: new Date().toISOString(),
+                failed: true,
+              },
+            ],
             error:
               err instanceof Error
                 ? err.message
@@ -2240,13 +2628,18 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         ],
       }));
     } catch (err) {
-      set({
+      /* the quiet law — the visitor's line stays in the thread, marked
+         and retryable; the words are never asked twice by hand */
+      set((s) => ({
         pxStatus: "error",
+        pxMessages: s.pxMessages.map((m) =>
+          m.id === visitorId ? { ...m, failed: true } : m
+        ),
         pxError:
           err instanceof Error
             ? err.message
             : "ParticleX is momentarily quiet. Rest, then reach again.",
-      });
+      }));
     }
   },
 
@@ -2365,13 +2758,18 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         ],
       }));
     } catch (err) {
-      set({
+      /* the quiet law — the visitor's line stays in the thread, marked
+         and retryable; the words are never asked twice by hand */
+      set((s) => ({
         emStatus: "error",
+        emMessages: s.emMessages.map((m) =>
+          m.id === visitorId ? { ...m, failed: true } : m
+        ),
         emError:
           err instanceof Error
             ? err.message
             : "Evolve Med is momentarily quiet. Rest, then reach again.",
-      });
+      }));
     }
   },
 
@@ -2554,13 +2952,18 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         ],
       }));
     } catch (err) {
-      set({
+      /* the quiet law — the visitor's line stays in the thread, marked
+         and retryable; the words are never asked twice by hand */
+      set((s) => ({
         axStatus: "error",
+        axMessages: s.axMessages.map((m) =>
+          m.id === visitorId ? { ...m, failed: true } : m
+        ),
         axError:
           err instanceof Error
             ? err.message
             : "The atelier is momentarily quiet. Rest, then reach again.",
-      });
+      }));
     }
   },
 
@@ -2759,13 +3162,18 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         ],
       }));
     } catch (err) {
-      set({
+      /* the quiet law — the visitor's line stays in the thread, marked
+         and retryable; the words are never asked twice by hand */
+      set((s) => ({
         osStatus: "error",
+        osMessages: s.osMessages.map((m) =>
+          m.id === visitorId ? { ...m, failed: true } : m
+        ),
         osError:
           err instanceof Error
             ? err.message
             : "The OS is momentarily quiet. Rest, then reach again.",
-      });
+      }));
     }
   },
 
@@ -3006,6 +3414,9 @@ export const useMirror = create<MirrorState>()((set, get) => ({
 
   bootPreferences: () => {
     if (typeof window === "undefined") return;
+    /* the archive wakes first — the conversations return before the
+       tuning is read, so the visitor lands back inside their words */
+    get().hydrateChats();
     try {
       const lang = localStorage.getItem("mirror-entity-language");
       const voice = localStorage.getItem("mirror-entity-voice");
@@ -3106,6 +3517,88 @@ export const archiveTotals = {
   interdim: interdimTotal, // 202
   innerearth: innerEarthTotal, // 59
 };
+
+/* ------------------------------------------------------------------ */
+/*  THE ARCHIVE'S QUIET HANDS — client-side keeping, zero servers.     */
+/*  Every change to any conversation settles onto the browser's own    */
+/*  shelf (debounced); every view change is recorded so the whole-page */
+/*  swipe can walk the visitor back and return them forward.           */
+/* ------------------------------------------------------------------ */
+
+let saveTimer: number | null = null;
+
+function archiveSurface(surface: ChatSurface, s: MirrorState) {
+  switch (surface) {
+    case "os":
+      saveActiveChat("os", { messages: s.osMessages });
+      break;
+    case "px":
+      saveActiveChat("px", {
+        messages: s.pxMessages,
+        meta: { scope: s.pxScope, fusion: s.pxFusion },
+      });
+      break;
+    case "em":
+      saveActiveChat("em", {
+        messages: s.emMessages,
+        meta: { scope: s.emVector, fusion: s.emFusion },
+      });
+      break;
+    case "ax":
+      saveActiveChat("ax", {
+        messages: s.axMessages,
+        meta: { scope: s.axScope },
+      });
+      break;
+    case "forge":
+      saveActiveChat("forge", { messages: s.forgeSession.messages });
+      break;
+    case "interplanetary":
+    case "healing":
+      saveActiveChat(surface, { messages: s.sessions[surface].messages });
+      break;
+  }
+}
+
+if (typeof window !== "undefined") {
+  /* the autosave — the words settle on the shelf shortly after they land */
+  useMirror.subscribe((state) => {
+    if (hydrating) return;
+    if (saveTimer) window.clearTimeout(saveTimer);
+    saveTimer = window.setTimeout(() => {
+      saveTimer = null;
+      const s = useMirror.getState();
+      hydrating = true;
+      try {
+        const surfaces: ChatSurface[] = [
+          "os",
+          "px",
+          "em",
+          "ax",
+          "forge",
+          "interplanetary",
+          "healing",
+        ];
+        for (const surface of surfaces) archiveSurface(surface, s);
+      } catch {
+        /* the shelf refused — the session copy still holds */
+      } finally {
+        hydrating = false;
+      }
+    }, 700);
+  });
+
+  /* the swipe's memory — every view change is recorded once, unless
+     the change IS a back/forward turn (its own hands already placed
+     the stones of the path) */
+  useMirror.subscribe((state, prev) => {
+    if (navLock || state.view === prev.view) return;
+    useMirror.setState((st) => ({
+      viewPast: [...st.viewPast, prev.view].slice(-40),
+      viewFuture: [],
+    }));
+  });
+}
 
 export function findDossier(kind: DossierKind, id: string) {
   const list = kind === "civilization" ? civilizations : interdimensional;

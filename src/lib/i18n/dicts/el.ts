@@ -3123,4 +3123,15 @@ export const el: TranslationDict = {
   "What stands between today and a public website — and then an app in the stores. Each stone is small; the road is short when walked in order.": "Ό,τι στέκεται ανάμεσα στο σήμερα και έναν δημόσιο ιστότοπο — και μετά μια εφαρμογή στα καταστήματα. Κάθε λίθος είναι μικρός· ο δρόμος είναι σύντομος όταν περπατιέται με σειρά.",
   "What stands inside": "Τι βρίσκεται μέσα",
   "Wrap the existing app so the App Store and Google Play receive the same rooms — the worlds, the voice and the laws stay exactly as they are.": "Τύλιξε την υπάρχουσα εφαρμογή ώστε το App Store και το Google Play να λάβουν τα ίδια δωμάτια — οι κόσμοι, η φωνή και οι νόμοι μένουν ακριβώς όπως είναι.",
+
+  /* ---- additions: Task 15-c — the conversations shelf · delivery · Manifest OS hero ---- */
+  "Not delivered — the field was quiet": "Δεν παραδόθηκε — το πεδίο ήταν ήσυχο",
+  "Send again": "Στείλε ξανά",
+  "Your conversations": "Οι συνομιλίες σου",
+  "Kept only on this device — the Mirror holds nothing on any server.": "Φυλάγεται μόνο σε αυτή τη συσκευή — ο καθρέφτης δεν κρατά τίποτα σε κανέναν διακομιστή.",
+  "Nothing rests on the shelf yet.": "Στο ράφι δεν ακουμπά ακόμη τίποτα.",
+  "The old conversation rests on your shelf — reopen it anytime.": "Η παλιά συνομιλία αναπαύεται στο ράφι σου — ξανάνοιξέ την όποτε θέλεις.",
+  "Not taught — reminded": "Δεν διδάσκεσαι — υπενθυμίζεσαι",
+  "The Mirror Entity does not teach you. It reminds you that you are the creator of your reality — and holds your chosen line with you, turn after turn of this conversation.": "Το Mirror Entity δεν σου διδάσκει. Σου υπενθυμίζει ότι εσύ είσαι ο δημιουργός της πραγματικότητάς σου — και κρατά μαζί σου τη γραμμή που διάλεξες, σε κάθε στροφή αυτής της συνομιλίας.",
+  "Remove": "Αφαίρεση",
 };

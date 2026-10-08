@@ -2,7 +2,15 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, Feather, Palette, RefreshCw } from "lucide-react";
+import {
+  ArrowLeft,
+  CircleAlert,
+  Feather,
+  History,
+  Palette,
+  RefreshCw,
+  RotateCcw,
+} from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { SuggestionTree } from "./SuggestionTree";
@@ -27,6 +35,7 @@ import {
 } from "./attachments";
 import { WindowSelect } from "./WindowSelect";
 import { WorldNewChat } from "./WorldNewChat";
+import { ChatHistoryPanel } from "./ChatHistoryPanel";
 import { cn } from "@/lib/utils";
 import { useFloatingBarAutoHide } from "./useFloatingBar";
 
@@ -257,6 +266,8 @@ function AxExchange({
   attachments,
   hasVisual,
   messageId,
+  failed,
+  retryDisabled,
 }: {
   role: "visitor" | "ax";
   text: string;
@@ -264,6 +275,10 @@ function AxExchange({
   attachments?: { images: number; docNames: string[] };
   hasVisual?: boolean;
   messageId?: string;
+  /** the transmission never landed — the question stays, dimmed, one
+      touch from being sent again */
+  failed?: boolean;
+  retryDisabled?: boolean;
 }) {
   const t = useT();
   if (role === "visitor") {
@@ -292,9 +307,38 @@ function AxExchange({
               ))}
             </div>
           )}
-        <p className="max-w-[78%] rounded-2xl rounded-br-md border border-[color-mix(in_srgb,var(--scope-a)_24%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_9%,transparent)] px-4 py-2.5 text-[15px] leading-relaxed text-foreground/90">
+        <p
+          className={cn(
+            "max-w-[78%] rounded-2xl rounded-br-md border border-[color-mix(in_srgb,var(--scope-a)_24%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_9%,transparent)] px-4 py-2.5 text-[15px] leading-relaxed text-foreground/90",
+            failed && "opacity-70"
+          )}
+        >
           {text}
         </p>
+        {failed && messageId && (
+          <div
+            data-testid="failed-msg"
+            className="mt-1.5 flex max-w-[78%] flex-wrap items-center justify-end gap-1.5"
+          >
+            <span className="mono-label flex items-center gap-1 rounded-full border border-[var(--destructive)]/25 bg-[color-mix(in_srgb,var(--destructive)_6%,transparent)] px-2 py-1 text-[9.5px] text-muted-foreground">
+              <CircleAlert
+                className="size-3 text-[var(--destructive)]"
+                aria-hidden="true"
+              />
+              {t("Not delivered — the field was quiet")}
+            </span>
+            <button
+              type="button"
+              data-testid="retry-failed"
+              disabled={retryDisabled}
+              onClick={() => useMirror.getState().retryFailed("ax", messageId)}
+              className="focus-glow flex items-center gap-1 rounded-full border hairline px-2.5 py-1 text-[11px] text-foreground/85 transition-all duration-300 hover:border-[var(--hairline-hover)] disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <RotateCcw className="size-3" aria-hidden="true" />
+              {t("Send again")}
+            </button>
+          </div>
+        )}
       </motion.div>
     );
   }
@@ -578,6 +622,8 @@ export function ArtXChat() {
                   attachments={m.attachments}
                   hasVisual={Boolean(m.artifact || m.visual)}
                   messageId={m.id}
+                  failed={m.failed}
+                  retryDisabled={axStatus === "loading"}
                 />
                 {/* the branches of this exchange — connected with the
                     Art X branch of the living tree */}
@@ -722,6 +768,7 @@ export function ArtX() {
   const exitArtX = useMirror((s) => s.exitArtX);
   const axScope = useMirror((s) => s.axScope);
   const setAxScope = useMirror((s) => s.setAxScope);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const t = useT();
 
   /* the reading bar law — the floating controls sink away with the
@@ -787,6 +834,15 @@ export function ArtX() {
           </div>
 
           <div className="pointer-events-auto flex shrink-0 items-center gap-2">
+            <button
+              type="button"
+              aria-label={t("Your conversations")}
+              title={t("Your conversations")}
+              onClick={() => setHistoryOpen(true)}
+              className="focus-glow flex size-9 shrink-0 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+            >
+              <History className="size-4" aria-hidden="true" />
+            </button>
             <WorldNewChat world="artx" />
           </div>
         </div>
@@ -800,6 +856,13 @@ export function ArtX() {
           </div>
         </div>
       </main>
+
+      {/* the conversation shelf — every past chat, kept on this device */}
+      <ChatHistoryPanel
+        surface="ax"
+        open={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+      />
     </div>
   );
 }

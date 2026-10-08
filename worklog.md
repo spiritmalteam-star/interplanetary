@@ -2907,3 +2907,78 @@ Work Log:
 Stage Summary:
 - Origin/main now carries the full chamber: the public About Us (four principles, fourteen worlds, ten-article Terms) with zero prompt or confidential leakage, the new house name MIRROR ENTITY DIGITAL CHAMBER everywhere it meets the world, the short-book law (10–16 pages, never an endless story), Evolve Med in seconds, and branches that own the conversation floor and belong only to their scope.
 - The one-shot token should be treated as spent; the visitor may revoke it at leisure.
+---
+Task ID: 15-a
+Agent: frontend-styling-expert
+Task: Whole-page swipe navigation (right = back, left = return) + Kindle-smooth texture polish
+
+Work Log:
+- Read worklog + AppShell + globals.css + mirror-store; confirmed navigateBack/navigateForward and all seven overlay flags already exist in the store (untouched).
+- Created src/components/mirror/SwipeNav.tsx ("use client"): window-level passive touchstart/touchmove/touchend (+touchcancel safety) listeners; gestures armed only when touches.length === 1 and the target is outside input/textarea/select/[contenteditable="true"]/[data-no-swipe]/[role="dialog"]/[data-radix-popper-content-wrapper]/[role="menu"] and outside any element up to 6 levels up that horizontally scrolls (scrollWidth > clientWidth + 4 with overflow-x auto/scroll) — protects carousels, tab strips, Dream Book page-flip. Touchend re-checks the store and stands down if modal/mobileNavOpen/communionOpen/authOpen/profileOpen/accountOpen/profilePageOpen; fires navigateBack on dx > 0 else navigateForward when dt < 900ms, |dx| >= 90, |dx| >= 2.2·|dy|. Styles written directly via ref (no React state); hairline is a fixed top-0 h-[2px] z-[90] pointer-events-none gradient bar (var(--scope-a, var(--gd)) → transparent), opacity 0 by default, transition-opacity duration-200, data-testid="swipe-nav-indicator".
+- One deliberate interpretation: scaleX uses clamp(|dx|/90, 0, 1) with transform-origin left/right by sign (and the gradient mirrored to-left/to-right), because a literal negative scaleX with origin right mirrors the bar off-screen — the edge anchor carries the direction, keeping the indicator visible for both swipes.
+- AppShell: AppShell's per-view early returns mean no single existing node hosts every world, so the default export now renders one outermost frame <div class="paper-grain relative h-[var(--app-h,100dvh)] overflow-hidden"> holding <SwipeNav /> once + the (renamed, otherwise untouched) AppShellViews — one persistent listener set across every world, grain over the whole app background.
+- globals.css: appended the Kindle-smooth section — .kindle-scroll (-webkit-overflow-scrolling: touch; overscroll-behavior-y: contain), .msg-block (content-visibility: auto; contain-intrinsic-size: auto 420px), .paper-grain + .paper-grain::after (5% overlay SVG fractal-noise grain, pointer-events none, z-1 inside its own isolated context so modals/handles at higher z stay above); added the missing -moz-osx-font-smoothing: grayscale to the body rule (it already had -webkit-font-smoothing + text-rendering). Nothing new animates — reduced-motion honored by construction.
+- Gates: bun run lint = 0 errors; bunx tsc --noEmit | grep "^src/" = empty.
+
+Stage Summary:
+- The whole chamber now turns like a hand-held book: swipe right anywhere returns to the previous view, swipe left goes forward, with a scope-tinted hairline filling along the top edge as the finger travels; typing fields, menus, dialogs and sideways scrollers keep their own touch, and any open overlay stands the page-turn down.
+- Kindle-smooth texture laws landed in globals.css (.kindle-scroll, .msg-block, .paper-grain grain veil + grayscale font smoothing) ready for surfaces to adopt; the grain already breathes over the entire app via the new outermost frame.
+- Artifacts: src/components/mirror/SwipeNav.tsx (new), src/components/mirror/AppShell.tsx (wrapper + import only), src/app/globals.css (body smoothing + appended section).
+---
+Task ID: 15-b
+Agent: general-purpose
+Task: ChatGPT-style conversation panel + New-chat archiving + failed-message retry UI across all six chat surfaces
+
+Work Log:
+- Read the store's shelf API (chat-archive.ts + mirror-store newChat/openChat/deleteChat/retryFailed/archiveTick — untouched) and ModalShell (centered dialog — did not fit a slide-over, so ChatHistoryPanel builds its own fixed backdrop + framer-motion right panel).
+- NEW src/components/mirror/ChatHistoryPanel.tsx: "use client" slide-over (fixed inset-0 z-[70] backdrop closes on click + Escape; right panel w-[320px] max-w-[85vw], border-l hairline bg-background, slides in with the house's 0.22/1/0.36/1 ease). Header: t("Your conversations") + Plus new-chat button (newChat(surface) → onClose). Rows newest-first by savedAt: truncated title + Intl short date (month short/day numeric), active row tinted color-mix var(--scope-a) 12%, click → openChat + close; per-row Trash2 (stopPropagation, aria t("Remove")) → deleteChat. Footer keeps the zero-database law in tiny muted text; empty state t("Nothing rests on the shelf yet."); long list scrolls with nice-scroll. Re-render triggers: archiveTick from the store + ARCHIVE_EVENT window listener (useState counter); listChats/getActiveChatId read during render (panel only opens client-side after mount).
+- WorldNewChat.tsx now makes the ChatGPT turn: world→surface map (manifest→os, quantum→px, evolvemed→em, artx→ax, invent→forge) calls useMirror.getState().newChat(surface); toast description changed to t("The old conversation rests on your shelf — reopen it anytime."). No more destructive clearWorldChat/clearChannel from UI.
+- History hand wired into every surface's header (lucide History, size-4, rounded-full border hairline size-9, aria/title t("Your conversations")) + ChatHistoryPanel mounted inside each scope root so the shelf tint follows the world: MirrorOS.tsx ("os"), ParticleX.tsx ("px"), EvolveMed.tsx ("em"), ArtX.tsx ("ax"), InventView.tsx ("forge"); the transmission channel's History button rests in AppShell's floating handles (view === "transmission") with surface = activeMode read from the store.
+- Failed-message UI ("stays in chat, never retype") in all six threads: visitor bubble renders dimmed (opacity-70) with a chip row (data-testid="failed-msg": CircleAlert size-3 + t("Not delivered — the field was quiet")) and a retry button (data-testid="retry-failed": RotateCcw size-3 + t("Send again")) calling retryFailed(target, m.id), disabled while that surface's status is "loading". OsExchange/PxExchange/EmExchange/AxExchange pass failed+retryDisabled from their messages; the existing error banners now coexist untouched. Combined Q/A renderers branch: ForgeExchange and TransmissionView's Exchange render ONLY the visitor half (query, dimmed) + chip + retry for a failed message — no empty reply body, no ReplyBranches, no empty frame.
+- All new copy through t(): "Your conversations", "Remove", "Nothing rests on the shelf yet.", "Kept only on this device — the Mirror holds nothing on any server.", "Not delivered — the field was quiet", "Send again", "The old conversation rests on your shelf — reopen it anytime." (English fallback while the dicts await their harvest).
+- GATES: bun run lint = 0 errors; bunx tsc --noEmit | grep "^src/" = empty (only pre-existing scripts/ + skills/ noise outside src/).
+
+Stage Summary:
+- Every conversation now survives: the six chat surfaces and both transmission channels open their own conversation shelf from the header's History hand — reopen any past chat, lay one down for good, or turn the page with New chat and the old words rest safely on the device.
+- The fresh-chat hand no longer erases: WorldNewChat opens a new page while the autosave keeps the outgoing conversation on the shelf.
+- A quiet field never costs a retyping: failed transmissions stay in the thread — dimmed, marked "Not delivered", one touch sends them again on every surface (os/px/em/ax/forge/interplanetary/healing).
+- Artifacts: src/components/mirror/ChatHistoryPanel.tsx (new), WorldNewChat.tsx, MirrorOS.tsx, MirrorOSChat.tsx, ParticleX.tsx, EvolveMed.tsx, ArtX.tsx, InventView.tsx, TransmissionView.tsx, AppShell.tsx.
+---
+Task ID: 15-c
+Agent: general-purpose
+Task: Add 9 new UI keys to all seven language dictionaries (de/el/es/fr/it/sq/tr) in mirror-spirit tone
+
+Work Log:
+- Read the worklog tail and inspected the dict system: English keys inline via t("..."), dictionaries as large exported objects in src/lib/i18n/dicts/{de,el,es,fr,it,sq,tr}.ts; new additions are appended as commented sections (e.g. "/* ---- additions: Task 29 — the shelf · akashic replies ---- */").
+- Anchored terminology in each language's own precedents before writing: "the field" (das Feld/το πεδίο/el campo/le champ/il campo/fusha/alan from "Charging the field…"), "shelf" (Regal/ράφι/estante/étagère/scaffale/raft/raf), "device/server" (Gerät+Server/συσκευή+διακομιστής/dispositivo+servidor/appareil+serveur/dispositivo+server/pajisje+server/cihaz+sunucu), "you are the creator" (du bist der Schöpfer / εσύ είσαι ο δημιουργός / tú eres el creador / vous êtes le créateur / tu sei il creatore / ti je krijuesi / yaratıcının sen olduğunu from the "gift from the stars" key), and the exact house phrasing for "holds your chosen line with you, turn after turn of this conversation" from the reality-refining intelligence key in all 7 dicts.
+- Honored each dict's person convention: du (de), σου (el), tú (es), tu in chat but vous inside the Manifest OS section (fr — "Parlez au Manifest OS", "garde avec vous la ligne"), tu (it), ti (sq), sen (tr); "Mirror Entity" kept untranslated as a proper noun per each dict's canonical About text; em-dash "—" with spaces preserved everywhere; fr ASCII apostrophes.
+- Appended a marked section "/* ---- additions: Task 15-c — the conversations shelf · delivery · Manifest OS hero ---- */" with the 9 keys at the end of each of the 7 dicts (11 inserted lines per file, nothing else touched). Buttons follow each dict's own idiom: de "Erneut senden", es/fr/it infinitive or impersonal, tr "Yeniden gönder".
+- Verified with scripts/check-i18n.mjs: "ALL DICTIONARY UI KEYS COMPLETE (content keys fall back to English where noted)" — hard UI tier fully green; only content-tier keys (another agent's living pools) fall back by design.
+- Independently re-verified all 9 exact keys (incl. U+2014 em-dashes) present in all 7 dicts via a Bun check: 9/9 × 7/7.
+- bunx tsc --noEmit: zero errors under src/ (remaining errors are pre-existing in examples/ and scripts/, untouched by this task).
+
+Stage Summary:
+- All 9 new UI keys — the delivery chip ("Not delivered — the field was quiet"), "Send again", "Your conversations", the device-only privacy note, the empty shelf, the reopen toast, and the Manifest OS hero pair ("Not taught — reminded" + the creator-of-your-reality body) — plus "Remove" now speak in all seven tongues, in each dict's established register and dash style. Checker passes for every UI key; tsc clean for src/. Files changed: src/lib/i18n/dicts/{de,el,es,fr,it,sq,tr}.ts only.
+
+---
+Task ID: 15
+Agent: Z.ai Code (main orchestrator)
+Task: The words never lost — failed transmissions stay and retry; the ChatGPT keeping (conversations survive reloads and journeys, new chat archives, old chats reopen); the whole-page swipe (right = back, left = return); the speed law widened (token ceilings on every route); the Kindle-smooth texture; the Manifest OS speaks the reminder law ("We don't teach you — we remind you that you are the creator of your reality"); branches follow each context window's own procedures
+
+Work Log:
+- Mapped every ask flow's failure path: askMirror/askForge lost the question entirely on error (activeQuery wiped, draft cleared); askOS/PX/EM/AX kept the line but offered no retry and cleared the draft — the visitor had to retype.
+- New src/lib/chat-archive.ts — the ChatGPT keeping, client-side only (zero-database law held): per surface (os/px/em/ax/forge/interplanetary/healing) a list of conversations + activeId; titles from the visitor's first words; 30 conversations × 80 messages caps; data:-URL strings > 60k shed on the shelf (quota law); QuotaExceeded trims the oldest half and retries once; ARCHIVE_EVENT fires on every shelf change; empty conversations never take shelf space (a fresh page exists only as an activeId, exactly like ChatGPT's unnamed chat).
+- Store: `failed?: boolean` on all five message shapes; every catch now keeps the visitor's words — scope channels/forge append a failed-marked message, os/px/em/ax mark the visitor line failed — plus retryFailed(target, messageId) which removes the failed message and re-asks in one touch; newChat(surface) archives-and-freshens (ChatGPT turn); openChat(surface,id) restores a conversation with its scope/fusion/window meta; deleteChat; hydrateChats() called first inside bootPreferences(); module-bottom autosave subscriber (700ms debounce) shelves every surface's active conversation; view-history subscriber records every view change (viewPast/viewFuture, 40-deep) with a navLock hand so back/forward turns are never re-recorded.
+- Speed law: max_tokens ceilings on all ten generation routes (transmission 1400, mirror-os 1200, particlex 1600, artx 1400, forge 1600, manifest 1200, poem 900, remedy 1200, invent-tool 1400, communion 1000) — no more unbounded generations.
+- Copy: Manifest OS hero rewritten — "Not taught — reminded" / "The Mirror Entity does not teach you. It reminds you that you are the creator of your reality — and holds your chosen line with you, turn after turn of this conversation." (9 new keys translated in all 7 tongues by Task 15-c).
+- Delegated 15-a (SwipeNav whole-page gestures + paper-grain/kindle-scroll/msg-block polish + AppShell mount), 15-b (ChatHistoryPanel slide-over + History buttons in all six surfaces + WorldNewChat→newChat archiving + failed chips/retry in every thread), 15-c (9 keys × 7 dicts, checker green).
+- Fixed the swipe-forward bug found in browser: the view recorder was wiping viewFuture on back-turns (navLock added).
+- E2E verified (agent-browser): blocked /api/transmission → ask → "Not delivered — the field was quiet" + "Send again" stays in chat → unroute → retry → delivered with branches grown; reload → conversation archived, restored on channel return (both exchanges present); history panel lists/titles/dates; New chat empties thread, old chat shelved (fresh activeId holds no shelf slot); reopen restores both exchanges; swipe right → observatory, swipe left → thread returns; Manifest OS speaks the new reminder law in mobile 390px and desktop; zero console errors; lint 0 errors; tsc src 0 errors.
+
+Stage Summary:
+- A failed transmission can no longer take a visitor's words: every question rests in its thread marked "Not delivered — the field was quiet" with a one-touch "Send again".
+- The conversations now keep like ChatGPT: reloads, journeys between worlds, nothing parts the visitor from their words; only an explicit "New chat" turns the page, and the old conversation rests on the shelf, reopenable and removable — all in the browser alone, zero servers.
+- The whole page turns like a book: swipe right goes back through the journey, swipe left returns.
+- Every generation route now runs under a speed ceiling; the app answers swifter.
+- The house speaks the reminder law: the visitor is reminded, never taught, that they are the creator of their reality.
+- Artifacts: src/lib/chat-archive.ts, src/components/mirror/{SwipeNav,ChatHistoryPanel}.tsx, mirror-store.ts, AppShell.tsx, WorldNewChat.tsx, MirrorOSChat/MirrorOS/ParticleX/EvolveMed/ArtX/InventView/TransmissionView, globals.css, 7 dicts, 10 API routes.

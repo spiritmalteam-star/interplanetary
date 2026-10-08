@@ -5,9 +5,12 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowLeft,
   Atom,
+  CircleAlert,
   Dna,
   Feather,
   FlaskConical,
+  History,
+  RotateCcw,
   ScrollText,
   StickyNote,
   Telescope,
@@ -23,6 +26,7 @@ import { cn } from "@/lib/utils";
 import { ListenButton } from "./ListenButton";
 import { ScopeNotes } from "./ScopeNotes";
 import { WorldNewChat } from "./WorldNewChat";
+import { ChatHistoryPanel } from "./ChatHistoryPanel";
 import { QuantumLoading } from "./ThemedLoadings";
 import { PxBioMech } from "./PxBioMech";
 import { RevelationProse, RevelationSections } from "./RevelationBody";
@@ -175,6 +179,9 @@ function PxExchange({
   seal,
   animate,
   index,
+  messageId,
+  failed,
+  retryDisabled,
 }: {
   role: "visitor" | "px";
   text: string;
@@ -183,6 +190,11 @@ function PxExchange({
   seal?: string;
   animate: boolean;
   index: number;
+  messageId?: string;
+  /** the transmission never landed — the question stays, dimmed, one
+      touch from being sent again */
+  failed?: boolean;
+  retryDisabled?: boolean;
 }) {
   const t = useT();
 
@@ -194,9 +206,38 @@ function PxExchange({
         transition={{ duration: animate ? 0.4 : 0, ease: [0.22, 1, 0.36, 1] }}
         className="flex flex-col items-end"
       >
-        <p className="max-w-[78%] rounded-2xl rounded-br-md border border-[color-mix(in_srgb,var(--scope-a)_24%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_9%,transparent)] px-4 py-2.5 text-[15px] leading-relaxed text-foreground/90">
+        <p
+          className={cn(
+            "max-w-[78%] rounded-2xl rounded-br-md border border-[color-mix(in_srgb,var(--scope-a)_24%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_9%,transparent)] px-4 py-2.5 text-[15px] leading-relaxed text-foreground/90",
+            failed && "opacity-70"
+          )}
+        >
           {text}
         </p>
+        {failed && messageId && (
+          <div
+            data-testid="failed-msg"
+            className="mt-1.5 flex max-w-[78%] flex-wrap items-center justify-end gap-1.5"
+          >
+            <span className="mono-label flex items-center gap-1 rounded-full border border-[var(--destructive)]/25 bg-[color-mix(in_srgb,var(--destructive)_6%,transparent)] px-2 py-1 text-[9.5px] text-muted-foreground">
+              <CircleAlert
+                className="size-3 text-[var(--destructive)]"
+                aria-hidden="true"
+              />
+              {t("Not delivered — the field was quiet")}
+            </span>
+            <button
+              type="button"
+              data-testid="retry-failed"
+              disabled={retryDisabled}
+              onClick={() => useMirror.getState().retryFailed("px", messageId)}
+              className="focus-glow flex items-center gap-1 rounded-full border hairline px-2.5 py-1 text-[11px] text-foreground/85 transition-all duration-300 hover:border-[var(--hairline-hover)] disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <RotateCcw className="size-3" aria-hidden="true" />
+              {t("Send again")}
+            </button>
+          </div>
+        )}
       </motion.div>
     );
   }
@@ -507,6 +548,9 @@ function ParticleXChat() {
                     seal={m.seal}
                     animate={i === pxMessages.length - 1 && pxStatus !== "loading"}
                     index={i}
+                    messageId={m.id}
+                    failed={m.failed}
+                    retryDisabled={pxStatus === "loading"}
                   />
                 )}
                 {/* the branches of this exchange — connected with the
@@ -703,6 +747,7 @@ export function ParticleX() {
   const setPxScope = useMirror((s) => s.setPxScope);
   const pinPxNotes = useMirror((s) => s.pinPxNotes);
   const [place, setPlace] = useState<PxPlace>("chat");
+  const [historyOpen, setHistoryOpen] = useState(false);
   const t = useT();
 
   /* the reading bar law — the floating controls sink away with the
@@ -759,6 +804,15 @@ export function ParticleX() {
           </div>
 
           <div className="pointer-events-auto flex shrink-0 items-center gap-2">
+            <button
+              type="button"
+              aria-label={t("Your conversations")}
+              title={t("Your conversations")}
+              onClick={() => setHistoryOpen(true)}
+              className="focus-glow flex size-9 shrink-0 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+            >
+              <History className="size-4" aria-hidden="true" />
+            </button>
             <WorldNewChat world="quantum" />
           </div>
         </div>
@@ -816,6 +870,13 @@ export function ParticleX() {
           </div>
         </div>
       </main>
+
+      {/* the conversation shelf — every past chat, kept on this device */}
+      <ChatHistoryPanel
+        surface="px"
+        open={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+      />
     </div>
   );
 }

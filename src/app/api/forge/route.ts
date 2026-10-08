@@ -178,6 +178,8 @@ Forge the one mystery creation now. Return the strict JSON.`,
         },
       ],
       thinking: { type: "disabled" },
+      /* the speed law — the answer arrives swiftly, never unbounded */
+      max_tokens: 1600,
     });
 
     const raw = completion.choices[0]?.message?.content ?? "";

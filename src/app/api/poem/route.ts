@@ -127,6 +127,8 @@ Weave the one poem now. Return the strict JSON.`,
         },
       ],
       thinking: { type: "disabled" },
+      /* the speed law — the answer arrives swiftly, never unbounded */
+      max_tokens: 900,
     });
 
     const raw = completion.choices[0]?.message?.content ?? "";

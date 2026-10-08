@@ -4,9 +4,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowLeft,
+  CircleAlert,
   Feather,
   Flame,
   Hammer,
+  History,
   RotateCcw,
   Sparkles,
   Wrench,
@@ -39,6 +41,7 @@ import {
 } from "./VisualizationCard";
 import { SigilForIntent } from "./MirrorOSForge";
 import { WorldNewChat } from "./WorldNewChat";
+import { ChatHistoryPanel } from "./ChatHistoryPanel";
 import { WindowSelect } from "./WindowSelect";
 import { useFloatingBarAutoHide } from "./useFloatingBar";
 
@@ -960,10 +963,57 @@ function ForgeVisualBlock({ m }: { m: ChatMessage }) {
 function ForgeExchange({
   m,
   animate,
+  retryDisabled,
 }: {
   m: ChatMessage;
   animate: boolean;
+  retryDisabled?: boolean;
 }) {
+  const t = useT();
+
+  /* the stroke that never landed — the question stays in the thread,
+     dimmed and marked, one touch from being sent again; no reply body
+     is drawn for it, for no answer ever came */
+  if (m.failed) {
+    return (
+      <motion.article
+        initial={animate ? { opacity: 0, y: 10 } : false}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        className="rounded-xl border hairline px-4 py-3.5 sm:px-5"
+        style={{
+          background: "color-mix(in srgb, var(--scope-a) 5%, transparent)",
+        }}
+      >
+        <p className="text-[13px] italic leading-relaxed text-muted-foreground opacity-70">
+          {m.query}
+        </p>
+        <div
+          data-testid="failed-msg"
+          className="mt-2 flex flex-wrap items-center gap-1.5"
+        >
+          <span className="mono-label flex items-center gap-1 rounded-full border border-[var(--destructive)]/25 bg-[color-mix(in_srgb,var(--destructive)_6%,transparent)] px-2 py-1 text-[9.5px] text-muted-foreground">
+            <CircleAlert
+              className="size-3 text-[var(--destructive)]"
+              aria-hidden="true"
+            />
+            {t("Not delivered — the field was quiet")}
+          </span>
+          <button
+            type="button"
+            data-testid="retry-failed"
+            disabled={retryDisabled}
+            onClick={() => useMirror.getState().retryFailed("forge", m.id)}
+            className="focus-glow flex items-center gap-1 rounded-full border hairline px-2.5 py-1 text-[11px] text-foreground/85 transition-all duration-300 hover:border-[var(--hairline-hover)] disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <RotateCcw className="size-3" aria-hidden="true" />
+            {t("Send again")}
+          </button>
+        </div>
+      </motion.article>
+    );
+  }
+
   return (
     <motion.article
       initial={animate ? { opacity: 0, y: 10 } : false}
@@ -1103,6 +1153,7 @@ function BenchChat() {
                 <ForgeExchange
                   m={m}
                   animate={i === messages.length - 1 && status !== "loading"}
+                  retryDisabled={loading}
                 />
                 {/* the branches of this stroke — connected with the
                     Invent branch of the living tree */}
@@ -1229,6 +1280,7 @@ function BenchChat() {
 export function InventView() {
   const exitInvent = useMirror((s) => s.exitInvent);
   const [place, setPlace] = useState<InventPlace>("bench");
+  const [historyOpen, setHistoryOpen] = useState(false);
   const t = useT();
 
   /* the reading bar law — the floating controls sink away with the
@@ -1288,6 +1340,15 @@ export function InventView() {
           </div>
 
           <div className="pointer-events-auto flex shrink-0 items-center gap-2">
+            <button
+              type="button"
+              aria-label={t("Your conversations")}
+              title={t("Your conversations")}
+              onClick={() => setHistoryOpen(true)}
+              className="focus-glow flex size-9 shrink-0 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+            >
+              <History className="size-4" aria-hidden="true" />
+            </button>
             <WorldNewChat world="invent" />
           </div>
         </div>
@@ -1344,6 +1405,13 @@ export function InventView() {
           </div>
         </div>
       </main>
+
+      {/* the conversation shelf — every past chat, kept on this device */}
+      <ChatHistoryPanel
+        surface="forge"
+        open={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+      />
     </div>
   );
 }

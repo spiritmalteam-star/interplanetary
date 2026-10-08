@@ -227,6 +227,7 @@ body {
     line-height: 1.7;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   ::selection {
     background: color-mix(in srgb, var(--cy) 28%, transparent);
@@ -1885,4 +1886,45 @@ html:not(.dark) .scope-lightcodes {
 /* content clearance under a bar-safe bar — the old h-12 spacer */
 .clearance-safe {
   height: calc(3rem + env(safe-area-inset-top, 0px));
+}
+
+/* ------------------------------------------------------------------ */
+/*  THE KINDLE-SMOOTH LAWS — silk under the finger, tooth on the      */
+/*  glass. Momentum that stays inside its page, threads the browser   */
+/*  may skip until the eye arrives, and a whisper of paper grain      */
+/*  over the whole chamber. Nothing here animates; the reduced-motion */
+/*  vow is honored by construction.                                   */
+/* ------------------------------------------------------------------ */
+
+/* e-ink patience for touch surfaces: momentum scrolling that never
+   drags the page beyond its own edges */
+.kindle-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+/* a hint long threads may adopt: let the browser skip what the eye
+   cannot see yet, remembering roughly how tall each block will be */
+.msg-block {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 420px;
+}
+
+/* a whisper of paper grain — the glass keeps its cosmic depth but
+   gains the tooth of a printed page. The class carries its own
+   position, so it rests on any outermost container untouched. */
+.paper-grain {
+  position: relative;
+  isolation: isolate;
+}
+.paper-grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 240px 240px;
 }

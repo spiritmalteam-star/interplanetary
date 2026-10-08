@@ -4,17 +4,26 @@ import { Plus } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useT } from "@/lib/i18n";
 import { useMirror } from "@/lib/mirror-store";
+import type { ChatSurface } from "@/lib/chat-archive";
 
 type WorldChat = "manifest" | "quantum" | "evolvemed" | "artx" | "invent";
 
-/** The fresh-chat hand of a world: one press and that world's own
-    conversation returns to its quiet origin — the manifest core (with
-    its blueprint bench), the quantum core, the med nexus or the forge.
-    It lives at the top-right of each world's header. */
+/** world → its own chat surface on the shelf */
+const WORLD_SURFACE: Record<WorldChat, ChatSurface> = {
+  manifest: "os",
+  quantum: "px",
+  evolvemed: "em",
+  artx: "ax",
+  invent: "forge",
+};
+
+/** The fresh-chat hand of a world: one press and the ChatGPT turn is
+    made — the present conversation already rests on the shelf (the
+    autosave kept it current) and a fresh page opens in its place. The
+    old one can always be reopened from the conversation panel. It
+    lives at the top-right of each world's header. */
 export function WorldNewChat({ world }: { world: WorldChat }) {
   const t = useT();
-  const clearWorldChat = useMirror((s) => s.clearWorldChat);
-  const clearChannel = useMirror((s) => s.clearChannel);
 
   return (
     <button
@@ -23,11 +32,12 @@ export function WorldNewChat({ world }: { world: WorldChat }) {
       aria-label={t("New chat")}
       title={t("New chat")}
       onClick={() => {
-        if (world === "invent") clearChannel("forge");
-        else clearWorldChat(world);
+        useMirror.getState().newChat(WORLD_SURFACE[world]);
         toast({
           title: t("New chat"),
-          description: t("The channel returns to its quiet origin."),
+          description: t(
+            "The old conversation rests on your shelf — reopen it anytime."
+          ),
         });
       }}
       className="focus-glow flex size-9 shrink-0 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"

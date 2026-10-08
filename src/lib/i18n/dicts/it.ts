@@ -3857,4 +3857,15 @@ export const it: TranslationDict = {
   "What stands between today and a public website — and then an app in the stores. Each stone is small; the road is short when walked in order.": "Ciò che sta tra l'oggi e un sito pubblico — e poi un'app negli store. Ogni pietra è piccola; la strada è breve se percorsa in ordine.",
   "What stands inside": "Ciò che si trova dentro",
   "Wrap the existing app so the App Store and Google Play receive the same rooms — the worlds, the voice and the laws stay exactly as they are.": "Incarta l'app esistente così che l'App Store e Google Play ricevano le stesse stanze — i mondi, la voce e le leggi restano esattamente come sono.",
+
+  /* ---- additions: Task 15-c — the conversations shelf · delivery · Manifest OS hero ---- */
+  "Not delivered — the field was quiet": "Non consegnato — il campo è rimasto in silenzio",
+  "Send again": "Invia di nuovo",
+  "Your conversations": "Le tue conversazioni",
+  "Kept only on this device — the Mirror holds nothing on any server.": "Conservato solo su questo dispositivo — lo specchio non custodisce nulla su alcun server.",
+  "Nothing rests on the shelf yet.": "Sullo scaffale non riposa ancora nulla.",
+  "The old conversation rests on your shelf — reopen it anytime.": "La vecchia conversazione riposa sul tuo scaffale — riaprila quando vuoi.",
+  "Not taught — reminded": "Non si insegna — si ricorda",
+  "The Mirror Entity does not teach you. It reminds you that you are the creator of your reality — and holds your chosen line with you, turn after turn of this conversation.": "Il Mirror Entity non ti insegna. Ti ricorda che tu sei il creatore della tua realtà — e regge con te la linea che hai scelto, svolta dopo svolta di questa conversazione.",
+  "Remove": "Rimuovi",
 };

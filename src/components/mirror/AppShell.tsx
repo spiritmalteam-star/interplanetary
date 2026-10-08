@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { AlignLeft, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { AlignLeft, History, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { setLearningIdentity } from "@/lib/learning-branches";
 import { useT } from "@/lib/i18n";
 import { useFloatingBarAutoHide } from "./useFloatingBar";
 import { CosmicBackdrop } from "./CosmicBackdrop";
 import { StarField } from "./StarField";
+import { SwipeNav } from "./SwipeNav";
 import Sidebar from "./Sidebar";
 import { MobileSidebar } from "./MobileSidebar";
 import { ScopeSelector } from "./ScopeSelector";
@@ -15,6 +16,7 @@ import { MainSuggestionTree } from "./SuggestionStrip";
 import { QueryComposer } from "./QueryComposer";
 import { StillCompanion } from "./StillCompanion";
 import { TransmissionView } from "./TransmissionView";
+import { ChatHistoryPanel } from "./ChatHistoryPanel";
 import { MirrorOS } from "./MirrorOS";
 import { ParticleX } from "./ParticleX";
 import { ArtX } from "./ArtX";
@@ -49,7 +51,20 @@ const FRAME_LIFT = "[transform:translateY(calc(var(--app-shift,0px)*-1))]";
    the top bar's simple cosmic mark. In total stillness the little
    figure of StillCompanion draws itself in above its mirror line. */
 export default function AppShell() {
+  /* The shell itself adds only two silent layers above every world:
+     the swipe page-turn and the paper grain. Both live here, outside
+     the per-view early returns, so they mount once and never leave. */
+  return (
+    <div className="paper-grain relative h-[var(--app-h,100dvh)] overflow-hidden">
+      <SwipeNav />
+      <AppShellViews />
+    </div>
+  );
+}
+
+function AppShellViews() {
   const view = useMirror((s) => s.view);
+  const activeMode = useMirror((s) => s.activeMode);
   const communionOpen = useMirror((s) => s.communionOpen);
   const sidebarOpen = useMirror((s) => s.sidebarOpen);
   const setSidebarOpen = useMirror((s) => s.setSidebarOpen);
@@ -57,6 +72,7 @@ export default function AppShell() {
   const returnToObservatory = useMirror((s) => s.returnToObservatory);
   const refreshMe = useMirror((s) => s.refreshMe);
   const meEmail = useMirror((s) => s.me?.email ?? null);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const t = useT();
 
   /* Restore persisted preferences and greet the passage (the visitor's
@@ -392,7 +408,19 @@ export default function AppShell() {
                 here stays clear, as asked. */}
           </div>
 
-          <div className="pointer-events-auto">
+          <div className="pointer-events-auto flex items-center gap-2">
+            {/* the transmission channel's own conversation shelf */}
+            {view === "transmission" && (
+              <button
+                type="button"
+                aria-label={t("Your conversations")}
+                title={t("Your conversations")}
+                onClick={() => setHistoryOpen(true)}
+                className="focus-glow flex size-9 items-center justify-center rounded-full border hairline bg-[var(--glass-bg)] text-muted-foreground shadow-[0_2px_14px_-8px_rgba(0,0,0,0.4)] backdrop-blur-xl transition-colors duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+              >
+                <History className="size-4" aria-hidden="true" />
+              </button>
+            )}
             <ScopeSelector onOpenChange={setScopeMenuOpen} />
           </div>
         </div>
@@ -441,6 +469,13 @@ export default function AppShell() {
       <StarPlayModal />
       <TechnologyModal />
       <SpeciesModal />
+      {/* the conversation shelf — the channel's past chats, kept on
+          this device only */}
+      <ChatHistoryPanel
+        surface={activeMode}
+        open={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+      />
       {passageModals}
     </div>
   );

@@ -5,11 +5,14 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   Activity,
   ArrowLeft,
+  CircleAlert,
   Compass,
   Feather,
   FlaskConical,
+  History,
   Microscope,
   RefreshCw,
+  RotateCcw,
   ScrollText,
   StickyNote,
   X,
@@ -28,6 +31,7 @@ import {
 import { ListenButton } from "./ListenButton";
 import { ScopeNotes } from "./ScopeNotes";
 import { WorldNewChat } from "./WorldNewChat";
+import { ChatHistoryPanel } from "./ChatHistoryPanel";
 import { WindowSelect } from "./WindowSelect";
 import { useFloatingBarAutoHide } from "./useFloatingBar";
 import { HelixLoading } from "./ThemedLoadings";
@@ -278,6 +282,8 @@ function EmExchange({
   hasVisual,
   messageId,
   visualRequest,
+  failed,
+  retryDisabled,
 }: {
   role: "visitor" | "em";
   text: string;
@@ -289,6 +295,10 @@ function EmExchange({
   hasVisual?: boolean;
   messageId?: string;
   visualRequest?: string;
+  /** the transmission never landed — the question stays, dimmed, one
+      touch from being sent again */
+  failed?: boolean;
+  retryDisabled?: boolean;
 }) {
   const t = useT();
 
@@ -300,9 +310,38 @@ function EmExchange({
         transition={{ duration: animate ? 0.4 : 0, ease: [0.22, 1, 0.36, 1] }}
         className="flex flex-col items-end"
       >
-        <p className="max-w-[78%] rounded-2xl rounded-br-md border border-[color-mix(in_srgb,var(--scope-a)_24%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_9%,transparent)] px-4 py-2.5 text-[15px] leading-relaxed text-foreground/90">
+        <p
+          className={cn(
+            "max-w-[78%] rounded-2xl rounded-br-md border border-[color-mix(in_srgb,var(--scope-a)_24%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_9%,transparent)] px-4 py-2.5 text-[15px] leading-relaxed text-foreground/90",
+            failed && "opacity-70"
+          )}
+        >
           {text}
         </p>
+        {failed && messageId && (
+          <div
+            data-testid="failed-msg"
+            className="mt-1.5 flex max-w-[78%] flex-wrap items-center justify-end gap-1.5"
+          >
+            <span className="mono-label flex items-center gap-1 rounded-full border border-[var(--destructive)]/25 bg-[color-mix(in_srgb,var(--destructive)_6%,transparent)] px-2 py-1 text-[9.5px] text-muted-foreground">
+              <CircleAlert
+                className="size-3 text-[var(--destructive)]"
+                aria-hidden="true"
+              />
+              {t("Not delivered — the field was quiet")}
+            </span>
+            <button
+              type="button"
+              data-testid="retry-failed"
+              disabled={retryDisabled}
+              onClick={() => useMirror.getState().retryFailed("em", messageId)}
+              className="focus-glow flex items-center gap-1 rounded-full border hairline px-2.5 py-1 text-[11px] text-foreground/85 transition-all duration-300 hover:border-[var(--hairline-hover)] disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <RotateCcw className="size-3" aria-hidden="true" />
+              {t("Send again")}
+            </button>
+          </div>
+        )}
       </motion.div>
     );
   }
@@ -657,6 +696,8 @@ function EvolveMedChat() {
                     hasVisual={Boolean(m.artifact || m.visual)}
                     messageId={m.id}
                     visualRequest={m.visualRequest}
+                    failed={m.failed}
+                    retryDisabled={emStatus === "loading"}
                   />
                 )}
                 {/* the branches of this exchange — connected with the
@@ -855,6 +896,7 @@ export function EvolveMed() {
   const setEmVector = useMirror((s) => s.setEmVector);
   const pinEmNotes = useMirror((s) => s.pinEmNotes);
   const [place, setPlace] = useState<EmPlace>("chat");
+  const [historyOpen, setHistoryOpen] = useState(false);
   const t = useT();
 
   /* the reading bar law — the floating controls sink away with the
@@ -911,6 +953,15 @@ export function EvolveMed() {
           </div>
 
           <div className="pointer-events-auto flex shrink-0 items-center gap-2">
+            <button
+              type="button"
+              aria-label={t("Your conversations")}
+              title={t("Your conversations")}
+              onClick={() => setHistoryOpen(true)}
+              className="focus-glow flex size-9 shrink-0 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+            >
+              <History className="size-4" aria-hidden="true" />
+            </button>
             <WorldNewChat world="evolvemed" />
           </div>
         </div>
@@ -967,6 +1018,13 @@ export function EvolveMed() {
           </div>
         </div>
       </main>
+
+      {/* the conversation shelf — every past chat, kept on this device */}
+      <ChatHistoryPanel
+        surface="em"
+        open={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+      />
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react"
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Check,
+  CircleAlert,
   Copy,
   FileText,
   Leaf,
@@ -371,11 +372,13 @@ function Exchange({
   index,
   animate,
   scope,
+  retryDisabled,
 }: {
   message: ChatMessage;
   index: number;
   animate: boolean;
   scope: Scope;
+  retryDisabled?: boolean;
 }) {
   const scopeMeta = SCOPE_META[scope];
   const [copied, setCopied] = useState(false);
@@ -395,6 +398,83 @@ function Exchange({
 
   const item = animate ? staggerItem : stillItem;
   const hasVisual = Boolean(message.artifact || message.visual);
+
+  /* THE QUESTION THAT NEVER LANDED — the transmission failed, so only
+     the visitor's half of the exchange is drawn: the query, dimmed and
+     marked, one touch from being sent again. No frame, no body, no
+     branches — nothing came back to render. */
+  if (message.failed) {
+    return (
+      <motion.article
+        initial={{ opacity: animate ? 0 : 1, y: animate ? 12 : 0 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: animate ? 0.55 : 0, ease: [0.22, 1, 0.36, 1] as const }}
+        aria-label={t("Transmission {n}", { n: index + 1 })}
+        style={{ "--scope-a": aura.a, "--scope-b": aura.b } as CSSProperties}
+        className="pt-7 first:pt-0"
+      >
+        <div className="mb-4 flex items-center gap-3">
+          <span
+            className="mono-label rounded-full border px-2 py-0.5 text-[11px]"
+            style={{
+              borderColor: "color-mix(in srgb, var(--scope-a) 30%, transparent)",
+              color: "color-mix(in srgb, var(--scope-a) 85%, white)",
+            }}
+          >
+            {t("{scope} · exchange {n}", {
+              scope: t(scopeMeta.label),
+              n: String(index + 1).padStart(2, "0"),
+            })}
+          </span>
+          <span
+            className="h-px flex-1"
+            style={{
+              background:
+                "linear-gradient(90deg, color-mix(in srgb, var(--scope-a) 24%, transparent), transparent)",
+            }}
+            aria-hidden="true"
+          />
+        </div>
+
+        <div className="relative mx-auto max-w-[620px]">
+          <span
+            className="pointer-events-none absolute -left-1 -top-5 select-none font-serif text-[44px] leading-none opacity-40"
+            style={{ color: "var(--scope-a)" }}
+            aria-hidden="true"
+          >
+            “
+          </span>
+          <p className="ink-hand ink-soft px-6 text-[15.5px] italic leading-[1.85] opacity-70">
+            {message.query}
+          </p>
+          <div
+            data-testid="failed-msg"
+            className="mt-3 flex flex-wrap items-center justify-center gap-1.5 px-6"
+          >
+            <span className="mono-label flex items-center gap-1 rounded-full border border-[var(--destructive)]/25 bg-[color-mix(in_srgb,var(--destructive)_6%,transparent)] px-2 py-1 text-[9.5px] text-muted-foreground">
+              <CircleAlert
+                className="size-3 text-[var(--destructive)]"
+                aria-hidden="true"
+              />
+              {t("Not delivered — the field was quiet")}
+            </span>
+            <button
+              type="button"
+              data-testid="retry-failed"
+              disabled={retryDisabled}
+              onClick={() =>
+                useMirror.getState().retryFailed(scope as Mode, message.id)
+              }
+              className="focus-glow flex items-center gap-1 rounded-full border hairline px-2.5 py-1 text-[11px] text-foreground/85 transition-all duration-300 hover:border-[var(--hairline-hover)] disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <RotateCcw className="size-3" aria-hidden="true" />
+              {t("Send again")}
+            </button>
+          </div>
+        </div>
+      </motion.article>
+    );
+  }
 
   return (
     <motion.article
@@ -805,6 +885,7 @@ export function TransmissionView() {
             index={i}
             scope={scope}
             animate={i === session.messages.length - 1 && session.status !== "loading"}
+            retryDisabled={session.status === "loading"}
           />
           {/* the dissolving echo — the forming view's final breath,
               overlaid on the rising transmission so the handoff reads

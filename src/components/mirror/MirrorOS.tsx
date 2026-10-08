@@ -8,6 +8,7 @@ import {
   Compass,
   FlaskConical,
   HeartHandshake,
+  History,
   ShieldCheck,
   Orbit,
   Sun,
@@ -32,6 +33,7 @@ import { cn } from "@/lib/utils";
 import { ListenButton } from "./ListenButton";
 import { MirrorOSForge } from "./MirrorOSForge";
 import { WorldNewChat } from "./WorldNewChat";
+import { ChatHistoryPanel } from "./ChatHistoryPanel";
 import { MirrorOSChat } from "./MirrorOSChat";
 import { WindowSelect } from "./WindowSelect";
 import { useFloatingBarAutoHide } from "./useFloatingBar";
@@ -530,6 +532,7 @@ function ToolsTab() {
 export function MirrorOS() {
   const exitMirrorOS = useMirror((s) => s.exitMirrorOS);
   const [place, setPlace] = useState<OsPlace>("chat");
+  const [historyOpen, setHistoryOpen] = useState(false);
   const t = useT();
 
   /* the reading bar law — the floating controls sink away with the
@@ -587,6 +590,15 @@ export function MirrorOS() {
           </div>
 
           <div className="pointer-events-auto flex shrink-0 items-center gap-2">
+            <button
+              type="button"
+              aria-label={t("Your conversations")}
+              title={t("Your conversations")}
+              onClick={() => setHistoryOpen(true)}
+              className="focus-glow flex size-9 shrink-0 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+            >
+              <History className="size-4" aria-hidden="true" />
+            </button>
             <WorldNewChat world="manifest" />
           </div>
         </div>
@@ -665,6 +677,13 @@ export function MirrorOS() {
           </div>
         </div>
       </main>
+
+      {/* the conversation shelf — every past chat, kept on this device */}
+      <ChatHistoryPanel
+        surface="os"
+        open={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+      />
     </div>
   );
 }
