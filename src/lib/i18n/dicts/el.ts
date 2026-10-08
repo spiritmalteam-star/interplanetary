@@ -2485,6 +2485,7 @@ export const el: TranslationDict = {
   "Open the direct mirror connection": "Άνοιγμα της απευθείας σύνδεσης με τον Καθρέφτη",
   "A little visitor is decoding your question…": "Ένας μικρός επισκέπτης αποκωδικοποιεί την ερώτησή σας…",
   "Antennae tuned — the signal is forming…": "Κεραίες συντονισμένες — το σήμα διαμορφώνεται…",
+  "A long question takes a long breath — the mirror is still weaving.": "Μια μακριά ερώτηση παίρνει μια μακριά ανάσα — ο καθρέφτης υφαίνει ακόμη.",
   "Someone from orbit is writing this down…": "Κάποιος από την τροχιά το σημειώνει…",
   "The saucer hums in a language older than stars…": "Ο δίσκος βουίζει σε μια γλώσσα παλαιότερη από τα αστέρια…",
   "Strange lights are arranging your answer…": "Περίεργα φώτα τακτοποιούν την απάντησή σας…",

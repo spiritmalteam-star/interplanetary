@@ -943,30 +943,11 @@ async function crystallizeVisual(
       ),
     }));
 
-    /* the same one silent repaint the scope visuals keep — when the
-       brushes rested before the canvas took the paint, the visitor
-       waits once more, not forever */
-    if (!regenerateOf && !artifact.imageUrl && artifact.slides.length === 0) {
-      window.setTimeout(() => {
-        const msg = crystallizeSession(target).messages.find(
-          (m) => m.id === visualId
-        );
-        if (
-          msg?.artifact &&
-          !msg.artifact.imageUrl &&
-          msg.artifact.slides.length === 0 &&
-          !msg.visual
-        ) {
-          void crystallizeVisual(target, userText, msg.visualRequest ?? artifact.subject, {
-            id: visualId,
-            request: msg.visualRequest ?? artifact.subject,
-            prompt: artifact.prompt,
-            subject: artifact.subject,
-            mode: artifact.mode,
-          });
-        }
-      }, 1200);
-    }
+    /* THE ONE ACTIVATION LAW — the image creator never fires twice on
+       its own. When the brushes rested before the canvas took the
+       paint (an artifact without an image), the prepared-prompt card
+       stands in its place with a one-touch recompose; the visitor —
+       never a timer — decides whether the atelier tries again. */
   } catch {
     patchCrystallizeSession(target, (session) => ({
       ...session,
@@ -2401,28 +2382,9 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         },
       }));
 
-      /* the same one silent repaint for the scope channels */
-      if (!regenerateOf && !artifact.imageUrl && artifact.slides.length === 0) {
-        window.setTimeout(() => {
-          const msg = get().sessions[mode].messages.find(
-            (m) => m.id === visualId
-          );
-          if (
-            msg?.artifact &&
-            !msg.artifact.imageUrl &&
-            msg.artifact.slides.length === 0 &&
-            !msg.visual
-          ) {
-            void get().askScopeVisual(mode, msg.visualRequest ?? artifact.subject, {
-              id: visualId,
-              request: msg.visualRequest ?? artifact.subject,
-              prompt: artifact.prompt,
-              subject: artifact.subject,
-              mode: artifact.mode,
-            });
-          }
-        }, 1200);
-      }
+      /* THE ONE ACTIVATION LAW — no silent second pass here either:
+         the prepared-prompt card (with its one-touch recompose) is the
+         graceful rest when the canvas stayed empty. */
     } catch {
       set((s) => ({
         sessions: {

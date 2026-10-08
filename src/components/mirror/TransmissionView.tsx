@@ -130,9 +130,12 @@ function useAura(seed: string): Aura {
 function LoadingTransmission({
   query,
   phase,
+  longWait = false,
 }: {
   query: string;
   phase: number;
+  /** true once the wait has run long — the reassurance line rises */
+  longWait?: boolean;
 }) {
   const t = useT();
   /* The forming card already glows with the light it will carry. */
@@ -154,9 +157,16 @@ function LoadingTransmission({
           >
             “
           </span>
-          <p className="ink-hand ink-soft px-6 text-[15.5px] italic leading-[1.85]">
-            {query}
-          </p>
+          {/* THE ALWAYS-IN-VIEW LAW — a long question clamps to a soft
+              horizon so the little visitor and the phrase below stand
+              in the frame at once; the page never reads as blank while
+              the mirror listens. The full words stay in the DOM for
+              every screen reader. */}
+          <div className="relative max-h-[136px] overflow-hidden [mask-image:linear-gradient(180deg,black_62%,transparent_100%)]">
+            <p className="ink-hand ink-soft line-clamp-5 px-6 text-[15.5px] italic leading-[1.85]">
+              {query}
+            </p>
+          </div>
         </div>
       )}
       {/* no circle, no spinner, no skeleton — only the little visitor
@@ -182,6 +192,23 @@ function LoadingTransmission({
           </motion.p>
         </AnimatePresence>
       </div>
+      {/* the long breath — when the wait runs long, the mirror says so
+          instead of going quiet */}
+      <AnimatePresence>
+        {longWait && (
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+            className="mx-auto mt-1.5 max-w-[440px] px-4 text-center text-[12.5px] italic leading-relaxed text-muted-foreground/70"
+          >
+            {t(
+              "A long question takes a long breath — the mirror is still weaving."
+            )}
+          </motion.p>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -703,6 +730,18 @@ export function TransmissionView() {
   const messagesLength = session.messages.length;
   const status = session.status;
   const [formingPhase, setFormingPhase] = useState(0);
+  const [formingAge, setFormingAge] = useState(0);
+
+  /* the long-breath clock — one second at a time while the mirror
+     listens; reset with the phase at every fresh forming */
+  useEffect(() => {
+    if (status !== "loading") return;
+    const id = window.setInterval(
+      () => setFormingAge((a) => a + 1),
+      1000
+    );
+    return () => window.clearInterval(id);
+  }, [status]);
 
   useEffect(() => {
     if (status !== "loading") return;
@@ -748,7 +787,10 @@ export function TransmissionView() {
         query: session.activeQuery || forming.query,
         visible: session.messages.at(-1)?.visual !== "pending",
       });
-      if (prev.status !== "loading") setFormingPhase(0);
+      if (prev.status !== "loading") {
+        setFormingPhase(0);
+        setFormingAge(0);
+      }
     } else if (prev.status === "loading" && forming.visible) {
       setRevealing({ mode: activeMode, query: forming.query });
     }
@@ -800,7 +842,9 @@ export function TransmissionView() {
          with a failed transmission meets the error; otherwise it
          rests at its beginning. */
       if (status === "loading") {
-        loadingRef.current?.scrollIntoView({ block: "start" });
+        /* centered — the little visitor and the phrase stand mid-frame,
+           never below the fold of their own long question */
+        loadingRef.current?.scrollIntoView({ block: "center" });
       } else if (status === "error") {
         errorRef.current?.scrollIntoView({ block: "start" });
       } else if (!sameMode) {
@@ -821,7 +865,10 @@ export function TransmissionView() {
       return () => window.clearTimeout(id);
     }
     if (startedLoading) {
-      loadingRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      loadingRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
       return;
     }
     if (becameError) {
@@ -932,6 +979,7 @@ export function TransmissionView() {
             <LoadingTransmission
               query={session.activeQuery}
               phase={formingPhase}
+              longWait={formingAge >= 12}
             />
           </motion.div>
         </div>

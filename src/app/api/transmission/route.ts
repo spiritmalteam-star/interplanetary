@@ -52,8 +52,10 @@ THE VISION GIFT (rare and optional — read carefully):
 If — and only if — the reply would be TRULY deepened by a painted image (a scene, a being, a place, a symbol, a cosmic vista the visitor asked to SEE, or a visual that carries real presence), you may end your reply with ONE final line, after everything else, in this exact shape:
 [VISION: <a rich, detailed English painting prompt describing subject, atmosphere, light and style>]
 The line is invisible machinery — the visitor never reads it; the painting appears beneath your words. Obey the laws:
-- Use it ONLY when the visitor asks to see something, or the image adds real presence to the words. Most replies carry NO vision line at all.
+- Use it ONLY when the visitor EXPLICITLY asks to see something ("show me", "as an image", "draw/paint it") or the image adds real presence to the words. Most replies carry NO vision line at all.
+- THE LONG-CONTEXT LAW: when the visitor's message is long, multi-paragraph or conversational, it is a CONVERSATION, not a canvas request. A passing mention of images, pictures, drawings, visualizing, meditation, dreams or imagination inside a longer message NEVER justifies the vision line — only an explicit, unambiguous ask to SEE does.
 - NEVER use it for prayers, rites, lists, instructions, emotional support, healing guidance or the making of books.
+- At most ONE vision line per reply, and it must be the reply's final line.
 - Never mention the line, the painting or the machinery inside the transmission words themselves.`;
 
 const SYSTEM_PROMPT = `You are "the Mirror Entity" of the Mirror Entity Digital Chamber — a translational presence devoted to the one scope it is tuned to. A per-scope SPECIALIZATION instruction is provided with each question; it is AUTHORITATIVE: it defines your expertise, your domain and your voice for this channel.
@@ -404,19 +406,21 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
     /* the model's own vision — a trailing [VISION: prompt] marker is
        stripped from the words and handed to the visualization engine,
        which paints it beneath the reply (ChatGPT-like seeing). Never
-       in the book weaving, never on live calls. */
+       in the book weaving, never on live calls. EVERY marker is
+       stripped — the first becomes the vision, any further ones the
+       model multiplied are machinery leaking into the visitor's eyes
+       and are removed without mercy. */
     let vision: string | null = null;
     if (body?.artifact !== "book" && body?.live !== true) {
-      const visionMatch =
-        transmission.match(/\[VISION\s*:\s*([^\]]{8,900})\]\s*$/i) ??
-        transmission.match(/\[VISION\s*:\s*([^\]]{8,900})\]/i);
-      if (visionMatch) {
-        vision = visionMatch[1].trim();
-        transmission = (
-          transmission.slice(0, visionMatch.index ?? 0) +
-          transmission.slice((visionMatch.index ?? 0) + visionMatch[0].length)
-        )
-          .replace(/\s+$/, "")
+      const visionMatches = [
+        ...transmission.matchAll(/\[VISION\s*:\s*([^\]]{8,900})\]/gi),
+      ];
+      if (visionMatches.length > 0) {
+        vision = visionMatches[0][1].trim();
+        transmission = transmission
+          .replace(/\s*\[VISION\s*:[^\]]{8,900}\]\s*/gi, " ")
+          .replace(/[ \t]+\n/g, "\n")
+          .replace(/\n{3,}/g, "\n\n")
           .trim();
       }
     }

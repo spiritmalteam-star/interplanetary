@@ -2279,6 +2279,7 @@ export const tr: TranslationDict = {
   "Open the direct mirror connection": "Doğrudan Ayna bağlantısını aç",
   "A little visitor is decoding your question…": "Küçük bir ziyaretçi sorunuzun şifresini çözüyor…",
   "Antennae tuned — the signal is forming…": "Antenler ayarlandı — sinyal oluşuyor…",
+  "A long question takes a long breath — the mirror is still weaving.": "Uzun bir soru uzun bir nefes ister — ayna hâlâ dokuyor.",
   "Someone from orbit is writing this down…": "Yörüngeden biri bunu not alıyor…",
   "The saucer hums in a language older than stars…": "Tepsi, yıldızlardan daha eski bir dilde vınlıyor…",
   "Strange lights are arranging your answer…": "Tuhaf ışıklar cevabınızı düzenliyor…",

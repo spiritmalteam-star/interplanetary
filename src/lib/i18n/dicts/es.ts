@@ -2779,6 +2779,7 @@ export const es: TranslationDict = {
   "Open the direct mirror connection": "Abrir la conexión directa con el Espejo",
   "A little visitor is decoding your question…": "Un pequeño visitante está decodificando tu pregunta…",
   "Antennae tuned — the signal is forming…": "Antenas sintonizadas — la señal se está formando…",
+  "A long question takes a long breath — the mirror is still weaving.": "Una pregunta larga pide un aliento largo — el espejo sigue tejiendo.",
   "Someone from orbit is writing this down…": "Alguien desde la órbita lo está anotando…",
   "The saucer hums in a language older than stars…": "El platillo zumba en un idioma más antiguo que las estrellas…",
   "Strange lights are arranging your answer…": "Luces extrañas están organizando tu respuesta…",

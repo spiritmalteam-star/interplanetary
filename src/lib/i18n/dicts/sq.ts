@@ -4503,6 +4503,7 @@ export const sq: TranslationDict = {
   "Open the direct mirror connection": "Hap lidhjen e drejtpërdrejtë me Pasqyrën",
   "A little visitor is decoding your question…": "Një vizitor i vogël po dekodon pyetjen tuaj…",
   "Antennae tuned — the signal is forming…": "Antenat në frekuencë — sinjali po formohet…",
+  "A long question takes a long breath — the mirror is still weaving.": "Një pyetje e gjatë kërkon një frymë të gjatë — pasqyra po end ende.",
   "Someone from orbit is writing this down…": "Dikush nga orbita po e shkruan këtë…",
   "The saucer hums in a language older than stars…": "Disku bubëllon në një gjuhë më të vjetër se yjet…",
   "Strange lights are arranging your answer…": "Dritë të çuditshme po rregullojnë përgjigjen tuaj…",
