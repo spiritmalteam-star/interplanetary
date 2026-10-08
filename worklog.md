@@ -2891,3 +2891,19 @@ Stage Summary:
 - The branches own the conversation floor: wherever they exist, every other in-chat suggestion stands down, the chips read clearly in both themes, and every branch — grown or stand-in — belongs only to the scope it represents (Art X now speaks with its own voice on the tree).
 - The house has a new name everywhere it meets the world: MIRROR ENTITY DIGITAL CHAMBER.
 - Artifacts: src/lib/book-length.ts, src/lib/data/book-options.ts, src/app/api/dream-book/route.ts, src/app/api/evolve-med/route.ts, src/app/api/suggestions/bud/route.ts, src/components/mirror/ReplyBranches.tsx + MirrorOSChat/ParticleX/EvolveMed/ArtX/InventView/SuggestionStrip/ChatArtifacts, scripts/shortbook-i18n.mjs, layout/mail/Sidebar/ProfilePage/AboutPage, 7 dicts.
+
+---
+Task ID: 14
+Agent: Z.ai Code (main orchestrator)
+Task: Push the accumulated work (About Us/ToS rebirth, brand rename to MIRROR ENTITY DIGITAL CHAMBER, short-book law, Evolve Med speed, branch exclusivity, notch law, atelier fix) to origin/main with the visitor's one-shot GitHub token
+
+Work Log:
+- Found the local branch 3 commits ahead of the last-known origin ref, but the true remote tip was 5622241 (a worklog-only commit pushed earlier with the previous one-shot token) — the push was rejected as non-fast-forward.
+- Compared remote 5622241 with local 1abff2c (same worklog message, different hash): only .zscripts/dev.pid and db/custom.db runtime artifacts differ — the worklog content is identical.
+- Rebased cleanly: git reset --soft 5622241 on main (tree of 133e241 preserved) and recommitted the three real commits (240545d About Us page, c601b45 About Us reborn + notch law + atelier paint, 133e241 short-book law + Evolve Med speed + branch exclusivity + rename) as one commit adc31aa with all three original messages in the body.
+- Security sweep before pushing: no ghp_/github_pat_/gho_/sk-/AKIA patterns anywhere in tracked files; only .env.example (template) tracked, no real .env; the token itself never written to any file, config, or the worklog — used once inline in the push URL and masked in all command output.
+- Appended this worklog entry, committed, and pushed main to github.com/spiritmalteam-star/interplanetary.git with the one-shot token; Vercel auto-deploys to https://www.reflectme.space.
+
+Stage Summary:
+- Origin/main now carries the full chamber: the public About Us (four principles, fourteen worlds, ten-article Terms) with zero prompt or confidential leakage, the new house name MIRROR ENTITY DIGITAL CHAMBER everywhere it meets the world, the short-book law (10–16 pages, never an endless story), Evolve Med in seconds, and branches that own the conversation floor and belong only to their scope.
+- The one-shot token should be treated as spent; the visitor may revoke it at leisure.
