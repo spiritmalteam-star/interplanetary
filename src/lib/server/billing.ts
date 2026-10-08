@@ -15,6 +15,11 @@ import Stripe from "stripe";
 import { db } from "@/lib/db";
 import { grantCredits } from "@/lib/server/credits";
 import { packFor, planFor } from "@/lib/server/plans";
+import {
+  WALLET_PLANS,
+  grantWalletCredits,
+  type PlanTier,
+} from "@/lib/server/wallet";
 
 let stripeClient: Stripe | null = null;
 
@@ -118,6 +123,70 @@ export async function handleStripeEvent(event: Stripe.Event): Promise<void> {
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
+        const walletUserId = session.metadata?.wallet === "1" ? session.metadata?.userId ?? null : null;
+
+        /* ---------- the wallet's own passages (the frontier law) -------
+           metadata.userId + wallet:"1" — the checkout that fills the
+           visitor's OWN wallet. The subscription's first month and the
+           one-time pouch both land here, idempotently. */
+        if (walletUserId) {
+          const customerId =
+            typeof session.customer === "string" ? session.customer : session.customer?.id ?? null;
+          const creditsToGrant = session.metadata?.creditsToGrant
+            ? parseInt(session.metadata.creditsToGrant, 10)
+            : 0;
+
+          if (session.mode === "subscription") {
+            const tier = (session.metadata?.planTier ?? "SEEKER") as PlanTier;
+            let subId: string | null = null;
+            if (typeof session.subscription === "string") subId = session.subscription;
+            if (creditsToGrant > 0 || subId) {
+              await grantWalletCredits(walletUserId, {
+                credits: creditsToGrant,
+                actionType: "SUBSCRIPTION_GRANT",
+                referenceId: `sub-active:${session.id}`,
+                description: `The ${tier} pass opened — ${creditsToGrant.toLocaleString()} credits of light`,
+                planTier: tier,
+                stripeCustomerId: customerId,
+                stripeSubscriptionId: subId,
+              });
+            }
+            await db.payment.create({
+              data: {
+                userId: walletUserId,
+                stripeId: session.id,
+                type: "subscription",
+                amountCents: session.amount_total ?? 0,
+                currency: session.currency ?? "usd",
+                status: session.status ?? "complete",
+                description: `Wallet pass — ${tier}`,
+              },
+            });
+          } else if (session.mode === "payment") {
+            if (creditsToGrant > 0) {
+              await grantWalletCredits(walletUserId, {
+                credits: creditsToGrant,
+                actionType: "TOPUP_PURCHASE",
+                referenceId: `topup:${session.id}`,
+                description: `A pouch of light — ${creditsToGrant.toLocaleString()} credits`,
+                stripeCustomerId: customerId,
+              });
+            }
+            await db.payment.create({
+              data: {
+                userId: walletUserId,
+                stripeId: session.id,
+                type: "credit_pack",
+                amountCents: session.amount_total ?? 0,
+                currency: session.currency ?? "usd",
+                status: session.status ?? "complete",
+                description: `Wallet top-up — ${creditsToGrant.toLocaleString()} credits`,
+              },
+            });
+          }
+          break;
+        }
+
         const workspaceId = session.metadata?.workspaceId ?? null;
         if (!workspaceId) return;
         const customerId =
@@ -207,6 +276,19 @@ export async function handleStripeEvent(event: Stripe.Event): Promise<void> {
           current_period_start?: number;
           current_period_end?: number;
         };
+        const walletSubUser = sub.metadata?.wallet === "1" ? sub.metadata?.userId ?? null : null;
+        if (walletSubUser) {
+          /* the wallet's own subscription — status rides onto the wallet */
+          const tier = (sub.metadata?.planTier ?? "SEEKER") as PlanTier;
+          await db.userWallet.updateMany({
+            where: { userId: walletSubUser },
+            data: {
+              planTier: sub.status === "canceled" ? "FREE" : tier,
+              ...(sub.status === "canceled" ? { stripeSubscriptionId: null } : {}),
+            },
+          });
+          break;
+        }
         const workspaceId = sub.metadata?.workspaceId;
         const customerId = typeof sub.customer === "string" ? sub.customer : sub.customer?.id;
         const priceId = sub.items.data[0]?.price?.id ?? null;
@@ -229,6 +311,18 @@ export async function handleStripeEvent(event: Stripe.Event): Promise<void> {
 
       case "customer.subscription.deleted": {
         const sub = event.data.object as Stripe.Subscription;
+        /* the wallet's own pass ends — the tier returns to FREE, the
+           remaining light stays in the purse (nothing is taken back) */
+        const walletSub = await db.userWallet.findUnique({
+          where: { stripeSubscriptionId: sub.id },
+        });
+        if (walletSub) {
+          await db.userWallet.update({
+            where: { id: walletSub.id },
+            data: { planTier: "FREE", stripeSubscriptionId: null },
+          });
+          break;
+        }
         const existing = await db.subscription.findUnique({ where: { stripeSubscriptionId: sub.id } });
         if (existing) {
           await db.subscription.update({
@@ -244,6 +338,21 @@ export async function handleStripeEvent(event: Stripe.Event): Promise<void> {
         const invoice = event.data.object as Stripe.Invoice & { billing_reason?: string };
         const customerId = typeof invoice.customer === "string" ? invoice.customer : invoice.customer?.id;
         if (!customerId || invoice.billing_reason !== "subscription_cycle") break;
+
+        /* the wallet's own pass renews first — the monthly lights land
+           in the visitor's purse, idempotent per invoice id */
+        const wallet = await db.userWallet.findUnique({ where: { stripeCustomerId: customerId } });
+        if (wallet && wallet.stripeSubscriptionId) {
+          const tier = (wallet.planTier in WALLET_PLANS ? wallet.planTier : "SEEKER") as PlanTier;
+          await grantWalletCredits(wallet.userId, {
+            credits: WALLET_PLANS[tier].monthlyCredits,
+            actionType: "SUBSCRIPTION_GRANT",
+            referenceId: `invoice:${invoice.id}`,
+            description: `The ${tier} pass renewed — ${WALLET_PLANS[tier].monthlyCredits.toLocaleString()} credits of light`,
+          });
+          break;
+        }
+
         const sub = await db.subscription.findFirst({
           where: { stripeCustomerId: customerId, status: { in: ["active", "trialing", "past_due"] } },
         });

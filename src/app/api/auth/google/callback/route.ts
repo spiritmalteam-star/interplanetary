@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { mergeAnonLibrary, readAnonId, setSessionCookie } from "@/lib/server/access";
 import { ensureVisitorProvisions } from "@/lib/server/workspace";
+import { ensureWallet } from "@/lib/server/wallet";
 
 /* ------------------------------------------------------------------ */
 /*  GET /api/auth/google/callback — the return of the Google passage. */
@@ -84,6 +85,8 @@ export async function GET(req: NextRequest) {
     setSessionCookie(res, user.id);
     /* the passage carries its workspace, ledger and gift */
     await ensureVisitorProvisions(user.id);
+    /* and its own wallet — five free lights on first arrival */
+    await ensureWallet(user.id);
     /* everything the anonymous cookie kept comes with the visitor */
     await mergeAnonLibrary(readAnonId(req), user.id);
     res.cookies.set("mirror_g_state", "", { path: "/", maxAge: 0 });

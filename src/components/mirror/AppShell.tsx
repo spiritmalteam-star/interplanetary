@@ -9,6 +9,8 @@ import { useFloatingBarAutoHide } from "./useFloatingBar";
 import { CosmicBackdrop } from "./CosmicBackdrop";
 import { StarField } from "./StarField";
 import { SwipeNav } from "./SwipeNav";
+import { WalletGuard } from "./WalletGuard";
+import { CreditBadge } from "./CreditBadge";
 import Sidebar from "./Sidebar";
 import { MobileSidebar } from "./MobileSidebar";
 import { ScopeSelector } from "./ScopeSelector";
@@ -57,6 +59,9 @@ export default function AppShell() {
   return (
     <div className="paper-grain relative h-[var(--app-h,100dvh)] overflow-hidden">
       <SwipeNav />
+      {/* the purse keeper rides above every world — the 402 watch, the
+          Stripe greeting, the unlock modal */}
+      <WalletGuard />
       <AppShellViews />
     </div>
   );
@@ -409,6 +414,8 @@ function AppShellViews() {
           </div>
 
           <div className="pointer-events-auto flex items-center gap-2">
+            {/* the visitor's own light — the purse, glanced from anywhere */}
+            <CreditBadge />
             {/* the transmission channel's own conversation shelf */}
             {view === "transmission" && (
               <button

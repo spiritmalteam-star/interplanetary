@@ -186,6 +186,23 @@ export interface MeUser {
   tier: "crystalline" | "light";
 }
 
+/* -------- the visitor's own light — the wallet at a glance ---------- */
+
+export interface WalletBalance {
+  planTier: "FREE" | "SEEKER" | "OBSERVATORY_PRO";
+  freeCreditsRemaining: number;
+  paidCreditsRemaining: number;
+  total: number;
+}
+
+/** What a 402 door said — why the unlock modal was called. */
+export interface WalletNotice {
+  required: number;
+  current: number;
+  planTier?: string;
+  actionType?: string;
+}
+
 /* -------- the dream book's keeping — a volume brought back -------- */
 
 export interface DreamBookResumePage {
@@ -464,6 +481,18 @@ interface MirrorState {
   authMode: "signin" | "register";
   profileOpen: boolean;
   accountOpen: boolean;
+
+  /* The visitor's own light — the wallet (planTier + both buckets),
+     the unlock modal and its cause. The modal opens by itself when any
+     door answers 402 INSUFFICIENT_CREDITS, and from the badge on tap. */
+  wallet: WalletBalance | null;
+  walletModalOpen: boolean;
+  walletNotice: WalletNotice | null;
+  setWallet: (wallet: WalletBalance | null) => void;
+  refreshWallet: () => Promise<void>;
+  openWalletModal: (notice?: WalletNotice | null) => void;
+  closeWalletModal: () => void;
+
   refreshMe: () => Promise<void>;
   setMe: (user: MeUser | null) => void;
   openAuth: (mode?: "signin" | "register") => void;
@@ -1032,6 +1061,9 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   authMode: "signin" as const,
   profileOpen: false,
   profilePageOpen: false,
+  wallet: null,
+  walletModalOpen: false,
+  walletNotice: null,
   expansionSeeds: [],
   dreamResume: null,
   lastBookResonance: null,
@@ -2437,10 +2469,12 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         user?: MeUser | null;
         googleConfigured?: boolean;
         settings?: unknown;
+        wallet?: WalletBalance | null;
       } | null;
       set({
         me: data?.user ?? null,
         googleConfigured: Boolean(data?.googleConfigured),
+        wallet: data?.wallet ?? get().wallet,
       });
       /* the passage's own tuning comes home — language, voice, pace,
          the fields of expansion — on every device, every sign-in */
@@ -2456,6 +2490,25 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   },
 
   setMe: (user) => set({ me: user }),
+
+  /* ------------- The visitor's own light — the wallet ------------- */
+
+  setWallet: (wallet) => set({ wallet }),
+
+  refreshWallet: async () => {
+    try {
+      const res = await fetch("/api/wallet");
+      const data = (await res.json().catch(() => null)) as {
+        wallet?: WalletBalance | null;
+      } | null;
+      if (data && "wallet" in data) set({ wallet: data.wallet ?? null });
+    } catch {
+      /* the glance keeps its silence — the purse stays as it was */
+    }
+  },
+
+  openWalletModal: (notice) => set({ walletModalOpen: true, walletNotice: notice ?? null }),
+  closeWalletModal: () => set({ walletModalOpen: false, walletNotice: null }),
 
   openAuth: (mode = "signin") => set({ authOpen: true, authMode: mode }),
   closeAuth: () => set({ authOpen: false }),
@@ -2477,7 +2530,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     } catch {
       /* even if the line is quiet, the visitor leaves cleanly */
     }
-    set({ me: null, authOpen: false, profileOpen: false, view: "observatory" });
+    set({ me: null, wallet: null, walletModalOpen: false, walletNotice: null, authOpen: false, profileOpen: false, view: "observatory" });
   },
 
   /** The visitor's own cosmic library — free for everyone. */

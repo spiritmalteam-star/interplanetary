@@ -38,6 +38,8 @@ model User {
   entries         LibraryEntry[]
   memberships     WorkspaceMember[]
   ownedWorkspaces Workspace[] @relation("OwnedWorkspaces")
+  wallet          UserWallet?
+  ledger          CreditLedger[]
 }
 
 model LibraryEntry {
@@ -205,4 +207,44 @@ model ProcessedEvent {
   id         String   @id // the provider's event id (e.g. Stripe evt_…)
   type       String
   receivedAt DateTime @default(now())
+}
+
+// ---------------------- the visitor's own wallet -------------------------
+// The per-user credit pipeline (the frontier law): every passage carries
+// its own wallet, purchases land here instantly through Stripe's signed
+// webhooks, and every AI operation the five gated doors serve is weighed
+// against it BEFORE it runs. SQLite keeps no enums — the allowed values
+// are the law written here:
+//   planTier    : FREE | SEEKER | OBSERVATORY_PRO
+//   actionType  : CHAT | AKASHIC | ART_X | LIGHT_CODES | DREAM_BOOK |
+//                 SUBSCRIPTION_GRANT | TOPUP_PURCHASE
+// CreditLedger.creditsDeducted is signed: negative = spent, positive =
+// granted or refunded. rawCostUsd is internal bookkeeping only — it is
+// never shown to the visitor.
+
+model UserWallet {
+  id                    String    @id @default(cuid())
+  userId                String    @unique
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planTier              String    @default("FREE") // FREE | SEEKER | OBSERVATORY_PRO
+  freeCreditsRemaining  Int       @default(5) // the birth gift — spent first
+  paidCreditsRemaining  Int       @default(0) // every purchase lands here
+  stripeCustomerId      String?   @unique
+  stripeSubscriptionId  String?   @unique
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+}
+
+model CreditLedger {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  actionType      String // CHAT | AKASHIC | ART_X | LIGHT_CODES | DREAM_BOOK | SUBSCRIPTION_GRANT | TOPUP_PURCHASE
+  creditsDeducted Int // signed — negative spent, positive granted/refunded
+  rawCostUsd      Float?   // internal: the API cost actually incurred
+  metadata        Json?    // model, tokens, split (freePart/paidPart), referenceId
+  createdAt       DateTime @default(now())
+
+  @@index([userId])
+  @@index([userId, createdAt])
 }

@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { hashPassword, mergeAnonLibrary, readAnonId, setSessionCookie } from "@/lib/server/access";
 import { GATES, rateLimit, requestIp } from "@/lib/server/rate-limit";
 import { ensureVisitorProvisions } from "@/lib/server/workspace";
+import { ensureWallet } from "@/lib/server/wallet";
 import { mailConfigured, sendLetter, envelope } from "@/lib/server/mail";
 import { randomBytes } from "crypto";
 
@@ -55,6 +56,8 @@ export async function POST(req: NextRequest) {
 
     /* the new passage receives its workspace, its ledger and its gift */
     await ensureVisitorProvisions(user.id);
+    /* and its own wallet — five free lights, laid in at the birth */
+    await ensureWallet(user.id);
 
     const res = NextResponse.json({ user: publicUser(user) }, { status: 201 });
     setSessionCookie(res, user.id);
