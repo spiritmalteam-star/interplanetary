@@ -8,6 +8,10 @@ import {
   type VisualizationMode,
 } from "@/lib/visualization";
 import {
+  harvestDirectorSpec,
+  parseJsonLoose,
+} from "@/lib/director-json";
+import {
   generateImage,
   consumePaintErrors,
   GALLERY_DIR,
@@ -86,60 +90,22 @@ ASPECT
 LANGUAGE (CRITICAL)
 The visitor reads in {LANGUAGE}. Every visitor-facing string — title, subtitle, whisper, explanation, discernment, panels, diagram labels, annotations, slide titles and bodies — must be fluent, natural {LANGUAGE}. Only "subject" and "artworkPrompt" stay in English.
 
+QUOTING LAW (CRITICAL — the JSON must survive)
+Never place the double-quote character (") inside any string value. When a sentence needs a quotation, use 'single quotes' instead. Never leave a value unfinished: every string opens and closes. Keep "body" values 20-60 words — dense, never rambling.
+
 OUTPUT FORMAT
 Return STRICT JSON only, no markdown fences, no text outside the JSON:
 {"mode":"illustration","subject":"...","title":"...","subtitle":"...","whisper":"...","explanation":"...","discernment":"...","aspect":"wide","artworkPrompt":"...","panels":[{"heading":"...","body":"..."}],"diagram":{"nodes":[{"id":"n1","label":"...","x":50,"y":30}],"edges":[["n1","n2"]]},"annotations":[{"x":20,"y":40,"label":"..."}],"slides":[{"title":"...","body":"...","artworkPrompt":"..."}]}`;
 
 /* ------------------------------------------------------------------ */
-/*  JSON recovery — the director may wrap, sloppily encode, or typo    */
-/*  its JSON (e.g. "y:10 without a closing quote). Three layers:       */
-/*  1. direct parse  2. heuristic repair  3. the model repairs itself  */
+/*  JSON recovery — the director may wrap, sloppily encode, typo its   */
+/*  JSON (e.g. "y:10 without a closing quote) or leave a raw quote     */
+/*  inside a panel body. The recovery lives in director-json.ts:       */
+/*  1. direct parse  2. heuristic repair  3. stray-quote escaping      */
+/*  4. field harvesting — and only then 5. the model repairs itself.   */
+/*  A vision is never refused because its JSON broke: the atelier      */
+/*  paints from the harvested fields, or from the visitor's own words. */
 /* ------------------------------------------------------------------ */
-
-function repairHeuristics(span: string): string {
-  return span
-    /* control characters inside strings */
-    .replace(/[\u0000-\u0019]+/g, " ")
-    /* trailing commas */
-    .replace(/,(\s*[}\]])/g, "$1")
-    /* missing quote after a short key:  "y:10  →  "y":10 */
-    .replace(/"(x|y|z|id|n)(:\s*-?\d)/g, '"$1":$2')
-    /* missing comma between sibling values:  "a":"1" "b":"2" */
-    .replace(/"(\s*)\{"(?=[a-z]+":)/g, '"$1,{"');
-}
-
-function tryParseSpan(text: string): Record<string, unknown> | null {
-  const start = text.indexOf("{");
-  const end = text.lastIndexOf("}");
-  if (start === -1 || end <= start) return null;
-  const span = text.slice(start, end + 1);
-  try {
-    return JSON.parse(span) as Record<string, unknown>;
-  } catch {
-    /* heuristic repair, then retry */
-    try {
-      return JSON.parse(repairHeuristics(span)) as Record<string, unknown>;
-    } catch {
-      return null;
-    }
-  }
-}
-
-function extractJsonLoose(raw: string): Record<string, unknown> | null {
-  let text = raw.trim();
-  for (let depth = 0; depth < 3; depth++) {
-    const fence = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-    if (fence) text = fence[1].trim();
-    const parsed = tryParseSpan(text);
-    if (parsed) return parsed;
-    /* unwrap an embedded JSON object inside a string field */
-    const start = text.indexOf("{");
-    const end = text.lastIndexOf("}");
-    if (start === -1 || end <= start) return null;
-    text = text.slice(start, end + 1);
-  }
-  return null;
-}
 
 /** Last resort — the model repairs its own broken JSON. */
 async function repairJsonWithModel(
@@ -163,7 +129,7 @@ async function repairJsonWithModel(
       max_tokens: 4096,
     });
     const fixed = (completion.choices[0]?.message?.content ?? "").trim();
-    return extractJsonLoose(fixed);
+    return parseJsonLoose(fixed);
   } catch {
     return null;
   }
@@ -344,7 +310,36 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
     });
 
     const raw = (completion.choices[0]?.message?.content ?? "").trim();
-    let spec = extractJsonLoose(raw);
+    let spec = parseJsonLoose(raw);
+    if (!spec) {
+      /* the structural parse failed — harvest the fields by hand so
+         the atelier can paint anyway; only the frame is missing */
+      const harvested = harvestDirectorSpec(raw);
+      if (harvested) {
+        console.error(
+          "[api/visualize] director JSON broken — painting from harvested fields. finish:",
+          completion.choices[0]?.finish_reason,
+          "len:",
+          raw.length
+        );
+        spec = {
+          mode: harvested.mode,
+          subject: harvested.subject,
+          title: harvested.title,
+          subtitle: harvested.subtitle,
+          whisper: harvested.whisper,
+          explanation: harvested.explanation,
+          discernment: harvested.discernment,
+          aspect: harvested.aspect,
+          artworkPrompt: harvested.artworkPrompt,
+          panels: harvested.panels,
+          annotations: harvested.annotations,
+          ...(harvested.diagramNodes.length >= 2
+            ? { diagram: { nodes: harvested.diagramNodes, edges: [] } }
+            : {}),
+        };
+      }
+    }
     if (!spec) {
       console.error(
         "[api/visualize] director output unparseable — asking the model to repair. finish:",
@@ -358,13 +353,24 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
       spec = await repairJsonWithModel(zai, raw);
     }
     if (!spec) {
-      return NextResponse.json(
-        {
-          error:
-            "The vision could not be composed. Rest a breath, then ask again.",
-        },
-        { status: 502 }
+      /* the vision itself was never composed — build the humblest
+         possible spec from the visitor's own words and paint it. The
+         brushes decide; the visitor never meets a bare refusal. */
+      console.error(
+        "[api/visualize] repair failed — painting from the visitor's words alone."
       );
+      spec = {
+        mode: modeHint ?? "illustration",
+        subject: message.slice(0, 200),
+        title: message.slice(0, 80),
+        subtitle: "",
+        whisper: "",
+        explanation: "",
+        discernment: "",
+        aspect: "",
+        artworkPrompt: message.slice(0, 600),
+        panels: [],
+      };
     }
 
     /* ---------- shape the director's spec ---------- */

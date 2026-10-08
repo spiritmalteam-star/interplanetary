@@ -100,7 +100,7 @@ export interface VisualizationArtifact {
 
 /** The words that name a visual PRODUCT (the thing being asked for). */
 const VISUAL_OBJECT_PATTERN =
-  /\b(?:images?|pics?|pictures?|photos?|illustrations?|visuals?|visuali[sz]ation|diagrams?|maps?|infographics?|artworks?|render(?:ing|s)?|drawings?|sketch(?:es)?|paintings?|imagery)\b/i;
+  /\b(?:images?|pics?|pictures?|photos?|illustrations?|visuals?|visions?|visuali[sz]ation|diagrams?|maps?|infographics?|artworks?|render(?:ing|s)?|drawings?|sketch(?:es)?|paintings?|imagery)\b/i;
 
 /** The verbs that can carry an ask. Present tense only — "showed"/
     "drew" narrate the past, they never petition the mirror. */
@@ -119,28 +119,47 @@ const NEGATION_PATTERN =
 
 /** Reported speech — "my therapist asked me to draw", "the book says
     to picture a door" — describes someone ELSE's ask, never the
-    visitor's own petition to this mirror. */
+    visitor's own petition to this mirror. Past and third-person forms
+    only: the bare forms ("draw me", "show me") are the visitor's own
+    imperative, never narration. */
 const REPORTED_SPEECH_PATTERN =
-  /\b(?:asked|asks?|told|tells?|suggested|suggests?|recommended|recommends?|said|says|wrote|writes?|claimed|claims?|taught|teaches?)\b[^.!?]{0,40}\b(?:me|us|him|her|them|to|that|us)\b/i;
+  /\b(?:asked|told|suggested|recommended|said|wrote|claimed|taught|teaches|teaching|says|tells|suggests|recommends|writes|claims|asks)\b[^.!?]{0,40}\b(?:me|us|him|her|them|to|that|us)\b/i;
 
 /** A sentence about an EXISTING image ("the picture you made", "that
     drawing of mine") — referencing, not requesting. */
 const REFERENCE_PATTERN =
-  /\b(?:the|this|that|these|those|my|your|his|her|their)\s+(?:images?|pics?|pictures?|photos?|drawings?|visuals?|renderings?|sketch(?:es)?|paintings?|illustrations?|imagery)\b/i;
+  /\b(?:the|this|that|these|those|my|your|his|her|their)\s+(?:images?|pics?|pictures?|photos?|drawings?|visuals?|visions?|renderings?|sketch(?:es)?|paintings?|illustrations?|imagery)\b/i;
 
 /** Explicit construction frames — "as an image", "into a picture",
     "in picture form" — an ask wherever they stand. */
 const FORM_FRAME_PATTERN =
   /\b(?:as|into|in)\s+(?:an?\s+|the\s+)?(?:images?|pics?|pictures?|photos?|visuals?|illustrations?|drawings?|paintings?|infographics?|diagrams?|maps?|renderings?)\b(?:\s+form)?/i;
 
+/** The objects of the OTHER chambers — a card, a book, a poem, a
+    record, a remedy, a sound transmission, an intention, a formula.
+    When such an object shares the sentence and no strong visual claim
+    takes the brush back ("as an image", a picture asked beside the
+    verb), the image gate stands down and lets that door's own gate
+    decide — and vice versa: the claim always wins the brush back. */
+const OTHER_DOOR_OBJECTS_PATTERN =
+  /\b(?:tarot|arcana|oracle\s+cards?|cards?|spread|deck|book|storybook|poem|poetry|haiku|sonnet|lullaby|akash?ic|records?|remed(?:y|ies)|sigil|intention|formula|invention|transmission|light\s*codes?)\b/i;
+
 /** Questions that are asks by their own shape. */
 const EXPLICIT_ASK_PATTERN =
   /\bwhat\s+(?:does|would|might|do)\s+.{0,80}?\s+(?:look|appear)\s+like\b/i;
 
-/** The speaker narrating their OWN past making — "I made a
-    presentation yesterday" — never a petition to the mirror. */
+/** The speaker narrating their OWN making — past ("I made a
+    presentation yesterday"), progressive ("I have been drawing
+    little sketches"), habitual ("sometimes I draw") — a story about
+    themselves, never a petition to the mirror. */
 const PAST_NARRATION_PATTERN =
-  /\bI\s+(?:drew|painted|showed|made|created|generated|sketched|produced|built|rendered|have\s+drawn|have\s+made|have\s+created)\b/i;
+  /\bI\s+(?:drew|painted|showed|made|created|generated|sketched|produced|built|rendered|had|draw|sketch|paint|have\s+drawn|have\s+made|have\s+created|have\s+been\s+(?:drawing|painting|sketching|making|creating|showing|building|rendering)|was\s+(?:drawing|painting|sketching|making|creating)|am\s+(?:drawing|painting|sketching|making|creating))\b/i;
+
+/** The sentence sitting in remembered time — "when I was young",
+    "my grandmother used to paint water" — storytelling, never a
+    present petition to the mirror. */
+const PAST_CONTEXT_PATTERN =
+  /\b(?:when i was|back when|as a child|as a kid|growing up|used to|yesterday|last (?:year|month|week|night|summer|winter|autumn|spring)|ago|in my childhood|every (?:day|night|week|month|morning|evening|sunday|saturday|summer|winter))\b/i;
 
 /** The speaker narrating their OWN future making — "I will draw you a
     map someday" — a story about themselves, not a request. */
@@ -187,8 +206,27 @@ function isVisualAskSentence(s: string): boolean {
   if (REPORTED_SPEECH_PATTERN.test(s)) return false;
   if (PAST_NARRATION_PATTERN.test(s)) return false;
   if (FUTURE_NARRATION_PATTERN.test(s)) return false;
+  if (PAST_CONTEXT_PATTERN.test(s)) return false;
 
   const hasObject = VISUAL_OBJECT_PATTERN.test(s);
+
+  /* THE CROSS-DOOR LAW — when another chamber's artifact shares the
+     sentence ("draw a card", "write a poem", "my akashic records"),
+     the brush stands down unless a visual claim takes it back: the
+     image word asked beside the verb, or an explicit form frame
+     ("as an image"). A COMPOUND head ("a vision card") belongs to
+     the door's own noun, whatever stands before it. */
+  const visualClaim =
+    (hasObject && verbNearObject(s)) || FORM_FRAME_PATTERN.test(s);
+  const dm = OTHER_DOOR_OBJECTS_PATTERN.exec(s);
+  if (dm) {
+    const vm = new RegExp(VISUAL_OBJECT_PATTERN.source, "i").exec(s);
+    const compoundHead =
+      vm !== null &&
+      dm.index > vm.index &&
+      dm.index <= vm.index + vm[0].length + 1;
+    if (compoundHead || !visualClaim) return false;
+  }
 
   if (hasObject && verbNearObject(s) && !REFERENCE_PATTERN.test(s)) {
     return true;
@@ -208,7 +246,8 @@ function isVisualAskSentence(s: string): boolean {
     (ASK_VERB_PATTERN.test(bare) || hasObject) &&
     !/\b(?:you|your|yourself|yours)\b/i.test(bare) &&
     !REPORTED_SPEECH_PATTERN.test(bare) &&
-    !REFERENCE_PATTERN.test(bare)
+    !REFERENCE_PATTERN.test(bare) &&
+    !OTHER_DOOR_OBJECTS_PATTERN.test(bare)
   ) {
     return true;
   }
@@ -262,15 +301,43 @@ export function detectVisualIntent(text: string): VisualIntent {
           !PAST_NARRATION_PATTERN.test(s) &&
           !FUTURE_NARRATION_PATTERN.test(s))
     ) ||
-    parts.some(
-      (s) =>
-        !META_MENTION_PATTERN.test(s) &&
-        !NEGATION_PATTERN.test(s) &&
-        !REPORTED_SPEECH_PATTERN.test(s) &&
-        !PAST_NARRATION_PATTERN.test(s) &&
-        !FUTURE_NARRATION_PATTERN.test(s) &&
-        PRODUCT_FRAME_PATTERNS.some((re) => re.test(s))
-    );
+    parts.some((s) => {
+      if (
+        META_MENTION_PATTERN.test(s) ||
+        NEGATION_PATTERN.test(s) ||
+        REPORTED_SPEECH_PATTERN.test(s) ||
+        PAST_NARRATION_PATTERN.test(s) ||
+        FUTURE_NARRATION_PATTERN.test(s) ||
+        PAST_CONTEXT_PATTERN.test(s)
+      ) {
+        return false;
+      }
+      if (!PRODUCT_FRAME_PATTERNS.some((re) => re.test(s))) return false;
+      /* the cross-door law — another chamber's artifact in the same
+         sentence keeps the brush sheathed unless a visual claim
+         (image word beside the verb, or a form frame) takes it back.
+         A product's TOPIC is not its object: "make a presentation
+         about my book" is a presentation, the book only names it. */
+      const hasObject = VISUAL_OBJECT_PATTERN.test(s);
+      const visualClaim =
+        (hasObject && verbNearObject(s)) || FORM_FRAME_PATTERN.test(s);
+      if (OTHER_DOOR_OBJECTS_PATTERN.test(s)) {
+        const pm = PRODUCT_FRAME_PATTERNS
+          .map((re) => re.exec(s))
+          .find((m): m is RegExpExecArray => m !== null);
+        let scope = s;
+        if (pm) {
+          const tail = s.slice(pm.index + pm[0].length);
+          if (/^\s+(?:about|of|for|on)\b/i.test(tail)) {
+            scope = s.slice(0, pm.index + pm[0].length);
+          }
+        }
+        if (OTHER_DOOR_OBJECTS_PATTERN.test(scope) && !visualClaim) {
+          return false;
+        }
+      }
+      return true;
+    });
   const followUp = FOLLOW_UP_PATTERNS.some((re) => re.test(v));
   return { direct, followUp };
 }

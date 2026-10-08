@@ -628,7 +628,11 @@ export function MirrorOSChat() {
                   )}
               </div>
             ))}
-            {osStatus === "loading" && (
+            {/* one breath at a time — while a visualization is forming
+                it carries its own card, so the plain thinking line
+                stands down and the thread never shows two loaders */}
+            {osStatus === "loading" &&
+              !osMessages.some((m) => m.visual === "pending") && (
               <div
                 ref={(node) => {
                   loadingRef.current = node;

@@ -50,7 +50,18 @@ export interface SideArtifactRef {
 }
 
 /* ------------------------------------------------------------------ */
-/*  THE REQUEST GATE                                                   */
+/*  THE REQUEST GATE — THE SENTENCE LAW                                */
+/*  The same core idea as the image gate: the doors read SENTENCES,    */
+/*  never the whole text at once. A long message that merely MENTIONS  */
+/*  a world ("the book I am reading", "I made a poem once", "my tarot  */
+/*  cards at home") is a conversation, not a request. One sentence     */
+/*  opens a door only when that sentence, in its own right, carries    */
+/*  the request — an explicit frame, a request verb standing close     */
+/*  before the door's name, or a bare naming that is itself the ask —  */
+/*  and none of the guards (meta-mention, negation, reported speech,   */
+/*  the speaker narrating their own past or future making) claim it    */
+/*  first. Ordinary questions that merely mention a world's name are   */
+/*  answered as ordinary words, nothing more.                          */
 /* ------------------------------------------------------------------ */
 
 /** An explicit request frame — the visitor addressing the mirror and
@@ -136,21 +147,114 @@ function verbNear(text: string, match: RegExpExecArray, gap = 5): boolean {
   return words.some((w) => REQUEST_VERBS.has(w));
 }
 
-/** The gate itself: does this mention READ as a request?
-    1. an explicit request frame anywhere in the message, or
-    2. a request verb close before the door's name, or
-    3. a bare naming — a short message (≤ 12 words) that does not
-       open like a question and is itself the ask ("akashic records
-       of my life in the Sirian waters" — nine words, one ask). */
-function isRequested(text: string, match: RegExpExecArray): boolean {
-  if (REQUEST_FRAME.test(text)) return true;
-  if (verbNear(text, match)) return true;
-  return wordCount(text) <= 12 && !INTERROGATIVE_START.test(text);
+/* --------------------------- THE GUARDS ---------------------------- */
+/*  A guarded sentence never opens a door — the same five guards the   */
+/*  image gate keeps, retuned for the chamber doors.                   */
+
+/** Meta-speech about a world's machinery — "the akashic records
+    section", "the poem generator", "the forge feature", "that world
+    in the app". Talking ABOUT a door is not knocking on it. */
+const META_FEATURE_PATTERN: RegExp = new RegExp(
+  [
+    "\\b(?:akash?ic|tarot|arcana|oracle|star\\s*play|forge|light\\s*codes?|particle\\s*x|quantum|evolve\\s*med|manifest(?:ing|ation)?|remed(?:y|ies))\\b[^.?!]{0,28}\\b(?:sections?|features?|doors?|worlds?|chambers?|tools?|modes?|tabs?|pages?|views?|screens?|creator|creators?|generator|generators?|engine|engines?)\\b",
+    "\\b(?:sections?|features?|doors?|worlds?|chambers?|tabs?|pages?|views?|screens?)\\s+(?:like|of|for)\\s+(?:the|this|that|our)?\\s*(?:akash?ic|forge|light\\s*codes?|quantum|star\\s*play|manifest\\w*|remed\\w*)\\b",
+  ].join("|"),
+  "i"
+);
+
+/** A sentence that declines or excludes — "no poem needed", "without
+    the cards", "not another reading". The opposite of a request. */
+const NEGATION_PATTERN: RegExp =
+  /\b(?:no|not|without|never|nothing|don'?t|do not|doesn'?t|no need (?:for|of)|not looking for|no more)\b[^.?!]{0,32}\b(?:book|poem|poetry|card|cards?|reading|readings?|record|records?|remed(?:y|ies)|sound|sounds|music|sigil|intention|visions?|transmission|haiku|sonnet|lullaby)\b/i;
+
+/** Reported speech — "my teacher told me to read the records", "the
+    book says to draw a card" — someone else's ask, never the
+    visitor's own petition to this mirror. Past and third-person forms
+    only: the bare forms ("write me", "tell me") are the visitor's
+    own imperative and must never be mistaken for narration. */
+const REPORTED_SPEECH_PATTERN: RegExp =
+  /\b(?:asked|told|suggested|recommended|said|wrote|claimed|taught|teaches|teaching|says|tells|suggests|recommends|writes|claims|asks)\b[^.?!]{0,40}\b(?:me|us|him|her|them|to|that|us)\b/i;
+
+/** The speaker narrating their OWN making — past ("I wrote a book
+    last year", "I pulled a card this morning"), habitual present
+    ("sometimes I draw little sketches") — a story, not a request. */
+const SELF_NARRATION_PATTERN: RegExp =
+  /\bI\s+(?:made|wrote|drew|painted|created|composed|built|designed|forged|pulled|flipped|shuffled|dealt|read|kept|keep|had|draw|sketch|paint|write|journal|have\s+(?:made|written|drawn|painted|created|composed|built|designed|forged|pulled|flipped|shuffled|dealt|read|kept))\b/i;
+
+/** The sentence sitting in remembered time — "when I was young", "my
+    mother read tarot every sunday" — storytelling, never a present
+    petition to the mirror. */
+const PAST_CONTEXT_PATTERN: RegExp =
+  /\b(?:when i was|back when|as a child|as a kid|growing up|used to|yesterday|last (?:year|month|week|night|summer|winter|autumn|spring)|ago|in my childhood|every (?:day|night|week|month|morning|evening|sunday|saturday|summer|winter))\b/i;
+
+/** The speaker narrating their OWN future making — "I will write a
+    book someday" — a story about themselves, not a request. */
+const FUTURE_NARRATION_PATTERN: RegExp =
+  /\bI\s+(?:will|shall)\s+(?:\w+\s+){0,3}?(?:make|write|draw|paint|create|compose|build|design|forge|read|pull|flip|shuffle|open|weave)\b/i;
+
+/** A finite clause verb — the mark of an ordinary STATEMENT ("the
+    sound of rain calms me", "the book is on the table"), not a bare
+    naming that is itself the ask ("relaxing sounds of stars",
+    "a poem about the sea"). Third-person and past forms only — bare
+    forms collide with the doors' own nouns and nouns of intent
+    ("find calm", "to help me sleep"). */
+const CLAUSE_VERB_PATTERN: RegExp =
+  /\b(?:is|are|was|were|am|be|been|being|have|has|had|do|does|did|can|could|will|would|shall|should|may|might|must|feels?|felt|seems?|seemed|sounds?|sounded|calms\b|calmed\b|calming\b|helps\b|helped\b|helping\b|makes?|made|brings?|brought|carries?|carried|reminds?|reminded|comes?|came|goes?|went|stays?|stayed|means?|meant|changes?|changed|speaks?|spoke|says?|said|tells?|told|asks?|asked|knows?|knew|thinks?|thought|wants?|wanted|needs?|needed|loves?|loved|likes?|liked)\b/i;
+
+/** The strongest statement markers — the be-verbs. They are checked
+    across the WHOLE sentence (they never collide with a door's
+    naming), while the wider clause-verb family is checked only
+    OUTSIDE the door-phrase match span. */
+const BE_VERB_PATTERN = /\b(?:is|are|was|were|am)\b/i;
+
+/**
+ * A guarded sentence never opens a door on its own. Meta-mention,
+ * negation, reported speech and the speaker narrating their own past
+ * or future making are absolute: the visitor's own ask must travel in
+ * its own words, not inside someone else's sentence.
+ */
+function guardedSentence(s: string): boolean {
+  if (META_FEATURE_PATTERN.test(s)) return true;
+  if (NEGATION_PATTERN.test(s)) return true;
+  if (REPORTED_SPEECH_PATTERN.test(s)) return true;
+  if (SELF_NARRATION_PATTERN.test(s)) return true;
+  if (FUTURE_NARRATION_PATTERN.test(s)) return true;
+  if (PAST_CONTEXT_PATTERN.test(s)) return true;
+  return false;
 }
 
-/* ------------------------------------------------------------------ */
-/*  THE DOORS — each with the words that name it                       */
-/* ------------------------------------------------------------------ */
+/**
+ * One sentence opens a door when it holds the door's name AND an
+ * asking shape of its own:
+ *   1. an explicit request frame inside the sentence,
+ *   2. a request verb standing close before the door's name,
+ *   3. a bare naming — a short sentence (≤ 12 words) that does not
+ *      open like a question and holds no finite clause verb, so the
+ *      naming itself IS the ask ("information in akashic",
+ *      "relaxing sounds of stars", "a poem about the sea").
+ */
+function sentenceRequests(s: string, match: RegExpExecArray): boolean {
+  if (REQUEST_FRAME.test(s)) return true;
+  if (verbNear(s, match)) return true;
+  /* the bare naming — the sentence IS the ask. An ordinary statement
+     is refused: clause verbs are sought OUTSIDE the door-phrase span
+     ("sounds" names the door itself), while the be-verbs are sought
+     across the whole sentence (they never share a door's words). */
+  if (wordCount(s) > 12 || INTERROGATIVE_START.test(s)) return false;
+  const outside =
+    s.slice(0, match.index) + " " + s.slice(match.index + match[0].length);
+  if (CLAUSE_VERB_PATTERN.test(outside)) return false;
+  if (BE_VERB_PATTERN.test(s)) return false;
+  return true;
+}
+
+/** The visitor's text, cut into sentences — the unit the doors read. */
+function splitSentences(text: string): string[] {
+  return text
+    .split(/(?<=[.!?…;])\s+|\n+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
 
 /* The book's own return — the visitor paused a volume earlier and now
    asks the mirror to bring it back where it rested. Already fully
@@ -232,7 +336,7 @@ const FORGE_PATTERNS: RegExp[] = [
    reply. Text verbs only — a lullaby SUNG belongs to the Light
    Codes chamber, a lullaby WRITTEN belongs to the loom. */
 const POEM_PATTERNS: RegExp[] = [
-  /\b(write|compose|pen|jot|weave|craft)\b[^.?!]{0,24}\b(me\s+|us\s+)?(a|an|the|us)?\s*(poem|poetry|verse|verses|haiku|sonnet|limerick|rhyme|lullaby)\b/i,
+  /\b(write|compose|pen|jot|weave|craft|make|create|give|deliver)\b[^.?!]{0,24}\b(me\s+|us\s+)?(a|an|the|us)?\s*(poem|poetry|verse|verses|haiku|sonnet|limerick|rhyme|lullaby)\b/i,
   /\b(a|an)\s+(poem|haiku|sonnet|lullaby)\s+(about|for|of|on)\b/i,
   /\bpoem\b[^.?!]{0,20}\b(about|for|of|on)\b/i,
   /\bhaiku\b/i,
@@ -315,30 +419,64 @@ function firstMatch(text: string, patterns: RegExp[]): RegExpExecArray | null {
 /**
  * One pass, most specific doors first. Returns the artifact kind that
  * should ride along with the mirror's reply — or null for ordinary
- * words that need nothing but an answer. A door opens ONLY on request:
- * an explicit frame, a request verb near the door's name, or a bare
- * naming that is itself the ask (≤ 12 words, no interrogative opener).
+ * words that need nothing but an answer.
+ *
+ * THE SENTENCE LAW — the doors read SENTENCES, never the whole text
+ * at once. Each door opens only when some sentence, untouched by the
+ * guards, carries the request in its own right: an explicit frame, a
+ * request verb close before the door's name, or a bare naming that is
+ * itself the ask. A companion frame in the neighboring sentence
+ * ("the akashic records. — can you open them for me?") still knocks;
+ * a mention five sentences away from the ask does not.
  */
 export function detectArtifactIntent(text: string): SideArtifactKind | null {
   const v = text.trim();
   if (v.length < 3) return null;
 
-  /* the book's return is itself a request — it needs no gate */
-  if (BOOK_RESUME_PATTERNS.some((re) => re.test(v))) return "book";
+  /* the book's return is itself a request — it needs no gate beyond
+     the guards (a negated or meta sentence never resumes a volume) */
+  if (
+    BOOK_RESUME_PATTERNS.some((re) => re.test(v)) &&
+    !NEGATION_PATTERN.test(v) &&
+    !META_FEATURE_PATTERN.test(v)
+  ) {
+    return "book";
+  }
+
+  const sentences = splitSentences(v);
 
   for (const door of DOORS) {
+    /* the quantum instruments are requests by nature — naming one IS
+       asking for it (kept whole-text: a named tool travels with its
+       own sentence wherever it stands) */
     if (door.ungated && door.ungated.some((re) => re.test(v))) {
       return door.kind;
     }
-    const m = firstMatch(v, door.patterns);
-    if (!m) continue;
-    if (isRequested(v, m)) return door.kind;
-    /* the forge hears a spoken directive — the vision is the ask */
-    if (door.kind === "forge" && FORGE_ASK_VERB.test(v) && forgeDirective(v)) {
-      return door.kind;
+
+    for (let i = 0; i < sentences.length; i++) {
+      const s = sentences[i];
+
+      /* an explicit frame next door — the door named in one sentence,
+         the ask framed in the neighbor ("…the akashic records. Can
+         you open them for me?") */
+      const next = sentences[i + 1];
+      const prev = sentences[i - 1];
+      const neighborFrame =
+        (next && REQUEST_FRAME.test(next) && !guardedSentence(next)) ||
+        (prev && REQUEST_FRAME.test(prev) && !guardedSentence(prev));
+
+      if (guardedSentence(s)) continue;
+      const m = firstMatch(s, door.patterns);
+      if (!m) continue;
+      if (sentenceRequests(s, m)) return door.kind;
+      if (neighborFrame) return door.kind;
+      /* the forge hears a spoken directive — the vision is the ask */
+      if (door.kind === "forge" && FORGE_ASK_VERB.test(s) && forgeDirective(s)) {
+        return door.kind;
+      }
+      /* a passing mention falls through to the next doors — the reply
+         stays an ordinary reply */
     }
-    /* a passing mention falls through to the next doors — the reply
-       stays an ordinary reply */
   }
   return null;
 }

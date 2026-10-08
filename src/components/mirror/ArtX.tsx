@@ -652,7 +652,11 @@ export function ArtXChat() {
                   )}
               </div>
             ))}
-            {axStatus === "loading" && (
+            {/* one breath at a time — while a vision is forming it
+                carries its own card, so the plain thinking line stands
+                down and the atelier thread never shows two loaders */}
+            {axStatus === "loading" &&
+              !axMessages.some((m) => m.visual === "pending") && (
               <div
                 ref={(node) => {
                   loadingRef.current = node;

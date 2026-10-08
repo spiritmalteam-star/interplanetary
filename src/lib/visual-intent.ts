@@ -36,6 +36,8 @@ const VISUAL_OBJECT_PATTERN = new RegExp(
     "\\bphotos?\\b",
     /* visual family — NOUNS only: visual(s), viusal(s), visuali[sz]ation */
     "\\bv(?:isuals?|iusals?|isuali[sz]ation|iusali[sz]ation)\\b",
+    /* vision, visions — the Mirror's own word for a crystallized sight */
+    "\\bvisions?\\b",
     /* crystallization — the NOUN form; the verb lives in ASK_VERB */
     "\\bc(?:ry|ri)stall?i[sz]ation\\b",
     /* drawn forms — drawing(s), sketch(es), painting(s), illustration(s) */
@@ -60,18 +62,30 @@ const NEGATION_PATTERN =
   /\b(?:no|not|without|never|nothing|don'?t|do not|doesn'?t|no need (?:for|of)|not looking for)\b[^.!?]{0,32}\b(?:images?|pics?|pictures?|photos?|visuals?|drawings?|sketch(?:es)?|paintings?|illustrations?)\b/i;
 
 /** Reported speech — "my therapist asked me to draw", "the book says
-    to picture a door" — someone else's ask, never the visitor's. */
+    to picture a door" — someone else's ask, never the visitor's.
+    Past and third-person forms only: the bare forms ("draw me",
+    "show me") are the visitor's own imperative, never narration. */
 const REPORTED_SPEECH_PATTERN =
-  /\b(?:asked|asks?|told|tells?|suggested|suggests?|recommended|recommends?|said|says|wrote|writes?|claimed|claims?|taught|teaches?)\b[^.!?]{0,40}\b(?:me|us|him|her|them|to|that|us)\b/i;
+  /\b(?:asked|told|suggested|recommended|said|wrote|claimed|taught|teaches|teaching|says|tells|suggests|recommends|writes|claims|asks)\b[^.!?]{0,40}\b(?:me|us|him|her|them|to|that|us)\b/i;
 
 /** A sentence about an EXISTING image — referencing, not requesting. */
 const REFERENCE_PATTERN =
-  /\b(?:the|this|that|these|those|my|your|his|her|their)\s+(?:images?|pics?|pictures?|photos?|drawings?|visuals?|renderings?|sketch(?:es)?|paintings?|illustrations?|imagery)\b/i;
+  /\b(?:the|this|that|these|those|my|your|his|her|their)\s+(?:images?|pics?|pictures?|photos?|drawings?|visuals?|visions?|renderings?|sketch(?:es)?|paintings?|illustrations?|imagery)\b/i;
 
 /** Explicit construction frames — "as an image", "into a picture" —
     an ask wherever they stand inside the sentence. */
 const FORM_FRAME_PATTERN =
   /\b(?:as|into|in)\s+(?:an?\s+|the\s+)?(?:images?|pics?|pictures?|photos?|visuals?|illustrations?|drawings?|paintings?|renderings?)\b(?:\s+form)?/i;
+
+/** The objects of the OTHER chambers — a card, a book, a poem, a
+    record, a remedy, a sound transmission, an intention, a formula.
+    When such an object shares the sentence and no strong visual claim
+    takes the brush back ("as an image", a picture asked beside the
+    verb), the image gate stands down and lets that door's own gate
+    decide — a card is drawn by the deck, a poem woven by the loom,
+    and only "show it as an image" returns the brush to the atelier. */
+const OTHER_DOOR_OBJECTS_PATTERN =
+  /\b(?:tarot|arcana|oracle\s+cards?|cards?|spread|deck|book|storybook|poem|poetry|haiku|sonnet|lullaby|akash?ic|records?|remed(?:y|ies)|sigil|intention|formula|invention|transmission|light\s*codes?)\b/i;
 
 /** Softened petitions — leading/trailing "please". */
 const POLITE_PREFIX_PATTERN =
@@ -91,10 +105,18 @@ const PROMPT_ASK_PATTERN =
 const EXPLICIT_ASK_PATTERN =
   /\bwhat\s+(?:does|would|might|do)\s+.{0,80}?\s+(?:look|appear)\s+like\b/i;
 
-/** The speaker narrating their OWN past making — "I made a
-    presentation yesterday" — never a petition to the mirror. */
+/** The speaker narrating their OWN making — past ("I made a
+    presentation yesterday"), progressive ("I have been drawing
+    little sketches"), habitual ("sometimes I draw") — a story about
+    themselves, never a petition to the mirror. */
 const PAST_NARRATION_PATTERN =
-  /\bI\s+(?:drew|painted|showed|made|created|generated|sketched|produced|built|rendered|have\s+drawn|have\s+made|have\s+created)\b/i;
+  /\bI\s+(?:drew|painted|showed|made|created|generated|sketched|produced|built|rendered|had|draw|sketch|paint|have\s+drawn|have\s+made|have\s+created|have\s+been\s+(?:drawing|painting|sketching|making|creating|showing|building|rendering)|was\s+(?:drawing|painting|sketching|making|creating)|am\s+(?:drawing|painting|sketching|making|creating))\b/i;
+
+/** The sentence sitting in remembered time — "when I was young",
+    "my grandmother used to paint water" — storytelling, never a
+    present petition to the mirror. */
+const PAST_CONTEXT_PATTERN =
+  /\b(?:when i was|back when|as a child|as a kid|growing up|used to|yesterday|last (?:year|month|week|night|summer|winter|autumn|spring)|ago|in my childhood|every (?:day|night|week|month|morning|evening|sunday|saturday|summer|winter))\b/i;
 
 /** The speaker narrating their OWN future making — "I will draw you a
     map someday" — a story about themselves, not a request. */
@@ -136,8 +158,27 @@ function isVisualAskSentence(s: string): boolean {
   if (REPORTED_SPEECH_PATTERN.test(s)) return false;
   if (PAST_NARRATION_PATTERN.test(s)) return false;
   if (FUTURE_NARRATION_PATTERN.test(s)) return false;
+  if (PAST_CONTEXT_PATTERN.test(s)) return false;
 
   const hasObject = VISUAL_OBJECT_PATTERN.test(s);
+
+  /* THE CROSS-DOOR LAW — when another chamber's artifact shares the
+     sentence ("draw a card", "write a poem", "my akashic records"),
+     the brush stands down unless a visual claim takes it back: the
+     image word asked beside the verb, or an explicit form frame
+     ("as an image"). A COMPOUND head ("a vision card") belongs to
+     the door's own noun, whatever stands before it. */
+  const visualClaim =
+    (hasObject && verbNearObject(s)) || FORM_FRAME_PATTERN.test(s);
+  const dm = OTHER_DOOR_OBJECTS_PATTERN.exec(s);
+  if (dm) {
+    const vm = new RegExp(VISUAL_OBJECT_PATTERN.source, "i").exec(s);
+    const compoundHead =
+      vm !== null &&
+      dm.index > vm.index &&
+      dm.index <= vm.index + vm[0].length + 1;
+    if (compoundHead || !visualClaim) return false;
+  }
 
   if (hasObject && verbNearObject(s) && !REFERENCE_PATTERN.test(s)) {
     return true;
@@ -155,7 +196,8 @@ function isVisualAskSentence(s: string): boolean {
     (ASK_VERB_PATTERN.test(bare) || hasObject) &&
     !/\b(?:you|your|yourself|yours)\b/i.test(bare) &&
     !REPORTED_SPEECH_PATTERN.test(bare) &&
-    !REFERENCE_PATTERN.test(bare)
+    !REFERENCE_PATTERN.test(bare) &&
+    !OTHER_DOOR_OBJECTS_PATTERN.test(bare)
   ) {
     return true;
   }

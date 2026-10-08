@@ -212,7 +212,7 @@ async function cogViewCall(
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ model, prompt, size }),
-        signal: AbortSignal.timeout(90_000),
+        signal: AbortSignal.timeout(60_000),
       });
       if (!res.ok) {
         const detail = (await res.text()).slice(0, 300);
@@ -334,7 +334,7 @@ async function paintWithDalle(
         quality: modelQuality,
         ...(isGptImage ? {} : { response_format: cloudMode ? "url" : "b64_json" }),
       }),
-      signal: AbortSignal.timeout(120_000),
+      signal: AbortSignal.timeout(100_000),
     });
 
     if (!res.ok) {

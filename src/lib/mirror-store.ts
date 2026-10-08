@@ -2863,26 +2863,11 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         ),
       }));
 
-      /* the same one silent repaint — the brushes rest once, not forever */
-      if (!regenerateOf && !artifact.imageUrl && artifact.slides.length === 0) {
-        window.setTimeout(() => {
-          const msg = get().emMessages.find((m) => m.id === visualId);
-          if (
-            msg?.artifact &&
-            !msg.artifact.imageUrl &&
-            msg.artifact.slides.length === 0 &&
-            !msg.visual
-          ) {
-            void get().askEMVisual(msg.visualRequest ?? artifact.subject, undefined, {
-              id: visualId,
-              request: msg.visualRequest ?? artifact.subject,
-              prompt: artifact.prompt,
-              subject: artifact.subject,
-              mode: artifact.mode,
-            });
-          }
-        }, 1200);
-      }
+      /* THE ONE ACTIVATION LAW — when the brushes rested, the prepared
+         prompt and the painter's journal are shown and the visitor
+         decides. The atelier never wakes a second time on its own: a
+         silent re-run read to the visitor as the image creator
+         activating twice. */
     } catch {
       set((s) => ({
         emStatus: "ready",
@@ -3068,28 +3053,9 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         ),
       }));
 
-      /* The atelier rested before the brush touched the canvas — one
-         silent repaint is set in motion before the prepared prompt is
-         shown. The visitor waits once more, not forever. */
-      if (!regenerateOf && !artifact.imageUrl && artifact.slides.length === 0) {
-        window.setTimeout(() => {
-          const msg = get().axMessages.find((m) => m.id === visualId);
-          if (
-            msg?.artifact &&
-            !msg.artifact.imageUrl &&
-            msg.artifact.slides.length === 0 &&
-            !msg.visual
-          ) {
-            void get().askArtXVisual(artifact.subject, null, {
-              id: visualId,
-              request: msg.visualRequest ?? artifact.subject,
-              prompt: artifact.prompt,
-              subject: artifact.subject,
-              mode: artifact.mode,
-            });
-          }
-        }, 1200);
-      }
+      /* THE ONE ACTIVATION LAW — as in every channel: the atelier never
+         wakes a second time on its own. A rested brush shows the
+         prepared prompt; the visitor's hand decides on a repaint. */
     } catch {
       set((s) => ({
         axStatus: "ready",
@@ -3278,28 +3244,9 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         ),
       }));
 
-      /* The atelier rested before the brush touched the canvas — one
-         silent repaint is set in motion before the prepared prompt is
-         shown. The visitor waits once more, not forever. */
-      if (!regenerateOf && !artifact.imageUrl && artifact.slides.length === 0) {
-        window.setTimeout(() => {
-          const msg = get().osMessages.find((m) => m.id === visualId);
-          if (
-            msg?.artifact &&
-            !msg.artifact.imageUrl &&
-            msg.artifact.slides.length === 0 &&
-            !msg.visual
-          ) {
-            void get().askOSVisual(artifact.subject, null, {
-              id: visualId,
-              request: msg.visualRequest ?? artifact.subject,
-              prompt: artifact.prompt,
-              subject: artifact.subject,
-              mode: artifact.mode,
-            });
-          }
-        }, 1200);
-      }
+      /* THE ONE ACTIVATION LAW — as in every channel: the atelier never
+         wakes a second time on its own. A rested brush shows the
+         prepared prompt; the visitor's hand decides on a repaint. */
     } catch {
       set((s) => ({
         osStatus: "ready",
