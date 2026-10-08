@@ -17,7 +17,7 @@ import {
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { SuggestionTree } from "./SuggestionTree";
-import { ReplyBranches } from "./ReplyBranches";
+import { ReplyBranches, branchChipsLive } from "./ReplyBranches";
 import { emGatheringPhrases, emVectors } from "@/lib/data/evolvemed";
 import { emNoteSets } from "@/lib/data/scope-notes";
 import { cn } from "@/lib/utils";
@@ -558,6 +558,35 @@ function EvolveMedChat() {
     .filter((s): s is (typeof emVectors)[number] => Boolean(s));
   const hasWindow = Boolean(activeVector) || fusionPair.length === 2;
 
+  /* THE SCOPE LAW — the branches belong only to the vector window this
+     thread stands in: the active vector (and its fusion) ride along. */
+  const scopeHint =
+    [activeVector?.name, ...fusionPair.map((s) => s.name)]
+      .filter(Boolean)
+      .join(" + ") || null;
+
+  /* THE BRANCHES' OWN FLOOR — when the latest landed reply carries
+     branches, they are the conversation's only suggestions: the living
+     tree stands down so just the branches speak. */
+  const branchesOwnFloor = useMemo(() => {
+    const last = [...emMessages]
+      .reverse()
+      .find(
+        (m) =>
+          m.role === "em" &&
+          m.text.trim() &&
+          !m.notesVector &&
+          !m.artifact &&
+          !m.visual
+      );
+    if (!last) return false;
+    return branchChipsLive(
+      "em",
+      last,
+      emVisitorBefore(emMessages, emMessages.indexOf(last))
+    );
+  }, [emMessages]);
+
   return (
     <div className="scope-frame-card relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl">
       <div
@@ -647,6 +676,7 @@ function EvolveMedChat() {
                         disabled={emStatus === "loading"}
                         onPick={() => {}}
                         contextQuery={emVisitorBefore(emMessages, i)}
+                        scopeHint={scopeHint}
                         askFn={(q) => {
                           if (emStatus !== "loading") void askEM(q);
                         }}
@@ -749,7 +779,9 @@ function EvolveMedChat() {
       )}
 
       {/* the living tree — the Evolve Med branch only, resting on the
-          active vector window, drifting to what is spoken */}
+          active vector window, drifting to what is spoken. It stands
+          down whenever this exchange's own branches hold the floor. */}
+      {!branchesOwnFloor && (
       <div className="shrink-0 px-3 pb-1 sm:px-5">
         <SuggestionTree
           focusBranch="evolvemed"
@@ -770,6 +802,7 @@ function EvolveMedChat() {
           transmitting={emStatus === "loading"}
         />
       </div>
+      )}
 
       {/* composer */}
       <div className="shrink-0 border-t hairline bg-[var(--glass-bg)] px-3 py-2.5 backdrop-blur-xl sm:px-4">
@@ -850,7 +883,7 @@ export function EvolveMed() {
           topBarHidden ? "invisible -translate-y-4 opacity-0" : "translate-y-0 opacity-100"
         )}
       >
-        <div className="flex h-14 items-center justify-between gap-2 px-3 sm:gap-3 sm:px-5">
+        <div className="bar-safe flex items-center justify-between gap-2 px-3 sm:gap-3 sm:px-5">
           <button
             type="button"
             onClick={exitEvolveMed}

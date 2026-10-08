@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------ */
-/*  Mirror Entity Laboratory — shared types & archive data            */
+/*  Mirror Entity Digital Chamber — shared types & archive data            */
 /* ------------------------------------------------------------------ */
 
 export type Mode = "interplanetary" | "healing";

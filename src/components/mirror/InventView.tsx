@@ -14,7 +14,7 @@ import {
 import { useMirror, type ChatMessage } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { SuggestionTree } from "./SuggestionTree";
-import { ReplyBranches } from "./ReplyBranches";
+import { ReplyBranches, branchChipsLive } from "./ReplyBranches";
 import {
   forgeChatPhases,
   forgeDomains,
@@ -1005,6 +1005,17 @@ function BenchChat() {
     [messages]
   );
 
+  /* THE BRANCHES' OWN FLOOR — when the latest landed stroke carries
+     branches, they are the conversation's only suggestions: the living
+     tree stands down so just the branches speak. */
+  const branchesOwnFloor = useMemo(() => {
+    const last = [...messages]
+      .reverse()
+      .find((m) => m.text.trim() && !m.artifact && !m.visual);
+    if (!last) return false;
+    return branchChipsLive("forge", last, last.query);
+  }, [messages]);
+
   useEffect(() => {
     if (!loading) return;
     const id = window.setInterval(
@@ -1145,7 +1156,9 @@ function BenchChat() {
       </div>
 
       {/* the living tree — the Invent branch only, resting on the forge,
-          drifting to what is spoken */}
+          drifting to what is spoken. It stands down whenever this
+          stroke's own branches hold the floor. */}
+      {!branchesOwnFloor && (
       <div className="shrink-0 px-3 pb-1 pt-2 sm:px-4">
         <SuggestionTree
           focusBranch="invent"
@@ -1165,6 +1178,7 @@ function BenchChat() {
           transmitting={loading}
         />
       </div>
+      )}
 
       {/* composer */}
       <div className="shrink-0 border-t hairline bg-[var(--glass-bg)] px-3 py-2.5 backdrop-blur-xl sm:px-4">
@@ -1243,7 +1257,7 @@ export function InventView() {
           topBarHidden ? "invisible -translate-y-4 opacity-0" : "translate-y-0 opacity-100"
         )}
       >
-        <div className="flex h-14 items-center justify-between gap-2 px-3 sm:gap-3 sm:px-5">
+        <div className="bar-safe flex items-center justify-between gap-2 px-3 sm:gap-3 sm:px-5">
           <button
             type="button"
             onClick={exitInvent}

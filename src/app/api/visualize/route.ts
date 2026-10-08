@@ -205,8 +205,10 @@ const MODE_DEFAULT_SIZE: Record<VisualizationMode, ImageSize> = {
 
 /* One brush at a time — the atelier refuses parallel hands, and a
    refused hand (429) is given time, never abandoned. Every paint is
-   queued behind the previous one and retried with growing patience. */
-const PAINT_BACKOFF_MS = [2500, 6000, 12000, 20000];
+   queued behind the previous one and retried with growing patience —
+   but the ladder is kept short, so a resting brush never keeps the
+   visitor waiting minutes for news. */
+const PAINT_BACKOFF_MS = [1500, 4000];
 
 let brushLine: Promise<unknown> = Promise.resolve();
 function withBrush<T>(task: () => Promise<T>): Promise<T> {
@@ -218,7 +220,7 @@ function withBrush<T>(task: () => Promise<T>): Promise<T> {
 async function paint(
   prompt: string,
   size: ImageSize,
-  attempts = 3
+  attempts = 2
 ): Promise<GeneratedImage | null> {
   return withBrush(async () => {
     for (let i = 0; i < attempts; i++) {
@@ -466,7 +468,7 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
           await paint(
             `${sp}. ${ART_DIRECTION}. ${ART_AVOID}.`,
             "1344x768",
-            3
+            2
           )
         );
       }

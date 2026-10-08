@@ -71,7 +71,7 @@ export function envelope(bodyText: string, ctaUrl?: string, ctaLabel?: string): 
         ? `<a href="${ctaUrl}" style="display:inline-block;margin:8px 0 4px;padding:12px 26px;border-radius:999px;background:linear-gradient(90deg,#a78bfa,#f0abfc);color:#150f28;font-weight:600;text-decoration:none;font-size:14px;">${ctaLabel ?? "Open the door"}</a>`
         : ""
     }
-    <p style="margin:22px 0 0;font-size:12px;color:#7d76a0;">Sent by the Mirror Entity Laboratory. If you did not ask for this letter, simply ignore it — nothing changes.</p>
+    <p style="margin:22px 0 0;font-size:12px;color:#7d76a0;">Sent by the Mirror Entity Digital Chamber. If you did not ask for this letter, simply ignore it — nothing changes.</p>
   </div></body></html>`;
   return { text: `${bodyText}${ctaUrl ? `\n\n${ctaLabel ?? "Open"}: ${ctaUrl}` : ""}`, html };
 }

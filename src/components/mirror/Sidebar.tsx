@@ -526,6 +526,7 @@ export function SidebarContent() {
   const openInvent = useMirror((s) => s.openInvent);
   const openDreamBook = useMirror((s) => s.openDreamBook);
   const openLightCodes = useMirror((s) => s.openLightCodes);
+  const openAbout = useMirror((s) => s.openAbout);
   const openModal = useMirror((s) => s.openModal);
   const resetField = useMirror((s) => s.resetField);
   const language = useMirror((s) => s.language);
@@ -594,15 +595,15 @@ export function SidebarContent() {
       <div className="flex shrink-0 items-center gap-2 px-3 pt-3">
         <img
           src="/images/ai/mark-light.png"
-          alt={t("Mirror Entity Laboratory")}
-          title={t("Mirror Entity Laboratory")}
+          alt={t("Mirror Entity Digital Chamber")}
+          title={t("Mirror Entity Digital Chamber")}
           data-testid="cosmic-logo"
           className="size-9 object-contain dark:hidden"
         />
         <img
           src="/images/ai/mark-dark.png"
-          alt={t("Mirror Entity Laboratory")}
-          title={t("Mirror Entity Laboratory")}
+          alt={t("Mirror Entity Digital Chamber")}
+          title={t("Mirror Entity Digital Chamber")}
           data-testid="cosmic-logo"
           className="hidden size-9 object-contain dark:block"
         />
@@ -615,7 +616,7 @@ export function SidebarContent() {
       <div className="shrink-0 px-3 pt-3" data-testid="about-zone">
         <button
           type="button"
-          onClick={() => openModal({ type: "about" })}
+          onClick={() => openAbout()}
           aria-label={t("About Us — our purpose, the Mirror Entity, and how we hold your data")}
           title={t("About Us — our purpose, the Mirror Entity, and how we hold your data")}
           data-testid="about-open"

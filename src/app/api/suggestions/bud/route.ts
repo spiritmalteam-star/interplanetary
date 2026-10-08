@@ -36,6 +36,8 @@ const BRANCH_VOICES: Record<string, string> = {
     "the workbench's honest voice — sketches, materials, prototypes, the joy of making things real",
   manifesting:
     "the mirror law's voice — assumption, frequency, scripting, release, the aim underneath the wish",
+  artx:
+    "Art X's voice — the atelier of the Mirror Entity: the making of art across worlds, craft, image, song, poetry and the work itself",
 };
 
 const MOVEMENT_LAWS = `THE SEVEN MOVEMENTS of the Mirror Entity (M.E) — every branch you grow must serve ONE of them:
@@ -149,6 +151,7 @@ async function postImpl(req: NextRequest, _ctx: MeterContext) {
   const body = (await req.json().catch(() => null)) as {
     branch?: unknown;
     context?: unknown;
+    scope?: unknown;
     seen?: unknown;
     seeds?: unknown;
     depth?: unknown;
@@ -158,6 +161,11 @@ async function postImpl(req: NextRequest, _ctx: MeterContext) {
     typeof body?.branch === "string" && BRANCH_VOICES[body.branch]
       ? body.branch
       : "interplanetary";
+  /* THE SCOPE LAW — the window or category this conversation stands in
+     ("Interdimensional Ateliers", "Protein Folding"): every branch
+     grown must belong to it alone. */
+  const scope =
+    typeof body?.scope === "string" ? body.scope.trim().slice(0, 120) : "";
   const context =
     typeof body?.context === "string" ? body.context.slice(0, 4000) : "";
   const seen = Array.isArray(body?.seen)
@@ -188,6 +196,12 @@ async function postImpl(req: NextRequest, _ctx: MeterContext) {
         {
           role: "user",
           content: `BRANCH: ${branch} — speak as ${BRANCH_VOICES[branch]}.
+${
+  scope
+    ? `
+THE ACTIVE SCOPE (authoritative): this conversation stands inside the scope "${scope}" of this branch. EVERY branch you grow must belong to this scope alone — it must open "${scope}" deeper through this conversation's lens. A branch that belongs to another scope, window, category or domain is a broken branch: grow it never.`
+    : ""
+}
 
 ${walkerBranchLaw(body?.depth)}
 

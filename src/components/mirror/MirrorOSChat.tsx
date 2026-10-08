@@ -6,7 +6,7 @@ import { Feather, Orbit, RefreshCw } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { SuggestionTree } from "./SuggestionTree";
-import { ReplyBranches } from "./ReplyBranches";
+import { ReplyBranches, branchChipsLive } from "./ReplyBranches";
 import { osOpeners } from "@/lib/data/mirroros";
 import { detectVisualIntent } from "@/lib/visualization";
 import {
@@ -364,6 +364,27 @@ export function MirrorOSChat() {
     [osMessages]
   );
 
+  /* THE BRANCHES' OWN FLOOR — when the latest landed reply carries
+     branches, they are the conversation's only suggestions: the living
+     tree stands down so just the branches speak. */
+  const branchesOwnFloor = useMemo(() => {
+    const last = [...osMessages]
+      .reverse()
+      .find(
+        (m) =>
+          m.role === "os" &&
+          m.text.trim() &&
+          !m.artifact &&
+          !m.visual
+      );
+    if (!last) return false;
+    return branchChipsLive(
+      "os",
+      last,
+      visitorBefore(osMessages, osMessages.indexOf(last))
+    );
+  }, [osMessages]);
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const latestRef = useRef<HTMLDivElement | null>(null);
   const loadingRef = useRef<HTMLDivElement | null>(null);
@@ -595,7 +616,9 @@ export function MirrorOSChat() {
       </div>
 
       {/* the living tree — the Manifesting branch only, resting on the
-          manifesting formulas, drifting to what is spoken */}
+          manifesting formulas, drifting to what is spoken. It stands
+          down whenever this exchange's own branches hold the floor. */}
+      {!branchesOwnFloor && (
       <div className="shrink-0 px-3 pb-1 sm:px-5">
         <SuggestionTree
           focusBranch="manifesting"
@@ -615,6 +638,7 @@ export function MirrorOSChat() {
           transmitting={osStatus === "loading"}
         />
       </div>
+      )}
 
       {/* composer */}
       <div className="shrink-0 border-t hairline bg-[var(--glass-bg)] px-3 py-2.5 backdrop-blur-xl sm:px-4">

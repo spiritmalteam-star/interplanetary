@@ -493,7 +493,7 @@ export function LightCodesView() {
     <div className="scope-lightcodes relative flex h-full flex-col">
       {/* ---------- top bar ---------- */}
       <header className="relative z-30 shrink-0 border-b hairline bg-[var(--glass-bg)] backdrop-blur-xl">
-        <div className="flex h-14 items-center justify-between gap-2 px-3 sm:px-5">
+        <div className="bar-safe flex items-center justify-between gap-2 px-3 sm:px-5">
           <button
             type="button"
             onClick={exitLightCodes}

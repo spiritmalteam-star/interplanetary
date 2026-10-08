@@ -57,7 +57,6 @@ export type ModalState =
   | { type: "astral" }
   | { type: "starplay" }
   | { type: "technology" }
-  | { type: "about" }
   | { type: "dossier"; kind: DossierKind; id: string }
   | { type: "entity"; kind: DossierKind; id: string }
   | { type: "species"; id: string }
@@ -163,7 +162,8 @@ export type MainView =
   | "evolvemed"
   | "artx"
   | "lightcodes"
-  | "library";
+  | "library"
+  | "about";
 export type RegisterKind = DossierKind;
 
 /* -------- the passage — the visitor's account and the free door -------- */
@@ -638,6 +638,8 @@ interface MirrorState {
 
   /* ParticleX — the quantum narrator (fully independent) */
   openParticleX: () => void;
+  /** The open door — the laboratory's own About page. */
+  openAbout: () => void;
   exitParticleX: () => void;
 
   setPxDraft: (v: string) => void;
@@ -2126,6 +2128,9 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       exactly like the Manifest OS and ParticleX do. Free for everyone. */
   openArtX: () =>
     set({ view: "artx", mobileNavOpen: false, modal: null }),
+
+  openAbout: () =>
+    set({ view: "about", mobileNavOpen: false, modal: null }),
 
   exitArtX: () => set({ view: "observatory" }),
 

@@ -7,7 +7,7 @@ import { es } from "./dicts/es";
 import { tr } from "./dicts/tr";
 
 /* ------------------------------------------------------------------ */
-/*  MIRROR ENTITY LABORATORY — universal translation layer             */
+/*  MIRROR ENTITY DIGITAL CHAMBER — universal translation layer             */
 /*  Keys are the English source strings themselves. A missing entry    */
 /*  gracefully falls back to English, so the app never breaks.         */
 /* ------------------------------------------------------------------ */

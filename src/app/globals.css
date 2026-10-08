@@ -62,7 +62,7 @@ body {
 }
 
 /* ------------------------------------------------------------------ */
-/*  MIRROR ENTITY LABORATORY — theme tokens                           */
+/*  MIRROR ENTITY DIGITAL CHAMBER — theme tokens                           */
 /* ------------------------------------------------------------------ */
 
 :root {
@@ -1861,4 +1861,28 @@ html:not(.dark) .scope-lightcodes {
     animation: none;
     stroke-opacity: 0.7;
   }
+}
+
+/* ------------------------------------------------------------------ */
+/*  THE NOTCH LAW — the house bows beneath the iPhone's status bar.    */
+/*  The app is built viewport-fit=cover, so every floating top bar     */
+/*  grows by the safe-area inset and its content rests below it. On    */
+/*  screens without a notch the insets are 0 and nothing changes.      */
+/* ------------------------------------------------------------------ */
+
+/* a world's top bar: the old h-14, plus whatever the notch demands */
+.bar-safe {
+  height: calc(3.5rem + env(safe-area-inset-top, 0px));
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* the conversation's floating handles: the old pt-3, lifted above
+   the notch when one exists */
+.handles-safe {
+  padding-top: max(0.75rem, env(safe-area-inset-top, 0px));
+}
+
+/* content clearance under a bar-safe bar — the old h-12 spacer */
+.clearance-safe {
+  height: calc(3rem + env(safe-area-inset-top, 0px));
 }

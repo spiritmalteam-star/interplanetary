@@ -35,8 +35,11 @@ export const TALES: BookOption[] = [
   { id: "ballad", label: "Ballad" },
 ];
 
-/** What kind of book it becomes. */
+/** What kind of book it becomes. The SHORT book is the visitor's own
+    ask honored: a complete tale in a handful of pages — the loom's
+    SHORT BOOK LAW (see src/lib/book-length.ts and the route). */
 export const VOLUMES: BookOption[] = [
+  { id: "short", label: "Short book" },
   { id: "bedtime", label: "Bedtime treasure" },
   { id: "classic", label: "Classic tale" },
   { id: "saga", label: "Grand saga" },
@@ -45,46 +48,54 @@ export const VOLUMES: BookOption[] = [
 /** The verse forms — books written in stanzas, not prose paragraphs. */
 export const VERSE_FORMS = new Set(["poem", "riddle", "ballad"]);
 
-/** The level of lecture — how deep and multidimensional the writing
-    reads. A depth gauge of four strata: from the most luminous
-    clarity (angel readers) down to the ancient legacy voice whose
-    paragraphs run in several dimensions at once. */
-export interface LectureLevel {
+/** The depth of the telling — how deep and multidimensional the book
+    reads. FIVE drawn steps, shown visually as 1 2 3 4 5: from the
+    clearest daylight (a book like most books, easily comprehensible)
+    down to the multidimensional voice whose story, structure and
+    reader all scale together. */
+export interface BookDepth {
   id: string;
   label: string;
-  /** Roman numeral of the stratum — shown on the depth bar. */
+  /** The depth numeral — shown on the depth bar. */
   numeral: string;
-  /** What the level does to the writing (i18n dynamic content). */
+  /** What the depth does to the writing (i18n dynamic content). */
   depth: string;
 }
 
-export const LECTURE_LEVELS: LectureLevel[] = [
+export const BOOK_DEPTHS: BookDepth[] = [
   {
-    id: "angel",
-    label: "Angel readers",
-    numeral: "I",
+    id: "d1",
+    label: "Clear daylight",
+    numeral: "1",
     depth:
-      "the most luminous clarity — every word rests open like daylight; the deeper strata still shimmer beneath, gentle as wings",
+      "the book most books are — one clear story, one steady voice, a structure every reader knows by heart; everything open, everything understood",
   },
   {
-    id: "cryptic",
-    label: "Cryptics",
-    numeral: "II",
+    id: "d2",
+    label: "Hidden streams",
+    numeral: "2",
     depth:
-      "veiled speech — symbols, silences and meanings folded beneath the surface, felt before they are understood",
+      "the classic shape keeps its form, but undercurrents begin — recurring symbols, quiet foreshadowing, a story that means more than it says",
   },
   {
-    id: "decipher",
-    label: "Decyphres",
-    numeral: "III",
+    id: "d3",
+    label: "Twilight layers",
+    numeral: "3",
     depth:
-      "writing as code — ciphers, riddles and layered registers the reader unlocks page by page",
+      "two tellings at once — the tale above and its meaning beneath; echoes and mirrors fold back on earlier pages and reward the second reading",
   },
   {
-    id: "legacy",
-    label: "Legacy reading",
-    numeral: "IV",
+    id: "d4",
+    label: "The deep grammar",
+    numeral: "4",
     depth:
-      "the deepest stratum — an ancient legacy voice whose paragraphs run in several dimensions at once, the book quietly reading its reader",
+      "writing as code — layered registers, riddles and ciphers, each unlock deepening every page before it; the structure itself begins to bend",
+  },
+  {
+    id: "d5",
+    label: "The multidimensional",
+    numeral: "5",
+    depth:
+      "the deepest telling — paragraphs running in several dimensions at once, time folding, the book quietly reading its reader; story, structure and reader scale together",
   },
 ];

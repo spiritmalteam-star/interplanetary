@@ -16,7 +16,7 @@ import {
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { SuggestionTree } from "./SuggestionTree";
-import { ReplyBranches } from "./ReplyBranches";
+import { ReplyBranches, branchChipsLive } from "./ReplyBranches";
 import { pxGatheringPhrases, pxScopes } from "@/lib/data/particlex";
 import { pxNoteSets } from "@/lib/data/scope-notes";
 import { cn } from "@/lib/utils";
@@ -418,6 +418,28 @@ function ParticleXChat() {
     .filter((s): s is (typeof pxScopes)[number] => Boolean(s));
   const hasWindow = Boolean(activeScope) || fusionPair.length === 2;
 
+  /* THE SCOPE LAW — the branches belong only to the window this thread
+     stands in: the active scope (and its fusion) ride with every ask. */
+  const scopeHint =
+    [activeScope?.name, ...fusionPair.map((s) => s.name)]
+      .filter(Boolean)
+      .join(" + ") || null;
+
+  /* THE BRANCHES' OWN FLOOR — when the latest landed reply carries
+     branches, they are the conversation's only suggestions: the living
+     tree stands down so just the branches speak. */
+  const branchesOwnFloor = useMemo(() => {
+    const last = [...pxMessages]
+      .reverse()
+      .find((m) => m.role === "px" && m.text.trim() && !m.notesScope);
+    if (!last) return false;
+    return branchChipsLive(
+      "px",
+      last,
+      pxVisitorBefore(pxMessages, pxMessages.indexOf(last))
+    );
+  }, [pxMessages]);
+
   return (
     <div className="scope-frame-card relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl">
       <div
@@ -502,6 +524,7 @@ function ParticleXChat() {
                         disabled={pxStatus === "loading"}
                         onPick={() => {}}
                         contextQuery={pxVisitorBefore(pxMessages, i)}
+                        scopeHint={scopeHint}
                         askFn={(q) => {
                           if (pxStatus !== "loading") void askPX(q);
                         }}
@@ -604,7 +627,9 @@ function ParticleXChat() {
       )}
 
       {/* the living tree — the quantum branch only, resting on the
-          active scope window, drifting to what is spoken */}
+          active scope window, drifting to what is spoken. It stands
+          down whenever this exchange's own branches hold the floor. */}
+      {!branchesOwnFloor && (
       <div className="shrink-0 px-3 pb-1 sm:px-5">
         <SuggestionTree
           focusBranch="quantum"
@@ -625,6 +650,7 @@ function ParticleXChat() {
           transmitting={pxStatus === "loading"}
         />
       </div>
+      )}
 
       {/* composer */}
       <div className="shrink-0 border-t hairline bg-[var(--glass-bg)] px-3 py-2.5 backdrop-blur-xl sm:px-4">
@@ -705,7 +731,7 @@ export function ParticleX() {
           topBarHidden ? "invisible -translate-y-4 opacity-0" : "translate-y-0 opacity-100"
         )}
       >
-        <div className="flex h-14 items-center justify-between gap-2 px-3 sm:gap-3 sm:px-5">
+        <div className="bar-safe flex items-center justify-between gap-2 px-3 sm:gap-3 sm:px-5">
           <button
             type="button"
             onClick={exitParticleX}

@@ -6,7 +6,7 @@ import { ArrowLeft, Feather, Palette, RefreshCw } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { SuggestionTree } from "./SuggestionTree";
-import { ReplyBranches } from "./ReplyBranches";
+import { ReplyBranches, branchChipsLive } from "./ReplyBranches";
 import { axAtelierIntro, axOpeners, axWindows } from "@/lib/data/artx";
 import { detectVisualIntent } from "@/lib/visualization";
 import {
@@ -379,7 +379,6 @@ export function ArtXChat() {
     () => axWindows.find((w) => w.id === axScope) ?? null,
     [axScope]
   );
-
   /* the channeling branch — the exchanges' own grown branches */
   const axChanneling = useMemo(
     () =>
@@ -388,6 +387,24 @@ export function ArtXChat() {
         .find((m) => m.role === "ax" && m.branches?.length)?.branches,
     [axMessages]
   );
+
+  /* THE BRANCHES' OWN FLOOR — when the latest landed reply carries
+     branches, they are the conversation's only suggestions: the living
+     tree stands down so just the branches speak. */
+  const branchesOwnFloor = useMemo(() => {
+    const last = [...axMessages]
+      .reverse()
+      .find(
+        (m) =>
+          m.role === "ax" && m.text.trim() && !m.artifact && !m.visual
+      );
+    if (!last) return false;
+    return branchChipsLive(
+      "ax",
+      last,
+      visitorBefore(axMessages, axMessages.indexOf(last))
+    );
+  }, [axMessages]);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const latestRef = useRef<HTMLDivElement | null>(null);
@@ -578,6 +595,9 @@ export function ArtXChat() {
                         disabled={axStatus === "loading"}
                         onPick={() => {}}
                         contextQuery={visitorBefore(axMessages, i)}
+                        scopeHint={
+                          activeWindow ? t(activeWindow.label) : null
+                        }
                         askFn={(q) => {
                           if (axStatus !== "loading") void askArtX(q);
                         }}
@@ -611,7 +631,9 @@ export function ArtXChat() {
       </div>
 
       {/* the living tree — the Art X branch only, resting on the
-          atelier's questions, drifting to what is spoken */}
+          atelier's questions, drifting to what is spoken. It stands
+          down whenever this exchange's own branches hold the floor. */}
+      {!branchesOwnFloor && (
       <div className="shrink-0 px-3 pb-1 sm:px-5">
         <SuggestionTree
           focusBranch="artx"
@@ -632,6 +654,7 @@ export function ArtXChat() {
           transmitting={axStatus === "loading"}
         />
       </div>
+      )}
 
       {/* composer */}
       <div className="shrink-0 border-t hairline bg-[var(--glass-bg)] px-3 py-2.5 backdrop-blur-xl sm:px-4">
@@ -735,7 +758,7 @@ export function ArtX() {
           topBarHidden ? "invisible -translate-y-4 opacity-0" : "translate-y-0 opacity-100"
         )}
       >
-        <div className="flex h-14 items-center justify-between gap-2 px-3 sm:gap-3 sm:px-5">
+        <div className="bar-safe flex items-center justify-between gap-2 px-3 sm:gap-3 sm:px-5">
           <button
             type="button"
             onClick={exitArtX}

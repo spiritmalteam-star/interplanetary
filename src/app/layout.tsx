@@ -32,11 +32,11 @@ const literata = Literata({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://reflectme.space"),
-  title: "Mirror Entity Laboratory — Interplanetary Channel",
+  title: "Mirror Entity Digital Chamber — Interplanetary Channel",
   description:
     "A translational field of willing representatives from many star civilizations, gathered to reflect the truth of who is supporting your evolution, with love.",
   keywords: [
-    "Mirror Entity Laboratory",
+    "Mirror Entity Digital Chamber",
     "Interplanetary Channel",
     "Galactic Encyclopedia",
     "Mirror OS · Reality Guidance",

@@ -10,6 +10,7 @@ import {
   sanitizeEcho,
   type ResonanceDraw,
 } from "@/lib/book-resonance";
+import { detectShortBookAsk } from "@/lib/book-length";
 
 /* ------------------------------------------------------------------ */
 /*  POST /api/dream-book — THE REAL-TIME DYNAMIC CODEX ENGINE.         */
@@ -48,10 +49,28 @@ interface WeavePage {
 }
 
 const BOOK_PLAN: Record<string, { min: number; max: number; label: string }> = {
+  /* THE SHORT BOOK — the visitor's own ask, honored: a complete tale
+     in a handful of pages, never a long, endless story. */
+  short: {
+    min: 10,
+    max: 16,
+    label:
+      "a SHORT book — a complete tale told in a handful of pages (10–16 total): one bright arc, no sprawling middle, an ending that arrives on time",
+  },
   bedtime: { min: 80, max: 104, label: "a soft bedtime treasure — short luminous pages, a calm nightly cadence" },
   classic: { min: 96, max: 120, label: "a classic tale — full pages, an evergreen storybook voice" },
   saga: { min: 120, max: 180, label: "a grand saga — an epic breadth of pages, a mythic storyteller's breath" },
 };
+
+/* THE SHORT BOOK LAW — spoken into the open conjuring when the volume
+   is short. It overrides the general pacing and chapter cadence: the
+   whole arc lands INSIDE the plan. */
+const SHORT_BOOK_LAW = `THE SHORT BOOK LAW (absolute — the visitor asked for a SHORT book, and a short book is what they receive):
+- Set "totalPages" between 10 and 16 (an even number) — and the WHOLE story must land inside that plan.
+- Cross the threshold fast, compress the middle into its essential turns only, and reach the Seal of Closing within the plan. No wandering, no filler volumes-within-the-volume, no new subplots that cannot close.
+- The four strata still walk — but briefly: the Root Frequency in a page, the turning spheres folded into the middle, the Mirror Chambers and the Seal arriving in time.
+- A new chapter every 4–8 pages at most (this overrides the general chapter cadence).
+- The ending must feel COMPLETE, not truncated: a short book is a whole book, not a fragment of a long one.`;
 
 const AGE_PLAN: Record<string, string> = {
   little: "readers aged 4–8 — very simple words, short sentences, warm pictures in language, zero real peril; wonder, kindness, gentle humor",
@@ -61,18 +80,27 @@ const AGE_PLAN: Record<string, string> = {
   timeless: "all ages at once — a true storybook voice that a child can enter and an adult can marvel at; layered but never dark",
 };
 
-/* The level of lecture — the DEPTH and multidimensional nature of the
-   writing itself, chosen on the loom's depth bar. This rides above the
-   reader's age: it is about how the writing READS, not who reads it. */
+/* The depth of the telling — the DEPTH and multidimensional nature of
+   the writing itself, chosen on the loom's depth bar (1–5). This rides
+   above the reader's age: it is about how the writing READS, not who
+   reads it. Depth 1 is the book most books are — easily comprehensible;
+   each deeper step scales the story, its structure and its voice. */
 const LEVEL_PLAN: Record<string, string> = {
-  angel:
-    "DEPTH I — ANGEL READERS: the most luminous clarity. Every sentence rests open like daylight; nothing is hidden, nothing withheld. The deeper strata of the story still shimmer beneath the surface, but only as gentle light — a child's heart could read it aloud and an elder could weep at the same line. Kind, radiant, unclouded prose.",
-  cryptic:
-    "DEPTH II — CRYPTICS: veiled speech. The writing speaks in symbols, silences and folded meanings — much is said by what is NOT said. Images carry double bottoms; names and omens recur with quiet insistence; the reader feels the truth under the surface before they can name it. Never confusing — always resonant.",
-  decipher:
-    "DEPTH III — DECYPHRES: writing as code. The volume is a text to be DECODED — ciphers, riddles, mirrored passages, layered registers (a child's story running above a scholar's treatise running above a liturgy). Clues are planted page by page; each unlock deepens the previous pages retroactively. The reader participates in the deciphering — every riddle answered by the stanzas that follow, never left hanging.",
-  legacy:
-    "DEPTH IV — LEGACY READING: the deepest stratum. An ancient legacy voice whose paragraphs run in several dimensions AT ONCE — the literal tale, the archetypal current beneath it, and the direct address to the reader's own life threading through both. Time folds; the book quietly reads its reader. Gravity without obscurity: every multidimensional layer must remain genuinely readable, never noise.",
+  d1: "DEPTH 1 — CLEAR DAYLIGHT: the book most books are. One clear story told in one steady voice, a structure every reader knows by heart — simple sentences, linear events, a beginning, a middle and an end that arrive exactly when expected. Everything open, everything understood; the reading is effortless from the first page to the last.",
+  d2: "DEPTH 2 — HIDDEN STREAMS: the classic structure keeps its shape, but undercurrents begin. Recurring symbols, quiet foreshadowing, scenes that mean more than they say; the surface stays easy to follow while a second story gathers beneath it.",
+  d3: "DEPTH 3 — TWILIGHT LAYERS: two tellings at once. The tale runs above; its meaning runs beneath. Echoes, mirrors and doubles fold back on earlier pages, names and omens recur with quiet intent, and the second reading is rewarded with what the first could not see. Never confusing — always resonant.",
+  d4: "DEPTH 4 — THE DEEP GRAMMAR: writing as code. Layered registers (a simple scene running above a deeper doctrine), riddles and ciphers planted page by page, each unlock deepening every page before it retroactively. The structure itself begins to bend — chapters answer one another, and the book quietly re-reads its own openings.",
+  d5: "DEPTH 5 — THE MULTIDIMENSIONAL: the deepest telling. Paragraphs run in several dimensions AT ONCE — the literal tale, the archetypal current beneath it, and the direct address to the reader's own life threading through both. Time folds; the book quietly reads its reader. The story, its structure and the reader scale together. Gravity without obscurity: every layer must remain genuinely readable, never noise.",
+};
+
+/* volumes woven before the depth bar existed carry the old strata ids;
+   they map onto the nearest new depth so a brought-back book keeps
+   its voice */
+const LEGACY_LEVEL_MAP: Record<string, string> = {
+  angel: "d1",
+  cryptic: "d3",
+  decipher: "d4",
+  legacy: "d5",
 };
 
 const TALE_HINTS: Record<string, string> = {
@@ -306,7 +334,9 @@ function buildUserPrompt(body: {
   const ageLine = AGE_PLAN[age] ?? AGE_PLAN.timeless;
   const taleLine = TALE_HINTS[tale] ?? TALE_HINTS.wonder;
   const volLine = BOOK_PLAN[volume] ?? BOOK_PLAN.classic;
-  const levelLine = LEVEL_PLAN[body.level] ?? "";
+  const isShortVolume = volume === "short";
+  const levelLine =
+    LEVEL_PLAN[LEGACY_LEVEL_MAP[body.level] ?? body.level] ?? "";
   const isVerse = VERSE_FORMS.has(tale);
 
   /* the subject spoken by the visitor — the master frequency */
@@ -363,6 +393,7 @@ function buildUserPrompt(body: {
       ...(levelLine ? [`- Depth of lecture: ${levelLine}`] : []),
       `- Kind of resonance: ${taleLine}`,
       `- Kind of book: ${volLine.label}`,
+      ...(isShortVolume ? [``, SHORT_BOOK_LAW] : []),
       ...(isVerse ? [``, VERSE_LAW] : []),
       wishes.trim()
         ? `- Whispered wishes (honor them faithfully, fold them in as the book's own bones): """${wishes.trim().slice(0, 1200)}"""`
@@ -385,6 +416,13 @@ function buildUserPrompt(body: {
       `- Reader: ${ageLine}`,
       ...(levelLine ? [`- Depth of lecture: ${levelLine}`] : []),
       `- Kind of resonance: ${taleLine}`,
+      ...(isShortVolume
+        ? [
+            `- THE SHORT BOOK LAW HOLDS: this volume is SHORT (planned ${
+                body.totalPages ?? 12
+              } pages). Every page-pair moves decisively toward the ending — no new subplots, no widening; the story is converging on its Seal.`,
+          ]
+        : []),
       ...(isVerse ? [``, VERSE_LAW] : []),
       body.threads ? `- THE THREAD (everything the volume remembers): ${body.threads}` : "",
       body.recentPages?.length
@@ -418,7 +456,13 @@ function buildUserPrompt(body: {
       ``,
       SEALED_NAME_LAW,
       ``,
-      `Choose a new total length: the current plan was ${body.totalPages ?? 120} pages; add 48 to 72 pages (a multiple of 2), never exceeding 300 total. Then write the NEXT TWO pages (pages ${body.pageNumber} and ${(body.pageNumber ?? 2) + 1}) — open the widened volume with a new movement: a farther shore of the subject, not a repetition. Give a chapter title if a new chapter begins here. Return the updated thread.`
+      `Choose a new total length: the current plan was ${
+        body.totalPages ?? 120
+      } pages; ${
+        isShortVolume
+          ? "add 6 to 10 pages (a multiple of 2), never exceeding 40 total — this volume stays a short book"
+          : "add 48 to 72 pages (a multiple of 2), never exceeding 300 total"
+      }. Then write the NEXT TWO pages (pages ${body.pageNumber} and ${(body.pageNumber ?? 2) + 1}) — open the widened volume with a new movement: a farther shore of the subject, not a repetition. Give a chapter title if a new chapter begins here. Return the updated thread.`
     );
   } else {
     lines.push(
@@ -539,6 +583,14 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
       typeof body?.config?.seed === "string" ? body.config.seed.trim().slice(0, 80) : "";
     const wishes = typeof body?.config?.wishes === "string" ? body.config.wishes : "";
 
+    /* THE SHORT BOOK LAW — the visitor's own words decide. A short-book
+       ask (in any tongue the house speaks, in the topic or the whispered
+       wishes) binds the loom to the short plan, whatever shape was
+       otherwise chosen. */
+    const shortAsk =
+      volume === "short" || detectShortBookAsk(`${topic} ${wishes}`);
+    const volumeKey = shortAsk ? "short" : volume;
+
     const threads = typeof body?.threads === "string" ? body.threads.slice(0, 2000) : undefined;
     const rewrites: string[] = Array.isArray(body?.rewrites)
       ? body.rewrites
@@ -626,7 +678,7 @@ THE NAME LAW WAS BROKEN: your reply used the forbidden stock name(s): ${violatio
                 phase,
                 age,
                 tale,
-                volume,
+                volume: volumeKey,
                 level,
                 topic,
                 seed,
@@ -707,11 +759,17 @@ THE NAME LAW WAS BROKEN: your reply used the forbidden stock name(s): ${violatio
       out.dedication =
         typeof parsed.dedication === "string" ? parsed.dedication.trim().slice(0, 400) : "";
       /* the loom may widen its plan, never thin it below the chosen
-         shape's floor — a "classic tale" can never arrive as 8 pages */
+         shape's floor — a "classic tale" can never arrive as 8 pages,
+         and a SHORT book can never arrive as a sprawling epic: the
+         plan's band (min–max) is clamped hard on both sides */
+      const plan = BOOK_PLAN[volumeKey] ?? BOOK_PLAN.classic;
       out.totalPages = clampTotal(
-        Math.max(
-          BOOK_PLAN[volume]?.min ?? 96,
-          typeof parsed.totalPages === "number" ? parsed.totalPages : 0
+        Math.min(
+          plan.max,
+          Math.max(
+            plan.min,
+            typeof parsed.totalPages === "number" ? parsed.totalPages : plan.min
+          )
         )
       );
       /* the volume's birth echo rides home with it — carried BY the
@@ -730,7 +788,7 @@ THE NAME LAW WAS BROKEN: your reply used the forbidden stock name(s): ${violatio
         {
           topic,
           seed,
-          config: { age, tale, volume, level, topic },
+          config: { age, tale, volume: volumeKey, level, topic },
           title: out.title,
           subtitle: out.subtitle,
           sigil: out.sigil,
@@ -754,8 +812,11 @@ THE NAME LAW WAS BROKEN: your reply used the forbidden stock name(s): ${violatio
       typeof parsed.totalPages === "number"
     ) {
       /* the loom may widen or narrow the book ONLY when a rewriting
-         wish actually speaks of the book's length */
-      out.totalPages = clampTotal(parsed.totalPages);
+         wish actually speaks of the book's length — and a short book
+         stretched by hand still stays a short book (capped at 40) */
+      out.totalPages = clampTotal(
+        Math.min(volumeKey === "short" ? 40 : 300, parsed.totalPages)
+      );
     }
 
     if (phase !== "open" && bookId) {

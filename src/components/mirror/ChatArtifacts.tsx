@@ -52,6 +52,7 @@ import { forgeDirective, guessLightCodesMode } from "@/lib/artifact-intent";
 import type { LightCodesMode } from "@/lib/data/light-codes";
 import { WorldSigil, type WorldSigilKey } from "./WorldSigils";
 import { READERS, TALES, VERSE_FORMS } from "@/lib/data/book-options";
+import { detectShortBookAsk } from "@/lib/book-length";
 import {
   drawStarPlayCards,
   STAR_PLAY_POSITIONS,
@@ -1626,6 +1627,15 @@ function BookWeaver({
   const [age, setAge] = useState("timeless");
   const [tale, setTale] = useState("wonder");
 
+  /* THE SHORT BOOK LAW — the visitor's own words decide the volume's
+     length. When their ask carries a short-book wish (in any tongue
+     the house speaks), the loom binds a SHORT book: a complete tale
+     in a handful of pages, never a long, endless story. */
+  const volumeId = useMemo(
+    () => (detectShortBookAsk(resonance) ? "short" : "classic"),
+    [resonance]
+  );
+
   const [meta, setMeta] = useState<WeaverMeta | null>(null);
   const [pages, setPages] = useState<WeaverPage[]>([]);
   const [spread, setSpread] = useState(0);
@@ -1687,7 +1697,21 @@ function BookWeaver({
         ? {
             phase,
             language,
-            config: { age, tale, volume: "classic", topic: theTopic },
+            config: {
+              age,
+              tale,
+              volume: volumeId,
+              topic: theTopic,
+              /* the short-book wish rides as its own whisper, so the
+                 loom hears the length law twice — once in the plan,
+                 once in the visitor's own voice */
+              ...(volumeId === "short"
+                ? {
+                    wishes:
+                      "The visitor asked for a SHORT book — weave a complete tale in a handful of pages (10–16 total), never a long, endless story.",
+                  }
+                : {}),
+            },
             /* the birth echo of the LAST volume this session conjured —
                carried by the visitor alone, so the new draw refuses it
                bone by bone and no two books share a single axis */
@@ -1697,11 +1721,11 @@ function BookWeaver({
         : {
             phase,
             language,
-            config: { age, tale, volume: "classic", topic: theTopic },
+            config: { age, tale, volume: volumeId, topic: theTopic },
             /* the loom remembers the volume it already bound */
             bookId: bookIdRef.current,
             bookMeta: metaRef.current ?? {},
-            bookConfig: { age, tale, volume: "classic", topic: theTopic },
+            bookConfig: { age, tale, volume: volumeId, topic: theTopic },
             threads: threadsRef.current,
             bookPages: pagesRef.current,
             pageNumber: pagesRef.current.length + 1,
@@ -1712,7 +1736,7 @@ function BookWeaver({
             rewrites: [],
           };
     },
-    [age, tale, topic, language]
+    [age, tale, topic, language, volumeId]
   );
 
   const weave = useCallback(

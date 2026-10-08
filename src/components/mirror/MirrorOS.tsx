@@ -559,7 +559,7 @@ export function MirrorOS() {
           topBarHidden ? "invisible -translate-y-4 opacity-0" : "translate-y-0 opacity-100"
         )}
       >
-        <div className="flex h-14 items-center justify-between gap-2 px-3 sm:gap-3 sm:px-5">
+        <div className="bar-safe flex items-center justify-between gap-2 px-3 sm:gap-3 sm:px-5">
           <button
             type="button"
             onClick={exitMirrorOS}

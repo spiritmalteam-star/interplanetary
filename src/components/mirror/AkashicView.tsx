@@ -742,7 +742,7 @@ export function AkashicView() {
       {/* ---------- the way back — the letter's own right corner,
                      fading the moment you scroll down to read ---------- */}
       <div className="pointer-events-none absolute inset-x-0 top-0 z-30">
-        <div className="mx-auto flex w-full max-w-[780px] justify-end px-3 pt-5 sm:px-6 sm:pt-7">
+        <div className="mx-auto flex w-full max-w-[780px] justify-end px-3 pt-[calc(1.25rem+env(safe-area-inset-top))] sm:px-6 sm:pt-7">
           <AnimatePresence>
             {!scrolledDown && (
               <motion.button

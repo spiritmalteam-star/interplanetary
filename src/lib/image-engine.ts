@@ -180,37 +180,62 @@ interface CogViewResponse {
   data?: { url?: string; b64_json?: string }[];
 }
 
-async function paintWithCogView(
+/* the painter's model ladder — the configured model leads; if the sky
+   refuses it (retired code, unlocked plan), the current flagship is
+   knocked on once before the brush gives the canvas away */
+async function cogViewCall(
   prompt: string,
   size: string
-): Promise<GeneratedImage> {
+): Promise<{ remoteUrl?: string; b64?: string }> {
   const apiKey = process.env.ZAI_API_KEY;
   if (!apiKey) throw new Error("ZAI_API_KEY is not configured");
 
   const base = (
     process.env.ZAI_BASE_URL ?? "https://api.z.ai/api/paas/v4"
   ).replace(/\/$/, "");
-  const model = process.env.ZAI_IMAGE_MODEL ?? "cogview-3-flash";
+  const models = [
+    process.env.ZAI_IMAGE_MODEL?.trim() || "cogview-3-flash",
+    /* a second knock — a different name on the same sky */
+    ...(process.env.ZAI_IMAGE_MODEL?.trim() ?
+      [process.env.ZAI_IMAGE_MODEL.trim()] : []),
+    "cogview-4",
+    "cogview-3-flash",
+  ].filter((m, i, a) => a.indexOf(m) === i);
 
-  const res = await fetch(`${base}/images/generations`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ model, prompt, size }),
-    signal: AbortSignal.timeout(120_000),
-  });
-
-  if (!res.ok) {
-    const detail = (await res.text()).slice(0, 300);
-    throw new Error(`Z.ai CogView ${res.status}: ${detail}`);
+  let lastError: unknown = null;
+  for (const model of models) {
+    try {
+      const res = await fetch(`${base}/images/generations`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ model, prompt, size }),
+        signal: AbortSignal.timeout(90_000),
+      });
+      if (!res.ok) {
+        const detail = (await res.text()).slice(0, 300);
+        throw new Error(`Z.ai CogView ${model} ${res.status}: ${detail}`);
+      }
+      const json = (await res.json()) as CogViewResponse;
+      const item = json.data?.[0];
+      if (item?.url || item?.b64_json) {
+        return { remoteUrl: item?.url, b64: item?.b64_json };
+      }
+      lastError = new Error(`Z.ai CogView ${model} returned no image`);
+    } catch (err) {
+      lastError = err;
+    }
   }
+  throw lastError ?? new Error("Z.ai CogView could not paint");
+}
 
-  const json = (await res.json()) as CogViewResponse;
-  const item = json.data?.[0];
-  const remoteUrl = item?.url;
-  const b64 = item?.b64_json;
+async function paintWithCogView(
+  prompt: string,
+  size: string
+): Promise<GeneratedImage> {
+  const { remoteUrl, b64 } = await cogViewCall(prompt, size);
 
   /* in the laboratory keep every painting in the gallery */
   if (canWriteGallery()) {
@@ -238,6 +263,14 @@ async function paintWithCogView(
   if (remoteUrl) {
     return {
       url: remoteUrl,
+      revisedPrompt: null,
+      originalPrompt: prompt,
+      engine: "zai",
+    };
+  }
+  if (b64) {
+    return {
+      url: `data:image/png;base64,${b64}`,
       revisedPrompt: null,
       originalPrompt: prompt,
       engine: "zai",
@@ -362,12 +395,12 @@ async function paintWithDalle(
 
 /* ------------------------ brush: the atelier ----------------------- */
 
-const ATELIER_BACKOFF_MS = [2500, 6000, 12000];
+const ATELIER_BACKOFF_MS = [1500, 4000];
 
 async function paintWithAtelier(
   prompt: string,
   size: (typeof ZAI_SIZES)[number],
-  attempts = 3
+  attempts = 2
 ): Promise<GeneratedImage> {
   let lastError: unknown = null;
   for (let i = 0; i < attempts; i++) {
@@ -376,9 +409,25 @@ async function paintWithAtelier(
       const response = await zai.images.generations.create({ prompt, size });
       const base64 = response?.data?.[0]?.base64;
       if (base64) {
-        const name = savePainting(base64);
+        /* the laboratory keeps the painting in its gallery; the cloud
+           (read-only) carries it home embedded in the answer instead —
+           either way the atelier can never lose the canvas to the
+           filesystem again */
+        if (canWriteGallery()) {
+          try {
+            const name = savePainting(base64);
+            return {
+              url: `/api/visual/${name}`,
+              revisedPrompt: null,
+              originalPrompt: prompt,
+              engine: "zai",
+            };
+          } catch {
+            /* the gallery closed mid-painting — carry the canvas home */
+          }
+        }
         return {
-          url: `/api/visual/${name}`,
+          url: `data:image/png;base64,${base64}`,
           revisedPrompt: null,
           originalPrompt: prompt,
           engine: "zai",

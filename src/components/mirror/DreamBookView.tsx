@@ -43,7 +43,7 @@ import {
   noteBrowserVoiceFallback,
   speakWithBrowserVoice,
 } from "@/lib/browser-voice";
-import { LECTURE_LEVELS, READERS, TALES, VOLUMES } from "@/lib/data/book-options";
+import { BOOK_DEPTHS, READERS, TALES, VOLUMES } from "@/lib/data/book-options";
 import { dedupeChapters } from "@/lib/book-text";
 import type { VoiceId } from "@/lib/i18n/core";
 import { cn } from "@/lib/utils";
@@ -715,9 +715,9 @@ export function DreamBookView() {
   const readPageOf = meta ? Math.min(pageIdx, meta.totalPages) : 0;
   const progress = meta ? Math.min(1, readPageOf / meta.totalPages) : 0;
 
-  /* the chosen level of lecture — the depth the book reads at */
+  /* the chosen depth of the telling — how deep the book reads */
   const levelMeta = useMemo(
-    () => LECTURE_LEVELS.find((l) => l.id === level) ?? null,
+    () => BOOK_DEPTHS.find((l) => l.id === level) ?? null,
     [level]
   );
 
@@ -749,7 +749,7 @@ export function DreamBookView() {
 
   const atelier = (
     <div className="relative flex h-full flex-col overflow-hidden bg-background text-foreground">
-      <header className="relative z-10 flex shrink-0 items-center gap-2 px-3 pt-3 sm:px-5">
+      <header className="relative z-10 flex shrink-0 items-center gap-2 px-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-5">
         <button
           type="button"
           onClick={backFromAtelier}
@@ -831,51 +831,60 @@ export function DreamBookView() {
             />
           </div>
 
-          {/* the level bar — the depth of lecture, four strata of reading */}
-          <div className="mt-7" data-testid="dream-level-bar">
+          {/* the depth bar — the depth of the telling, five steps:
+              1 reads like most books, 5 runs in several dimensions;
+              each step is drawn taller than the last, so the eye
+              sees the telling itself scaling with the number */}
+          <div className="mt-7" data-testid="dream-depth-bar">
             <p className="mono-label mb-2.5 text-center text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
-              {t("The level of lecture")}
+              {t("The depth of the telling")}
             </p>
             <div className="flex items-end gap-1.5">
-              {LECTURE_LEVELS.map((lv, i) => {
+              {BOOK_DEPTHS.map((lv, i) => {
                 const active = level === lv.id;
-                const intensities = [0.14, 0.32, 0.58, 0.92];
+                /* the fill deepens with the step, but never past the
+                   point where the numeral stops reading; the active
+                   step is filled solid and its number inverts */
+                const fills = [0.07, 0.12, 0.18, 0.26, 0.36];
+                const heights = [22, 26, 30, 34, 38];
                 return (
                   <button
                     key={lv.id}
                     type="button"
                     onClick={() => choose("level", lv.id)}
                     aria-pressed={active}
-                    aria-label={`${t(lv.label)} — ${lv.numeral}`}
-                    data-testid={`dream-level-${lv.id}`}
+                    aria-label={`${t(lv.label)} — depth ${lv.numeral}`}
+                    data-testid={`dream-depth-${lv.id}`}
                     className="focus-glow group flex min-w-0 flex-1 flex-col items-center gap-1.5"
                   >
                     <span
                       className={cn(
-                        "relative flex h-7 w-full items-end overflow-hidden rounded-md border transition-all duration-300",
+                        "relative flex w-full items-end justify-center overflow-hidden rounded-md border transition-all duration-300",
                         active && "glow-sm"
                       )}
                       style={{
+                        height: `${heights[i]}px`,
                         borderColor: active
                           ? "var(--foreground)"
                           : "var(--border)",
-                        background: `color-mix(in srgb, var(--foreground) ${intensities[i]}%, transparent)`,
+                        background: active
+                          ? "var(--foreground)"
+                          : `color-mix(in srgb, var(--foreground) ${fills[i]}%, transparent)`,
                       }}
                     >
                       <span
-                        className="absolute inset-x-0 top-0 flex justify-center pt-0.5 font-[family-name(var(--font-literata))] text-[9px] tracking-[0.14em]"
+                        className="font-[family-name(var(--font-literata))] text-[11px] font-semibold leading-none tracking-[0.08em]"
                         style={{
-                          color:
-                            i >= 2
-                              ? "var(--background)"
-                              : "var(--muted-foreground)",
+                          color: active
+                            ? "var(--background)"
+                            : "var(--muted-foreground)",
                         }}
                       >
                         {lv.numeral}
                       </span>
                       {active && (
                         <motion.span
-                          layoutId="dream-level-marker"
+                          layoutId="dream-depth-marker"
                           className="absolute inset-x-0 bottom-0 h-[3px] bg-foreground"
                           transition={{ type: "spring", stiffness: 380, damping: 32 }}
                         />
@@ -898,7 +907,7 @@ export function DreamBookView() {
             <p className="ink-hand ink-soft mt-2.5 min-h-[2.6em] text-center text-[12px] italic leading-relaxed">
               {levelMeta
                 ? t(levelMeta.depth)
-                : t("Choose how deep the book reads — from the clearest daylight to the multidimensional legacy voice.")}
+                : t("Choose how deep the telling goes — from the clearest daylight to the multidimensional voice.")}
             </p>
           </div>
           <div aria-hidden="true" className="h-4" />
@@ -920,7 +929,7 @@ export function DreamBookView() {
                 className="ink-hand ink-soft mb-2 text-center text-[12.5px] italic"
               >
                 {t(
-                  "The loom waits for a thread — choose the reader, the tale, the book, or the level below."
+                  "The loom waits for a thread — choose the reader, the tale, the book, or the depth below."
                 )}
               </motion.p>
             )}
@@ -1337,7 +1346,7 @@ export function DreamBookView() {
                       {levelMeta && (
                         <p
                           className="mono-label mt-3 text-[9px] uppercase tracking-[0.24em] text-[var(--dream-ink-faint)]"
-                          data-testid="dream-reading-level-badge"
+                          data-testid="dream-depth-badge"
                         >
                           {levelMeta.numeral} · {t(levelMeta.label)}
                         </p>

@@ -835,7 +835,7 @@ export function ProfilePage() {
               <span className="sm:hidden">{t("Back")}</span>
             </button>
             <span className="mono-label ml-auto hidden text-[9px] uppercase tracking-[0.26em] text-muted-foreground/60 sm:block">
-              {t("The Mirror Entity Laboratory")}
+              {t("The Mirror Entity Digital Chamber")}
             </span>
           </div>
         </header>

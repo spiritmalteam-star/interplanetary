@@ -12,6 +12,7 @@ import {
   scoreSuggestion,
 } from "@/lib/suggestion-resonance";
 import { SuggestionTree } from "./SuggestionTree";
+import { branchChipsLive } from "./ReplyBranches";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 
@@ -293,6 +294,20 @@ export function MainSuggestionTree() {
 
   const loading = status === "loading";
 
+  /* THE BRANCHES' OWN FLOOR — when the latest landed reply carries
+     branches, they are the conversation's only suggestions: the living
+     tree stands down so just the branches speak. */
+  const branchesOwnFloor = useMemo(() => {
+    const last = [...messages]
+      .reverse()
+      .find(
+        (m) =>
+          m.text.trim() && !m.artifact && !m.visual && !m.sideArtifact
+      );
+    if (!last) return false;
+    return branchChipsLive(activeMode, last, last.query);
+  }, [messages, activeMode]);
+
   /* the channeling branch — the branches grown at this thread's
      replies hang at the top of the tree, tied to the general branch */
   const channeling = useMemo(
@@ -300,7 +315,7 @@ export function MainSuggestionTree() {
     [messages]
   );
 
-  return (
+  return branchesOwnFloor ? null : (
     <SuggestionTree
       focusBranch={activeMode}
       /* THE CATEGORIZATION LAW: the branches of suggestions belong to

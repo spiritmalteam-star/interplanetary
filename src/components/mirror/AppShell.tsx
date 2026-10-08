@@ -30,7 +30,7 @@ import { ArchiveRegister } from "./ArchiveRegister";
 import { CommunionView } from "./CommunionView";
 import { AkashicView } from "./AkashicView";
 import { DreamBookView } from "./DreamBookView";
-import { AboutModal } from "./AboutModal";
+import { AboutPage } from "./AboutPage";
 import { FederationModal } from "./FederationModal";
 import { AstralJobsModal } from "./AstralJobsModal";
 import { DossierModal } from "./DossierModal";
@@ -313,6 +313,20 @@ export default function AppShell() {
     );
   }
 
+  /* The About page — the open door of the house: who we are, every
+     room, the craft, the road to launch, the blueprint. Its own
+     quiet chapter with its own scroll; one back hand returns. */
+  if (view === "about") {
+    return (
+      <div className={`relative h-[var(--app-h,100dvh)] overflow-hidden ${FRAME_LIFT}`}>
+        <CosmicBackdrop />
+        <StarField />
+        <AboutPage />
+        {passageModals}
+      </div>
+    );
+  }
+
   /* The Invent studio is its own bound world: the inventor's compact
      workshop — blueprints, bench and rail — one back button returns. */
   if (view === "invent") {
@@ -341,7 +355,7 @@ export default function AppShell() {
             the scope selector as a fancy icon at the right */}
         <div
           ref={handlesBarRef}
-          className={`pointer-events-none absolute inset-x-0 top-0 z-30 flex items-start justify-between gap-2 bg-gradient-to-b from-[var(--background)]/80 via-[var(--background)]/25 to-transparent px-3 pb-2 pt-3 transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform sm:px-4 ${
+          className={`pointer-events-none handles-safe absolute inset-x-0 top-0 z-30 flex items-start justify-between gap-2 bg-gradient-to-b from-[var(--background)]/80 via-[var(--background)]/25 to-transparent px-3 pb-2 transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform sm:px-4 ${
             handlesHidden
               ? "invisible -translate-y-4 opacity-0"
               : "translate-y-0 opacity-100"
@@ -396,7 +410,7 @@ export default function AppShell() {
           {/* clearance for the floating handles — constant height, so
               hiding them never shifts the thread (that would re-trigger
               the scroll listener in an endless loop) */}
-          <div aria-hidden="true" className="h-12" />
+          <div aria-hidden="true" className="clearance-safe" />
 
           <div className="mx-auto w-full max-w-[760px] px-4 pb-4 sm:px-6">
             {view === "observatory" ? (
@@ -421,7 +435,6 @@ export default function AppShell() {
       </main>
 
       <FederationModal />
-      <AboutModal />
       <AstralJobsModal />
       <DossierModal />
       <SettingsModal />

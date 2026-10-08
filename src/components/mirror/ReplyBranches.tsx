@@ -89,6 +89,30 @@ function poolFor(kind: BranchThread): string[] {
   return chatSuggestionPools[poolId] ?? [];
 }
 
+/* THE BRANCHES' OWN FLOOR — the one law of the conversation's feet:
+   when a landed reply carries branches, they are THE suggestions of
+   the chat — the tree and every other in-chat whisper stand down so
+   only the branches speak. This pure check tells any view whether a
+   landed reply currently holds the floor (grown branches, or the
+   stand-in whispers while the engine thinks). */
+export function branchChipsLive(
+  kind: BranchThread,
+  message: { text: string; query?: string; branches?: LearnedBranch[] },
+  contextQuery?: string
+): boolean {
+  if (!message.text.trim()) return false;
+  if (message.branches && message.branches.length > 0) return true;
+  const pool = poolFor(kind);
+  if (pool.length === 0) return false;
+  const vocab = contextVocabulary(
+    `${contextQuery ?? message.query ?? ""}\n${message.text}`.slice(-1800)
+  );
+  const seen = new Set(loadSeen().map((s) => s.toLowerCase()));
+  return pool.some(
+    (s) => scoreSuggestion(s, vocab) > 0 && !seen.has(s.toLowerCase())
+  );
+}
+
 export function ReplyBranches({
   message,
   kind,
@@ -97,6 +121,7 @@ export function ReplyBranches({
   onPick,
   contextQuery,
   askFn,
+  scopeHint: scopeHintProp,
 }: {
   message: ReplyBranchMessage;
   /** Which thread this reply lives in — decides its general branch. */
@@ -110,12 +135,19 @@ export function ReplyBranches({
   contextQuery?: string;
   /** How a picked branch is asked — defaults to the main mirror. */
   askFn?: (q: string) => void;
+  /** The scope/window this thread currently stands in (its own name —
+      "Interdimensional Ateliers", "Protein Folding"). THE SCOPE LAW:
+      branches belong ONLY to the category or scope they represent —
+      the grown branches open this scope alone, and the stand-in
+      whispers lean toward it. */
+  scopeHint?: string | null;
 }) {
   const t = useT();
   const askMirror = useMirror((s) => s.askMirror);
   const attachBranches = useMirror((s) => s.attachBranches);
   /* the visitor's fields of expansion — coherent ones seed new branches */
   const seeds = useMirror((s) => s.expansionSeeds);
+  const scopeHint = scopeHintProp ?? null;
   /* the dropdown — the branches rest folded until the hand asks for them,
      so they never lay themselves out directly beneath the transmission */
   const [open, setOpen] = useState(false);
@@ -132,9 +164,11 @@ export function ReplyBranches({
     const rotated = [...pool.slice(rotateBy), ...pool.slice(0, rotateBy)];
     /* the reply's own breath is the context — closer than the whole
        thread ever is: this is what makes these branches more
-       connected to the context than the tree's standing whispers */
+       connected to the context than the tree's standing whispers.
+       The active scope's name rides at the front, so the whispers
+       that surface belong to the scope the visitor stands in. */
     const vocab = contextVocabulary(
-      `${contextQuery ?? message.query}\n${message.text}`.slice(-1800)
+      `${scopeHint ?? ""}\n${contextQuery ?? message.query}\n${message.text}`.slice(-1800)
     );
     const seen = new Set(loadSeen().map((s) => s.toLowerCase()));
     return rotated
@@ -143,7 +177,7 @@ export function ReplyBranches({
       .sort((a, b) => b.score - a.score || a.i - b.i)
       .slice(0, 3)
       .map((x) => x.s);
-  }, [message.text, message.query, contextQuery, kind]);
+  }, [message.text, message.query, contextQuery, kind, scopeHint]);
 
   /* the grown branches — one quiet call per landed reply */
   const growRef = useRef(false);
@@ -163,6 +197,9 @@ export function ReplyBranches({
             /* the last breaths are THIS exchange — the freshest
                resonance the laboratory can hear */
             context: `${contextQuery ?? message.query}\n${message.text}`.slice(-2400),
+            /* THE SCOPE LAW — the grown branches belong only to the
+               scope this thread stands in */
+            scope: scopeHint ?? undefined,
             seen: loadSeen().slice(0, 24),
             /* the visitor's own fields of expansion ride along —
                coherent ones grow branches of their own */
@@ -185,7 +222,7 @@ export function ReplyBranches({
       }
     }, 650);
     return () => window.clearTimeout(id);
-  }, [active, message.id, message.text, message.query, message.branches, kind, contextQuery, seeds, attachBranches]);
+  }, [active, message.id, message.text, message.query, message.branches, kind, contextQuery, scopeHint, seeds, attachBranches]);
 
   const branches = message.branches;
   /* nothing to stand on yet and nothing grown — the foot rests empty */
@@ -221,23 +258,23 @@ export function ReplyBranches({
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
         data-testid="reply-branches-toggle"
-        className="focus-glow flex w-full items-center justify-between gap-2 rounded-full border border-[color-mix(in_srgb,var(--gd)_26%,transparent)] bg-[color-mix(in_srgb,var(--gd)_4%,transparent)] px-3.5 py-1.5 text-left transition-all duration-300 hover:border-[color-mix(in_srgb,var(--gd)_44%,transparent)]"
+        className="focus-glow flex w-full items-center justify-between gap-2 rounded-full border border-[color-mix(in_srgb,var(--scope-a,var(--gd))_46%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_12%,var(--glass-bg))] px-3.5 py-1.5 text-left shadow-[0_1px_12px_-6px_color-mix(in_srgb,var(--scope-a,var(--gd))_45%,transparent)] transition-all duration-300 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_62%,transparent)] hover:bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_18%,var(--glass-bg))]"
       >
         <span className="flex min-w-0 items-center gap-2">
-          <ListTree className="size-3.5 shrink-0 text-[var(--gd)]" aria-hidden="true" />
-          <span className="mono-label truncate text-[9px] uppercase tracking-[0.22em] text-muted-foreground/70">
+          <ListTree className="size-3.5 shrink-0 text-[var(--scope-a,var(--gd))]" aria-hidden="true" />
+          <span className="mono-label truncate text-[9px] uppercase tracking-[0.22em] text-foreground/85">
             {t("Branches of this exchange")}
           </span>
         </span>
         <span className="flex shrink-0 items-center gap-2">
           <span
-            className="mono-label rounded-full px-1.5 text-[8px] uppercase tracking-[0.14em] leading-[1.6] text-[var(--gd)]"
-            style={{ border: "1px solid color-mix(in srgb, var(--gd) 30%, transparent)" }}
+            className="mono-label rounded-full px-1.5 text-[8px] uppercase tracking-[0.14em] leading-[1.6] text-[var(--scope-a,var(--gd))]"
+            style={{ border: "1px solid color-mix(in srgb, var(--scope-a, var(--gd)) 48%, transparent)" }}
           >
             {chipCount}
           </span>
           <ChevronDown
-            className={`size-3.5 text-muted-foreground/70 transition-transform duration-300 ${open ? "rotate-180" : ""}`}
+            className={`size-3.5 text-foreground/80 transition-transform duration-300 ${open ? "rotate-180" : ""}`}
             aria-hidden="true"
           />
         </span>
@@ -261,13 +298,13 @@ export function ReplyBranches({
               key={`${b.type}-${i}`}
               role="note"
               aria-label={t("Pause & integrate")}
-              className="max-w-full rounded-2xl border border-dashed border-[color-mix(in_srgb,var(--gd)_30%,transparent)] bg-[color-mix(in_srgb,var(--gd)_5%,transparent)] px-3 py-1.5"
+              className="max-w-full rounded-2xl border border-dashed border-[color-mix(in_srgb,var(--scope-a,var(--gd))_44%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_10%,var(--glass-bg))] px-3 py-1.5"
               data-testid="reply-branch-pause"
             >
-              <span className="mono-label mr-1.5 inline-block rounded-full px-1.5 align-middle text-[8px] uppercase tracking-[0.14em] leading-[1.6] text-[var(--gd)]">
+              <span className="mono-label mr-1.5 inline-block rounded-full px-1.5 align-middle text-[8px] uppercase tracking-[0.14em] leading-[1.6] text-[var(--scope-a,var(--gd))]">
                 {t("Pause & integrate")}
               </span>
-              <span className="align-middle text-[12px] italic leading-[1.5] text-foreground/80">
+              <span className="align-middle text-[12px] italic leading-[1.5] text-foreground/90">
                 {b.question}
               </span>
             </div>
@@ -280,13 +317,13 @@ export function ReplyBranches({
               aria-disabled={disabled}
               data-testid="reply-branch-chip"
               title={b.reason ? `${b.question} — ${b.reason}` : b.question}
-              className="focus-glow max-w-full rounded-full border border-[color-mix(in_srgb,var(--gd)_32%,transparent)] bg-[var(--glass-bg)] px-3 py-1.5 text-left font-serif text-[12.5px] italic leading-snug text-foreground/85 backdrop-blur-xl transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50 sm:text-[13px]"
+              className="focus-glow max-w-full rounded-full border border-[color-mix(in_srgb,var(--scope-a,var(--gd))_52%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_14%,var(--glass-bg))] px-3 py-1.5 text-left font-serif text-[12.5px] italic leading-snug text-foreground shadow-[0_1px_10px_-6px_color-mix(in_srgb,var(--scope-a,var(--gd))_50%,transparent)] backdrop-blur-xl transition-all duration-300 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_70%,transparent)] hover:bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_22%,var(--glass-bg))] disabled:cursor-not-allowed disabled:opacity-50 sm:text-[13px]"
             >
               <span
-                className="mono-label mr-1.5 inline-block rounded-full px-1.5 align-middle text-[8px] uppercase tracking-[0.14em] not-italic leading-[1.6] text-[var(--gd)]"
+                className="mono-label mr-1.5 inline-block rounded-full px-1.5 align-middle text-[8px] uppercase tracking-[0.14em] not-italic leading-[1.6] text-[var(--scope-a,var(--gd))]"
                 style={{
                   border:
-                    "1px solid color-mix(in srgb, var(--gd) 30%, transparent)",
+                    "1px solid color-mix(in srgb, var(--scope-a, var(--gd)) 46%, transparent)",
                 }}
               >
                 {t(BRANCH_TYPE_LABELS[b.type])}
@@ -306,7 +343,7 @@ export function ReplyBranches({
               aria-disabled={disabled}
               data-testid="reply-branch-chip"
               title={s}
-              className="focus-glow max-w-full rounded-full border hairline bg-[var(--glass-bg)] px-3 py-1.5 text-left font-serif text-[12.5px] italic leading-snug text-muted-foreground backdrop-blur-xl transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50 sm:text-[13px]"
+              className="focus-glow max-w-full rounded-full border border-[color-mix(in_srgb,var(--scope-a,var(--gd))_44%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_10%,var(--glass-bg))] px-3 py-1.5 text-left font-serif text-[12.5px] italic leading-snug text-foreground/90 backdrop-blur-xl transition-all duration-300 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_62%,transparent)] hover:bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_16%,var(--glass-bg))] hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50 sm:text-[13px]"
             >
               {t(s)}
             </button>
