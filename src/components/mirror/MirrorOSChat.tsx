@@ -5,9 +5,9 @@ import { AnimatePresence, motion } from "framer-motion";
 import { CircleAlert, Feather, Orbit, RefreshCw, RotateCcw } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
-import { SuggestionTree } from "./SuggestionTree";
-import { ReplyBranches, branchChipsLive } from "./ReplyBranches";
+import { ReplyBranches } from "./ReplyBranches";
 import { osOpeners } from "@/lib/data/mirroros";
+import { recordJourney } from "@/lib/learning-branches";
 import { detectVisualIntent } from "@/lib/visualization";
 import {
   blendVisualRequest,
@@ -53,10 +53,10 @@ function OpenerOrbs() {
   const loading = osStatus === "loading";
 
   return (
-    <section aria-label={t("Suggested openers")} className="mt-6">
+    <section aria-label={t("First branches")} className="mt-6">
       <div className="flex items-center justify-center gap-3">
         <span className="mono-label text-[10.5px] text-muted-foreground/70">
-          {t("Suggested openers")}
+          {t("First branches")}
         </span>
         <button
           type="button"
@@ -65,8 +65,8 @@ function OpenerOrbs() {
             setSpin((n) => n + 1);
           }}
           disabled={loading}
-          aria-label={t("New openers")}
-          title={t("New openers")}
+          aria-label={t("New branches")}
+          title={t("New branches")}
           className="focus-glow flex size-6.5 items-center justify-center rounded-full border hairline text-muted-foreground/80 transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
         >
           <motion.span
@@ -96,7 +96,13 @@ function OpenerOrbs() {
             <button
               key={q}
               type="button"
-              onClick={() => !loading && void askOS(q)}
+              onClick={() => {
+                if (loading) return;
+                /* the start is a branch of the walk too — the first
+                   step is kept on the manifesting branch of the tree */
+                recordJourney({ b: "manifesting" });
+                void askOS(q);
+              }}
               aria-disabled={loading}
               className="focus-glow group flex min-h-[46px] items-center gap-2.5 rounded-2xl border border-[color-mix(in_srgb,var(--scope-a)_18%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_5%,transparent)] px-3.5 py-2.5 text-left transition-all duration-300 hover:-translate-y-0.5 hover:border-[color-mix(in_srgb,var(--scope-a)_38%,transparent)]"
             >
@@ -391,36 +397,6 @@ export function MirrorOSChat() {
     null
   );
 
-  /* the channeling branch — the exchanges' own grown branches */
-  const osChanneling = useMemo(
-    () =>
-      [...osMessages]
-        .reverse()
-        .find((m) => m.role === "os" && m.branches?.length)?.branches,
-    [osMessages]
-  );
-
-  /* THE BRANCHES' OWN FLOOR — when the latest landed reply carries
-     branches, they are the conversation's only suggestions: the living
-     tree stands down so just the branches speak. */
-  const branchesOwnFloor = useMemo(() => {
-    const last = [...osMessages]
-      .reverse()
-      .find(
-        (m) =>
-          m.role === "os" &&
-          m.text.trim() &&
-          !m.artifact &&
-          !m.visual
-      );
-    if (!last) return false;
-    return branchChipsLive(
-      "os",
-      last,
-      visitorBefore(osMessages, osMessages.indexOf(last))
-    );
-  }, [osMessages]);
-
   const scrollRef = useRef<HTMLDivElement>(null);
   const latestRef = useRef<HTMLDivElement | null>(null);
   const loadingRef = useRef<HTMLDivElement | null>(null);
@@ -661,30 +637,9 @@ export function MirrorOSChat() {
         )}
       </div>
 
-      {/* the living tree — the Manifesting branch only, resting on the
-          manifesting formulas, drifting to what is spoken. It stands
-          down whenever this exchange's own branches hold the floor. */}
-      {!branchesOwnFloor && (
-      <div className="shrink-0 px-3 pb-1 sm:px-5">
-        <SuggestionTree
-          focusBranch="manifesting"
-          /* THE CATEGORIZATION LAW: the branches of suggestions belong
-             to the kategory we are at — manifesting only. */
-          lockedBranch="manifesting"
-          contextText={osMessages
-            .slice(-6)
-            .map((m) => m.text)
-            .join("\n")}
-          onPick={(q) => {
-            if (osStatus !== "loading") void askOS(q);
-          }}
-          disabled={osStatus === "loading"}
-          testIdPrefix="os-suggestion"
-          channeling={osChanneling}
-          transmitting={osStatus === "loading"}
-        />
-      </div>
-      )}
+      {/* THE BRANCHES' OWN FLOOR — the only suggestions of this chat
+          are the branches grown on each reply. The living tree lives in
+          the hub (BranchHub), summoned from a branch's own link. */}
 
       {/* composer */}
       <div className="shrink-0 border-t hairline bg-[var(--glass-bg)] px-3 py-2.5 backdrop-blur-xl sm:px-4">

@@ -2,6 +2,13 @@ import type { TranslationDict } from "../types";
 
 /** it — Italian dictionary (Task 3-b). Keys are the English source strings. */
 export const it: TranslationDict = {
+  "Your light — credits remaining": "La tua luce — luci rimaste",
+  "Every reflection is weighed before it is served — a whisper 1 · a reading 2 · the atelier 5 · the light codes 12.": "Ogni riflesso è pesato prima di essere servito — un sussurro 1 · una lettura 2 · l'atelier 5 · i codici di luce 12.",
+  "Choose": "Scegli",
+  "The purse belongs to a passage. Open yours — it arrives already holding five lights.": "La tasca appartiene a un passaggio. Apri il tuo — arriva già custodendo cinque luci.",
+  "The purse holds {current} of light — this reflection asks for {required}.": "La tasca custodisce {current} di luce — questo riflesso chiede {required}.",
+  "Your reflections are weighed in light. Choose how the purse is filled.": "I tuoi riflessi sono pesati nella luce. Scegli come si riempie la tasca.",
+  "Bring more light — the mirror keeps speaking": "Porta più luce — lo specchio continua a parlare",
   "Choose how deep the telling goes.": "Scegli quanto in profondità va il racconto.",
   "Copy page": "Copia la pagina",
   "Copy this page": "Copia questa pagina",
@@ -2345,10 +2352,11 @@ export const it: TranslationDict = {
   "Back to the OS core": "Torna al nucleo dell'OS",
   "Direct line to the Manifest OS": "Linea diretta con il Manifest OS",
   "Mirror OS · Reality": "Mirror OS · Realtà",
-  "New openers": "Nuovi spunti di apertura",
+  "New branches": "Nuovi rami",
   "Send to the OS": "Invia all'OS",
   "Speak with the reality-refining intelligence itself — it remembers every turn of this conversation and holds your chosen line with you.": "Parla con l'intelligenza stessa che raffina la realtà — ricorda ogni svolta di questa conversazione e regge con te la linea che hai scelto.",
-  "Suggested openers": "Spunti di apertura suggeriti",
+  "First branches": "Primi rami",
+  "The branches of this conversation, linked with their branch of the tree.": "I rami di questa conversazione, legati al loro ramo dell'albero.",
   "The OS could not complete the refinement.": "L'OS non è riuscito a completare il raffinamento.",
   "the OS is refining its answer": "l'OS sta raffinando la sua risposta",
   "Walk it with the Manifest OS": "Percorila con il Manifest OS",

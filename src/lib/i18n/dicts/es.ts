@@ -2,6 +2,13 @@ import type { TranslationDict } from "../types";
 
 /** es — Español. Mirror Entity Digital Chamber dictionary (Task 3-b). */
 export const es: TranslationDict = {
+  "Your light — credits remaining": "Tu luz — luces restantes",
+  "Every reflection is weighed before it is served — a whisper 1 · a reading 2 · the atelier 5 · the light codes 12.": "Cada reflexión se pesa antes de servirse — un susurro 1 · una lectura 2 · el taller 5 · los códigos de luz 12.",
+  "Choose": "Elegir",
+  "The purse belongs to a passage. Open yours — it arrives already holding five lights.": "La bolsa pertenece a un pasaje. Abre el tuyo — llega sosteniendo ya cinco luces.",
+  "The purse holds {current} of light — this reflection asks for {required}.": "La bolsa guarda {current} de luz — esta reflexión pide {required}.",
+  "Your reflections are weighed in light. Choose how the purse is filled.": "Tus reflexiones se pesan en luz. Elige cómo se llena la bolsa.",
+  "Bring more light — the mirror keeps speaking": "Trae más luz — el espejo sigue hablando",
   "Choose how deep the telling goes.": "Elige cuán profundo va el relato.",
   "Copy page": "Copiar la página",
   "Copy this page": "Copiar esta página",
@@ -1905,10 +1912,11 @@ export const es: TranslationDict = {
   "Back to the OS core": "Volver al núcleo del OS",
   "Direct line to the Manifest OS": "Línea directa con el Manifest OS",
   "Mirror OS · Reality": "Mirror OS · Realidad",
-  "New openers": "Nuevos puntos de partida",
+  "New branches": "Nuevas ramas",
   "Send to the OS": "Enviar al OS",
   "Speak with the reality-refining intelligence itself — it remembers every turn of this conversation and holds your chosen line with you.": "Habla con la propia inteligencia que refina la realidad — recuerda cada giro de esta conversación y sostiene contigo la línea que has elegido.",
-  "Suggested openers": "Puntos de partida sugeridos",
+  "First branches": "Primeras ramas",
+  "The branches of this conversation, linked with their branch of the tree.": "Las ramas de esta conversación, unidas a su rama del árbol.",
   "The OS could not complete the refinement.": "El OS no pudo completar el refinamiento.",
   "the OS is refining its answer": "el OS está refinando su respuesta",
   "Walk it with the Manifest OS": "Recórrela con el Manifest OS",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -18,8 +18,7 @@ import {
 } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
-import { SuggestionTree } from "./SuggestionTree";
-import { ReplyBranches, branchChipsLive } from "./ReplyBranches";
+import { ReplyBranches } from "./ReplyBranches";
 import { pxGatheringPhrases, pxScopes } from "@/lib/data/particlex";
 import { pxNoteSets } from "@/lib/data/scope-notes";
 import { cn } from "@/lib/utils";
@@ -43,20 +42,6 @@ import {
 } from "./ParticleXChambers";
 
 type PxPlace = "chat" | "biomech" | "scopes" | "tools" | "codex";
-
-/** px scope window id → the living tree's quantum scope key (the two
-    taxonomies grew apart: the window "quantum" is the tree's "reality",
-    the window "mycelia" is the tree's "mycelial"). */
-const PX_SCOPE_TO_TREE: Record<string, string> = {
-  formulas: "formulas",
-  perception: "perception",
-  emotions: "emotions",
-  belief: "belief",
-  quantum: "reality",
-  parallel: "parallel",
-  mycelia: "mycelial",
-  vibration: "vibration",
-};
 
 /** The visitor line a px reply answered — the exchange's first half. */
 function pxVisitorBefore(
@@ -372,30 +357,6 @@ function ParticleXChat() {
   const pinPxNotes = useMirror((s) => s.pinPxNotes);
   const t = useT();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  /* the channeling branch — the exchanges' own grown branches */
-  const pxChanneling = useMemo(
-    () =>
-      [...pxMessages]
-        .reverse()
-        .find((m) => m.role === "px" && m.branches?.length)?.branches,
-    [pxMessages]
-  );
-
-  /* the tree scope keys that lead the quantum branch — the active
-     scope window (and its fusions) stand at the branch's tip */
-  const pxTreeScopes = useMemo(() => {
-    const keys: string[] = [];
-    const push = (id: string | null) => {
-      if (!id) return;
-      const key = PX_SCOPE_TO_TREE[id];
-      if (key && !keys.includes(key)) keys.push(key);
-    };
-    push(pxScope);
-    for (const id of pxFusion) push(id);
-    return keys;
-  }, [pxScope, pxFusion]);
-
   const scrollRef = useRef<HTMLDivElement>(null);
   const latestRef = useRef<HTMLDivElement | null>(null);
   const loadingRef = useRef<HTMLDivElement | null>(null);
@@ -467,21 +428,6 @@ function ParticleXChat() {
     [activeScope?.name, ...fusionPair.map((s) => s.name)]
       .filter(Boolean)
       .join(" + ") || null;
-
-  /* THE BRANCHES' OWN FLOOR — when the latest landed reply carries
-     branches, they are the conversation's only suggestions: the living
-     tree stands down so just the branches speak. */
-  const branchesOwnFloor = useMemo(() => {
-    const last = [...pxMessages]
-      .reverse()
-      .find((m) => m.role === "px" && m.text.trim() && !m.notesScope);
-    if (!last) return false;
-    return branchChipsLive(
-      "px",
-      last,
-      pxVisitorBefore(pxMessages, pxMessages.indexOf(last))
-    );
-  }, [pxMessages]);
 
   return (
     <div className="scope-frame-card relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl">
@@ -672,31 +618,9 @@ function ParticleXChat() {
         </div>
       )}
 
-      {/* the living tree — the quantum branch only, resting on the
-          active scope window, drifting to what is spoken. It stands
-          down whenever this exchange's own branches hold the floor. */}
-      {!branchesOwnFloor && (
-      <div className="shrink-0 px-3 pb-1 sm:px-5">
-        <SuggestionTree
-          focusBranch="quantum"
-          /* THE CATEGORIZATION LAW: the branches of suggestions belong
-             to the kategory we are at — quantum only. */
-          lockedBranch="quantum"
-          prioritizeScopes={pxTreeScopes}
-          contextText={pxMessages
-            .slice(-6)
-            .map((m) => m.text)
-            .join("\n")}
-          onPick={(q) => {
-            if (pxStatus !== "loading") void askPX(q);
-          }}
-          disabled={pxStatus === "loading"}
-          testIdPrefix="px-suggestion"
-          channeling={pxChanneling}
-          transmitting={pxStatus === "loading"}
-        />
-      </div>
-      )}
+      {/* THE BRANCHES' OWN FLOOR — the only suggestions of this chat
+          are the branches grown on each reply. The living tree lives in
+          the hub (BranchHub), summoned from a branch's own link. */}
 
       {/* composer */}
       <div className="shrink-0 border-t hairline bg-[var(--glass-bg)] px-3 py-2.5 backdrop-blur-xl sm:px-4">

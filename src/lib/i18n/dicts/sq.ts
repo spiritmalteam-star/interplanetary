@@ -2,6 +2,13 @@ import type { TranslationDict } from "../types";
 
 /** sq — Shqip. Mirror Entity Digital Chamber dictionary (Task 3-a). */
 export const sq: TranslationDict = {
+  "Your light — credits remaining": "Drita jote — dritat e mbetura",
+  "Every reflection is weighed before it is served — a whisper 1 · a reading 2 · the atelier 5 · the light codes 12.": "Çdo pasqyrim peshohet përpara se të shërbehet — një pëshpërimë 1 · një lexim 2 · atelierja 5 · kodat e dritës 12.",
+  "Choose": "Zgjidh",
+  "The purse belongs to a passage. Open yours — it arrives already holding five lights.": "Thesca i përket një kalimi. Hape tëndën — vjen duke mbajtur tashmë pesë drita.",
+  "The purse holds {current} of light — this reflection asks for {required}.": "Thesca mban {current} dritë — ky pasqyrim kërkon {required}.",
+  "Your reflections are weighed in light. Choose how the purse is filled.": "Pasqyrimet e tua peshohen në dritë. Zgjidh si mbushet thesci.",
+  "Bring more light — the mirror keeps speaking": "Sjell më shumë drit — pasqyra vazhdon të flasë",
   "Choose how deep the telling goes.": "Zgjidh sa thellë shkon tregimi.",
   "Copy page": "Kopjo faqen",
   "Copy this page": "Kopjo këtë faqe",
@@ -3629,10 +3636,11 @@ export const sq: TranslationDict = {
   "Back to the OS core": "Kthehu te thelbi i OS-it",
   "Direct line to the Manifest OS": "Linja e drejtpërdrejtë me Manifest OS-in",
   "Mirror OS · Reality": "Mirror OS · Realiteti",
-  "New openers": "Hapëse të reja",
+  "New branches": "Degë të reja",
   "Send to the OS": "Dërgo te OS-i",
   "Speak with the reality-refining intelligence itself — it remembers every turn of this conversation and holds your chosen line with you.": "Bisedo me vetë inteligjencën që e përsos realitetin — ajo mban mend çdo kthesë të kësaj bisede dhe e mban përkrah teje vijën që ke zgjedhur.",
-  "Suggested openers": "Hapëse të sugjeruara",
+  "First branches": "Degët e para",
+  "The branches of this conversation, linked with their branch of the tree.": "Degët e kësaj bisede, të lidhura me degën e tyre të pemës.",
   "The OS could not complete the refinement.": "OS-i nuk arriti ta përfundojë përsosjen.",
   "the OS is refining its answer": "OS-i po e përsos përgjigjen",
   "Walk it with the Manifest OS": "Eco me Manifest OS-in",

@@ -28,15 +28,26 @@ type ActiveHandle = { key: string; stop: () => void; reset: () => void };
 let active: ActiveHandle | null = null;
 
 function stopActive() {
-  if (!active) return;
+  /* THE HANDLE IS RELEASED FIRST — a stop can settle the voice's end
+     synchronously (the traveler's browser voice does exactly that:
+     cancel() fires onend before cancel() returns), and the settled end
+     must never reach back into a handle already laid to rest. The
+     handle is captured and the one active seat emptied BEFORE its own
+     stop runs, so neither the stop nor the settled end can null it
+     mid-flight. */
+  const current = active;
+  if (!current) return;
+  active = null;
   try {
-    active.stop();
+    current.stop();
   } catch {
     /* already stopped */
   }
-  const current = active;
-  active = null;
-  current.reset();
+  try {
+    current.reset();
+  } catch {
+    /* the voice is already at rest */
+  }
 }
 export function ListenButton({
   text,

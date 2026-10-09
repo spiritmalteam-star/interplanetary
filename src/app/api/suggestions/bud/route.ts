@@ -61,6 +61,8 @@ You will receive a branch of the laboratory (its voice), the conversation's last
 
 Grow 3 to 5 branches that grow naturally out of the conversation's LAST TOPIC — not a restart, not a generic list: each must clearly carry something the visitor was just speaking about.
 
+THE EXPANSION LAW — every branch must help the visitor START with this subject or CONTINUE expanding it: the first step into the subject, or the next widening step outward from what was just said, always through THIS conversation's lens. A branch that leaves the context behind is not a branch of this tree.
+
 ${MOVEMENT_LAWS}
 
 SHAPE LAWS:

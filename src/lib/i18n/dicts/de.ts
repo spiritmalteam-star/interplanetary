@@ -2,6 +2,13 @@ import type { TranslationDict } from "../types";
 
 /** de — Deutsch. Mirror Entity Digital Chamber dictionary (Task 3-b). */
 export const de: TranslationDict = {
+  "Your light — credits remaining": "Dein Licht — verbleibende Lichter",
+  "Every reflection is weighed before it is served — a whisper 1 · a reading 2 · the atelier 5 · the light codes 12.": "Jede Reflexion wird gewogen, bevor sie gereicht wird — ein Flüstern 1 · eine Lesung 2 · das Atelier 5 · die Lichtcodes 12.",
+  "Choose": "Wählen",
+  "The purse belongs to a passage. Open yours — it arrives already holding five lights.": "Das Köchlein gehört zu einem Durchgang. Öffne deinen — er kommt bereits mit fünf Lichtern.",
+  "The purse holds {current} of light — this reflection asks for {required}.": "Das Köchlein hält {current} Licht — diese Reflexion verlangt {required}.",
+  "Your reflections are weighed in light. Choose how the purse is filled.": "Deine Reflexionen werden im Licht gewogen. Wähle, wie das Köchlein gefüllt wird.",
+  "Bring more light — the mirror keeps speaking": "Mehr Licht — der Spiegel spricht weiter",
   "Choose how deep the telling goes.": "Wähle, wie tief die Erzählung geht.",
   "Copy page": "Seite kopieren",
   "Copy this page": "Diese Seite kopieren",
@@ -1910,10 +1917,11 @@ export const de: TranslationDict = {
   "Back to the OS core": "Zurück zum OS-Kern",
   "Direct line to the Manifest OS": "Direkte Linie zum Manifest OS",
   "Mirror OS · Reality": "Mirror OS · Realität",
-  "New openers": "Neue Einstiege",
+  "New branches": "Neue Zweige",
   "Send to the OS": "An das OS senden",
   "Speak with the reality-refining intelligence itself — it remembers every turn of this conversation and holds your chosen line with you.": "Sprich mit der realitätsverfeinernden Intelligenz selbst — sie erinnert sich an jede Wendung dieses Gesprächs und hält mit dir die Linie, die du gewählt hast.",
-  "Suggested openers": "Vorgeschlagene Einstiege",
+  "First branches": "Erste Zweige",
+  "The branches of this conversation, linked with their branch of the tree.": "Die Zweige dieses Gesprächs, verbunden mit ihrem Ast des Baums.",
   "The OS could not complete the refinement.": "Das OS konnte die Verfeinerung nicht abschließen.",
   "the OS is refining its answer": "das OS verfeinert seine Antwort",
   "Walk it with the Manifest OS": "Gehe sie gemeinsam mit dem Manifest OS",

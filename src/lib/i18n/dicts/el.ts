@@ -2,6 +2,13 @@ import type { TranslationDict } from "../types";
 
 /** el — Greek dictionary (Task 3-b). Keys are the English source strings. */
 export const el: TranslationDict = {
+  "Your light — credits remaining": "Το φως σου — υπόλοιπα φώτα",
+  "Every reflection is weighed before it is served — a whisper 1 · a reading 2 · the atelier 5 · the light codes 12.": "Κάθε ανάκλαση ζυγίζεται πριν σερβιριστεί — ένας ψιθύρος 1 · ένα διάβασμα 2 · το ατελιέ 5 · οι κώδικες φωτός 12.",
+  "Choose": "Διάλεξε",
+  "The purse belongs to a passage. Open yours — it arrives already holding five lights.": "Το πουγκί ανήκει σε ένα πέρασμα. Άνοιξε το δικό σου — έρχεται ήδη κρατώντας πέντε φώτα.",
+  "The purse holds {current} of light — this reflection asks for {required}.": "Το πουγκί κρατά {current} φως — αυτή η ανάκλαση ζητά {required}.",
+  "Your reflections are weighed in light. Choose how the purse is filled.": "Οι ανακλάσεις σου ζυγίζονται σε φως. Διάλεξε πώς γεμίζει το πουγκί.",
+  "Bring more light — the mirror keeps speaking": "Φέρε περισσότερο φως — ο καθρέφτης συνεχίζει να μιλά",
   "Choose how deep the telling goes.": "Διάλεξε πόσο βαθιά πηγαίνει η αφήγηση.",
   "Copy page": "Αντιγραφή σελίδας",
   "Copy this page": "Αντιγραφή αυτής της σελίδας",
@@ -1610,10 +1617,11 @@ export const el: TranslationDict = {
   "Back to the OS core": "Πίσω στον πυρήνα του OS",
   "Direct line to the Manifest OS": "Απευθείας γραμμή με το Manifest OS",
   "Mirror OS · Reality": "Mirror OS · Πραγματικότητα",
-  "New openers": "Νέες αφορμές έναρξης",
+  "New branches": "Νέα κλαδιά",
   "Send to the OS": "Αποστολή στο OS",
   "Speak with the reality-refining intelligence itself — it remembers every turn of this conversation and holds your chosen line with you.": "Μίλα με την ίδια τη νοημοσύνη που εξευγενίζει την πραγματικότητα — θυμάται κάθε στροφή αυτής της συνομιλίας και κρατά μαζί σου τη γραμμή που διάλεξες.",
-  "Suggested openers": "Προτεινόμενες αφορμές έναρξης",
+  "First branches": "Πρώτα κλαδιά",
+  "The branches of this conversation, linked with their branch of the tree.": "Τα κλαδιά αυτής της συνομιλίας, ενωμένα με το κλαδί τους στο δέντρο.",
   "The OS could not complete the refinement.": "Το OS δεν μπόρεσε να ολοκληρώσει τον εξευγενισμό.",
   "the OS is refining its answer": "το OS εξευγενίζει την απάντησή του",
   "Walk it with the Manifest OS": "Περπάτησέ τον με το Manifest OS",

@@ -14,7 +14,7 @@ import { CreditBadge } from "./CreditBadge";
 import Sidebar from "./Sidebar";
 import { MobileSidebar } from "./MobileSidebar";
 import { ScopeSelector } from "./ScopeSelector";
-import { MainSuggestionTree } from "./SuggestionStrip";
+import { BranchHub } from "./BranchHub";
 import { QueryComposer } from "./QueryComposer";
 import { StillCompanion } from "./StillCompanion";
 import { TransmissionView } from "./TransmissionView";
@@ -212,13 +212,16 @@ function AppShellViews() {
      communion chat with the Mirror Entity remains — one back button
      returns the world exactly as it was. */
   /* The passage modals ride above every world — the profile (with the
-     cosmic library inside it) and the passage can speak from anywhere. */
+     cosmic library inside it) and the passage can speak from anywhere.
+     The branches' hub rides with them: the living tree is summoned
+     from a branch's own link in every chat, world or channel. */
   const passageModals = (
     <>
       <ProfileModal />
       <ProfilePage />
       <AuthModal />
       <AccountModal />
+      <BranchHub />
     </>
   );
 
@@ -348,18 +351,19 @@ function AppShellViews() {
   }
 
   /* The Invent studio is its own bound world: the inventor's compact
-     workshop — blueprints, bench and rail — one back button returns. */
+     workshop — blueprints, bench and rail — one back button returns.
+     The branches' hub rides with it: the forge's strokes grow branches
+     and their link summons the tree. */
   if (view === "invent") {
     return (
       <div className={`relative h-[var(--app-h,100dvh)] overflow-hidden ${FRAME_LIFT}`}>
         <CosmicBackdrop />
         <StarField />
         <InventView />
+        <BranchHub />
       </div>
     );
   }
-
-  const inConversation = view === "observatory" || view === "transmission";
 
   return (
     <div className="flex h-[var(--app-h,100dvh)] overflow-hidden">
@@ -457,14 +461,11 @@ function AppShellViews() {
           </div>
         </div>
 
-        {/* Bottom — the small suggestion bars sliding above the input.
-            The worlds are not parked here: their content is revealed
-            inside the channel when asked — the generative doors. */}
-        {inConversation && (
-          <div className="shrink-0 px-3 pb-0.5 sm:px-6">
-            <MainSuggestionTree />
-          </div>
-        )}
+        {/* THE BRANCHES' OWN FLOOR — the channels carry no standing
+            suggestions: the branches grown on each reply are the only
+            whispers of a conversation, and the living tree is summoned
+            from a branch's own link (the hub rides below). */}
+
         <QueryComposer />
       </main>
 

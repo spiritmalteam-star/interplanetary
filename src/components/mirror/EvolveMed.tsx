@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Activity,
@@ -19,8 +19,7 @@ import {
 } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
-import { SuggestionTree } from "./SuggestionTree";
-import { ReplyBranches, branchChipsLive } from "./ReplyBranches";
+import { ReplyBranches } from "./ReplyBranches";
 import { emGatheringPhrases, emVectors } from "@/lib/data/evolvemed";
 import { emNoteSets } from "@/lib/data/scope-notes";
 import { cn } from "@/lib/utils";
@@ -52,15 +51,6 @@ import {
 } from "./EvolveMedChambers";
 
 type EmPlace = "chat" | "vectors" | "instruments" | "codex";
-
-/** em vector window id → the living tree's Evolve Med scope key (the
-    window "genome" is the tree's "genomics"; the rest speak alike). */
-const EM_VECTOR_TO_TREE: Record<string, string> = {
-  genome: "genomics",
-  engines: "engines",
-  medworld: "medworld",
-  interface: "interface",
-};
 
 /** The visitor line an em reply answered — the exchange's first half. */
 function emVisitorBefore(
@@ -499,29 +489,6 @@ function EvolveMedChat() {
   const t = useT();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  /* the channeling branch — the exchanges' own grown branches */
-  const emChanneling = useMemo(
-    () =>
-      [...emMessages]
-        .reverse()
-        .find((m) => m.role === "em" && m.branches?.length)?.branches,
-    [emMessages]
-  );
-
-  /* the tree scope keys that lead the Evolve Med branch — the active
-     vector window (and its fusions) stand at the branch's tip */
-  const emTreeScopes = useMemo(() => {
-    const keys: string[] = [];
-    const push = (id: string | null) => {
-      if (!id) return;
-      const key = EM_VECTOR_TO_TREE[id];
-      if (key && !keys.includes(key)) keys.push(key);
-    };
-    push(emVector);
-    for (const id of emFusion) push(id);
-    return keys;
-  }, [emVector, emFusion]);
-
   const scrollRef = useRef<HTMLDivElement>(null);
   const latestRef = useRef<HTMLDivElement | null>(null);
   const loadingRef = useRef<HTMLDivElement | null>(null);
@@ -605,28 +572,6 @@ function EvolveMedChat() {
     [activeVector?.name, ...fusionPair.map((s) => s.name)]
       .filter(Boolean)
       .join(" + ") || null;
-
-  /* THE BRANCHES' OWN FLOOR — when the latest landed reply carries
-     branches, they are the conversation's only suggestions: the living
-     tree stands down so just the branches speak. */
-  const branchesOwnFloor = useMemo(() => {
-    const last = [...emMessages]
-      .reverse()
-      .find(
-        (m) =>
-          m.role === "em" &&
-          m.text.trim() &&
-          !m.notesVector &&
-          !m.artifact &&
-          !m.visual
-      );
-    if (!last) return false;
-    return branchChipsLive(
-      "em",
-      last,
-      emVisitorBefore(emMessages, emMessages.indexOf(last))
-    );
-  }, [emMessages]);
 
   return (
     <div className="scope-frame-card relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl">
@@ -821,31 +766,9 @@ function EvolveMedChat() {
         </div>
       )}
 
-      {/* the living tree — the Evolve Med branch only, resting on the
-          active vector window, drifting to what is spoken. It stands
-          down whenever this exchange's own branches hold the floor. */}
-      {!branchesOwnFloor && (
-      <div className="shrink-0 px-3 pb-1 sm:px-5">
-        <SuggestionTree
-          focusBranch="evolvemed"
-          /* THE CATEGORIZATION LAW: the branches of suggestions belong
-             to the kategory we are at — Evolve Med only. */
-          lockedBranch="evolvemed"
-          prioritizeScopes={emTreeScopes}
-          contextText={emMessages
-            .slice(-6)
-            .map((m) => m.text)
-            .join("\n")}
-          onPick={(q) => {
-            if (emStatus !== "loading") void askEM(q);
-          }}
-          disabled={emStatus === "loading"}
-          testIdPrefix="em-suggestion"
-          channeling={emChanneling}
-          transmitting={emStatus === "loading"}
-        />
-      </div>
-      )}
+      {/* THE BRANCHES' OWN FLOOR — the only suggestions of this chat
+          are the branches grown on each reply. The living tree lives in
+          the hub (BranchHub), summoned from a branch's own link. */}
 
       {/* composer */}
       <div className="shrink-0 border-t hairline bg-[var(--glass-bg)] px-3 py-2.5 backdrop-blur-xl sm:px-4">

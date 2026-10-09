@@ -15,8 +15,7 @@ import {
 } from "lucide-react";
 import { useMirror, type ChatMessage } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
-import { SuggestionTree } from "./SuggestionTree";
-import { ReplyBranches, branchChipsLive } from "./ReplyBranches";
+import { ReplyBranches } from "./ReplyBranches";
 import {
   forgeChatPhases,
   forgeDomains,
@@ -1050,23 +1049,6 @@ function BenchChat() {
   const { status, messages, draft, error, activeQuery } = forgeSession;
   const loading = status === "loading";
 
-  /* the channeling branch — the strokes' own grown branches */
-  const forgeChanneling = useMemo(
-    () => [...messages].reverse().find((m) => m.branches?.length)?.branches,
-    [messages]
-  );
-
-  /* THE BRANCHES' OWN FLOOR — when the latest landed stroke carries
-     branches, they are the conversation's only suggestions: the living
-     tree stands down so just the branches speak. */
-  const branchesOwnFloor = useMemo(() => {
-    const last = [...messages]
-      .reverse()
-      .find((m) => m.text.trim() && !m.artifact && !m.visual);
-    if (!last) return false;
-    return branchChipsLive("forge", last, last.query);
-  }, [messages]);
-
   useEffect(() => {
     if (!loading) return;
     const id = window.setInterval(
@@ -1207,30 +1189,9 @@ function BenchChat() {
         )}
       </div>
 
-      {/* the living tree — the Invent branch only, resting on the forge,
-          drifting to what is spoken. It stands down whenever this
-          stroke's own branches hold the floor. */}
-      {!branchesOwnFloor && (
-      <div className="shrink-0 px-3 pb-1 pt-2 sm:px-4">
-        <SuggestionTree
-          focusBranch="invent"
-          /* THE CATEGORIZATION LAW: the branches of suggestions belong
-             to the kategory we are at — invent only. */
-          lockedBranch="invent"
-          contextText={messages
-            .slice(-6)
-            .map((m) => `${m.query}\n${m.text}`)
-            .join("\n")}
-          onPick={(s) => {
-            if (!loading) send(s);
-          }}
-          disabled={loading}
-          testIdPrefix="forge-suggestion"
-          channeling={forgeChanneling}
-          transmitting={loading}
-        />
-      </div>
-      )}
+      {/* THE BRANCHES' OWN FLOOR — the only suggestions of the forge
+          are the branches grown on each stroke. The living tree lives
+          in the hub (BranchHub), summoned from a branch's own link. */}
 
       {/* composer */}
       <div className="shrink-0 border-t hairline bg-[var(--glass-bg)] px-3 py-2.5 backdrop-blur-xl sm:px-4">

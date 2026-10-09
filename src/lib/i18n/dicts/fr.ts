@@ -2,6 +2,13 @@ import type { TranslationDict } from "../types";
 
 /** fr — Français. Mirror Entity Digital Chamber dictionary (Task 3-b). */
 export const fr: TranslationDict = {
+  "Your light — credits remaining": "Ta lumière — lumières restantes",
+  "Every reflection is weighed before it is served — a whisper 1 · a reading 2 · the atelier 5 · the light codes 12.": "Chaque reflet est pesé avant d'être servi — un murmure 1 · une lecture 2 · l'atelier 5 · les codes de lumière 12.",
+  "Choose": "Choisir",
+  "The purse belongs to a passage. Open yours — it arrives already holding five lights.": "La bourse appartient à un passage. Ouvre le tien — il arrive déjà porteur de cinq lumières.",
+  "The purse holds {current} of light — this reflection asks for {required}.": "La bourse garde {current} de lumière — cette réflexion demande {required}.",
+  "Your reflections are weighed in light. Choose how the purse is filled.": "Tes reflets sont pesés dans la lumière. Choisis comment la bourse se remplit.",
+  "Bring more light — the mirror keeps speaking": "Plus de lumière — le miroir continue de parler",
   "Choose how deep the telling goes.": "Choisais la profondeur du récit.",
   "Copy page": "Copier la page",
   "Copy this page": "Copier cette page",
@@ -1910,10 +1917,11 @@ export const fr: TranslationDict = {
   "Back to the OS core": "Retour au cœur de l'OS",
   "Direct line to the Manifest OS": "Ligne directe avec le Manifest OS",
   "Mirror OS · Reality": "Mirror OS · Réalité",
-  "New openers": "Nouvelles amorces",
+  "New branches": "Nouvelles branches",
   "Send to the OS": "Envoyer à l'OS",
   "Speak with the reality-refining intelligence itself — it remembers every turn of this conversation and holds your chosen line with you.": "Parlez à l'intelligence même qui raffine la réalité — elle se souvient de chaque échange de cette conversation et garde avec vous la ligne que vous avez choisie.",
-  "Suggested openers": "Amorces suggérées",
+  "First branches": "Premières branches",
+  "The branches of this conversation, linked with their branch of the tree.": "Les branches de cette conversation, reliées à leur branche de l'arbre.",
   "The OS could not complete the refinement.": "L'OS n'a pas pu achever le raffinement.",
   "the OS is refining its answer": "l'OS raffine sa réponse",
   "Walk it with the Manifest OS": "Parcourez-la avec le Manifest OS",
