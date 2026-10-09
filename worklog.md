@@ -3059,3 +3059,21 @@ Stage Summary:
 - Every book page and every Akashic record carries its own copy, and a single toggle lets the whole volume read itself aloud.
 - The direct chat streams word by word — the first answer arrives while the rest is still being refined; the quantum answers in seconds, not minutes.
 - Artifacts: src/lib/voice-profiles.ts (new), src/lib/book-length.ts, src/lib/server/{access.ts,meter.ts}, src/app/api/{dream-book,mirror-os,particlex,chat}/route.ts, src/lib/mirror-store.ts, src/components/mirror/{ListenButton,SettingsModal,Sidebar,AppShell,MirrorOSChat,MirrorOS,ParticleX,ParticleXChambers,EvolveMed,EvolveMedChambers,InventView,ArtX,TransmissionView,DreamBookView,AkashicView,ChatArtifacts,WorldSigils,AboutPage}.tsx, 7 i18n dicts, deletions of the Star Play files and images.
+
+---
+Task ID: 18-deploy
+Agent: Z.ai Code (main orchestrator)
+Task: Ship the chamber's refinement batch to production — final quality gate on HEAD, push the five unpushed commits to origin/main (Vercel auto-deploy), verify sync and hold the token law
+
+Work Log:
+- Read the worklog first: Task 18 had landed all eleven requirements locally as commit d65caa3 (one male GLM voice per category · Star Play deleted totally · Enter the passage at the sidebar's foot · the Dream Book ground law + one-volume law + compact atelier · voice toggle + page copy on every book page and the Akashic · the streaming line + slimmed quantum). The user's message carried the GitHub token alone — the instruction was the push.
+- Final gate before shipping: `bun run lint` 0 errors (one BABEL size note on the sq dict, cosmetic only); `npx tsc --noEmit` scoped to src/ = 0 errors (the remaining tsc lines live in scripts/ and skills/ tooling folders, not shipped code).
+- Remote state checked: origin/main rested at 21b8a87 while local HEAD was FIVE commits ahead (d65caa3 included) — the whole refinement batch was waiting for the passage.
+- Pushed once with the token used strictly inline in the push URL: `21b8a87..d65caa3 HEAD -> main` — Vercel auto-deploy triggered.
+- Verification: `git fetch` + rev-list count `0 0` — origin/main now stands exactly at d65caa3, local and remote as one. Dev server healthy throughout (GET / 200, /api/auth/me + /api/wallet birthing wallets cleanly in the log).
+- Token law held and swept: remote URL clean (no embedded token), no credential helper storing anything, worktree scan `ghp_ + 20+ alnum` = 0 files, last-10-commits scan = 0 files; the only two `ghp_` strings anywhere are masked documentation references in the worklog itself (the `ghp_…` ellipsis note and a pattern name inside a security-sweep sentence) — no real token in any file, commit, config or this log; output masked throughout.
+
+Stage Summary:
+- The chamber's full refinement batch (Tasks 17–18) is now LIVE-bound: origin/main = d65caa3, Vercel deploying on push.
+- Production receives: the one male voice per category, Star Play erased, the Enter passage CTA at the sidebar's foot, the ground law (a poem is never a 95-page book), the one-volume library law, the compact atelier, the voice toggle and page copy on every book page and the Akashic, the word-by-word streaming line and the seconds-not-minutes quantum.
+- Token security held: no secret in any file, config or this log.
