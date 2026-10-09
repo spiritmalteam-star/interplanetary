@@ -1,8 +1,27 @@
 /* ------------------------------------------------------------------ */
 /*  MIRROR ENTITY — Universal Visualization Engine                     */
 /*  Shared types + natural-language visual intent detection.           */
-/*  Safe on client and server: no imports, no I/O.                     */
+/*  Safe on client and server: no I/O; the only import is the tongue   */
+/*  packs (pure regex sources).                                        */
 /* ------------------------------------------------------------------ */
+
+import {
+  uWord,
+  NEGATION_WORDS_I18N,
+  REPORTED_SPEECH_I18N,
+  PAST_CONTEXT_I18N,
+  FUTURE_NARRATION_I18N,
+  SELF_NARRATION_I18N,
+  VISUAL_OBJECTS_I18N,
+  VISUAL_ASK_VERBS_I18N,
+  VISUAL_META_I18N,
+  POSSESSIVE_I18N,
+  YOU_WORDS_I18N,
+  VISUAL_EXPLICIT_ASK_I18N,
+  VISUAL_FORM_FRAMES_I18N,
+  POLITE_WORDS_I18N,
+  OTHER_DOOR_OBJECTS_I18N,
+} from "@/lib/intent-languages";
 
 export type VisualizationMode =
   | "illustration" /* A — cinematic illustration            */
@@ -98,42 +117,60 @@ export interface VisualizationArtifact {
 /*  sharing one sentence, untouched by the guards below.               */
 /* ------------------------------------------------------------------ */
 
-/** The words that name a visual PRODUCT (the thing being asked for). */
-const VISUAL_OBJECT_PATTERN =
-  /\b(?:images?|pics?|pictures?|photos?|illustrations?|visuals?|visions?|visuali[sz]ation|diagrams?|maps?|infographics?|artworks?|render(?:ing|s)?|drawings?|sketch(?:es)?|paintings?|imagery)\b/i;
+/** The words that name a visual PRODUCT (the thing being asked for) —
+    in every tongue the sidebar speaks. */
+const VISUAL_OBJECT_PATTERN = new RegExp(
+  `\\b(?:images?|pics?|pictures?|photos?|illustrations?|visuals?|visions?|visuali[sz]ation|diagrams?|maps?|infographics?|artworks?|render(?:ing|s)?|drawings?|sketch(?:es)?|paintings?|imagery|${VISUAL_OBJECTS_I18N})\\b`,
+  "iu"
+);
 
 /** The verbs that can carry an ask. Present tense only — "showed"/
     "drew" narrate the past, they never petition the mirror. */
-const ASK_VERB_PATTERN =
-  /\b(?:show|draw|paint|sketch|render|depict|portray|illustrate|make|create|generate|give|produce|channel|crystallize|crystallise|visualize|visualise|turn)\b/i;
+const ASK_VERB_PATTERN = new RegExp(
+  `\\b(?:show|draw|paint|sketch|render|depict|portray|illustrate|make|create|generate|give|produce|channel|crystallize|crystallise|visualize|visualise|turn|${VISUAL_ASK_VERBS_I18N})\\b`,
+  "iu"
+);
 
 /** A sentence that TALKS ABOUT the image machinery — the creator, the
     generator, the feature — is meta-speech, never a request. */
-const META_MENTION_PATTERN =
-  /\b(?:image|picture|photo|visual)s?\s+(?:creator|creators|generator|generators?|generation|engine|engines?|tools?|features?|models?|sections?|doors?|pipe?lines?)\b/i;
+const META_MENTION_PATTERN = new RegExp(
+  `\\b(?:image|picture|photo|visual)s?\\s+(?:creator|creators|generator|generators?|generation|engine|engines?|tools?|features?|models?|sections?|doors?|pipe?lines?)\\b|${uWord(VISUAL_META_I18N)}`,
+  "iu"
+);
 
 /** A sentence that declines, negates or excludes an image is the
-    opposite of a request. */
-const NEGATION_PATTERN =
-  /\b(?:no|not|without|never|nothing|don'?t|do not|doesn'?t|no need (?:for|of)|not looking for)\b[^.!?]{0,32}\b(?:images?|pics?|pictures?|photos?|visuals?|drawings?|sketch(?:es)?|paintings?|illustrations?)\b/i;
+    opposite of a request — in every tongue. */
+const NEGATION_PATTERN = new RegExp(
+  `\\b(?:no|not|without|never|nothing|don'?t|do not|doesn'?t|no need (?:for|of)|not looking for|${NEGATION_WORDS_I18N})\\b[^.!?]{0,32}\\b(?:images?|pics?|pictures?|photos?|visuals?|drawings?|sketch(?:es)?|paintings?|illustrations?|${VISUAL_OBJECTS_I18N})\\b`,
+  "iu"
+);
 
 /** Reported speech — "my therapist asked me to draw", "the book says
     to picture a door" — describes someone ELSE's ask, never the
     visitor's own petition to this mirror. Past and third-person forms
     only: the bare forms ("draw me", "show me") are the visitor's own
     imperative, never narration. */
-const REPORTED_SPEECH_PATTERN =
-  /\b(?:asked|told|suggested|recommended|said|wrote|claimed|taught|teaches|teaching|says|tells|suggests|recommends|writes|claims|asks)\b[^.!?]{0,40}\b(?:me|us|him|her|them|to|that|us)\b/i;
+const REPORTED_SPEECH_PATTERN = new RegExp(
+  `\\b(?:asked|told|suggested|recommended|said|wrote|claimed|taught|teaches|teaching|says|tells|suggests|recommends|writes|claims|asks|${REPORTED_SPEECH_I18N})\\b[^.!?]{0,40}\\b(?:me|us|him|her|them|to|that|us|mir|mich|moi|nous|vous|me|nos|ti|ci|μου|μας|σου|του|της|bana|bize|mua|mu)\\b`,
+  "iu"
+);
 
 /** A sentence about an EXISTING image ("the picture you made", "that
-    drawing of mine") — referencing, not requesting. */
-const REFERENCE_PATTERN =
-  /\b(?:the|this|that|these|those|my|your|his|her|their)\s+(?:images?|pics?|pictures?|photos?|drawings?|visuals?|visions?|renderings?|sketch(?:es)?|paintings?|illustrations?|imagery)\b/i;
+    drawing of mine", "meine Bilder", "mis dibujos") — referencing,
+    not requesting. */
+const REFERENCE_PATTERN = new RegExp(
+  `\\b(?:the|this|that|these|those|my|your|his|her|their|${POSSESSIVE_I18N})\\s+(?:images?|pics?|pictures?|photos?|drawings?|visuals?|visions?|renderings?|sketch(?:es)?|paintings?|illustrations?|imagery|${VISUAL_OBJECTS_I18N})\\b|(?:images?|pics?|pictures?|photos?|drawings?|visuals?|visions?|renderings?|sketch(?:es)?|paintings?|illustrations?|${VISUAL_OBJECTS_I18N})\\s+(?:μου|μας|imi?|e imja|e mia|meine)`,
+  "iu"
+);
 
 /** Explicit construction frames — "as an image", "into a picture",
-    "in picture form" — an ask wherever they stand. */
-const FORM_FRAME_PATTERN =
-  /\b(?:as|into|in)\s+(?:an?\s+|the\s+)?(?:images?|pics?|pictures?|photos?|visuals?|illustrations?|drawings?|paintings?|infographics?|diagrams?|maps?|renderings?)\b(?:\s+form)?/i;
+    "in picture form", "als Bild", "comme une image", "como una
+    imagen", "come una immagine", "ως εικόνα", "resim olarak" — an
+    ask wherever they stand. */
+const FORM_FRAME_PATTERN = new RegExp(
+  `\\b(?:as|into|in)\\s+(?:an?\\s+|the\\s+)?(?:images?|pics?|pictures?|photos?|visuals?|illustrations?|drawings?|paintings?|infographics?|diagrams?|maps?|renderings?)\\b(?:\\s+form)?|${uWord(VISUAL_FORM_FRAMES_I18N)}`,
+  "iu"
+);
 
 /** The objects of the OTHER chambers — a card, a book, a poem, a
     record, a remedy, a sound transmission, an intention, a formula.
@@ -141,33 +178,56 @@ const FORM_FRAME_PATTERN =
     takes the brush back ("as an image", a picture asked beside the
     verb), the image gate stands down and lets that door's own gate
     decide — and vice versa: the claim always wins the brush back. */
-const OTHER_DOOR_OBJECTS_PATTERN =
-  /\b(?:tarot|arcana|oracle\s+cards?|cards?|spread|deck|book|storybook|poem|poetry|haiku|sonnet|lullaby|akash?ic|records?|remed(?:y|ies)|sigil|intention|formula|invention|transmission|light\s*codes?)\b/i;
+const OTHER_DOOR_OBJECTS_PATTERN = new RegExp(
+  `\\b(?:tarot|arcana|oracle\\s+cards?|cards?|spread|deck|book|storybook|poem|poetry|haiku|sonnet|lullaby|akash?ic|records?|remed(?:y|ies)|sigil|intention|formula|invention|transmission|light\\s*codes?)\\b|${uWord(OTHER_DOOR_OBJECTS_I18N)}`,
+  "iu"
+);
 
-/** Questions that are asks by their own shape. */
-const EXPLICIT_ASK_PATTERN =
-  /\bwhat\s+(?:does|would|might|do)\s+.{0,80}?\s+(?:look|appear)\s+like\b/i;
+/** Questions that are asks by their own shape — in every tongue. */
+const EXPLICIT_ASK_PATTERN = new RegExp(
+  `\\bwhat\\s+(?:does|would|might|do)\\s+.{0,80}?\\s+(?:look|appear)\\s+like\\b|${uWord(VISUAL_EXPLICIT_ASK_I18N)}`,
+  "iu"
+);
 
 /** The speaker narrating their OWN making — past ("I made a
     presentation yesterday"), progressive ("I have been drawing
     little sketches"), habitual ("sometimes I draw") — a story about
     themselves, never a petition to the mirror. */
-const PAST_NARRATION_PATTERN =
-  /\bI\s+(?:drew|painted|showed|made|created|generated|sketched|produced|built|rendered|had|draw|sketch|paint|have\s+drawn|have\s+made|have\s+created|have\s+been\s+(?:drawing|painting|sketching|making|creating|showing|building|rendering)|was\s+(?:drawing|painting|sketching|making|creating)|am\s+(?:drawing|painting|sketching|making|creating))\b/i;
+const PAST_NARRATION_PATTERN = new RegExp(
+  [
+    "\\bI\\s+(?:drew|painted|showed|made|created|generated|sketched|produced|built|rendered|had|draw|sketch|paint|have\\s+drawn|have\\s+made|have\\s+created|have\\s+been\\s+(?:drawing|painting|sketching|making|creating|showing|building|rendering)|was\\s+(?:drawing|painting|sketching|making|creating)|am\\s+(?:drawing|painting|sketching|making|creating))\\b",
+    uWord(SELF_NARRATION_I18N),
+  ].join("|"),
+  "iu"
+);
 
 /** The sentence sitting in remembered time — "when I was young",
     "my grandmother used to paint water" — storytelling, never a
     present petition to the mirror. */
-const PAST_CONTEXT_PATTERN =
-  /\b(?:when i was|back when|as a child|as a kid|growing up|used to|yesterday|last (?:year|month|week|night|summer|winter|autumn|spring)|ago|in my childhood|every (?:day|night|week|month|morning|evening|sunday|saturday|summer|winter))\b/i;
+const PAST_CONTEXT_PATTERN = new RegExp(
+  [
+    "\\b(?:when i was|back when|as a child|as a kid|growing up|used to|yesterday|last (?:year|month|week|night|summer|winter|autumn|spring)|ago|in my childhood|every (?:day|night|week|month|morning|evening|sunday|saturday|summer|winter))\\b",
+    uWord(PAST_CONTEXT_I18N),
+  ].join("|"),
+  "iu"
+);
 
 /** The speaker narrating their OWN future making — "I will draw you a
     map someday" — a story about themselves, not a request. */
-const FUTURE_NARRATION_PATTERN =
-  /\bI\s+(?:will|shall)\s+(?:\w+\s+){0,3}?(?:show|draw|paint|sketch|render|depict|portray|illustrate|make|create|generate|produce|channel)\b/i;
+const FUTURE_NARRATION_PATTERN = new RegExp(
+  [
+    "\\bI\\s+(?:will|shall)\\s+(?:\\w+\\s+){0,3}?(?:show|draw|paint|sketch|render|depict|portray|illustrate|make|create|generate|produce|channel)\\b",
+    uWord(FUTURE_NARRATION_I18N),
+  ].join("|"),
+  "iu"
+);
 
-/** Softened petitions — "can you …", "could you …", "will you …". */
-const POLITE_PREFIX_PATTERN = /^\s*(?:please|pls)\b[\s,:;-]*|\s*(?:please|pls)[\s,.!]*$/gi;
+/** Softened petitions — "can you …", "could you …", "will you …",
+    "bitte", "por favor", "lütfen", "σε παρακαλώ", "të lutem". */
+const POLITE_PREFIX_PATTERN = new RegExp(
+  `^\\s*(?:please|pls|${POLITE_WORDS_I18N})\\b[\\s,:;-]*|\\s*(?:please|pls|${POLITE_WORDS_I18N})[\\s,.!]*$`,
+  "giu"
+);
 
 function sentences(text: string): string[] {
   return text
@@ -244,7 +304,7 @@ function isVisualAskSentence(s: string): boolean {
   if (
     words.length <= 8 &&
     (ASK_VERB_PATTERN.test(bare) || hasObject) &&
-    !/\b(?:you|your|yourself|yours)\b/i.test(bare) &&
+    !new RegExp(uWord(`you|your|yourself|yours|${YOU_WORDS_I18N}`), "iu").test(bare) &&
     !REPORTED_SPEECH_PATTERN.test(bare) &&
     !REFERENCE_PATTERN.test(bare) &&
     !OTHER_DOOR_OBJECTS_PATTERN.test(bare)

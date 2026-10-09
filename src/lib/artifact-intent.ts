@@ -20,6 +20,31 @@
 /* ------------------------------------------------------------------ */
 
 import type { LightCodesMode } from "@/lib/data/light-codes";
+import {
+  uWord,
+  REQUEST_FRAMES_I18N,
+  REQUEST_VERBS_I18N,
+  INTERROGATIVE_I18N,
+  NEGATION_WORDS_I18N,
+  REPORTED_SPEECH_I18N,
+  SELF_NARRATION_I18N,
+  PAST_CONTEXT_I18N,
+  FUTURE_NARRATION_I18N,
+  CLAUSE_VERBS_I18N,
+  BOOK_NAMES_I18N,
+  AKASHIC_NAMES_I18N,
+  MANIFEST_NAMES_I18N,
+  FORGE_NAMES_I18N,
+  POEM_NAMES_I18N,
+  CODES_NAMES_I18N,
+  QUANTUM_NAMES_I18N,
+  REMEDY_NAMES_I18N,
+  CONNECTOR_I18N,
+  MUSIC_NOUNS_I18N,
+  FORMULA_TOOL_I18N,
+  PERCEPTION_TOOL_I18N,
+  LIGHT_CODES_MODES_I18N,
+} from "@/lib/intent-languages";
 
 export type SideArtifactKind =
   | "akashic"
@@ -66,8 +91,10 @@ export interface SideArtifactRef {
 /** An explicit request frame — the visitor addressing the mirror and
     asking for something to be brought, shown or made. Verbs only:
     a bare "please" or "can you" also travels with plain questions
-    ("please explain quantum entanglement") and must not open doors. */
-const REQUEST_FRAME: RegExp = new RegExp(
+    ("please explain quantum entanglement") and must not open doors.
+    THE TONGUE LAW — every supported language brings its own frames
+    ("kannst du öffnen", "peux-tu montrer", "μπορείς να δείξεις"). */
+const ENGLISH_REQUEST_FRAME: RegExp = new RegExp(
   [
     "\\b(?:can|could|will|would)\\s+you\\s+(?:please\\s+)?(?:open|show|give|bring|create|make|build|draw|read|tune|play|prepare|weave|write|channel|summon|reveal|visit|enter|invent|design|devise|forge)\\b",
     "\\b(?:please\\s+)?(?:open|show|give|bring|bring\\s+me|create|make|draw|read|tune|play|prepare|weave|write|channel|summon|reveal|invent|design|devise|forge|build)\\s+(?:me\\s+)?(?:a|an|the|my|some|us|another)\\b",
@@ -77,6 +104,16 @@ const REQUEST_FRAME: RegExp = new RegExp(
   ].join("|"),
   "i"
 );
+
+/** The whole tongue-union of frames, weighed once per sentence. */
+const REQUEST_FRAME_ALL: RegExp = new RegExp(
+  [ENGLISH_REQUEST_FRAME.source, ...REQUEST_FRAMES_I18N.map((r) => r.source)].join("|"),
+  "iu"
+);
+
+function hasRequestFrame(s: string): boolean {
+  return REQUEST_FRAME_ALL.test(s);
+}
 
 /** Request verbs that may stand close before a door's name —
     "open the light codes", "create a book", "draw me a card". */
@@ -119,6 +156,7 @@ const REQUEST_VERBS: ReadonlySet<string> = new Set([
   "generate", "generating",
   "want", "wants", "wish", "wishes", "need", "needs",
   "help",
+  ...REQUEST_VERBS_I18N,
 ]);
 
 /** A question's opening words — a bare naming never begins like this.
@@ -126,15 +164,19 @@ const REQUEST_VERBS: ReadonlySet<string> = new Set([
     asks-for-an-answer openers ("please explain quantum…") read as
     questions, not as the ask itself — the request frame and the
     request verbs still catch the true requests among them. */
-const INTERROGATIVE_START: RegExp =
-  /^(why|how|what|when|where|who|which|whose|is|are|am|was|were|do|does|did|has|have|had|will|would|should|shall|can|could|may|please|explain|describe|tell|name|list|define|compare|prove|imagine|consider|suppose|help|give|show|write|draw|make|create|open|play|sing|read|put|turn|translate|weave|build|start|begin|continue|resume)\b/i;
+const INTERROGATIVE_START: RegExp = new RegExp(
+  `^(?:why|how|what|when|where|who|which|whose|is|are|am|was|were|do|does|did|has|have|had|will|would|should|shall|can|could|may|please|explain|describe|tell|name|list|define|compare|prove|imagine|consider|suppose|help|give|show|write|draw|make|create|open|play|sing|read|put|turn|translate|weave|build|start|begin|continue|resume|${INTERROGATIVE_I18N})(?![\\p{L}\\p{M}])`,
+  "iu"
+);
 
 function wordCount(text: string): number {
   return text.split(/\s+/).filter(Boolean).length;
 }
 
 /** A request verb standing within `gap` words before the door's name —
-    "open the akashic records", "create a book about the sea". */
+    "open the akashic records", "create a book about the sea". THE
+    TONGUE LAW — the word walk keeps every letter of every alphabet:
+    umlauts, Greek and Turkish characters survive the strip. */
 function verbNear(text: string, match: RegExpExecArray, gap = 5): boolean {
   const before = text.slice(0, match.index);
   const words = before
@@ -142,7 +184,7 @@ function verbNear(text: string, match: RegExpExecArray, gap = 5): boolean {
     .split(/\s+/)
     .filter(Boolean)
     .slice(-gap)
-    .map((w) => w.toLowerCase().replace(/[^a-z']/g, ""));
+    .map((w) => w.toLowerCase().replace(/[^\p{L}']/gu, ""));
   return words.some((w) => REQUEST_VERBS.has(w));
 }
 
@@ -152,59 +194,151 @@ function verbNear(text: string, match: RegExpExecArray, gap = 5): boolean {
 
 /** Meta-speech about a world's machinery — "the akashic records
     section", "the poem generator", "the forge feature", "that world
-    in the app". Talking ABOUT a door is not knocking on it. */
+    in the app", "die Lichtcodes Sektion", "la sección de códigos" —
+    talking ABOUT a door is not knocking on it. */
+const MACHINERY_I18N: string = [
+  /* English */
+  "sections?|features?|tools?|modes?|tabs?|views?|screens?|creator|creators?|generator|generators?|engine|engines?|menu|button|buttons?",
+  /* German */
+  "sektion|sektionen|abschnitt|abschnitte|funktion|funktionen|werkzeug|werkzeuge|generator|generatoren|ansicht|ansichten|menü|schaltfläche",
+  /* French */
+  "section|sections|fonctionnalité|fonctionnalités|générateur|générateurs|outil|outils|écran|écrans",
+  /* Spanish */
+  "sección|secciones|función|funciones|generador|generadores|herramienta|herramientas|pantalla|pantallas",
+  /* Italian */
+  "sezione|sezioni|funzione|funzioni|generatore|generatori|strumento|strumenti|schermata|schermate",
+  /* Greek */
+  "ενότητα|ενότητες|λειτουργία|λειτουργίες|δημιουργός|δημιουργοί|εργαλείο|εργαλεία|οθόνη|οθόνες",
+  /* Turkish */
+  "bölüm|bölümler|özellik|özellikler|oluşturucu|araç|araçlar|menü",
+  /* Albanian */
+  "seksioni|seksionet|funksioni|funksionet|gjeneratori|vegla|meny",
+].join("|");
+
+const ALL_DOOR_NAMES_I18N: string = [
+  BOOK_NAMES_I18N,
+  AKASHIC_NAMES_I18N,
+  MANIFEST_NAMES_I18N,
+  FORGE_NAMES_I18N,
+  POEM_NAMES_I18N,
+  CODES_NAMES_I18N,
+  QUANTUM_NAMES_I18N,
+  REMEDY_NAMES_I18N,
+].join("|");
+
 const META_FEATURE_PATTERN: RegExp = new RegExp(
   [
+    /* English pairs */
     "\\b(?:akash?ic|tarot|arcana|oracle|star\\s*play|forge|light\\s*codes?|particle\\s*x|quantum|evolve\\s*med|manifest(?:ing|ation)?|remed(?:y|ies))\\b[^.?!]{0,28}\\b(?:sections?|features?|doors?|worlds?|chambers?|tools?|modes?|tabs?|pages?|views?|screens?|creator|creators?|generator|generators?|engine|engines?)\\b",
     "\\b(?:sections?|features?|doors?|worlds?|chambers?|tabs?|pages?|views?|screens?)\\s+(?:like|of|for)\\s+(?:the|this|that|our)?\\s*(?:akash?ic|forge|light\\s*codes?|quantum|star\\s*play|manifest\\w*|remed\\w*)\\b",
+    /* EVERY TONGUE — a door's own name beside its machinery */
+    uWord(ALL_DOOR_NAMES_I18N) + "[^.?!]{0,28}" + uWord(MACHINERY_I18N),
+    uWord(MACHINERY_I18N) + "[^.?!]{0,28}" + uWord(ALL_DOOR_NAMES_I18N),
   ].join("|"),
-  "i"
+  "iu"
 );
 
 /** A sentence that declines or excludes — "no poem needed", "without
-    the cards", "not another reading". The opposite of a request. */
-const NEGATION_PATTERN: RegExp =
-  /\b(?:no|not|without|never|nothing|don'?t|do not|doesn'?t|no need (?:for|of)|not looking for|no more)\b[^.?!]{0,32}\b(?:book|poem|poetry|card|cards?|reading|readings?|record|records?|remed(?:y|ies)|sound|sounds|music|sigil|intention|visions?|transmission|haiku|sonnet|lullaby)\b/i;
+    the cards", "not another reading", "kein Gedicht nötig", "sin un
+    libro", "χωρίς βιβλίο". The opposite of a request. */
+const ARTIFACT_NOUNS_ALL: string = [
+  "book|poem|poetry|card|cards?|reading|readings?|record|records?|remed(?:y|ies)|sound|sounds|music|sigil|intention|visions?|transmission|haiku|sonnet|lullaby",
+  BOOK_NAMES_I18N,
+  POEM_NAMES_I18N,
+  AKASHIC_NAMES_I18N,
+  CODES_NAMES_I18N,
+  REMEDY_NAMES_I18N,
+  MANIFEST_NAMES_I18N,
+  MUSIC_NOUNS_I18N,
+].join("|");
+
+const NEGATION_PATTERN: RegExp = new RegExp(
+  uWord(
+    "no|not|without|never|nothing|don'?t|do not|doesn'?t|no need (?:for|of)|not looking for|no more|" +
+      NEGATION_WORDS_I18N
+  ) +
+    "[^.?!]{0,32}" +
+    uWord(ARTIFACT_NOUNS_ALL),
+  "iu"
+);
 
 /** Reported speech — "my teacher told me to read the records", "the
-    book says to draw a card" — someone else's ask, never the
-    visitor's own petition to this mirror. Past and third-person forms
-    only: the bare forms ("write me", "tell me") are the visitor's
-    own imperative and must never be mistaken for narration. */
-const REPORTED_SPEECH_PATTERN: RegExp =
-  /\b(?:asked|told|suggested|recommended|said|wrote|claimed|taught|teaches|teaching|says|tells|suggests|recommends|writes|claims|asks)\b[^.?!]{0,40}\b(?:me|us|him|her|them|to|that|us)\b/i;
+    book says to draw a card", "mein Lehrer erzählte von den
+    Chroniken" — someone else's ask, never the visitor's own petition
+    to this mirror. Past and third-person forms only: the bare forms
+    ("write me", "tell me") are the visitor's own imperative and must
+    never be mistaken for narration. */
+const REPORTED_SPEECH_PATTERN: RegExp = new RegExp(
+  uWord(
+    "asked|told|suggested|recommended|said|wrote|claimed|taught|teaches|teaching|says|tells|suggests|recommends|writes|claims|asks|" +
+      REPORTED_SPEECH_I18N
+  ) +
+    "[^.?!]{0,40}" +
+    uWord("me|us|him|her|them|to|that|mir|mich|dir|dich|moi|nous|vous|me|nos|ti|ci|μου|μας|σου|του|της|bana|bize|mua|mu|na"),
+  "iu"
+);
 
 /** The speaker narrating their OWN making — past ("I wrote a book
-    last year", "I pulled a card this morning"), habitual present
-    ("sometimes I draw little sketches") — a story, not a request. */
-const SELF_NARRATION_PATTERN: RegExp =
-  /\bI\s+(?:made|wrote|drew|painted|created|composed|built|designed|forged|pulled|flipped|shuffled|dealt|read|kept|keep|had|draw|sketch|paint|write|journal|have\s+(?:made|written|drawn|painted|created|composed|built|designed|forged|pulled|flipped|shuffled|dealt|read|kept))\b/i;
+    last year", "Ich habe ein Buch geschrieben", "j'ai écrit un
+    poème"), habitual present ("sometimes I draw little sketches") —
+    a story, not a request. */
+const SELF_NARRATION_PATTERN: RegExp = new RegExp(
+  [
+    "\\bI\\s+(?:made|wrote|drew|painted|created|composed|built|designed|forged|pulled|flipped|shuffled|dealt|read|kept|keep|had|draw|sketch|paint|write|journal|have\\s+(?:made|written|drawn|painted|created|composed|built|designed|forged|pulled|flipped|shuffled|dealt|read|kept))\\b",
+    uWord(SELF_NARRATION_I18N),
+  ].join("|"),
+  "iu"
+);
 
-/** The sentence sitting in remembered time — "when I was young", "my
-    mother read tarot every sunday" — storytelling, never a present
-    petition to the mirror. */
-const PAST_CONTEXT_PATTERN: RegExp =
-  /\b(?:when i was|back when|as a child|as a kid|growing up|used to|yesterday|last (?:year|month|week|night|summer|winter|autumn|spring)|ago|in my childhood|every (?:day|night|week|month|morning|evening|sunday|saturday|summer|winter))\b/i;
+/** The sentence sitting in remembered time — "when I was young",
+    "als ich klein war", "quand j'étais petite", "όταν ήμουν παιδί",
+    "çocukken" — storytelling, never a present petition to the mirror. */
+const PAST_CONTEXT_PATTERN: RegExp = new RegExp(
+  [
+    "\\b(?:when i was|back when|as a child|as a kid|growing up|used to|yesterday|last (?:year|month|week|night|summer|winter|autumn|spring)|ago|in my childhood|every (?:day|night|week|month|morning|evening|sunday|saturday|summer|winter))\\b",
+    uWord(PAST_CONTEXT_I18N),
+  ].join("|"),
+  "iu"
+);
 
 /** The speaker narrating their OWN future making — "I will write a
-    book someday" — a story about themselves, not a request. */
-const FUTURE_NARRATION_PATTERN: RegExp =
-  /\bI\s+(?:will|shall)\s+(?:\w+\s+){0,3}?(?:make|write|draw|paint|create|compose|build|design|forge|read|pull|flip|shuffle|open|weave)\b/i;
+    book someday", "Ich werde ein Buch schreiben", "θα γράψω" — a
+    story about themselves, not a request. */
+const FUTURE_NARRATION_PATTERN: RegExp = new RegExp(
+  [
+    "\\bI\\s+(?:will|shall)\\s+(?:\\w+\\s+){0,3}?(?:make|write|draw|paint|create|compose|build|design|forge|read|pull|flip|shuffle|open|weave)\\b",
+    uWord(FUTURE_NARRATION_I18N),
+  ].join("|"),
+  "iu"
+);
 
 /** A finite clause verb — the mark of an ordinary STATEMENT ("the
-    sound of rain calms me", "the book is on the table"), not a bare
-    naming that is itself the ask ("relaxing sounds of stars",
-    "a poem about the sea"). Third-person and past forms only — bare
-    forms collide with the doors' own nouns and nouns of intent
-    ("find calm", "to help me sleep"). */
-const CLAUSE_VERB_PATTERN: RegExp =
-  /\b(?:is|are|was|were|am|be|been|being|have|has|had|do|does|did|can|could|will|would|shall|should|may|might|must|feels?|felt|seems?|seemed|sounds?|sounded|calms\b|calmed\b|calming\b|helps\b|helped\b|helping\b|makes?|made|brings?|brought|carries?|carried|reminds?|reminded|comes?|came|goes?|went|stays?|stayed|means?|meant|changes?|changed|speaks?|spoke|says?|said|tells?|told|asks?|asked|knows?|knew|thinks?|thought|wants?|wanted|needs?|needed|loves?|loved|likes?|liked)\b/i;
+    sound of rain calms me", "das Buch ist auf dem Tisch", "el libro
+    está en la mesa"), not a bare naming that is itself the ask
+    ("relaxing sounds of stars", "a poem about the sea"). Third-person
+    and past forms only — bare forms collide with the doors' own
+    nouns and nouns of intent ("find calm", "to help me sleep").
+    THE TONGUE LAW — every supported language brings its own finite
+    verbs, and the request verbs are weighed FIRST, so a request
+    never loses its verb to the clause law. */
+const CLAUSE_VERB_PATTERN: RegExp = new RegExp(
+  uWord(
+    "is|are|was|were|am|be|been|being|have|has|had|do|does|did|can|could|will|would|shall|should|may|might|must|feels?|felt|seems?|seemed|sounds?|sounded|calms\\b|calmed\\b|calming\\b|helps\\b|helped\\b|helping\\b|makes?|made|brings?|brought|carries?|carried|reminds?|reminded|comes?|came|goes?|went|stays?|stayed|means?|meant|changes?|changed|speaks?|spoke|says?|said|tells?|told|asks?|asked|knows?|knew|thinks?|thought|wants?|wanted|needs?|needed|loves?|loved|likes?|liked|" +
+      CLAUSE_VERBS_I18N
+  ),
+  "iu"
+);
 
-/** The strongest statement markers — the be-verbs. They are checked
-    across the WHOLE sentence (they never collide with a door's
-    naming), while the wider clause-verb family is checked only
-    OUTSIDE the door-phrase match span. */
-const BE_VERB_PATTERN = /\b(?:is|are|was|were|am)\b/i;
+/** The strongest statement markers — the be-verbs of EVERY tongue.
+    They are checked across the WHOLE sentence (they never collide with
+    a door's naming), while the wider clause-verb family is checked
+    only OUTSIDE the door-phrase match span. */
+const BE_VERB_PATTERN = new RegExp(
+  uWord(
+    "is|are|was|were|am|ist|sind|war|waren|bin|est|sont|était|étaient|es|son|era|eran|está|están|è|sono|είναι|ήταν|üzerinde|içinde|altında|yanında|është|janë"
+  ),
+  "iu"
+);
 
 /**
  * A guarded sentence never opens a door on its own. Meta-mention,
@@ -233,7 +367,7 @@ function guardedSentence(s: string): boolean {
  *      "relaxing sounds of stars", "a poem about the sea").
  */
 function sentenceRequests(s: string, match: RegExpExecArray): boolean {
-  if (REQUEST_FRAME.test(s)) return true;
+  if (hasRequestFrame(s)) return true;
   if (verbNear(s, match)) return true;
   /* the bare naming — the sentence IS the ask. An ordinary statement
      is refused: clause verbs are sought OUTSIDE the door-phrase span
@@ -257,7 +391,8 @@ function splitSentences(text: string): string[] {
 
 /* The book's own return — the visitor paused a volume earlier and now
    asks the mirror to bring it back where it rested. Already fully
-   request-shaped, so it rides WITHOUT the gate. */
+   request-shaped, so it rides WITHOUT the gate. Every tongue speaks
+   the return in its own words. */
 const BOOK_RESUME_PATTERNS: RegExp[] = [
   /\b(bring|get|call|pull|take)\s+(back|my)\b[^.?!]{0,20}\b(book|volume|story|tale|novel)\b/i,
   /\b(bring\s+back|return\s+to|go\s+back\s+to|come\s+back\s+to)\b[^.?!]{0,20}\b(my|the|our)\s+(book|volume|story|tale|novel)\b/i,
@@ -265,19 +400,51 @@ const BOOK_RESUME_PATTERNS: RegExp[] = [
   /\bmy\s+(book|volume|story|tale)\b[^.?!]{0,30}\b(back|again|paused|left|page)\b/i,
   /\bbook\b[^.?!]{0,20}\b(where\s+(i|we)\s+(paused|left|stopped))\b/i,
   /\b(where\s+(i|we)\s+(paused|left\s+off|stopped))\b/i,
+  /* German */
+  new RegExp(uWord("mein buch (zurück|wieder|weiter|fortsetzen|again)"), "iu"),
+  new RegExp(uWord("(?:bring|hol) (?:mein|das) buch (?:zurück|wieder)"), "iu"),
+  new RegExp(uWord("weiterlesen|wo ich aufgehört hab(?:e)?|buch fortsetzen"), "iu"),
+  /* French */
+  new RegExp(uWord("(?:reprendre|ramener|rouvrir) mon livre"), "iu"),
+  new RegExp(uWord("mon livre (?:à nouveau|de retour|encore)"), "iu"),
+  new RegExp(uWord("où je m'étais arrêté|reprendre la lecture"), "iu"),
+  /* Spanish */
+  new RegExp(uWord("(?:continuar|seguir|retomar) mi libro"), "iu"),
+  new RegExp(uWord("mi libro (?:otra vez|de vuelta)"), "iu"),
+  new RegExp(uWord("donde lo dej[ée]"), "iu"),
+  /* Italian */
+  new RegExp(uWord("(?:riprendere|riportare) (?:il|lo) mio libro"), "iu"),
+  new RegExp(uWord("(?:il|lo) mio libro (?:di nuovo|ancora)"), "iu"),
+  new RegExp(uWord("dove l'avevo lasciato"), "iu"),
+  /* Greek */
+  new RegExp(uWord("(?:φέρε πίσω|συνέχισε) το βιβλίο μου"), "iu"),
+  new RegExp(uWord("το βιβλίο μου (?:ξανά|πίσω)"), "iu"),
+  new RegExp(uWord("όπου το άφησα"), "iu"),
+  /* Turkish */
+  new RegExp(uWord("kitabımı (?:geri getir|tekrar|devam)"), "iu"),
+  new RegExp(uWord("kitabıma devam|kaldığım yerden"), "iu"),
+  /* Albanian */
+  new RegExp(uWord("(?:kthe|vazhdo) librin tim"), "iu"),
+  new RegExp(uWord("libri im (?:përsëri|prapë)"), "iu"),
+  new RegExp(uWord("aty ku ndala"), "iu"),
 ];
 
 /* The Book door — a volume woven right inside the conversation:
-   the mirror asks about the book, then the loom binds it in chat. */
+   the mirror asks about the book, then the loom binds it in chat.
+   THE TONGUE LAW — das Buch, le livre, el libro, il libro, το
+   βιβλίο, kitap, libri — every name the sidebar speaks. */
 const BOOK_PATTERNS: RegExp[] = [
   /\b(make|create|craft|write|weave|manifest|compose|start|begin|open)\b[^.?!]{0,32}\b(a|an|the|my|us|me)\s+(book|storybook|volume|tale|story)\b/i,
-  /\b(book|storybook|volume)\b[^.?!]{0,32}\b(about|of|on|for)\b/i,
+  new RegExp(`${uWord(`book|storybook|volume|${BOOK_NAMES_I18N}`)}[^.?!]{0,32}${uWord(`about|of|on|for|${CONNECTOR_I18N}`)}`, "iu"),
   /\bwrite\s+(me|us)\s+(a|an)?\s*(book|story|tale|novel)\b/i,
   /\b(make|create|craft|write|weave|compose)\b[^.?!]{0,24}\b(poem|poetry|riddle|riddles|ballad|lullaby)\s+(book|volume|collection)\b/i,
   /\b(cozy|little|whole|entire|full|new|another)\s+book\b/i,
+  new RegExp(uWord(`book|storybook|volume|${BOOK_NAMES_I18N}`), "iu"),
 ];
 
-/* The Akashic door — records, past lives, the Library itself. */
+/* The Akashic door — records, past lives, the Library itself —
+   die Chroniken, les chroniques, las vidas pasadas, οι προηγούμενες
+   ζωές, önceki hayatlar, jetët e mëparshme. */
 const AKASHIC_PATTERNS: RegExp[] = [
   /\bakash?ic\b/i,
   /\bakasha\b/i,
@@ -287,9 +454,12 @@ const AKASHIC_PATTERNS: RegExp[] = [
   /\b(open|visit|enter|draw\s+from)\s+(the\s+)?(library|hall\s+of\s+records?|akash)/i,
   /\breading\s+from\s+the\s+(records?|hall|library)\b/i,
   /\binformation\s+(in|from|about|inside)\s+(the\s+)?akash/i,
+  new RegExp(uWord(AKASHIC_NAMES_I18N), "iu"),
 ];
 
-/* The Manifesting door — intentions to charge into blueprints. */
+/* The Manifesting door — intentions to charge into blueprints.
+   THE SIDEBAR'S OWN NAMES — Gestalten, Manifester, Manifesta,
+   Εκδήλωση, Tezahür, Manifesto — plus the verbs of manifestation. */
 const MANIFEST_PATTERNS: RegExp[] = [
   /\bmanifest(ation|ing)?\b/i,
   /\b(help\s+me\s+)?(attract|call\s+in)\b/i,
@@ -298,6 +468,7 @@ const MANIFEST_PATTERNS: RegExp[] = [
   /\bsigil\b/i,
   /\bi\s+(want|wish|choose|would\s+like)\s+to\s+(manifest|attract)\b/i,
   /\bmanifest\s+(a|an|the|my|more|calm|love|wealth|health|peace|joy|abundance)\b/i,
+  new RegExp(uWord(MANIFEST_NAMES_I18N), "iu"),
 ];
 
 /* The Forge door — mysteries struck from the coals, and the visitor's
@@ -315,22 +486,27 @@ const FORGE_PATTERNS: RegExp[] = [
   /\bstrike\b[^.?!]{0,16}\bforge\b/i,
   /\bsomething\s+(strange|wonderful|new|playful)\b[^.?!]{0,24}\b(make|build|create|invent)\b/i,
   /\bnew\s+way\s+of\b/i,
+  new RegExp(uWord(FORGE_NAMES_I18N), "iu"),
 ];
 
 /* The Poem door — a poem woven as its own artifact, straight into
    the channel: no mirror speech around it, the ink itself is the
    reply. Text verbs only — a lullaby SUNG belongs to the Light
-   Codes chamber, a lullaby WRITTEN belongs to the loom. */
+   Codes chamber, a lullaby WRITTEN belongs to the loom.
+   das Gedicht, le poème, el poema, la poesia, το ποίημα, şiir. */
 const POEM_PATTERNS: RegExp[] = [
   /\b(write|compose|pen|jot|weave|craft|make|create|give|deliver)\b[^.?!]{0,24}\b(me\s+|us\s+)?(a|an|the|us)?\s*(poem|poetry|verse|verses|haiku|sonnet|limerick|rhyme|lullaby)\b/i,
   /\b(a|an)\s+(poem|haiku|sonnet|lullaby)\s+(about|for|of|on)\b/i,
-  /\bpoem\b[^.?!]{0,20}\b(about|for|of|on)\b/i,
+  new RegExp(`${uWord(`poem|poetry|haiku|sonnet|lullaby|${POEM_NAMES_I18N}`)}[^.?!]{0,24}${uWord(`about|for|of|on|${CONNECTOR_I18N}`)}`, "iu"),
   /\bhaiku\b/i,
   /\bsonnet\b/i,
+  new RegExp(uWord(POEM_NAMES_I18N), "iu"),
 ];
 
 /* The Light Codes door — sound transmissions through the Mirror
-   Entity: named transmissions, sound healing, the singing tones. */
+   Entity: named transmissions, sound healing, the singing tones.
+   Lichtcodes, codes de lumière, códigos de luz, Κώδικες Φωτός,
+   Işık Kodları, Kodat e Dritës. */
 const CODES_PATTERNS: RegExp[] = [
   /\blight\s*codes?\b/i,
   /\bsound\s+(transmission|bath|healing|code)s?\b/i,
@@ -340,13 +516,13 @@ const CODES_PATTERNS: RegExp[] = [
   /\bschumann\b/i,
   /\bfrequenc(y|ies)\b[^.?!]{0,28}\b(transmission|healing|session|bath|tone)\b/i,
   /\b(music|song|melody|transmission)\b/i,
+  new RegExp(uWord(CODES_NAMES_I18N), "iu"),
+  new RegExp(uWord(MUSIC_NOUNS_I18N), "iu"),
 ];
 
 /* The Quantum World door — ParticleX, the narrator of what is beneath
-   and beside the visible. The narrator's INSTRUMENTS (the formula, the
-   Formula Loom, the Perception Glass, the Frequency Wheel, the Parallel
-   Catalog) are requests by nature — naming one IS asking for it — so
-   they open the door without the gate. */
+   and beside the visible. Quantenwelt, Monde Quantique, Mundo
+   Cuántico, Κβαντικός Κόσμος, Kuantum Dünya, Botë Kuantike. */
 const QUANTUM_PATTERNS: RegExp[] = [
   /\bquantum\b/i,
   /\bparticle\s*x\b/i,
@@ -355,6 +531,7 @@ const QUANTUM_PATTERNS: RegExp[] = [
   /\bwave\s+function\b/i,
   /\bmultiverse\b/i,
   /\bparallel\s+(lines?|worlds?|realit(y|ies)|self|selves)\b/i,
+  new RegExp(uWord(QUANTUM_NAMES_I18N), "iu"),
 ];
 
 const QUANTUM_INSTRUMENTS: RegExp[] = [
@@ -363,16 +540,19 @@ const QUANTUM_INSTRUMENTS: RegExp[] = [
   /\bthe\s+perception\s+glass\b/i,
   /\bthe\s+frequency\s+wheel\b/i,
   /\bthe\s+parallel\s+catalog\b/i,
+  new RegExp(uWord(FORMULA_TOOL_I18N), "iu"),
 ];
 
 /* The Evolve Med door — the evolutionary medical nexus, the apothecary
-   of the future, a remedy prepared in the channel itself. */
+   of the future, a remedy prepared in the channel itself.
+   Heilmittel, remède, remedio, γιατρικό, çare, ilaç. */
 const REMEDY_PATTERNS: RegExp[] = [
   /\bevolve\s*med\b/i,
   /\b(evolutionary\s+)?(medical|medicine)\s+nexus\b/i,
   /\bremed(y|ies)\b/i,
   /\bapothecar(y|ies)\b/i,
   /\bhealing\s+(protocol|vector|route)\b/i,
+  new RegExp(uWord(REMEDY_NAMES_I18N), "iu"),
 ];
 
 /* The doors in their order — most specific first. */
@@ -447,8 +627,8 @@ export function detectArtifactIntent(text: string): SideArtifactKind | null {
       const next = sentences[i + 1];
       const prev = sentences[i - 1];
       const neighborFrame =
-        (next && REQUEST_FRAME.test(next) && !guardedSentence(next)) ||
-        (prev && REQUEST_FRAME.test(prev) && !guardedSentence(prev));
+        (next && hasRequestFrame(next) && !guardedSentence(next)) ||
+        (prev && hasRequestFrame(prev) && !guardedSentence(prev));
 
       if (guardedSentence(s)) continue;
       const m = firstMatch(s, door.patterns);
@@ -482,20 +662,43 @@ const FORGE_STRIP: RegExp[] = [
   /\b(?:for|with)\s+(?:me|us)\b/gi,
   /\bthe\s+forge\b/gi,
   /\bsomething\s+(?:strange|wonderful|new|playful|beautiful|curious)\b/gi,
+  /* German scaffolding */
+  /\b(?:bitte\s+)?kannst du (?:bitte\s+)?/gi,
+  /\bich (?:will|möchte|brauche) (?:du )?(?:zu )?/gi,
+  /\b(?:erfinde|baue?|erschaffe|gestalte|entwirf(?:e)?|mache?|kreiere|konstruiere|denke mir)\b/gi,
+  /\b(?:für|mit) (?:mich|uns)\b/gi,
+  /\b(?:die|das) schmiede\b/gi,
+  /* French scaffolding */
+  /\b(?:s'il te pla[îi]t|stp)\b/gi,
+  /\bje (?:veux|voudrais|souhaite) (?:que tu )?/gi,
+  /\b(?:invente|construis|crée|fais|conçois|dessine)\b/gi,
+  /\bpour (?:moi|nous)\b/gi,
+  /\b(?:la|le) forge\b/gi,
+  /* Spanish / Italian scaffolding */
+  /\b(?:por favor|per favore|per piacere)\b/gi,
+  /\b(?:quiero|necesito|voglio|vorrei|desidero)\b/gi,
+  /\b(?:inventa|construye|crea|haz|concibe|diseña|costruisci|concepisci|progetta)\b/gi,
+  /\b(?:para|per) (?:mí|mi|nos|noi)\b/gi,
 ];
 
 /* A forge ask that carries its own vision — the creation verb plus
     enough of the seeker's words. A complete ask is itself the request:
-    it opens the forge without the gate, however long the words run. */
-const FORGE_ASK_VERB: RegExp =
-  /\b(invent|build|design|devise|conceive|forge|strike|construct)\b/i;
+    it opens the forge without the gate, however long the words run.
+    Every tongue's creation verbs knock here too. */
+const FORGE_ASK_VERB: RegExp = new RegExp(
+  uWord(
+    "invent|build|design|devise|conceive|forge|strike|construct|erfinde|erfinden|baue|bauen|erschaffe|entwirf|konstruiere|gestalte|invente|inventer|construis|conçois|inventa|inventar|construye|concibe|crea|εφεύρε|εφευρίσκω|σχεδίασε|icat|tasarla|shpik|krijo"
+  ),
+  "iu"
+);
 
 /**
  * The forge directive — the visitor's words carry a complete creation
  * ask (three or more meaningful words remain once the request
  * scaffolding is stripped). The returned string is the visitor's OWN
  * words, carried to the forge verbatim; null means the bench waits
- * for the dials.
+ * for the dials. THE TONGUE LAW — every letter of every alphabet
+ * survives the word walk.
  */
 export function forgeDirective(text: string): string | null {
   const raw = text.trim();
@@ -505,7 +708,7 @@ export function forgeDirective(text: string): string | null {
   const words = v
     .split(/\s+/)
     .filter(Boolean)
-    .map((w) => w.toLowerCase().replace(/[^a-z']/g, ""))
+    .map((w) => w.toLowerCase().replace(/[^\p{L}']/gu, ""))
     .filter((w) => w.length > 1);
   return words.length >= 3 ? raw.slice(0, 400) : null;
 }
@@ -528,8 +731,15 @@ export function isBookResume(text: string): boolean {
 export function detectQuantumTool(text: string): string | null {
   const v = text.trim();
   if (v.length < 3) return null;
-  if (/\bformula\b/i.test(v)) return "formula";
-  if (/\bperceiv(es?|ing|ed)\b|\bperception\b/i.test(v)) return "perception";
+  if (new RegExp(`\\bformula\\b|${uWord(FORMULA_TOOL_I18N)}`, "iu").test(v))
+    return "formula";
+  if (
+    new RegExp(
+      `\\bperceiv(?:es?|ing|ed)\\b|\\bperception\\b|${uWord(PERCEPTION_TOOL_I18N)}`,
+      "iu"
+    ).test(v)
+  )
+    return "perception";
   return null;
 }
 
@@ -553,12 +763,32 @@ export const MUSIC_INTENT: RegExp = new RegExp(
     "\\b(?:relaxing|calming|soothing|healing|gentle|peaceful|deep)\\s+sounds?\\s+of\\b",
     /* "sing me / sing about …" */
     "\\b(?:sing|hum)\\s+(?:me|about|of)\\b",
+    /* EVERY TONGUE — "spiel Musik", "mets de la musique", "pon música",
+       "metti musica", "παίξε μουσική", "müzik çal", "luaj muzikë" */
+    `${uWord(`spiel(?:e|st)?|joue|jouer|mets?|metti|pon|metti|παίξε|παίξε μου|çal|aç|luaj|këndo`)}\\s+(?:mir\\s+|moi\\s+|me\\s+|mi\\s+|μου\\s+|bana\\s+|mua\\s+|une?\\s+|un\\s+|una\\s+|de la\\s+|nje\\s+|një\\s+|bir\\s+)?(?:${MUSIC_NOUNS_I18N})`,
+    `${uWord(`(?:${MUSIC_NOUNS_I18N})`)}\\s+(?:für|pour|para|per|για|için|për|about|for)`,
+    `${uWord(`entspannende?|beruhigende?|ruhige?|heilende?|relax\\w*|calmante|relajante|rilassante|ηρεμ\\w*|καταπραΰν\\w*|sakinleştirici|rahatlatıcı|qetësuese`)}\\s+(?:klänge?|musik|sons?|musique|sonidos?|música|suoni|musica|ήχους|μουσική|sesler|müzik|tinguj|muzikë)`,
   ].join("|"),
-  "i"
+  "iu"
 );
 
 export function guessLightCodesMode(query: string): LightCodesMode {
   const q = query.toLowerCase();
+  /* EVERY TONGUE — the tuner hears the themes in each language too.
+     Each token carries its own suffix star, so "ruhige Klänge" and
+     "θεραπευτικά" still find their chamber (uWord wraps the WHOLE
+     alternation — the tolerance must live inside every token). */
+  for (const { mode, words } of LIGHT_CODES_MODES_I18N) {
+    try {
+      const tolerant = words
+        .split("|")
+        .map((w) => w + "[\\p{L}\\p{M}]*")
+        .join("|");
+      if (new RegExp(uWord(tolerant), "iu").test(q)) return mode as LightCodesMode;
+    } catch {
+      /* a malformed tongue group never breaks the tuner */
+    }
+  }
   if (
     /star|planet|arctur|pleiad|sirius|vega|andromed|inner earth|civilization|alien|galaxy|cosmic|another star|remembering/.test(
       q
