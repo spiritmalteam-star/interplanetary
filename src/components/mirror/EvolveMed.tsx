@@ -29,6 +29,7 @@ import {
   isVisualIntent,
 } from "@/lib/visual-intent";
 import { ListenButton } from "./ListenButton";
+import { voiceProfile } from "@/lib/voice-profiles";
 import { ScopeNotes } from "./ScopeNotes";
 import { WorldNewChat } from "./WorldNewChat";
 import { ChatHistoryPanel } from "./ChatHistoryPanel";
@@ -424,6 +425,7 @@ function EmExchange({
               <ListenButton
                 text={`${text}. ${formulaList.join(". ")}`}
                 cacheKey={`em-${text.slice(0, 24)}-${text.length}-${index}`}
+                profile={voiceProfile("evolvemed")}
                 voice="regent"
                 className="shrink-0 whitespace-nowrap"
               />

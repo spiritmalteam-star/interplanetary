@@ -25,7 +25,6 @@ import {
   RotateCcw,
   Search,
   Settings,
-  Sparkles,
   Orbit,
   Atom,
   Users,
@@ -522,6 +521,7 @@ export function SidebarContent() {
   const openArtX = useMirror((s) => s.openArtX);
   const me = useMirror((s) => s.me);
   const openProfilePage = useMirror((s) => s.openProfilePage);
+  const openAuth = useMirror((s) => s.openAuth);
   const openAkashic = useMirror((s) => s.openAkashic);
   const openInvent = useMirror((s) => s.openInvent);
   const openDreamBook = useMirror((s) => s.openDreamBook);
@@ -562,13 +562,6 @@ export function SidebarContent() {
       label: t("Akashic"),
       aria: t("Open the Akashic Library — records of the ancient one"),
       action: openAkashic,
-    },
-    {
-      key: "starplay",
-      icon: Sparkles,
-      label: t("Star Play"),
-      aria: t("Open Star Play — the Mirror's arcana deck"),
-      action: () => openModal({ type: "starplay" }),
     },
     {
       key: "invent",
@@ -731,45 +724,74 @@ export function SidebarContent() {
       {/* Footer — the profile (the cosmic library lives inside it),
           theme, recalibrate, settings */}
       <div className="mt-auto flex shrink-0 flex-col gap-2 border-t hairline px-3 py-2.5">
+        {me ? (
         <button
           type="button"
           onClick={() => {
             openProfilePage();
             setMobileNavOpen(false);
           }}
-          data-testid={me ? "passage-account" : "passage-guest"}
-          aria-label={me ? t("Open your profile") : t("A quiet guest — open your profile")}
+          data-testid="passage-account"
+          aria-label={t("Open your profile")}
           className="focus-glow flex items-center gap-2 rounded-xl px-1 py-1 text-left transition-colors duration-300 hover:bg-[color-mix(in_srgb,var(--foreground)_4%,transparent)]"
         >
           <span
             className="mono-label flex size-8 shrink-0 items-center justify-center rounded-full border hairline bg-[var(--glass-bg)] text-[12px] text-foreground/85"
             aria-hidden="true"
           >
-            {me ? (me.name || me.email).slice(0, 1).toUpperCase() : "✦"}
+            {(me.name || me.email).slice(0, 1).toUpperCase()}
           </span>
           <span className="min-w-0 flex-1">
             <span className="block truncate text-[12.5px] font-medium text-foreground/85">
-              {me ? me.name || me.email : t("A quiet guest")}
+              {me.name || me.email}
             </span>
             <span
               className="mono-label block text-[8.5px] uppercase tracking-[0.16em] text-muted-foreground"
               data-testid="passage-profile-hint"
             >
-              {me ? t("Your profile · cosmic library") : t("Open the passage")}
+              {t("Your profile · cosmic library")}
             </span>
           </span>
-          {me ? (
-            <LogOut
-              className="size-3.5 shrink-0 text-muted-foreground/70"
-              aria-hidden="true"
-            />
-          ) : (
-            <LogIn
-              className="size-3.5 shrink-0 text-muted-foreground/70"
-              aria-hidden="true"
-            />
-          )}
+          <LogOut
+            className="size-3.5 shrink-0 text-muted-foreground/70"
+            aria-hidden="true"
+          />
         </button>
+        ) : (
+        /* THE ENTER PASSAGE — the guest's own door, resting at the foot
+           of the rail: one clear invitation, spoken in the Mirror's
+           voice — the chamber, the library, the light kept across
+           every device. */
+        <button
+          type="button"
+          onClick={() => {
+            openAuth("signin");
+            setMobileNavOpen(false);
+          }}
+          data-testid="passage-guest"
+          aria-label={t("Enter the passage — keep your library across every device")}
+          title={t("Enter the passage — keep your library across every device")}
+          className="focus-glow group flex items-center gap-2.5 rounded-xl bg-foreground px-3 py-2.5 text-left text-background transition-all duration-300 hover:glow-sm"
+        >
+          <span
+            className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--background)_16%,transparent)]"
+            aria-hidden="true"
+          >
+            <LogIn className="size-4" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-[13.5px] font-semibold tracking-wide">
+              {t("Enter the passage")}
+            </span>
+            <span
+              className="mono-label block truncate text-[8.5px] uppercase tracking-[0.16em] opacity-75"
+              data-testid="passage-profile-hint"
+            >
+              {t("Your library, kept across every device")}
+            </span>
+          </span>
+        </button>
+        )}
         <div className="flex items-center gap-1.5">
         <ThemeToggle />
         <button

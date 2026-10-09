@@ -58,7 +58,7 @@ LIVE CALL OVERRIDE (AUTHORITATIVE — overrides every length rule above): This m
 
 export const POST = meterRoute("mirror_os", postImpl);
 
-async function postImpl(req: NextRequest): Promise<NextResponse> {
+async function postImpl(req: NextRequest): Promise<Response> {
   try {
     const body = await req.json().catch(() => null);
     const query: unknown = body?.query;
@@ -106,19 +106,107 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
       },
     ];
 
-    /* Conversation memory — the OS never forgets the thread it is in. */
+    /* Conversation memory — the OS never forgets the thread it is in.
+       THE SPEED LAW: the last eight turns, tightly clipped — a long
+       thread must never slow the first word of the answer. */
     if (Array.isArray(body?.history)) {
-      for (const turn of (body.history as { role?: unknown; text?: unknown }[]).slice(-10)) {
+      for (const turn of (body.history as { role?: unknown; text?: unknown }[]).slice(-8)) {
         if (typeof turn?.text !== "string" || !turn.text.trim()) continue;
         if (turn.role === "visitor") {
-          messages.push({ role: "user", content: turn.text.trim() });
+          messages.push({ role: "user", content: turn.text.trim().slice(0, 3000) });
         } else if (turn.role === "os") {
-          messages.push({ role: "assistant", content: turn.text.trim() });
+          messages.push({ role: "assistant", content: turn.text.trim().slice(0, 3000) });
         }
       }
     }
 
     messages.push({ role: "user", content: `${query.trim()}${attachmentLines}${languageLine}` });
+
+    /* ---------- THE STREAMING LINE — the answer begins the second it
+       is known. The first word arrives while the rest is still being
+       refined: the visitor reads as the OS speaks, never staring at a
+       blank room. Only the direct chat streams; the live call still
+       gathers its whole reply before it speaks. */
+    if (body?.stream === true) {
+      const upstream = await zai.chat.completions.create({
+        messages,
+        thinking: { type: "disabled" },
+        max_tokens: 1200,
+        stream: true,
+      });
+
+      const encoder = new TextEncoder();
+      const sse = new ReadableStream<Uint8Array>({
+        async start(controller) {
+          const send = (obj: Record<string, unknown>) =>
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify(obj)}\n\n`));
+          let full = "";
+          try {
+            const reader = (upstream as unknown as ReadableStream<Uint8Array>).getReader();
+            const decoder = new TextDecoder();
+            let buf = "";
+            for (;;) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              buf += decoder.decode(value, { stream: true });
+              let nl: number;
+              while ((nl = buf.indexOf("\n")) !== -1) {
+                const line = buf.slice(0, nl).trim();
+                buf = buf.slice(nl + 1);
+                if (!line.startsWith("data:")) continue;
+                const payload = line.slice(5).trim();
+                if (!payload || payload === "[DONE]") continue;
+                try {
+                  const j = JSON.parse(payload) as {
+                    choices?: { delta?: { content?: string }; message?: { content?: string } }[];
+                  };
+                  const delta =
+                    j.choices?.[0]?.delta?.content ??
+                    j.choices?.[0]?.message?.content ?? "";
+                  if (typeof delta === "string" && delta) {
+                    full += delta;
+                    send({ type: "delta", text: delta });
+                  }
+                } catch {
+                  /* a partial line rides on — the next chunk completes it */
+                }
+              }
+            }
+            const reply = full.trim();
+            if (!reply) {
+              send({ type: "error", error: "The OS is momentarily quiet. Rest, then reach again." });
+              return;
+            }
+            await saveLibrary(
+              visitor.user.id,
+              "manifest",
+              query.trim().slice(0, 140),
+              reply.slice(0, 280),
+              { query: query.trim().slice(0, 4000), reply }
+            );
+            send({ type: "done", reply });
+          } catch {
+            send({ type: "error", error: "The OS is momentarily quiet. Rest, then reach again." });
+          } finally {
+            controller.close();
+          }
+        },
+      });
+      return new Response(sse, {
+        headers: {
+          "Content-Type": "text/event-stream; charset=utf-8",
+          "Cache-Control": "no-store, no-transform",
+          Connection: "keep-alive",
+          ...(visitor.freshAnon && visitor.anonId
+            ? {
+                /* the fresh anonymous keeper rides home with their own
+                   cookie, even on the streaming line */
+                "Set-Cookie": `mirror_anon=${visitor.anonId}; Path=/; Max-Age=${365 * 24 * 60 * 60}; HttpOnly; SameSite=Lax${process.env.NODE_ENV === "production" ? "; Secure" : ""}`,
+              }
+            : {}),
+        },
+      });
+    }
 
     const completion = await zai.chat.completions.create({
       messages,

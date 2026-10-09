@@ -15,7 +15,6 @@
 export type WorldSigilKey =
   | "mirroros"
   | "akashic"
-  | "starplay"
   | "invent"
   | "dreambook"
   | "lightcodes"
@@ -30,10 +29,6 @@ const PNG_SIGILS: Record<WorldSigilKey, [string, string]> = {
   akashic: [
     "/images/sigils/world-akashic-dark.png",
     "/images/sigils/world-akashic-light.png",
-  ],
-  starplay: [
-    "/images/sigils/world-starplay-dark.png",
-    "/images/sigils/world-starplay-light.png",
   ],
   invent: [
     "/images/sigils/world-invent-dark.png",

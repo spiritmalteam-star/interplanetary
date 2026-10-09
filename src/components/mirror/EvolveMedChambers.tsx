@@ -50,6 +50,7 @@ import {
 import { EM_LAB_PAGES } from "@/lib/data/evolvemed-lab";
 import { cn } from "@/lib/utils";
 import { ListenButton } from "./ListenButton";
+import { voiceProfile } from "@/lib/voice-profiles";
 import { RevelationProse, RevelationSections } from "./RevelationBody";
 
 /* ------------------------------------------------------------------ */
@@ -454,6 +455,7 @@ function EmToolCard({
             <ListenButton
               text={`${result.revelation}. ${result.formulas.join(". ")}`}
               cacheKey={`em-tool-${tool}-${result.revelation.slice(0, 24)}-${result.revelation.length}`}
+              profile={voiceProfile("evolvemed")}
               voice="regent"
             />
             <EmCopyButton text={`${result.revelation}\n\n${result.formulas.join("\n")}`} />

@@ -26,7 +26,6 @@ import {
   ScrollText,
   ShieldCheck,
   Smartphone,
-  Sparkles,
   Stethoscope,
   Telescope,
   Users,
@@ -379,66 +378,60 @@ export function AboutPage() {
               />
               <WorldCard
                 n={4}
-                icon={Sparkles}
-                name="Star Play"
-                desc="A reflective arcana deck dealing dynamic card spreads, deep symbolic readings, and visual art."
-              />
-              <WorldCard
-                n={5}
                 icon={Hammer}
                 name="Invent (The Forge)"
                 desc="An invention workshop for drafting blueprints, multi-phase technical concepts, and domain-specific structured revelations."
               />
               <WorldCard
-                n={6}
+                n={5}
                 icon={BookOpen}
                 name="Dream Book"
                 desc="A collaborative literary chamber that weaves unique multi-chapter books step-by-step, engineered so no two volumes share the same structural skeleton or opening breath."
               />
               <WorldCard
-                n={7}
+                n={6}
                 icon={Music}
                 name="Light Codes"
                 desc="A sonic and harmonic chamber synthesizing calming frequencies, audio transmissions, and musical compositions."
               />
               <WorldCard
-                n={8}
+                n={7}
                 icon={Atom}
                 name="ParticleX (Quantum World)"
                 desc="An exploratory environment dissecting perception fields, emotional mechanics, and fundamental physics concepts through structured revelations."
               />
               <WorldCard
-                n={9}
+                n={8}
                 icon={Stethoscope}
                 name="Evolve Med"
                 desc="A meta-biological exploration nexus examining therapeutic concepts, synthetic genomics theory, and cellular wellness frameworks."
               />
               <WorldCard
-                n={10}
+                n={9}
                 icon={Palette}
                 name="Art X (The Atelier)"
                 desc="A multi-dimensional creative workshop producing production-grade lyrics, paste-able studio art prompts, poetry, album concepts, and color recipes grounded in real-world artistic techniques."
               />
               <WorldCard
-                n={11}
+                n={10}
                 icon={Moon}
                 name="Communion"
                 desc="A minimalist, immersive voice interaction mode where the laboratory interface dissolves into a pure audio reflection."
               />
               <WorldCard
-                n={12}
+                n={11}
                 icon={Library}
                 name="The Cosmic Library"
                 desc="Your private archive where every kept book, blueprint, song, and transmission is safely stored for re-reading, printing, or exporting."
               />
               <WorldCard
-                n={13}
+                n={12}
                 icon={FileText}
                 name="Outer Realms Archive"
                 desc="An encyclopedia detailing historical, interdimensional, and speculative archetypes, civilizations, and representatives with searchable dossiers."
               />
               <WorldCard
-                n={14}
+                n={13}
                 icon={Telescope}
                 name="The Observatory & About"
                 desc="The blueprint room detailing the technology, laws, design principles, and roadmap of our laboratory."

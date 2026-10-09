@@ -19,6 +19,7 @@ import type { Mode, Scope } from "@/lib/mirror-types";
 import { cn } from "@/lib/utils";
 import { findTerms } from "@/lib/data/lexicon";
 import { ListenButton } from "./ListenButton";
+import { voiceProfile } from "@/lib/voice-profiles";
 import { AlienLoading } from "./AlienLoading";
 import { TermPopover } from "./TermPopover";
 import { SideArtifact } from "./ChatArtifacts";
@@ -610,7 +611,7 @@ function Exchange({
               a direct-generation artifact carries no words of its own) */}
           {!hasVisual && message.text.trim() && (
             <div className="mb-4 flex items-center justify-end gap-2">
-              <ListenButton text={message.text} cacheKey={message.id} />
+              <ListenButton text={message.text} cacheKey={message.id} profile={voiceProfile("transmission")} />
               <button
                 type="button"
                 onClick={handleCopy}

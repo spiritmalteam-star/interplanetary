@@ -47,7 +47,7 @@ export interface MeterContext {
 export type MeteredHandler = (
   req: NextRequest,
   ctx: MeterContext
-) => Promise<NextResponse>;
+) => Promise<Response>;
 
 export function meterRoute(operation: string, handler: MeteredHandler) {
   return async (req: NextRequest): Promise<NextResponse> => {
@@ -239,7 +239,16 @@ export function meterRoute(operation: string, handler: MeteredHandler) {
         latencyMs: Date.now() - started,
       });
 
-      return withAnonCookie(res, visitor);
+      /* plain Responses (the streaming SSE lines) are wrapped so the
+         anonymous cookie can still ride home on them */
+      const out =
+        res instanceof NextResponse
+          ? res
+          : new NextResponse(res.body, {
+              status: res.status,
+              headers: res.headers,
+            });
+      return withAnonCookie(out, visitor);
     } catch (err) {
       /* the handler itself fell — the meter keeps the door standing,
          and the wallet's pre-execution draw goes back to its owner */

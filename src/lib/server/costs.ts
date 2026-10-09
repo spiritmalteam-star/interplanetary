@@ -28,7 +28,6 @@ export const COSTS: Record<string, number> = {
   visualize: cost("visualize", 30),
   image: cost("image", 150), // painted inside chat & friends (charged extra)
   light_codes: cost("light_codes", 20),
-  star_play: cost("star_play", 25),
   particlex: cost("particlex", 20),
   evolve_med: cost("evolve_med", 20),
   communion: cost("communion", 20),

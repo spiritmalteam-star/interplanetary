@@ -34,6 +34,7 @@ import {
 import { cn } from "@/lib/utils";
 import { ForgeLoading } from "./ThemedLoadings";
 import { ListenButton } from "./ListenButton";
+import { voiceProfile } from "@/lib/voice-profiles";
 import {
   PreparedPromptFallback,
   VisualizationCard,
@@ -324,7 +325,7 @@ function MysteryCard({ onAskBench }: { onAskBench: () => void }) {
           <RotateCcw className="size-3.5" aria-hidden="true" />
           {t("Forge another")}
         </button>
-        <ListenButton text={spoken} cacheKey={`mystery-${mystery.name}`} />
+        <ListenButton text={spoken} cacheKey={`mystery-${mystery.name}`} profile={voiceProfile("forge")} />
       </div>
     </motion.div>
   );
@@ -592,7 +593,7 @@ function ToolResultCard({ onAskBench }: { onAskBench: () => void }) {
           <Feather className="size-3.5" aria-hidden="true" />
           {t("Ask the Forge about it")}
         </button>
-        <ListenButton text={spoken} cacheKey={`tool-${spoken.length}-${spoken.slice(0, 24)}`} />
+        <ListenButton text={spoken} cacheKey={`tool-${spoken.length}-${spoken.slice(0, 24)}`} profile={voiceProfile("forge")} />
       </div>
     </motion.div>
   );

@@ -14,6 +14,7 @@ import {
   isVisualIntent,
 } from "@/lib/visual-intent";
 import { ListenButton } from "./ListenButton";
+import { voiceProfile } from "@/lib/voice-profiles";
 import {
   PreparedPromptFallback,
   VisualizationCard,
@@ -364,7 +365,7 @@ function OsExchange({
               ))}
             </div>
             <div className="mt-1.5 flex">
-              <ListenButton text={text} cacheKey={`os-${text.slice(0, 24)}-${text.length}`} />
+              <ListenButton text={text} cacheKey={`os-${text.slice(0, 24)}-${text.length}`} profile={voiceProfile("main")} />
             </div>
           </>
         )}
@@ -630,9 +631,13 @@ export function MirrorOSChat() {
             ))}
             {/* one breath at a time — while a visualization is forming
                 it carries its own card, so the plain thinking line
-                stands down and the thread never shows two loaders */}
+                stands down and the thread never shows two loaders.
+                The streaming law: once the OS's own line holds words,
+                the thinking line steps aside — the answer IS the
+                indicator now. */}
             {osStatus === "loading" &&
-              !osMessages.some((m) => m.visual === "pending") && (
+              !osMessages.some((m) => m.visual === "pending") &&
+              !osMessages[osMessages.length - 1]?.text?.trim() && (
               <div
                 ref={(node) => {
                   loadingRef.current = node;

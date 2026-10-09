@@ -2,6 +2,16 @@ import type { TranslationDict } from "../types";
 
 /** it — Italian dictionary (Task 3-b). Keys are the English source strings. */
 export const it: TranslationDict = {
+  "Choose how deep the telling goes.": "Scegli quanto in profondità va il racconto.",
+  "Copy page": "Copia la pagina",
+  "Copy this page": "Copia questa pagina",
+  "The page is copied.": "La pagina è copiata.",
+  "Let every page read itself aloud": "Lascia che ogni pagina legga se stessa ad alta voce",
+  "The voice reads every page — release for silence": "La voce legge ogni pagina — rilascia per il silenzio",
+  "Let every record read itself aloud": "Lascia che ogni registro legga se stesso ad alta voce",
+  "The Librarian reads every record — release for silence": "Il Bibliotecario legge ogni registro — rilascia per il silenzio",
+  "Your library, kept across every device": "La tua biblioteca, custodita su ogni dispositivo",
+  "Enter the passage — keep your library across every device": "Entra dal passaggio — custodisci la tua biblioteca su ogni dispositivo",
   "Short book": "Libro breve",
   "The loom waits for a thread — choose the reader, the tale, the book, or the depth below.": "Il telaio attende un filo — scegli il lettore, la favola, il libro o la profondità qui sotto.",
   "Choose how deep the telling goes — from the clearest daylight to the multidimensional voice.": "Scegli quanto in profondità va il racconto — dalla luce più chiara alla voce multidimensionale.",

@@ -39,7 +39,6 @@ import { FederationModal } from "./FederationModal";
 import { AstralJobsModal } from "./AstralJobsModal";
 import { DossierModal } from "./DossierModal";
 import { SettingsModal } from "./SettingsModal";
-import { StarPlayModal } from "./StarPlayModal";
 import { TechnologyModal } from "./TechnologyModal";
 import { SpeciesModal } from "./SpeciesModal";
 
@@ -473,7 +472,6 @@ function AppShellViews() {
       <AstralJobsModal />
       <DossierModal />
       <SettingsModal />
-      <StarPlayModal />
       <TechnologyModal />
       <SpeciesModal />
       {/* the conversation shelf — the channel's past chats, kept on

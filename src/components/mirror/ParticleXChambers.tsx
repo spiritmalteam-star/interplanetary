@@ -34,6 +34,7 @@ import { pxBeings, pxMonuments, pxScopes } from "@/lib/data/particlex";
 import { PX_LAB_PAGES } from "@/lib/data/particlex-lab";
 import { cn } from "@/lib/utils";
 import { ListenButton } from "./ListenButton";
+import { voiceProfile } from "@/lib/voice-profiles";
 import { RevelationProse, RevelationSections } from "./RevelationBody";
 
 /* ------------------------------------------------------------------ */
@@ -442,6 +443,7 @@ function ToolCard({
             <ListenButton
               text={`${result.revelation}. ${result.formulas.join(". ")}`}
               cacheKey={`px-tool-${tool}-${result.revelation.slice(0, 24)}-${result.revelation.length}`}
+              profile={voiceProfile("quantum")}
               voice="regent"
             />
             <PxCopyButton text={`${result.revelation}\n\n${result.formulas.join("\n")}`} />

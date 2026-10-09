@@ -114,9 +114,10 @@ async function postImpl(req: NextRequest, ctx: MeterContext): Promise<NextRespon
       );
     }
 
-    /* shape the conversation — text only, last 20 turns */
+    /* shape the conversation — text only, the last 12 turns, tightly
+       clipped: a long thread must never slow the first word */
     const convo = messages
-      .slice(-20)
+      .slice(-12)
       .map((m) => ({
         role:
           m?.role === "assistant"
@@ -126,8 +127,8 @@ async function postImpl(req: NextRequest, ctx: MeterContext): Promise<NextRespon
               : ("user" as const),
         content:
           typeof m?.content === "string"
-            ? m.content.slice(0, 8000)
-            : String(m?.content ?? "").slice(0, 8000),
+            ? m.content.slice(0, 4000)
+            : String(m?.content ?? "").slice(0, 4000),
       }))
       .filter((m) => m.content.trim().length > 0);
 

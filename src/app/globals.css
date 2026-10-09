@@ -971,26 +971,6 @@ html:not(.dark) .scope-lightcodes {
     inset 0 1px 0 color-mix(in srgb, white 10%, transparent);
 }
 
-/* Breathing violet halo around the emblem / drawn seals */
-.starplay-halo {
-  animation: dream-halo 3.8s ease-in-out infinite;
-}
-
-/* Soft violet aura behind the modal body */
-.starplay-aura {
-  background:
-    radial-gradient(
-      120% 70% at 50% 0%,
-      color-mix(in srgb, var(--sp-a) 10%, transparent) 0%,
-      transparent 60%
-    ),
-    radial-gradient(
-      90% 60% at 85% 100%,
-      color-mix(in srgb, var(--sp-b) 8%, transparent) 0%,
-      transparent 55%
-    );
-}
-
 /* ------------------------------------------------------------------ */
 /*  Reduced motion                                                    */
 /* ------------------------------------------------------------------ */
@@ -1014,13 +994,11 @@ html:not(.dark) .scope-lightcodes {
   .dream-halo,
   .star-btn,
   .star-btn::before,
-  .starplay-halo,
   .communion-btn,
   .communion-btn::before,
   .communion-halo,
   .communion-ring,
   .communion-star,
-  .tarot-glare,
   .ak-eye,
   .ak-rune,
   .ak-line,
@@ -1224,99 +1202,6 @@ html:not(.dark) .scope-lightcodes {
   transform: rotate(45deg);
   background: #c9c9c8;
   box-shadow: 0 0 10px color-mix(in srgb, #c9c9c8 60%, transparent);
-}
-
-/* ------------------------------------------------------------------ */
-/*  STAR PLAY — the tarot ritual (straight deal, 3D turn-and-reveal,   */
-/*  the card's whole meaning read inside the card).                    */
-/* ------------------------------------------------------------------ */
-
-.tarot-scene {
-  perspective: 1400px;
-}
-.tarot-inner {
-  transform-style: preserve-3d;
-  will-change: transform;
-}
-.tarot-face {
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-}
-/* NOTE: deliberately no `position` here — unlayered CSS would beat
-   Tailwind utilities; hosts add `relative` explicitly in markup. */
-.tarot-back {
-  background:
-    repeating-conic-gradient(
-      from 0deg,
-      color-mix(in srgb, var(--sp-b) 7%, transparent) 0deg 9deg,
-      transparent 9deg 18deg
-    ),
-    radial-gradient(
-      120% 100% at 50% 0%,
-      color-mix(in srgb, var(--sp-a) 34%, transparent) 0%,
-      transparent 62%
-    ),
-    linear-gradient(
-      168deg,
-      color-mix(in srgb, var(--sp-a) 30%, #0b0b0c) 0%,
-      #0b0b0c 58%,
-      color-mix(in srgb, var(--sp-b) 24%, #0b0b0c) 100%
-    );
-}
-.tarot-back::before {
-  content: "";
-  position: absolute;
-  inset: 7px;
-  border: 1px solid color-mix(in srgb, var(--sp-b) 30%, transparent);
-  border-radius: inherit;
-  pointer-events: none;
-}
-.tarot-glare {
-  background: linear-gradient(
-    115deg,
-    transparent 30%,
-    color-mix(in srgb, white 10%, transparent) 46%,
-    transparent 62%
-  );
-  animation: dream-drift 6.5s ease-in-out infinite;
-}
-
-/* The oracle's reading panel — a beautiful paper sent in front of the
-   visitor: warm ivory sheet, faint starlight fibers, warm ink. */
-.oracle-paper {
-  background:
-    radial-gradient(
-      130% 90% at 50% 0%,
-      rgba(255, 255, 255, 0.88) 0%,
-      transparent 56%
-    ),
-    radial-gradient(
-      120% 130% at 50% 118%,
-      color-mix(in srgb, var(--sp-a) 15%, transparent) 0%,
-      transparent 56%
-    ),
-    #eeedec;
-  color: #2b2b2a;
-  border-color: color-mix(in srgb, var(--sp-a) 26%, #d2d2d1);
-  box-shadow:
-    0 34px 90px -30px rgba(0, 0, 0, 0.8),
-    0 0 70px -26px color-mix(in srgb, var(--sp-a) 50%, transparent),
-    inset 0 0 90px -42px rgba(255, 255, 255, 0.12);
-}
-.oracle-paper::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 150px;
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    color-mix(in srgb, #8a8a89 65%, transparent),
-    transparent
-  );
 }
 
 /* ------------------------------------------------------------------ */

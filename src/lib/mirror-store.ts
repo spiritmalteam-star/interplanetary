@@ -64,7 +64,6 @@ import { journeyDepth } from "@/lib/learning-branches";
 export type ModalState =
   | { type: "federation" }
   | { type: "astral" }
-  | { type: "starplay" }
   | { type: "technology" }
   | { type: "dossier"; kind: DossierKind; id: string }
   | { type: "entity"; kind: DossierKind; id: string }
@@ -3083,6 +3082,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     if (!query || get().osStatus === "loading") return;
 
     const visitorId = nextMessageId();
+    const osId = nextMessageId();
     set((s) => ({
       osStatus: "loading",
       osError: null,
@@ -3104,13 +3104,24 @@ export const useMirror = create<MirrorState>()((set, get) => ({
               }
             : {}),
         },
+        /* the OS's own line is opened at once — the streaming answer
+           fills it word by word, so the room is never blank */
+        { id: osId, role: "os" as const, text: "" },
       ],
     }));
 
+    /* the streaming answer — text grows on the os line as it arrives */
+    const appendOs = (full: string) =>
+      set((s) => ({
+        osMessages: s.osMessages.map((m) =>
+          m.id === osId ? { ...m, text: full } : m
+        ),
+      }));
+
     try {
       const history = get()
-        .osMessages.filter((m) => m.id !== visitorId)
-        .slice(-10)
+        .osMessages.filter((m) => m.id !== visitorId && m.id !== osId)
+        .slice(-8)
         .map((m) => ({ role: m.role, text: m.text }));
 
       const payload = attachments ? attachmentsToPayload(attachments) : null;
@@ -3122,34 +3133,92 @@ export const useMirror = create<MirrorState>()((set, get) => ({
           history,
           language: get().language,
           depth: journeyDepth(),
+          stream: true,
           ...(payload ?? {}),
         }),
       });
-      const data = await res.json().catch(() => null);
-      if (!res.ok) {
-        throw new Error(
-          (data && data.error) ||
-            "The OS is momentarily quiet. Rest, then reach again."
-        );
+
+      /* a house without the streaming line — the whole reply at once */
+      if (!res.ok || !res.body) {
+        const data = await res.json().catch(() => null);
+        if (!res.ok) {
+          throw new Error(
+            (data && data.error) ||
+              "The OS is momentarily quiet. Rest, then reach again."
+          );
+        }
+        appendOs(String(data.reply ?? ""));
+        set({ osStatus: "ready" });
+        void get().refreshMe();
+        return;
       }
 
-      void get().refreshMe();
-
-      set((s) => ({
-        osStatus: "ready",
-        osMessages: [
-          ...s.osMessages,
-          { id: nextMessageId(), role: "os" as const, text: data.reply },
-        ],
-      }));
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buf = "";
+      let full = "";
+      let settled = false;
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        let sep: number;
+        while ((sep = buf.indexOf("\n\n")) !== -1) {
+          const rawEvent = buf.slice(0, sep);
+          buf = buf.slice(sep + 2);
+          const line = rawEvent
+            .split("\n")
+            .find((l) => l.startsWith("data: "));
+          if (!line) continue;
+          let evt: {
+            type?: string;
+            text?: string;
+            reply?: string;
+            error?: string;
+          };
+          try {
+            evt = JSON.parse(line.slice(6));
+          } catch {
+            continue;
+          }
+          if (evt.type === "delta" && evt.text) {
+            full += evt.text;
+            appendOs(full);
+          } else if (evt.type === "done") {
+            settled = true;
+            full = evt.reply || full;
+            appendOs(full);
+            set({ osStatus: "ready" });
+            void get().refreshMe();
+          } else if (evt.type === "error") {
+            throw new Error(
+              evt.error ||
+                "The OS is momentarily quiet. Rest, then reach again."
+            );
+          }
+        }
+      }
+      /* the line closed without a settled end — what arrived stays */
+      if (!settled) {
+        if (full.trim()) {
+          set({ osStatus: "ready" });
+          void get().refreshMe();
+        } else {
+          throw new Error(
+            "The OS is momentarily quiet. Rest, then reach again."
+          );
+        }
+      }
     } catch (err) {
       /* the quiet law — the visitor's line stays in the thread, marked
          and retryable; the words are never asked twice by hand */
       set((s) => ({
         osStatus: "error",
-        osMessages: s.osMessages.map((m) =>
-          m.id === visitorId ? { ...m, failed: true } : m
-        ),
+        osMessages:
+          /* an os line that never received a word leaves the thread */
+          s.osMessages.filter(
+            (m) => !(m.id === osId && !m.text.trim())
+          ),
         osError:
           err instanceof Error
             ? err.message

@@ -2,6 +2,16 @@ import type { TranslationDict } from "../types";
 
 /** fr — Français. Mirror Entity Digital Chamber dictionary (Task 3-b). */
 export const fr: TranslationDict = {
+  "Choose how deep the telling goes.": "Choisais la profondeur du récit.",
+  "Copy page": "Copier la page",
+  "Copy this page": "Copier cette page",
+  "The page is copied.": "La page est copiée.",
+  "Let every page read itself aloud": "Laisse chaque page se lire à voix haute",
+  "The voice reads every page — release for silence": "La voix lit chaque page — relâche pour le silence",
+  "Let every record read itself aloud": "Laisse chaque registre se lire à voix haute",
+  "The Librarian reads every record — release for silence": "Le Bibliothécaire lit chaque registre — relâche pour le silence",
+  "Your library, kept across every device": "Ta bibliothèque, gardée sur chaque appareil",
+  "Enter the passage — keep your library across every device": "Entre par le passage — garde ta bibliothèque sur chaque appareil",
   "Short book": "Livre court",
   "The loom waits for a thread — choose the reader, the tale, the book, or the depth below.": "Le métier attend un fil — choisis le lecteur, le conte, le livre ou la profondeur ci-dessous.",
   "Choose how deep the telling goes — from the clearest daylight to the multidimensional voice.": "Choisis la profondeur du récit — de la clarté la plus pure à la voix multidimensionnelle.",

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import ZAI from "@/lib/zai-client";
-import { resolveVisitor, saveLibrary, updateLibrary, withAnonCookie } from "@/lib/server/access";
+import { resolveVisitor, saveLibrary, updateLibrary, deleteLibraryKind, withAnonCookie } from "@/lib/server/access";
 import { LANGUAGE_NAMES, isLanguageCode } from "@/lib/i18n/core";
 import { meterRoute } from "@/lib/server/meter";
 import {
@@ -10,7 +10,7 @@ import {
   sanitizeEcho,
   type ResonanceDraw,
 } from "@/lib/book-resonance";
-import { detectShortBookAsk } from "@/lib/book-length";
+import { detectShortBookAsk, topicHoldsGround } from "@/lib/book-length";
 
 /* ------------------------------------------------------------------ */
 /*  POST /api/dream-book — THE REAL-TIME DYNAMIC CODEX ENGINE.         */
@@ -60,6 +60,17 @@ const BOOK_PLAN: Record<string, { min: number; max: number; label: string }> = {
   bedtime: { min: 80, max: 104, label: "a soft bedtime treasure — short luminous pages, a calm nightly cadence" },
   classic: { min: 96, max: 120, label: "a classic tale — full pages, an evergreen storybook voice" },
   saga: { min: 120, max: 180, label: "a grand saga — an epic breadth of pages, a mythic storyteller's breath" },
+  /* THE POEM ITSELF — when the visitor's own words ask for a poem (no
+     book word spoken), the loom weaves the poem, not a book: verses on
+     a few leaves, complete in the hand. THE GROUND LAW (see
+     src/lib/book-length.ts) — a short poem can never arrive as a
+     ninety-five page book again. */
+  tiny: {
+    min: 4,
+    max: 10,
+    label:
+      "A POEM ITSELF — verses on a few leaves (4–10 pages): the whole poem present, nothing padded, no sprawling book around it",
+  },
 };
 
 /* THE SHORT BOOK LAW — spoken into the open conjuring when the volume
@@ -329,12 +340,14 @@ function buildUserPrompt(body: {
   rewrites?: string[];
   charter: string;
   resonance?: string;
+  /* THE GROUND LAW — the visitor's own words outrank the shapes */
+  ground?: { tale?: string; short: boolean; tiny: boolean };
 }): string {
   const { phase, age, tale, volume, topic, wishes, languageName, rewrites } = body;
   const ageLine = AGE_PLAN[age] ?? AGE_PLAN.timeless;
   const taleLine = TALE_HINTS[tale] ?? TALE_HINTS.wonder;
   const volLine = BOOK_PLAN[volume] ?? BOOK_PLAN.classic;
-  const isShortVolume = volume === "short";
+  const isShortVolume = volume === "short" || volume === "tiny";
   const levelLine =
     LEVEL_PLAN[LEGACY_LEVEL_MAP[body.level] ?? body.level] ?? "";
   const isVerse = VERSE_FORMS.has(tale);
@@ -393,7 +406,23 @@ function buildUserPrompt(body: {
       ...(levelLine ? [`- Depth of lecture: ${levelLine}`] : []),
       `- Kind of resonance: ${taleLine}`,
       `- Kind of book: ${volLine.label}`,
-      ...(isShortVolume ? [``, SHORT_BOOK_LAW] : []),
+      ...(body.ground?.tiny
+        ? [
+            ``,
+            `THE GROUND LAW (absolute — the visitor's own words outrank every chosen shape): the visitor asked for A POEM — not a book that carries a poem. Weave the poem itself: verses on a few leaves (4–10 pages total), complete and unhurried, nothing padded, no sprawling book around it. The plan above is law, whatever any other line may imply.`,
+          ]
+        : body.ground?.tale
+          ? [
+              ``,
+              `THE GROUND LAW (absolute — the visitor's own words outrank every chosen shape): the visitor's words name the form "${body.ground.tale}". Weave THIS volume in that form — the shape the visitor SPEAKS always outranks the shapes they merely selected.`,
+            ]
+          : body.ground?.short
+            ? [
+                ``,
+                `THE GROUND LAW (absolute — the visitor's own words outrank every chosen shape): the visitor's own words ask for a SHORT telling — the plan yields to their words, and the whole telling lands inside it.`,
+              ]
+            : []),
+      ...(isShortVolume && !body.ground?.tiny ? [``, SHORT_BOOK_LAW] : []),
       ...(isVerse ? [``, VERSE_LAW] : []),
       wishes.trim()
         ? `- Whispered wishes (honor them faithfully, fold them in as the book's own bones): """${wishes.trim().slice(0, 1200)}"""`
@@ -589,7 +618,16 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
        otherwise chosen. */
     const shortAsk =
       volume === "short" || detectShortBookAsk(`${topic} ${wishes}`);
-    const volumeKey = shortAsk ? "short" : volume;
+    /* THE GROUND LAW — the visitor's own words outrank the shapes.
+       A topic that speaks a form (a poem, a riddle, a ballad) or a
+       length (short, brief) holds the ground: a short poem is woven as
+       the poem itself, never again as a ninety-five page book. */
+    const ground = topicHoldsGround(`${topic} ${wishes}`);
+    const volumeKey = ground.tiny ? "tiny" : shortAsk ? "short" : volume;
+    /* the form the visitor SPOKE outranks the form they selected —
+       "the chat holds the ground" — in every phase, so continuations
+       of a poem-asked volume stay verse */
+    const taleKey = ground.tale ?? tale;
 
     const threads = typeof body?.threads === "string" ? body.threads.slice(0, 2000) : undefined;
     const rewrites: string[] = Array.isArray(body?.rewrites)
@@ -633,7 +671,7 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
               ? (body.bookConfig as Record<string, unknown>).topic
               : topic,
           }
-        : { age, tale, volume, level, topic };
+        : { age, tale: taleKey, volume: volumeKey, level, topic };
     const pageNumber =
       typeof body?.pageNumber === "number" && body.pageNumber > 0
         ? Math.floor(body.pageNumber)
@@ -677,7 +715,7 @@ THE NAME LAW WAS BROKEN: your reply used the forbidden stock name(s): ${violatio
               buildUserPrompt({
                 phase,
                 age,
-                tale,
+                tale: taleKey,
                 volume: volumeKey,
                 level,
                 topic,
@@ -691,6 +729,7 @@ THE NAME LAW WAS BROKEN: your reply used the forbidden stock name(s): ${violatio
                 rewrites,
                 charter,
                 resonance: resonance ? resonanceCharter(resonance) : undefined,
+                ground,
               }) +
               violationBlock +
               (reminder
@@ -772,6 +811,11 @@ THE NAME LAW WAS BROKEN: your reply used the forbidden stock name(s): ${violatio
           )
         )
       );
+      /* THE ONE VOLUME LAW — when a new book is requested, the previous
+         one leaves the database entirely: the profile library holds ONE
+         living volume per keeper, and a fresh conjuring erases the last
+         one before the new book takes its place on the shelf. */
+      await deleteLibraryKind(visitor.user.id, "dreambook");
       /* the volume's birth echo rides home with it — carried BY the
          visitor (in their page, in their session), so the NEXT
          conjuring's draw can refuse every one of these bones. The
@@ -788,7 +832,7 @@ THE NAME LAW WAS BROKEN: your reply used the forbidden stock name(s): ${violatio
         {
           topic,
           seed,
-          config: { age, tale, volume: volumeKey, level, topic },
+          config: { age, tale: taleKey, volume: volumeKey, level, topic },
           title: out.title,
           subtitle: out.subtitle,
           sigil: out.sigil,
@@ -812,10 +856,15 @@ THE NAME LAW WAS BROKEN: your reply used the forbidden stock name(s): ${violatio
       typeof parsed.totalPages === "number"
     ) {
       /* the loom may widen or narrow the book ONLY when a rewriting
-         wish actually speaks of the book's length — and a short book
-         stretched by hand still stays a short book (capped at 40) */
+         wish actually speaks of the book's length — a short book
+         stretched by hand still stays a short book (capped at 40),
+         and a poem asked by name is never widened past its leaves
+         (capped at 12) */
       out.totalPages = clampTotal(
-        Math.min(volumeKey === "short" ? 40 : 300, parsed.totalPages)
+        Math.min(
+          volumeKey === "tiny" ? 12 : volumeKey === "short" ? 40 : 300,
+          parsed.totalPages
+        )
       );
     }
 

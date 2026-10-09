@@ -2,6 +2,16 @@ import type { TranslationDict } from "../types";
 
 /** tr — Türkçe. Mirror Entity Digital Chamber dictionary (Task 3-b). */
 export const tr: TranslationDict = {
+  "Choose how deep the telling goes.": "Anlatımın ne kadar derine gideceğini seç.",
+  "Copy page": "Sayfayı kopyala",
+  "Copy this page": "Bu sayfayı kopyala",
+  "The page is copied.": "Sayfa kopyalandı.",
+  "Let every page read itself aloud": "Her sayfanın kendini sesli okumasına izin ver",
+  "The voice reads every page — release for silence": "Ses her sayfayı okur — sessizlik için bırak",
+  "Let every record read itself aloud": "Her kaydın kendini sesli okumasına izin ver",
+  "The Librarian reads every record — release for silence": "Kütüphaneci her kaydı okur — sessizlik için bırak",
+  "Your library, kept across every device": "Kütüphanen, her cihazda saklanır",
+  "Enter the passage — keep your library across every device": "Geçide gir — kütüphaneni her cihazda tut",
   "Short book": "Kısa kitap",
   "The loom waits for a thread — choose the reader, the tale, the book, or the depth below.": "Tezgâh bir iplik bekliyor — okuru, masalı, kitabı ya da aşağıdaki derinliği seç.",
   "Choose how deep the telling goes — from the clearest daylight to the multidimensional voice.": "Anlatının ne kadar derine gideceğini seç — en berrak ışıktan çok boyutlu sese kadar.",

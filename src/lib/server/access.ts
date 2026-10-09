@@ -230,9 +230,9 @@ export async function resolveVisitor(req: NextRequest): Promise<Visitor> {
 }
 
 /** Attaches the freshly minted anon cookie to a response, if one is due. */
-export function withAnonCookie<T extends NextResponse>(res: T, visitor: Visitor): T {
+export function withAnonCookie<T extends Response>(res: T, visitor: Visitor): T {
   if (visitor.freshAnon) {
-    res.cookies.set(ANON_COOKIE, visitor.anonId, {
+    (res as unknown as NextResponse).cookies.set(ANON_COOKIE, visitor.anonId, {
       httpOnly: true,
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
@@ -321,6 +321,26 @@ export async function updateLibrary(
     });
   } catch (err) {
     console.error("[access] library update failed:", err);
+  }
+}
+
+/**
+ * THE ONE VOLUME LAW — every past volume of a sector leaves the
+ * database the moment a new one is asked for: the keeper's profile
+ * library holds the LIVING volume alone, never an accumulation of
+ * old drafts. Returns how many entries were erased.
+ */
+export async function deleteLibraryKind(
+  userId: string | null | undefined,
+  sector: LibrarySector
+): Promise<number> {
+  if (!userId || userId.startsWith(STATELESS_PREFIX)) return 0;
+  try {
+    const gone = await db.libraryEntry.deleteMany({ where: { userId, sector } });
+    return gone.count;
+  } catch (err) {
+    console.error("[access] library erase failed:", err);
+    return 0;
   }
 }
 

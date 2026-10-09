@@ -17,6 +17,7 @@ import {
   AudioLines,
   Check,
   ChevronsUpDown,
+  Copy,
   Feather,
   LoaderCircle,
   MoonStar,
@@ -24,6 +25,8 @@ import {
   Play,
   Sparkles,
   Square,
+  Volume2,
+  VolumeX,
   Waves,
   X,
   ZoomIn,
@@ -143,6 +146,7 @@ export function DreamBookView() {
 
   /* ---- the book ---- */
   const [meta, setMeta] = useState<BookMeta | null>(null);
+  const narrateRef = useRef<((auto?: boolean) => Promise<void> | void) | null>(null);
   const [pages, setPages] = useState<WeavePage[]>([]);
   const [ended, setEnded] = useState(false);
   const [pageIdx, setPageIdx] = useState(0);
@@ -160,6 +164,10 @@ export function DreamBookView() {
   const [narrating, setNarrating] = useState(false);
   const [narrPaused, setNarrPaused] = useState(false);
   const [narrLoading, setNarrLoading] = useState(false);
+  /* THE VOICE TOGGLE — when held, every page the visitor turns reads
+     itself aloud; when released, the pages keep their silence. One
+     switch governing the whole volume, resting beside the reading. */
+  const [autoNarrate, setAutoNarrate] = useState(false);
 
   /* ---- the rewriting hand ---- */
   const [rewriteOpen, setRewriteOpen] = useState(false);
@@ -297,6 +305,15 @@ export function DreamBookView() {
   }, []);
 
   useEffect(() => stopNarration, [stopNarration]);
+
+  /* the toggle's own law — a page turned with the voice held reads
+     itself; the toggle released silences the room at once. The short
+     breath lets the stop settle before the fresh voice is drawn. */
+  useEffect(() => {
+    if (!autoNarrate || stage !== "reading") return;
+    const t = window.setTimeout(() => void narrateRef.current?.(true), 180);
+    return () => window.clearTimeout(t);
+  }, [pageIdx, autoNarrate, stage]);
 
   /* ---------------- the weaver's fetch ----------------
      A generous timeout and one quiet retry: if a thread slips
@@ -593,16 +610,20 @@ export function DreamBookView() {
 
   /* ---------------- the narrator ---------------- */
 
-  const narrate = useCallback(async () => {
-    /* a voice holding its breath — let it go on from the same word */
+  const narrate = useCallback(async (auto = false) => {
+    /* a voice holding its breath — let it go on from the same word
+       (only a human press resumes; the auto voice turns the page) */
     const held = narrRef.current.audio;
     if (held && narrPaused && held.paused) {
-      await resumeNarration();
-      return;
+      if (!auto) {
+        await resumeNarration();
+        return;
+      }
+      stopNarration();
     }
     /* a voice already prepared and waiting for a fresh touch? */
     const prepared = narrRef.current.audio;
-    if (prepared && narrRef.current.ready && prepared.paused) {
+    if (!auto && prepared && narrRef.current.ready && prepared.paused) {
       narrRef.current.ready = false;
       try {
         await prepared.play();
@@ -615,7 +636,9 @@ export function DreamBookView() {
     }
     if (narrating || narrLoading) {
       stopNarration();
-      return;
+      /* the auto voice on a page turn: the old page's voice is let go
+         and the new page's voice begins — never merely silenced */
+      if (!auto) return;
     }
     stopNarration();
     setNarrLoading(true);
@@ -695,6 +718,9 @@ export function DreamBookView() {
     }
   }, [narrating, narrLoading, narrPaused, currentPage, pageIdx, meta, stopNarration, resumeNarration, t]);
 
+  /* the auto-voice effect reads the freshest narrate without re-firing */
+  narrateRef.current = narrate;
+
   /* ---------------- shared ---------------- */
 
   const backFromAtelier = () => {
@@ -766,151 +792,136 @@ export function DreamBookView() {
       </header>
 
       <div className="nice-scroll relative z-10 min-h-0 flex-1 overflow-y-auto">
-        <div className="mx-auto flex w-full max-w-[680px] flex-col px-4 pb-6 pt-4 sm:px-6">
-          {/* the hero — pure ink, no colours, the book's own face */}
-          <div className="flex flex-col items-center pb-1 pt-2 text-center">
+        <div className="mx-auto flex w-full max-w-[620px] flex-col px-4 pb-4 pt-2 sm:px-6">
+          {/* the compact face of the atelier — one line, one panel, the
+              book plainly indicated: everything the visitor needs held
+              in a single quiet sheet, nothing to scroll past */}
+          <div className="mt-1 flex items-center gap-2.5">
             <span
-              className="font-[family-name(var(--font-literata))] text-2xl text-foreground/30"
+              className="font-[family-name(var(--font-literata))] text-lg text-foreground/30"
               aria-hidden="true"
             >
               ❧
             </span>
-            <h1 className="ink-title mt-3 text-[28px] leading-tight sm:text-[34px]">
+            <h1 className="ink-title text-[21px] leading-tight sm:text-[24px]">
               {t("Dream Book")}
             </h1>
-            <p className="ink-hand ink-soft mt-2 max-w-[440px] text-[12.5px] italic leading-relaxed sm:text-sm">
-              {t(
-                "Name any subject, era, or universe — the loom tunes itself, and the book begins."
-              )}
-            </p>
-            <div className="mt-5 flex items-center gap-3" aria-hidden="true">
-              <span className="h-px w-14 bg-border" />
-              <span className="font-[family-name(var(--font-literata))] text-[10px] text-foreground/30">
-                ✦
-              </span>
-              <span className="h-px w-14 bg-border" />
+            <span className="h-px flex-1 bg-border" aria-hidden="true" />
+          </div>
+          <p className="ink-hand ink-soft mt-1.5 text-[12.5px] italic leading-relaxed sm:text-[13.5px]">
+            {t("Name any subject, era, or universe — the loom tunes itself, and the book begins.")}
+          </p>
+
+          {/* the shapes — reader / tale / book, one compact sheet */}
+          <div className="mt-4 rounded-2xl border border-border bg-card/40 p-3.5 sm:p-4">
+            <div className="space-y-3">
+              <ShapeRow
+                label={t("The reader")}
+                options={READERS}
+                active={age}
+                onPick={(id) => choose("reader", id)}
+              />
+              <ShapeMenu
+                label={t("The tale")}
+                options={TALES}
+                active={tale}
+                onPick={(id) => choose("tale", id)}
+              />
+              <ShapeRow
+                label={t("The book")}
+                options={VOLUMES}
+                active={volume}
+                onPick={(id) => choose("volume", id)}
+              />
             </div>
-          </div>
 
-          {/* the welcome — the room's own greeting, set in the reading
-              hand. No transcript, no bubbles: one page of prose that
-              waits like a dedication, and the input below begins the
-              tale exactly as it always has. */}
-          <div className="mx-auto mt-7 max-w-[440px]">
-            <p className="ink-hand text-[16.5px] leading-[1.95] first-letter:float-left first-letter:mr-3 first-letter:mt-[7px] first-letter:text-[50px] first-letter:font-semibold first-letter:leading-[0.78] sm:text-[18px]">
-              {t(
-                "Welcome, keeper of wishes. Speak anything — a subject, a wish, a whole world — and the book begins."
-              )}
-            </p>
-          </div>
-
-          {/* the page-marker slide — pass between the Book and the
-              Akashic Library without ever leaving the reading rooms */}
-          <div className="mt-7 flex justify-center">
-          </div>
-
-          {/* the shapes — reader / tale / book */}
-          <div className="mt-5 space-y-4">
-            <ShapeRow
-              label={t("The reader")}
-              options={READERS}
-              active={age}
-              onPick={(id) => choose("reader", id)}
-            />
-            <ShapeMenu
-              label={t("The tale")}
-              options={TALES}
-              active={tale}
-              onPick={(id) => choose("tale", id)}
-            />
-            <ShapeRow
-              label={t("The book")}
-              options={VOLUMES}
-              active={volume}
-              onPick={(id) => choose("volume", id)}
-            />
-          </div>
-
-          {/* the depth bar — the depth of the telling, five steps:
-              1 reads like most books, 5 runs in several dimensions;
-              each step is drawn taller than the last, so the eye
-              sees the telling itself scaling with the number */}
-          <div className="mt-7" data-testid="dream-depth-bar">
-            <p className="mono-label mb-2.5 text-center text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
-              {t("The depth of the telling")}
-            </p>
-            <div className="flex items-end gap-1.5">
-              {BOOK_DEPTHS.map((lv, i) => {
-                const active = level === lv.id;
-                /* the fill deepens with the step, but never past the
-                   point where the numeral stops reading; the active
-                   step is filled solid and its number inverts */
-                const fills = [0.07, 0.12, 0.18, 0.26, 0.36];
-                const heights = [22, 26, 30, 34, 38];
-                return (
-                  <button
-                    key={lv.id}
-                    type="button"
-                    onClick={() => choose("level", lv.id)}
-                    aria-pressed={active}
-                    aria-label={`${t(lv.label)} — depth ${lv.numeral}`}
-                    data-testid={`dream-depth-${lv.id}`}
-                    className="focus-glow group flex min-w-0 flex-1 flex-col items-center gap-1.5"
-                  >
-                    <span
-                      className={cn(
-                        "relative flex w-full items-end justify-center overflow-hidden rounded-md border transition-all duration-300",
-                        active && "glow-sm"
-                      )}
-                      style={{
-                        height: `${heights[i]}px`,
-                        borderColor: active
-                          ? "var(--foreground)"
-                          : "var(--border)",
-                        background: active
-                          ? "var(--foreground)"
-                          : `color-mix(in srgb, var(--foreground) ${fills[i]}%, transparent)`,
-                      }}
+            {/* the depth bar — five compact steps on one line; the
+                active step speaks its own one-line whisper beneath */}
+            <div className="mt-3.5 border-t border-border/60 pt-3" data-testid="dream-depth-bar">
+              <p className="mono-label mb-2 text-[9px] uppercase tracking-[0.22em] text-muted-foreground">
+                {t("The depth of the telling")}
+              </p>
+              <div className="flex items-end gap-1.5">
+                {BOOK_DEPTHS.map((lv, i) => {
+                  const active = level === lv.id;
+                  const fills = [0.07, 0.12, 0.18, 0.26, 0.36];
+                  const heights = [16, 20, 24, 28, 32];
+                  return (
+                    <button
+                      key={lv.id}
+                      type="button"
+                      onClick={() => choose("level", lv.id)}
+                      aria-pressed={active}
+                      aria-label={`${t(lv.label)} — depth ${lv.numeral}`}
+                      data-testid={`dream-depth-${lv.id}`}
+                      title={t(lv.label)}
+                      className="focus-glow group flex min-w-0 flex-1 flex-col items-center gap-1"
                     >
                       <span
-                        className="font-[family-name(var(--font-literata))] text-[11px] font-semibold leading-none tracking-[0.08em]"
+                        className={cn(
+                          "relative flex w-full items-end justify-center overflow-hidden rounded-md border transition-all duration-300",
+                          active && "glow-sm"
+                        )}
                         style={{
-                          color: active
-                            ? "var(--background)"
-                            : "var(--muted-foreground)",
+                          height: `${heights[i]}px`,
+                          borderColor: active
+                            ? "var(--foreground)"
+                            : "var(--border)",
+                          background: active
+                            ? "var(--foreground)"
+                            : `color-mix(in srgb, var(--foreground) ${fills[i]}%, transparent)`,
                         }}
                       >
-                        {lv.numeral}
+                        <span
+                          className="font-[family-name(var(--font-literata))] text-[10px] font-semibold leading-none tracking-[0.08em]"
+                          style={{
+                            color: active
+                              ? "var(--background)"
+                              : "var(--muted-foreground)",
+                          }}
+                        >
+                          {lv.numeral}
+                        </span>
+                        {active && (
+                          <motion.span
+                            layoutId="dream-depth-marker"
+                            className="absolute inset-x-0 bottom-0 h-[2.5px] bg-foreground"
+                            transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                          />
+                        )}
                       </span>
-                      {active && (
-                        <motion.span
-                          layoutId="dream-depth-marker"
-                          className="absolute inset-x-0 bottom-0 h-[3px] bg-foreground"
-                          transition={{ type: "spring", stiffness: 380, damping: 32 }}
-                        />
-                      )}
-                    </span>
-                    <span
-                      className={cn(
-                        "w-full truncate text-center font-[family-name(var(--font-literata))] text-[10.5px] italic leading-tight transition-colors duration-300",
-                        active
-                          ? "text-foreground"
-                          : "text-muted-foreground/75 group-hover:text-foreground"
-                      )}
-                    >
-                      {t(lv.label)}
-                    </span>
-                  </button>
-                );
-              })}
+                      <span
+                        className={cn(
+                          "w-full truncate text-center font-[family-name(var(--font-literata))] text-[9.5px] italic leading-tight transition-colors duration-300",
+                          active
+                            ? "text-foreground"
+                            : "text-muted-foreground/75 group-hover:text-foreground"
+                        )}
+                      >
+                        {t(lv.label)}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+              {/* the active depth's own whisper — one line, only when held */}
+              <AnimatePresence initial={false} mode="wait">
+                <motion.p
+                  key={levelMeta?.id ?? "none"}
+                  initial={{ opacity: 0, y: 3 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -2 }}
+                  transition={{ duration: 0.25 }}
+                  className="ink-hand ink-soft mt-2 min-h-[1.6em] text-center text-[11px] italic leading-snug"
+                >
+                  {levelMeta
+                    ? t(levelMeta.depth)
+                    : t("Choose how deep the telling goes.")}
+                </motion.p>
+              </AnimatePresence>
             </div>
-            <p className="ink-hand ink-soft mt-2.5 min-h-[2.6em] text-center text-[12px] italic leading-relaxed">
-              {levelMeta
-                ? t(levelMeta.depth)
-                : t("Choose how deep the telling goes — from the clearest daylight to the multidimensional voice.")}
-            </p>
           </div>
-          <div aria-hidden="true" className="h-4" />
+          <div aria-hidden="true" className="h-2" />
         </div>
       </div>
 
@@ -1129,7 +1140,7 @@ export function DreamBookView() {
           </button>
           <button
             type="button"
-            onClick={narrate}
+            onClick={() => void narrate()}
             aria-label={narrating ? t("Stop") : t("Listen to the story")}
             title={narrating ? t("Stop") : t("Listen to the story")}
             className={cn(
@@ -1144,6 +1155,41 @@ export function DreamBookView() {
               <Square className="size-3.5 fill-current" aria-hidden="true" />
             ) : (
               <AudioLines className="size-4" aria-hidden="true" />
+            )}
+          </button>
+          {/* THE VOICE TOGGLE — held: every page reads itself aloud,
+              one after another, for the whole volume; released: the
+              pages keep their silence. It governs every page. */}
+          <button
+            type="button"
+            onClick={() =>
+              setAutoNarrate((v) => {
+                if (v) stopNarration();
+                return !v;
+              })
+            }
+            data-testid="book-voice-toggle"
+            aria-pressed={autoNarrate}
+            aria-label={
+              autoNarrate
+                ? t("The voice reads every page — release for silence")
+                : t("Let every page read itself aloud")
+            }
+            title={
+              autoNarrate
+                ? t("The voice reads every page — release for silence")
+                : t("Let every page read itself aloud")
+            }
+            className={cn(
+              inkIconBtn,
+              autoNarrate &&
+                "border-transparent bg-foreground text-background hover:opacity-90"
+            )}
+          >
+            {autoNarrate ? (
+              <Volume2 className="size-4" aria-hidden="true" />
+            ) : (
+              <VolumeX className="size-4" aria-hidden="true" />
             )}
           </button>
           {/* the pause — the lady's voice holds its breath, one touch
@@ -1442,7 +1488,8 @@ export function DreamBookView() {
       </footer>
 
       {/* the one button that remains while immersed — the next page,
-          floating alone over the reading */}
+          floating alone over the reading; beside it, the voice toggle
+          so the reading aloud follows the visitor onto every page */}
       <AnimatePresence>
         {immersed && canNext && (
           <motion.button
@@ -1457,6 +1504,50 @@ export function DreamBookView() {
             className="dream-turn focus-glow absolute bottom-6 right-5 z-30 flex size-12 items-center justify-center rounded-full"
           >
             <ArrowLeft className="size-5 rotate-180" aria-hidden="true" />
+          </motion.button>
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {immersed && (
+          <motion.button
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 16 }}
+            transition={{ duration: 0.35, ease: "easeOut" }}
+            type="button"
+            onClick={() =>
+              setAutoNarrate((v) => {
+                if (v) stopNarration();
+                return !v;
+              })
+            }
+            data-testid="book-voice-toggle-immersed"
+            aria-pressed={autoNarrate}
+            aria-label={
+              autoNarrate
+                ? t("The voice reads every page — release for silence")
+                : t("Let every page read itself aloud")
+            }
+            title={
+              autoNarrate
+                ? t("The voice reads every page — release for silence")
+                : t("Let every page read itself aloud")
+            }
+            className={cn(
+              "dream-turn focus-glow absolute bottom-6 left-5 z-30 flex size-12 items-center justify-center rounded-full",
+              autoNarrate && "dream-turn-active"
+            )}
+            style={
+              autoNarrate
+                ? { background: "var(--foreground)", color: "var(--background)" }
+                : undefined
+            }
+          >
+            {autoNarrate ? (
+              <Volume2 className="size-5" aria-hidden="true" />
+            ) : (
+              <VolumeX className="size-5" aria-hidden="true" />
+            )}
           </motion.button>
         )}
       </AnimatePresence>
@@ -1780,6 +1871,21 @@ function BookPage({
   onRetry?: () => void;
 }) {
   const t = useT();
+  /* THE PAGE'S OWN COPY — one quiet button at the end of every page:
+     the page's whole text carried to the clipboard, nothing more. */
+  const [copied, setCopied] = useState(false);
+  const copyPage = async () => {
+    if (!page) return;
+    try {
+      const header = page.chapter ? `${page.chapter}\n\n` : "";
+      await navigator.clipboard.writeText(`${header}${pageText(page)}`);
+      setCopied(true);
+      toast.success(t("The page is copied."));
+      window.setTimeout(() => setCopied(false), 2200);
+    } catch {
+      toast.error(t("The copying did not take — select and copy by hand."));
+    }
+  };
   return (
     <div
       className={cn(
@@ -1809,9 +1915,31 @@ function BookPage({
               </p>
             ))}
           </div>
-          <p className="mt-5 text-center font-[family-name(var(--font-literata))] text-[11px] text-[var(--dream-ink-faint)]">
-            {page.n}
-          </p>
+          {/* the end of the page — its number, and the copy of its words */}
+          <div className="mt-5 flex items-center justify-center gap-2">
+            <p className="font-[family-name(var(--font-literata))] text-[11px] text-[var(--dream-ink-faint)]">
+              {page.n}
+            </p>
+            <span
+              className="h-px w-6 bg-[var(--dream-ink-faint)]/30"
+              aria-hidden="true"
+            />
+            <button
+              type="button"
+              onClick={() => void copyPage()}
+              data-testid={`book-page-copy-${page.n}`}
+              aria-label={t("Copy this page")}
+              title={t("Copy this page")}
+              className="focus-glow inline-flex h-7 items-center gap-1.5 rounded-full border border-[var(--dream-ink-faint)]/30 px-2.5 font-[family-name(var(--font-literata))] text-[10.5px] italic text-[var(--dream-ink-soft)] transition-all duration-300 hover:border-[var(--dream-ink-soft)] hover:text-[var(--dream-ink)]"
+            >
+              {copied ? (
+                <Check className="size-3" aria-hidden="true" />
+              ) : (
+                <Copy className="size-3" aria-hidden="true" />
+              )}
+              {copied ? t("copied") : t("Copy page")}
+            </button>
+          </div>
         </>
       ) : (
         /* the page still in the loom */

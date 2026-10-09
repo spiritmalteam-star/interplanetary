@@ -31,6 +31,7 @@ import {
 } from "@/lib/data/mirroros";
 import { cn } from "@/lib/utils";
 import { ListenButton } from "./ListenButton";
+import { voiceProfile } from "@/lib/voice-profiles";
 import { MirrorOSForge } from "./MirrorOSForge";
 import { WorldNewChat } from "./WorldNewChat";
 import { ChatHistoryPanel } from "./ChatHistoryPanel";
@@ -164,7 +165,7 @@ function FormulaCard({ index, formulaId }: { index: number; formulaId: string })
             </div>
 
             <div className="mt-3 flex justify-end">
-              <ListenButton text={spoken} cacheKey={`os-${formula.id}`} />
+              <ListenButton text={spoken} cacheKey={`os-${formula.id}`} profile={voiceProfile("manifest")} />
             </div>
           </div>
         </motion.div>

@@ -173,7 +173,10 @@ export function SettingsModal() {
             {t("Voice for transcript")}
           </p>
           <div className="space-y-2">
-            {VOICES.map((v) => {
+            {/* THE ONE MAN LAW — the transcript voice of every chat is
+                the man of the GLM engine. The kind lady reader is the
+                Dream Books' own narrator and is never offered here. */}
+            {VOICES.filter((v) => v.id !== "reader").map((v) => {
               const selected = voice === v.id;
               const isPreviewing = previewing === v.id;
               return (

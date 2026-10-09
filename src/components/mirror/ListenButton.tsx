@@ -5,7 +5,8 @@ import { AudioLines, LoaderCircle, Square } from "lucide-react";
 import { toast } from "sonner";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
-import type { VoiceId } from "@/lib/i18n/core";
+import { DEFAULT_VOICE, type VoiceId } from "@/lib/i18n/core";
+import type { VoiceProfile } from "@/lib/voice-profiles";
 import {
   browserVoiceAvailable,
   noteBrowserVoiceFallback,
@@ -45,17 +46,30 @@ export function ListenButton({
   /** A fixed voice — when given it wins over the visitor's setting
       (e.g. ParticleX's gentle gentleman narrator). */
   voice: fixedVoice,
+  /** A fixed pace — the category's own rhythm, when it must not
+      follow the visitor's global setting. */
+  pace: fixedPace,
+  /** The category's full profile — voice and rhythm together. When
+      given it wins over everything: THE CATEGORY VOICE LAW. */
+  profile,
 }: {
   text: string;
   cacheKey: string;
   variant?: "pill" | "icon";
   className?: string;
   voice?: VoiceId;
+  pace?: number;
+  profile?: VoiceProfile;
 }) {
   const t = useT();
   const storeVoice = useMirror((s) => s.voice);
-  const voice = fixedVoice ?? storeVoice;
-  const pace = useMirror((s) => s.pace);
+  const storePace = useMirror((s) => s.pace);
+  /* THE ONE MAN LAW — no chat ever answers in a woman's voice. The
+     kind lady reader belongs to the Dream Books alone; if the visitor's
+     global setting carries her, every chat register falls back to the
+     male house voice. */
+  const voice = profile?.voice ?? fixedVoice ?? (storeVoice === "reader" ? DEFAULT_VOICE : storeVoice);
+  const pace = profile?.pace ?? fixedPace ?? storePace;
   const language = useMirror((s) => s.language);
   const [state, setState] = useState<"idle" | "loading" | "playing">("idle");
   const stateRef = useRef<"idle" | "loading" | "playing">("idle");
@@ -73,14 +87,14 @@ export function ListenButton({
   useEffect(() => {
     if (active && active.key.startsWith(`${cacheKey}::`)) stopActive();
     prepared.current = null;
-  }, [cacheKey, voice, pace, language]);
+  }, [cacheKey, voice, pace, language, profile]);
 
   /* Unmount — release the voice if this button owns it. */
   useEffect(() => {
     return () => {
       if (active && active.key.startsWith(`${cacheKey}::`)) stopActive();
     };
-  }, [cacheKey, voice]);
+  }, [cacheKey, voice, profile]);
 
   /* THE TRAVELER'S VOICE — when the house voice cannot travel (a sky
      without a tongue, a fallen wire), the visitor's own browser reads
@@ -92,7 +106,7 @@ export function ListenButton({
       const handle = speakWithBrowserVoice({
         text: spoken,
         lang: language,
-        rate: pace,
+        rate: Math.min(1.15, pace),
         onEnd: () => {
           if (active?.key === key) {
             active = null;

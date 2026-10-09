@@ -2,6 +2,16 @@ import type { TranslationDict } from "../types";
 
 /** sq — Shqip. Mirror Entity Digital Chamber dictionary (Task 3-a). */
 export const sq: TranslationDict = {
+  "Choose how deep the telling goes.": "Zgjidh sa thellë shkon tregimi.",
+  "Copy page": "Kopjo faqen",
+  "Copy this page": "Kopjo këtë faqe",
+  "The page is copied.": "Faqja u kopjua.",
+  "Let every page read itself aloud": "Lër çdo faqe të lexojë veten me zë",
+  "The voice reads every page — release for silence": "Zëri lexon çdo faqe — lësho për heshtje",
+  "Let every record read itself aloud": "Lër çdo regjistrim të lexojë veten me zë",
+  "The Librarian reads every record — release for silence": "Bibliotekisti lexon çdo regjistrim — lësho për heshtje",
+  "Your library, kept across every device": "Biblioteka jote, e ruajtur në çdo pajisje",
+  "Enter the passage — keep your library across every device": "Hyr në kalim — mbaje bibliotekën tënde në çdo pajisje",
   "Short book": "Libër e shkurtër",
   "The loom waits for a thread — choose the reader, the tale, the book, or the depth below.": "Tejku pret për një fill — zgjidh lexuesin, përrallën, librin ose thellësinë poshtë.",
   "Choose how deep the telling goes — from the clearest daylight to the multidimensional voice.": "Zgjidh sa thellë shkon tregimi — nga drita më e qartë deri te zëri shumëdimensional.",

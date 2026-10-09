@@ -13,6 +13,8 @@ import {
   RotateCcw,
   Share2,
   Square,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useMirror } from "@/lib/mirror-store";
@@ -241,6 +243,13 @@ export function AkashicView() {
     "idle" | "loading" | "playing"
   >("idle");
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  /* THE VOICE TOGGLE — when held, every record the Librarian draws is
+     read aloud the moment it touches the desk; released, the letters
+     keep their silence. One switch governing the whole room. */
+  const [autoVoice, setAutoVoice] = useState(false);
+  const listenRef = useRef<((auto?: boolean) => Promise<void> | void) | null>(null);
+  const recordSeq = useRef(0);
+  const voiceFetchSeq = useRef(0);
 
   const stopVoice = useCallback(() => {
     try {
@@ -254,16 +263,19 @@ export function AkashicView() {
 
   useEffect(() => stopVoice, [stopVoice]);
 
-  const handleListen = useCallback(async () => {
-    if (voiceState === "loading") return;
-    if (voiceState === "playing") {
+  const handleListen = useCallback(async (auto = false) => {
+    if (voiceState === "loading") {
+      if (!auto) return;
+    } else if (voiceState === "playing") {
       stopVoice();
-      return;
+      if (!auto) return;
     }
     if (!record) return;
     /* The Librarian reads aloud himself — the old man's own voice,
        slower than the world, from behind the great desk. */
     setVoiceState("loading");
+    /* a newer voice demand always wins — an older gather never speaks */
+    const seq = ++voiceFetchSeq.current;
     try {
       const res = await fetch("/api/tts", {
         method: "POST",
@@ -279,6 +291,7 @@ export function AkashicView() {
       });
       if (!res.ok) throw new Error("voice quiet");
       const blob = await res.blob();
+      if (voiceFetchSeq.current !== seq) return;
       const audio = new Audio(URL.createObjectURL(blob));
       audioRef.current = audio;
       audio.onended = () => {
@@ -312,6 +325,21 @@ export function AkashicView() {
       toast.error(t("The Librarian is quiet. Rest, then listen again."));
     }
   }, [record, voiceState, stopVoice, t, language]);
+
+  /* the freshest listen, without re-firing the effect that calls it */
+  listenRef.current = handleListen;
+
+  /* the toggle's own law — a record set down while the voice is held
+     reads itself aloud at once; the toggle released silences the room */
+  useEffect(() => {
+    if (!autoVoice || !record) return;
+    recordSeq.current += 1;
+    const seq = recordSeq.current;
+    const timer = window.setTimeout(() => {
+      if (recordSeq.current === seq) void listenRef.current?.(true);
+    }, 220);
+    return () => window.clearTimeout(timer);
+  }, [record, autoVoice]);
 
   /* ---------------------------------------------------------------- */
   /*  The Universal Visualization Engine — a request to SEE becomes    */
@@ -628,6 +656,38 @@ export function AkashicView() {
                   >
                     <Share2 className="size-3.5 shrink-0" aria-hidden="true" />
                     <span className="hidden sm:inline">{t("Share")}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setAutoVoice((v) => {
+                        if (v) stopVoice();
+                        return !v;
+                      })
+                    }
+                    data-testid="akashic-voice-toggle"
+                    aria-pressed={autoVoice}
+                    aria-label={
+                      autoVoice
+                        ? t("The Librarian reads every record — release for silence")
+                        : t("Let every record read itself aloud")
+                    }
+                    title={
+                      autoVoice
+                        ? t("The Librarian reads every record — release for silence")
+                        : t("Let every record read itself aloud")
+                    }
+                    className={cn(
+                      "papyrus-btn focus-glow inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 text-[10.5px] font-medium tracking-[0.05em] sm:px-3.5",
+                      autoVoice &&
+                        "bg-[color-mix(in_srgb,var(--foreground)_10%,transparent)]"
+                    )}
+                  >
+                    {autoVoice ? (
+                      <Volume2 className="size-3.5 shrink-0" aria-hidden="true" />
+                    ) : (
+                      <VolumeX className="size-3.5 shrink-0" aria-hidden="true" />
+                    )}
                   </button>
                   <button
                     type="button"

@@ -2,6 +2,16 @@ import type { TranslationDict } from "../types";
 
 /** el — Greek dictionary (Task 3-b). Keys are the English source strings. */
 export const el: TranslationDict = {
+  "Choose how deep the telling goes.": "Διάλεξε πόσο βαθιά πηγαίνει η αφήγηση.",
+  "Copy page": "Αντιγραφή σελίδας",
+  "Copy this page": "Αντιγραφή αυτής της σελίδας",
+  "The page is copied.": "Η σελίδα αντιγράφηκε.",
+  "Let every page read itself aloud": "Άφησε κάθε σελίδα να διαβάζει τον εαυτό της δυνατά",
+  "The voice reads every page — release for silence": "Η φωνή διαβάζει κάθε σελίδα — άφερε για σιωπή",
+  "Let every record read itself aloud": "Άφησε κάθε αρχείο να διαβάζει τον εαυτό του δυνατά",
+  "The Librarian reads every record — release for silence": "Ο Βιβλιοθηκάριος διαβάζει κάθε αρχείο — άφερε για σιωπή",
+  "Your library, kept across every device": "Η βιβλιοθήκη σου, φυλαγμένη σε κάθε συσκευή",
+  "Enter the passage — keep your library across every device": "Μπέκα από τη διάβαση — κράτα τη βιβλιοθήκη σου σε κάθε συσκευή",
   "Short book": "Σύντομο βιβλίο",
   "The loom waits for a thread — choose the reader, the tale, the book, or the depth below.": "Ο αργαλειός περιμένει ένα νήμα — διάλεξε τον αναγνώστη, το παραμύθι, το βιβλίο ή το βάθος παρακάτω.",
   "Choose how deep the telling goes — from the clearest daylight to the multidimensional voice.": "Διάλεξε πόσο βαθιά φτάνει η αφήγηση — από το πιο καθαρό φως ως την πολυδιάστατη φωνή.",

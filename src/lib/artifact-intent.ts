@@ -2,7 +2,7 @@
 /*  MIRROR ENTITY — the Generative Side-Activity Engine                */
 /*  Detects, from one chat message, when a side activity should be     */
 /*  brought INTO the channel as a living artifact: the Akashic letter, */
-/*  the Star Play draw, the Manifesting ritual, the Forge strike, the  */
+/*  the Manifesting ritual, the Forge strike, the                       */
 /*  woven book — and the whole remaining sidebar: the Light Codes      */
 /*  chamber, the Quantum World's narrator and the Evolve Med nexus.    */
 /*  Their content is revealed when asked into the chat, much like      */
@@ -23,7 +23,6 @@ import type { LightCodesMode } from "@/lib/data/light-codes";
 
 export type SideArtifactKind =
   | "akashic"
-  | "star"
   | "manifest"
   | "forge"
   | "book"
@@ -290,19 +289,6 @@ const AKASHIC_PATTERNS: RegExp[] = [
   /\binformation\s+(in|from|about|inside)\s+(the\s+)?akash/i,
 ];
 
-/* The Star Play door — cards, spreads, the arcana deck. */
-const STAR_PATTERNS: RegExp[] = [
-  /\bstar\s*play\b/i,
-  /\btarot\b/i,
-  /\barcana\b/i,
-  /\boracle\b/i,
-  /\b(draw|pull|pick|turn|flip|deal)\b[^.?!]{0,24}\b(cards?|spread|deck)\b/i,
-  /\bcard\s+(spread|draw|reading)\b/i,
-  /\bthree\s+cards\b/i,
-  /\bshuffle\b/i,
-  /\bask\s+the\s+deck\b/i,
-];
-
 /* The Manifesting door — intentions to charge into blueprints. */
 const MANIFEST_PATTERNS: RegExp[] = [
   /\bmanifest(ation|ing)?\b/i,
@@ -397,7 +383,6 @@ const DOORS: {
 }[] = [
   { kind: "book", patterns: BOOK_PATTERNS },
   { kind: "akashic", patterns: AKASHIC_PATTERNS },
-  { kind: "star", patterns: STAR_PATTERNS },
   { kind: "manifest", patterns: MANIFEST_PATTERNS },
   { kind: "forge", patterns: FORGE_PATTERNS },
   { kind: "poem", patterns: POEM_PATTERNS },

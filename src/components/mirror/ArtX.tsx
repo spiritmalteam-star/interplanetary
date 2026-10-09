@@ -22,6 +22,7 @@ import {
   isVisualIntent,
 } from "@/lib/visual-intent";
 import { ListenButton } from "./ListenButton";
+import { voiceProfile } from "@/lib/voice-profiles";
 import {
   PreparedPromptFallback,
   VisualizationCard,
@@ -392,7 +393,7 @@ function AxExchange({
               ))}
             </div>
             <div className="mt-1.5 flex">
-              <ListenButton text={text} cacheKey={`ax-${text.slice(0, 24)}-${text.length}`} />
+              <ListenButton text={text} cacheKey={`ax-${text.slice(0, 24)}-${text.length}`} profile={voiceProfile("artx")} />
             </div>
           </>
         )}

@@ -54,11 +54,6 @@ import { WorldSigil, type WorldSigilKey } from "./WorldSigils";
 import { READERS, TALES, VERSE_FORMS } from "@/lib/data/book-options";
 import { detectShortBookAsk } from "@/lib/book-length";
 import {
-  drawStarPlayCards,
-  STAR_PLAY_POSITIONS,
-  type DrawnCard,
-} from "@/lib/star-play";
-import {
   forgeDomains,
   forgePhases,
   forgeScales,
@@ -712,209 +707,6 @@ export function TimelineRecordSection({
           </button>
         </div>
       )}
-    </div>
-  );
-}
-
-/* ================================================================== */
-/*  2 · THE STAR DRAW — three seats dealt in the channel; tap to       */
-/*      turn, then let the deck speak.                                 */
-/* ================================================================== */
-
-const STAR_EMBLEM = "/images/ai/star-play-emblem.jpg";
-
-function StarDraw() {
-  const t = useT();
-  const language = useMirror((s) => s.language);
-  const [drawn, setDrawn] = useState<DrawnCard[] | null>(null);
-  const [flipped, setFlipped] = useState<boolean[]>([false, false, false]);
-  const [reading, setReading] = useState<string | null>(null);
-  const [state, setState] = useState<"idle" | "loading" | "error">("idle");
-
-  useEffect(() => {
-    setDrawn(drawStarPlayCards(3));
-    setFlipped([false, false, false]);
-    setReading(null);
-    setState("idle");
-  }, []);
-
-  const shuffle = () => {
-    setDrawn(drawStarPlayCards(3));
-    setFlipped([false, false, false]);
-    setReading(null);
-    setState("idle");
-  };
-
-  const turn = (i: number) =>
-    setFlipped((f) => {
-      if (f[i]) return f;
-      const next = [...f];
-      next[i] = true;
-      return next;
-    });
-
-  const allUp = drawn !== null && flipped.every(Boolean);
-
-  const speak = useCallback(async () => {
-    if (!drawn || !allUp || state === "loading") return;
-    setState("loading");
-    try {
-      const res = await fetch("/api/star-play", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          language,
-          cards: drawn.map((d) => ({
-            essence: d.card.essence,
-            message: d.card.message,
-            position: d.position,
-          })),
-        }),
-      });
-      const data = (await res.json()) as { reading?: string; error?: string };
-      if (!res.ok || !data.reading) throw new Error(data.error ?? "quiet");
-      setReading(data.reading);
-      setState("idle");
-    } catch {
-      setState("error");
-    }
-  }, [drawn, allUp, state, language]);
-
-  const readingParas = reading ? reading.split(/\n{2,}/) : [];
-
-  return (
-    <div>
-      {/* the three seats */}
-      {drawn && (
-        <div className="flex items-start justify-center gap-3 sm:gap-5" data-testid="chat-star-cards">
-          {drawn.map((d, i) => (
-            <div key={d.card.id} className="flex w-[96px] flex-col items-center sm:w-[116px]">
-              <div className="tarot-scene relative h-[150px] w-full sm:h-[176px]" data-testid={`chat-star-card-${i}`}>
-                <motion.div
-                  className="tarot-inner size-full"
-                  initial={{ opacity: 0, y: 26, scale: 0.94 }}
-                  animate={{ opacity: 1, y: 0, scale: 1, rotateY: flipped[i] ? 180 : 0 }}
-                  transition={{
-                    opacity: { duration: 0.4, delay: i * 0.1 },
-                    y: { duration: 0.5, delay: i * 0.1, ease: [0.22, 1, 0.36, 1] },
-                    scale: { duration: 0.5, delay: i * 0.1 },
-                    rotateY: { duration: 0.8, ease: [0.66, 0, 0.32, 1] },
-                  }}
-                  whileHover={{ y: -4 }}
-                >
-                  {/* sealed back */}
-                  <button
-                    type="button"
-                    onClick={() => turn(i)}
-                    aria-label={t("Turn the card of {seat}", { seat: t(STAR_PLAY_POSITIONS[i]) })}
-                    data-testid={`chat-star-turn-${i}`}
-                    className="tarot-face tarot-back relative block size-full cursor-pointer overflow-hidden rounded-xl border border-[color-mix(in_srgb,var(--scope-a)_38%,transparent)] transition-shadow duration-300"
-                  >
-                    <span className="tarot-glare pointer-events-none absolute inset-0" aria-hidden="true" />
-                    <span className="absolute left-1/2 top-1/2 flex size-[52%] -translate-x-1/2 -translate-y-1/2 items-center justify-center">
-                      <span className="starplay-halo absolute inset-0 rounded-full border border-[color-mix(in_srgb,var(--scope-a)_36%,transparent)]" />
-                      <img
-                        src={STAR_EMBLEM}
-                        alt=""
-                        aria-hidden="true"
-                        className="absolute inset-[10%] size-[80%] rounded-full object-cover opacity-90"
-                      />
-                    </span>
-                    <span className="mono-label absolute inset-x-0 bottom-2.5 text-center text-[8px] uppercase tracking-[0.28em] text-[color-mix(in_srgb,var(--scope-b)_80%,transparent)]">
-                      ◆ {t("Star Play")} ◆
-                    </span>
-                  </button>
-                  {/* the face */}
-                  <div
-                    className="tarot-face absolute inset-0 flex size-full flex-col overflow-hidden rounded-xl border border-[color-mix(in_srgb,var(--scope-a)_42%,transparent)] bg-card"
-                    style={{ transform: "rotateY(180deg)" }}
-                    data-testid={`chat-star-face-${i}`}
-                  >
-                    <div className="relative h-[52%] shrink-0 overflow-hidden">
-                      <img src={d.card.image} alt="" aria-hidden="true" className="size-full object-cover" loading="lazy" />
-                    </div>
-                    <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-2 py-1.5 text-center">
-                      <p className="ink-hand text-[10.5px] font-semibold leading-tight">{d.card.name}</p>
-                      <p className="ink-faint mt-1 line-clamp-2 text-[8.5px] italic leading-snug">{d.card.essence}</p>
-                    </div>
-                  </div>
-                </motion.div>
-              </div>
-              <span className="mono-label mt-2 text-center text-[8.5px] uppercase tracking-[0.18em] text-muted-foreground/75">
-                {t(STAR_PLAY_POSITIONS[i])}
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* speak / shuffle — one quiet row */}
-      <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-        {!allUp && (
-          <p className="text-[12px] italic text-muted-foreground/75">{t("Turn each card when it calls you")}</p>
-        )}
-        {allUp && !reading && state !== "loading" && (
-          <button type="button" onClick={() => void speak()} data-testid="chat-star-speak" className={btnSolid}>
-            <Sparkles className="size-3.5" aria-hidden="true" />
-            {t("Let the deck speak")}
-          </button>
-        )}
-        {state === "loading" && (
-          <span className="mono-label flex items-center gap-2 text-[10px] text-muted-foreground">
-            <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
-            {t("the deck is speaking...")}
-          </span>
-        )}
-        <button type="button" onClick={shuffle} data-testid="chat-star-shuffle" className={btnGhost}>
-          <RotateCcw className="size-3.5" aria-hidden="true" />
-          {t("Shuffle again")}
-        </button>
-      </div>
-      {state === "error" && (
-        <p className="mt-3 text-center text-[13px] italic text-muted-foreground">
-          {t("The deck stayed quiet — shuffle, then draw again.")}
-        </p>
-      )}
-
-      {/* the reading — one thread through the three seats */}
-      <AnimatePresence>
-        {reading && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-            className="mx-auto mt-5 max-w-[560px] border-t hairline pt-4"
-            data-testid="chat-star-reading"
-          >
-            {readingParas.map((para, i) => {
-              const isSignature = para.trim().startsWith("—");
-              return (
-                <p
-                  key={i}
-                  className={cn(
-                    isSignature
-                      ? "mono-label mt-3 text-center text-[10px] tracking-[0.12em] text-muted-foreground"
-                      : "ink-hand text-[14.5px] leading-[1.9] text-foreground/90",
-                    i === 0 && !isSignature && "font-medium"
-                  )}
-                >
-                  {para}
-                </p>
-              );
-            })}
-            <div className="mt-4 flex flex-wrap items-center justify-center gap-1.5 border-t hairline pt-3.5">
-              <span className="mono-label mr-1 text-[9px] uppercase tracking-[0.2em] text-muted-foreground/70">
-                {t("Woven from")}
-              </span>
-              {drawn?.map((d) => (
-                <span key={d.card.id} className="rounded-full border hairline px-2 py-0.5 text-[10.5px] text-muted-foreground">
-                  {t(d.position)}
-                </span>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }
@@ -3025,7 +2817,6 @@ function NexusReveal({
 
 const KIND_SIGIL: Record<SideArtifactKind, WorldSigilKey> = {
   akashic: "akashic",
-  star: "starplay",
   manifest: "mirroros",
   forge: "invent",
   book: "dreambook",
@@ -3059,9 +2850,7 @@ export function SideArtifact({
   const label =
     kind === "akashic"
       ? t("Brought from the Akashic Library")
-      : kind === "star"
-        ? t("Dealt from the Star Play")
-        : kind === "manifest"
+      : kind === "manifest"
           ? t("The Manifesting Chamber")
           : kind === "book"
             ? t("The weaving instrument")
@@ -3085,7 +2874,6 @@ export function SideArtifact({
         <span className="h-px flex-1" style={{ background: "linear-gradient(90deg, color-mix(in srgb, var(--scope-a) 22%, transparent), transparent)" }} aria-hidden="true" />
       </div>
       {kind === "akashic" && <AkashicLetter resonance={resonance} />}
-      {kind === "star" && <StarDraw />}
       {kind === "manifest" && <ManifestRitual resonance={resonance} />}
       {kind === "forge" && <ForgeStrike resonance={resonance} />}
       {kind === "book" && <BookWeaver resonance={resonance} resume={resume} />}
