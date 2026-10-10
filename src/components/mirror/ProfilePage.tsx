@@ -23,6 +23,7 @@ import {
 import { LANGUAGES, VOICES, useT, type VoiceId } from "@/lib/i18n";
 import { useMirror } from "@/lib/mirror-store";
 import { DnaHelix, useJourney } from "./DnaTimeline";
+import { ExpansionMirrorPanel } from "./ExpansionMirror";
 import { cn } from "@/lib/utils";
 
 /* ------------------------------------------------------------------ */
@@ -702,6 +703,13 @@ export function ProfilePage() {
                 <DnaHelix steps={journey} />
               </div>
             </section>
+            <SectionHead
+              title={t("Your expansion mirror")}
+              desc={t(
+                "The algorithm that studies your continuations and reflects your progression back to you."
+              )}
+            />
+            <ExpansionMirrorPanel />
           </div>
         );
 

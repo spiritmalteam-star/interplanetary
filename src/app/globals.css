@@ -1860,3 +1860,55 @@ html:not(.dark) .scope-lightcodes {
     animation: none;
   }
 }
+
+/* --------------------------------------------------------------------
+   THE GENEALOGY BLOOM — the family tree's own arrival. Every chip and
+   connector rises once, opacity + transform only (pure compositor
+   work), then rests still forever. The phone stays cool. */
+@keyframes genea-bloom {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translate3d(0, 14px, 0) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translate3d(0, 0, 0) scale(1);
+  }
+}
+.genea-bloom {
+  animation: genea-bloom 0.62s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+/* the intro cards and strips bloom without the centering shift */
+.still-bloom {
+  animation-name: genea-bloom-still;
+}
+@keyframes genea-bloom-still {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+@keyframes genea-draw {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.genea-draw {
+  animation: genea-draw 0.8s ease-out backwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .genea-bloom,
+  .genea-draw {
+    animation: none;
+  }
+  .genea-bloom {
+    transform: translateX(-50%);
+  }
+}

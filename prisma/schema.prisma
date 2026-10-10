@@ -40,6 +40,8 @@ model User {
   ownedWorkspaces Workspace[] @relation("OwnedWorkspaces")
   wallet          UserWallet?
   ledger          CreditLedger[]
+  expansion       ExpansionProfile?
+  expansionEvents ExpansionEvent[]
 }
 
 model LibraryEntry {
@@ -246,5 +248,36 @@ model CreditLedger {
   createdAt       DateTime @default(now())
 
   @@index([userId])
+  @@index([userId, createdAt])
+}
+
+model ExpansionProfile {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  score        Int      @default(0)
+  stage        Int      @default(0)
+  breadth      Float    @default(0)
+  depth        Float    @default(0)
+  harmony      Float    @default(0)
+  constancy    Float    @default(0)
+  creation     Float    @default(0)
+  totalPicks   Int      @default(0)
+  chains       Int      @default(0)
+  deepestChain Int      @default(0)
+  delta        Int      @default(0)
+  updatedAt    DateTime @updatedAt
+  createdAt    DateTime @default(now())
+}
+
+model ExpansionEvent {
+  id       String   @id @default(cuid())
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind     String // pick | transmission | grow
+  scope    String?
+  movement String?
+  createdAt DateTime @default(now())
+
   @@index([userId, createdAt])
 }
