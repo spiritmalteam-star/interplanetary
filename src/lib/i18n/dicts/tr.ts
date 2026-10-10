@@ -2984,4 +2984,18 @@ export const tr: TranslationDict = {
   "This hour's family is complete": "Bu saatin ailesi tamamlandı",
   "Your expansion mirror": "Genişleme aynan",
   "{count} more stand ready — grow the family": "{count} tane daha hazır — aileyi büyüt",
+
+  /* ---- additions: Task 25 — the resonance walk (v4.0) ---- */
+  "Light code frequency": "Işık kodu frekansı",
+  "Open the field's voice": "Alanın sesini aç",
+  "Silence the field": "Alanı sustur",
+  "Reader": "Okur",
+  "Depth": "Derinlik",
+  "Open in the Dream Book": "Rüya Kitabı'nda aç",
+  "The sigil of this resonance": "Bu rezonansın mührü",
+  "Inner light": "İç ışık",
+  "Outer realm": "Dış alem",
+  "Little dreamers": "Küçük rüya görenler",
+  "Young readers": "Genç okurlar",
+  "Teens": "Gençler",
 };

@@ -1995,3 +1995,73 @@ html:not(.dark) .scope-lightcodes {
     animation: none;
   }
 }
+
+/* --------------------------------------------------------------------
+   THE RESONANCE WALK — v4.0. The GPU law for every node container and
+   the sequential revelation's own keyframes (transform + opacity only,
+   one run, then stillness). The glass surface stays OPAQUE (the
+   chamber law): a solid tint of the background lifted by its own
+   shadow — the conversation behind can never bleed through. */
+.mirror-node-container {
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+  will-change: transform, opacity;
+}
+.glass-surface {
+  background: color-mix(
+    in srgb,
+    var(--background) 94%,
+    var(--scope-a, var(--gd)) 6%
+  );
+  box-shadow:
+    0 30px 60px -20px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 color-mix(in srgb, white 6%, transparent);
+}
+@keyframes resonance-fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes resonance-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-in {
+  animation: resonance-fade-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.animate-slide-up {
+  animation: resonance-slide-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+/* the field's breathing bars — pure transform, four small delays */
+@keyframes res-bar-breathe {
+  0%,
+  100% {
+    transform: scaleY(0.35);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+.res-bar {
+  transform-origin: bottom;
+  animation: res-bar-breathe 1.5s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in,
+  .animate-slide-up,
+  .res-bar {
+    animation: none;
+  }
+}

@@ -3190,4 +3190,18 @@ export const el: TranslationDict = {
   "This hour's family is complete": "Η οικογένεια της ώρας είναι ολοκληρωμένη",
   "Your expansion mirror": "Ο καθρέφτης της επέκτασής σου",
   "{count} more stand ready — grow the family": "{count} ακόμη περιμένουν έτοιμα — μεγάλωσε την οικογένεια",
+
+  /* ---- additions: Task 25 — the resonance walk (v4.0) ---- */
+  "Light code frequency": "Συχνότητα κώδικα φωτός",
+  "Open the field's voice": "Άνοιγμα της φωνής του πεδίου",
+  "Silence the field": "Σιγή του πεδίου",
+  "Reader": "Αναγνώστης",
+  "Depth": "Βάθος",
+  "Open in the Dream Book": "Άνοιγμα στο Βιβλίο των Ονείρων",
+  "The sigil of this resonance": "Η σφραγίδα αυτής της αντήχησης",
+  "Inner light": "Εσωτερικό φως",
+  "Outer realm": "Εξωτερικό βασίλειο",
+  "Little dreamers": "Μικροί ονειροπόλοι",
+  "Young readers": "Νέοι αναγνώστες",
+  "Teens": "Έφηβοι",
 };

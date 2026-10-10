@@ -5208,4 +5208,18 @@ export const sq: TranslationDict = {
   "This hour's family is complete": "Familja e kësaj ore është e plotë",
   "Your expansion mirror": "Pasqyra juaj e zgjerimit",
   "{count} more stand ready — grow the family": "{count} të tjera janë gati — rrit familjen",
+
+  /* ---- additions: Task 25 — the resonance walk (v4.0) ---- */
+  "Light code frequency": "Frekuenca e kodit të dritës",
+  "Open the field's voice": "Hap zërin e fushës",
+  "Silence the field": "Qetëso fushën",
+  "Reader": "Lexues",
+  "Depth": "Thellësi",
+  "Open in the Dream Book": "Hap në Librin e Ëndrrave",
+  "The sigil of this resonance": "Sigili i kësaj rezonance",
+  "Inner light": "Drita e brendshme",
+  "Outer realm": "Mbretëria e jashtme",
+  "Little dreamers": "Ëndrrimtarët e vegjël",
+  "Young readers": "Lexuesit e rinj",
+  "Teens": "Adoleshentët",
 };

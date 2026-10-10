@@ -25,6 +25,8 @@ import {
   Sparkles,
   Sprout,
   TreeDeciduous,
+  Volume2,
+  VolumeX,
   X,
 } from "lucide-react";
 import { canopyHour, growCanopy } from "@/lib/data/suggestion-banks";
@@ -55,7 +57,20 @@ import {
 import { recordExpansion } from "@/lib/expansion";
 import { ExpansionRing } from "./ExpansionMirror";
 import { useT } from "@/lib/i18n";
+import { useMirror } from "@/lib/mirror-store";
 import { cn } from "@/lib/utils";
+import {
+  categoryForMove,
+  getWalkSession,
+  mediaForQuestion,
+  walkNodeId,
+  type MediaPayload,
+} from "@/lib/resonance-walk";
+import {
+  ResonantMediaStage,
+  ResonantStageBadge,
+  useSequentialReveal,
+} from "./ResonantCardViewer";
 
 /* ------------------------------------------------------------------ */
 /*  THE LIVING TREE — THE GENEALOGY METHOD.                            */
@@ -261,6 +276,13 @@ export function BranchCanopy({
   onLatch?: (latched: boolean) => void;
 }) {
   const t = useT();
+  const openDreamBook = useMirror((s) => s.openDreamBook);
+
+  /* THE RESONANCE WALK — v4.0 rooms: the field's voice gate (state up
+     front; the wiring effects live further below, where the walk's
+     context is ready). The standing room's media constellation is
+     read, not stored — derived from the session at render time. */
+  const [fieldOn, setFieldOn] = useState(false);
 
   /* THE FADE LAW — mount → visible on open; fade → unmount on close.
      THE LATCH LAW: while the answer lives in the tree (the zoom), the
@@ -286,11 +308,15 @@ export function BranchCanopy({
       setShown(false);
     } else {
       setShown(false);
+      /* THE FOLD CLOSES THE GATE — the field's voice rests with the walk */
+      if (fieldOn) setFieldOn(false);
     }
   }
 
   useEffect(() => {
     if (!active) {
+      /* the fold silences the field (external system — the audio) */
+      getWalkSession().disableSound();
       const id = window.setTimeout(() => {
         setMounted(false);
         /* the room closes with the walk — the answer returns to the chat */
@@ -881,6 +907,117 @@ export function BranchCanopy({
     if (el && pinnedRef.current) el.scrollTop = el.scrollHeight;
   }, [liveAnswer, liveLoading]);
 
+  /* ------------- THE RESONANCE WALK — v4.0 wiring -------------
+     Every room the camera lands on registers with the session
+     controller: the Predictive Resonance Cache pre-loads each
+     branch's sigil and frequency one to two steps ahead, and the
+     field's voice crossfades to the new room's own tone once the
+     visitor's hand has opened the gate. */
+  const zoomQ = zoom?.q ?? null;
+  const zoomMove = zoom?.move ?? null;
+
+  /* the room the walk just left — the parent of the standing room,
+     kept in state (render-time guarded, the official pattern) */
+  const [seenRoomQ, setSeenRoomQ] = useState<string | null>(null);
+  const [lastRoomQ, setLastRoomQ] = useState<string | null>(null);
+  if (zoomQ !== seenRoomQ) {
+    setSeenRoomQ(zoomQ);
+    setLastRoomQ(seenRoomQ);
+  }
+
+  /* the standing room's media — read from the walk's own session;
+     before the room is registered, the same deterministic draw the
+     registration will use keeps the very first paint correct */
+  const roomMedia = useMemo(() => {
+    if (!zoomQ) return null;
+    const id = walkNodeId(zoomQ);
+    const known = getWalkSession().getNode(id);
+    if (known?.media) return known.media;
+    const parentId =
+      lastRoomQ && walkNodeId(lastRoomQ) !== id ? walkNodeId(lastRoomQ) : null;
+    return mediaForQuestion(zoomQ, parentId, categoryForMove(zoomMove));
+  }, [zoomQ, zoomMove, lastRoomQ]);
+
+  useEffect(() => {
+    if (!zoomQ) return;
+    const session = getWalkSession();
+    const id = walkNodeId(zoomQ);
+    const cat = categoryForMove(zoomMove);
+    const known = session.getNode(id);
+    const parentId =
+      known?.parentId ??
+      (lastRoomQ && walkNodeId(lastRoomQ) !== id ? walkNodeId(lastRoomQ) : null);
+    if (session.currentNodeId === id) {
+      /* the same room stands again — re-anchor, never double-step */
+      session.touch(id);
+    } else {
+      session.navigateToBranch({
+        id,
+        parentId,
+        category: known?.category ?? cat,
+        title: zoomQ,
+        transmission: known?.transmission ?? "",
+        media: known?.media ?? mediaForQuestion(zoomQ, parentId, cat),
+        childrenIds: known?.childrenIds ?? [],
+      });
+    }
+  }, [zoomQ, zoomMove, lastRoomQ]);
+
+  /* THE SETTLING — the transmission lands, the branches grow: the room
+     is refreshed and the horizon (children, with their deterministic
+     media) is registered and pre-loaded — so the next press never
+     waits on the network, exactly as the PRC promises. */
+  const answerLen = (liveAnswer ?? "").trim().length;
+  const answerLanded = !liveLoading && answerLen > 0;
+  const settledKey = `${zoomQ ?? ""}|${answerLanded ? "1" : "0"}|${answerLen}|${contSeeds.length}`;
+  useEffect(() => {
+    if (!zoomQ || !answerLanded) return;
+    const session = getWalkSession();
+    const id = walkNodeId(zoomQ);
+    const known = session.getNode(id);
+    const cat = known?.category ?? categoryForMove(zoomMove);
+    const parentId = known?.parentId ?? null;
+    for (const b of contSeeds) {
+      const cid = walkNodeId(b.question);
+      const existingChild = session.getNode(cid);
+      session.register({
+        id: cid,
+        parentId: id,
+        category: categoryForMove(b.type),
+        title: b.question,
+        transmission: "",
+        media:
+          existingChild?.media ??
+          mediaForQuestion(b.question, id, categoryForMove(b.type)),
+        childrenIds: [],
+      });
+    }
+    session.settle({
+      id,
+      parentId,
+      category: cat,
+      title: zoomQ,
+      transmission: (liveAnswer ?? "").trim(),
+      media: known?.media ?? mediaForQuestion(zoomQ, parentId, cat),
+      childrenIds: contSeeds.map((b) => walkNodeId(b.question)),
+    });
+  }, [settledKey, answerLanded, zoomQ, zoomMove, contSeeds, liveAnswer]);
+
+  /* THE FIELD'S GATE — the visitor's own hand opens the voice. */
+  const toggleField = useCallback(() => {
+    const session = getWalkSession();
+    if (fieldOn) {
+      session.disableSound();
+      setFieldOn(false);
+    } else {
+      session.enableSound();
+      setFieldOn(true);
+    }
+  }, [fieldOn]);
+
+  /* THE SEQUENTIAL REVELATION — four stages, keyed to the room. */
+  const revealStage = useSequentialReveal(zoomQ ?? "", answerLanded);
+
   /* the reply line inside the answer — cleared when the room turns to
      a new question (render-time guarded reset, the official pattern) */
   const [replyDraft, setReplyDraft] = useState("");
@@ -1364,57 +1501,103 @@ export function BranchCanopy({
                     </p>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={exitZoom}
-                  aria-label={t("Back to the tree")}
+                <div className="flex shrink-0 items-center gap-1.5">
+                  {/* THE FIELD'S GATE — the walk's own ambient voice */}
+                  <button
+                    type="button"
+                    onClick={toggleField}
+                    aria-pressed={fieldOn}
+                    aria-label={fieldOn ? t("Silence the field") : t("Open the field's voice")}
+                    title={fieldOn ? t("Silence the field") : t("Open the field's voice")}
+                    data-testid={`${testIdPrefix}-zoom-field`}
+                    className={cn(
+                      "focus-glow flex size-7 shrink-0 items-center justify-center rounded-full border transition-all duration-300",
+                      fieldOn
+                        ? "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_14%,transparent)] text-[var(--scope-a,var(--gd))]"
+                        : "hairline text-muted-foreground hover:border-[var(--hairline-hover)] hover:text-foreground"
+                    )}
+                  >
+                    {fieldOn ? (
+                      <Volume2 className="size-3.5" aria-hidden="true" />
+                    ) : (
+                      <VolumeX className="size-3.5" aria-hidden="true" />
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={exitZoom}
+                    aria-label={t("Back to the tree")}
                   title={t("Back to the tree")}
                   data-testid={`${testIdPrefix}-zoom-back`}
-                  className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
-                >
-                  <TreeDeciduous className="size-3.5" aria-hidden="true" />
-                </button>
+                    className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+                  >
+                    <TreeDeciduous className="size-3.5" aria-hidden="true" />
+                  </button>
+                </div>
               </header>
 
-              {/* the answer — growing word by word while it channels */}
+              {/* the answer — revealed in stages: badge (1), transmission
+                  (2), media (3) — every step one compositor breath */}
               <div
                 ref={bodyRef}
                 onScroll={onBodyScroll}
                 data-testid={`${testIdPrefix}-zoom-answer`}
                 className="nice-scroll min-h-0 flex-1 overflow-y-auto px-4 py-3.5 sm:px-5"
               >
+                {zoom && (
+                  <ResonantStageBadge
+                    category={categoryForMove(zoomMove)}
+                    moveLabel={zoom.move ? t(BRANCH_TYPE_LABELS[zoom.move]) : null}
+                    visible={revealStage >= 1}
+                  />
+                )}
                 {answer ? (
-                  <div className="canopy-answer whitespace-pre-wrap break-words text-[13.5px] leading-[1.75] text-foreground/90 sm:text-[14px]">
-                    {answer}
-                    {liveLoading && (
+                  revealStage >= 2 ? (
+                    <div className="canopy-answer whitespace-pre-wrap break-words text-[13.5px] leading-[1.75] text-foreground/90 sm:text-[14px]">
+                      {answer}
+                      {liveLoading && (
+                        <span
+                          aria-hidden="true"
+                          className="ml-1 inline-block h-[13px] w-[7px] translate-y-[1px] animate-pulse rounded-[2px] bg-[var(--scope-a,var(--gd))] align-baseline opacity-70"
+                        />
+                      )}
+                    </div>
+                  ) : null
+                ) : (
+                  revealStage >= 2 && (
+                    <div className="flex items-center gap-2 py-5 text-muted-foreground" aria-live="polite">
                       <span
                         aria-hidden="true"
-                        className="ml-1 inline-block h-[13px] w-[7px] translate-y-[1px] animate-pulse rounded-[2px] bg-[var(--scope-a,var(--gd))] align-baseline opacity-70"
+                        className="animate-line-breathe h-4 w-px shrink-0"
+                        style={{
+                          background:
+                            "linear-gradient(180deg, var(--scope-a,var(--gd)), transparent)",
+                        }}
                       />
-                    )}
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2 py-5 text-muted-foreground" aria-live="polite">
-                    <span
-                      aria-hidden="true"
-                      className="animate-line-breathe h-4 w-px shrink-0"
-                      style={{
-                        background:
-                          "linear-gradient(180deg, var(--scope-a,var(--gd)), transparent)",
-                      }}
-                    />
-                    <span className="mono-label text-[10px] uppercase tracking-[0.22em]">
-                      {t("Channeling")}
-                    </span>
-                  </div>
+                      <span className="mono-label text-[10px] uppercase tracking-[0.22em]">
+                        {t("Channeling")}
+                      </span>
+                    </div>
+                  )
                 )}
+
+                {/* STAGE 3 — the room's own media, pre-loaded by the PRC */}
+                <ResonantMediaStage
+                  media={roomMedia}
+                  visible={revealStage >= 3 && answerLanded}
+                  fieldOn={fieldOn}
+                  onFieldToggle={toggleField}
+                  onOpenBook={openDreamBook}
+                  testIdPrefix={`${testIdPrefix}-zoom`}
+                />
               </div>
 
               {/* the walk continues from the answer's own branches —
                   and a slim line carries the visitor's own words */}
               {!liveLoading && answer && (
                 <footer className="flex shrink-0 flex-col gap-2.5 border-t px-4 py-3 sm:px-5" style={{ borderColor: "color-mix(in srgb, var(--hairline) 70%, transparent)" }}>
-                  {contSeeds.length > 0 && (
+                  {/* STAGE 4 — the next horizon, one touch from the answer's end */}
+                  {revealStage >= 4 && contSeeds.length > 0 && (
                     <div className="flex flex-col gap-1.5">
                       <span className="mono-label flex items-center gap-1.5 text-[8.5px] uppercase tracking-[0.2em] text-muted-foreground/70">
                         <Sprout

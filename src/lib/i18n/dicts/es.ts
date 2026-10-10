@@ -3484,4 +3484,18 @@ export const es: TranslationDict = {
   "This hour's family is complete": "La familia de esta hora está completa",
   "Your expansion mirror": "Tu espejo de expansión",
   "{count} more stand ready — grow the family": "{count} más están listas — haz crecer la familia",
+
+  /* ---- additions: Task 25 — the resonance walk (v4.0) ---- */
+  "Light code frequency": "Frecuencia del código de luz",
+  "Open the field's voice": "Abrir la voz del campo",
+  "Silence the field": "Silenciar el campo",
+  "Reader": "Lector",
+  "Depth": "Profundidad",
+  "Open in the Dream Book": "Abrir en el Libro de Sueños",
+  "The sigil of this resonance": "El sello de esta resonancia",
+  "Inner light": "Luz interior",
+  "Outer realm": "Reino exterior",
+  "Little dreamers": "Pequeños soñadores",
+  "Young readers": "Jóvenes lectores",
+  "Teens": "Adolescentes",
 };

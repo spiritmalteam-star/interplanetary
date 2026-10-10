@@ -3506,4 +3506,18 @@ export const de: TranslationDict = {
   "Reply within the branch…": "Innerhalb des Zweiges antworten…",
   "Send": "Senden",
   "The algorithm that studies your continuations and reflects your progression back to you.": "Der Algorithmus, der deine Fortführungen studiert und deine Entwicklung zu dir zurückspiegelt.",
+
+  /* ---- additions: Task 25 — the resonance walk (v4.0) ---- */
+  "Light code frequency": "Lichtcode-Frequenz",
+  "Open the field's voice": "Die Stimme des Feldes öffnen",
+  "Silence the field": "Das Feld zum Schweigen bringen",
+  "Reader": "Leser",
+  "Depth": "Tiefe",
+  "Open in the Dream Book": "Im Traumbuch öffnen",
+  "The sigil of this resonance": "Das Sigil dieser Resonanz",
+  "Inner light": "Inneres Licht",
+  "Outer realm": "Äußeres Reich",
+  "Little dreamers": "Kleine Träumer",
+  "Young readers": "Junge Leser",
+  "Teens": "Jugendliche",
 };
