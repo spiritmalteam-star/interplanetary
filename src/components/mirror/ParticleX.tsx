@@ -23,6 +23,7 @@ import {
   BranchCanopy,
   CanopyRestStrip,
   CanopySummonButton,
+  useCanopyAnswerFold,
 } from "./BranchCanopy";
 import { pxGatheringPhrases, pxScopes } from "@/lib/data/particlex";
 import { pxNoteSets } from "@/lib/data/scope-notes";
@@ -324,6 +325,9 @@ function ParticleXChat() {
      empty room, fading when the answer arrives, summoned again by the
      button beside the input. */
   const [summoned, setSummoned] = useState(false);
+  /* THE ANSWER'S SPACE — the walk grows while the transmission runs;
+     the revealed answer folds the tree and takes its room. */
+  useCanopyAnswerFold(pxStatus === "loading", setSummoned);
 
   /* The thread opens at its BEGINNING: mounting or reopening the chat
      never scrolls away from the first words. New turns settle at the
@@ -501,10 +505,11 @@ function ParticleXChat() {
         open={
           pxMessages.length === 0 && pxStatus === "idle" && !pxError
             ? true
-            : summoned
+            : summoned || pxStatus === "loading"
         }
         onPick={(q) => {
-          setSummoned(false);
+          /* the tree stays open — the new branches grow from the pressed
+             whisper; the answer's own reveal folds the tree in time */
           if (pxStatus !== "loading") void askPX(q);
         }}
         onClose={() => setSummoned(false)}
@@ -614,7 +619,7 @@ function ParticleXChat() {
         open={
           pxMessages.length === 0 && pxStatus === "idle" && !pxError
             ? true
-            : summoned
+            : summoned || pxStatus === "loading"
         }
         onSummon={() => setSummoned(true)}
         disabled={pxStatus === "loading"}

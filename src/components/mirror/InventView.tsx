@@ -20,6 +20,7 @@ import {
   BranchCanopy,
   CanopyRestStrip,
   CanopySummonButton,
+  useCanopyAnswerFold,
 } from "./BranchCanopy";
 import {
   forgeChatPhases,
@@ -1057,6 +1058,9 @@ function BenchChat() {
 
   const { status, messages, draft, error, activeQuery } = forgeSession;
   const loading = status === "loading";
+  /* THE ANSWER'S SPACE — the walk grows while the transmission runs;
+     the revealed answer folds the tree and takes its room. */
+  useCanopyAnswerFold(loading, setSummoned);
 
   useEffect(() => {
     if (!loading) return;
@@ -1182,10 +1186,11 @@ function BenchChat() {
         open={
           messages.length === 0 && status === "idle" && !error
             ? true
-            : summoned
+            : summoned || loading
         }
         onPick={(q) => {
-          setSummoned(false);
+          /* the tree stays open — the new branches grow from the pressed
+             whisper; the answer's own reveal folds the tree in time */
           if (!loading) send(q);
         }}
         onClose={() => setSummoned(false)}
@@ -1222,7 +1227,7 @@ function BenchChat() {
         open={
           messages.length === 0 && status === "idle" && !error
             ? true
-            : summoned
+            : summoned || loading
         }
         onSummon={() => setSummoned(true)}
         disabled={loading}

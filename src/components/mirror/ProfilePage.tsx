@@ -45,6 +45,7 @@ const SECTOR_META: Record<string, { icon: string; label: string }> = {
   manifest: { icon: "◐", label: "Manifesting" },
   invent: { icon: "⚒", label: "The Forge" },
   dreambook: { icon: "❧", label: "Dream Books" },
+  dreambook_archive: { icon: "❧", label: "The kept volumes" },
   quantum: { icon: "⚛", label: "Quantum World" },
   evolvemed: { icon: "✚", label: "Evolve Med" },
 };

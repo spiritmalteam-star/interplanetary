@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import ZAI from "@/lib/zai-client";
-import { resolveVisitor, saveLibrary, updateLibrary, deleteLibraryKind, withAnonCookie } from "@/lib/server/access";
+import { resolveVisitor, saveLibrary, updateLibrary, archiveLibraryKind, withAnonCookie } from "@/lib/server/access";
 import { LANGUAGE_NAMES, isLanguageCode } from "@/lib/i18n/core";
 import { meterRoute } from "@/lib/server/meter";
 import {
@@ -811,11 +811,11 @@ THE NAME LAW WAS BROKEN: your reply used the forbidden stock name(s): ${violatio
           )
         )
       );
-      /* THE ONE VOLUME LAW — when a new book is requested, the previous
-         one leaves the database entirely: the profile library holds ONE
-         living volume per keeper, and a fresh conjuring erases the last
-         one before the new book takes its place on the shelf. */
-      await deleteLibraryKind(visitor.user.id, "dreambook");
+      /* THE SHELF OF KEPT VOLUMES — a fresh conjuring no longer erases
+         the past: the previous living volume steps into the keeper's
+         history (the kept shelf, twelve deep), and the new book takes
+         its place as the living volume on the shelf. */
+      await archiveLibraryKind(visitor.user.id, "dreambook", "dreambook_archive", 12);
       /* the volume's birth echo rides home with it — carried BY the
          visitor (in their page, in their session), so the NEXT
          conjuring's draw can refuse every one of these bones. The

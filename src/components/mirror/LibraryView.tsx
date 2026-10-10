@@ -69,6 +69,7 @@ const SECTORS: { id: string; label: string; icon: typeof Atom }[] = [
   { id: "manifest", label: "The Manifest", icon: BookOpen },
   { id: "invent", label: "Invent", icon: NotebookPen },
   { id: "dreambook", label: "The Dream Book", icon: MoonStar },
+  { id: "dreambook_archive", label: "The kept volumes", icon: BookMarked },
   { id: "quantum", label: "ParticleX", icon: Atom },
   { id: "evolvemed", label: "Evolve Med", icon: Activity },
   { id: "artx", label: "Art X", icon: Palette },
@@ -250,7 +251,9 @@ export function LibraryView() {
                           {items.map((e) => {
                             const bookPages = e.content?.pages ?? [];
                             const continuable =
-                              e.sector === "dreambook" && bookPages.length > 0;
+                              (e.sector === "dreambook" ||
+                                e.sector === "dreambook_archive") &&
+                              bookPages.length > 0;
                             return (
                               <div
                                 key={e.id}

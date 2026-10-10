@@ -15,7 +15,7 @@ import Sidebar from "./Sidebar";
 import { MobileSidebar } from "./MobileSidebar";
 import { ScopeSelector } from "./ScopeSelector";
 import { BranchHub } from "./BranchHub";
-import { BranchCanopy, CanopyRestStrip } from "./BranchCanopy";
+import { BranchCanopy, CanopyRestStrip, useCanopyAnswerFold } from "./BranchCanopy";
 import { QueryComposer } from "./QueryComposer";
 import { StillCompanion } from "./StillCompanion";
 import { TransmissionView } from "./TransmissionView";
@@ -85,6 +85,9 @@ function AppShellViews() {
   const canopySummoned = useMirror((s) => s.canopySummoned);
   const setCanopySummoned = useMirror((s) => s.setCanopySummoned);
   const channel = useMirror((s) => s.sessions[s.activeMode]);
+  /* THE ANSWER'S SPACE — the walk grows while the transmission runs;
+     the revealed answer folds the tree and takes its room. */
+  useCanopyAnswerFold(channel.status === "loading", setCanopySummoned);
   const channelEmpty =
     channel.messages.length === 0 &&
     channel.status === "idle" &&
@@ -478,12 +481,15 @@ function AppShellViews() {
             filling the whole chat box on the landing and in the channel
             alike; it fades when the answer is revealed and returns at
             the summon button beside the input */}
+        {/* the walk stays standing while its transmission runs — the
+            revealed answer folds it and takes the room */}
         {(view === "transmission" || view === "observatory") && (
           <BranchCanopy
             category={activeMode}
-            open={channelEmpty || canopySummoned}
+            open={channelEmpty || canopySummoned || channel.status === "loading"}
             onPick={(q) => {
-              setCanopySummoned(false);
+              /* the tree stays open — the new branches grow from the
+                 pressed whisper; the answer's reveal folds it in time */
               void useMirror.getState().askMirror(q);
             }}
             onClose={() => setCanopySummoned(false)}
@@ -523,7 +529,7 @@ function AppShellViews() {
             the whole grove again. */}
         {(view === "transmission" || view === "observatory") && (
           <CanopyRestStrip
-            open={channelEmpty || canopySummoned}
+            open={channelEmpty || canopySummoned || channel.status === "loading"}
             onSummon={() => setCanopySummoned(true)}
             disabled={channel.status === "loading"}
             testIdPrefix="channel-canopy"

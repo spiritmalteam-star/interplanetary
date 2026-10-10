@@ -344,6 +344,48 @@ export async function deleteLibraryKind(
   }
 }
 
+/**
+ * THE SHELF OF KEPT VOLUMES — a fresh conjuring no longer erases the
+ * past. The newest volume of a sector stays the living one (the resume
+ * flows keep their meaning); every older volume steps back into the
+ * sector's own archive (`sector + "_archive"`), where the visitor's
+ * history keeps it. The archive itself is bounded — the oldest beyond
+ * `bound` finally leave the library so the keeping stays light.
+ */
+export async function archiveLibraryKind(
+  userId: string | null | undefined,
+  sector: LibrarySector,
+  archiveSector: string,
+  bound = 12
+): Promise<void> {
+  if (!userId || userId.startsWith(STATELESS_PREFIX)) return;
+  try {
+    const rows = await db.libraryEntry.findMany({
+      where: { userId, sector },
+      orderBy: { createdAt: "desc" },
+      select: { id: true },
+    });
+    if (rows.length > 1) {
+      await db.libraryEntry.updateMany({
+        where: { id: { in: rows.slice(1).map((r) => r.id) } },
+        data: { sector: archiveSector },
+      });
+    }
+    const kept = await db.libraryEntry.findMany({
+      where: { userId, sector: archiveSector },
+      orderBy: { createdAt: "desc" },
+      select: { id: true },
+    });
+    if (kept.length > bound) {
+      await db.libraryEntry.deleteMany({
+        where: { id: { in: kept.slice(bound).map((r) => r.id) } },
+      });
+    }
+  } catch (err) {
+    console.error("[access] library archive failed:", err);
+  }
+}
+
 /* ------------------------- login rate limit ------------------------ */
 
 const attempts = new Map<string, { count: number; resetAt: number }>();

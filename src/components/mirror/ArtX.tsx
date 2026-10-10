@@ -18,6 +18,7 @@ import {
   BranchCanopy,
   CanopyRestStrip,
   CanopySummonButton,
+  useCanopyAnswerFold,
 } from "./BranchCanopy";
 import { axAtelierIntro, axWindows } from "@/lib/data/artx";
 import { detectVisualIntent } from "@/lib/visualization";
@@ -326,6 +327,9 @@ export function ArtXChat() {
      empty room, fading when the answer arrives, summoned again by the
      button beside the input. */
   const [summoned, setSummoned] = useState(false);
+  /* THE ANSWER'S SPACE — the walk grows while the transmission runs;
+     the revealed answer folds the tree and takes its room. */
+  useCanopyAnswerFold(axStatus === "loading", setSummoned);
   /* "this" in a follow-up refers to the last artifact of this line */
   const visualContextRef = useRef<{ subject: string; mode: string } | null>(
     null
@@ -554,10 +558,11 @@ export function ArtXChat() {
         open={
           axMessages.length === 0 && axStatus === "idle" && !axError
             ? true
-            : summoned
+            : summoned || axStatus === "loading"
         }
         onPick={(q) => {
-          setSummoned(false);
+          /* the tree stays open — the new branches grow from the pressed
+             whisper; the answer's own reveal folds the tree in time */
           if (axStatus !== "loading") void askArtX(q);
         }}
         onClose={() => setSummoned(false)}
@@ -602,7 +607,7 @@ export function ArtXChat() {
         open={
           axMessages.length === 0 && axStatus === "idle" && !axError
             ? true
-            : summoned
+            : summoned || axStatus === "loading"
         }
         onSummon={() => setSummoned(true)}
         disabled={axStatus === "loading"}

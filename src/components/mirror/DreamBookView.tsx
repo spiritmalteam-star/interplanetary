@@ -19,6 +19,7 @@ import {
   ChevronsUpDown,
   Copy,
   Feather,
+  History,
   LoaderCircle,
   MoonStar,
   Pause,
@@ -48,6 +49,13 @@ import {
 } from "@/lib/browser-voice";
 import { BOOK_DEPTHS, READERS, TALES, VOLUMES } from "@/lib/data/book-options";
 import { dedupeChapters } from "@/lib/book-text";
+import {
+  forgetVolume,
+  keepVolume,
+  loadShelf,
+  type ShelfVolume,
+} from "@/lib/book-shelf";
+import type { DreamBookResume } from "@/lib/mirror-store";
 import type { VoiceId } from "@/lib/i18n/core";
 import { cn } from "@/lib/utils";
 
@@ -201,37 +209,6 @@ export function DreamBookView() {
   const dreamResume = useMirror((s) => s.dreamResume);
   const clearDreamResume = useMirror((s) => s.clearDreamResume);
   const resumeAppliedRef = useRef(false);
-  useEffect(() => {
-    if (resumeAppliedRef.current) return;
-    const r = dreamResume;
-    if (!r) return;
-    resumeAppliedRef.current = true;
-    bookIdRef.current = r.bookId;
-    pagesRef.current = r.pages.map((p) => ({ ...p, paragraphs: [...p.paragraphs] }));
-    threadsRef.current = r.threads;
-    metaRef.current = { ...r.meta };
-    endedRef.current = r.ended;
-    configRef.current = {
-      age: r.config.age,
-      tale: r.config.tale,
-      volume: r.config.volume,
-      level: r.config.level ?? "",
-      topic: r.config.topic,
-    };
-    setAge(r.config.age);
-    setTale(r.config.tale);
-    setVolume(r.config.volume);
-    setLevel(r.config.level ?? "");
-    setTopic(r.config.topic);
-    setPages(pagesRef.current);
-    setMeta(metaRef.current);
-    setEnded(r.ended);
-    setPageIdx(0);
-    setSlideDir(1);
-    setZoom(1);
-    setStage("reading");
-    clearDreamResume();
-  }, [dreamResume, clearDreamResume]);
 
   /* the rewriting hand — wishes that bend the pages yet to come */
   const addRewrite = useCallback((text: string) => {
@@ -272,6 +249,181 @@ export function DreamBookView() {
     setNarrating(false);
     setNarrPaused(false);
     setNarrLoading(false);
+  }, []);
+
+  /* -------- a volume brought back — from library or shelf --------
+     The whole book — its pages, its thread, its voice config — is
+     restored, and the reading resumes exactly where it was left. */
+  const applyResume = useCallback(
+    (r: DreamBookResume) => {
+      stopNarration();
+      bookIdRef.current = r.bookId;
+      pagesRef.current = r.pages.map((p) => ({
+        ...p,
+        paragraphs: [...p.paragraphs],
+      }));
+      threadsRef.current = r.threads;
+      metaRef.current = { ...r.meta };
+      endedRef.current = r.ended;
+      configRef.current = {
+        age: r.config.age,
+        tale: r.config.tale,
+        volume: r.config.volume,
+        level: r.config.level ?? "",
+        topic: r.config.topic,
+      };
+      setAge(r.config.age);
+      setTale(r.config.tale);
+      setVolume(r.config.volume);
+      setLevel(r.config.level ?? "");
+      setTopic(r.config.topic);
+      setPages(pagesRef.current);
+      setMeta(metaRef.current);
+      setEnded(r.ended);
+      setPageIdx(0);
+      setSlideDir(1);
+      setZoom(1);
+      setStage("reading");
+    },
+    [stopNarration]
+  );
+
+  useEffect(() => {
+    if (resumeAppliedRef.current || !dreamResume) return;
+    resumeAppliedRef.current = true;
+    applyResume(dreamResume);
+    clearDreamResume();
+  }, [dreamResume, applyResume, clearDreamResume]);
+
+  /* ---------------- the shelf of kept volumes ----------------
+     A volume that took an evening to weave never vanishes when the
+     visitor turns away: it rests on the shelf — kept on this device,
+     and in the keeper's library history. The history button brings
+     the past volumes back, ready to be read or continued. */
+  const [shelfOpen, setShelfOpen] = useState(false);
+  const [localShelf, setLocalShelf] = useState<ShelfVolume[]>([]);
+  const [libraryVolumes, setLibraryVolumes] = useState<ShelfVolume[] | null>(
+    null
+  );
+  const [shelfLoading, setShelfLoading] = useState(false);
+
+  const snapshotCurrent = useCallback((): ShelfVolume | null => {
+    const m = metaRef.current;
+    if (!m || pagesRef.current.length === 0) return null;
+    return {
+      bookId: bookIdRef.current,
+      title: m.title,
+      subtitle: m.subtitle,
+      sigil: m.sigil,
+      axiom: m.axiom,
+      dedication: m.dedication,
+      totalPages: m.totalPages,
+      ended: endedRef.current,
+      savedAt: new Date().toISOString(),
+      config: { ...configRef.current },
+      threads: threadsRef.current,
+      pages: pagesRef.current.map((p) => ({
+        n: p.n,
+        ...(p.chapter ? { chapter: p.chapter } : {}),
+        paragraphs: [...p.paragraphs],
+      })),
+    };
+  }, []);
+
+  /* the volume in hand never vanishes — it keeps itself before any
+     turn away (a new dream, a walk back to the atelier, an exit) */
+  const keepCurrent = useCallback(() => {
+    const snap = snapshotCurrent();
+    if (!snap) return;
+    keepVolume(snap);
+  }, [snapshotCurrent]);
+
+  const openShelf = useCallback(() => {
+    stopNarration();
+    keepCurrent();
+    setLocalShelf(loadShelf());
+    setLibraryVolumes(null);
+    setShelfLoading(true);
+    setShelfOpen(true);
+    void (async () => {
+      try {
+        const res = await fetch("/api/library", {
+          signal: AbortSignal.timeout(20000),
+        });
+        const data = await res.json().catch(() => null);
+        const entries: Array<{
+          id: string;
+          sector: string;
+          title: string;
+          excerpt: string;
+          content: Record<string, unknown>;
+          createdAt: string;
+        }> = Array.isArray(data?.entries) ? data.entries : [];
+        const vols: ShelfVolume[] = entries
+          .filter(
+            (e) =>
+              (e.sector === "dreambook" || e.sector === "dreambook_archive") &&
+              Array.isArray(e.content?.pages) &&
+              (e.content?.pages as unknown[]).length > 0
+          )
+          .map((e) => {
+            const c = e.content as Record<string, unknown>;
+            const cfg = (c.config ?? {}) as Record<string, unknown>;
+            return {
+              bookId: e.id,
+              title: String(c.title ?? e.title ?? "A Dream Book"),
+              subtitle: String(c.subtitle ?? ""),
+              sigil: String(c.sigil ?? ""),
+              axiom: String(c.axiom ?? e.excerpt ?? ""),
+              dedication: String(c.dedication ?? ""),
+              totalPages: Number(c.totalPages ?? 0),
+              ended: Boolean(c.ended),
+              savedAt: e.createdAt,
+              config: {
+                age: String(cfg.age ?? "timeless"),
+                tale: String(cfg.tale ?? "wonder"),
+                volume: String(cfg.volume ?? "classic"),
+                level: String(cfg.level ?? ""),
+                topic: String(cfg.topic ?? c.topic ?? ""),
+              },
+              threads: String(c.threads ?? ""),
+              pages: c.pages as ShelfVolume["pages"],
+            };
+          });
+        setLibraryVolumes(vols);
+      } catch {
+        setLibraryVolumes([]);
+      } finally {
+        setShelfLoading(false);
+      }
+    })();
+  }, [keepCurrent, stopNarration]);
+
+  const resumeVolume = useCallback(
+    (v: ShelfVolume) => {
+      applyResume({
+        bookId: v.bookId,
+        config: v.config,
+        meta: {
+          title: v.title,
+          subtitle: v.subtitle,
+          sigil: v.sigil,
+          axiom: v.axiom,
+          dedication: v.dedication ?? "",
+          totalPages: v.totalPages || Math.max(8, v.pages.length + 8),
+        },
+        pages: v.pages,
+        threads: v.threads,
+        ended: v.ended,
+      });
+      setShelfOpen(false);
+    },
+    [applyResume]
+  );
+
+  const forgetLocal = useCallback((bookId: string) => {
+    forgetVolume(bookId);
+    setLocalShelf(loadShelf());
   }, []);
 
   /* the pause — the lady's voice holds its breath exactly where it was,
@@ -578,6 +730,7 @@ export function DreamBookView() {
 
   const newDream = useCallback(() => {
     stopNarration();
+    keepCurrent(); /* the volume in hand rests on the shelf first */
     pagesRef.current = [];
     threadsRef.current = "";
     metaRef.current = null;
@@ -596,7 +749,7 @@ export function DreamBookView() {
     setTopicDraft("");
     setLevel("");
     setStage("atelier");
-  }, [stopNarration]);
+  }, [stopNarration, keepCurrent]);
 
   const weaveOnward = useCallback(async () => {
     const ok = await weave("extend", pagesRef.current.length + 1);
@@ -725,6 +878,7 @@ export function DreamBookView() {
 
   const backFromAtelier = () => {
     stopNarration();
+    keepCurrent(); /* the volume rests on the shelf before the exit */
     exitDreamBook();
   };
 
@@ -735,6 +889,7 @@ export function DreamBookView() {
 
   const backFromReader = () => {
     stopNarration();
+    keepCurrent(); /* the volume rests on the shelf before the turn */
     setStage("atelier");
   };
 
@@ -784,6 +939,18 @@ export function DreamBookView() {
           className={inkIconBtn}
         >
           <ArrowLeft className="size-4" aria-hidden="true" />
+        </button>
+        {/* THE KEPT VOLUMES — the books' own history: every volume woven
+            rests here, on this device and in the keeper's library. */}
+        <button
+          type="button"
+          onClick={openShelf}
+          aria-label={t("The kept volumes")}
+          title={t("The kept volumes")}
+          data-testid="dream-shelf"
+          className={inkIconBtn}
+        >
+          <History className="size-4" aria-hidden="true" />
         </button>
         <span className="mono-label flex items-center gap-1.5 text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
           <MoonStar className="size-3.5" aria-hidden="true" />
@@ -1114,6 +1281,17 @@ export function DreamBookView() {
           className={inkIconBtn}
         >
           <ArrowLeft className="size-4" aria-hidden="true" />
+        </button>
+        {/* the kept volumes — the past books are always one touch away */}
+        <button
+          type="button"
+          onClick={openShelf}
+          aria-label={t("The kept volumes")}
+          title={t("The kept volumes")}
+          data-testid="dream-shelf-reading"
+          className={cn(inkIconBtn, "hidden sm:flex")}
+        >
+          <History className="size-4" aria-hidden="true" />
         </button>
         <h1 className="ink-hand min-w-0 flex-1 truncate text-center text-[14px] text-foreground/85 sm:text-[16px]">
           {meta?.title ?? ""}
@@ -1629,9 +1807,139 @@ export function DreamBookView() {
     </div>
   );
 
-  if (stage === "weaving") return weaving;
-  if (stage === "reading") return reader;
-  return atelier;
+  /* ================================================================ */
+  /*  THE KEPT VOLUMES — the books' own history                        */
+  /* ================================================================ */
+
+  const shelfRow = (v: ShelfVolume, local: boolean) => (
+    <div
+      key={`${local ? "local" : "lib"}-${v.bookId}-${v.savedAt}`}
+      className="flex items-start gap-3 rounded-xl border border-border/80 bg-card/40 px-3.5 py-3"
+      data-testid={local ? "shelf-volume-local" : "shelf-volume-library"}
+    >
+      <span
+        className="ink-hand flex size-9 shrink-0 items-center justify-center text-[16px] text-foreground/40"
+        aria-hidden="true"
+      >
+        {v.sigil || "❧"}
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-[13.5px] font-medium text-foreground/90">
+          {v.title}
+        </p>
+        <p className="mt-0.5 line-clamp-2 text-[12px] leading-relaxed text-muted-foreground">
+          {v.axiom || v.subtitle || v.pages[0]?.paragraphs[0]?.slice(0, 120) || "…"}
+        </p>
+        <p className="mono-label mt-1.5 text-[8.5px] uppercase tracking-[0.16em] text-muted-foreground/60">
+          {(v.savedAt || "").slice(0, 10)} · {t("page {n} of {m}", { n: Math.min(v.pages.length, v.totalPages || v.pages.length), m: v.totalPages || v.pages.length })}
+          {v.ended ? ` · ${t("Read again")}` : ""}
+        </p>
+      </div>
+      <div className="flex shrink-0 flex-col items-end gap-1.5">
+        <button
+          type="button"
+          onClick={() => resumeVolume(v)}
+          data-testid="shelf-continue"
+          className="focus-glow inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-[11.5px] font-medium text-foreground/85 transition-all duration-300 hover:border-foreground/40 hover:glow-sm"
+        >
+          <Feather className="size-3" aria-hidden="true" />
+          {v.ended ? t("Read again") : t("Continue the story")}
+        </button>
+        {local && (
+          <button
+            type="button"
+            onClick={() => forgetLocal(v.bookId)}
+            aria-label={t("Forget this volume")}
+            title={t("Forget this volume")}
+            className="focus-glow text-muted-foreground/60 transition-colors hover:text-foreground"
+          >
+            <X className="size-3.5" aria-hidden="true" />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+
+  const shelfPanel = (
+    <ModalShell
+      open={shelfOpen}
+      onOpenChange={setShelfOpen}
+      title={t("The kept volumes")}
+      description={t(
+        "Every volume you weave is kept here — on this device, and in your library when you are signed in."
+      )}
+      widthClass="sm:max-w-[560px]"
+    >
+      <div className="nice-scroll max-h-[60dvh] space-y-5 overflow-y-auto px-5 pb-5 sm:px-6 sm:pb-6">
+        {shelfLoading && libraryVolumes === null ? (
+          <p
+            className="flex items-center gap-2 py-4 text-[13px] text-muted-foreground"
+            aria-busy="true"
+          >
+            <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
+            {t("The shelves are being read…")}
+          </p>
+        ) : (
+          <>
+            {localShelf.length > 0 && (
+              <section>
+                <p className="mono-label mb-2 text-[9px] uppercase tracking-[0.22em] text-muted-foreground">
+                  {t("On this device")}
+                </p>
+                <div className="space-y-2" data-testid="shelf-local-list">
+                  {localShelf.map((v) => shelfRow(v, true))}
+                </div>
+              </section>
+            )}
+            {libraryVolumes !== null && libraryVolumes.length > 0 && (
+              <section>
+                <p className="mono-label mb-2 text-[9px] uppercase tracking-[0.22em] text-muted-foreground">
+                  {t("In your library")}
+                </p>
+                <div className="space-y-2" data-testid="shelf-library-list">
+                  {libraryVolumes
+                    .filter(
+                      (v) =>
+                        !localShelf.some(
+                          (l) => l.bookId && l.bookId === v.bookId
+                        )
+                    )
+                    .map((v) => shelfRow(v, false))}
+                </div>
+              </section>
+            )}
+            {localShelf.length === 0 &&
+              (libraryVolumes === null || libraryVolumes.length === 0) && (
+                <p className="ink-hand ink-soft py-4 text-center text-[13.5px] italic text-muted-foreground" data-testid="shelf-empty">
+                  {t("The shelf rests empty — your first volume will keep itself here.")}
+                </p>
+              )}
+          </>
+        )}
+      </div>
+    </ModalShell>
+  );
+
+  if (stage === "weaving")
+    return (
+      <>
+        {weaving}
+        {shelfPanel}
+      </>
+    );
+  if (stage === "reading")
+    return (
+      <>
+        {reader}
+        {shelfPanel}
+      </>
+    );
+  return (
+    <>
+      {atelier}
+      {shelfPanel}
+    </>
+  );
 }
 
 /* ------------------------------------------------------------------ */

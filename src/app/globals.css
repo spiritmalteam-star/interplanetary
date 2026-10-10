@@ -1903,6 +1903,23 @@ html:not(.dark) .scope-lightcodes {
 .genea-draw {
   animation: genea-draw 0.8s ease-out backwards;
 }
+/* THE FLASH OF THE TRAIL — one soft ring-run when the walk returns to
+   a past step; a single CSS run, then stillness (the GPU law holds). */
+@keyframes genea-flash {
+  0% {
+    box-shadow:
+      0 0 0 0 color-mix(in srgb, var(--scope-a, var(--gd)) 55%, transparent),
+      0 3px 14px -8px rgba(0, 0, 0, 0.55);
+  }
+  100% {
+    box-shadow:
+      0 0 0 14px color-mix(in srgb, var(--scope-a, var(--gd)) 0%, transparent),
+      0 3px 14px -8px rgba(0, 0, 0, 0.55);
+  }
+}
+.genea-flash {
+  animation: genea-flash 1.4s ease-out 1;
+}
 @media (prefers-reduced-motion: reduce) {
   .genea-bloom,
   .genea-draw {
@@ -1910,5 +1927,8 @@ html:not(.dark) .scope-lightcodes {
   }
   .genea-bloom {
     transform: translateX(-50%);
+  }
+  .genea-flash {
+    animation: none;
   }
 }

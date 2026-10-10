@@ -12,6 +12,7 @@ import {
 } from "react";
 import {
   ArrowLeftRight,
+  ChevronRight,
   ChevronUp,
   Hand,
   Hourglass,
@@ -24,11 +25,7 @@ import {
   Sprout,
   X,
 } from "lucide-react";
-import {
-  canopyHour,
-  growCanopy,
-  type CanopyWhisper,
-} from "@/lib/data/suggestion-banks";
+import { canopyHour, growCanopy } from "@/lib/data/suggestion-banks";
 import type { BranchId } from "@/lib/data/suggestion-tree";
 import {
   buildIdf,
@@ -46,6 +43,7 @@ import {
 import {
   BATCH_SIZE,
   buildExtensionTopology,
+  buildGraftTopology,
   buildSeedTopology,
   layTree,
   type GenealogyNode,
@@ -60,27 +58,31 @@ import { cn } from "@/lib/utils";
 /* ------------------------------------------------------------------ */
 /*  THE LIVING TREE — THE GENEALOGY METHOD.                            */
 /*                                                                     */
-/*  A different method, as asked: the branches now stand as a FAMILY   */
-/*  TREE, very well arranged, expanding in all directions. The trunk   */
-/*  rises from the very top of the input bar; the first forks spread   */
-/*  left and right; every fork forks again — a tidy genealogy whose    */
+/*  A different method, as asked: the branches stand as a FAMILY TREE, */
+/*  very well arranged, expanding in all directions. The trunk rises   */
+/*  from the very top of the input bar; the first forks spread left    */
+/*  and right; every fork forks again — a tidy genealogy whose         */
 /*  generations climb upward and outward the further the walk goes.    */
+/*                                                                     */
+/*  THE NO-OVERLAP LAW. Every whisper carries a fixed box, its text    */
+/*  clamped inside; the connectors live only in the gap between the    */
+/*  generations and every chip stands OPAQUE — a line can never touch  */
+/*  a single word of a suggestion.                                     */
+/*                                                                     */
+/*  THE GRAFT LAW. Press a whisper and the tree GROWS FROM THERE: a    */
+/*  whole sub-family blooms directly above the pressed chip, its       */
+/*  voices tuned to the channeling context; everything that stood      */
+/*  above folds away. The pressed chip keeps its mark and the header   */
+/*  holds the trail of the walk — the visitor is never lost.           */
 /*                                                                     */
 /*  THE THIRTY LAW. The family loads THIRTY at a time. While the       */
 /*  visitor slides through the first thirty, the next thirty are       */
-/*  already grown and held ready — one touch of GROW (or a slide to    */
-/*  the frontier itself) reveals them in the same breath. The visitor  */
-/*  never waits.                                                       */
+/*  already grown and held ready. The visitor never waits.             */
 /*                                                                     */
 /*  THE HARMONIC LAW. When the context proceeds — a transmission       */
 /*  received, the conversation turned — the tree regrows focused on    */
 /*  that context: twelve voices bloom at once, twelve more after a     */
-/*  few seconds, the last six after another — proceeding harmonically  */
-/*  with the context instead of dumping itself.                        */
-/*                                                                     */
-/*  THE MIRROR. Every pick feeds the Expansion Mirror — the algorithm  */
-/*  that studies the continuations and proceeds a score, so every      */
-/*  profile can notice its own progression, digitally.                 */
+/*  few seconds, the last six after another.                           */
 /*                                                                     */
 /*  THE GPU LAW. Native two-axis scrolling carries the walk (the       */
 /*  compositor's own motion), CSS keyframes carry every bloom — one    */
@@ -103,6 +105,31 @@ const MAX_BATCHES = 12;
 /** The harmonic pauses — twelve voices, then twelve, then six. */
 const WAVE_PAUSE_1 = 2600;
 const WAVE_PAUSE_2 = 3400;
+
+/* ------------- the answer's space (the fold on reveal) -------------- */
+
+/**
+ * THE ANSWER'S SPACE — while a transmission is channeled the walk may
+ * keep growing from its last choice; when the answer is revealed the
+ * tree holds one graceful breath (the visitor watches the new branches
+ * bloom from their own choice) and then folds to make space for the
+ * answer. One touch of the summon (or the rest strip) brings the whole
+ * family back, graft and trail intact.
+ */
+export function useCanopyAnswerFold(
+  loading: boolean,
+  fold: (v: boolean) => void
+) {
+  const wasLoading = useRef(false);
+  useEffect(() => {
+    const was = wasLoading.current;
+    wasLoading.current = loading;
+    if (was && !loading) {
+      const id = window.setTimeout(() => fold(false), 3200);
+      return () => window.clearTimeout(id);
+    }
+  }, [loading, fold]);
+}
 
 /* ------------------- the summon button (by the input) ---------------- */
 
@@ -327,21 +354,36 @@ export function BranchCanopy({
       limit: grove.length,
       perSubject: 2,
     });
-    if (hits.length === 0) return grove.map((w) => ({ ...w, score: 0 }));
-    const hitTexts = new Set(hits.map((h) => h.text.toLowerCase()));
-    const rest = grove.filter((w) => !hitTexts.has(w.text.toLowerCase()));
-    return [...hits, ...rest.map((w) => ({ ...w, score: 0 }))];
+    const combined =
+      hits.length === 0
+        ? grove.map((w) => ({ ...w, score: 0 }))
+        : [...hits, ...grove.filter((w) => !hits.some((h) => h.text === w.text)).map((w) => ({ ...w, score: 0 }))];
+    /* the dedupe law — one whisper never stands twice in the family */
+    const seenTexts = new Set<string>();
+    const unique: typeof combined = [];
+    for (const w of combined) {
+      const k = w.text.toLowerCase();
+      if (!seenTexts.has(k)) {
+        seenTexts.add(k);
+        unique.push(w);
+      }
+    }
+    return unique;
   }, [grove, field, idf, seenSnapshot]);
 
   /* THE GOLDEN ROW — the exchange's own grown branches stand nearest
-     the trunk; the compiler keeps this stable by content. */
-  const goldenSeeds: GenealogySeed[] = (channeling ?? [])
-    .slice(0, 6)
-    .map((b) => ({
-      text: b.question,
-      movement: b.type,
-      score: 3,
-    }));
+     the trunk; deduped by content, the compiler keeps this stable. */
+  const goldenSeeds: GenealogySeed[] = [];
+  {
+    const gSeen = new Set<string>();
+    for (const b of channeling ?? []) {
+      const k = b.question.toLowerCase();
+      if (gSeen.has(k)) continue;
+      gSeen.add(k);
+      goldenSeeds.push({ text: b.question, movement: b.type, score: 3 });
+      if (goldenSeeds.length >= 6) break;
+    }
+  }
 
   /* THE HARMONIC CONTINUATION — when a transmission's own branches
      arrive, the mirror records it: the context has proceeded. The
@@ -376,6 +418,45 @@ export function BranchCanopy({
   const [narrow, setNarrow] = useState(false);
   /* the anchored view's memory — one layout pass per change */
   const prevSize = useRef({ w: 0, h: 0 });
+  /* every whisper ever laid — a spent voice never stands twice, even
+     after a fold returns its row to the pool */
+  const [spent, setSpent] = useState<Set<string>>(() => new Set());
+
+  const markSpent = useCallback((seeds: GenealogySeed[]) => {
+    if (seeds.length === 0) return;
+    setSpent((prev) => {
+      let changed = false;
+      const next = new Set(prev);
+      for (const s of seeds) {
+        const k = s.text.toLowerCase();
+        if (!next.has(k)) {
+          next.add(k);
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, []);
+
+  /* ---------------- THE GRAFT state — the walk's own memory --------
+     the pressed whisper ("you are here"), the trail of the walk, the
+     one quiet pan request, the fold level of the last choice */
+  const [maxLevel, setMaxLevel] = useState<number | null>(null);
+  const [pickedId, setPickedId] = useState<string | null>(null);
+  const [lineage, setLineage] = useState<{ id: string | null; text: string }[]>(
+    []
+  );
+  const [flashId, setFlashId] = useState<string | null>(null);
+  /* the pan request rides a ref — consumed by the anchored view's own
+     layout pass; no state churn, no extra effect, no loop */
+  const panReqRef = useRef<string | null>(null);
+
+  const commitTopologies = useCallback(
+    (fn: (t: GenealogyTopology[]) => GenealogyTopology[]) => {
+      setTopologies((prev) => fn(prev));
+    },
+    []
+  );
 
   /* THE REGROW LAW — the family rebuilds whenever its ranking is
      re-earned (new context, new hour, new salt), never mid-session
@@ -390,15 +471,21 @@ export function BranchCanopy({
       const seeds: GenealogySeed[] = ranked
         .slice(0, BATCH_SIZE)
         .map((w) => ({ text: w.text, movement: w.movement, score: w.score }));
+      markSpent(seeds);
       setTopologies(
         seeds.length > 0
           ? [buildSeedTopology(seeds, [], narrowRef.current)]
           : []
       );
+      /* a regrown tree forgets the graft — the walk's trail remains */
+      setMaxLevel(null);
+      setPickedId(null);
+      panReqRef.current = null;
+      setLineage((ln) => ln.map((l) => ({ text: l.text, id: null })));
       prevSize.current = { w: 0, h: 0 }; /* the view returns to the trunk */
     }, 0);
     return () => window.clearTimeout(id);
-  }, [ranked, mounted]);
+  }, [ranked, mounted, markSpent]);
 
   /* THE GEOMETRY — narrow windows carry a slimmer, taller family. */
   const vpRef = useRef<HTMLDivElement | null>(null);
@@ -417,27 +504,21 @@ export function BranchCanopy({
     return () => ro.disconnect();
   }, [mounted]);
 
-  /* THE LAID TREE — every batch laid together in one coordinate space. */
+  /* THE LAID TREE — every batch laid together in one coordinate space;
+     the fold (maxLevel) prunes every generation above the last choice. */
   const tree = useMemo(
-    () => layTree(topologies, goldenSeeds, narrow),
-    [topologies, goldenSeeds, narrow]
+    () => layTree(topologies, goldenSeeds, narrow, maxLevel),
+    [topologies, goldenSeeds, narrow, maxLevel]
   );
 
   /* THE READY THIRTY — the next family, grown before it is asked for.
-     Sliced from the ranked grove beyond everything already standing;
+     Sliced from the ranked grove beyond every voice already spent;
      the visitor never waits. */
-  const usedCount = useMemo(
-    () =>
-      topologies.reduce(
-        (acc, topo) =>
-          acc + topo.rows.reduce((a, r) => a + r.seeds.length, 0),
-        0
-      ),
-    [topologies]
-  );
   const prepared = useMemo(() => {
     if (topologies.length === 0 || topologies.length >= MAX_BATCHES) return null;
-    const slice = ranked.slice(usedCount, usedCount + BATCH_SIZE);
+    const slice = ranked
+      .filter((w) => !spent.has(w.text.toLowerCase()))
+      .slice(0, BATCH_SIZE);
     if (slice.length === 0) return null;
     const seeds: GenealogySeed[] = slice.map((w) => ({
       text: w.text,
@@ -445,21 +526,32 @@ export function BranchCanopy({
       score: w.score,
     }));
     return tree.frontier.length > 0
-      ? buildExtensionTopology(seeds, tree.frontier)
+      ? buildExtensionTopology(seeds, tree.frontier, narrow)
       : buildSeedTopology(seeds, [], narrow);
-  }, [ranked, usedCount, topologies, tree, narrow]);
+  }, [ranked, topologies, tree, narrow, spent]);
 
-  /* THE GROW — one breath, from the ready pool. The functional law
-     deduplicates by itself: the same prepared family can never stand
-     twice. */
+  const groveDone =
+    ranked.length > 0 && !ranked.some((w) => !spent.has(w.text.toLowerCase()));
+
+  /* THE GROW — one breath, from the ready pool. A ready family may
+     only hang from tips that still stand: a folded frontier can never
+     parent it (the functional law also deduplicates). */
   const grow = useCallback(() => {
     const next = prepared;
     if (!next) return;
-    setTopologies((t) => {
+    markSpent(next.rows.flatMap((r) => r.seeds));
+    commitTopologies((t) => {
       if (t.length >= MAX_BATCHES || t[t.length - 1] === next) return t;
+      const ids = new Set<string>();
+      t.forEach((topo, b) =>
+        topo.rows.forEach((row, r) =>
+          row.seeds.forEach((_, i) => ids.add(`n${b}.${r}.${i}`))
+        )
+      );
+      if (next.fromTips.some((id) => id !== "root" && !ids.has(id))) return t;
       return [...t, next];
     });
-  }, [prepared]);
+  }, [prepared, commitTopologies, markSpent]);
 
   /* THE FRONTIER EAR — slide to the top of the family and the ready
      thirty reveal themselves; the walk never hits a wall. */
@@ -499,13 +591,26 @@ export function BranchCanopy({
 
   /* THE ANCHORED VIEW — the first layout stands at the trunk; a growing
      family keeps the visitor's reading place; a regrown family returns
-     to the floor. One layout pass per change — never per frame. */
+     to the floor; a fresh graft pans once so the new house is in view.
+     One layout pass per change — never per frame. */
   useLayoutEffect(() => {
     const vp = vpRef.current;
     if (!vp || !mounted) return;
     const { width, height } = tree.geometry;
     const dW = width - prevSize.current.w;
     const dH = height - prevSize.current.h;
+    const req = panReqRef.current;
+    if (req) {
+      panReqRef.current = null;
+      const n = tree.byId.get(req);
+      if (n) {
+        /* one quiet pan — the new house, in view at once */
+        vp.scrollTop = Math.max(0, n.y - vp.clientHeight * 0.38);
+        vp.scrollLeft = Math.max(0, n.x - vp.clientWidth / 2);
+        prevSize.current = { w: width, h: height };
+        return;
+      }
+    }
     if (prevSize.current.h === 0 || dH < 0) {
       vp.scrollTop = vp.scrollHeight;
       vp.scrollLeft = Math.max(0, (vp.scrollWidth - vp.clientWidth) / 2);
@@ -514,11 +619,31 @@ export function BranchCanopy({
       vp.scrollLeft += dW;
     }
     prevSize.current = { w: width, h: height };
-  }, [tree.geometry.width, tree.geometry.height, mounted]);
+  }, [tree.geometry.width, tree.geometry.height, mounted, tree]);
 
-  /* THE QUIET PICK — the walk is recorded in every ledger. */
+  /* ---------------- THE GRAFT — the walk grows from a choice -------- */
+
+  /* the pan — one quiet assignment, never an animation loop */
+  const panToNode = useCallback(
+    (id: string | null) => {
+      const vp = vpRef.current;
+      if (!vp || !id) return;
+      const n = tree.byId.get(id);
+      if (!n) return;
+      vp.scrollTop = Math.max(0, n.y - vp.clientHeight * 0.38);
+      vp.scrollLeft = Math.max(0, n.x - vp.clientWidth / 2);
+    },
+    [tree]
+  );
+
+  /* the pan effect is folded into the anchored view's layout pass */
+
+  /* THE QUIET PICK — the walk grows FROM the pressed whisper: the
+     pressed chip is marked, a whole sub-family is grafted directly
+     above it, tuned to the channeling context, and everything that
+     stood above folds away. The trail remembers every step. */
   const pick = useCallback(
-    (node: { text: string; movement: BranchType }) => {
+    (node: GenealogyNode) => {
       if (disabled) return;
       recordExpansion("pick", {
         scope: scopeHint ?? null,
@@ -526,10 +651,89 @@ export function BranchCanopy({
       });
       recordJourney({ b: category, s: scopeHint ?? undefined });
       recordSeen([node.text]);
+      setPickedId(node.id);
+      setLineage((ln) =>
+        [...ln.filter((l) => l.text !== node.text), { id: node.id, text: node.text }].slice(-10)
+      );
+      /* the fold — the choice prunes the speculation above it */
+      const level = tree.levelOf.get(node.id);
+      if (typeof level === "number") setMaxLevel(level);
+      /* the grafted house — its voices tuned to the channeling context:
+         the pressed whisper leads the field, the thread's breath follows */
+      const pickField = buildResonanceField({
+        scope: scopeHint ?? null,
+        context: `${node.text}\n${contextSnapshot}`.trim() || null,
+        buds: [node.text],
+        hour,
+      });
+      const spentSet = spent;
+      const fresh = grove.filter((w) => !spentSet.has(w.text.toLowerCase()));
+      if (fresh.length > 0) {
+        const hits = rankWhispers(fresh, pickField, {
+          idf,
+          seen: seenSnapshot,
+          limit: BATCH_SIZE,
+          perSubject: 2,
+        });
+        const chosen =
+          hits.length > 0
+            ? hits
+            : fresh
+                .map((w) => ({ ...w, score: 0 }))
+                .slice(0, BATCH_SIZE);
+        const seeds: GenealogySeed[] = chosen
+          .slice(0, BATCH_SIZE)
+          .map((w) => ({ text: w.text, movement: w.movement, score: w.score }));
+        if (seeds.length > 0) {
+          const graft = buildGraftTopology(seeds, node.id, narrowRef.current);
+          markSpent(seeds);
+          commitTopologies((t) =>
+            t.length >= MAX_BATCHES ? t : [...t, graft]
+          );
+          panReqRef.current = node.id; /* one quiet pan — the new house in view */
+        }
+      }
       onPick(node.text);
     },
-    [category, disabled, onPick, scopeHint]
+    [
+      category,
+      disabled,
+      onPick,
+      scopeHint,
+      tree,
+      grove,
+      idf,
+      seenSnapshot,
+      contextSnapshot,
+      hour,
+      commitTopologies,
+      markSpent,
+      spent,
+    ]
   );
+
+  /* the trail's own touch — pan to a past step and flash it once */
+  const walkBack = useCallback(
+    (id: string | null) => {
+      panToNode(id);
+      if (!id) return;
+      setFlashId(id);
+      window.setTimeout(() => setFlashId(null), 1500);
+    },
+    [panToNode]
+  );
+
+  /* the lineage chain — from the pressed whisper down to the trunk:
+     every tie of the walk burns brighter than the rest of the tree */
+  const chainSet = useMemo(() => {
+    const s = new Set<string>();
+    let cur = pickedId ? tree.byId.get(pickedId) : null;
+    while (cur) {
+      s.add(cur.id);
+      cur = cur.parent ? (tree.byId.get(cur.parent) ?? null) : null;
+    }
+    return s;
+  }, [pickedId, tree]);
 
   if (!mounted) return null;
 
@@ -552,41 +756,49 @@ export function BranchCanopy({
   }
 
   /* the connectors — one path per revealed child, drawn from its
-     parent's foot to its own crown */
-  const paths: { d: string; golden: boolean; delay: number; key: string }[] = [];
+     parent's foot to its own crown, kept OUT of the chips themselves
+     (two pixels of air at each end — a line never touches a word) */
+  const paths: {
+    d: string;
+    golden: boolean;
+    chain: boolean;
+    delay: number;
+    key: string;
+  }[] = [];
   nodes.forEach((n, ni) => {
     if (!n.parent) return;
     const p = tree.byId.get(n.parent);
     if (!p) return;
     const x1 = p.x;
-    const y1 = p.y + geo.chipH;
+    const y1 = p.y + geo.chipH + 2;
     const x2 = n.x;
-    const y2 = n.y;
+    const y2 = n.y - 2;
     const mid1 = y1 + (y2 - y1) * 0.45;
     const mid2 = y2 - (y2 - y1) * 0.45;
     paths.push({
       key: `p-${n.id}`,
       d: `M ${x1} ${y1} C ${x1} ${mid1}, ${x2} ${mid2}, ${x2} ${y2}`,
       golden: !!n.golden,
+      chain: chainSet.has(n.id),
       delay: Math.min(n.wave * 130 + (ni % 12) * 26, 640),
     });
   });
   /* the trunk's own arms — from the trunk's crown to the first row and
      the golden row (the root's children) */
   const trunkTop = geo.height - geo.trunkH;
-  const trunkArms: { d: string; key: string }[] = [];
+  const trunkArms: { d: string; key: string; chain: boolean }[] = [];
   for (const n of nodes) {
     if (n.parent) continue;
     trunkArms.push({
       key: `ta-${n.id}`,
       d: `M ${geo.width / 2} ${trunkTop + 8} C ${geo.width / 2} ${trunkTop + 26}, ${n.x} ${n.y - 34}, ${n.x} ${n.y}`,
+      chain: chainSet.has(n.id),
     });
   }
 
   const preparedCount = prepared
     ? prepared.rows.reduce((a, r) => a + r.seeds.length, 0)
     : 0;
-  const groveDone = usedCount >= ranked.length;
 
   return (
     <div
@@ -601,7 +813,9 @@ export function BranchCanopy({
     >
       {/* ---------------------------- header ---------------------------
           The tree reaches the very top of the chat box. The Expansion
-          Mirror rides here — the score that evolves with the walk. */}
+          Mirror rides here — the score that evolves with the walk —
+          and beneath the title, the trail of the walk itself: every
+          pressed whisper, in order, so the visitor is never lost. */}
       <div className="shrink-0 border-b hairline bg-[color-mix(in_srgb,var(--background)_70%,transparent)] px-3 pb-2 pt-[52px] backdrop-blur-xl sm:px-5 sm:pt-[60px]">
         <div className="mx-auto flex w-full max-w-[680px] items-center justify-between gap-2">
           <div className="flex min-w-0 items-center gap-2">
@@ -651,6 +865,52 @@ export function BranchCanopy({
             </button>
           </div>
         </div>
+
+        {/* THE TRAIL OF THE WALK — every pressed whisper, oldest first;
+            one touch pans the tree back to that very step. */}
+        {lineage.length > 0 && (
+          <div
+            data-testid={`${testIdPrefix}-trail`}
+            className="nice-scroll mx-auto mt-1.5 flex w-full max-w-[680px] items-center gap-1 overflow-x-auto pb-0.5"
+          >
+            <span className="mono-label shrink-0 pr-0.5 text-[8px] uppercase tracking-[0.2em] text-muted-foreground/60">
+              {t("Your walk")}
+            </span>
+            {lineage.map((l, i) => {
+              const latest = i === lineage.length - 1;
+              return (
+                <span key={`${l.text}-${i}`} className="flex shrink-0 items-center gap-1">
+                  {i > 0 && (
+                    <ChevronRight
+                      className="size-3 shrink-0 text-muted-foreground/35"
+                      aria-hidden="true"
+                    />
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => walkBack(l.id)}
+                    aria-label={`${t("Return to")}: ${l.text}`}
+                    title={l.text}
+                    className={cn(
+                      "focus-glow max-w-[170px] truncate rounded-full border px-2 py-0.5 text-[10.5px] leading-snug transition-all duration-300",
+                      latest
+                        ? "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_66%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_14%,var(--background))] font-medium text-[var(--scope-a,var(--gd))]"
+                        : "border-[color-mix(in_srgb,var(--hairline)_80%,transparent)] text-muted-foreground hover:border-[var(--hairline-hover)] hover:text-foreground"
+                    )}
+                  >
+                    {l.text}
+                  </button>
+                </span>
+              );
+            })}
+            <span
+              className="mono-label shrink-0 animate-pulse pl-1 text-[8px] uppercase tracking-[0.18em] text-[var(--scope-a,var(--gd))]"
+              aria-hidden="true"
+            >
+              {t("You are here")}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* --------------------- the walkable family --------------------- */}
@@ -740,7 +1000,9 @@ export function BranchCanopy({
             }}
           />
 
-          {/* the connectors — every family tie, one static SVG */}
+          {/* the connectors — every family tie, one static SVG; each
+              line keeps two pixels of air clear of every chip, and the
+              walk's own chain burns brighter than the rest */}
           <svg
             aria-hidden="true"
             className="pointer-events-none absolute inset-0"
@@ -753,8 +1015,12 @@ export function BranchCanopy({
               <path
                 key={a.key}
                 d={a.d}
-                stroke="color-mix(in srgb, var(--scope-a,var(--gd)) 34%, transparent)"
-                strokeWidth="1.6"
+                stroke={
+                  a.chain
+                    ? "color-mix(in srgb, var(--scope-a,var(--gd)) 70%, transparent)"
+                    : "color-mix(in srgb, var(--scope-a,var(--gd)) 34%, transparent)"
+                }
+                strokeWidth={a.chain ? 2 : 1.6}
                 strokeLinecap="round"
               />
             ))}
@@ -769,7 +1035,9 @@ export function BranchCanopy({
                   stroke={
                     p.golden
                       ? "color-mix(in srgb, #f59e0b 30%, transparent)"
-                      : "color-mix(in srgb, var(--scope-a,var(--gd)) 16%, transparent)"
+                      : p.chain
+                        ? "color-mix(in srgb, var(--scope-a,var(--gd)) 40%, transparent)"
+                        : "color-mix(in srgb, var(--scope-a,var(--gd)) 16%, transparent)"
                   }
                   strokeWidth="3.4"
                   strokeLinecap="round"
@@ -779,20 +1047,26 @@ export function BranchCanopy({
                   stroke={
                     p.golden
                       ? "color-mix(in srgb, #f59e0b 72%, transparent)"
-                      : "color-mix(in srgb, var(--scope-a,var(--gd)) 62%, transparent)"
+                      : p.chain
+                        ? "color-mix(in srgb, var(--scope-a,var(--gd)) 88%, transparent)"
+                        : "color-mix(in srgb, var(--scope-a,var(--gd)) 62%, transparent)"
                   }
-                  strokeWidth="1.2"
+                  strokeWidth={p.chain ? 1.6 : 1.2}
                   strokeLinecap="round"
                 />
               </g>
             ))}
           </svg>
 
-          {/* the whispers — the family's own chips */}
+          {/* the whispers — the family's own chips: opaque by law, so a
+              line can never cross a word */}
           {nodes.map((n, i) => {
             const deep = n.score >= 2.4;
             const attuned = !deep && n.score > 0;
             const Icon = MOVEMENT_ICONS[n.movement] ?? Layers;
+            const isPicked = n.id === pickedId;
+            const onChain = chainSet.has(n.id);
+            const flashing = n.id === flashId;
             return (
               <button
                 key={n.id}
@@ -803,31 +1077,45 @@ export function BranchCanopy({
                 data-testid={
                   n.golden
                     ? `${testIdPrefix}-crown-chip`
-                    : `${testIdPrefix}-whisper`
+                    : isPicked
+                      ? `${testIdPrefix}-whisper-picked`
+                      : `${testIdPrefix}-whisper`
                 }
                 className={cn(
-                  "genea-bloom focus-glow absolute flex flex-col items-start gap-0.5 rounded-2xl border px-3 py-2 text-left transition-colors duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-50",
+                  "genea-bloom focus-glow absolute z-10 flex flex-col items-start gap-0.5 overflow-hidden rounded-2xl border px-3 py-2 text-left shadow-[0_3px_14px_-8px_rgba(0,0,0,0.55)] transition-colors duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-50",
                   narrow
                     ? "text-[11px] leading-[1.3]"
                     : "text-[12.5px] leading-[1.35]",
                   n.golden
-                    ? "border-[color-mix(in_srgb,#f59e0b_52%,transparent)] bg-[color-mix(in_srgb,#f59e0b_13%,var(--glass-bg))] font-serif italic text-foreground shadow-[0_0_16px_-6px_color-mix(in_srgb,#f59e0b_60%,transparent)]"
-                    : deep
-                      ? "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_62%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_13%,var(--glass-bg))] text-foreground shadow-[0_0_16px_-6px_color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)]"
-                      : attuned
-                        ? "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_42%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_7%,var(--glass-bg))] text-foreground/90"
-                        : "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_28%,transparent)] bg-[color-mix(in_srgb,var(--glass-bg)_94%,transparent)] text-foreground/85 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_58%,transparent)]"
+                    ? "border-[color-mix(in_srgb,#f59e0b_52%,transparent)] bg-[color-mix(in_srgb,#f59e0b_14%,var(--background)_86%)] font-serif italic text-foreground shadow-[0_0_16px_-6px_color-mix(in_srgb,#f59e0b_60%,transparent)]"
+                    : isPicked
+                      ? "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_85%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_18%,var(--background)_82%)] text-foreground shadow-[0_0_20px_-5px_color-mix(in_srgb,var(--scope-a,var(--gd))_70%,transparent)]"
+                      : onChain
+                        ? "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_66%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_12%,var(--background)_88%)] text-foreground"
+                        : deep
+                          ? "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_62%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_13%,var(--background)_87%)] text-foreground shadow-[0_0_16px_-6px_color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)]"
+                          : attuned
+                            ? "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_42%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_7%,var(--background)_93%)] text-foreground/90"
+                            : "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_28%,transparent)] bg-[color-mix(in_srgb,var(--foreground)_3%,var(--background)_97%)] text-foreground/85 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_58%,transparent)]",
+                  flashing && "genea-flash"
                 )}
                 style={
                   {
                     left: n.x,
                     top: n.y,
                     width: geo.chipW,
+                    height: geo.chipH,
                     transform: "translateX(-50%)",
                     animationDelay: `${n.golden ? i * 40 : Math.min(n.wave * 130 + (i % 12) * 26, 640)}ms`,
                   } as CSSProperties
                 }
               >
+                {isPicked && (
+                  <span
+                    aria-hidden="true"
+                    className="animate-pulse absolute right-1.5 top-1.5 flex size-1.5 rounded-full bg-[var(--scope-a,var(--gd))]"
+                  />
+                )}
                 <Icon
                   className={cn(
                     "size-3 shrink-0",

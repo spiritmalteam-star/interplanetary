@@ -24,6 +24,7 @@ import {
   BranchCanopy,
   CanopyRestStrip,
   CanopySummonButton,
+  useCanopyAnswerFold,
 } from "./BranchCanopy";
 import { emGatheringPhrases, emVectors } from "@/lib/data/evolvemed";
 import { emNoteSets } from "@/lib/data/scope-notes";
@@ -459,6 +460,9 @@ function EvolveMedChat() {
      empty room, fading when the answer arrives, summoned again by the
      button beside the input. */
   const [summoned, setSummoned] = useState(false);
+  /* THE ANSWER'S SPACE — the walk grows while the transmission runs;
+     the revealed answer folds the tree and takes its room. */
+  useCanopyAnswerFold(emStatus === "loading", setSummoned);
 
   /* The thread opens at its BEGINNING: mounting or reopening the chat
      never scrolls away from the first words. New turns settle at the
@@ -652,10 +656,11 @@ function EvolveMedChat() {
         open={
           emMessages.length === 0 && emStatus === "idle" && !emError
             ? true
-            : summoned
+            : summoned || emStatus === "loading"
         }
         onPick={(q) => {
-          setSummoned(false);
+          /* the tree stays open — the new branches grow from the pressed
+             whisper; the answer's own reveal folds the tree in time */
           if (emStatus !== "loading") void askEM(q);
         }}
         onClose={() => setSummoned(false)}
@@ -765,7 +770,7 @@ function EvolveMedChat() {
         open={
           emMessages.length === 0 && emStatus === "idle" && !emError
             ? true
-            : summoned
+            : summoned || emStatus === "loading"
         }
         onSummon={() => setSummoned(true)}
         disabled={emStatus === "loading"}
