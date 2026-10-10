@@ -9,11 +9,10 @@
 /*    Stage 1 — the category badge: which movement this room serves.  */
 /*    Stage 2 — the transmission: the question and its answer,        */
 /*              growing word by word while it channels.               */
-/*    Stage 3 — the multi-media attachments: the light-code frequency */
-/*              (a real, playable tone), the dream-book archetype,    */
-/*              the sigil of the resonance. They rise the moment the  */
-/*              transmission lands — already pre-loaded by the PRC,   */
-/*              so nothing here ever waits on the network.            */
+/*    Stage 3 — THE NARRATOR: a man, the documentary register,        */
+/*              reading the transmission aloud — the walk's one       */
+/*              voice (the book, the sigil and the frequency tones    */
+/*              are retired; the room no longer renders them).        */
 /*    Stage 4 — the next horizon: the branches grown on this answer,  */
 /*              one touch and the walk continues from its end.        */
 /*                                                                     */
@@ -21,9 +20,14 @@
 /*  then stillness. prefers-reduced-motion opens every stage at once. */
 /* ------------------------------------------------------------------ */
 
-import { useEffect, useState } from "react";
-import { BookOpen, Volume1, Volume2 } from "lucide-react";
-import type { MediaPayload, ResonanceCategory } from "@/lib/resonance-walk";
+import { useEffect, useState, useSyncExternalStore } from "react";
+import { AudioLines, LoaderCircle, Square } from "lucide-react";
+import type { ResonanceCategory } from "@/lib/resonance-walk";
+import {
+  getNarration,
+  subscribeNarration,
+  type NarrationSnapshot,
+} from "@/lib/room-narrator";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
@@ -73,6 +77,15 @@ export function useSequentialReveal(
   return stage;
 }
 
+/* ------------- THE NARRATOR'S EAR (a quiet external store) --------- */
+
+/** The narrator's state, read without re-render storms: the module is
+    a sync-external store; the room subscribes once and re-renders
+    only when the voice itself changes (idle ↔ gathering ↔ speaking). */
+export function useNarration(): NarrationSnapshot {
+  return useSyncExternalStore(subscribeNarration, getNarration, getNarration);
+}
+
 /* --------------------- STAGE 1 — THE BADGE ------------------------- */
 
 /** The four movements of the walk, spoken through the house's own
@@ -117,11 +130,11 @@ export function ResonantStageBadge({
   );
 }
 
-/* ------------------- STAGE 3 — THE MEDIA CARDS --------------------- */
+/* ------------------ STAGE 3 — THE NARRATOR ------------------------- */
 
 /** The breathing bars — one keyframe, four delays, then infinite
     stillness in motion (pure transform, no frames). */
-function FieldBars() {
+function VoiceBars() {
   return (
     <div className="flex h-4 shrink-0 items-end gap-[3px]" aria-hidden="true">
       {[0, 1, 2, 3].map((i) => (
@@ -138,154 +151,81 @@ function FieldBars() {
   );
 }
 
-export function ResonantMediaStage({
-  media,
+/**
+ * THE NARRATOR'S CARD — the room's one voice. A man, the documentary
+ * register, reads the transmission aloud (the house voice, /api/tts —
+ * never a tone, never an image, never a book). One touch lets him
+ * speak; one touch silences him. The gathering breath shows while the
+ * voice travels; the bars breathe while he reads.
+ */
+export function ResonantNarrationStage({
+  roomId,
+  text,
   visible,
-  fieldOn,
-  onFieldToggle,
-  onOpenBook,
+  narration,
+  onToggle,
   testIdPrefix,
 }: {
-  media: MediaPayload | null;
+  /** The standing room's own id — the voice is cached per room. */
+  roomId: string;
+  /** The landed transmission the narrator reads. */
+  text: string;
   visible: boolean;
-  /** True while the field's voice is open (a frequency is humming). */
-  fieldOn: boolean;
-  onFieldToggle: () => void;
-  /** Opens the Dream Book atelier — the archetype's full volume is
-      woven there for real. */
-  onOpenBook?: () => void;
+  /** The live narration snapshot (the room subscribes once). */
+  narration: NarrationSnapshot;
+  /** The room's own toggle — the canopy owns the gate. */
+  onToggle: () => void;
   testIdPrefix: string;
 }) {
   const t = useT();
-  if (!visible || !media) return null;
-  const hasAny = media.music || media.book || media.image;
-  if (!hasAny) return null;
+  if (!visible || !text.trim()) return null;
+
+  const mine = narration.roomId === roomId;
+  const loading = mine && narration.state === "loading";
+  const playing = mine && narration.state === "playing";
 
   return (
     <div
-      className="animate-fade-in mt-4 space-y-2"
-      data-testid={`${testIdPrefix}-media`}
+      className="animate-fade-in mt-4 flex items-center gap-3 rounded-xl border px-3 py-2.5"
+      style={{
+        borderColor:
+          "color-mix(in srgb, var(--scope-a,var(--gd)) 22%, transparent)",
+        backgroundColor:
+          "color-mix(in srgb, var(--scope-a,var(--gd)) 5%, var(--background))",
+      }}
+      data-testid={`${testIdPrefix}-narration`}
     >
-      {/* THE FIELD'S VOICE — a real tone, gated by the visitor's hand */}
-      {media.music && (
-        <div
-          className="flex items-center gap-3 rounded-xl border px-3 py-2.5"
-          style={{
-            borderColor:
-              "color-mix(in srgb, var(--scope-a,var(--gd)) 22%, transparent)",
-            backgroundColor:
-              "color-mix(in srgb, var(--scope-a,var(--gd)) 5%, var(--background))",
-          }}
-          data-testid={`${testIdPrefix}-media-music`}
-        >
-          <button
-            type="button"
-            onClick={onFieldToggle}
-            aria-pressed={fieldOn}
-            aria-label={fieldOn ? t("Silence the field") : t("Open the field's voice")}
-            title={fieldOn ? t("Silence the field") : t("Open the field's voice")}
-            data-testid={`${testIdPrefix}-freq-toggle`}
-            className={cn(
-              "focus-glow flex size-8 shrink-0 items-center justify-center rounded-full border transition-all duration-300",
-              fieldOn
-                ? "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_60%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_18%,var(--background))] text-[var(--scope-a,var(--gd))]"
-                : "border-[color-mix(in_srgb,var(--hairline)_90%,transparent)] text-muted-foreground hover:text-foreground"
-            )}
-          >
-            {fieldOn ? (
-              <Volume2 className="size-3.5" aria-hidden="true" />
-            ) : (
-              <Volume1 className="size-3.5" aria-hidden="true" />
-            )}
-          </button>
-          <div className="min-w-0 flex-1">
-            <p className="mono-label text-[8px] uppercase tracking-[0.2em] text-muted-foreground/70">
-              {t("Light code frequency")}
-            </p>
-            <p className="truncate text-[12px] leading-snug text-foreground/90">
-              {media.music.ambientFrequency}
-            </p>
-          </div>
-          {fieldOn && <FieldBars />}
-        </div>
-      )}
-
-      {/* THE DREAM BOOK — an archetype waiting to be woven */}
-      {media.book && (
-        <div
-          className="flex items-start gap-3 rounded-xl border px-3 py-2.5"
-          style={{
-            borderColor: "color-mix(in srgb, var(--hairline) 90%, transparent)",
-            backgroundColor:
-              "color-mix(in srgb, var(--scope-a,var(--gd)) 3%, var(--background))",
-          }}
-          data-testid={`${testIdPrefix}-media-book`}
-        >
-          <BookOpen
-            className="mt-0.5 size-4 shrink-0 text-[var(--scope-a,var(--gd))] opacity-85"
-            aria-hidden="true"
-          />
-          <div className="min-w-0 flex-1">
-            <p className="mono-label text-[8px] uppercase tracking-[0.2em] text-muted-foreground/70">
-              {t("Dream Book")}
-            </p>
-            <p className="truncate text-[12.5px] font-medium leading-snug text-foreground/95">
-              {media.book.title}
-            </p>
-            <p className="mt-0.5 text-[10.5px] leading-snug text-muted-foreground/80">
-              {t("Reader")}: {t(media.book.targetReader)} · {t("Depth")}{" "}
-              {media.book.depthLevel}/5
-            </p>
-            <p className="mt-1 text-[11.5px] italic leading-relaxed text-muted-foreground/85">
-              {media.book.summary}
-            </p>
-            {onOpenBook && (
-              <button
-                type="button"
-                onClick={onOpenBook}
-                data-testid={`${testIdPrefix}-media-book-open`}
-                className="focus-glow mt-1.5 inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[10.5px] leading-snug text-foreground/90 transition-all duration-300 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_60%,transparent)] hover:text-foreground"
-                style={{
-                  borderColor:
-                    "color-mix(in srgb, var(--scope-a,var(--gd)) 34%, transparent)",
-                  backgroundColor:
-                    "color-mix(in srgb, var(--scope-a,var(--gd)) 7%, var(--background))",
-                }}
-              >
-                <BookOpen className="size-3" aria-hidden="true" />
-                {t("Open in the Dream Book")}
-              </button>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* THE SIGIL — the image shaped by this question's resonance */}
-      {media.image && (
-        <figure
-          className="overflow-hidden rounded-xl border"
-          style={{
-            borderColor: "color-mix(in srgb, var(--hairline) 90%, transparent)",
-          }}
-          data-testid={`${testIdPrefix}-media-image`}
-        >
-          <img
-            src={media.image.imageUrl}
-            alt={`${t("The sigil of this resonance")} — ${media.image.prompt}`}
-            loading="lazy"
-            decoding="async"
-            className="h-40 w-full object-cover sm:h-44"
-          />
-          <figcaption className="flex items-center gap-1.5 px-3 py-1.5">
-            <span className="mono-label shrink-0 text-[8px] uppercase tracking-[0.2em] text-[var(--scope-a,var(--gd))] opacity-80">
-              {t("The sigil of this resonance")}
-            </span>
-            <span className="truncate text-[10.5px] italic text-muted-foreground/75">
-              {media.image.prompt}
-            </span>
-          </figcaption>
-        </figure>
-      )}
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-pressed={playing}
+        aria-label={playing || loading ? t("Silence the narrator") : t("Let the narrator speak")}
+        title={playing || loading ? t("Silence the narrator") : t("Let the narrator speak")}
+        data-testid={`${testIdPrefix}-narration-toggle`}
+        className={cn(
+          "focus-glow flex size-8 shrink-0 items-center justify-center rounded-full border transition-all duration-300",
+          playing || loading
+            ? "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_60%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_18%,var(--background))] text-[var(--scope-a,var(--gd))]"
+            : "border-[color-mix(in_srgb,var(--hairline)_90%,transparent)] text-muted-foreground hover:text-foreground"
+        )}
+      >
+        {loading ? (
+          <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
+        ) : playing ? (
+          <Square className="size-3 fill-current" aria-hidden="true" />
+        ) : (
+          <AudioLines className="size-3.5" aria-hidden="true" />
+        )}
+      </button>
+      <div className="min-w-0 flex-1">
+        <p className="mono-label text-[8px] uppercase tracking-[0.2em] text-muted-foreground/70">
+          {t("The narrator's voice")}
+        </p>
+        <p className="truncate text-[12px] leading-snug text-foreground/90">
+          {t("A man · documentary narrator")}
+        </p>
+      </div>
+      {playing && <VoiceBars />}
     </div>
   );
 }

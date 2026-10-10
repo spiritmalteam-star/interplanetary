@@ -66,13 +66,19 @@ import { cn } from "@/lib/utils";
 import {
   categoryForMove,
   getWalkSession,
-  mediaForQuestion,
   walkNodeId,
-  type MediaPayload,
 } from "@/lib/resonance-walk";
 import {
-  ResonantMediaStage,
+  closeNarrationGate,
+  narrationGateOpen,
+  openNarrationGate,
+  speakRoomNarration,
+  stopRoomNarration,
+} from "@/lib/room-narrator";
+import {
+  ResonantNarrationStage,
   ResonantStageBadge,
+  useNarration,
   useSequentialReveal,
 } from "./ResonantCardViewer";
 
@@ -627,13 +633,16 @@ export function BranchCanopy({
   onLatch?: (latched: boolean) => void;
 }) {
   const t = useT();
-  const openDreamBook = useMirror((s) => s.openDreamBook);
+  const language = useMirror((s) => s.language);
 
-  /* THE RESONANCE WALK — v4.0 rooms: the field's voice gate (state up
-     front; the wiring effects live further below, where the walk's
-     context is ready). The standing room's media constellation is
-     read, not stored — derived from the session at render time. */
-  const [fieldOn, setFieldOn] = useState(false);
+  /* THE RESONANCE WALK — v4.1, the quiet walk: the room's one voice is
+     the male narrator (lib/room-narrator.ts). The gate lives up front;
+     the wiring effects live further below, where the walk's context is
+     ready. The book, the sigil and the frequency tones are retired —
+     the room no longer renders them, and the cache has nothing to
+     pre-fetch: the walk stays light. */
+  const [narratorOpen, setNarratorOpen] = useState(() => narrationGateOpen());
+  const narration = useNarration();
 
   /* THE FADE LAW — mount → visible on open; fade → unmount on close.
      THE LATCH LAW: while the answer lives in the tree (the zoom), the
@@ -659,15 +668,15 @@ export function BranchCanopy({
       setShown(false);
     } else {
       setShown(false);
-      /* THE FOLD CLOSES THE GATE — the field's voice rests with the walk */
-      if (fieldOn) setFieldOn(false);
+      /* THE FOLD CLOSES THE GATE — the narrator rests with the walk */
+      if (narratorOpen) setNarratorOpen(false);
     }
   }
 
   useEffect(() => {
     if (!active) {
-      /* the fold silences the field (external system — the audio) */
-      getWalkSession().disableSound();
+      /* the fold silences the narrator (external system — the audio) */
+      closeNarrationGate();
       const id = window.setTimeout(() => {
         setMounted(false);
         /* the room closes with the walk — the answer returns to the chat */
@@ -1292,19 +1301,6 @@ export function BranchCanopy({
     setLastRoomQ(seenRoomQ);
   }
 
-  /* the standing room's media — read from the walk's own session;
-     before the room is registered, the same deterministic draw the
-     registration will use keeps the very first paint correct */
-  const roomMedia = useMemo(() => {
-    if (!zoomQ) return null;
-    const id = walkNodeId(zoomQ);
-    const known = getWalkSession().getNode(id);
-    if (known?.media) return known.media;
-    const parentId =
-      lastRoomQ && walkNodeId(lastRoomQ) !== id ? walkNodeId(lastRoomQ) : null;
-    return mediaForQuestion(zoomQ, parentId, categoryForMove(zoomMove));
-  }, [zoomQ, zoomMove, lastRoomQ]);
-
   useEffect(() => {
     if (!zoomQ) return;
     const session = getWalkSession();
@@ -1324,16 +1320,22 @@ export function BranchCanopy({
         category: known?.category ?? cat,
         title: zoomQ,
         transmission: known?.transmission ?? "",
-        media: known?.media ?? mediaForQuestion(zoomQ, parentId, cat),
         childrenIds: known?.childrenIds ?? [],
       });
     }
   }, [zoomQ, zoomMove, lastRoomQ]);
 
+  /* THE WALK'S SILENCE BETWEEN ROOMS — the narrator never reads one
+     room's words into the next; the new room's voice (if the gate
+     stands open) rises when its own transmission lands. */
+  useEffect(() => {
+    stopRoomNarration();
+  }, [zoomQ]);
+
   /* THE SETTLING — the transmission lands, the branches grow: the room
-     is refreshed and the horizon (children, with their deterministic
-     media) is registered and pre-loaded — so the next press never
-     waits on the network, exactly as the PRC promises. */
+     is refreshed and its children are registered — so the walk
+     remembers where it may go next. Nothing is fetched: the quiet
+     walk's cache is bookkeeping alone. */
   const answerLen = (liveAnswer ?? "").trim().length;
   const answerLanded = !liveLoading && answerLen > 0;
   const settledKey = `${zoomQ ?? ""}|${answerLanded ? "1" : "0"}|${answerLen}|${contSeeds.length}`;
@@ -1346,16 +1348,12 @@ export function BranchCanopy({
     const parentId = known?.parentId ?? null;
     for (const b of contSeeds) {
       const cid = walkNodeId(b.question);
-      const existingChild = session.getNode(cid);
       session.register({
         id: cid,
         parentId: id,
         category: categoryForMove(b.type),
         title: b.question,
         transmission: "",
-        media:
-          existingChild?.media ??
-          mediaForQuestion(b.question, id, categoryForMove(b.type)),
         childrenIds: [],
       });
     }
@@ -1365,22 +1363,36 @@ export function BranchCanopy({
       category: cat,
       title: zoomQ,
       transmission: (liveAnswer ?? "").trim(),
-      media: known?.media ?? mediaForQuestion(zoomQ, parentId, cat),
       childrenIds: contSeeds.map((b) => walkNodeId(b.question)),
     });
   }, [settledKey, answerLanded, zoomQ, zoomMove, contSeeds, liveAnswer]);
 
-  /* THE FIELD'S GATE — the visitor's own hand opens the voice. */
-  const toggleField = useCallback(() => {
-    const session = getWalkSession();
-    if (fieldOn) {
-      session.disableSound();
-      setFieldOn(false);
-    } else {
-      session.enableSound();
-      setFieldOn(true);
+  /* THE NARRATOR'S GATE — the visitor's own hand opens the voice; one
+     touch and the standing room's landed transmission is read aloud
+     by the male documentary narrator. */
+  const toggleNarrator = useCallback(() => {
+    if (narratorOpen) {
+      closeNarrationGate();
+      setNarratorOpen(false);
+      return;
     }
-  }, [fieldOn]);
+    openNarrationGate();
+    setNarratorOpen(true);
+    const q = zoomQ;
+    const a = (liveAnswer ?? "").trim();
+    if (q && a && !liveLoading) {
+      void speakRoomNarration(walkNodeId(q), a, language);
+    }
+  }, [narratorOpen, zoomQ, liveAnswer, liveLoading, language]);
+
+  /* THE NARRATOR'S EAR — the gate stands open and the room's words
+     have landed: the voice rises by itself, room after room, for as
+     long as the walk continues. During the stream the effect rests
+     (answerLanded is false); once landed the words are final. */
+  useEffect(() => {
+    if (!narratorOpen || !answerLanded || !zoomQ) return;
+    void speakRoomNarration(walkNodeId(zoomQ), (liveAnswer ?? "").trim(), language);
+  }, [narratorOpen, answerLanded, zoomQ, liveAnswer, language]);
 
   /* THE SEQUENTIAL REVELATION — four stages, keyed to the room. */
   const revealStage = useSequentialReveal(zoomQ ?? "", answerLanded);
@@ -1667,22 +1679,23 @@ export function BranchCanopy({
                   </div>
                 </div>
                 <div className="flex shrink-0 items-center gap-1.5">
-                  {/* THE FIELD'S GATE — the walk's own ambient voice */}
+                  {/* THE NARRATOR'S GATE — the walk's one voice: a man,
+                      the documentary register, reading each room aloud */}
                   <button
                     type="button"
-                    onClick={toggleField}
-                    aria-pressed={fieldOn}
-                    aria-label={fieldOn ? t("Silence the field") : t("Open the field's voice")}
-                    title={fieldOn ? t("Silence the field") : t("Open the field's voice")}
-                    data-testid={`${testIdPrefix}-zoom-field`}
+                    onClick={toggleNarrator}
+                    aria-pressed={narratorOpen}
+                    aria-label={narratorOpen ? t("Silence the narrator") : t("Let the narrator speak")}
+                    title={narratorOpen ? t("Silence the narrator") : t("Let the narrator speak")}
+                    data-testid={`${testIdPrefix}-zoom-narrator`}
                     className={cn(
                       "focus-glow flex size-7 shrink-0 items-center justify-center rounded-full border transition-all duration-300",
-                      fieldOn
+                      narratorOpen
                         ? "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_14%,transparent)] text-[var(--scope-a,var(--gd))]"
                         : "hairline text-muted-foreground hover:border-[var(--hairline-hover)] hover:text-foreground"
                     )}
                   >
-                    {fieldOn ? (
+                    {narratorOpen ? (
                       <Volume2 className="size-3.5" aria-hidden="true" />
                     ) : (
                       <VolumeX className="size-3.5" aria-hidden="true" />
@@ -1746,15 +1759,17 @@ export function BranchCanopy({
                   )
                 )}
 
-                {/* STAGE 3 — the room's own media, pre-loaded by the PRC */}
-                <ResonantMediaStage
-                  media={roomMedia}
-                  visible={revealStage >= 3 && answerLanded}
-                  fieldOn={fieldOn}
-                  onFieldToggle={toggleField}
-                  onOpenBook={openDreamBook}
-                  testIdPrefix={`${testIdPrefix}-zoom`}
-                />
+                {/* STAGE 3 — the narrator's voice, the room's one card */}
+                {zoom && (
+                  <ResonantNarrationStage
+                    roomId={walkNodeId(zoom.q)}
+                    text={answer}
+                    visible={revealStage >= 3 && answerLanded}
+                    narration={narration}
+                    onToggle={toggleNarrator}
+                    testIdPrefix={`${testIdPrefix}-zoom`}
+                  />
+                )}
               </div>
 
               {/* the walk continues from the answer's own branches —
