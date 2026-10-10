@@ -606,7 +606,10 @@ export function MirrorOSChat() {
         testIdPrefix="os-composer"
       />
 
-      {/* composer */}
+      {/* composer — THE ONE INPUT LAW: while the answer lives in the
+          tree (the zoom), the room's own reply line is the only input;
+          the composer returns the moment the room is handed back. */}
+      {!canopyLatch && (
       <div className="relative z-30 shrink-0 border-t hairline bg-[var(--glass-bg)] px-3 py-2.5 backdrop-blur-xl sm:px-4">
         <form
           onSubmit={(e) => {
@@ -667,6 +670,7 @@ export function MirrorOSChat() {
           </div>
         </form>
       </div>
+      )}
     </div>
   );
 }

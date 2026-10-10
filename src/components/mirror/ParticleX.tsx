@@ -635,7 +635,9 @@ function ParticleXChat() {
         testIdPrefix="px-composer"
       />
 
-      {/* composer */}
+      {/* composer — THE ONE INPUT LAW: the room's reply line is the
+          only input while the answer lives in the tree */}
+      {!canopyLatch && (
       <div className="relative z-30 shrink-0 border-t hairline bg-[var(--glass-bg)] px-3 py-2.5 backdrop-blur-xl sm:px-4">
         <form
           onSubmit={(e) => {
@@ -681,6 +683,7 @@ function ParticleXChat() {
           </div>
         </form>
       </div>
+      )}
     </div>
   );
 }

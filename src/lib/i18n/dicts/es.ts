@@ -2,6 +2,7 @@ import type { TranslationDict } from "../types";
 
 /** es — Español. Mirror Entity Digital Chamber dictionary (Task 3-b). */
 export const es: TranslationDict = {
+  "Branches of this transmission": "Ramas de esta transmisión",
   "Your light — credits remaining": "Tu luz — luces restantes",
   "Every reflection is weighed before it is served — a whisper 1 · a reading 2 · the atelier 5 · the light codes 12.": "Cada reflexión se pesa antes de servirse — un susurro 1 · una lectura 2 · el taller 5 · los códigos de luz 12.",
   "Choose": "Elegir",

@@ -2,6 +2,7 @@ import type { TranslationDict } from "../types";
 
 /** sq — Shqip. Mirror Entity Digital Chamber dictionary (Task 3-a). */
 export const sq: TranslationDict = {
+  "Branches of this transmission": "Degët e këtij transmetimi",
   "Your light — credits remaining": "Drita jote — dritat e mbetura",
   "Every reflection is weighed before it is served — a whisper 1 · a reading 2 · the atelier 5 · the light codes 12.": "Çdo pasqyrim peshohet përpara se të shërbehet — një pëshpërimë 1 · një lexim 2 · atelierja 5 · kodat e dritës 12.",
   "Choose": "Zgjidh",

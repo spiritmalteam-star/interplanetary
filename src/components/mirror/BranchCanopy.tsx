@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  memo,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -9,9 +10,11 @@ import {
   useState,
   type CSSProperties,
   type ReactNode,
+  type RefObject,
 } from "react";
 import {
   ArrowLeftRight,
+  ChevronDown,
   ChevronRight,
   ChevronUp,
   Hand,
@@ -53,6 +56,7 @@ import {
   type GenealogyNode,
   type GenealogySeed,
   type GenealogyTopology,
+  type LaidTree,
 } from "@/lib/genealogy";
 import { recordExpansion } from "@/lib/expansion";
 import { ExpansionRing } from "./ExpansionMirror";
@@ -224,6 +228,353 @@ export function CanopyRestStrip({
     </div>
   );
 }
+
+/* ------------- the family canvas (the still heavy layer) ------------ */
+
+/**
+ * THE STILL CANVAS. Every chip, every connector, the trunk and its
+ * flare — the whole drawn family lives in one memoized layer. While
+ * the answer streams word by word, or the visitor types their own
+ * reply inside the room, this layer does not re-render even once:
+ * the walk stands perfectly still behind the answer, the compositor
+ * never re-paints sixty chips for one more word, and the phone stays
+ * cool. It re-renders only when the family itself truly changes —
+ * a pick, a graft, a wave, a regrow.
+ */
+const TreeCanvas = memo(function TreeCanvas({
+  tree,
+  batchCount,
+  latestReveal,
+  chainSet,
+  pickedId,
+  flashId,
+  narrow,
+  disabled,
+  onPick,
+  sentinelRef,
+  testIdPrefix,
+}: {
+  tree: LaidTree;
+  batchCount: number;
+  latestReveal: 1 | 2 | 3;
+  chainSet: Set<string>;
+  pickedId: string | null;
+  flashId: string | null;
+  narrow: boolean;
+  disabled?: boolean;
+  onPick: (node: GenealogyNode) => void;
+  sentinelRef: RefObject<HTMLDivElement | null>;
+  testIdPrefix: string;
+}) {
+  const t = useT();
+  const geo = tree.geometry;
+
+  /* only the revealed nodes ever enter the DOM — the later waves are
+     simply not there yet; each bloom is one CSS keyframe, run once */
+  const nodes: GenealogyNode[] = useMemo(() => {
+    const out: GenealogyNode[] = [];
+    for (const n of tree.nodes) {
+      if (n.golden) {
+        out.push(n);
+        continue;
+      }
+      const b = Number(n.id.slice(1, n.id.indexOf(".")));
+      if (b < batchCount - 1 || n.wave < latestReveal) out.push(n);
+    }
+    return out;
+  }, [tree, batchCount, latestReveal]);
+
+  /* the connectors — one path per revealed child, drawn from its
+     parent's foot to its own crown, kept OUT of the chips themselves
+     (two pixels of air at each end — a line never touches a word) */
+  const paths = useMemo(() => {
+    const out: {
+      d: string;
+      golden: boolean;
+      chain: boolean;
+      delay: number;
+      key: string;
+    }[] = [];
+    nodes.forEach((n, ni) => {
+      if (!n.parent) return;
+      const p = tree.byId.get(n.parent);
+      if (!p) return;
+      const x1 = p.x;
+      const y1 = p.y + p.h + 2;
+      const x2 = n.x;
+      const y2 = n.y - 2;
+      const mid1 = y1 + (y2 - y1) * 0.45;
+      const mid2 = y2 - (y2 - y1) * 0.45;
+      out.push({
+        key: `p-${n.id}`,
+        d: `M ${x1} ${y1} C ${x1} ${mid1}, ${x2} ${mid2}, ${x2} ${y2}`,
+        golden: !!n.golden,
+        chain: chainSet.has(n.id),
+        delay: Math.min(n.wave * 130 + (ni % 12) * 26, 640),
+      });
+    });
+    return out;
+  }, [nodes, tree, chainSet]);
+
+  /* the trunk's own arms — from the trunk's crown to the first row and
+     the golden row (the root's children) */
+  const trunkTop = geo.height - geo.trunkH;
+  const trunkArms = useMemo(() => {
+    const out: { d: string; key: string; chain: boolean }[] = [];
+    for (const n of nodes) {
+      if (n.parent) continue;
+      out.push({
+        key: `ta-${n.id}`,
+        d: `M ${geo.width / 2} ${trunkTop + 8} C ${geo.width / 2} ${trunkTop + 26}, ${n.x} ${n.y - 34}, ${n.x} ${n.y}`,
+        chain: chainSet.has(n.id),
+      });
+    }
+    return out;
+  }, [nodes, geo.width, trunkTop, chainSet]);
+
+  return (
+    <div
+      className="relative mx-auto"
+      style={{
+        width: geo.width,
+        height: geo.height,
+        minWidth: "100%",
+      }}
+    >
+      {/* the sentinel — the frontier's ear, heard by the observer */}
+      <div
+        ref={sentinelRef}
+        aria-hidden="true"
+        className="absolute left-0 top-0 h-px w-full"
+      />
+
+      {/* the trunk — one breathing line rising from the input bar */}
+      <div
+        aria-hidden="true"
+        className="animate-line-breathe absolute"
+        style={{
+          left: geo.width / 2 - 1,
+          bottom: 0,
+          width: 2,
+          height: geo.trunkH,
+          background:
+            "linear-gradient(0deg, transparent, var(--scope-a,var(--gd)) 18%, var(--scope-b,var(--pk)) 100%)",
+        }}
+      />
+      {/* the root flare — the tree drinks from the input bar */}
+      <div
+        aria-hidden="true"
+        className="absolute rounded-full"
+        style={{
+          left: geo.width / 2 - 110,
+          bottom: -26,
+          width: 220,
+          height: 64,
+          background:
+            "radial-gradient(ellipse at 50% 100%, color-mix(in srgb, var(--scope-a,var(--gd)) 30%, transparent), transparent 70%)",
+        }}
+      />
+
+      {/* the connectors — every family tie, one static SVG; each
+          line keeps two pixels of air clear of every chip, and the
+          walk's own chain burns brighter than the rest */}
+      <svg
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0"
+        width={geo.width}
+        height={geo.height}
+        viewBox={`0 0 ${geo.width} ${geo.height}`}
+        fill="none"
+      >
+        {trunkArms.map((a) => (
+          <path
+            key={a.key}
+            d={a.d}
+            stroke={
+              a.chain
+                ? "color-mix(in srgb, var(--scope-a,var(--gd)) 70%, transparent)"
+                : "color-mix(in srgb, var(--scope-a,var(--gd)) 34%, transparent)"
+            }
+            strokeWidth={a.chain ? 2 : 1.6}
+            strokeLinecap="round"
+          />
+        ))}
+        {paths.map((p) => (
+          <g
+            key={p.key}
+            className="genea-draw"
+            style={{ animationDelay: `${p.delay + 180}ms` }}
+          >
+            <path
+              d={p.d}
+              stroke={
+                p.golden
+                  ? "color-mix(in srgb, #f59e0b 30%, transparent)"
+                  : p.chain
+                    ? "color-mix(in srgb, var(--scope-a,var(--gd)) 40%, transparent)"
+                    : "color-mix(in srgb, var(--scope-a,var(--gd)) 16%, transparent)"
+              }
+              strokeWidth="3.4"
+              strokeLinecap="round"
+            />
+            <path
+              d={p.d}
+              stroke={
+                p.golden
+                  ? "color-mix(in srgb, #f59e0b 72%, transparent)"
+                  : p.chain
+                    ? "color-mix(in srgb, var(--scope-a,var(--gd)) 88%, transparent)"
+                    : "color-mix(in srgb, var(--scope-a,var(--gd)) 62%, transparent)"
+              }
+              strokeWidth={p.chain ? 1.6 : 1.2}
+              strokeLinecap="round"
+            />
+          </g>
+        ))}
+      </svg>
+
+      {/* the whispers — the family's own chips: opaque by law, the
+          WHOLE text inside each one's measured box, and a line can
+          never cross a word */}
+      {nodes.map((n, i) => {
+        const deep = n.score >= 2.4;
+        const attuned = !deep && n.score > 0;
+        const Icon = MOVEMENT_ICONS[n.movement] ?? Layers;
+        const isPicked = n.id === pickedId;
+        const onChain = chainSet.has(n.id);
+        const flashing = n.id === flashId;
+        return (
+          <button
+            key={n.id}
+            type="button"
+            onClick={() => onPick(n)}
+            disabled={disabled}
+            title={t(BRANCH_TYPE_LABELS[n.movement])}
+            data-testid={
+              n.golden
+                ? `${testIdPrefix}-crown-chip`
+                : isPicked
+                  ? `${testIdPrefix}-whisper-picked`
+                  : `${testIdPrefix}-whisper`
+            }
+            className={cn(
+              "genea-bloom focus-glow absolute z-10 flex flex-col items-start gap-0.5 rounded-2xl border px-3 py-2 text-left shadow-[0_3px_14px_-8px_rgba(0,0,0,0.55)] transition-colors duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-50",
+              narrow ? "px-2.5 text-[11.5px] leading-4" : "text-[12.5px] leading-[17px]",
+              n.golden
+                ? "border-[color-mix(in_srgb,#f59e0b_52%,transparent)] bg-[color-mix(in_srgb,#f59e0b_14%,var(--background)_86%)] font-serif italic text-foreground shadow-[0_0_16px_-6px_color-mix(in_srgb,#f59e0b_60%,transparent)]"
+                : isPicked
+                  ? "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_85%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_18%,var(--background)_82%)] text-foreground shadow-[0_0_20px_-5px_color-mix(in_srgb,var(--scope-a,var(--gd))_70%,transparent)]"
+                  : onChain
+                    ? "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_66%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_12%,var(--background)_88%)] text-foreground"
+                    : deep
+                      ? "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_62%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_13%,var(--background)_87%)] text-foreground shadow-[0_0_16px_-6px_color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)]"
+                      : attuned
+                        ? "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_42%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_7%,var(--background)_93%)] text-foreground/90"
+                        : "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_28%,transparent)] bg-[color-mix(in_srgb,var(--foreground)_3%,var(--background)_97%)] text-foreground/85 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_58%,transparent)]",
+              flashing && "genea-flash"
+            )}
+            style={
+              {
+                left: n.x,
+                top: n.y,
+                width: geo.chipW,
+                height: n.h,
+                transform: "translateX(-50%)",
+                animationDelay: `${n.golden ? i * 40 : Math.min(n.wave * 130 + (i % 12) * 26, 640)}ms`,
+              } as CSSProperties
+            }
+          >
+            {isPicked && (
+              <span
+                aria-hidden="true"
+                className="animate-pulse absolute right-1.5 top-1.5 flex size-1.5 rounded-full bg-[var(--scope-a,var(--gd))]"
+              />
+            )}
+            <Icon
+              className={cn(
+                "size-3 shrink-0",
+                n.golden
+                  ? "text-[#f59e0b]"
+                  : "text-[var(--scope-a,var(--gd))] opacity-80"
+              )}
+              aria-hidden="true"
+            />
+            <span className="w-full whitespace-pre-wrap break-words">
+              {n.text}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+});
+
+/* --------- the room's own reply line (the one quiet input) ---------- */
+
+/**
+ * THE ROOM'S REPLY — the single input of the answer's room. It keeps
+ * its own draft, so every keystroke re-renders one input and nothing
+ * else: not the sixty-chip family, not the growing answer — the room
+ * never stutters under the visitor's own words. The draft clears
+ * itself when the walk turns to a new room.
+ */
+const ZoomReplyForm = memo(function ZoomReplyForm({
+  roomKey,
+  disabled,
+  onSend,
+  testIdPrefix,
+}: {
+  roomKey: string;
+  disabled?: boolean;
+  onSend: (text: string) => void;
+  testIdPrefix: string;
+}) {
+  const t = useT();
+  const [draft, setDraft] = useState("");
+  const [seenKey, setSeenKey] = useState(roomKey);
+  if (roomKey !== seenKey) {
+    setSeenKey(roomKey);
+    if (draft !== "") setDraft("");
+  }
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        const q = draft.trim();
+        if (!q) return;
+        setDraft("");
+        onSend(q);
+      }}
+      className="flex items-center gap-1.5 rounded-full border py-1 pl-3.5 pr-1 transition-colors duration-300 focus-within:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)]"
+      style={{
+        borderColor:
+          "color-mix(in srgb, var(--hairline) 80%, transparent)",
+      }}
+    >
+      <label htmlFor={`${testIdPrefix}-zoom-reply`} className="sr-only">
+        {t("Reply within the branch…")}
+      </label>
+      <input
+        id={`${testIdPrefix}-zoom-reply`}
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        placeholder={t("Reply within the branch…")}
+        disabled={disabled}
+        autoComplete="off"
+        data-testid={`${testIdPrefix}-zoom-reply`}
+        className="min-w-0 flex-1 bg-transparent py-1 text-[13px] text-foreground placeholder:text-muted-foreground/55 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+      />
+      <button
+        type="submit"
+        disabled={disabled || !draft.trim()}
+        aria-label={t("Send")}
+        className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--scope-a,var(--gd))] to-[color-mix(in_srgb,var(--scope-b,var(--pk))_70%,var(--scope-a,var(--gd)))] text-[#101010] shadow-[0_0_14px_-6px_color-mix(in_srgb,var(--scope-a,var(--gd))_70%,transparent)] transition-all duration-300 hover:scale-[1.04] disabled:cursor-not-allowed disabled:opacity-35 disabled:shadow-none"
+      >
+        <Send className="size-3" aria-hidden="true" />
+      </button>
+    </form>
+  );
+});
 
 /* --------------------------- the canopy ------------------------------ */
 
@@ -422,14 +773,18 @@ export function BranchCanopy({
       limit: grove.length,
       perSubject: 2,
     });
-    const combined =
-      hits.length === 0
-        ? grove.map((w) => ({ ...w, score: 0 }))
-        : [...hits, ...grove.filter((w) => !hits.some((h) => h.text === w.text)).map((w) => ({ ...w, score: 0 }))];
-    /* the dedupe law — one whisper never stands twice in the family */
+    /* the dedupe law — one whisper never stands twice in the family
+       (a set, never a scan: the grove is five hundred voices) */
     const seenTexts = new Set<string>();
-    const unique: typeof combined = [];
-    for (const w of combined) {
+    const unique: (typeof grove[number] & { score: number })[] = [];
+    for (const w of hits.length === 0
+      ? grove.map((w) => ({ ...w, score: 0 }))
+      : [
+          ...hits,
+          ...grove
+            .filter((w) => !hits.some((h) => h.text === w.text))
+            .map((w) => ({ ...w, score: 0 })),
+        ]) {
       const k = w.text.toLowerCase();
       if (!seenTexts.has(k)) {
         seenTexts.add(k);
@@ -440,18 +795,20 @@ export function BranchCanopy({
   }, [grove, field, idf, seenSnapshot]);
 
   /* THE GOLDEN ROW — the exchange's own grown branches stand nearest
-     the trunk; deduped by content, the compiler keeps this stable. */
-  const goldenSeeds: GenealogySeed[] = [];
-  {
+     the trunk; deduped by content, memoized on the buds' own words so
+     a streaming answer never re-lays the family under the visitor. */
+  const goldenSeeds: GenealogySeed[] = useMemo(() => {
+    const out: GenealogySeed[] = [];
     const gSeen = new Set<string>();
     for (const b of channeling ?? []) {
       const k = b.question.toLowerCase();
       if (gSeen.has(k)) continue;
       gSeen.add(k);
-      goldenSeeds.push({ text: b.question, movement: b.type, score: 3 });
-      if (goldenSeeds.length >= 6) break;
+      out.push({ text: b.question, movement: b.type, score: 3 });
+      if (out.length >= 6) break;
     }
-  }
+    return out;
+  }, [channeling]);
 
   /* THE HARMONIC CONTINUATION — when a transmission's own branches
      arrive, the mirror records it: the context has proceeded. The
@@ -528,10 +885,14 @@ export function BranchCanopy({
 
   /* THE REGROW LAW — the family rebuilds whenever its ranking is
      re-earned (new context, new hour, new salt), never mid-session
-     without cause. The tree keeps standing across open and close. */
+     without cause. The tree keeps standing across open and close.
+     THE ROOM'S STILLNESS: while the answer lives in the tree (the
+     zoom), the family never re-ranks under the visitor's reading —
+     a pending regrow simply waits for the room to hand back. */
   const lastRankedRef = useRef<unknown>(null);
   useEffect(() => {
     if (!mounted || ranked.length === 0) return;
+    if (zoomed) return;
     if (lastRankedRef.current === ranked) return;
     lastRankedRef.current = ranked;
     /* the engine never renders synchronously inside an effect */
@@ -553,7 +914,7 @@ export function BranchCanopy({
       prevSize.current = { w: 0, h: 0 }; /* the view returns to the trunk */
     }, 0);
     return () => window.clearTimeout(id);
-  }, [ranked, mounted, markSpent]);
+  }, [ranked, mounted, markSpent, zoomed]);
 
   /* THE GEOMETRY — narrow windows carry a slimmer, taller family. */
   const vpRef = useRef<HTMLDivElement | null>(null);
@@ -697,6 +1058,40 @@ export function BranchCanopy({
 
   /* ---------------- THE GRAFT — the walk grows from a choice -------- */
 
+  /**
+   * THE FULL HOUSE LAW. The grafted sub-family is tuned by resonance —
+   * the pressed whisper's own words lead the field — but resonance may
+   * sing for only a few voices (a quiet context, a narrow vocabulary).
+   * A house of two is a starved house: the resonance's own hits stand
+   * first, and the fresh pool fills the batch the rest of the way, so
+   * every graft carries a whole family (up to what remains unspent).
+   */
+  const chooseGraftSeeds = useCallback(
+    (fresh: typeof grove, pickField: ReturnType<typeof buildResonanceField>): GenealogySeed[] => {
+      const hits = rankWhispers(fresh, pickField, {
+        idf,
+        seen: seenSnapshot,
+        limit: BATCH_SIZE,
+        perSubject: 2,
+      });
+      if (hits.length >= BATCH_SIZE || fresh.length <= hits.length) {
+        return hits
+          .slice(0, BATCH_SIZE)
+          .map((w) => ({ text: w.text, movement: w.movement, score: w.score }));
+      }
+      /* the fill — the resonance leads, the family is never starved */
+      const hitTexts = new Set(hits.map((h) => h.text));
+      const fill = fresh
+        .filter((w) => !hitTexts.has(w.text))
+        .slice(0, BATCH_SIZE - hits.length)
+        .map((w) => ({ ...w, score: 0 }));
+      return [...hits, ...fill].map(
+        (w) => ({ text: w.text, movement: w.movement, score: w.score })
+      );
+    },
+    [idf, seenSnapshot]
+  );
+
   /* the pan — one quiet assignment, never an animation loop */
   const panToNode = useCallback(
     (id: string | null) => {
@@ -742,21 +1137,7 @@ export function BranchCanopy({
       const spentSet = spent;
       const fresh = grove.filter((w) => !spentSet.has(w.text.toLowerCase()));
       if (fresh.length > 0) {
-        const hits = rankWhispers(fresh, pickField, {
-          idf,
-          seen: seenSnapshot,
-          limit: BATCH_SIZE,
-          perSubject: 2,
-        });
-        const chosen =
-          hits.length > 0
-            ? hits
-            : fresh
-                .map((w) => ({ ...w, score: 0 }))
-                .slice(0, BATCH_SIZE);
-        const seeds: GenealogySeed[] = chosen
-          .slice(0, BATCH_SIZE)
-          .map((w) => ({ text: w.text, movement: w.movement, score: w.score }));
+        const seeds = chooseGraftSeeds(fresh, pickField);
         if (seeds.length > 0) {
           const graft = buildGraftTopology(seeds, node.id, narrowRef.current);
           markSpent(seeds);
@@ -777,8 +1158,7 @@ export function BranchCanopy({
       scopeHint,
       tree,
       grove,
-      idf,
-      seenSnapshot,
+      chooseGraftSeeds,
       contextSnapshot,
       hour,
       commitTopologies,
@@ -810,19 +1190,7 @@ export function BranchCanopy({
         });
         const fresh = grove.filter((w) => !spent.has(w.text.toLowerCase()));
         if (fresh.length > 0) {
-          const hits = rankWhispers(fresh, pickField, {
-            idf,
-            seen: seenSnapshot,
-            limit: BATCH_SIZE,
-            perSubject: 2,
-          });
-          const chosen =
-            hits.length > 0
-              ? hits
-              : fresh.map((w) => ({ ...w, score: 0 })).slice(0, BATCH_SIZE);
-          const seeds: GenealogySeed[] = chosen
-            .slice(0, BATCH_SIZE)
-            .map((w) => ({ text: w.text, movement: w.movement, score: w.score }));
+          const seeds = chooseGraftSeeds(fresh, pickField);
           if (seeds.length > 0) {
             const graft = buildGraftTopology(seeds, pickedId, narrowRef.current);
             markSpent(seeds);
@@ -844,8 +1212,7 @@ export function BranchCanopy({
       pickedId,
       scopeHint,
       grove,
-      idf,
-      seenSnapshot,
+      chooseGraftSeeds,
       contextSnapshot,
       hour,
       commitTopologies,
@@ -1018,80 +1385,35 @@ export function BranchCanopy({
   /* THE SEQUENTIAL REVELATION — four stages, keyed to the room. */
   const revealStage = useSequentialReveal(zoomQ ?? "", answerLanded);
 
-  /* the reply line inside the answer — cleared when the room turns to
-     a new question (render-time guarded reset, the official pattern) */
-  const [replyDraft, setReplyDraft] = useState("");
-  const [seenReplyQ, setSeenReplyQ] = useState<string | null>(null);
+  /* THE DROPDOWN — the branches of this transmission stand behind one
+     quiet button, folded by default; the visitor drops them down when
+     they wish to explore more. Each new room folds them again
+     (render-time guarded reset, the official pattern). */
+  const [branchesOpen, setBranchesOpen] = useState(false);
+  const [seenBranchQ, setSeenBranchQ] = useState<string | null>(null);
   {
     const q = zoom?.q ?? null;
-    if (q !== seenReplyQ) {
-      setSeenReplyQ(q);
-      if (replyDraft !== "") setReplyDraft("");
+    if (q !== seenBranchQ) {
+      setSeenBranchQ(q);
+      if (branchesOpen) setBranchesOpen(false);
     }
   }
+
+  /* the room's own reply — handed to the memoized form (the form owns
+     its draft; the walk's continuation rides through here) */
+  const sendReplyFromPanel = useCallback(
+    (text: string) => sendFromPanel(text, null),
+    [sendFromPanel]
+  );
 
   if (!mounted) return null;
 
   /* ---------------- the rendered family -----------------------------
-     Only the revealed nodes ever enter the DOM — the later waves are
-     simply not there yet; each bloom is one CSS keyframe, run once. */
+     The whole drawn family lives in the memoized TreeCanvas — while
+     the answer streams or the visitor types, that layer stands still. */
   const batchCount = topologies.length;
-  const geo = tree.geometry;
   const answer = (liveAnswer ?? "").trim();
   const ZoomIcon = zoom?.move ? (MOVEMENT_ICONS[zoom.move] ?? Layers) : Layers;
-
-  const nodeVisible = (n: GenealogyNode): boolean => {
-    if (n.golden) return true;
-    const b = Number(n.id.slice(1, n.id.indexOf(".")));
-    if (b < batchCount - 1) return true;
-    return n.wave < latestReveal;
-  };
-
-  const nodes: GenealogyNode[] = [];
-  for (const n of tree.nodes) {
-    if (nodeVisible(n)) nodes.push(n);
-  }
-
-  /* the connectors — one path per revealed child, drawn from its
-     parent's foot to its own crown, kept OUT of the chips themselves
-     (two pixels of air at each end — a line never touches a word) */
-  const paths: {
-    d: string;
-    golden: boolean;
-    chain: boolean;
-    delay: number;
-    key: string;
-  }[] = [];
-  nodes.forEach((n, ni) => {
-    if (!n.parent) return;
-    const p = tree.byId.get(n.parent);
-    if (!p) return;
-    const x1 = p.x;
-    const y1 = p.y + p.h + 2;
-    const x2 = n.x;
-    const y2 = n.y - 2;
-    const mid1 = y1 + (y2 - y1) * 0.45;
-    const mid2 = y2 - (y2 - y1) * 0.45;
-    paths.push({
-      key: `p-${n.id}`,
-      d: `M ${x1} ${y1} C ${x1} ${mid1}, ${x2} ${mid2}, ${x2} ${y2}`,
-      golden: !!n.golden,
-      chain: chainSet.has(n.id),
-      delay: Math.min(n.wave * 130 + (ni % 12) * 26, 640),
-    });
-  });
-  /* the trunk's own arms — from the trunk's crown to the first row and
-     the golden row (the root's children) */
-  const trunkTop = geo.height - geo.trunkH;
-  const trunkArms: { d: string; key: string; chain: boolean }[] = [];
-  for (const n of nodes) {
-    if (n.parent) continue;
-    trunkArms.push({
-      key: `ta-${n.id}`,
-      d: `M ${geo.width / 2} ${trunkTop + 8} C ${geo.width / 2} ${trunkTop + 26}, ${n.x} ${n.y - 34}, ${n.x} ${n.y}`,
-      chain: chainSet.has(n.id),
-    });
-  }
 
   const preparedCount = prepared
     ? prepared.rows.reduce((a, r) => a + r.seeds.length, 0)
@@ -1256,180 +1578,21 @@ export function BranchCanopy({
             ) : null}
           </div>
 
-          {/* THE CANVAS — the whole family, walked in every direction */}
-          <div
-            className="relative mx-auto"
-            style={{
-              width: geo.width,
-              height: geo.height,
-              minWidth: "100%",
-            }}
-          >
-            {/* the sentinel — the frontier's ear, heard by the observer */}
-            <div
-              ref={sentinelRef}
-              aria-hidden="true"
-              className="absolute left-0 top-0 h-px w-full"
-            />
-
-            {/* the trunk — one breathing line rising from the input bar */}
-            <div
-              aria-hidden="true"
-              className="animate-line-breathe absolute"
-              style={{
-                left: geo.width / 2 - 1,
-                bottom: 0,
-                width: 2,
-                height: geo.trunkH,
-                background:
-                  "linear-gradient(0deg, transparent, var(--scope-a,var(--gd)) 18%, var(--scope-b,var(--pk)) 100%)",
-              }}
-            />
-            {/* the root flare — the tree drinks from the input bar */}
-            <div
-              aria-hidden="true"
-              className="absolute rounded-full"
-              style={{
-                left: geo.width / 2 - 110,
-                bottom: -26,
-                width: 220,
-                height: 64,
-                background:
-                  "radial-gradient(ellipse at 50% 100%, color-mix(in srgb, var(--scope-a,var(--gd)) 30%, transparent), transparent 70%)",
-              }}
-            />
-
-            {/* the connectors — every family tie, one static SVG; each
-                line keeps two pixels of air clear of every chip, and the
-                walk's own chain burns brighter than the rest */}
-            <svg
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-0"
-              width={geo.width}
-              height={geo.height}
-              viewBox={`0 0 ${geo.width} ${geo.height}`}
-              fill="none"
-            >
-              {trunkArms.map((a) => (
-                <path
-                  key={a.key}
-                  d={a.d}
-                  stroke={
-                    a.chain
-                      ? "color-mix(in srgb, var(--scope-a,var(--gd)) 70%, transparent)"
-                      : "color-mix(in srgb, var(--scope-a,var(--gd)) 34%, transparent)"
-                  }
-                  strokeWidth={a.chain ? 2 : 1.6}
-                  strokeLinecap="round"
-                />
-              ))}
-              {paths.map((p) => (
-                <g
-                  key={p.key}
-                  className="genea-draw"
-                  style={{ animationDelay: `${p.delay + 180}ms` }}
-                >
-                  <path
-                    d={p.d}
-                    stroke={
-                      p.golden
-                        ? "color-mix(in srgb, #f59e0b 30%, transparent)"
-                        : p.chain
-                          ? "color-mix(in srgb, var(--scope-a,var(--gd)) 40%, transparent)"
-                          : "color-mix(in srgb, var(--scope-a,var(--gd)) 16%, transparent)"
-                    }
-                    strokeWidth="3.4"
-                    strokeLinecap="round"
-                  />
-                  <path
-                    d={p.d}
-                    stroke={
-                      p.golden
-                        ? "color-mix(in srgb, #f59e0b 72%, transparent)"
-                        : p.chain
-                          ? "color-mix(in srgb, var(--scope-a,var(--gd)) 88%, transparent)"
-                          : "color-mix(in srgb, var(--scope-a,var(--gd)) 62%, transparent)"
-                    }
-                    strokeWidth={p.chain ? 1.6 : 1.2}
-                    strokeLinecap="round"
-                  />
-                </g>
-              ))}
-            </svg>
-
-            {/* the whispers — the family's own chips: opaque by law, the
-                WHOLE text inside each one's measured box, and a line can
-                never cross a word */}
-            {nodes.map((n, i) => {
-              const deep = n.score >= 2.4;
-              const attuned = !deep && n.score > 0;
-              const Icon = MOVEMENT_ICONS[n.movement] ?? Layers;
-              const isPicked = n.id === pickedId;
-              const onChain = chainSet.has(n.id);
-              const flashing = n.id === flashId;
-              return (
-                <button
-                  key={n.id}
-                  type="button"
-                  onClick={() => pick(n)}
-                  disabled={disabled}
-                  title={t(BRANCH_TYPE_LABELS[n.movement])}
-                  data-testid={
-                    n.golden
-                      ? `${testIdPrefix}-crown-chip`
-                      : isPicked
-                        ? `${testIdPrefix}-whisper-picked`
-                        : `${testIdPrefix}-whisper`
-                  }
-                  className={cn(
-                    "genea-bloom focus-glow absolute z-10 flex flex-col items-start gap-0.5 rounded-2xl border px-3 py-2 text-left shadow-[0_3px_14px_-8px_rgba(0,0,0,0.55)] transition-colors duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-50",
-                    narrow ? "px-2.5 text-[11.5px] leading-4" : "text-[12.5px] leading-[17px]",
-                    n.golden
-                      ? "border-[color-mix(in_srgb,#f59e0b_52%,transparent)] bg-[color-mix(in_srgb,#f59e0b_14%,var(--background)_86%)] font-serif italic text-foreground shadow-[0_0_16px_-6px_color-mix(in_srgb,#f59e0b_60%,transparent)]"
-                      : isPicked
-                        ? "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_85%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_18%,var(--background)_82%)] text-foreground shadow-[0_0_20px_-5px_color-mix(in_srgb,var(--scope-a,var(--gd))_70%,transparent)]"
-                        : onChain
-                          ? "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_66%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_12%,var(--background)_88%)] text-foreground"
-                          : deep
-                            ? "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_62%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_13%,var(--background)_87%)] text-foreground shadow-[0_0_16px_-6px_color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)]"
-                            : attuned
-                              ? "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_42%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_7%,var(--background)_93%)] text-foreground/90"
-                              : "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_28%,transparent)] bg-[color-mix(in_srgb,var(--foreground)_3%,var(--background)_97%)] text-foreground/85 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_58%,transparent)]",
-                    flashing && "genea-flash"
-                  )}
-                  style={
-                    {
-                      left: n.x,
-                      top: n.y,
-                      width: geo.chipW,
-                      height: n.h,
-                      transform: "translateX(-50%)",
-                      animationDelay: `${n.golden ? i * 40 : Math.min(n.wave * 130 + (i % 12) * 26, 640)}ms`,
-                    } as CSSProperties
-                  }
-                >
-                  {isPicked && (
-                    <span
-                      aria-hidden="true"
-                      className="animate-pulse absolute right-1.5 top-1.5 flex size-1.5 rounded-full bg-[var(--scope-a,var(--gd))]"
-                    />
-                  )}
-                  <Icon
-                    className={cn(
-                      "size-3 shrink-0",
-                      n.golden
-                        ? "text-[#f59e0b]"
-                        : "text-[var(--scope-a,var(--gd))] opacity-80"
-                    )}
-                    aria-hidden="true"
-                  />
-                  <span className="w-full whitespace-pre-wrap break-words">
-                    {n.text}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+          {/* THE CANVAS — the whole family, walked in every direction.
+              Memoized: the walk stands still while the room speaks. */}
+          <TreeCanvas
+            tree={tree}
+            batchCount={batchCount}
+            latestReveal={latestReveal}
+            chainSet={chainSet}
+            pickedId={pickedId}
+            flashId={flashId}
+            narrow={narrow}
+            disabled={disabled}
+            onPick={pick}
+            sentinelRef={sentinelRef}
+            testIdPrefix={testIdPrefix}
+          />
 
           {/* THE EMPTY ROOM'S OWN IDENTITY — spoken above the trunk */}
           {(introSub || introSubExtra || introExtra) && (
@@ -1466,16 +1629,18 @@ export function BranchCanopy({
         )}
 
         {/* ------------- THE ZOOM — the answer lives here -------------
-            the answer rises at the heart of the tree; when it lands,
-            the branches grown on it stand inside the room and one
-            touch continues the walk without ever leaving */}
+            the answer rises as a full quiet room — from the bottom of
+            the chat box to its very top — and when the transmission
+            lands, the branches grown on it stand behind one dropdown
+            button inside the room; one touch continues the walk
+            without ever leaving */}
         {zoom && (
-          <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center p-2.5 sm:p-5">
+          <div className="pointer-events-none absolute inset-0 z-30 flex justify-center p-2 sm:p-3">
             <section
               key={zoom.q}
               data-testid={`${testIdPrefix}-zoom`}
               aria-label={zoom.q}
-              className="canopy-panel pointer-events-auto flex max-h-full w-full max-w-[640px] flex-col overflow-hidden rounded-3xl border bg-background shadow-[0_28px_80px_-32px_rgba(0,0,0,0.65)]"
+              className="canopy-panel pointer-events-auto flex min-h-0 w-full max-w-[720px] flex-col overflow-hidden rounded-3xl border bg-background shadow-[0_28px_80px_-32px_rgba(0,0,0,0.65)]"
               style={{
                 borderColor:
                   "color-mix(in srgb, var(--scope-a,var(--gd)) 30%, transparent)",
@@ -1593,85 +1758,113 @@ export function BranchCanopy({
               </div>
 
               {/* the walk continues from the answer's own branches —
-                  and a slim line carries the visitor's own words */}
+                  THE DROPDOWN: the branches stand behind one quiet
+                  button, folded by default, opened wide with the whole
+                  of every whisper — and a slim line (the room's one
+                  input) carries the visitor's own words */}
               {!liveLoading && answer && (
-                <footer className="flex shrink-0 flex-col gap-2.5 border-t px-4 py-3 sm:px-5" style={{ borderColor: "color-mix(in srgb, var(--hairline) 70%, transparent)" }}>
-                  {/* STAGE 4 — the next horizon, one touch from the answer's end */}
+                <footer
+                  className="flex shrink-0 flex-col gap-2.5 border-t px-4 py-3 sm:px-5"
+                  style={{
+                    borderColor:
+                      "color-mix(in srgb, var(--hairline) 70%, transparent)",
+                  }}
+                >
+                  {/* STAGE 4 — the next horizon, dropped down to explore */}
                   {revealStage >= 4 && contSeeds.length > 0 && (
-                    <div className="flex flex-col gap-1.5">
-                      <span className="mono-label flex items-center gap-1.5 text-[8.5px] uppercase tracking-[0.2em] text-muted-foreground/70">
+                    <div className="flex flex-col gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setBranchesOpen((o) => !o)}
+                        aria-expanded={branchesOpen}
+                        aria-controls={`${testIdPrefix}-branches-panel`}
+                        data-testid={`${testIdPrefix}-branches-toggle`}
+                        className="focus-glow group flex w-full items-center gap-2 rounded-full border px-3.5 py-2 text-left transition-all duration-300 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)]"
+                        style={{
+                          borderColor:
+                            "color-mix(in srgb, var(--scope-a,var(--gd)) 28%, transparent)",
+                          backgroundColor:
+                            "color-mix(in srgb, var(--scope-a,var(--gd)) 5%, var(--background))",
+                        }}
+                      >
                         <Sprout
-                          className="size-3 text-[var(--scope-a,var(--gd))]"
+                          className="size-3.5 shrink-0 text-[var(--scope-a,var(--gd))]"
                           aria-hidden="true"
                         />
-                        {t("Continue the walk")}
-                      </span>
-                      <div className="flex flex-wrap gap-1.5">
-                        {contSeeds.map((b) => {
-                          const CIcon = MOVEMENT_ICONS[b.type] ?? Layers;
-                          return (
-                            <button
-                              key={b.question}
-                              type="button"
-                              onClick={() => sendFromPanel(b.question, b.type)}
-                              disabled={disabled}
-                              title={t(BRANCH_TYPE_LABELS[b.type])}
-                              data-testid={`${testIdPrefix}-cont`}
-                              className="focus-glow flex max-w-full items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11.5px] leading-snug text-foreground/90 transition-all duration-300 hover:-translate-y-px hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_60%,transparent)] hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-                              style={{
-                                borderColor:
-                                  "color-mix(in srgb, var(--scope-a,var(--gd)) 30%, transparent)",
-                                backgroundColor:
-                                  "color-mix(in srgb, var(--scope-a,var(--gd)) 6%, var(--background))",
-                              }}
-                            >
-                              <CIcon
-                                className="size-3 shrink-0 text-[var(--scope-a,var(--gd))] opacity-80"
-                                aria-hidden="true"
-                              />
-                              <span className="truncate">{b.question}</span>
-                            </button>
-                          );
-                        })}
-                      </div>
+                        <span className="mono-label min-w-0 flex-1 truncate text-[9px] uppercase tracking-[0.2em] text-muted-foreground">
+                          {t("Branches of this transmission")}
+                        </span>
+                        <span
+                          className="mono-label shrink-0 rounded-full border px-1.5 py-0.5 text-[8.5px] leading-none tabular-nums"
+                          style={{
+                            borderColor:
+                              "color-mix(in srgb, var(--scope-a,var(--gd)) 32%, transparent)",
+                            color: "var(--scope-a,var(--gd))",
+                          }}
+                        >
+                          {contSeeds.length}
+                        </span>
+                        <ChevronDown
+                          className={cn(
+                            "size-3.5 shrink-0 text-muted-foreground transition-transform duration-300",
+                            branchesOpen && "rotate-180"
+                          )}
+                          aria-hidden="true"
+                        />
+                      </button>
+                      {branchesOpen && (
+                        <div
+                          id={`${testIdPrefix}-branches-panel`}
+                          data-testid={`${testIdPrefix}-branches-panel`}
+                          className="nice-scroll grid max-h-[42vh] gap-2 overflow-y-auto pr-0.5 sm:grid-cols-2"
+                        >
+                          {contSeeds.map((b) => {
+                            const CIcon = MOVEMENT_ICONS[b.type] ?? Layers;
+                            return (
+                              <button
+                                key={b.question}
+                                type="button"
+                                onClick={() => sendFromPanel(b.question, b.type)}
+                                disabled={disabled}
+                                title={t(BRANCH_TYPE_LABELS[b.type])}
+                                data-testid={`${testIdPrefix}-cont`}
+                                className="focus-glow group flex items-start gap-2.5 rounded-2xl border px-3.5 py-2.5 text-left transition-all duration-300 hover:-translate-y-px hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_60%,transparent)] disabled:cursor-not-allowed disabled:opacity-40"
+                                style={{
+                                  borderColor:
+                                    "color-mix(in srgb, var(--scope-a,var(--gd)) 24%, transparent)",
+                                  backgroundColor:
+                                    "color-mix(in srgb, var(--scope-a,var(--gd)) 5%, var(--background))",
+                                }}
+                              >
+                                <CIcon
+                                  className="mt-0.5 size-3.5 shrink-0 text-[var(--scope-a,var(--gd))] opacity-80"
+                                  aria-hidden="true"
+                                />
+                                <span className="min-w-0 flex-1">
+                                  <span className="mono-label block text-[8px] uppercase tracking-[0.18em] text-muted-foreground/60">
+                                    {t(BRANCH_TYPE_LABELS[b.type])}
+                                  </span>
+                                  <span className="mt-0.5 block whitespace-pre-wrap break-words text-[12.5px] leading-snug text-foreground/90">
+                                    {b.question}
+                                  </span>
+                                </span>
+                                <ChevronRight
+                                  className="mt-1 size-3.5 shrink-0 text-muted-foreground/35 transition-transform duration-300 group-hover:translate-x-0.5"
+                                  aria-hidden="true"
+                                />
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   )}
-                  <form
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      const q = replyDraft.trim();
-                      if (!q) return;
-                      setReplyDraft("");
-                      sendFromPanel(q, null);
-                    }}
-                    className="flex items-center gap-1.5 rounded-full border py-1 pl-3.5 pr-1 transition-colors duration-300 focus-within:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)]"
-                    style={{
-                      borderColor:
-                        "color-mix(in srgb, var(--hairline) 80%, transparent)",
-                    }}
-                  >
-                    <label htmlFor={`${testIdPrefix}-zoom-reply`} className="sr-only">
-                      {t("Reply within the branch…")}
-                    </label>
-                    <input
-                      id={`${testIdPrefix}-zoom-reply`}
-                      value={replyDraft}
-                      onChange={(e) => setReplyDraft(e.target.value)}
-                      placeholder={t("Reply within the branch…")}
-                      disabled={disabled}
-                      autoComplete="off"
-                      data-testid={`${testIdPrefix}-zoom-reply`}
-                      className="min-w-0 flex-1 bg-transparent py-1 text-[13px] text-foreground placeholder:text-muted-foreground/55 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-                    />
-                    <button
-                      type="submit"
-                      disabled={disabled || !replyDraft.trim()}
-                      aria-label={t("Send")}
-                      className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--scope-a,var(--gd))] to-[color-mix(in_srgb,var(--scope-b,var(--pk))_70%,var(--scope-a,var(--gd)))] text-[#101010] shadow-[0_0_14px_-6px_color-mix(in_srgb,var(--scope-a,var(--gd))_70%,transparent)] transition-all duration-300 hover:scale-[1.04] disabled:cursor-not-allowed disabled:opacity-35 disabled:shadow-none"
-                    >
-                      <Send className="size-3" aria-hidden="true" />
-                    </button>
-                  </form>
+                  <ZoomReplyForm
+                    roomKey={zoom.q}
+                    disabled={disabled || liveLoading}
+                    onSend={sendReplyFromPanel}
+                    testIdPrefix={testIdPrefix}
+                  />
                 </footer>
               )}
             </section>

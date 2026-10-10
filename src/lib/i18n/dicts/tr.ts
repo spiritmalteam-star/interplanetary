@@ -2,6 +2,7 @@ import type { TranslationDict } from "../types";
 
 /** tr — Türkçe. Mirror Entity Digital Chamber dictionary (Task 3-b). */
 export const tr: TranslationDict = {
+  "Branches of this transmission": "Bu iletimin dalları",
   "Your light — credits remaining": "Işığın — kalan ışıklar",
   "Every reflection is weighed before it is served — a whisper 1 · a reading 2 · the atelier 5 · the light codes 12.": "Her yansıma servis edilmeden önce tartılır — bir fısıltı 1 · bir okuma 2 · atölye 5 · ışık kodları 12.",
   "Choose": "Seç",

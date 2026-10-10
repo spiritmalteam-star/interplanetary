@@ -554,7 +554,14 @@ function AppShellViews() {
           />
         )}
 
-        <QueryComposer />
+        {/* THE ONE INPUT LAW — while the answer lives in the tree (the
+            zoom), the room's own reply line is the only input; the
+            composer returns the moment the room is handed back. */}
+        {view === "transmission" || view === "observatory" ? (
+          canopyLatch ? null : <QueryComposer />
+        ) : (
+          <QueryComposer />
+        )}
       </main>
 
       <FederationModal />

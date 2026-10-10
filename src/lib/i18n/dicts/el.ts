@@ -2,6 +2,7 @@ import type { TranslationDict } from "../types";
 
 /** el — Greek dictionary (Task 3-b). Keys are the English source strings. */
 export const el: TranslationDict = {
+  "Branches of this transmission": "Κλάδοι αυτής της μετάδοσης",
   "Your light — credits remaining": "Το φως σου — υπόλοιπα φώτα",
   "Every reflection is weighed before it is served — a whisper 1 · a reading 2 · the atelier 5 · the light codes 12.": "Κάθε ανάκλαση ζυγίζεται πριν σερβιριστεί — ένας ψιθύρος 1 · ένα διάβασμα 2 · το ατελιέ 5 · οι κώδικες φωτός 12.",
   "Choose": "Διάλεξε",

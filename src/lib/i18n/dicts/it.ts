@@ -2,6 +2,7 @@ import type { TranslationDict } from "../types";
 
 /** it — Italian dictionary (Task 3-b). Keys are the English source strings. */
 export const it: TranslationDict = {
+  "Branches of this transmission": "Rami di questa trasmissione",
   "Your light — credits remaining": "La tua luce — luci rimaste",
   "Every reflection is weighed before it is served — a whisper 1 · a reading 2 · the atelier 5 · the light codes 12.": "Ogni riflesso è pesato prima di essere servito — un sussurro 1 · una lettura 2 · l'atelier 5 · i codici di luce 12.",
   "Choose": "Scegli",
