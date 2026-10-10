@@ -148,9 +148,17 @@ export function ReplyBranches({
   /* the visitor's fields of expansion — coherent ones seed new branches */
   const seeds = useMirror((s) => s.expansionSeeds);
   const scopeHint = scopeHintProp ?? null;
-  /* the dropdown — the branches rest folded until the hand asks for them,
-     so they never lay themselves out directly beneath the transmission */
-  const [open, setOpen] = useState(false);
+  /* the dropdown — THE BRANCHES ARE NEVER GONE: they open by themselves
+     the moment their reply becomes the latest landed exchange, and fold
+     again when a newer exchange takes the floor. The hand always wins:
+     once the visitor toggles them, the tree never argues. */
+  const [open, setOpen] = useState(active);
+  const [touched, setTouched] = useState(false);
+  const [seenActive, setSeenActive] = useState(active);
+  if (active !== seenActive) {
+    setSeenActive(active);
+    if (!touched) setOpen(active);
+  }
 
   /* the instant stand-in — the pool's closest whispers to THIS reply
      alone, so the foot is never empty while the engine thinks.
@@ -255,7 +263,10 @@ export function ReplyBranches({
           out directly; they drop down only when the door is pressed. */}
       <button
         type="button"
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => {
+          setTouched(true);
+          setOpen((o) => !o);
+        }}
         aria-expanded={open}
         data-testid="reply-branches-toggle"
         className="focus-glow flex w-full items-center justify-between gap-2 rounded-full border border-[color-mix(in_srgb,var(--scope-a,var(--gd))_46%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_12%,var(--glass-bg))] px-3.5 py-1.5 text-left shadow-[0_1px_12px_-6px_color-mix(in_srgb,var(--scope-a,var(--gd))_45%,transparent)] transition-all duration-300 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_62%,transparent)] hover:bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_18%,var(--glass-bg))]"

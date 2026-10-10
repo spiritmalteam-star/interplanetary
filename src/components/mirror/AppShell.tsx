@@ -15,6 +15,7 @@ import Sidebar from "./Sidebar";
 import { MobileSidebar } from "./MobileSidebar";
 import { ScopeSelector } from "./ScopeSelector";
 import { BranchHub } from "./BranchHub";
+import { BranchCanopy } from "./BranchCanopy";
 import { QueryComposer } from "./QueryComposer";
 import { StillCompanion } from "./StillCompanion";
 import { TransmissionView } from "./TransmissionView";
@@ -78,6 +79,16 @@ function AppShellViews() {
   const meEmail = useMirror((s) => s.me?.email ?? null);
   const [historyOpen, setHistoryOpen] = useState(false);
   const t = useT();
+  /* THE CANOPY of the main channels — the branches fill the whole chat
+     box: standing in an empty channel, fading when the answer arrives,
+     summoned again by the button beside the input. */
+  const canopySummoned = useMirror((s) => s.canopySummoned);
+  const setCanopySummoned = useMirror((s) => s.setCanopySummoned);
+  const channel = useMirror((s) => s.sessions[s.activeMode]);
+  const channelEmpty =
+    channel.messages.length === 0 &&
+    channel.status === "idle" &&
+    !channel.error;
 
   /* Restore persisted preferences and greet the passage (the visitor's
      account, if one is held, and today's remaining transmissions). */
@@ -439,11 +450,13 @@ function AppShellViews() {
             no pill; the page simply breathes */}
 
         {/* Scrollable conversation area — keyed by view so each screen
-            (and every chat thread) opens at its very beginning */}
+            (and every chat thread) opens at its very beginning. The
+            canopy rides over it: the branches fill the whole chat box. */}
+        <div className="relative min-h-0 flex-1">
         <div
           ref={chatScrollRef}
           key={view}
-          className="nice-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain"
+          className="nice-scroll h-full min-h-0 flex-1 overflow-y-auto overscroll-contain"
         >
           {/* clearance for the floating handles — constant height, so
               hiding them never shifts the thread (that would re-trigger
@@ -459,6 +472,45 @@ function AppShellViews() {
               <ArchiveRegister />
             )}
           </div>
+        </div>
+
+        {/* THE BRANCH CANOPY — the living tree of the main channels,
+            filling the whole chat box on the landing and in the channel
+            alike; it fades when the answer is revealed and returns at
+            the summon button beside the input */}
+        {(view === "transmission" || view === "observatory") && (
+          <BranchCanopy
+            category={activeMode}
+            open={channelEmpty || canopySummoned}
+            onPick={(q) => {
+              setCanopySummoned(false);
+              void useMirror.getState().askMirror(q);
+            }}
+            onClose={() => setCanopySummoned(false)}
+            disabled={channel.status === "loading"}
+            testIdPrefix="channel-canopy"
+            introHeading={
+              activeMode === "healing"
+                ? t("The healing channel")
+                : t("The interplanetary channel")
+            }
+            introSub={
+              channelEmpty
+                ? t(
+                    "Every scope keeps its own private channel — ask from the composer below to open the first transmission."
+                  )
+                : null
+            }
+            contextText={channel.messages
+              .slice(-6)
+              .map((m) => `${m.query ?? ""}\n${m.text}`)
+              .join("\n")}
+            channeling={
+              [...channel.messages].reverse().find((m) => m.branches?.length)
+                ?.branches ?? null
+            }
+          />
+        )}
         </div>
 
         {/* THE BRANCHES' OWN FLOOR — the channels carry no standing

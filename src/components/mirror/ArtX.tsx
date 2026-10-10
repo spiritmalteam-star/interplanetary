@@ -14,8 +14,8 @@ import {
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { ReplyBranches } from "./ReplyBranches";
-import { axAtelierIntro, axOpeners, axWindows } from "@/lib/data/artx";
-import { recordJourney } from "@/lib/learning-branches";
+import { BranchCanopy, CanopySummonButton } from "./BranchCanopy";
+import { axAtelierIntro, axWindows } from "@/lib/data/artx";
 import { detectVisualIntent } from "@/lib/visualization";
 import {
   blendVisualRequest,
@@ -40,28 +40,6 @@ import { ChatHistoryPanel } from "./ChatHistoryPanel";
 import { cn } from "@/lib/utils";
 import { useFloatingBarAutoHide } from "./useFloatingBar";
 
-/** Openers visible at once (wrap-around window). */
-const WINDOW = 4;
-
-/** The atelier's mark: a palette held inside one turning dashed ring. */
-function AtelierMark({ className }: { className?: string }) {
-  return (
-    <span
-      className={cn(
-        "dream-halo relative flex items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--scope-a)_38%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_9%,transparent)]",
-        className
-      )}
-      aria-hidden="true"
-    >
-      <span
-        className="absolute inset-0 rounded-full border border-dashed border-[color-mix(in_srgb,var(--scope-b)_35%,transparent)]"
-        style={{ animation: "spin-slower 26s linear infinite" }}
-      />
-      <Palette className="size-5 text-[var(--scope-a)]" />
-    </span>
-  );
-}
-
 function visitorBefore(
   arr: { role: "visitor" | "ax"; text: string }[],
   idx: number
@@ -69,87 +47,6 @@ function visitorBefore(
   for (let i = idx - 1; i >= 0; i--)
     if (arr[i].role === "visitor") return arr[i].text;
   return "";
-}
-
-function OpenerOrbs() {
-  const axStatus = useMirror((s) => s.axStatus);
-  const askArtX = useMirror((s) => s.askArtX);
-  const t = useT();
-  const [offset, setOffset] = useState(0);
-  const [spin, setSpin] = useState(0);
-
-  const visible = axOpeners
-    .map((_, i) => axOpeners[(offset + i) % axOpeners.length])
-    .slice(0, WINDOW);
-  const loading = axStatus === "loading";
-
-  return (
-    <section aria-label={t("First branches")} className="mt-6">
-      <div className="flex items-center justify-center gap-3">
-        <span className="mono-label text-[10.5px] text-muted-foreground/70">
-          {t("First branches")}
-        </span>
-        <button
-          type="button"
-          onClick={() => {
-            setOffset((o) => (o + WINDOW) % axOpeners.length);
-            setSpin((n) => n + 1);
-          }}
-          disabled={loading}
-          aria-label={t("New branches")}
-          title={t("New branches")}
-          className="focus-glow flex size-6.5 items-center justify-center rounded-full border hairline text-muted-foreground/80 transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          <motion.span
-            aria-hidden="true"
-            animate={{ rotate: spin * 180 }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-            className="flex"
-          >
-            <RefreshCw className="size-3" aria-hidden="true" />
-          </motion.span>
-        </button>
-      </div>
-
-      <AnimatePresence mode="wait" initial={false}>
-        <motion.div
-          key={offset}
-          initial={{ opacity: 0, y: 4 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -4 }}
-          transition={{ duration: 0.25, ease: "easeOut" }}
-          className={cn(
-            "mx-auto mt-3 grid max-w-[560px] grid-cols-1 gap-2 sm:grid-cols-2",
-            loading && "pointer-events-none opacity-60"
-          )}
-        >
-          {visible.map((q) => (
-            <button
-              key={q}
-              type="button"
-              onClick={() => {
-                if (loading) return;
-                /* the start is a branch of the walk too — the first
-                   step is kept on the Art X branch of the tree */
-                recordJourney({ b: "artx" });
-                void askArtX(q);
-              }}
-              aria-disabled={loading}
-              className="focus-glow group flex min-h-[46px] items-center gap-2.5 rounded-2xl border border-[color-mix(in_srgb,var(--scope-a)_18%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_5%,transparent)] px-3.5 py-2.5 text-left transition-all duration-300 hover:-translate-y-0.5 hover:border-[color-mix(in_srgb,var(--scope-a)_38%,transparent)]"
-            >
-              <Palette
-                className="size-3 shrink-0 text-[var(--scope-a)] opacity-80"
-                aria-hidden="true"
-              />
-              <span className="flex-1 text-[14px] leading-snug text-foreground/80">
-                {t(q)}
-              </span>
-            </button>
-          ))}
-        </motion.div>
-      </AnimatePresence>
-    </section>
-  );
 }
 
 function AxThinking() {
@@ -421,6 +318,10 @@ export function ArtXChat() {
   const askArtXVisual = useMirror((s) => s.askArtXVisual);
   const t = useT();
   const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
+  /* THE CANOPY — the branches fill the whole chat box: standing in the
+     empty room, fading when the answer arrives, summoned again by the
+     button beside the input. */
+  const [summoned, setSummoned] = useState(false);
   /* "this" in a follow-up refers to the last artifact of this line */
   const visualContextRef = useRef<{ subject: string; mode: string } | null>(
     null
@@ -503,6 +404,8 @@ export function ArtXChat() {
     if (!query || axStatus === "loading" || hasPendingAttachments(attachments))
       return;
     const carried = attachments.length > 0 ? attachments : undefined;
+    /* the tree steps aside as the answer begins to form */
+    setSummoned(false);
 
     /* IMAGE CRYSTALLIZATION — a vision is asked for by name: no LLM
        round-trip travels. The last work (the atelier's most recent
@@ -556,31 +459,8 @@ export function ArtXChat() {
         className="nice-scroll min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-3 pb-5 pt-16 sm:px-5 sm:pt-[72px]"
       >
         {axMessages.length === 0 && axStatus === "idle" && !axError ? (
-          <div className="flex h-full flex-col py-6 text-center">
-            <div className="my-auto flex w-full flex-col items-center">
-              <AtelierMark className="size-14" />
-              <p className="scope-gradient-text mt-4 text-[17px] font-semibold">
-                {t(axAtelierIntro[0])}
-              </p>
-              <p className="mx-auto mt-2 max-w-[440px] text-[14.5px] leading-relaxed text-muted-foreground">
-                {t(axAtelierIntro[1])}
-              </p>
-              {activeWindow && (
-                <div
-                  className="mt-4 max-w-[440px] rounded-2xl border border-[color-mix(in_srgb,var(--scope-a)_24%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_6%,transparent)] px-4 py-3"
-                  data-testid="artx-window-whisper"
-                >
-                  <p className="mono-label text-[9.5px] text-[var(--scope-a)]">
-                    {t(activeWindow.label)}
-                  </p>
-                  <p className="mt-1 text-[13.5px] italic leading-relaxed text-foreground/80">
-                    {t(activeWindow.whisper)}
-                  </p>
-                </div>
-              )}
-              <OpenerOrbs />
-            </div>
-          </div>
+          /* the room belongs to the tree — the canopy stands over it */
+          <div className="h-full" aria-hidden="true" />
         ) : (
           <>
             {axMessages.map((m, i) => (
@@ -661,12 +541,59 @@ export function ArtXChat() {
         )}
       </div>
 
-      {/* THE BRANCHES' OWN FLOOR — the only suggestions of this chat
-          are the branches grown on each reply. The living tree lives in
-          the hub (BranchHub), summoned from a branch's own link. */}
+      {/* THE BRANCH CANOPY — the living tree of this chat, filling the
+          whole box: it stands in the empty room, fades when the answer
+          is revealed, and is summoned again beside the input. */}
+      <BranchCanopy
+        category="artx"
+        scopeHint={activeWindow ? t(activeWindow.label) : null}
+        open={
+          axMessages.length === 0 && axStatus === "idle" && !axError
+            ? true
+            : summoned
+        }
+        onPick={(q) => {
+          setSummoned(false);
+          if (axStatus !== "loading") void askArtX(q);
+        }}
+        onClose={() => setSummoned(false)}
+        disabled={axStatus === "loading"}
+        testIdPrefix="ax-canopy"
+        introHeading={t(axAtelierIntro[0])}
+        introSub={
+          axMessages.length === 0 && axStatus === "idle" && !axError
+            ? t(axAtelierIntro[1])
+            : null
+        }
+        introExtra={
+          axMessages.length === 0 && axStatus === "idle" && !axError && activeWindow ? (
+            <div
+              className="w-full max-w-[440px] rounded-2xl border border-[color-mix(in_srgb,var(--scope-a)_24%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_6%,transparent)] px-4 py-3"
+              data-testid="artx-window-whisper"
+            >
+              <p className="mono-label text-[9.5px] text-[var(--scope-a)]">
+                {t(activeWindow.label)}
+              </p>
+              <p className="mt-1 text-[13.5px] italic leading-relaxed text-foreground/80">
+                {t(activeWindow.whisper)}
+              </p>
+            </div>
+          ) : null
+        }
+        contextText={axMessages
+          .slice(-6)
+          .map((m) => m.text)
+          .join("\n")}
+        channeling={
+          [...axMessages]
+            .reverse()
+            .find((m) => m.role === "ax" && m.branches?.length)?.branches ??
+          null
+        }
+      />
 
       {/* composer */}
-      <div className="shrink-0 border-t hairline bg-[var(--glass-bg)] px-3 py-2.5 backdrop-blur-xl sm:px-4">
+      <div className="relative z-30 shrink-0 border-t hairline bg-[var(--glass-bg)] px-3 py-2.5 backdrop-blur-xl sm:px-4">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -681,7 +608,13 @@ export function ArtXChat() {
             }
             testId="ax-attachments"
           />
-          <div className="glass-strong flex items-end gap-2 rounded-[18px] p-1.5 pl-3.5 transition-all duration-300 focus-within:-translate-y-px focus-within:border-[var(--hairline-active)] focus-within:glow-sm">
+          <div className="glass-strong flex items-end gap-2 rounded-[18px] p-1.5 pl-2 transition-all duration-300 focus-within:-translate-y-px focus-within:border-[var(--hairline-active)] focus-within:glow-sm">
+            <CanopySummonButton
+              open={summoned}
+              onToggle={() => setSummoned((v) => !v)}
+              disabled={axStatus === "loading"}
+              testIdPrefix="ax-composer"
+            />
             <label htmlFor="ax-query" className="sr-only">
               {t("Ask Art X")}
             </label>

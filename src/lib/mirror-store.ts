@@ -402,6 +402,10 @@ interface MirrorState {
   sidebarOpen: boolean;
   view: MainView;
   composerFocusNonce: number;
+  /** THE CANOPY'S SUMMON — the living tree of the main channels, called
+      back by the button beside the input. It fades by itself when an
+      answer lands; this flag only holds the visitor's summon. */
+  canopySummoned: boolean;
 
   /* THE SWIPE'S MEMORY — every view change is recorded, so a right
      swipe anywhere walks back through the journey and a left swipe
@@ -606,6 +610,7 @@ interface MirrorState {
   closeModal: () => void;
   setMobileNavOpen: (open: boolean) => void;
   setSidebarOpen: (open: boolean) => void;
+  setCanopySummoned: (open: boolean) => void;
 
   /** Inner Earth: consult the Mirror about one of the 59 peoples
       beneath the surface — closes overlays, opens the Interplanetary
@@ -976,6 +981,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   sidebarOpen: true,
   view: "observatory",
   composerFocusNonce: 0,
+  canopySummoned: false,
   viewPast: [],
   viewFuture: [],
   archiveTick: 0,
@@ -1074,6 +1080,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       return {
         activeMode: mode,
         sidebarTab: defaultTabForMode(mode),
+        canopySummoned: false,
         view:
           showChannel || s.view === "transmission"
             ? "transmission"
@@ -1087,6 +1094,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   closeModal: () => set({ modal: null }),
   setMobileNavOpen: (open) => set({ mobileNavOpen: open }),
   setSidebarOpen: (open) => set({ sidebarOpen: open }),
+  setCanopySummoned: (open) => set({ canopySummoned: open }),
 
   askAboutInnerEarth: (name) =>
     set((s) => ({

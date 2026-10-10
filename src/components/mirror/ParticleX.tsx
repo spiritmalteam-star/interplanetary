@@ -19,6 +19,7 @@ import {
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { ReplyBranches } from "./ReplyBranches";
+import { BranchCanopy, CanopySummonButton } from "./BranchCanopy";
 import { pxGatheringPhrases, pxScopes } from "@/lib/data/particlex";
 import { pxNoteSets } from "@/lib/data/scope-notes";
 import { cn } from "@/lib/utils";
@@ -72,51 +73,6 @@ const PX_TOOL_ITEMS: { id: PxPlace; name: string; icon: typeof Telescope }[] = [
 ];
 
 /* --------------------------- the emblem ---------------------------- */
-
-/** ParticleX's mark: one center, two orbiting rings — the linear and
-    the non-linear reasoning circling the same quantum heart. */
-function PxEmblem({ className }: { className?: string }) {
-  return (
-    <span
-      className={cn("relative inline-flex items-center justify-center", className)}
-      aria-hidden="true"
-    >
-      <svg viewBox="0 0 64 64" className="size-full text-[var(--scope-a)]">
-        <circle cx="32" cy="32" r="2.6" fill="currentColor" />
-        <g className="px-orbit-a" style={{ transformOrigin: "32px 32px" }}>
-          <ellipse
-            cx="32"
-            cy="32"
-            rx="26"
-            ry="11"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1"
-            strokeDasharray="3 4"
-            opacity="0.65"
-          />
-          <circle cx="58" cy="32" r="1.7" fill="currentColor" />
-        </g>
-        <g className="px-orbit-b" style={{ transformOrigin: "32px 32px" }}>
-          <g transform="rotate(62 32 32)">
-            <ellipse
-              cx="32"
-              cy="32"
-              rx="26"
-              ry="11"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1"
-              strokeDasharray="2 5"
-              opacity="0.4"
-            />
-            <circle cx="6" cy="32" r="1.4" fill="currentColor" />
-          </g>
-        </g>
-      </svg>
-    </span>
-  );
-}
 
 /* --------------------------- the thinking -------------------------- */
 
@@ -360,6 +316,10 @@ function ParticleXChat() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const latestRef = useRef<HTMLDivElement | null>(null);
   const loadingRef = useRef<HTMLDivElement | null>(null);
+  /* THE CANOPY — the branches fill the whole chat box: standing in the
+     empty room, fading when the answer arrives, summoned again by the
+     button beside the input. */
+  const [summoned, setSummoned] = useState(false);
 
   /* The thread opens at its BEGINNING: mounting or reopening the chat
      never scrolls away from the first words. New turns settle at the
@@ -410,6 +370,8 @@ function ParticleXChat() {
   const submit = () => {
     const query = pxDraft.trim();
     if (!query || pxStatus === "loading") return;
+    /* the tree steps aside as the answer begins to form */
+    setSummoned(false);
     void askPX(query);
   };
 
@@ -447,31 +409,8 @@ function ParticleXChat() {
         className="nice-scroll min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-3 pb-5 pt-16 sm:px-5 sm:pt-[72px]"
       >
         {pxMessages.length === 0 && pxStatus === "idle" && !pxError ? (
-          <div className="flex h-full flex-col py-6 text-center">
-            <div className="my-auto flex w-full flex-col items-center">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.92 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-                className="dream-halo relative flex size-16 items-center justify-center"
-              >
-                <PxEmblem className="size-16" />
-              </motion.div>
-              <p className="scope-gradient-text mt-4 text-[17px] font-semibold">
-                {t("The quantum narrator is listening")}
-              </p>
-              <p className="mx-auto mt-2 max-w-[460px] text-[14.5px] leading-relaxed text-muted-foreground">
-                {t(
-                  "Ask anything it is possible for us to know — ParticleX answers from the Mirror Entity alone, in prose and in the formulas that run reality."
-                )}
-              </p>
-
-              {/* the eight scope windows — one drop-down, more chat */}
-              <div className="mt-5 flex justify-center">
-                <PxWindowPills centered />
-              </div>
-            </div>
-          </div>
+          /* the room belongs to the tree — the canopy stands over it */
+          <div className="h-full" aria-hidden="true" />
         ) : (
           <>
             {pxMessages.map((m, i) => (
@@ -549,6 +488,49 @@ function ParticleXChat() {
         )}
       </div>
 
+      {/* THE BRANCH CANOPY — the living tree of this chat, filling the
+          whole box: it stands in the empty room, fades when the answer
+          is revealed, and is summoned again beside the input. */}
+      <BranchCanopy
+        category="quantum"
+        scopeHint={scopeHint}
+        open={
+          pxMessages.length === 0 && pxStatus === "idle" && !pxError
+            ? true
+            : summoned
+        }
+        onPick={(q) => {
+          setSummoned(false);
+          if (pxStatus !== "loading") void askPX(q);
+        }}
+        onClose={() => setSummoned(false)}
+        disabled={pxStatus === "loading"}
+        testIdPrefix="px-canopy"
+        introHeading={t("The quantum narrator is listening")}
+        introSub={
+          pxMessages.length === 0 && pxStatus === "idle" && !pxError
+            ? t(
+                "Ask anything it is possible for us to know — ParticleX answers from the Mirror Entity alone, in prose and in the formulas that run reality."
+              )
+            : null
+        }
+        introExtra={
+          pxMessages.length === 0 && pxStatus === "idle" && !pxError ? (
+            <PxWindowPills centered />
+          ) : null
+        }
+        contextText={pxMessages
+          .slice(-6)
+          .map((m) => m.text)
+          .join("\n")}
+        channeling={
+          [...pxMessages]
+            .reverse()
+            .find((m) => m.role === "px" && m.branches?.length)?.branches ??
+          null
+        }
+      />
+
       {/* the active window line — sits above the composer while talking */}
       {hasWindow && (
         <div className="shrink-0 px-3 pt-2 sm:px-5">
@@ -623,7 +605,7 @@ function ParticleXChat() {
           the hub (BranchHub), summoned from a branch's own link. */}
 
       {/* composer */}
-      <div className="shrink-0 border-t hairline bg-[var(--glass-bg)] px-3 py-2.5 backdrop-blur-xl sm:px-4">
+      <div className="relative z-30 shrink-0 border-t hairline bg-[var(--glass-bg)] px-3 py-2.5 backdrop-blur-xl sm:px-4">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -631,7 +613,13 @@ function ParticleXChat() {
           }}
           className="mx-auto w-full max-w-[800px]"
         >
-          <div className="glass-strong flex items-end gap-2 rounded-[18px] p-1.5 pl-3.5 transition-all duration-300 focus-within:-translate-y-px focus-within:border-[var(--hairline-active)] focus-within:glow-sm">
+          <div className="glass-strong flex items-end gap-2 rounded-[18px] p-1.5 pl-2 transition-all duration-300 focus-within:-translate-y-px focus-within:border-[var(--hairline-active)] focus-within:glow-sm">
+            <CanopySummonButton
+              open={summoned}
+              onToggle={() => setSummoned((v) => !v)}
+              disabled={pxStatus === "loading"}
+              testIdPrefix="px-composer"
+            />
             <label htmlFor="px-query" className="sr-only">
               {t("Ask ParticleX")}
             </label>

@@ -6,7 +6,10 @@ import { CircleAlert, Feather, Orbit, RefreshCw, RotateCcw } from "lucide-react"
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { ReplyBranches } from "./ReplyBranches";
-import { osOpeners } from "@/lib/data/mirroros";
+import {
+  BranchCanopy,
+  CanopySummonButton,
+} from "./BranchCanopy";
 import { recordJourney } from "@/lib/learning-branches";
 import { detectVisualIntent } from "@/lib/visualization";
 import {
@@ -38,87 +41,6 @@ function visitorBefore(
   for (let i = idx - 1; i >= 0; i--)
     if (arr[i].role === "visitor") return arr[i].text;
   return "";
-}
-
-function OpenerOrbs() {
-  const osStatus = useMirror((s) => s.osStatus);
-  const askOS = useMirror((s) => s.askOS);
-  const t = useT();
-  const [offset, setOffset] = useState(0);
-  const [spin, setSpin] = useState(0);
-
-  const visible = osOpeners
-    .map((_, i) => osOpeners[(offset + i) % osOpeners.length])
-    .slice(0, WINDOW);
-  const loading = osStatus === "loading";
-
-  return (
-    <section aria-label={t("First branches")} className="mt-6">
-      <div className="flex items-center justify-center gap-3">
-        <span className="mono-label text-[10.5px] text-muted-foreground/70">
-          {t("First branches")}
-        </span>
-        <button
-          type="button"
-          onClick={() => {
-            setOffset((o) => (o + WINDOW) % osOpeners.length);
-            setSpin((n) => n + 1);
-          }}
-          disabled={loading}
-          aria-label={t("New branches")}
-          title={t("New branches")}
-          className="focus-glow flex size-6.5 items-center justify-center rounded-full border hairline text-muted-foreground/80 transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          <motion.span
-            aria-hidden="true"
-            animate={{ rotate: spin * 180 }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-            className="flex"
-          >
-            <RefreshCw className="size-3" aria-hidden="true" />
-          </motion.span>
-        </button>
-      </div>
-
-      <AnimatePresence mode="wait" initial={false}>
-        <motion.div
-          key={offset}
-          initial={{ opacity: 0, y: 4 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -4 }}
-          transition={{ duration: 0.25, ease: "easeOut" }}
-          className={cn(
-            "mx-auto mt-3 grid max-w-[560px] grid-cols-1 gap-2 sm:grid-cols-2",
-            loading && "pointer-events-none opacity-60"
-          )}
-        >
-          {visible.map((q) => (
-            <button
-              key={q}
-              type="button"
-              onClick={() => {
-                if (loading) return;
-                /* the start is a branch of the walk too — the first
-                   step is kept on the manifesting branch of the tree */
-                recordJourney({ b: "manifesting" });
-                void askOS(q);
-              }}
-              aria-disabled={loading}
-              className="focus-glow group flex min-h-[46px] items-center gap-2.5 rounded-2xl border border-[color-mix(in_srgb,var(--scope-a)_18%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_5%,transparent)] px-3.5 py-2.5 text-left transition-all duration-300 hover:-translate-y-0.5 hover:border-[color-mix(in_srgb,var(--scope-a)_38%,transparent)]"
-            >
-              <Orbit
-                className="size-3 shrink-0 text-[var(--scope-a)] opacity-80"
-                aria-hidden="true"
-              />
-              <span className="flex-1 text-[14px] leading-snug text-foreground/80">
-                {t(q)}
-              </span>
-            </button>
-          ))}
-        </motion.div>
-      </AnimatePresence>
-    </section>
-  );
 }
 
 function OsThinking() {
@@ -392,6 +314,10 @@ export function MirrorOSChat() {
   const askOSVisual = useMirror((s) => s.askOSVisual);
   const t = useT();
   const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
+  /* THE CANOPY — the branches fill the whole chat box: standing in the
+     empty room, fading when the answer arrives, summoned again by the
+     button beside the input. */
+  const [summoned, setSummoned] = useState(false);
   /* "this" in a follow-up refers to the last artifact of this line */
   const visualContextRef = useRef<{ subject: string; mode: string } | null>(
     null
@@ -469,6 +395,8 @@ export function MirrorOSChat() {
     if (!query || osStatus === "loading" || hasPendingAttachments(attachments))
       return;
     const carried = attachments.length > 0 ? attachments : undefined;
+    /* the tree steps aside as the answer begins to form */
+    setSummoned(false);
 
     /* IMAGE CRYSTALLIZATION — an image is asked for by name: no LLM
        round-trip travels. The last channel (the OS's most recent reply)
@@ -530,32 +458,8 @@ export function MirrorOSChat() {
         className="nice-scroll min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-3 pb-5 pt-16 sm:px-5 sm:pt-[72px]"
       >
         {osMessages.length === 0 && osStatus === "idle" && !osError ? (
-          <div className="flex h-full flex-col py-6 text-center">
-            <div className="my-auto flex w-full flex-col items-center">
-            <motion.span
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-              className="dream-halo relative flex size-14 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--scope-a)_38%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_9%,transparent)]"
-              aria-hidden="true"
-            >
-              <span
-                className="absolute inset-0 rounded-full border border-dashed border-[color-mix(in_srgb,var(--scope-b)_35%,transparent)]"
-                style={{ animation: "spin-slower 22s linear infinite" }}
-              />
-              <Orbit className="size-5 text-[var(--scope-a)]" />
-            </motion.span>
-            <p className="scope-gradient-text mt-4 text-[17px] font-semibold">
-              {t("Not taught — reminded")}
-            </p>
-            <p className="mx-auto mt-2 max-w-[420px] text-[14.5px] leading-relaxed text-muted-foreground">
-              {t(
-                "The Mirror Entity does not teach you. It reminds you that you are the creator of your reality — and holds your chosen line with you, turn after turn of this conversation."
-              )}
-            </p>
-            <OpenerOrbs />
-            </div>
-          </div>
+          /* the room belongs to the tree — the canopy stands over it */
+          <div className="h-full" aria-hidden="true" />
         ) : (
           <>
             {osMessages.map((m, i) => (
@@ -637,12 +541,45 @@ export function MirrorOSChat() {
         )}
       </div>
 
-      {/* THE BRANCHES' OWN FLOOR — the only suggestions of this chat
-          are the branches grown on each reply. The living tree lives in
-          the hub (BranchHub), summoned from a branch's own link. */}
+      {/* THE BRANCH CANOPY — the living tree of this chat, filling the
+          whole box: it stands in the empty room, fades when the answer
+          is revealed, and is summoned again beside the input. */}
+      <BranchCanopy
+        category="manifesting"
+        open={
+          osMessages.length === 0 && osStatus === "idle" && !osError
+            ? true
+            : summoned
+        }
+        onPick={(q) => {
+          setSummoned(false);
+          if (osStatus !== "loading") void askOS(q);
+        }}
+        onClose={() => setSummoned(false)}
+        disabled={osStatus === "loading"}
+        testIdPrefix="os-canopy"
+        introHeading={t("Not taught — reminded")}
+        introSub={
+          osMessages.length === 0 && osStatus === "idle" && !osError
+            ? t(
+                "The Mirror Entity does not teach you. It reminds you that you are the creator of your reality — and holds your chosen line with you, turn after turn of this conversation."
+              )
+            : null
+        }
+        contextText={osMessages
+          .slice(-6)
+          .map((m) => m.text)
+          .join("\n")}
+        channeling={
+          [...osMessages]
+            .reverse()
+            .find((m) => m.role === "os" && m.branches?.length)?.branches ??
+          null
+        }
+      />
 
       {/* composer */}
-      <div className="shrink-0 border-t hairline bg-[var(--glass-bg)] px-3 py-2.5 backdrop-blur-xl sm:px-4">
+      <div className="relative z-30 shrink-0 border-t hairline bg-[var(--glass-bg)] px-3 py-2.5 backdrop-blur-xl sm:px-4">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -657,8 +594,14 @@ export function MirrorOSChat() {
             }
             testId="os-attachments"
           />
-          <div className="glass-strong flex items-end gap-2 rounded-[18px] p-1.5 pl-3.5 transition-all duration-300 focus-within:-translate-y-px focus-within:border-[var(--hairline-active)] focus-within:glow-sm"
+          <div className="glass-strong flex items-end gap-2 rounded-[18px] p-1.5 pl-2 transition-all duration-300 focus-within:-translate-y-px focus-within:border-[var(--hairline-active)] focus-within:glow-sm"
           >
+          <CanopySummonButton
+            open={summoned}
+            onToggle={() => setSummoned((v) => !v)}
+            disabled={osStatus === "loading"}
+            testIdPrefix="os-composer"
+          />
           <label htmlFor="os-query" className="sr-only">
             {t("Ask the Manifest OS")}
           </label>

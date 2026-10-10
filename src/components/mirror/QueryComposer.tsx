@@ -12,6 +12,9 @@ import {
 } from "@/components/mirror/ChatInputExtras";
 import { RemedyLayer } from "@/components/mirror/RemedyLayer";
 import {
+  CanopySummonButton,
+} from "@/components/mirror/BranchCanopy";
+import {
   hasPendingAttachments,
   type ChatAttachment,
 } from "@/components/mirror/attachments";
@@ -25,6 +28,7 @@ export function QueryComposer() {
   const askScopeVisual = useMirror((s) => s.askScopeVisual);
   const status = useMirror((s) => s.sessions[s.activeMode].status);
   const composerFocusNonce = useMirror((s) => s.composerFocusNonce);
+  const canopySummoned = useMirror((s) => s.canopySummoned);
   const t = useT();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
@@ -62,6 +66,8 @@ export function QueryComposer() {
     if (!query || status === "loading" || hasPendingAttachments(attachments))
       return;
     const carried = attachments.length > 0 ? attachments : undefined;
+    /* the tree steps aside as the answer begins to form */
+    useMirror.getState().setCanopySummoned(false);
     /* The side activities speak first: an akashic record, a card draw,
        an intention to charge or a mystery to strike travels with the
        reply as a living artifact — not as a picture. */
@@ -115,10 +121,20 @@ export function QueryComposer() {
           testId="composer-attachments"
         />
         <div
-          className={`glass-strong flex items-end gap-1 rounded-[16px] p-1.5 pl-3 transition-all duration-300 focus-within:border-[color-mix(in_srgb,var(--cy)_38%,transparent)] sm:gap-1 sm:p-1 sm:pl-2.5 ${
+          className={`glass-strong flex items-end gap-1 rounded-[16px] p-1.5 pl-2 transition-all duration-300 focus-within:border-[color-mix(in_srgb,var(--cy)_38%,transparent)] sm:gap-1 sm:p-1 sm:pl-2 ${
             status === "loading" ? "opacity-80" : ""
           }`}
         >
+          <CanopySummonButton
+            open={canopySummoned}
+            onToggle={() =>
+              useMirror.getState().setCanopySummoned(
+                !useMirror.getState().canopySummoned
+              )
+            }
+            disabled={status === "loading"}
+            testIdPrefix="composer"
+          />
           <label htmlFor="mirror-query" className="sr-only">
             {t("Ask the mirror")}
           </label>

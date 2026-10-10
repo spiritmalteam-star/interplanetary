@@ -20,6 +20,7 @@ import {
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { ReplyBranches } from "./ReplyBranches";
+import { BranchCanopy, CanopySummonButton } from "./BranchCanopy";
 import { emGatheringPhrases, emVectors } from "@/lib/data/evolvemed";
 import { emNoteSets } from "@/lib/data/scope-notes";
 import { cn } from "@/lib/utils";
@@ -80,48 +81,6 @@ const EM_TOOL_ITEMS: { id: EmPlace; name: string; icon: typeof Compass }[] = [
 ];
 
 /* --------------------------- the emblem ---------------------------- */
-
-/** Evolve Med's mark: a living helix — two strands crossing around
-    one axis, the digital and the biological breathing together. */
-function EmEmblem({ className }: { className?: string }) {
-  return (
-    <span
-      className={cn("relative inline-flex items-center justify-center", className)}
-      aria-hidden="true"
-    >
-      <svg viewBox="0 0 64 64" className="size-full text-[var(--scope-a)]">
-        {/* the two strands of the helix */}
-        <g className="em-helix" style={{ transformOrigin: "32px 32px" }}>
-          <path
-            d="M22 8 C42 20 22 44 42 56"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.4"
-            strokeLinecap="round"
-          />
-          <path
-            d="M42 8 C22 20 42 44 22 56"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.4"
-            strokeLinecap="round"
-            opacity="0.55"
-          />
-          {/* the rungs — the meeting places of the strands */}
-          <line x1="26" y1="16" x2="38" y2="16" stroke="currentColor" strokeWidth="1" opacity="0.7" />
-          <line x1="24" y1="28" x2="40" y2="28" stroke="currentColor" strokeWidth="1" opacity="0.5" />
-          <line x1="24" y1="40" x2="40" y2="40" stroke="currentColor" strokeWidth="1" opacity="0.7" />
-          <line x1="26" y1="50" x2="38" y2="50" stroke="currentColor" strokeWidth="1" opacity="0.45" />
-        </g>
-        {/* the four vectors — one quiet dot for each, at the compass points */}
-        <circle cx="32" cy="3.5" r="1.4" fill="currentColor" opacity="0.8" />
-        <circle cx="60.5" cy="32" r="1.4" fill="currentColor" opacity="0.55" />
-        <circle cx="32" cy="60.5" r="1.4" fill="currentColor" opacity="0.8" />
-        <circle cx="3.5" cy="32" r="1.4" fill="currentColor" opacity="0.55" />
-      </svg>
-    </span>
-  );
-}
 
 /* --------------------------- the thinking -------------------------- */
 
@@ -492,6 +451,10 @@ function EvolveMedChat() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const latestRef = useRef<HTMLDivElement | null>(null);
   const loadingRef = useRef<HTMLDivElement | null>(null);
+  /* THE CANOPY — the branches fill the whole chat box: standing in the
+     empty room, fading when the answer arrives, summoned again by the
+     button beside the input. */
+  const [summoned, setSummoned] = useState(false);
 
   /* The thread opens at its BEGINNING: mounting or reopening the chat
      never scrolls away from the first words. New turns settle at the
@@ -542,6 +505,8 @@ function EvolveMedChat() {
   const submit = () => {
     const query = emDraft.trim();
     if (!query || emStatus === "loading") return;
+    /* the tree steps aside as the answer begins to form */
+    setSummoned(false);
     /* IMAGE CRYSTALLIZATION — an image is asked for by name: the last
        channel (the nexus's most recent revelation) crystallizes at
        once, shaped by the visitor's words; with an empty thread, the
@@ -591,31 +556,8 @@ function EvolveMedChat() {
         className="nice-scroll min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-3 pb-5 pt-16 sm:px-5 sm:pt-[72px]"
       >
         {emMessages.length === 0 && emStatus === "idle" && !emError ? (
-          <div className="flex h-full flex-col py-6 text-center">
-            <div className="my-auto flex w-full flex-col items-center">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.92 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-                className="dream-halo relative flex size-16 items-center justify-center"
-              >
-                <EmEmblem className="size-16" />
-              </motion.div>
-              <p className="scope-gradient-text mt-4 text-[17px] font-semibold">
-                {t("The biocompiler is online")}
-              </p>
-              <p className="mx-auto mt-2 max-w-[460px] text-[14.5px] leading-relaxed text-muted-foreground">
-                {t(
-                  "Bring a directive — an intention, a therapeutic goal, an archive to keep — and Evolve Med compiles it into a living blueprint, routed across the four vector windows, in prose and in the mechanisms that run the living machine."
-                )}
-              </p>
-
-              {/* the four vector windows — one drop-down, more chat */}
-              <div className="mt-5 flex justify-center">
-                <EmWindowPills centered />
-              </div>
-            </div>
-          </div>
+          /* the room belongs to the tree — the canopy stands over it */
+          <div className="h-full" aria-hidden="true" />
         ) : (
           <>
             {emMessages.map((m, i) => (
@@ -697,6 +639,49 @@ function EvolveMedChat() {
         )}
       </div>
 
+      {/* THE BRANCH CANOPY — the living tree of this chat, filling the
+          whole box: it stands in the empty room, fades when the answer
+          is revealed, and is summoned again beside the input. */}
+      <BranchCanopy
+        category="evolvemed"
+        scopeHint={scopeHint}
+        open={
+          emMessages.length === 0 && emStatus === "idle" && !emError
+            ? true
+            : summoned
+        }
+        onPick={(q) => {
+          setSummoned(false);
+          if (emStatus !== "loading") void askEM(q);
+        }}
+        onClose={() => setSummoned(false)}
+        disabled={emStatus === "loading"}
+        testIdPrefix="em-canopy"
+        introHeading={t("The biocompiler is online")}
+        introSub={
+          emMessages.length === 0 && emStatus === "idle" && !emError
+            ? t(
+                "Bring a directive — an intention, a therapeutic goal, an archive to keep — and Evolve Med compiles it into a living blueprint, routed across the four vector windows, in prose and in the mechanisms that run the living machine."
+              )
+            : null
+        }
+        introExtra={
+          emMessages.length === 0 && emStatus === "idle" && !emError ? (
+            <EmWindowPills centered />
+          ) : null
+        }
+        contextText={emMessages
+          .slice(-6)
+          .map((m) => m.text)
+          .join("\n")}
+        channeling={
+          [...emMessages]
+            .reverse()
+            .find((m) => m.role === "em" && m.branches?.length)?.branches ??
+          null
+        }
+      />
+
       {/* the active vector line — sits above the composer while talking */}
       {hasWindow && (
         <div className="shrink-0 px-3 pt-2 sm:px-5">
@@ -771,7 +756,7 @@ function EvolveMedChat() {
           the hub (BranchHub), summoned from a branch's own link. */}
 
       {/* composer */}
-      <div className="shrink-0 border-t hairline bg-[var(--glass-bg)] px-3 py-2.5 backdrop-blur-xl sm:px-4">
+      <div className="relative z-30 shrink-0 border-t hairline bg-[var(--glass-bg)] px-3 py-2.5 backdrop-blur-xl sm:px-4">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -779,7 +764,13 @@ function EvolveMedChat() {
           }}
           className="mx-auto w-full max-w-[800px]"
         >
-          <div className="glass-strong flex items-end gap-2 rounded-[18px] p-1.5 pl-3.5 transition-all duration-300 focus-within:-translate-y-px focus-within:border-[var(--hairline-active)] focus-within:glow-sm">
+          <div className="glass-strong flex items-end gap-2 rounded-[18px] p-1.5 pl-2 transition-all duration-300 focus-within:-translate-y-px focus-within:border-[var(--hairline-active)] focus-within:glow-sm">
+            <CanopySummonButton
+              open={summoned}
+              onToggle={() => setSummoned((v) => !v)}
+              disabled={emStatus === "loading"}
+              testIdPrefix="em-composer"
+            />
             <label htmlFor="em-query" className="sr-only">
               {t("Ask Evolve Med")}
             </label>

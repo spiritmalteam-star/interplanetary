@@ -16,6 +16,7 @@ import {
 import { useMirror, type ChatMessage } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { ReplyBranches } from "./ReplyBranches";
+import { BranchCanopy, CanopySummonButton } from "./BranchCanopy";
 import {
   forgeChatPhases,
   forgeDomains,
@@ -1045,6 +1046,10 @@ function BenchChat() {
   const t = useT();
   const threadRef = useRef<HTMLDivElement | null>(null);
   const [phase, setPhase] = useState(0);
+  /* THE CANOPY — the branches fill the whole chat box: standing in the
+     empty room, fading when the answer arrives, summoned again by the
+     button beside the input. */
+  const [summoned, setSummoned] = useState(false);
 
   const { status, messages, draft, error, activeQuery } = forgeSession;
   const loading = status === "loading";
@@ -1069,6 +1074,8 @@ function BenchChat() {
   const send = (text?: string) => {
     const q = (text ?? draft).trim();
     if (!q || loading) return;
+    /* the tree steps aside as the answer begins to form */
+    setSummoned(false);
     /* IMAGE CRYSTALLIZATION — an image is asked for by name: the last
        channel (the forge's most recent stroke) crystallizes at once,
        shaped by the visitor's words; with an empty thread, the words
@@ -1101,34 +1108,8 @@ function BenchChat() {
         data-testid="forge-thread"
       >
         {messages.length === 0 && status === "idle" && !error ? (
-          <div className="flex h-full flex-col items-center justify-center py-6 text-center">
-            <motion.span
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-              className="scope-halo relative flex size-14 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--scope-a)_38%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_9%,transparent)]"
-              aria-hidden="true"
-            >
-              <span
-                className="absolute inset-0 rounded-full border border-dashed border-[color-mix(in_srgb,var(--scope-b)_35%,transparent)]"
-                style={{ animation: "spin-slower 22s linear infinite" }}
-              />
-              <Hammer className="size-5 text-[var(--scope-a)]" />
-            </motion.span>
-            <p className="scope-gradient-text mt-4 text-[17px] font-semibold sm:text-[19px]">
-              {t("Strike While the Coals Are Lit")}
-            </p>
-            <p className="mx-auto mt-2 max-w-[480px] text-[14.5px] leading-relaxed text-muted-foreground">
-              {t(
-                "Speak with the Forge on the bench — set a tool of the inteligjence to work, or turn the dials and meet a mystery you never asked for."
-              )}
-            </p>
-            <p className="mx-auto mt-4 max-w-[420px] text-[13.5px] italic leading-relaxed text-muted-foreground/80">
-              {t(
-                "The bench is quiet. Speak a want, a half-idea, a block — or strike the chamber for a mystery."
-              )}
-            </p>
-          </div>
+          /* the room belongs to the tree — the canopy stands over it */
+          <div className="h-full" aria-hidden="true" />
         ) : (
           <div className="mx-auto w-full max-w-[860px] space-y-4">
             {messages.map((m, i) => (
@@ -1189,13 +1170,57 @@ function BenchChat() {
         )}
       </div>
 
-      {/* THE BRANCHES' OWN FLOOR — the only suggestions of the forge
-          are the branches grown on each stroke. The living tree lives
-          in the hub (BranchHub), summoned from a branch's own link. */}
+      {/* THE BRANCH CANOPY — the living tree of this chat, filling the
+          whole box: it stands in the empty room, fades when the answer
+          is revealed, and is summoned again beside the input. */}
+      <BranchCanopy
+        category="invent"
+        open={
+          messages.length === 0 && status === "idle" && !error
+            ? true
+            : summoned
+        }
+        onPick={(q) => {
+          setSummoned(false);
+          if (!loading) send(q);
+        }}
+        onClose={() => setSummoned(false)}
+        disabled={loading}
+        testIdPrefix="forge-canopy"
+        introHeading={t("Strike While the Coals Are Lit")}
+        introSub={
+          messages.length === 0 && status === "idle" && !error
+            ? t(
+                "Speak with the Forge on the bench — set a tool of the inteligjence to work, or turn the dials and meet a mystery you never asked for."
+              )
+            : null
+        }
+        introSubExtra={
+          messages.length === 0 && status === "idle" && !error
+            ? t(
+                "The bench is quiet. Speak a want, a half-idea, a block — or strike the chamber for a mystery."
+              )
+            : null
+        }
+        contextText={messages
+          .slice(-6)
+          .map((m) => `${m.query ?? ""}\n${m.text}`)
+          .join("\n")}
+        channeling={
+          [...messages].reverse().find((m) => m.branches?.length)?.branches ??
+          null
+        }
+      />
 
       {/* composer */}
-      <div className="shrink-0 border-t hairline bg-[var(--glass-bg)] px-3 py-2.5 backdrop-blur-xl sm:px-4">
+      <div className="relative z-30 shrink-0 border-t hairline bg-[var(--glass-bg)] px-3 py-2.5 backdrop-blur-xl sm:px-4">
         <div className="mx-auto flex w-full max-w-[800px] items-end gap-2">
+          <CanopySummonButton
+            open={summoned}
+            onToggle={() => setSummoned((v) => !v)}
+            disabled={loading}
+            testIdPrefix="forge-composer-summon"
+          />
           <textarea
             value={draft}
             onChange={(e) => setForgeDraft(e.target.value)}
