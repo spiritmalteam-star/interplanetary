@@ -3500,4 +3500,10 @@ export const de: TranslationDict = {
   "Forget this volume": "Diesen Band vergessen",
   "Read again": "Erneut lesen",
   "page {n} of {m}": "Seite {n} von {m}",
+  "Back to the tree": "Zurück zum Baum",
+  "Continue the walk": "Den Spaziergang fortsetzen",
+  "Grow the family — 30 more branches stand ready": "Ziehe die Familie groß — 30 weitere Zweige stehen bereit",
+  "Reply within the branch…": "Innerhalb des Zweiges antworten…",
+  "Send": "Senden",
+  "The algorithm that studies your continuations and reflects your progression back to you.": "Der Algorithmus, der deine Fortführungen studiert und deine Entwicklung zu dir zurückspiegelt.",
 };

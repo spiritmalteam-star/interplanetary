@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { CircleAlert, Feather, Orbit, RefreshCw, RotateCcw } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
@@ -10,7 +10,6 @@ import {
   BranchCanopy,
   CanopyRestStrip,
   CanopySummonButton,
-  useCanopyAnswerFold,
 } from "./BranchCanopy";
 import { recordJourney } from "@/lib/learning-branches";
 import { detectVisualIntent } from "@/lib/visualization";
@@ -317,13 +316,21 @@ export function MirrorOSChat() {
   const t = useT();
   const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
   /* THE CANOPY — the branches fill the whole chat box: standing in the
-     empty room, fading when the answer arrives, summoned again by the
-     button beside the input. */
+     empty room, summoned again by the button beside the input. THE
+     ANSWER LIVES IN THE TREE now: the walk stays standing through the
+     transmission and the answer rises inside it. */
   const [summoned, setSummoned] = useState(false);
-  /* THE ANSWER'S SPACE — the walk keeps growing from its last choice
-     while the transmission is channeled; the revealed answer folds the
-     tree and takes its room. The summon returns it, graft and trail. */
-  useCanopyAnswerFold(osStatus === "loading", setSummoned);
+  /* while the answer lives in the tree, the rest strip rests too */
+  const [canopyLatch, setCanopyLatch] = useState(false);
+  const onCanopyLatch = useCallback((v: boolean) => setCanopyLatch(v), []);
+  const lastVisitorMsg = useMemo(
+    () => [...osMessages].reverse().find((m) => m.role === "visitor") ?? null,
+    [osMessages]
+  );
+  const lastOsMsg = useMemo(
+    () => [...osMessages].reverse().find((m) => m.role === "os") ?? null,
+    [osMessages]
+  );
   /* "this" in a follow-up refers to the last artifact of this line */
   const visualContextRef = useRef<{ subject: string; mode: string } | null>(
     null
@@ -401,9 +408,6 @@ export function MirrorOSChat() {
     if (!query || osStatus === "loading" || hasPendingAttachments(attachments))
       return;
     const carried = attachments.length > 0 ? attachments : undefined;
-    /* the tree steps aside as the answer begins to form */
-    setSummoned(false);
-
     /* IMAGE CRYSTALLIZATION — an image is asked for by name: no LLM
        round-trip travels. The last channel (the OS's most recent reply)
        crystallizes at once, shaped by the visitor's words; with an
@@ -583,6 +587,10 @@ export function MirrorOSChat() {
             .find((m) => m.role === "os" && m.branches?.length)?.branches ??
           null
         }
+        liveLoading={osStatus === "loading"}
+        liveQuestion={lastVisitorMsg?.text || null}
+        liveAnswer={lastOsMsg?.text || null}
+        onLatch={onCanopyLatch}
       />
 
       {/* THE TRUNK'S REST — the living tree's slim floor at the top of
@@ -591,7 +599,7 @@ export function MirrorOSChat() {
         open={
           osMessages.length === 0 && osStatus === "idle" && !osError
             ? true
-            : summoned || osStatus === "loading"
+            : summoned || osStatus === "loading" || canopyLatch
         }
         onSummon={() => setSummoned(true)}
         disabled={osStatus === "loading"}

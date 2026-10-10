@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Activity,
@@ -24,7 +24,6 @@ import {
   BranchCanopy,
   CanopyRestStrip,
   CanopySummonButton,
-  useCanopyAnswerFold,
 } from "./BranchCanopy";
 import { emGatheringPhrases, emVectors } from "@/lib/data/evolvemed";
 import { emNoteSets } from "@/lib/data/scope-notes";
@@ -457,12 +456,21 @@ function EvolveMedChat() {
   const latestRef = useRef<HTMLDivElement | null>(null);
   const loadingRef = useRef<HTMLDivElement | null>(null);
   /* THE CANOPY — the branches fill the whole chat box: standing in the
-     empty room, fading when the answer arrives, summoned again by the
-     button beside the input. */
+     empty room, summoned again by the button beside the input. THE
+     ANSWER LIVES IN THE TREE now: the walk stays standing through the
+     transmission and the answer rises inside it. */
   const [summoned, setSummoned] = useState(false);
-  /* THE ANSWER'S SPACE — the walk grows while the transmission runs;
-     the revealed answer folds the tree and takes its room. */
-  useCanopyAnswerFold(emStatus === "loading", setSummoned);
+  /* while the answer lives in the tree, the rest strip rests too */
+  const [canopyLatch, setCanopyLatch] = useState(false);
+  const onCanopyLatch = useCallback((v: boolean) => setCanopyLatch(v), []);
+  const lastEmVisitor = useMemo(
+    () => [...emMessages].reverse().find((m) => m.role === "visitor") ?? null,
+    [emMessages]
+  );
+  const lastEmReply = useMemo(
+    () => [...emMessages].reverse().find((m) => m.role === "em") ?? null,
+    [emMessages]
+  );
 
   /* The thread opens at its BEGINNING: mounting or reopening the chat
      never scrolls away from the first words. New turns settle at the
@@ -512,10 +520,7 @@ function EvolveMedChat() {
 
   const submit = () => {
     const query = emDraft.trim();
-    if (!query || emStatus === "loading") return;
-    /* the tree steps aside as the answer begins to form */
-    setSummoned(false);
-    /* IMAGE CRYSTALLIZATION — an image is asked for by name: the last
+    if (!query || emStatus === "loading") return;    /* IMAGE CRYSTALLIZATION — an image is asked for by name: the last
        channel (the nexus's most recent revelation) crystallizes at
        once, shaped by the visitor's words; with an empty thread, the
        words themselves crystallize. */
@@ -689,6 +694,10 @@ function EvolveMedChat() {
             .find((m) => m.role === "em" && m.branches?.length)?.branches ??
           null
         }
+        liveLoading={emStatus === "loading"}
+        liveQuestion={lastEmVisitor?.text || null}
+        liveAnswer={lastEmReply?.text || null}
+        onLatch={onCanopyLatch}
       />
 
       {/* the active vector line — sits above the composer while talking */}
@@ -770,7 +779,7 @@ function EvolveMedChat() {
         open={
           emMessages.length === 0 && emStatus === "idle" && !emError
             ? true
-            : summoned || emStatus === "loading"
+            : summoned || emStatus === "loading" || canopyLatch
         }
         onSummon={() => setSummoned(true)}
         disabled={emStatus === "loading"}

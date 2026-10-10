@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AlignLeft, History, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { setLearningIdentity } from "@/lib/learning-branches";
@@ -15,7 +15,7 @@ import Sidebar from "./Sidebar";
 import { MobileSidebar } from "./MobileSidebar";
 import { ScopeSelector } from "./ScopeSelector";
 import { BranchHub } from "./BranchHub";
-import { BranchCanopy, CanopyRestStrip, useCanopyAnswerFold } from "./BranchCanopy";
+import { BranchCanopy, CanopyRestStrip } from "./BranchCanopy";
 import { QueryComposer } from "./QueryComposer";
 import { StillCompanion } from "./StillCompanion";
 import { TransmissionView } from "./TransmissionView";
@@ -85,9 +85,17 @@ function AppShellViews() {
   const canopySummoned = useMirror((s) => s.canopySummoned);
   const setCanopySummoned = useMirror((s) => s.setCanopySummoned);
   const channel = useMirror((s) => s.sessions[s.activeMode]);
-  /* THE ANSWER'S SPACE — the walk grows while the transmission runs;
-     the revealed answer folds the tree and takes its room. */
-  useCanopyAnswerFold(channel.status === "loading", setCanopySummoned);
+  /* THE ANSWER LIVES IN THE TREE — the walk stays standing through the
+     transmission; the answer rises inside it and the walk continues
+     from the end of the reply without ever leaving the branches. */
+  const lastChannelMsg =
+    channel.messages.length > 0
+      ? channel.messages[channel.messages.length - 1]
+      : null;
+  const channelLoading = channel.status === "loading";
+  /* while the answer lives in the tree, the rest strip rests too */
+  const [canopyLatch, setCanopyLatch] = useState(false);
+  const onCanopyLatch = useCallback((v: boolean) => setCanopyLatch(v), []);
   const channelEmpty =
     channel.messages.length === 0 &&
     channel.status === "idle" &&
@@ -479,10 +487,10 @@ function AppShellViews() {
 
         {/* THE BRANCH CANOPY — the living tree of the main channels,
             filling the whole chat box on the landing and in the channel
-            alike; it fades when the answer is revealed and returns at
-            the summon button beside the input */}
+            alike; the answer rises inside the tree and the walk
+            continues from the end of every transmission */}
         {/* the walk stays standing while its transmission runs — the
-            revealed answer folds it and takes the room */}
+            answer lives within it, in the zoom */}
         {(view === "transmission" || view === "observatory") && (
           <BranchCanopy
             category={activeMode}
@@ -515,6 +523,14 @@ function AppShellViews() {
               [...channel.messages].reverse().find((m) => m.branches?.length)
                 ?.branches ?? null
             }
+            liveLoading={channelLoading}
+            liveQuestion={
+              channelLoading
+                ? channel.activeQuery || null
+                : lastChannelMsg?.query || null
+            }
+            liveAnswer={channelLoading ? null : lastChannelMsg?.text || null}
+            onLatch={onCanopyLatch}
           />
         )}
         </div>
@@ -529,7 +545,9 @@ function AppShellViews() {
             the whole grove again. */}
         {(view === "transmission" || view === "observatory") && (
           <CanopyRestStrip
-            open={channelEmpty || canopySummoned || channel.status === "loading"}
+            open={
+              channelEmpty || canopySummoned || channel.status === "loading" || canopyLatch
+            }
             onSummon={() => setCanopySummoned(true)}
             disabled={channel.status === "loading"}
             testIdPrefix="channel-canopy"

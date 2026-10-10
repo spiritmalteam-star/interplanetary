@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -18,7 +18,6 @@ import {
   BranchCanopy,
   CanopyRestStrip,
   CanopySummonButton,
-  useCanopyAnswerFold,
 } from "./BranchCanopy";
 import { axAtelierIntro, axWindows } from "@/lib/data/artx";
 import { detectVisualIntent } from "@/lib/visualization";
@@ -324,12 +323,21 @@ export function ArtXChat() {
   const t = useT();
   const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
   /* THE CANOPY — the branches fill the whole chat box: standing in the
-     empty room, fading when the answer arrives, summoned again by the
-     button beside the input. */
+     empty room, summoned again by the button beside the input. THE
+     ANSWER LIVES IN THE TREE now: the walk stays standing through the
+     transmission and the answer rises inside it. */
   const [summoned, setSummoned] = useState(false);
-  /* THE ANSWER'S SPACE — the walk grows while the transmission runs;
-     the revealed answer folds the tree and takes its room. */
-  useCanopyAnswerFold(axStatus === "loading", setSummoned);
+  /* while the answer lives in the tree, the rest strip rests too */
+  const [canopyLatch, setCanopyLatch] = useState(false);
+  const onCanopyLatch = useCallback((v: boolean) => setCanopyLatch(v), []);
+  const lastAxVisitor = useMemo(
+    () => [...axMessages].reverse().find((m) => m.role === "visitor") ?? null,
+    [axMessages]
+  );
+  const lastAxReply = useMemo(
+    () => [...axMessages].reverse().find((m) => m.role === "ax") ?? null,
+    [axMessages]
+  );
   /* "this" in a follow-up refers to the last artifact of this line */
   const visualContextRef = useRef<{ subject: string; mode: string } | null>(
     null
@@ -412,9 +420,6 @@ export function ArtXChat() {
     if (!query || axStatus === "loading" || hasPendingAttachments(attachments))
       return;
     const carried = attachments.length > 0 ? attachments : undefined;
-    /* the tree steps aside as the answer begins to form */
-    setSummoned(false);
-
     /* IMAGE CRYSTALLIZATION — a vision is asked for by name: no LLM
        round-trip travels. The last work (the atelier's most recent
        reply) crystallizes at once, shaped by the visitor's words; with
@@ -599,6 +604,10 @@ export function ArtXChat() {
             .find((m) => m.role === "ax" && m.branches?.length)?.branches ??
           null
         }
+        liveLoading={axStatus === "loading"}
+        liveQuestion={lastAxVisitor?.text || null}
+        liveAnswer={lastAxReply?.text || null}
+        onLatch={onCanopyLatch}
       />
 
       {/* THE TRUNK'S REST — the living tree's slim floor at the top of
@@ -607,7 +616,7 @@ export function ArtXChat() {
         open={
           axMessages.length === 0 && axStatus === "idle" && !axError
             ? true
-            : summoned || axStatus === "loading"
+            : summoned || axStatus === "loading" || canopyLatch
         }
         onSummon={() => setSummoned(true)}
         disabled={axStatus === "loading"}

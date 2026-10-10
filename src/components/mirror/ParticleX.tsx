@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -23,7 +23,6 @@ import {
   BranchCanopy,
   CanopyRestStrip,
   CanopySummonButton,
-  useCanopyAnswerFold,
 } from "./BranchCanopy";
 import { pxGatheringPhrases, pxScopes } from "@/lib/data/particlex";
 import { pxNoteSets } from "@/lib/data/scope-notes";
@@ -322,12 +321,21 @@ function ParticleXChat() {
   const latestRef = useRef<HTMLDivElement | null>(null);
   const loadingRef = useRef<HTMLDivElement | null>(null);
   /* THE CANOPY — the branches fill the whole chat box: standing in the
-     empty room, fading when the answer arrives, summoned again by the
-     button beside the input. */
+     empty room, summoned again by the button beside the input. THE
+     ANSWER LIVES IN THE TREE now: the walk stays standing through the
+     transmission and the answer rises inside it. */
   const [summoned, setSummoned] = useState(false);
-  /* THE ANSWER'S SPACE — the walk grows while the transmission runs;
-     the revealed answer folds the tree and takes its room. */
-  useCanopyAnswerFold(pxStatus === "loading", setSummoned);
+  /* while the answer lives in the tree, the rest strip rests too */
+  const [canopyLatch, setCanopyLatch] = useState(false);
+  const onCanopyLatch = useCallback((v: boolean) => setCanopyLatch(v), []);
+  const lastPxVisitor = useMemo(
+    () => [...pxMessages].reverse().find((m) => m.role === "visitor") ?? null,
+    [pxMessages]
+  );
+  const lastPxReply = useMemo(
+    () => [...pxMessages].reverse().find((m) => m.role === "px") ?? null,
+    [pxMessages]
+  );
 
   /* The thread opens at its BEGINNING: mounting or reopening the chat
      never scrolls away from the first words. New turns settle at the
@@ -377,10 +385,7 @@ function ParticleXChat() {
 
   const submit = () => {
     const query = pxDraft.trim();
-    if (!query || pxStatus === "loading") return;
-    /* the tree steps aside as the answer begins to form */
-    setSummoned(false);
-    void askPX(query);
+    if (!query || pxStatus === "loading") return;    void askPX(query);
   };
 
   /* The active window: one scope, or a melted pair. */
@@ -538,6 +543,10 @@ function ParticleXChat() {
             .find((m) => m.role === "px" && m.branches?.length)?.branches ??
           null
         }
+        liveLoading={pxStatus === "loading"}
+        liveQuestion={lastPxVisitor?.text || null}
+        liveAnswer={lastPxReply?.text || null}
+        onLatch={onCanopyLatch}
       />
 
       {/* the active window line — sits above the composer while talking */}
@@ -619,7 +628,7 @@ function ParticleXChat() {
         open={
           pxMessages.length === 0 && pxStatus === "idle" && !pxError
             ? true
-            : summoned || pxStatus === "loading"
+            : summoned || pxStatus === "loading" || canopyLatch
         }
         onSummon={() => setSummoned(true)}
         disabled={pxStatus === "loading"}

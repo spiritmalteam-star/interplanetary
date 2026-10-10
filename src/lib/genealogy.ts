@@ -13,10 +13,16 @@ import type { BranchType } from "@/lib/learning-branches";
 /*  voices, then twelve more after a few seconds, then the last six —  */
 /*  so the tree proceeds with the context instead of dumping itself.   */
 /*                                                                     */
-/*  THE NO-OVERLAP LAW. Every whisper carries a FIXED box — the text   */
-/*  is clamped inside it — and the rows hold one full connector gap    */
-/*  between generations. A final sweep walks every row and widens the  */
-/*  canvas rather than ever letting two whispers touch.                */
+/*  THE READABILITY LAW. Every whisper shows its WHOLE text — nothing  */
+/*  is ever clamped or cut. Each chip carries its own measured height  */
+/*  (a bigger voice stands in a bigger box — that is welcome), and the */
+/*  generations keep one generous breath of distance between them, so  */
+/*  every suggestion is readable at a glance.                          */
+/*                                                                     */
+/*  THE NO-OVERLAP LAW. Rows hold one full connector gap between       */
+/*  generations and every chip stands OPAQUE — a line can never touch  */
+/*  a single word of a suggestion. A final sweep walks every row and   */
+/*  widens the canvas rather than ever letting two whispers touch.     */
 /*                                                                     */
 /*  THE GRAFT LAW. When the visitor presses a whisper, a whole new     */
 /*  sub-family is grown FROM that very chip — its topology carries the */
@@ -51,6 +57,8 @@ export interface GenealogyNode {
   /** Canvas coordinates; x is the chip's center, y the chip's top. */
   x: number;
   y: number;
+  /** The chip's own measured height — the whole text always fits. */
+  h: number;
 }
 
 /** One generation of one batch, in pure topology form. */
@@ -82,11 +90,12 @@ export interface GenealogyTopology {
 
 export interface GenealogyGeometry {
   chipW: number;
+  /** The typical chip height (the smallest box a whisper may stand in). */
   chipH: number;
   step: number;
-  rowH: number;
+  /** The generous breath of distance between two generations. */
+  rowGap: number;
   trunkH: number;
-  goldenRowH: number;
   width: number;
   height: number;
 }
@@ -100,21 +109,99 @@ const SEED_GENS_WIDE = [2, 4, 8, 16];
 /** Narrow screens raise a taller, slimmer house — the same thirty. */
 const SEED_GENS_NARROW = [2, 3, 5, 8, 12];
 
-const CHIP_W_WIDE = 188;
-const CHIP_W_NARROW = 124;
-/* THE FIXED BOX — every chip carries the FULL height its clamped text
-   may ever need, so no whisper can ever lean on its neighbour below. */
-const CHIP_H_WIDE = 72;
-const CHIP_H_NARROW = 78;
-const STEP_WIDE = 206;
-const STEP_NARROW = 134;
-const ROW_H_WIDE = 128;
-const ROW_H_NARROW = 124;
+/* THE READABLE BOX — a wide enough line of text per chip, the WHOLE
+   whisper inside it (measured, never clamped), and a generous breath
+   of distance between the generations. */
+const CHIP_W_WIDE = 212;
+const CHIP_W_NARROW = 154;
+const STEP_WIDE = 230;
+const STEP_NARROW = 166;
+const ROW_GAP_WIDE = 46;
+const ROW_GAP_NARROW = 40;
 const TRUNK_H_WIDE = 92;
 const TRUNK_H_NARROW = 72;
-const GOLDEN_ROW_H_WIDE = 96;
-const GOLDEN_ROW_H_NARROW = 106;
+/** The golden row's own breath above the trunk. */
+const GOLDEN_GAP = 22;
 const SIDE_PAD = 30;
+
+/* Chip anatomy — must mirror the rendered chip's own classes. */
+const PAD_X_WIDE = 12; // px-3
+const PAD_X_NARROW = 10; // px-2.5
+const PAD_Y = 8; // py-2
+const ICON_H = 12; // size-3 sigil
+const ICON_GAP = 2; // gap-0.5
+const SAFETY_H = 5; // the box never pinches a descender
+
+/* ------------------------- the text measure ------------------------ */
+
+let measureCanvas: HTMLCanvasElement | null = null;
+
+const SANS_STACK =
+  'var(--font-jakarta, "Plus Jakarta Sans"), system-ui, -apple-system, sans-serif';
+const SERIF_STACK = 'var(--font-literata, Georgia), "Times New Roman", serif';
+
+/**
+ * The greedy word-wrap of one whisper at a given width — measured by
+ * the same canvas the browser lays out with, so the chip's box is cut
+ * to its own words. Falls back to an honest estimate off-device.
+ */
+function measureLines(
+  text: string,
+  innerW: number,
+  fontPx: number,
+  font: string
+): number {
+  try {
+    if (typeof document !== "undefined") {
+      if (!measureCanvas) measureCanvas = document.createElement("canvas");
+      const ctx = measureCanvas.getContext("2d");
+      if (ctx) {
+        ctx.font = `${fontPx}px ${font}`;
+        const words = text.split(/\s+/).filter(Boolean);
+        let lines = 1;
+        let cur = "";
+        for (const w of words) {
+          const cand = cur ? `${cur} ${w}` : w;
+          if (!cur || ctx.measureText(cand).width <= innerW) {
+            cur = cand;
+          } else {
+            lines++;
+            cur = w;
+          }
+        }
+        return Math.max(1, lines);
+      }
+    }
+  } catch {
+    /* the honest estimate below carries it */
+  }
+  const perLine = Math.max(8, Math.floor(innerW / (fontPx * 0.52)));
+  return Math.max(1, Math.ceil(text.length / perLine));
+}
+
+/** The measured height of one chip — the WHOLE text, never clamped. */
+const heightCache = new Map<string, number>();
+function chipHeight(text: string, narrow: boolean, serif: boolean): number {
+  const key = `${narrow ? "n" : "w"}${serif ? "s" : "p"}:${text}`;
+  const hit = heightCache.get(key);
+  if (hit !== undefined) return hit;
+  const padX = narrow ? PAD_X_NARROW : PAD_X_WIDE;
+  const fontPx = narrow ? 11.5 : 12.5;
+  const lineH = narrow ? 16 : 17;
+  const innerW = (narrow ? CHIP_W_NARROW : CHIP_W_WIDE) - padX * 2;
+  const font = serif
+    ? `italic ${fontPx}px ${SERIF_STACK}`
+    : `${fontPx}px ${SANS_STACK}`;
+  const lines = measureLines(text, innerW, fontPx, font);
+  const h = Math.max(
+    54,
+    Math.ceil(PAD_Y * 2 + ICON_H + ICON_GAP + lines * lineH) + SAFETY_H
+  );
+  /* the cache holds one hour's grove at most, then steps aside */
+  if (heightCache.size > 2400) heightCache.clear();
+  heightCache.set(key, h);
+  return h;
+}
 
 /* ------------------------- the geometry law ------------------------ */
 
@@ -122,21 +209,19 @@ export function genealogyGeometry(narrow: boolean): GenealogyGeometry {
   return narrow
     ? {
         chipW: CHIP_W_NARROW,
-        chipH: CHIP_H_NARROW,
+        chipH: 58,
         step: STEP_NARROW,
-        rowH: ROW_H_NARROW,
+        rowGap: ROW_GAP_NARROW,
         trunkH: TRUNK_H_NARROW,
-        goldenRowH: GOLDEN_ROW_H_NARROW,
         width: 0,
         height: 0,
       }
     : {
         chipW: CHIP_W_WIDE,
-        chipH: CHIP_H_WIDE,
+        chipH: 62,
         step: STEP_WIDE,
-        rowH: ROW_H_WIDE,
+        rowGap: ROW_GAP_WIDE,
         trunkH: TRUNK_H_WIDE,
-        goldenRowH: GOLDEN_ROW_H_WIDE,
         width: 0,
         height: 0,
       };
@@ -371,18 +456,50 @@ export function layTree(
   /* ---- pass 3: vertical order — THE TREE RISES FROM THE TRUNK.
      The trunk holds the floor (bottom of the canvas, at the top of
      the input bar); the golden row stands nearest the root; every
-     generation rises above the last, frontier at the very top. */
-  const goldenOff = goldenCount > 0 ? geo.goldenRowH : 0;
+     generation rises above the last, frontier at the very top. Every
+     row carries the FULL height its own whispers measured — a taller
+     voice takes a taller band, and one generous breath of distance
+     always separates the generations. */
+  const rowH = keptRows.map((r) => {
+    const row = topologies[r.batch].rows[r.row];
+    let h = geo.chipH;
+    for (const s of row.seeds) h = Math.max(h, chipHeight(s.text, narrow, false));
+    return h;
+  });
+  const goldenH =
+    goldenCount > 0
+      ? Math.max(
+          geo.chipH,
+          ...goldenSeeds
+            .slice(0, goldenCount)
+            .map((s) => chipHeight(s.text, narrow, true))
+        )
+      : 0;
+
   const totalRows = keptRows.length;
-  const height =
-    geo.trunkH + goldenOff + totalRows * geo.rowH + SIDE_PAD;
+  const height = Math.ceil(
+    SIDE_PAD * 2 +
+      geo.trunkH +
+      (goldenCount > 0 ? GOLDEN_GAP + goldenH : 0) +
+      rowH.reduce((a, h) => a + h, 0) +
+      geo.rowGap * totalRows +
+      8
+  );
+
+  /* the trunk's top — every row is seated upward from here */
+  const trunkTop = height - SIDE_PAD - geo.trunkH;
   const rowTop = new Map<string, number>();
   const rowGen = new Map<string, number>();
-  keptRows.forEach((r, g) => {
-    const key = `${r.batch}:${r.row}`;
-    rowTop.set(key, height - SIDE_PAD - geo.trunkH - goldenOff - (g + 1) * geo.rowH);
-    rowGen.set(key, g);
-  });
+  {
+    let cursorY = trunkTop - (goldenCount > 0 ? GOLDEN_GAP + goldenH : 0);
+    keptRows.forEach((r, g) => {
+      const key = `${r.batch}:${r.row}`;
+      cursorY -= geo.rowGap;
+      rowTop.set(key, cursorY - rowH[g]);
+      rowGen.set(key, g);
+      cursorY -= rowH[g];
+    });
+  }
 
   /* ---- pass 4: x positions — leaves slot in order, parents center
      over their children, every row centered over the canvas */
@@ -453,6 +570,7 @@ export function layTree(
         golden: false,
         x,
         y: top,
+        h: chipHeight(seed.text, narrow, false),
       };
       xById.set(id, x);
       nodes.push(node);
@@ -559,12 +677,14 @@ export function layTree(
   }
 
   /* ---- the golden row — the exchange's own branches, centered,
-     standing nearest the trunk, blooming first */
+     standing nearest the trunk, blooming first; every chip aligned to
+     the same floor line, whatever its own measured height */
   const goldenNodes: GenealogyNode[] = [];
   if (goldenCount > 0) {
     const x0 = width / 2 - goldenSpan / 2;
-    const gy = height - SIDE_PAD - geo.trunkH - geo.goldenRowH + (geo.goldenRowH - geo.chipH) / 2;
+    const floor = trunkTop - GOLDEN_GAP;
     for (let i = 0; i < goldenCount; i++) {
+      const h = chipHeight(goldenSeeds[i].text, narrow, true);
       goldenNodes.push({
         id: `gold.${i}`,
         text: goldenSeeds[i].text,
@@ -575,7 +695,8 @@ export function layTree(
         wave: 0,
         golden: true,
         x: x0 + i * (geo.chipW + 12) + geo.chipW / 2,
-        y: gy,
+        y: floor - h,
+        h,
       });
     }
   }

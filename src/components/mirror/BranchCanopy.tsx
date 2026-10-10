@@ -21,8 +21,10 @@ import {
   ListTree,
   Moon,
   RefreshCw,
+  Send,
   Sparkles,
   Sprout,
+  TreeDeciduous,
   X,
 } from "lucide-react";
 import { canopyHour, growCanopy } from "@/lib/data/suggestion-banks";
@@ -58,22 +60,29 @@ import { cn } from "@/lib/utils";
 /* ------------------------------------------------------------------ */
 /*  THE LIVING TREE — THE GENEALOGY METHOD.                            */
 /*                                                                     */
-/*  A different method, as asked: the branches stand as a FAMILY TREE, */
-/*  very well arranged, expanding in all directions. The trunk rises   */
-/*  from the very top of the input bar; the first forks spread left    */
-/*  and right; every fork forks again — a tidy genealogy whose         */
-/*  generations climb upward and outward the further the walk goes.    */
+/*  A family tree rising from the very top of the input bar, walked    */
+/*  in every direction. THE READABILITY LAW: every whisper shows its   */
+/*  WHOLE text — each chip carries its own measured height, a bigger   */
+/*  voice stands in a bigger box, and one generous breath of distance  */
+/*  always separates the generations. THE NO-OVERLAP LAW: every chip   */
+/*  stands OPAQUE and the connectors live only in the gaps between     */
+/*  the generations — a line can never touch a single word.            */
 /*                                                                     */
-/*  THE NO-OVERLAP LAW. Every whisper carries a fixed box, its text    */
-/*  clamped inside; the connectors live only in the gap between the    */
-/*  generations and every chip stands OPAQUE — a line can never touch  */
-/*  a single word of a suggestion.                                     */
+/*  THE OPAQUE CHAMBER. The tree owns the whole chat box with a solid  */
+/*  wall of its own background — the conversation behind it never      */
+/*  shows through, and the walk reads like a page of its own.          */
 /*                                                                     */
-/*  THE GRAFT LAW. Press a whisper and the tree GROWS FROM THERE: a    */
-/*  whole sub-family blooms directly above the pressed chip, its       */
-/*  voices tuned to the channeling context; everything that stood      */
-/*  above folds away. The pressed chip keeps its mark and the header   */
-/*  holds the trail of the walk — the visitor is never lost.           */
+/*  THE ANSWER LIVES IN THE TREE (the zoom law). Press a whisper and   */
+/*  the whole family gracefully steps back — one smooth breath, the    */
+/*  camera pulls away, the tree dims into a living backdrop — and the  */
+/*  answer rises in a quiet panel at its heart. The visitor follows    */
+/*  the branch FROM the end of every transmission without ever         */
+/*  leaving: when the answer lands, the branches grown on it stand     */
+/*  inside the panel — one touch continues the walk, the answer that   */
+/*  follows replaces this one in the same breath. A slim reply line    */
+/*  lets the visitor speak their own words from within the answer.     */
+/*  One touch returns the full family — the walk, the graft, the       */
+/*  trail, all standing exactly where they were.                       */
 /*                                                                     */
 /*  THE THIRTY LAW. The family loads THIRTY at a time. While the       */
 /*  visitor slides through the first thirty, the next thirty are       */
@@ -85,9 +94,9 @@ import { cn } from "@/lib/utils";
 /*  few seconds, the last six after another.                           */
 /*                                                                     */
 /*  THE GPU LAW. Native two-axis scrolling carries the walk (the       */
-/*  compositor's own motion), CSS keyframes carry every bloom — one    */
-/*  run, then stillness. Not one requestAnimationFrame lives here;    */
-/*  the phone stays cool.                                              */
+/*  compositor's own motion), CSS keyframes carry every bloom and the  */
+/*  zoom itself (transform + opacity, one run, then stillness).        */
+/*  Not one requestAnimationFrame lives here; the phone stays cool.    */
 /* ------------------------------------------------------------------ */
 
 const MOVEMENT_ICONS: Record<BranchType, typeof Layers> = {
@@ -105,31 +114,6 @@ const MAX_BATCHES = 12;
 /** The harmonic pauses — twelve voices, then twelve, then six. */
 const WAVE_PAUSE_1 = 2600;
 const WAVE_PAUSE_2 = 3400;
-
-/* ------------- the answer's space (the fold on reveal) -------------- */
-
-/**
- * THE ANSWER'S SPACE — while a transmission is channeled the walk may
- * keep growing from its last choice; when the answer is revealed the
- * tree holds one graceful breath (the visitor watches the new branches
- * bloom from their own choice) and then folds to make space for the
- * answer. One touch of the summon (or the rest strip) brings the whole
- * family back, graft and trail intact.
- */
-export function useCanopyAnswerFold(
-  loading: boolean,
-  fold: (v: boolean) => void
-) {
-  const wasLoading = useRef(false);
-  useEffect(() => {
-    const was = wasLoading.current;
-    wasLoading.current = loading;
-    if (was && !loading) {
-      const id = window.setTimeout(() => fold(false), 3200);
-      return () => window.clearTimeout(id);
-    }
-  }, [loading, fold]);
-}
 
 /* ------------------- the summon button (by the input) ---------------- */
 
@@ -242,6 +226,10 @@ export function BranchCanopy({
   introSub,
   introSubExtra,
   introExtra,
+  liveQuestion,
+  liveAnswer,
+  liveLoading,
+  onLatch,
 }: {
   /** The branch of the living tree this chat belongs to. */
   category: BranchId;
@@ -262,18 +250,38 @@ export function BranchCanopy({
   /** A second, quieter line beneath the intro. */
   introSubExtra?: string | null;
   introExtra?: ReactNode;
+  /** The question of the transmission now forming (or just formed). */
+  liveQuestion?: string | null;
+  /** The answer as it arrives — grows word by word while streaming. */
+  liveAnswer?: string | null;
+  /** True while the transmission is being channeled. */
+  liveLoading?: boolean;
+  /** THE LATCH — true while the answer lives in the tree (the zoom);
+      the chat keeps its rest strip resting while the walk holds. */
+  onLatch?: (latched: boolean) => void;
 }) {
   const t = useT();
 
   /* THE FADE LAW — mount → visible on open; fade → unmount on close.
+     THE LATCH LAW: while the answer lives in the tree (the zoom), the
+     canopy holds its place even when the parent's open relaxes — the
+     visitor follows the branch from the end of the transmission; the
+     moment they step back to the walk, the parent's law applies again.
      Pure CSS transitions; render-time guarded resets only. */
   const [mounted, setMounted] = useState(open);
   const [shown, setShown] = useState(false);
   const [seenOpen, setSeenOpen] = useState(open);
 
-  if (open !== seenOpen) {
-    setSeenOpen(open);
-    if (open) {
+  /* ------------------- THE ZOOM — the answer's room ------------------ */
+  const [zoom, setZoom] = useState<{ q: string; move: BranchType | null } | null>(
+    null
+  );
+  const zoomed = zoom !== null;
+  const active = open || zoomed;
+
+  if (active !== seenOpen) {
+    setSeenOpen(active);
+    if (active) {
       setMounted(true);
       setShown(false);
     } else {
@@ -282,13 +290,47 @@ export function BranchCanopy({
   }
 
   useEffect(() => {
-    if (!open) {
-      const id = window.setTimeout(() => setMounted(false), 700);
+    if (!active) {
+      const id = window.setTimeout(() => {
+        setMounted(false);
+        /* the room closes with the walk — the answer returns to the chat */
+        setZoom(null);
+      }, 700);
       return () => window.clearTimeout(id);
     }
     const id = window.setTimeout(() => setShown(true), 30);
     return () => window.clearTimeout(id);
-  }, [open]);
+  }, [active]);
+
+  /* THE ZOOM EAR — whenever a transmission begins while the walk
+     stands (a pressed whisper, the composer, a continuation), the
+     camera pulls back and the answer rises inside the tree.
+     THE QUIET FIELD — a transmission that returned nothing (an error
+     held by the chat behind) sends the visitor gently back to the walk.
+     Both render-time guarded (the official pattern — the engine never
+     renders synchronously inside an effect). */
+  const [seenLiveKey, setSeenLiveKey] = useState<string | null>(null);
+  const liveKey =
+    mounted && liveLoading && liveQuestion ? liveQuestion : null;
+  if (liveKey && liveKey !== seenLiveKey) {
+    setSeenLiveKey(liveKey);
+    if (zoom?.q !== liveKey) setZoom({ q: liveKey, move: null });
+  } else if (!liveLoading && seenLiveKey !== null) {
+    /* the next transmission zooms again — even the very same words */
+    setSeenLiveKey(null);
+  }
+  if (zoom && !liveLoading && !liveAnswer) {
+    setZoom(null);
+  }
+
+  const exitZoom = useCallback(() => setZoom(null), []);
+
+  /* THE LATCH, spoken to the chat — the rest strip rests while the
+     answer lives in the tree (an external-system sync, never a
+     render-loop). */
+  useEffect(() => {
+    onLatch?.(zoomed);
+  }, [zoomed, onLatch]);
 
   /* THE HOURLY LAW — the grove is captured at summon; a rolled hour
      regrows the whole family by itself. Reload every hour, as asked. */
@@ -591,11 +633,17 @@ export function BranchCanopy({
 
   /* THE ANCHORED VIEW — the first layout stands at the trunk; a growing
      family keeps the visitor's reading place; a regrown family returns
-     to the floor; a fresh graft pans once so the new house is in view.
+     to the floor; a fresh graft pans once so the new house is in view;
+     a geometry flip (narrow ⟷ wide) re-anchors to the family's heart.
      One layout pass per change — never per frame. */
+  const prevNarrowRef = useRef<boolean | null>(null);
   useLayoutEffect(() => {
     const vp = vpRef.current;
     if (!vp || !mounted) return;
+    if (prevNarrowRef.current !== null && prevNarrowRef.current !== narrow) {
+      prevSize.current = { w: 0, h: 0 }; /* the geometry turned — re-anchor */
+    }
+    prevNarrowRef.current = narrow;
     const { width, height } = tree.geometry;
     const dW = width - prevSize.current.w;
     const dH = height - prevSize.current.h;
@@ -619,7 +667,7 @@ export function BranchCanopy({
       vp.scrollLeft += dW;
     }
     prevSize.current = { w: width, h: height };
-  }, [tree.geometry.width, tree.geometry.height, mounted, tree]);
+  }, [tree.geometry.width, tree.geometry.height, mounted, tree, narrow]);
 
   /* ---------------- THE GRAFT — the walk grows from a choice -------- */
 
@@ -636,12 +684,11 @@ export function BranchCanopy({
     [tree]
   );
 
-  /* the pan effect is folded into the anchored view's layout pass */
-
   /* THE QUIET PICK — the walk grows FROM the pressed whisper: the
      pressed chip is marked, a whole sub-family is grafted directly
      above it, tuned to the channeling context, and everything that
-     stood above folds away. The trail remembers every step. */
+     stood above folds away. The trail remembers every step. And THE
+     ZOOM: the camera pulls back and the answer rises inside the tree. */
   const pick = useCallback(
     (node: GenealogyNode) => {
       if (disabled) return;
@@ -693,6 +740,8 @@ export function BranchCanopy({
           panReqRef.current = node.id; /* one quiet pan — the new house in view */
         }
       }
+      /* THE ZOOM — the answer rises inside the tree, instantly */
+      setZoom({ q: node.text, move: node.movement });
       onPick(node.text);
     },
     [
@@ -701,6 +750,73 @@ export function BranchCanopy({
       onPick,
       scopeHint,
       tree,
+      grove,
+      idf,
+      seenSnapshot,
+      contextSnapshot,
+      hour,
+      commitTopologies,
+      markSpent,
+      spent,
+    ]
+  );
+
+  /* THE WALK CONTINUES FROM THE ANSWER — a branch grown on the reply,
+     pressed inside the panel, keeps the walk going from the family's
+     last standing place: the trail grows, a new house is grafted from
+     the pressed chip's own node, and the next answer replaces this one
+     in the same quiet room. */
+  const sendFromPanel = useCallback(
+    (text: string, move: BranchType | null) => {
+      if (disabled || liveLoading || !text.trim()) return;
+      recordExpansion("pick", { scope: scopeHint ?? null, movement: move });
+      recordJourney({ b: category, s: scopeHint ?? undefined });
+      recordSeen([text]);
+      setLineage((ln) =>
+        [...ln.filter((l) => l.text !== text), { id: null, text }].slice(-10)
+      );
+      if (pickedId) {
+        const pickField = buildResonanceField({
+          scope: scopeHint ?? null,
+          context: `${text}\n${contextSnapshot}`.trim() || null,
+          buds: [text],
+          hour,
+        });
+        const fresh = grove.filter((w) => !spent.has(w.text.toLowerCase()));
+        if (fresh.length > 0) {
+          const hits = rankWhispers(fresh, pickField, {
+            idf,
+            seen: seenSnapshot,
+            limit: BATCH_SIZE,
+            perSubject: 2,
+          });
+          const chosen =
+            hits.length > 0
+              ? hits
+              : fresh.map((w) => ({ ...w, score: 0 })).slice(0, BATCH_SIZE);
+          const seeds: GenealogySeed[] = chosen
+            .slice(0, BATCH_SIZE)
+            .map((w) => ({ text: w.text, movement: w.movement, score: w.score }));
+          if (seeds.length > 0) {
+            const graft = buildGraftTopology(seeds, pickedId, narrowRef.current);
+            markSpent(seeds);
+            commitTopologies((t) =>
+              t.length >= MAX_BATCHES ? t : [...t, graft]
+            );
+            panReqRef.current = pickedId;
+          }
+        }
+      }
+      setZoom({ q: text, move });
+      onPick(text);
+    },
+    [
+      category,
+      disabled,
+      liveLoading,
+      onPick,
+      pickedId,
+      scopeHint,
       grove,
       idf,
       seenSnapshot,
@@ -735,6 +851,48 @@ export function BranchCanopy({
     return s;
   }, [pickedId, tree]);
 
+  /* THE ANSWER'S ROOM — the reply's own branches, pressed from inside
+     the panel; the walk's own reply line beneath them. */
+  const contSeeds = useMemo(() => {
+    const seen = new Set<string>();
+    const out: LearnedBranch[] = [];
+    for (const b of channeling ?? []) {
+      const k = b.question.toLowerCase();
+      if (seen.has(k) || (zoom && k === zoom.q.toLowerCase())) continue;
+      seen.add(k);
+      out.push(b);
+      if (out.length >= 6) break;
+    }
+    return out;
+  }, [channeling, zoom]);
+
+  /* the panel's streaming body — pinned to the newest words while the
+     answer grows, unless the visitor scrolled up to read */
+  const bodyRef = useRef<HTMLDivElement | null>(null);
+  const pinnedRef = useRef(true);
+  const onBodyScroll = useCallback(() => {
+    const el = bodyRef.current;
+    if (!el) return;
+    pinnedRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 90;
+  }, []);
+  useEffect(() => {
+    if (!liveLoading) return;
+    const el = bodyRef.current;
+    if (el && pinnedRef.current) el.scrollTop = el.scrollHeight;
+  }, [liveAnswer, liveLoading]);
+
+  /* the reply line inside the answer — cleared when the room turns to
+     a new question (render-time guarded reset, the official pattern) */
+  const [replyDraft, setReplyDraft] = useState("");
+  const [seenReplyQ, setSeenReplyQ] = useState<string | null>(null);
+  {
+    const q = zoom?.q ?? null;
+    if (q !== seenReplyQ) {
+      setSeenReplyQ(q);
+      if (replyDraft !== "") setReplyDraft("");
+    }
+  }
+
   if (!mounted) return null;
 
   /* ---------------- the rendered family -----------------------------
@@ -742,6 +900,8 @@ export function BranchCanopy({
      simply not there yet; each bloom is one CSS keyframe, run once. */
   const batchCount = topologies.length;
   const geo = tree.geometry;
+  const answer = (liveAnswer ?? "").trim();
+  const ZoomIcon = zoom?.move ? (MOVEMENT_ICONS[zoom.move] ?? Layers) : Layers;
 
   const nodeVisible = (n: GenealogyNode): boolean => {
     if (n.golden) return true;
@@ -770,7 +930,7 @@ export function BranchCanopy({
     const p = tree.byId.get(n.parent);
     if (!p) return;
     const x1 = p.x;
-    const y1 = p.y + geo.chipH + 2;
+    const y1 = p.y + p.h + 2;
     const x2 = n.x;
     const y2 = n.y - 2;
     const mid1 = y1 + (y2 - y1) * 0.45;
@@ -805,7 +965,7 @@ export function BranchCanopy({
       data-testid={testIdPrefix}
       aria-hidden={!shown}
       className={cn(
-        "absolute inset-0 z-20 flex min-h-0 flex-col bg-[color-mix(in_srgb,var(--background)_94%,transparent)] transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]",
+        "absolute inset-0 z-20 flex min-h-0 flex-col bg-background transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]",
         shown
           ? "pointer-events-auto translate-y-0 opacity-100"
           : "pointer-events-none translate-y-2 opacity-0"
@@ -816,7 +976,7 @@ export function BranchCanopy({
           Mirror rides here — the score that evolves with the walk —
           and beneath the title, the trail of the walk itself: every
           pressed whisper, in order, so the visitor is never lost. */}
-      <div className="shrink-0 border-b hairline bg-[color-mix(in_srgb,var(--background)_70%,transparent)] px-3 pb-2 pt-[52px] backdrop-blur-xl sm:px-5 sm:pt-[60px]">
+      <div className="shrink-0 border-b hairline bg-background px-3 pb-2 pt-[52px] sm:px-5 sm:pt-[60px]">
         <div className="mx-auto flex w-full max-w-[680px] items-center justify-between gap-2">
           <div className="flex min-w-0 items-center gap-2">
             <span
@@ -914,248 +1074,424 @@ export function BranchCanopy({
       </div>
 
       {/* --------------------- the walkable family --------------------- */}
-      <div
-        ref={vpRef}
-        role="region"
-        aria-label={t("The living tree")}
-        className="nice-scroll relative min-h-0 flex-1 overflow-auto"
-        style={{
-          overscrollBehavior: "contain",
-          touchAction: "pan-x pan-y",
-          WebkitOverflowScrolling: "touch",
-        }}
-      >
-        {/* THE GROW — the ready thirty, one breath away, always in reach */}
-        <div className="pointer-events-none sticky top-0 z-20 flex h-0 justify-center px-3">
-          {prepared || groveDone ? (
-            <button
-              type="button"
-              onClick={grow}
-              disabled={!prepared || disabled}
-              aria-label={
-                prepared
-                  ? t("Grow the family — 30 more branches stand ready")
-                  : t("This hour's family is complete")
-              }
-              data-testid={`${testIdPrefix}-grow`}
-              className={cn(
-                "pointer-events-auto mt-2 flex items-center gap-2 rounded-full border px-4 py-1.5 text-[11px] font-medium uppercase tracking-[0.14em] backdrop-blur-xl transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-45",
-                prepared
-                  ? "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_44%,transparent)] bg-[color-mix(in_srgb,var(--background)_82%,transparent)] text-[var(--scope-a,var(--gd))] hover:shadow-[0_0_18px_-6px_color-mix(in_srgb,var(--scope-a,var(--gd))_60%,transparent)]"
-                  : "border-[color-mix(in_srgb,var(--hairline)_80%,transparent)] bg-[color-mix(in_srgb,var(--background)_72%,transparent)] text-muted-foreground"
-              )}
-            >
-              <Sprout className="size-3.5" aria-hidden="true" />
-              {prepared
-                ? t("{count} more stand ready — grow the family", {
-                    count: preparedCount,
-                  })
-                : groveDone
-                  ? t("This hour's family is complete")
-                  : t("The family is complete")}
-            </button>
-          ) : null}
-        </div>
-
-        {/* THE CANVAS — the whole family, walked in every direction */}
+      <div className="relative min-h-0 flex-1">
         <div
-          className="relative mx-auto"
+          ref={vpRef}
+          data-dim={zoomed ? "true" : "false"}
+          role="region"
+          aria-label={t("The living tree")}
+          className="canopy-stage nice-scroll absolute inset-0 overflow-auto"
           style={{
-            width: geo.width,
-            height: geo.height,
-            minWidth: "100%",
+            overscrollBehavior: "contain",
+            touchAction: "pan-x pan-y",
+            WebkitOverflowScrolling: "touch",
           }}
         >
-          {/* the sentinel — the frontier's ear, heard by the observer */}
-          <div
-            ref={sentinelRef}
-            aria-hidden="true"
-            className="absolute left-0 top-0 h-px w-full"
-          />
-
-          {/* the trunk — one breathing line rising from the input bar */}
-          <div
-            aria-hidden="true"
-            className="animate-line-breathe absolute"
-            style={{
-              left: geo.width / 2 - 1,
-              bottom: 0,
-              width: 2,
-              height: geo.trunkH,
-              background:
-                "linear-gradient(0deg, transparent, var(--scope-a,var(--gd)) 18%, var(--scope-b,var(--pk)) 100%)",
-            }}
-          />
-          {/* the root flare — the tree drinks from the input bar */}
-          <div
-            aria-hidden="true"
-            className="absolute rounded-full"
-            style={{
-              left: geo.width / 2 - 110,
-              bottom: -26,
-              width: 220,
-              height: 64,
-              background:
-                "radial-gradient(ellipse at 50% 100%, color-mix(in srgb, var(--scope-a,var(--gd)) 30%, transparent), transparent 70%)",
-            }}
-          />
-
-          {/* the connectors — every family tie, one static SVG; each
-              line keeps two pixels of air clear of every chip, and the
-              walk's own chain burns brighter than the rest */}
-          <svg
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-0"
-            width={geo.width}
-            height={geo.height}
-            viewBox={`0 0 ${geo.width} ${geo.height}`}
-            fill="none"
-          >
-            {trunkArms.map((a) => (
-              <path
-                key={a.key}
-                d={a.d}
-                stroke={
-                  a.chain
-                    ? "color-mix(in srgb, var(--scope-a,var(--gd)) 70%, transparent)"
-                    : "color-mix(in srgb, var(--scope-a,var(--gd)) 34%, transparent)"
-                }
-                strokeWidth={a.chain ? 2 : 1.6}
-                strokeLinecap="round"
-              />
-            ))}
-            {paths.map((p) => (
-              <g
-                key={p.key}
-                className="genea-draw"
-                style={{ animationDelay: `${p.delay + 180}ms` }}
-              >
-                <path
-                  d={p.d}
-                  stroke={
-                    p.golden
-                      ? "color-mix(in srgb, #f59e0b 30%, transparent)"
-                      : p.chain
-                        ? "color-mix(in srgb, var(--scope-a,var(--gd)) 40%, transparent)"
-                        : "color-mix(in srgb, var(--scope-a,var(--gd)) 16%, transparent)"
-                  }
-                  strokeWidth="3.4"
-                  strokeLinecap="round"
-                />
-                <path
-                  d={p.d}
-                  stroke={
-                    p.golden
-                      ? "color-mix(in srgb, #f59e0b 72%, transparent)"
-                      : p.chain
-                        ? "color-mix(in srgb, var(--scope-a,var(--gd)) 88%, transparent)"
-                        : "color-mix(in srgb, var(--scope-a,var(--gd)) 62%, transparent)"
-                  }
-                  strokeWidth={p.chain ? 1.6 : 1.2}
-                  strokeLinecap="round"
-                />
-              </g>
-            ))}
-          </svg>
-
-          {/* the whispers — the family's own chips: opaque by law, so a
-              line can never cross a word */}
-          {nodes.map((n, i) => {
-            const deep = n.score >= 2.4;
-            const attuned = !deep && n.score > 0;
-            const Icon = MOVEMENT_ICONS[n.movement] ?? Layers;
-            const isPicked = n.id === pickedId;
-            const onChain = chainSet.has(n.id);
-            const flashing = n.id === flashId;
-            return (
+          {/* THE GROW — the ready thirty, one breath away, always in reach */}
+          <div className="pointer-events-none sticky top-0 z-20 flex h-0 justify-center px-3">
+            {prepared || groveDone ? (
               <button
-                key={n.id}
                 type="button"
-                onClick={() => pick(n)}
-                disabled={disabled}
-                title={t(BRANCH_TYPE_LABELS[n.movement])}
-                data-testid={
-                  n.golden
-                    ? `${testIdPrefix}-crown-chip`
-                    : isPicked
-                      ? `${testIdPrefix}-whisper-picked`
-                      : `${testIdPrefix}-whisper`
+                onClick={grow}
+                disabled={!prepared || disabled}
+                aria-label={
+                  prepared
+                    ? t("Grow the family — 30 more branches stand ready")
+                    : t("This hour's family is complete")
                 }
+                data-testid={`${testIdPrefix}-grow`}
                 className={cn(
-                  "genea-bloom focus-glow absolute z-10 flex flex-col items-start gap-0.5 overflow-hidden rounded-2xl border px-3 py-2 text-left shadow-[0_3px_14px_-8px_rgba(0,0,0,0.55)] transition-colors duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-50",
-                  narrow
-                    ? "text-[11px] leading-[1.3]"
-                    : "text-[12.5px] leading-[1.35]",
-                  n.golden
-                    ? "border-[color-mix(in_srgb,#f59e0b_52%,transparent)] bg-[color-mix(in_srgb,#f59e0b_14%,var(--background)_86%)] font-serif italic text-foreground shadow-[0_0_16px_-6px_color-mix(in_srgb,#f59e0b_60%,transparent)]"
-                    : isPicked
-                      ? "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_85%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_18%,var(--background)_82%)] text-foreground shadow-[0_0_20px_-5px_color-mix(in_srgb,var(--scope-a,var(--gd))_70%,transparent)]"
-                      : onChain
-                        ? "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_66%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_12%,var(--background)_88%)] text-foreground"
-                        : deep
-                          ? "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_62%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_13%,var(--background)_87%)] text-foreground shadow-[0_0_16px_-6px_color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)]"
-                          : attuned
-                            ? "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_42%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_7%,var(--background)_93%)] text-foreground/90"
-                            : "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_28%,transparent)] bg-[color-mix(in_srgb,var(--foreground)_3%,var(--background)_97%)] text-foreground/85 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_58%,transparent)]",
-                  flashing && "genea-flash"
+                  "pointer-events-auto mt-2 flex items-center gap-2 rounded-full border px-4 py-1.5 text-[11px] font-medium uppercase tracking-[0.14em] backdrop-blur-xl transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-45",
+                  prepared
+                    ? "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_44%,transparent)] bg-[color-mix(in_srgb,var(--background)_82%,transparent)] text-[var(--scope-a,var(--gd))] hover:shadow-[0_0_18px_-6px_color-mix(in_srgb,var(--scope-a,var(--gd))_60%,transparent)]"
+                    : "border-[color-mix(in_srgb,var(--hairline)_80%,transparent)] bg-[color-mix(in_srgb,var(--background)_72%,transparent)] text-muted-foreground"
                 )}
-                style={
-                  {
-                    left: n.x,
-                    top: n.y,
-                    width: geo.chipW,
-                    height: geo.chipH,
-                    transform: "translateX(-50%)",
-                    animationDelay: `${n.golden ? i * 40 : Math.min(n.wave * 130 + (i % 12) * 26, 640)}ms`,
-                  } as CSSProperties
-                }
               >
-                {isPicked && (
-                  <span
-                    aria-hidden="true"
-                    className="animate-pulse absolute right-1.5 top-1.5 flex size-1.5 rounded-full bg-[var(--scope-a,var(--gd))]"
-                  />
-                )}
-                <Icon
-                  className={cn(
-                    "size-3 shrink-0",
-                    n.golden
-                      ? "text-[#f59e0b]"
-                      : "text-[var(--scope-a,var(--gd))] opacity-80"
-                  )}
-                  aria-hidden="true"
-                />
-                <span
-                  className={cn(
-                    "w-full",
-                    narrow ? "line-clamp-3" : "line-clamp-2"
-                  )}
-                >
-                  {n.text}
-                </span>
+                <Sprout className="size-3.5" aria-hidden="true" />
+                {prepared
+                  ? t("{count} more stand ready — grow the family", {
+                      count: preparedCount,
+                    })
+                  : groveDone
+                    ? t("This hour's family is complete")
+                    : t("The family is complete")}
               </button>
-            );
-          })}
+            ) : null}
+          </div>
+
+          {/* THE CANVAS — the whole family, walked in every direction */}
+          <div
+            className="relative mx-auto"
+            style={{
+              width: geo.width,
+              height: geo.height,
+              minWidth: "100%",
+            }}
+          >
+            {/* the sentinel — the frontier's ear, heard by the observer */}
+            <div
+              ref={sentinelRef}
+              aria-hidden="true"
+              className="absolute left-0 top-0 h-px w-full"
+            />
+
+            {/* the trunk — one breathing line rising from the input bar */}
+            <div
+              aria-hidden="true"
+              className="animate-line-breathe absolute"
+              style={{
+                left: geo.width / 2 - 1,
+                bottom: 0,
+                width: 2,
+                height: geo.trunkH,
+                background:
+                  "linear-gradient(0deg, transparent, var(--scope-a,var(--gd)) 18%, var(--scope-b,var(--pk)) 100%)",
+              }}
+            />
+            {/* the root flare — the tree drinks from the input bar */}
+            <div
+              aria-hidden="true"
+              className="absolute rounded-full"
+              style={{
+                left: geo.width / 2 - 110,
+                bottom: -26,
+                width: 220,
+                height: 64,
+                background:
+                  "radial-gradient(ellipse at 50% 100%, color-mix(in srgb, var(--scope-a,var(--gd)) 30%, transparent), transparent 70%)",
+              }}
+            />
+
+            {/* the connectors — every family tie, one static SVG; each
+                line keeps two pixels of air clear of every chip, and the
+                walk's own chain burns brighter than the rest */}
+            <svg
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0"
+              width={geo.width}
+              height={geo.height}
+              viewBox={`0 0 ${geo.width} ${geo.height}`}
+              fill="none"
+            >
+              {trunkArms.map((a) => (
+                <path
+                  key={a.key}
+                  d={a.d}
+                  stroke={
+                    a.chain
+                      ? "color-mix(in srgb, var(--scope-a,var(--gd)) 70%, transparent)"
+                      : "color-mix(in srgb, var(--scope-a,var(--gd)) 34%, transparent)"
+                  }
+                  strokeWidth={a.chain ? 2 : 1.6}
+                  strokeLinecap="round"
+                />
+              ))}
+              {paths.map((p) => (
+                <g
+                  key={p.key}
+                  className="genea-draw"
+                  style={{ animationDelay: `${p.delay + 180}ms` }}
+                >
+                  <path
+                    d={p.d}
+                    stroke={
+                      p.golden
+                        ? "color-mix(in srgb, #f59e0b 30%, transparent)"
+                        : p.chain
+                          ? "color-mix(in srgb, var(--scope-a,var(--gd)) 40%, transparent)"
+                          : "color-mix(in srgb, var(--scope-a,var(--gd)) 16%, transparent)"
+                    }
+                    strokeWidth="3.4"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d={p.d}
+                    stroke={
+                      p.golden
+                        ? "color-mix(in srgb, #f59e0b 72%, transparent)"
+                        : p.chain
+                          ? "color-mix(in srgb, var(--scope-a,var(--gd)) 88%, transparent)"
+                          : "color-mix(in srgb, var(--scope-a,var(--gd)) 62%, transparent)"
+                    }
+                    strokeWidth={p.chain ? 1.6 : 1.2}
+                    strokeLinecap="round"
+                  />
+                </g>
+              ))}
+            </svg>
+
+            {/* the whispers — the family's own chips: opaque by law, the
+                WHOLE text inside each one's measured box, and a line can
+                never cross a word */}
+            {nodes.map((n, i) => {
+              const deep = n.score >= 2.4;
+              const attuned = !deep && n.score > 0;
+              const Icon = MOVEMENT_ICONS[n.movement] ?? Layers;
+              const isPicked = n.id === pickedId;
+              const onChain = chainSet.has(n.id);
+              const flashing = n.id === flashId;
+              return (
+                <button
+                  key={n.id}
+                  type="button"
+                  onClick={() => pick(n)}
+                  disabled={disabled}
+                  title={t(BRANCH_TYPE_LABELS[n.movement])}
+                  data-testid={
+                    n.golden
+                      ? `${testIdPrefix}-crown-chip`
+                      : isPicked
+                        ? `${testIdPrefix}-whisper-picked`
+                        : `${testIdPrefix}-whisper`
+                  }
+                  className={cn(
+                    "genea-bloom focus-glow absolute z-10 flex flex-col items-start gap-0.5 rounded-2xl border px-3 py-2 text-left shadow-[0_3px_14px_-8px_rgba(0,0,0,0.55)] transition-colors duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-50",
+                    narrow ? "px-2.5 text-[11.5px] leading-4" : "text-[12.5px] leading-[17px]",
+                    n.golden
+                      ? "border-[color-mix(in_srgb,#f59e0b_52%,transparent)] bg-[color-mix(in_srgb,#f59e0b_14%,var(--background)_86%)] font-serif italic text-foreground shadow-[0_0_16px_-6px_color-mix(in_srgb,#f59e0b_60%,transparent)]"
+                      : isPicked
+                        ? "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_85%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_18%,var(--background)_82%)] text-foreground shadow-[0_0_20px_-5px_color-mix(in_srgb,var(--scope-a,var(--gd))_70%,transparent)]"
+                        : onChain
+                          ? "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_66%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_12%,var(--background)_88%)] text-foreground"
+                          : deep
+                            ? "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_62%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_13%,var(--background)_87%)] text-foreground shadow-[0_0_16px_-6px_color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)]"
+                            : attuned
+                              ? "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_42%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_7%,var(--background)_93%)] text-foreground/90"
+                              : "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_28%,transparent)] bg-[color-mix(in_srgb,var(--foreground)_3%,var(--background)_97%)] text-foreground/85 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_58%,transparent)]",
+                    flashing && "genea-flash"
+                  )}
+                  style={
+                    {
+                      left: n.x,
+                      top: n.y,
+                      width: geo.chipW,
+                      height: n.h,
+                      transform: "translateX(-50%)",
+                      animationDelay: `${n.golden ? i * 40 : Math.min(n.wave * 130 + (i % 12) * 26, 640)}ms`,
+                    } as CSSProperties
+                  }
+                >
+                  {isPicked && (
+                    <span
+                      aria-hidden="true"
+                      className="animate-pulse absolute right-1.5 top-1.5 flex size-1.5 rounded-full bg-[var(--scope-a,var(--gd))]"
+                    />
+                  )}
+                  <Icon
+                    className={cn(
+                      "size-3 shrink-0",
+                      n.golden
+                        ? "text-[#f59e0b]"
+                        : "text-[var(--scope-a,var(--gd))] opacity-80"
+                    )}
+                    aria-hidden="true"
+                  />
+                  <span className="w-full whitespace-pre-wrap break-words">
+                    {n.text}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* THE EMPTY ROOM'S OWN IDENTITY — spoken above the trunk */}
+          {(introSub || introSubExtra || introExtra) && (
+            <div className="pointer-events-none sticky bottom-2 z-10 flex flex-col items-center gap-2 px-4 text-center">
+              {introSub && (
+                <p className="genea-bloom still-bloom max-w-[460px] rounded-2xl border border-[color-mix(in_srgb,var(--scope-a,var(--gd))_22%,transparent)] bg-[color-mix(in_srgb,var(--background)_72%,transparent)] px-4 py-2.5 text-[13.5px] leading-relaxed text-muted-foreground backdrop-blur-xl">
+                  {introSub}
+                </p>
+              )}
+              {introSubExtra && (
+                <p className="genea-bloom still-bloom max-w-[440px] rounded-2xl border border-[color-mix(in_srgb,var(--scope-a,var(--gd))_16%,transparent)] bg-[color-mix(in_srgb,var(--background)_72%,transparent)] px-4 py-2 text-[13px] italic leading-relaxed text-muted-foreground/80 backdrop-blur-xl">
+                  {introSubExtra}
+                </p>
+              )}
+              {introExtra && (
+                <div className="genea-bloom still-bloom pointer-events-auto flex justify-center">
+                  {introExtra}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* THE EMPTY ROOM'S OWN IDENTITY — spoken above the trunk */}
-        {(introSub || introSubExtra || introExtra) && (
-          <div className="pointer-events-none sticky bottom-2 z-10 flex flex-col items-center gap-2 px-4 text-center">
-            {introSub && (
-              <p className="genea-bloom still-bloom max-w-[460px] rounded-2xl border border-[color-mix(in_srgb,var(--scope-a,var(--gd))_22%,transparent)] bg-[color-mix(in_srgb,var(--background)_72%,transparent)] px-4 py-2.5 text-[13.5px] leading-relaxed text-muted-foreground backdrop-blur-xl">
-                {introSub}
-              </p>
-            )}
-            {introSubExtra && (
-              <p className="genea-bloom still-bloom max-w-[440px] rounded-2xl border border-[color-mix(in_srgb,var(--scope-a,var(--gd))_16%,transparent)] bg-[color-mix(in_srgb,var(--background)_72%,transparent)] px-4 py-2 text-[13px] italic leading-relaxed text-muted-foreground/80 backdrop-blur-xl">
-                {introSubExtra}
-              </p>
-            )}
-            {introExtra && (
-              <div className="genea-bloom still-bloom pointer-events-auto flex justify-center">
-                {introExtra}
+        {/* ------------------- THE ZOOM — the veil -------------------
+            the family steps back into a living backdrop; one touch of
+            it returns the walk */}
+        {zoomed && (
+          <div
+            onClick={exitZoom}
+            aria-hidden="true"
+            data-testid={`${testIdPrefix}-veil`}
+            className="canopy-veil absolute inset-0 z-20 bg-[color-mix(in_srgb,var(--background)_28%,transparent)]"
+          />
+        )}
+
+        {/* ------------- THE ZOOM — the answer lives here -------------
+            the answer rises at the heart of the tree; when it lands,
+            the branches grown on it stand inside the room and one
+            touch continues the walk without ever leaving */}
+        {zoom && (
+          <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center p-2.5 sm:p-5">
+            <section
+              key={zoom.q}
+              data-testid={`${testIdPrefix}-zoom`}
+              aria-label={zoom.q}
+              className="canopy-panel pointer-events-auto flex max-h-full w-full max-w-[640px] flex-col overflow-hidden rounded-3xl border bg-background shadow-[0_28px_80px_-32px_rgba(0,0,0,0.65)]"
+              style={{
+                borderColor:
+                  "color-mix(in srgb, var(--scope-a,var(--gd)) 30%, transparent)",
+              }}
+            >
+              {/* the question — the whisper the visitor walked to */}
+              <header className="flex shrink-0 items-start justify-between gap-3 border-b px-4 py-3 sm:px-5" style={{ borderColor: "color-mix(in srgb, var(--hairline) 70%, transparent)" }}>
+                <div className="flex min-w-0 items-start gap-2.5">
+                  <span
+                    className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--scope-a,var(--gd))_42%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_10%,transparent)]"
+                    aria-hidden="true"
+                  >
+                    <ZoomIcon className="size-3.5 text-[var(--scope-a,var(--gd))]" />
+                  </span>
+                  <div className="min-w-0">
+                    {zoom.move && (
+                      <p className="mono-label text-[8px] uppercase tracking-[0.2em] text-muted-foreground/70">
+                        {t(BRANCH_TYPE_LABELS[zoom.move])}
+                      </p>
+                    )}
+                    <p className="break-words text-[14px] font-medium leading-snug text-foreground">
+                      {zoom.q}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={exitZoom}
+                  aria-label={t("Back to the tree")}
+                  title={t("Back to the tree")}
+                  data-testid={`${testIdPrefix}-zoom-back`}
+                  className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+                >
+                  <TreeDeciduous className="size-3.5" aria-hidden="true" />
+                </button>
+              </header>
+
+              {/* the answer — growing word by word while it channels */}
+              <div
+                ref={bodyRef}
+                onScroll={onBodyScroll}
+                data-testid={`${testIdPrefix}-zoom-answer`}
+                className="nice-scroll min-h-0 flex-1 overflow-y-auto px-4 py-3.5 sm:px-5"
+              >
+                {answer ? (
+                  <div className="canopy-answer whitespace-pre-wrap break-words text-[13.5px] leading-[1.75] text-foreground/90 sm:text-[14px]">
+                    {answer}
+                    {liveLoading && (
+                      <span
+                        aria-hidden="true"
+                        className="ml-1 inline-block h-[13px] w-[7px] translate-y-[1px] animate-pulse rounded-[2px] bg-[var(--scope-a,var(--gd))] align-baseline opacity-70"
+                      />
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 py-5 text-muted-foreground" aria-live="polite">
+                    <span
+                      aria-hidden="true"
+                      className="animate-line-breathe h-4 w-px shrink-0"
+                      style={{
+                        background:
+                          "linear-gradient(180deg, var(--scope-a,var(--gd)), transparent)",
+                      }}
+                    />
+                    <span className="mono-label text-[10px] uppercase tracking-[0.22em]">
+                      {t("Channeling")}
+                    </span>
+                  </div>
+                )}
               </div>
-            )}
+
+              {/* the walk continues from the answer's own branches —
+                  and a slim line carries the visitor's own words */}
+              {!liveLoading && answer && (
+                <footer className="flex shrink-0 flex-col gap-2.5 border-t px-4 py-3 sm:px-5" style={{ borderColor: "color-mix(in srgb, var(--hairline) 70%, transparent)" }}>
+                  {contSeeds.length > 0 && (
+                    <div className="flex flex-col gap-1.5">
+                      <span className="mono-label flex items-center gap-1.5 text-[8.5px] uppercase tracking-[0.2em] text-muted-foreground/70">
+                        <Sprout
+                          className="size-3 text-[var(--scope-a,var(--gd))]"
+                          aria-hidden="true"
+                        />
+                        {t("Continue the walk")}
+                      </span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {contSeeds.map((b) => {
+                          const CIcon = MOVEMENT_ICONS[b.type] ?? Layers;
+                          return (
+                            <button
+                              key={b.question}
+                              type="button"
+                              onClick={() => sendFromPanel(b.question, b.type)}
+                              disabled={disabled}
+                              title={t(BRANCH_TYPE_LABELS[b.type])}
+                              data-testid={`${testIdPrefix}-cont`}
+                              className="focus-glow flex max-w-full items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11.5px] leading-snug text-foreground/90 transition-all duration-300 hover:-translate-y-px hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_60%,transparent)] hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                              style={{
+                                borderColor:
+                                  "color-mix(in srgb, var(--scope-a,var(--gd)) 30%, transparent)",
+                                backgroundColor:
+                                  "color-mix(in srgb, var(--scope-a,var(--gd)) 6%, var(--background))",
+                              }}
+                            >
+                              <CIcon
+                                className="size-3 shrink-0 text-[var(--scope-a,var(--gd))] opacity-80"
+                                aria-hidden="true"
+                              />
+                              <span className="truncate">{b.question}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      const q = replyDraft.trim();
+                      if (!q) return;
+                      setReplyDraft("");
+                      sendFromPanel(q, null);
+                    }}
+                    className="flex items-center gap-1.5 rounded-full border py-1 pl-3.5 pr-1 transition-colors duration-300 focus-within:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)]"
+                    style={{
+                      borderColor:
+                        "color-mix(in srgb, var(--hairline) 80%, transparent)",
+                    }}
+                  >
+                    <label htmlFor={`${testIdPrefix}-zoom-reply`} className="sr-only">
+                      {t("Reply within the branch…")}
+                    </label>
+                    <input
+                      id={`${testIdPrefix}-zoom-reply`}
+                      value={replyDraft}
+                      onChange={(e) => setReplyDraft(e.target.value)}
+                      placeholder={t("Reply within the branch…")}
+                      disabled={disabled}
+                      autoComplete="off"
+                      data-testid={`${testIdPrefix}-zoom-reply`}
+                      className="min-w-0 flex-1 bg-transparent py-1 text-[13px] text-foreground placeholder:text-muted-foreground/55 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                    />
+                    <button
+                      type="submit"
+                      disabled={disabled || !replyDraft.trim()}
+                      aria-label={t("Send")}
+                      className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--scope-a,var(--gd))] to-[color-mix(in_srgb,var(--scope-b,var(--pk))_70%,var(--scope-a,var(--gd)))] text-[#101010] shadow-[0_0_14px_-6px_color-mix(in_srgb,var(--scope-a,var(--gd))_70%,transparent)] transition-all duration-300 hover:scale-[1.04] disabled:cursor-not-allowed disabled:opacity-35 disabled:shadow-none"
+                    >
+                      <Send className="size-3" aria-hidden="true" />
+                    </button>
+                  </form>
+                </footer>
+              )}
+            </section>
           </div>
         )}
       </div>

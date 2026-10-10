@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -20,7 +20,6 @@ import {
   BranchCanopy,
   CanopyRestStrip,
   CanopySummonButton,
-  useCanopyAnswerFold,
 } from "./BranchCanopy";
 import {
   forgeChatPhases,
@@ -1055,12 +1054,17 @@ function BenchChat() {
      empty room, fading when the answer arrives, summoned again by the
      button beside the input. */
   const [summoned, setSummoned] = useState(false);
+  /* while the answer lives in the tree, the rest strip rests too */
+  const [canopyLatch, setCanopyLatch] = useState(false);
+  const onCanopyLatch = useCallback((v: boolean) => setCanopyLatch(v), []);
 
   const { status, messages, draft, error, activeQuery } = forgeSession;
   const loading = status === "loading";
-  /* THE ANSWER'S SPACE — the walk grows while the transmission runs;
-     the revealed answer folds the tree and takes its room. */
-  useCanopyAnswerFold(loading, setSummoned);
+  /* THE ANSWER LIVES IN THE TREE — the walk stays standing through the
+     transmission; the answer rises inside it and the walk continues
+     from the end of the reply without ever leaving the branches. */
+  const lastForgeMsg =
+    messages.length > 0 ? messages[messages.length - 1] : null;
 
   useEffect(() => {
     if (!loading) return;
@@ -1081,10 +1085,7 @@ function BenchChat() {
 
   const send = (text?: string) => {
     const q = (text ?? draft).trim();
-    if (!q || loading) return;
-    /* the tree steps aside as the answer begins to form */
-    setSummoned(false);
-    /* IMAGE CRYSTALLIZATION — an image is asked for by name: the last
+    if (!q || loading) return;    /* IMAGE CRYSTALLIZATION — an image is asked for by name: the last
        channel (the forge's most recent stroke) crystallizes at once,
        shaped by the visitor's words; with an empty thread, the words
        themselves crystallize. */
@@ -1219,6 +1220,12 @@ function BenchChat() {
           [...messages].reverse().find((m) => m.branches?.length)?.branches ??
           null
         }
+        liveLoading={loading}
+        liveQuestion={
+          loading ? activeQuery || null : lastForgeMsg?.query || null
+        }
+        liveAnswer={loading ? null : lastForgeMsg?.text || null}
+        onLatch={onCanopyLatch}
       />
 
       {/* THE TRUNK'S REST — the living tree's slim floor at the top of
@@ -1227,7 +1234,7 @@ function BenchChat() {
         open={
           messages.length === 0 && status === "idle" && !error
             ? true
-            : summoned || loading
+            : summoned || loading || canopyLatch
         }
         onSummon={() => setSummoned(true)}
         disabled={loading}

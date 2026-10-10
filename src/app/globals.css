@@ -1932,3 +1932,66 @@ html:not(.dark) .scope-lightcodes {
     animation: none;
   }
 }
+
+/* --------------------------------------------------------------------
+   THE ZOOM — THE ANSWER LIVES IN THE TREE. When a transmission begins
+   from within the walk, the whole family steps back in one smooth,
+   compositor-owned breath (transform + opacity + filter only — no
+   layout, no frames, no lag) and becomes a living backdrop behind the
+   answer panel. One class toggle, one transition, then stillness. */
+.canopy-stage {
+  transition:
+    transform 0.64s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.64s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.64s cubic-bezier(0.22, 1, 0.36, 1);
+  transform-origin: 50% 62%;
+}
+.canopy-stage[data-dim="true"] {
+  transform: scale(0.85) translateY(2%);
+  opacity: 0.12;
+  filter: blur(3px) saturate(0.7);
+}
+.canopy-veil {
+  animation: canopy-veil-in 0.6s ease both;
+}
+@keyframes canopy-veil-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+/* the answer panel rises from the tree's heart — one run, then rest */
+.canopy-panel {
+  animation: canopy-panel-in 0.52s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes canopy-panel-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 18px, 0) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+/* the answer's own words arrive with one quiet fade */
+.canopy-answer {
+  animation: canopy-veil-in 0.5s ease both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .canopy-stage {
+    transition: opacity 0.3s ease;
+  }
+  .canopy-stage[data-dim="true"] {
+    transform: none;
+    filter: none;
+    opacity: 0.1;
+  }
+  .canopy-panel,
+  .canopy-veil,
+  .canopy-answer {
+    animation: none;
+  }
+}

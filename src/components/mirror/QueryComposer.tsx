@@ -66,8 +66,8 @@ export function QueryComposer() {
     if (!query || status === "loading" || hasPendingAttachments(attachments))
       return;
     const carried = attachments.length > 0 ? attachments : undefined;
-    /* the tree steps aside as the answer begins to form */
-    useMirror.getState().setCanopySummoned(false);
+    /* the answer now LIVES IN THE TREE — the walk stays standing and
+       the answer rises inside it while the transmission runs */
     /* The side activities speak first: an akashic record, a card draw,
        an intention to charge or a mystery to strike travels with the
        reply as a living artifact — not as a picture. */
