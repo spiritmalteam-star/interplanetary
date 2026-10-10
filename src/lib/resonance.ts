@@ -195,7 +195,7 @@ export function buildResonanceField(opts: {
 
 /* ---------------------------- the rarity ---------------------------- */
 
-const idfCache = new WeakMap<string[], Map<string, number>>();
+const idfCache = new Map<string[], Map<string, number>>();
 
 /**
  * The cost of every word, measured across the whole grove. A word that

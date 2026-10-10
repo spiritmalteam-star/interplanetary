@@ -20,7 +20,11 @@ import {
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { ReplyBranches } from "./ReplyBranches";
-import { BranchCanopy, CanopySummonButton } from "./BranchCanopy";
+import {
+  BranchCanopy,
+  CanopyRestStrip,
+  CanopySummonButton,
+} from "./BranchCanopy";
 import { emGatheringPhrases, emVectors } from "@/lib/data/evolvemed";
 import { emNoteSets } from "@/lib/data/scope-notes";
 import { cn } from "@/lib/utils";
@@ -754,6 +758,19 @@ function EvolveMedChat() {
       {/* THE BRANCHES' OWN FLOOR — the only suggestions of this chat
           are the branches grown on each reply. The living tree lives in
           the hub (BranchHub), summoned from a branch's own link. */}
+
+      {/* THE TRUNK'S REST — the living tree's slim floor at the top of
+          the input bar; one touch summons the whole grove again. */}
+      <CanopyRestStrip
+        open={
+          emMessages.length === 0 && emStatus === "idle" && !emError
+            ? true
+            : summoned
+        }
+        onSummon={() => setSummoned(true)}
+        disabled={emStatus === "loading"}
+        testIdPrefix="em-composer"
+      />
 
       {/* composer */}
       <div className="relative z-30 shrink-0 border-t hairline bg-[var(--glass-bg)] px-3 py-2.5 backdrop-blur-xl sm:px-4">

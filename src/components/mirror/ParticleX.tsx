@@ -19,7 +19,11 @@ import {
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { ReplyBranches } from "./ReplyBranches";
-import { BranchCanopy, CanopySummonButton } from "./BranchCanopy";
+import {
+  BranchCanopy,
+  CanopyRestStrip,
+  CanopySummonButton,
+} from "./BranchCanopy";
 import { pxGatheringPhrases, pxScopes } from "@/lib/data/particlex";
 import { pxNoteSets } from "@/lib/data/scope-notes";
 import { cn } from "@/lib/utils";
@@ -603,6 +607,19 @@ function ParticleXChat() {
       {/* THE BRANCHES' OWN FLOOR — the only suggestions of this chat
           are the branches grown on each reply. The living tree lives in
           the hub (BranchHub), summoned from a branch's own link. */}
+
+      {/* THE TRUNK'S REST — the living tree's slim floor at the top of
+          the input bar; one touch summons the whole grove again. */}
+      <CanopyRestStrip
+        open={
+          pxMessages.length === 0 && pxStatus === "idle" && !pxError
+            ? true
+            : summoned
+        }
+        onSummon={() => setSummoned(true)}
+        disabled={pxStatus === "loading"}
+        testIdPrefix="px-composer"
+      />
 
       {/* composer */}
       <div className="relative z-30 shrink-0 border-t hairline bg-[var(--glass-bg)] px-3 py-2.5 backdrop-blur-xl sm:px-4">

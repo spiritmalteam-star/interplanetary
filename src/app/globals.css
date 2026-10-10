@@ -1835,3 +1835,28 @@ html:not(.dark) .scope-lightcodes {
     animation: none;
   }
 }
+
+/* THE CANOPY'S RADIAL BLOOM — the old tree's slide in all directions,
+   reborn: every limb slides outward from the trunk along its own
+   --rad-x direction, the crown drops from above, the echo fields
+   arrive last. Per-element CSS custom properties steer one shared
+   keyframe; the animation runs once and the grove rests still. */
+@keyframes canopy-radial {
+  from {
+    opacity: 0;
+    transform: translate3d(var(--rad-x, 0px), var(--rad-y, 10px), 0)
+      scale(var(--rad-s, 0.97));
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+.canopy-radial {
+  animation: canopy-radial 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .canopy-radial {
+    animation: none;
+  }
+}

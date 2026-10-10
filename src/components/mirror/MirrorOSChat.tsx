@@ -8,6 +8,7 @@ import { useT } from "@/lib/i18n";
 import { ReplyBranches } from "./ReplyBranches";
 import {
   BranchCanopy,
+  CanopyRestStrip,
   CanopySummonButton,
 } from "./BranchCanopy";
 import { recordJourney } from "@/lib/learning-branches";
@@ -576,6 +577,19 @@ export function MirrorOSChat() {
             .find((m) => m.role === "os" && m.branches?.length)?.branches ??
           null
         }
+      />
+
+      {/* THE TRUNK'S REST — the living tree's slim floor at the top of
+          the input bar; one touch summons the whole grove again. */}
+      <CanopyRestStrip
+        open={
+          osMessages.length === 0 && osStatus === "idle" && !osError
+            ? true
+            : summoned
+        }
+        onSummon={() => setSummoned(true)}
+        disabled={osStatus === "loading"}
+        testIdPrefix="os-composer"
       />
 
       {/* composer */}

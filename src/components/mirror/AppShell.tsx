@@ -15,7 +15,7 @@ import Sidebar from "./Sidebar";
 import { MobileSidebar } from "./MobileSidebar";
 import { ScopeSelector } from "./ScopeSelector";
 import { BranchHub } from "./BranchHub";
-import { BranchCanopy } from "./BranchCanopy";
+import { BranchCanopy, CanopyRestStrip } from "./BranchCanopy";
 import { QueryComposer } from "./QueryComposer";
 import { StillCompanion } from "./StillCompanion";
 import { TransmissionView } from "./TransmissionView";
@@ -517,6 +517,18 @@ function AppShellViews() {
             suggestions: the branches grown on each reply are the only
             whispers of a conversation, and the living tree is summoned
             from a branch's own link (the hub rides below). */}
+
+        {/* THE TRUNK'S REST — the living tree's slim floor at the top
+            of the input bar in the main channels; one touch summons
+            the whole grove again. */}
+        {(view === "transmission" || view === "observatory") && (
+          <CanopyRestStrip
+            open={channelEmpty || canopySummoned}
+            onSummon={() => setCanopySummoned(true)}
+            disabled={channel.status === "loading"}
+            testIdPrefix="channel-canopy"
+          />
+        )}
 
         <QueryComposer />
       </main>

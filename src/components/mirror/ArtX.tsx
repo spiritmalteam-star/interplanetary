@@ -14,7 +14,11 @@ import {
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { ReplyBranches } from "./ReplyBranches";
-import { BranchCanopy, CanopySummonButton } from "./BranchCanopy";
+import {
+  BranchCanopy,
+  CanopyRestStrip,
+  CanopySummonButton,
+} from "./BranchCanopy";
 import { axAtelierIntro, axWindows } from "@/lib/data/artx";
 import { detectVisualIntent } from "@/lib/visualization";
 import {
@@ -590,6 +594,19 @@ export function ArtXChat() {
             .find((m) => m.role === "ax" && m.branches?.length)?.branches ??
           null
         }
+      />
+
+      {/* THE TRUNK'S REST — the living tree's slim floor at the top of
+          the input bar; one touch summons the whole grove again. */}
+      <CanopyRestStrip
+        open={
+          axMessages.length === 0 && axStatus === "idle" && !axError
+            ? true
+            : summoned
+        }
+        onSummon={() => setSummoned(true)}
+        disabled={axStatus === "loading"}
+        testIdPrefix="ax-composer"
       />
 
       {/* composer */}
