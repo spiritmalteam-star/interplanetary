@@ -2301,6 +2301,10 @@ export const tr: TranslationDict = {
   "The channel returns to its quiet origin.": "Kanal kendi sessiz kaynağına döner.",
   "Where shall we begin?": "Nereden başlayalım?",
   "Worlds": "Dünyalar",
+  "The making's room": "Yaratım odası",
+  "The transmission could not cross": "İletim geçemedi",
+  "The categories of the house": "Evin kategorileri",
+  "Archives": "Arşivler",
   "With love": "Sevgiyle",
 
   /* Task 60 — classic white shell */

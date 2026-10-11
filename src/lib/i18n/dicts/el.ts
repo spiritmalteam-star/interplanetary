@@ -2507,6 +2507,10 @@ export const el: TranslationDict = {
   "The channel returns to its quiet origin.": "Το κανάλι επιστρέφει στη σιωπηλή του αρχή.",
   "Where shall we begin?": "Πού θα ξεκινήσουμε;",
   "Worlds": "Κόσμοι",
+  "The making's room": "Το δωμάτιο της δημιουργίας",
+  "The transmission could not cross": "Η μετάδοση δεν πέρασε",
+  "The categories of the house": "Οι κατηγορίες του σπιτιού",
+  "Archives": "Αρχεία",
   "With love": "Με αγάπη",
 
   /* Task 60 — classic white shell */

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { TreeDeciduous } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { setLearningIdentity } from "@/lib/learning-branches";
 import { useT } from "@/lib/i18n";
@@ -11,6 +12,16 @@ import { CreditBadge } from "./CreditBadge";
 import { ThemeToggle } from "./ThemeToggle";
 import { BranchCanopy } from "./BranchCanopy";
 import { ReplyBranches } from "./ReplyBranches";
+import { TransmissionView } from "./TransmissionView";
+import { QueryComposer } from "./QueryComposer";
+import { MirrorOS } from "./MirrorOS";
+import { ParticleX } from "./ParticleX";
+import { ArtX } from "./ArtX";
+import { EvolveMed } from "./EvolveMed";
+import { InventView } from "./InventView";
+import { LightCodesView } from "./LightCodesView";
+import { LibraryView } from "./LibraryView";
+import { ArchiveRegister } from "./ArchiveRegister";
 import { AuthModal } from "./PassageModal";
 import { ProfileModal } from "./ProfileModal";
 import { ProfilePage } from "./ProfilePage";
@@ -70,6 +81,18 @@ function AppShellViews() {
     channel.messages.length > 0
       ? channel.messages[channel.messages.length - 1]
       : null;
+  const returnToObservatory = useMirror((s) => s.returnToObservatory);
+
+  /* THE MAKING'S ROOM — a reply that carries a living artifact (a book
+     being woven, a record, a card, a song, a poem, a painting) rises
+     as its own room above the tree, where the artifact conducts its
+     own generation; a plain answer never does — it lives in the
+     tree's own room. */
+  const makingOpen =
+    view === "transmission" &&
+    channel.status === "ready" &&
+    !!lastChannelMsg &&
+    !!(lastChannelMsg.sideArtifact || lastChannelMsg.artifact);
 
   /* Restore persisted preferences and greet the passage (the visitor's
      account, if one is held, and today's remaining transmissions). */
@@ -232,6 +255,92 @@ function AppShellViews() {
     );
   }
 
+  /* THE WORLDS — every kategory of the old website remains its own
+     full-screen chapter, reached from the realm's doors; one back
+     hand in each returns to the living tree. */
+  if (view === "mirroros") {
+    return (
+      <div className={`relative h-[var(--app-h,100dvh)] overflow-hidden ${FRAME_LIFT}`}>
+        <CosmicBackdrop />
+        <StarField />
+        <MirrorOS />
+        {passageModals}
+      </div>
+    );
+  }
+
+  if (view === "particlex") {
+    return (
+      <div className={`relative h-[var(--app-h,100dvh)] overflow-hidden ${FRAME_LIFT}`}>
+        <CosmicBackdrop />
+        <StarField />
+        <ParticleX />
+        {passageModals}
+      </div>
+    );
+  }
+
+  if (view === "evolvemed") {
+    return (
+      <div className={`relative h-[var(--app-h,100dvh)] overflow-hidden ${FRAME_LIFT}`}>
+        <CosmicBackdrop />
+        <StarField />
+        <EvolveMed />
+        {passageModals}
+      </div>
+    );
+  }
+
+  if (view === "artx") {
+    return (
+      <div className={`relative h-[var(--app-h,100dvh)] overflow-hidden ${FRAME_LIFT}`}>
+        <CosmicBackdrop />
+        <StarField />
+        <ArtX />
+        {passageModals}
+      </div>
+    );
+  }
+
+  if (view === "invent") {
+    return (
+      <div className={`relative h-[var(--app-h,100dvh)] overflow-hidden ${FRAME_LIFT}`}>
+        <CosmicBackdrop />
+        <StarField />
+        <InventView />
+        <BranchHub />
+      </div>
+    );
+  }
+
+  if (view === "lightcodes") {
+    return (
+      <div className={`relative h-[var(--app-h,100dvh)] overflow-hidden ${FRAME_LIFT}`}>
+        <CosmicBackdrop />
+        <StarField />
+        <LightCodesView />
+        {passageModals}
+      </div>
+    );
+  }
+
+  if (view === "library") {
+    return (
+      <div className={`relative h-[var(--app-h,100dvh)] overflow-hidden ${FRAME_LIFT}`}>
+        <LibraryView />
+        {passageModals}
+      </div>
+    );
+  }
+
+  if (view === "register") {
+    return (
+      <div className={`relative h-[var(--app-h,100dvh)] overflow-hidden ${FRAME_LIFT}`}>
+        <ArchiveRegister />
+      </div>
+    );
+  }
+
   /* ----------------------- THE BRANCH REALM -------------------------
      No other surface exists: the tree owns every pixel. The canopy
      never folds (open stands true), the seed sits at the centre, the
@@ -271,6 +380,7 @@ function AppShellViews() {
           channelLoading ? channel.activeQuery || null : lastChannelMsg?.query || null
         }
         liveAnswer={channelLoading ? null : lastChannelMsg?.text || null}
+        liveError={channel.error}
         headerExtra={
           <>
             <CreditBadge />
@@ -292,6 +402,38 @@ function AppShellViews() {
           disabled={channelLoading}
           onPick={() => {}}
         />
+      )}
+
+      {/* THE MAKING'S ROOM — books, records, cards, songs, poems,
+          paintings: the makings rise above the tree; one hand returns
+          to the walk. */}
+      {makingOpen && (
+        <div
+          className="absolute inset-0 z-40 flex flex-col bg-background"
+          data-testid="making-room"
+        >
+          <div className="flex shrink-0 items-center gap-2 border-b hairline px-3 py-2 sm:px-5">
+            <button
+              type="button"
+              onClick={returnToObservatory}
+              aria-label={t("Back to the tree")}
+              title={t("Back to the tree")}
+              data-testid="making-room-back"
+              className="focus-glow flex size-8 items-center justify-center rounded-full border hairline text-muted-foreground transition-colors duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+            >
+              <TreeDeciduous className="size-4" aria-hidden="true" />
+            </button>
+            <p className="mono-label text-[9px] uppercase tracking-[0.2em] text-muted-foreground">
+              {t("The making's room")}
+            </p>
+          </div>
+          <div className="nice-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain">
+            <div className="mx-auto w-full max-w-[760px] px-4 pb-4 sm:px-6">
+              <TransmissionView />
+            </div>
+          </div>
+          <QueryComposer />
+        </div>
       )}
 
       {/* the reading rooms' own modals — every door keeps its keys */}

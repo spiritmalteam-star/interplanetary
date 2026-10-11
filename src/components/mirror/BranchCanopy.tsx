@@ -14,11 +14,15 @@ import {
 } from "react";
 import {
   ArrowLeftRight,
+  Atom,
+  AudioLines,
+  BookMarked,
   BookOpen,
   ChevronDown,
   ChevronRight,
   ChevronUp,
   Compass,
+  Dna,
   Hand,
   Hourglass,
   Info,
@@ -29,9 +33,13 @@ import {
   LogIn,
   Maximize2,
   Moon,
+  NotebookPen,
+  Palette,
   RefreshCw,
+  RotateCcw,
   ScrollText,
   Send,
+  Settings,
   SlidersHorizontal,
   Sparkles,
   Sprout,
@@ -41,13 +49,10 @@ import {
   VolumeX,
   X,
 } from "lucide-react";
-import {
-  canopyHour,
-  familyAccent,
-  growMixedCanopy,
-  TREE_FAMILIES,
-} from "@/lib/data/suggestion-banks";
+import { canopyHour, familyAccent, growMixedCanopy, TREE_FAMILIES } from "@/lib/data/suggestion-banks";
 import type { BranchId } from "@/lib/data/suggestion-tree";
+import { detectArtifactIntent } from "@/lib/artifact-intent";
+import { isVisualIntent } from "@/lib/visual-intent";
 import {
   buildIdf,
   buildResonanceField,
@@ -922,6 +927,7 @@ export function BranchCanopy({
   liveQuestion,
   liveAnswer,
   liveLoading,
+  liveError,
   onLatch,
   realm,
   headerExtra,
@@ -950,6 +956,8 @@ export function BranchCanopy({
   liveAnswer?: string | null;
   /** True while the transmission is being channeled. */
   liveLoading?: boolean;
+  /** The channel's own error — the room speaks it instead of folding. */
+  liveError?: string | null;
   /** THE LATCH — true while the answer lives in the tree (the zoom);
       the chat keeps its rest strip resting while the walk holds. */
   onLatch?: (latched: boolean) => void;
@@ -973,6 +981,18 @@ export function BranchCanopy({
   const openAbout = useMirror((s) => s.openAbout);
   const openAuth = useMirror((s) => s.openAuth);
   const openProfile = useMirror((s) => s.openProfile);
+  /* THE WHOLE HOUSE'S DOORS — every kategory of the old website's
+     sidebar, standing within the branches themselves: the worlds the
+     tree grows toward, the archives, and the quiet hands. */
+  const openMirrorOS = useMirror((s) => s.openMirrorOS);
+  const openInvent = useMirror((s) => s.openInvent);
+  const openLightCodes = useMirror((s) => s.openLightCodes);
+  const openParticleX = useMirror((s) => s.openParticleX);
+  const openEvolveMed = useMirror((s) => s.openEvolveMed);
+  const openArtX = useMirror((s) => s.openArtX);
+  const openRegister = useMirror((s) => s.openRegister);
+  const openModal = useMirror((s) => s.openModal);
+  const resetField = useMirror((s) => s.resetField);
 
   /* THE RESONANCE WALK — v4.1, the quiet walk: the room's one voice is
      the male narrator (lib/room-narrator.ts). The gate lives up front;
@@ -1034,14 +1054,10 @@ export function BranchCanopy({
   /* THE ZOOM EAR — whenever a transmission begins while the walk
      stands (a pressed whisper, the composer, a continuation), the
      camera pulls back and the answer rises inside the tree.
-     THE QUIET FIELD — a transmission that returned nothing (an error
-     held by the chat behind) sends the visitor gently back to the walk
-     — but only after one breath of grace: the instant between the
-     visitor's touch and the channel's first loading breath must never
-     fold the room they just asked for (THE OPEN DOOR LAW — a pressed
-     whisper always opens).
-     Both render-time guarded (the official pattern — the engine never
-     renders synchronously inside an effect). */
+     (Render-time guarded — the official pattern: the engine never
+     renders synchronously inside an effect. THE OPEN DOOR LAW holds:
+     a pressed whisper always opens its room, and the room stands —
+     an ask that returns nothing speaks its error inside the room.) */
   const [seenLiveKey, setSeenLiveKey] = useState<string | null>(null);
   const zoomOpenedAtRef = useRef(0);
   const liveKey =
@@ -1053,18 +1069,6 @@ export function BranchCanopy({
   } else if (!liveLoading && seenLiveKey !== null) {
     /* the next transmission zooms again — even the very same words */
     setSeenLiveKey(null);
-  }
-  /* a live room whose transmission returned nothing folds back to the
-     walk; a RESTORED room (a previous branch re-opened from the trail)
-     is its own words — the guard never touches it. */
-  if (
-    zoom &&
-    !zoom.restored &&
-    !liveLoading &&
-    !liveAnswer &&
-    Date.now() - zoomOpenedAtRef.current > 900
-  ) {
-    setZoom(null);
   }
 
   const exitZoom = useCallback(() => setZoom(null), []);
@@ -1856,9 +1860,16 @@ export function BranchCanopy({
           panReqRef.current = node.id; /* one quiet pan — the new house in view */
         }
       }
-      /* THE ZOOM — the answer rises inside the tree, instantly */
+      /* THE ZOOM — the answer rises inside the tree, instantly.
+         THE MAKING LAW: when the whisper asks the laboratory to MAKE
+         something (a record, a book, a card, a song, a poem, a
+         painting) the making is born in its own room above the tree —
+         the room rises by itself, so the walk never flashes an empty
+         answer here. */
       zoomOpenedAtRef.current = Date.now();
-      setZoom({ q: node.text, move: node.movement });
+      const makesSomething =
+        detectArtifactIntent(node.text) !== null || isVisualIntent(node.text);
+      if (!makesSomething) setZoom({ q: node.text, move: node.movement });
       onPick(node.text);
     },
     [
@@ -1912,7 +1923,9 @@ export function BranchCanopy({
         }
       }
       zoomOpenedAtRef.current = Date.now();
-      setZoom({ q: text, move });
+      const makesSomething =
+        detectArtifactIntent(text) !== null || isVisualIntent(text);
+      if (!makesSomething) setZoom({ q: text, move });
       onPick(text);
     },
     [
@@ -2076,7 +2089,15 @@ export function BranchCanopy({
      walk's cache is bookkeeping alone. A RESTORED room (a previous
      branch re-opened from the trail) is memory, not a landing — the
      settle never touches it. */
-  const liveAnswerText = (liveAnswer ?? "").trim();
+  /* THE ROOM'S OWN WORDS — the channel's live answer belongs to the
+     standing room only when its question IS the room's question; a
+     previous exchange's words never wear another room's title.
+     THE ROOM NEVER FOLDS — an ask that could not cross shows its
+     error right here (the chat behind holds nothing anymore). */
+  const liveBelongsToRoom = !!zoomQ && liveQuestion === zoomQ;
+  const liveAnswerText = liveBelongsToRoom ? (liveAnswer ?? "").trim() : "";
+  const roomError =
+    liveBelongsToRoom || !liveLoading ? liveError ?? null : null;
   const restoredText = zoom?.restored ?? null;
   const answer = restoredText ?? liveAnswerText;
   const answerLanded = restoredText
@@ -2630,6 +2651,87 @@ export function BranchCanopy({
           </div>
         )}
 
+        {/* THE WHOLE HOUSE'S DOORS — the sidebar's every kategory,
+            listed on top of the living tree: the worlds the tree grows
+            toward, the archives of the outer realms, and the quiet
+            hands. One calm scrollable row of small doors. */}
+        {realm && (
+          <nav
+            aria-label={t("The categories of the house")}
+            data-testid={`${testIdPrefix}-house-doors`}
+            className="nice-scroll mx-auto mt-1.5 flex w-full max-w-[760px] items-center gap-1.5 overflow-x-auto pb-0.5"
+          >
+            <span className="mono-label shrink-0 pr-0.5 text-[8px] uppercase tracking-[0.18em] text-muted-foreground/50">
+              {t("Worlds")}
+            </span>
+            {(
+              [
+                { key: "mirroros", icon: Sparkles, label: t("Manifest"), open: openMirrorOS },
+                { key: "invent", icon: NotebookPen, label: t("Invent"), open: openInvent },
+                { key: "lightcodes", icon: AudioLines, label: t("Light Codes"), open: () => openLightCodes() },
+                { key: "particlex", icon: Atom, label: t("Quantum World"), open: openParticleX },
+                { key: "evolvemed", icon: Dna, label: t("Evolve Med"), open: openEvolveMed },
+                { key: "artx", icon: Palette, label: t("Art X"), open: openArtX },
+                { key: "archives", icon: BookMarked, label: t("Archives"), open: () => openRegister("civilization") },
+              ] as const
+            ).map((d) => (
+              <button
+                key={d.key}
+                type="button"
+                onClick={d.open}
+                aria-label={d.label}
+                title={d.label}
+                data-testid={`${testIdPrefix}-door-${d.key}`}
+                className="focus-glow flex size-8 shrink-0 items-center justify-center gap-1.5 rounded-full border hairline px-0 text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground sm:w-auto sm:px-3"
+              >
+                <d.icon className="size-3.5 shrink-0" aria-hidden="true" />
+                <span className="hidden text-[12px] font-medium sm:inline">
+                  {d.label}
+                </span>
+              </button>
+            ))}
+            <span
+              aria-hidden="true"
+              className="mx-0.5 h-4 w-px shrink-0 bg-[var(--hairline)]"
+            />
+            <button
+              type="button"
+              onClick={() => openModal({ type: "settings" })}
+              aria-label={t("Settings")}
+              title={t("Settings")}
+              data-testid={`${testIdPrefix}-door-settings`}
+              className="focus-glow flex size-8 shrink-0 items-center justify-center gap-1.5 rounded-full border hairline px-0 text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground sm:w-auto sm:px-3"
+            >
+              <Settings className="size-3.5 shrink-0" aria-hidden="true" />
+              <span className="hidden text-[12px] font-medium sm:inline">
+                {t("Settings")}
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                resetField();
+                import("sonner").then(({ toast }) =>
+                  toast.success(t("Field recalibrated"), {
+                    description: t(
+                      "All scopes returned to origin. Free will honored always."
+                    ),
+                  })
+                );
+              }}
+              aria-label={t("Recalibrate the field")}
+              title={t("Recalibrate the field")}
+              data-testid={`${testIdPrefix}-door-recalibrate`}
+              className="focus-glow flex size-8 shrink-0 items-center justify-center gap-1.5 rounded-full border hairline px-0 text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground sm:w-auto sm:px-3"
+            >
+              <RotateCcw className="size-3.5 shrink-0" aria-hidden="true" />
+              <span className="hidden text-[12px] font-medium sm:inline">
+                {t("Recalibrate the field")}
+              </span>
+            </button>
+          </nav>
+        )}
+
         {/* THE TRAIL OF THE WALK — every pressed whisper, oldest first;
             one touch pans the tree back to that very step. */}
         {lineage.length > 0 && (
@@ -3006,6 +3108,21 @@ export function BranchCanopy({
                         )}
                       </div>
                     ) : null
+                  ) : roomError && !liveLoading && revealStage >= 2 ? (
+                    /* THE ROOM'S HONESTY — an ask that could not cross
+                       shows its reason right here; the walk stands. */
+                    <div
+                      className="my-2 rounded-2xl border border-[color-mix(in_srgb,#f43f5e_38%,transparent)] bg-[color-mix(in_srgb,#f43f5e_7%,var(--background))] px-4 py-3.5"
+                      role="alert"
+                      data-testid={`${testIdPrefix}-zoom-error`}
+                    >
+                      <p className="mono-label text-[8.5px] uppercase tracking-[0.2em] text-[#f43f5e]">
+                        {t("The transmission could not cross")}
+                      </p>
+                      <p className="mt-1.5 text-[13px] leading-relaxed text-foreground/85">
+                        {roomError}
+                      </p>
+                    </div>
                   ) : (
                     revealStage >= 2 && (
                       <div className="flex items-center gap-2 py-5 text-muted-foreground" aria-live="polite">

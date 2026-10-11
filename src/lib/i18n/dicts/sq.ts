@@ -4525,6 +4525,10 @@ export const sq: TranslationDict = {
   "The channel returns to its quiet origin.": "Kanali kthehet në origjinën e tij të qetë.",
   "Where shall we begin?": "Nga ku të fillojmë?",
   "Worlds": "Botët",
+  "The making's room": "Dhoma e krijimit",
+  "The transmission could not cross": "Transmetimi nuk kaloi dot",
+  "The categories of the house": "Kategoritë e shtëpisë",
+  "Archives": "Arkivat",
   "With love": "Me dashuri",
 
   /* Task 60 — classic white shell */

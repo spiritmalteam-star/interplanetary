@@ -3383,3 +3383,20 @@ Work Log:
 Stage Summary:
 - The whole app is branches and chat now: one living tree fills the screen — categories at the very top, the logo at the centre where every branch emerges, four doors (akashic · book · about · passage) in the crown, the old interface deleted; the walk zooms by the fingers alone; a whisper (or a free whisper from the floor) opens its room, the transmission answers, the branches grow, and the walk continues — never folding, never losing the finger.
 - Artifacts: BranchCanopy.tsx (realm crown, seed, pinch, ask bar, grace guard, family voice), AppShell.tsx (the realm + headless grower mount), ReplyBranches.tsx (headless grower), layout.tsx (viewport pinch lock), 7 dicts (+4 keys).
+
+---
+Task ID: 30-b
+Agent: Z.ai Code (main orchestrator)
+Task: Integrate with the parallel "branch realm" line (remote main had moved ahead: af7dc66) and re-apply this session's deltas on top of it — every sidebar kategory listed on top of the living tree, the makings' room, and the room-never-folds law.
+
+Work Log:
+- Discovered the remote had advanced by 3 commits (97fa5ef "the general walk", af7dc66 "the branch realm" — a parallel implementation of the same batch: general family mix + seven families with unique rope colors, THE MIX sliders, the compass, pinch zoom, logo seed at the centre, four doors, i18n). Preserved this session's independent rewrite on the local branch `my-tree-home-backup` (b641b4c) and rebased the work onto FETCH_HEAD.
+- THE WHOLE HOUSE'S DOORS: the realm's crown carried only four doors (akashic · book · about · passage) and the remote AppShell had deleted the world branches entirely — Light Codes, Invent, Quantum World, Evolve Med, Art X, Manifest OS, the Library and the Archives were UNREACHABLE. Added the scrollable doors row beneath the crown (Worlds: Manifest · Invent · Light Codes · Quantum World · Evolve Med · Art X · Archives | Settings · Recalibrate) and restored all eight world view branches in AppShell so every door opens its world; each world's back hand returns to the tree.
+- THE MAKING'S ROOM in the realm: books, records, cards, songs, poems and paintings had no surface in the branch realm (TransmissionView was never rendered; side artifacts were invisible). Re-applied the making's room — an artifact reply rises as its own room above the tree (TransmissionView + composer + one back hand); artifact/visual-intent whispers no longer open a zoom room that would instantly fold (THE MAKING LAW in pick/sendFromPanel).
+- THE ROOM NEVER FOLDS: removed the remote's 900ms grace fold guard; the room now resolves its answer only when liveQuestion === zoom.q (no wrong-answer flash) and speaks the channel's error inline (liveError prop + error card) instead of folding.
+- i18n: 4 keys × 7 tongues (The making's room · The transmission could not cross · The categories of the house · Archives).
+- Verified via agent-browser (desktop + mobile 390px): realm renders with the crown, the doors row and the logo seed; whisper pick → room opens and the answer lands; Light Codes door opens its world and returns; artifact ask via the floor's whisper line → the making's room wove "Salt and Breath"; making-room back hand returns to the tree; mobile width exact (390); zero console errors; bun run lint clean.
+
+Stage Summary:
+- The deployed line now carries BOTH sessions' work: the parallel realm (families, mix, compass, zoom, seed) + this session's complete door list (every sidebar kategory on top of the tree), the makings' room, and the room-never-folds law with inline errors.
+- Key artifacts: BranchCanopy.tsx (house doors row + making law + liveError), AppShell.tsx (eight world branches restored + making's room), 7 dicts.

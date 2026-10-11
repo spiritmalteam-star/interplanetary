@@ -3241,6 +3241,10 @@ export const it: TranslationDict = {
   "The channel returns to its quiet origin.": "Il canale torna alla sua quieta origine.",
   "Where shall we begin?": "Da dove cominciamo?",
   "Worlds": "Mondi",
+  "The making's room": "La stanza della creazione",
+  "The transmission could not cross": "La trasmissione non è passata",
+  "The categories of the house": "Le categorie della casa",
+  "Archives": "Archivi",
   "With love": "Con amore",
 
   /* Task 60 — classic white shell */
