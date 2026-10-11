@@ -2304,6 +2304,13 @@ export const tr: TranslationDict = {
   "The making's room": "Yaratım odası",
   "The transmission could not cross": "İletim geçemedi",
   "The categories of the house": "Evin kategorileri",
+  "The making is being born — its room rises when it stands.": "Yaratılış doğuyor — odası ayaklandığında yükselir.",
+  "Categories": "Kategoriler",
+  "The worlds of the house": "Evin dünyaları",
+  "The mix of worlds": "Dünyaların karışımı",
+  "The mix of worlds rests in the settings, inside your profile.": "Dünyaların karışımı ayarlarda dinlenir, profilinin içinde.",
+  "How much of each family the living tree carries — the percentages decide which suggestions visit more often.": "Yaşayan ağacın her aileden ne kadar taşıdığı — yüzdeler hangi önerilerin daha sık görüneceğine karar verir.",
+  "The mix of worlds, the language of every word and the voice that reads your transmissions.": "Dünyaların karışımı, her kelimenin dili ve iletimlerini okuyan ses.",
   "Archives": "Arşivler",
   "With love": "Sevgiyle",
 

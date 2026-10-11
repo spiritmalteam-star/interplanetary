@@ -2510,6 +2510,13 @@ export const el: TranslationDict = {
   "The making's room": "Το δωμάτιο της δημιουργίας",
   "The transmission could not cross": "Η μετάδοση δεν πέρασε",
   "The categories of the house": "Οι κατηγορίες του σπιτιού",
+  "The making is being born — its room rises when it stands.": "Η δημιουργία γεννιέται — το δωμάτιό της υψώνεται όταν σταθεί.",
+  "Categories": "Κατηγορίες",
+  "The worlds of the house": "Οι κόσμοι του σπιτιού",
+  "The mix of worlds": "Το μείγμα των κόσμων",
+  "The mix of worlds rests in the settings, inside your profile.": "Το μείγμα των κόσμων αναπαύεται στις ρυθμίσεις, μέσα στο προφίλ σου.",
+  "How much of each family the living tree carries — the percentages decide which suggestions visit more often.": "Πόσο από κάθε οικογένεια κουβαλά το ζωντανό δέντρο — τα ποσοστά αποφασίζουν ποιες προτάσεις επισκέπτονται συχνότερα.",
+  "The mix of worlds, the language of every word and the voice that reads your transmissions.": "Το μείγμα των κόσμων, η γλώσσα κάθε λέξης και η φωνή που διαβάζει τις διαβιβάσεις σου.",
   "Archives": "Αρχεία",
   "With love": "Με αγάπη",
 

@@ -7,6 +7,12 @@ import { ModalShell } from "./ModalShell";
 import { useMirror } from "@/lib/mirror-store";
 import { LANGUAGES, PACES, VOICES, useT, type VoiceId } from "@/lib/i18n";
 import {
+  familyLabelKeys,
+  familyShare,
+  setFamilyWeightInMix,
+} from "@/lib/tree-mix";
+import { TREE_FAMILIES } from "@/lib/data/suggestion-banks";
+import {
   noteBrowserVoiceFallback,
   speakWithBrowserVoice,
 } from "@/lib/browser-voice";
@@ -16,8 +22,10 @@ const SAMPLE_TEXT_KEY =
   "Across the quiet field, a warm signal gathers into light.";
 
 /**
- * SettingsModal — opened from the button at the top of the sidebar.
- * Language (eight, Albanian included) · transcript voice · narration pace.
+ * SettingsModal — the Laboratory's settings: the mix of worlds (how much
+ * of each family the living tree carries) · language · transcript voice
+ * · narration pace. The same settings room also lives inside the
+ * visitor's profile — the proportions are one, wherever they are spoken.
  */
 export function SettingsModal() {
   const modal = useMirror((s) => s.modal);
@@ -28,6 +36,10 @@ export function SettingsModal() {
   const setLanguage = useMirror((s) => s.setLanguage);
   const setVoice = useMirror((s) => s.setVoice);
   const setPace = useMirror((s) => s.setPace);
+  /* THE MIX OF WORLDS — how much of each family the living tree
+     carries; the same proportions the tree's kategories speak */
+  const mix = useMirror((s) => s.treeMix);
+  const setTreeMix = useMirror((s) => s.setTreeMix);
   const t = useT();
 
   const open = modal?.type === "settings";
@@ -121,11 +133,88 @@ export function SettingsModal() {
       }}
       title={t("Laboratory Settings")}
       description={t(
-        "Choose the language of every word and the voice that reads your transmissions."
+        "The mix of worlds, the language of every word and the voice that reads your transmissions."
       )}
       widthClass="sm:max-w-[600px]"
     >
       <div className="nice-scroll max-h-[62vh] space-y-6 overflow-y-auto px-5 pb-6 sm:px-6 max-md:max-h-[60dvh]">
+        {/* ---------------- The mix of worlds ---------------- */}
+        <section aria-label={t("The mix of worlds")}>
+          <p className="mono-label mb-1 text-[11.5px] text-muted-foreground">
+            {t("The mix of worlds")}
+          </p>
+          <p className="mb-3 text-[12px] leading-relaxed text-muted-foreground/80">
+            {t(
+              "How much of each family the living tree carries — the percentages decide which suggestions visit more often."
+            )}
+          </p>
+          <div className="rounded-xl border hairline p-3.5">
+            <div className="flex flex-col gap-2.5">
+              {TREE_FAMILIES.map((f) => {
+                const share = familyShare(mix, f.key);
+                const w = mix.weights[f.key] ?? 0;
+                return (
+                  <div key={f.key} className="flex items-center gap-2.5">
+                    <span
+                      aria-hidden="true"
+                      className="size-2 shrink-0 rounded-full"
+                      style={{
+                        backgroundColor: f.accent,
+                        opacity: share.on ? 1 : 0.3,
+                      }}
+                    />
+                    <span className="w-[92px] shrink-0 truncate text-[12.5px] text-foreground/85">
+                      {t(familyLabelKeys[f.key] ?? f.key)}
+                    </span>
+                    <input
+                      type="range"
+                      min={0}
+                      max={100}
+                      step={5}
+                      value={share.on ? w : 0}
+                      onChange={(e) =>
+                        setTreeMix(
+                          setFamilyWeightInMix(mix, f.key, Number(e.target.value))
+                        )
+                      }
+                      aria-label={t(familyLabelKeys[f.key] ?? f.key)}
+                      data-testid={`settings-mix-${f.key}`}
+                      className="h-1 min-w-0 flex-1 cursor-pointer appearance-none rounded-full bg-[color-mix(in_srgb,var(--hairline)_90%,transparent)]
+                      [&::-webkit-slider-thumb]:size-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full"
+                      style={{ accentColor: f.accent }}
+                    />
+                    <span
+                      className="w-8 shrink-0 text-right text-[10.5px] tabular-nums"
+                      style={{ color: share.on ? f.accent : undefined }}
+                    >
+                      {share.pct}%
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+            <button
+              type="button"
+              onClick={() =>
+                setTreeMix({
+                  on: TREE_FAMILIES.map((f) => f.key),
+                  weights: Object.fromEntries(
+                    TREE_FAMILIES.map((f) => [f.key, 1])
+                  ),
+                })
+              }
+              data-testid="settings-mix-even"
+              className="focus-glow mt-3.5 w-full rounded-full border px-3 py-1.5 text-[11.5px] text-muted-foreground transition-all duration-300 hover:text-foreground"
+              style={{
+                borderColor:
+                  "color-mix(in srgb, var(--hairline) 80%, transparent)",
+              }}
+            >
+              {t("Even voices")}
+            </button>
+          </div>
+        </section>
+
         {/* ---------------- Language ---------------- */}
         <section aria-label={t("Language")}>
           <p className="mono-label mb-2.5 text-[11.5px] text-muted-foreground">

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import ZAI from "@/lib/zai-client";
 import { walkerDepthLine } from "@/lib/walker-depth";
+import { walkLine } from "@/lib/walk-context";
 import { REMEMBRANCE_LAW } from "@/lib/remembrance-law";
 import { creationSeedBlock, drawCreationSeed } from "@/lib/artx-resonance";
 import {
@@ -148,6 +149,7 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
           seedLine +
           REMEMBRANCE_LAW +
           walkerDepthLine(body?.depth) +
+          walkLine(body?.walk) +
           (body?.live === true ? LIVE_CALL_BLOCK : ""),
       },
     ];

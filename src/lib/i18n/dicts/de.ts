@@ -2810,6 +2810,13 @@ export const de: TranslationDict = {
   "The making's room": "Der Raum des Schaffens",
   "The transmission could not cross": "Die Übertragung konnte nicht hindurch",
   "The categories of the house": "Die Kategorien des Hauses",
+  "The making is being born — its room rises when it stands.": "Das Werk wird geboren — sein Raum erhebt sich, wenn es steht.",
+  "Categories": "Kategorien",
+  "The worlds of the house": "Die Welten des Hauses",
+  "The mix of worlds": "Der Mix der Welten",
+  "The mix of worlds rests in the settings, inside your profile.": "Der Mix der Welten ruht in den Einstellungen, in deinem Profil.",
+  "How much of each family the living tree carries — the percentages decide which suggestions visit more often.": "Wie viel von jeder Familie der lebende Baum trägt — die Prozente entscheiden, welche Vorschläge öfter erscheinen.",
+  "The mix of worlds, the language of every word and the voice that reads your transmissions.": "Der Mix der Welten, die Sprache jedes Wortes und die Stimme, die deine Übertragungen liest.",
   "Archives": "Archive",
   "With love": "Mit Liebe",
 

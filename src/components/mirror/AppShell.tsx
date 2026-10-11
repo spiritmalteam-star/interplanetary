@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { TreeDeciduous } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { setLearningIdentity } from "@/lib/learning-branches";
@@ -87,12 +87,25 @@ function AppShellViews() {
      being woven, a record, a card, a song, a poem, a painting) rises
      as its own room above the tree, where the artifact conducts its
      own generation; a plain answer never does — it lives in the
-     tree's own room. */
+     tree's own room. THE REALM'S VIEW — the tree stands in the
+     observatory's own view, so the observatory rises the making too:
+     a whisper that crystallized into a painting finds its room here
+     instead of a zoom that would wait forever. THE BACK HAND'S LAW —
+     once the visitor leaves a making, it rests: the same artifact
+     never rises twice, a NEW one always does. */
+  const [dismissedMakingId, setDismissedMakingId] = useState<string | null>(
+    null
+  );
   const makingOpen =
-    view === "transmission" &&
+    (view === "transmission" || view === "observatory") &&
     channel.status === "ready" &&
     !!lastChannelMsg &&
-    !!(lastChannelMsg.sideArtifact || lastChannelMsg.artifact);
+    !!(lastChannelMsg.sideArtifact || lastChannelMsg.artifact) &&
+    dismissedMakingId !== lastChannelMsg.id;
+  const leaveTheMaking = () => {
+    setDismissedMakingId(lastChannelMsg?.id ?? null);
+    returnToObservatory();
+  };
 
   /* Restore persisted preferences and greet the passage (the visitor's
      account, if one is held, and today's remaining transmissions). */
@@ -415,7 +428,7 @@ function AppShellViews() {
           <div className="flex shrink-0 items-center gap-2 border-b hairline px-3 py-2 sm:px-5">
             <button
               type="button"
-              onClick={returnToObservatory}
+              onClick={leaveTheMaking}
               aria-label={t("Back to the tree")}
               title={t("Back to the tree")}
               data-testid="making-room-back"

@@ -4528,6 +4528,13 @@ export const sq: TranslationDict = {
   "The making's room": "Dhoma e krijimit",
   "The transmission could not cross": "Transmetimi nuk kaloi dot",
   "The categories of the house": "Kategoritë e shtëpisë",
+  "The making is being born — its room rises when it stands.": "Krijimi po lind — dhoma e tij ngrihet kur të qëndron.",
+  "Categories": "Kategoritë",
+  "The worlds of the house": "Botat e shtëpisë",
+  "The mix of worlds": "Përzierja e botave",
+  "The mix of worlds rests in the settings, inside your profile.": "Përzierja e botave pushon te rregullimet, brenda profilit tënd.",
+  "How much of each family the living tree carries — the percentages decide which suggestions visit more often.": "Sa nga secila familja mban pema e gjallë — përqindjet vendosin cilat sugjerime vizitojnë më shpesh.",
+  "The mix of worlds, the language of every word and the voice that reads your transmissions.": "Përzierja e botave, gjuha e çdo fjale dhe zëri që të lexon transmetimet.",
   "Archives": "Arkivat",
   "With love": "Me dashuri",
 

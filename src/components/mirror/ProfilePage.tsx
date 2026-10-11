@@ -22,6 +22,12 @@ import {
 } from "lucide-react";
 import { LANGUAGES, VOICES, useT, type VoiceId } from "@/lib/i18n";
 import { useMirror } from "@/lib/mirror-store";
+import {
+  familyLabelKeys,
+  familyShare,
+  setFamilyWeightInMix,
+} from "@/lib/tree-mix";
+import { TREE_FAMILIES } from "@/lib/data/suggestion-banks";
 import { DnaHelix, useJourney } from "./DnaTimeline";
 import { ExpansionMirrorPanel } from "./ExpansionMirror";
 import { cn } from "@/lib/utils";
@@ -87,6 +93,10 @@ export function ProfilePage() {
   const setPace = useMirror((s) => s.setPace);
   const seeds = useMirror((s) => s.expansionSeeds);
   const setSeeds = useMirror((s) => s.setExpansionSeeds);
+  /* THE MIX OF WORLDS — how much of each family the living tree
+     carries; the same proportions the Laboratory's settings speak */
+  const treeMix = useMirror((s) => s.treeMix);
+  const setTreeMix = useMirror((s) => s.setTreeMix);
 
   /* the walk's helix — the DNA evolutionary timeline */
   const journey = useJourney();
@@ -534,6 +544,89 @@ export function ProfilePage() {
                     ×{pace.toFixed(2)}
                   </span>
                 </div>
+              </div>
+              {/* THE MIX OF WORLDS — the living tree's own proportions */}
+              <div
+                className="flex flex-col gap-3 p-5 sm:p-6"
+                data-testid="profilepage-mix"
+              >
+                <div>
+                  <p className="text-[13.5px] font-medium text-foreground/90">
+                    {t("The mix of worlds")}
+                  </p>
+                  <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground/80">
+                    {t(
+                      "How much of each family the living tree carries — the percentages decide which suggestions visit more often."
+                    )}
+                  </p>
+                </div>
+                <div className="flex flex-col gap-2.5">
+                  {TREE_FAMILIES.map((f) => {
+                    const share = familyShare(treeMix, f.key);
+                    const w = treeMix.weights[f.key] ?? 0;
+                    return (
+                      <div key={f.key} className="flex items-center gap-2.5">
+                        <span
+                          aria-hidden="true"
+                          className="size-2 shrink-0 rounded-full"
+                          style={{
+                            backgroundColor: f.accent,
+                            opacity: share.on ? 1 : 0.3,
+                          }}
+                        />
+                        <span className="w-[92px] shrink-0 truncate text-[12.5px] text-foreground/85">
+                          {t(familyLabelKeys[f.key] ?? f.key)}
+                        </span>
+                        <input
+                          type="range"
+                          min={0}
+                          max={100}
+                          step={5}
+                          value={share.on ? w : 0}
+                          onChange={(e) =>
+                            setTreeMix(
+                              setFamilyWeightInMix(
+                                treeMix,
+                                f.key,
+                                Number(e.target.value)
+                              )
+                            )
+                          }
+                          aria-label={t(familyLabelKeys[f.key] ?? f.key)}
+                          data-testid={`profilepage-mix-${f.key}`}
+                          className="h-1 min-w-0 flex-1 cursor-pointer appearance-none rounded-full bg-[color-mix(in_srgb,var(--hairline)_90%,transparent)]
+                          [&::-webkit-slider-thumb]:size-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full"
+                          style={{ accentColor: f.accent }}
+                        />
+                        <span
+                          className="w-8 shrink-0 text-right text-[10.5px] tabular-nums"
+                          style={{ color: share.on ? f.accent : undefined }}
+                        >
+                          {share.pct}%
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setTreeMix({
+                      on: TREE_FAMILIES.map((f) => f.key),
+                      weights: Object.fromEntries(
+                        TREE_FAMILIES.map((f) => [f.key, 1])
+                      ),
+                    })
+                  }
+                  data-testid="profilepage-mix-even"
+                  className="focus-glow w-full rounded-full border px-3 py-1.5 text-[11.5px] text-muted-foreground transition-all duration-300 hover:text-foreground sm:w-[280px] sm:self-end"
+                  style={{
+                    borderColor:
+                      "color-mix(in srgb, var(--hairline) 80%, transparent)",
+                  }}
+                >
+                  {t("Even voices")}
+                </button>
               </div>
             </section>
             {!signedIn && (

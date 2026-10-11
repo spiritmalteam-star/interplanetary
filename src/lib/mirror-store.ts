@@ -11,6 +11,12 @@ import type {
   InventToolResult,
 } from "@/lib/mirror-types";
 import { civilizations, civilizationTotal } from "@/lib/data/civilizations";
+import {
+  defaultTreeMix,
+  loadTreeMix,
+  saveTreeMix,
+  type TreeMix,
+} from "@/lib/tree-mix";
 import { interdimensional, interdimTotal } from "@/lib/data/interdimensional";
 import { innerEarthTotal } from "@/lib/data/inner-earth";
 import {
@@ -581,6 +587,12 @@ interface MirrorState {
   voice: VoiceId;
   pace: number;
 
+  /* THE MIX OF WORLDS — how much of each family the living tree
+     carries, held in the store so the tree, the Laboratory's settings
+     and the profile's own settings room all speak the same proportions. */
+  treeMix: TreeMix;
+  setTreeMix: (mix: TreeMix) => void;
+
   setLanguage: (code: LanguageCode) => void;
   setVoice: (id: VoiceId) => void;
   setPace: (value: number) => void;
@@ -1070,6 +1082,14 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   language: "en" as LanguageCode,
   voice: DEFAULT_VOICE,
   pace: 0.95,
+
+  /* the whole house, mixed — the GENERAL walk stands until the
+     visitor's own proportions join from their device */
+  treeMix: defaultTreeMix(),
+  setTreeMix: (mix) => {
+    set({ treeMix: mix });
+    saveTreeMix(mix);
+  },
 
   setMode: (mode) =>
     set((s) => {
@@ -3460,6 +3480,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       const lang = localStorage.getItem("mirror-entity-language");
       const voice = localStorage.getItem("mirror-entity-voice");
       const pace = Number(localStorage.getItem("mirror-entity-pace"));
+      const savedMix = loadTreeMix();
       const rawSeeds = localStorage.getItem("mirror-entity-seeds");
       const seeds = rawSeeds
         ? (JSON.parse(rawSeeds) as unknown[]).filter(
@@ -3473,6 +3494,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
           ? { pace }
           : {}),
         ...(seeds.length > 0 ? { expansionSeeds: seeds.slice(0, 6) } : {}),
+        ...(savedMix ? { treeMix: savedMix } : {}),
       });
     } catch {
       /* storage unavailable */

@@ -1878,6 +1878,14 @@ html:not(.dark) .scope-lightcodes {
 .genea-bloom {
   animation: genea-bloom 0.62s cubic-bezier(0.22, 1, 0.36, 1) backwards;
 }
+/* THE LAG LAW — every whisper off the eye skips its own paint work:
+   the browser lays out and paints only what stands in view, so
+   sliding the suggestions across the family stays liquid even when
+   hundreds of voices hang from the tree. Each chip carries its own
+   explicit width and height, so the skip is always exact. */
+.tree-chip {
+  content-visibility: auto;
+}
 /* the intro cards and strips bloom without the centering shift */
 .still-bloom {
   animation-name: genea-bloom-still;
