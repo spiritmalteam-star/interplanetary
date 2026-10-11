@@ -406,6 +406,19 @@ export function layTree(
         );
         if (found) seat = found.level;
       }
+    } else if (topo.wing) {
+      /* THE WING'S OWN SEAT — the new family takes its place directly
+         BESIDE the branch it sprouts from (often a mid-tree donor):
+         the canopy spreads left and right at every height, instead of
+         piling only toward the sky. Rows above shift up, exactly as a
+         graft's house slides in between. */
+      const m = topo.fromTips[0]?.match(/^n(\d+)\.(\d+)\.(\d+)$/);
+      if (m) {
+        const found = laidRows.find(
+          (lr) => lr.batch === Number(m[1]) && lr.row === Number(m[2])
+        );
+        if (found) seat = found.level;
+      }
     }
     if (seat >= 0) {
       /* every row already seated above the parent rises by this batch's
@@ -542,7 +555,10 @@ export function layTree(
       const tipXs = topo.fromTips
         .map((id) => xById.get(id))
         .filter((x): x is number => typeof x === "number");
-      const margin = geo.step * 0.58;
+      /* THE WING'S OWN BREATH — one generous gap between the donor
+         branch and the family that sprouts from it, so every flank
+         reads as its own house and the ropes stay readable */
+      const margin = geo.step * 0.9;
       if (tipXs.length > 0) {
         const tmin = Math.min(...tipXs);
         const tmax = Math.max(...tipXs);

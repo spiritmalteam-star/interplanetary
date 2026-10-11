@@ -16,14 +16,13 @@ import {
   ArrowLeftRight,
   Atom,
   AudioLines,
-  BookMarked,
   BookOpen,
   ChevronDown,
   ChevronRight,
   ChevronUp,
   Compass,
   Dna,
-  Globe,
+  Hammer,
   Hand,
   Hourglass,
   Info,
@@ -33,6 +32,7 @@ import {
   LoaderCircle,
   LogIn,
   Maximize2,
+  Menu,
   Moon,
   NotebookPen,
   Palette,
@@ -180,6 +180,47 @@ const WAVE_PAUSE_2 = 3400;
    The family's own light — rope + section, one text — wears through
    the --chip-a custom property; the words stay the house's one color. */
 
+/* -------- the family's own light — rope + section, one text ----------
+   THE WORLD'S SPIRIT IN EVERY KATEGORY. The old worlds' doors are
+   gone; their spirits live inside the categories they grew from: one
+   row per nature, the world's own icon at its side, and a chosen
+   category FOCUSES the walk on that nature — the tree grows its
+   branches, and every room speaks with that world's voice. */
+
+const FAMILY_SPIRITS: Record<
+  string,
+  { icon: typeof Sparkles; spirit: string }
+> = {
+  interplanetary: {
+    icon: Sparkles,
+    spirit: "The star channels — contact, starseeds, the gathered civilizations",
+  },
+  manifest: {
+    icon: NotebookPen,
+    spirit: "The reality OS — formulas, shifts, daily protocols",
+  },
+  quantum: {
+    icon: Atom,
+    spirit: "The quantum narrator — the underside of things",
+  },
+  evolvemed: {
+    icon: Dna,
+    spirit: "The evolutionary nexus — body, breath, renewal",
+  },
+  invent: {
+    icon: Hammer,
+    spirit: "The forge — intentions become blueprints",
+  },
+  healing: {
+    icon: AudioLines,
+    spirit: "The healing codes — sound, light, quiet repair",
+  },
+  artx: {
+    icon: Palette,
+    spirit: "The atelier — poems, songs, paintings, cards",
+  },
+};
+
 /* -------- the room's conversation — speak with the transmission ------
 
    THE TRANSMISSION LISTENS. Inside a branch's room the visitor can
@@ -285,24 +326,28 @@ async function speakWithTransmission(
 
 /* ------------------- the seed — the house's heart -------------------
 
-   THE SEED LAW. The brand mark hangs at the very CENTRE of the realm,
-   and every branch of the house emerges from behind it: the trunk
-   rises from its lower rim, the first generations open above it, the
-   wings breathe to both sides. Climb the tree and the seed stays —
-   the heart of the house never moves. */
+   THE SEED LAW. The house's own logo — the mark the About page
+   carries — hangs at the very CENTRE of the realm, just beneath the
+   trunk's base: every branch of the house rises from behind it, the
+   first generations open above it, the wings breathe to both sides.
+   THE CLEARING LAW — the seed is a centre point, never a wall: the
+   trunk's lowest breath fades into the quiet circle around it, so no
+   rope and no word ever crosses the logo's face. Climb the tree and
+   the seed stays — the heart of the house never moves. */
 
 export function RootSigil() {
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none absolute inset-x-0 top-1/2 z-0 flex -translate-y-1/2 flex-col items-center gap-2.5"
+      className="pointer-events-none absolute inset-x-0 z-0 flex translate-y-0 flex-col items-center gap-2"
+      style={{ top: "calc(50% + 3.4rem)" }}
     >
-      <div className="relative flex size-[116px] items-center justify-center sm:size-[132px]">
+      <div className="relative flex size-[112px] items-center justify-center sm:size-[124px]">
         <div
           className="absolute inset-0 rounded-full"
           style={{
             background:
-              "radial-gradient(circle, color-mix(in srgb, var(--scope-a,var(--gd)) 20%, transparent), transparent 68%)",
+              "radial-gradient(circle, color-mix(in srgb, var(--scope-a,var(--gd)) 16%, transparent), transparent 68%)",
           }}
         />
         <svg viewBox="0 0 120 120" className="absolute inset-0 size-full" fill="none">
@@ -310,39 +355,31 @@ export function RootSigil() {
             cx="60"
             cy="60"
             r="56"
-            stroke="color-mix(in srgb, var(--scope-a,var(--gd)) 32%, transparent)"
+            stroke="color-mix(in srgb, var(--scope-a,var(--gd)) 26%, transparent)"
             strokeWidth="1"
           />
           <circle
             cx="60"
             cy="60"
             r="45"
-            stroke="color-mix(in srgb, var(--scope-a,var(--gd)) 18%, transparent)"
+            stroke="color-mix(in srgb, var(--scope-a,var(--gd)) 14%, transparent)"
             strokeWidth="1"
             strokeDasharray="2 5"
           />
         </svg>
-        <svg viewBox="0 0 48 48" className="relative size-11 sm:size-12" fill="none">
-          <path
-            d="M6 24c5.5-8.2 11.6-12.3 18-12.3S36.5 15.8 42 24c-5.5 8.2-11.6 12.3-18 12.3S11.5 32.2 6 24Z"
-            stroke="color-mix(in srgb, var(--foreground) 66%, transparent)"
-            strokeWidth="1.6"
-          />
-          <circle
-            cx="24"
-            cy="24"
-            r="6.5"
-            stroke="color-mix(in srgb, var(--scope-a,var(--gd)) 80%, transparent)"
-            strokeWidth="1.6"
-            className="animate-pulse"
-          />
-          <circle
-            cx="24"
-            cy="24"
-            r="2"
-            fill="color-mix(in srgb, var(--scope-b,var(--pk)) 80%, transparent)"
-          />
-        </svg>
+        {/* the house's own mark — the About page's logo, light and dark */}
+        <img
+          src="/images/ai/mark-light.png"
+          alt=""
+          className="relative size-14 object-contain dark:hidden sm:size-16"
+          draggable={false}
+        />
+        <img
+          src="/images/ai/mark-dark.png"
+          alt=""
+          className="relative hidden size-14 object-contain dark:block sm:size-16"
+          draggable={false}
+        />
       </div>
       <p className="mono-label text-[9px] uppercase tracking-[0.42em] text-foreground/65">
         Mirror Entity
@@ -1350,12 +1387,24 @@ export function BranchCanopy({
           ? ("right" as const)
           : ("left" as const)
         : undefined;
-    return tree.frontier.length > 0
-      ? buildExtensionTopology(tunedSeeds, tree.frontier, narrow, wing)
+    /* THE SIDEWARD LAW — from the fifth family on, each new house
+       sprouts from a branch MID-TREE (a donor of the already-standing
+       canopy): the wings breathe left and right at every height, and
+       the walk spreads in all directions instead of piling skyward. */
+    let tips = tree.frontier;
+    if (wing && topologies.length >= 4) {
+      const donorIdx = Math.max(0, Math.floor(topologies.length / 2) - 1);
+      const donor = topologies[donorIdx];
+      const rIdx = donor.rows.length - 1;
+      const width = narrow ? 3 : 5;
+      tips = donor.rows[rIdx].seeds
+        .slice(0, width)
+        .map((_, i) => ({ id: `n${donorIdx}.${rIdx}.${i}` }));
+    }
+    return tips.length > 0
+      ? buildExtensionTopology(tunedSeeds, tips, narrow, wing)
       : buildSeedTopology(tunedSeeds, [], narrow);
   }, [ranked, topologies, tree, narrow, spent, expansionScore, withAccents]);
-
-  const groveDone = topologies.length >= MAX_BATCHES;
 
   /* THE GROW — one breath, from the ready pool. A ready family may
      only hang from tips that still stand: a folded frontier can never
@@ -2203,10 +2252,6 @@ export function BranchCanopy({
   const narrLoading = narrMine && narration.state === "loading";
   const narrPlaying = narrMine && narration.state === "playing";
 
-  const preparedCount = prepared
-    ? prepared.rows.reduce((a, r) => a + r.seeds.length, 0)
-    : 0;
-
   return (
     <div
       data-testid={testIdPrefix}
@@ -2220,13 +2265,13 @@ export function BranchCanopy({
     >
       {/* ---------------------------- header ---------------------------
           THE COMPASS — the whole house's steering, one calm row. THE
-          KATEGORIES: every family of the walk stands behind one clean
-          dropdown (General + the seven lights, each wearing its own
-          share of the house). THE WORLDS: every world of the house
-          stands behind one dropdown of its own — the crown stays
-          clean, the doors wait inside. The where-pill speaks the
-          place; the mix of worlds rests in the settings, inside the
-          profile. */}
+          MENU carries where the walk stands (the compass, the depth,
+          the trail of steps and the recalibrating hand) behind one
+          quiet button. THE KATEGORIES: every family of the walk — the
+          world's own spirit woven into its row — stands behind one
+          clean dropdown; a chosen category focuses the walk on that
+          nature, and every room speaks with that world's voice. The
+          mix of worlds rests in the settings, inside the profile. */}
       <div
         className={cn(
           "shrink-0 bg-background px-3 pb-1 sm:px-5",
@@ -2244,35 +2289,157 @@ export function BranchCanopy({
             realm ? "max-w-[760px]" : "max-w-[680px]"
           )}
         >
-          {/* WHERE THE WALK STANDS — the little compass of the place:
-              the family the tree speaks in, and how deep the walk is */}
-          <span
-            data-testid={`${testIdPrefix}-where`}
-            title={t("Where the walk stands")}
-            className="flex shrink-0 items-center gap-1.5 rounded-full border py-1 pl-2 pr-2.5"
-            style={{
-              borderColor:
-                "color-mix(in srgb, var(--scope-a,var(--gd)) 34%, transparent)",
-              backgroundColor:
-                "color-mix(in srgb, var(--scope-a,var(--gd)) 8%, var(--background))",
-            }}
-          >
-            <Compass
-              className="size-3 shrink-0 text-[var(--scope-a,var(--gd))]"
-              aria-hidden="true"
-            />
-            <span className="mono-label max-w-[92px] truncate whitespace-nowrap text-[9px] uppercase tracking-[0.16em] text-foreground/85 sm:max-w-[140px]">
-              {mixTitle(mix, t)}
-            </span>
-            {lineage.length > 0 && (
-              <span
-                className="mono-label whitespace-nowrap text-[9px] tabular-nums text-muted-foreground/70"
-                aria-hidden="true"
-              >
-                ·{lineage.length}
-              </span>
+          {/* THE MENU — where the walk stands, behind one quiet button:
+              the compass, the depth, every step of the trail (one
+              touch returns the tree to that step) and the quiet
+              recalibrating hand */}
+          <div className="relative shrink-0">
+            <button
+              type="button"
+              onClick={() => setCrownMenu((m) => (m === "menu" ? null : "menu"))}
+              aria-expanded={crownMenu === "menu"}
+              aria-label={t("Where the walk stands")}
+              title={t("Where the walk stands")}
+              data-testid={`${testIdPrefix}-menu`}
+              className={cn(
+                "focus-glow flex size-7 items-center justify-center rounded-full border transition-all duration-300",
+                crownMenu === "menu"
+                  ? "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_14%,transparent)] text-[var(--scope-a,var(--gd))]"
+                  : "hairline text-muted-foreground hover:border-[var(--hairline-hover)] hover:text-foreground"
+              )}
+            >
+              <Menu className="size-3" aria-hidden="true" />
+            </button>
+            {crownMenu === "menu" && (
+              <>
+                <div
+                  aria-hidden="true"
+                  className="fixed inset-0 z-30"
+                  onClick={() => setCrownMenu(null)}
+                />
+                <div
+                  data-testid={`${testIdPrefix}-menu-panel`}
+                  className="nice-scroll absolute left-0 top-9 z-40 max-h-[70vh] w-[286px] overflow-y-auto rounded-2xl border bg-background p-3 shadow-[0_18px_48px_-20px_rgba(0,0,0,0.6)]"
+                  style={{
+                    borderColor:
+                      "color-mix(in srgb, var(--scope-a,var(--gd)) 30%, transparent)",
+                  }}
+                >
+                  {/* where the walk stands */}
+                  <div
+                    data-testid={`${testIdPrefix}-where`}
+                    className="flex items-center gap-2 rounded-xl px-2 py-2"
+                    style={{
+                      backgroundColor:
+                        "color-mix(in srgb, var(--scope-a,var(--gd)) 8%, transparent)",
+                    }}
+                  >
+                    <Compass
+                      className="size-3.5 shrink-0 text-[var(--scope-a,var(--gd))]"
+                      aria-hidden="true"
+                    />
+                    <span className="mono-label min-w-0 flex-1 truncate text-[9px] uppercase tracking-[0.16em] text-foreground/85">
+                      {mixTitle(mix, t)}
+                    </span>
+                    <span
+                      className="mono-label shrink-0 text-[9px] tabular-nums text-muted-foreground/70"
+                      aria-hidden="true"
+                    >
+                      ·{lineage.length}
+                    </span>
+                  </div>
+                  {/* the trail of the walk */}
+                  {lineage.length > 0 && (
+                    <div
+                      data-testid={`${testIdPrefix}-trail`}
+                      className="mt-2 flex flex-col"
+                    >
+                      <p className="mono-label px-2 pb-1 text-[8px] uppercase tracking-[0.2em] text-muted-foreground/60">
+                        {t("Your walk")}
+                      </p>
+                      {[...lineage].map((l, i) => {
+                        const latest = i === lineage.length - 1;
+                        return (
+                          <button
+                            key={`${l.text}-${i}`}
+                            type="button"
+                            onClick={() => {
+                              walkBack(l);
+                              setCrownMenu(null);
+                            }}
+                            aria-label={`${t("Return to")}: ${l.text}`}
+                            title={l.text}
+                            className={cn(
+                              "focus-glow flex items-center gap-2 rounded-xl px-2 py-1.5 text-left transition-colors duration-300 hover:bg-[color-mix(in_srgb,var(--foreground)_4%,transparent)]",
+                              latest && "bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_10%,transparent)]"
+                            )}
+                          >
+                            <span
+                              aria-hidden="true"
+                              className={cn(
+                                "mono-label w-4 shrink-0 text-[8px] tabular-nums",
+                                latest
+                                  ? "text-[var(--scope-a,var(--gd))]"
+                                  : "text-muted-foreground/50"
+                              )}
+                            >
+                              {i + 1}
+                            </span>
+                            <span
+                              className={cn(
+                                "min-w-0 flex-1 truncate text-[12px]",
+                                latest
+                                  ? "font-medium text-[var(--scope-a,var(--gd))]"
+                                  : "text-foreground/85"
+                              )}
+                            >
+                              {l.text}
+                            </span>
+                            {latest && (
+                              <span className="mono-label shrink-0 animate-pulse text-[7.5px] uppercase tracking-[0.16em] text-[var(--scope-a,var(--gd))]">
+                                {t("You are here")}
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                  {/* the quiet hand — the field returns to origin */}
+                  <span
+                    aria-hidden="true"
+                    className="mx-1 mt-2 block h-px bg-[var(--hairline)]"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      resetField();
+                      setCrownMenu(null);
+                      import("sonner").then(({ toast }) =>
+                        toast.success(t("Field recalibrated"), {
+                          description: t(
+                            "All scopes returned to origin. Free will honored always."
+                          ),
+                        })
+                      );
+                    }}
+                    aria-label={t("Recalibrate the field")}
+                    title={t("Recalibrate the field")}
+                    data-testid={`${testIdPrefix}-door-recalibrate`}
+                    className="focus-glow mt-1 flex w-full items-center gap-2.5 rounded-xl px-2 py-2 text-left transition-colors duration-300 hover:bg-[color-mix(in_srgb,var(--foreground)_4%,transparent)]"
+                  >
+                    <RotateCcw
+                      className="size-3.5 shrink-0 text-muted-foreground"
+                      aria-hidden="true"
+                    />
+                    <span className="min-w-0 flex-1 truncate text-[12.5px] text-foreground/90">
+                      {t("Recalibrate the field")}
+                    </span>
+                  </button>
+                </div>
+              </>
             )}
-          </span>
+          </div>
 
           {/* THE KATEGORIES — every family of the walk behind one clean
               dropdown: General (the whole house, mixed) and the seven
@@ -2365,34 +2532,72 @@ export function BranchCanopy({
                     />
                     {TREE_FAMILIES.map((f) => {
                       const share = familyShare(mix, f.key);
+                      const focused =
+                        mix.on.length === 1 &&
+                        mix.on.includes(f.key) &&
+                        share.on;
+                      const spirit = FAMILY_SPIRITS[f.key];
+                      const SpiritIcon = spirit?.icon ?? Layers;
                       return (
                         <button
                           key={f.key}
                           type="button"
-                          onClick={() => toggleFamily(f.key)}
-                          aria-pressed={share.on}
+                          onClick={() => {
+                            /* THE FOCUS LAW — one touch on a category
+                               focuses the whole walk on that nature: the
+                               tree grows its branches and every room
+                               speaks with that world's own voice. */
+                            if (focused) return;
+                            applyMix({ on: [f.key], weights: { [f.key]: 1 } });
+                            import("sonner").then(({ toast }) =>
+                              toast(t("The walk focuses on {name}", {
+                                name: t(familyLabelKeys[f.key] ?? f.key),
+                              }))
+                            );
+                          }}
+                          aria-pressed={focused}
                           title={t(familyLabelKeys[f.key] ?? f.key)}
                           data-testid={`${testIdPrefix}-family-${f.key}`}
-                          className="focus-glow flex items-center gap-2.5 rounded-xl px-2 py-2 text-left transition-colors duration-300 hover:bg-[color-mix(in_srgb,var(--foreground)_4%,transparent)]"
+                          className={cn(
+                            "focus-glow flex items-center gap-2.5 rounded-xl px-2 py-2 text-left transition-colors duration-300 hover:bg-[color-mix(in_srgb,var(--foreground)_4%,transparent)]",
+                            focused &&
+                              "bg-[color-mix(in_srgb,var(--foreground)_5%,transparent)]"
+                          )}
                         >
                           <span
                             aria-hidden="true"
-                            className="size-2 shrink-0 rounded-full transition-opacity duration-300"
+                            className="flex size-6 shrink-0 items-center justify-center rounded-lg"
                             style={{
-                              backgroundColor: f.accent,
-                              opacity: share.on ? 1 : 0.3,
-                            }}
-                          />
-                          <span className="min-w-0 flex-1 truncate text-[12.5px] text-foreground/90">
-                            {t(familyLabelKeys[f.key] ?? f.key)}
-                          </span>
-                          <span
-                            className="mono-label shrink-0 text-[9px] tabular-nums"
-                            style={{
-                              color: share.on ? f.accent : undefined,
+                              backgroundColor: `color-mix(in srgb, ${f.accent} 12%, transparent)`,
                             }}
                           >
-                            {share.on ? `${share.pct}%` : "—"}
+                            <SpiritIcon
+                              className="size-3"
+                              style={{ color: f.accent, opacity: share.on ? 1 : 0.55 }}
+                            />
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className="flex items-center gap-2">
+                              <span className="truncate text-[12.5px] text-foreground/90">
+                                {t(familyLabelKeys[f.key] ?? f.key)}
+                              </span>
+                              {share.on && share.pct !== 100 && (
+                                <span
+                                  className="mono-label shrink-0 text-[9px] tabular-nums"
+                                  style={{ color: f.accent }}
+                                >
+                                  {share.pct}%
+                                </span>
+                              )}
+                              {focused && (
+                                <span className="mono-label shrink-0 text-[8px] uppercase tracking-[0.14em] text-[var(--scope-a,var(--gd))]">
+                                  {t("You are here")}
+                                </span>
+                              )}
+                            </span>
+                            <span className="mono-label mt-0.5 block truncate text-[8.5px] normal-case tracking-[0.02em] text-muted-foreground/70">
+                              {t(spirit?.spirit ?? f.key)}
+                            </span>
                           </span>
                         </button>
                       );
@@ -2414,162 +2619,84 @@ export function BranchCanopy({
             )}
           </div>
 
-          {/* THE WORLDS — every world of the house behind one dropdown:
-              the seven realms the tree grows toward, the archives, and
-              the quiet recalibrating hand. One door, one list. */}
-          {realm && (
-            <div className="relative shrink-0">
-              <button
-                type="button"
-                onClick={() =>
-                  setCrownMenu((m) => (m === "worlds" ? null : "worlds"))
-                }
-                aria-expanded={crownMenu === "worlds"}
-                aria-label={t("Worlds")}
-                title={t("Worlds")}
-                data-testid={`${testIdPrefix}-worlds`}
-                className={cn(
-                  "focus-glow flex h-7 items-center gap-1.5 rounded-full border px-2.5 transition-all duration-300",
-                  crownMenu === "worlds"
-                    ? "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_14%,transparent)] text-[var(--scope-a,var(--gd))]"
-                    : "hairline text-muted-foreground hover:border-[var(--hairline-hover)] hover:text-foreground"
-                )}
-              >
-                <Globe className="size-3" aria-hidden="true" />
-                <span className="mono-label whitespace-nowrap text-[9px] uppercase tracking-[0.14em]">
-                  {t("Worlds")}
-                </span>
-                <ChevronDown
-                  className={cn(
-                    "size-2.5 transition-transform duration-300",
-                    crownMenu === "worlds" && "rotate-180"
-                  )}
-                  aria-hidden="true"
-                />
-              </button>
-              {crownMenu === "worlds" && (
-                <>
-                  <div
-                    aria-hidden="true"
-                    className="fixed inset-0 z-30"
-                    onClick={() => setCrownMenu(null)}
-                  />
-                  <div
-                    data-testid={`${testIdPrefix}-worlds-panel`}
-                    className="nice-scroll absolute left-0 top-9 z-40 max-h-[68vh] w-[252px] overflow-y-auto rounded-2xl border bg-background p-2 shadow-[0_18px_48px_-20px_rgba(0,0,0,0.6)]"
-                    style={{
-                      borderColor:
-                        "color-mix(in srgb, var(--scope-a,var(--gd)) 30%, transparent)",
-                    }}
-                  >
-                    <p className="mono-label px-2 pb-1.5 pt-1 text-[8.5px] uppercase tracking-[0.2em] text-muted-foreground">
-                      {t("The worlds of the house")}
-                    </p>
-                    {(
-                      [
-                        { key: "mirroros", icon: Sparkles, label: t("Manifest"), open: openMirrorOS },
-                        { key: "invent", icon: NotebookPen, label: t("Invent"), open: openInvent },
-                        { key: "lightcodes", icon: AudioLines, label: t("Light Codes"), open: () => openLightCodes() },
-                        { key: "particlex", icon: Atom, label: t("Quantum World"), open: openParticleX },
-                        { key: "evolvemed", icon: Dna, label: t("Evolve Med"), open: openEvolveMed },
-                        { key: "artx", icon: Palette, label: t("Art X"), open: openArtX },
-                        { key: "archives", icon: BookMarked, label: t("Archives"), open: () => openRegister("civilization") },
-                      ] as const
-                    ).map((d) => (
-                      <button
-                        key={d.key}
-                        type="button"
-                        onClick={d.open}
-                        aria-label={d.label}
-                        title={d.label}
-                        data-testid={`${testIdPrefix}-door-${d.key}`}
-                        className="focus-glow flex w-full items-center gap-2.5 rounded-xl px-2 py-2 text-left transition-colors duration-300 hover:bg-[color-mix(in_srgb,var(--foreground)_4%,transparent)]"
-                      >
-                        <d.icon
-                          className="size-3.5 shrink-0 text-muted-foreground"
-                          aria-hidden="true"
-                        />
-                        <span className="min-w-0 flex-1 truncate text-[12.5px] text-foreground/90">
-                          {d.label}
-                        </span>
-                        <ChevronRight
-                          className="size-3 shrink-0 text-muted-foreground/40"
-                          aria-hidden="true"
-                        />
-                      </button>
-                    ))}
-                    <span
-                      aria-hidden="true"
-                      className="mx-2 my-1 block h-px bg-[var(--hairline)]"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        resetField();
-                        setCrownMenu(null);
-                        import("sonner").then(({ toast }) =>
-                          toast.success(t("Field recalibrated"), {
-                            description: t(
-                              "All scopes returned to origin. Free will honored always."
-                            ),
-                          })
-                        );
-                      }}
-                      aria-label={t("Recalibrate the field")}
-                      title={t("Recalibrate the field")}
-                      data-testid={`${testIdPrefix}-door-recalibrate`}
-                      className="focus-glow flex w-full items-center gap-2.5 rounded-xl px-2 py-2 text-left transition-colors duration-300 hover:bg-[color-mix(in_srgb,var(--foreground)_4%,transparent)]"
-                    >
-                      <RotateCcw
-                        className="size-3.5 shrink-0 text-muted-foreground"
-                        aria-hidden="true"
-                      />
-                      <span className="min-w-0 flex-1 truncate text-[12.5px] text-foreground/90">
-                        {t("Recalibrate the field")}
-                      </span>
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          )}
+          {/* THE WORLDS ARE GONE — their spirit lives inside the
+              categories: a chosen kategory focuses the walk on that
+              nature, and every room speaks with that world's voice. */}
 
           <div className="flex min-w-0 flex-1 items-center justify-end gap-1.5">
-            {!realm && <ExpansionRing />}
             {headerExtra && (
               <div className="hidden items-center gap-1.5 sm:flex">{headerExtra}</div>
             )}
-            <button
-              type="button"
-              onClick={() => setSalt((s) => s + 1)}
-              disabled={disabled}
-              aria-label={t("New branches")}
-              title={t("New branches")}
-              data-testid={`${testIdPrefix}-renew`}
-              className="focus-glow flex size-7 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              <RefreshCw className="size-3" aria-hidden="true" />
-            </button>
-            {!realm && (
-              <button
-                type="button"
-                onClick={onClose}
-                aria-label={t("Hide the branches")}
-                title={t("Hide the branches")}
-                data-testid={`${testIdPrefix}-close`}
-                className="focus-glow flex size-7 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
-              >
-                <X className="size-3.5" aria-hidden="true" />
-              </button>
+            {!realm && <ExpansionRing />}
+            {realm ? (
+              /* the right column — the renewing hand, and beneath it
+                 the visitor's own passage (the profile room, where the
+                 score mirror and the settings live) */
+              <div className="flex flex-col items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setSalt((s) => s + 1)}
+                  disabled={disabled}
+                  aria-label={t("New branches")}
+                  title={t("New branches")}
+                  data-testid={`${testIdPrefix}-renew`}
+                  className="focus-glow flex size-7 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <RefreshCw className="size-3" aria-hidden="true" />
+                </button>
+                <button
+                  type="button"
+                  onClick={openProfilePage}
+                  aria-label={t("Passage")}
+                  title={t("Passage")}
+                  data-testid={`${testIdPrefix}-door-passage`}
+                  className="focus-glow flex size-7 items-center justify-center rounded-full border text-[var(--scope-a,var(--gd))] transition-all duration-300 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)]"
+                  style={{
+                    borderColor:
+                      "color-mix(in srgb, var(--scope-a,var(--gd)) 34%, transparent)",
+                    backgroundColor:
+                      "color-mix(in srgb, var(--scope-a,var(--gd)) 8%, var(--background))",
+                  }}
+                >
+                  {me ? (
+                    <UserRound className="size-3" aria-hidden="true" />
+                  ) : (
+                    <LogIn className="size-3" aria-hidden="true" />
+                  )}
+                </button>
+              </div>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setSalt((s) => s + 1)}
+                  disabled={disabled}
+                  aria-label={t("New branches")}
+                  title={t("New branches")}
+                  data-testid={`${testIdPrefix}-renew`}
+                  className="focus-glow flex size-7 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <RefreshCw className="size-3" aria-hidden="true" />
+                </button>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  aria-label={t("Hide the branches")}
+                  title={t("Hide the branches")}
+                  data-testid={`${testIdPrefix}-close`}
+                  className="focus-glow flex size-7 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+                >
+                  <X className="size-3.5" aria-hidden="true" />
+                </button>
+              </>
             )}
           </div>
         </div>
 
         {/* THE REALM'S SECOND ROW — the doors of the house: the akashic
-            library, the book, the open door of the house, the visitor's
-            own passage. The old app lives here — four quiet doors
-            within the branches themselves, the walk's depth beside
-            them. */}
+            library, the book, the open door of the house. The passage
+            rides the top bar's right column now, the score mirror lives
+            inside the profile — three quiet doors remain. */}
         {realm && (
           <div className="mx-auto mt-1.5 flex w-full max-w-[760px] items-center justify-between gap-2">
             <div className="flex min-w-0 items-center gap-1.5">
@@ -2612,80 +2739,7 @@ export function BranchCanopy({
                   {t("About us")}
                 </span>
               </button>
-              <button
-                type="button"
-                onClick={openProfilePage}
-                aria-label={t("Passage")}
-                title={t("Passage")}
-                data-testid={`${testIdPrefix}-door-passage`}
-                className="focus-glow flex size-8 items-center justify-center gap-1.5 rounded-full border px-0 text-[var(--scope-a,var(--gd))] transition-all duration-300 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)] sm:w-auto sm:px-3"
-                style={{
-                  borderColor:
-                    "color-mix(in srgb, var(--scope-a,var(--gd)) 34%, transparent)",
-                  backgroundColor:
-                    "color-mix(in srgb, var(--scope-a,var(--gd)) 8%, var(--background))",
-                }}
-              >
-                {me ? (
-                  <UserRound className="size-3.5 shrink-0" aria-hidden="true" />
-                ) : (
-                  <LogIn className="size-3.5 shrink-0" aria-hidden="true" />
-                )}
-                <span className="hidden text-[12px] font-medium sm:inline">
-                  {t("Passage")}
-                </span>
-              </button>
             </div>
-            <ExpansionRing />
-          </div>
-        )}
-
-        {/* THE TRAIL OF THE WALK — every pressed whisper, oldest first;
-            one touch pans the tree back to that very step. */}
-        {lineage.length > 0 && (
-          <div
-            data-testid={`${testIdPrefix}-trail`}
-            className={cn(
-              "nice-scroll mx-auto mt-1.5 flex w-full items-center gap-1 overflow-x-auto pb-0.5",
-              realm ? "max-w-[760px]" : "max-w-[680px]"
-            )}
-          >
-            <span className="mono-label shrink-0 pr-0.5 text-[8px] uppercase tracking-[0.2em] text-muted-foreground/60">
-              {t("Your walk")}
-            </span>
-            {lineage.map((l, i) => {
-              const latest = i === lineage.length - 1;
-              return (
-                <span key={`${l.text}-${i}`} className="flex shrink-0 items-center gap-1">
-                  {i > 0 && (
-                    <ChevronRight
-                      className="size-3 shrink-0 text-muted-foreground/35"
-                      aria-hidden="true"
-                    />
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => walkBack(l)}
-                    aria-label={`${t("Return to")}: ${l.text}`}
-                    title={l.text}
-                    className={cn(
-                      "focus-glow max-w-[170px] truncate rounded-full border px-2 py-0.5 text-[10.5px] leading-snug transition-all duration-300",
-                      latest
-                        ? "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_66%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_14%,var(--background))] font-medium text-[var(--scope-a,var(--gd))]"
-                        : "border-[color-mix(in_srgb,var(--hairline)_80%,transparent)] text-muted-foreground hover:border-[var(--hairline-hover)] hover:text-foreground"
-                    )}
-                  >
-                    {l.text}
-                  </button>
-                </span>
-              );
-            })}
-            <span
-              className="mono-label shrink-0 animate-pulse pl-1 text-[8px] uppercase tracking-[0.18em] text-[var(--scope-a,var(--gd))]"
-              aria-hidden="true"
-            >
-              {t("You are here")}
-            </span>
           </div>
         )}
       </div>
@@ -2708,37 +2762,10 @@ export function BranchCanopy({
             WebkitOverflowScrolling: "touch",
           }}
         >
-          {/* THE GROW — the ready thirty, one breath away, always in reach */}
-          <div className="pointer-events-none sticky top-0 z-20 flex h-0 justify-center px-3">
-            {prepared || groveDone ? (
-              <button
-                type="button"
-                onClick={grow}
-                disabled={!prepared || disabled}
-                aria-label={
-                  prepared
-                    ? t("Grow the family — 30 more branches stand ready")
-                    : t("This hour's family is complete")
-                }
-                data-testid={`${testIdPrefix}-grow`}
-                className={cn(
-                  "pointer-events-auto mt-2 flex items-center gap-2 rounded-full border px-4 py-1.5 text-[11px] font-medium uppercase tracking-[0.14em] shadow-[0_4px_18px_-10px_rgba(0,0,0,0.4)] transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-45",
-                  prepared
-                    ? "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_44%,transparent)] bg-background text-[var(--scope-a,var(--gd))] hover:shadow-[0_0_18px_-6px_color-mix(in_srgb,var(--scope-a,var(--gd))_60%,transparent)]"
-                    : "border-[color-mix(in_srgb,var(--hairline)_80%,transparent)] bg-background text-muted-foreground"
-                )}
-              >
-                <Sprout className="size-3.5" aria-hidden="true" />
-                {prepared
-                  ? t("{count} more stand ready — grow the family", {
-                      count: preparedCount,
-                    })
-                  : groveDone
-                    ? t("This hour's family is complete")
-                    : t("The family is complete")}
-              </button>
-            ) : null}
-          </div>
+          {/* THE QUIET GROWTH — the family grows of its own breath:
+              the frontier's ear (the sentinel above) hears the visitor
+              slide toward the top and the ready thirty weave in — no
+              button, no counting line, the walk never hits a wall. */}
 
           {/* THE CANVAS — the whole family, walked in every direction.
               Memoized: the walk stands still while the room speaks.
