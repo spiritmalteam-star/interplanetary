@@ -1197,7 +1197,6 @@ function BenchChat() {
         onClose={() => setSummoned(false)}
         disabled={loading}
         testIdPrefix="forge-canopy"
-        introHeading={t("Strike While the Coals Are Lit")}
         introSub={
           messages.length === 0 && status === "idle" && !error
             ? t(

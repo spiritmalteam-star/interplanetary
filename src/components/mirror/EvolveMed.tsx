@@ -671,7 +671,6 @@ function EvolveMedChat() {
         onClose={() => setSummoned(false)}
         disabled={emStatus === "loading"}
         testIdPrefix="em-canopy"
-        introHeading={t("The biocompiler is online")}
         introSub={
           emMessages.length === 0 && emStatus === "idle" && !emError
             ? t(

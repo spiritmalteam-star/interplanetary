@@ -569,7 +569,6 @@ export function MirrorOSChat() {
         onClose={() => setSummoned(false)}
         disabled={osStatus === "loading"}
         testIdPrefix="os-canopy"
-        introHeading={t("Not taught — reminded")}
         introSub={
           osMessages.length === 0 && osStatus === "idle" && !osError
             ? t(

@@ -28,6 +28,46 @@ export function canopyHour(): number {
 export interface CanopyWhisper {
   text: string;
   movement: BranchType;
+  /** THE FAMILY — which scope's light this whisper carries (the mixed
+      grove tags every voice with its own family so the tree can dress
+      each rope and section in that family's color). */
+  family?: string;
+}
+
+/* --------------------- the families of the house --------------------
+
+   THE GENERAL WALK. The tree's default branch is GENERAL: the whole
+   house mixed — every family's whispers woven into one grove, each
+   voice wearing its own family's light (rope and section in the
+   family's color, the words in the house's one text color). The
+   compass lets the visitor choose which families the walk explores,
+   and the mix sets how much of each — the percentages that decide
+   which suggestions appear more often. */
+
+export interface TreeFamily {
+  /** Stable key (the mix, the compass chips, the persistence). */
+  key: string;
+  /** The BranchId whose bank feeds this family. */
+  category: BranchId;
+  /** The family's own light — rope + section color (text stays one). */
+  accent: string;
+}
+
+/** The families of the one house — the compass speaks them by key. */
+export const TREE_FAMILIES: TreeFamily[] = [
+  { key: "interplanetary", category: "interplanetary", accent: "#22d3ee" },
+  { key: "manifest", category: "manifesting", accent: "#f59e0b" },
+  { key: "quantum", category: "quantum", accent: "#a78bfa" },
+  { key: "evolvemed", category: "evolvemed", accent: "#34d399" },
+  { key: "invent", category: "invent", accent: "#fb7185" },
+  { key: "healing", category: "healing", accent: "#2dd4bf" },
+  { key: "artx", category: "artx", accent: "#e879f9" },
+];
+
+/** The accent a family wears — unknown keys fall to the house light. */
+export function familyAccent(key: string | null | undefined): string | null {
+  if (!key) return null;
+  return TREE_FAMILIES.find((f) => f.key === key)?.accent ?? null;
 }
 
 /* ------------------------- the tiny engine -------------------------- */
@@ -1165,6 +1205,98 @@ export function growCanopy(
 
   if (groveCache.size > 40) groveCache.clear();
   groveCache.set(key, out);
+  return out;
+}
+
+/* ----------------------- the general mix grove ---------------------- */
+
+const mixedCache = new Map<string, CanopyWhisper[]>();
+
+/**
+ * THE GENERAL GROVE — the whole house woven into one walk. Every
+ * selected family contributes its share of the five hundred voices,
+ * in the proportion the visitor's mix asks for, each whisper tagged
+ * with its own family so the tree can dress it in that family's
+ * light. The same hour, scope and mix always weave the same grove —
+ * no flicker, no refetch churn; a new hour or a new mix re-weaves.
+ */
+export function growMixedCanopy(
+  on: string[],
+  weights: Record<string, number>,
+  scope: string | null,
+  hour: number,
+  salt = 0
+): CanopyWhisper[] {
+  const families = TREE_FAMILIES.filter(
+    (f) => on.includes(f.key) && (weights[f.key] ?? 0) > 0
+  );
+  if (families.length === 0)
+    return growCanopy("manifesting", scope, hour, salt);
+  if (families.length === 1) {
+    const f = families[0];
+    return growCanopy(f.category, scope, hour, salt).map((w) => ({
+      ...w,
+      family: f.key,
+    }));
+  }
+  const wSig = families.map((f) => `${f.key}:${weights[f.key] ?? 0}`).join(",");
+  const key = `mixed|${families.map((f) => f.key).join("+")}|${wSig}|${scope ?? ""}|${hour}|${salt}`;
+  const hit = mixedCache.get(key);
+  if (hit) return hit;
+
+  const sum = families.reduce((a, f) => a + (weights[f.key] ?? 0), 0) || 1;
+
+  /* each family grows its own bank and shares the grove by weight —
+     a small floor keeps a quiet family from vanishing entirely */
+  const pools: { family: string; rows: CanopyWhisper[] }[] = families.map(
+    (f, i) => {
+      const share = (weights[f.key] ?? 0) / sum;
+      const count = Math.max(24, Math.round(CANOPY_PER_CATEGORY * share));
+      const rows = growCanopy(f.category, scope, hour, salt + i).slice(
+        0,
+        count
+      );
+      return { family: f.key, rows: rows.map((w) => ({ ...w, family: f.key })) };
+    }
+  );
+
+  /* THE WEAVE — the families' voices interleave, round-robin in the
+     mix's own proportions, so no stretch of the tree belongs to one
+     family alone; the whole grove stays one connected walk */
+  const seen = new Set<string>();
+  const out: CanopyWhisper[] = [];
+  const cursors = pools.map(() => 0);
+  let guard = 0;
+  while (out.length < CANOPY_PER_CATEGORY && guard < CANOPY_PER_CATEGORY * 4) {
+    guard++;
+    let placed = false;
+    for (let i = 0; i < pools.length; i++) {
+      const pool = pools[i];
+      const cur = cursors[i];
+      if (cur >= pool.rows.length) continue;
+      const w = pool.rows[cur];
+      cursors[i] = cur + 1;
+      const k = w.text.toLowerCase();
+      if (seen.has(k)) continue;
+      seen.add(k);
+      out.push(w);
+      placed = true;
+      if (out.length >= CANOPY_PER_CATEGORY) break;
+    }
+    if (!placed) break;
+  }
+
+  /* the hour's own shuffle — the same determinism as the single banks */
+  const seed =
+    hashStr(key) ^ Math.imul(hour + 1, 2654435761) ^ Math.imul(salt + 1, 97);
+  const rng = mulberry32(seed);
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+
+  if (mixedCache.size > 24) mixedCache.clear();
+  mixedCache.set(key, out);
   return out;
 }
 

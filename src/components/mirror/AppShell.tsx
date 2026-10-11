@@ -503,11 +503,6 @@ function AppShellViews() {
             onClose={() => setCanopySummoned(false)}
             disabled={channel.status === "loading"}
             testIdPrefix="channel-canopy"
-            introHeading={
-              activeMode === "healing"
-                ? t("The healing channel")
-                : t("The interplanetary channel")
-            }
             introSub={
               channelEmpty
                 ? t(

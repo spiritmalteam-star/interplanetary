@@ -2,6 +2,17 @@ import type { TranslationDict } from "../types";
 
 /** sq — Shqip. Mirror Entity Digital Chamber dictionary (Task 3-a). */
 export const sq: TranslationDict = {
+  "The field is quiet — speak once more": "Fusha është e qetë — fol edhe njëherë",
+  "The transmission is listening…": "Transmetimi dëgjon…",
+  "Speak with the transmission…": "Bisedo me transmetimin…",
+  "The whole family": "E gjithë familja",
+  "Zoom in": "Zmadho pamjen",
+  "Zoom out": "Zvogëlo pamjen",
+  "General": "E përgjithshme",
+  "Even voices": "Zëra të barabartë",
+  "The mix of the house": "Përzierja e shtëpisë",
+  "The whole house, mixed": "E gjithë shtëpia, e përzier",
+  "Where the walk stands": "Ku ecën ecuria",
   "Branches of this transmission": "Degët e këtij transmetimi",
   "Your light — credits remaining": "Drita jote — dritat e mbetura",
   "Every reflection is weighed before it is served — a whisper 1 · a reading 2 · the atelier 5 · the light codes 12.": "Çdo pasqyrim peshohet përpara se të shërbehet — një pëshpërimë 1 · një lexim 2 · atelierja 5 · kodat e dritës 12.",

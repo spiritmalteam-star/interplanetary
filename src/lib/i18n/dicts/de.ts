@@ -2,6 +2,17 @@ import type { TranslationDict } from "../types";
 
 /** de — Deutsch. Mirror Entity Digital Chamber dictionary (Task 3-b). */
 export const de: TranslationDict = {
+  "The field is quiet — speak once more": "Das Feld ist still — sprich noch einmal",
+  "The transmission is listening…": "Die Übertragung hört zu…",
+  "Speak with the transmission…": "Sprich mit der Übertragung…",
+  "The whole family": "Die ganze Familie",
+  "Zoom in": "Hineinzoomen",
+  "Zoom out": "Herauszoomen",
+  "General": "Allgemein",
+  "Even voices": "Gleiche Stimmen",
+  "The mix of the house": "Die Mischung des Hauses",
+  "The whole house, mixed": "Das ganze Haus, gemischt",
+  "Where the walk stands": "Wo der Weg steht",
   "Branches of this transmission": "Verzweigungen dieser Übertragung",
   "Your light — credits remaining": "Dein Licht — verbleibende Lichter",
   "Every reflection is weighed before it is served — a whisper 1 · a reading 2 · the atelier 5 · the light codes 12.": "Jede Reflexion wird gewogen, bevor sie gereicht wird — ein Flüstern 1 · eine Lesung 2 · das Atelier 5 · die Lichtcodes 12.",

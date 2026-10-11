@@ -40,6 +40,9 @@ export interface GenealogySeed {
   text: string;
   movement: BranchType;
   score: number;
+  /** THE FAMILY'S LIGHT — the rope and the section wear this color;
+      the words always wear the house's one text color. */
+  accent?: string;
 }
 
 export interface GenealogyNode {
@@ -54,6 +57,8 @@ export interface GenealogyNode {
   wave: 0 | 1 | 2;
   /** The exchange's own grown branch — golden, standing nearest the root. */
   golden?: boolean;
+  /** The family's own light — rope + section color (text stays one). */
+  accent?: string;
   /** Canvas coordinates; x is the chip's center, y the chip's top. */
   x: number;
   y: number;
@@ -607,6 +612,7 @@ export function layTree(
         text: seed.text,
         movement: seed.movement,
         score: seed.score,
+        accent: seed.accent,
         gen,
         parent,
         wave: 2,
@@ -736,6 +742,7 @@ export function layTree(
         text: goldenSeeds[i].text,
         movement: goldenSeeds[i].movement,
         score: goldenSeeds[i].score,
+        accent: goldenSeeds[i].accent,
         gen: -1,
         parent: null,
         wave: 0,

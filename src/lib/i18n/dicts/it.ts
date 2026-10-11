@@ -2,6 +2,17 @@ import type { TranslationDict } from "../types";
 
 /** it — Italian dictionary (Task 3-b). Keys are the English source strings. */
 export const it: TranslationDict = {
+  "The field is quiet — speak once more": "Il campo è silenzioso — parla ancora una volta",
+  "The transmission is listening…": "La trasmissione ascolta…",
+  "Speak with the transmission…": "Parla con la trasmissione…",
+  "The whole family": "Tutta la famiglia",
+  "Zoom in": "Ingrandisci la vista",
+  "Zoom out": "Riduci la vista",
+  "General": "Generale",
+  "Even voices": "Voci pari",
+  "The mix of the house": "La miscela della casa",
+  "The whole house, mixed": "Tutta la casa, mescolata",
+  "Where the walk stands": "Dove cammina la passeggiata",
   "Branches of this transmission": "Rami di questa trasmissione",
   "Your light — credits remaining": "La tua luce — luci rimaste",
   "Every reflection is weighed before it is served — a whisper 1 · a reading 2 · the atelier 5 · the light codes 12.": "Ogni riflesso è pesato prima di essere servito — un sussurro 1 · una lettura 2 · l'atelier 5 · i codici di luce 12.",

@@ -573,7 +573,6 @@ export function ArtXChat() {
         onClose={() => setSummoned(false)}
         disabled={axStatus === "loading"}
         testIdPrefix="ax-canopy"
-        introHeading={t(axAtelierIntro[0])}
         introSub={
           axMessages.length === 0 && axStatus === "idle" && !axError
             ? t(axAtelierIntro[1])

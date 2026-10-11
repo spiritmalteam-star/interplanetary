@@ -2,6 +2,17 @@ import type { TranslationDict } from "../types";
 
 /** tr — Türkçe. Mirror Entity Digital Chamber dictionary (Task 3-b). */
 export const tr: TranslationDict = {
+  "The field is quiet — speak once more": "Alan sessiz — bir daha konuş",
+  "The transmission is listening…": "İletim dinliyor…",
+  "Speak with the transmission…": "İletimle konuş…",
+  "The whole family": "Bütün aile",
+  "Zoom in": "Yaklaştır",
+  "Zoom out": "Uzaklaştır",
+  "General": "Genel",
+  "Even voices": "Eşit sesler",
+  "The mix of the house": "Evin karışımı",
+  "The whole house, mixed": "Bütün ev, karışık",
+  "Where the walk stands": "Yürüyüş nerede duruyor",
   "Branches of this transmission": "Bu iletimin dalları",
   "Your light — credits remaining": "Işığın — kalan ışıklar",
   "Every reflection is weighed before it is served — a whisper 1 · a reading 2 · the atelier 5 · the light codes 12.": "Her yansıma servis edilmeden önce tartılır — bir fısıltı 1 · bir okuma 2 · atölye 5 · ışık kodları 12.",

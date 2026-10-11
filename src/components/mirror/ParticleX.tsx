@@ -520,7 +520,6 @@ function ParticleXChat() {
         onClose={() => setSummoned(false)}
         disabled={pxStatus === "loading"}
         testIdPrefix="px-canopy"
-        introHeading={t("The quantum narrator is listening")}
         introSub={
           pxMessages.length === 0 && pxStatus === "idle" && !pxError
             ? t(
