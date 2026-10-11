@@ -3521,5 +3521,9 @@ export const fr: TranslationDict = {
   "Teens": "Ados",
   "The voice is gathering — one breath…": "La voix se rassemble — un souffle…",
   "The narrator is reading": "Le narrateur lit",
-  "Returned to the walk": "De retour sur le chemin"
+  "Returned to the walk": "De retour sur le chemin",
+  "About us": "À propos de nous",
+  "Passage": "Le Passage",
+  "Whisper to the tree…": "Murmure à l'arbre…",
+  "The whole house grows from the seed — press a whisper to walk, or speak below.": "Toute la maison pousse depuis la graine — touche un murmure pour marcher, ou parle ci-dessous.",
 };

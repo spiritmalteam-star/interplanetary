@@ -14,26 +14,29 @@ import {
 } from "react";
 import {
   ArrowLeftRight,
+  BookOpen,
   ChevronDown,
   ChevronRight,
   ChevronUp,
   Compass,
   Hand,
   Hourglass,
+  Info,
   Layers,
   Link2,
   ListTree,
   LoaderCircle,
+  LogIn,
   Maximize2,
-  Minus,
   Moon,
-  Plus,
   RefreshCw,
+  ScrollText,
   Send,
   SlidersHorizontal,
   Sparkles,
   Sprout,
   TreeDeciduous,
+  UserRound,
   Volume2,
   VolumeX,
   X,
@@ -351,6 +354,77 @@ async function speakWithTransmission(
     typeof data?.transmission === "string" ? data.transmission.trim() : "";
   if (!res.ok || !reply) throw new Error(data?.error || "The field is quiet");
   return reply;
+}
+
+/* ------------------- the seed — the house's heart -------------------
+
+   THE SEED LAW. The brand mark hangs at the very CENTRE of the realm,
+   and every branch of the house emerges from behind it: the trunk
+   rises from its lower rim, the first generations open above it, the
+   wings breathe to both sides. Climb the tree and the seed stays —
+   the heart of the house never moves. */
+
+export function RootSigil() {
+  return (
+    <div
+      aria-hidden="true"
+      className="pointer-events-none absolute inset-x-0 top-1/2 z-0 flex -translate-y-1/2 flex-col items-center gap-2.5"
+    >
+      <div className="relative flex size-[116px] items-center justify-center sm:size-[132px]">
+        <div
+          className="absolute inset-0 rounded-full"
+          style={{
+            background:
+              "radial-gradient(circle, color-mix(in srgb, var(--scope-a,var(--gd)) 20%, transparent), transparent 68%)",
+          }}
+        />
+        <svg viewBox="0 0 120 120" className="absolute inset-0 size-full" fill="none">
+          <circle
+            cx="60"
+            cy="60"
+            r="56"
+            stroke="color-mix(in srgb, var(--scope-a,var(--gd)) 32%, transparent)"
+            strokeWidth="1"
+          />
+          <circle
+            cx="60"
+            cy="60"
+            r="45"
+            stroke="color-mix(in srgb, var(--scope-a,var(--gd)) 18%, transparent)"
+            strokeWidth="1"
+            strokeDasharray="2 5"
+          />
+        </svg>
+        <svg viewBox="0 0 48 48" className="relative size-11 sm:size-12" fill="none">
+          <path
+            d="M6 24c5.5-8.2 11.6-12.3 18-12.3S36.5 15.8 42 24c-5.5 8.2-11.6 12.3-18 12.3S11.5 32.2 6 24Z"
+            stroke="color-mix(in srgb, var(--foreground) 66%, transparent)"
+            strokeWidth="1.6"
+          />
+          <circle
+            cx="24"
+            cy="24"
+            r="6.5"
+            stroke="color-mix(in srgb, var(--scope-a,var(--gd)) 80%, transparent)"
+            strokeWidth="1.6"
+            className="animate-pulse"
+          />
+          <circle
+            cx="24"
+            cy="24"
+            r="2"
+            fill="color-mix(in srgb, var(--scope-b,var(--pk)) 80%, transparent)"
+          />
+        </svg>
+      </div>
+      <p className="mono-label text-[9px] uppercase tracking-[0.42em] text-foreground/65">
+        Mirror Entity
+      </p>
+      <p className="mono-label text-[7.5px] uppercase tracking-[0.34em] text-muted-foreground/50">
+        Digital Chamber
+      </p>
+    </div>
+  );
 }
 
 /* ------------------- the summon button (by the input) ---------------- */
@@ -849,6 +923,8 @@ export function BranchCanopy({
   liveAnswer,
   liveLoading,
   onLatch,
+  realm,
+  headerExtra,
 }: {
   /** The branch of the living tree this chat belongs to. */
   category: BranchId;
@@ -877,9 +953,26 @@ export function BranchCanopy({
   /** THE LATCH — true while the answer lives in the tree (the zoom);
       the chat keeps its rest strip resting while the walk holds. */
   onLatch?: (latched: boolean) => void;
+  /** THE REALM — this tree IS the whole application: the categories
+      stand at the very top, the house doors (akashic · book · about ·
+      the passage) ride beside them, the seed sits at the centre, the
+      tree never folds, and one whisper line speaks from the floor. */
+  realm?: boolean;
+  /** Extra quiet controls riding the realm's crown (the purse, the
+      theme) — rendered between the where-pill and the doors. */
+  headerExtra?: ReactNode;
 }) {
   const t = useT();
   const language = useMirror((s) => s.language);
+  /* THE HOUSE DOORS — the old app, folded into the realm's crown:
+     the akashic library, the book, the open door of the house, and
+     the visitor's own passage (sign in, or their account). */
+  const me = useMirror((s) => s.me);
+  const openAkashic = useMirror((s) => s.openAkashic);
+  const openDreamBook = useMirror((s) => s.openDreamBook);
+  const openAbout = useMirror((s) => s.openAbout);
+  const openAuth = useMirror((s) => s.openAuth);
+  const openProfile = useMirror((s) => s.openProfile);
 
   /* THE RESONANCE WALK — v4.1, the quiet walk: the room's one voice is
      the male narrator (lib/room-narrator.ts). The gate lives up front;
@@ -942,14 +1035,20 @@ export function BranchCanopy({
      stands (a pressed whisper, the composer, a continuation), the
      camera pulls back and the answer rises inside the tree.
      THE QUIET FIELD — a transmission that returned nothing (an error
-     held by the chat behind) sends the visitor gently back to the walk.
+     held by the chat behind) sends the visitor gently back to the walk
+     — but only after one breath of grace: the instant between the
+     visitor's touch and the channel's first loading breath must never
+     fold the room they just asked for (THE OPEN DOOR LAW — a pressed
+     whisper always opens).
      Both render-time guarded (the official pattern — the engine never
      renders synchronously inside an effect). */
   const [seenLiveKey, setSeenLiveKey] = useState<string | null>(null);
+  const zoomOpenedAtRef = useRef(0);
   const liveKey =
     mounted && liveLoading && liveQuestion ? liveQuestion : null;
   if (liveKey && liveKey !== seenLiveKey) {
     setSeenLiveKey(liveKey);
+    zoomOpenedAtRef.current = Date.now();
     if (zoom?.q !== liveKey) setZoom({ q: liveKey, move: null });
   } else if (!liveLoading && seenLiveKey !== null) {
     /* the next transmission zooms again — even the very same words */
@@ -958,7 +1057,13 @@ export function BranchCanopy({
   /* a live room whose transmission returned nothing folds back to the
      walk; a RESTORED room (a previous branch re-opened from the trail)
      is its own words — the guard never touches it. */
-  if (zoom && !zoom.restored && !liveLoading && !liveAnswer) {
+  if (
+    zoom &&
+    !zoom.restored &&
+    !liveLoading &&
+    !liveAnswer &&
+    Date.now() - zoomOpenedAtRef.current > 900
+  ) {
     setZoom(null);
   }
 
@@ -1120,11 +1225,19 @@ export function BranchCanopy({
 
   /* THE FAMILY'S LIGHT — every whisper knows its own family, so every
      seed carries that family's accent to the tree (rope + section;
-     the words stay the house's one text color). */
+     the words stay the house's one text color). THE FAMILY'S VOICE —
+     the same map resolves which house door the room's own chat
+     speaks through: a manifest whisper's room answers as the
+     manifest answers, an Art X room as the atelier. */
   const familyByUk = useMemo(() => {
     const m = new Map<string, string | undefined>();
     for (const w of grove)
       m.set(w.text.toLowerCase(), familyAccent(w.family) ?? undefined);
+    return m;
+  }, [grove]);
+  const familyKeyByText = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const w of grove) m.set(w.text.toLowerCase(), w.family ?? "");
     return m;
   }, [grove]);
   const accentOfText = useCallback(
@@ -1430,18 +1543,39 @@ export function BranchCanopy({
      interconnections readable across the whole family; zoom in and a
      single whisper fills the eye. One transform on one wrapper — the
      compositor owns it, the still canvas never re-renders for it.
-     Ctrl/cmd + wheel and the quiet cluster of buttons both steer it. */
-  const ZOOM_MIN = 0.4;
+     THE FINGER'S LAW — no plus, no minus: the walk is zoomed by the
+     visitor's own fingers (a pinch travels apart or together) and by
+     ctrl/cmd + wheel on the desktop. One live ref carries the scale
+     so every gesture event lands on the true current zoom. */
+  const ZOOM_MIN = 0.22;
   const ZOOM_MAX = 1.8;
   const clampZoom = useCallback(
     (z: number) => Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, z)),
     []
   );
   const [treeZoom, setTreeZoom] = useState(1);
-  const zoomBy = useCallback(
-    (f: number) => setTreeZoom((z) => clampZoom(z * f)),
+  const zoomLiveRef = useRef(1);
+  const applyZoom = useCallback(
+    (z: number) => {
+      const nz = clampZoom(z);
+      zoomLiveRef.current = nz;
+      setTreeZoom(nz);
+    },
     [clampZoom]
   );
+  /* THE TRUNK'S OWN X — the seed's stem inside the scroll content:
+     every floor-anchor and the whole-family view center the TRUNK
+     (the canvas's margin-auto box may drift when the family's wings
+     change its width under a standing view). */
+  const trunkScrollLeft = useCallback(() => {
+    const v = vpRef.current;
+    if (!v) return 0;
+    const inner = v.querySelector<HTMLDivElement>("div[style*='will-change']");
+    const canvas = inner?.parentElement ?? null;
+    if (!canvas) return Math.max(0, (v.scrollWidth - v.clientWidth) / 2);
+    const trunkX = canvas.offsetLeft + canvas.offsetWidth / 2;
+    return Math.max(0, trunkX - v.clientWidth / 2);
+  }, []);
   const zoomFit = useCallback(() => {
     const vp = vpRef.current;
     if (!vp) return;
@@ -1449,30 +1583,141 @@ export function BranchCanopy({
       vp.clientWidth / Math.max(1, tree.geometry.width),
       vp.clientHeight / Math.max(1, tree.geometry.height)
     );
-    setTreeZoom(clampZoom(Math.min(z, 1)));
-    /* THE WHOLE FAMILY, CENTERED — one quiet anchor after the scale
-       settles: the trunk holds the floor, the wings breathe to both
-       sides (one timeout, never an animation loop) */
+    /* the final scale — clamped exactly as the walk will wear it — so
+       the anchor math and the true scale never disagree */
+    const zFinal = clampZoom(Math.min(z, 1));
+    applyZoom(zFinal);
+    /* THE WHOLE FAMILY, CENTERED ON ITS TRUNK — one quiet anchor after
+       the scale settles. Pure geometry, no DOM read (the canvas box may
+       not have re-rendered yet): the margin-auto canvas puts its stem
+       at max(0,(clientW−geoW·z)/2)+geoW·z/2, so centering the stem is
+       one subtraction. The floor stays below (the seed holds it). */
     window.setTimeout(() => {
       const v = vpRef.current;
       if (!v) return;
-      v.scrollLeft = Math.max(0, (v.scrollWidth - v.clientWidth) / 2);
+      v.scrollLeft = Math.max(
+        0,
+        (tree.geometry.width * zFinal - v.clientWidth) / 2
+      );
       v.scrollTop = Math.max(0, v.scrollHeight - v.clientHeight);
     }, 60);
-  }, [clampZoom, tree.geometry.width, tree.geometry.height]);
-  /* ctrl/cmd + wheel — a native non-passive listener (React's wheel is
-     passive; the zoom must be allowed to claim the gesture) */
+  }, [applyZoom, clampZoom, tree.geometry.width, tree.geometry.height]);
+
+  /* THE PINCH — two fingers, one zoom: the meeting point of the
+     fingers never moves while the family grows or steps back beneath
+     them. One native non-passive listener owns the gesture (the
+     browser's own page-zoom is turned away at the door — touch
+     preventDefault and Safari's gesture events alike), and a click
+     that a pinch might have birthed is swallowed so no whisper opens
+     by accident. */
+  const pinchRef = useRef<{
+    dist: number;
+    midX: number;
+    midY: number;
+    moved: boolean;
+  } | null>(null);
+  const pinchBlockRef = useRef(false);
+  useEffect(() => {
+    const vp = vpRef.current;
+    if (!vp || !mounted) return;
+    const fingers = (t1: Touch, t2: Touch) =>
+      Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+    const onStart = (e: TouchEvent) => {
+      if (e.touches.length !== 2) return;
+      const a = e.touches[0];
+      const b = e.touches[1];
+      pinchRef.current = {
+        dist: Math.max(1, fingers(a, b)),
+        midX: (a.clientX + b.clientX) / 2,
+        midY: (a.clientY + b.clientY) / 2,
+        moved: false,
+      };
+      e.preventDefault(); /* the walk claims the gesture */
+    };
+    const onMove = (e: TouchEvent) => {
+      const st = pinchRef.current;
+      if (!st || e.touches.length !== 2) return;
+      e.preventDefault();
+      const a = e.touches[0];
+      const b = e.touches[1];
+      const dist = Math.max(1, fingers(a, b));
+      const midX = (a.clientX + b.clientX) / 2;
+      const midY = (a.clientY + b.clientY) / 2;
+      const f = dist / st.dist;
+      const drift = Math.hypot(midX - st.midX, midY - st.midY);
+      if (Math.abs(f - 1) < 0.004 && drift < 3) return;
+      const z0 = zoomLiveRef.current;
+      const z1 = clampZoom(z0 * f);
+      if (z1 !== z0) {
+        const rect = vp.getBoundingClientRect();
+        /* the content point beneath the fingers' meeting place stays put */
+        const cx = (vp.scrollLeft + (st.midX - rect.left)) / z0;
+        const cy = (vp.scrollTop + (st.midY - rect.top)) / z0;
+        const maxSL = Math.max(0, tree.geometry.width * z1 - vp.clientWidth);
+        const maxST = Math.max(0, tree.geometry.height * z1 - vp.clientHeight);
+        vp.scrollLeft = Math.min(maxSL, Math.max(0, cx * z1 - (midX - rect.left)));
+        vp.scrollTop = Math.min(maxST, Math.max(0, cy * z1 - (midY - rect.top)));
+        applyZoom(z1);
+        st.moved = true;
+      }
+      st.dist = dist;
+      st.midX = midX;
+      st.midY = midY;
+    };
+    const onEnd = (e: TouchEvent) => {
+      const st = pinchRef.current;
+      if (!st) return;
+      if (e.touches.length < 2) {
+        if (st.moved) {
+          /* a pinch is not a tap — the next click, if the engine
+             synthesizes one, dies here */
+          pinchBlockRef.current = true;
+          window.setTimeout(() => {
+            pinchBlockRef.current = false;
+          }, 350);
+        }
+        pinchRef.current = null;
+      }
+    };
+    const onGesture = (e: Event) => e.preventDefault(); /* Safari's own pinch — turned away */
+    const onClickCapture = (e: MouseEvent) => {
+      if (!pinchBlockRef.current) return;
+      e.preventDefault();
+      e.stopPropagation();
+      pinchBlockRef.current = false;
+    };
+    vp.addEventListener("touchstart", onStart, { passive: false });
+    vp.addEventListener("touchmove", onMove, { passive: false });
+    vp.addEventListener("touchend", onEnd, { passive: false });
+    vp.addEventListener("touchcancel", onEnd, { passive: false });
+    vp.addEventListener("gesturestart", onGesture);
+    vp.addEventListener("gesturechange", onGesture);
+    vp.addEventListener("click", onClickCapture, true);
+    return () => {
+      vp.removeEventListener("touchstart", onStart);
+      vp.removeEventListener("touchmove", onMove);
+      vp.removeEventListener("touchend", onEnd);
+      vp.removeEventListener("touchcancel", onEnd);
+      vp.removeEventListener("gesturestart", onGesture);
+      vp.removeEventListener("gesturechange", onGesture);
+      vp.removeEventListener("click", onClickCapture, true);
+    };
+  }, [mounted, clampZoom, applyZoom, tree.geometry.width, tree.geometry.height]);
+
+  /* ctrl/cmd + wheel — the desktop's own pinch; a native non-passive
+     listener (React's wheel is passive; the zoom must be allowed to
+     claim the gesture) */
   useEffect(() => {
     const vp = vpRef.current;
     if (!vp || !mounted) return;
     const h = (e: WheelEvent) => {
       if (!(e.ctrlKey || e.metaKey)) return;
       e.preventDefault();
-      setTreeZoom((z) => clampZoom(z * (e.deltaY < 0 ? 1.12 : 0.89)));
+      applyZoom(zoomLiveRef.current * (e.deltaY < 0 ? 1.12 : 0.89));
     };
     vp.addEventListener("wheel", h, { passive: false });
     return () => vp.removeEventListener("wheel", h);
-  }, [mounted, clampZoom]);
+  }, [mounted, applyZoom]);
 
   /* THE ANCHORED VIEW — the first layout stands at the trunk; a growing
      family keeps the visitor's reading place; a regrown family returns
@@ -1503,14 +1748,16 @@ export function BranchCanopy({
       }
     }
     if (prevSize.current.h === 0 || dH < 0) {
+      /* THE FLOOR — the trunk base rests at the seed, the stem's line
+         down the middle of the realm */
       vp.scrollTop = vp.scrollHeight;
-      vp.scrollLeft = Math.max(0, (vp.scrollWidth - vp.clientWidth) / 2);
+      vp.scrollLeft = trunkScrollLeft();
     } else if (dH > 0 || dW !== 0) {
       vp.scrollTop += dH * treeZoom;
       vp.scrollLeft += dW * treeZoom;
     }
     prevSize.current = { w: width, h: height };
-  }, [tree.geometry.width, tree.geometry.height, mounted, tree, narrow, treeZoom]);
+  }, [tree.geometry.width, tree.geometry.height, mounted, tree, narrow, treeZoom, trunkScrollLeft]);
 
   /* ---------------- THE GRAFT — the walk grows from a choice -------- */
 
@@ -1610,6 +1857,7 @@ export function BranchCanopy({
         }
       }
       /* THE ZOOM — the answer rises inside the tree, instantly */
+      zoomOpenedAtRef.current = Date.now();
       setZoom({ q: node.text, move: node.movement });
       onPick(node.text);
     },
@@ -1663,6 +1911,7 @@ export function BranchCanopy({
           }
         }
       }
+      zoomOpenedAtRef.current = Date.now();
       setZoom({ q: text, move });
       onPick(text);
     },
@@ -1927,6 +2176,13 @@ export function BranchCanopy({
       const q = text.trim();
       if (disabled || threadBusy || !q || !zoom) return;
       const roomQ = zoom.q;
+      /* THE FAMILY'S VOICE — the room speaks through the door of the
+         family its own whisper was grown from (the manifest room as
+         the manifest, the atelier room as the atelier); a whisper the
+         grove doesn't know keeps the channel's own door. */
+      const famKey = familyKeyByText.get(roomQ.toLowerCase());
+      const roomCategory: BranchId =
+        TREE_FAMILIES.find((f) => f.key === famKey)?.category ?? category;
       const prior = threadRef.current
         .filter((turn) => turn.a && !turn.failed)
         .map(({ q: tq, a: ta }) => ({ q: tq, a: ta }));
@@ -1934,7 +2190,7 @@ export function BranchCanopy({
       setThreadBusy(true);
       try {
         const reply = await speakWithTransmission(
-          category,
+          roomCategory,
           q,
           roomQ,
           answer || "",
@@ -1958,7 +2214,7 @@ export function BranchCanopy({
         setThreadBusy(false);
       }
     },
-    [answer, category, disabled, language, threadBusy, zoom]
+    [answer, category, disabled, familyKeyByText, language, threadBusy, zoom]
   );
 
   /* the thread's own pin — the newest answer keeps the eye while the
@@ -1977,6 +2233,10 @@ export function BranchCanopy({
     },
     [speakFromRoom]
   );
+
+  /* THE FLOOR'S OWN DRAFT — the realm's whisper line keeps its words
+     while the visitor thinks; one send and the room rises with them. */
+  const [askDraft, setAskDraft] = useState("");
 
   if (!mounted) return null;
 
@@ -2007,15 +2267,34 @@ export function BranchCanopy({
       )}
     >
       {/* ---------------------------- header ---------------------------
-          THE COMPASS — the whole house's steering, one quiet row:
-          where the walk stands, which families it explores, and the
-          mix that decides which suggestions visit more often. The
-          chat reaches the very top of the box — no title block, no
-          count line; the place speaks through the compass alone. */}
-      <div className="shrink-0 bg-background px-3 pb-1 pt-10 md:pt-1.5 sm:px-5">
-        <div className="mx-auto flex w-full max-w-[680px] items-center gap-2">
+          THE COMPASS — the whole house's steering. THE REALM CROWN:
+          the categories stand at the very top (General + every family
+          one touch weaves in or out, the mix beside them), and beneath
+          them the where-pill and the house doors — akashic, book,
+          about, the visitor's own passage. No title block, no count
+          line; the place speaks through the compass alone. */}
+      <div
+        className={cn(
+          "shrink-0 bg-background px-3 pb-1 sm:px-5",
+          !realm && "pt-10 md:pt-1.5"
+        )}
+        style={
+          realm
+            ? { paddingTop: "max(0.5rem, env(safe-area-inset-top))" }
+            : undefined
+        }
+      >
+        <div
+          className={cn(
+            "mx-auto flex w-full items-center gap-2",
+            realm ? "max-w-[760px]" : "max-w-[680px]"
+          )}
+        >
           {/* WHERE THE WALK STANDS — the little compass of the place:
-              the family the tree speaks in, and how deep the walk is */}
+              the family the tree speaks in, and how deep the walk is
+              (in the realm it rides the second row, beneath the
+              categories — the categories keep the very top) */}
+          {!realm && (
           <span
             data-testid={`${testIdPrefix}-where`}
             title={t("Where the walk stands")}
@@ -2043,6 +2322,7 @@ export function BranchCanopy({
               </span>
             )}
           </span>
+          )}
 
           {/* THE FAMILIES — which lights the walk explores; one touch
               folds a family out of the grove or weaves it back in */}
@@ -2217,7 +2497,7 @@ export function BranchCanopy({
                 </>
               )}
             </div>
-            <ExpansionRing />
+            {!realm && <ExpansionRing />}
             <button
               type="button"
               onClick={() => setSalt((s) => s + 1)}
@@ -2229,25 +2509,136 @@ export function BranchCanopy({
             >
               <RefreshCw className="size-3" aria-hidden="true" />
             </button>
-            <button
-              type="button"
-              onClick={onClose}
-              aria-label={t("Hide the branches")}
-              title={t("Hide the branches")}
-              data-testid={`${testIdPrefix}-close`}
-              className="focus-glow flex size-7 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
-            >
-              <X className="size-3.5" aria-hidden="true" />
-            </button>
+            {!realm && (
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label={t("Hide the branches")}
+                title={t("Hide the branches")}
+                data-testid={`${testIdPrefix}-close`}
+                className="focus-glow flex size-7 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+              >
+                <X className="size-3.5" aria-hidden="true" />
+              </button>
+            )}
           </div>
         </div>
+
+        {/* THE REALM'S SECOND ROW — where the walk stands, and the doors
+            of the house: the akashic library, the book, the open door
+            of the house, the visitor's own passage. The old app lives
+            here — four quiet doors within the branches themselves. */}
+        {realm && (
+          <div className="mx-auto mt-1.5 flex w-full max-w-[760px] items-center justify-between gap-2">
+            <div className="flex min-w-0 items-center gap-1.5">
+              <span
+                data-testid={`${testIdPrefix}-where`}
+                title={t("Where the walk stands")}
+                className="flex shrink-0 items-center gap-1.5 rounded-full border py-1 pl-2 pr-2.5"
+                style={{
+                  borderColor:
+                    "color-mix(in srgb, var(--scope-a,var(--gd)) 34%, transparent)",
+                  backgroundColor:
+                    "color-mix(in srgb, var(--scope-a,var(--gd)) 8%, var(--background))",
+                }}
+              >
+                <Compass
+                  className="size-3 shrink-0 text-[var(--scope-a,var(--gd))]"
+                  aria-hidden="true"
+                />
+                <span className="mono-label max-w-[92px] truncate whitespace-nowrap text-[9px] uppercase tracking-[0.16em] text-foreground/85 sm:max-w-[140px]">
+                  {mixTitle(mix, t)}
+                </span>
+                {lineage.length > 0 && (
+                  <span
+                    className="mono-label whitespace-nowrap text-[9px] tabular-nums text-muted-foreground/70"
+                    aria-hidden="true"
+                  >
+                    ·{lineage.length}
+                  </span>
+                )}
+              </span>
+              <ExpansionRing />
+            </div>
+            <div className="flex shrink-0 items-center gap-1.5">
+              {headerExtra && (
+                <div className="hidden items-center gap-1.5 sm:flex">{headerExtra}</div>
+              )}
+              <button
+                type="button"
+                onClick={openAkashic}
+                aria-label={t("Akashic")}
+                title={t("Akashic")}
+                data-testid={`${testIdPrefix}-door-akashic`}
+                className="focus-glow flex size-8 items-center justify-center gap-1.5 rounded-full border hairline px-0 text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground sm:w-auto sm:px-3"
+              >
+                <ScrollText className="size-3.5 shrink-0" aria-hidden="true" />
+                <span className="hidden text-[12px] font-medium sm:inline">
+                  {t("Akashic")}
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={openDreamBook}
+                aria-label={t("Book")}
+                title={t("Book")}
+                data-testid={`${testIdPrefix}-door-book`}
+                className="focus-glow flex size-8 items-center justify-center gap-1.5 rounded-full border hairline px-0 text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground sm:w-auto sm:px-3"
+              >
+                <BookOpen className="size-3.5 shrink-0" aria-hidden="true" />
+                <span className="hidden text-[12px] font-medium sm:inline">
+                  {t("Book")}
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={openAbout}
+                aria-label={t("About us")}
+                title={t("About us")}
+                data-testid={`${testIdPrefix}-door-about`}
+                className="focus-glow flex size-8 items-center justify-center gap-1.5 rounded-full border hairline px-0 text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground sm:w-auto sm:px-3"
+              >
+                <Info className="size-3.5 shrink-0" aria-hidden="true" />
+                <span className="hidden text-[12px] font-medium sm:inline">
+                  {t("About us")}
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => (me ? openProfile() : openAuth("signin"))}
+                aria-label={me ? t("Passage") : t("Sign in")}
+                title={me ? t("Passage") : t("Sign in")}
+                data-testid={`${testIdPrefix}-door-passage`}
+                className="focus-glow flex size-8 items-center justify-center gap-1.5 rounded-full border px-0 text-[var(--scope-a,var(--gd))] transition-all duration-300 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)] sm:w-auto sm:px-3"
+                style={{
+                  borderColor:
+                    "color-mix(in srgb, var(--scope-a,var(--gd)) 34%, transparent)",
+                  backgroundColor:
+                    "color-mix(in srgb, var(--scope-a,var(--gd)) 8%, var(--background))",
+                }}
+              >
+                {me ? (
+                  <UserRound className="size-3.5 shrink-0" aria-hidden="true" />
+                ) : (
+                  <LogIn className="size-3.5 shrink-0" aria-hidden="true" />
+                )}
+                <span className="hidden text-[12px] font-medium sm:inline">
+                  {me ? t("Passage") : t("Sign in")}
+                </span>
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* THE TRAIL OF THE WALK — every pressed whisper, oldest first;
             one touch pans the tree back to that very step. */}
         {lineage.length > 0 && (
           <div
             data-testid={`${testIdPrefix}-trail`}
-            className="nice-scroll mx-auto mt-1.5 flex w-full max-w-[680px] items-center gap-1 overflow-x-auto pb-0.5"
+            className={cn(
+              "nice-scroll mx-auto mt-1.5 flex w-full items-center gap-1 overflow-x-auto pb-0.5",
+              realm ? "max-w-[760px]" : "max-w-[680px]"
+            )}
           >
             <span className="mono-label shrink-0 pr-0.5 text-[8px] uppercase tracking-[0.2em] text-muted-foreground/60">
               {t("Your walk")}
@@ -2291,6 +2682,10 @@ export function BranchCanopy({
 
       {/* --------------------- the walkable family --------------------- */}
       <div className="relative min-h-0 flex-1">
+        {/* THE SEED — the house's heart: the logo at the very centre,
+            every branch of the realm emerging from behind it. It paints
+            beneath the walk — the chips pass over it, the gaps show it. */}
+        {realm && <RootSigil />}
         <div
           ref={vpRef}
           data-dim={zoomed ? "true" : "false"}
@@ -2375,9 +2770,15 @@ export function BranchCanopy({
             </div>
           </div>
 
+          {/* THE REALM'S FLOOR SPACE — the trunk base rests at the
+              vertical centre of the realm when the walk stands at the
+              floor, so the tree visibly rises from the seed */}
+          {realm && <div aria-hidden="true" style={{ height: "40dvh" }} />}
+
           {/* THE EMPTY ROOM'S OWN IDENTITY — spoken above the trunk;
-              OPAQUE by law — no tree line may ever show behind it */}
-          {(introSub || introSubExtra || introExtra) && (
+              OPAQUE by law — no tree line may ever show behind it
+              (the realm speaks its motto beside the whisper line) */}
+          {!realm && (introSub || introSubExtra || introExtra) && (
             <div className="pointer-events-none sticky bottom-2 z-10 flex flex-col items-center gap-2 px-4 text-center">
               {introSub && (
                 <p className="genea-bloom still-bloom max-w-[460px] rounded-2xl border border-[color-mix(in_srgb,var(--scope-a,var(--gd))_22%,transparent)] bg-background px-4 py-2.5 text-[13.5px] leading-relaxed text-muted-foreground shadow-[0_6px_24px_-14px_rgba(0,0,0,0.45)]">
@@ -2398,59 +2799,82 @@ export function BranchCanopy({
           )}
         </div>
 
-        {/* THE TREE'S OWN ZOOM — the quiet cluster: out, the reading,
-            in, and the whole family at once; ctrl/cmd + wheel zooms too */}
+        {/* THE TREE'S OWN ZOOM — no plus, no minus: the walk zooms by
+            the fingers (a pinch travels apart or together) and by
+            ctrl/cmd + wheel on the desktop. One quiet button remains —
+            the whole family, seen at once. */}
         {!zoomed && (
-          <div
-            data-testid={`${testIdPrefix}-zoomctl`}
-            className="absolute bottom-3 right-3 z-20 flex items-center gap-0.5 rounded-full border bg-background px-1 py-0.5 shadow-[0_8px_28px_-14px_rgba(0,0,0,0.55)]"
+          <button
+            type="button"
+            onClick={zoomFit}
+            aria-label={t("The whole family")}
+            title={t("The whole family")}
+            data-testid={`${testIdPrefix}-zoom-fit`}
+            className="focus-glow absolute bottom-3 right-3 z-20 flex size-8 items-center justify-center rounded-full border bg-background text-muted-foreground shadow-[0_8px_28px_-14px_rgba(0,0,0,0.55)] transition-colors duration-300 hover:text-foreground"
             style={{
               borderColor:
                 "color-mix(in srgb, var(--scope-a,var(--gd)) 28%, transparent)",
             }}
           >
-            <button
-              type="button"
-              onClick={() => zoomBy(0.87)}
-              disabled={treeZoom <= ZOOM_MIN + 0.001}
-              aria-label={t("Zoom out")}
-              title={t("Zoom out")}
-              data-testid={`${testIdPrefix}-zoom-out`}
-              className="focus-glow flex size-6 items-center justify-center rounded-full text-muted-foreground transition-colors duration-300 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-35"
+            <Maximize2 className="size-3.5" aria-hidden="true" />
+          </button>
+        )}
+
+        {/* THE FLOOR'S WHISPER LINE — the realm's one input while no
+            room stands: the visitor speaks from the floor and the room
+            rises with their words. When a room stands, the room's own
+            reply line is the one input (THE ONE INPUT LAW). */}
+        {realm && !zoomed && (
+          <div
+            data-testid={`${testIdPrefix}-askbar`}
+            className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex flex-col items-center gap-2 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+          >
+            {introSub && (
+              <p className="genea-bloom still-bloom max-w-[520px] rounded-2xl border border-[color-mix(in_srgb,var(--scope-a,var(--gd))_20%,transparent)] bg-background px-4 py-2 text-center text-[12.5px] leading-relaxed text-muted-foreground shadow-[0_6px_24px_-14px_rgba(0,0,0,0.45)]">
+                {introSub}
+              </p>
+            )}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const q = askDraft.trim();
+                if (!q || disabled || liveLoading) return;
+                setAskDraft("");
+                sendFromPanel(q, null);
+              }}
+              className="pointer-events-auto flex w-full max-w-[560px] items-center gap-2 rounded-full border bg-background/95 py-1.5 pl-4 pr-1.5 shadow-[0_10px_36px_-16px_rgba(0,0,0,0.55)] backdrop-blur-xl transition-colors duration-300 focus-within:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)]"
+              style={{
+                borderColor:
+                  "color-mix(in srgb, var(--scope-a,var(--gd)) 26%, transparent)",
+              }}
             >
-              <Minus className="size-3.5" aria-hidden="true" />
-            </button>
-            <span
-              className="mono-label w-9 text-center text-[9px] tabular-nums text-muted-foreground"
-              aria-hidden="true"
-            >
-              {Math.round(treeZoom * 100)}%
-            </span>
-            <button
-              type="button"
-              onClick={() => zoomBy(1.15)}
-              disabled={treeZoom >= ZOOM_MAX - 0.001}
-              aria-label={t("Zoom in")}
-              title={t("Zoom in")}
-              data-testid={`${testIdPrefix}-zoom-in`}
-              className="focus-glow flex size-6 items-center justify-center rounded-full text-muted-foreground transition-colors duration-300 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-35"
-            >
-              <Plus className="size-3.5" aria-hidden="true" />
-            </button>
-            <span
-              aria-hidden="true"
-              className="mx-0.5 h-4 w-px bg-[color-mix(in_srgb,var(--hairline)_90%,transparent)]"
-            />
-            <button
-              type="button"
-              onClick={zoomFit}
-              aria-label={t("The whole family")}
-              title={t("The whole family")}
-              data-testid={`${testIdPrefix}-zoom-fit`}
-              className="focus-glow flex size-6 items-center justify-center rounded-full text-muted-foreground transition-colors duration-300 hover:text-foreground"
-            >
-              <Maximize2 className="size-3" aria-hidden="true" />
-            </button>
+              <Sparkles
+                className="size-3.5 shrink-0 text-[var(--scope-a,var(--gd))]"
+                aria-hidden="true"
+              />
+              <label htmlFor={`${testIdPrefix}-ask`} className="sr-only">
+                {t("Whisper to the tree…")}
+              </label>
+              <input
+                id={`${testIdPrefix}-ask`}
+                value={askDraft}
+                onChange={(e) => setAskDraft(e.target.value)}
+                placeholder={t("Whisper to the tree…")}
+                disabled={disabled}
+                autoComplete="off"
+                data-testid={`${testIdPrefix}-ask-input`}
+                className="min-w-0 flex-1 bg-transparent py-1 text-[13.5px] text-foreground placeholder:text-muted-foreground/55 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+              />
+              <button
+                type="submit"
+                disabled={disabled || liveLoading || !askDraft.trim()}
+                aria-label={t("Send")}
+                data-testid={`${testIdPrefix}-ask-send`}
+                className="focus-glow flex size-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--scope-a,var(--gd))] to-[color-mix(in_srgb,var(--scope-b,var(--pk))_70%,var(--scope-a,var(--gd)))] text-[#101010] shadow-[0_0_14px_-6px_color-mix(in_srgb,var(--scope-a,var(--gd))_70%,transparent)] transition-all duration-300 hover:scale-[1.04] disabled:cursor-not-allowed disabled:opacity-35 disabled:shadow-none"
+              >
+                <Send className="size-3.5" aria-hidden="true" />
+              </button>
+            </form>
           </div>
         )}
 

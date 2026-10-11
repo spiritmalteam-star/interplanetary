@@ -3222,5 +3222,9 @@ export const el: TranslationDict = {
   "Teens": "Έφηβοι",
   "The voice is gathering — one breath…": "Η φωνή συγκεντρώνεται — μια ανάσα…",
   "The narrator is reading": "Ο αφηγητής διαβάζει",
-  "Returned to the walk": "Πίσω στο μονοπάτι"
+  "Returned to the walk": "Πίσω στο μονοπάτι",
+  "About us": "Σχετικά με εμάς",
+  "Passage": "Το Πέρασμα",
+  "Whisper to the tree…": "Ψιθύρισε στο δέντρο…",
+  "The whole house grows from the seed — press a whisper to walk, or speak below.": "Όλο το σπίτι μεγαλώνει από τον σπόρο — πάτα ένα ψιθύρισμα για να περπατήσεις, ή μίλησε παρακάτω.",
 };

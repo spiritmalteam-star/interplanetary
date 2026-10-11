@@ -3016,5 +3016,9 @@ export const tr: TranslationDict = {
   "Teens": "Gençler",
   "The voice is gathering — one breath…": "Ses toplanıyor — bir nefes…",
   "The narrator is reading": "Anlatıcı okuyor",
-  "Returned to the walk": "Yolculuğa geri dönüldü"
+  "Returned to the walk": "Yolculuğa geri dönüldü",
+  "About us": "Hakkımızda",
+  "Passage": "Geçit",
+  "Whisper to the tree…": "Ağaca fısılda…",
+  "The whole house grows from the seed — press a whisper to walk, or speak below.": "Bütün ev tohumdan büyür — yürümek için bir fısıltıya dokun ya da aşağıda konuş.",
 };

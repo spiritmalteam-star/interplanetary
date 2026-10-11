@@ -53,6 +53,10 @@ export const viewport: Viewport = {
   ],
   width: "device-width",
   initialScale: 1,
+  /* the walk owns its own pinch — the page never zooms under the
+     visitor's fingers; the tree scales beneath them instead */
+  maximumScale: 1,
+  userScalable: false,
   /* the whole application fits the visible frame on every device —
      no scrolling ever needed to reach the input */
   viewportFit: "cover",

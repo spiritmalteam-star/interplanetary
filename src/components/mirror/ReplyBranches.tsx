@@ -123,6 +123,7 @@ export function ReplyBranches({
   contextQuery,
   askFn,
   scopeHint: scopeHintProp,
+  headless,
 }: {
   message: ReplyBranchMessage;
   /** Which thread this reply lives in — decides its general branch. */
@@ -142,6 +143,11 @@ export function ReplyBranches({
       the grown branches open this scope alone, and the stand-in
       whispers lean toward it. */
   scopeHint?: string | null;
+  /** THE HEADLESS GROWER — no dropdown of its own: the reply's
+      branches are grown and attached to the message alone, for the
+      living tree (the golden row and the room's own dropdown) to
+      wear. The realm mounts this beside its canopy. */
+  headless?: boolean;
 }) {
   const t = useT();
   const askMirror = useMirror((s) => s.askMirror);
@@ -235,6 +241,11 @@ export function ReplyBranches({
     }, 650);
     return () => window.clearTimeout(id);
   }, [active, message.id, message.text, message.query, message.branches, kind, contextQuery, scopeHint, seeds, attachBranches]);
+
+  /* THE HEADLESS GROWER — the branches belong to the tree now: grown,
+     attached, and worn by the golden row and the room's own dropdown.
+     This mount keeps no dropdown of its own. */
+  if (headless) return null;
 
   const branches = message.branches;
   /* nothing to stand on yet and nothing grown — the foot rests empty */

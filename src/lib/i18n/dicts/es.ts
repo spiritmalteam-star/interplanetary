@@ -3516,5 +3516,9 @@ export const es: TranslationDict = {
   "Teens": "Adolescentes",
   "The voice is gathering — one breath…": "La voz se reúne — un respiro…",
   "The narrator is reading": "El narrador lee",
-  "Returned to the walk": "De vuelta al camino"
+  "Returned to the walk": "De vuelta al camino",
+  "About us": "Sobre nosotros",
+  "Passage": "El Pasaje",
+  "Whisper to the tree…": "Susurra al árbol…",
+  "The whole house grows from the seed — press a whisper to walk, or speak below.": "Toda la casa crece desde la semilla — toca un susurro para caminar, o habla abajo.",
 };

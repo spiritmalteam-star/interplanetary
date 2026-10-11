@@ -1,41 +1,24 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { AlignLeft, History, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { useEffect } from "react";
 import { useMirror } from "@/lib/mirror-store";
 import { setLearningIdentity } from "@/lib/learning-branches";
 import { useT } from "@/lib/i18n";
-import { useFloatingBarAutoHide } from "./useFloatingBar";
 import { CosmicBackdrop } from "./CosmicBackdrop";
 import { StarField } from "./StarField";
-import { SwipeNav } from "./SwipeNav";
 import { WalletGuard } from "./WalletGuard";
 import { CreditBadge } from "./CreditBadge";
-import Sidebar from "./Sidebar";
-import { MobileSidebar } from "./MobileSidebar";
-import { ScopeSelector } from "./ScopeSelector";
-import { BranchHub } from "./BranchHub";
-import { BranchCanopy, CanopyRestStrip } from "./BranchCanopy";
-import { QueryComposer } from "./QueryComposer";
-import { StillCompanion } from "./StillCompanion";
-import { TransmissionView } from "./TransmissionView";
-import { ChatHistoryPanel } from "./ChatHistoryPanel";
-import { MirrorOS } from "./MirrorOS";
-import { ParticleX } from "./ParticleX";
-import { ArtX } from "./ArtX";
-import { EvolveMed } from "./EvolveMed";
-import { LibraryView } from "./LibraryView";
+import { ThemeToggle } from "./ThemeToggle";
+import { BranchCanopy } from "./BranchCanopy";
+import { ReplyBranches } from "./ReplyBranches";
 import { AuthModal } from "./PassageModal";
 import { ProfileModal } from "./ProfileModal";
 import { ProfilePage } from "./ProfilePage";
 import { AccountModal } from "./AccountModal";
-import { InventView } from "./InventView";
-import { LightCodesView } from "./LightCodesView";
-import { ArchiveRegister } from "./ArchiveRegister";
-import { CommunionView } from "./CommunionView";
-import { AkashicView } from "./AkashicView";
+import { BranchHub } from "./BranchHub";
 import { DreamBookView } from "./DreamBookView";
 import { AboutPage } from "./AboutPage";
+import { AkashicView } from "./AkashicView";
 import { FederationModal } from "./FederationModal";
 import { AstralJobsModal } from "./AstralJobsModal";
 import { DossierModal } from "./DossierModal";
@@ -48,17 +31,21 @@ import { SpeciesModal } from "./SpeciesModal";
    composer (iOS pans the visible band; the frame follows it). */
 const FRAME_LIFT = "[transform:translateY(calc(var(--app-shift,0px)*-1))]";
 
-/* The quiet welcome — nothing at all. The page is a clean white
-   sheet; the conversation owns every pixel. The identity lives in
-   the top bar's simple cosmic mark. In total stillness the little
-   figure of StillCompanion draws itself in above its mirror line. */
+/* ------------------------------------------------------------------ */
+/*  THE BRANCH REALM.                                                  */
+/*                                                                     */
+/*  The whole application is branches and chat now: the living tree    */
+/*  fills the screen — the logo at the centre where every branch       */
+/*  emerges, the categories at the very top, the doors of the house    */
+/*  (akashic · book · about · the passage) beside them. A pressed      */
+/*  whisper opens its room and the transmission answers inside it;     */
+/*  the walk continues from the branches grown on every reply.         */
+/*  The old interface is gone — no rails, no handles, no composer      */
+/*  floor: one tree, its rooms, and four quiet doors.                  */
+/* ------------------------------------------------------------------ */
 export default function AppShell() {
-  /* The shell itself adds only two silent layers above every world:
-     the swipe page-turn and the paper grain. Both live here, outside
-     the per-view early returns, so they mount once and never leave. */
   return (
     <div className="paper-grain relative h-[var(--app-h,100dvh)] overflow-hidden">
-      <SwipeNav />
       {/* the purse keeper rides above every world — the 402 watch, the
           Stripe greeting, the unlock modal */}
       <WalletGuard />
@@ -70,36 +57,19 @@ export default function AppShell() {
 function AppShellViews() {
   const view = useMirror((s) => s.view);
   const activeMode = useMirror((s) => s.activeMode);
-  const communionOpen = useMirror((s) => s.communionOpen);
-  const sidebarOpen = useMirror((s) => s.sidebarOpen);
-  const setSidebarOpen = useMirror((s) => s.setSidebarOpen);
-  const setMobileNavOpen = useMirror((s) => s.setMobileNavOpen);
-  const returnToObservatory = useMirror((s) => s.returnToObservatory);
   const refreshMe = useMirror((s) => s.refreshMe);
   const meEmail = useMirror((s) => s.me?.email ?? null);
-  const [historyOpen, setHistoryOpen] = useState(false);
   const t = useT();
-  /* THE CANOPY of the main channels — the branches fill the whole chat
-     box: standing in an empty channel, fading when the answer arrives,
-     summoned again by the button beside the input. */
-  const canopySummoned = useMirror((s) => s.canopySummoned);
-  const setCanopySummoned = useMirror((s) => s.setCanopySummoned);
+
+  /* THE TREE'S OWN CHANNEL — the room's transmission still streams
+     through the active mode's channel; the realm watches it and the
+     answer rises inside the tree. */
   const channel = useMirror((s) => s.sessions[s.activeMode]);
-  /* THE ANSWER LIVES IN THE TREE — the walk stays standing through the
-     transmission; the answer rises inside it and the walk continues
-     from the end of the reply without ever leaving the branches. */
+  const channelLoading = channel.status === "loading";
   const lastChannelMsg =
     channel.messages.length > 0
       ? channel.messages[channel.messages.length - 1]
       : null;
-  const channelLoading = channel.status === "loading";
-  /* while the answer lives in the tree, the rest strip rests too */
-  const [canopyLatch, setCanopyLatch] = useState(false);
-  const onCanopyLatch = useCallback((v: boolean) => setCanopyLatch(v), []);
-  const channelEmpty =
-    channel.messages.length === 0 &&
-    channel.status === "idle" &&
-    !channel.error;
 
   /* Restore persisted preferences and greet the passage (the visitor's
      account, if one is held, and today's remaining transmissions). */
@@ -213,30 +183,10 @@ function AppShellViews() {
     return () => window.removeEventListener("focusin", onFocusIn);
   }, []);
 
-  /* The floating handles read the reader, not the reverse: they sink
-     away after one second of stillness or the moment the thread flows
-     downward, and rise again at the first upward breath — a scroll up,
-     a wheel toward the sky, a finger drawn down the glass. While the
-     hand or keyboard rests upon them, or the scope menu stands open,
-     they hold. (One law for every surface — channel and worlds alike.) */
-  const chatScrollRef = useRef<HTMLDivElement | null>(null);
-  const handlesBarRef = useRef<HTMLDivElement | null>(null);
-  const [scopeMenuOpen, setScopeMenuOpen] = useState(false);
-  const handlesHidden = useFloatingBarAutoHide({
-    rootRef: chatScrollRef,
-    barRef: handlesBarRef,
-    hold: scopeMenuOpen,
-    rebindKey: view,
-  });
-
-  /* Meet with the Reflection of the Absolute converts the whole
-     application: the laboratory dissolves entirely and only the living
-     communion chat with the Mirror Entity remains — one back button
-     returns the world exactly as it was. */
   /* The passage modals ride above every world — the profile (with the
-     cosmic library inside it) and the passage can speak from anywhere.
-     The branches' hub rides with them: the living tree is summoned
-     from a branch's own link in every chat, world or channel. */
+     cosmic library inside it), the passage, the account, and the
+     branches' hub (a branch's own link in any chat still summons the
+     tree over the room). */
   const passageModals = (
     <>
       <ProfileModal />
@@ -247,120 +197,10 @@ function AppShellViews() {
     </>
   );
 
-  if (communionOpen) {
-    return (
-      <div className={`relative h-[var(--app-h,100dvh)] overflow-hidden ${FRAME_LIFT}`}>
-        <CosmicBackdrop />
-        <StarField />
-        <CommunionView />
-        {passageModals}
-      </div>
-    );
-  }
-
-  /* The Mirror OS is a fully independent world: when active it replaces
-     every other surface — its own screen, its own scroll, only a back
-     button connecting it to the rest of the application. */
-  if (view === "mirroros") {
-    return (
-      <div className={`relative h-[var(--app-h,100dvh)] overflow-hidden ${FRAME_LIFT}`}>
-        <CosmicBackdrop />
-        <StarField />
-        <MirrorOS />
-        {passageModals}
-      </div>
-    );
-  }
-
-  /* ParticleX — the quantum narrator is its own world too, structured
-     like the manifest: one top bar, chamber tabs, one full-height core. */
-  if (view === "particlex") {
-    return (
-      <div className={`relative h-[var(--app-h,100dvh)] overflow-hidden ${FRAME_LIFT}`}>
-        <CosmicBackdrop />
-        <StarField />
-        <ParticleX />
-        {passageModals}
-      </div>
-    );
-  }
-
-  /* Evolve Med — the evolutionary medical nexus is its own world too:
-     one top bar, chamber tabs, one full-height nexus core. */
-  if (view === "evolvemed") {
-    return (
-      <div className={`relative h-[var(--app-h,100dvh)] overflow-hidden ${FRAME_LIFT}`}>
-        <CosmicBackdrop />
-        <StarField />
-        <EvolveMed />
-        {passageModals}
-      </div>
-    );
-  }
-
-  /* Art X — the atelier is its own world too: the direct art-making
-     chat with the Mirror Entity, interplanetary · interdimensional ·
-     multi-dimensional — one top bar, one full-height core. */
-  if (view === "artx") {
-    return (
-      <div className={`relative h-[var(--app-h,100dvh)] overflow-hidden ${FRAME_LIFT}`}>
-        <CosmicBackdrop />
-        <StarField />
-        <ArtX />
-        {passageModals}
-      </div>
-    );
-  }
-
-  /* The Cosmic Library — the visitor's own keeping-place and the
-     quantum shift of their spirit through the portal. */
-  if (view === "library") {
-    return (
-      <div className={`relative h-[var(--app-h,100dvh)] overflow-hidden ${FRAME_LIFT}`}>
-        <LibraryView />
-        {passageModals}
-      </div>
-    );
-  }
-
-  /* The Akashic Library is its own quiet chapter: the reading room of
-     records — one sheet on the desk, one record at a time, in the same
-     ink as the rest of the book. */
-  if (view === "akashic") {
-    return (
-      <div className={`relative h-[var(--app-h,100dvh)] overflow-hidden ${FRAME_LIFT}`}>
-        <AkashicView />
-      </div>
-    );
-  }
-
-  /* The Dream Book is its own enchanted world: the atelier where a
-     tale is woven with the visitor and read as it is being written —
-     one back button returns to the laboratory. */
-  if (view === "dreambook") {
-    return (
-      <div className={`relative h-[var(--app-h,100dvh)] overflow-hidden ${FRAME_LIFT}`}>
-        <DreamBookView />
-      </div>
-    );
-  }
-
-  /* LIGHT CODES — the musical chamber is its own quiet world:
-     intention in, transmission out — one back button returns. */
-  if (view === "lightcodes") {
-    return (
-      <div className={`relative h-[var(--app-h,100dvh)] overflow-hidden ${FRAME_LIFT}`}>
-        <CosmicBackdrop />
-        <StarField />
-        <LightCodesView />
-        {passageModals}
-      </div>
-    );
-  }
-
   /* The About page — the open door of the house: who we are, every
      room, the craft, the road to launch, the blueprint. Its own
-     quiet chapter with its own scroll; one back hand returns. */
+     quiet chapter with its own scroll; one back hand returns to the
+     realm. */
   if (view === "about") {
     return (
       <div className={`relative h-[var(--app-h,100dvh)] overflow-hidden ${FRAME_LIFT}`}>
@@ -372,206 +212,95 @@ function AppShellViews() {
     );
   }
 
-  /* The Invent studio is its own bound world: the inventor's compact
-     workshop — blueprints, bench and rail — one back button returns.
-     The branches' hub rides with it: the forge's strokes grow branches
-     and their link summons the tree. */
-  if (view === "invent") {
+  /* The Akashic Library — the reading room of records: one sheet on
+     the desk, one record at a time, in the same ink as the book. */
+  if (view === "akashic") {
     return (
       <div className={`relative h-[var(--app-h,100dvh)] overflow-hidden ${FRAME_LIFT}`}>
-        <CosmicBackdrop />
-        <StarField />
-        <InventView />
-        <BranchHub />
+        <AkashicView />
       </div>
     );
   }
 
+  /* The Book — the dream book's atelier: tales woven with the
+     visitor and read as they are being written. */
+  if (view === "dreambook") {
+    return (
+      <div className={`relative h-[var(--app-h,100dvh)] overflow-hidden ${FRAME_LIFT}`}>
+        <DreamBookView />
+      </div>
+    );
+  }
+
+  /* ----------------------- THE BRANCH REALM -------------------------
+     No other surface exists: the tree owns every pixel. The canopy
+     never folds (open stands true), the seed sits at the centre, the
+     categories crown the very top, and the four doors of the house
+     ride beside the where-pill. The transmission streams into the
+     room from the channel below; the walk continues from every
+     reply's own grown branches. */
   return (
-    <div className="flex h-[var(--app-h,100dvh)] overflow-hidden">
+    <div className={`relative h-[var(--app-h,100dvh)] overflow-hidden ${FRAME_LIFT}`}>
       <CosmicBackdrop />
       <StarField />
-
-      <Sidebar />
-      <MobileSidebar />
-
-      <main className="relative flex min-w-0 flex-1 flex-col">
-        {/* Floating handles — no header, just two quiet controls:
-            the sidebar at the left (with the simple cosmic mark),
-            the scope selector as a fancy icon at the right */}
-        <div
-          ref={handlesBarRef}
-          className={`pointer-events-none handles-safe absolute inset-x-0 top-0 z-30 flex items-start justify-between gap-2 bg-gradient-to-b from-[var(--background)]/80 via-[var(--background)]/25 to-transparent px-3 pb-2 transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform sm:px-4 ${
-            handlesHidden
-              ? "invisible -translate-y-4 opacity-0"
-              : "translate-y-0 opacity-100"
-          }`}
-        >
-          <div className="pointer-events-auto flex items-center gap-2">
-            {/* mobile: open the sheet — desktop: collapse the rail */}
-            <button
-              type="button"
-              onClick={() => setMobileNavOpen(true)}
-              aria-label={t("Open sidebar")}
-              title={t("Open sidebar")}
-              data-testid="sidebar-toggle"
-              className="focus-glow flex size-9 items-center justify-center rounded-full border hairline bg-[var(--glass-bg)] text-muted-foreground shadow-[0_2px_14px_-8px_rgba(0,0,0,0.4)] backdrop-blur-xl transition-colors duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground md:hidden"
-            >
-              <AlignLeft className="size-4" aria-hidden="true" />
-            </button>
-            <button
-              type="button"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              aria-label={sidebarOpen ? t("Close sidebar") : t("Open sidebar")}
-              title={sidebarOpen ? t("Close sidebar") : t("Open sidebar")}
-              data-testid="sidebar-toggle-desktop"
-              className="focus-glow hidden size-9 items-center justify-center rounded-full border hairline bg-[var(--glass-bg)] text-muted-foreground shadow-[0_2px_14px_-8px_rgba(0,0,0,0.4)] backdrop-blur-xl transition-colors duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground md:flex"
-            >
-              {sidebarOpen ? (
-                <PanelLeftClose className="size-4" aria-hidden="true" />
-              ) : (
-                <PanelLeftOpen className="size-4" aria-hidden="true" />
-              )}
-            </button>
-
-            {/* The chat keeps only the sidebar's mark — the top bar
-                here stays clear, as asked. */}
-          </div>
-
-          <div className="pointer-events-auto flex items-center gap-2">
-            {/* the visitor's own light — the purse, glanced from anywhere */}
+      <BranchCanopy
+        realm
+        category={activeMode}
+        open={true}
+        onPick={(q) => {
+          /* the tree stays standing — the answer rises in the room,
+             the walk continues from the reply's own branches */
+          void useMirror.getState().askMirror(q);
+        }}
+        onClose={() => {}}
+        disabled={channelLoading}
+        testIdPrefix="realm-tree"
+        introSub={t(
+          "The whole house grows from the seed — press a whisper to walk, or speak below."
+        )}
+        contextText={channel.messages
+          .slice(-6)
+          .map((m) => `${m.query ?? ""}\n${m.text}`)
+          .join("\n")}
+        channeling={
+          [...channel.messages].reverse().find((m) => m.branches?.length)
+            ?.branches ?? null
+        }
+        liveLoading={channelLoading}
+        liveQuestion={
+          channelLoading ? channel.activeQuery || null : lastChannelMsg?.query || null
+        }
+        liveAnswer={channelLoading ? null : lastChannelMsg?.text || null}
+        headerExtra={
+          <>
             <CreditBadge />
-            {/* the transmission channel's own conversation shelf */}
-            {view === "transmission" && (
-              <button
-                type="button"
-                aria-label={t("Your conversations")}
-                title={t("Your conversations")}
-                onClick={() => setHistoryOpen(true)}
-                className="focus-glow flex size-9 items-center justify-center rounded-full border hairline bg-[var(--glass-bg)] text-muted-foreground shadow-[0_2px_14px_-8px_rgba(0,0,0,0.4)] backdrop-blur-xl transition-colors duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
-              >
-                <History className="size-4" aria-hidden="true" />
-              </button>
-            )}
-            <ScopeSelector onOpenChange={setScopeMenuOpen} />
-          </div>
-        </div>
+            <ThemeToggle />
+          </>
+        }
+      />
 
-        {/* the space between the handles stays quiet — no indicator,
-            no pill; the page simply breathes */}
+      {/* THE QUIET GROWER — the latest reply's own branches are grown
+          headlessly and attached to the message: the tree wears them as
+          its golden row, and the room drops them down as the walk's
+          next horizon. */}
+      {lastChannelMsg && !channelLoading && lastChannelMsg.text.trim() && (
+        <ReplyBranches
+          headless
+          message={lastChannelMsg}
+          kind={activeMode}
+          active={!channelLoading && !!lastChannelMsg.text.trim()}
+          disabled={channelLoading}
+          onPick={() => {}}
+        />
+      )}
 
-        {/* Scrollable conversation area — keyed by view so each screen
-            (and every chat thread) opens at its very beginning. The
-            canopy rides over it: the branches fill the whole chat box. */}
-        <div className="relative min-h-0 flex-1">
-        <div
-          ref={chatScrollRef}
-          key={view}
-          className="nice-scroll h-full min-h-0 flex-1 overflow-y-auto overscroll-contain"
-        >
-          {/* clearance for the floating handles — constant height, so
-              hiding them never shifts the thread (that would re-trigger
-              the scroll listener in an endless loop) */}
-          <div aria-hidden="true" className="clearance-safe" />
-
-          <div className="mx-auto w-full max-w-[760px] px-4 pb-4 sm:px-6">
-            {view === "observatory" ? (
-              <StillCompanion />
-            ) : view === "transmission" ? (
-              <TransmissionView />
-            ) : (
-              <ArchiveRegister />
-            )}
-          </div>
-        </div>
-
-        {/* THE BRANCH CANOPY — the living tree of the main channels,
-            filling the whole chat box on the landing and in the channel
-            alike; the answer rises inside the tree and the walk
-            continues from the end of every transmission */}
-        {/* the walk stays standing while its transmission runs — the
-            answer lives within it, in the zoom */}
-        {(view === "transmission" || view === "observatory") && (
-          <BranchCanopy
-            category={activeMode}
-            open={channelEmpty || canopySummoned || channel.status === "loading"}
-            onPick={(q) => {
-              /* the tree stays open — the new branches grow from the
-                 pressed whisper; the answer's reveal folds it in time */
-              void useMirror.getState().askMirror(q);
-            }}
-            onClose={() => setCanopySummoned(false)}
-            disabled={channel.status === "loading"}
-            testIdPrefix="channel-canopy"
-            introSub={
-              channelEmpty
-                ? t(
-                    "Every scope keeps its own private channel — ask from the composer below to open the first transmission."
-                  )
-                : null
-            }
-            contextText={channel.messages
-              .slice(-6)
-              .map((m) => `${m.query ?? ""}\n${m.text}`)
-              .join("\n")}
-            channeling={
-              [...channel.messages].reverse().find((m) => m.branches?.length)
-                ?.branches ?? null
-            }
-            liveLoading={channelLoading}
-            liveQuestion={
-              channelLoading
-                ? channel.activeQuery || null
-                : lastChannelMsg?.query || null
-            }
-            liveAnswer={channelLoading ? null : lastChannelMsg?.text || null}
-            onLatch={onCanopyLatch}
-          />
-        )}
-        </div>
-
-        {/* THE BRANCHES' OWN FLOOR — the channels carry no standing
-            suggestions: the branches grown on each reply are the only
-            whispers of a conversation, and the living tree is summoned
-            from a branch's own link (the hub rides below). */}
-
-        {/* THE TRUNK'S REST — the living tree's slim floor at the top
-            of the input bar in the main channels; one touch summons
-            the whole grove again. */}
-        {(view === "transmission" || view === "observatory") && (
-          <CanopyRestStrip
-            open={
-              channelEmpty || canopySummoned || channel.status === "loading" || canopyLatch
-            }
-            onSummon={() => setCanopySummoned(true)}
-            disabled={channel.status === "loading"}
-            testIdPrefix="channel-canopy"
-          />
-        )}
-
-        {/* THE ONE INPUT LAW — while the answer lives in the tree (the
-            zoom), the room's own reply line is the only input; the
-            composer returns the moment the room is handed back. */}
-        {view === "transmission" || view === "observatory" ? (
-          canopyLatch ? null : <QueryComposer />
-        ) : (
-          <QueryComposer />
-        )}
-      </main>
-
+      {/* the reading rooms' own modals — every door keeps its keys */}
       <FederationModal />
       <AstralJobsModal />
       <DossierModal />
       <SettingsModal />
       <TechnologyModal />
       <SpeciesModal />
-      {/* the conversation shelf — the channel's past chats, kept on
-          this device only */}
-      <ChatHistoryPanel
-        surface={activeMode}
-        open={historyOpen}
-        onClose={() => setHistoryOpen(false)}
-      />
       {passageModals}
     </div>
   );

@@ -5240,5 +5240,9 @@ export const sq: TranslationDict = {
   "Teens": "Adoleshentët",
   "The voice is gathering — one breath…": "Zëri po mblidhet — një frymë…",
   "The narrator is reading": "Tregimtari po lexon",
-  "Returned to the walk": "Kthyer në rrugë"
+  "Returned to the walk": "Kthyer në rrugë",
+  "About us": "Rreth nesh",
+  "Passage": "Kalimi",
+  "Whisper to the tree…": "Pëshpëriti pemës…",
+  "The whole house grows from the seed — press a whisper to walk, or speak below.": "E gjithë shtëpia rritet nga fara — shtyp një pëshpëritje për të ecur, ose fol më poshtë.",
 };
