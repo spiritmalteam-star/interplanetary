@@ -5227,4 +5227,7 @@ export const sq: TranslationDict = {
   "Little dreamers": "Ëndrrimtarët e vegjël",
   "Young readers": "Lexuesit e rinj",
   "Teens": "Adoleshentët",
+  "The voice is gathering — one breath…": "Zëri po mblidhet — një frymë…",
+  "The narrator is reading": "Tregimtari po lexon",
+  "Returned to the walk": "Kthyer në rrugë"
 };

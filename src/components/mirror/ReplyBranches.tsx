@@ -17,6 +17,7 @@ import {
   type LearnedBranch,
 } from "@/lib/learning-branches";
 import { useMirror } from "@/lib/mirror-store";
+import { readExpansionScore } from "@/lib/expansion";
 import type { Mode } from "@/lib/mirror-types";
 import { useT } from "@/lib/i18n";
 
@@ -215,6 +216,9 @@ export function ReplyBranches({
             /* THE DNA DEEPENING: the deeper the walk, the deeper the
                branches the engine grows */
             depth: journeyDepth(),
+            /* THE WALKER'S OWN SCORE: the profile's expansion index —
+               the branches meet the walker at their own depth */
+            score: readExpansionScore(),
           }),
         });
         const data = await res.json().catch(() => null);

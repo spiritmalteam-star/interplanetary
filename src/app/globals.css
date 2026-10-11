@@ -1980,6 +1980,24 @@ html:not(.dark) .scope-lightcodes {
 .canopy-answer {
   animation: canopy-veil-in 0.5s ease both;
 }
+/* the room's own content swap — one quiet fade when the walk turns to
+   the next branch (the panel itself never remounts: no flicker) */
+.room-swap {
+  animation: canopy-veil-in 0.32s ease both;
+}
+/* the narrator's gathering breath — the honest "wait one beat" pulse */
+.narration-gathering {
+  animation: narration-gather 1.6s ease-in-out infinite;
+}
+@keyframes narration-gather {
+  0%,
+  100% {
+    opacity: 0.72;
+  }
+  50% {
+    opacity: 1;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   .canopy-stage {
     transition: opacity 0.3s ease;
@@ -1991,7 +2009,9 @@ html:not(.dark) .scope-lightcodes {
   }
   .canopy-panel,
   .canopy-veil,
-  .canopy-answer {
+  .canopy-answer,
+  .room-swap,
+  .narration-gathering {
     animation: none;
   }
 }

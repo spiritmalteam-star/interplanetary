@@ -66,7 +66,8 @@ THE EXPANSION LAW — every branch must help the visitor START with this subject
 ${MOVEMENT_LAWS}
 
 SHAPE LAWS:
-- Each "question": maximum 16 words. It ends with "?" unless it is a pause invitation.
+- Each "question": maximum 12 words. Short, plain, readable in one breath — a long question is a broken question. It ends with "?" unless it is a pause invitation.
+- THE DIFFERENT LOOKS LAW: no two questions may share their opening word, and no two may use the same sentence shape (one may open with "What", the next with a verb, the next with "Where"...). They must read like different writers wrote them.
 - Each "reason": maximum 14 words, one honest clause beginning with a small connective like "because", "so that", "to see" — WHY this branch grew here.
 - Write in the SAME LANGUAGE the conversation is written in.
 - Never mention yourself, the tree, buds, branches or suggestions. Never number anything.
@@ -149,6 +150,20 @@ function growBranches(
   return grown;
 }
 
+const walkerScoreLaw = (score: unknown): string => {
+  const s = typeof score === "number" && Number.isFinite(score)
+    ? Math.max(0, Math.min(100, Math.floor(score)))
+    : null;
+  if (s === null) return "";
+  if (s < 15) {
+    return `\nTHE WALKER'S DEPTH (authoritative): this visitor's expansion score is ${s} — a fresh spark. Grow questions that are SHORT (8 words or fewer), plain and concrete: small doable steps, gentle reflections, one honest layer at a time. No abstract physics, no far-reaching contrasts — the first doors first.`;
+  }
+  if (s < 46) {
+    return `\nTHE WALKER'S DEPTH (authoritative): this visitor's expansion score is ${s} — the walk has taken hold. Grow questions of up to 11 words, grounded but curious: one layer down, one step outward.`;
+  }
+  return `\nTHE WALKER'S DEPTH (authoritative): this visitor's expansion score is ${s} — a wide, practiced walker. Grow questions of up to 12 words with real reach: meaningful contrasts, honest connections, bold creations. Never first-door questions.`;
+};
+
 async function postImpl(req: NextRequest, _ctx: MeterContext) {
   const body = (await req.json().catch(() => null)) as {
     branch?: unknown;
@@ -157,6 +172,7 @@ async function postImpl(req: NextRequest, _ctx: MeterContext) {
     seen?: unknown;
     seeds?: unknown;
     depth?: unknown;
+    score?: unknown;
   } | null;
 
   const branch =
@@ -206,6 +222,7 @@ THE ACTIVE SCOPE (authoritative): this conversation stands inside the scope "${s
 }
 
 ${walkerBranchLaw(body?.depth)}
+${walkerScoreLaw(body?.score)}
 
 ALREADY OFFERED (never repeat or paraphrase):
 ${

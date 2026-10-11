@@ -3508,4 +3508,7 @@ export const fr: TranslationDict = {
   "Little dreamers": "Petits rêveurs",
   "Young readers": "Jeunes lecteurs",
   "Teens": "Ados",
+  "The voice is gathering — one breath…": "La voix se rassemble — un souffle…",
+  "The narrator is reading": "Le narrateur lit",
+  "Returned to the walk": "De retour sur le chemin"
 };

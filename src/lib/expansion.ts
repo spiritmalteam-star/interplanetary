@@ -92,6 +92,16 @@ function saveCachedMirror(m: ExpansionMirror): void {
   }
 }
 
+/** The walker's Expansion Index (0–100), read from the cached mirror —
+    0 when no mirror has been studied yet. Client-safe, synchronous. */
+export function readExpansionScore(): number {
+  if (typeof window === "undefined") return 0;
+  const cached = loadCachedMirror();
+  return cached && Number.isFinite(cached.score)
+    ? Math.max(0, Math.min(100, cached.score))
+    : 0;
+}
+
 /** Record one expansion event — locally instant, server-side forever. */
 export function recordExpansion(
   kind: ExpansionEventKind,

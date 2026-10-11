@@ -22,6 +22,7 @@ import {
   Layers,
   Link2,
   ListTree,
+  LoaderCircle,
   Moon,
   RefreshCw,
   Send,
@@ -58,11 +59,12 @@ import {
   type GenealogyTopology,
   type LaidTree,
 } from "@/lib/genealogy";
-import { recordExpansion } from "@/lib/expansion";
+import { recordExpansion, readExpansionScore } from "@/lib/expansion";
 import { ExpansionRing } from "./ExpansionMirror";
 import { useT } from "@/lib/i18n";
 import { useMirror } from "@/lib/mirror-store";
 import { cn } from "@/lib/utils";
+import { tuneSeedBatch } from "@/lib/question-voice";
 import {
   categoryForMove,
   getWalkSession,
@@ -76,7 +78,7 @@ import {
   stopRoomNarration,
 } from "@/lib/room-narrator";
 import {
-  ResonantNarrationStage,
+  NarrationStatusLine,
   ResonantStageBadge,
   useNarration,
   useSequentialReveal,
@@ -134,8 +136,8 @@ const MOVEMENT_ICONS: Record<BranchType, typeof Layers> = {
   pause: Hourglass,
 };
 
-/** How many families the tree may carry in one hour's grove. */
-const MAX_BATCHES = 12;
+/** How many families the tree may carry — the walk never ends. */
+const MAX_BATCHES = 60;
 /** The harmonic pauses — twelve voices, then twelve, then six. */
 const WAVE_PAUSE_1 = 2600;
 const WAVE_PAUSE_2 = 3400;
@@ -199,7 +201,7 @@ export function CanopyRestStrip({
   if (open) return null;
   return (
     <div
-      className="relative z-10 shrink-0 border-t bg-[color-mix(in_srgb,var(--background)_72%,transparent)] backdrop-blur-xl hairline"
+      className="relative z-10 shrink-0 border-t bg-background hairline"
       style={{ borderTopColor: "color-mix(in srgb, var(--scope-a,var(--gd)) 26%, transparent)" }}
     >
       <button
@@ -338,6 +340,25 @@ const TreeCanvas = memo(function TreeCanvas({
     return out;
   }, [nodes, geo.width, trunkTop, chainSet]);
 
+  /* THE LINE MASKS — an opaque plate under every chip, a little wider
+     than the chip itself. Any connector that would pass behind a
+     section is erased before it can ever show through the chip's
+     rounded corners: a line belongs to the gaps between sections,
+     never behind them. */
+  const masks = useMemo(() => {
+    const out: { key: string; x: number; y: number; w: number; h: number }[] = [];
+    for (const n of nodes) {
+      out.push({
+        key: `m-${n.id}`,
+        x: n.x - geo.chipW / 2 - 5,
+        y: n.y - 5,
+        w: geo.chipW + 10,
+        h: n.h + 10,
+      });
+    }
+    return out;
+  }, [nodes, geo.chipW]);
+
   return (
     <div
       className="relative mx-auto"
@@ -381,9 +402,9 @@ const TreeCanvas = memo(function TreeCanvas({
         }}
       />
 
-      {/* the connectors — every family tie, one static SVG; each
-          line keeps two pixels of air clear of every chip, and the
-          walk's own chain burns brighter than the rest */}
+      {/* the connectors — every family tie, one static SVG; the opaque
+          plates under every chip erase any line that would pass behind
+          a section, and the walk's own chain burns brighter */}
       <svg
         aria-hidden="true"
         className="pointer-events-none absolute inset-0"
@@ -392,6 +413,17 @@ const TreeCanvas = memo(function TreeCanvas({
         viewBox={`0 0 ${geo.width} ${geo.height}`}
         fill="none"
       >
+        {masks.map((m) => (
+          <rect
+            key={m.key}
+            x={m.x}
+            y={m.y}
+            width={m.w}
+            height={m.h}
+            rx={22}
+            fill="var(--background)"
+          />
+        ))}
         {trunkArms.map((a) => (
           <path
             key={a.key}
@@ -464,8 +496,8 @@ const TreeCanvas = memo(function TreeCanvas({
                   : `${testIdPrefix}-whisper`
             }
             className={cn(
-              "genea-bloom focus-glow absolute z-10 flex flex-col items-start gap-0.5 rounded-2xl border px-3 py-2 text-left shadow-[0_3px_14px_-8px_rgba(0,0,0,0.55)] transition-colors duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-50",
-              narrow ? "px-2.5 text-[11.5px] leading-4" : "text-[12.5px] leading-[17px]",
+              "genea-bloom focus-glow absolute z-10 flex flex-col items-start gap-[3px] rounded-2xl border px-[13px] py-[9px] text-left shadow-[0_3px_14px_-8px_rgba(0,0,0,0.55)] transition-colors duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-50",
+              narrow ? "px-[11px] text-[12px] leading-[17px]" : "text-[13px] leading-[18px]",
               n.golden
                 ? "border-[color-mix(in_srgb,#f59e0b_52%,transparent)] bg-[color-mix(in_srgb,#f59e0b_14%,var(--background)_86%)] font-serif italic text-foreground shadow-[0_0_16px_-6px_color-mix(in_srgb,#f59e0b_60%,transparent)]"
                 : isPicked
@@ -498,7 +530,7 @@ const TreeCanvas = memo(function TreeCanvas({
             )}
             <Icon
               className={cn(
-                "size-3 shrink-0",
+                "size-3.5 shrink-0",
                 n.golden
                   ? "text-[#f59e0b]"
                   : "text-[var(--scope-a,var(--gd))] opacity-80"
@@ -654,10 +686,14 @@ export function BranchCanopy({
   const [shown, setShown] = useState(false);
   const [seenOpen, setSeenOpen] = useState(open);
 
-  /* ------------------- THE ZOOM — the answer's room ------------------ */
-  const [zoom, setZoom] = useState<{ q: string; move: BranchType | null } | null>(
-    null
-  );
+  /* ------------------- THE ZOOM — the answer's room ------------------
+     `restored` carries the transmission of a PREVIOUS branch — the
+     trail's chips re-open their own rooms from the walk's memory. */
+  const [zoom, setZoom] = useState<{
+    q: string;
+    move: BranchType | null;
+    restored?: string;
+  } | null>(null);
   const zoomed = zoom !== null;
   const active = open || zoomed;
 
@@ -705,7 +741,10 @@ export function BranchCanopy({
     /* the next transmission zooms again — even the very same words */
     setSeenLiveKey(null);
   }
-  if (zoom && !liveLoading && !liveAnswer) {
+  /* a live room whose transmission returned nothing folds back to the
+     walk; a RESTORED room (a previous branch re-opened from the trail)
+     is its own words — the guard never touches it. */
+  if (zoom && !zoom.restored && !liveLoading && !liveAnswer) {
     setZoom(null);
   }
 
@@ -745,6 +784,17 @@ export function BranchCanopy({
     );
     return () => window.clearTimeout(id);
   }, [mounted, seenSnapshot]);
+
+  /* THE WALKER'S OWN DEPTH — the profile's DNA evolution score (the
+     Expansion Index) joins after first paint too: the questions' voice
+     — their length and which movements lead — is tuned to the walker
+     the mirror already knows. */
+  const [expansionScore, setExpansionScore] = useState(0);
+  useEffect(() => {
+    if (!mounted) return;
+    const id = window.setTimeout(() => setExpansionScore(readExpansionScore()), 0);
+    return () => window.clearTimeout(id);
+  }, [mounted]);
 
   /* THE RESONANCE EAR — the scope leads threefold, the grown branches
      twofold, the context that follows carries the middle; rarity,
@@ -897,7 +947,9 @@ export function BranchCanopy({
      without cause. The tree keeps standing across open and close.
      THE ROOM'S STILLNESS: while the answer lives in the tree (the
      zoom), the family never re-ranks under the visitor's reading —
-     a pending regrow simply waits for the room to hand back. */
+     a pending regrow simply waits for the room to hand back.
+     THE VOICE: every seed is tuned by the walker's own depth —
+     shortened to one breath, near-twins stepped aside. */
   const lastRankedRef = useRef<unknown>(null);
   useEffect(() => {
     if (!mounted || ranked.length === 0) return;
@@ -906,9 +958,13 @@ export function BranchCanopy({
     lastRankedRef.current = ranked;
     /* the engine never renders synchronously inside an effect */
     const id = window.setTimeout(() => {
-      const seeds: GenealogySeed[] = ranked
-        .slice(0, BATCH_SIZE)
-        .map((w) => ({ text: w.text, movement: w.movement, score: w.score }));
+      const seeds = tuneSeedBatch(
+        ranked
+          .slice(0, BATCH_SIZE * 2)
+          .map((w) => ({ text: w.text, movement: w.movement, score: w.score })),
+        expansionScore,
+        BATCH_SIZE
+      );
       markSpent(seeds);
       setTopologies(
         seeds.length > 0
@@ -923,7 +979,7 @@ export function BranchCanopy({
       prevSize.current = { w: 0, h: 0 }; /* the view returns to the trunk */
     }, 0);
     return () => window.clearTimeout(id);
-  }, [ranked, mounted, markSpent, zoomed]);
+  }, [ranked, mounted, markSpent, zoomed, expansionScore]);
 
   /* THE GEOMETRY — narrow windows carry a slimmer, taller family. */
   const vpRef = useRef<HTMLDivElement | null>(null);
@@ -950,26 +1006,40 @@ export function BranchCanopy({
   );
 
   /* THE READY THIRTY — the next family, grown before it is asked for.
-     Sliced from the ranked grove beyond every voice already spent;
-     the visitor never waits. */
+     Sliced from the ranked grove beyond every voice already spent; the
+     visitor never waits. THE WINGS: from the third family on, each new
+     family grows out to one SIDE of the house (alternating), so the
+     tree spreads in every direction instead of one column. THE ENDLESS
+     LAW: the grove spent itself, the family re-weaves from the whole
+     grove, rotated — the walk never hits a wall. */
   const prepared = useMemo(() => {
     if (topologies.length === 0 || topologies.length >= MAX_BATCHES) return null;
-    const slice = ranked
-      .filter((w) => !spent.has(w.text.toLowerCase()))
-      .slice(0, BATCH_SIZE);
+    let slice = ranked.filter((w) => !spent.has(w.text.toLowerCase()));
+    if (slice.length === 0) {
+      const off = (topologies.length * 7) % Math.max(1, ranked.length);
+      slice = ranked.map((_, i) => ranked[(i + off) % ranked.length]);
+    }
     if (slice.length === 0) return null;
-    const seeds: GenealogySeed[] = slice.map((w) => ({
-      text: w.text,
-      movement: w.movement,
-      score: w.score,
-    }));
+    const tuned = tuneSeedBatch(
+      slice
+        .slice(0, BATCH_SIZE * 2)
+        .map((w) => ({ text: w.text, movement: w.movement, score: w.score })),
+      expansionScore,
+      BATCH_SIZE
+    );
+    if (tuned.length === 0) return null;
+    const wing =
+      topologies.length >= 2
+        ? topologies.length % 2 === 0
+          ? ("right" as const)
+          : ("left" as const)
+        : undefined;
     return tree.frontier.length > 0
-      ? buildExtensionTopology(seeds, tree.frontier, narrow)
-      : buildSeedTopology(seeds, [], narrow);
-  }, [ranked, topologies, tree, narrow, spent]);
+      ? buildExtensionTopology(tuned, tree.frontier, narrow, wing)
+      : buildSeedTopology(tuned, [], narrow);
+  }, [ranked, topologies, tree, narrow, spent, expansionScore]);
 
-  const groveDone =
-    ranked.length > 0 && !ranked.some((w) => !spent.has(w.text.toLowerCase()));
+  const groveDone = topologies.length >= MAX_BATCHES;
 
   /* THE GROW — one breath, from the ready pool. A ready family may
      only hang from tips that still stand: a folded frontier can never
@@ -1083,22 +1153,23 @@ export function BranchCanopy({
         limit: BATCH_SIZE,
         perSubject: 2,
       });
-      if (hits.length >= BATCH_SIZE || fresh.length <= hits.length) {
-        return hits
-          .slice(0, BATCH_SIZE)
-          .map((w) => ({ text: w.text, movement: w.movement, score: w.score }));
-      }
       /* the fill — the resonance leads, the family is never starved */
       const hitTexts = new Set(hits.map((h) => h.text));
       const fill = fresh
         .filter((w) => !hitTexts.has(w.text))
-        .slice(0, BATCH_SIZE - hits.length)
+        .slice(0, BATCH_SIZE)
         .map((w) => ({ ...w, score: 0 }));
-      return [...hits, ...fill].map(
-        (w) => ({ text: w.text, movement: w.movement, score: w.score })
+      /* THE VOICE — the whole house tuned at once: shortened to the
+         walker's breath, near-twins stepped aside */
+      return tuneSeedBatch(
+        [...hits, ...fill].map(
+          (w) => ({ text: w.text, movement: w.movement, score: w.score })
+        ),
+        expansionScore,
+        BATCH_SIZE
       );
     },
-    [idf, seenSnapshot]
+    [idf, seenSnapshot, expansionScore]
   );
 
   /* the pan — one quiet assignment, never an animation loop */
@@ -1230,12 +1301,27 @@ export function BranchCanopy({
     ]
   );
 
-  /* the trail's own touch — pan to a past step and flash it once */
+  /* the trail's own touch — RETURN to a previous branch: the walk
+     session kept the room's transmission, so one touch re-opens that
+     very room with its own words standing in it. A room the walk no
+     longer remembers still answers the old way: one quiet pan and a
+     single flash of the chip. */
   const walkBack = useCallback(
-    (id: string | null) => {
-      panToNode(id);
-      if (!id) return;
-      setFlashId(id);
+    (step: { id: string | null; text: string }) => {
+      const known = getWalkSession().getNode(walkNodeId(step.text));
+      if (known && known.transmission.trim()) {
+        if (step.id) panToNode(step.id);
+        /* the walk stepped back — the trail follows: the returned room
+           stands last, and YOU ARE HERE points at it */
+        setLineage((ln) =>
+          [...ln.filter((l) => l.text !== step.text), { id: step.id, text: step.text }].slice(-10)
+        );
+        setZoom({ q: step.text, move: null, restored: known.transmission.trim() });
+        return;
+      }
+      panToNode(step.id);
+      if (!step.id) return;
+      setFlashId(step.id);
       window.setTimeout(() => setFlashId(null), 1500);
     },
     [panToNode]
@@ -1254,22 +1340,36 @@ export function BranchCanopy({
   }, [pickedId, tree]);
 
   /* THE ANSWER'S ROOM — the reply's own branches, pressed from inside
-     the panel; the walk's own reply line beneath them. */
+     the panel; THE VOICE — every branch shortened to the walker's
+     breath, near-twins stepped aside, so the room's horizon is a set
+     of questions that never look alike. */
   const contSeeds = useMemo(() => {
     const seen = new Set<string>();
-    const out: LearnedBranch[] = [];
+    const pool: { type: BranchType; question: string; reason?: string }[] = [];
     for (const b of channeling ?? []) {
       const k = b.question.toLowerCase();
       if (seen.has(k) || (zoom && k === zoom.q.toLowerCase())) continue;
       seen.add(k);
-      out.push(b);
-      if (out.length >= 6) break;
+      pool.push({ type: b.type, question: b.question, reason: b.reason });
     }
-    return out;
-  }, [channeling, zoom]);
+    const tuned = tuneSeedBatch(
+      pool.map((b) => ({ text: b.question, movement: b.type, score: 3 })),
+      expansionScore,
+      6
+    );
+    const byText = new Map(pool.map((b) => [b.question, b]));
+    /* a tuned text keeps its branch's reason when one grew with it */
+    return tuned.map((ts) => {
+      const src =
+        byText.get(ts.text) ??
+        pool.find((b) => b.question.length >= ts.text.length && b.question.includes(ts.text.slice(0, 24)));
+      return { type: ts.movement, question: ts.text, reason: src?.reason };
+    });
+  }, [channeling, zoom, expansionScore]);
 
   /* the panel's streaming body — pinned to the newest words while the
-     answer grows, unless the visitor scrolled up to read */
+     answer grows, unless the visitor scrolled up to read; a new room
+     opens at its own top (one quiet reset, never a jump) */
   const bodyRef = useRef<HTMLDivElement | null>(null);
   const pinnedRef = useRef(true);
   const onBodyScroll = useCallback(() => {
@@ -1291,6 +1391,13 @@ export function BranchCanopy({
      visitor's hand has opened the gate. */
   const zoomQ = zoom?.q ?? null;
   const zoomMove = zoom?.move ?? null;
+
+  /* a new room opens at its own top — one quiet reset, never a jump */
+  useEffect(() => {
+    const el = bodyRef.current;
+    if (el) el.scrollTop = 0;
+    pinnedRef.current = true;
+  }, [zoomQ]);
 
   /* the room the walk just left — the parent of the standing room,
      kept in state (render-time guarded, the official pattern) */
@@ -1335,12 +1442,18 @@ export function BranchCanopy({
   /* THE SETTLING — the transmission lands, the branches grow: the room
      is refreshed and its children are registered — so the walk
      remembers where it may go next. Nothing is fetched: the quiet
-     walk's cache is bookkeeping alone. */
-  const answerLen = (liveAnswer ?? "").trim().length;
-  const answerLanded = !liveLoading && answerLen > 0;
-  const settledKey = `${zoomQ ?? ""}|${answerLanded ? "1" : "0"}|${answerLen}|${contSeeds.length}`;
+     walk's cache is bookkeeping alone. A RESTORED room (a previous
+     branch re-opened from the trail) is memory, not a landing — the
+     settle never touches it. */
+  const liveAnswerText = (liveAnswer ?? "").trim();
+  const restoredText = zoom?.restored ?? null;
+  const answer = restoredText ?? liveAnswerText;
+  const answerLanded = restoredText
+    ? true
+    : !liveLoading && liveAnswerText.length > 0;
+  const settledKey = `${zoomQ ?? ""}|${answerLanded ? "1" : "0"}|${liveAnswerText.length}|${contSeeds.length}`;
   useEffect(() => {
-    if (!zoomQ || !answerLanded) return;
+    if (!zoomQ || restoredText || !answerLanded) return;
     const session = getWalkSession();
     const id = walkNodeId(zoomQ);
     const known = session.getNode(id);
@@ -1362,10 +1475,10 @@ export function BranchCanopy({
       parentId,
       category: cat,
       title: zoomQ,
-      transmission: (liveAnswer ?? "").trim(),
+      transmission: liveAnswerText,
       childrenIds: contSeeds.map((b) => walkNodeId(b.question)),
     });
-  }, [settledKey, answerLanded, zoomQ, zoomMove, contSeeds, liveAnswer]);
+  }, [settledKey, answerLanded, zoomQ, zoomMove, contSeeds, liveAnswerText, restoredText]);
 
   /* THE NARRATOR'S GATE — the visitor's own hand opens the voice; one
      touch and the standing room's landed transmission is read aloud
@@ -1379,20 +1492,20 @@ export function BranchCanopy({
     openNarrationGate();
     setNarratorOpen(true);
     const q = zoomQ;
-    const a = (liveAnswer ?? "").trim();
-    if (q && a && !liveLoading) {
-      void speakRoomNarration(walkNodeId(q), a, language);
+    if (q && answer && answerLanded) {
+      void speakRoomNarration(walkNodeId(q), answer, language);
     }
-  }, [narratorOpen, zoomQ, liveAnswer, liveLoading, language]);
+  }, [narratorOpen, zoomQ, answer, answerLanded, language]);
 
   /* THE NARRATOR'S EAR — the gate stands open and the room's words
-     have landed: the voice rises by itself, room after room, for as
-     long as the walk continues. During the stream the effect rests
-     (answerLanded is false); once landed the words are final. */
+     have landed (a live transmission, or a previous branch returned
+     to from the trail): the voice rises by itself, room after room,
+     for as long as the walk continues. During the stream the effect
+     rests; once landed the words are final. */
   useEffect(() => {
-    if (!narratorOpen || !answerLanded || !zoomQ) return;
-    void speakRoomNarration(walkNodeId(zoomQ), (liveAnswer ?? "").trim(), language);
-  }, [narratorOpen, answerLanded, zoomQ, liveAnswer, language]);
+    if (!narratorOpen || !answerLanded || !zoomQ || !answer) return;
+    void speakRoomNarration(walkNodeId(zoomQ), answer, language);
+  }, [narratorOpen, answerLanded, zoomQ, answer, language]);
 
   /* THE SEQUENTIAL REVELATION — four stages, keyed to the room. */
   const revealStage = useSequentialReveal(zoomQ ?? "", answerLanded);
@@ -1424,8 +1537,12 @@ export function BranchCanopy({
      The whole drawn family lives in the memoized TreeCanvas — while
      the answer streams or the visitor types, that layer stands still. */
   const batchCount = topologies.length;
-  const answer = (liveAnswer ?? "").trim();
   const ZoomIcon = zoom?.move ? (MOVEMENT_ICONS[zoom.move] ?? Layers) : Layers;
+  /* the narrator's own ear, resolved for the standing room */
+  const narrMine =
+    zoomQ !== null && narration.roomId === walkNodeId(zoomQ);
+  const narrLoading = narrMine && narration.state === "loading";
+  const narrPlaying = narrMine && narration.state === "playing";
 
   const preparedCount = prepared
     ? prepared.rows.reduce((a, r) => a + r.seeds.length, 0)
@@ -1519,7 +1636,7 @@ export function BranchCanopy({
                   )}
                   <button
                     type="button"
-                    onClick={() => walkBack(l.id)}
+                    onClick={() => walkBack(l)}
                     aria-label={`${t("Return to")}: ${l.text}`}
                     title={l.text}
                     className={cn(
@@ -1572,10 +1689,10 @@ export function BranchCanopy({
                 }
                 data-testid={`${testIdPrefix}-grow`}
                 className={cn(
-                  "pointer-events-auto mt-2 flex items-center gap-2 rounded-full border px-4 py-1.5 text-[11px] font-medium uppercase tracking-[0.14em] backdrop-blur-xl transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-45",
+                  "pointer-events-auto mt-2 flex items-center gap-2 rounded-full border px-4 py-1.5 text-[11px] font-medium uppercase tracking-[0.14em] shadow-[0_4px_18px_-10px_rgba(0,0,0,0.4)] transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-45",
                   prepared
-                    ? "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_44%,transparent)] bg-[color-mix(in_srgb,var(--background)_82%,transparent)] text-[var(--scope-a,var(--gd))] hover:shadow-[0_0_18px_-6px_color-mix(in_srgb,var(--scope-a,var(--gd))_60%,transparent)]"
-                    : "border-[color-mix(in_srgb,var(--hairline)_80%,transparent)] bg-[color-mix(in_srgb,var(--background)_72%,transparent)] text-muted-foreground"
+                    ? "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_44%,transparent)] bg-background text-[var(--scope-a,var(--gd))] hover:shadow-[0_0_18px_-6px_color-mix(in_srgb,var(--scope-a,var(--gd))_60%,transparent)]"
+                    : "border-[color-mix(in_srgb,var(--hairline)_80%,transparent)] bg-background text-muted-foreground"
                 )}
               >
                 <Sprout className="size-3.5" aria-hidden="true" />
@@ -1606,16 +1723,17 @@ export function BranchCanopy({
             testIdPrefix={testIdPrefix}
           />
 
-          {/* THE EMPTY ROOM'S OWN IDENTITY — spoken above the trunk */}
+          {/* THE EMPTY ROOM'S OWN IDENTITY — spoken above the trunk;
+              OPAQUE by law — no tree line may ever show behind it */}
           {(introSub || introSubExtra || introExtra) && (
             <div className="pointer-events-none sticky bottom-2 z-10 flex flex-col items-center gap-2 px-4 text-center">
               {introSub && (
-                <p className="genea-bloom still-bloom max-w-[460px] rounded-2xl border border-[color-mix(in_srgb,var(--scope-a,var(--gd))_22%,transparent)] bg-[color-mix(in_srgb,var(--background)_72%,transparent)] px-4 py-2.5 text-[13.5px] leading-relaxed text-muted-foreground backdrop-blur-xl">
+                <p className="genea-bloom still-bloom max-w-[460px] rounded-2xl border border-[color-mix(in_srgb,var(--scope-a,var(--gd))_22%,transparent)] bg-background px-4 py-2.5 text-[13.5px] leading-relaxed text-muted-foreground shadow-[0_6px_24px_-14px_rgba(0,0,0,0.45)]">
                   {introSub}
                 </p>
               )}
               {introSubExtra && (
-                <p className="genea-bloom still-bloom max-w-[440px] rounded-2xl border border-[color-mix(in_srgb,var(--scope-a,var(--gd))_16%,transparent)] bg-[color-mix(in_srgb,var(--background)_72%,transparent)] px-4 py-2 text-[13px] italic leading-relaxed text-muted-foreground/80 backdrop-blur-xl">
+                <p className="genea-bloom still-bloom max-w-[440px] rounded-2xl border border-[color-mix(in_srgb,var(--scope-a,var(--gd))_16%,transparent)] bg-background px-4 py-2 text-[13px] italic leading-relaxed text-muted-foreground/80 shadow-[0_6px_24px_-14px_rgba(0,0,0,0.45)]">
                   {introSubExtra}
                 </p>
               )}
@@ -1629,14 +1747,14 @@ export function BranchCanopy({
         </div>
 
         {/* ------------------- THE ZOOM — the veil -------------------
-            the family steps back into a living backdrop; one touch of
-            it returns the walk */}
+            the family steps back into a quiet backdrop; the veil is
+            heavy enough that no tree line ever shows behind the room */}
         {zoomed && (
           <div
             onClick={exitZoom}
             aria-hidden="true"
             data-testid={`${testIdPrefix}-veil`}
-            className="canopy-veil absolute inset-0 z-20 bg-[color-mix(in_srgb,var(--background)_28%,transparent)]"
+            className="canopy-veil absolute inset-0 z-20 bg-[color-mix(in_srgb,var(--background)_68%,transparent)]"
           />
         )}
 
@@ -1649,7 +1767,6 @@ export function BranchCanopy({
         {zoom && (
           <div className="pointer-events-none absolute inset-0 z-30 flex justify-center p-2 sm:p-3">
             <section
-              key={zoom.q}
               data-testid={`${testIdPrefix}-zoom`}
               aria-label={zoom.q}
               className="canopy-panel pointer-events-auto flex min-h-0 w-full max-w-[720px] flex-col overflow-hidden rounded-3xl border bg-background shadow-[0_28px_80px_-32px_rgba(0,0,0,0.65)]"
@@ -1658,7 +1775,10 @@ export function BranchCanopy({
                   "color-mix(in srgb, var(--scope-a,var(--gd)) 30%, transparent)",
               }}
             >
-              {/* the question — the whisper the visitor walked to */}
+              {/* the question — the whisper the visitor walked to;
+                  NO remount key: the panel itself never leaves the tree
+                  when the walk turns to the next branch, only the room
+                  inside it changes — the transmission glides, no flicker */}
               <header className="flex shrink-0 items-start justify-between gap-3 border-b px-4 py-3 sm:px-5" style={{ borderColor: "color-mix(in srgb, var(--hairline) 70%, transparent)" }}>
                 <div className="flex min-w-0 items-start gap-2.5">
                   <span
@@ -1673,14 +1793,21 @@ export function BranchCanopy({
                         {t(BRANCH_TYPE_LABELS[zoom.move])}
                       </p>
                     )}
+                    {zoom.restored && (
+                      <p className="mono-label text-[8px] uppercase tracking-[0.2em] text-[var(--scope-a,var(--gd))]">
+                        {t("Returned to the walk")}
+                      </p>
+                    )}
                     <p className="break-words text-[14px] font-medium leading-snug text-foreground">
                       {zoom.q}
                     </p>
                   </div>
                 </div>
                 <div className="flex shrink-0 items-center gap-1.5">
-                  {/* THE NARRATOR'S GATE — the walk's one voice: a man,
-                      the documentary register, reading each room aloud */}
+                  {/* THE NARRATOR'S GATE — the walk's one voice, at the
+                      TOP of the room: a man, the documentary register,
+                      reading each room aloud. While his voice gathers,
+                      the spinner asks the visitor to wait one breath. */}
                   <button
                     type="button"
                     onClick={toggleNarrator}
@@ -1689,13 +1816,16 @@ export function BranchCanopy({
                     title={narratorOpen ? t("Silence the narrator") : t("Let the narrator speak")}
                     data-testid={`${testIdPrefix}-zoom-narrator`}
                     className={cn(
-                      "focus-glow flex size-7 shrink-0 items-center justify-center rounded-full border transition-all duration-300",
-                      narratorOpen
+                      "focus-glow relative flex size-7 shrink-0 items-center justify-center rounded-full border transition-all duration-300",
+                      narratorOpen || narrLoading
                         ? "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_14%,transparent)] text-[var(--scope-a,var(--gd))]"
-                        : "hairline text-muted-foreground hover:border-[var(--hairline-hover)] hover:text-foreground"
+                        : "hairline text-muted-foreground hover:border-[var(--hairline-hover)] hover:text-foreground",
+                      narrLoading && "animate-pulse"
                     )}
                   >
-                    {narratorOpen ? (
+                    {narrLoading ? (
+                      <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
+                    ) : narratorOpen ? (
                       <Volume2 className="size-3.5" aria-hidden="true" />
                     ) : (
                       <VolumeX className="size-3.5" aria-hidden="true" />
@@ -1705,8 +1835,8 @@ export function BranchCanopy({
                     type="button"
                     onClick={exitZoom}
                     aria-label={t("Back to the tree")}
-                  title={t("Back to the tree")}
-                  data-testid={`${testIdPrefix}-zoom-back`}
+                    title={t("Back to the tree")}
+                    data-testid={`${testIdPrefix}-zoom-back`}
                     className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
                   >
                     <TreeDeciduous className="size-3.5" aria-hidden="true" />
@@ -1715,173 +1845,179 @@ export function BranchCanopy({
               </header>
 
               {/* the answer — revealed in stages: badge (1), transmission
-                  (2), media (3) — every step one compositor breath */}
+                  (2), the narrator's ear (3) — every step one compositor
+                  breath. The room's content swaps in one quiet fade when
+                  the walk turns to the next branch. */}
               <div
                 ref={bodyRef}
                 onScroll={onBodyScroll}
                 data-testid={`${testIdPrefix}-zoom-answer`}
                 className="nice-scroll min-h-0 flex-1 overflow-y-auto px-4 py-3.5 sm:px-5"
               >
-                {zoom && (
-                  <ResonantStageBadge
-                    category={categoryForMove(zoomMove)}
-                    moveLabel={zoom.move ? t(BRANCH_TYPE_LABELS[zoom.move]) : null}
-                    visible={revealStage >= 1}
-                  />
-                )}
-                {answer ? (
-                  revealStage >= 2 ? (
-                    <div className="canopy-answer whitespace-pre-wrap break-words text-[13.5px] leading-[1.75] text-foreground/90 sm:text-[14px]">
-                      {answer}
-                      {liveLoading && (
+                <div key={zoom.q} className="room-swap">
+                  {zoom && (
+                    <ResonantStageBadge
+                      category={categoryForMove(zoomMove)}
+                      moveLabel={zoom.move ? t(BRANCH_TYPE_LABELS[zoom.move]) : null}
+                      visible={revealStage >= 1}
+                    />
+                  )}
+                  {answer ? (
+                    revealStage >= 2 ? (
+                      <div className="canopy-answer whitespace-pre-wrap break-words text-[13.5px] leading-[1.75] text-foreground/90 sm:text-[14px]">
+                        {answer}
+                        {liveLoading && (
+                          <span
+                            aria-hidden="true"
+                            className="ml-1 inline-block h-[13px] w-[7px] translate-y-[1px] animate-pulse rounded-[2px] bg-[var(--scope-a,var(--gd))] align-baseline opacity-70"
+                          />
+                        )}
+                      </div>
+                    ) : null
+                  ) : (
+                    revealStage >= 2 && (
+                      <div className="flex items-center gap-2 py-5 text-muted-foreground" aria-live="polite">
                         <span
                           aria-hidden="true"
-                          className="ml-1 inline-block h-[13px] w-[7px] translate-y-[1px] animate-pulse rounded-[2px] bg-[var(--scope-a,var(--gd))] align-baseline opacity-70"
+                          className="animate-line-breathe h-4 w-px shrink-0"
+                          style={{
+                            background:
+                              "linear-gradient(180deg, var(--scope-a,var(--gd)), transparent)",
+                          }}
                         />
-                      )}
-                    </div>
-                  ) : null
-                ) : (
-                  revealStage >= 2 && (
-                    <div className="flex items-center gap-2 py-5 text-muted-foreground" aria-live="polite">
-                      <span
-                        aria-hidden="true"
-                        className="animate-line-breathe h-4 w-px shrink-0"
-                        style={{
-                          background:
-                            "linear-gradient(180deg, var(--scope-a,var(--gd)), transparent)",
-                        }}
-                      />
-                      <span className="mono-label text-[10px] uppercase tracking-[0.22em]">
-                        {t("Channeling")}
-                      </span>
-                    </div>
-                  )
-                )}
+                        <span className="mono-label text-[10px] uppercase tracking-[0.22em]">
+                          {t("Channeling")}
+                        </span>
+                      </div>
+                    )
+                  )}
 
-                {/* STAGE 3 — the narrator's voice, the room's one card */}
-                {zoom && (
-                  <ResonantNarrationStage
-                    roomId={walkNodeId(zoom.q)}
-                    text={answer}
-                    visible={revealStage >= 3 && answerLanded}
-                    narration={narration}
-                    onToggle={toggleNarrator}
-                    testIdPrefix={`${testIdPrefix}-zoom`}
-                  />
-                )}
+                  {/* STAGE 3 — the narrator's honest status: the loading
+                      indicator while the voice gathers, the bars while he
+                      reads. No button stands at the bottom of the text
+                      anymore — his gate lives at the top of the room. */}
+                  {zoom && (
+                    <NarrationStatusLine
+                      roomId={walkNodeId(zoom.q)}
+                      visible={revealStage >= 3 && answerLanded}
+                      narration={narration}
+                      testIdPrefix={`${testIdPrefix}-zoom`}
+                    />
+                  )}
+                </div>
               </div>
 
               {/* the walk continues from the answer's own branches —
                   THE DROPDOWN: the branches stand behind one quiet
                   button, folded by default, opened wide with the whole
                   of every whisper — and a slim line (the room's one
-                  input) carries the visitor's own words */}
-              {!liveLoading && answer && (
-                <footer
-                  className="flex shrink-0 flex-col gap-2.5 border-t px-4 py-3 sm:px-5"
-                  style={{
-                    borderColor:
-                      "color-mix(in srgb, var(--hairline) 70%, transparent)",
-                  }}
-                >
-                  {/* STAGE 4 — the next horizon, dropped down to explore */}
-                  {revealStage >= 4 && contSeeds.length > 0 && (
-                    <div className="flex flex-col gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setBranchesOpen((o) => !o)}
-                        aria-expanded={branchesOpen}
-                        aria-controls={`${testIdPrefix}-branches-panel`}
-                        data-testid={`${testIdPrefix}-branches-toggle`}
-                        className="focus-glow group flex w-full items-center gap-2 rounded-full border px-3.5 py-2 text-left transition-all duration-300 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)]"
+                  input) carries the visitor's own words. THE ROOM
+                  NEVER COLLAPSES: the footer stands through the whole
+                  transmission, so the next branch glides in without a
+                  single flicker. */}
+              <footer
+                className="flex shrink-0 flex-col gap-2.5 border-t px-4 py-3 sm:px-5"
+                style={{
+                  borderColor:
+                    "color-mix(in srgb, var(--hairline) 70%, transparent)",
+                }}
+              >
+                {/* STAGE 4 — the next horizon, dropped down to explore */}
+                {!liveLoading && answer && revealStage >= 4 && contSeeds.length > 0 && (
+                  <div className="flex flex-col gap-2.5">
+                    <button
+                      type="button"
+                      onClick={() => setBranchesOpen((o) => !o)}
+                      aria-expanded={branchesOpen}
+                      aria-controls={`${testIdPrefix}-branches-panel`}
+                      data-testid={`${testIdPrefix}-branches-toggle`}
+                      className="focus-glow group flex w-full items-center gap-2 rounded-full border px-3.5 py-2 text-left transition-all duration-300 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)]"
+                      style={{
+                        borderColor:
+                          "color-mix(in srgb, var(--scope-a,var(--gd)) 28%, transparent)",
+                        backgroundColor:
+                          "color-mix(in srgb, var(--scope-a,var(--gd)) 5%, var(--background))",
+                      }}
+                    >
+                      <Sprout
+                        className="size-3.5 shrink-0 text-[var(--scope-a,var(--gd))]"
+                        aria-hidden="true"
+                      />
+                      <span className="mono-label min-w-0 flex-1 truncate text-[9px] uppercase tracking-[0.2em] text-muted-foreground">
+                        {t("Branches of this transmission")}
+                      </span>
+                      <span
+                        className="mono-label shrink-0 rounded-full border px-1.5 py-0.5 text-[8.5px] leading-none tabular-nums"
                         style={{
                           borderColor:
-                            "color-mix(in srgb, var(--scope-a,var(--gd)) 28%, transparent)",
-                          backgroundColor:
-                            "color-mix(in srgb, var(--scope-a,var(--gd)) 5%, var(--background))",
+                            "color-mix(in srgb, var(--scope-a,var(--gd)) 32%, transparent)",
+                          color: "var(--scope-a,var(--gd))",
                         }}
                       >
-                        <Sprout
-                          className="size-3.5 shrink-0 text-[var(--scope-a,var(--gd))]"
-                          aria-hidden="true"
-                        />
-                        <span className="mono-label min-w-0 flex-1 truncate text-[9px] uppercase tracking-[0.2em] text-muted-foreground">
-                          {t("Branches of this transmission")}
-                        </span>
-                        <span
-                          className="mono-label shrink-0 rounded-full border px-1.5 py-0.5 text-[8.5px] leading-none tabular-nums"
-                          style={{
-                            borderColor:
-                              "color-mix(in srgb, var(--scope-a,var(--gd)) 32%, transparent)",
-                            color: "var(--scope-a,var(--gd))",
-                          }}
-                        >
-                          {contSeeds.length}
-                        </span>
-                        <ChevronDown
-                          className={cn(
-                            "size-3.5 shrink-0 text-muted-foreground transition-transform duration-300",
-                            branchesOpen && "rotate-180"
-                          )}
-                          aria-hidden="true"
-                        />
-                      </button>
-                      {branchesOpen && (
-                        <div
-                          id={`${testIdPrefix}-branches-panel`}
-                          data-testid={`${testIdPrefix}-branches-panel`}
-                          className="nice-scroll grid max-h-[42vh] gap-2 overflow-y-auto pr-0.5 sm:grid-cols-2"
-                        >
-                          {contSeeds.map((b) => {
-                            const CIcon = MOVEMENT_ICONS[b.type] ?? Layers;
-                            return (
-                              <button
-                                key={b.question}
-                                type="button"
-                                onClick={() => sendFromPanel(b.question, b.type)}
-                                disabled={disabled}
-                                title={t(BRANCH_TYPE_LABELS[b.type])}
-                                data-testid={`${testIdPrefix}-cont`}
-                                className="focus-glow group flex items-start gap-2.5 rounded-2xl border px-3.5 py-2.5 text-left transition-all duration-300 hover:-translate-y-px hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_60%,transparent)] disabled:cursor-not-allowed disabled:opacity-40"
-                                style={{
-                                  borderColor:
-                                    "color-mix(in srgb, var(--scope-a,var(--gd)) 24%, transparent)",
-                                  backgroundColor:
-                                    "color-mix(in srgb, var(--scope-a,var(--gd)) 5%, var(--background))",
-                                }}
-                              >
-                                <CIcon
-                                  className="mt-0.5 size-3.5 shrink-0 text-[var(--scope-a,var(--gd))] opacity-80"
-                                  aria-hidden="true"
-                                />
-                                <span className="min-w-0 flex-1">
-                                  <span className="mono-label block text-[8px] uppercase tracking-[0.18em] text-muted-foreground/60">
-                                    {t(BRANCH_TYPE_LABELS[b.type])}
-                                  </span>
-                                  <span className="mt-0.5 block whitespace-pre-wrap break-words text-[12.5px] leading-snug text-foreground/90">
-                                    {b.question}
-                                  </span>
+                        {contSeeds.length}
+                      </span>
+                      <ChevronDown
+                        className={cn(
+                          "size-3.5 shrink-0 text-muted-foreground transition-transform duration-300",
+                          branchesOpen && "rotate-180"
+                        )}
+                        aria-hidden="true"
+                      />
+                    </button>
+                    {branchesOpen && (
+                      <div
+                        id={`${testIdPrefix}-branches-panel`}
+                        data-testid={`${testIdPrefix}-branches-panel`}
+                        className="nice-scroll grid max-h-[52vh] gap-2.5 overflow-y-auto pr-0.5 sm:grid-cols-2"
+                      >
+                        {contSeeds.map((b) => {
+                          const CIcon = MOVEMENT_ICONS[b.type] ?? Layers;
+                          return (
+                            <button
+                              key={b.question}
+                              type="button"
+                              onClick={() => sendFromPanel(b.question, b.type)}
+                              disabled={disabled}
+                              title={t(BRANCH_TYPE_LABELS[b.type])}
+                              data-testid={`${testIdPrefix}-cont`}
+                              className="focus-glow group flex items-start gap-2.5 rounded-2xl border px-4 py-3 text-left transition-all duration-300 hover:-translate-y-px hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_60%,transparent)] disabled:cursor-not-allowed disabled:opacity-40"
+                              style={{
+                                borderColor:
+                                  "color-mix(in srgb, var(--scope-a,var(--gd)) 24%, transparent)",
+                                backgroundColor:
+                                  "color-mix(in srgb, var(--scope-a,var(--gd)) 5%, var(--background))",
+                              }}
+                            >
+                              <CIcon
+                                className="mt-0.5 size-4 shrink-0 text-[var(--scope-a,var(--gd))] opacity-80"
+                                aria-hidden="true"
+                              />
+                              <span className="min-w-0 flex-1">
+                                <span className="mono-label block text-[8px] uppercase tracking-[0.18em] text-muted-foreground/60">
+                                  {t(BRANCH_TYPE_LABELS[b.type])}
                                 </span>
-                                <ChevronRight
-                                  className="mt-1 size-3.5 shrink-0 text-muted-foreground/35 transition-transform duration-300 group-hover:translate-x-0.5"
-                                  aria-hidden="true"
-                                />
-                              </button>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  <ZoomReplyForm
-                    roomKey={zoom.q}
-                    disabled={disabled || liveLoading}
-                    onSend={sendReplyFromPanel}
-                    testIdPrefix={testIdPrefix}
-                  />
-                </footer>
-              )}
+                                <span className="mt-1 block whitespace-pre-wrap break-words text-[13.5px] leading-snug text-foreground/90">
+                                  {b.question}
+                                </span>
+                              </span>
+                              <ChevronRight
+                                className="mt-1 size-3.5 shrink-0 text-muted-foreground/35 transition-transform duration-300 group-hover:translate-x-0.5"
+                                aria-hidden="true"
+                              />
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
+                <ZoomReplyForm
+                  roomKey={zoom.q}
+                  disabled={disabled || liveLoading}
+                  onSend={sendReplyFromPanel}
+                  testIdPrefix={testIdPrefix}
+                />
+              </footer>
             </section>
           </div>
         )}

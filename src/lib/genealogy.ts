@@ -86,6 +86,15 @@ export interface GenealogyTopology {
    * generation instead of one endless row).
    */
   hangAll?: boolean;
+  /**
+   * THE WING — when set, this batch grows out to one SIDE of the
+   * family ("left" or "right"): its first row seats beyond the
+   * family's edge instead of stacking on top, so the tree spreads in
+   * every direction and never runs out of sky. Alternated batch by
+   * batch, the walk extends sideways and upward together — infinite
+   * in every direction.
+   */
+  wing?: "left" | "right";
 }
 
 export interface GenealogyGeometry {
@@ -111,26 +120,29 @@ const SEED_GENS_NARROW = [2, 3, 5, 8, 12];
 
 /* THE READABLE BOX — a wide enough line of text per chip, the WHOLE
    whisper inside it (measured, never clamped), and a generous breath
-   of distance between the generations. */
-const CHIP_W_WIDE = 212;
-const CHIP_W_NARROW = 154;
-const STEP_WIDE = 230;
-const STEP_NARROW = 166;
-const ROW_GAP_WIDE = 46;
-const ROW_GAP_NARROW = 40;
+   of distance between the generations. The visitor asked for BIGGER
+   sections that hold the whole question with air to spare. */
+const CHIP_W_WIDE = 250;
+const CHIP_W_NARROW = 184;
+const STEP_WIDE = 268;
+const STEP_NARROW = 198;
+const ROW_GAP_WIDE = 56;
+const ROW_GAP_NARROW = 48;
 const TRUNK_H_WIDE = 92;
 const TRUNK_H_NARROW = 72;
 /** The golden row's own breath above the trunk. */
 const GOLDEN_GAP = 22;
 const SIDE_PAD = 30;
 
+const CHIP_H_WIDE = 66;
+const CHIP_H_NARROW = 62;
 /* Chip anatomy — must mirror the rendered chip's own classes. */
-const PAD_X_WIDE = 12; // px-3
-const PAD_X_NARROW = 10; // px-2.5
-const PAD_Y = 8; // py-2
-const ICON_H = 12; // size-3 sigil
-const ICON_GAP = 2; // gap-0.5
-const SAFETY_H = 5; // the box never pinches a descender
+const PAD_X_WIDE = 13; // px-[13px]
+const PAD_X_NARROW = 11;
+const PAD_Y = 9; // py-[9px]
+const ICON_H = 13; // size-3.5 sigil
+const ICON_GAP = 3;
+const SAFETY_H = 6; // the box never pinches a descender
 
 /* ------------------------- the text measure ------------------------ */
 
@@ -186,15 +198,15 @@ function chipHeight(text: string, narrow: boolean, serif: boolean): number {
   const hit = heightCache.get(key);
   if (hit !== undefined) return hit;
   const padX = narrow ? PAD_X_NARROW : PAD_X_WIDE;
-  const fontPx = narrow ? 11.5 : 12.5;
-  const lineH = narrow ? 16 : 17;
+  const fontPx = narrow ? 12 : 13;
+  const lineH = narrow ? 17 : 18;
   const innerW = (narrow ? CHIP_W_NARROW : CHIP_W_WIDE) - padX * 2;
   const font = serif
     ? `italic ${fontPx}px ${SERIF_STACK}`
     : `${fontPx}px ${SANS_STACK}`;
   const lines = measureLines(text, innerW, fontPx, font);
   const h = Math.max(
-    54,
+    narrow ? CHIP_H_NARROW : CHIP_H_WIDE,
     Math.ceil(PAD_Y * 2 + ICON_H + ICON_GAP + lines * lineH) + SAFETY_H
   );
   /* the cache holds one hour's grove at most, then steps aside */
@@ -209,7 +221,7 @@ export function genealogyGeometry(narrow: boolean): GenealogyGeometry {
   return narrow
     ? {
         chipW: CHIP_W_NARROW,
-        chipH: 58,
+        chipH: CHIP_H_NARROW,
         step: STEP_NARROW,
         rowGap: ROW_GAP_NARROW,
         trunkH: TRUNK_H_NARROW,
@@ -218,7 +230,7 @@ export function genealogyGeometry(narrow: boolean): GenealogyGeometry {
       }
     : {
         chipW: CHIP_W_WIDE,
-        chipH: 62,
+        chipH: CHIP_H_WIDE,
         step: STEP_WIDE,
         rowGap: ROW_GAP_WIDE,
         trunkH: TRUNK_H_WIDE,
@@ -271,10 +283,11 @@ export function buildSeedTopology(
 export function buildExtensionTopology(
   seeds: GenealogySeed[],
   frontier: { id: string }[],
-  narrow: boolean
+  narrow: boolean,
+  wing?: "left" | "right"
 ): GenealogyTopology {
   const parents = frontier.length > 0 ? frontier : [{ id: "root" }];
-  const cap = narrow ? 8 : 12;
+  const cap = narrow ? 7 : 11;
   const pool = seeds.slice(0, BATCH_SIZE);
   const rows: GenealogyRow[] = [];
   for (let start = 0; start < pool.length; start += cap) {
@@ -293,6 +306,7 @@ export function buildExtensionTopology(
     index: 0,
     rows,
     fromTips: parents.map((p) => p.id),
+    ...(wing ? { wing } : {}),
   };
 }
 
@@ -514,10 +528,39 @@ export function layTree(
     const gen = rowGen.get(key) ?? 0;
     const top = rowTop.get(key) ?? 0;
 
-    /* a graft's deeper rows — and every forked generation of an
-       extension — center over their own family, not the canvas */
+    /* THE WING — the batch's first row seats just beyond the frontier
+       cluster it grows from (alternating sides), so the tree climbs
+       like a staircase: up and sideways together, every wing near its
+       family, the walk spreading in every direction without end. */
     let left0 = (width - r.span) / 2;
-    if (r.row > 0 && (r.graftOf || topologies[r.batch].fromTips.length > 0)) {
+    if (topo.wing && r.row === 0) {
+      const tipXs = topo.fromTips
+        .map((id) => xById.get(id))
+        .filter((x): x is number => typeof x === "number");
+      const margin = geo.step * 0.58;
+      if (tipXs.length > 0) {
+        const tmin = Math.min(...tipXs);
+        const tmax = Math.max(...tipXs);
+        left0 =
+          topo.wing === "right" ? tmax + margin : tmin - r.span - margin;
+      } else {
+        let minX = Infinity;
+        let maxX = -Infinity;
+        for (const x of xById.values()) {
+          if (x < minX) minX = x;
+          if (x > maxX) maxX = x;
+        }
+        if (!Number.isFinite(minX)) {
+          minX = width / 2;
+          maxX = width / 2;
+        }
+        left0 =
+          topo.wing === "right" ? maxX + margin : minX - r.span - margin;
+      }
+    } else if (
+      r.row > 0 &&
+      (r.graftOf || topologies[r.batch].fromTips.length > 0)
+    ) {
       const prevRow = topo.rows[r.row - 1];
       let sum = 0;
       let n = 0;
@@ -583,6 +626,9 @@ export function layTree(
   for (let b = 0; b < topologies.length; b++) {
     const topo = topologies[b];
     if (topo.fromTips.length === 0 || topo.rows.length === 0) continue;
+    /* THE WING keeps its own flank seat — the family must not be
+       dragged back under the tips it grew from */
+    if (topo.wing) continue;
     for (let rr = 0; rr < topo.rows.length; rr++) {
       const lr = keptRows.find((r) => r.batch === b && r.row === rr);
       if (!lr) continue; /* folded by the prune */

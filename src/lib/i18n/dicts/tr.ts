@@ -3003,4 +3003,7 @@ export const tr: TranslationDict = {
   "Little dreamers": "Küçük rüya görenler",
   "Young readers": "Genç okurlar",
   "Teens": "Gençler",
+  "The voice is gathering — one breath…": "Ses toplanıyor — bir nefes…",
+  "The narrator is reading": "Anlatıcı okuyor",
+  "Returned to the walk": "Yolculuğa geri dönüldü"
 };

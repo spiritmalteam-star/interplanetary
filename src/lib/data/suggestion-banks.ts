@@ -1033,6 +1033,45 @@ function fill(
   return out;
 }
 
+/** The word count of a composed whisper. */
+function wordCount(text: string): number {
+  return text.trim().split(/\s+/).filter(Boolean).length;
+}
+
+/* THE BREVITY LAW — the visitor reads the whole question in one
+   breath. A whisper carries at most ONE scene-setting facet: when the
+   frame with the facet woven in grows past twelve words, the facet
+   falls away and the frame stands in its plain form; a frame that is
+   still past sixteen words lays its trailing follow-up down too. The
+   grove stays whole — the questions just speak in fewer words, and
+   the repeated tails that made siblings look alike never show. */
+function weave(
+  frame: string,
+  subject: string,
+  facet: string,
+  scope: string | null
+): string {
+  const withFacet = fill(frame, subject, facet, scope);
+  if (withFacet && wordCount(withFacet) <= 12) return withFacet;
+
+  /* the plain form — the same frame, the facet laid down */
+  const plainFrame = frame.replaceAll(" {f}", "").replaceAll("{f}", "");
+  const plain = fill(plainFrame, subject, facet, scope);
+  const body = plain || withFacet;
+  if (!body) return "";
+
+  /* a last trailing follow-up after an em-dash falls away when the
+     breath still runs long */
+  if (wordCount(body) > 16) {
+    const dashAt = body.indexOf(" — ");
+    if (dashAt > 0) {
+      const head = body.slice(0, dashAt);
+      if (wordCount(head) >= 5) return head;
+    }
+  }
+  return body;
+}
+
 /** The grow cache — one grove per (category, scope, hour, salt). */
 const groveCache = new Map<string, CanopyWhisper[]>();
 
@@ -1112,9 +1151,9 @@ export function growCanopy(
     let text: string;
     if (scope && rng() < 0.34) {
       const sFrames = bank.scopeFrames;
-      text = fill(sFrames[Math.floor(rng() * sFrames.length)], subject, facet, scope);
+      text = weave(sFrames[Math.floor(rng() * sFrames.length)], subject, facet, scope);
     } else {
-      text = fill(frame.text, subject, facet, scope);
+      text = weave(frame.text, subject, facet, scope);
     }
     if (!text) continue;
 

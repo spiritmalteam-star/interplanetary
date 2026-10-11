@@ -3209,4 +3209,7 @@ export const el: TranslationDict = {
   "Little dreamers": "Μικροί ονειροπόλοι",
   "Young readers": "Νέοι αναγνώστες",
   "Teens": "Έφηβοι",
+  "The voice is gathering — one breath…": "Η φωνή συγκεντρώνεται — μια ανάσα…",
+  "The narrator is reading": "Ο αφηγητής διαβάζει",
+  "Returned to the walk": "Πίσω στο μονοπάτι"
 };

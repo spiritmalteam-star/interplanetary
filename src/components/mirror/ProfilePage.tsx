@@ -101,6 +101,19 @@ export function ProfilePage() {
   const [seedError, setSeedError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
+  /* THE SMOOTH ENTRANCE — the room's heavy content (the library head,
+     the DNA helix, the mirror) joins one breath AFTER the door has
+     begun to rise, so the opening itself is always liquid. */
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    if (!open) {
+      setReady(false);
+      return;
+    }
+    const id = window.setTimeout(() => setReady(true), 200);
+    return () => window.clearTimeout(id);
+  }, [open]);
+
   const signedIn = Boolean(me && !me.email.startsWith("anon:"));
 
   /* the library's quiet head — counts and the freshest entries */
@@ -815,21 +828,22 @@ export function ProfilePage() {
     }
   };
 
-  if (!open) return null;
+  if (typeof document === "undefined") return null;
 
   return createPortal(
     <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.28 }}
-        className="fixed inset-0 z-[85] flex flex-col bg-background"
-        data-testid="profile-page"
-        role="dialog"
-        aria-modal="true"
-        aria-label={t("Your profile")}
-      >
+      {open && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 12 }}
+          transition={{ duration: 0.34, ease: [0.22, 1, 0.36, 1] }}
+          className="fixed inset-0 z-[85] flex flex-col bg-background"
+          data-testid="profile-page"
+          role="dialog"
+          aria-modal="true"
+          aria-label={t("Your profile")}
+        >
         {/* the head — one way back to the Mirror, one name */}
         <header className="shrink-0 border-b hairline bg-[var(--glass-bg-soft)] backdrop-blur-xl">
           <div className="mx-auto flex w-full max-w-6xl items-center gap-3 px-4 py-3 sm:px-8">
@@ -902,11 +916,21 @@ export function ProfilePage() {
             </nav>
 
             <div className="mx-auto w-full max-w-2xl px-4 pb-20 pt-6 sm:px-6 sm:pt-8">
-              {renderSection()}
+              {ready ? (
+                renderSection()
+              ) : (
+                <div className="flex justify-center py-20" aria-busy="true">
+                  <LoaderCircle
+                    className="size-5 animate-spin text-muted-foreground/60"
+                    aria-hidden="true"
+                  />
+                </div>
+              )}
             </div>
           </div>
         </div>
       </motion.div>
+      )}
     </AnimatePresence>,
     document.body
   );
