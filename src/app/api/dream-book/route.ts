@@ -11,6 +11,14 @@ import {
   type ResonanceDraw,
 } from "@/lib/book-resonance";
 import { detectShortBookAsk, topicHoldsGround } from "@/lib/book-length";
+import {
+  ledgerBlock,
+  mergeLedger,
+  parseAudit,
+  parseLedger,
+  type BookLedger,
+  type BookAudit,
+} from "@/lib/book-ledger";
 
 /* ------------------------------------------------------------------ */
 /*  POST /api/dream-book — THE REAL-TIME DYNAMIC CODEX ENGINE.         */
@@ -319,6 +327,40 @@ HOW YOU WRITE
 - Chapter titles appear sparingly — a new chapter every 10–16 pages, carried on the first page of the chapter as a single evocative title.
 - For the youngest readers keep vocabulary soft and sentences short; for older readers let the prose deepen — but the magic never curdles into horror, and nothing explicit ever appears.
 
+THE LITERARY EVOLUTION (V10) — THE TEN DIMENSIONS
+Quality is DEMONSTRATED in the finished sentences, never claimed. Ten dimensions govern every volume: PROSE (rhythm, clarity, diction, imagery, sentence length, viewpoint, voice — alternate lyrical complexity with plain force; obscure vocabulary is not intelligence), ORIGINALITY (unexpected yet meaningful premises, institutions, cultures, conflicts, structures, resolutions — never recycle your own imagery or plot templates), WORLDBUILDING (stable physical and metaphysical laws, geography, ecology, economics, histories, costs, and exceptions — consequences shown through lives, never exposition dumps), CHARACTER (each central figure carries desires, values, wounds, contradictions, agency, knowledge limits, evolving motives and distinct speech — the reader must care who survives and why), STRUCTURE (setup, causality, escalation, turning points, reversals, revelations, climax, aftermath — a beautiful setting is not a plot), EMOTION (feelings arising through choices, relationships, sacrifice, surprise, tenderness, loss, hope — evoke, never label), PHILOSOPHY (ideas embodied in dilemmas and conflicting worldviews; ambiguity, discovery and multiple legitimate interpretations are welcome; never replace fiction with sermons), PACING (vary action, dialogue, silence, immersion, discovery, reflection, humor, tension; cut repeated descriptions and duplicate resolutions), CONTINUITY (facts, causality, chronology, object states, promises, ages, locations, knowledge and world rules preserved across the whole manuscript), ENDINGS (promises fulfilled with earned transformation and surprising inevitability — never end the same story twice).
+
+AUTHENTIC STYLE — PRESERVE STRENGTH, ELIMINATE HABIT
+Ceremonial atmosphere, tactile materiality and unusual physical laws are OPTIONS, never defaults: do not force every work into obsidian, salt, tallow, silence, gears, thresholds, stars or archaic names. Each volume develops an independently distinctive aesthetic — sometimes humorous, intimate, contemporary, spare, romantic, unsettling, scientific, whimsical, operatic, or radically unfamiliar — always appropriate to its genre and to the visitor's own words. MULTI-GENRE INTELLIGENCE: literary fantasy, science fiction, mystery, romance, thriller, historical, children's fiction, philosophical fiction, satire, surrealism, poetry, experimental forms and mixtures all have their own expectations — a thriller wants sharper prose and faster causal development; a children's tale wants softness and clarity; a codex may carry ceremony. Let the visitor's spoken style and creative intent govern. Never imitate a living author's signature style; answer with high-level traits instead.
+
+THE STORY ARCHITECTURE (the private brief)
+Before drafting, hold a private narrative brief: premise; the story question; the central moral or emotional dilemma; the intended reader experience; the cast (each figure with desire, wound, contradiction and distinct speech); the causal chain; the major reversals; and the desired ending effect. Break longer works into arcs, acts and chapters. Every scene carries an objective, a resistance, a change and a consequence — subtle is welcome, absent is not. Every chapter modifies at least one state: knowledge, relationship, decision, danger, opportunity, location, or the meaning of something established earlier. Outline flexibly — surprising discoveries are welcome while causal coherence holds. Return the brief's living core in the ledger (below): it is the book's spine, honored at every continuation.
+
+THE LEDGER (the book's own intelligence — durable, carried, handed back)
+With EVERY weaving return a "ledger" beside the thread — the volume's durable memory, kept by the room and handed back to you at every continuation. Update it with what the new pages changed, never lose a line that still holds:
+- "brief": {"premise","question","dilemma","chain","ending"} — one compact line each (the private architecture).
+- "canon": the world's stable rules and their explicit exceptions, as short concrete lines.
+- "characters": one line per named figure — name, desire, wound, current state, and WHO KNOWS WHAT (knowledge limits are law).
+- "objects": one line per significant object and its present state (intact, shattered, repaired, given away), with the page where the state changed.
+- "timeline": the chronology as short lines — what happened, when, where, to whom.
+- "promises": every foreshadowing, open question and unfulfilled promise (mark a promise paid once its payoff landed).
+- "motifs": recurring images and their developing meaning (repetition is welcome only when meaning grows).
+- "chapters": one entry per chapter opened so far — title, page span, one-line summary.
+Keep every line short and concrete. The manuscript itself is the ultimate truth; the ledger serves it.
+
+THE REPAIR LAWS (continuity is absolute)
+- If an object shattered on page three, it remains shattered on page seven unless a witnessed, explained change restored it.
+- No character acts on knowledge they do not have; secrets travel only through events.
+- Time never contradicts itself: three threads may interweave, but their order stays possible.
+- A resolution, once reached, is never paraphrased again — later pages introduce genuine new development or they do not belong.
+- The final sentence of a book is written once: never re-echo a closing cadence already used, never re-declare a mystery already closed.
+- Before returning pages, silently audit them against the ledger: mend every contradiction, repeated image and broken rule BEFORE the pages leave the loom.
+
+THE HONEST CRAFT
+- Ten out of ten is exceptionally rare — mastery demonstrated, never fluent language alone; the channel never grades itself inside the book's pages.
+- Dialogue sometimes conceals intent, generates friction, reveals asymmetry of knowledge, or changes a relationship; characters can disagree intelligently, and none is a dummy carrying the story's thesis. Allow small, ordinary, intimate details inside extraordinary worlds — readers must meet people, not ceremonial witnesses to scenery.
+- Vary paragraph length, cadence, sentence structures and scene types; before accepting a metaphor ask whether it improves perception or only decorates; limit stacked similes; keep short, clear sentences available at the key turns; let the sensory channels take turns instead of overusing smell or mineral textures; treat unusual words and invented names as tools, not proof of quality.
+
 THE THREAD (story memory)
 - With every weaving you return a "thread": a compact living summary of the volume so far — who the characters are, what they carry, what has changed, what remains open, the emotional key you are playing, and the stratum the book is walking through. It is the loom's memory; guard it well and keep it under 130 words.`;
 }
@@ -342,8 +384,14 @@ function buildUserPrompt(body: {
   resonance?: string;
   /* THE GROUND LAW — the visitor's own words outrank the shapes */
   ground?: { tale?: string; short: boolean; tiny: boolean };
+  /* THE LEDGER (V10) — the book's own durable memory, handed back */
+  ledger?: BookLedger | null;
+  /* THE SPAN — how many pages one continuation writes (2 by default;
+     the whole-book reveal strides four at a time) */
+  span?: number;
 }): string {
   const { phase, age, tale, volume, topic, wishes, languageName, rewrites } = body;
+  const span = Math.min(4, Math.max(2, Math.round(body.span ?? 2)));
   const ageLine = AGE_PLAN[age] ?? AGE_PLAN.timeless;
   const taleLine = TALE_HINTS[tale] ?? TALE_HINTS.wonder;
   const volLine = BOOK_PLAN[volume] ?? BOOK_PLAN.classic;
@@ -454,6 +502,7 @@ function buildUserPrompt(body: {
         : []),
       ...(isVerse ? [``, VERSE_LAW] : []),
       body.threads ? `- THE THREAD (everything the volume remembers): ${body.threads}` : "",
+      ...(body.ledger ? [ledgerBlock(body.ledger)] : []),
       body.recentPages?.length
         ? `- THE PAGES JUST READ (continue seamlessly from exactly this voice and moment — never re-tell them, never contradict them):\n"""${body.recentPages.join("\n\n").slice(-2600)}"""`
         : "",
@@ -464,8 +513,8 @@ function buildUserPrompt(body: {
       ``,
       SEALED_NAME_LAW,
       ``,
-      `Write the NEXT TWO pages (pages ${body.pageNumber} and ${(body.pageNumber ?? 2) + 1}) of the same volume, in the same voice. Let the book deepen: a new turn, a revelation earned by what came before, the world growing one ring wider. Open a new chapter here ONLY if the loom's rhythm asks for it.`,
-      `Return the updated thread.`
+      `Write the NEXT ${span === 2 ? "TWO pages" : `${span} pages`} (pages ${body.pageNumber} through ${(body.pageNumber ?? 2) + span - 1}) of the same volume, in the same voice. Let the book deepen: a new turn, a revelation earned by what came before, the world growing one ring wider. Open a new chapter here ONLY if the loom's rhythm asks for it.`,
+      `Return the updated thread and the updated ledger.`
     );
   } else if (phase === "extend") {
     lines.push(
@@ -475,6 +524,7 @@ function buildUserPrompt(body: {
       ...(levelLine ? [`- Depth of lecture: ${levelLine}`] : []),
       ...(isVerse ? [``, VERSE_LAW] : []),
       body.threads ? `- THE THREAD (everything the volume remembers): ${body.threads}` : "",
+      ...(body.ledger ? [ledgerBlock(body.ledger)] : []),
       body.recentPages?.length
         ? `- THE PAGES JUST READ:\n"""${body.recentPages.join("\n\n").slice(-2600)}"""`
         : "",
@@ -491,7 +541,7 @@ function buildUserPrompt(body: {
         isShortVolume
           ? "add 6 to 10 pages (a multiple of 2), never exceeding 40 total — this volume stays a short book"
           : "add 48 to 72 pages (a multiple of 2), never exceeding 300 total"
-      }. Then write the NEXT TWO pages (pages ${body.pageNumber} and ${(body.pageNumber ?? 2) + 1}) — open the widened volume with a new movement: a farther shore of the subject, not a repetition. Give a chapter title if a new chapter begins here. Return the updated thread.`
+      }. Then write the NEXT TWO pages (pages ${body.pageNumber} and ${(body.pageNumber ?? 2) + 1}) — open the widened volume with a new movement: a farther shore of the subject, not a repetition. Give a chapter title if a new chapter begins here. Return the updated thread and the updated ledger.`
     );
   } else {
     lines.push(
@@ -500,6 +550,7 @@ function buildUserPrompt(body: {
       ...(levelLine ? [`- Depth of lecture: ${levelLine}`] : []),
       ...(isVerse ? [``, VERSE_LAW] : []),
       body.threads ? `- THE THREAD (everything the volume remembers): ${body.threads}` : "",
+      ...(body.ledger ? [ledgerBlock(body.ledger)] : []),
       body.recentPages?.length
         ? `- THE PAGES JUST READ:\n"""${body.recentPages.join("\n\n").slice(-2600)}"""`
         : "",
@@ -510,7 +561,7 @@ function buildUserPrompt(body: {
       ``,
       SEALED_NAME_LAW,
       ``,
-      `Land every open thread with tenderness and truth — the ending must feel inevitable, as if the whole book had been walking toward exactly these pages, and the final cadence must leave an indelible afterimage: the reader should close the book feeling it continues to evolve in their mind. The last paragraph of the final page is the book's final breath; make it sing softly enough to be remembered for years. On page ${body.pageNumber}, open the final chapter (give it a title) if the rhythm asks. Return the updated thread.`
+      `Land every open thread with tenderness and truth — the ending must feel inevitable, as if the whole book had been walking toward exactly these pages, and the final cadence must leave an indelible afterimage: the reader should close the book feeling it continues to evolve in their mind. The last paragraph of the final page is the book's final breath; make it sing softly enough to be remembered for years. On page ${body.pageNumber}, open the final chapter (give it a title) if the rhythm asks. The ending must be an ENDING — no re-declared resolutions, no closing cadence the book has already sung. Return the updated thread, the final ledger, and the private audit.`
     );
   }
 
@@ -530,8 +581,15 @@ function buildUserPrompt(body: {
   lines.push(
     ``,
     `OUTPUT FORMAT — return STRICT JSON only, no markdown fences, no text outside the JSON:`,
-    `{"title":"<book title — only in phase open>","subtitle":"<one line — only in phase open>","sigil":"<one short invocation line tuned to the subject — only in phase open>","axiom":"<one crystallizing sentence: why this volume is conjured now — only in phase open>","dedication":"<1–2 sentences — only in phase open>","totalPages":<number — in phase open or extend, or in a continuation ONLY when the rewriting hand explicitly asks for a different length>,"threads":"<the compact living memory of the volume so far>","pages":[{"n":<page number>,"chapter":"<chapter title — only if a chapter opens on this page>","paragraphs":["<paragraph 1>","<paragraph 2>"]}]}`,
-    `Rules: exactly TWO page objects, in order, numbered ${phase === "open" ? "1 and 2" : `${body.pageNumber} and ${(body.pageNumber ?? 2) + 1}`}. Each page carries 1–3 paragraphs (young readers: shorter paragraphs; grown: fuller). "chapter" is a plain title without the word "Chapter" — given ONLY when a genuinely new chapter opens on that page (a new chapter every 10–16 pages AT MOST; most page-pairs carry NO chapter at all; NEVER repeat a chapter title already given — a page must not wear a chapter it did not open). Page text is pure prose — no headings, no markdown, no asterisks, no emojis. In verse forms a paragraph string may contain real line breaks (\\n) so every verse line sits on its own line. The channel is open: manifest the book.${strictJsonLine(languageName)}`
+    `{"title":"<book title — only in phase open>","subtitle":"<one line — only in phase open>","sigil":"<one short invocation line tuned to the subject — only in phase open>","axiom":"<one crystallizing sentence: why this volume is conjured now — only in phase open>","dedication":"<1–2 sentences — only in phase open>","totalPages":<number — in phase open or extend, or in a continuation ONLY when the rewriting hand explicitly asks for a different length>,"threads":"<the compact living memory of the volume so far>","ledger":{"brief":{"premise":"<one line>","question":"<one line>","dilemma":"<one line>","chain":"<one line>","ending":"<one line — the desired effect on the reader>"},"canon":["<world rule>"],"characters":["<Name — desire, wound, state, who knows what>"],"objects":["<object — state (page changed)>"],"timeline":["<event — when, where>"],"promises":["<foreshadowing / open promise>"],"motifs":["<recurring image — its developing meaning>"],"chapters":[{"title":"<chapter>","pages":"<n–m>","summary":"<one line>"}]},"pages":[{"n":<page number>,"chapter":"<chapter title — only if a chapter opens on this page>","paragraphs":["<paragraph 1>","<paragraph 2>"]}]${phase === "close" ? `,"audit":{"prose":{"score":<0–10>,"evidence":"<one line from the finished writing>"},"originality":{...},"worldbuilding":{...},"character":{...},"structure":{...},"emotion":{...},"philosophy":{...},"pacing":{...},"continuity":{...},"endings":{...}}` : ""}}`,
+    `Rules: exactly ${span === 2 ? `TWO page objects, in order, numbered ${phase === "open" ? "1 and 2" : `${body.pageNumber} and ${(body.pageNumber ?? 2) + 1}`}` : `${span} page objects, in order, numbered ${body.pageNumber} through ${(body.pageNumber ?? 2) + span - 1}`}. Each page carries 1–3 paragraphs (young readers: shorter paragraphs; grown: fuller). "chapter" is a plain title without the word "Chapter" — given ONLY when a genuinely new chapter opens on that page (a new chapter every 10–16 pages AT MOST; most page-pairs carry NO chapter at all; NEVER repeat a chapter title already given — a page must not wear a chapter it did not open). Page text is pure prose — no headings, no markdown, no asterisks, no emojis. In verse forms a paragraph string may contain real line breaks (\\n) so every verse line sits on its own line.`,
+    phase === "open"
+      ? `The "ledger" is REQUIRED in this opening: fill it with the private brief and every canon line, character, object, promise and motif the first pages establish — the room keeps it and hands it back at every continuation.`
+      : `The "ledger" is REQUIRED: carry forward EVERY line you received, updated by what these new pages changed — a line that still holds is never dropped, objects keep their state, paid promises are marked paid, and the new chapter (if any) is appended to "chapters".`,
+    phase === "close"
+      ? `The "audit" is REQUIRED in this closing phase: the private, honest editorial report on the FINISHED volume — ten dimensions, each scored 0–10 (10 is exceptionally rare; never award it by habit) with ONE line of evidence drawn from the actual writing. It lives outside the book and is never printed in its pages.`
+      : "",
+    `The channel is open: manifest the book.${strictJsonLine(languageName)}`
   );
 
   return lines.filter((l) => l !== "").join("\n");
@@ -556,10 +614,10 @@ function extractJson(raw: string): Record<string, unknown> | null {
   }
 }
 
-function normalizePages(raw: unknown, startN: number): WeavePage[] {
+function normalizePages(raw: unknown, startN: number, span = 2): WeavePage[] {
   if (!Array.isArray(raw)) return [];
   const pages: WeavePage[] = [];
-  raw.slice(0, 2).forEach((p, i) => {
+  raw.slice(0, span).forEach((p, i) => {
     if (!p || typeof p !== "object") return;
     const obj = p as Record<string, unknown>;
     const paragraphs = Array.isArray(obj.paragraphs)
@@ -630,6 +688,14 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
     const taleKey = ground.tale ?? tale;
 
     const threads = typeof body?.threads === "string" ? body.threads.slice(0, 2000) : undefined;
+    /* THE LEDGER (V10) — the room hands the book's own memory back */
+    const incomingLedger = parseLedger(body?.ledger);
+    /* THE SPAN — the whole-book reveal strides four pages at a time;
+       every other call writes the classic pair */
+    const spanRaw = Number(body?.span);
+    const span = phase === "next" && Number.isFinite(spanRaw)
+      ? Math.min(4, Math.max(2, Math.round(spanRaw)))
+      : 2;
     const rewrites: string[] = Array.isArray(body?.rewrites)
       ? body.rewrites
           .filter((s: unknown): s is string => typeof s === "string")
@@ -730,6 +796,8 @@ THE NAME LAW WAS BROKEN: your reply used the forbidden stock name(s): ${violatio
                 charter,
                 resonance: resonance ? resonanceCharter(resonance) : undefined,
                 ground,
+                ledger: incomingLedger,
+                span,
               }) +
               violationBlock +
               (reminder
@@ -763,10 +831,10 @@ THE NAME LAW WAS BROKEN: your reply used the forbidden stock name(s): ${violatio
     };
 
     let parsed = extractJson(await channelReply(false));
-    let pages = parsed ? normalizePages(parsed.pages, pageNumber) : [];
+    let pages = parsed ? normalizePages(parsed.pages, pageNumber, span) : [];
     if (pages.length === 0) {
       parsed = extractJson(await channelReply(true));
-      pages = parsed ? normalizePages(parsed.pages, pageNumber) : [];
+      pages = parsed ? normalizePages(parsed.pages, pageNumber, span) : [];
     }
     if (!parsed || pages.length === 0) {
       return NextResponse.json(
@@ -775,14 +843,25 @@ THE NAME LAW WAS BROKEN: your reply used the forbidden stock name(s): ${violatio
       );
     }
 
+    /* THE LEDGER — the reply's own memory merged over the room's: a
+       line that still holds is never dropped */
+    const mergedLedger = mergeLedger(incomingLedger, parseLedger(parsed.ledger));
+
     const out: Record<string, unknown> = {
       pages,
       threads:
         typeof parsed.threads === "string" && parsed.threads.trim()
           ? parsed.threads.trim().slice(0, 2000)
           : threads ?? "",
+      ...(mergedLedger ? { ledger: mergedLedger } : {}),
       ended: phase === "close",
     };
+
+    /* THE HONEST AUDIT — the closing volume carries its private report */
+    if (phase === "close") {
+      const audit = parseAudit(parsed.audit);
+      if (audit) out.audit = audit;
+    }
 
     if (phase === "open") {
       out.title =
@@ -841,6 +920,7 @@ THE NAME LAW WAS BROKEN: your reply used the forbidden stock name(s): ${violatio
           totalPages: out.totalPages,
           pages,
           threads: out.threads,
+          ...(mergedLedger ? { ledger: mergedLedger } : {}),
           ended: false,
           /* the volume's own birth echo — kept FOR the visitor alone,
              never read back by the mirror: creation consults nothing */
@@ -886,6 +966,7 @@ THE NAME LAW WAS BROKEN: your reply used the forbidden stock name(s): ${violatio
                 : undefined,
           pages: [...bookPages, ...pages],
           threads: out.threads,
+          ...(mergedLedger ? { ledger: mergedLedger } : {}),
           ended: phase === "close" ? true : Boolean(bookMeta?.ended),
         },
         400000

@@ -1350,6 +1350,36 @@ html:not(.dark) .scope-lightcodes {
   animation: shimmer-line 2.2s linear infinite;
 }
 
+/* THE WHOLE-BOOK REVEAL — the quill dips to the page and lifts again
+   while the loom channels the volume in one breath; the dashed ring
+   turns slowly around it (transform + opacity only — the GPU's own) */
+@keyframes ink-pour {
+  0%,
+  100% {
+    transform: rotate(-14deg) translateY(0) scale(1);
+  }
+  45% {
+    transform: rotate(10deg) translateY(4px) scale(0.94);
+  }
+  60% {
+    transform: rotate(10deg) translateY(5px) scale(0.92);
+  }
+}
+@keyframes ink-turn {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+.ink-pour-anim {
+  animation: ink-pour 2.4s ease-in-out infinite;
+}
+.ink-turn-anim {
+  animation: ink-turn 9s linear infinite;
+}
+
 /* the composer's quill — a neutral ink disc, like the send law */
 .akashic-btn {
   background: var(--foreground);
@@ -1490,6 +1520,10 @@ html:not(.dark) .scope-lightcodes {
 @media (prefers-reduced-motion: reduce) {
   .book-spine {
     transition: none !important;
+  }
+  .ink-pour-anim,
+  .ink-turn-anim {
+    animation: none !important;
   }
 }
 

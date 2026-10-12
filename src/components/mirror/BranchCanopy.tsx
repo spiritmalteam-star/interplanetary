@@ -213,8 +213,9 @@ const TOOL_LABELS: Record<CreationDoor, string> = {
   invent: "Invent",
 };
 /** The share of whispers that carry a tool (the visitor asked for
-    about 10–15 percent — thirteen of every hundred). */
-const TOOL_SHARE = 13;
+    about 10–15 percent — eleven of every hundred keeps the visible
+    ratio, golden and creation chips excluded, inside the band). */
+const TOOL_SHARE = 11;
 
 /* the walk's own hash — the doors are random to the eye, honest to
    the hour (the same hour grows the same doors) */
@@ -567,7 +568,7 @@ const TreeCanvas = memo(function TreeCanvas({
   disabled,
   onPick,
   onTool,
-  tools,
+  tools = [],
   sentinelRef,
   rootSentinelRef,
   testIdPrefix,
@@ -1247,7 +1248,7 @@ export function BranchCanopy({
   const applyMix = useMirror((s) => s.setTreeMix);
   /* the crown's two quiet dropdowns — the kategories of the walk and
      the worlds of the house */
-  const [crownMenu, setCrownMenu] = useState<"cats" | "worlds" | null>(null);
+  const [crownMenu, setCrownMenu] = useState<"cats" | "menu" | null>(null);
 
   /* one touch folds a family out of the grove, or weaves it back in —
      the walk never walks empty (the last family always stays) */
@@ -1634,7 +1635,7 @@ export function BranchCanopy({
        sprouts from a branch MID-TREE (a donor of the already-standing
        canopy): the wings breathe left and right at every height, and
        the walk spreads in all directions instead of piling skyward. */
-    let tips = tree.frontier;
+    let tips: { id: string }[] = tree.frontier;
     if (wing && topologies.length >= 4) {
       const donorIdx = Math.max(0, Math.floor(topologies.length / 2) - 1);
       const donor = topologies[donorIdx];
@@ -1985,11 +1986,13 @@ export function BranchCanopy({
       }
     }
     if (prevSize.current.h === 0 || dH < 0) {
-      /* THE FLOOR — the trunk base rests at the seed, the stem's line
-         down the middle of the realm, the undergrove waiting below */
+      /* THE FLOOR — the seed holds the middle: the trunk's base rests
+         at the seed's own heart (container/2 + 3.4rem + half the
+         sigil), the crown rising above it and the undergrove waiting
+         just below the fold */
       vp.scrollTop = Math.max(
         0,
-        trunkBaseY * treeZoom - vp.clientHeight + 14
+        trunkBaseY * treeZoom - (vp.clientHeight / 2 + 110)
       );
       vp.scrollLeft = trunkScrollLeft();
     } else if (dH > 0 && trunkMoved) {
@@ -3146,7 +3149,10 @@ export function BranchCanopy({
                 narrow={narrow}
                 disabled={disabled}
                 onPick={pick}
+                onTool={openTool}
+                tools={tools}
                 sentinelRef={sentinelRef}
+                rootSentinelRef={rootSentinelRef}
                 testIdPrefix={testIdPrefix}
               />
             </div>

@@ -15,9 +15,11 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowLeft,
   AudioLines,
+  BookOpenText,
   Check,
   ChevronsUpDown,
   Copy,
+  Download,
   Feather,
   History,
   LoaderCircle,
@@ -57,6 +59,9 @@ import {
 } from "@/lib/book-shelf";
 import type { DreamBookResume } from "@/lib/mirror-store";
 import type { VoiceId } from "@/lib/i18n/core";
+import type { BookAudit, BookLedger } from "@/lib/book-ledger";
+import { AUDIT_DIMENSIONS } from "@/lib/book-ledger";
+import { downloadBookPdf } from "@/lib/book-pdf";
 import { cn } from "@/lib/utils";
 
 /* ------------------------------------------------------------------ */
@@ -182,6 +187,29 @@ export function DreamBookView() {
   const [rewriteDraft, setRewriteDraft] = useState("");
   const [rewrites, setRewrites] = useState<string[]>([]);
 
+  /* ---- the whole book (V10 + the full reveal) ----
+     THE LEDGER — the volume's own durable memory (canon, characters,
+     objects, chronology, promises, motifs), handed to the loom at
+     every continuation and kept here while the volume lives. */
+  const ledgerRef = useRef<BookLedger | null>(null);
+  /* the ledgers of the kept volumes, remembered per book id so a
+     volume brought back from the shelf continues with its bones */
+  const ledgerByBookRef = useRef<Map<string, BookLedger>>(new Map());
+  /* the whole-book reveal — channeling every remaining page in one
+     unbroken breath, with the loom's progress spoken while it works */
+  const [wholeReveal, setWholeReveal] = useState<{
+    woven: number;
+    total: number;
+  } | null>(null);
+  /* the whole-book reading — every woven page in one continuous scroll */
+  const [wholeMode, setWholeMode] = useState(false);
+  /* the loom's private honest audit — carried from the close and kept
+     OUT of the book unless the reader asks to see it */
+  const [audit, setAudit] = useState<BookAudit | null>(null);
+  const [auditOpen, setAuditOpen] = useState(false);
+  /* the binding press — while the PDF is gathered */
+  const [binding, setBinding] = useState(false);
+
   const pagesRef = useRef<WeavePage[]>([]);
   const threadsRef = useRef("");
   const metaRef = useRef<BookMeta | null>(null);
@@ -265,6 +293,8 @@ export function DreamBookView() {
       threadsRef.current = r.threads;
       metaRef.current = { ...r.meta };
       endedRef.current = r.ended;
+      /* the volume's bones return with it — the ledger kept per book */
+      ledgerRef.current = ledgerByBookRef.current.get(r.bookId) ?? null;
       configRef.current = {
         age: r.config.age,
         tale: r.config.tale,
@@ -397,6 +427,11 @@ export function DreamBookView() {
           .map((e) => {
             const c = e.content as Record<string, unknown>;
             const cfg = (c.config ?? {}) as Record<string, unknown>;
+            /* the volume's bones ride in its own entry — kept per book
+               id so a resumed volume continues with its ledger */
+            if (c.ledger && typeof c.ledger === "object") {
+              ledgerByBookRef.current.set(e.id, c.ledger as BookLedger);
+            }
             return {
               bookId: e.id,
               title: String(c.title ?? e.title ?? "A Dream Book"),
@@ -504,7 +539,8 @@ export function DreamBookView() {
   const weave = useCallback(
     async (
       phase: "open" | "next" | "close" | "extend",
-      pageNumber: number
+      pageNumber: number,
+      span = 2
     ): Promise<boolean> => {
       if (weavingRef.current) return false;
       weavingRef.current = true;
@@ -552,6 +588,12 @@ export function DreamBookView() {
             : {}),
           ...carrying,
           threads: threadsRef.current || undefined,
+          /* THE LEDGER (V10) — the volume's own bones ride back */
+          ...(phase !== "open" && ledgerRef.current
+            ? { ledger: ledgerRef.current }
+            : {}),
+          /* THE SPAN — the whole-book reveal strides four at a time */
+          ...(span > 2 ? { span } : {}),
           recentPages: recent.length ? recent : undefined,
           pageNumber,
           totalPages: metaRef.current?.totalPages,
@@ -587,6 +629,18 @@ export function DreamBookView() {
         /* a fresh volume's place in the library rides home with it */
         if (phase === "open" && typeof data.libraryId === "string") {
           bookIdRef.current = data.libraryId;
+        }
+
+        /* THE LEDGER — the loom's updated memory of the volume */
+        if (data.ledger && typeof data.ledger === "object") {
+          ledgerRef.current = data.ledger as BookLedger;
+          if (bookIdRef.current) {
+            ledgerByBookRef.current.set(bookIdRef.current, ledgerRef.current);
+          }
+        }
+        /* THE HONEST AUDIT — carried privately from the close */
+        if (phase === "close" && data.audit && typeof data.audit === "object") {
+          setAudit(data.audit as BookAudit);
         }
 
         const fresh: WeavePage[] = data.pages;
@@ -745,16 +799,16 @@ export function DreamBookView() {
     [limitIdx, stopNarration]
   );
 
-  /* keyboard page turns */
+  /* keyboard page turns (the whole-book reading scrolls freely) */
   useEffect(() => {
-    if (stage !== "reading") return;
+    if (stage !== "reading" || wholeMode) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "ArrowRight") goPage(1);
       if (e.key === "ArrowLeft") goPage(-1);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [stage, goPage]);
+  }, [stage, wholeMode, goPage]);
 
   const newDream = useCallback(() => {
     stopNarration();
@@ -765,6 +819,7 @@ export function DreamBookView() {
     endedRef.current = false;
     rewritesRef.current = [];
     bookIdRef.current = "";
+    ledgerRef.current = null;
     setPages([]);
     setMeta(null);
     setEnded(false);
@@ -776,6 +831,10 @@ export function DreamBookView() {
     setTopic("");
     setTopicDraft("");
     setLevel("");
+    setAudit(null);
+    setAuditOpen(false);
+    setWholeMode(false);
+    setWholeReveal(null);
     setStage("atelier");
   }, [stopNarration, keepCurrent]);
 
@@ -788,6 +847,72 @@ export function DreamBookView() {
     const ok = await weave("close", pagesRef.current.length + 1);
     if (ok) setPageIdx((s) => s + 1);
   }, [weave]);
+
+  /* ---------------- THE WHOLE BOOK — one unbroken channeling --------
+     The visitor no longer turns the loom's crank two pages at a time:
+     one touch and the loom weaves every remaining page of the volume,
+     a stride of four at a time, the thread and the ledger riding
+     beneath every stride — and the progress spoken while it works.
+     When the last page lands, the whole book stands open at once. */
+  const revealWholeBook = useCallback(async () => {
+    if (weavingRef.current || wholeReveal || !metaRef.current) return;
+    stopNarration();
+    setWholeMode(false);
+    const total = metaRef.current.totalPages;
+    setWholeReveal({ woven: pagesRef.current.length, total });
+    try {
+      /* a generous guard: three hundred strides are more than any
+         volume can ask for — the loop always ends by the book's own
+         plan or the loom's honest silence before it matters */
+      for (let stride = 0; stride < 160; stride++) {
+        const have = pagesRef.current.length;
+        const plan = metaRef.current?.totalPages ?? total;
+        if (endedRef.current || have >= plan + 1) break;
+        setWholeReveal({ woven: have, total: plan });
+        if (have >= plan) {
+          /* the planned end reached — the Seal of Closing is woven */
+          const ok = await weave("close", have + 1);
+          if (!ok) break;
+          continue;
+        }
+        const ok = await weave("next", have + 1, 4);
+        if (!ok) break;
+      }
+    } finally {
+      setWholeReveal(null);
+      setWholeMode(true);
+      if (navigator.vibrate) navigator.vibrate(18);
+    }
+  }, [weave, wholeReveal, stopNarration]);
+
+  /* THE BINDING PRESS — the whole book, pages and front matter, bound
+     into one ink PDF and handed to the visitor's own hands */
+  const downloadWhole = useCallback(async () => {
+    if (binding || !meta || pagesRef.current.length === 0) return;
+    setBinding(true);
+    try {
+      await downloadBookPdf(
+        {
+          title: meta.title,
+          subtitle: meta.subtitle,
+          sigil: meta.sigil,
+          axiom: meta.axiom,
+          dedication: meta.dedication,
+          totalPages: meta.totalPages,
+        },
+        dedupeChapters(pagesRef.current).map((p) => ({
+          n: p.n,
+          ...(p.chapter ? { chapter: p.chapter } : {}),
+          paragraphs: p.paragraphs,
+        }))
+      );
+      toast.success(t("The book is bound — the PDF is yours"));
+    } catch {
+      toast.error(t("The binding press needs a breath — try again"));
+    } finally {
+      setBinding(false);
+    }
+  }, [binding, meta, t]);
 
   /* ---------------- the narrator ---------------- */
 
@@ -1344,6 +1469,39 @@ export function DreamBookView() {
               />
             )}
           </button>
+          {/* THE WHOLE BOOK — one touch channels every remaining page
+              in one unbroken breath; when the volume is already
+              complete, the same touch simply opens it whole */}
+          <button
+            type="button"
+            onClick={() => void revealWholeBook()}
+            disabled={!!wholeReveal || weavingNext}
+            aria-label={t("Whole book")}
+            title={t("Whole book")}
+            data-testid="dream-whole-reveal"
+            className="dream-fancy focus-glow relative flex h-9 items-center gap-1.5 rounded-full pl-3 pr-3.5 disabled:opacity-55"
+          >
+            <BookOpenText className="size-3.5" aria-hidden="true" />
+            <span className="hidden font-[family-name(var(--font-literata))] text-[12.5px] italic tracking-wide sm:inline">
+              {t("Whole book")}
+            </span>
+          </button>
+          {/* THE BINDING PRESS — the whole book as one PDF */}
+          <button
+            type="button"
+            onClick={() => void downloadWhole()}
+            disabled={binding || pages.length === 0}
+            aria-label={t("Download the whole book")}
+            title={t("Download the whole book")}
+            data-testid="dream-download"
+            className={cn(inkIconBtn, "disabled:opacity-35")}
+          >
+            {binding ? (
+              <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
+            ) : (
+              <Download className="size-4" aria-hidden="true" />
+            )}
+          </button>
           <button
             type="button"
             onClick={() => void narrate()}
@@ -1453,12 +1611,80 @@ export function DreamBookView() {
       </header>
 
       {/* the book itself — one page at a time, sliding, each page
-          stretching the full height of the screen once revealed */}
+          stretching the full height of the screen once revealed — or,
+          in the whole-book reading, every woven page in one continuous
+          column the visitor scrolls like a real bound volume */}
       <div
-        {...readerScroll}
+        {...(wholeMode ? {} : readerScroll)}
         className="nice-scroll relative z-10 min-h-0 flex-1 overflow-y-auto overscroll-contain"
       >
-        <div className="mx-auto flex h-full w-full max-w-[760px] items-stretch justify-center px-3 pb-7 pt-3 sm:px-8 sm:pb-9">
+        {wholeMode ? (
+          /* THE WHOLE BOOK — the title leaf, every woven page and the
+             seal of closing in one quiet column */
+          <div className="mx-auto w-full max-w-[700px] px-3 pb-24 pt-3 sm:px-8">
+            <div
+              className="dream-page dream-page-single mb-7 flex flex-col items-center px-6 py-12 text-center sm:px-12"
+              data-testid="dream-whole-title"
+            >
+              <span
+                className="font-[family-name(var(--font-literata))] text-2xl text-[var(--dream-ink-faint)]"
+                aria-hidden="true"
+              >
+                ❧
+              </span>
+              {meta?.sigil && (
+                <p className="mt-4 max-w-[360px] font-[family-name(var(--font-literata))] text-[12.5px] italic leading-relaxed text-[var(--dream-ink-soft)]">
+                  {meta.sigil}
+                </p>
+              )}
+              <h2 className="mt-5 max-w-[360px] font-[family-name(var(--font-literata))] text-[26px] leading-snug text-[var(--dream-ink)] sm:text-[32px]">
+                {meta?.title}
+              </h2>
+              {meta?.subtitle && (
+                <p className="mt-3 font-[family-name(var(--font-literata))] text-[13px] italic text-[var(--dream-ink-soft)] sm:text-sm">
+                  {meta.subtitle}
+                </p>
+              )}
+              {meta?.axiom && (
+                <p className="mt-5 max-w-[400px] font-[family-name(var(--font-literata))] text-[12.5px] italic leading-relaxed text-[var(--dream-ink-soft)]">
+                  {meta.axiom}
+                </p>
+              )}
+              {meta?.dedication && (
+                <p className="mt-3 max-w-[300px] font-[family-name(var(--font-literata))] text-[12px] italic leading-relaxed text-[var(--dream-ink-soft)]">
+                  {meta.dedication}
+                </p>
+              )}
+            </div>
+            {displayPages.map((p) => (
+              <BookPage
+                key={`whole-${p.n}`}
+                page={p}
+                fontSize={ZOOM_STEPS[zoom]}
+              />
+            ))}
+            <div className="dream-page dream-page-single mt-7 flex flex-col items-center px-6 py-12 text-center">
+              <span
+                className="font-[family-name(var(--font-literata))] text-4xl text-[var(--dream-ink-soft)]"
+                aria-hidden="true"
+              >
+                ❦
+              </span>
+              <h2 className="mt-5 font-[family-name(var(--font-literata))] text-[24px] text-[var(--dream-ink)]">
+                {t("The End")}
+              </h2>
+              <p className="mt-2 font-[family-name(var(--font-literata))] text-[13.5px] italic text-[var(--dream-ink-soft)]">
+                {meta?.title}
+              </p>
+              {!ended && (
+                <p className="mono-label mt-3 text-[9px] uppercase tracking-[0.2em] text-[var(--dream-ink-faint)]">
+                  {t("The loom is still weaving — the book returns whole when the seal lands")}
+                </p>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="mx-auto flex h-full w-full max-w-[760px] items-stretch justify-center px-3 pb-7 pt-3 sm:px-8 sm:pb-9">
           <div className="relative flex min-h-full w-full max-w-[640px] flex-col">
             {/* the slide buttons — desktop (the previous one rests while
                 the reading is immersed — only the next page remains) */}
@@ -1554,6 +1780,51 @@ export function DreamBookView() {
                       <MoonStar className="size-4" aria-hidden="true" />
                       {t("Begin a new dream")}
                     </button>
+                    {/* THE HONEST AUDIT — the loom's private report on
+                        the finished volume, kept outside the book and
+                        revealed only when the reader asks */}
+                    {audit && (
+                      <div className="mt-7 w-full max-w-[420px]">
+                        <button
+                          type="button"
+                          onClick={() => setAuditOpen((o) => !o)}
+                          aria-expanded={auditOpen}
+                          data-testid="dream-audit-toggle"
+                          className="focus-glow mx-auto flex h-9 items-center gap-2 rounded-full border border-[var(--dream-ink-faint)]/35 px-4 font-[family-name(var(--font-literata))] text-[12px] italic text-[var(--dream-ink-soft)] transition-all duration-300 hover:border-[var(--dream-ink-soft)] hover:text-[var(--dream-ink)]"
+                        >
+                          <Feather className="size-3.5" aria-hidden="true" />
+                          {t("The loom's honest audit")}
+                          <ChevronsUpDown className="size-3 opacity-60" aria-hidden="true" />
+                        </button>
+                        {auditOpen && (
+                          <ul
+                            className="nice-scroll mt-4 max-h-[38vh] space-y-1.5 overflow-y-auto text-left"
+                            data-testid="dream-audit-list"
+                          >
+                            {AUDIT_DIMENSIONS.map(({ key, label }) =>
+                              audit[key] ? (
+                                <li
+                                  key={key}
+                                  className="rounded-xl border border-[var(--dream-ink-faint)]/25 px-3 py-2"
+                                >
+                                  <p className="flex items-baseline justify-between gap-2">
+                                    <span className="font-[family-name(var(--font-literata))] text-[12px] text-[var(--dream-ink-soft)]">
+                                      {t(label)}
+                                    </span>
+                                    <span className="mono-label text-[10px] tabular-nums text-[var(--dream-ink)]">
+                                      {audit[key]!.score}/10
+                                    </span>
+                                  </p>
+                                  <p className="mt-1 font-[family-name(var(--font-literata))] text-[11.5px] italic leading-relaxed text-[var(--dream-ink-soft)]">
+                                    {audit[key]!.evidence}
+                                  </p>
+                                </li>
+                              ) : null
+                            )}
+                          </ul>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ) : pageIdx === 0 ? (
                   /* the title page — the Liminal Threshold, one leaf,
@@ -1639,11 +1910,40 @@ export function DreamBookView() {
               )}
             </AnimatePresence>
           </div>
-        </div>
+          </div>
+        )}
       </div>
+
+      {/* THE WHOLE BOOK'S OWN RETURN — a floating hand that folds the
+          continuous volume back into page-by-page reading */}
+      <AnimatePresence>
+        {wholeMode && (
+          <motion.button
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 16 }}
+            transition={{ duration: 0.35, ease: "easeOut" }}
+            type="button"
+            onClick={() => {
+              setWholeMode(false);
+              setPageIdx(Math.min(pageIdx, Math.max(1, pages.length)));
+            }}
+            aria-label={t("Read page by page")}
+            title={t("Read page by page")}
+            data-testid="dream-whole-return"
+            className="dream-turn focus-glow absolute bottom-6 right-5 z-30 flex h-11 items-center gap-2 rounded-full px-4"
+          >
+            <BookOpenText className="size-4" aria-hidden="true" />
+            <span className="font-[family-name(var(--font-literata))] text-[12px] italic">
+              {t("Read page by page")}
+            </span>
+          </motion.button>
+        )}
+      </AnimatePresence>
 
       {/* the progress thread + the slide buttons (they rest while the
           reading is immersed — the page alone fills the screen) */}
+      {!wholeMode && (
       <footer
         className={cn(
           "relative z-20 shrink-0 overflow-hidden px-4 transition-all duration-500",
@@ -1692,12 +1992,13 @@ export function DreamBookView() {
           </button>
         </div>
       </footer>
+      )}
 
       {/* the one button that remains while immersed — the next page,
           floating alone over the reading; beside it, the voice toggle
           so the reading aloud follows the visitor onto every page */}
       <AnimatePresence>
-        {immersed && canNext && (
+        {immersed && canNext && !wholeMode && (
           <motion.button
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
@@ -1714,7 +2015,7 @@ export function DreamBookView() {
         )}
       </AnimatePresence>
       <AnimatePresence>
-        {immersed && (
+        {immersed && !wholeMode && (
           <motion.button
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
@@ -1755,6 +2056,63 @@ export function DreamBookView() {
               <VolumeX className="size-5" aria-hidden="true" />
             )}
           </motion.button>
+        )}
+      </AnimatePresence>
+
+      {/* THE WHOLE-BOOK REVEAL — the loom channels every remaining page
+          in one unbroken breath: the quill dips, the ring turns, and
+          the progress of the weaving is spoken while it works */}
+      <AnimatePresence>
+        {wholeReveal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
+            data-testid="dream-whole-overlay"
+            className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-[color-mix(in_srgb,var(--background)_94%,transparent)] px-6 backdrop-blur-[3px]"
+            role="status"
+            aria-live="polite"
+          >
+            <div className="relative flex size-20 items-center justify-center">
+              <span
+                aria-hidden="true"
+                className="ink-turn-anim absolute inset-0 rounded-full border border-dashed border-foreground/25"
+              />
+              <span
+                aria-hidden="true"
+                className="absolute inset-3 rounded-full border border-foreground/12"
+              />
+              <Feather
+                className="ink-pour-anim size-8 text-foreground/80"
+                aria-hidden="true"
+              />
+            </div>
+            <p className="mono-label mt-6 text-[10px] uppercase tracking-[0.26em] text-muted-foreground">
+              {t("The loom channels the whole book…")}
+            </p>
+            <p
+              className="ink-hand ink-soft mt-2 font-[family-name(var(--font-literata))] text-[13.5px] italic text-foreground/85"
+              data-testid="dream-whole-progress"
+            >
+              {t("{n} of {y} pages woven")
+                .replace("{n}", String(Math.min(wholeReveal.woven, wholeReveal.total)))
+                .replace("{y}", String(wholeReveal.total))}
+            </p>
+            <div className="mt-5 h-[3px] w-60 overflow-hidden rounded-full bg-foreground/10">
+              <div
+                className="h-full rounded-full bg-foreground/65 transition-all duration-700"
+                style={{
+                  width: `${Math.min(100, Math.round((wholeReveal.woven / Math.max(1, wholeReveal.total)) * 100))}%`,
+                }}
+              />
+            </div>
+            <p className="ink-hand ink-faint mt-5 max-w-[320px] text-center text-[11.5px] italic leading-relaxed text-muted-foreground">
+              {t(
+                "The loom weaves four pages at a stride — long books take their time; the telling never breaks."
+              )}
+            </p>
+          </motion.div>
         )}
       </AnimatePresence>
 

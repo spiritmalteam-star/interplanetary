@@ -254,6 +254,7 @@ export function genealogyGeometry(narrow: boolean): GenealogyGeometry {
         trunkH: TRUNK_H_NARROW,
         width: 0,
         height: 0,
+        trunkBaseY: 0,
       }
     : {
         chipW: CHIP_W_WIDE,
@@ -263,6 +264,7 @@ export function genealogyGeometry(narrow: boolean): GenealogyGeometry {
         trunkH: TRUNK_H_WIDE,
         width: 0,
         height: 0,
+        trunkBaseY: 0,
       };
 }
 
@@ -351,8 +353,11 @@ export function buildRootTopology(
   narrow: boolean,
   side: "left" | "right"
 ): GenealogyTopology {
-  const cap = narrow ? 5 : 6;
-  const pool = seeds.slice(0, BATCH_SIZE);
+  /* THE ROOT'S OWN PROPORTIONS — slim rows, close to the trunk: a
+     root family is sixteen whispers in rows of four, descending in
+     tidy steps beside the seed (never a wide fan across the ground) */
+  const cap = narrow ? 3 : 4;
+  const pool = seeds.slice(0, 16);
   const rows: GenealogyRow[] = [];
   for (let start = 0; start < pool.length; start += cap) {
     const chunk = pool.slice(start, start + cap);
@@ -488,22 +493,25 @@ export function layTree(
       }
     }
     if (seat < 0 && !topo.above && topo.root) {
-      /* THE ROOT'S OWN LEVELS — the undergrove takes the negative
-         floors beneath the trunk: row r seats at level −(r+1). The
-         fold never reaches them (roots stand through every choice)
-         and the grafts' upward shifts never disturb them. */
+      /* THE ROOT'S OWN LEVELS — the undergrove descends family by
+         family: each root family seats beneath everything already
+         dug, so its first row hangs from the deepest tips of its side
+         (the level just above) and its rows sink below in order. The
+         fold never reaches them and the grafts' shifts never disturb
+         them. */
+      const base = laidRows.reduce((m, lr) => (lr.level < m ? lr.level : m), 0);
       topo.rows.forEach((row, r) => {
         laidRows.push({
           batch: b,
           row: r,
           count: row.seeds.length,
           span: row.seeds.length * geo.step,
-          level: -(r + 1),
+          level: base - 1 - r,
         });
       });
       topo.rows.forEach((row, r) => {
         row.seeds.forEach((_, i) => {
-          levelOfId.set(`n${b}.${r}.${i}`, -(r + 1));
+          levelOfId.set(`n${b}.${r}.${i}`, base - 1 - r);
         });
       });
       continue;
@@ -652,7 +660,11 @@ export function layTree(
   const idOf = new Map<string, string>(); // "batch:row:idx" → node id
   const nodes: GenealogyNode[] = [];
 
-  for (const r of keptRows) {
+  /* THE ROOTS ARE LAID FIRST — a root family's deeper rows read their
+     parents' positions (row r needs row r−1), and the root rows sit at
+     negative levels, so the undergrove is seated top-down (row 0 beside
+     the trunk, then row beneath row) before any crown row is placed. */
+  for (const r of [...rootLaid, ...upRows]) {
     const key = `${r.batch}:${r.row}`;
     const topo = topologies[r.batch];
     const row = topo.rows[r.row];
@@ -780,7 +792,7 @@ export function layTree(
       const lr = keptRows.find((r) => r.batch === b && r.row === rr);
       if (!lr) continue; /* folded by the prune */
       const row = topo.rows[rr];
-      if (rr > 0 && !topo.hangAll) continue; /* deeper rows center over their own family */
+      if (rr > 0 && !topo.hangAll && !topo.root) continue; /* deeper rows center over their own family */
 
       /* group children by parent tip, in the parents' own left-to-right order */
       const groups = new Map<string, number[]>();
@@ -853,19 +865,73 @@ export function layTree(
         maxX = Math.max(maxX, n.x + geo.chipW / 2);
       }
     }
-    if (minX < SIDE_PAD) {
-      const dx = SIDE_PAD - minX;
+    /* the canvas grows rather than ever clipping a family ... */
+    const span = maxX - minX;
+    if (span + SIDE_PAD * 2 > width) {
+      const dx = (span + SIDE_PAD * 2 - width) / 2;
       for (const n of nodes) n.x += dx;
       for (const [id, x] of xById) xById.set(id, x + dx);
+      width = Math.ceil(span + SIDE_PAD * 2);
       minX += dx;
       maxX += dx;
     }
-    const needed = maxX - minX + SIDE_PAD * 2;
-    if (needed > width) {
-      const dx = (needed - width) / 2;
-      for (const n of nodes) n.x += dx;
-      for (const [id, x] of xById) xById.set(id, x + dx);
-      width = Math.ceil(needed);
+    /* ... and the whole family always stands CENTERED in it — the
+       trunk's own line is the canvas's centre, the golden row rides
+       the middle, and every root flank reads true beside the seed */
+    const dx2 = (width - span) / 2 - minX;
+    if (Math.abs(dx2) > 0.5) {
+      for (const n of nodes) n.x += dx2;
+      for (const [id, x] of xById) xById.set(id, x + dx2);
+    }
+  }
+
+  /* ---- the roots flank the true trunk ----
+     The sweep has centered the family, so the trunk's line is exactly
+     the canvas's centre now. Each side's first trunk-hung root family
+     — and with it every deeper family of that side, ties intact —
+     slides so its first row stands one margin beyond the trunk's
+     side: the undergrove hugs the seed instead of the sweep's mean. */
+  for (const side of ["left", "right"] as const) {
+    for (let b = 0; b < topologies.length; b++) {
+      const topo = topologies[b];
+      if (
+        !topo.root ||
+        (topo.wing ?? "left") !== side ||
+        topo.fromTips.length > 0 ||
+        topo.rows.length === 0
+      )
+        continue;
+      const n0 = topo.rows[0].seeds.length;
+      const xs0 = topo.rows[0].seeds
+        .map((_, i) => xById.get(`n${b}.0.${i}`))
+        .filter((x): x is number => typeof x === "number");
+      if (xs0.length === 0) break;
+      const mean0 = xs0.reduce((a, x) => a + x, 0) / xs0.length;
+      const margin = geo.chipW * 0.62 + 26;
+      const wantMean =
+        side === "right"
+          ? width / 2 + margin + (n0 * geo.step) / 2
+          : width / 2 - margin - (n0 * geo.step) / 2;
+      const d = wantMean - mean0;
+      if (Math.abs(d) >= 0.5) {
+        for (let b2 = 0; b2 < topologies.length; b2++) {
+          const t2 = topologies[b2];
+          if (!t2.root || (t2.wing ?? "left") !== side) continue;
+          t2.rows.forEach((row, r) => {
+            row.seeds.forEach((_, i) => {
+              const id = `n${b2}.${r}.${i}`;
+              const x = xById.get(id);
+              if (typeof x === "number") {
+                const nx = x + d;
+                xById.set(id, nx);
+                const node = nodes.find((n) => n.id === id);
+                if (node) node.x = nx;
+              }
+            });
+          });
+        }
+      }
+      break; /* only the first trunk-hung family anchors its side */
     }
   }
 
