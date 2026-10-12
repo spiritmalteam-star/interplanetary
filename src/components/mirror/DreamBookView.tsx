@@ -295,6 +295,34 @@ export function DreamBookView() {
     clearDreamResume();
   }, [dreamResume, applyResume, clearDreamResume]);
 
+  /* THE BRANCH'S OWN VOLUME — a creation chip's whisper rides here
+     from the living tree: the atelier opens with the branch's own
+     words already spoken into the loom's one input, and one thread
+     held (the tale's shape, drawn from the branch's own words), so a
+     single touch of the channel begins a book born of that branch —
+     made in this moment, never the same volume twice. The loom never
+     starts by itself: the weaving waits for the visitor's own hand. */
+  const branchSeed = useMirror((s) => s.branchCreationSeed);
+  const setBranchCreationSeed = useMirror((s) => s.setBranchCreationSeed);
+  const seedTakenRef = useRef(false);
+  useEffect(() => {
+    if (seedTakenRef.current || !branchSeed || branchSeed.kind !== "book")
+      return;
+    seedTakenRef.current = true;
+    const topic = branchSeed.topic;
+    setBranchCreationSeed(null);
+    let h = 2166136261;
+    for (let i = 0; i < topic.length; i++) {
+      h ^= topic.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    h = h >>> 0;
+    const tale = TALES[h % TALES.length];
+    setTopicDraft(topic);
+    setTopic(topic);
+    if (tale) setTale(tale.id);
+  }, [branchSeed, setBranchCreationSeed]);
+
   /* ---------------- the shelf of kept volumes ----------------
      A volume that took an evening to weave never vanishes when the
      visitor turns away: it rests on the shelf — kept on this device,

@@ -201,6 +201,30 @@ export function AkashicView() {
     [language, record]
   );
 
+  /* THE BRANCH'S OWN RECORD — a creation chip's whisper rides here
+     from the living tree: the Library seeks at once, and the record
+     it opens is born of that branch's own words — made in this
+     moment, never the same record twice. The seed is consumed on
+     arrival (returning later never re-seeks). */
+  const branchSeed = useMirror((s) => s.branchCreationSeed);
+  const setBranchCreationSeed = useMirror((s) => s.setBranchCreationSeed);
+  const seekRef = useRef(seek);
+  seekRef.current = seek;
+  const seedTakenRef = useRef(false);
+  useEffect(() => {
+    if (seedTakenRef.current || !branchSeed || branchSeed.kind !== "akashic")
+      return;
+    seedTakenRef.current = true;
+    const topic = branchSeed.topic;
+    /* the seed is cleared INSIDE the timeout — clearing it in the body
+       would change this effect's own deps and cancel the pending seek */
+    const id = window.setTimeout(() => {
+      setBranchCreationSeed(null);
+      void seekRef.current(topic, false);
+    }, 80);
+    return () => window.clearTimeout(id);
+  }, [branchSeed, setBranchCreationSeed]);
+
   /* ---------- copy · share · the Librarian's own voice ---------- */
 
   const recordText = record

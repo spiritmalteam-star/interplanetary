@@ -553,6 +553,18 @@ interface MirrorState {
   mysteryDials: ForgeDials;
   mystery: MysteryCreation | null;
   mysteryError: string | null;
+  /* THE CREATION SEED — the whisper a creation chip was grown from:
+     the living tree's akashic / book / invent suggestions carry the
+     branch's own words here, and the theme page that opens forges
+     its making from them (made in the moment, never the same twice). */
+  branchCreationSeed: {
+    kind: "akashic" | "book" | "invent";
+    topic: string;
+  } | null;
+  setBranchCreationSeed: (seed: {
+    kind: "akashic" | "book" | "invent";
+    topic: string;
+  } | null) => void;
   /* THE TOOL WALL — the Forge's bench tools, worked by the inteligjence */
   toolStatus: ToolStatus;
   toolId: string | null;
@@ -577,7 +589,7 @@ interface MirrorState {
     } | null
   ) => Promise<void>;
   setMysteryDial: (group: keyof ForgeDials, id: string) => void;
-  strikeMystery: () => Promise<void>;
+  strikeMystery: (directive?: string) => Promise<void>;
   setToolId: (id: string) => void;
   setToolInput: (value: string) => void;
   workTool: () => Promise<void>;
@@ -1073,6 +1085,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   mysteryDials: { domain: "device", scale: "pocket", spark: "sun" },
   mystery: null,
   mysteryError: null,
+  branchCreationSeed: null,
   toolStatus: "idle" as ToolStatus,
   toolId: null,
   toolInput: "",
@@ -1937,6 +1950,9 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     );
   },
 
+  /* ---- the creation seed — the branch's words riding to a theme page ---- */
+  setBranchCreationSeed: (seed) => set({ branchCreationSeed: seed }),
+
   /* ---- the random mystery creation — one strike, one conception ---- */
   setMysteryDial: (group, id) =>
     set((s) => ({
@@ -1946,7 +1962,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       mystery: s.mysteryStatus === "ready" ? null : s.mystery,
     })),
 
-  strikeMystery: async () => {
+  strikeMystery: async (directive) => {
     if (get().mysteryStatus === "forging") return;
     const dials = get().mysteryDials;
 
@@ -1962,6 +1978,11 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           dials,
+          /* THE BRANCH'S OWN WORDS — a creation chip's whisper leads
+             the forge: the dials and the embers yield to the branch
+             the visitor walked in from (the creation is born of the
+             branch, made in this exact moment). */
+          directive: directive?.trim() || undefined,
           language: get().language,
         }),
       });

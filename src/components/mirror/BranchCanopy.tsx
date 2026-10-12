@@ -89,7 +89,6 @@ import {
 } from "@/lib/genealogy";
 import { recordExpansion, readExpansionScore } from "@/lib/expansion";
 import { ExpansionRing } from "./ExpansionMirror";
-import { CreationChamber, type CreationKind } from "./CreationChamber";
 import { useT } from "@/lib/i18n";
 import { useMirror } from "@/lib/mirror-store";
 import { cn } from "@/lib/utils";
@@ -171,20 +170,46 @@ const MAX_BATCHES = 60;
 const WAVE_PAUSE_1 = 2600;
 const WAVE_PAUSE_2 = 3400;
 
-/* THE CREATION GATES — three small doors that hang beside certain
-   whispers. They are not information but CREATION: each gate births,
-   in this exact moment, a making tied to the whisper and its
-   kategory — a record, a book, an invention — unique to the walker
-   whose resonance opens it. */
-const CREATION_GATES: {
-  kind: CreationKind;
-  label: string;
+/* THE CREATION SUGGESTIONS — three whispers that are not information
+   but DOORS. They stand in the family as individual suggestions, each
+   wearing its own sigil, and one touch opens the creation's own theme
+   page — the record of akasha, the book, the invention — forged in
+   that very moment from the branch's own words, never the same making
+   twice. They are woven among the whispers (never hung beneath them):
+   suggestions and creations share one tree. */
+type CreationDoor = NonNullable<GenealogySeed["creation"]>;
+
+const CREATION_DOORS: {
+  kind: CreationDoor;
   icon: typeof ScrollText;
 }[] = [
-  { kind: "akashic", label: "Create · a record of akasha", icon: ScrollText },
-  { kind: "book", label: "Create · a book from this branch", icon: BookOpen },
-  { kind: "invent", label: "Create · an invention of this branch", icon: Hammer },
+  { kind: "akashic", icon: ScrollText },
+  { kind: "book", icon: BookOpen },
+  { kind: "invent", icon: Hammer },
 ];
+
+const CREATION_LABELS: Record<CreationDoor, string> = {
+  akashic: "A record of akasha",
+  book: "A book from this branch",
+  invent: "An invention of this branch",
+};
+
+const CREATION_ICON_BY_KIND: Record<CreationDoor, typeof ScrollText> = {
+  akashic: ScrollText,
+  book: BookOpen,
+  invent: Hammer,
+};
+
+/* the walk's own hash — the doors are random to the eye, honest to
+   the hour (the same hour grows the same doors) */
+function hashWalk(s: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
 
 /* ---------------- the tree mix — the compass's memory ----------------
 
@@ -525,7 +550,6 @@ const TreeCanvas = memo(function TreeCanvas({
   narrow,
   disabled,
   onPick,
-  onCreate,
   sentinelRef,
   testIdPrefix,
 }: {
@@ -538,7 +562,6 @@ const TreeCanvas = memo(function TreeCanvas({
   narrow: boolean;
   disabled?: boolean;
   onPick: (node: GenealogyNode) => void;
-  onCreate: (kind: CreationKind, node: GenealogyNode) => void;
   sentinelRef: RefObject<HTMLDivElement | null>;
   testIdPrefix: string;
 }) {
@@ -746,9 +769,14 @@ const TreeCanvas = memo(function TreeCanvas({
           WHOLE text inside each one's measured box, and a line can
           never cross a word */}
       {nodes.map((n, i) => {
-        const deep = n.score >= 2.4;
+        const deep = n.score >= 2.4 || !!n.creation;
         const attuned = !deep && n.score > 0;
-        const Icon = MOVEMENT_ICONS[n.movement] ?? Layers;
+        /* THE CREATION'S OWN SIGIL — a creation suggestion wears its
+           own door's icon (the record, the book, the hammer); every
+           other whisper wears its movement's mark. */
+        const Icon = n.creation
+          ? CREATION_ICON_BY_KIND[n.creation]
+          : (MOVEMENT_ICONS[n.movement] ?? Layers);
         const isPicked = n.id === pickedId;
         const onChain = chainSet.has(n.id);
         const flashing = n.id === flashId;
@@ -761,7 +789,11 @@ const TreeCanvas = memo(function TreeCanvas({
             type="button"
             onClick={() => onPick(n)}
             disabled={disabled}
-            title={t(BRANCH_TYPE_LABELS[n.movement])}
+            title={
+              n.creation
+                ? t(CREATION_LABELS[n.creation])
+                : t(BRANCH_TYPE_LABELS[n.movement])
+            }
             data-testid={
               n.golden
                 ? `${testIdPrefix}-crown-chip`
@@ -817,50 +849,10 @@ const TreeCanvas = memo(function TreeCanvas({
         );
       })}
 
-      {/* THE CREATION GATES — beside certain whispers hang three small
-          doors, like amulets on the family's ropes: the record, the
-          book, the invention. One touch births a making tied to this
-          whisper and its kategory — made in this moment, unique to the
-          walker's resonance, never the same creation twice. */}
-      {nodes.map((n, i) => {
-        if (n.golden || i % 6 !== 2) return null;
-        const gateAccent = n.accent ?? "var(--scope-a, var(--gd))";
-        return (
-          <div
-            key={`gates-${n.id}`}
-            className="absolute z-10 flex items-center gap-1.5"
-            style={{
-              left: n.x,
-              top: n.y + n.h + 7,
-              transform: "translateX(-50%)",
-            }}
-          >
-            {CREATION_GATES.map((g) => {
-              const GateIcon = g.icon;
-              return (
-                <button
-                  key={g.kind}
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onCreate(g.kind, n);
-                  }}
-                  disabled={disabled}
-                  aria-label={t(g.label)}
-                  title={t(g.label)}
-                  data-testid={`${testIdPrefix}-gate-${g.kind}`}
-                  className="focus-glow flex size-[22px] items-center justify-center rounded-full border bg-background text-muted-foreground shadow-[0_2px_10px_-6px_rgba(0,0,0,0.5)] transition-colors duration-300 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-                  style={{
-                    borderColor: `color-mix(in srgb, ${gateAccent} 38%, transparent)`,
-                  }}
-                >
-                  <GateIcon className="size-3" aria-hidden="true" />
-                </button>
-              );
-            })}
-          </div>
-        );
-      })}
+      {/* THE CREATION GATES ARE NO LONGER HUNG BESIDE THE WHISPERS —
+          they are whispers now: the record, the book and the invention
+          stand in the family as individual suggestions (woven by the
+          canopy above), each opening its own theme page. */}
     </div>
   );
 });
@@ -1016,6 +1008,9 @@ export function BranchCanopy({
   const openArtX = useMirror((s) => s.openArtX);
   const openRegister = useMirror((s) => s.openRegister);
   const resetField = useMirror((s) => s.resetField);
+  /* THE CREATION DOOR — the branch's own words ride with the touch:
+     the theme page that opens forges its making from them. */
+  const setBranchCreationSeed = useMirror((s) => s.setBranchCreationSeed);
 
   /* THE RESONANCE WALK — v4.1, the quiet walk: the room's one voice is
      the male narrator (lib/room-narrator.ts). The gate lives up front;
@@ -1367,6 +1362,37 @@ export function BranchCanopy({
      a pending regrow simply waits for the room to hand back.
      THE VOICE: every seed is tuned by the walker's own depth —
      shortened to one breath, near-twins stepped aside. */
+  /* THE CREATION WHISPERS — one door woven into every family as an
+     INDIVIDUAL SUGGESTION: the record, the book, the invention, each
+     wearing its own sigil and tied to a whisper of its own batch —
+     the branch's own words the creation grows from. Random to the eye
+     (the hour, the salt and the batch choose together), always
+     connected to the branch and its kategory. PURE: the same hour,
+     salt and batch always weave the same door, so a recomputed family
+     never loses or doubles its door. */
+  const weaveCreations = useCallback(
+    (seeds: GenealogySeed[], batchIndex: number): GenealogySeed[] => {
+      if (seeds.length < 6) return seeds;
+      const h = hashWalk(`${hour}:${salt}:${batchIndex}`);
+      const door = CREATION_DOORS[(h + batchIndex) % CREATION_DOORS.length];
+      const topicSeed = seeds[h % seeds.length];
+      const topic = topicSeed.text;
+      const out = [...seeds];
+      /* the door stands mid-family — never the batch's first breath */
+      const at = Math.min(2 + (h % Math.max(1, out.length - 2)), out.length);
+      out.splice(at, 0, {
+        text: `${t(CREATION_LABELS[door.kind])} — ${topic}`,
+        movement: "create",
+        score: 1,
+        accent: topicSeed.accent,
+        creation: door.kind,
+        topic,
+      });
+      return out;
+    },
+    [hour, salt, t]
+  );
+
   const lastRankedRef = useRef<unknown>(null);
   useEffect(() => {
     if (!mounted || ranked.length === 0) return;
@@ -1382,7 +1408,7 @@ export function BranchCanopy({
         expansionScore,
         BATCH_SIZE
       );
-      const seeds = withAccents(tuned);
+      const seeds = weaveCreations(withAccents(tuned), 0);
       markSpent(seeds);
       setTopologies(
         seeds.length > 0
@@ -1397,7 +1423,7 @@ export function BranchCanopy({
       prevSize.current = { w: 0, h: 0 }; /* the view returns to the trunk */
     }, 0);
     return () => window.clearTimeout(id);
-  }, [ranked, mounted, markSpent, zoomed, expansionScore, withAccents]);
+  }, [ranked, mounted, markSpent, zoomed, expansionScore, withAccents, weaveCreations]);
 
   /* THE GEOMETRY — narrow windows carry a slimmer, taller family. */
   const vpRef = useRef<HTMLDivElement | null>(null);
@@ -1446,7 +1472,8 @@ export function BranchCanopy({
       BATCH_SIZE
     );
     if (tuned.length === 0) return null;
-    const tunedSeeds = withAccents(tuned);
+    /* one creation door rides with every ready family as well */
+    const tunedSeeds = weaveCreations(withAccents(tuned), topologies.length);
     const wing =
       topologies.length >= 2
         ? topologies.length % 2 === 0
@@ -1470,7 +1497,7 @@ export function BranchCanopy({
     return tips.length > 0
       ? buildExtensionTopology(tunedSeeds, tips, narrow, wing)
       : buildSeedTopology(tunedSeeds, [], narrow);
-  }, [ranked, topologies, tree, narrow, spent, expansionScore, withAccents]);
+  }, [ranked, topologies, tree, narrow, spent, expansionScore, withAccents, weaveCreations]);
 
   /* THE GROW — one breath, from the ready pool. A ready family may
      only hang from tips that still stand: a folded frontier can never
@@ -1836,10 +1863,27 @@ export function BranchCanopy({
      pressed chip is marked, a whole sub-family is grafted directly
      above it, tuned to the channeling context, and everything that
      stood above folds away. The trail remembers every step. And THE
-     ZOOM: the camera pulls back and the answer rises inside the tree. */
+     ZOOM: the camera pulls back and the answer rises inside the tree.
+     THE CREATION DOOR — an individual suggestion that is a making,
+     not a question: one touch opens its own theme page — the record,
+     the book, the invention — forged in the moment from the branch's
+     own words (the seed rides to the page; no room rises, the page
+     IS the room). */
   const pick = useCallback(
     (node: GenealogyNode) => {
       if (disabled) return;
+      if (node.creation) {
+        recordJourney({ b: category, s: scopeHint ?? undefined });
+        setPickedId(node.id);
+        setBranchCreationSeed({
+          kind: node.creation,
+          topic: node.topic ?? node.text,
+        });
+        if (node.creation === "akashic") openAkashic();
+        else if (node.creation === "book") openDreamBook();
+        else openInvent();
+        return;
+      }
       recordExpansion("pick", {
         scope: scopeHint ?? null,
         movement: node.movement,
@@ -1864,7 +1908,10 @@ export function BranchCanopy({
       const spentSet = spent;
       const fresh = grove.filter((w) => !spentSet.has(w.text.toLowerCase()));
       if (fresh.length > 0) {
-        const seeds = chooseGraftSeeds(fresh, pickField);
+        const seeds = weaveCreations(
+          chooseGraftSeeds(fresh, pickField),
+          topologies.length
+        );
         if (seeds.length > 0) {
           const graft = buildGraftTopology(seeds, node.id, narrowRef.current);
           markSpent(seeds);
@@ -1899,27 +1946,13 @@ export function BranchCanopy({
       commitTopologies,
       markSpent,
       spent,
+      weaveCreations,
+      topologies.length,
+      setBranchCreationSeed,
+      openAkashic,
+      openDreamBook,
+      openInvent,
     ]
-  );
-
-  /* THE CREATION GATES — a gate pressed beside a whisper births a
-     making tied to that branch and its kategory, unique to the walker
-     (the resonance of this very moment), never the same creation
-     twice. */
-  const [creation, setCreation] = useState<{
-    kind: CreationKind;
-    topic: string;
-    family: string;
-  } | null>(null);
-  const openCreation = useCallback(
-    (kind: CreationKind, node: GenealogyNode) => {
-      setCreation({
-        kind,
-        topic: node.text,
-        family: familyKeyByText.get(node.text.toLowerCase()) ?? "",
-      });
-    },
-    [familyKeyByText]
   );
 
   /* THE WALK CONTINUES FROM THE ANSWER — a branch grown on the reply,
@@ -1945,7 +1978,10 @@ export function BranchCanopy({
         });
         const fresh = grove.filter((w) => !spent.has(w.text.toLowerCase()));
         if (fresh.length > 0) {
-          const seeds = chooseGraftSeeds(fresh, pickField);
+          const seeds = weaveCreations(
+            chooseGraftSeeds(fresh, pickField),
+            topologies.length
+          );
           if (seeds.length > 0) {
             const graft = buildGraftTopology(seeds, pickedId, narrowRef.current);
             markSpent(seeds);
@@ -1976,6 +2012,8 @@ export function BranchCanopy({
       commitTopologies,
       markSpent,
       spent,
+      weaveCreations,
+      topologies.length,
     ]
   );
 
@@ -2917,7 +2955,6 @@ export function BranchCanopy({
                 narrow={narrow}
                 disabled={disabled}
                 onPick={pick}
-                onCreate={openCreation}
                 sentinelRef={sentinelRef}
                 testIdPrefix={testIdPrefix}
               />
@@ -3374,14 +3411,11 @@ export function BranchCanopy({
           </div>
         )}
 
-        {/* THE CREATION CHAMBER — a gate's making, born above the tree:
-            the record, the book, the invention of the whisper whose
-            gate the walker opened — made in this moment, unique to
-            their resonance. */}
-        <CreationChamber
-          creation={creation}
-          onClose={() => setCreation(null)}
-        />
+        {/* THE CREATION CHAMBER IS GONE — the creation suggestions open
+            their own original theme pages now (the akashic library, the
+            book, the forge), each forging its making from the branch's
+            own words. The tree carries the doors; the pages do the
+            making. */}
       </div>
     </div>
   );

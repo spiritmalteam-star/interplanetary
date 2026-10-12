@@ -45,6 +45,7 @@ import {
   VisualizationPending,
 } from "./VisualizationCard";
 import { SigilForIntent } from "./MirrorOSForge";
+import { InventionDraft, deriveForm } from "./InventionDraft";
 import { WorldNewChat } from "./WorldNewChat";
 import { ChatHistoryPanel } from "./ChatHistoryPanel";
 import { WindowSelect } from "./WindowSelect";
@@ -198,7 +199,11 @@ function ForgingEmber({ phase }: { phase: number }) {
 
 /* ---------------- the revealed mystery creation ---------------- */
 
-function MysteryCard({ onAskBench }: { onAskBench: () => void }) {
+function MysteryCard({
+  onAskBench,
+}: {
+  onAskBench: () => void;
+}) {
   const mystery = useMirror((s) => s.mystery);
   const strikeMystery = useMirror((s) => s.strikeMystery);
   const askForge = useMirror((s) => s.askForge);
@@ -252,6 +257,18 @@ function MysteryCard({ onAskBench }: { onAskBench: () => void }) {
         <h4 className="scope-gradient-text mt-2.5 font-serif text-[18.5px] italic leading-snug sm:text-[20px]">
           {mystery.name}
         </h4>
+      </div>
+
+      {/* THE INVENTION'S OWN DRAWING — the blueprint drafts itself as
+          the visitor reads: rings turning, motes in orbit, a core
+          breathing, the invention's own body per its form. The making
+          is not only read — it is SEEN. */}
+      <div className="mt-4">
+        <InventionDraft
+          form={deriveForm(mystery.name)}
+          accent="var(--scope-a)"
+          seed={mystery.name}
+        />
       </div>
 
       <div className="mt-4 space-y-3.5 text-left">
@@ -337,7 +354,15 @@ function MysteryCard({ onAskBench }: { onAskBench: () => void }) {
 
 /* ---------------- the Mystery Chamber ---------------- */
 
-function MysteryChamber({ onAskBench }: { onAskBench: () => void }) {
+function MysteryChamber({
+  onAskBench,
+  requestTop,
+}: {
+  onAskBench: () => void;
+  /** The page's own scroll-to-top — the revealed creation must stand
+      at the very top of the world, read without ever scrolling down. */
+  requestTop: () => void;
+}) {
   const mysteryStatus = useMirror((s) => s.mysteryStatus);
   const mysteryDials = useMirror((s) => s.mysteryDials);
   const setMysteryDial = useMirror((s) => s.setMysteryDial);
@@ -354,6 +379,14 @@ function MysteryChamber({ onAskBench }: { onAskBench: () => void }) {
     );
     return () => window.clearInterval(id);
   }, [mysteryStatus]);
+
+  /* THE TOP LAW — the invention reveals at the TOP: the moment the
+     creation climbs out of the coals, the page rises to it — the
+     visitor reads the invention where their eyes already are, never
+     hunting for it below the fold. */
+  useEffect(() => {
+    if (mysteryStatus === "ready") requestTop();
+  }, [mysteryStatus, requestTop]);
 
   return (
     <div
@@ -372,6 +405,23 @@ function MysteryChamber({ onAskBench }: { onAskBench: () => void }) {
           )}
         </p>
       </div>
+
+      {/* THE REVEALED CREATION — at the TOP of the chamber, above the
+          dials: the invention is the first thing the eye meets when
+          the forge has spoken, never something to scroll down for. */}
+      <AnimatePresence mode="wait">
+        {mysteryStatus === "ready" && (
+          <motion.div
+            key="ready"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <MysteryCard onAskBench={onAskBench} />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="mt-6 space-y-5">
         <DialGroup
@@ -430,18 +480,6 @@ function MysteryChamber({ onAskBench }: { onAskBench: () => void }) {
             transition={{ duration: 0.3 }}
           >
             <ForgingEmber phase={phase} />
-          </motion.div>
-        )}
-
-        {mysteryStatus === "ready" && (
-          <motion.div
-            key="ready"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <MysteryCard onAskBench={onAskBench} />
           </motion.div>
         )}
 
@@ -1301,16 +1339,42 @@ export function InventView() {
   const [historyOpen, setHistoryOpen] = useState(false);
   const t = useT();
 
+  /* THE BRANCH'S OWN FORGE — a creation chip's whisper rides here from
+     the living tree: the page opens on the Mystery Chamber with the
+     branch's own words leading the strike, the invention born of that
+     branch — made in this moment, never the same making twice. The
+     seed is consumed on arrival (returning later never re-strikes). */
+  const branchSeed = useMirror((s) => s.branchCreationSeed);
+  const setBranchCreationSeed = useMirror((s) => s.setBranchCreationSeed);
+  const strikeMystery = useMirror((s) => s.strikeMystery);
+  const seedTakenRef = useRef(false);
+  useEffect(() => {
+    if (seedTakenRef.current || !branchSeed || branchSeed.kind !== "invent")
+      return;
+    seedTakenRef.current = true;
+    const topic = branchSeed.topic;
+    const id = window.setTimeout(() => {
+      setBranchCreationSeed(null);
+      setPlace("mystery");
+      void strikeMystery(topic);
+    }, 80);
+    return () => window.clearTimeout(id);
+  }, [branchSeed, setBranchCreationSeed, strikeMystery]);
+
   /* the reading bar law — the floating controls sink away with the
      stillness or the downward flow, rise at the first upward breath */
   const worldRootRef = useRef<HTMLDivElement | null>(null);
   const topBarRef = useRef<HTMLElement | null>(null);
+  const mainRef = useRef<HTMLElement | null>(null);
   const [toolsOpen, setToolsOpen] = useState(false);
   const topBarHidden = useFloatingBarAutoHide({
     rootRef: worldRootRef,
     barRef: topBarRef,
     hold: toolsOpen,
   });
+  const requestTop = useCallback(() => {
+    mainRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
 
   return (
     <div
@@ -1375,6 +1439,7 @@ export function InventView() {
       {/* ---------- the workshop — one spacious chamber at a time,
           reaching the very top of the world ---------- */}
       <main
+        ref={mainRef}
         className="nice-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain"
         data-testid="invent-view"
       >
@@ -1410,7 +1475,12 @@ export function InventView() {
                   </div>
 
                   {place === "tools" && <ToolWallChamber onAskBench={() => setPlace("bench")} />}
-                  {place === "mystery" && <MysteryChamber onAskBench={() => setPlace("bench")} />}
+                  {place === "mystery" && (
+                    <MysteryChamber
+                      onAskBench={() => setPlace("bench")}
+                      requestTop={requestTop}
+                    />
+                  )}
 
                   <p className="mono-label mt-8 text-center text-[10px] text-muted-foreground/60">
                     {t(

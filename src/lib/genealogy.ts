@@ -43,6 +43,13 @@ export interface GenealogySeed {
   /** THE FAMILY'S LIGHT — the rope and the section wear this color;
       the words always wear the house's one text color. */
   accent?: string;
+  /** THE CREATION WHISPER — an individual suggestion that is not
+      information but a DOOR: the record, the book, the invention,
+      born from this very branch ("topic" carries the whisper it
+      grew from). One touch opens the creation's own theme page. */
+  creation?: "akashic" | "book" | "invent";
+  /** The whisper the creation is tied to — the branch's own words. */
+  topic?: string;
 }
 
 export interface GenealogyNode {
@@ -59,6 +66,10 @@ export interface GenealogyNode {
   golden?: boolean;
   /** The family's own light — rope + section color (text stays one). */
   accent?: string;
+  /** The creation door this chip carries (see GenealogySeed). */
+  creation?: "akashic" | "book" | "invent";
+  /** The whisper the creation is tied to — the branch's own words. */
+  topic?: string;
   /** Canvas coordinates; x is the chip's center, y the chip's top. */
   x: number;
   y: number;
@@ -629,6 +640,8 @@ export function layTree(
         movement: seed.movement,
         score: seed.score,
         accent: seed.accent,
+        creation: seed.creation,
+        topic: seed.topic,
         gen,
         parent,
         wave: 2,
