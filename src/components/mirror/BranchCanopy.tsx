@@ -31,7 +31,6 @@ import {
   Link2,
   ListTree,
   LoaderCircle,
-  LogIn,
   Maximize2,
   Menu,
   Moon,
@@ -1081,8 +1080,8 @@ export function BranchCanopy({
   const language = useMirror((s) => s.language);
   /* THE HOUSE DOORS — the old app, folded into the realm's crown:
      the akashic library, the book, the open door of the house, and
-     the visitor's own passage (sign in, or their account). */
-  const me = useMirror((s) => s.me);
+     the visitor's own passage (their account; the way in and the
+     way out both live inside it). */
   const openAkashic = useMirror((s) => s.openAkashic);
   const openDreamBook = useMirror((s) => s.openDreamBook);
   const openAbout = useMirror((s) => s.openAbout);
@@ -3047,11 +3046,12 @@ export function BranchCanopy({
                       "color-mix(in srgb, var(--scope-a,var(--gd)) 8%, var(--background))",
                   }}
                 >
-                  {me ? (
-                    <UserRound className="size-3" aria-hidden="true" />
-                  ) : (
-                    <LogIn className="size-3" aria-hidden="true" />
-                  )}
+                  {/* THE ICON ITSELF — the passage always wears the
+                      visitor's own figure: a person, never an arrow.
+                      Guests find the way in INSIDE the passage; walkers
+                      leave from the same room. The door never dresses
+                      itself as an exit. */}
+                  <UserRound className="size-3" aria-hidden="true" />
                 </button>
               </div>
             ) : (

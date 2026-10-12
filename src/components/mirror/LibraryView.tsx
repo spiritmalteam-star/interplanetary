@@ -65,7 +65,7 @@ interface LibraryEntry {
 }
 
 const SECTORS: { id: string; label: string; icon: typeof Atom }[] = [
-  { id: "observatory", label: "The Observatory", icon: Sparkles },
+  { id: "observatory", label: "Transmissions", icon: Sparkles },
   { id: "manifest", label: "The Manifest", icon: BookOpen },
   { id: "invent", label: "Invent", icon: NotebookPen },
   { id: "dreambook", label: "The Dream Book", icon: MoonStar },
@@ -160,7 +160,7 @@ export function LibraryView() {
               className="size-3.5 transition-transform duration-300 group-hover:-translate-x-0.5"
               aria-hidden="true"
             />
-            <span className="hidden sm:inline">{t("Return to the Observatory")}</span>
+            <span className="hidden sm:inline">{t("Back to the branches")}</span>
             <span className="sm:hidden">{t("Back")}</span>
           </button>
 

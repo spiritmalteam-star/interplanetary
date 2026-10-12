@@ -358,7 +358,7 @@ export function ArchiveRegister() {
             className="size-3.5 transition-transform duration-300 group-hover:-translate-x-0.5"
             aria-hidden="true"
           />
-          {t("Return to the Observatory")}
+          {t("Back to the branches")}
         </button>
         <button
           type="button"

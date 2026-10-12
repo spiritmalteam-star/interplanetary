@@ -201,6 +201,10 @@ export function DreamBookView() {
     woven: number;
     total: number;
   } | null>(null);
+  /* the visitor's own hand on the loom — raised the moment they let
+     the whole-book channeling rest; the loop reads it between strides
+     and keeps everything already woven */
+  const cancelRevealRef = useRef(false);
   /* the whole-book reading — every woven page in one continuous scroll */
   const [wholeMode, setWholeMode] = useState(false);
   /* the loom's private honest audit — carried from the close and kept
@@ -540,7 +544,8 @@ export function DreamBookView() {
     async (
       phase: "open" | "next" | "close" | "extend",
       pageNumber: number,
-      span = 2
+      span = 2,
+      timeoutMs = 150000
     ): Promise<boolean> => {
       if (weavingRef.current) return false;
       weavingRef.current = true;
@@ -607,11 +612,16 @@ export function DreamBookView() {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: payload,
-            signal: AbortSignal.timeout(150000),
+            signal: AbortSignal.timeout(timeoutMs),
           });
         let res: Response;
         try {
           res = await attempt();
+          /* a sleeping gateway answers 5xx — one quiet retry before
+             the visitor ever feels it */
+          if (res.status >= 500) {
+            res = await attempt();
+          }
         } catch {
           res = await attempt();
         }
@@ -644,8 +654,16 @@ export function DreamBookView() {
         }
 
         const fresh: WeavePage[] = data.pages;
-        pagesRef.current = [...pagesRef.current, ...fresh];
-        setPages(pagesRef.current);
+        /* THE LOOM NEVER WRITES A PAGE TWICE — a page whose number the
+           volume already holds is dropped, so a retried stride (or a
+           weave answered twice) can never double a leaf nor clash the
+           reader's keys */
+        const held = new Set(pagesRef.current.map((p) => p.n));
+        const novel = fresh.filter((p) => !held.has(p.n));
+        if (novel.length > 0) {
+          pagesRef.current = [...pagesRef.current, ...novel];
+          setPages(pagesRef.current);
+        }
         if (typeof data.threads === "string" && data.threads) {
           threadsRef.current = data.threads;
         }
@@ -813,6 +831,7 @@ export function DreamBookView() {
   const newDream = useCallback(() => {
     stopNarration();
     keepCurrent(); /* the volume in hand rests on the shelf first */
+    clearDreamResume(); /* a stale hand-off can never seed this volume */
     pagesRef.current = [];
     threadsRef.current = "";
     metaRef.current = null;
@@ -836,7 +855,7 @@ export function DreamBookView() {
     setWholeMode(false);
     setWholeReveal(null);
     setStage("atelier");
-  }, [stopNarration, keepCurrent]);
+  }, [stopNarration, keepCurrent, clearDreamResume]);
 
   const weaveOnward = useCallback(async () => {
     const ok = await weave("extend", pagesRef.current.length + 1);
@@ -853,37 +872,109 @@ export function DreamBookView() {
      one touch and the loom weaves every remaining page of the volume,
      a stride of four at a time, the thread and the ledger riding
      beneath every stride — and the progress spoken while it works.
+     THE LOOM'S RESILIENCE — a slipped stride never ends the telling:
+     every stride is tried again (three silent strides in a row are the
+     only surrender), a stalled stride cannot trap the loop, and the
+     visitor's own X rests the loom at once, keeping every page woven.
      When the last page lands, the whole book stands open at once. */
   const revealWholeBook = useCallback(async () => {
-    if (weavingRef.current || wholeReveal || !metaRef.current) return;
+    if (wholeReveal || !metaRef.current) return;
     stopNarration();
     setWholeMode(false);
+    cancelRevealRef.current = false;
     const total = metaRef.current.totalPages;
     setWholeReveal({ woven: pagesRef.current.length, total });
+    let started = false;
+    let silentStrides = 0;
     try {
-      /* a generous guard: three hundred strides are more than any
+      /* THE QUEUED HAND — the reader's own prefetch may already hold
+         the loom (it weaves the next pages the moment the book opens).
+         The whole reveal never fights it and never dies silently: it
+         waits for the current breath to land, then takes the loom and
+         channels everything that remains. */
+      for (let wait = 0; wait < 600 && weavingRef.current; wait++) {
+        if (cancelRevealRef.current) return;
+        await new Promise((r) => setTimeout(r, 250));
+      }
+      if (weavingRef.current || cancelRevealRef.current) return;
+      started = true;
+      /* the loom's own patience — before every stride, the reveal lets
+         any breath already in the loom land (the reader's prefetch),
+         so a stride is never swallowed by a held door */
+      const waitForLoom = async () => {
+        for (let wait = 0; wait < 600 && weavingRef.current; wait++) {
+          if (cancelRevealRef.current) return false;
+          await new Promise((r) => setTimeout(r, 250));
+        }
+        return !weavingRef.current && !cancelRevealRef.current;
+      };
+      /* a generous guard: two hundred strides are more than any
          volume can ask for — the loop always ends by the book's own
-         plan or the loom's honest silence before it matters */
-      for (let stride = 0; stride < 160; stride++) {
+         plan, the loom's honest silence, or the visitor's hand */
+      for (let stride = 0; stride < 200; stride++) {
+        if (cancelRevealRef.current) break;
+        if (!(await waitForLoom())) break;
         const have = pagesRef.current.length;
         const plan = metaRef.current?.totalPages ?? total;
         if (endedRef.current || have >= plan + 1) break;
-        setWholeReveal({ woven: have, total: plan });
+        if (!cancelRevealRef.current) {
+          setWholeReveal({ woven: have, total: plan });
+        }
         if (have >= plan) {
-          /* the planned end reached — the Seal of Closing is woven */
-          const ok = await weave("close", have + 1);
-          if (!ok) break;
+          /* the planned end reached — the Seal of Closing is woven.
+             A long breath is given to the seal too: the audit and the
+             ending ride the same slow ink as any stride. */
+          const ok = await weave("close", have + 1, 2, 240000);
+          if (cancelRevealRef.current) break;
+          if (!ok) {
+            if (weavingRef.current) continue; /* contention, not silence */
+            silentStrides += 1;
+            if (silentStrides >= 3) break;
+            continue;
+          }
+          silentStrides = 0;
           continue;
         }
-        const ok = await weave("next", have + 1, 4);
-        if (!ok) break;
+        const before = pagesRef.current.length;
+        const ok = await weave("next", have + 1, 4, 240000);
+        if (cancelRevealRef.current) break;
+        if (!ok) {
+          /* a weave refused because another breath held the loom is
+             not a silent stride — the patience above simply lets it
+             land, and the telling goes on */
+          if (weavingRef.current) continue;
+          silentStrides += 1;
+          /* three silent strides in a row — only then does the loom
+             rest; every single slip is woven again on its own breath */
+          if (silentStrides >= 3) break;
+          continue;
+        }
+        silentStrides = 0;
+        /* the stall guard — a stride that returns no pages can never
+           hold the loop; the book simply opens with what is woven */
+        if (pagesRef.current.length === before) break;
       }
     } finally {
+      cancelRevealRef.current = false;
       setWholeReveal(null);
-      setWholeMode(true);
-      if (navigator.vibrate) navigator.vibrate(18);
+      /* the whole book opens only when the reveal truly ran — a click
+         that was released before taking the loom leaves the reader
+         exactly as it was */
+      if (started) {
+        setWholeMode(true);
+        if (navigator.vibrate) navigator.vibrate(18);
+      }
     }
   }, [weave, wholeReveal, stopNarration]);
+
+  /* the visitor lets the loom rest — the channeling stops between
+     strides and the book opens whole with everything already woven */
+  const restTheLoom = useCallback(() => {
+    cancelRevealRef.current = true;
+    setWholeReveal(null);
+    setWholeMode(true);
+    if (navigator.vibrate) navigator.vibrate(12);
+  }, []);
 
   /* THE BINDING PRESS — the whole book, pages and front matter, bound
      into one ink PDF and handed to the visitor's own hands */
@@ -1035,6 +1126,15 @@ export function DreamBookView() {
     exitDreamBook();
   };
 
+  /* THE QUIET X — one clear close in every room of the book: it rests
+     the voice, keeps the volume on the shelf, and returns the visitor
+     to the tree in a single touch */
+  const exitTheBook = () => {
+    stopNarration();
+    keepCurrent();
+    exitDreamBook();
+  };
+
   const backFromWeaving = () => {
     setWeaveError(false);
     setStage("atelier");
@@ -1109,6 +1209,18 @@ export function DreamBookView() {
           <MoonStar className="size-3.5" aria-hidden="true" />
           <span className="hidden sm:inline">{t("The atelier of tales")}</span>
         </span>
+        <span className="min-w-2 flex-1" aria-hidden="true" />
+        {/* THE QUIET X — one touch returns to the branches */}
+        <button
+          type="button"
+          onClick={exitTheBook}
+          aria-label={t("Close the book")}
+          title={t("Close the book")}
+          data-testid="dream-atelier-close"
+          className={inkIconBtn}
+        >
+          <X className="size-4" aria-hidden="true" />
+        </button>
       </header>
 
       <div className="nice-scroll relative z-10 min-h-0 flex-1 overflow-y-auto">
@@ -1475,7 +1587,7 @@ export function DreamBookView() {
           <button
             type="button"
             onClick={() => void revealWholeBook()}
-            disabled={!!wholeReveal || weavingNext}
+            disabled={!!wholeReveal}
             aria-label={t("Whole book")}
             title={t("Whole book")}
             data-testid="dream-whole-reveal"
@@ -1600,6 +1712,18 @@ export function DreamBookView() {
             className={cn(inkIconBtn, "disabled:opacity-35")}
           >
             <ZoomIn className="size-4" aria-hidden="true" />
+          </button>
+          {/* THE QUIET X — one touch closes the book and returns to the
+              branches, from the reader and from the whole-book alike */}
+          <button
+            type="button"
+            onClick={exitTheBook}
+            aria-label={t("Close the book")}
+            title={t("Close the book")}
+            data-testid="dream-reader-close"
+            className={cn(inkIconBtn, "ml-0.5")}
+          >
+            <X className="size-4" aria-hidden="true" />
           </button>
           {/* the page-marker slide — it rests among the reading's own
               instruments and vanishes with the whole top bar the moment
@@ -1915,29 +2039,44 @@ export function DreamBookView() {
       </div>
 
       {/* THE WHOLE BOOK'S OWN RETURN — a floating hand that folds the
-          continuous volume back into page-by-page reading */}
+          continuous volume back into page-by-page reading, with the
+          quiet X beside it that closes the book for the branches */}
       <AnimatePresence>
         {wholeMode && (
-          <motion.button
+          <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 16 }}
             transition={{ duration: 0.35, ease: "easeOut" }}
-            type="button"
-            onClick={() => {
-              setWholeMode(false);
-              setPageIdx(Math.min(pageIdx, Math.max(1, pages.length)));
-            }}
-            aria-label={t("Read page by page")}
-            title={t("Read page by page")}
-            data-testid="dream-whole-return"
-            className="dream-turn focus-glow absolute bottom-6 right-5 z-30 flex h-11 items-center gap-2 rounded-full px-4"
+            className="absolute bottom-6 right-5 z-30 flex items-center gap-2"
           >
-            <BookOpenText className="size-4" aria-hidden="true" />
-            <span className="font-[family-name(var(--font-literata))] text-[12px] italic">
-              {t("Read page by page")}
-            </span>
-          </motion.button>
+            <motion.button
+              type="button"
+              onClick={exitTheBook}
+              aria-label={t("Close the book")}
+              title={t("Close the book")}
+              data-testid="dream-whole-close"
+              className="dream-turn focus-glow flex size-11 items-center justify-center rounded-full"
+            >
+              <X className="size-4" aria-hidden="true" />
+            </motion.button>
+            <motion.button
+              type="button"
+              onClick={() => {
+                setWholeMode(false);
+                setPageIdx(Math.min(pageIdx, Math.max(1, pages.length)));
+              }}
+              aria-label={t("Read page by page")}
+              title={t("Read page by page")}
+              data-testid="dream-whole-return"
+              className="dream-turn focus-glow flex h-11 items-center gap-2 rounded-full px-4"
+            >
+              <BookOpenText className="size-4" aria-hidden="true" />
+              <span className="font-[family-name(var(--font-literata))] text-[12px] italic">
+                {t("Read page by page")}
+              </span>
+            </motion.button>
+          </motion.div>
         )}
       </AnimatePresence>
 
@@ -2074,6 +2213,19 @@ export function DreamBookView() {
             role="status"
             aria-live="polite"
           >
+            {/* THE VISITOR'S HAND — one touch lets the loom rest: the
+                channeling stops between strides and the book opens
+                with every page already woven */}
+            <button
+              type="button"
+              onClick={restTheLoom}
+              aria-label={t("Let the loom rest")}
+              title={t("Let the loom rest")}
+              data-testid="dream-whole-cancel"
+              className="focus-glow absolute right-4 top-4 flex size-9 items-center justify-center rounded-full border border-border text-muted-foreground transition-all duration-300 hover:border-foreground/40 hover:text-foreground sm:right-6 sm:top-6"
+            >
+              <X className="size-4" aria-hidden="true" />
+            </button>
             <div className="relative flex size-20 items-center justify-center">
               <span
                 aria-hidden="true"

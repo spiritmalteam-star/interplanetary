@@ -95,7 +95,7 @@ export const WALLET_PLANS: Record<PlanTier, WalletPlanDef> = {
   },
   OBSERVATORY_PRO: {
     id: "OBSERVATORY_PRO",
-    label: "Observatory Pro",
+    label: "Mirror Pro",
     priceCents: envCents("WALLET_OBSERVATORY_PRO_PRICE_CENTS", 1999),
     monthlyCredits: walletCost("OBSERVATORY_PRO_CREDITS", 250),
     stripePriceId: process.env.STRIPE_PRICE_OBSERVATORY_PRO,

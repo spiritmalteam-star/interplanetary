@@ -433,7 +433,7 @@ export function AboutPage() {
               <WorldCard
                 n={13}
                 icon={Telescope}
-                name="The Observatory & About"
+                name="The Blueprint & About"
                 desc="The blueprint room detailing the technology, laws, design principles, and roadmap of our laboratory."
               />
             </div>

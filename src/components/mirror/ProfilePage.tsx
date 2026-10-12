@@ -47,7 +47,7 @@ import { cn } from "@/lib/utils";
 /* ------------------------------------------------------------------ */
 
 const SECTOR_META: Record<string, { icon: string; label: string }> = {
-  observatory: { icon: "✦", label: "Observatory" },
+  observatory: { icon: "✦", label: "Transmissions" },
   manifest: { icon: "◐", label: "Manifesting" },
   invent: { icon: "⚒", label: "The Forge" },
   dreambook: { icon: "❧", label: "Dream Books" },

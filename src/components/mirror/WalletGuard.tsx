@@ -127,7 +127,7 @@ const PASSES = [
   {
     id: "OBSERVATORY_PRO",
     plan: "OBSERVATORY_PRO",
-    name: "Observatory Pro",
+    name: "Mirror Pro",
     price: "$19.99",
     cadence: "/ month",
     credits: "250 credits every moon",
