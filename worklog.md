@@ -3496,3 +3496,21 @@ Work Log:
 Stage Summary:
 - The branches now answer with INSTRUMENTS beside suggestions (akashic/book/invent orbs tied to the walk's own words, ~11-14%, opening their original theme pages), the house grows in EVERY direction (upward, wings, and an undergrove of root families flanking the seed — tidy, trunk-true, endless downward), the crown lost its middle profile-look button, and the Dream Book evolved into the V10 literary engine: a durable ledger of canon/characters/objects/promises behind every continuation, the whole book channeled in one unbroken breath with its own loading rite, the whole volume readable at once, the whole volume downloadable as a bound PDF, and the loom's private honest audit kept outside the book until the reader asks.
 - Artifacts: genealogy.ts (roots + sweep centering + trunk alignment), BranchCanopy.tsx (tools, planner, cascade, root sentinel, floor anchor, exit door removed), book-ledger.ts (new), book-pdf.ts (new), public/fonts/DejaVuSerif{,-Bold}.ttf (new), dream-book/route.ts (V10 system layer + ledger + span + audit), DreamBookView.tsx (ledger, reveal loop, whole mode, overlay, audit, PDF button), globals.css (ink-pour/ink-turn + reduced motion), 7 dicts (+19 keys). NOT PUSHED yet in this entry's writing; push follows this session.
+
+---
+Task ID: 31
+Agent: Z.ai Code (main)
+Task: Restore the latest version after the working tree was found reverted to an old snapshot (user report: "u brought back an old version again")
+
+Work Log:
+- git status showed local main stuck at 287287b while origin/main had advanced to 0640d98 (16 commits ahead, 0 local-only commits)
+- Stashed local-only artifacts (.zscripts/dev.pid, db/custom.db) then fast-forwarded: git pull --ff-only origin main → 287287b..0640d98
+- Verified main == origin/main == 0640d98, working tree clean
+- Killed stale dev server, cleared .next cache, restarted bun run dev in background (Ready in 907ms, HTTP 200)
+- Agent Browser verification: page renders the living tree with top-bar orbs (Akashic/Book/Invent), CATEGORIES dropdown, credits, whisper chat; no console/page errors
+- Clicked Book orb → Dream Book view opens with full UI (age gates, tale styles, depth layers, "Channel the book")
+
+Stage Summary:
+- Latest implementation restored and browser-verified: commit 0640d98 (branches tools + undergrove, middle profile button gone, Dream Book V10 with whole-book channeling, loading rite, bound PDF, ledger of bones)
+- ReplicationPromptModal.tsx / replication-prompt.ts removed from the site (per requirement E — prompt lives in chat only)
+- Pre-restore local artifacts kept in stash "local dev artifacts (pid/db) during restore"
