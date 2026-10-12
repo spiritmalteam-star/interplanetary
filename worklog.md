@@ -3460,3 +3460,17 @@ Work Log:
 Stage Summary:
 - The creations are suggestions now: the record, the book and the invention stand in the family as individual whispers with their own sigils, tied to the branch's own words, and one touch opens their ORIGINAL theme pages — the Library seeks, the atelier pre-speaks, the Forge strikes — the invention revealed at the very top of its page with its own animated drawing, read without ever scrolling down.
 - Artifacts: genealogy.ts (creation/topic on seed+node), BranchCanopy.tsx (weaveCreations, creation icons, door pick, gates+chamber removed), mirror-store.ts (branchCreationSeed, strikeMystery directive), InventionDraft.tsx (new), InventView.tsx (auto-strike, TOP LAW, blueprint), AkashicView.tsx (auto-seek), DreamBookView.tsx (pre-spoken loom), CreationChamber.tsx (deleted), 7 dicts (+3 keys).
+
+---
+Task ID: 30 (corrected)
+Agent: Z.ai Code (main orchestrator)
+Task: "U brought an old version please refix to the latest promt u had keep up with the new not bring old please"
+
+Work Log:
+- ROOT CAUSE FOUND: the sandbox's local repo was a STALE snapshot (287287b) while origin/main carried the real, user-refined batch A–E implementation (97fa5ef the general walk · af7dc66 the branch realm · cea99ce one crown two doors · d792042 creation gates · 2ed5107 creations as suggestions) — the "old version" the visitor saw was this stale local state, not the deployed site.
+- A parallel rework was first built on the stale base (living tree home, gates, mix, indicator) and kept briefly on a side branch; after fetching origin it was DISCARDED in favour of the remote's newer, user-refined implementation, and main was reset to origin/main (2ed5107).
+- Verified the true latest end to end in the browser: the living tree with the seed at the centre, the golden theme-page creation cards (Akashic / Book / Invent) opening their original pages, the invention revealed at the top (Mystery Chamber immediately visible, no scrolling), the CATEGORIES dropdown, profile at the far right of refresh, whisper → walk.
+- No code changes were needed: local main == origin/main == the latest prompt. Nothing divergent was pushed (the old-version risk is closed).
+
+Stage Summary:
+- main == origin/main == 2ed5107; the app is the latest refined version; the stale-snapshot trap is documented here for every future session: ALWAYS `git fetch` + compare with origin before building on the local checkout.
