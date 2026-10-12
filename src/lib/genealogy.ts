@@ -111,6 +111,13 @@ export interface GenealogyTopology {
    * in every direction.
    */
   wing?: "left" | "right";
+  /**
+   * THE ROOT — when set, this batch grows DOWNWARD: the family seats
+   * below the trunk and descends generation by generation, flanking
+   * the seed to one side. The tree fills the ground under its crown —
+   * branches in every direction, and no empty corner anywhere.
+   */
+  root?: boolean;
 }
 
 export interface GenealogyGeometry {
@@ -123,6 +130,10 @@ export interface GenealogyGeometry {
   trunkH: number;
   width: number;
   height: number;
+  /** The Y where the trunk's base stands — the seed's own floor.
+      Root rows descend BELOW this line; the floor anchor keeps this
+      line at the seed, whatever the roots carry underneath. */
+  trunkBaseY: number;
 }
 
 /** The harmonic waves: 12 voices, 12 after a breath, the last 6 after another. */
@@ -327,6 +338,47 @@ export function buildExtensionTopology(
 }
 
 /**
+ * THE ROOT — the undergrove: a family that grows DOWNWARD, flanking
+ * the seed to one side. Its first row hangs from the trunk's base (or
+ * from the deepest tips of its side's already-standing roots); every
+ * later row forks again, the root system descending generation by
+ * generation. The layout seats it below the trunk (root batches carry
+ * negative levels).
+ */
+export function buildRootTopology(
+  seeds: GenealogySeed[],
+  tips: { id: string }[],
+  narrow: boolean,
+  side: "left" | "right"
+): GenealogyTopology {
+  const cap = narrow ? 5 : 6;
+  const pool = seeds.slice(0, BATCH_SIZE);
+  const rows: GenealogyRow[] = [];
+  for (let start = 0; start < pool.length; start += cap) {
+    const chunk = pool.slice(start, start + cap);
+    const seedsRow: GenealogySeed[] = [];
+    const parentLocal: number[] = [];
+    const parentCount =
+      rows.length === 0
+        ? Math.max(1, tips.length)
+        : rows[rows.length - 1].seeds.length;
+    for (let i = 0; i < chunk.length; i++) {
+      seedsRow.push(chunk[i]);
+      /* the first row of a trunk-hung root rises from the trunk itself */
+      parentLocal.push(tips.length === 0 && rows.length === 0 ? -1 : i % parentCount);
+    }
+    rows.push({ seeds: seedsRow, parentLocal });
+  }
+  return {
+    index: 0,
+    rows,
+    fromTips: tips.map((t) => t.id),
+    wing: side,
+    root: true,
+  };
+}
+
+/**
  * THE GRAFT — the sub-family born of a pressed whisper. The first row
  * forks straight from the pressed node; every later row forks again,
  * a whole house rising from that one choice. The layout seats it
@@ -367,8 +419,12 @@ export interface LaidTree {
   byId: Map<string, GenealogyNode>;
   geometry: GenealogyGeometry;
   frontier: { id: string; gen: number }[];
+  /** The deepest root tips per side — the frontier of the UNDERGROVE:
+      the next root family hangs from these, descending still farther. */
+  rootFrontier: { left: { id: string; gen: number }[]; right: { id: string; gen: number }[] };
   golden: GenealogyNode[];
-  /** node id → its generation level in the whole tree (0 = nearest the trunk). */
+  /** node id → its generation level in the whole tree (0 = nearest the trunk;
+      negative levels are the root rows beneath it). */
   levelOf: Map<string, number>;
   /** How many batches the tree carries. */
   batchCount: number;
@@ -417,7 +473,7 @@ export function layTree(
         );
         if (found) seat = found.level;
       }
-    } else if (topo.wing) {
+    } else if (topo.wing && !topo.root) {
       /* THE WING'S OWN SEAT — the new family takes its place directly
          BESIDE the branch it sprouts from (often a mid-tree donor):
          the canopy spreads left and right at every height, instead of
@@ -430,6 +486,27 @@ export function layTree(
         );
         if (found) seat = found.level;
       }
+    }
+    if (seat < 0 && !topo.above && topo.root) {
+      /* THE ROOT'S OWN LEVELS — the undergrove takes the negative
+         floors beneath the trunk: row r seats at level −(r+1). The
+         fold never reaches them (roots stand through every choice)
+         and the grafts' upward shifts never disturb them. */
+      topo.rows.forEach((row, r) => {
+        laidRows.push({
+          batch: b,
+          row: r,
+          count: row.seeds.length,
+          span: row.seeds.length * geo.step,
+          level: -(r + 1),
+        });
+      });
+      topo.rows.forEach((row, r) => {
+        row.seeds.forEach((_, i) => {
+          levelOfId.set(`n${b}.${r}.${i}`, -(r + 1));
+        });
+      });
+      continue;
     }
     if (seat >= 0) {
       /* every row already seated above the parent rises by this batch's
@@ -484,6 +561,12 @@ export function layTree(
       (newestGraft && lr.batch === lastIdx)
   );
   keptRows.sort((a, b2) => a.level - b2.level);
+  /* the undergrove descends nearest-first: −1 hugs the trunk, −2
+     stands beneath it, and so on down */
+  const rootLaid = keptRows
+    .filter((lr) => lr.level < 0)
+    .sort((a, b2) => b2.level - a.level);
+  const upRows = keptRows.filter((lr) => lr.level >= 0);
 
   /* ---- pass 2: the canvas that holds them all */
   const goldenCount = Math.min(goldenSeeds.length, 6);
@@ -496,19 +579,21 @@ export function layTree(
     640
   );
 
-  /* ---- pass 3: vertical order — THE TREE RISES FROM THE TRUNK.
-     The trunk holds the floor (bottom of the canvas, at the top of
-     the input bar); the golden row stands nearest the root; every
-     generation rises above the last, frontier at the very top. Every
-     row carries the FULL height its own whispers measured — a taller
+  /* ---- pass 3: vertical order — THE TREE RISES FROM THE TRUNK AND
+     DESCENDS BENEATH IT. The trunk stands above the undergrove; the
+     golden row rests nearest the root; every generation rises above
+     the last, frontier at the very top — and the root families sink
+     below the trunk, row beneath row, flanking the seed. Every row
+     carries the FULL height its own whispers measured — a taller
      voice takes a taller band, and one generous breath of distance
      always separates the generations. */
-  const rowH = keptRows.map((r) => {
+  const rowHOf = new Map<string, number>();
+  for (const r of keptRows) {
     const row = topologies[r.batch].rows[r.row];
     let h = geo.chipH;
     for (const s of row.seeds) h = Math.max(h, chipHeight(s.text, narrow, false));
-    return h;
-  });
+    rowHOf.set(`${r.batch}:${r.row}`, h);
+  }
   const goldenH =
     goldenCount > 0
       ? Math.max(
@@ -519,28 +604,45 @@ export function layTree(
         )
       : 0;
 
-  const totalRows = keptRows.length;
+  const upBlock =
+    upRows.reduce((a, r) => a + (rowHOf.get(`${r.batch}:${r.row}`) ?? 0), 0) +
+    geo.rowGap * upRows.length;
+  const rootBlock =
+    rootLaid.reduce((a, r) => a + (rowHOf.get(`${r.batch}:${r.row}`) ?? 0), 0) +
+    geo.rowGap * rootLaid.length;
   const height = Math.ceil(
     SIDE_PAD * 2 +
       geo.trunkH +
+      rootBlock +
       (goldenCount > 0 ? GOLDEN_GAP + goldenH : 0) +
-      rowH.reduce((a, h) => a + h, 0) +
-      geo.rowGap * totalRows +
+      upBlock +
       8
   );
 
-  /* the trunk's top — every row is seated upward from here */
-  const trunkTop = height - SIDE_PAD - geo.trunkH;
+  /* the trunk's top — the crown rows seat upward from here, the
+     undergrove descends from the trunk's base */
+  const trunkTop = height - SIDE_PAD - geo.trunkH - rootBlock;
+  const trunkBaseY = trunkTop + geo.trunkH;
   const rowTop = new Map<string, number>();
   const rowGen = new Map<string, number>();
   {
     let cursorY = trunkTop - (goldenCount > 0 ? GOLDEN_GAP + goldenH : 0);
-    keptRows.forEach((r, g) => {
+    upRows.forEach((r, idx) => {
       const key = `${r.batch}:${r.row}`;
       cursorY -= geo.rowGap;
-      rowTop.set(key, cursorY - rowH[g]);
-      rowGen.set(key, g);
-      cursorY -= rowH[g];
+      rowTop.set(key, cursorY - (rowHOf.get(key) ?? 0));
+      rowGen.set(key, idx);
+      cursorY -= rowHOf.get(key) ?? 0;
+    });
+  }
+  {
+    let cursorY = trunkBaseY;
+    rootLaid.forEach((r, idx) => {
+      const key = `${r.batch}:${r.row}`;
+      cursorY += geo.rowGap;
+      rowTop.set(key, cursorY);
+      rowGen.set(key, -(idx + 1));
+      cursorY += rowHOf.get(key) ?? 0;
     });
   }
 
@@ -557,12 +659,19 @@ export function layTree(
     const gen = rowGen.get(key) ?? 0;
     const top = rowTop.get(key) ?? 0;
 
-    /* THE WING — the batch's first row seats just beyond the frontier
-       cluster it grows from (alternating sides), so the tree climbs
-       like a staircase: up and sideways together, every wing near its
-       family, the walk spreading in every direction without end. */
+    /* THE ROOT'S OWN SEAT — a trunk-hung root family's first row
+       flanks the seed: one whole row beyond the trunk's side, its
+       deeper rows descending beneath (centered over their own house,
+       the branch below handles that). A root family hung from deeper
+       root tips is dragged beneath them by the lean pass instead. */
     let left0 = (width - r.span) / 2;
-    if (topo.wing && r.row === 0) {
+    if (topo.root && r.row === 0 && topo.fromTips.length === 0) {
+      const margin = geo.chipW * 0.62 + 26;
+      left0 =
+        topo.wing === "right"
+          ? width / 2 + margin
+          : width / 2 - margin - r.span;
+    } else if (topo.wing && !topo.root && r.row === 0) {
       const tipXs = topo.fromTips
         .map((id) => xById.get(id))
         .filter((x): x is number => typeof x === "number");
@@ -591,7 +700,9 @@ export function layTree(
       }
     } else if (
       r.row > 0 &&
-      (r.graftOf || topologies[r.batch].fromTips.length > 0)
+      (r.graftOf ||
+        topologies[r.batch].fromTips.length > 0 ||
+        topologies[r.batch].root)
     ) {
       const prevRow = topo.rows[r.row - 1];
       let sum = 0;
@@ -662,8 +773,9 @@ export function layTree(
     const topo = topologies[b];
     if (topo.fromTips.length === 0 || topo.rows.length === 0) continue;
     /* THE WING keeps its own flank seat — the family must not be
-       dragged back under the tips it grew from */
-    if (topo.wing) continue;
+       dragged back under the tips it grew from. A ROOT hung from
+       deeper root tips leans beneath them like any other family. */
+    if (topo.wing && !topo.root) continue;
     for (let rr = 0; rr < topo.rows.length; rr++) {
       const lr = keptRows.find((r) => r.batch === b && r.row === rr);
       if (!lr) continue; /* folded by the prune */
@@ -824,22 +936,39 @@ export function layTree(
     if (standing) levelOf.set(id, lv);
   }
 
-  /* the frontier — the topmost standing row invites the next family */
+  /* the frontier — the topmost standing row invites the next family
+     upward; the deepest root row of each side invites the next family
+     downward (the undergrove keeps descending) */
   const frontier: { id: string; gen: number }[] = [];
-  if (keptRows.length > 0) {
-    const top = keptRows[keptRows.length - 1];
+  if (upRows.length > 0) {
+    const top = upRows[upRows.length - 1];
     const topGen = rowGen.get(`${top.batch}:${top.row}`) ?? 0;
     for (let i = 0; i < top.count; i++) {
       const id = idOf.get(`${top.batch}:${top.row}:${i}`);
       if (id) frontier.push({ id, gen: topGen });
     }
   }
+  const rootFrontier: LaidTree["rootFrontier"] = { left: [], right: [] };
+  for (const side of ["left", "right"] as const) {
+    const mine = rootLaid.filter(
+      (lr) =>
+        topologies[lr.batch].root && topologies[lr.batch].wing === side
+    );
+    if (mine.length === 0) continue;
+    const deepest = mine.reduce((a, b2) => (a.level < b2.level ? a : b2));
+    const gen = rowGen.get(`${deepest.batch}:${deepest.row}`) ?? 0;
+    for (let i = 0; i < deepest.count; i++) {
+      const id = idOf.get(`${deepest.batch}:${deepest.row}:${i}`);
+      if (id) rootFrontier[side].push({ id, gen });
+    }
+  }
 
   return {
     nodes: [...goldenNodes, ...nodes],
     byId,
-    geometry: { ...geo, width, height },
+    geometry: { ...geo, width, height, trunkBaseY },
     frontier,
+    rootFrontier,
     golden: goldenNodes,
     levelOf,
     batchCount: topologies.length,

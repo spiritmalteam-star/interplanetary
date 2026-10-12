@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Fragment,
   memo,
   useCallback,
   useEffect,
@@ -31,7 +32,6 @@ import {
   ListTree,
   LoaderCircle,
   LogIn,
-  LogOut,
   Maximize2,
   Menu,
   Moon,
@@ -80,6 +80,7 @@ import {
   BATCH_SIZE,
   buildExtensionTopology,
   buildGraftTopology,
+  buildRootTopology,
   buildSeedTopology,
   layTree,
   type GenealogyNode,
@@ -199,6 +200,21 @@ const CREATION_ICON_BY_KIND: Record<CreationDoor, typeof ScrollText> = {
   book: BookOpen,
   invent: Hammer,
 };
+
+/* THE TOOLS OF THE BRANCHES — small sigil-orbs hung ON the tree
+   itself (not among the suggestions): roughly one whisper in eight
+   carries a tool at its side, each randomly tied to that whisper and
+   opening its own original theme page with the tied words riding as
+   the seed. The branches answer with more than suggestions — they
+   answer with instruments. */
+const TOOL_LABELS: Record<CreationDoor, string> = {
+  akashic: "Akashic",
+  book: "Book",
+  invent: "Invent",
+};
+/** The share of whispers that carry a tool (the visitor asked for
+    about 10–15 percent — thirteen of every hundred). */
+const TOOL_SHARE = 13;
 
 /* the walk's own hash — the doors are random to the eye, honest to
    the hour (the same hour grows the same doors) */
@@ -550,7 +566,10 @@ const TreeCanvas = memo(function TreeCanvas({
   narrow,
   disabled,
   onPick,
+  onTool,
+  tools,
   sentinelRef,
+  rootSentinelRef,
   testIdPrefix,
 }: {
   tree: LaidTree;
@@ -562,7 +581,15 @@ const TreeCanvas = memo(function TreeCanvas({
   narrow: boolean;
   disabled?: boolean;
   onPick: (node: GenealogyNode) => void;
+  onTool: (kind: "akashic" | "book" | "invent", topic: string) => void;
+  tools: {
+    key: string;
+    kind: "akashic" | "book" | "invent";
+    node: GenealogyNode;
+    side: 1 | -1;
+  }[];
   sentinelRef: RefObject<HTMLDivElement | null>;
+  rootSentinelRef: RefObject<HTMLDivElement | null>;
   testIdPrefix: string;
 }) {
   const t = useT();
@@ -619,20 +646,24 @@ const TreeCanvas = memo(function TreeCanvas({
   }, [nodes, tree, chainSet]);
 
   /* the trunk's own arms — from the trunk's crown to the first row and
-     the golden row (the root's children) */
-  const trunkTop = geo.height - geo.trunkH;
+     the golden row (the root's children); a ROOT row hangs from the
+     trunk's base instead — the arm descends, the undergrove begins */
+  const trunkTop = geo.trunkBaseY - geo.trunkH;
   const trunkArms = useMemo(() => {
     const out: { d: string; key: string; chain: boolean }[] = [];
     for (const n of nodes) {
       if (n.parent) continue;
+      const descends = n.y > trunkTop + geo.trunkH;
       out.push({
         key: `ta-${n.id}`,
-        d: `M ${geo.width / 2} ${trunkTop + 8} C ${geo.width / 2} ${trunkTop + 26}, ${n.x} ${n.y - 34}, ${n.x} ${n.y}`,
+        d: descends
+          ? `M ${geo.width / 2} ${trunkTop + geo.trunkH - 4} C ${geo.width / 2} ${trunkTop + geo.trunkH + 30}, ${n.x} ${n.y - 34}, ${n.x} ${n.y}`
+          : `M ${geo.width / 2} ${trunkTop + 8} C ${geo.width / 2} ${trunkTop + 26}, ${n.x} ${n.y - 34}, ${n.x} ${n.y}`,
         chain: chainSet.has(n.id),
       });
     }
     return out;
-  }, [nodes, geo.width, trunkTop, chainSet]);
+  }, [nodes, geo.width, geo.trunkH, trunkTop, chainSet]);
 
   /* THE LINE MASKS — an opaque plate under every chip, a little wider
      than the chip itself. Any connector that would pass behind a
@@ -668,14 +699,23 @@ const TreeCanvas = memo(function TreeCanvas({
         aria-hidden="true"
         className="absolute left-0 top-0 h-px w-full"
       />
+      {/* the root's own ear — heard at the canvas's floor: the
+          undergrove keeps descending when the visitor reaches down */}
+      <div
+        ref={rootSentinelRef}
+        aria-hidden="true"
+        className="absolute bottom-0 left-0 h-px w-full"
+      />
 
-      {/* the trunk — one breathing line rising from the input bar */}
+      {/* the trunk — one breathing line rising from the seed's floor;
+          the undergrove descends beneath it (the trunk stands at its
+          own base, never at the canvas's bottom edge) */}
       <div
         aria-hidden="true"
         className="animate-line-breathe absolute"
         style={{
           left: geo.width / 2 - 1,
-          bottom: 0,
+          top: geo.trunkBaseY - geo.trunkH,
           width: 2,
           height: geo.trunkH,
           background:
@@ -688,7 +728,7 @@ const TreeCanvas = memo(function TreeCanvas({
         className="absolute rounded-full"
         style={{
           left: geo.width / 2 - 110,
-          bottom: -26,
+          top: geo.trunkBaseY - 38,
           width: 220,
           height: 64,
           background:
@@ -849,6 +889,57 @@ const TreeCanvas = memo(function TreeCanvas({
         );
       })}
 
+      {/* THE TOOLS OF THE BRANCHES — the sigil-orbs hung on the tree:
+          one for roughly every eighth whisper, tied to that whisper's
+          own words, each opening its original theme page — the record,
+          the book, the invention — made in the moment, unique to the
+          walker's resonance. The branches answer with instruments. */}
+      {tools.map((tool) => {
+        const Icon = CREATION_ICON_BY_KIND[tool.kind];
+        const acc = tool.node.accent ?? "var(--scope-a, var(--gd))";
+        const cx = tool.node.x + tool.side * (geo.chipW / 2 + 20);
+        const cy = tool.node.y + tool.node.h / 2;
+        const stemLeft = tool.side === 1 ? tool.node.x + geo.chipW / 2 + 2 : cx + 7;
+        return (
+          <Fragment key={tool.key}>
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute z-0 h-px"
+              style={{
+                left: stemLeft,
+                top: cy,
+                width: 14,
+                background: `color-mix(in srgb, ${acc} 38%, transparent)`,
+              }}
+            />
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onTool(tool.kind, tool.node.text);
+              }}
+              disabled={disabled}
+              aria-label={t(TOOL_LABELS[tool.kind])}
+              title={t(TOOL_LABELS[tool.kind])}
+              data-testid={`${testIdPrefix}-tool-${tool.kind}`}
+              className="genea-bloom focus-glow absolute z-20 flex size-7 items-center justify-center rounded-full border bg-[color-mix(in_srgb,var(--chip-a)_10%,var(--background)_90%)] text-[var(--chip-a)] shadow-[0_0_14px_-6px_color-mix(in_srgb,var(--chip-a)_65%,transparent)] transition-all duration-300 hover:scale-110 hover:border-[color-mix(in_srgb,var(--chip-a)_70%,transparent)] disabled:cursor-not-allowed disabled:opacity-50"
+              style={
+                {
+                  left: cx,
+                  top: cy - 14,
+                  transform: "translateX(-50%)",
+                  borderColor: `color-mix(in srgb, ${acc} 42%, transparent)`,
+                  "--chip-a": acc,
+                  animationDelay: `${Math.min(tool.node.wave * 130 + 240, 760)}ms`,
+                } as CSSProperties
+              }
+            >
+              <Icon className="size-3.5" aria-hidden="true" />
+            </button>
+          </Fragment>
+        );
+      })}
+
       {/* THE CREATION GATES ARE NO LONGER HUNG BESIDE THE WHISPERS —
           they are whispers now: the record, the book and the invention
           stand in the family as individual suggestions (woven by the
@@ -995,8 +1086,6 @@ export function BranchCanopy({
   const openDreamBook = useMirror((s) => s.openDreamBook);
   const openAbout = useMirror((s) => s.openAbout);
   const openProfilePage = useMirror((s) => s.openProfilePage);
-  const openAuthGate = useMirror((s) => s.openAuth);
-  const signOutPassage = useMirror((s) => s.signOut);
   /* THE WHOLE HOUSE'S DOORS — every kategory of the old website's
      sidebar, standing within the branches themselves: the worlds the
      tree grows toward, the archives, and the quiet hands. */
@@ -1449,13 +1538,70 @@ export function BranchCanopy({
     [topologies, goldenSeeds, narrow, maxLevel]
   );
 
+  /* THE TOOLS OF THE BRANCHES — roughly one whisper in thirteen carries
+     a sigil-orb at its side (the record, the book, the invention).
+     The tie is honest-random: node id + hour + salt choose together,
+     so the same hour always hangs the same tools, and the kinds
+     distribute evenly across the whole grove. */
+  const tools = useMemo(() => {
+    const out: {
+      key: string;
+      kind: "akashic" | "book" | "invent";
+      node: GenealogyNode;
+      side: 1 | -1;
+    }[] = [];
+    let kindCursor = 0;
+    for (const n of tree.nodes) {
+      if (n.golden || n.creation) continue;
+      const h = hashWalk(`${n.id}|${hour}:${salt}`);
+      if (h % 100 >= TOOL_SHARE) continue;
+      const kind = CREATION_DOORS[kindCursor++ % CREATION_DOORS.length].kind;
+      out.push({
+        key: `tool-${n.id}`,
+        kind,
+        node: n,
+        side: h % 2 === 0 ? 1 : -1,
+      });
+    }
+    return out;
+  }, [tree, hour, salt]);
+
+  /* THE TOOL'S OWN HAND — one touch hangs the tied whisper's words on
+     the tool and opens its original theme page: the record seeks, the
+     book's loom pre-speaks, the forge strikes — each making born of
+     that branch, in the moment, never the same making twice. */
+  const openTool = useCallback(
+    (kind: "akashic" | "book" | "invent", topic: string) => {
+      if (disabled) return;
+      recordJourney({ b: category, s: scopeHint ?? undefined });
+      setBranchCreationSeed({ kind, topic });
+      if (kind === "akashic") openAkashic();
+      else if (kind === "book") openDreamBook();
+      else openInvent();
+    },
+    [
+      disabled,
+      category,
+      scopeHint,
+      recordJourney,
+      setBranchCreationSeed,
+      openAkashic,
+      openDreamBook,
+      openInvent,
+    ]
+  );
+
   /* THE READY THIRTY — the next family, grown before it is asked for.
      Sliced from the ranked grove beyond every voice already spent; the
-     visitor never waits. THE WINGS: from the third family on, each new
-     family grows out to one SIDE of the house (alternating), so the
-     tree spreads in every direction instead of one column. THE ENDLESS
-     LAW: the grove spent itself, the family re-weaves from the whole
-     grove, rotated — the walk never hits a wall. */
+     visitor never waits. THE PLANNER — the family alternates its
+     direction so the walk fills EVERY direction: upward, then a root
+     descending left of the seed, a root descending right, the first
+     wings beside the crown — and the cycle repeats, the tree rising,
+     spreading and digging deeper forever. THE MID-TREE LAW: from the
+     fifth family on, each wing sprouts from a branch MID-TREE (a donor
+     of the already-standing canopy): the wings breathe left and right
+     at every height. THE ENDLESS LAW: the grove spent itself, the
+     family re-weaves from the whole grove, rotated — never a wall. */
   const prepared = useMemo(() => {
     if (topologies.length === 0 || topologies.length >= MAX_BATCHES) return null;
     let slice = ranked.filter((w) => !spent.has(w.text.toLowerCase()));
@@ -1474,12 +1620,16 @@ export function BranchCanopy({
     if (tuned.length === 0) return null;
     /* one creation door rides with every ready family as well */
     const tunedSeeds = weaveCreations(withAccents(tuned), topologies.length);
+    /* THE FAMILY PLANNER — 1 up · 2 root-left · 3 root-right ·
+       4 wing-left · 0 wing-right, cycling forever */
+    const step = topologies.length % 5;
+    if (step === 2 || step === 3) {
+      const side = step === 2 ? "left" : "right";
+      const tips = tree.rootFrontier[side].map((t) => ({ id: t.id }));
+      return buildRootTopology(tunedSeeds, tips, narrow, side);
+    }
     const wing =
-      topologies.length >= 2
-        ? topologies.length % 2 === 0
-          ? ("right" as const)
-          : ("left" as const)
-        : undefined;
+      step === 4 ? ("left" as const) : step === 0 ? ("right" as const) : undefined;
     /* THE SIDEWARD LAW — from the fifth family on, each new house
        sprouts from a branch MID-TREE (a donor of the already-standing
        canopy): the wings breathe left and right at every height, and
@@ -1535,6 +1685,42 @@ export function BranchCanopy({
     io.observe(st);
     return () => io.disconnect();
   }, [mounted, grow]);
+
+  /* THE ROOT'S OWN EAR — reach down to the undergrove's floor and the
+     next root family descends; the ground is as endless as the sky. */
+  const rootSentinelRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const vp = vpRef.current;
+    const st = rootSentinelRef.current;
+    if (!vp || !st || !mounted) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) grow();
+      },
+      { root: vp, rootMargin: "0px 0px 180px 0px", threshold: 0 }
+    );
+    io.observe(st);
+    return () => io.disconnect();
+  }, [mounted, grow]);
+
+  /* THE QUIET FILLING — the house needs no empty corner: on its own
+     breaths the first families bloom in every direction (upward, then
+     a root left of the seed, a root right of it, then the first
+     wings), so the tree stands full before the visitor ever asks.
+     The grower rides a ref — the cascade never restarts when a new
+     family makes `grow` itself anew. */
+  const growRef = useRef(grow);
+  useEffect(() => {
+    growRef.current = grow;
+  }, [grow]);
+  useEffect(() => {
+    if (!mounted) return;
+    const beats = [650, 1500, 2350, 3200, 4050, 4900, 5750];
+    const ids = beats.map((ms) =>
+      window.setTimeout(() => growRef.current(), ms)
+    );
+    return () => ids.forEach((id) => window.clearTimeout(id));
+  }, [mounted]);
 
   /* THE HARMONIC WAVES — twelve voices at once, twelve after a few
      seconds, the last six after another; every family arrives in
@@ -1764,8 +1950,14 @@ export function BranchCanopy({
      family keeps the visitor's reading place; a regrown family returns
      to the floor; a fresh graft pans once so the new house is in view;
      a geometry flip (narrow ⟷ wide) re-anchors to the family's heart.
-     One layout pass per change — never per frame. */
+     One layout pass per change — never per frame.
+     THE UNDERGROVE LAW — the seed's own floor is the trunk's BASE, not
+     the canvas's bottom: root families descend beneath the trunk, so
+     the floor anchor holds the trunk base at the seed while the roots
+     reach down into the ground, and a root's growth never moves the
+     crown (the trunk base stays put; only the ground deepens). */
   const prevNarrowRef = useRef<boolean | null>(null);
+  const prevTrunkBaseRef = useRef(0);
   useLayoutEffect(() => {
     const vp = vpRef.current;
     if (!vp || !mounted) return;
@@ -1773,36 +1965,50 @@ export function BranchCanopy({
       prevSize.current = { w: 0, h: 0 }; /* the geometry turned — re-anchor */
     }
     prevNarrowRef.current = narrow;
-    const { width, height } = tree.geometry;
+    const { width, height, trunkBaseY } = tree.geometry;
     const dW = width - prevSize.current.w;
     const dH = height - prevSize.current.h;
+    const trunkMoved =
+      prevTrunkBaseRef.current !== 0 &&
+      Math.abs(trunkBaseY - prevTrunkBaseRef.current) > 0.5;
     const req = panReqRef.current;
     if (req) {
       panReqRef.current = null;
       const n = tree.byId.get(req);
       if (n) {
         /* one quiet pan — the new house, in view at once */
-        vp.scrollTop = Math.max(0, n.y - vp.clientHeight * 0.38);
-        vp.scrollLeft = Math.max(0, n.x - vp.clientWidth / 2);
+        vp.scrollTop = Math.max(0, n.y * treeZoom - vp.clientHeight * 0.38);
+        vp.scrollLeft = Math.max(0, n.x * treeZoom - vp.clientWidth / 2);
         prevSize.current = { w: width, h: height };
+        prevTrunkBaseRef.current = trunkBaseY;
         return;
       }
     }
     if (prevSize.current.h === 0 || dH < 0) {
       /* THE FLOOR — the trunk base rests at the seed, the stem's line
-         down the middle of the realm */
-      vp.scrollTop = vp.scrollHeight;
+         down the middle of the realm, the undergrove waiting below */
+      vp.scrollTop = Math.max(
+        0,
+        trunkBaseY * treeZoom - vp.clientHeight + 14
+      );
       vp.scrollLeft = trunkScrollLeft();
-    } else if (dH > 0 || dW !== 0) {
+    } else if (dH > 0 && trunkMoved) {
+      /* the crown rose — every row shifted down by the growth */
       vp.scrollTop += dH * treeZoom;
       /* THE FLICKER LAW — every row re-centers over the canvas, so
          widening the family shifts the content by HALF the delta;
          compensating by exactly that half keeps the tree standing
          still while it grows, and the slide never stutters */
       vp.scrollLeft += (dW / 2) * treeZoom;
+    } else if (dH > 0 || dW !== 0) {
+      /* THE ROOTS DEEPENED — the new rows descend BELOW the standing
+         trunk: the crown keeps its exact place, only the ground
+         deepens; the walk never stirs */
+      vp.scrollLeft += (dW / 2) * treeZoom;
     }
     prevSize.current = { w: width, h: height };
-  }, [tree.geometry.width, tree.geometry.height, mounted, tree, narrow, treeZoom, trunkScrollLeft]);
+    prevTrunkBaseRef.current = trunkBaseY;
+  }, [tree.geometry.width, tree.geometry.height, tree.geometry.trunkBaseY, mounted, tree, narrow, treeZoom, trunkScrollLeft]);
 
   /* ---------------- THE GRAFT — the walk grows from a choice -------- */
 
@@ -2757,11 +2963,13 @@ export function BranchCanopy({
             )}
           </div>
 
-          {/* THE DOORS OF THE HOUSE — akashic · book · about · exit,
-              standing in the very top row now: four quiet ways from
-              the walk into the house's own rooms. The exit door is the
-              passage's own hand — signed-in walkers leave, guests are
-              shown the way in. */}
+          {/* THE DOORS OF THE HOUSE — akashic · book · about, standing
+              in the very top row: quiet ways from the walk into the
+              house's own rooms. THE MIDDLE PROFILE BUTTON IS GONE — the
+              exit arrow that mirrored the passage's own sign has left
+              the crown; the passage at the far right already opens the
+              door (signed-in walkers leave from its account room, and
+              guests are shown the way in there). */}
           <div className="flex shrink-0 items-center gap-1">
             <button
               type="button"
@@ -2792,23 +3000,6 @@ export function BranchCanopy({
               className="focus-glow flex size-7 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
             >
               <Info className="size-3" aria-hidden="true" />
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                const m = useMirror.getState().me;
-                if (m && !m.email.startsWith("anon:")) {
-                  void signOutPassage();
-                } else {
-                  openAuthGate("signin");
-                }
-              }}
-              aria-label={t("Exit")}
-              title={t("Exit")}
-              data-testid={`${testIdPrefix}-door-exit`}
-              className="focus-glow flex size-7 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
-            >
-              <LogOut className="size-3" aria-hidden="true" />
             </button>
           </div>
 
