@@ -21,6 +21,7 @@ export const COSTS: Record<string, number> = {
   mirror_os: cost("mirror_os", 15),
   artx: cost("artx", 15),
   forge: cost("forge", 25),
+  branch_creation: cost("branch_creation", 20),
   poem: cost("poem", 15),
   account_settings: cost("account_settings", 0),
   invent_tool: cost("invent_tool", 15),

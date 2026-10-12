@@ -1993,6 +1993,90 @@ html:not(.dark) .scope-lightcodes {
 .room-swap {
   animation: canopy-veil-in 0.32s ease both;
 }
+
+/* --------------------------------------------------------------------
+   THE CREATION DRAFT — the invention gate's drawing breathes: rings
+   turning, motes in orbit, a core pulsing, a line of force flowing.
+   Transform/opacity/stroke only — pure compositor work, the chamber
+   stays cool. transform-box: fill-box keeps every rotation on its own
+   shape, so the draft draws itself in place. */
+@keyframes draft-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.draft-spin,
+.draft-spin-fast,
+.draft-spin-rev {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.draft-spin {
+  animation: draft-spin 26s linear infinite;
+}
+.draft-spin-fast {
+  animation: draft-spin 11s linear infinite;
+}
+.draft-spin-rev {
+  animation: draft-spin 34s linear infinite reverse;
+}
+@keyframes draft-pulse {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.draft-pulse {
+  animation: draft-pulse 2.6s ease-in-out infinite;
+}
+@keyframes draft-flow {
+  to {
+    stroke-dashoffset: -40;
+  }
+}
+.draft-flow {
+  animation: draft-flow 2.8s linear infinite;
+}
+@keyframes draft-swing {
+  0%,
+  100% {
+    transform: rotate(-7deg);
+  }
+  50% {
+    transform: rotate(7deg);
+  }
+}
+.draft-swing {
+  animation: draft-swing 3.4s ease-in-out infinite;
+  transform-box: view-box;
+}
+@keyframes draft-wobble {
+  0%,
+  100% {
+    transform: rotate(-5deg);
+  }
+  50% {
+    transform: rotate(5deg);
+  }
+}
+.draft-wobble {
+  animation: draft-wobble 2.2s ease-in-out infinite;
+  transform-box: view-box;
+}
+@media (prefers-reduced-motion: reduce) {
+  .draft-spin,
+  .draft-spin-fast,
+  .draft-spin-rev,
+  .draft-pulse,
+  .draft-flow,
+  .draft-swing,
+  .draft-wobble {
+    animation: none;
+  }
+}
 /* the narrator's gathering breath — the honest "wait one beat" pulse */
 .narration-gathering {
   animation: narration-gather 1.6s ease-in-out infinite;

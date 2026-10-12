@@ -31,6 +31,7 @@ import {
   ListTree,
   LoaderCircle,
   LogIn,
+  LogOut,
   Maximize2,
   Menu,
   Moon,
@@ -88,6 +89,7 @@ import {
 } from "@/lib/genealogy";
 import { recordExpansion, readExpansionScore } from "@/lib/expansion";
 import { ExpansionRing } from "./ExpansionMirror";
+import { CreationChamber, type CreationKind } from "./CreationChamber";
 import { useT } from "@/lib/i18n";
 import { useMirror } from "@/lib/mirror-store";
 import { cn } from "@/lib/utils";
@@ -168,6 +170,21 @@ const MAX_BATCHES = 60;
 /** The harmonic pauses — twelve voices, then twelve, then six. */
 const WAVE_PAUSE_1 = 2600;
 const WAVE_PAUSE_2 = 3400;
+
+/* THE CREATION GATES — three small doors that hang beside certain
+   whispers. They are not information but CREATION: each gate births,
+   in this exact moment, a making tied to the whisper and its
+   kategory — a record, a book, an invention — unique to the walker
+   whose resonance opens it. */
+const CREATION_GATES: {
+  kind: CreationKind;
+  label: string;
+  icon: typeof ScrollText;
+}[] = [
+  { kind: "akashic", label: "Create · a record of akasha", icon: ScrollText },
+  { kind: "book", label: "Create · a book from this branch", icon: BookOpen },
+  { kind: "invent", label: "Create · an invention of this branch", icon: Hammer },
+];
 
 /* ---------------- the tree mix — the compass's memory ----------------
 
@@ -501,25 +518,27 @@ export function CanopyRestStrip({
 const TreeCanvas = memo(function TreeCanvas({
   tree,
   batchCount,
-  latestReveal,
+  revealed,
   chainSet,
   pickedId,
   flashId,
   narrow,
   disabled,
   onPick,
+  onCreate,
   sentinelRef,
   testIdPrefix,
 }: {
   tree: LaidTree;
   batchCount: number;
-  latestReveal: 1 | 2 | 3;
+  revealed: Record<number, 1 | 2 | 3>;
   chainSet: Set<string>;
   pickedId: string | null;
   flashId: string | null;
   narrow: boolean;
   disabled?: boolean;
   onPick: (node: GenealogyNode) => void;
+  onCreate: (kind: CreationKind, node: GenealogyNode) => void;
   sentinelRef: RefObject<HTMLDivElement | null>;
   testIdPrefix: string;
 }) {
@@ -536,10 +555,10 @@ const TreeCanvas = memo(function TreeCanvas({
         continue;
       }
       const b = Number(n.id.slice(1, n.id.indexOf(".")));
-      if (b < batchCount - 1 || n.wave < latestReveal) out.push(n);
+      if (b < batchCount - 1 || n.wave < (revealed[b] ?? 1)) out.push(n);
     }
     return out;
-  }, [tree, batchCount, latestReveal]);
+  }, [tree, batchCount, revealed]);
 
   /* the connectors — one path per revealed child, drawn from its
      parent's foot to its own crown, kept OUT of the chips themselves
@@ -797,6 +816,51 @@ const TreeCanvas = memo(function TreeCanvas({
           </button>
         );
       })}
+
+      {/* THE CREATION GATES — beside certain whispers hang three small
+          doors, like amulets on the family's ropes: the record, the
+          book, the invention. One touch births a making tied to this
+          whisper and its kategory — made in this moment, unique to the
+          walker's resonance, never the same creation twice. */}
+      {nodes.map((n, i) => {
+        if (n.golden || i % 6 !== 2) return null;
+        const gateAccent = n.accent ?? "var(--scope-a, var(--gd))";
+        return (
+          <div
+            key={`gates-${n.id}`}
+            className="absolute z-10 flex items-center gap-1.5"
+            style={{
+              left: n.x,
+              top: n.y + n.h + 7,
+              transform: "translateX(-50%)",
+            }}
+          >
+            {CREATION_GATES.map((g) => {
+              const GateIcon = g.icon;
+              return (
+                <button
+                  key={g.kind}
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onCreate(g.kind, n);
+                  }}
+                  disabled={disabled}
+                  aria-label={t(g.label)}
+                  title={t(g.label)}
+                  data-testid={`${testIdPrefix}-gate-${g.kind}`}
+                  className="focus-glow flex size-[22px] items-center justify-center rounded-full border bg-background text-muted-foreground shadow-[0_2px_10px_-6px_rgba(0,0,0,0.5)] transition-colors duration-300 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                  style={{
+                    borderColor: `color-mix(in srgb, ${gateAccent} 38%, transparent)`,
+                  }}
+                >
+                  <GateIcon className="size-3" aria-hidden="true" />
+                </button>
+              );
+            })}
+          </div>
+        );
+      })}
     </div>
   );
 });
@@ -939,6 +1003,8 @@ export function BranchCanopy({
   const openDreamBook = useMirror((s) => s.openDreamBook);
   const openAbout = useMirror((s) => s.openAbout);
   const openProfilePage = useMirror((s) => s.openProfilePage);
+  const openAuthGate = useMirror((s) => s.openAuth);
+  const signOutPassage = useMirror((s) => s.signOut);
   /* THE WHOLE HOUSE'S DOORS — every kategory of the old website's
      sidebar, standing within the branches themselves: the worlds the
      tree grows toward, the archives, and the quiet hands. */
@@ -1445,14 +1511,24 @@ export function BranchCanopy({
 
   /* THE HARMONIC WAVES — twelve voices at once, twelve after a few
      seconds, the last six after another; every family arrives in
-     rhythm with the context. */
-  const [latestReveal, setLatestReveal] = useState<1 | 2 | 3>(1);
+     rhythm with the context. THE FLICKER LAW — only the NEWEST family
+     waits for its waves; every older family keeps its full reveal, so
+     a growing tree never flashes a chip away and back while the
+     visitor slides through it. */
+  const [revealed, setRevealed] = useState<Record<number, 1 | 2 | 3>>({});
   useEffect(() => {
     if (topologies.length === 0) return;
-    const t0 = window.setTimeout(() => setLatestReveal(1), 0);
-    const t1 = window.setTimeout(() => setLatestReveal(2), WAVE_PAUSE_1);
+    const b = topologies.length - 1;
+    const t0 = window.setTimeout(
+      () => setRevealed((r) => (r[b] === 1 ? r : { ...r, [b]: 1 })),
+      0
+    );
+    const t1 = window.setTimeout(
+      () => setRevealed((r) => (r[b] === 2 ? r : { ...r, [b]: 2 })),
+      WAVE_PAUSE_1
+    );
     const t2 = window.setTimeout(
-      () => setLatestReveal(3),
+      () => setRevealed((r) => (r[b] === 3 ? r : { ...r, [b]: 3 })),
       WAVE_PAUSE_1 + WAVE_PAUSE_2
     );
     return () => {
@@ -1692,7 +1768,11 @@ export function BranchCanopy({
       vp.scrollLeft = trunkScrollLeft();
     } else if (dH > 0 || dW !== 0) {
       vp.scrollTop += dH * treeZoom;
-      vp.scrollLeft += dW * treeZoom;
+      /* THE FLICKER LAW — every row re-centers over the canvas, so
+         widening the family shifts the content by HALF the delta;
+         compensating by exactly that half keeps the tree standing
+         still while it grows, and the slide never stutters */
+      vp.scrollLeft += (dW / 2) * treeZoom;
     }
     prevSize.current = { w: width, h: height };
   }, [tree.geometry.width, tree.geometry.height, mounted, tree, narrow, treeZoom, trunkScrollLeft]);
@@ -1820,6 +1900,26 @@ export function BranchCanopy({
       markSpent,
       spent,
     ]
+  );
+
+  /* THE CREATION GATES — a gate pressed beside a whisper births a
+     making tied to that branch and its kategory, unique to the walker
+     (the resonance of this very moment), never the same creation
+     twice. */
+  const [creation, setCreation] = useState<{
+    kind: CreationKind;
+    topic: string;
+    family: string;
+  } | null>(null);
+  const openCreation = useCallback(
+    (kind: CreationKind, node: GenealogyNode) => {
+      setCreation({
+        kind,
+        topic: node.text,
+        family: familyKeyByText.get(node.text.toLowerCase()) ?? "",
+      });
+    },
+    [familyKeyByText]
   );
 
   /* THE WALK CONTINUES FROM THE ANSWER — a branch grown on the reply,
@@ -2619,6 +2719,61 @@ export function BranchCanopy({
             )}
           </div>
 
+          {/* THE DOORS OF THE HOUSE — akashic · book · about · exit,
+              standing in the very top row now: four quiet ways from
+              the walk into the house's own rooms. The exit door is the
+              passage's own hand — signed-in walkers leave, guests are
+              shown the way in. */}
+          <div className="flex shrink-0 items-center gap-1">
+            <button
+              type="button"
+              onClick={openAkashic}
+              aria-label={t("Akashic")}
+              title={t("Akashic")}
+              data-testid={`${testIdPrefix}-door-akashic`}
+              className="focus-glow flex size-7 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+            >
+              <ScrollText className="size-3" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              onClick={openDreamBook}
+              aria-label={t("Book")}
+              title={t("Book")}
+              data-testid={`${testIdPrefix}-door-book`}
+              className="focus-glow flex size-7 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+            >
+              <BookOpen className="size-3" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              onClick={openAbout}
+              aria-label={t("About us")}
+              title={t("About us")}
+              data-testid={`${testIdPrefix}-door-about`}
+              className="focus-glow flex size-7 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+            >
+              <Info className="size-3" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                const m = useMirror.getState().me;
+                if (m && !m.email.startsWith("anon:")) {
+                  void signOutPassage();
+                } else {
+                  openAuthGate("signin");
+                }
+              }}
+              aria-label={t("Exit")}
+              title={t("Exit")}
+              data-testid={`${testIdPrefix}-door-exit`}
+              className="focus-glow flex size-7 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+            >
+              <LogOut className="size-3" aria-hidden="true" />
+            </button>
+          </div>
+
           {/* THE WORLDS ARE GONE — their spirit lives inside the
               categories: a chosen kategory focuses the walk on that
               nature, and every room speaks with that world's voice. */}
@@ -2629,10 +2784,12 @@ export function BranchCanopy({
             )}
             {!realm && <ExpansionRing />}
             {realm ? (
-              /* the right column — the renewing hand, and beneath it
-                 the visitor's own passage (the profile room, where the
-                 score mirror and the settings live) */
-              <div className="flex flex-col items-center gap-1">
+              /* THE TOP ROW'S RIGHT HAND — the renewing hand first, and
+                 at its very right the visitor's own passage (the
+                 profile room, where the score mirror and the settings
+                 live): the passage stands at the extreme right of the
+                 renewing hand, on the same row. */
+              <div className="flex items-center gap-1.5">
                 <button
                   type="button"
                   onClick={() => setSalt((s) => s + 1)}
@@ -2693,55 +2850,10 @@ export function BranchCanopy({
           </div>
         </div>
 
-        {/* THE REALM'S SECOND ROW — the doors of the house: the akashic
-            library, the book, the open door of the house. The passage
-            rides the top bar's right column now, the score mirror lives
-            inside the profile — three quiet doors remain. */}
-        {realm && (
-          <div className="mx-auto mt-1.5 flex w-full max-w-[760px] items-center justify-between gap-2">
-            <div className="flex min-w-0 items-center gap-1.5">
-              <button
-                type="button"
-                onClick={openAkashic}
-                aria-label={t("Akashic")}
-                title={t("Akashic")}
-                data-testid={`${testIdPrefix}-door-akashic`}
-                className="focus-glow flex size-8 items-center justify-center gap-1.5 rounded-full border hairline px-0 text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground sm:w-auto sm:px-3"
-              >
-                <ScrollText className="size-3.5 shrink-0" aria-hidden="true" />
-                <span className="hidden text-[12px] font-medium sm:inline">
-                  {t("Akashic")}
-                </span>
-              </button>
-              <button
-                type="button"
-                onClick={openDreamBook}
-                aria-label={t("Book")}
-                title={t("Book")}
-                data-testid={`${testIdPrefix}-door-book`}
-                className="focus-glow flex size-8 items-center justify-center gap-1.5 rounded-full border hairline px-0 text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground sm:w-auto sm:px-3"
-              >
-                <BookOpen className="size-3.5 shrink-0" aria-hidden="true" />
-                <span className="hidden text-[12px] font-medium sm:inline">
-                  {t("Book")}
-                </span>
-              </button>
-              <button
-                type="button"
-                onClick={openAbout}
-                aria-label={t("About us")}
-                title={t("About us")}
-                data-testid={`${testIdPrefix}-door-about`}
-                className="focus-glow flex size-8 items-center justify-center gap-1.5 rounded-full border hairline px-0 text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground sm:w-auto sm:px-3"
-              >
-                <Info className="size-3.5 shrink-0" aria-hidden="true" />
-                <span className="hidden text-[12px] font-medium sm:inline">
-                  {t("About us")}
-                </span>
-              </button>
-            </div>
-          </div>
-        )}
+        {/* THE SECOND ROW IS GONE — the doors of the house (akashic ·
+            book · about · exit) ride the very top row now, and the
+            passage stands at the top row's extreme right: one calm
+            compass, no second rank beneath it. */}
       </div>
 
       {/* --------------------- the walkable family --------------------- */}
@@ -2798,13 +2910,14 @@ export function BranchCanopy({
               <TreeCanvas
                 tree={tree}
                 batchCount={batchCount}
-                latestReveal={latestReveal}
+                revealed={revealed}
                 chainSet={chainSet}
                 pickedId={pickedId}
                 flashId={flashId}
                 narrow={narrow}
                 disabled={disabled}
                 onPick={pick}
+                onCreate={openCreation}
                 sentinelRef={sentinelRef}
                 testIdPrefix={testIdPrefix}
               />
@@ -3110,15 +3223,7 @@ export function BranchCanopy({
                           key={`${zoomQ}-${i}`}
                           className="flex flex-col gap-2"
                         >
-                          <p
-                            className="ml-auto max-w-[86%] whitespace-pre-wrap break-words rounded-2xl rounded-br-md border px-3.5 py-2 text-[13px] leading-relaxed text-foreground"
-                            style={{
-                              borderColor:
-                                "color-mix(in srgb, var(--scope-a,var(--gd)) 30%, transparent)",
-                              backgroundColor:
-                                "color-mix(in srgb, var(--scope-a,var(--gd)) 10%, var(--background) 90%)",
-                            }}
-                          >
+                          <p className="ml-auto max-w-[88%] whitespace-pre-wrap break-words text-[13px] font-medium leading-relaxed text-foreground">
                             {turn.q}
                           </p>
                           {turn.loading ? (
@@ -3268,6 +3373,15 @@ export function BranchCanopy({
             </section>
           </div>
         )}
+
+        {/* THE CREATION CHAMBER — a gate's making, born above the tree:
+            the record, the book, the invention of the whisper whose
+            gate the walker opened — made in this moment, unique to
+            their resonance. */}
+        <CreationChamber
+          creation={creation}
+          onClose={() => setCreation(null)}
+        />
       </div>
     </div>
   );
