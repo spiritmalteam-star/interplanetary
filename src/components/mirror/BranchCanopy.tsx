@@ -2739,7 +2739,12 @@ export function BranchCanopy({
           THE TOP BAR DROPS DOWN WHEN NEEDED AND RISES UP WHEN NOT:
           one quiet hand at the top-right corner folds the whole crown
           away and the branches take almost the whole sky. The hand
-          itself never leaves — it is the way back down. */}
+          itself never leaves — it is the way back down.
+          THE ONE JOB LAW — the hand hides and shows the top bar and
+          NOTHING else: it floats above every room (a folded crown in a
+          standing room never buries it), so bringing the bar back never
+          closes the room, never returns the branches — the screen stays
+          exactly where the visitor stands. */}
       <div className="relative shrink-0">
         <div
           aria-hidden={realm && crownUp ? true : undefined}
@@ -3220,7 +3225,7 @@ export function BranchCanopy({
             aria-label={crownUp ? t("Show the top bar") : t("Hide the top bar")}
             title={crownUp ? t("Show the top bar") : t("Hide the top bar")}
             data-testid={`${testIdPrefix}-crown-toggle`}
-            className="focus-glow absolute z-30 flex size-7 items-center justify-center rounded-full border bg-background text-muted-foreground shadow-[0_8px_22px_-12px_rgba(0,0,0,0.55)] transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+            className="focus-glow absolute z-40 flex size-7 items-center justify-center rounded-full border bg-background text-muted-foreground shadow-[0_8px_22px_-12px_rgba(0,0,0,0.55)] transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
             style={{
               top: "max(0.5rem, env(safe-area-inset-top))",
               right: "max(0.75rem, env(safe-area-inset-right))",
@@ -3461,7 +3466,20 @@ export function BranchCanopy({
                   NO remount key: the panel itself never leaves the tree
                   when the walk turns to the next branch, only the room
                   inside it changes — the transmission glides, no flicker */}
-              <header className="flex shrink-0 items-start justify-between gap-3 border-b px-4 py-2.5 sm:px-5" style={{ borderColor: "color-mix(in srgb, var(--hairline) 70%, transparent)" }}>
+              <header
+                className="flex shrink-0 items-start justify-between gap-3 border-b px-4 py-2.5 pr-11 sm:px-5 sm:pr-12"
+                style={{
+                  borderColor:
+                    "color-mix(in srgb, var(--hairline) 70%, transparent)",
+                  /* the crown's own corner — when the crown is folded the
+                     room rises to the very top of the screen: its buttons
+                     yield the corner to the floating top-bar hand (and
+                     clear the notch's safe band) */
+                  paddingTop: crownUp
+                    ? "max(0.5rem, env(safe-area-inset-top))"
+                    : undefined,
+                }}
+              >
                 <div className="flex min-w-0 items-start gap-2.5">
                   <span
                     className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--scope-a,var(--gd))_42%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_10%,transparent)]"
