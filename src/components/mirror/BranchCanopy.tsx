@@ -200,6 +200,22 @@ const CREATION_ICON_BY_KIND: Record<CreationDoor, typeof ScrollText> = {
   invent: Hammer,
 };
 
+/* THE CATEGORY TIMELINE — one standing tree per category, kept in the
+   room's own memory (never on the phone): the families grown, the
+   whispers spent, the trail of the walk, the picked branch, the reveal
+   waves. When the visitor jumps between categories, the tree they leave
+   is laid on this shelf and the other category's tree is lifted back
+   exactly as it stood — no suggestion lost, no branch forgotten. */
+interface CanopyTimeline {
+  topologies: GenealogyTopology[];
+  spent: string[];
+  lineage: { id: string | null; text: string }[];
+  pickedId: string | null;
+  maxLevel: number | null;
+  revealed: Record<number, 1 | 2 | 3>;
+  salt: number;
+}
+
 /* THE TOOLS OF THE BRANCHES — small sigil-orbs hung ON the tree
    itself (not among the suggestions): roughly one whisper in eight
    carries a tool at its side, each randomly tied to that whisper and
@@ -1248,6 +1264,29 @@ export function BranchCanopy({
   /* the crown's two quiet dropdowns — the kategories of the walk and
      the worlds of the house */
   const [crownMenu, setCrownMenu] = useState<"cats" | "menu" | null>(null);
+  /* THE CROWN'S OWN BREATH — the top bar drops down when the visitor
+     needs it and rises up when they don't, so the branches take almost
+     the whole sky. One quiet hand at the top-right corner carries it. */
+  const [crownUp, setCrownUp] = useState(false);
+  /* THE FOCUSED FAMILY — when the walk stands on ONE category, the
+     whole house wears that category's own light: the chat's frame, the
+     composer, the doors and the seed glow all take its color. */
+  const focusFamily =
+    mix.on.length === 1
+      ? TREE_FAMILIES.find((f) => f.key === mix.on[0]) ?? null
+      : null;
+  /* THE REGENERATION'S REST — after a category's own tree is lifted
+     back from the timeline, the regrow rests: the restored tree never
+     re-ranks under the visitor. The renewing hand (inside the chat),
+     the visitor's own pick or ask wake it again. */
+  const suppressRegrowRef = useRef(false);
+  /* THE RENEWING HAND — the reload lives INSIDE the chat now: the
+     floor's whisper line and every room carry it. One touch and the
+     family is re-grown fresh. */
+  const renew = useCallback(() => {
+    suppressRegrowRef.current = false;
+    setSalt((s) => s + 1);
+  }, []);
 
   /* one touch folds a family out of the grove, or weaves it back in —
      the walk never walks empty (the last family always stays) */
@@ -1490,6 +1529,9 @@ export function BranchCanopy({
     lastRankedRef.current = ranked;
     /* the engine never renders synchronously inside an effect */
     const id = window.setTimeout(() => {
+      /* THE TIMELINE'S REST — a tree lifted back from a category's own
+         shelf stands untouched until the visitor's own hand moves. */
+      if (suppressRegrowRef.current) return;
       const tuned = tuneSeedBatch(
         ranked
           .slice(0, BATCH_SIZE * 2)
@@ -2080,6 +2122,8 @@ export function BranchCanopy({
   const pick = useCallback(
     (node: GenealogyNode) => {
       if (disabled) return;
+      /* the visitor's own step — the tree may grow again */
+      suppressRegrowRef.current = false;
       if (node.creation) {
         recordJourney({ b: category, s: scopeHint ?? undefined });
         setPickedId(node.id);
@@ -2171,6 +2215,8 @@ export function BranchCanopy({
   const sendFromPanel = useCallback(
     (text: string, move: BranchType | null) => {
       if (disabled || liveLoading || !text.trim()) return;
+      /* the visitor's own step — the tree may grow again */
+      suppressRegrowRef.current = false;
       recordExpansion("pick", { scope: scopeHint ?? null, movement: move });
       recordJourney({ b: category, s: scopeHint ?? undefined });
       recordSeen([text]);
@@ -2585,6 +2631,72 @@ export function BranchCanopy({
      while the visitor thinks; one send and the room rises with them. */
   const [askDraft, setAskDraft] = useState("");
 
+  /* ------------- THE CATEGORY TIMELINE — the walk's own memory --------
+     Every category keeps its own standing tree in the room's memory
+     (never on the phone). THE JUMP: the visitor chooses another
+     category — the tree they leave is laid on the shelf, the other
+     category's tree is lifted back exactly as it stood (the last
+     suggestions and the branch of the walk are never lost). THE NEW
+     CHAT LAW — a chosen category begins a NEW conversation: the room
+     folds, every room's thread rests, and the channel returns to its
+     quiet origin (the old words already rest on the archive's shelf).
+     While a restored tree stands, the regrow rests too. */
+  const focusKey = mix.on.length === 1 ? mix.on[0] : "general";
+  const timelineRef = useRef<Map<string, CanopyTimeline>>(new Map());
+  const prevFocusRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!mounted) return;
+    const prev = prevFocusRef.current;
+    if (prev === null) {
+      prevFocusRef.current = focusKey;
+      return;
+    }
+    if (prev === focusKey) return;
+    prevFocusRef.current = focusKey;
+    /* the tree the visitor leaves behind — laid on the room's shelf */
+    if (topologies.length > 0) {
+      timelineRef.current.set(prev, {
+        topologies,
+        spent: [...spent],
+        lineage,
+        pickedId,
+        maxLevel,
+        revealed,
+        salt,
+      });
+    } else {
+      timelineRef.current.delete(prev);
+    }
+    /* THE NEW CHAT — the conversation begins again with the category:
+       the old words rest on the archive's own shelf (the ChatGPT turn),
+       the channel opens a fresh page, and every room's thread rests. */
+    if (!disabled) {
+      threadsRef.current.clear();
+      setThread([]);
+      setThreadBusy(false);
+      setZoom(null);
+      setAskDraft("");
+      setBranchesOpen(false);
+      useMirror.getState().newChat(useMirror.getState().activeMode);
+    }
+    /* the other category's own tree — lifted back up as it stood */
+    const snap = timelineRef.current.get(focusKey);
+    if (snap && snap.topologies.length > 0) {
+      setTopologies(snap.topologies);
+      setSpent(new Set(snap.spent));
+      setLineage(snap.lineage);
+      setPickedId(snap.pickedId);
+      setMaxLevel(snap.maxLevel);
+      setRevealed(snap.revealed);
+      setSalt(snap.salt);
+      panReqRef.current = null;
+      prevSize.current = { w: 0, h: 0 }; /* the view returns to the trunk */
+      suppressRegrowRef.current = true; /* the timeline rests */
+    } else {
+      suppressRegrowRef.current = false; /* a fresh grove may grow */
+    }
+  }, [focusKey, mounted, disabled, topologies, spent, lineage, pickedId, maxLevel, revealed, salt]);
+
   if (!mounted) return null;
 
   /* ---------------- the rendered family -----------------------------
@@ -2608,6 +2720,11 @@ export function BranchCanopy({
           ? "pointer-events-auto translate-y-0 opacity-100"
           : "pointer-events-none translate-y-2 opacity-0"
       )}
+      style={
+        focusFamily
+          ? ({ "--scope-a": focusFamily.accent } as CSSProperties)
+          : undefined
+      }
     >
       {/* ---------------------------- header ---------------------------
           THE COMPASS — the whole house's steering, one calm row. THE
@@ -2618,6 +2735,22 @@ export function BranchCanopy({
           clean dropdown; a chosen category focuses the walk on that
           nature, and every room speaks with that world's voice. The
           mix of worlds rests in the settings, inside the profile. */}
+      {/* ------------------------- the crown's breath -----------------
+          THE TOP BAR DROPS DOWN WHEN NEEDED AND RISES UP WHEN NOT:
+          one quiet hand at the top-right corner folds the whole crown
+          away and the branches take almost the whole sky. The hand
+          itself never leaves — it is the way back down. */}
+      <div className="relative shrink-0">
+        <div
+          aria-hidden={realm && crownUp ? true : undefined}
+          className={cn(
+            "transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
+            realm && crownUp ? "max-h-0 opacity-0" : "max-h-36 opacity-100",
+            /* the crown's own dropdowns must never be clipped — the
+               fold only clips when the crown itself is folded away */
+            crownMenu ? "overflow-visible" : "overflow-hidden"
+          )}
+        >
       <div
         className={cn(
           "shrink-0 bg-background px-3 pb-1 sm:px-5",
@@ -2632,7 +2765,7 @@ export function BranchCanopy({
         <div
           className={cn(
             "mx-auto flex w-full items-center gap-1.5",
-            realm ? "max-w-[760px]" : "max-w-[680px]"
+            realm ? "max-w-[760px] pr-11 sm:pr-12" : "max-w-[680px]"
           )}
         >
           {/* THE MENU — where the walk stands, behind one quiet button:
@@ -2842,9 +2975,11 @@ export function BranchCanopy({
                     {/* GENERAL — the whole house in even voices */}
                     <button
                       type="button"
-                      onClick={() =>
-                        applyMix({ on: allFamilyKeys(), weights: evenWeights() })
-                      }
+                      onClick={() => {
+                        /* already the whole house — the walk rests */
+                        if (mixIsGeneral(mix)) return;
+                        applyMix({ on: allFamilyKeys(), weights: evenWeights() });
+                      }}
                       aria-pressed={mixIsGeneral(mix)}
                       title={t("The whole house, mixed")}
                       data-testid={`${testIdPrefix}-family-general`}
@@ -3015,50 +3150,36 @@ export function BranchCanopy({
             )}
             {!realm && <ExpansionRing />}
             {realm ? (
-              /* THE TOP ROW'S RIGHT HAND — the renewing hand first, and
-                 at its very right the visitor's own passage (the
-                 profile room, where the score mirror and the settings
-                 live): the passage stands at the extreme right of the
-                 renewing hand, on the same row. */
-              <div className="flex items-center gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => setSalt((s) => s + 1)}
-                  disabled={disabled}
-                  aria-label={t("New branches")}
-                  title={t("New branches")}
-                  data-testid={`${testIdPrefix}-renew`}
-                  className="focus-glow flex size-7 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  <RefreshCw className="size-3" aria-hidden="true" />
-                </button>
-                <button
-                  type="button"
-                  onClick={openProfilePage}
-                  aria-label={t("Passage")}
-                  title={t("Passage")}
-                  data-testid={`${testIdPrefix}-door-passage`}
-                  className="focus-glow flex size-7 items-center justify-center rounded-full border text-[var(--scope-a,var(--gd))] transition-all duration-300 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)]"
-                  style={{
-                    borderColor:
-                      "color-mix(in srgb, var(--scope-a,var(--gd)) 34%, transparent)",
-                    backgroundColor:
-                      "color-mix(in srgb, var(--scope-a,var(--gd)) 8%, var(--background))",
-                  }}
-                >
-                  {/* THE ICON ITSELF — the passage always wears the
-                      visitor's own figure: a person, never an arrow.
-                      Guests find the way in INSIDE the passage; walkers
-                      leave from the same room. The door never dresses
-                      itself as an exit. */}
-                  <UserRound className="size-3" aria-hidden="true" />
-                </button>
-              </div>
+              /* THE TOP ROW'S RIGHT HAND — at its very right stands the
+                 visitor's own passage (the profile room, where the score
+                 mirror and the settings live). THE RENEWING HAND MOVED
+                 INSIDE THE CHAT — the floor's whisper line and every
+                 room carry the reload now, so the crown stays a calm
+                 compass of doors. THE ICON ITSELF — the passage always
+                 wears the visitor's own figure: a person, never an
+                 arrow. Guests find the way in INSIDE the passage;
+                 walkers leave from the same room. */
+              <button
+                type="button"
+                onClick={openProfilePage}
+                aria-label={t("Passage")}
+                title={t("Passage")}
+                data-testid={`${testIdPrefix}-door-passage`}
+                className="focus-glow flex size-7 items-center justify-center rounded-full border text-[var(--scope-a,var(--gd))] transition-all duration-300 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)]"
+                style={{
+                  borderColor:
+                    "color-mix(in srgb, var(--scope-a,var(--gd)) 34%, transparent)",
+                  backgroundColor:
+                    "color-mix(in srgb, var(--scope-a,var(--gd)) 8%, var(--background))",
+                }}
+              >
+                <UserRound className="size-3" aria-hidden="true" />
+              </button>
             ) : (
               <>
                 <button
                   type="button"
-                  onClick={() => setSalt((s) => s + 1)}
+                  onClick={renew}
                   disabled={disabled}
                   aria-label={t("New branches")}
                   title={t("New branches")}
@@ -3086,6 +3207,34 @@ export function BranchCanopy({
             book · about · exit) ride the very top row now, and the
             passage stands at the top row's extreme right: one calm
             compass, no second rank beneath it. */}
+      </div>
+        </div>
+        {realm && (
+          <button
+            type="button"
+            onClick={() => {
+              setCrownMenu(null);
+              setCrownUp((u) => !u);
+            }}
+            aria-expanded={!crownUp}
+            aria-label={crownUp ? t("Show the top bar") : t("Hide the top bar")}
+            title={crownUp ? t("Show the top bar") : t("Hide the top bar")}
+            data-testid={`${testIdPrefix}-crown-toggle`}
+            className="focus-glow absolute z-30 flex size-7 items-center justify-center rounded-full border bg-background text-muted-foreground shadow-[0_8px_22px_-12px_rgba(0,0,0,0.55)] transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+            style={{
+              top: "max(0.5rem, env(safe-area-inset-top))",
+              right: "max(0.75rem, env(safe-area-inset-right))",
+              borderColor:
+                "color-mix(in srgb, var(--scope-a,var(--gd)) 30%, transparent)",
+            }}
+          >
+            {crownUp ? (
+              <ChevronDown className="size-3.5" aria-hidden="true" />
+            ) : (
+              <ChevronUp className="size-3.5" aria-hidden="true" />
+            )}
+          </button>
+        )}
       </div>
 
       {/* --------------------- the walkable family --------------------- */}
@@ -3230,12 +3379,25 @@ export function BranchCanopy({
                 setAskDraft("");
                 sendFromPanel(q, null);
               }}
-              className="pointer-events-auto flex w-full max-w-[560px] items-center gap-2 rounded-full border bg-background/95 py-1.5 pl-4 pr-1.5 shadow-[0_10px_36px_-16px_rgba(0,0,0,0.55)] backdrop-blur-xl transition-colors duration-300 focus-within:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)]"
+              className="pointer-events-auto flex w-full max-w-[560px] items-center gap-2 rounded-full border bg-background/95 py-1.5 pl-2.5 pr-1.5 shadow-[0_10px_36px_-16px_rgba(0,0,0,0.55)] backdrop-blur-xl transition-colors duration-300 focus-within:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)]"
               style={{
                 borderColor:
                   "color-mix(in srgb, var(--scope-a,var(--gd)) 26%, transparent)",
               }}
             >
+              {/* THE RENEWING HAND — the reload lives in the chat now:
+                  one touch and the family is re-grown fresh. */}
+              <button
+                type="button"
+                onClick={renew}
+                disabled={disabled}
+                aria-label={t("New branches")}
+                title={t("New branches")}
+                data-testid={`${testIdPrefix}-ask-renew`}
+                className="focus-glow flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors duration-300 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <RefreshCw className="size-3.5" aria-hidden="true" />
+              </button>
               <Sparkles
                 className="size-3.5 shrink-0 text-[var(--scope-a,var(--gd))]"
                 aria-hidden="true"
@@ -3324,6 +3486,19 @@ export function BranchCanopy({
                   </div>
                 </div>
                 <div className="flex shrink-0 items-center gap-1.5">
+                  {/* THE RENEWING HAND — the reload lives in the chat:
+                      the family behind the room is re-grown fresh. */}
+                  <button
+                    type="button"
+                    onClick={renew}
+                    disabled={disabled}
+                    aria-label={t("New branches")}
+                    title={t("New branches")}
+                    data-testid={`${testIdPrefix}-zoom-renew`}
+                    className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    <RefreshCw className="size-3.5" aria-hidden="true" />
+                  </button>
                   {/* THE NARRATOR'S GATE — the walk's one voice, at the
                       TOP of the room: a man, the documentary register,
                       reading each room aloud. While his voice gathers,

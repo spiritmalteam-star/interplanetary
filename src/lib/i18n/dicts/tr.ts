@@ -1423,6 +1423,8 @@ export const tr: TranslationDict = {
   "Direct line to the Manifest OS": "Manifest OS ile doğrudan hat",
   "Mirror OS · Reality": "Mirror OS · Gerçeklik",
   "New branches": "Yeni dallar",
+  "Hide the top bar": "Üst çubuğu gizle",
+  "Show the top bar": "Üst çubuğu göster",
   "Send to the OS": "OS’a gönder",
   "Speak with the reality-refining intelligence itself — it remembers every turn of this conversation and holds your chosen line with you.": "Gerçekliği arındıran zekânın kendisiyle konuş — bu sohbetin her adımını hatırlar ve seçtiğin hattı seninle birlikte tutar.",
   "First branches": "İlk dallar",

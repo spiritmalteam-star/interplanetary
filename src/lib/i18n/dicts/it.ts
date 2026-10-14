@@ -2363,6 +2363,8 @@ export const it: TranslationDict = {
   "Direct line to the Manifest OS": "Linea diretta con il Manifest OS",
   "Mirror OS · Reality": "Mirror OS · Realtà",
   "New branches": "Nuovi rami",
+  "Hide the top bar": "Nascondi la barra superiore",
+  "Show the top bar": "Mostra la barra superiore",
   "Send to the OS": "Invia all'OS",
   "Speak with the reality-refining intelligence itself — it remembers every turn of this conversation and holds your chosen line with you.": "Parla con l'intelligenza stessa che raffina la realtà — ricorda ogni svolta di questa conversazione e regge con te la linea che hai scelto.",
   "First branches": "Primi rami",

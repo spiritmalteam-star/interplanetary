@@ -1928,6 +1928,8 @@ export const de: TranslationDict = {
   "Direct line to the Manifest OS": "Direkte Linie zum Manifest OS",
   "Mirror OS · Reality": "Mirror OS · Realität",
   "New branches": "Neue Zweige",
+  "Hide the top bar": "Die obere Leiste ausblenden",
+  "Show the top bar": "Die obere Leiste einblenden",
   "Send to the OS": "An das OS senden",
   "Speak with the reality-refining intelligence itself — it remembers every turn of this conversation and holds your chosen line with you.": "Sprich mit der realitätsverfeinernden Intelligenz selbst — sie erinnert sich an jede Wendung dieses Gesprächs und hält mit dir die Linie, die du gewählt hast.",
   "First branches": "Erste Zweige",

@@ -3647,6 +3647,8 @@ export const sq: TranslationDict = {
   "Direct line to the Manifest OS": "Linja e drejtpërdrejtë me Manifest OS-in",
   "Mirror OS · Reality": "Mirror OS · Realiteti",
   "New branches": "Degë të reja",
+  "Hide the top bar": "Fsheh shiritin e sipërm",
+  "Show the top bar": "Shfaq shiritin e sipërm",
   "Send to the OS": "Dërgo te OS-i",
   "Speak with the reality-refining intelligence itself — it remembers every turn of this conversation and holds your chosen line with you.": "Bisedo me vetë inteligjencën që e përsos realitetin — ajo mban mend çdo kthesë të kësaj bisede dhe e mban përkrah teje vijën që ke zgjedhur.",
   "First branches": "Degët e para",

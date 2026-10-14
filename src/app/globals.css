@@ -373,9 +373,12 @@ html:not(.dark) .text-hero {
   to { transform: rotate(360deg); }
 }
 
-.animate-drift-a { animation: drift-a 46s ease-in-out infinite; }
-.animate-drift-b { animation: drift-b 58s ease-in-out infinite; }
-.animate-drift-c { animation: drift-c 64s ease-in-out infinite; }
+/* THE SETTLING SKY — the atmosphere drifts three gentle breaths and
+   then stands still: the compositor rests, the phone stays cool.
+   (0% == 100% in every keyframe, so the rest is seamless.) */
+.animate-drift-a { animation: drift-a 46s ease-in-out 3; }
+.animate-drift-b { animation: drift-b 58s ease-in-out 3; }
+.animate-drift-c { animation: drift-c 64s ease-in-out 3; }
 .animate-dot-pulse { animation: dot-pulse 2.6s ease-in-out infinite; }
 .animate-pill-breathe { animation: pill-breathe 3.4s ease-in-out infinite; }
 .animate-line-breathe { animation: line-breathe 3s ease-in-out infinite; }

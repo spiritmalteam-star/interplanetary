@@ -1628,6 +1628,8 @@ export const el: TranslationDict = {
   "Direct line to the Manifest OS": "Απευθείας γραμμή με το Manifest OS",
   "Mirror OS · Reality": "Mirror OS · Πραγματικότητα",
   "New branches": "Νέα κλαδιά",
+  "Hide the top bar": "Απόκρυψη της πάνω μπάρας",
+  "Show the top bar": "Εμφάνιση της πάνω μπάρας",
   "Send to the OS": "Αποστολή στο OS",
   "Speak with the reality-refining intelligence itself — it remembers every turn of this conversation and holds your chosen line with you.": "Μίλα με την ίδια τη νοημοσύνη που εξευγενίζει την πραγματικότητα — θυμάται κάθε στροφή αυτής της συνομιλίας και κρατά μαζί σου τη γραμμή που διάλεξες.",
   "First branches": "Πρώτα κλαδιά",

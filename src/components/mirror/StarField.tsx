@@ -17,6 +17,12 @@ interface Star {
 /**
  * StarField — tiny, sparse, low-opacity stars drifting very slowly.
  * Only visible in dark mode. Honors prefers-reduced-motion.
+ *
+ * THE COOL SKY. The stars rest most of the time: one frame every
+ * ~130ms instead of sixty (the twinkle is slower than the eye's
+ * patience anyway), fewer stars on small screens, a lighter canvas
+ * backing store, and the whole sky sleeps while the page is hidden.
+ * Not one warm breath reaches the phone from the heavens.
  */
 export function StarField() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -29,13 +35,15 @@ export function StarField() {
     if (!ctx) return;
 
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const FRAME_REST = 130; /* ~8fps — the twinkle never needs more */
     let stars: Star[] = [];
     let raf = 0;
     let running = true;
+    let lastFrame = 0;
     let w = 0;
     let h = 0;
 
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
 
     const build = () => {
       w = window.innerWidth;
@@ -46,7 +54,10 @@ export function StarField() {
       canvas.style.height = `${h}px`;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-      const target = Math.min(110, Math.floor((w * h) / 16000));
+      const target = Math.max(
+        12,
+        Math.min(w < 760 ? 36 : 80, Math.floor((w * h) / 26000))
+      );
       stars = Array.from({ length: target }, () => ({
         x: Math.random() * w,
         y: Math.random() * h,
@@ -71,8 +82,7 @@ export function StarField() {
       ctx.globalAlpha = 1;
     };
 
-    const frame = (t: number) => {
-      if (!running) return;
+    const draw = (t: number) => {
       ctx.clearRect(0, 0, w, h);
       for (const s of stars) {
         const tw = 0.55 + 0.45 * Math.sin(s.phase + t * s.speed);
@@ -85,7 +95,34 @@ export function StarField() {
         ctx.fill();
       }
       ctx.globalAlpha = 1;
-      raf = requestAnimationFrame(frame);
+    };
+
+    const loop = (t: number) => {
+      raf = 0;
+      if (!running) return;
+      if (t - lastFrame >= FRAME_REST) {
+        lastFrame = t;
+        draw(t);
+      }
+      raf = requestAnimationFrame(loop);
+    };
+
+    const stop = () => {
+      if (raf) {
+        cancelAnimationFrame(raf);
+        raf = 0;
+      }
+    };
+    const start = () => {
+      if (
+        !raf &&
+        running &&
+        !document.hidden &&
+        !reduced &&
+        resolvedTheme === "dark"
+      ) {
+        raf = requestAnimationFrame(loop);
+      }
     };
 
     build();
@@ -94,22 +131,28 @@ export function StarField() {
       if (reduced) {
         drawStatic();
       } else {
-        raf = requestAnimationFrame(frame);
+        start();
       }
     } else {
       ctx.clearRect(0, 0, w, h);
     }
 
+    const onVisibility = () => {
+      if (document.hidden) stop();
+      else start();
+    };
     const onResize = () => {
       build();
       if (resolvedTheme === "dark" && reduced) drawStatic();
     };
     window.addEventListener("resize", onResize);
+    document.addEventListener("visibilitychange", onVisibility);
 
     return () => {
       running = false;
-      cancelAnimationFrame(raf);
+      stop();
       window.removeEventListener("resize", onResize);
+      document.removeEventListener("visibilitychange", onVisibility);
     };
   }, [resolvedTheme]);
 
