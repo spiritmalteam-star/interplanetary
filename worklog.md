@@ -3565,3 +3565,20 @@ Work Log:
 
 Stage Summary:
 - main == origin/main == 48fc153: Task 42 (crown breath, reload in chat, category timelines + colored frame, the cool sky) stands on top of Task 32 (whole-book X, no old traces) — the two commits' laws merged without losing either.
+
+---
+Task ID: 43
+Agent: Z.ai Code (main session)
+Task: "No no the drop button must just hide and show the top bar not bring back the branches, so please remove that, the screen must stay where we are" — a refinement of Task 42's crown breath.
+
+Work Log:
+- ROOT CAUSE REPRODUCED: when a room (chat) stood open and the crown was folded, the room filled the whole sky and the top-bar hand vanished BEHIND it (both z-30, the room's later DOM won). The room's own "Back to the tree" button then sat in the exact corner where the drop button used to be — tapping that corner to call the bar back closed the room and returned the branches. From the visitor's seat, the drop button "brought back the branches".
+- THE ONE JOB LAW: the top-bar hand now floats above every room (z-30 → z-40, above the room z-30 and the veil z-20; still beneath the making's room z-40, which is its own chapter with its own back hand). A folded crown in a standing room can never bury the hand again: it is always visible, always in the same corner, and its only act is folding/unfolding the bar.
+- THE CORNER YIELDS: the zoomed room's header now reserves the crown's corner (pr-11 sm:pr-12, the same law as the crown row itself) and lifts beneath the notch's safe band when the crown is folded (paddingTop: max(0.5rem, env(safe-area-inset-top)) only while crownUp) — the room's renew/narrator/back buttons can never sit under, nor be mistaken for, the floating hand.
+- No navigation was added or removed anywhere: the hand's onClick remains setCrownMenu(null) + setCrownUp(toggle) — nothing else. "Remove that" is realized as: the room can never be dismissed by the hand's corner again.
+- Verified (agent-browser, mobile 390×844 + desktop 1280×800, zero console/page errors): fold on the tree → open a room → the hand floats above the room's top-right, the room's buttons shifted clear left → tap the hand → the bar drops down AND THE ROOM STAYS OPEN mid-channeling (the answer streamed on, untouched) → tap again → the bar folds, still in the room → the room's back button exits to the tree with the fold state kept; the making's room still rises above everything when a making crystallizes (its own overlay by design); the tree's scroll position never jumps on fold/unfold (tree layout depends on width only). Lint 0 errors (server stopped per the OOM law, restarted after).
+
+Stage Summary:
+- The top-bar hand keeps its one job everywhere: hide and show the bar — never close a room, never summon the branches. The screen stays exactly where the visitor stands, whether the walk is on the tree or deep inside a room.
+- Artifacts: BranchCanopy.tsx (crown hand z-40, zoom-room header corner reservation + safe-band top padding while folded).
+- Pushed 0e991b8..4c854af main → origin (Vercel auto-deploys).
