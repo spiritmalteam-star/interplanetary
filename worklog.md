@@ -3551,3 +3551,17 @@ Work Log:
 Stage Summary:
 - The realm now breathes: the top bar folds away when the walk needs the whole sky and drops down with one touch; the reload lives inside the chat (floor line + every room); a chosen category begins a NEW conversation wrapped in that category's own color; and every category keeps its own branch timeline in the room's memory so no suggestion and no walked branch is ever lost between jumps — while the sky itself learned to rest (throttled stars, finite drifts) so the phone stays cool and nothing old is stored on it.
 - Artifacts: BranchCanopy.tsx (crown breath, renew in chat, category timeline + rest law, --scope-a focus frame), StarField.tsx (cool loop), globals.css (finite drifts), 7 dicts (+2 keys each).
+
+---
+Task ID: 42-addendum
+Agent: Z.ai Code (main session)
+Task: Push bookkeeping for Task 42
+
+Work Log:
+- First push rejected: origin had advanced to 0e76a6b (the previous session's Task 32 — whole-book X, old-trace deletion, UserRound passage) pushed from a parallel session. Stashed the db artifact, rebased Task 42 onto 0e76a6b.
+- Resolved two conflicts: BranchCanopy crown right-hand (took Task 42's structure — renew moved into the chat — WITH Task 32's icon law: the passage always wears UserRound, never the LogIn arrow) and worklog.md (both entries kept: Task 32 then Task 42).
+- Re-verified post-rebase (server stopped for lint per the OOM law, then restarted): lint 0 errors; realm renders with the toggle present, askbar renew present, crown renew gone (96 chips standing); crown fold re-verified visually; zero console/page errors.
+- Pushed 0e76a6b..48fc153 main → origin (Vercel auto-deploys).
+
+Stage Summary:
+- main == origin/main == 48fc153: Task 42 (crown breath, reload in chat, category timelines + colored frame, the cool sky) stands on top of Task 32 (whole-book X, no old traces) — the two commits' laws merged without losing either.
