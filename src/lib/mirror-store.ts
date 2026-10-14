@@ -696,7 +696,11 @@ interface MirrorState {
   clearChannel: (mode?: Mode | "forge") => void;
   askMirror: (
     question: string,
-    attachments?: ChatAttachment[]
+    attachments?: ChatAttachment[],
+    /** THE CATEGORY'S OWN DOOR — when the walk stands focused on a
+        category (or a family's own whisper is pressed), the ask rides
+        that scope's own voice, never the general channel. */
+    scope?: string
   ) => Promise<void>;
   /** The learning branches grown for one landed reply — attached once,
       quietly, so they persist with the exchange. Every thread of the
@@ -2106,9 +2110,18 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     }));
   },
 
-  askMirror: async (question, attachments) => {
+  askMirror: async (question, attachments, askScope) => {
     const query = question.trim();
     const mode = get().activeMode;
+    /* THE CATEGORY'S OWN DOOR — the ask speaks with the focused
+       category's own voice (the forge answers for invent, the OS for
+       the manifest, the narrator for quantum); without a scope the
+       standing channel keeps its own door. */
+    const apiMode = askScope
+      ? askScope === "invent"
+        ? "forge"
+        : askScope
+      : mode;
     const session = get().sessions[mode];
     if (!query || session.status === "loading") return;
 
@@ -2236,7 +2249,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           query,
-          mode,
+          mode: apiMode,
           language: get().language,
           history,
           depth: journeyDepth(),

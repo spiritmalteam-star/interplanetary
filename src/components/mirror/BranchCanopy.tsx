@@ -18,10 +18,12 @@ import {
   Atom,
   AudioLines,
   BookOpen,
+  Check,
   ChevronDown,
   ChevronRight,
   ChevronUp,
   Compass,
+  Copy,
   Dna,
   Hammer,
   Hand,
@@ -36,6 +38,7 @@ import {
   Moon,
   NotebookPen,
   Palette,
+  Phone,
   RefreshCw,
   RotateCcw,
   ScrollText,
@@ -89,6 +92,8 @@ import {
 } from "@/lib/genealogy";
 import { recordExpansion, readExpansionScore } from "@/lib/expansion";
 import { ExpansionRing } from "./ExpansionMirror";
+import { LiveCall } from "./LiveCall";
+import type { LiveScopeKey } from "@/lib/live-scopes";
 import { useT } from "@/lib/i18n";
 import { useMirror } from "@/lib/mirror-store";
 import { cn } from "@/lib/utils";
@@ -299,12 +304,12 @@ const FAMILY_SPIRITS: Record<
 
    THE TRANSMISSION LISTENS. Inside a branch's room the visitor can
    speak with the transmission itself: their words travel through the
-   scope's own door — the channels' transmission voice for the
-   interplanetary, healing and invent lines, the atelier for Art X,
-   the OS for the manifest, quantum and evolve med houses — and the
-   transmission answers in place, the conversation of the branch kept
-   inside the branch. The room's reply line is this conversation; the
-   branches dropdown remains the walk. */
+   scope's own door — every house speaks its own voice now (the
+   channels' transmission scopes carry the interplanetary, healing,
+   invent, manifest, quantum and evolve med lines; the atelier keeps
+   its own Art X door) — and the transmission answers in place, the
+   conversation of the branch kept inside the branch. The room's reply
+   line is this conversation; the branches dropdown remains the walk. */
 
 interface RoomTurn {
   q: string;
@@ -348,7 +353,7 @@ async function speakWithTransmission(
       throw new Error(data?.error || "The field is quiet");
     return reply;
   }
-  if (category === "manifesting" || category === "quantum" || category === "evolvemed") {
+  if (category === "manifesting") {
     const res = await fetch("/api/mirror-os", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -398,72 +403,82 @@ async function speakWithTransmission(
   return reply;
 }
 
-/* ------------------- the seed — the house's heart -------------------
+/* ------------------- the copy hand — words kept ----------------------
 
-   THE SEED LAW. The house's own logo — the mark the About page
-   carries — hangs at the very CENTRE of the realm, just beneath the
-   trunk's base: every branch of the house rises from behind it, the
-   first generations open above it, the wings breathe to both sides.
-   THE CLEARING LAW — the seed is a centre point, never a wall: the
-   trunk's lowest breath fades into the quiet circle around it, so no
-   rope and no word ever crosses the logo's face. Climb the tree and
-   the seed stays — the heart of the house never moves. */
+   A COPY BUTTON AT EVERY CHANNELING. Each transmission — the room's
+   own answer and every word of the room's conversation — carries one
+   quiet hand: one touch and the words are the visitor's, on their
+   own clipboard, ready to travel anywhere. */
 
-export function RootSigil() {
+const RoomCopyButton = memo(function RoomCopyButton({
+  text,
+  testId,
+}: {
+  text: string;
+  testId: string;
+}) {
+  const t = useT();
+  const [copied, setCopied] = useState(false);
   return (
-    <div
-      aria-hidden="true"
-      className="pointer-events-none absolute inset-x-0 z-0 flex translate-y-0 flex-col items-center gap-2"
-      style={{ top: "calc(50% + 3.4rem)" }}
+    <button
+      type="button"
+      onClick={async () => {
+        try {
+          if (navigator.clipboard?.writeText) {
+            await navigator.clipboard.writeText(text);
+          } else {
+            throw new Error("no clipboard");
+          }
+        } catch {
+          /* the modern line refused (or never stood) — the quiet hand
+             copies by selection, the old way that always works */
+          try {
+            const ta = document.createElement("textarea");
+            ta.value = text;
+            ta.style.position = "fixed";
+            ta.style.opacity = "0";
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand("copy");
+            document.body.removeChild(ta);
+          } catch {
+            /* the words stay on the screen — nothing breaks */
+            return;
+          }
+        }
+        setCopied(true);
+        window.setTimeout(() => setCopied(false), 1600);
+      }}
+      aria-label={t("Copy")}
+      title={t("Copy")}
+      data-testid={testId}
+      className="focus-glow flex size-6 shrink-0 items-center justify-center rounded-full text-muted-foreground/60 transition-colors duration-300 hover:text-foreground"
     >
-      <div className="relative flex size-[112px] items-center justify-center sm:size-[124px]">
-        <div
-          className="absolute inset-0 rounded-full"
-          style={{
-            background:
-              "radial-gradient(circle, color-mix(in srgb, var(--scope-a,var(--gd)) 16%, transparent), transparent 68%)",
-          }}
-        />
-        <svg viewBox="0 0 120 120" className="absolute inset-0 size-full" fill="none">
-          <circle
-            cx="60"
-            cy="60"
-            r="56"
-            stroke="color-mix(in srgb, var(--scope-a,var(--gd)) 26%, transparent)"
-            strokeWidth="1"
-          />
-          <circle
-            cx="60"
-            cy="60"
-            r="45"
-            stroke="color-mix(in srgb, var(--scope-a,var(--gd)) 14%, transparent)"
-            strokeWidth="1"
-            strokeDasharray="2 5"
-          />
-        </svg>
-        {/* the house's own mark — the About page's logo, light and dark */}
-        <img
-          src="/images/ai/mark-light.png"
-          alt=""
-          className="relative size-14 object-contain dark:hidden sm:size-16"
-          draggable={false}
-        />
-        <img
-          src="/images/ai/mark-dark.png"
-          alt=""
-          className="relative hidden size-14 object-contain dark:block sm:size-16"
-          draggable={false}
-        />
-      </div>
-      <p className="mono-label text-[9px] uppercase tracking-[0.42em] text-foreground/65">
-        Mirror Entity
-      </p>
-      <p className="mono-label text-[7.5px] uppercase tracking-[0.34em] text-muted-foreground/50">
-        Digital Chamber
-      </p>
-    </div>
+      {copied ? (
+        <Check className="size-3" aria-hidden="true" />
+      ) : (
+        <Copy className="size-3" aria-hidden="true" />
+      )}
+    </button>
   );
-}
+});
+
+/* ---------------- the category's own direct line ---------------------
+
+   EVERY SCOPE'S CHAT CARRIES ITS CALL. The room calls the presence
+   its own whisper was grown from (the manifest room calls the OS,
+   the quantum room the narrator, the invent room the forge); the
+   floor calls the focused category's presence. */
+
+const LIVE_SCOPE_BY_CATEGORY: Record<string, LiveScopeKey> = {
+  interplanetary: "interplanetary",
+  healing: "healing",
+  manifesting: "mirroros",
+  quantum: "quantum",
+  evolvemed: "evolvemed",
+  invent: "forge",
+  artx: "artx",
+};
 
 /* ------------------- the summon button (by the input) ---------------- */
 
@@ -639,7 +654,7 @@ const TreeCanvas = memo(function TreeCanvas({
       delay: number;
       key: string;
     }[] = [];
-    nodes.forEach((n, ni) => {
+    nodes.forEach((n) => {
       if (!n.parent) return;
       const p = tree.byId.get(n.parent);
       if (!p) return;
@@ -655,7 +670,9 @@ const TreeCanvas = memo(function TreeCanvas({
         golden: !!n.golden,
         chain: chainSet.has(n.id),
         accent: n.accent ?? "var(--scope-a, var(--gd))",
-        delay: Math.min(n.wave * 130 + (ni % 12) * 26, 640),
+        /* the draw delay is the node's own (wave + id hash) — never the
+           array's index: a re-laid tree never re-draws an old rope */
+        delay: Math.min(n.wave * 130 + (hashWalk(n.id) % 12) * 26, 640),
       });
     });
     return out;
@@ -824,7 +841,7 @@ const TreeCanvas = memo(function TreeCanvas({
       {/* the whispers — the family's own chips: opaque by law, the
           WHOLE text inside each one's measured box, and a line can
           never cross a word */}
-      {nodes.map((n, i) => {
+      {nodes.map((n) => {
         const deep = n.score >= 2.4 || !!n.creation;
         const attuned = !deep && n.score > 0;
         /* THE CREATION'S OWN SIGIL — a creation suggestion wears its
@@ -881,7 +898,15 @@ const TreeCanvas = memo(function TreeCanvas({
                 height: n.h,
                 transform: "translateX(-50%)",
                 "--chip-a": chipAccent,
-                animationDelay: `${n.golden ? i * 40 : Math.min(n.wave * 130 + (i % 12) * 26, 640)}ms`,
+                /* THE STILL STANDING LAW — every chip's bloom delay is
+                   its own (wave + id hash), never the array's index: a
+                   re-laid tree never re-runs an old chip's entrance —
+                   no flash, no flicker, the family simply grows */
+                animationDelay: `${
+                  n.golden
+                    ? (hashWalk(n.id) % 12) * 40
+                    : Math.min(n.wave * 130 + (hashWalk(n.id) % 12) * 26, 640)
+                }ms`,
               } as CSSProperties
             }
           >
@@ -978,11 +1003,14 @@ const ZoomReplyForm = memo(function ZoomReplyForm({
   disabled,
   onSend,
   testIdPrefix,
+  leading,
 }: {
   roomKey: string;
   disabled?: boolean;
   onSend: (text: string) => void;
   testIdPrefix: string;
+  /** THE CATEGORY'S OWN CALL — the direct line rides inside the pill. */
+  leading?: ReactNode;
 }) {
   const t = useT();
   const [draft, setDraft] = useState("");
@@ -1000,12 +1028,13 @@ const ZoomReplyForm = memo(function ZoomReplyForm({
         setDraft("");
         onSend(q);
       }}
-      className="flex items-center gap-1.5 rounded-full border py-1 pl-3.5 pr-1 transition-colors duration-300 focus-within:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)]"
+      className="flex items-center gap-1.5 rounded-full border py-1 pl-2.5 pr-1 transition-colors duration-300 focus-within:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)]"
       style={{
         borderColor:
           "color-mix(in srgb, var(--hairline) 80%, transparent)",
       }}
     >
+      {leading}
       <label htmlFor={`${testIdPrefix}-zoom-reply`} className="sr-only">
         {t("Speak with the transmission…")}
       </label>
@@ -1063,7 +1092,7 @@ export function BranchCanopy({
   /** The branches grown on the conversation's own replies — the golden row. */
   channeling?: LearnedBranch[] | null;
   open: boolean;
-  onPick: (q: string) => void;
+  onPick: (q: string, scope?: string) => void;
   onClose: () => void;
   disabled?: boolean;
   testIdPrefix: string;
@@ -1349,6 +1378,28 @@ export function BranchCanopy({
     (seeds: { text: string; movement: BranchType; score: number }[]) =>
       seeds.map((s) => ({ ...s, accent: accentOfText(s.text) })),
     [accentOfText]
+  );
+
+  /* THE WALK'S FOCUS — the single family the compass has chosen, or
+     the whole grove ("general"). The ask's own door reads it. */
+  const focusKey = mix.on.length === 1 ? mix.on[0] : "general";
+  /* THE ASK'S OWN DOOR — a pressed whisper speaks through its own
+     family's voice (the quantum chip asks the narrator, the forge chip
+     the forge); the visitor's typed words speak through the focused
+     category's voice; the general floor keeps the standing channel.
+     THE SIDEBAR'S TONE RETURNS: every category answers with the same
+     tone and reasoning its own house always spoke. */
+  const askScopeFor = useCallback(
+    (text: string): string | undefined => {
+      const famKey = familyKeyByText.get(text.toLowerCase());
+      const fam = TREE_FAMILIES.find((f) => f.key === famKey);
+      if (fam) return fam.category;
+      if (focusKey !== "general") {
+        return TREE_FAMILIES.find((f) => f.key === focusKey)?.category;
+      }
+      return undefined;
+    },
+    [familyKeyByText, focusKey]
   );
 
   const budsKey = channeling?.map((b) => b.question).join("\u0001") ?? "";
@@ -2183,12 +2234,13 @@ export function BranchCanopy({
       const makesSomething =
         detectArtifactIntent(node.text) !== null || isVisualIntent(node.text);
       if (!makesSomething) setZoom({ q: node.text, move: node.movement });
-      onPick(node.text);
+      onPick(node.text, askScopeFor(node.text));
     },
     [
       category,
       disabled,
       onPick,
+      askScopeFor,
       scopeHint,
       tree,
       grove,
@@ -2250,13 +2302,14 @@ export function BranchCanopy({
       const makesSomething =
         detectArtifactIntent(text) !== null || isVisualIntent(text);
       if (!makesSomething) setZoom({ q: text, move });
-      onPick(text);
+      onPick(text, askScopeFor(text));
     },
     [
       category,
       disabled,
       liveLoading,
       onPick,
+      askScopeFor,
       pickedId,
       scopeHint,
       grove,
@@ -2631,6 +2684,33 @@ export function BranchCanopy({
      while the visitor thinks; one send and the room rises with them. */
   const [askDraft, setAskDraft] = useState("");
 
+  /* THE CATEGORY'S OWN CALL — every scope's chat carries its own
+     direct line: the room calls the presence its whisper was grown
+     from (the manifest room the OS, the quantum room the narrator,
+     the invent room the forge); the floor calls the focused
+     category's presence; the general floor keeps the standing
+     channel's own presence. */
+  const [liveCallScope, setLiveCallScope] = useState<LiveScopeKey | null>(null);
+  const zoomFamKey = zoom
+    ? familyKeyByText.get(zoom.q.toLowerCase())
+    : undefined;
+  const roomLiveScope: LiveScopeKey =
+    (zoomFamKey
+      ? LIVE_SCOPE_BY_CATEGORY[
+          TREE_FAMILIES.find((f) => f.key === zoomFamKey)?.category ?? ""
+        ]
+      : undefined) ??
+    LIVE_SCOPE_BY_CATEGORY[category] ??
+    "interplanetary";
+  const floorLiveScope: LiveScopeKey =
+    (focusKey !== "general"
+      ? LIVE_SCOPE_BY_CATEGORY[
+          TREE_FAMILIES.find((f) => f.key === focusKey)?.category ?? ""
+        ]
+      : undefined) ??
+    LIVE_SCOPE_BY_CATEGORY[category] ??
+    "interplanetary";
+
   /* ------------- THE CATEGORY TIMELINE — the walk's own memory --------
      Every category keeps its own standing tree in the room's memory
      (never on the phone). THE JUMP: the visitor chooses another
@@ -2641,7 +2721,6 @@ export function BranchCanopy({
      folds, every room's thread rests, and the channel returns to its
      quiet origin (the old words already rest on the archive's shelf).
      While a restored tree stands, the regrow rests too. */
-  const focusKey = mix.on.length === 1 ? mix.on[0] : "general";
   const timelineRef = useRef<Map<string, CanopyTimeline>>(new Map());
   const prevFocusRef = useRef<string | null>(null);
   useEffect(() => {
@@ -3244,10 +3323,10 @@ export function BranchCanopy({
 
       {/* --------------------- the walkable family --------------------- */}
       <div className="relative min-h-0 flex-1">
-        {/* THE SEED — the house's heart: the logo at the very centre,
-            every branch of the realm emerging from behind it. It paints
-            beneath the walk — the chips pass over it, the gaps show it. */}
-        {realm && <RootSigil />}
+        {/* THE CENTRE IS CLEAR — the house's logo no longer stands at
+            the heart of the realm: the trunk's base still anchors the
+            floor at the same point, the crown rises above it and the
+            undergrove waits below — the tree owns the whole clearing. */}
         <div
           ref={vpRef}
           data-dim={zoomed ? "true" : "false"}
@@ -3402,6 +3481,19 @@ export function BranchCanopy({
                 className="focus-glow flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors duration-300 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <RefreshCw className="size-3.5" aria-hidden="true" />
+              </button>
+              {/* THE CATEGORY'S OWN CALL — the focused category's direct
+                  line, one touch from the floor */}
+              <button
+                type="button"
+                onClick={() => setLiveCallScope(floorLiveScope)}
+                disabled={disabled}
+                aria-label={t("Open the direct mirror connection")}
+                title={t("Open the direct mirror connection")}
+                data-testid={`${testIdPrefix}-ask-call`}
+                className="focus-glow flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors duration-300 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <Phone className="size-3.5" aria-hidden="true" />
               </button>
               <Sparkles
                 className="size-3.5 shrink-0 text-[var(--scope-a,var(--gd))]"
@@ -3577,13 +3669,24 @@ export function BranchCanopy({
                   )}
                   {answer ? (
                     revealStage >= 2 ? (
-                      <div className="canopy-answer whitespace-pre-wrap break-words text-[13.5px] leading-[1.75] text-foreground/90 sm:text-[14px]">
-                        {answer}
-                        {liveLoading && (
-                          <span
-                            aria-hidden="true"
-                            className="ml-1 inline-block h-[13px] w-[7px] translate-y-[1px] animate-pulse rounded-[2px] bg-[var(--scope-a,var(--gd))] align-baseline opacity-70"
-                          />
+                      <div className="relative">
+                        <div className="canopy-answer whitespace-pre-wrap break-words text-[13.5px] leading-[1.75] text-foreground/90 sm:text-[14px]">
+                          {answer}
+                          {liveLoading && (
+                            <span
+                              aria-hidden="true"
+                              className="ml-1 inline-block h-[13px] w-[7px] translate-y-[1px] animate-pulse rounded-[2px] bg-[var(--scope-a,var(--gd))] align-baseline opacity-70"
+                            />
+                          )}
+                        </div>
+                        {/* THE COPY HAND — the words are the visitor's */}
+                        {!liveLoading && (
+                          <div className="mt-0.5 flex justify-end">
+                            <RoomCopyButton
+                              text={answer}
+                              testId={`${testIdPrefix}-zoom-copy`}
+                            />
+                          </div>
                         )}
                       </div>
                     ) : null
@@ -3671,9 +3774,15 @@ export function BranchCanopy({
                               </span>
                             </p>
                           ) : turn.a ? (
-                            <p className="max-w-[94%] whitespace-pre-wrap break-words text-[13.5px] leading-[1.7] text-foreground/90">
-                              {turn.a}
-                            </p>
+                            <div className="flex items-start gap-1">
+                              <p className="min-w-0 flex-1 whitespace-pre-wrap break-words text-[13.5px] leading-[1.7] text-foreground/90">
+                                {turn.a}
+                              </p>
+                              <RoomCopyButton
+                                text={turn.a}
+                                testId={`${testIdPrefix}-room-copy-${i}`}
+                              />
+                            </div>
                           ) : turn.failed ? (
                             <p className="mono-label text-[9.5px] uppercase tracking-[0.2em] text-muted-foreground/60">
                               {t("The field is quiet — speak once more")}
@@ -3795,6 +3904,20 @@ export function BranchCanopy({
                   disabled={disabled || liveLoading || threadBusy}
                   onSend={sendReplyFromPanel}
                   testIdPrefix={testIdPrefix}
+                  leading={
+                    /* THE CATEGORY'S OWN CALL — the room's direct line */
+                    <button
+                      type="button"
+                      onClick={() => setLiveCallScope(roomLiveScope)}
+                      disabled={disabled}
+                      aria-label={t("Open the direct mirror connection")}
+                      title={t("Open the direct mirror connection")}
+                      data-testid={`${testIdPrefix}-room-call`}
+                      className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors duration-300 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      <Phone className="size-3.5" aria-hidden="true" />
+                    </button>
+                  }
                 />
               </footer>
             </section>
@@ -3806,6 +3929,16 @@ export function BranchCanopy({
             book, the forge), each forging its making from the branch's
             own words. The tree carries the doors; the pages do the
             making. */}
+
+        {/* THE CATEGORY'S OWN CALL — the direct line, opened from the
+            floor or from inside any room: the presence answers as the
+            scope it belongs to, in its own voice. */}
+        {liveCallScope && (
+          <LiveCall
+            scope={liveCallScope}
+            onClose={() => setLiveCallScope(null)}
+          />
+        )}
       </div>
     </div>
   );

@@ -12,6 +12,9 @@ export type LiveScopeKey =
   | "interplanetary"
   | "healing"
   | "mirroros"
+  | "quantum"
+  | "evolvemed"
+  | "forge"
   | "akashic"
   | "artx";
 
@@ -65,6 +68,33 @@ export const LIVE_SCOPES: Record<LiveScopeKey, LiveScopeConfig> = {
     voice: "sage",
     pace: 0.95,
     wrapperClass: "scope-manifesting",
+    accentA: "var(--scope-a)",
+    accentB: "var(--scope-b)",
+  },
+  quantum: {
+    nameKey: "the Quantum Narrator",
+    specializationKey: "the underside of things — formulas and revelations",
+    voice: "regent",
+    pace: 0.9,
+    wrapperClass: "scope-particlex",
+    accentA: "var(--scope-a)",
+    accentB: "var(--scope-b)",
+  },
+  evolvemed: {
+    nameKey: "the Evolutionary Nexus",
+    specializationKey: "the body's frontier, compiled and revealed",
+    voice: "lumen",
+    pace: 0.92,
+    wrapperClass: "scope-evolvemed",
+    accentA: "var(--scope-a)",
+    accentB: "var(--scope-b)",
+  },
+  forge: {
+    nameKey: "the Forge",
+    specializationKey: "intentions become buildable conceptions",
+    voice: "nova",
+    pace: 1.0,
+    wrapperClass: "scope-invent",
     accentA: "var(--scope-a)",
     accentB: "var(--scope-b)",
   },

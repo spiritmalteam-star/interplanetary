@@ -140,7 +140,8 @@ async function askScope(
     return data.reply;
   }
 
-  /* interplanetary · healing */
+  /* the transmission scopes — interplanetary · healing · quantum ·
+     evolvemed · forge: each rides its own MODE_CONTEXT voice, live */
   const res = await fetch("/api/transmission", {
     method: "POST",
     headers: { "Content-Type": "application/json" },

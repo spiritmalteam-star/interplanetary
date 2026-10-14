@@ -369,10 +369,12 @@ function AppShellViews() {
         realm
         category={activeMode}
         open={true}
-        onPick={(q) => {
+        onPick={(q, scope) => {
           /* the tree stays standing — the answer rises in the room,
-             the walk continues from the reply's own branches */
-          void useMirror.getState().askMirror(q);
+             the walk continues from the reply's own branches.
+             THE CATEGORY'S OWN DOOR — the ask rides the pressed
+             whisper's (or the focused category's) own scope voice. */
+          void useMirror.getState().askMirror(q, undefined, scope);
         }}
         onClose={() => {}}
         disabled={channelLoading}
