@@ -3660,3 +3660,23 @@ Work Log:
 Stage Summary:
 - The realm's floor is a living river now: six slow streams of whispers drifting sideways in alternating directions, glowing in every family's light (or the focused category's own), golden with the exchange's own branches, holding still under the finger, seamless on the compositor — creative, smooth, sensational, and cool. The house's mark has left the top bar; the light's quiet hand stayed.
 - Artifacts: BranchCanopy.tsx (RiverFloor/RiverStream/RiverChipBtn/LightToggle, crown flex row, realm river render, realm regrow/prepared gating, riverWhispers + riverPick), globals.css (river-drift keyframes + reduced-motion guard), 7 dicts (+1 key).
+
+---
+Task ID: 48
+Agent: Z.ai Code (main)
+Task: "Please put sugestions in blocks of maya style fill the screen and use can scroll down or reload" — the realm's river floor becomes THE GLYPH WALL: Maya stele blocks filling the screen, scroll-down for the deep rows, reload to pour the wall anew.
+
+Work Log:
+- Read worklog tail: Task 47 (river + logo removal) was already delivered; this turn replaces the river with a third presentation — stone.
+- Replaced RiverChipBtn/RiverStream/RiverFloor (and river-drift CSS) with GlyphTile/GlyphWall in BranchCanopy.tsx: each suggestion is a Maya stele — stepped crest (3-tier pyramid silhouette), MayaCount (vigesimal dots·bars from hashWalk(text), shell for 0), codex inner frame, cartouche line + movement glyph, family-accent stone gradient; golden stones (exchange buds, ≤4) stand first in amber serif; one creation door carved mid-wall (hash of hour:salt:focus).
+- THE SMALL-FAMILY LAW HELD: GLYPH_FIRST=18 resting stones, GLYPH_POOL=36 max (first family + deep rows); ranked realm slice RIVER_POOL→GLYPH_POOL; no graft/fold in realm (glyphPick = riverPick semantics: trail + room only).
+- SCROLL: one IntersectionObserver sentinel ("THE DEEP EAR") between the families reveals the deep rows once (rootMargin 220px, root = the wall), then rests; on wide screens the ear auto-fills so the wall always fills the screen.
+- RELOAD: wall's own sticky strip (caption + reload, right edge clearing the crown toggle) + the wall's foot button ("The wall has spoken — pour it again"); both call renew() (salt bump); the wall is KEYED by hour:salt:focusKey at the render site so a fresh pour is a fresh mount — deep rows reset with zero setState-in-effect (lint-clean).
+- FIX ALONG THE WAY: the realm's crown LightToggle carried a real hydration mismatch (server carved Moon, client Sun — resolvedTheme undefined at SSR); the two faces are now drawn by the theme's own class (hidden dark:block / block dark:hidden, onClick reads documentElement.classList) — zero hydration drift; also scoped the reduced-motion translateX(-50%) rule to :not(.still-bloom) so still-bloom blocks never shift.
+- i18n: swapped the orphaned "The river of whispers" key for "The wall of whispers" / "Pour the wall again" / "The wall has spoken — pour it again" hand-translated in all 7 dicts.
+- VERIFIED (agent-browser, 390×844 + 1280×800): resting wall 17 tiles + 1 creation door = 18; scroll to foot → 36 stones + foot button; reload → re-poured (order changed, 18 back, scrollTop 0); press stone → room rises, answer streamed (939 chars, scope-toned); after exchange → 4 golden amber serif stones crown the wall; Quantum focus → every stone wears one violet ink (uniqueBorderColors: 1) + "YOU ARE HERE" in compass; light toggle both directions CSS-driven; desktop 4 cols auto-filled; strip reload clears the crown toggle (right 50px); zero console errors/warnings, no dev-overlay issues on fresh load.
+- OPERATIONS: lint 0 errors (server stopped per OOM law, restarted after); pushed 0b19e63..75f021f; Vercel auto-deploys.
+
+Stage Summary:
+- The realm's floor is a wall of stone now: a Maya stele wall that fills the screen, wears every family's ink (or the focused category's own), crowns itself with the exchange's golden stones, uncovers its deep rows under the visitor's slide, and pours itself anew on reload — compositor-only blooms, 36 stones max, the phone stays cool. The light's hand no longer breaks the water.
+- Artifacts: BranchCanopy.tsx (MayaCount/GlyphTile/GlyphWall, hydration-safe LightToggle, key-remount re-pour), globals.css (river-drift removed, reduced-motion still-bloom guard), 7 dicts (3 new keys, river key retired).
