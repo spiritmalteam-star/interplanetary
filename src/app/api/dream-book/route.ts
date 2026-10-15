@@ -35,7 +35,7 @@ import {
 /*    III. The Mirror Chambers — the subject turns upon the reader     */
 /*    IV.  The Eternal Return — the Seal of Closing                    */
 /*                                                                     */
-/*  The book is opened ONCE from resonance (the spoken frequency +     */
+/*  The book is opened ONCE from resonance (the spoken subject +       */
 /*  the chosen shapes + whispered wishes) and then continues           */
 /*  page-pair by page-pair, each call carrying a compact "thread"      */
 /*  (story memory) and the exact text of the previous two pages, so    */
@@ -43,7 +43,7 @@ import {
 /*                                                                     */
 /*  Once open, the visitor holds a pen beside the loom: an array of    */
 /*  "rewrites" — wishes that bend what is coming (events, length,      */
-/*  chapters, the very voice, even the frequency itself) — rides       */
+/*  chapters, the very voice, even the subject itself) — rides         */
 /*  along with every continuation until the visitor lets them go.      */
 /* ------------------------------------------------------------------ */
 
@@ -67,7 +67,7 @@ const BOOK_PLAN: Record<string, { min: number; max: number; label: string }> = {
   },
   bedtime: { min: 80, max: 104, label: "a soft bedtime treasure — short luminous pages, a calm nightly cadence" },
   classic: { min: 96, max: 120, label: "a classic tale — full pages, an evergreen storybook voice" },
-  saga: { min: 120, max: 180, label: "a grand saga — an epic breadth of pages, a mythic storyteller's breath" },
+  saga: { min: 120, max: 220, label: "a grand saga — an epic breadth of pages up to 220, a mythic storyteller's breath" },
   /* THE POEM ITSELF — when the visitor's own words ask for a poem (no
      book word spoken), the loom weaves the poem, not a book: verses on
      a few leaves, complete in the hand. THE GROUND LAW (see
@@ -87,7 +87,7 @@ const BOOK_PLAN: Record<string, { min: number; max: number; label: string }> = {
 const SHORT_BOOK_LAW = `THE SHORT BOOK LAW (absolute — the visitor asked for a SHORT book, and a short book is what they receive):
 - Set "totalPages" between 10 and 16 (an even number) — and the WHOLE story must land inside that plan.
 - Cross the threshold fast, compress the middle into its essential turns only, and reach the Seal of Closing within the plan. No wandering, no filler volumes-within-the-volume, no new subplots that cannot close.
-- The four strata still walk — but briefly: the Root Frequency in a page, the turning spheres folded into the middle, the Mirror Chambers and the Seal arriving in time.
+- The four strata still walk — but briefly: the Root Current in a page, the turning spheres folded into the middle, the Mirror Chambers and the Seal arriving in time.
 - A new chapter every 4–8 pages at most (this overrides the general chapter cadence).
 - The ending must feel COMPLETE, not truncated: a short book is a whole book, not a fragment of a long one.`;
 
@@ -296,7 +296,7 @@ WHO YOU ARE
 
 INFINITE PLASTICITY
 - Instantly adapt your tone, lexicon and structural approach to whatever the visitor demands — hard science among distant stars, esoteric histories, alternate poetry, the strategy of empires and markets, forgotten mythologies, a child's night, a question nobody has asked yet. No genre is foreign to you; no era is closed.
-- When the visitor speaks a subject, lock onto its energetic frequency in the same breath: extract its root genesis, its turning points, and the reflections it casts, and let the entire book breathe that frequency — not as a lecture, but as a living volume.
+- When the visitor speaks a subject, lock onto its living core in the same breath: extract its root genesis, its turning points, and the reflections it casts, and let the entire book breathe that core — not as a lecture, but as a living volume.
 
 THE LIGHT TOUCH OF REFINEMENT
 - Apply rigorous literary pacing, poetic gravity and structural elegance on the fly, so that spontaneous creation still carries the weight of an ancient, sacred codex. Zero fluff: every sentence earns its ink, every page feels carved rather than printed.
@@ -315,7 +315,7 @@ THE LAW OF NAMES (ABSOLUTE)
 
 THE FOUR STRATA (every book assembles through them, whether told as tale or chronicle)
 - I. THE LIMINAL THRESHOLD — the front matter: a SIGIL tuned to the subject (one short opening line — an invocation, not a description) and the AXIOM OF ORIGIN (one crystallizing sentence explaining why this specific volume has been conjured from the void at this exact second). The first pages must feel like crossing a threshold.
-- II. THE MACROCOSMIC CHRONICLES — the body: first THE ROOT FREQUENCY (the subject traced back to its primordial source, its fundamental laws, its hidden history), then THE TURNING SPHERES (the great arcs — evolutionary, dramatic, philosophical — each chapter one sphere turning).
+- II. THE MACROCOSMIC CHRONICLES — the body: first THE ROOT CURRENT (the subject traced back to its primordial source, its fundamental laws, its hidden history), then THE TURNING SPHERES (the great arcs — evolutionary, dramatic, philosophical — each chapter one sphere turning).
 - III. THE MIRROR CHAMBERS — the reflection: in the book's late stretch, the subject turns upon the reader. THE INTERACTIVE CATALYST: push past passive consumption, so the theme mirrors the visitor's own consciousness and choices — woven into the living story, never preached, never an essay.
 - IV. THE ETERNAL RETURN — the back matter: THE SEAL OF CLOSING. A concluding cadence that leaves an indelible mental afterimage, implying the book continues to evolve in the reader's mind long after the final page.
 
@@ -356,6 +356,15 @@ THE REPAIR LAWS (continuity is absolute)
 - The final sentence of a book is written once: never re-echo a closing cadence already used, never re-declare a mystery already closed.
 - Before returning pages, silently audit them against the ledger: mend every contradiction, repeated image and broken rule BEFORE the pages leave the loom.
 
+THE UNREPEATING PAGE (inside one volume — the story evolves naturally)
+- Every page must MOVE: a new event, a new image, a new consequence, a new turn of knowledge, relationship or place. Never restate, recap, re-summarize or re-describe what an earlier page already told — not as echo, not as narration recap, not as "as you know" dialogue, not as a repeated description wearing new words.
+- A motif may return ONLY when its meaning has grown (the ledger's motifs keep score); if a beat would repeat an earlier one, push it one step further instead — escalate it, invert it, or pay it off.
+- The THREAD and the LEDGER are the inventory of everything already told: write what is NOT yet in them. Before returning continuation pages, silently audit them against every chapter summary and motif in the ledger — if a planned scene retreads one, replace it with the next genuine development of the story.
+
+THE PLAIN WORD LAW (the voice stays clean — AUTHORITATIVE)
+- Never lean on mystical filler: no "frequency", "vibration", "vibrational", "energetic", "raise your vibration", "resonate at", "the universe wants", "the energy of" as decoration, mood or explanation — UNLESS the spoken subject itself is literally about sound, music, physics or those exact words (then use them precisely, technically and sparingly, as the topic's own true terms).
+- Wonder is built from concrete things — senses, objects, weather, choices, consequences, real knowledge — never from incense words. The test: if a sentence still works with the mystical word deleted, delete the word. This law stands in every vein, even the most mystique one: mystery arrives through images and events, never through vocabulary.
+
 THE HONEST CRAFT
 - Ten out of ten is exceptionally rare — mastery demonstrated, never fluent language alone; the channel never grades itself inside the book's pages.
 - Dialogue sometimes conceals intent, generates friction, reveals asymmetry of knowledge, or changes a relationship; characters can disagree intelligently, and none is a dummy carrying the story's thesis. Allow small, ordinary, intimate details inside extraordinary worlds — readers must meet people, not ceremonial witnesses to scenery.
@@ -389,6 +398,9 @@ function buildUserPrompt(body: {
   /* THE SPAN — how many pages one continuation writes (2 by default;
      the whole-book reveal strides four at a time) */
   span?: number;
+  /* THE VEIN — ground (a normal, grounded book) or ephemeral
+     (metaphysical, mystique); absent keeps the channel's own breath */
+  vein?: string;
 }): string {
   const { phase, age, tale, volume, topic, wishes, languageName, rewrites } = body;
   const span = Math.min(4, Math.max(2, Math.round(body.span ?? 2)));
@@ -400,12 +412,22 @@ function buildUserPrompt(body: {
     LEVEL_PLAN[LEGACY_LEVEL_MAP[body.level] ?? body.level] ?? "";
   const isVerse = VERSE_FORMS.has(tale);
 
-  /* the subject spoken by the visitor — the master frequency */
+  /* THE VEIN — the visitor's big choice: a normal grounded book or an
+     ephemeral, metaphysical one. It shapes the telling, never the
+     craft; the PLAIN WORD LAW stands in both. */
+  const veinLine =
+    body.vein === "ground"
+      ? `THE VEIN OF THIS VOLUME — GROUND: a normal, grounded book. Realistic texture, believable people, cause and consequence a reader could touch; no prophecy, no mysticism, no metaphysical machinery — wonder comes from the real world's own depth (science, craft, history, nature, the human heart). The PLAIN WORD LAW stands at its strictest here.`
+      : body.vein === "ephemeral"
+        ? `THE VEIN OF THIS VOLUME — EPHEMERAL: a metaphysical, mystique telling — omens, symbols, dreams breathing through the tale, the invisible made almost palpable, the reader unsure for a page whether a wind was weather or a messenger. Even here the PLAIN WORD LAW stands: the mystique arrives through concrete images and events, never through filler vocabulary.`
+        : "";
+
+  /* the subject spoken by the visitor — the master subject */
   const hasTopic = topic.trim().length > 0;
   const topicLines: string[] = hasTopic
     ? [
         `[USER DESIRE / DYNAMIC TOPIC]: """${topic.trim().slice(0, 600)}"""`,
-        `This spoken subject is the MASTER FREQUENCY of the whole volume — bend tone, lexicon and content to it, whatever it is: an era, a philosophy, a technology, a fiction, a universe, a question nobody has asked yet. The chosen shapes and the resonance skeleton below are the resonances AROUND it: the skeleton shapes HOW the story is told, the subject shapes WHAT it tells. Neither may be ignored.`,
+        `This spoken subject is the MASTER SUBJECT of the whole volume — bend tone, lexicon and content to it, whatever it is: an era, a philosophy, a technology, a fiction, a universe, a question nobody has asked yet. The chosen shapes and the resonance skeleton below are the resonances AROUND it: the skeleton shapes HOW the story is told, the subject shapes WHAT it tells. Neither may be ignored.`,
       ]
     : [];
 
@@ -432,7 +454,7 @@ function buildUserPrompt(body: {
             return frac >= 0.7
               ? `STRATUM III — THE MIRROR CHAMBERS: the book's late stretch. THE INTERACTIVE CATALYST — turn the subject upon the reader now: situations and questions that make the theme reflect the reader's own consciousness and choices, woven into the living story, never preached, never an essay.`
               : frac <= 0.3
-                ? `STRATUM II — THE MACROCOSMIC CHRONICLES (the Root Frequency): the early body — trace the subject back to its primordial source, its fundamental laws, its hidden history, while the story itself takes its first breath.`
+                ? `STRATUM II — THE MACROCOSMIC CHRONICLES (the Root Current): the early body — trace the subject back to its primordial source, its fundamental laws, its hidden history, while the story itself takes its first breath.`
                 : `STRATUM II — THE MACROCOSMIC CHRONICLES (the Turning Spheres): the great middle — unfold the major arcs one sphere at a time; each chapter a turning of the subject's destiny, revelation or argument.`;
           })();
 
@@ -446,7 +468,7 @@ function buildUserPrompt(body: {
 
   if (phase === "open") {
     lines.push(
-      `OPEN A NEW BOOK. Tune first. ${hasTopic ? "The visitor has spoken a subject — lock onto its frequency." : "No subject is spoken — open from resonance alone."}`,
+      `OPEN A NEW BOOK. Tune first. ${hasTopic ? "The visitor has spoken a subject — lock onto its core." : "No subject is spoken — open from resonance alone."}`,
       ...topicLines,
       ...resonanceLines,
       ``,
@@ -454,6 +476,7 @@ function buildUserPrompt(body: {
       ...(levelLine ? [`- Depth of lecture: ${levelLine}`] : []),
       `- Kind of resonance: ${taleLine}`,
       `- Kind of book: ${volLine.label}`,
+      ...(veinLine ? [`- ${veinLine}`] : []),
       ...(body.ground?.tiny
         ? [
             ``,
@@ -540,7 +563,7 @@ function buildUserPrompt(body: {
       } pages; ${
         isShortVolume
           ? "add 6 to 10 pages (a multiple of 2), never exceeding 40 total — this volume stays a short book"
-          : "add 48 to 72 pages (a multiple of 2), never exceeding 300 total"
+          : "add 48 to 72 pages (a multiple of 2), never exceeding 220 total"
       }. Then write the NEXT TWO pages (pages ${body.pageNumber} and ${(body.pageNumber ?? 2) + 1}) — open the widened volume with a new movement: a farther shore of the subject, not a repetition. Give a chapter title if a new chapter begins here. Return the updated thread and the updated ledger.`
     );
   } else {
@@ -569,11 +592,11 @@ function buildUserPrompt(body: {
   if (rewrites && rewrites.length > 0 && phase !== "open") {
     lines.push(
       ``,
-      `THE READER'S REWRITING HAND — the visitor now holds a pen beside the loom. Honor these wishes faithfully in the pages you write NOW and in ALL pages that follow, weaving them in as if they had always belonged to the volume. They may redirect coming events, reshape or add chapters, change the book's length, recast the very voice and style of the writing, or retune the frequency of the subject itself.`,
+      `THE READER'S REWRITING HAND — the visitor now holds a pen beside the loom. Honor these wishes faithfully in the pages you write NOW and in ALL pages that follow, weaving them in as if they had always belonged to the volume. They may redirect coming events, reshape or add chapters, change the book's length, recast the very voice and style of the writing, or turn the telling toward a different face of the subject itself.`,
       ...rewrites.map((r, i) => `  ${i + 1}. """${r}"""`),
       ``,
       wishesLength(rewrites)
-        ? `A wish explicitly asks for a different length of the book — you MUST therefore return a new "totalPages" (an even number between 8 and 300) that honors that wish. Do not omit it.`
+        ? `A wish explicitly asks for a different length of the book — you MUST therefore return a new "totalPages" (an even number between 8 and 220) that honors that wish. Do not omit it.`
         : `No wish touches the book's length — omit "totalPages" entirely.`
     );
   }
@@ -638,7 +661,7 @@ function normalizePages(raw: unknown, startN: number, span = 2): WeavePage[] {
   return pages;
 }
 
-const clampTotal = (n: number) => Math.min(300, Math.max(8, Math.round(n / 2) * 2));
+const clampTotal = (n: number) => Math.min(220, Math.max(8, Math.round(n / 2) * 2));
 
 /* a wish may only move the book's length when it actually speaks of length —
    the channel sometimes answers "totalPages" to any rewrite, and a
@@ -669,6 +692,12 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
     const seed =
       typeof body?.config?.seed === "string" ? body.config.seed.trim().slice(0, 80) : "";
     const wishes = typeof body?.config?.wishes === "string" ? body.config.wishes : "";
+    /* THE VEIN — the visitor's big choice, carried on every weaving:
+       ground (a normal book) or ephemeral (metaphysical, mystique). */
+    const vein =
+      body?.config?.vein === "ground" || body?.config?.vein === "ephemeral"
+        ? body.config.vein
+        : undefined;
 
     /* THE SHORT BOOK LAW — the visitor's own words decide. A short-book
        ask (in any tongue the house speaks, in the topic or the whispered
@@ -798,6 +827,7 @@ THE NAME LAW WAS BROKEN: your reply used the forbidden stock name(s): ${violatio
                 ground,
                 ledger: incomingLedger,
                 span,
+                vein,
               }) +
               violationBlock +
               (reminder

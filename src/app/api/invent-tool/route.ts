@@ -3,6 +3,12 @@ import ZAI from "@/lib/zai-client";
 import type { InventToolLine, InventToolResult } from "@/lib/mirror-types";
 import { TOOL_LINE_LABELS } from "@/lib/data/invent";
 import { meterRoute } from "@/lib/server/meter";
+import {
+  describeImage,
+  documentBlock,
+  imageBlock,
+  parseAttachments,
+} from "@/lib/server/attachments";
 
 /* ------------------------------------------------------------------ */
 /*  THE TOOL WALL — four bench presences of the Forge, each one a way  */
@@ -196,12 +202,27 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
         ? ""
         : `\n\nLANGUAGE (CRITICAL): the seeker reads in ${languageName}. Write EVERY word of your answer in fluent, natural ${languageName}.`;
 
+    /* Attachments — one image seen with the vision field, up to three
+       extracted documents — folded into what the tool reads. */
+    const { imageDataUrl, documents } = parseAttachments(body);
+    const attachmentBlocks: string[] = [];
+    if (imageDataUrl) {
+      const block = imageBlock(await describeImage(zai, imageDataUrl));
+      if (block) attachmentBlocks.push(block);
+    }
+    const docBlock = documentBlock(documents);
+    if (docBlock) attachmentBlocks.push(docBlock);
+    const attachmentLines =
+      attachmentBlocks.length > 0
+        ? `\n\n${attachmentBlocks.join("\n\n")}`
+        : "";
+
     const completion = await zai.chat.completions.create({
       messages: [
         { role: "assistant", content: def.system },
         {
           role: "user",
-          content: `${def.userIntro}\n${input}${languageLine}\n\nDo the work now. Return the strict JSON.`,
+          content: `${def.userIntro}\n${input}${attachmentLines}${languageLine}\n\nDo the work now. Return the strict JSON.`,
         },
       ],
       thinking: { type: "disabled" },

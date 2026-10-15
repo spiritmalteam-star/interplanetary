@@ -4,6 +4,12 @@ import { walkerDepthLine } from "@/lib/walker-depth";
 import { resolveVisitor, saveLibrary, withAnonCookie } from "@/lib/server/access";
 import { EM_LAB_PAGES } from "@/lib/data/evolvemed-lab";
 import { meterRoute } from "@/lib/server/meter";
+import {
+  describeImage,
+  documentBlock,
+  imageBlock,
+  parseAttachments,
+} from "@/lib/server/attachments";
 
 /* ------------------------------------------------------------------ */
 /*  POST /api/evolve-med — EVOLVE MED, THE OMNI-MATRIX BIOLOGICAL      */
@@ -351,6 +357,21 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
     const toolLine =
       tool === "nexus" ? "" : `\n\n${TOOL_MODES[tool]}`;
 
+    /* Attachments — one image seen with the vision field, up to three
+       extracted documents — folded into the directive the nexus reads. */
+    const { imageDataUrl, documents } = parseAttachments(body);
+    const attachmentBlocks: string[] = [];
+    if (imageDataUrl) {
+      const block = imageBlock(await describeImage(zai, imageDataUrl));
+      if (block) attachmentBlocks.push(block);
+    }
+    const docBlock = documentBlock(documents);
+    if (docBlock) attachmentBlocks.push(docBlock);
+    const attachmentLines =
+      attachmentBlocks.length > 0
+        ? `\n\n${attachmentBlocks.join("\n\n")}`
+        : "";
+
     const messages: { role: "system" | "user" | "assistant"; content: string }[] = [
       {
         role: "system",
@@ -375,7 +396,7 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
 
     messages.push({
       role: "user",
-      content: `${query.trim()}${scopeLine}${fusionLine}${languageLine}`,
+      content: `${query.trim()}${scopeLine}${fusionLine}${attachmentLines}${languageLine}`,
     });
 
     /* The nexus is asked twice before the line falls silent

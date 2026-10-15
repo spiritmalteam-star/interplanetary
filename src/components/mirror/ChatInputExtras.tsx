@@ -3,6 +3,7 @@
 import { useCallback, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
+  Camera,
   Check,
   FileText,
   LoaderCircle,
@@ -44,6 +45,9 @@ interface ChatInputExtrasProps {
   mobileLarger?: boolean;
   /** Accent CSS variable for the hairline buttons. */
   accentVar?: string;
+  /** The call rides here by default; a host that already carries its
+      own call hand (the realm's rooms) may dismiss it. */
+  withCall?: boolean;
   attachments: ChatAttachment[];
   onAttachmentsChange: (
     next: ChatAttachment[] | ((prev: ChatAttachment[]) => ChatAttachment[])
@@ -56,12 +60,14 @@ export function ChatInputExtras({
   size = "md",
   mobileLarger = false,
   accentVar = "var(--scope-a)",
+  withCall = true,
   attachments,
   onAttachmentsChange,
 }: ChatInputExtrasProps) {
   const t = useT();
 
   const fileRef = useRef<HTMLInputElement | null>(null);
+  const cameraRef = useRef<HTMLInputElement | null>(null);
   const [liveCallOpen, setLiveCallOpen] = useState(false);
 
   /* ---------- the paperclip ---------- */
@@ -147,6 +153,7 @@ export function ChatInputExtras({
         onAttachmentsChange((prev) => [...prev, ...shaped]);
       }
       if (fileRef.current) fileRef.current.value = "";
+      if (cameraRef.current) cameraRef.current.value = "";
     },
     [attachments, t, updateAttachment, removeAttachment, onAttachmentsChange]
   );
@@ -176,6 +183,19 @@ export function ChatInputExtras({
         aria-hidden="true"
         tabIndex={-1}
       />
+      {/* THE CAPTURE — the camera's own eye: one touch and the phone
+          photographs straight into the message (the rear lens by law;
+          the picker still answers on desks without a camera). */}
+      <input
+        ref={cameraRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        hidden
+        onChange={(e) => handleFiles(e.target.files)}
+        aria-hidden="true"
+        tabIndex={-1}
+      />
 
       {/* paperclip — one image, three documents */}
       <button
@@ -194,23 +214,42 @@ export function ChatInputExtras({
         <Paperclip className={cn(iconSize, "text-muted-foreground")} aria-hidden="true" />
       </button>
 
-      {/* the call — one purpose only: a single click opens the scope's
-          own direct mirror communication */}
+      {/* the camera — one touch photographs into the message */}
       <button
         type="button"
-        onClick={() => setLiveCallOpen(true)}
+        onClick={() => cameraRef.current?.click()}
         disabled={disabled}
-        aria-label={t("Open the direct mirror connection")}
-        title={t("Open the direct mirror connection")}
-        data-testid={`chat-call-${scope}`}
+        aria-label={t("Photograph into the message")}
+        title={t("Photograph into the message")}
+        data-testid={`chat-capture-${scope}`}
         className={cn(
           "focus-glow flex shrink-0 items-center justify-center rounded-full border transition-all duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40",
           btnSize
         )}
         style={{ borderColor: "color-mix(in srgb, " + accentVar + " 26%, transparent)" }}
       >
-        <Phone className={cn(iconSize, "text-muted-foreground")} aria-hidden="true" />
+        <Camera className={cn(iconSize, "text-muted-foreground")} aria-hidden="true" />
       </button>
+
+      {/* the call — one purpose only: a single click opens the scope's
+          own direct mirror communication */}
+      {withCall && (
+        <button
+          type="button"
+          onClick={() => setLiveCallOpen(true)}
+          disabled={disabled}
+          aria-label={t("Open the direct mirror connection")}
+          title={t("Open the direct mirror connection")}
+          data-testid={`chat-call-${scope}`}
+          className={cn(
+            "focus-glow flex shrink-0 items-center justify-center rounded-full border transition-all duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40",
+            btnSize
+          )}
+          style={{ borderColor: "color-mix(in srgb, " + accentVar + " 26%, transparent)" }}
+        >
+          <Phone className={cn(iconSize, "text-muted-foreground")} aria-hidden="true" />
+        </button>
+      )}
 
       {/* the live call — the scope's own direct line */}
       <AnimatePresence>

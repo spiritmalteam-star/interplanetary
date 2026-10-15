@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import ZAI from "@/lib/zai-client";
 import { meterRoute } from "@/lib/server/meter";
+import {
+  describeImage,
+  documentBlock,
+  imageBlock,
+  parseAttachments,
+} from "@/lib/server/attachments";
 
 export const maxDuration = 60;
 
@@ -103,7 +109,10 @@ function interpreterPrompt(b: LcBody, languageName: string): string {
     .join("\n");
 }
 
-async function interpret(b: LcBody): Promise<{
+async function interpret(
+  b: LcBody,
+  attachmentLines = ""
+): Promise<{
   title: string;
   style: string;
   lyrics: string | null;
@@ -120,8 +129,9 @@ async function interpret(b: LcBody): Promise<{
         {
           role: "user",
           content:
-            b.intention?.trim() ||
-            "The Mirror chooses what this transmission holds.",
+            (b.intention?.trim() ||
+              "The Mirror chooses what this transmission holds.") +
+            attachmentLines,
         },
       ],
       temperature: 0.85,
@@ -222,7 +232,23 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "The chamber received nothing to interpret." }, { status: 400 });
   }
   try {
-    const interp = await interpret(b);
+    /* Attachments — one image seen with the vision field, up to three
+       extracted documents — folded into what the interpreter reads. */
+    const { imageDataUrl, documents } = parseAttachments(b);
+    const attachmentBlocks: string[] = [];
+    if (imageDataUrl) {
+      const zai = await ZAI.create();
+      const block = imageBlock(await describeImage(zai, imageDataUrl));
+      if (block) attachmentBlocks.push(block);
+    }
+    const docBlock = documentBlock(documents);
+    if (docBlock) attachmentBlocks.push(docBlock);
+    const attachmentLines =
+      attachmentBlocks.length > 0
+        ? `\n\n${attachmentBlocks.join("\n\n")}`
+        : "";
+
+    const interp = await interpret(b, attachmentLines);
     if (b.interpretOnly) {
       return NextResponse.json(interp);
     }

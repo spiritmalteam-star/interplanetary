@@ -2,6 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import ZAI from "@/lib/zai-client";
 import { renderTransmissionPdf, type Transmission } from "@/lib/transmission-pdf";
 import { meterRoute } from "@/lib/server/meter";
+import {
+  describeImage,
+  documentBlock,
+  imageBlock,
+  parseAttachments,
+} from "@/lib/server/attachments";
 
 /* ------------------------------------------------------------------ */
 /*  POST /api/evolve-med/pdf — THE QUICK TRANSMISSION PRESS.           */
@@ -190,6 +196,21 @@ ${turn.sections.map((s) => `· ${s.heading} — ${s.body}`).join("\n")}`
 
     const zai = await ZAI.create();
 
+    /* Attachments — one image seen with the vision field, up to three
+       extracted documents — folded into what the transmission reads. */
+    const { imageDataUrl, documents } = parseAttachments(body);
+    const attachmentBlocks: string[] = [];
+    if (imageDataUrl) {
+      const block = imageBlock(await describeImage(zai, imageDataUrl));
+      if (block) attachmentBlocks.push(block);
+    }
+    const docBlock = documentBlock(documents);
+    if (docBlock) attachmentBlocks.push(docBlock);
+    const attachmentLines =
+      attachmentBlocks.length > 0
+        ? `\n\n${attachmentBlocks.join("\n\n")}`
+        : "";
+
     /* ---- one quick transmission — retried once should the JSON
        arrive malformed -------------------------------------------- */
     let transmission: Transmission | null = null;
@@ -203,6 +224,7 @@ ${turn.sections.map((s) => `· ${s.heading} — ${s.body}`).join("\n")}`
             content:
               `THE TRANSMISSION THREAD (your one source — the conversation to press into ink):\n\n${threadBlock}` +
               `\n\n${focusLine}` +
+              attachmentLines +
               `\n\nGEAR OF DEPTH (honor it absolutely): ${GEARS[depth]}` +
               `\n\nLENGTH: exactly ${pages} page-block${pages > 1 ? "s" : ""} in the "pages" array.` +
               `\n\nLANGUAGE (CRITICAL): write EVERY word in fluent, natural ${languageName}.` +

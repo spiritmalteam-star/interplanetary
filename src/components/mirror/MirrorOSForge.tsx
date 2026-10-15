@@ -10,6 +10,8 @@ import { sectionImage } from "@/lib/entity-utils";
 import { cn } from "@/lib/utils";
 import { Slider } from "@/components/ui/slider";
 import { toast } from "@/hooks/use-toast";
+import { AttachmentChips, ChatInputExtras } from "./ChatInputExtras";
+import type { ChatAttachment } from "./attachments";
 
 /* ---------------- sigil forge (deterministic per intention) ---------------- */
 
@@ -299,6 +301,8 @@ export function MirrorOSForge() {
   const t = useT();
 
   const [phase, setPhase] = useState(0);
+  /* what the intention carries — one image, up to three documents */
+  const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
 
   useEffect(() => {
     if (labStage !== "charging") return;
@@ -342,6 +346,22 @@ export function MirrorOSForge() {
               maxLength={400}
               className="focus-glow mt-2 w-full resize-none rounded-xl border hairline bg-transparent px-3.5 py-3 text-[15px] leading-relaxed text-foreground placeholder:text-muted-foreground/60"
             />
+            {/* what the intention carries — chips and the paperclip/camera */}
+            <div className="mt-2 flex items-center gap-2">
+              <AttachmentChips
+                attachments={attachments}
+                onRemove={(id) =>
+                  setAttachments((prev) => prev.filter((a) => a.id !== id))
+                }
+              />
+              <ChatInputExtras
+                scope="mirroros"
+                size="2xs"
+                withCall={false}
+                attachments={attachments}
+                onAttachmentsChange={setAttachments}
+              />
+            </div>
             <p className="mono-label mt-1.5 text-right text-[10px] text-muted-foreground/60">
               {labIntention.length}/400
             </p>
@@ -421,7 +441,11 @@ export function MirrorOSForge() {
             <button
               type="button"
               disabled={!canCharge}
-              onClick={() => void chargeIntention()}
+              onClick={() => {
+                const carried = attachments;
+                setAttachments([]);
+                void chargeIntention(carried);
+              }}
               className={cn(
                 "focus-glow mt-5 flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-3 text-[14.5px] font-semibold transition-all duration-300",
                 canCharge

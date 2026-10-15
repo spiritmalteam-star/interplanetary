@@ -14,6 +14,8 @@ import {
   Hammer,
   Hand,
   HeartHandshake,
+  History,
+  Image,
   Info,
   Library,
   LifeBuoy,
@@ -23,12 +25,14 @@ import {
   Moon,
   Music,
   Palette,
+  Phone,
   ScrollText,
   ShieldCheck,
   Smartphone,
   Stethoscope,
   Telescope,
   Users,
+  Volume2,
 } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
@@ -209,6 +213,7 @@ export function AboutPage() {
   const jumps = useMemo(
     () => [
       { href: "#about-principles", label: "Principles" },
+      { href: "#about-today", label: "The house today" },
       { href: "#about-worlds", label: "The fourteen worlds" },
       { href: "#about-promise", label: "Built as a mirror" },
       { href: "#about-terms", label: "Terms of service" },
@@ -346,6 +351,54 @@ export function AboutPage() {
                 dignity and potential. The mirror never deems a human
                 non-human; exploration is an act of remembering who you are.
               </PrincipleRow>
+            </div>
+          </Reveal>
+
+          {/* ── the house, as it stands today ──────────────────────────────────────────── */}
+          <Reveal className="space-y-6 border-t pt-10">
+            <SectionHead
+              id="about-today"
+              kicker="what the house holds now"
+              title="The House, As It Stands Today"
+              intro="The laboratory keeps evolving with its visitors. These are the hands the house extends at this hour — each one woven this season."
+            />
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <WorldCard
+                n={1}
+                icon={Compass}
+                name="The Living Realm — a Wall of Stone"
+                desc="The floor of suggestions is a wall of Maya-style carved stones now: it fills the screen, wears every category's own light, uncovers deeper rows as you slide down, and pours itself anew at one visible touch — a fresh page of suggestions whenever you ask."
+              />
+              <WorldCard
+                n={2}
+                icon={History}
+                name="The Walk's Ledger — Your History Keeper"
+                desc="The compass at the top-left corner follows the trajectory of your walk and keeps your materials: the volumes you kept, the conversations you saved, and the journey's own steps — every previous creation one touch away, found again."
+              />
+              <WorldCard
+                n={3}
+                icon={BookOpen}
+                name="The Dream Book — Two Veins, 220 Pages"
+                desc="Books now declare their nature: GROUND for a normal, grounded telling, EPHEMERAL for the metaphysical and mystique — up to 220 numbered pages, a story that evolves naturally without repeating itself, and a clean voice free of filler mysticism unless the subject itself asks for it."
+              />
+              <WorldCard
+                n={4}
+                icon={Image}
+                name="Bring Your Own Sight"
+                desc="Every chat in the house carries a paperclip and a camera now: attach an image, a PDF or a document — or photograph straight into the message — and the mirror sees and reads what you bring, on the realm's floor, in every room, and in every world's own chat."
+              />
+              <WorldCard
+                n={5}
+                icon={Volume2}
+                name="A Voice That Never Stumbles"
+                desc="The reading voice has been re-loomed: a page turned can never drag a late voice back, a stopped line leaves no echo talking, and the browser's stand-in voice silences with the same hand — the house voice holds steady through every page and call."
+              />
+              <WorldCard
+                n={6}
+                icon={Phone}
+                name="The Call — Words That Stay in Sight"
+                desc="During a direct call the exchanged words follow the voice now: the newest line stays in view while it arrives — no chasing the text down the page — and the transcript breathes wider on every screen."
+              />
             </div>
           </Reveal>
 

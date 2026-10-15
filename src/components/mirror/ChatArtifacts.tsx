@@ -61,6 +61,11 @@ import {
 } from "@/lib/data/invent";
 import { labFrequencies } from "@/lib/data/metaphysics";
 import { RevelationProse, RevelationSections } from "./RevelationBody";
+import { AttachmentChips, ChatInputExtras } from "./ChatInputExtras";
+import {
+  attachmentsToPayload,
+  type ChatAttachment,
+} from "./attachments";
 
 /* ================================================================== */
 /*  THE GENERATIVE SIDE-ACTIVITY ARTIFACTS                             */
@@ -736,9 +741,13 @@ function ManifestRitual({ resonance }: { resonance: string }) {
   const [blueprint, setBlueprint] = useState<MiniBlueprint | null>(null);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState(false);
+  /* what the intention carries — one image, up to three documents */
+  const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
 
   const charge = async () => {
     if (!intention.trim() || stage === "charging") return;
+    const carried = attachments.length > 0 ? attachments : undefined;
+    setAttachments([]);
     setStage("charging");
     setError(false);
     setProgress(0);
@@ -750,7 +759,13 @@ function ManifestRitual({ resonance }: { resonance: string }) {
         fetch("/api/manifest", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ intention: intention.trim(), emotion, intensity, language }),
+          body: JSON.stringify({
+            intention: intention.trim(),
+            emotion,
+            intensity,
+            language,
+            ...(carried ? attachmentsToPayload(carried) : {}),
+          }),
         }),
         new Promise((r) => window.setTimeout(r, 2100)), /* let the orb breathe */
       ]);
@@ -787,6 +802,22 @@ function ManifestRitual({ resonance }: { resonance: string }) {
             data-testid="chat-manifest-intention"
             className="focus-glow mt-2 w-full resize-none rounded-xl border hairline bg-background/50 px-3.5 py-2.5 text-[14px] leading-relaxed text-foreground placeholder:text-muted-foreground/60"
           />
+          {/* what the intention carries — chips and the paperclip/camera */}
+          <div className="mt-2 flex items-center gap-2">
+            <AttachmentChips
+              attachments={attachments}
+              onRemove={(id) =>
+                setAttachments((prev) => prev.filter((a) => a.id !== id))
+              }
+            />
+            <ChatInputExtras
+              scope="mirroros"
+              size="2xs"
+              withCall={false}
+              attachments={attachments}
+              onAttachmentsChange={setAttachments}
+            />
+          </div>
           <p className="mono-label mt-3 text-[9.5px] uppercase tracking-[0.2em] text-[var(--scope-a)]">
             {t("Emotional frequency · the carrier wave")}
           </p>

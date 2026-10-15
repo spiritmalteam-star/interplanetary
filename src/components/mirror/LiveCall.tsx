@@ -217,9 +217,27 @@ export function LiveCall({
     };
   }, []);
 
+  /* THE WORDS STAY IN SIGHT — the transcript follows the voice: the
+     line glides to the newest word as the reply reveals itself, and
+     never asks the visitor to chase it down a box. The hand is polite:
+     when the visitor has scrolled up to re-read, the line waits. */
+  const followTranscript = useCallback((behavior: ScrollBehavior) => {
+    const box = transcriptEndRef.current?.parentElement?.parentElement;
+    if (!box) return;
+    const nearFoot =
+      box.scrollTop + box.clientHeight >= box.scrollHeight - 90;
+    if (!nearFoot) return;
+    transcriptEndRef.current?.scrollIntoView({ behavior, block: "end" });
+  }, []);
+
   useEffect(() => {
-    transcriptEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [turns.length, phase]);
+    followTranscript("smooth");
+  }, [turns.length, phase, followTranscript]);
+
+  /* the reveal tick — the newest words stay in view while they arrive */
+  useEffect(() => {
+    followTranscript("auto");
+  }, [revealedChars, followTranscript]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -789,7 +807,10 @@ export function LiveCall({
 
         {/* ---------- the words exchanged on this line ---------- */}
         {turns.length > 0 && (
-          <div className="nice-scroll mt-4 max-h-44 overflow-y-auto px-5">
+          <div
+            className="nice-scroll mt-4 max-h-[36dvh] min-h-16 overflow-y-auto px-5"
+            data-testid="live-call-transcript"
+          >
             <div className="flex flex-col gap-2.5">
               {turns.map((turn, i) => {
                 const isLastMirror = i === lastMirrorIndex;

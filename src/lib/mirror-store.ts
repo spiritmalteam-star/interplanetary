@@ -592,7 +592,7 @@ interface MirrorState {
   strikeMystery: (directive?: string) => Promise<void>;
   setToolId: (id: string) => void;
   setToolInput: (value: string) => void;
-  workTool: () => Promise<void>;
+  workTool: (attachments?: ChatAttachment[]) => Promise<void>;
 
   /* Universal language + transcript voice */
   language: LanguageCode;
@@ -678,6 +678,7 @@ interface MirrorState {
     interpretOnly?: boolean;
     context?: string;
     intention?: string;
+    attachments?: ChatAttachment[];
   }) => Promise<void>;
   reshapeLc: (track: LcTrack) => void;
   clearLcPlayer: () => void;
@@ -751,7 +752,7 @@ interface MirrorState {
   /** Pin a window's note stickers into the conversation flow. */
   pinPxNotes: (scopeId: string) => void;
   setPxFusion: (ids: string[] | ((prev: string[]) => string[])) => void;
-  askPX: (question: string) => Promise<void>;
+  askPX: (question: string, attachments?: ChatAttachment[]) => Promise<void>;
 
   /* Evolve Med — the evolutionary medical nexus (fully independent) */
   openEvolveMed: () => void;
@@ -761,7 +762,7 @@ interface MirrorState {
   /** Pin a vector window's note stickers into the conversation flow. */
   pinEmNotes: (vectorId: string) => void;
   setEmFusion: (ids: string[] | ((prev: string[]) => string[])) => void;
-  askEM: (question: string) => Promise<void>;
+  askEM: (question: string, attachments?: ChatAttachment[]) => Promise<void>;
   /** IMAGE CRYSTALLIZATION in the Evolve Med nexus — the last channel
       of the nexus thread crystallized at once. `display` is what the
       visitor's bubble shows (the raw words); `question` may be the
@@ -807,7 +808,7 @@ interface MirrorState {
   setLabIntention: (v: string) => void;
   setLabEmotion: (id: string) => void;
   setLabIntensity: (v: number) => void;
-  chargeIntention: () => Promise<void>;
+  chargeIntention: (attachments?: ChatAttachment[]) => Promise<void>;
   resetLabDraft: () => void;
 
   /* Manifest OS — direct chat */
@@ -1242,6 +1243,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
           language: s.language,
           context: opts?.context,
           interpretOnly: opts?.interpretOnly === true,
+          ...(opts?.attachments ? attachmentsToPayload(opts.attachments) : {}),
         }),
       });
       const data = await res.json().catch(() => null);
@@ -2026,7 +2028,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
 
   setToolInput: (value) => set({ toolInput: value }),
 
-  workTool: async () => {
+  workTool: async (attachments) => {
     const tool = get().toolId;
     const input = get().toolInput.trim();
     if (!tool || input.length < 2 || get().toolStatus === "working") return;
@@ -2045,6 +2047,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
           tool,
           input,
           language: get().language,
+          ...(attachments ? attachmentsToPayload(attachments) : {}),
         }),
       });
       const data = await res.json().catch(() => null);
@@ -2625,7 +2628,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       ).slice(0, 2),
     })),
 
-  askPX: async (question) => {
+  askPX: async (question, attachments) => {
     const query = question.trim();
     if (!query || get().pxStatus === "loading") return;
 
@@ -2663,6 +2666,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
           scope: scopeName,
           fusion: fusionNames.length === 2 ? fusionNames : [],
           depth: journeyDepth(),
+          ...(attachments ? attachmentsToPayload(attachments) : {}),
         }),
       });
       const data = (await res.json().catch(() => null)) as {
@@ -2755,7 +2759,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       ).slice(0, 2),
     })),
 
-  askEM: async (question) => {
+  askEM: async (question, attachments) => {
     const query = question.trim();
     if (!query || get().emStatus === "loading") return;
 
@@ -2793,6 +2797,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
           scope: vectorName,
           fusion: fusionNames.length === 2 ? fusionNames : [],
           depth: journeyDepth(),
+          ...(attachments ? attachmentsToPayload(attachments) : {}),
         }),
       });
       const data = (await res.json().catch(() => null)) as {
@@ -3535,7 +3540,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     }
   },
 
-  chargeIntention: async () => {
+  chargeIntention: async (attachments) => {
     const intention = get().labIntention.trim();
     if (!intention || get().labStage === "charging") return;
 
@@ -3577,6 +3582,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
           emotion: get().labEmotion,
           intensity: get().labIntensity,
           language: get().language,
+          ...(attachments ? attachmentsToPayload(attachments) : {}),
         }),
       });
       const data = await res.json().catch(() => null);

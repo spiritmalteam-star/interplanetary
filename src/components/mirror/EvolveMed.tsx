@@ -39,6 +39,11 @@ import { WorldNewChat } from "./WorldNewChat";
 import { ChatHistoryPanel } from "./ChatHistoryPanel";
 import { WindowSelect } from "./WindowSelect";
 import { useFloatingBarAutoHide } from "./useFloatingBar";
+import { AttachmentChips, ChatInputExtras } from "./ChatInputExtras";
+import {
+  hasPendingAttachments,
+  type ChatAttachment,
+} from "./attachments";
 import { HelixLoading } from "./ThemedLoadings";
 import {
   PreparedPromptFallback,
@@ -516,11 +521,18 @@ function EvolveMedChat() {
     el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
   }, [emDraft]);
 
-  const canSend = emDraft.trim().length > 0 && emStatus !== "loading";
+  /* what the directive carries — one image, up to three documents */
+  const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
+
+  const canSend =
+    emDraft.trim().length > 0 &&
+    emStatus !== "loading" &&
+    !hasPendingAttachments(attachments);
 
   const submit = () => {
     const query = emDraft.trim();
-    if (!query || emStatus === "loading") return;    /* IMAGE CRYSTALLIZATION — an image is asked for by name: the last
+    if (!query || emStatus === "loading") return;
+    /* IMAGE CRYSTALLIZATION — an image is asked for by name: the last
        channel (the nexus's most recent revelation) crystallizes at
        once, shaped by the visitor's words; with an empty thread, the
        words themselves crystallize. */
@@ -529,10 +541,13 @@ function EvolveMedChat() {
         [...emMessages]
           .reverse()
           .find((m) => m.role === "em" && m.text.trim())?.text ?? "";
+      setAttachments([]);
       void askEMVisual(blendVisualRequest(query, lastReply), query);
       return;
     }
-    void askEM(query);
+    const carried = attachments.length > 0 ? attachments : undefined;
+    setAttachments([]);
+    void askEM(query, carried);
   };
 
   /* The active route: one vector, or a melted pair. */
@@ -796,6 +811,12 @@ function EvolveMedChat() {
           }}
           className="mx-auto w-full max-w-[800px]"
         >
+          <AttachmentChips
+            attachments={attachments}
+            onRemove={(id) =>
+              setAttachments((prev) => prev.filter((a) => a.id !== id))
+            }
+          />
           <div className="glass-strong flex items-end gap-2 rounded-[18px] p-1.5 pl-2 transition-all duration-300 focus-within:-translate-y-px focus-within:border-[var(--hairline-active)] focus-within:glow-sm">
             <CanopySummonButton
               open={summoned}
@@ -820,6 +841,14 @@ function EvolveMedChat() {
               }}
               placeholder={t("Ask Evolve Med…")}
               className="nice-scroll max-h-[120px] flex-1 resize-none bg-transparent py-2 text-[15px] leading-relaxed text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
+            />
+            <ChatInputExtras
+              scope="evolvemed"
+              size="2xs"
+              withCall={false}
+              disabled={emStatus === "loading"}
+              attachments={attachments}
+              onAttachmentsChange={setAttachments}
             />
             <button
               type="submit"

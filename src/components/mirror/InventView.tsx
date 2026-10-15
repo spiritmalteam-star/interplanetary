@@ -50,6 +50,12 @@ import { WorldNewChat } from "./WorldNewChat";
 import { ChatHistoryPanel } from "./ChatHistoryPanel";
 import { WindowSelect } from "./WindowSelect";
 import { useFloatingBarAutoHide } from "./useFloatingBar";
+import { AttachmentChips, ChatInputExtras } from "./ChatInputExtras";
+import {
+  attachmentsToPayload,
+  hasPendingAttachments,
+  type ChatAttachment,
+} from "./attachments";
 
 /* ------------------------------------------------------------------ */
 /*  INVENT — THE FORGE · the fourth book on the shelf, rebuilt as its  */
@@ -653,6 +659,8 @@ function ToolWallChamber({ onAskBench }: { onAskBench: () => void }) {
   const workTool = useMirror((s) => s.workTool);
   const t = useT();
   const [phase, setPhase] = useState(0);
+  /* what the work carries — one image, up to three documents */
+  const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
 
   const tool = inventTools.find((x) => x.id === toolId) ?? null;
 
@@ -665,7 +673,17 @@ function ToolWallChamber({ onAskBench }: { onAskBench: () => void }) {
     return () => window.clearInterval(id);
   }, [toolStatus]);
 
-  const canWork = tool !== null && toolInput.trim().length >= 2 && toolStatus !== "working";
+  const canWork =
+    tool !== null &&
+    toolInput.trim().length >= 2 &&
+    toolStatus !== "working" &&
+    !hasPendingAttachments(attachments);
+
+  const work = () => {
+    const carried = attachments.length > 0 ? attachments : undefined;
+    setAttachments([]);
+    void workTool(carried);
+  };
 
   return (
     <div data-testid="tool-wall">
@@ -796,7 +814,7 @@ function ToolWallChamber({ onAskBench }: { onAskBench: () => void }) {
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey && canWork) {
                 e.preventDefault();
-                void workTool();
+                work();
               }
             }}
             rows={3}
@@ -807,10 +825,28 @@ function ToolWallChamber({ onAskBench }: { onAskBench: () => void }) {
             className="focus-glow mt-1.5 max-h-32 min-h-[64px] w-full resize-none rounded-xl border hairline bg-transparent px-3.5 py-2.5 text-[14px] leading-relaxed text-foreground placeholder:text-muted-foreground/60"
           />
 
+          {/* what the work carries — chips and the paperclip/camera */}
+          <div className="mt-2 flex items-center gap-2">
+            <AttachmentChips
+              attachments={attachments}
+              onRemove={(id) =>
+                setAttachments((prev) => prev.filter((a) => a.id !== id))
+              }
+            />
+            <ChatInputExtras
+              scope="forge"
+              size="2xs"
+              withCall={false}
+              disabled={toolStatus === "working"}
+              attachments={attachments}
+              onAttachmentsChange={setAttachments}
+            />
+          </div>
+
           <button
             type="button"
             disabled={!canWork}
-            onClick={() => void workTool()}
+            onClick={work}
             data-testid="work-tool"
             aria-label={t(tool.action)}
             className={cn(
@@ -1095,6 +1131,8 @@ function BenchChat() {
   /* while the answer lives in the tree, the rest strip rests too */
   const [canopyLatch, setCanopyLatch] = useState(false);
   const onCanopyLatch = useCallback((v: boolean) => setCanopyLatch(v), []);
+  /* what the ask carries — one image, up to three documents */
+  const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
 
   const { status, messages, draft, error, activeQuery } = forgeSession;
   const loading = status === "loading";
@@ -1130,13 +1168,17 @@ function BenchChat() {
     if (isVisualIntent(q)) {
       const lastReply =
         [...messages].reverse().find((m) => m.text.trim())?.text ?? "";
+      setAttachments([]);
       void askForgeVisual(blendVisualRequest(q, lastReply), q);
       return;
     }
-    void askForge(q);
+    const carried = attachments.length > 0 ? attachments : undefined;
+    setAttachments([]);
+    void askForge(q, carried);
   };
 
-  const canSend = draft.trim().length > 0 && !loading;
+  const canSend =
+    draft.trim().length > 0 && !loading && !hasPendingAttachments(attachments);
 
   return (
     <div
@@ -1282,8 +1324,15 @@ function BenchChat() {
           only input while the answer lives in the tree */}
       {!canopyLatch && (
       <div className="relative z-30 shrink-0 border-t hairline bg-[var(--glass-bg)] px-3 py-2.5 backdrop-blur-xl sm:px-4">
-        <div className="mx-auto flex w-full max-w-[800px] items-end gap-2">
-          <CanopySummonButton
+        <div className="mx-auto w-full max-w-[800px]">
+          <AttachmentChips
+            attachments={attachments}
+            onRemove={(id) =>
+              setAttachments((prev) => prev.filter((a) => a.id !== id))
+            }
+          />
+          <div className="flex w-full items-end gap-2">
+            <CanopySummonButton
             open={summoned}
             onToggle={() => setSummoned((v) => !v)}
             disabled={loading}
@@ -1305,6 +1354,14 @@ function BenchChat() {
             placeholder={t("Speak to the Forge — a want, a half-idea, a block…")}
             className="focus-glow max-h-28 min-h-[46px] w-full resize-none rounded-xl border hairline bg-transparent px-3.5 py-2.5 text-[14.5px] leading-relaxed text-foreground placeholder:text-muted-foreground/60"
           />
+          <ChatInputExtras
+            scope="forge"
+            size="2xs"
+            withCall={false}
+            disabled={loading}
+            attachments={attachments}
+            onAttachmentsChange={setAttachments}
+          />
           <button
             type="button"
             onClick={() => send()}
@@ -1324,6 +1381,7 @@ function BenchChat() {
           >
             <Feather className="size-4" aria-hidden="true" />
           </button>
+          </div>
         </div>
       </div>
       )}

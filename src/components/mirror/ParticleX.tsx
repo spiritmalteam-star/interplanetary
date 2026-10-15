@@ -37,6 +37,11 @@ import { PxBioMech } from "./PxBioMech";
 import { RevelationProse, RevelationSections } from "./RevelationBody";
 import { WindowSelect } from "./WindowSelect";
 import { useFloatingBarAutoHide } from "./useFloatingBar";
+import { AttachmentChips, ChatInputExtras } from "./ChatInputExtras";
+import {
+  hasPendingAttachments,
+  type ChatAttachment,
+} from "./attachments";
 import {
   PxCodexTab,
   PxCopyButton,
@@ -320,6 +325,8 @@ function ParticleXChat() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const latestRef = useRef<HTMLDivElement | null>(null);
   const loadingRef = useRef<HTMLDivElement | null>(null);
+  /* what the revelation carries — one image, up to three documents */
+  const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
   /* THE CANOPY — the branches fill the whole chat box: standing in the
      empty room, summoned again by the button beside the input. THE
      ANSWER LIVES IN THE TREE now: the walk stays standing through the
@@ -381,11 +388,17 @@ function ParticleXChat() {
     el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
   }, [pxDraft]);
 
-  const canSend = pxDraft.trim().length > 0 && pxStatus !== "loading";
+  const canSend =
+    pxDraft.trim().length > 0 &&
+    pxStatus !== "loading" &&
+    !hasPendingAttachments(attachments);
 
   const submit = () => {
     const query = pxDraft.trim();
-    if (!query || pxStatus === "loading") return;    void askPX(query);
+    if (!query || pxStatus === "loading") return;
+    const carried = attachments.length > 0 ? attachments : undefined;
+    setAttachments([]);
+    void askPX(query, carried);
   };
 
   /* The active window: one scope, or a melted pair. */
@@ -645,6 +658,12 @@ function ParticleXChat() {
           }}
           className="mx-auto w-full max-w-[800px]"
         >
+          <AttachmentChips
+            attachments={attachments}
+            onRemove={(id) =>
+              setAttachments((prev) => prev.filter((a) => a.id !== id))
+            }
+          />
           <div className="glass-strong flex items-end gap-2 rounded-[18px] p-1.5 pl-2 transition-all duration-300 focus-within:-translate-y-px focus-within:border-[var(--hairline-active)] focus-within:glow-sm">
             <CanopySummonButton
               open={summoned}
@@ -669,6 +688,14 @@ function ParticleXChat() {
               }}
               placeholder={t("Ask ParticleX…")}
               className="nice-scroll max-h-[120px] flex-1 resize-none bg-transparent py-2 text-[15px] leading-relaxed text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
+            />
+            <ChatInputExtras
+              scope="quantum"
+              size="2xs"
+              withCall={false}
+              disabled={pxStatus === "loading"}
+              attachments={attachments}
+              onAttachmentsChange={setAttachments}
             />
             <button
               type="submit"

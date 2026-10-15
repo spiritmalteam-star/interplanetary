@@ -51,6 +51,11 @@ import { EM_LAB_PAGES } from "@/lib/data/evolvemed-lab";
 import { cn } from "@/lib/utils";
 import { ListenButton } from "./ListenButton";
 import { voiceProfile } from "@/lib/voice-profiles";
+import { AttachmentChips, ChatInputExtras } from "./ChatInputExtras";
+import {
+  attachmentsToPayload,
+  type ChatAttachment,
+} from "./attachments";
 import { RevelationProse, RevelationSections } from "./RevelationBody";
 
 /* ------------------------------------------------------------------ */
@@ -532,9 +537,13 @@ export function EmPdfButton() {
   const [focus, setFocus] = useState("");
   const [depth, setDepth] = useState(3);
   const [pages, setPages] = useState(2);
+  /* what the transmission carries — one image, up to three documents */
+  const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
 
   const press = async () => {
     if (busy || thread.length === 0) return;
+    const carried = attachments.length > 0 ? attachments : undefined;
+    setAttachments([]);
     setBusy(true);
     try {
       const res = await fetch("/api/evolve-med/pdf", {
@@ -545,6 +554,7 @@ export function EmPdfButton() {
           focus: focus.trim() || null,
           depth,
           pages,
+          ...(carried ? attachmentsToPayload(carried) : {}),
           thread: thread.slice(-14).map((m) => ({
             role: m.role,
             text: m.text,
@@ -631,6 +641,23 @@ export function EmPdfButton() {
               data-testid="em-pdf-focus"
               className="nice-scroll mt-1.5 w-full resize-none rounded-xl border hairline bg-transparent px-3 py-2 text-[14px] leading-relaxed text-foreground placeholder:text-muted-foreground/50 focus:border-[var(--hairline-active)] focus:outline-none"
             />
+            {/* what the transmission carries — chips and the paperclip/camera */}
+            <div className="mt-2 flex items-center gap-2">
+              <AttachmentChips
+                attachments={attachments}
+                onRemove={(id) =>
+                  setAttachments((prev) => prev.filter((a) => a.id !== id))
+                }
+              />
+              <ChatInputExtras
+                scope="evolvemed"
+                size="2xs"
+                withCall={false}
+                disabled={busy}
+                attachments={attachments}
+                onAttachmentsChange={setAttachments}
+              />
+            </div>
           </div>
 
           {/* the gear of depth */}

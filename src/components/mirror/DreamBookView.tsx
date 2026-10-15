@@ -48,6 +48,7 @@ import { useT } from "@/lib/i18n";
 import {
   noteBrowserVoiceFallback,
   speakWithBrowserVoice,
+  stopBrowserVoice,
 } from "@/lib/browser-voice";
 import { BOOK_DEPTHS, READERS, TALES, VOLUMES } from "@/lib/data/book-options";
 import { dedupeChapters } from "@/lib/book-text";
@@ -142,11 +143,15 @@ export function DreamBookView() {
   const [level, setLevel] = useState("");
   const [topic, setTopic] = useState("");
   const [topicDraft, setTopicDraft] = useState("");
+  /* THE VEIN — the big choice of the loom: ephemeral (metaphysical,
+     mystique) or ground (a normal book). The channel's own breath has
+     always been ephemeral, so it is the resting hand. */
+  const [vein, setVein] = useState<"ephemeral" | "ground">("ephemeral");
   const [phaseIdx, setPhaseIdx] = useState(0);
 
   const WEAVING_PHASES = useMemo(
     () => [
-      t("Tuning the loom to your frequency…"),
+      t("Tuning the loom to your subject…"),
       t("Gathering threads from the far side of sleep…"),
       t("Choosing names the stars have not used yet…"),
       t("Folding the first pages of the world…"),
@@ -220,7 +225,7 @@ export function DreamBookView() {
   const endedRef = useRef(false);
   const weavingRef = useRef(false);
   const rewritesRef = useRef<string[]>([]);
-  const configRef = useRef({ age, tale, volume, level, topic });
+  const configRef = useRef({ age, tale, volume, level, topic, vein });
   /* the book's own place in its keeper's cosmic library — a fresh
      volume is given it on open; a volume brought back already has one,
      and every woven page keeps that entry alive */
@@ -229,10 +234,16 @@ export function DreamBookView() {
     audio: null,
     ready: false,
   });
+  /* THE VOICE'S OWN GENERATION — every narrate raises it, every stop
+     raises it: a slow fetch for a page already left behind comes home
+     to a stale generation and is dropped unplayed, so a turned page
+     can never be dragged back by its own late voice (the glitch's
+     root — a race between the wire and the reader's finger). */
+  const narrSeqRef = useRef(0);
 
   useEffect(() => {
-    configRef.current = { age, tale, volume, level, topic };
-  }, [age, tale, volume, level, topic]);
+    configRef.current = { age, tale, volume, level, topic, vein };
+  }, [age, tale, volume, level, topic, vein]);
 
   /* -------- a volume brought back from the cosmic library --------
      The DreamBookView mounts fresh when the library hands a volume
@@ -268,6 +279,7 @@ export function DreamBookView() {
   /* ---------------- the narrator (declared early — others call it) --- */
 
   const stopNarration = useCallback(() => {
+    narrSeqRef.current += 1;
     const a = narrRef.current.audio;
     if (a) {
       try {
@@ -275,9 +287,18 @@ export function DreamBookView() {
       } catch {
         /* already stopped */
       }
+      /* the carved breath is freed — no blob lingers unheard */
+      try {
+        URL.revokeObjectURL(a.src);
+      } catch {
+        /* already freed */
+      }
     }
     narrRef.current.audio = null;
     narrRef.current.ready = false;
+    /* the traveler's fallback voice is silenced with the same hand —
+       a page turn never leaves the browser still reading the old leaf */
+    stopBrowserVoice();
     setNarrating(false);
     setNarrPaused(false);
     setNarrLoading(false);
@@ -305,6 +326,7 @@ export function DreamBookView() {
         volume: r.config.volume,
         level: r.config.level ?? "",
         topic: r.config.topic,
+        vein: "ephemeral",
       };
       setAge(r.config.age);
       setTale(r.config.tale);
@@ -1039,34 +1061,63 @@ export function DreamBookView() {
     }
     stopNarration();
     setNarrLoading(true);
+    /* this voice's own generation — the stamp every awaited reply
+       carries home to be checked against */
+    const seq = ++narrSeqRef.current;
     const opening = pageIdx === 0 && meta
       ? `${meta.title}. ${meta.subtitle} ${meta.sigil} ${meta.axiom} ${meta.dedication}`
       : "";
     const body = currentPage ? pageText(currentPage) : "";
     const text = (opening || body).trim();
     try {
-      const voice = BOOK_VOICE;
       if (!text) return;
       const res = await fetch("/api/tts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text, voice, pace: 0.85 }),
+        body: JSON.stringify({ text, voice: BOOK_VOICE, pace: 0.85 }),
       });
       if (!res.ok) throw new Error("quiet");
       const blob = await res.blob();
-      const audio = new Audio(URL.createObjectURL(blob));
+      /* the reader moved on while the wire carried this voice — the
+         stale breath is freed unplayed and the fresh page keeps its
+         own voice (the glitch is dead here) */
+      if (seq !== narrSeqRef.current) {
+        return;
+      }
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      const freeVoice = () => {
+        if (narrRef.current.audio === audio) narrRef.current.audio = null;
+        try {
+          URL.revokeObjectURL(url);
+        } catch {
+          /* already freed */
+        }
+      };
       narrRef.current.audio = audio;
       audio.onended = () => {
-        if (narrRef.current.audio === audio) narrRef.current.audio = null;
+        freeVoice();
         setNarrating(false);
         setNarrPaused(false);
       };
       audio.onerror = () => {
-        if (narrRef.current.audio === audio) narrRef.current.audio = null;
+        freeVoice();
         setNarrating(false);
         setNarrPaused(false);
       };
       await audio.play();
+      if (seq !== narrSeqRef.current) {
+        /* a stop or a page turn landed in the play's own breath */
+        try {
+          audio.pause();
+        } catch {
+          /* already quiet */
+        }
+        freeVoice();
+        setNarrating(false);
+        setNarrPaused(false);
+        return;
+      }
       setNarrating(true);
       setNarrPaused(false);
     } catch (err) {
@@ -1243,6 +1294,82 @@ export function DreamBookView() {
           <p className="ink-hand ink-soft mt-1.5 text-[12.5px] italic leading-relaxed sm:text-[13.5px]">
             {t("Name any subject, era, or universe — the loom tunes itself, and the book begins.")}
           </p>
+
+          {/* THE TWO VEINS — the loom's big categorisation: a normal,
+              grounded book, or an ephemeral one that breathes the
+              metaphysical and the mystique. Two cards, plainly lit —
+              the first choice the atelier asks. */}
+          <div
+            className="mt-4 grid grid-cols-2 gap-2.5"
+            role="radiogroup"
+            aria-label={t("The vein of the book")}
+            data-testid="dream-vein"
+          >
+            {(
+              [
+                {
+                  id: "ephemeral" as const,
+                  glyph: "☾",
+                  label: t("Ephemeral"),
+                  hint: t("Metaphysical · mystique — omens, symbols and the invisible breathing through the tale"),
+                },
+                {
+                  id: "ground" as const,
+                  glyph: "❧",
+                  label: t("Ground"),
+                  hint: t("A normal book — grounded people, real places, cause and consequence you can touch"),
+                },
+              ]
+            ).map((v) => {
+              const active = vein === v.id;
+              return (
+                <button
+                  key={v.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={active}
+                  onClick={() => setVein(v.id)}
+                  data-testid={`dream-vein-${v.id}`}
+                  className={cn(
+                    "focus-glow relative flex flex-col items-start gap-1 rounded-xl border px-3.5 py-3 text-left transition-all duration-300",
+                    active
+                      ? "glow-sm border-foreground/45 bg-foreground/[0.06]"
+                      : "border-border bg-card/30 hover:border-foreground/25"
+                  )}
+                >
+                  <span className="flex items-center gap-2">
+                    <span
+                      aria-hidden="true"
+                      className={cn(
+                        "font-[family-name(var(--font-literata))] text-[15px] leading-none transition-colors duration-300",
+                        active ? "text-foreground" : "text-muted-foreground/60"
+                      )}
+                    >
+                      {v.glyph}
+                    </span>
+                    <span
+                      className={cn(
+                        "font-[family-name(var(--font-literata))] text-[13.5px] font-semibold tracking-wide transition-colors duration-300",
+                        active ? "text-foreground" : "text-foreground/70"
+                      )}
+                    >
+                      {v.label}
+                    </span>
+                  </span>
+                  <span className="text-[10.5px] italic leading-snug text-muted-foreground/85">
+                    {v.hint}
+                  </span>
+                  {active && (
+                    <motion.span
+                      layoutId="dream-vein-marker"
+                      className="absolute inset-x-3 bottom-0 h-[2px] rounded-full bg-foreground/70"
+                      transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                    />
+                  )}
+                </button>
+              );
+            })}
+          </div>
 
           {/* the shapes — reader / tale / book, one compact sheet */}
           <div className="mt-4 rounded-2xl border border-border bg-card/40 p-3.5 sm:p-4">
@@ -2274,7 +2401,7 @@ export function DreamBookView() {
         onOpenChange={setRewriteOpen}
         title={t("The rewriting hand")}
         description={t(
-          "Whisper what must change — the coming events, the number of pages, the chapters, the very voice of the writing, even the frequency of the subject itself. The loom will bend the book to your hand."
+          "Whisper what must change — the coming events, the number of pages (up to 220), the chapters, the very voice of the writing, even the face of the subject itself. The loom will bend the book to your hand."
         )}
         widthClass="sm:max-w-[500px]"
       >

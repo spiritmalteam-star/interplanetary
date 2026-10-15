@@ -74,12 +74,16 @@ import {
 } from "@/lib/resonance";
 import {
   BRANCH_TYPE_LABELS,
+  loadJourney,
   loadSeen,
   recordJourney,
   recordSeen,
   type BranchType,
+  type JourneyStep,
   type LearnedBranch,
 } from "@/lib/learning-branches";
+import { listChats, type ChatSurface } from "@/lib/chat-archive";
+import { loadShelf, type ShelfVolume } from "@/lib/book-shelf";
 import {
   BATCH_SIZE,
   buildExtensionTopology,
@@ -93,8 +97,10 @@ import {
   type LaidTree,
 } from "@/lib/genealogy";
 import { recordExpansion, readExpansionScore } from "@/lib/expansion";
+import { attachmentsToPayload, type ChatAttachment } from "./attachments";
 import { ExpansionRing } from "./ExpansionMirror";
 import { LiveCall } from "./LiveCall";
+import { ChatInputExtras, AttachmentChips } from "./ChatInputExtras";
 import type { LiveScopeKey } from "@/lib/live-scopes";
 import { useT } from "@/lib/i18n";
 import { useMirror } from "@/lib/mirror-store";
@@ -327,8 +333,15 @@ async function speakWithTransmission(
   transmission: string,
   thread: { q: string; a: string }[],
   language: string,
-  walk: string[] = []
+  walk: string[] = [],
+  /* THE CARRIED SIGHT — an image and up to three documents may ride
+     with the room's own words; the routes already keep the eyes */
+  attachments?: ChatAttachment[]
 ): Promise<string> {
+  const carried =
+    attachments && attachments.length > 0
+      ? attachmentsToPayload(attachments)
+      : {};
   if (category === "artx") {
     const res = await fetch("/api/artx", {
       method: "POST",
@@ -337,6 +350,7 @@ async function speakWithTransmission(
         query,
         language,
         walk,
+        ...carried,
         history: [
           { role: "ax", text: transmission },
           ...thread.flatMap((t) => [
@@ -363,6 +377,7 @@ async function speakWithTransmission(
         query,
         language,
         walk,
+        ...carried,
         history: [
           { role: "assistant", text: transmission },
           ...thread.flatMap((t) => [
@@ -390,6 +405,7 @@ async function speakWithTransmission(
       mode: category === "invent" ? "forge" : category,
       language,
       walk,
+      ...carried,
       history: [{ q: branchQuestion, a: transmission }, ...thread]
         .slice(-6)
         .map((h) => ({ q: h.q, a: h.a })),
@@ -1006,59 +1022,91 @@ const ZoomReplyForm = memo(function ZoomReplyForm({
   onSend,
   testIdPrefix,
   leading,
+  scopeKey,
 }: {
   roomKey: string;
   disabled?: boolean;
-  onSend: (text: string) => void;
+  onSend: (text: string, attachments: ChatAttachment[]) => void;
   testIdPrefix: string;
   /** THE CATEGORY'S OWN CALL — the direct line rides inside the pill. */
   leading?: ReactNode;
+  /** THE EXTRAS' OWN SCOPE — the call already rides as `leading`, so
+      the extras only carry the paperclip and the camera's eye. */
+  scopeKey: LiveScopeKey;
 }) {
   const t = useT();
   const [draft, setDraft] = useState("");
+  /* THE CARRIED SIGHT — one image and up to three documents may ride
+     with the room's own words, chips above the line */
+  const [atts, setAtts] = useState<ChatAttachment[]>([]);
   const [seenKey, setSeenKey] = useState(roomKey);
   if (roomKey !== seenKey) {
     setSeenKey(roomKey);
     if (draft !== "") setDraft("");
+    if (atts.length > 0) setAtts([]);
   }
+  const send = () => {
+    const q = draft.trim();
+    if (!q) return;
+    /* only whole cargo travels: the image seen, the documents read */
+    const carried = atts.filter((a) =>
+      a.kind === "image" ? !!a.dataUrl : !a.reading && !!a.text
+    );
+    setDraft("");
+    setAtts([]);
+    onSend(q, carried);
+  };
   return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        const q = draft.trim();
-        if (!q) return;
-        setDraft("");
-        onSend(q);
-      }}
-      className="flex items-center gap-1.5 rounded-full border py-1 pl-2.5 pr-1 transition-colors duration-300 focus-within:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)]"
-      style={{
-        borderColor:
-          "color-mix(in srgb, var(--hairline) 80%, transparent)",
-      }}
-    >
-      {leading}
-      <label htmlFor={`${testIdPrefix}-zoom-reply`} className="sr-only">
-        {t("Speak with the transmission…")}
-      </label>
-      <input
-        id={`${testIdPrefix}-zoom-reply`}
-        value={draft}
-        onChange={(e) => setDraft(e.target.value)}
-        placeholder={t("Speak with the transmission…")}
-        disabled={disabled}
-        autoComplete="off"
-        data-testid={`${testIdPrefix}-zoom-reply`}
-        className="min-w-0 flex-1 bg-transparent py-1 text-[13px] text-foreground placeholder:text-muted-foreground/55 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+    <div className="flex min-w-0 flex-1 flex-col items-stretch">
+      <AttachmentChips
+        attachments={atts}
+        onRemove={(id) => setAtts((p) => p.filter((a) => a.id !== id))}
+        testId={`${testIdPrefix}-zoom-attachments`}
       />
-      <button
-        type="submit"
-        disabled={disabled || !draft.trim()}
-        aria-label={t("Send")}
-        className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--scope-a,var(--gd))] to-[color-mix(in_srgb,var(--scope-b,var(--pk))_70%,var(--scope-a,var(--gd)))] text-[#101010] shadow-[0_0_14px_-6px_color-mix(in_srgb,var(--scope-a,var(--gd))_70%,transparent)] transition-all duration-300 hover:scale-[1.04] disabled:cursor-not-allowed disabled:opacity-35 disabled:shadow-none"
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          send();
+        }}
+        className="flex items-center gap-1.5 rounded-full border py-1 pl-2 pr-1 transition-colors duration-300 focus-within:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)]"
+        style={{
+          borderColor:
+            "color-mix(in srgb, var(--hairline) 80%, transparent)",
+        }}
       >
-        <Send className="size-3" aria-hidden="true" />
-      </button>
-    </form>
+        {leading}
+        <ChatInputExtras
+          scope={scopeKey}
+          size="2xs"
+          withCall={false}
+          disabled={disabled}
+          accentVar="var(--scope-a,var(--gd))"
+          attachments={atts}
+          onAttachmentsChange={setAtts}
+        />
+        <label htmlFor={`${testIdPrefix}-zoom-reply`} className="sr-only">
+          {t("Speak with the transmission…")}
+        </label>
+        <input
+          id={`${testIdPrefix}-zoom-reply`}
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          placeholder={t("Speak with the transmission…")}
+          disabled={disabled}
+          autoComplete="off"
+          data-testid={`${testIdPrefix}-zoom-reply`}
+          className="min-w-0 flex-1 bg-transparent py-1 text-[13px] text-foreground placeholder:text-muted-foreground/55 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+        />
+        <button
+          type="submit"
+          disabled={disabled || !draft.trim()}
+          aria-label={t("Send")}
+          className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--scope-a,var(--gd))] to-[color-mix(in_srgb,var(--scope-b,var(--pk))_70%,var(--scope-a,var(--gd)))] text-[#101010] shadow-[0_0_14px_-6px_color-mix(in_srgb,var(--scope-a,var(--gd))_70%,transparent)] transition-all duration-300 hover:scale-[1.04] disabled:cursor-not-allowed disabled:opacity-35 disabled:shadow-none"
+        >
+          <Send className="size-3" aria-hidden="true" />
+        </button>
+      </form>
+    </div>
   );
 });
 
@@ -1458,34 +1506,78 @@ const GlyphWall = memo(function GlyphWall({
         />
       </div>
 
-      {/* THE WALL'S OWN STRIP — its caption and its reload, always in
-          reach however deep the visitor slides (the right edge keeps
-          the crown's own toggle clear) */}
+      {/* THE WALL'S OWN STRIP — plainly visible, never a whisper: the
+          wall's name, its living count (how many stones stand, how many
+          still sleep below), and its own POUR AGAIN hand — the one
+          touch that shifts the whole page of suggestions. The right
+          edge keeps the crown's own toggle clear. */}
       <div
-        className="sticky top-0 z-10 flex items-center justify-between border-b bg-background/60 px-3.5 py-1.5 backdrop-blur-md"
+        className="sticky top-0 z-10 border-b bg-background/80 px-3.5 py-2 backdrop-blur-md"
         style={{
           borderColor:
-            "color-mix(in srgb, var(--hairline) 70%, transparent)",
+            "color-mix(in srgb, var(--scope-a,var(--gd)) 26%, transparent)",
         }}
       >
-        <span className="mono-label text-[8.5px] uppercase tracking-[0.18em] text-muted-foreground/70">
-          The glyph wall
-        </span>
-        <button
-          type="button"
-          onClick={onReload}
-          disabled={disabled}
-          aria-label={t("Pour the wall again")}
-          title={t("Pour the wall again")}
-          data-testid={`${testIdPrefix}-glyph-reload`}
-          className="focus-glow mr-9 flex size-6 items-center justify-center rounded-full border text-[var(--scope-a,var(--gd))] transition-all duration-300 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)] disabled:cursor-not-allowed disabled:opacity-40 sm:mr-10"
-          style={{
-            borderColor:
-              "color-mix(in srgb, var(--scope-a,var(--gd)) 34%, transparent)",
-          }}
-        >
-          <RefreshCw className="size-3" aria-hidden="true" />
-        </button>
+        <div className="flex items-center justify-between gap-2.5">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <span aria-hidden="true" className="flex flex-col gap-[2.5px] pt-0.5">
+              <i
+                className="block h-[3px] w-[20px] rounded-[1px]"
+                style={{
+                  backgroundColor: "var(--scope-a,var(--gd))",
+                  opacity: 0.92,
+                }}
+              />
+              <i
+                className="block h-[3px] w-[13px] rounded-[1px]"
+                style={{
+                  backgroundColor: "var(--scope-a,var(--gd))",
+                  opacity: 0.55,
+                }}
+              />
+              <i
+                className="block h-[3px] w-[6px] rounded-[1px]"
+                style={{
+                  backgroundColor: "var(--scope-a,var(--gd))",
+                  opacity: 0.3,
+                }}
+              />
+            </span>
+            <div className="min-w-0">
+              <p className="mono-label text-[9px] uppercase tracking-[0.2em] text-foreground/85">
+                The glyph wall
+              </p>
+              <p
+                className="mono-label truncate text-[8px] normal-case tracking-[0.04em] text-muted-foreground"
+                data-testid={`${testIdPrefix}-glyph-count`}
+              >
+                {deep || !hasDeep
+                  ? `${tiles.length} ${t("stones")} · ${t("the whole family stands")}`
+                  : `${shown.length} ${t("stones")} · ${tiles.length - shown.length} ${t("sleep below")}`}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onReload}
+            disabled={disabled}
+            aria-label={t("Pour the wall again")}
+            title={t("Pour the wall again")}
+            data-testid={`${testIdPrefix}-glyph-reload`}
+            className="focus-glow mr-9 flex h-7 shrink-0 items-center gap-1.5 rounded-full border px-3 text-[var(--scope-a,var(--gd))] transition-all duration-300 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_62%,transparent)] disabled:cursor-not-allowed disabled:opacity-40 sm:mr-10"
+            style={{
+              borderColor:
+                "color-mix(in srgb, var(--scope-a,var(--gd)) 46%, transparent)",
+              backgroundColor:
+                "color-mix(in srgb, var(--scope-a,var(--gd)) 13%, var(--background))",
+            }}
+          >
+            <RefreshCw className="size-3" aria-hidden="true" />
+            <span className="mono-label text-[9px] font-semibold uppercase tracking-[0.16em]">
+              {t("Pour again")}
+            </span>
+          </button>
+        </div>
       </div>
 
       <div className="relative grid auto-rows-[124px] grid-cols-2 gap-2.5 px-3 pb-44 pt-3 sm:auto-rows-[138px] sm:grid-cols-3 sm:gap-3 lg:grid-cols-4">
@@ -1594,7 +1686,7 @@ export function BranchCanopy({
   /** The branches grown on the conversation's own replies — the golden row. */
   channeling?: LearnedBranch[] | null;
   open: boolean;
-  onPick: (q: string, scope?: string) => void;
+  onPick: (q: string, scope?: string, attachments?: ChatAttachment[]) => void;
   onClose: () => void;
   disabled?: boolean;
   testIdPrefix: string;
@@ -1633,6 +1725,10 @@ export function BranchCanopy({
   const openDreamBook = useMirror((s) => s.openDreamBook);
   const openAbout = useMirror((s) => s.openAbout);
   const openProfilePage = useMirror((s) => s.openProfilePage);
+  /* THE LEDGER'S OWN HANDS — one opens a saved conversation right
+     where it lives, the other restores a kept volume to the reading */
+  const openChatSurface = useMirror((s) => s.openChat);
+  const resumeKeptVolume = useMirror((s) => s.resumeDreamBook);
   /* THE WHOLE HOUSE'S DOORS — every kategory of the old website's
      sidebar, standing within the branches themselves: the worlds the
      tree grows toward, the archives, and the quiet hands. */
@@ -1795,6 +1891,50 @@ export function BranchCanopy({
   /* the crown's two quiet dropdowns — the kategories of the walk and
      the worlds of the house */
   const [crownMenu, setCrownMenu] = useState<"cats" | "menu" | null>(null);
+  /* THE WALK'S LEDGER — the history saver the panel carries: the kept
+     volumes of the shelf, the saved conversations of every surface,
+     and the journey's own kept steps. Loaded fresh each time the
+     panel opens — the ledger always reads the present keep. */
+  const [walkLedger, setWalkLedger] = useState<{
+    volumes: ShelfVolume[];
+    chats: {
+      surface: ChatSurface;
+      label: string;
+      id: string;
+      title: string;
+      count: number;
+    }[];
+    journey: JourneyStep[];
+  } | null>(null);
+  useEffect(() => {
+    if (crownMenu !== "menu") return;
+    const labels: Record<ChatSurface, string> = {
+      os: "Manifest OS",
+      px: "Particle X",
+      em: "Evolve Med",
+      ax: "Akashic",
+      forge: "Invent",
+      interplanetary: "Interplanetary",
+      healing: "Healing codes",
+    };
+    const surfaces = Object.keys(labels) as ChatSurface[];
+    const chats = surfaces.flatMap((s) =>
+      listChats(s)
+        .slice(0, 2)
+        .map((c) => ({
+          surface: s,
+          label: labels[s],
+          id: c.id,
+          title: c.title,
+          count: c.messages.length,
+        }))
+    );
+    setWalkLedger({
+      volumes: loadShelf(),
+      chats,
+      journey: loadJourney(),
+    });
+  }, [crownMenu]);
   /* THE CROWN'S OWN BREATH — the top bar drops down when the visitor
      needs it and rises up when they don't, so the branches take almost
      the whole sky. One quiet hand at the top-right corner carries it. */
@@ -2828,7 +2968,7 @@ export function BranchCanopy({
      the pressed chip's own node, and the next answer replaces this one
      in the same quiet room. */
   const sendFromPanel = useCallback(
-    (text: string, move: BranchType | null) => {
+    (text: string, move: BranchType | null, attachments?: ChatAttachment[]) => {
       if (disabled || liveLoading || !text.trim()) return;
       /* the visitor's own step — the tree may grow again */
       suppressRegrowRef.current = false;
@@ -2865,7 +3005,7 @@ export function BranchCanopy({
       const makesSomething =
         detectArtifactIntent(text) !== null || isVisualIntent(text);
       if (!makesSomething) setZoom({ q: text, move });
-      onPick(text, askScopeFor(text));
+      onPick(text, askScopeFor(text), attachments);
     },
     [
       category,
@@ -3165,7 +3305,7 @@ export function BranchCanopy({
   );
 
   const speakFromRoom = useCallback(
-    async (text: string) => {
+    async (text: string, attachments?: ChatAttachment[]) => {
       const q = text.trim();
       if (disabled || threadBusy || !q || !zoom) return;
       const roomQ = zoom.q;
@@ -3194,7 +3334,8 @@ export function BranchCanopy({
           answer || "",
           prior,
           language,
-          walk
+          walk,
+          attachments
         );
         applyRoomTurn(roomQ, (t) =>
           t.map((turn, i) =>
@@ -3237,8 +3378,8 @@ export function BranchCanopy({
   /* the room's own reply — now the conversation with the transmission
      (the walk continues from the branches dropdown above it) */
   const sendReplyFromPanel = useCallback(
-    (text: string) => {
-      void speakFromRoom(text);
+    (text: string, attachments?: ChatAttachment[]) => {
+      void speakFromRoom(text, attachments);
     },
     [speakFromRoom]
   );
@@ -3246,6 +3387,9 @@ export function BranchCanopy({
   /* THE FLOOR'S OWN DRAFT — the realm's whisper line keeps its words
      while the visitor thinks; one send and the room rises with them. */
   const [askDraft, setAskDraft] = useState("");
+  /* THE FLOOR'S OWN CARGO — the paperclip and the camera's eye for the
+     realm's own whisper line (one image, three documents) */
+  const [askAtts, setAskAtts] = useState<ChatAttachment[]>([]);
 
   /* THE CATEGORY'S OWN CALL — every scope's chat carries its own
      direct line: the room calls the presence its whisper was grown
@@ -3447,7 +3591,7 @@ export function BranchCanopy({
                 />
                 <div
                   data-testid={`${testIdPrefix}-menu-panel`}
-                  className="nice-scroll absolute left-0 top-9 z-40 max-h-[70vh] w-[286px] overflow-y-auto rounded-2xl border bg-background p-3 shadow-[0_18px_48px_-20px_rgba(0,0,0,0.6)]"
+                  className="nice-scroll absolute left-0 top-9 z-40 max-h-[78vh] w-[286px] overflow-y-auto rounded-2xl border bg-background p-3 shadow-[0_18px_48px_-20px_rgba(0,0,0,0.6)]"
                   style={{
                     borderColor:
                       "color-mix(in srgb, var(--scope-a,var(--gd)) 30%, transparent)",
@@ -3531,6 +3675,134 @@ export function BranchCanopy({
                           </button>
                         );
                       })}
+                    </div>
+                  )}
+                  {/* THE WALK'S LEDGER — the history saver: everything
+                      the visitor kept, one touch from here. The kept
+                      volumes return to the reading; the saved
+                      conversations open in their own rooms; the
+                      journey's steps stay as the map of the walk. */}
+                  {walkLedger &&
+                    (walkLedger.volumes.length > 0 ||
+                      walkLedger.chats.length > 0 ||
+                      walkLedger.journey.length > 0) && (
+                    <div data-testid={`${testIdPrefix}-ledger`} className="mt-1.5">
+                      <p className="mono-label px-2 pb-1 text-[8px] uppercase tracking-[0.2em] text-muted-foreground/60">
+                        {t("The walk's ledger")}
+                      </p>
+                      {walkLedger.volumes.length > 0 && (
+                        <div data-testid={`${testIdPrefix}-ledger-books`}>
+                          <p className="px-2 pb-0.5 text-[10px] italic text-muted-foreground/70">
+                            {t("Kept volumes")}
+                          </p>
+                          {walkLedger.volumes.slice(0, 4).map((v) => (
+                            <button
+                              key={v.bookId}
+                              type="button"
+                              onClick={() => {
+                                resumeKeptVolume({
+                                  bookId: v.bookId,
+                                  config: v.config,
+                                  meta: {
+                                    title: v.title,
+                                    subtitle: v.subtitle,
+                                    sigil: v.sigil,
+                                    axiom: v.axiom,
+                                    dedication: v.dedication ?? "",
+                                    totalPages:
+                                      v.totalPages ||
+                                      Math.max(8, v.pages.length + 8),
+                                  },
+                                  pages: v.pages,
+                                  threads: v.threads,
+                                  ended: v.ended,
+                                });
+                                setCrownMenu(null);
+                              }}
+                              aria-label={`${t("Read again")}: ${v.title}`}
+                              title={v.title}
+                              data-testid={`${testIdPrefix}-ledger-book`}
+                              className="focus-glow flex w-full items-center gap-2 rounded-xl px-2 py-1.5 text-left transition-colors duration-300 hover:bg-[color-mix(in_srgb,var(--foreground)_4%,transparent)]"
+                            >
+                              <BookOpen
+                                className="size-3 shrink-0 text-muted-foreground/70"
+                                aria-hidden="true"
+                              />
+                              <span className="min-w-0 flex-1 truncate text-[12px] text-foreground/85">
+                                {v.title}
+                              </span>
+                              <span className="mono-label shrink-0 text-[8px] tabular-nums text-muted-foreground/60">
+                                {v.pages.length}/{v.totalPages}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      {walkLedger.chats.length > 0 && (
+                        <div
+                          data-testid={`${testIdPrefix}-ledger-chats`}
+                          className="mt-1.5"
+                        >
+                          <p className="px-2 pb-0.5 text-[10px] italic text-muted-foreground/70">
+                            {t("Saved conversations")}
+                          </p>
+                          {walkLedger.chats.slice(0, 6).map((c) => (
+                            <button
+                              key={`${c.surface}-${c.id}`}
+                              type="button"
+                              onClick={() => {
+                                openChatSurface(c.surface, c.id);
+                                setCrownMenu(null);
+                              }}
+                              aria-label={`${t("Open")}: ${c.title}`}
+                              title={c.title}
+                              data-testid={`${testIdPrefix}-ledger-chat`}
+                              className="focus-glow flex w-full items-center gap-2 rounded-xl px-2 py-1.5 text-left transition-colors duration-300 hover:bg-[color-mix(in_srgb,var(--foreground)_4%,transparent)]"
+                            >
+                              <NotebookPen
+                                className="size-3 shrink-0 text-muted-foreground/70"
+                                aria-hidden="true"
+                              />
+                              <span className="min-w-0 flex-1 truncate text-[12px] text-foreground/85">
+                                {c.title}
+                              </span>
+                              <span className="mono-label shrink-0 text-[8px] uppercase tracking-[0.1em] text-muted-foreground/60">
+                                {c.label}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      {walkLedger.journey.length > 0 && (
+                        <div
+                          data-testid={`${testIdPrefix}-ledger-journey`}
+                          className="mt-1.5"
+                        >
+                          <p className="px-2 pb-0.5 text-[10px] italic text-muted-foreground/70">
+                            {t("The journey kept")}
+                          </p>
+                          {walkLedger.journey.slice(0, 5).map((j, i) => (
+                            <div
+                              key={`${j.at}-${i}`}
+                              className="flex items-center gap-2 px-2 py-1"
+                            >
+                              <span
+                                aria-hidden="true"
+                                className="mono-label w-14 shrink-0 text-[8px] tabular-nums text-muted-foreground/50"
+                              >
+                                {new Date(j.at).toLocaleDateString(undefined, {
+                                  month: "short",
+                                  day: "numeric",
+                                })}
+                              </span>
+                              <span className="min-w-0 flex-1 truncate text-[11.5px] text-muted-foreground/85">
+                                {j.b}
+                                {j.s ? ` · ${j.s}` : ""}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )}
                   {/* the quiet hand — the field returns to origin */}
@@ -4055,13 +4327,28 @@ export function BranchCanopy({
                 {introSub}
               </p>
             )}
+            {askAtts.length > 0 && (
+              <div className="pointer-events-auto w-full max-w-[560px]">
+                <AttachmentChips
+                  attachments={askAtts}
+                  onRemove={(id) =>
+                    setAskAtts((p) => p.filter((a) => a.id !== id))
+                  }
+                  testId={`${testIdPrefix}-ask-attachments`}
+                />
+              </div>
+            )}
             <form
               onSubmit={(e) => {
                 e.preventDefault();
                 const q = askDraft.trim();
                 if (!q || disabled || liveLoading) return;
+                const carried = askAtts.filter((a) =>
+                  a.kind === "image" ? !!a.dataUrl : !a.reading && !!a.text
+                );
                 setAskDraft("");
-                sendFromPanel(q, null);
+                setAskAtts([]);
+                sendFromPanel(q, null, carried);
               }}
               className="pointer-events-auto flex w-full max-w-[560px] items-center gap-2 rounded-full border bg-background/95 py-1.5 pl-2.5 pr-1.5 shadow-[0_10px_36px_-16px_rgba(0,0,0,0.55)] backdrop-blur-xl transition-colors duration-300 focus-within:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)]"
               style={{
@@ -4070,7 +4357,19 @@ export function BranchCanopy({
               }}
             >
               {/* THE INPUT'S OWN CALM — the reload and the star have
-                  left the whisper line: the call, the words, the send. */}
+                  left the whisper line: the cargo, the call, the words,
+                  the send. */}
+              {/* THE FLOOR'S OWN PAPERCLIP AND CAMERA — one image and
+                  up to three documents ride with the whisper */}
+              <ChatInputExtras
+                scope={floorLiveScope}
+                size="2xs"
+                withCall={false}
+                disabled={disabled || liveLoading}
+                accentVar="var(--scope-a,var(--gd))"
+                attachments={askAtts}
+                onAttachmentsChange={setAskAtts}
+              />
               {/* THE CATEGORY'S OWN CALL — the focused category's direct
                   line, one touch from the floor */}
               <button
@@ -4489,6 +4788,7 @@ export function BranchCanopy({
                   disabled={disabled || liveLoading || threadBusy}
                   onSend={sendReplyFromPanel}
                   testIdPrefix={testIdPrefix}
+                  scopeKey={roomLiveScope}
                   leading={
                     /* THE CATEGORY'S OWN CALL — the room's direct line */
                     <button

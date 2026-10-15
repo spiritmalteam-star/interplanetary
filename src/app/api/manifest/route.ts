@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import ZAI from "@/lib/zai-client";
 import { meterRoute } from "@/lib/server/meter";
+import {
+  describeImage,
+  documentBlock,
+  imageBlock,
+  parseAttachments,
+} from "@/lib/server/attachments";
 
 const LANGUAGE_NAMES: Record<string, string> = {
   en: "English",
@@ -75,12 +81,27 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
         ? ""
         : `\n\nLANGUAGE (CRITICAL): the visitor reads in ${languageName}. Write EVERY value in the blueprint — title, field_state, visualization, all three micro_actions, affirmation, window and caution — in fluent, natural ${languageName}.`;
 
+    /* Attachments — one image seen with the vision field, up to three
+       extracted documents — folded into what the chamber reads. */
+    const { imageDataUrl, documents } = parseAttachments(body);
+    const attachmentBlocks: string[] = [];
+    if (imageDataUrl) {
+      const block = imageBlock(await describeImage(zai, imageDataUrl));
+      if (block) attachmentBlocks.push(block);
+    }
+    const docBlock = documentBlock(documents);
+    if (docBlock) attachmentBlocks.push(docBlock);
+    const attachmentLines =
+      attachmentBlocks.length > 0
+        ? `\n\n${attachmentBlocks.join("\n\n")}`
+        : "";
+
     const completion = await zai.chat.completions.create({
       messages: [
         { role: "assistant", content: SYSTEM_PROMPT },
         {
           role: "user",
-          content: `Intention: ${intention.trim()}\nChosen emotional frequency: ${emotion}\nChamber intensity dial: ${intensity}/10${languageLine}`,
+          content: `Intention: ${intention.trim()}\nChosen emotional frequency: ${emotion}\nChamber intensity dial: ${intensity}/10${attachmentLines}${languageLine}`,
         },
       ],
       thinking: { type: "disabled" },

@@ -25,6 +25,8 @@ import {
   type LcMode,
 } from "@/lib/data/light-codes";
 import { cn } from "@/lib/utils";
+import { AttachmentChips, ChatInputExtras } from "./ChatInputExtras";
+import type { ChatAttachment } from "./attachments";
 
 /* ------------------------------------------------------------------ */
 /*  LIGHT CODES — the musical chamber. A compact room: the heading,    */
@@ -476,6 +478,8 @@ export function LightCodesView() {
 
   const [shapeOpen, setShapeOpen] = useState(false);
   const [phraseIdx, setPhraseIdx] = useState(0);
+  /* what the transmission carries — one image, up to three documents */
+  const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
 
   const mode = LC_MODES.find((m) => m.id === lcMode) ?? LC_MODES[0];
   const busy = lcStatus === "interpreting" || lcStatus === "polling";
@@ -549,6 +553,22 @@ export function LightCodesView() {
               data-testid="lc-intention"
               className="focus-glow w-full resize-none rounded-xl border hairline bg-[var(--glass-bg-soft)] px-3.5 py-2.5 text-[14.5px] leading-relaxed text-foreground placeholder:text-muted-foreground/60"
             />
+            {/* what the intention carries — chips and the paperclip/camera */}
+            <div className="mt-2 flex items-center gap-2">
+              <AttachmentChips
+                attachments={attachments}
+                onRemove={(id) =>
+                  setAttachments((prev) => prev.filter((a) => a.id !== id))
+                }
+              />
+              <ChatInputExtras
+                scope="healing"
+                size="2xs"
+                withCall={false}
+                attachments={attachments}
+                onAttachmentsChange={setAttachments}
+              />
+            </div>
             {/* one-tap intents of the chosen chamber */}
             {mode.intents && (
               <div className="mt-2 flex flex-wrap gap-1.5">
@@ -709,7 +729,11 @@ export function LightCodesView() {
             <button
               type="button"
               disabled={busy}
-              onClick={() => void generateLightCode()}
+              onClick={() => {
+                const carried = attachments;
+                setAttachments([]);
+                void generateLightCode({ attachments: carried });
+              }}
               data-testid="lc-generate"
               className="focus-glow group flex h-12 items-center gap-2.5 rounded-full bg-gradient-to-r from-[var(--scope-a)] to-[color-mix(in_srgb,var(--scope-b)_80%,var(--scope-a))] px-8 text-[14.5px] font-semibold tracking-wide text-[#f6f4ef] shadow-[0_6px_28px_-10px_color-mix(in_srgb,var(--scope-a)_75%,transparent)] transition-all duration-300 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
             >
