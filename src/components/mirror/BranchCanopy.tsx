@@ -1648,10 +1648,9 @@ const GlyphWall = memo(function GlyphWall({
       </div>
 
       {/* THE WALL'S OWN STRIP — plainly visible, never a whisper: the
-          wall's name, its living count (how many stones stand, how many
-          still sleep below), and its own POUR AGAIN hand — the one
-          touch that shifts the whole page of suggestions. The right
-          edge keeps the crown's own toggle clear. */}
+          wall's name and its living count (how many stones stand, how
+          many still sleep below). The pour hand lives ONLY at the
+          wall's foot — one pour, one place. */}
       <div
         className="sticky top-0 z-10 border-b bg-background/80 px-3.5 py-2 backdrop-blur-md"
         style={{
@@ -1659,65 +1658,43 @@ const GlyphWall = memo(function GlyphWall({
             "color-mix(in srgb, var(--scope-a,var(--gd)) 26%, transparent)",
         }}
       >
-        <div className="flex items-center justify-between gap-2.5">
-          <div className="flex min-w-0 items-center gap-2.5">
-            <span aria-hidden="true" className="flex flex-col gap-[2.5px] pt-0.5">
-              <i
-                className="block h-[3px] w-[20px] rounded-[1px]"
-                style={{
-                  backgroundColor: "var(--scope-a,var(--gd))",
-                  opacity: 0.92,
-                }}
-              />
-              <i
-                className="block h-[3px] w-[13px] rounded-[1px]"
-                style={{
-                  backgroundColor: "var(--scope-a,var(--gd))",
-                  opacity: 0.55,
-                }}
-              />
-              <i
-                className="block h-[3px] w-[6px] rounded-[1px]"
-                style={{
-                  backgroundColor: "var(--scope-a,var(--gd))",
-                  opacity: 0.3,
-                }}
-              />
-            </span>
-            <div className="min-w-0">
-              <p className="mono-label text-[9px] uppercase tracking-[0.2em] text-foreground/85">
-                {firstSteps ? t("First steps") : "The glyph wall"}
-              </p>
-              <p
-                className="mono-label truncate text-[8px] normal-case tracking-[0.04em] text-muted-foreground"
-                data-testid={`${testIdPrefix}-glyph-count`}
-              >
-                {deep || !hasDeep
-                  ? `${tiles.length} ${t("stones")} · ${t("the whole family stands")}`
-                  : `${shown.length} ${t("stones")} · ${tiles.length - shown.length} ${t("sleep below")}`}
-              </p>
-            </div>
+        <div className="flex items-center gap-2.5">
+          <span aria-hidden="true" className="flex flex-col gap-[2.5px] pt-0.5">
+            <i
+              className="block h-[3px] w-[20px] rounded-[1px]"
+              style={{
+                backgroundColor: "var(--scope-a,var(--gd))",
+                opacity: 0.92,
+              }}
+            />
+            <i
+              className="block h-[3px] w-[13px] rounded-[1px]"
+              style={{
+                backgroundColor: "var(--scope-a,var(--gd))",
+                opacity: 0.55,
+              }}
+            />
+            <i
+              className="block h-[3px] w-[6px] rounded-[1px]"
+              style={{
+                backgroundColor: "var(--scope-a,var(--gd))",
+                opacity: 0.3,
+              }}
+            />
+          </span>
+          <div className="min-w-0">
+            <p className="mono-label text-[9px] uppercase tracking-[0.2em] text-foreground/85">
+              {firstSteps ? t("First steps") : "The glyph wall"}
+            </p>
+            <p
+              className="mono-label truncate text-[8px] normal-case tracking-[0.04em] text-muted-foreground"
+              data-testid={`${testIdPrefix}-glyph-count`}
+            >
+              {deep || !hasDeep
+                ? `${tiles.length} ${t("stones")} · ${t("the whole family stands")}`
+                : `${shown.length} ${t("stones")} · ${tiles.length - shown.length} ${t("sleep below")}`}
+            </p>
           </div>
-          <button
-            type="button"
-            onClick={onReload}
-            disabled={disabled}
-            aria-label={t("Pour the wall again")}
-            title={t("Pour the wall again")}
-            data-testid={`${testIdPrefix}-glyph-reload`}
-            className="focus-glow mr-9 flex h-7 shrink-0 items-center gap-1.5 rounded-full border px-3 text-[var(--scope-a,var(--gd))] transition-all duration-300 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_62%,transparent)] disabled:cursor-not-allowed disabled:opacity-40 sm:mr-10"
-            style={{
-              borderColor:
-                "color-mix(in srgb, var(--scope-a,var(--gd)) 46%, transparent)",
-              backgroundColor:
-                "color-mix(in srgb, var(--scope-a,var(--gd)) 13%, var(--background))",
-            }}
-          >
-            <RefreshCw className="size-3" aria-hidden="true" />
-            <span className="mono-label text-[9px] font-semibold uppercase tracking-[0.16em]">
-              {t("Pour again")}
-            </span>
-          </button>
         </div>
       </div>
 

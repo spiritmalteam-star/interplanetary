@@ -745,7 +745,25 @@ function chainChatBackends(primary: ZAIClient, fallback: ZAIClient): ZAIClient {
 /* the bridge */
 
 export default class ZAI {
-  static async create(): Promise<ZAIClient> {
+  /* the sky, remembered — the bridge is raised ONCE per process and
+     every channel after that simply walks across it. Rebuilding the
+     provider chain on every request made each first word wait for a
+     sky that already stood; the cache hands the standing sky over in
+     the same breath. A fallen sky is forgotten so it can be raised
+     again on the next ask. */
+  private static sky: Promise<ZAIClient> | null = null;
+
+  static create(): Promise<ZAIClient> {
+    if (!ZAI.sky) {
+      ZAI.sky = ZAI.build().catch((err) => {
+        ZAI.sky = null;
+        throw err;
+      });
+    }
+    return ZAI.sky;
+  }
+
+  private static async build(): Promise<ZAIClient> {
     const provider = resolveProvider();
     if (provider === "zai-cloud") {
       const cfg = zaiCloudConfig();

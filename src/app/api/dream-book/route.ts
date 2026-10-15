@@ -608,7 +608,7 @@ function buildUserPrompt(body: {
     `Rules: exactly ${span === 2 ? `TWO page objects, in order, numbered ${phase === "open" ? "1 and 2" : `${body.pageNumber} and ${(body.pageNumber ?? 2) + 1}`}` : `${span} page objects, in order, numbered ${body.pageNumber} through ${(body.pageNumber ?? 2) + span - 1}`}. Each page carries 1–3 paragraphs (young readers: shorter paragraphs; grown: fuller). "chapter" is a plain title without the word "Chapter" — given ONLY when a genuinely new chapter opens on that page (a new chapter every 10–16 pages AT MOST; most page-pairs carry NO chapter at all; NEVER repeat a chapter title already given — a page must not wear a chapter it did not open). Page text is pure prose — no headings, no markdown, no asterisks, no emojis. In verse forms a paragraph string may contain real line breaks (\\n) so every verse line sits on its own line.`,
     phase === "open"
       ? `The "ledger" is REQUIRED in this opening: fill it with the private brief and every canon line, character, object, promise and motif the first pages establish — the room keeps it and hands it back at every continuation.`
-      : `The "ledger" is REQUIRED: carry forward EVERY line you received, updated by what these new pages changed — a line that still holds is never dropped, objects keep their state, paid promises are marked paid, and the new chapter (if any) is appended to "chapters".`,
+      : `The "ledger" is REQUIRED: carry forward EVERY line you received, updated by what these new pages changed — a line that still holds is never dropped, objects keep their state, paid promises are marked paid, and the new chapter (if any) is appended to "chapters". THE LEDGER STAYS LEAN — a fast loom is a kind loom: every ledger line is ONE short clause (at most ~12 words); canon at most 10 lines, characters at most 12, objects at most 10, timeline at most 16 (when it overflows, the earliest events fold into one summarizing line), promises at most 10, motifs at most 8, and "chapters" carries only the LAST 12 chapters, each summary one short line.`,
     phase === "close"
       ? `The "audit" is REQUIRED in this closing phase: the private, honest editorial report on the FINISHED volume — ten dimensions, each scored 0–10 (10 is exceptionally rare; never award it by habit) with ONE line of evidence drawn from the actual writing. It lives outside the book and is never printed in its pages.`
       : "",
@@ -794,13 +794,7 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
     const priorEcho = phase === "open" ? sanitizeEcho(body?.priorResonance) : {};
     const resonance: ResonanceDraw | null =
       phase === "open" ? drawResonance(priorEcho) : null;
-    const askLoom = async (reminder: boolean, violations: string[] = []): Promise<string> => {
-      const violationBlock =
-        violations.length > 0
-          ? `
-
-THE NAME LAW WAS BROKEN: your reply used the forbidden stock name(s): ${violations.join(", ")}. Re-forge this reply — SAME story, SAME pages, SAME voice — with EVERY such name replaced by a fresh name coined from the naming charter's syllable seeds. Return ONLY the raw JSON object.`
-          : "";
+    const askLoom = async (reminder: boolean): Promise<string> => {
       const completion = await zai.chat.completions.create({
         messages: [
           { role: "assistant", content: systemPrompt() },
@@ -829,7 +823,6 @@ THE NAME LAW WAS BROKEN: your reply used the forbidden stock name(s): ${violatio
                 span,
                 vein,
               }) +
-              violationBlock +
               (reminder
                 ? "\n\nREMINDER: the loom could not read the last reply. Return ONLY the raw JSON object — no text, no markdown, nothing before or after it."
                 : ""),
@@ -846,18 +839,18 @@ THE NAME LAW WAS BROKEN: your reply used the forbidden stock name(s): ${violatio
     };
 
     /* the loom always asks twice before it falls silent — one unreadable
-       reply must never cost the visitor their book — and the sealed
-       stock-drawer of names is enforced on every reply: one polite
-       re-forging, then a mechanical re-forging from the seeds */
+       reply must never cost the visitor their book. The sealed
+       stock-drawer of names is enforced in the SAME breath: the
+       mechanical re-forging from the charter's syllable seeds happens
+       first and locally — a full second sky-crossing for a name swap
+       made the visitor wait a whole page-turn longer for nothing they
+       could feel. The unreadable-reply reminder (below) stays a real
+       second ask, because no local hand can mend a broken reply. */
     const channelReply = async (reminder: boolean): Promise<string> => {
-      let text = await askLoom(reminder);
-      let sealed = findSealedNames(text);
-      if (sealed.length > 0) {
-        text = await askLoom(reminder, sealed);
-        sealed = findSealedNames(text);
-      }
-      if (sealed.length > 0) text = reforgeSealedNames(text, seeds);
-      return text;
+      const text = await askLoom(reminder);
+      const sealed = findSealedNames(text);
+      if (sealed.length === 0) return text;
+      return reforgeSealedNames(text, seeds);
     };
 
     let parsed = extractJson(await channelReply(false));
