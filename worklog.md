@@ -3621,3 +3621,23 @@ Work Log:
 Stage Summary:
 - The realm's floor is ten rows of whispers now — swiped sideways for more, jumped vertically page by page, random in the general walk and wrapped in the focused category's own color and voice — and it cannot lag or flicker because there is nothing left to lag: plain flow, native scroll, zero animation loops. The whisper line lost its reload and its star; the crown gained the house's seal at its exact centre, and the seal itself is the light's toggle. The theme pages keep the genealogy tree untouched.
 - Artifacts: BranchCanopy.tsx (SuggestionRows + RowChipBtn + CrownLogo, realm render swap, crown 3-column grid, askbar calm, field/idf/ranked realm gating), AppShell.tsx (introSub, headerExtra purse only), 7 dicts (+3 keys each).
+
+---
+Task ID: 46
+Agent: Z.ai Code (main session)
+Task: "Please return the branches but much less so it runs smooth and understandable simple"
+
+Work Log:
+- THE BRANCHES RETURN, MUCH LESS: the realm's floor is the genealogy tree again (canvas, trunk, ropes, golden row, tools — the exact pre-rows render), but carried by a SMALL FAMILY LAW:
+  - REALM_BATCH_SIZE = 18 — the realm's standing family is ONE small batch (tuned to 18 seeds + the woven creation door + the golden row of the exchange) instead of the theme pages' 30-per-batch endless walk. Verified: 20 chips at rest on mobile, 19 on desktop — the whole family reads in one view.
+  - NO SELF-GROWTH: the frontier ear, the root's ear and the QUIET FILLING cascade (7 timed grows that once flooded ~240 chips onto the realm) all sleep in the realm (gated on realm). Verified: the count stood still through the old cascade window; the tree grows ONLY under the visitor's hand.
+  - SMALL GRAFTED HOUSES: REALM_GRAFT = 12 — one press grafts a small family, never a flood (chooseGraftSeeds capped; theme pages keep BATCH_SIZE).
+  - THE REALM'S SMALL FAMILY RANKED: the realm's ranked is a seeded shuffle of the grove (hour:salt:focusKey, mulberry32) — random to the eye, deterministic to the engine, no resonance field, no ranking passes (Task 45's perf law kept); the idf returned to every walk (the graft law needs it; one memoized pass, never a per-frame cost).
+- THE ROWS STEP ASIDE: SuggestionRows, RowChipBtn, the row constants and the rows' own pick/door/light callbacks are gone (git history keeps them); the orphan "Whispers of the house" key left all seven dictionaries. The shuffle helpers stayed — they now weave the realm's small family.
+- THE REALM KEEPS EVERYTHING TASK 45 GAVE IT: the crown's centre seal (light toggle), the calm whisper line (call, words, send), the zoom-fit button returns to the realm with the tree it belongs to.
+- VERIFIED (agent-browser, mobile 390×844 + desktop 1280×800, zero page errors, console clean): tree at rest 20 chips; press a whisper → the room rises and the answer streams with its scope's voice (quantum narrator formula line present) → back to the tree: the pressed chip stands picked, its small grafted house above it, the golden row amber below (fold + graft in one breath — the walk's own law); zoom-fit shows the whole family in one view; focusing the Forge re-weaves the family in the Forge's own light ("YOU ARE HERE", 20 forge chips); crown fold, doors and passage untouched.
+- OPERATIONS: lint 0 errors (server stopped per the OOM law, restarted after; an OOM kill during the restart dance came from two servers overlapping — one clean server remains).
+
+Stage Summary:
+- The branches are back in the realm — much less of them: one small standing family, no self-growth, small grafted houses, the whole tree readable in one view — smooth and understandable simple, growing only under the visitor's own hand. The theme pages keep their endless walk untouched.
+- Artifacts: BranchCanopy.tsx (realm tree restore, REALM_BATCH_SIZE/REALM_GRAFT, realm-gated sentinels + cascade, seeded realm ranked, idf for every walk, rows removed), 7 dicts (−1 orphan key).

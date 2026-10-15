@@ -3265,7 +3265,6 @@ export const it: TranslationDict = {
   "Interdimensional": "Interdimensionale",
   "Open the direct mirror connection": "Apri la connessione diretta con lo Specchio",
   "Toggle the light": "Cambiare la luce",
-  "Whispers of the house": "I sussurri della casa",
   "Press a whisper to walk, or speak below.": "Premi un sussurro per camminare, o parla qui sotto.",
   "A little visitor is decoding your question…": "Un piccolo visitatore sta decodificando la tua domanda…",
   "Antennae tuned — the signal is forming…": "Antenne sintonizzate — il segnale si sta formando…",

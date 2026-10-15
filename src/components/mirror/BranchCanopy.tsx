@@ -173,6 +173,13 @@ const MOVEMENT_ICONS: Record<BranchType, typeof Layers> = {
 
 /** How many families the tree may carry — the walk never ends. */
 const MAX_BATCHES = 60;
+/** THE REALM'S SMALL FAMILY — the realm's tree carries one small
+    standing family, much less than the theme pages' endless walk:
+    it grows only under the visitor's own hand, never by itself. */
+const REALM_BATCH_SIZE = 18;
+/** THE REALM'S GRAFTED HOUSE — one press adds a small family, never
+    a flood: the branches stay readable and the walk stays liquid. */
+const REALM_GRAFT = 12;
 /** The harmonic pauses — twelve voices, then twelve, then six. */
 const WAVE_PAUSE_1 = 2600;
 const WAVE_PAUSE_2 = 3400;
@@ -1062,38 +1069,9 @@ const ZoomReplyForm = memo(function ZoomReplyForm({
   );
 });
 
-/* ------------- the rows of the house — the walk's new floor ----------
-   THE ROWS REPLACE THE CANVAS. Ten rows of whispers stand on the
-   screen — every row slides sideways under the finger to reveal more,
-   and one vertical breath jumps a whole page. The general walk speaks
-   random voices of the whole house; one category focused, every row
-   speaks that family and wears its own light. No absolute geometry,
-   no SVG ropes, no entrance replays: the rows are plain flow — the
-   compositor scrolls them natively, and nothing can flicker. */
-
-const ROWS_PER_PAGE = 10;
-const CHIPS_PER_ROW = 8;
-const ROW_PAGES_MAX = 8;
-
-interface RowWhisper {
-  text: string;
-  movement: BranchType;
-  accent: string;
-}
-
-interface RowChip {
-  key: string;
-  text: string;
-  movement: BranchType;
-  accent: string;
-  golden?: boolean;
-  creation?: CreationDoor;
-  topic?: string;
-}
-
-/* the rows' own shuffle — honest-random to the eye, deterministic to
-   the engine: the same hour, salt, page and row always grow the same
-   row (no hydration drift, no re-shuffle under the visitor's feet) */
+/* the family's own shuffle — honest-random to the eye, deterministic
+   to the engine: the same hour, salt and focus always weave the same
+   small family (no hydration drift, no re-shuffle under the visitor) */
 function mulberry32(a: number): () => number {
   return () => {
     a |= 0;
@@ -1115,240 +1093,6 @@ function seededShuffle<T>(items: T[], seed: number): T[] {
   }
   return out;
 }
-
-const RowChipBtn = memo(function RowChipBtn({
-  chip,
-  disabled,
-  onPick,
-  onCreation,
-  testId,
-}: {
-  chip: RowChip;
-  disabled?: boolean;
-  onPick: (text: string, move: BranchType) => void;
-  onCreation: (kind: CreationDoor, topic: string) => void;
-  testId: string;
-}) {
-  const t = useT();
-  const Icon = chip.creation
-    ? CREATION_ICON_BY_KIND[chip.creation]
-    : (MOVEMENT_ICONS[chip.movement] ?? Layers);
-  const label = chip.creation
-    ? `${t(CREATION_LABELS[chip.creation])} — ${chip.topic ?? ""}`
-    : chip.text;
-  return (
-    <button
-      type="button"
-      onClick={() =>
-        chip.creation
-          ? onCreation(chip.creation, chip.topic ?? chip.text)
-          : onPick(chip.text, chip.movement)
-      }
-      disabled={disabled}
-      title={label}
-      data-testid={
-        chip.golden
-          ? `${testId}-crown-chip`
-          : chip.creation
-            ? `${testId}-creation`
-            : `${testId}-row-chip`
-      }
-      className="focus-glow flex shrink-0 items-center gap-2 rounded-2xl border py-2 pl-3 pr-3.5 text-left shadow-[0_3px_14px_-10px_rgba(0,0,0,0.5)] transition-colors duration-300 hover:border-[color-mix(in_srgb,var(--chip-a)_70%,transparent)] disabled:cursor-not-allowed disabled:opacity-50"
-      style={
-        {
-          "--chip-a": chip.accent,
-          borderColor: chip.golden
-            ? "color-mix(in srgb, #f59e0b 52%, transparent)"
-            : "color-mix(in srgb, var(--chip-a) 38%, transparent)",
-          backgroundColor: chip.golden
-            ? "color-mix(in srgb, #f59e0b 14%, var(--background) 86%)"
-            : "color-mix(in srgb, var(--chip-a) 7%, var(--background) 93%)",
-          maxWidth: "min(76vw, 340px)",
-        } as CSSProperties
-      }
-    >
-      <Icon
-        className={cn(
-          "size-3 shrink-0",
-          chip.golden ? "text-[#f59e0b]" : "text-[var(--chip-a)] opacity-80"
-        )}
-        aria-hidden="true"
-      />
-      <span
-        className={cn(
-          "line-clamp-2 break-words text-[12px] leading-[16px] sm:line-clamp-3 sm:text-[12.5px] sm:leading-[17px]",
-          chip.golden
-            ? "font-serif italic text-foreground"
-            : "text-foreground/90"
-        )}
-      >
-        {label}
-      </span>
-    </button>
-  );
-});
-
-const SuggestionRows = memo(function SuggestionRows({
-  whispers,
-  golden,
-  disabled,
-  hour,
-  salt,
-  onPick,
-  onCreation,
-  testIdPrefix,
-}: {
-  whispers: RowWhisper[];
-  golden: GenealogySeed[];
-  disabled?: boolean;
-  hour: number;
-  salt: number;
-  onPick: (text: string, move: BranchType) => void;
-  onCreation: (kind: CreationDoor, topic: string) => void;
-  testIdPrefix: string;
-}) {
-  const t = useT();
-  const scrollRef = useRef<HTMLDivElement | null>(null);
-  const endRef = useRef<HTMLDivElement | null>(null);
-  const [pageCount, setPageCount] = useState(2);
-
-  /* the vertical ear — one page before the floor is reached, the next
-     page is already woven (the walk never hits a wall) */
-  useEffect(() => {
-    const root = scrollRef.current;
-    const st = endRef.current;
-    if (!root || !st) return;
-    const io = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((e) => e.isIntersecting))
-          setPageCount((c) => Math.min(ROW_PAGES_MAX, c + 1));
-      },
-      { root, rootMargin: "0px 0px 240px 0px", threshold: 0 }
-    );
-    io.observe(st);
-    return () => io.disconnect();
-  }, []);
-
-  const pages = useMemo(() => {
-    const out: RowChip[][][] = [];
-    /* every whisper this visit has already worn — a voice never stands
-       twice until the whole grove has spoken (then it weaves again) */
-    const seen = new Set<string>();
-    for (let p = 0; p < pageCount; p++) {
-      const rows: RowChip[][] = [];
-      for (let r = 0; r < ROWS_PER_PAGE; r++) {
-        if (p === 0 && r === 0 && golden.length > 0) {
-          /* THE GOLDEN ROW — the exchange's own grown branches stand
-             first, wearing the amber light */
-          rows.push(
-            golden.slice(0, CHIPS_PER_ROW).map((g, i) => ({
-              key: `k-${p}-${r}-${i}`,
-              text: g.text,
-              movement: g.movement,
-              accent: "#f59e0b",
-              golden: true,
-            }))
-          );
-          for (const g of golden) seen.add(g.text.toLowerCase());
-          continue;
-        }
-        const shuffled = seededShuffle(
-          whispers,
-          hashWalk(`${hour}:${salt}:${p}:${r}`)
-        );
-        const fresh = shuffled.filter((w) => !seen.has(w.text.toLowerCase()));
-        const pool = fresh.length >= CHIPS_PER_ROW ? fresh : shuffled;
-        const picked = pool.slice(0, CHIPS_PER_ROW);
-        rows.push(
-          picked.map((w, i) => ({
-            key: `k-${p}-${r}-${i}`,
-            text: w.text,
-            movement: w.movement,
-            accent: w.accent,
-          }))
-        );
-        for (const w of picked) seen.add(w.text.toLowerCase());
-      }
-      /* THE CREATION DOOR — one making woven into every page, mid-row,
-         tied to the row's own first whisper (the branch's own words
-         the creation grows from) */
-      const h = hashWalk(`door:${hour}:${salt}:${p}`);
-      const door = CREATION_DOORS[h % CREATION_DOORS.length].kind;
-      const atRow =
-        p === 0 && golden.length > 0
-          ? 1 + (h % (ROWS_PER_PAGE - 1))
-          : h % ROWS_PER_PAGE;
-      const row = rows[atRow];
-      if (row.length > 0) {
-        const topic = row[0].text;
-        const at = Math.min(2 + (h % Math.max(1, row.length - 2)), row.length);
-        row.splice(at, 0, {
-          key: `door-${p}`,
-          text: `${t(CREATION_LABELS[door])} — ${topic}`,
-          movement: "create",
-          accent: row[0].accent,
-          creation: door,
-          topic,
-        });
-      }
-      out.push(rows);
-    }
-    return out;
-  }, [whispers, golden, pageCount, hour, salt, t]);
-
-  return (
-    <div
-      ref={scrollRef}
-      role="region"
-      aria-label={t("Whispers of the house")}
-      data-testid={`${testIdPrefix}-rows`}
-      className="no-scrollbar absolute inset-0 overflow-y-auto"
-      style={{
-        scrollSnapType: "y mandatory",
-        overscrollBehavior: "contain",
-        WebkitOverflowScrolling: "touch",
-      }}
-    >
-      {pages.map((rows, p) => (
-        <div
-          key={p}
-          data-testid={`${testIdPrefix}-page-${p}`}
-          className="flex h-full flex-col pb-24 pt-1"
-          style={{
-            scrollSnapAlign: "start",
-            scrollSnapStop: "always",
-          }}
-        >
-          {rows.map((chips, r) => (
-            <div key={r} className="flex min-h-0 flex-1 items-center">
-              <div
-                className="no-scrollbar flex h-full w-full items-center gap-2 overflow-x-auto px-2"
-                style={{
-                  maskImage:
-                    "linear-gradient(90deg, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%)",
-                  WebkitMaskImage:
-                    "linear-gradient(90deg, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%)",
-                }}
-              >
-                {chips.map((c) => (
-                  <RowChipBtn
-                    key={c.key}
-                    chip={c}
-                    disabled={disabled}
-                    onPick={onPick}
-                    onCreation={onCreation}
-                    testId={testIdPrefix}
-                  />
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      ))}
-      <div ref={endRef} aria-hidden="true" className="h-px w-full" />
-    </div>
-  );
-});
 
 /* ------------- the crown's own seal — the light's toggle -------------
    THE LOGO AT THE HEART OF THE TOP BAR: the house's mark stands at
@@ -1735,64 +1479,6 @@ export function BranchCanopy({
     [familyKeyByText, focusKey]
   );
 
-  /* THE ROWS' OWN PICK — the flat floor's whisper: the walk records
-     its step (the trail remembers) and the answer rises in the room.
-     No graft, no fold, no pan — the rows stand flat; the walk lives
-     in the trail and in the rooms. */
-  const pickText = useCallback(
-    (text: string, move: BranchType) => {
-      if (disabled) return;
-      suppressRegrowRef.current = false;
-      recordExpansion("pick", { scope: scopeHint ?? null, movement: move });
-      recordJourney({ b: category, s: scopeHint ?? undefined });
-      recordSeen([text]);
-      setLineage((ln) =>
-        [...ln.filter((l) => l.text !== text), { id: null, text }].slice(-10)
-      );
-      zoomOpenedAtRef.current = Date.now();
-      const makesSomething =
-        detectArtifactIntent(text) !== null || isVisualIntent(text);
-      if (!makesSomething) setZoom({ q: text, move });
-      onPick(text, askScopeFor(text));
-    },
-    [disabled, onPick, askScopeFor, scopeHint, category]
-  );
-
-  /* THE ROWS' OWN DOOR — a creation whisper opens its original theme
-     page with the tied whisper's words riding as the seed. */
-  const openCreationDoor = useCallback(
-    (kind: CreationDoor, topic: string) => {
-      if (disabled) return;
-      recordJourney({ b: category, s: scopeHint ?? undefined });
-      setBranchCreationSeed({ kind, topic });
-      if (kind === "akashic") openAkashic();
-      else if (kind === "book") openDreamBook();
-      else openInvent();
-    },
-    [
-      disabled,
-      category,
-      scopeHint,
-      setBranchCreationSeed,
-      openAkashic,
-      openDreamBook,
-      openInvent,
-    ]
-  );
-
-  /* THE ROWS' OWN LIGHT — every whisper carries its family's accent:
-     the general walk wears every house's colors mixed, a focused
-     category wears its own light on every row. */
-  const rowWhispers = useMemo<RowWhisper[]>(
-    () =>
-      grove.map((w) => ({
-        text: w.text,
-        movement: w.movement,
-        accent: familyAccent(w.family) ?? "var(--scope-a, var(--gd))",
-      })),
-    [grove]
-  );
-
   const budsKey = channeling?.map((b) => b.question).join("\u0001") ?? "";
   const field = useMemo<ReturnType<typeof buildResonanceField> | null>(
     () =>
@@ -1806,10 +1492,25 @@ export function BranchCanopy({
           }),
     [realm, scopeHint, contextSnapshot, budsKey, hour]
   );
-  const idf = useMemo(() => (realm ? null : buildIdf(grove.map((w) => w.text))), [realm, grove]);
+  /* THE GRAFT LAW — the idf belongs to every walk (the realm's own
+     grafted houses are tuned by it too): one memoized pass over the
+     grove, never a per-frame cost. */
+  const idf = useMemo(() => buildIdf(grove.map((w) => w.text)), [grove]);
 
   const ranked = useMemo(() => {
-    if (realm || grove.length === 0 || !field || !idf) return [];
+    /* THE REALM'S SMALL FAMILY — the grove shuffled by the hour, the
+       salt and the focus; no resonance field, no ranking passes: the
+       realm's tree is one small family, and it costs almost nothing. */
+    if (realm) {
+      if (grove.length === 0) return [];
+      return seededShuffle(
+        grove,
+        hashWalk(`realm:${hour}:${salt}:${focusKey}`)
+      )
+        .slice(0, REALM_BATCH_SIZE * 2)
+        .map((w) => ({ ...w, score: 0 }));
+    }
+    if (grove.length === 0 || !field || !idf) return [];
     const hits = rankWhispers(grove, field, {
       idf,
       seen: seenSnapshot,
@@ -1835,7 +1536,7 @@ export function BranchCanopy({
       }
     }
     return unique;
-  }, [grove, field, idf, seenSnapshot]);
+  }, [realm, grove, field, idf, seenSnapshot, hour, salt, focusKey]);
 
   /* THE GOLDEN ROW — the exchange's own grown branches stand nearest
      the trunk; deduped by content, memoized on the buds' own words so
@@ -1976,12 +1677,13 @@ export function BranchCanopy({
       /* THE TIMELINE'S REST — a tree lifted back from a category's own
          shelf stands untouched until the visitor's own hand moves. */
       if (suppressRegrowRef.current) return;
+      const cap = realm ? REALM_BATCH_SIZE : BATCH_SIZE;
       const tuned = tuneSeedBatch(
         ranked
-          .slice(0, BATCH_SIZE * 2)
+          .slice(0, cap * 2)
           .map((w) => ({ text: w.text, movement: w.movement, score: w.score })),
         expansionScore,
-        BATCH_SIZE
+        cap
       );
       const seeds = weaveCreations(withAccents(tuned), 0);
       markSpent(seeds);
@@ -1998,7 +1700,7 @@ export function BranchCanopy({
       prevSize.current = { w: 0, h: 0 }; /* the view returns to the trunk */
     }, 0);
     return () => window.clearTimeout(id);
-  }, [ranked, mounted, markSpent, zoomed, expansionScore, withAccents, weaveCreations]);
+  }, [realm, ranked, mounted, markSpent, zoomed, expansionScore, withAccents, weaveCreations]);
 
   /* THE GEOMETRY — narrow windows carry a slimmer, taller family. */
   const vpRef = useRef<HTMLDivElement | null>(null);
@@ -2156,12 +1858,14 @@ export function BranchCanopy({
   }, [prepared, commitTopologies, markSpent]);
 
   /* THE FRONTIER EAR — slide to the top of the family and the ready
-     thirty reveal themselves; the walk never hits a wall. */
+     thirty reveal themselves; the walk never hits a wall.
+     THE REALM'S REST — the realm's family is small by law: the ear
+     sleeps there, the branches grow only under the visitor's hand. */
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     const vp = vpRef.current;
     const st = sentinelRef.current;
-    if (!vp || !st || !mounted) return;
+    if (!vp || !st || !mounted || realm) return;
     const io = new IntersectionObserver(
       (entries) => {
         if (entries.some((e) => e.isIntersecting)) grow();
@@ -2170,7 +1874,7 @@ export function BranchCanopy({
     );
     io.observe(st);
     return () => io.disconnect();
-  }, [mounted, grow]);
+  }, [mounted, grow, realm]);
 
   /* THE ROOT'S OWN EAR — reach down to the undergrove's floor and the
      next root family descends; the ground is as endless as the sky. */
@@ -2178,7 +1882,7 @@ export function BranchCanopy({
   useEffect(() => {
     const vp = vpRef.current;
     const st = rootSentinelRef.current;
-    if (!vp || !st || !mounted) return;
+    if (!vp || !st || !mounted || realm) return;
     const io = new IntersectionObserver(
       (entries) => {
         if (entries.some((e) => e.isIntersecting)) grow();
@@ -2187,7 +1891,7 @@ export function BranchCanopy({
     );
     io.observe(st);
     return () => io.disconnect();
-  }, [mounted, grow]);
+  }, [mounted, grow, realm]);
 
   /* THE QUIET FILLING — the house needs no empty corner: on its own
      breaths the first families bloom in every direction (upward, then
@@ -2200,13 +1904,13 @@ export function BranchCanopy({
     growRef.current = grow;
   }, [grow]);
   useEffect(() => {
-    if (!mounted) return;
+    if (!mounted || realm) return;
     const beats = [650, 1500, 2350, 3200, 4050, 4900, 5750];
     const ids = beats.map((ms) =>
       window.setTimeout(() => growRef.current(), ms)
     );
     return () => ids.forEach((id) => window.clearTimeout(id));
-  }, [mounted]);
+  }, [mounted, realm]);
 
   /* THE HARMONIC WAVES — twelve voices at once, twelve after a few
      seconds, the last six after another; every family arrives in
@@ -2511,17 +2215,20 @@ export function BranchCanopy({
   const chooseGraftSeeds = useCallback(
     (fresh: typeof grove, pickField: ReturnType<typeof buildResonanceField>): GenealogySeed[] => {
       if (!idf) return [];
+      /* THE REALM'S MEASURE — a grafted house in the realm is a small
+         family (much less), so every press keeps the walk readable */
+      const cap = realm ? REALM_GRAFT : BATCH_SIZE;
       const hits = rankWhispers(fresh, pickField, {
         idf,
         seen: seenSnapshot,
-        limit: BATCH_SIZE,
+        limit: cap,
         perSubject: 2,
       });
       /* the fill — the resonance leads, the family is never starved */
       const hitTexts = new Set(hits.map((h) => h.text));
       const fill = fresh
         .filter((w) => !hitTexts.has(w.text))
-        .slice(0, BATCH_SIZE)
+        .slice(0, cap)
         .map((w) => ({ ...w, score: 0 }));
       /* THE VOICE — the whole house tuned at once: shortened to the
          walker's breath, near-twins stepped aside; every voice keeps
@@ -2532,11 +2239,11 @@ export function BranchCanopy({
             (w) => ({ text: w.text, movement: w.movement, score: w.score })
           ),
           expansionScore,
-          BATCH_SIZE
+          cap
         )
       );
     },
-    [idf, seenSnapshot, expansionScore, withAccents]
+    [realm, idf, seenSnapshot, expansionScore, withAccents]
   );
 
   /* the pan — one quiet assignment, never an animation loop; the
@@ -3738,21 +3445,11 @@ export function BranchCanopy({
       <div className="relative min-h-0 flex-1">
         {/* THE CENTRE IS CLEAR — the house's logo no longer stands at
             the heart of the realm: it lives in the crown's centre now.
-        THE ROWS REPLACE THE CANVAS — the realm's floor is ten rows of
-            whispers (plain flow, native scroll: nothing can lag or
-            flicker); the theme pages keep the genealogy tree. */}
-        {realm ? (
-          <SuggestionRows
-            whispers={rowWhispers}
-            golden={goldenSeeds}
-            disabled={disabled}
-            hour={hour}
-            salt={salt}
-            onPick={pickText}
-            onCreation={openCreationDoor}
-            testIdPrefix={testIdPrefix}
-          />
-        ) : (
+        THE BRANCHES RETURN, MUCH LESS — the realm's floor is the
+            genealogy tree again, but a SMALL family: one standing
+            batch, no self-growth, small grafted houses. Much less on
+            the screen, so the walk runs smooth and reads simple —
+            and it grows only under the visitor's own hand. */}
         <>
         <div
           ref={vpRef}
@@ -3850,9 +3547,10 @@ export function BranchCanopy({
         {/* THE TREE'S OWN ZOOM — no plus, no minus: the walk zooms by
             the fingers (a pinch travels apart or together) and by
             ctrl/cmd + wheel on the desktop. One quiet button remains —
-            the whole family, seen at once. THE ROWS NEED NO ZOOM —
-            the button belongs to the tree (the theme pages). */}
-        {!realm && !zoomed && (
+            the whole family, seen at once. THE REALM'S OWN BUTTON —
+            the branches stand in the realm again, so the button
+            stands there too. */}
+        {!zoomed && (
           <button
             type="button"
             onClick={zoomFit}
@@ -3869,7 +3567,6 @@ export function BranchCanopy({
           </button>
         )}
         </>
-        )}
 
         {/* THE FLOOR'S WHISPER LINE — the realm's one input while no
             room stands: the visitor speaks from the floor and the room
