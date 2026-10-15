@@ -1094,13 +1094,13 @@ function seededShuffle<T>(items: T[], seed: number): T[] {
 
 function LightToggle({ testIdPrefix }: { testIdPrefix: string }) {
   const t = useT();
-  const { resolvedTheme, setTheme } = useTheme();
-  const dark = resolvedTheme === "dark";
+  const { setTheme } = useTheme();
   return (
     <button
       type="button"
       onClick={() => {
         const root = document.documentElement;
+        const dark = root.classList.contains("dark");
         root.classList.add("theme-anim");
         setTheme(dark ? "light" : "dark");
         window.setTimeout(() => root.classList.remove("theme-anim"), 560);
@@ -1116,56 +1116,96 @@ function LightToggle({ testIdPrefix }: { testIdPrefix: string }) {
           "color-mix(in srgb, var(--scope-a,var(--gd)) 8%, var(--background))",
       }}
     >
-      {dark ? (
-        <Sun className="size-3" aria-hidden="true" />
-      ) : (
-        <Moon className="size-3" aria-hidden="true" />
-      )}
+      {/* THE TWO FACES OF THE HAND — the icons are drawn by the theme's
+          own class, never by the client's memory of it: server and
+          client carve the same face, and the water never breaks (no
+          hydration drift). */}
+      <Sun className="hidden size-3 dark:block" aria-hidden="true" />
+      <Moon className="block size-3 dark:hidden" aria-hidden="true" />
     </button>
   );
 }
 
-/* --------------- the river of whispers — the realm's floor -----------
-   THE SUGGESTIONS FLOW. Six streams of whispers cross the floor, each
-   drifting slowly on its own breath — left, then right, then left —
-   so the suggestions COME TO the visitor instead of waiting to be
-   hunted. One touch holds the water still under the finger; one press
-   opens the room. The general walk speaks random voices of the whole
-   house, every chip wearing its own family's light; one category
-   focused, the whole river speaks that family in its own color. The
-   exchange's own grown branches ride the first stream in amber. No
-   absolute geometry, no SVG ropes, no JS clocks: one compositor
-   transform per stream, and the phone stays cool. */
+/* --------------- the glyph wall — the realm's floor ------------------
+   THE SUGGESTIONS BECOME STONE. The floor is a Maya stele wall: every
+   suggestion carved into its own block — a stepped crest rising at its
+   head, a Maya count (dots and bars) standing guard, a cartouche of
+   the family's ink running beneath the words. The wall fills the
+   screen; sliding down uncovers the deep rows (the second family);
+   the wall's own reload pours the stone anew. One bloom per stone
+   (opacity + transform only, compositor work), no drift, no JS
+   clocks — the phone stays cool. */
 
-const RIVER_STREAMS = 6;
-const RIVER_CHIPS = 7;
-const RIVER_POOL = 48;
+const GLYPH_FIRST = 18; /* the resting family — the small-family law */
+const GLYPH_POOL = 36; /* the whole wall: first family + the deep rows */
 
-interface RiverWhisper {
+interface GlyphWhisper {
   text: string;
   movement: BranchType;
   accent: string;
 }
 
-interface RiverChip {
+interface GlyphTileData {
   text: string;
   movement: BranchType;
   accent: string;
-  wave?: number;
   golden?: boolean;
   creation?: CreationDoor;
   topic?: string;
 }
 
-const RiverChipBtn = memo(function RiverChipBtn({
-  chip,
+/* THE MAYA COUNT — every stone carries its own vigesimal count: one
+   dot is one, one bar is five, the shell stands for zero. Drawn from
+   the whisper's own hash — the same words always wear the same count.
+   Pure divs, painted once, never re-rendered. */
+function MayaCount({ n, accent }: { n: number; accent: string }) {
+  const v = ((n % 20) + 20) % 20;
+  if (v === 0) {
+    return (
+      <span
+        aria-hidden="true"
+        className="mt-px inline-block size-[7px] rounded-[50%] border"
+        style={{
+          borderColor: `color-mix(in srgb, ${accent} 55%, transparent)`,
+        }}
+      />
+    );
+  }
+  const dots = v % 5;
+  const bars = Math.floor(v / 5);
+  return (
+    <span aria-hidden="true" className="flex flex-col items-end gap-[2px]">
+      {dots > 0 && (
+        <span className="flex gap-[2.5px]">
+          {Array.from({ length: dots }, (_, i) => (
+            <i
+              key={i}
+              className="block size-[3.5px] rounded-full"
+              style={{ backgroundColor: accent }}
+            />
+          ))}
+        </span>
+      )}
+      {Array.from({ length: bars }, (_, i) => (
+        <i
+          key={i}
+          className="block h-[3px] w-[15px] rounded-[1.5px]"
+          style={{ backgroundColor: accent }}
+        />
+      ))}
+    </span>
+  );
+}
+
+const GlyphTile = memo(function GlyphTile({
+  tile,
   disabled,
   onPick,
   onCreation,
   testId,
   bloomDelay,
 }: {
-  chip: RiverChip;
+  tile: GlyphTileData;
   disabled?: boolean;
   onPick: (text: string, move: BranchType) => void;
   onCreation: (kind: CreationDoor, topic: string) => void;
@@ -1173,140 +1213,118 @@ const RiverChipBtn = memo(function RiverChipBtn({
   bloomDelay: number;
 }) {
   const t = useT();
-  const Icon = chip.creation
-    ? CREATION_ICON_BY_KIND[chip.creation]
-    : (MOVEMENT_ICONS[chip.movement] ?? Layers);
-  const label = chip.creation
-    ? `${t(CREATION_LABELS[chip.creation])} — ${chip.topic ?? ""}`
-    : chip.text;
+  const a = tile.accent;
+  const Icon = tile.creation
+    ? CREATION_ICON_BY_KIND[tile.creation]
+    : (MOVEMENT_ICONS[tile.movement] ?? Layers);
+  const label = tile.creation
+    ? `${t(CREATION_LABELS[tile.creation])} — ${tile.topic ?? ""}`
+    : tile.text;
   return (
     <button
       type="button"
       onClick={() =>
-        chip.creation
-          ? onCreation(chip.creation, chip.topic ?? chip.text)
-          : onPick(chip.text, chip.movement)
+        tile.creation
+          ? onCreation(tile.creation, tile.topic ?? tile.text)
+          : onPick(tile.text, tile.movement)
       }
       disabled={disabled}
       title={label}
       data-testid={
-        chip.golden
-          ? `${testId}-river-crown-chip`
-          : chip.creation
-            ? `${testId}-river-creation`
-            : `${testId}-river-chip`
+        tile.golden
+          ? `${testId}-glyph-golden`
+          : tile.creation
+            ? `${testId}-glyph-creation`
+            : `${testId}-glyph-tile`
       }
-      className="genea-bloom still-bloom focus-glow flex shrink-0 items-center gap-2 rounded-2xl border py-2 pl-3 pr-3.5 text-left shadow-[0_3px_14px_-10px_rgba(0,0,0,0.5)] transition-colors duration-300 hover:border-[color-mix(in_srgb,var(--chip-a)_70%,transparent)] disabled:cursor-not-allowed disabled:opacity-50"
+      className="genea-bloom still-bloom focus-glow relative flex h-full flex-col overflow-hidden rounded-[5px] border p-2.5 text-left shadow-[0_4px_16px_-12px_rgba(0,0,0,0.55)] transition-colors duration-300 hover:border-[color-mix(in_srgb,var(--tile-a)_62%,transparent)] disabled:cursor-not-allowed disabled:opacity-50"
       style={
         {
-          "--chip-a": chip.accent,
+          "--tile-a": a,
           animationDelay: `${bloomDelay}ms`,
-          borderColor: chip.golden
-            ? "color-mix(in srgb, #f59e0b 52%, transparent)"
-            : "color-mix(in srgb, var(--chip-a) 38%, transparent)",
-          backgroundColor: chip.golden
-            ? "color-mix(in srgb, #f59e0b 14%, var(--background) 86%)"
-            : "color-mix(in srgb, var(--chip-a) 7%, var(--background) 93%)",
-          boxShadow: chip.golden
-            ? "0 0 18px -8px color-mix(in srgb, #f59e0b 60%, transparent)"
-            : "0 0 16px -10px color-mix(in srgb, var(--chip-a) 50%, transparent)",
-          maxWidth: "min(72vw, 330px)",
-          marginTop: chip.wave ?? 0,
+          borderColor: tile.golden
+            ? "color-mix(in srgb, #f59e0b 50%, transparent)"
+            : "color-mix(in srgb, var(--tile-a) 36%, transparent)",
+          background: tile.golden
+            ? "linear-gradient(168deg, color-mix(in srgb, #f59e0b 15%, var(--background) 85%) 0%, var(--background) 55%, color-mix(in srgb, #f59e0b 7%, var(--background) 93%) 100%)"
+            : "linear-gradient(168deg, color-mix(in srgb, var(--tile-a) 11%, var(--background) 89%) 0%, var(--background) 52%, color-mix(in srgb, var(--tile-a) 6%, var(--background) 94%) 100%)",
+          boxShadow: tile.golden
+            ? "0 0 20px -10px color-mix(in srgb, #f59e0b 55%, transparent)"
+            : "0 4px 16px -12px rgba(0,0,0,0.55)",
         } as CSSProperties
       }
     >
-      <Icon
-        className={cn(
-          "size-3 shrink-0",
-          chip.golden ? "text-[#f59e0b]" : "text-[var(--chip-a)] opacity-80"
-        )}
+      {/* THE CODEX FRAME — one quiet inner ring, carved a step inside
+          the stone */}
+      <span
         aria-hidden="true"
+        className="pointer-events-none absolute inset-[4px] rounded-[3px] border"
+        style={{
+          borderColor: tile.golden
+            ? "color-mix(in srgb, #f59e0b 22%, transparent)"
+            : "color-mix(in srgb, var(--tile-a) 17%, transparent)",
+        }}
       />
+      {/* THE STONE'S HEADER — the stepped crest rises at the left (the
+          pyramid's own silhouette), the Maya count stands at the right */}
+      <span
+        aria-hidden="true"
+        className="relative flex items-start justify-between gap-2"
+      >
+        <span className="flex flex-col gap-[2px] pt-px">
+          <i
+            className="block h-[2.5px] w-[22px] rounded-[1px]"
+            style={{ backgroundColor: a, opacity: 0.9 }}
+          />
+          <i
+            className="block h-[2.5px] w-[14px] rounded-[1px]"
+            style={{ backgroundColor: a, opacity: 0.55 }}
+          />
+          <i
+            className="block h-[2.5px] w-[7px] rounded-[1px]"
+            style={{ backgroundColor: a, opacity: 0.32 }}
+          />
+        </span>
+        <MayaCount n={hashWalk(tile.text)} accent={a} />
+      </span>
+      {/* THE CARVING — the whisper's own words */}
       <span
         className={cn(
-          "line-clamp-2 break-words text-[12px] leading-[16px] sm:line-clamp-3 sm:text-[12.5px] sm:leading-[17px]",
-          chip.golden
+          "relative mt-1.5 line-clamp-4 break-words text-[11.5px] leading-[15.5px] sm:text-[12px] sm:leading-[16px]",
+          tile.golden
             ? "font-serif italic text-foreground"
             : "text-foreground/90"
         )}
       >
         {label}
       </span>
+      {/* THE CARTOUCHE — the movement's own glyph closes the stone, a
+          thin line of the family's ink running beneath */}
+      <span
+        aria-hidden="true"
+        className="relative mt-auto flex items-center gap-1.5 pt-2"
+      >
+        <Icon
+          className={cn(
+            "size-3 shrink-0",
+            tile.golden
+              ? "text-[#f59e0b]"
+              : "text-[var(--tile-a)] opacity-75"
+          )}
+        />
+        <i
+          className="block h-[2px] flex-1 rounded-[1px]"
+          style={{
+            backgroundColor: tile.golden ? "#f59e0b" : a,
+            opacity: 0.35,
+          }}
+        />
+      </span>
     </button>
   );
 });
 
-const RiverStream = memo(function RiverStream({
-  index,
-  chips,
-  direction,
-  duration,
-  phase,
-  disabled,
-  onPick,
-  onCreation,
-  testIdPrefix,
-}: {
-  index: number;
-  chips: RiverChip[];
-  direction: 1 | -1;
-  duration: number;
-  phase: number;
-  disabled?: boolean;
-  onPick: (text: string, move: BranchType) => void;
-  onCreation: (kind: CreationDoor, topic: string) => void;
-  testIdPrefix: string;
-}) {
-  /* THE HELD WATER — the stream rests while the finger stands on it,
-     and flows again the moment the finger leaves */
-  const [held, setHeld] = useState(false);
-  return (
-    <div
-      data-testid={`${testIdPrefix}-river-stream-${index}`}
-      className="no-scrollbar w-full overflow-x-auto"
-      style={{
-        maskImage:
-          "linear-gradient(90deg, transparent 0, #000 26px, #000 calc(100% - 26px), transparent 100%)",
-        WebkitMaskImage:
-          "linear-gradient(90deg, transparent 0, #000 26px, #000 calc(100% - 26px), transparent 100%)",
-      }}
-      onPointerDown={() => setHeld(true)}
-      onPointerUp={() => setHeld(false)}
-      onPointerLeave={() => setHeld(false)}
-      onPointerCancel={() => setHeld(false)}
-    >
-      <div
-        className="river-track flex w-max items-center gap-2 px-3 py-1"
-        style={{
-          /* THE LONGHAND LAW — every animation property set the long
-             way: mixing the shorthand with its own longhands makes
-             React warn on every held-water rerender */
-          animationName: "river-drift",
-          animationDuration: `${duration}s`,
-          animationTimingFunction: "linear",
-          animationIterationCount: "infinite",
-          animationDirection: direction === 1 ? "normal" : "reverse",
-          animationDelay: `${phase}s`,
-          animationPlayState: held ? "paused" : "running",
-        }}
-      >
-        {[...chips, ...chips].map((c, i) => (
-          <RiverChipBtn
-            key={`${i < chips.length ? "a" : "b"}-${i % Math.max(1, chips.length)}`}
-            chip={c}
-            disabled={disabled}
-            onPick={onPick}
-            onCreation={onCreation}
-            testId={testIdPrefix}
-            bloomDelay={Math.min(index * 140 + (i % Math.max(1, chips.length)) * 90 + (hashWalk(c.text) % 80), 1100)}
-          />
-        ))}
-      </div>
-    </div>
-  );
-});
-
-const RiverFloor = memo(function RiverFloor({
+const GlyphWall = memo(function GlyphWall({
   whispers,
   golden,
   disabled,
@@ -1315,9 +1333,10 @@ const RiverFloor = memo(function RiverFloor({
   focusKey,
   onPick,
   onCreation,
+  onReload,
   testIdPrefix,
 }: {
-  whispers: RiverWhisper[];
+  whispers: GlyphWhisper[];
   golden: GenealogySeed[];
   disabled?: boolean;
   hour: number;
@@ -1325,99 +1344,107 @@ const RiverFloor = memo(function RiverFloor({
   focusKey: string;
   onPick: (text: string, move: BranchType) => void;
   onCreation: (kind: CreationDoor, topic: string) => void;
+  onReload: () => void;
   testIdPrefix: string;
 }) {
   const t = useT();
-  const streams = useMemo(() => {
-    const out: {
-      chips: RiverChip[];
-      dir: 1 | -1;
-      dur: number;
-      phase: number;
-    }[] = [];
+  /* the deep rows — the wall's second family, uncovered by sliding */
+  const [deep, setDeep] = useState(false);
+  const deepRef = useRef<HTMLDivElement | null>(null);
+
+  const tiles = useMemo(() => {
+    const out: GlyphTileData[] = [];
     const seen = new Set<string>();
-    /* THE GOLDEN STREAM — the exchange's own grown branches ride the
-       first water, wearing the amber light */
-    if (golden.length > 0) {
-      const g = golden.slice(0, RIVER_CHIPS).map((s) => ({
+    /* THE GOLDEN STONES — the exchange's own grown branches stand in
+       the wall's first rows, wearing the amber light */
+    for (const s of golden) {
+      const k = s.text.toLowerCase();
+      if (seen.has(k)) continue;
+      seen.add(k);
+      out.push({
         text: s.text,
         movement: s.movement,
         accent: "#f59e0b",
         golden: true,
-      }));
-      for (const c of g) seen.add(c.text.toLowerCase());
-      out.push({ chips: g, dir: 1, dur: 76, phase: 0 });
+      });
+      if (out.length >= 4) break;
     }
-    const lanes: RiverChip[][] = Array.from(
-      { length: RIVER_STREAMS - out.length },
-      () => []
-    );
     /* the family's own shuffle — the same hour, salt and focus always
-       pour the same river (no hydration drift, no re-shuffle under
+       carve the same wall (no hydration drift, no re-shuffle under
        the visitor); a voice never stands twice until the grove has
        spoken */
     const shuffled = seededShuffle(
       whispers,
-      hashWalk(`river:${hour}:${salt}:${focusKey}`)
+      hashWalk(`wall:${hour}:${salt}:${focusKey}`)
     );
-    let dealt = 0;
     for (const w of shuffled) {
+      if (out.length >= GLYPH_POOL) break;
       const k = w.text.toLowerCase();
       if (seen.has(k)) continue;
       seen.add(k);
-      lanes[dealt % lanes.length].push({
-        text: w.text,
-        movement: w.movement,
-        accent: w.accent,
-        /* the wave — every chip rides its own little height, so the
-           streams read as water, never as rigid bands */
-        wave: ((hashWalk(w.text) % 3) - 1) * 4,
-      });
-      dealt++;
-      if (dealt >= lanes.length * RIVER_CHIPS) break;
+      out.push({ text: w.text, movement: w.movement, accent: w.accent });
     }
-    /* THE CREATION DOOR — one making woven mid-stream, tied to its
-       stream's own first whisper (the branch's own words the making
-       grows from) */
-    const h = hashWalk(`door:${hour}:${salt}:${focusKey}`);
-    const door = CREATION_DOORS[h % CREATION_DOORS.length].kind;
-    const lane = lanes[h % lanes.length];
-    if (lane.length > 2) {
-      const topic = lane[0].text;
-      lane.splice(Math.min(2 + (h % Math.max(1, lane.length - 2)), lane.length), 0, {
+    /* THE CREATION DOOR — one making carved mid-wall, tied to the
+       stone it grows from (the branch's own words the making grows
+       from) */
+    if (out.length >= 5) {
+      const h = hashWalk(`door:${hour}:${salt}:${focusKey}`);
+      const door = CREATION_DOORS[h % CREATION_DOORS.length].kind;
+      const at = 2 + (h % Math.min(9, out.length - 3));
+      const topic = out[at].text;
+      out.splice(at + 1, 0, {
         text: `${t(CREATION_LABELS[door])} — ${topic}`,
         movement: "create",
-        accent: lane[0].accent,
+        accent: out[at].accent,
         creation: door,
         topic,
       });
+      if (out.length > GLYPH_POOL) out.pop();
     }
-    lanes.forEach((chips, i) => {
-      if (chips.length === 0) return;
-      const hh = hashWalk(`flow:${hour}:${salt}:${focusKey}:${i}`);
-      out.push({
-        chips,
-        dir: i % 2 === 0 ? 1 : -1,
-        dur: 64 + (hh % 44),
-        phase: -((hh % 30) + 2),
-      });
-    });
     return out;
   }, [whispers, golden, hour, salt, focusKey, t]);
+
+  /* the deep rows rest again whenever the wall is re-poured — the
+     wall is keyed by its own deal at the render site, so a fresh
+     pour is a fresh wall (no effect, no state sync) */
+
+  /* THE DEEP EAR — one IntersectionObserver hears the visitor slide
+     toward the wall's foot and weaves the second family in; no scroll
+     clocks, no per-frame work, one reveal and it rests forever */
+  const hasDeep = tiles.length > GLYPH_FIRST;
+  useEffect(() => {
+    if (deep || !hasDeep) return;
+    const el = deepRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      (es) => {
+        if (es.some((e) => e.isIntersecting)) {
+          setDeep(true);
+          io.disconnect();
+        }
+      },
+      { root: el.closest("[data-glyph-scroll]"), rootMargin: "220px 0px" }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [deep, hasDeep]);
+
+  const shown = deep ? tiles : tiles.slice(0, GLYPH_FIRST);
 
   return (
     <div
       role="region"
-      aria-label={t("The river of whispers")}
-      data-testid={`${testIdPrefix}-river`}
+      aria-label={t("The wall of whispers")}
+      data-testid={`${testIdPrefix}-glyph-wall`}
+      data-glyph-scroll=""
       className="no-scrollbar absolute inset-0 overflow-y-auto"
       style={{
         overscrollBehavior: "contain",
         WebkitOverflowScrolling: "touch",
       }}
     >
-      {/* THE FLOOR'S OWN LIGHT — one soft glow behind the water, the
-          focused category's color breathing under every stream */}
+      {/* THE FLOOR'S OWN LIGHT — one soft glow behind the stone, the
+          focused category's color breathing under the wall */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 flex items-center justify-center"
@@ -1430,22 +1457,107 @@ const RiverFloor = memo(function RiverFloor({
           }}
         />
       </div>
-      <div className="relative flex min-h-full flex-col justify-center gap-1 pb-28 pt-4">
-        {streams.map((s, i) => (
-          <RiverStream
-            key={i}
-            index={i}
-            chips={s.chips}
-            direction={s.dir}
-            duration={s.dur}
-            phase={s.phase}
+
+      {/* THE WALL'S OWN STRIP — its caption and its reload, always in
+          reach however deep the visitor slides (the right edge keeps
+          the crown's own toggle clear) */}
+      <div
+        className="sticky top-0 z-10 flex items-center justify-between border-b bg-background/60 px-3.5 py-1.5 backdrop-blur-md"
+        style={{
+          borderColor:
+            "color-mix(in srgb, var(--hairline) 70%, transparent)",
+        }}
+      >
+        <span className="mono-label text-[8.5px] uppercase tracking-[0.18em] text-muted-foreground/70">
+          The glyph wall
+        </span>
+        <button
+          type="button"
+          onClick={onReload}
+          disabled={disabled}
+          aria-label={t("Pour the wall again")}
+          title={t("Pour the wall again")}
+          data-testid={`${testIdPrefix}-glyph-reload`}
+          className="focus-glow mr-9 flex size-6 items-center justify-center rounded-full border text-[var(--scope-a,var(--gd))] transition-all duration-300 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)] disabled:cursor-not-allowed disabled:opacity-40 sm:mr-10"
+          style={{
+            borderColor:
+              "color-mix(in srgb, var(--scope-a,var(--gd)) 34%, transparent)",
+          }}
+        >
+          <RefreshCw className="size-3" aria-hidden="true" />
+        </button>
+      </div>
+
+      <div className="relative grid auto-rows-[124px] grid-cols-2 gap-2.5 px-3 pb-44 pt-3 sm:auto-rows-[138px] sm:grid-cols-3 sm:gap-3 lg:grid-cols-4">
+        {shown.map((tile, i) => (
+          <GlyphTile
+            key={`${i}:${tile.text}`}
+            tile={tile}
             disabled={disabled}
             onPick={onPick}
             onCreation={onCreation}
-            testIdPrefix={testIdPrefix}
+            testId={testIdPrefix}
+            bloomDelay={Math.min(
+              i * 26 + (hashWalk(tile.text) % 40),
+              1100
+            )}
           />
         ))}
+        {/* THE DEEP EAR — the sentinel resting between the two
+            families, heard only while the deep rows still sleep */}
+        {!deep && hasDeep && (
+          <div ref={deepRef} aria-hidden="true" className="col-span-full h-px" />
+        )}
       </div>
+
+      {/* THE WALL'S FOOT — the whole family has spoken; one touch pours
+          the stone anew */}
+      {(deep || !hasDeep) && (
+        <div className="relative flex justify-center px-3">
+          <button
+            type="button"
+            onClick={onReload}
+            disabled={disabled}
+            aria-label={t("Pour the wall again")}
+            data-testid={`${testIdPrefix}-glyph-reload-end`}
+            className="focus-glow flex flex-col items-center gap-1.5 rounded-[5px] border border-dashed px-5 py-3 text-muted-foreground/70 transition-colors duration-300 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_50%,transparent)] hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+            style={{
+              borderColor:
+                "color-mix(in srgb, var(--scope-a,var(--gd)) 26%, transparent)",
+            }}
+          >
+            <span
+              aria-hidden="true"
+              className="flex flex-col items-center gap-[2px]"
+            >
+              <i
+                className="block h-[2.5px] w-[26px] rounded-[1px]"
+                style={{
+                  backgroundColor: "var(--scope-a,var(--gd))",
+                  opacity: 0.7,
+                }}
+              />
+              <i
+                className="block h-[2.5px] w-[17px] rounded-[1px]"
+                style={{
+                  backgroundColor: "var(--scope-a,var(--gd))",
+                  opacity: 0.45,
+                }}
+              />
+              <i
+                className="block h-[2.5px] w-[8px] rounded-[1px]"
+                style={{
+                  backgroundColor: "var(--scope-a,var(--gd))",
+                  opacity: 0.28,
+                }}
+              />
+            </span>
+            <span className="text-[11px] italic">
+              {t("The wall has spoken — pour it again")}
+            </span>
+          </button>
+        </div>
+      )}
     </div>
   );
 });
@@ -1795,10 +1907,10 @@ export function BranchCanopy({
     [familyKeyByText, focusKey]
   );
 
-  /* THE RIVER'S OWN LIGHT — every whisper carries its family's accent:
+  /* THE WALL'S OWN LIGHT — every whisper carries its family's accent:
      the general walk wears every house's colors mixed, a focused
-     category wears its own light on every stream. */
-  const riverWhispers = useMemo<RiverWhisper[]>(
+     category wears its own light on every stone. */
+  const glyphWhispers = useMemo<GlyphWhisper[]>(
     () =>
       grove.map((w) => ({
         text: w.text,
@@ -1808,11 +1920,11 @@ export function BranchCanopy({
     [grove]
   );
 
-  /* THE RIVER'S OWN PICK — the flowing floor's whisper: the walk
-     records its step (the trail remembers) and the answer rises in
-     the room. No graft, no fold, no pan — the water stands flat; the
-     walk lives in the trail and in the rooms. */
-  const riverPick = useCallback(
+  /* THE WALL'S OWN PICK — the carved stone speaks: the walk records
+     its step (the trail remembers) and the answer rises in the room.
+     No graft, no fold, no pan — the wall stands still; the walk lives
+     in the trail and in the rooms. */
+  const glyphPick = useCallback(
     (text: string, move: BranchType) => {
       if (disabled) return;
       suppressRegrowRef.current = false;
@@ -1850,16 +1962,16 @@ export function BranchCanopy({
   const idf = useMemo(() => buildIdf(grove.map((w) => w.text)), [grove]);
 
   const ranked = useMemo(() => {
-    /* THE REALM'S RIVER — the grove shuffled by the hour, the salt and
+    /* THE REALM'S WALL — the grove shuffled by the hour, the salt and
        the focus; no resonance field, no ranking passes: the realm's
-       floor is a flowing river, and it costs almost nothing. */
+       floor is a wall of stone, and it costs almost nothing. */
     if (realm) {
       if (grove.length === 0) return [];
       return seededShuffle(
         grove,
         hashWalk(`realm:${hour}:${salt}:${focusKey}`)
       )
-        .slice(0, RIVER_POOL)
+        .slice(0, GLYPH_POOL)
         .map((w) => ({ ...w, score: 0 }));
     }
     if (grove.length === 0 || !field || !idf) return [];
@@ -3794,22 +3906,24 @@ export function BranchCanopy({
         {/* THE CENTRE IS CLEAR — the house's logo no longer stands at
             the heart of the realm: it lives nowhere now — the mark has
             left the crown too.
-        THE RIVER OF WHISPERS — the realm's floor is six slow streams
-            of suggestions, drifting sideways on their own breath (the
-            water comes to the visitor), golden with the exchange's own
-            branches, wearing the focused category's own light. Pure
-            compositor work: smooth, alive, and cool. The theme pages
-            keep the genealogy tree. */}
+        THE GLYPH WALL — the realm's floor is a Maya stele wall: every
+            suggestion carved into its own stone (stepped crest, Maya
+            count, cartouche), the wall filling the screen, sliding
+            down uncovering the deep rows, the reload pouring the stone
+            anew. One bloom per stone, compositor only: smooth, alive,
+            and cool. The theme pages keep the genealogy tree. */}
         {realm ? (
-          <RiverFloor
-            whispers={riverWhispers}
+          <GlyphWall
+            key={`${hour}:${salt}:${focusKey}`}
+            whispers={glyphWhispers}
             golden={goldenSeeds}
             disabled={disabled}
             hour={hour}
             salt={salt}
             focusKey={focusKey}
-            onPick={riverPick}
+            onPick={glyphPick}
             onCreation={openTool}
+            onReload={renew}
             testIdPrefix={testIdPrefix}
           />
         ) : (
