@@ -2214,3 +2214,26 @@ html:not(.dark) .scope-lightcodes {
     animation: none;
   }
 }
+
+/* --------------------------------------------------------------------
+   THE RIVER'S DRIFT — the realm's streams cross the floor on the
+   compositor alone: one transform, linear, infinite; the duplicated
+   content makes the loop seamless (the track is exactly two copies
+   wide, so -50% lands on the same pixels the loop began on). The
+   phone stays cool — no JS clock, no repaint, only the compositor. */
+@keyframes river-drift {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+.river-track {
+  will-change: transform;
+}
+@media (prefers-reduced-motion: reduce) {
+  .river-track {
+    animation: none !important;
+  }
+}

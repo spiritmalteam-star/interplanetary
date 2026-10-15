@@ -2830,6 +2830,7 @@ export const fr: TranslationDict = {
   "Interdimensional": "Interdimensionnel",
   "Open the direct mirror connection": "Ouvrir la connexion directe avec le Miroir",
   "Toggle the light": "Changer la lumière",
+  "The river of whispers": "La rivière des murmures",
   "Press a whisper to walk, or speak below.": "Appuie sur un murmure pour marcher, ou parle ci-dessous.",
   "A little visitor is decoding your question…": "Un petit visiteur décode votre question…",
   "Antennae tuned — the signal is forming…": "Antennes accordées — le signal se forme…",

@@ -4549,6 +4549,7 @@ export const sq: TranslationDict = {
   "Interdimensional": "Ndërdimensional",
   "Open the direct mirror connection": "Hap lidhjen e drejtpërdrejtë me Pasqyrën",
   "Toggle the light": "Ndrysho dritën",
+  "The river of whispers": "Lumi i pëshpëritjeve",
   "Press a whisper to walk, or speak below.": "Shtyp një pëshpëritje për të ecur, ose fol më poshtë.",
   "A little visitor is decoding your question…": "Një vizitor i vogël po dekodon pyetjen tuaj…",
   "Antennae tuned — the signal is forming…": "Antenat në frekuencë — sinjali po formohet…",

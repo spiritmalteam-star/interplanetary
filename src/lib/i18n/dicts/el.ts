@@ -2531,6 +2531,7 @@ export const el: TranslationDict = {
   "Interdimensional": "Διαστατικό",
   "Open the direct mirror connection": "Άνοιγμα της απευθείας σύνδεσης με τον Καθρέφτη",
   "Toggle the light": "Αλλαγή φωτός",
+  "The river of whispers": "Το ποτάμι των ψιθύρων",
   "Press a whisper to walk, or speak below.": "Πάτα ένα ψίθυρο για να περπατήσεις, ή μίλα παρακάτω.",
   "A little visitor is decoding your question…": "Ένας μικρός επισκέπτης αποκωδικοποιεί την ερώτησή σας…",
   "Antennae tuned — the signal is forming…": "Κεραίες συντονισμένες — το σήμα διαμορφώνεται…",

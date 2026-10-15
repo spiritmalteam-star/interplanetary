@@ -2325,6 +2325,7 @@ export const tr: TranslationDict = {
   "Interdimensional": "Boyutlar Arası",
   "Open the direct mirror connection": "Doğrudan Ayna bağlantısını aç",
   "Toggle the light": "Işığı değiştir",
+  "The river of whispers": "Fısıltıların nehri",
   "Press a whisper to walk, or speak below.": "Yürümek için bir fısıltıya dokun, ya da aşağıda konuş.",
   "A little visitor is decoding your question…": "Küçük bir ziyaretçi sorunuzun şifresini çözüyor…",
   "Antennae tuned — the signal is forming…": "Antenler ayarlandı — sinyal oluşuyor…",

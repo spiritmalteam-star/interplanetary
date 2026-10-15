@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useTheme } from "next-themes";
 import {
   Fragment,
@@ -47,6 +46,7 @@ import {
   Send,
   Sparkles,
   Sprout,
+  Sun,
   TreeDeciduous,
   UserRound,
   Volume2,
@@ -173,13 +173,6 @@ const MOVEMENT_ICONS: Record<BranchType, typeof Layers> = {
 
 /** How many families the tree may carry — the walk never ends. */
 const MAX_BATCHES = 60;
-/** THE REALM'S SMALL FAMILY — the realm's tree carries one small
-    standing family, much less than the theme pages' endless walk:
-    it grows only under the visitor's own hand, never by itself. */
-const REALM_BATCH_SIZE = 18;
-/** THE REALM'S GRAFTED HOUSE — one press adds a small family, never
-    a flood: the branches stay readable and the walk stays liquid. */
-const REALM_GRAFT = 12;
 /** The harmonic pauses — twelve voices, then twelve, then six. */
 const WAVE_PAUSE_1 = 2600;
 const WAVE_PAUSE_2 = 3400;
@@ -1094,45 +1087,368 @@ function seededShuffle<T>(items: T[], seed: number): T[] {
   return out;
 }
 
-/* ------------- the crown's own seal — the light's toggle -------------
-   THE LOGO AT THE HEART OF THE TOP BAR: the house's mark stands at
-   the exact centre of the crown, and one touch turns the realm's
-   light — deep space ⟷ daylight — the contrast breathing under the
-   visitor's finger. */
+/* ------------- the crown's own light — a quiet hand ------------------
+   THE MARK HAS LEFT THE TOP BAR: the house's logo no longer stands in
+   the crown. The light's toggle stays — one touch turns the realm,
+   deep space ⟷ daylight, the contrast breathing under the finger. */
 
-function CrownLogo({ testIdPrefix }: { testIdPrefix: string }) {
+function LightToggle({ testIdPrefix }: { testIdPrefix: string }) {
   const t = useT();
   const { resolvedTheme, setTheme } = useTheme();
+  const dark = resolvedTheme === "dark";
   return (
     <button
       type="button"
       onClick={() => {
         const root = document.documentElement;
         root.classList.add("theme-anim");
-        setTheme(resolvedTheme === "dark" ? "light" : "dark");
+        setTheme(dark ? "light" : "dark");
         window.setTimeout(() => root.classList.remove("theme-anim"), 560);
       }}
       aria-label={t("Toggle the light")}
       title={t("Toggle the light")}
-      data-testid={`${testIdPrefix}-logo`}
-      className="focus-glow flex size-8 shrink-0 items-center justify-center rounded-xl transition-all duration-300 hover:scale-105"
+      data-testid={`${testIdPrefix}-light-toggle`}
+      className="focus-glow flex size-7 items-center justify-center rounded-full border text-[var(--scope-a,var(--gd))] transition-all duration-300 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)]"
       style={{
-        border: "1px solid color-mix(in srgb, var(--scope-a,var(--gd)) 30%, transparent)",
+        borderColor:
+          "color-mix(in srgb, var(--scope-a,var(--gd)) 34%, transparent)",
         backgroundColor:
-          "color-mix(in srgb, var(--scope-a,var(--gd)) 6%, var(--background))",
+          "color-mix(in srgb, var(--scope-a,var(--gd)) 8%, var(--background))",
       }}
     >
-      <Image
-        src="/logo.svg"
-        alt=""
-        width={18}
-        height={18}
-        className="size-[18px]"
-        priority
-      />
+      {dark ? (
+        <Sun className="size-3" aria-hidden="true" />
+      ) : (
+        <Moon className="size-3" aria-hidden="true" />
+      )}
     </button>
   );
 }
+
+/* --------------- the river of whispers — the realm's floor -----------
+   THE SUGGESTIONS FLOW. Six streams of whispers cross the floor, each
+   drifting slowly on its own breath — left, then right, then left —
+   so the suggestions COME TO the visitor instead of waiting to be
+   hunted. One touch holds the water still under the finger; one press
+   opens the room. The general walk speaks random voices of the whole
+   house, every chip wearing its own family's light; one category
+   focused, the whole river speaks that family in its own color. The
+   exchange's own grown branches ride the first stream in amber. No
+   absolute geometry, no SVG ropes, no JS clocks: one compositor
+   transform per stream, and the phone stays cool. */
+
+const RIVER_STREAMS = 6;
+const RIVER_CHIPS = 7;
+const RIVER_POOL = 48;
+
+interface RiverWhisper {
+  text: string;
+  movement: BranchType;
+  accent: string;
+}
+
+interface RiverChip {
+  text: string;
+  movement: BranchType;
+  accent: string;
+  wave?: number;
+  golden?: boolean;
+  creation?: CreationDoor;
+  topic?: string;
+}
+
+const RiverChipBtn = memo(function RiverChipBtn({
+  chip,
+  disabled,
+  onPick,
+  onCreation,
+  testId,
+  bloomDelay,
+}: {
+  chip: RiverChip;
+  disabled?: boolean;
+  onPick: (text: string, move: BranchType) => void;
+  onCreation: (kind: CreationDoor, topic: string) => void;
+  testId: string;
+  bloomDelay: number;
+}) {
+  const t = useT();
+  const Icon = chip.creation
+    ? CREATION_ICON_BY_KIND[chip.creation]
+    : (MOVEMENT_ICONS[chip.movement] ?? Layers);
+  const label = chip.creation
+    ? `${t(CREATION_LABELS[chip.creation])} — ${chip.topic ?? ""}`
+    : chip.text;
+  return (
+    <button
+      type="button"
+      onClick={() =>
+        chip.creation
+          ? onCreation(chip.creation, chip.topic ?? chip.text)
+          : onPick(chip.text, chip.movement)
+      }
+      disabled={disabled}
+      title={label}
+      data-testid={
+        chip.golden
+          ? `${testId}-river-crown-chip`
+          : chip.creation
+            ? `${testId}-river-creation`
+            : `${testId}-river-chip`
+      }
+      className="genea-bloom still-bloom focus-glow flex shrink-0 items-center gap-2 rounded-2xl border py-2 pl-3 pr-3.5 text-left shadow-[0_3px_14px_-10px_rgba(0,0,0,0.5)] transition-colors duration-300 hover:border-[color-mix(in_srgb,var(--chip-a)_70%,transparent)] disabled:cursor-not-allowed disabled:opacity-50"
+      style={
+        {
+          "--chip-a": chip.accent,
+          animationDelay: `${bloomDelay}ms`,
+          borderColor: chip.golden
+            ? "color-mix(in srgb, #f59e0b 52%, transparent)"
+            : "color-mix(in srgb, var(--chip-a) 38%, transparent)",
+          backgroundColor: chip.golden
+            ? "color-mix(in srgb, #f59e0b 14%, var(--background) 86%)"
+            : "color-mix(in srgb, var(--chip-a) 7%, var(--background) 93%)",
+          boxShadow: chip.golden
+            ? "0 0 18px -8px color-mix(in srgb, #f59e0b 60%, transparent)"
+            : "0 0 16px -10px color-mix(in srgb, var(--chip-a) 50%, transparent)",
+          maxWidth: "min(72vw, 330px)",
+          marginTop: chip.wave ?? 0,
+        } as CSSProperties
+      }
+    >
+      <Icon
+        className={cn(
+          "size-3 shrink-0",
+          chip.golden ? "text-[#f59e0b]" : "text-[var(--chip-a)] opacity-80"
+        )}
+        aria-hidden="true"
+      />
+      <span
+        className={cn(
+          "line-clamp-2 break-words text-[12px] leading-[16px] sm:line-clamp-3 sm:text-[12.5px] sm:leading-[17px]",
+          chip.golden
+            ? "font-serif italic text-foreground"
+            : "text-foreground/90"
+        )}
+      >
+        {label}
+      </span>
+    </button>
+  );
+});
+
+const RiverStream = memo(function RiverStream({
+  index,
+  chips,
+  direction,
+  duration,
+  phase,
+  disabled,
+  onPick,
+  onCreation,
+  testIdPrefix,
+}: {
+  index: number;
+  chips: RiverChip[];
+  direction: 1 | -1;
+  duration: number;
+  phase: number;
+  disabled?: boolean;
+  onPick: (text: string, move: BranchType) => void;
+  onCreation: (kind: CreationDoor, topic: string) => void;
+  testIdPrefix: string;
+}) {
+  /* THE HELD WATER — the stream rests while the finger stands on it,
+     and flows again the moment the finger leaves */
+  const [held, setHeld] = useState(false);
+  return (
+    <div
+      data-testid={`${testIdPrefix}-river-stream-${index}`}
+      className="no-scrollbar w-full overflow-x-auto"
+      style={{
+        maskImage:
+          "linear-gradient(90deg, transparent 0, #000 26px, #000 calc(100% - 26px), transparent 100%)",
+        WebkitMaskImage:
+          "linear-gradient(90deg, transparent 0, #000 26px, #000 calc(100% - 26px), transparent 100%)",
+      }}
+      onPointerDown={() => setHeld(true)}
+      onPointerUp={() => setHeld(false)}
+      onPointerLeave={() => setHeld(false)}
+      onPointerCancel={() => setHeld(false)}
+    >
+      <div
+        className="river-track flex w-max items-center gap-2 px-3 py-1"
+        style={{
+          /* THE LONGHAND LAW — every animation property set the long
+             way: mixing the shorthand with its own longhands makes
+             React warn on every held-water rerender */
+          animationName: "river-drift",
+          animationDuration: `${duration}s`,
+          animationTimingFunction: "linear",
+          animationIterationCount: "infinite",
+          animationDirection: direction === 1 ? "normal" : "reverse",
+          animationDelay: `${phase}s`,
+          animationPlayState: held ? "paused" : "running",
+        }}
+      >
+        {[...chips, ...chips].map((c, i) => (
+          <RiverChipBtn
+            key={`${i < chips.length ? "a" : "b"}-${i % Math.max(1, chips.length)}`}
+            chip={c}
+            disabled={disabled}
+            onPick={onPick}
+            onCreation={onCreation}
+            testId={testIdPrefix}
+            bloomDelay={Math.min(index * 140 + (i % Math.max(1, chips.length)) * 90 + (hashWalk(c.text) % 80), 1100)}
+          />
+        ))}
+      </div>
+    </div>
+  );
+});
+
+const RiverFloor = memo(function RiverFloor({
+  whispers,
+  golden,
+  disabled,
+  hour,
+  salt,
+  focusKey,
+  onPick,
+  onCreation,
+  testIdPrefix,
+}: {
+  whispers: RiverWhisper[];
+  golden: GenealogySeed[];
+  disabled?: boolean;
+  hour: number;
+  salt: number;
+  focusKey: string;
+  onPick: (text: string, move: BranchType) => void;
+  onCreation: (kind: CreationDoor, topic: string) => void;
+  testIdPrefix: string;
+}) {
+  const t = useT();
+  const streams = useMemo(() => {
+    const out: {
+      chips: RiverChip[];
+      dir: 1 | -1;
+      dur: number;
+      phase: number;
+    }[] = [];
+    const seen = new Set<string>();
+    /* THE GOLDEN STREAM — the exchange's own grown branches ride the
+       first water, wearing the amber light */
+    if (golden.length > 0) {
+      const g = golden.slice(0, RIVER_CHIPS).map((s) => ({
+        text: s.text,
+        movement: s.movement,
+        accent: "#f59e0b",
+        golden: true,
+      }));
+      for (const c of g) seen.add(c.text.toLowerCase());
+      out.push({ chips: g, dir: 1, dur: 76, phase: 0 });
+    }
+    const lanes: RiverChip[][] = Array.from(
+      { length: RIVER_STREAMS - out.length },
+      () => []
+    );
+    /* the family's own shuffle — the same hour, salt and focus always
+       pour the same river (no hydration drift, no re-shuffle under
+       the visitor); a voice never stands twice until the grove has
+       spoken */
+    const shuffled = seededShuffle(
+      whispers,
+      hashWalk(`river:${hour}:${salt}:${focusKey}`)
+    );
+    let dealt = 0;
+    for (const w of shuffled) {
+      const k = w.text.toLowerCase();
+      if (seen.has(k)) continue;
+      seen.add(k);
+      lanes[dealt % lanes.length].push({
+        text: w.text,
+        movement: w.movement,
+        accent: w.accent,
+        /* the wave — every chip rides its own little height, so the
+           streams read as water, never as rigid bands */
+        wave: ((hashWalk(w.text) % 3) - 1) * 4,
+      });
+      dealt++;
+      if (dealt >= lanes.length * RIVER_CHIPS) break;
+    }
+    /* THE CREATION DOOR — one making woven mid-stream, tied to its
+       stream's own first whisper (the branch's own words the making
+       grows from) */
+    const h = hashWalk(`door:${hour}:${salt}:${focusKey}`);
+    const door = CREATION_DOORS[h % CREATION_DOORS.length].kind;
+    const lane = lanes[h % lanes.length];
+    if (lane.length > 2) {
+      const topic = lane[0].text;
+      lane.splice(Math.min(2 + (h % Math.max(1, lane.length - 2)), lane.length), 0, {
+        text: `${t(CREATION_LABELS[door])} — ${topic}`,
+        movement: "create",
+        accent: lane[0].accent,
+        creation: door,
+        topic,
+      });
+    }
+    lanes.forEach((chips, i) => {
+      if (chips.length === 0) return;
+      const hh = hashWalk(`flow:${hour}:${salt}:${focusKey}:${i}`);
+      out.push({
+        chips,
+        dir: i % 2 === 0 ? 1 : -1,
+        dur: 64 + (hh % 44),
+        phase: -((hh % 30) + 2),
+      });
+    });
+    return out;
+  }, [whispers, golden, hour, salt, focusKey, t]);
+
+  return (
+    <div
+      role="region"
+      aria-label={t("The river of whispers")}
+      data-testid={`${testIdPrefix}-river`}
+      className="no-scrollbar absolute inset-0 overflow-y-auto"
+      style={{
+        overscrollBehavior: "contain",
+        WebkitOverflowScrolling: "touch",
+      }}
+    >
+      {/* THE FLOOR'S OWN LIGHT — one soft glow behind the water, the
+          focused category's color breathing under every stream */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 flex items-center justify-center"
+      >
+        <div
+          className="h-56 w-72 rounded-full"
+          style={{
+            background:
+              "radial-gradient(ellipse at center, color-mix(in srgb, var(--scope-a,var(--gd)) 15%, transparent), transparent 70%)",
+          }}
+        />
+      </div>
+      <div className="relative flex min-h-full flex-col justify-center gap-1 pb-28 pt-4">
+        {streams.map((s, i) => (
+          <RiverStream
+            key={i}
+            index={i}
+            chips={s.chips}
+            direction={s.dir}
+            duration={s.dur}
+            phase={s.phase}
+            disabled={disabled}
+            onPick={onPick}
+            onCreation={onCreation}
+            testIdPrefix={testIdPrefix}
+          />
+        ))}
+      </div>
+    </div>
+  );
+});
 
 /* --------------------------- the canopy ------------------------------ */
 
@@ -1479,6 +1795,42 @@ export function BranchCanopy({
     [familyKeyByText, focusKey]
   );
 
+  /* THE RIVER'S OWN LIGHT — every whisper carries its family's accent:
+     the general walk wears every house's colors mixed, a focused
+     category wears its own light on every stream. */
+  const riverWhispers = useMemo<RiverWhisper[]>(
+    () =>
+      grove.map((w) => ({
+        text: w.text,
+        movement: w.movement,
+        accent: familyAccent(w.family) ?? "var(--scope-a, var(--gd))",
+      })),
+    [grove]
+  );
+
+  /* THE RIVER'S OWN PICK — the flowing floor's whisper: the walk
+     records its step (the trail remembers) and the answer rises in
+     the room. No graft, no fold, no pan — the water stands flat; the
+     walk lives in the trail and in the rooms. */
+  const riverPick = useCallback(
+    (text: string, move: BranchType) => {
+      if (disabled) return;
+      suppressRegrowRef.current = false;
+      recordExpansion("pick", { scope: scopeHint ?? null, movement: move });
+      recordJourney({ b: category, s: scopeHint ?? undefined });
+      recordSeen([text]);
+      setLineage((ln) =>
+        [...ln.filter((l) => l.text !== text), { id: null, text }].slice(-10)
+      );
+      zoomOpenedAtRef.current = Date.now();
+      const makesSomething =
+        detectArtifactIntent(text) !== null || isVisualIntent(text);
+      if (!makesSomething) setZoom({ q: text, move });
+      onPick(text, askScopeFor(text));
+    },
+    [disabled, onPick, askScopeFor, scopeHint, category]
+  );
+
   const budsKey = channeling?.map((b) => b.question).join("\u0001") ?? "";
   const field = useMemo<ReturnType<typeof buildResonanceField> | null>(
     () =>
@@ -1498,16 +1850,16 @@ export function BranchCanopy({
   const idf = useMemo(() => buildIdf(grove.map((w) => w.text)), [grove]);
 
   const ranked = useMemo(() => {
-    /* THE REALM'S SMALL FAMILY — the grove shuffled by the hour, the
-       salt and the focus; no resonance field, no ranking passes: the
-       realm's tree is one small family, and it costs almost nothing. */
+    /* THE REALM'S RIVER — the grove shuffled by the hour, the salt and
+       the focus; no resonance field, no ranking passes: the realm's
+       floor is a flowing river, and it costs almost nothing. */
     if (realm) {
       if (grove.length === 0) return [];
       return seededShuffle(
         grove,
         hashWalk(`realm:${hour}:${salt}:${focusKey}`)
       )
-        .slice(0, REALM_BATCH_SIZE * 2)
+        .slice(0, RIVER_POOL)
         .map((w) => ({ ...w, score: 0 }));
     }
     if (grove.length === 0 || !field || !idf) return [];
@@ -1668,7 +2020,9 @@ export function BranchCanopy({
 
   const lastRankedRef = useRef<unknown>(null);
   useEffect(() => {
-    if (!mounted || ranked.length === 0) return;
+    /* THE REALM'S REST — the river never lays a tree: the topologies,
+       the folds and the graft walk belong to the theme pages alone. */
+    if (!mounted || realm || ranked.length === 0) return;
     if (zoomed) return;
     if (lastRankedRef.current === ranked) return;
     lastRankedRef.current = ranked;
@@ -1677,13 +2031,12 @@ export function BranchCanopy({
       /* THE TIMELINE'S REST — a tree lifted back from a category's own
          shelf stands untouched until the visitor's own hand moves. */
       if (suppressRegrowRef.current) return;
-      const cap = realm ? REALM_BATCH_SIZE : BATCH_SIZE;
       const tuned = tuneSeedBatch(
         ranked
-          .slice(0, cap * 2)
+          .slice(0, BATCH_SIZE * 2)
           .map((w) => ({ text: w.text, movement: w.movement, score: w.score })),
         expansionScore,
-        cap
+        BATCH_SIZE
       );
       const seeds = weaveCreations(withAccents(tuned), 0);
       markSpent(seeds);
@@ -1791,7 +2144,7 @@ export function BranchCanopy({
      at every height. THE ENDLESS LAW: the grove spent itself, the
      family re-weaves from the whole grove, rotated — never a wall. */
   const prepared = useMemo(() => {
-    if (topologies.length === 0 || topologies.length >= MAX_BATCHES) return null;
+    if (realm || topologies.length === 0 || topologies.length >= MAX_BATCHES) return null;
     let slice = ranked.filter((w) => !spent.has(w.text.toLowerCase()));
     if (slice.length === 0) {
       const off = (topologies.length * 7) % Math.max(1, ranked.length);
@@ -2215,20 +2568,17 @@ export function BranchCanopy({
   const chooseGraftSeeds = useCallback(
     (fresh: typeof grove, pickField: ReturnType<typeof buildResonanceField>): GenealogySeed[] => {
       if (!idf) return [];
-      /* THE REALM'S MEASURE — a grafted house in the realm is a small
-         family (much less), so every press keeps the walk readable */
-      const cap = realm ? REALM_GRAFT : BATCH_SIZE;
       const hits = rankWhispers(fresh, pickField, {
         idf,
         seen: seenSnapshot,
-        limit: cap,
+        limit: BATCH_SIZE,
         perSubject: 2,
       });
       /* the fill — the resonance leads, the family is never starved */
       const hitTexts = new Set(hits.map((h) => h.text));
       const fill = fresh
         .filter((w) => !hitTexts.has(w.text))
-        .slice(0, cap)
+        .slice(0, BATCH_SIZE)
         .map((w) => ({ ...w, score: 0 }));
       /* THE VOICE — the whole house tuned at once: shortened to the
          walker's breath, near-twins stepped aside; every voice keeps
@@ -2239,11 +2589,11 @@ export function BranchCanopy({
             (w) => ({ text: w.text, movement: w.movement, score: w.score })
           ),
           expansionScore,
-          cap
+          BATCH_SIZE
         )
       );
     },
-    [realm, idf, seenSnapshot, expansionScore, withAccents]
+    [idf, seenSnapshot, expansionScore, withAccents]
   );
 
   /* the pan — one quiet assignment, never an animation loop; the
@@ -2948,18 +3298,13 @@ export function BranchCanopy({
         }
       >
         <div
-          className={cn(
-            "mx-auto w-full items-center gap-1.5",
-            realm
-              ? "grid max-w-[760px] grid-cols-[1fr_auto_1fr]"
-              : "flex max-w-[680px]"
-          )}
+          className="mx-auto flex w-full max-w-[760px] items-center gap-1.5"
         >
-          {/* THE CROWN'S THREE COLUMNS — the walk's steering at the
-              left, the house's own seal at the exact centre (one touch
-              turns the realm's light), the doors and the passage at
-              the right. Outside the realm the old flex row stands. */}
-          <div className={cn(realm ? "flex min-w-0 items-center gap-1.5" : "contents")}>
+          {/* THE CROWN'S OWN ROW — the walk's steering at the left, the
+              doors and the passage at the right. THE MARK HAS LEFT THE
+              TOP BAR — no logo stands in the crown; the light's own
+              hand (a quiet sun/moon) rides with the doors instead. */}
+          <div className="contents">
           {/* THE MENU — where the walk stands, behind one quiet button:
               the compass, the depth, every step of the trail (one
               touch returns the tree to that step) and the quiet
@@ -3298,11 +3643,11 @@ export function BranchCanopy({
           </div>
           </div>
 
-          {/* THE HOUSE'S OWN SEAL — the logo at the exact centre of the
-              crown; one touch turns the light (deep space ⟷ daylight) */}
-          {realm && <CrownLogo testIdPrefix={testIdPrefix} />}
+          {/* THE LIGHT'S OWN HAND — the crown's quiet sun/moon: the
+              mark left the top bar, the toggle stayed */}
+          {realm && <LightToggle testIdPrefix={testIdPrefix} />}
 
-          <div className={cn(realm ? "flex min-w-0 items-center justify-end gap-1.5 pr-11 sm:pr-12" : "contents")}>
+          <div className="contents">
           {/* THE DOORS OF THE HOUSE — akashic · book · about, standing
               in the very top row: quiet ways from the walk into the
               house's own rooms. THE MIDDLE PROFILE BUTTON IS GONE — the
@@ -3347,7 +3692,10 @@ export function BranchCanopy({
               categories: a chosen kategory focuses the walk on that
               nature, and every room speaks with that world's voice. */}
 
-          <div className="flex min-w-0 flex-1 items-center justify-end gap-1.5">
+          <div className={cn(
+            "flex min-w-0 flex-1 items-center justify-end gap-1.5",
+            realm && "pr-11 sm:pr-12"
+          )}>
             {headerExtra && (
               <div className="hidden items-center gap-1.5 sm:flex">{headerExtra}</div>
             )}
@@ -3444,12 +3792,27 @@ export function BranchCanopy({
         {/* --------------------- the walkable family --------------------- */}
       <div className="relative min-h-0 flex-1">
         {/* THE CENTRE IS CLEAR — the house's logo no longer stands at
-            the heart of the realm: it lives in the crown's centre now.
-        THE BRANCHES RETURN, MUCH LESS — the realm's floor is the
-            genealogy tree again, but a SMALL family: one standing
-            batch, no self-growth, small grafted houses. Much less on
-            the screen, so the walk runs smooth and reads simple —
-            and it grows only under the visitor's own hand. */}
+            the heart of the realm: it lives nowhere now — the mark has
+            left the crown too.
+        THE RIVER OF WHISPERS — the realm's floor is six slow streams
+            of suggestions, drifting sideways on their own breath (the
+            water comes to the visitor), golden with the exchange's own
+            branches, wearing the focused category's own light. Pure
+            compositor work: smooth, alive, and cool. The theme pages
+            keep the genealogy tree. */}
+        {realm ? (
+          <RiverFloor
+            whispers={riverWhispers}
+            golden={goldenSeeds}
+            disabled={disabled}
+            hour={hour}
+            salt={salt}
+            focusKey={focusKey}
+            onPick={riverPick}
+            onCreation={openTool}
+            testIdPrefix={testIdPrefix}
+          />
+        ) : (
         <>
         <div
           ref={vpRef}
@@ -3515,11 +3878,6 @@ export function BranchCanopy({
             </div>
           </div>
 
-          {/* THE REALM'S FLOOR SPACE — the trunk base rests at the
-              vertical centre of the realm when the walk stands at the
-              floor, so the tree visibly rises from the seed */}
-          {realm && <div aria-hidden="true" style={{ height: "40dvh" }} />}
-
           {/* THE EMPTY ROOM'S OWN IDENTITY — spoken above the trunk;
               OPAQUE by law — no tree line may ever show behind it
               (the realm speaks its motto beside the whisper line) */}
@@ -3547,10 +3905,10 @@ export function BranchCanopy({
         {/* THE TREE'S OWN ZOOM — no plus, no minus: the walk zooms by
             the fingers (a pinch travels apart or together) and by
             ctrl/cmd + wheel on the desktop. One quiet button remains —
-            the whole family, seen at once. THE REALM'S OWN BUTTON —
-            the branches stand in the realm again, so the button
-            stands there too. */}
-        {!zoomed && (
+            the whole family, seen at once. THE RIVER NEEDS NO ZOOM —
+            the water is already the whole family in reach; the button
+            belongs to the tree (the theme pages). */}
+        {!realm && !zoomed && (
           <button
             type="button"
             onClick={zoomFit}
@@ -3567,6 +3925,7 @@ export function BranchCanopy({
           </button>
         )}
         </>
+        )}
 
         {/* THE FLOOR'S WHISPER LINE — the realm's one input while no
             room stands: the visitor speaks from the floor and the room

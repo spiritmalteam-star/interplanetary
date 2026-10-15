@@ -3641,3 +3641,22 @@ Work Log:
 Stage Summary:
 - The branches are back in the realm — much less of them: one small standing family, no self-growth, small grafted houses, the whole tree readable in one view — smooth and understandable simple, growing only under the visitor's own hand. The theme pages keep their endless walk untouched.
 - Artifacts: BranchCanopy.tsx (realm tree restore, REALM_BATCH_SIZE/REALM_GRAFT, realm-gated sentinels + cascade, seeded realm ranked, idf for every walk, rows removed), 7 dicts (−1 orphan key).
+
+---
+Task ID: 47
+Agent: Z.ai Code (main session)
+Task: "Please different way of showing suggestions more creative smooth and sensational also remove the logo from top bar"
+
+Work Log:
+- THE RIVER OF WHISPERS (the realm's new floor): the suggestions no longer stand in a tree — they FLOW. Six streams cross the floor, each drifting slowly sideways on its own breath, alternating directions (normal/reverse), each with its own duration (64–108s) and negative phase (they never move in lockstep), so the suggestions COME TO the visitor instead of waiting to be hunted. The whole track is exactly two copies of its chips wide and drifts to translate3d(-50%) — a seamless marquee; one compositor transform per stream, no JS clocks, no SVG, no absolute geometry — the phone stays cool.
+- THE WATER YIELDS: one touch holds the stream still under the finger (animationPlayState paused on pointerdown, running again on up/leave/cancel) — verified paused ↔ running live.
+- THE LAWS CARRIED OVER: the golden stream (the exchange's own grown branches) rides the FIRST water in amber serif — verified 4 golden chips after an exchange; one creation door woven mid-stream (hash of hour:salt:focus), tied to its stream's first whisper — verified opening its theme page path; the general walk mixes every family's colors, one category focused re-pours the whole river in that family's light and voice (verified: EvolveMed → 84 emerald chips of cortisol/vagus/fascia whispers); a voice never stands twice until the grove has spoken; the same hour/salt/focus always pours the same river (mulberry32 seeded shuffle — no hydration drift).
+- THE WAVE: every chip rides its own little height (hash ±4px) and blooms in a staggered ripple (stream × position × hash delays, capped 1.1s) — the river arrives like water, never as rigid bands. Chips glow softly in their own accent (box-shadow color-mix), 2-line clamp, edge-fade masks on every stream.
+- THE MARK LEFT THE TOP BAR: CrownLogo and its grid are gone — the crown row is one calm flex again (steering left, doors + passage right). The LIGHT'S TOGGLE STAYED: a quiet sun/moon hand (LightToggle) now rides beside the doors — verified light→dark→light with the theme-anim breath. The logo now stands nowhere in the realm.
+- PERFECT ALIGNMENT WITH THE SMALL-FAMILY LAW: 6 streams × 7 chips = 42 unique voices (84 rendered with the seamless copies) + golden + door — much less than the old flood, more alive than the rows. The realm never lays a tree any more (regrow + prepared gated on !realm — topologies, folds and grafts belong to the theme pages alone; the theme pages keep their endless walk untouched).
+- FIX ALONG THE WAY: the river initially mixed the animation shorthand with its own longhands — React warned on every held-water rerender; every animation property is now set the longhand way (THE LONGHAND LAW) — verified zero console warnings on fresh loads and interactions, mobile 390×844 + desktop 1280×800.
+- OPERATIONS: NOTE — the local workspace was found ROLLED BACK to the Task-43 snapshot this turn (reflog clean, filesystem restore); the remote held everything (origin/main = b1a8c02), recovered with fetch + reset --hard before any work. Lint 0 errors (server stopped per the OOM law, restarted after). i18n: +1 key ("The river of whispers") hand-translated into all seven dictionaries.
+
+Stage Summary:
+- The realm's floor is a living river now: six slow streams of whispers drifting sideways in alternating directions, glowing in every family's light (or the focused category's own), golden with the exchange's own branches, holding still under the finger, seamless on the compositor — creative, smooth, sensational, and cool. The house's mark has left the top bar; the light's quiet hand stayed.
+- Artifacts: BranchCanopy.tsx (RiverFloor/RiverStream/RiverChipBtn/LightToggle, crown flex row, realm river render, realm regrow/prepared gating, riverWhispers + riverPick), globals.css (river-drift keyframes + reduced-motion guard), 7 dicts (+1 key).
