@@ -9,7 +9,6 @@ import { CosmicBackdrop } from "./CosmicBackdrop";
 import { StarField } from "./StarField";
 import { WalletGuard } from "./WalletGuard";
 import { CreditBadge } from "./CreditBadge";
-import { ThemeToggle } from "./ThemeToggle";
 import { BranchCanopy } from "./BranchCanopy";
 import { ReplyBranches } from "./ReplyBranches";
 import { TransmissionView } from "./TransmissionView";
@@ -380,7 +379,7 @@ function AppShellViews() {
         disabled={channelLoading}
         testIdPrefix="realm-tree"
         introSub={t(
-          "The whole house grows from the seed — press a whisper to walk, or speak below."
+          "Press a whisper to walk, or speak below."
         )}
         contextText={channel.messages
           .slice(-6)
@@ -397,10 +396,9 @@ function AppShellViews() {
         liveAnswer={channelLoading ? null : lastChannelMsg?.text || null}
         liveError={channel.error}
         headerExtra={
-          <>
-            <CreditBadge />
-            <ThemeToggle />
-          </>
+          /* THE CROWN'S OWN PURSE — the theme has moved to the crown's
+             centre: the house's seal (the logo) toggles the light. */
+          <CreditBadge />
         }
       />
 
