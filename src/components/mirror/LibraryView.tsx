@@ -160,7 +160,7 @@ export function LibraryView() {
               className="size-3.5 transition-transform duration-300 group-hover:-translate-x-0.5"
               aria-hidden="true"
             />
-            <span className="hidden sm:inline">{t("Back to the branches")}</span>
+            <span className="hidden sm:inline">{t("Back to the wall")}</span>
             <span className="sm:hidden">{t("Back")}</span>
           </button>
 
@@ -220,7 +220,7 @@ export function LibraryView() {
                   {t("Your Cosmic Library")}
                 </h1>
                 <p className="mx-auto mt-2 max-w-[460px] text-[14px] leading-relaxed text-muted-foreground">
-                  {t("Every transmission the laboratory has carried for you, kept in its own sector — yours alone, always.")}
+                  {t("Every transmission the house has carried for you, kept in its own sector — yours alone, always.")}
                 </p>
               </div>
 

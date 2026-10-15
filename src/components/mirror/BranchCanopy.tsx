@@ -512,7 +512,7 @@ export function CanopySummonButton({
   testIdPrefix: string;
 }) {
   const t = useT();
-  const label = open ? t("Hide the branches") : t("Summon the branches");
+  const label = open ? t("Hide the wall") : t("Summon the wall");
   return (
     <button
       type="button"
@@ -564,8 +564,8 @@ export function CanopyRestStrip({
         type="button"
         onClick={onSummon}
         disabled={disabled}
-        aria-label={t("Summon the branches")}
-        title={t("Summon the branches")}
+        aria-label={t("Summon the wall")}
+        title={t("Summon the wall")}
         data-testid={`${testIdPrefix}-rest`}
         className="focus-glow group mx-auto flex h-10 w-full max-w-[720px] items-center justify-center gap-2 px-3 text-muted-foreground transition-colors duration-300 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
       >
@@ -1193,10 +1193,102 @@ interface GlyphWhisper {
   accent: string;
 }
 
+/* THE FIRST STEPS — the newcomer's own stones. Plain, warm, everyday
+   whispers a first visitor reads at a glance; the deep grove waits
+   beneath, and the wall ADVANCES as the visitor walks (kept on the
+   device, never on a server): the third exchange opens the deep
+   grove below the plain resting family, the tenth hands the whole
+   wall to the deep grove. */
+const PLAIN_STONES: GlyphWhisper[] = [
+  { text: "Who am I, beneath everything I carry?", movement: "reflect", accent: "#a78bfa" },
+  { text: "What does my heart need tonight?", movement: "reflect", accent: "#2dd4bf" },
+  { text: "A message I need to hear right now", movement: "deepen", accent: "#f59e0b" },
+  { text: "What am I not seeing clearly?", movement: "reflect", accent: "#a78bfa" },
+  { text: "Where is my energy going lately?", movement: "deepen", accent: "#34d399" },
+  { text: "What should I let go of tonight?", movement: "pause", accent: "#2dd4bf" },
+  { text: "A gentle truth about my week ahead", movement: "deepen", accent: "#22d3ee" },
+  { text: "What makes me feel alive?", movement: "connect", accent: "#2dd4bf" },
+  { text: "Who thinks of me tonight?", movement: "connect", accent: "#22d3ee" },
+  { text: "What is my quiet gift to share?", movement: "apply", accent: "#f59e0b" },
+  { text: "Show me the next small step on my path", movement: "apply", accent: "#fb7185" },
+  { text: "What do my dreams tell me lately?", movement: "deepen", accent: "#2dd4bf" },
+  { text: "A word of courage for tomorrow", movement: "create", accent: "#f59e0b" },
+  { text: "What is waiting for me to notice it?", movement: "reflect", accent: "#a78bfa" },
+  { text: "How do I find calm tonight?", movement: "pause", accent: "#34d399" },
+  { text: "What is my body trying to tell me?", movement: "deepen", accent: "#34d399" },
+  { text: "The color of my spirit today", movement: "create", accent: "#e879f9" },
+  { text: "A picture of my guides watching over me", movement: "create", accent: "#e879f9" },
+  { text: "What is my greatest strength right now?", movement: "apply", accent: "#2dd4bf" },
+  { text: "What do I need to forgive myself for?", movement: "reflect", accent: "#2dd4bf" },
+  { text: "Where does my road lead this season?", movement: "deepen", accent: "#22d3ee" },
+  { text: "What would joy do tonight?", movement: "connect", accent: "#f59e0b" },
+  { text: "What am I ready to receive?", movement: "connect", accent: "#a78bfa" },
+  { text: "A small ritual for my evening", movement: "apply", accent: "#2dd4bf" },
+  { text: "What does my home need to feel peaceful?", movement: "apply", accent: "#fb7185" },
+  { text: "What is the universe whispering to me?", movement: "deepen", accent: "#22d3ee" },
+];
+
+/* THE WALK THAT ADVANCES — the visitor's own steps, kept on the
+   device (never on a server): every exchange is one step. */
+const WALK_STEPS_KEY = "mirror-walk-steps";
+
+function readWalkSteps(): number {
+  try {
+    const raw = window.localStorage.getItem(WALK_STEPS_KEY);
+    const n = raw ? Number(raw) : 0;
+    return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0;
+  } catch {
+    return 0;
+  }
+}
+
+function stepWalkOnce(): number {
+  const next = readWalkSteps() + 1;
+  try {
+    window.localStorage.setItem(WALK_STEPS_KEY, String(next));
+  } catch {
+    /* a closed vault holds no grudge — the walk simply stays */
+  }
+  return next;
+}
+
+/* THE STONE'S OWN KIND — every stone says plainly what it opens: a
+   text answer by the mirror, an image crystallizing, a making
+   (creation, manifest), the book, the akashic record. */
+type GlyphKind =
+  | "mirror"
+  | "image"
+  | "creation"
+  | "manifest"
+  | "book"
+  | "akashic";
+
+const GLYPH_KIND_LABELS: Record<GlyphKind, string> = {
+  mirror: "mirror",
+  image: "image",
+  creation: "creation",
+  manifest: "manifest",
+  book: "book",
+  akashic: "akashic",
+};
+
+function glyphKindForText(text: string): GlyphKind {
+  const art = detectArtifactIntent(text);
+  if (art) {
+    if (art === "book") return "book";
+    if (art === "akashic") return "akashic";
+    if (art === "manifest") return "manifest";
+    return "creation";
+  }
+  if (isVisualIntent(text)) return "image";
+  return "mirror";
+}
+
 interface GlyphTileData {
   text: string;
   movement: BranchType;
   accent: string;
+  kind: GlyphKind;
   golden?: boolean;
   creation?: CreationDoor;
   topic?: string;
@@ -1360,6 +1452,17 @@ const GlyphTile = memo(function GlyphTile({
               : "text-[var(--tile-a)] opacity-75"
           )}
         />
+        {/* THE KIND — every stone says what it opens, in its own ink */}
+        <span
+          className={cn(
+            "mono-label shrink-0 text-[7px] uppercase tracking-[0.14em]",
+            tile.golden
+              ? "text-[#f59e0b]"
+              : "text-[var(--tile-a)] opacity-70"
+          )}
+        >
+          {t(GLYPH_KIND_LABELS[tile.kind])}
+        </span>
         <i
           className="block h-[2px] flex-1 rounded-[1px]"
           style={{
@@ -1374,6 +1477,8 @@ const GlyphTile = memo(function GlyphTile({
 
 const GlyphWall = memo(function GlyphWall({
   whispers,
+  entry,
+  firstSteps,
   golden,
   disabled,
   hour,
@@ -1385,6 +1490,12 @@ const GlyphWall = memo(function GlyphWall({
   testIdPrefix,
 }: {
   whispers: GlyphWhisper[];
+  /** THE FIRST STEPS' ENTRY — the plain family the resting rows are
+      carved from while the wall still advances (undefined once the
+      deep grove owns the whole wall). */
+  entry?: GlyphWhisper[];
+  /** The newcomer's own wall — the strip speaks the first steps. */
+  firstSteps?: boolean;
   golden: GenealogySeed[];
   disabled?: boolean;
   hour: number;
@@ -1413,6 +1524,7 @@ const GlyphWall = memo(function GlyphWall({
         text: s.text,
         movement: s.movement,
         accent: "#f59e0b",
+        kind: glyphKindForText(s.text),
         golden: true,
       });
       if (out.length >= 4) break;
@@ -1425,12 +1537,40 @@ const GlyphWall = memo(function GlyphWall({
       whispers,
       hashWalk(`wall:${hour}:${salt}:${focusKey}`)
     );
+    /* THE FIRST STEPS' ENTRY — when a plain entry family rides with
+       the wall, the resting rows are carved from it and the deep
+       rows rise from the whole grove: the wall advances gently. */
+    const entryShuffled = entry
+      ? seededShuffle(
+          entry,
+          hashWalk(`wall-entry:${hour}:${salt}:${focusKey}`)
+        )
+      : null;
+    let resting = 0;
+    for (const w of entryShuffled ?? shuffled) {
+      if (resting >= GLYPH_FIRST || out.length >= GLYPH_POOL) break;
+      const k = w.text.toLowerCase();
+      if (seen.has(k)) continue;
+      seen.add(k);
+      out.push({
+        text: w.text,
+        movement: w.movement,
+        accent: w.accent,
+        kind: glyphKindForText(w.text),
+      });
+      resting++;
+    }
     for (const w of shuffled) {
       if (out.length >= GLYPH_POOL) break;
       const k = w.text.toLowerCase();
       if (seen.has(k)) continue;
       seen.add(k);
-      out.push({ text: w.text, movement: w.movement, accent: w.accent });
+      out.push({
+        text: w.text,
+        movement: w.movement,
+        accent: w.accent,
+        kind: glyphKindForText(w.text),
+      });
     }
     /* THE CREATION DOOR — one making carved mid-wall, tied to the
        stone it grows from (the branch's own words the making grows
@@ -1444,13 +1584,14 @@ const GlyphWall = memo(function GlyphWall({
         text: `${t(CREATION_LABELS[door])} — ${topic}`,
         movement: "create",
         accent: out[at].accent,
+        kind: door === "invent" ? "creation" : door,
         creation: door,
         topic,
       });
       if (out.length > GLYPH_POOL) out.pop();
     }
     return out;
-  }, [whispers, golden, hour, salt, focusKey, t]);
+  }, [whispers, entry, golden, hour, salt, focusKey, t]);
 
   /* the deep rows rest again whenever the wall is re-poured — the
      wall is keyed by its own deal at the render site, so a fresh
@@ -1545,7 +1686,7 @@ const GlyphWall = memo(function GlyphWall({
             </span>
             <div className="min-w-0">
               <p className="mono-label text-[9px] uppercase tracking-[0.2em] text-foreground/85">
-                The glyph wall
+                {firstSteps ? t("First steps") : "The glyph wall"}
               </p>
               <p
                 className="mono-label truncate text-[8px] normal-case tracking-[0.04em] text-muted-foreground"
@@ -1580,7 +1721,7 @@ const GlyphWall = memo(function GlyphWall({
         </div>
       </div>
 
-      <div className="relative grid auto-rows-[124px] grid-cols-2 gap-2.5 px-3 pb-44 pt-3 sm:auto-rows-[138px] sm:grid-cols-3 sm:gap-3 lg:grid-cols-4">
+      <div className="relative grid auto-rows-[124px] grid-cols-2 gap-2.5 px-3 pb-5 pt-3 sm:auto-rows-[138px] sm:grid-cols-3 sm:gap-3 lg:grid-cols-4">
         {shown.map((tile, i) => (
           <GlyphTile
             key={`${i}:${tile.text}`}
@@ -1603,48 +1744,30 @@ const GlyphWall = memo(function GlyphWall({
       </div>
 
       {/* THE WALL'S FOOT — the whole family has spoken; one touch pours
-          the stone anew */}
+          the stone anew. It stands ABOVE the whisper line: fully
+          visible at the end of the wall, never behind the input — the
+          breath of space below it belongs to the input bar. */}
       {(deep || !hasDeep) && (
-        <div className="relative flex justify-center px-3">
+        <div className="relative flex justify-center px-3 pb-44">
           <button
             type="button"
             onClick={onReload}
             disabled={disabled}
             aria-label={t("Pour the wall again")}
             data-testid={`${testIdPrefix}-glyph-reload-end`}
-            className="focus-glow flex flex-col items-center gap-1.5 rounded-[5px] border border-dashed px-5 py-3 text-muted-foreground/70 transition-colors duration-300 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_50%,transparent)] hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+            className="focus-glow flex items-center gap-2.5 rounded-full border px-5 py-2.5 text-foreground/90 shadow-[0_10px_30px_-18px_rgba(0,0,0,0.6)] transition-all duration-300 hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-40"
             style={{
               borderColor:
-                "color-mix(in srgb, var(--scope-a,var(--gd)) 26%, transparent)",
+                "color-mix(in srgb, var(--scope-a,var(--gd)) 46%, transparent)",
+              backgroundColor:
+                "color-mix(in srgb, var(--scope-a,var(--gd)) 13%, var(--background))",
             }}
           >
-            <span
+            <RefreshCw
+              className="size-3.5 shrink-0 text-[var(--scope-a,var(--gd))]"
               aria-hidden="true"
-              className="flex flex-col items-center gap-[2px]"
-            >
-              <i
-                className="block h-[2.5px] w-[26px] rounded-[1px]"
-                style={{
-                  backgroundColor: "var(--scope-a,var(--gd))",
-                  opacity: 0.7,
-                }}
-              />
-              <i
-                className="block h-[2.5px] w-[17px] rounded-[1px]"
-                style={{
-                  backgroundColor: "var(--scope-a,var(--gd))",
-                  opacity: 0.45,
-                }}
-              />
-              <i
-                className="block h-[2.5px] w-[8px] rounded-[1px]"
-                style={{
-                  backgroundColor: "var(--scope-a,var(--gd))",
-                  opacity: 0.28,
-                }}
-              />
-            </span>
-            <span className="text-[11px] italic">
+            />
+            <span className="text-[12px] italic">
               {t("The wall has spoken — pour it again")}
             </span>
           </button>
@@ -2060,6 +2183,22 @@ export function BranchCanopy({
     [grove]
   );
 
+  /* THE WALL THAT ADVANCES — the visitor's own steps, read after first
+     paint (the server always carves the newcomer's wall, no hydration
+     drift): every exchange (a stone pressed, a making begun) is one
+     step. The first steps wear the plain stones alone; from the third
+     exchange the deep grove joins beneath them; from the tenth the
+     whole wall belongs to the deep grove. */
+  const [walkSteps, setWalkSteps] = useState(0);
+  useEffect(() => {
+    setWalkSteps(readWalkSteps());
+  }, []);
+  const bumpWalkSteps = useCallback(() => {
+    setWalkSteps(stepWalkOnce());
+  }, []);
+  const glyphStage: "first" | "steady" | "deep" =
+    walkSteps < 3 ? "first" : walkSteps < 10 ? "steady" : "deep";
+
   /* THE WALL'S OWN PICK — the carved stone speaks: the walk records
      its step (the trail remembers) and the answer rises in the room.
      No graft, no fold, no pan — the wall stands still; the walk lives
@@ -2068,6 +2207,7 @@ export function BranchCanopy({
     (text: string, move: BranchType) => {
       if (disabled) return;
       suppressRegrowRef.current = false;
+      bumpWalkSteps();
       recordExpansion("pick", { scope: scopeHint ?? null, movement: move });
       recordJourney({ b: category, s: scopeHint ?? undefined });
       recordSeen([text]);
@@ -2080,7 +2220,14 @@ export function BranchCanopy({
       if (!makesSomething) setZoom({ q: text, move });
       onPick(text, askScopeFor(text));
     },
-    [disabled, onPick, askScopeFor, scopeHint, category]
+    [
+      disabled,
+      onPick,
+      askScopeFor,
+      scopeHint,
+      category,
+      bumpWalkSteps,
+    ]
   );
 
   const budsKey = channeling?.map((b) => b.question).join("\u0001") ?? "";
@@ -2367,6 +2514,7 @@ export function BranchCanopy({
     (kind: "akashic" | "book" | "invent", topic: string) => {
       if (disabled) return;
       recordJourney({ b: category, s: scopeHint ?? undefined });
+      bumpWalkSteps();
       setBranchCreationSeed({ kind, topic });
       if (kind === "akashic") openAkashic();
       else if (kind === "book") openDreamBook();
@@ -2381,6 +2529,7 @@ export function BranchCanopy({
       openAkashic,
       openDreamBook,
       openInvent,
+      bumpWalkSteps,
     ]
   );
 
@@ -4187,7 +4336,9 @@ export function BranchCanopy({
         {realm ? (
           <GlyphWall
             key={`${hour}:${salt}:${focusKey}`}
-            whispers={glyphWhispers}
+            whispers={glyphStage === "first" ? PLAIN_STONES : glyphWhispers}
+            entry={glyphStage === "steady" ? PLAIN_STONES : undefined}
+            firstSteps={glyphStage === "first"}
             golden={goldenSeeds}
             disabled={disabled}
             hour={hour}
@@ -4523,8 +4674,8 @@ export function BranchCanopy({
                   <button
                     type="button"
                     onClick={exitZoom}
-                    aria-label={t("Back to the tree")}
-                    title={t("Back to the tree")}
+                    aria-label={t("Back to the wall")}
+                    title={t("Back to the wall")}
                     data-testid={`${testIdPrefix}-zoom-back`}
                     className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
                   >

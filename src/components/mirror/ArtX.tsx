@@ -745,7 +745,7 @@ export function ArtX() {
               className="size-3.5 transition-transform duration-300 group-hover:-translate-x-0.5"
               aria-hidden="true"
             />
-            <span className="hidden sm:inline">{t("Back to the branches")}</span>
+            <span className="hidden sm:inline">{t("Back to the wall")}</span>
             <span className="sm:hidden">{t("Back")}</span>
           </button>
 

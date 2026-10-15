@@ -1461,7 +1461,7 @@ export function InventView() {
               aria-hidden="true"
             />
             <span className="hidden sm:inline">
-              {t("Back to the branches")}
+              {t("Back to the wall")}
             </span>
             <span className="sm:hidden">{t("Back")}</span>
           </button>

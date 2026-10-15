@@ -431,8 +431,8 @@ function AppShellViews() {
             <button
               type="button"
               onClick={leaveTheMaking}
-              aria-label={t("Back to the tree")}
-              title={t("Back to the tree")}
+              aria-label={t("Back to the wall")}
+              title={t("Back to the wall")}
               data-testid="making-room-back"
               className="focus-glow flex size-8 items-center justify-center rounded-full border hairline text-muted-foreground transition-colors duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
             >
