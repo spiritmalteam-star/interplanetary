@@ -1315,9 +1315,9 @@ export function DreamBookView() {
           </p>
 
           {/* THE TWO VEINS — the loom's big categorisation: a normal,
-              grounded book, or an ephemeral one that breathes the
-              metaphysical and the mystique. Two cards, plainly lit —
-              the first choice the atelier asks. */}
+              grounded book, or The Eternal Dreamer — the one that
+              breathes the metaphysical and the mystique. Two cards,
+              plainly lit — the first choice the atelier asks. */}
           <div
             className="mt-4 grid grid-cols-2 gap-2.5"
             role="radiogroup"
@@ -1329,7 +1329,7 @@ export function DreamBookView() {
                 {
                   id: "ephemeral" as const,
                   glyph: "☾",
-                  label: t("Ephemeral"),
+                  label: t("The Eternal Dreamer"),
                   hint: t("Metaphysical · mystique — omens, symbols and the invisible breathing through the tale"),
                 },
                 {

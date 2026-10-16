@@ -1478,7 +1478,6 @@ const GlyphTile = memo(function GlyphTile({
 const GlyphWall = memo(function GlyphWall({
   whispers,
   entry,
-  firstSteps,
   golden,
   disabled,
   hour,
@@ -1494,8 +1493,6 @@ const GlyphWall = memo(function GlyphWall({
       carved from while the wall still advances (undefined once the
       deep grove owns the whole wall). */
   entry?: GlyphWhisper[];
-  /** The newcomer's own wall — the strip speaks the first steps. */
-  firstSteps?: boolean;
   golden: GenealogySeed[];
   disabled?: boolean;
   hour: number;
@@ -1647,56 +1644,9 @@ const GlyphWall = memo(function GlyphWall({
         />
       </div>
 
-      {/* THE WALL'S OWN STRIP — plainly visible, never a whisper: the
-          wall's name and its living count (how many stones stand, how
-          many still sleep below). The pour hand lives ONLY at the
-          wall's foot — one pour, one place. */}
-      <div
-        className="sticky top-0 z-10 border-b bg-background/80 px-3.5 py-2 backdrop-blur-md"
-        style={{
-          borderColor:
-            "color-mix(in srgb, var(--scope-a,var(--gd)) 26%, transparent)",
-        }}
-      >
-        <div className="flex items-center gap-2.5">
-          <span aria-hidden="true" className="flex flex-col gap-[2.5px] pt-0.5">
-            <i
-              className="block h-[3px] w-[20px] rounded-[1px]"
-              style={{
-                backgroundColor: "var(--scope-a,var(--gd))",
-                opacity: 0.92,
-              }}
-            />
-            <i
-              className="block h-[3px] w-[13px] rounded-[1px]"
-              style={{
-                backgroundColor: "var(--scope-a,var(--gd))",
-                opacity: 0.55,
-              }}
-            />
-            <i
-              className="block h-[3px] w-[6px] rounded-[1px]"
-              style={{
-                backgroundColor: "var(--scope-a,var(--gd))",
-                opacity: 0.3,
-              }}
-            />
-          </span>
-          <div className="min-w-0">
-            <p className="mono-label text-[9px] uppercase tracking-[0.2em] text-foreground/85">
-              {firstSteps ? t("First steps") : "The glyph wall"}
-            </p>
-            <p
-              className="mono-label truncate text-[8px] normal-case tracking-[0.04em] text-muted-foreground"
-              data-testid={`${testIdPrefix}-glyph-count`}
-            >
-              {deep || !hasDeep
-                ? `${tiles.length} ${t("stones")} · ${t("the whole family stands")}`
-                : `${shown.length} ${t("stones")} · ${tiles.length - shown.length} ${t("sleep below")}`}
-            </p>
-          </div>
-        </div>
-      </div>
+      {/* THE WALL HAS NO NAMEPLATE — no caption, no side glyph, no
+          count: the stones speak for themselves. The pour hand lives
+          ONLY at the wall's foot — one pour, one place. */}
 
       <div className="relative grid auto-rows-[124px] grid-cols-2 gap-2.5 px-3 pb-5 pt-3 sm:auto-rows-[138px] sm:grid-cols-3 sm:gap-3 lg:grid-cols-4">
         {shown.map((tile, i) => (
@@ -4315,7 +4265,6 @@ export function BranchCanopy({
             key={`${hour}:${salt}:${focusKey}`}
             whispers={glyphStage === "first" ? PLAIN_STONES : glyphWhispers}
             entry={glyphStage === "steady" ? PLAIN_STONES : undefined}
-            firstSteps={glyphStage === "first"}
             golden={goldenSeeds}
             disabled={disabled}
             hour={hour}

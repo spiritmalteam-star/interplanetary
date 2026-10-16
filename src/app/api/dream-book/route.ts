@@ -412,14 +412,14 @@ function buildUserPrompt(body: {
     LEVEL_PLAN[LEGACY_LEVEL_MAP[body.level] ?? body.level] ?? "";
   const isVerse = VERSE_FORMS.has(tale);
 
-  /* THE VEIN — the visitor's big choice: a normal grounded book or an
-     ephemeral, metaphysical one. It shapes the telling, never the
-     craft; the PLAIN WORD LAW stands in both. */
+  /* THE VEIN — the visitor's big choice: a normal grounded book or
+     The Eternal Dreamer — the metaphysical, mystique one. It shapes
+     the telling, never the craft; the PLAIN WORD LAW stands in both. */
   const veinLine =
     body.vein === "ground"
       ? `THE VEIN OF THIS VOLUME — GROUND: a normal, grounded book. Realistic texture, believable people, cause and consequence a reader could touch; no prophecy, no mysticism, no metaphysical machinery — wonder comes from the real world's own depth (science, craft, history, nature, the human heart). The PLAIN WORD LAW stands at its strictest here.`
       : body.vein === "ephemeral"
-        ? `THE VEIN OF THIS VOLUME — EPHEMERAL: a metaphysical, mystique telling — omens, symbols, dreams breathing through the tale, the invisible made almost palpable, the reader unsure for a page whether a wind was weather or a messenger. Even here the PLAIN WORD LAW stands: the mystique arrives through concrete images and events, never through filler vocabulary.`
+        ? `THE VEIN OF THIS VOLUME — THE ETERNAL DREAMER: a metaphysical, mystique telling — omens, symbols, dreams breathing through the tale, the invisible made almost palpable, the reader unsure for a page whether a wind was weather or a messenger. Even here the PLAIN WORD LAW stands: the mystique arrives through concrete images and events, never through filler vocabulary.`
         : "";
 
   /* the subject spoken by the visitor — the master subject */
