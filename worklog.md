@@ -3775,3 +3775,19 @@ Work Log:
 Stage Summary:
 - The wall has no nameplate anymore — no phrase, no side glyph, no count: the stones stand alone and the only hand at the wall is the pour at its foot. The About is the Mirror Entity's own page now — she writes who she is, shows her thirteen rooms in one line each, keeps her four laws, and holds one short plain-word visitor agreement; nothing of the app's inner machinery or prompt-voice leaks in. And the mystique vein of the loom bears its true name: The Eternal Dreamer.
 - Artifacts: BranchCanopy.tsx (strip removed, firstSteps prop retired), AboutPage.tsx (full rewrite: letter + rooms + laws + find-me + compact agreement), DreamBookView.tsx (vein label), /api/dream-book (vein name in the loom's law), 7 dicts (1 key added, 5 retired).
+
+---
+Task ID: 54
+Agent: Z.ai Code (main)
+Task: "For some reason no changed of last time been made it seem the website returned to a previous old, please fix"
+
+Work Log:
+- DIAGNOSIS: the local workspace had been ROLLED BACK to a pre-Task-49 snapshot — HEAD sat at 1ede8c7 (Task 48 era; working tree carried the old strip, the old About, the old "Ephemeral" vein), while GITHUB (origin/main = 572e180) still held every commit from Tasks 49–53. Reflog showed no trace of the Task 49–53 commits at all and the stash list carried a "local dev artifacts (pid/db) during restore" entry — an external sandbox restore/checkpoint swap replaced .git + the working tree while the remote was untouched. The sandbox itself had REBOOTED shortly before (uptime ~13 min at diagnosis), which matches the restore event.
+- RESTORE: fetched origin (origin/main → 572e180) and `git reset --hard origin/main` — local main back at 572e180 with the full Task 49–53 chain (1adf257 Task 53 code, e10cbd9 Task 52 worklog, 4ad68aa Task 52 code, …); verified by grep: the mirror letter back in AboutPage, "The Eternal Dreamer" back in DreamBookView, `glyph-count` strip testid absent, worklog tail = Task 53.
+- WHY THE USER SAW THE OLD VERSION: the local preview serves the working tree — with the tree rolled back, the preview (and any local check) showed the pre-Task-49 site. The production source on GitHub was never lost, so the Vercel deployment chain was intact.
+- SANDBOX BEHAVIOR NOTE (post-reboot): a dev server started from a bash command is reaped when that command ends (verified 5×: alive within the command — 25s and 45s checks — dead by the next command, even with zero Chromium present and setsid/nohup/disown; the only kernel OOM line predates the session). One-shot verification pattern adopted: warm the compile with curl inside the SAME command, then run the browser checks in that command while the server lives. tmux/screen/at unavailable for a PID-1 reparent escape.
+- OPERATIONS: tsc/lint not re-run (zero code changes this task — pure restore); reset leaves the tree identical to the pushed remote.
+
+Stage Summary:
+- The house was not broken — the workshop was moved back in time. GitHub kept every commit; the local workspace had been swapped to an old checkpoint by an external restore. One `git reset --hard origin/main` brought the whole Task 49–53 chain home: the unnamed wall, the About in her own words, and The Eternal Dreamer are all back on the local floor, verified against the exact commit the visitor last received (572e180).
+- Artifacts: none new (pure restore) — local main re-pinned to origin/main 572e180.
