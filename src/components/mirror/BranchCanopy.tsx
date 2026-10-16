@@ -4682,7 +4682,7 @@ export function BranchCanopy({
                   {answer ? (
                     revealStage >= 2 ? (
                       <div className="relative">
-                        <div className="canopy-answer whitespace-pre-wrap break-words text-[13.5px] leading-[1.75] text-foreground/90 sm:text-[14px]">
+                        <div className="canopy-answer whitespace-pre-wrap break-words text-[14.5px] leading-[1.75] text-foreground/90 sm:text-[15px]">
                           {answer}
                           {liveLoading && (
                             <span
@@ -4787,7 +4787,7 @@ export function BranchCanopy({
                             </p>
                           ) : turn.a ? (
                             <div className="flex items-start gap-1">
-                              <p className="min-w-0 flex-1 whitespace-pre-wrap break-words text-[13.5px] leading-[1.7] text-foreground/90">
+                              <p className="min-w-0 flex-1 whitespace-pre-wrap break-words text-[14.5px] leading-[1.7] text-foreground/90">
                                 {turn.a}
                               </p>
                               <RoomCopyButton

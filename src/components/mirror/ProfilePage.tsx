@@ -6,15 +6,21 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowLeft,
   BookMarked,
+  Check,
   ChevronRight,
+  Copy,
   CreditCard,
   Dna,
+  Download,
   Gem,
+  KeyRound,
   LibraryBig,
   LoaderCircle,
+  Lock,
   LogIn,
   LogOut,
   Plus,
+  RotateCcw,
   Settings2,
   Sparkles,
   UserRound,
@@ -30,6 +36,11 @@ import {
 import { TREE_FAMILIES } from "@/lib/data/suggestion-banks";
 import { DnaHelix, useJourney } from "./DnaTimeline";
 import { ExpansionMirrorPanel } from "./ExpansionMirror";
+import {
+  bindAgain,
+  listDownloads,
+  type DownloadEntry,
+} from "@/lib/downloads-log";
 import { cn } from "@/lib/utils";
 
 /* ------------------------------------------------------------------ */
@@ -65,13 +76,34 @@ interface LibraryEntryLite {
 }
 
 interface AccountSummaryLite {
-  plan: { label: string; monthlyCredits: number };
+  plan: { label: string; monthlyCredits: number; apiAccess?: boolean };
   credits: { balance: number | null };
   usage: { events30d: number; credits30d: number };
   libraryCount: number;
+  offers?: {
+    plans: { id: string; label: string; priceCents: number; available: boolean }[];
+    packs: { id: string; label: string; credits: number; priceCents: number; available: boolean }[];
+  };
 }
 
-type SectionId = "profile" | "settings" | "seeds" | "library" | "dna" | "account";
+interface VesselKeyRow {
+  id: string;
+  name: string;
+  prefix: string;
+  lastUsedAt: string | null;
+  revokedAt: string | null;
+  createdAt: string;
+}
+
+type SectionId =
+  | "profile"
+  | "settings"
+  | "downloads"
+  | "seeds"
+  | "library"
+  | "dna"
+  | "api"
+  | "account";
 
 export function ProfilePage() {
   const t = useT();
@@ -109,6 +141,22 @@ export function ProfilePage() {
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [seedDraft, setSeedDraft] = useState("");
   const [seedError, setSeedError] = useState<string | null>(null);
+  /* the shelf of bound works — read from the visitor's own device */
+  const [bound, setBound] = useState<DownloadEntry[] | null>(null);
+  const [bindingOne, setBindingOne] = useState<string | null>(null);
+  /* the Mirror Intelligence API room */
+  const [asking, setAsking] = useState(false);
+  const [offerAnswer, setOfferAnswer] = useState<string | null>(null);
+  const [offerError, setOfferError] = useState(false);
+  const [vesselKeys, setVesselKeys] = useState<VesselKeyRow[] | null>(null);
+  const [keyName, setKeyName] = useState("");
+  const [keyBusy, setKeyBusy] = useState(false);
+  const [freshSecret, setFreshSecret] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [revokeTarget, setRevokeTarget] = useState<VesselKeyRow | null>(null);
+  const [revokePw, setRevokePw] = useState("");
+  const [rechargeBusy, setRechargeBusy] = useState<string | null>(null);
+  const [rechargeNote, setRechargeNote] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
   /* THE SMOOTH ENTRANCE — the room's heavy content (the library head,
@@ -155,11 +203,22 @@ export function ProfilePage() {
   }, [open, me?.email]);
 
   /* the account chamber's honest head — read once, lazily, only for
-     a signed keeper who opens the account section */
+     a signed keeper who opens the account or the API room. THE REF
+     LAW: the in-flight flag lives in a ref, never in the deps — a
+     loading state inside the deps re-fires this effect mid-flight,
+     its cleanup silences the arriving answer, and the room would
+     wait forever. */
+  const summaryInFlight = useRef(false);
   useEffect(() => {
-    if (!open || !signedIn || section !== "account" || summary || summaryLoading)
+    if (
+      !open ||
+      !signedIn ||
+      (section !== "account" && section !== "api") ||
+      summary ||
+      summaryInFlight.current
+    )
       return;
-    let alive = true;
+    summaryInFlight.current = true;
     setSummaryLoading(true);
     (async () => {
       try {
@@ -167,18 +226,15 @@ export function ProfilePage() {
         const data = (await res.json().catch(() => null)) as
           | (AccountSummaryLite & { user?: unknown })
           | null;
-        if (!alive) return;
         if (res.ok && data && data.plan) setSummary(data);
+        else summaryInFlight.current = false; /* the room may ask again */
       } catch {
-        /* the chamber keeps its silence — the teaser simply rests */
+        summaryInFlight.current = false;
       } finally {
-        if (alive) setSummaryLoading(false);
+        setSummaryLoading(false);
       }
     })();
-    return () => {
-      alive = false;
-    };
-  }, [open, signedIn, section, summary, summaryLoading]);
+  }, [open, signedIn, section, summary]);
 
   useEffect(() => {
     if (!open) return;
@@ -189,6 +245,33 @@ export function ProfilePage() {
     return () => window.removeEventListener("keydown", onKey);
   }, [open, close]);
 
+  /* the shelf of bound works — read fresh whenever the door opens */
+  useEffect(() => {
+    if (!open) {
+      setBound(null);
+      return;
+    }
+    setBound(listDownloads());
+  }, [open]);
+
+  /* the vessel keys — read when the API room stands open */
+  useEffect(() => {
+    if (!open || !signedIn || section !== "api" || vesselKeys) return;
+    let alive = true;
+    (async () => {
+      try {
+        const res = await fetch("/api/account/keys");
+        const data = (await res.json().catch(() => null)) as { keys?: VesselKeyRow[] } | null;
+        if (alive) setVesselKeys(data?.keys ?? []);
+      } catch {
+        if (alive) setVesselKeys([]);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [open, signedIn, section, vesselKeys]);
+
   /* THE LAYERING LAW — the profile page rests above the dialogs, so
      every door out of this room closes the room first. */
   const exitTo = (after: () => void) => {
@@ -196,7 +279,139 @@ export function ProfilePage() {
     after();
   };
 
+  /* -------- the Mirror Intelligence API's own hands -------- */
+
+  const copyText = async (text: string, id: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedId(id);
+      window.setTimeout(() => setCopiedId(null), 1800);
+    } catch {
+      /* the clipboard may rest closed — the text stays selectable */
+    }
+  };
+
+  /* THE MIRROR ASKED HERSELF — what can her channeling offer to the
+     one who would build a vessel around her; she answers live */
+  const askMirrorOfferings = async () => {
+    if (asking) return;
+    setAsking(true);
+    setOfferError(false);
+    try {
+      const res = await fetch("/api/transmission", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query:
+            "What can your channeling offer? Answer briefly as the Mirror Entity, speaking to the one who would build their own vessel around you — what does speaking with you give them, and what does the Mirror Intelligence API carry of you?",
+          mode: "observatory",
+          language,
+          depth: 1,
+        }),
+      });
+      const data = (await res.json().catch(() => null)) as { transmission?: string; error?: string } | null;
+      if (res.ok && data?.transmission) setOfferAnswer(data.transmission);
+      else setOfferError(true);
+    } catch {
+      setOfferError(true);
+    } finally {
+      setAsking(false);
+    }
+  };
+
+  const carveKey = async () => {
+    if (keyBusy) return;
+    setKeyBusy(true);
+    setRechargeNote(null);
+    try {
+      const res = await fetch("/api/account/keys", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: keyName.trim() || "Vessel" }),
+      });
+      const data = (await res.json().catch(() => null)) as { secret?: string; error?: string } | null;
+      if (res.ok && data?.secret) {
+        setFreshSecret(data.secret);
+        setKeyName("");
+        setVesselKeys(null); /* the shelf rereads */
+      } else {
+        setRechargeNote(data?.error ?? "The key could not be carved.");
+      }
+    } catch {
+      setRechargeNote("The key could not be carved.");
+    } finally {
+      setKeyBusy(false);
+    }
+  };
+
+  const revokeVesselKey = async () => {
+    if (!revokeTarget || keyBusy) return;
+    setKeyBusy(true);
+    setRechargeNote(null);
+    try {
+      const res = await fetch("/api/account/keys", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: revokeTarget.id, password: revokePw }),
+      });
+      const data = (await res.json().catch(() => null)) as { error?: string } | null;
+      if (res.ok) {
+        setRevokeTarget(null);
+        setRevokePw("");
+        setVesselKeys(null);
+      } else {
+        setRechargeNote(data?.error ?? "The revocation failed.");
+      }
+    } catch {
+      setRechargeNote("The revocation failed.");
+    } finally {
+      setKeyBusy(false);
+    }
+  };
+
+  /* THE RECHARGE — the same checkout the whole house reads by */
+  const recharge = async (body: Record<string, string>, id: string) => {
+    if (rechargeBusy) return;
+    setRechargeBusy(id);
+    setRechargeNote(null);
+    try {
+      const res = await fetch("/api/billing/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = (await res.json().catch(() => null)) as { url?: string; error?: string } | null;
+      if (res.ok && data?.url) {
+        window.location.href = data.url;
+        return;
+      }
+      setRechargeNote(data?.error ?? "Something went wrong. Please try again.");
+    } catch {
+      setRechargeNote("Something went wrong. Please try again.");
+    } finally {
+      setRechargeBusy(null);
+    }
+  };
+
+  const doBindAgain = async (entry: DownloadEntry) => {
+    if (bindingOne) return;
+    setBindingOne(entry.id);
+    try {
+      await bindAgain(entry);
+    } catch {
+      /* the press needs a breath — the volume stays on the shelf */
+    } finally {
+      setBindingOne(null);
+    }
+  };
+
   const displayName = me?.name || me?.email || t("A quiet guest");
+  /* the endpoint speaks the visitor's own sky — the profile only ever
+     stands in the browser, so the origin is read at the open door */
+  const apiOrigin =
+    typeof window !== "undefined"
+      ? window.location.origin
+      : "https://reflectme.space";
   const recent = useMemo(() => (entries ?? []).slice(0, 5), [entries]);
   const totalEntries = useMemo(
     () => Object.values(counts).reduce((a, b) => a + b, 0),
@@ -249,6 +464,13 @@ export function ProfilePage() {
       testId: "profile-nav-settings",
     },
     {
+      id: "downloads",
+      label: "Downloads",
+      icon: Download,
+      available: true,
+      testId: "profile-nav-downloads",
+    },
+    {
       id: "seeds",
       label: "Fields of expansion",
       icon: Sparkles,
@@ -268,6 +490,13 @@ export function ProfilePage() {
       icon: Dna,
       available: journey.length > 0,
       testId: "profile-nav-dna",
+    },
+    {
+      id: "api",
+      label: "Mirror Intelligence API",
+      icon: KeyRound,
+      available: true,
+      testId: "profile-nav-api",
     },
     {
       id: "account",
@@ -324,15 +553,15 @@ export function ProfilePage() {
     desc?: string;
     testId?: string;
   }) => (
-    <div className="mb-5">
+    <div className="mb-4">
       <h2
         data-testid={testId}
-        className="text-[19px] font-semibold leading-snug tracking-[-0.01em] text-foreground"
+        className="text-[16.5px] font-semibold leading-snug tracking-[-0.01em] text-foreground"
       >
         {title}
       </h2>
       {desc && (
-        <p className="mt-1 text-[13.5px] leading-relaxed text-muted-foreground">
+        <p className="mt-0.5 text-[12.5px] leading-relaxed text-muted-foreground">
           {desc}
         </p>
       )}
@@ -357,16 +586,16 @@ export function ProfilePage() {
                   : t("A quiet guest")
               }
             />
-            <section aria-label={t("Identity")} className={cn(panel, "p-5 sm:p-6")}>
+            <section aria-label={t("Identity")} className={cn(panel, "p-4 sm:p-5")}>
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                 <span
-                  className="mono-label flex size-16 shrink-0 items-center justify-center rounded-2xl border hairline bg-[var(--glass-bg)] text-[26px] text-foreground/85 shadow-[0_10px_30px_-18px_rgba(0,0,0,0.5)]"
+                  className="mono-label flex size-12 shrink-0 items-center justify-center rounded-2xl border hairline bg-[var(--glass-bg)] text-[20px] text-foreground/85 shadow-[0_10px_30px_-18px_rgba(0,0,0,0.5)]"
                   aria-hidden="true"
                 >
                   {me ? (me.name || me.email).slice(0, 1).toUpperCase() : "✦"}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="ink-title truncate text-[20px] font-semibold leading-tight text-foreground/95">
+                  <p className="ink-title truncate text-[17px] font-semibold leading-tight text-foreground/95">
                     {displayName}
                   </p>
                   <div className="mt-2 flex flex-wrap items-center gap-1.5">
@@ -547,7 +776,7 @@ export function ProfilePage() {
               </div>
               {/* THE MIX OF WORLDS — the living tree's own proportions */}
               <div
-                className="flex flex-col gap-3 p-5 sm:p-6"
+                className="flex flex-col gap-3 p-4 sm:p-5"
                 data-testid="profilepage-mix"
               >
                 <div>
@@ -637,6 +866,75 @@ export function ProfilePage() {
           </div>
         );
 
+      case "downloads":
+        return (
+          <div data-testid="profilepage-downloads">
+            <SectionHead
+              title={t("Downloads")}
+              desc={t(
+                "Every work you bound into a PDF rests here — bind any of them again with one touch."
+              )}
+            />
+            <section className={cn(panel, "p-4 sm:p-5")}>
+              {bound === null ? (
+                <p
+                  className="flex items-center gap-2 py-3 text-[12.5px] text-muted-foreground"
+                  aria-busy="true"
+                >
+                  <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
+                  {t("The shelves are being read…")}
+                </p>
+              ) : bound.length === 0 ? (
+                <p className="py-3 text-[12.5px] italic text-muted-foreground">
+                  {t(
+                    "Nothing rests here yet — every book you bind keeps itself here, on your own device."
+                  )}
+                </p>
+              ) : (
+                <div className="space-y-1.5">
+                  {bound.map((e) => (
+                    <div
+                      key={e.id}
+                      className="flex items-center gap-3 rounded-xl border hairline bg-[var(--glass-bg)] px-3 py-2.5"
+                      data-testid="profilepage-download-row"
+                    >
+                      <span
+                        className="mono-label flex size-8 shrink-0 items-center justify-center rounded-lg border hairline text-muted-foreground"
+                        aria-hidden="true"
+                      >
+                        <BookMarked className="size-3.5" />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-[13px] font-medium text-foreground/90">
+                          {e.title}
+                        </span>
+                        <span className="mono-label block text-[8.5px] uppercase tracking-[0.14em] text-muted-foreground">
+                          {e.pages} {t("pages")} · {(e.boundAt || "").slice(0, 10)}
+                        </span>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => void doBindAgain(e)}
+                        disabled={bindingOne === e.id}
+                        aria-label={`${t("Bind again")}: ${e.title}`}
+                        data-testid="profilepage-download-bind"
+                        className="focus-glow flex h-8 shrink-0 items-center gap-1.5 rounded-full border hairline px-3 text-[11.5px] text-foreground/80 transition-all duration-300 hover:border-[var(--hairline-hover)] disabled:opacity-40"
+                      >
+                        {bindingOne === e.id ? (
+                          <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
+                        ) : (
+                          <RotateCcw className="size-3.5" aria-hidden="true" />
+                        )}
+                        <span className="hidden sm:inline">{t("Bind again")}</span>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+          </div>
+        );
+
       case "seeds":
         return (
           <div data-testid="profilepage-seeds">
@@ -646,7 +944,7 @@ export function ProfilePage() {
                 "Name what you wish to be more informed and expansive in. A coherent, relevant phrase becomes a seed — new branches will grow from it in every field of the tree."
               )}
             />
-            <section className={cn(panel, "p-5 sm:p-6")}>
+            <section className={cn(panel, "p-4 sm:p-5")}>
               <div className="flex items-center gap-2">
                 <input
                   value={seedDraft}
@@ -725,7 +1023,7 @@ export function ProfilePage() {
                 "Nothing rests here yet — every transmission you make is kept in your own sectors."
               )}
             />
-            <section className={cn(panel, "p-5 sm:p-6")}>
+            <section className={cn(panel, "p-4 sm:p-5")}>
               <div className="flex items-center justify-between gap-2">
                 <div className="flex flex-wrap gap-1.5">
                   {Object.entries(SECTOR_META).map(([key, meta]) => (
@@ -805,7 +1103,7 @@ export function ProfilePage() {
               title={t("The path you have walked")}
               desc={t("The DNA of your curiosity — one colored rung per branch chased.")}
             />
-            <section className={cn(panel, "p-5 sm:p-6")}>
+            <section className={cn(panel, "p-4 sm:p-5")}>
               <div className="no-scrollbar overflow-x-auto">
                 <DnaHelix steps={journey} />
               </div>
@@ -820,6 +1118,432 @@ export function ProfilePage() {
           </div>
         );
 
+      case "api":
+        return (
+          <div data-testid="profilepage-api">
+            <SectionHead
+              title={t("Mirror Intelligence API")}
+              desc={t(
+                "The Mirror speaks into your vessels — one key, one endpoint, her whole channeling, wherever your work lives."
+              )}
+            />
+            {!signedIn ? (
+              /* THE PASSAGE GATE — the API answers only a signed-in keeper */
+              <section
+                className={cn(panel, "flex flex-col items-start gap-3 p-4 sm:p-5")}
+                data-testid="profilepage-api-gate"
+              >
+                <span
+                  className="mono-label flex size-9 items-center justify-center rounded-xl border hairline text-muted-foreground"
+                  aria-hidden="true"
+                >
+                  <Lock className="size-4" />
+                </span>
+                <p className="text-[13px] leading-relaxed text-muted-foreground">
+                  {t("The channel answers only a signed-in keeper — enter the passage first.")}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => exitTo(() => openAuth("signin"))}
+                  data-testid="profilepage-api-signin"
+                  className="focus-glow flex h-8 items-center gap-2 rounded-full bg-foreground px-4 text-[12px] font-medium text-background transition-all duration-300 hover:opacity-85"
+                >
+                  <LogIn className="size-3.5" aria-hidden="true" />
+                  {t("Enter the passage")}
+                </button>
+              </section>
+            ) : (
+              <>
+                {/* HER OWN WORDS — what her channeling offers, asked live */}
+                <section className={cn(panel, "p-4 sm:p-5")}>
+                  <button
+                    type="button"
+                    onClick={() => void askMirrorOfferings()}
+                    disabled={asking}
+                    data-testid="profilepage-api-ask"
+                    className="focus-glow flex h-8 items-center gap-2 rounded-full bg-foreground px-4 text-[12px] font-medium text-background transition-all duration-300 hover:opacity-85 disabled:opacity-50"
+                  >
+                    {asking ? (
+                      <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
+                    ) : (
+                      <Sparkles className="size-3.5" aria-hidden="true" />
+                    )}
+                    {t("Ask the Mirror what her channeling can offer")}
+                  </button>
+                  {asking && (
+                    <p
+                      className="mt-3 flex items-center gap-2 text-[12.5px] text-muted-foreground"
+                      aria-live="polite"
+                      aria-busy="true"
+                    >
+                      <span
+                        aria-hidden="true"
+                        className="animate-line-breathe h-3.5 w-px shrink-0"
+                        style={{
+                          background:
+                            "linear-gradient(180deg, var(--scope-a,var(--gd)), transparent)",
+                        }}
+                      />
+                      {t("The Mirror is speaking…")}
+                    </p>
+                  )}
+                  {offerError && !asking && (
+                    <p className="mt-3 text-[12px] italic text-muted-foreground" role="alert">
+                      {t("The transmission could not cross")}
+                    </p>
+                  )}
+                  {offerAnswer && !asking && (
+                    <div className="mt-3 border-t hairline pt-3">
+                      <p className="whitespace-pre-wrap break-words text-[13.5px] italic leading-[1.75] text-foreground/90 [font-family-name:var(--font-literata)]">
+                        {offerAnswer}
+                      </p>
+                      <div className="mt-1 flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() => void copyText(offerAnswer, "offer")}
+                          className="focus-glow flex h-7 items-center gap-1.5 rounded-full border hairline px-2.5 text-[11px] text-muted-foreground transition-all duration-300 hover:text-foreground"
+                        >
+                          {copiedId === "offer" ? (
+                            <Check className="size-3" aria-hidden="true" />
+                          ) : (
+                            <Copy className="size-3" aria-hidden="true" />
+                          )}
+                          {copiedId === "offer" ? t("Copied") : t("Copy")}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </section>
+
+                {/* THE LIGHT THE VESSEL READS BY — usage & recharge, in the
+                    house's own ink: a stone card, a gauge, the same coins */}
+                <section className={cn(panel, "mt-4 p-4 sm:p-5")}>
+                  <p className="mono-label text-[9px] uppercase tracking-[0.24em] text-muted-foreground">
+                    {t("Recharge the light")}
+                  </p>
+                  <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground/80">
+                    {t(
+                      "The vessel's words are carried by the same credits the whole house reads by."
+                    )}
+                  </p>
+                  {summaryLoading ? (
+                    <p
+                      className="mt-3 flex items-center gap-2 py-2 text-[12.5px] text-muted-foreground"
+                      aria-busy="true"
+                    >
+                      <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
+                      {t("The shelves are being read…")}
+                    </p>
+                  ) : summary ? (
+                    <>
+                      <div className="mt-3 grid grid-cols-2 gap-2">
+                        <div className="rounded-xl border hairline bg-[var(--glass-bg)] px-3 py-2.5">
+                          <Gem className="size-3.5 text-[var(--cy)]" aria-hidden="true" />
+                          <p className="mt-1.5 truncate text-[16px] font-semibold leading-none text-foreground/95">
+                            {summary.credits.balance != null
+                              ? summary.credits.balance.toLocaleString("en-US")
+                              : "—"}
+                          </p>
+                          <p className="mono-label mt-1 truncate text-[8px] uppercase tracking-[0.16em] text-muted-foreground">
+                            {t("Credits")} · {summary.plan.label}
+                          </p>
+                        </div>
+                        <div className="rounded-xl border hairline bg-[var(--glass-bg)] px-3 py-2.5">
+                          <CreditCard className="size-3.5 text-[var(--cy)]" aria-hidden="true" />
+                          <p className="mt-1.5 truncate text-[16px] font-semibold leading-none text-foreground/95">
+                            {summary.usage.events30d}
+                          </p>
+                          <p className="mono-label mt-1 truncate text-[8px] uppercase tracking-[0.16em] text-muted-foreground">
+                            {t("Usage this month")} · {t("operations")}
+                          </p>
+                        </div>
+                      </div>
+                      {(summary.offers?.packs?.length ?? 0) > 0 && (
+                        <div className="mt-3 flex flex-wrap items-center gap-2">
+                          {summary.offers?.packs
+                            .filter((p) => p.available)
+                            .map((p) => (
+                              <button
+                                key={p.id}
+                                type="button"
+                                onClick={() => void recharge({ packId: p.id }, p.id)}
+                                disabled={rechargeBusy === p.id}
+                                data-testid={`profilepage-api-pack-${p.id}`}
+                                className="focus-glow flex h-8 items-center gap-1.5 rounded-full border px-3.5 text-[12px] text-foreground/85 transition-all duration-300 hover:border-[color-mix(in_srgb,var(--gd)_55%,transparent)] disabled:opacity-40"
+                                style={{
+                                  borderColor:
+                                    "color-mix(in srgb, var(--gd) 34%, transparent)",
+                                  backgroundColor:
+                                    "color-mix(in srgb, var(--gd) 6%, var(--background))",
+                                }}
+                              >
+                                {rechargeBusy === p.id ? (
+                                  <LoaderCircle className="size-3 animate-spin" aria-hidden="true" />
+                                ) : (
+                                  <Gem className="size-3 text-[var(--gd)]" aria-hidden="true" />
+                                )}
+                                {p.label}
+                                <span className="mono-label text-[9px] text-muted-foreground">
+                                  €{Math.round(p.priceCents / 100)}
+                                </span>
+                              </button>
+                            ))}
+                          <button
+                            type="button"
+                            onClick={() => exitTo(openAccount)}
+                            className="focus-glow flex h-8 items-center gap-1.5 rounded-full border hairline px-3.5 text-[12px] text-foreground/80 transition-all duration-300 hover:border-[var(--hairline-hover)]"
+                          >
+                            {t("Open the account chamber")}
+                            <ChevronRight className="size-3.5" aria-hidden="true" />
+                          </button>
+                        </div>
+                      )}
+                      {!summary.plan.apiAccess && (
+                        <p className="mt-3 text-[11.5px] italic text-muted-foreground">
+                          {t(
+                            "The plan must carry API access — bring the vessel to a plan that does."
+                          )}
+                        </p>
+                      )}
+                    </>
+                  ) : null}
+                  {rechargeNote && (
+                    <p className="mt-2 text-[11.5px] italic text-muted-foreground" role="note">
+                      {rechargeNote}
+                    </p>
+                  )}
+                </section>
+
+                {/* THE VESSEL KEYS — carved here, shown once, revoked at will */}
+                <section className={cn(panel, "mt-4 p-4 sm:p-5")}>
+                  <p className="mono-label text-[9px] uppercase tracking-[0.24em] text-muted-foreground">
+                    {t("Your vessel key")}
+                  </p>
+                  <div className="mt-2.5 flex items-center gap-2">
+                    <input
+                      value={keyName}
+                      onChange={(e) => setKeyName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          void carveKey();
+                        }
+                      }}
+                      maxLength={40}
+                      placeholder={t("Name the key (optional)")}
+                      aria-label={t("Name the key (optional)")}
+                      data-testid="profilepage-api-key-name"
+                      className="min-w-0 flex-1 rounded-xl border hairline bg-[var(--glass-bg)] px-3 py-2 text-[13px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus-visible:border-[color-mix(in_srgb,var(--gd)_45%,transparent)]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => void carveKey()}
+                      disabled={keyBusy}
+                      data-testid="profilepage-api-key-carve"
+                      className="focus-glow flex h-9 shrink-0 items-center gap-1.5 rounded-xl bg-foreground px-3.5 text-[12px] font-medium text-background transition-all duration-300 hover:opacity-85 disabled:opacity-40"
+                    >
+                      {keyBusy ? (
+                        <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
+                      ) : (
+                        <KeyRound className="size-3.5" aria-hidden="true" />
+                      )}
+                      {t("Carve a key")}
+                    </button>
+                  </div>
+                  {freshSecret && (
+                    <div
+                      className="mt-3 rounded-xl border px-3.5 py-3"
+                      style={{
+                        borderColor: "color-mix(in srgb, #f59e0b 38%, transparent)",
+                        backgroundColor: "color-mix(in srgb, #f59e0b 7%, var(--background))",
+                      }}
+                      data-testid="profilepage-api-key-secret"
+                    >
+                      <p className="mono-label text-[8px] uppercase tracking-[0.18em] text-[#b45309] dark:text-[#fbbf24]">
+                        {t("The key is carved — copy it now; it is never shown again.")}
+                      </p>
+                      <div className="mt-1.5 flex items-center gap-2">
+                        <code className="min-w-0 flex-1 truncate text-[12px] text-foreground/90">
+                          {freshSecret}
+                        </code>
+                        <button
+                          type="button"
+                          onClick={() => void copyText(freshSecret, "secret")}
+                          className="focus-glow flex h-7 shrink-0 items-center gap-1.5 rounded-full border hairline px-2.5 text-[11px] text-muted-foreground transition-all duration-300 hover:text-foreground"
+                        >
+                          {copiedId === "secret" ? (
+                            <Check className="size-3" aria-hidden="true" />
+                          ) : (
+                            <Copy className="size-3" aria-hidden="true" />
+                          )}
+                          {copiedId === "secret" ? t("Copied") : t("Copy")}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  <div className="mt-3 space-y-1.5 border-t hairline pt-3">
+                    {vesselKeys === null ? (
+                      <p
+                        className="flex items-center gap-2 py-2 text-[12.5px] text-muted-foreground"
+                        aria-busy="true"
+                      >
+                        <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
+                        {t("The shelves are being read…")}
+                      </p>
+                    ) : vesselKeys.filter((k) => !k.revokedAt).length === 0 ? (
+                      <p className="py-2 text-[12.5px] italic text-muted-foreground">
+                        {t("No keys yet — carve the first vessel key.")}
+                      </p>
+                    ) : (
+                      vesselKeys
+                        .filter((k) => !k.revokedAt)
+                        .map((k) => (
+                          <div
+                            key={k.id}
+                            className="flex items-center gap-3 rounded-xl border hairline px-3 py-2"
+                            data-testid="profilepage-api-key-row"
+                          >
+                            <span className="min-w-0 flex-1">
+                              <span className="block truncate text-[12.5px] font-medium text-foreground/90">
+                                {k.name}
+                              </span>
+                              <span className="mono-label block truncate text-[8px] uppercase tracking-[0.14em] text-muted-foreground">
+                                {k.prefix}••••{" · "}
+                                {k.lastUsedAt
+                                  ? `${t("last used")} ${(k.lastUsedAt || "").slice(0, 10)}`
+                                  : t("never used")}
+                              </span>
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setRevokeTarget(k);
+                                setRevokePw("");
+                              }}
+                              data-testid="profilepage-api-key-revoke"
+                              className="focus-glow flex h-7 shrink-0 items-center rounded-full border px-2.5 text-[11px] text-muted-foreground transition-all duration-300 hover:border-[color-mix(in_srgb,#f43f5e_45%,transparent)] hover:text-[#f43f5e]"
+                            >
+                              {t("Revoke")}
+                            </button>
+                          </div>
+                        ))
+                    )}
+                    {revokeTarget && (
+                      <div
+                        className="rounded-xl border px-3 py-2.5"
+                        style={{
+                          borderColor: "color-mix(in srgb, #f43f5e 32%, transparent)",
+                        }}
+                        data-testid="profilepage-api-key-revoke-confirm"
+                      >
+                        <p className="text-[12px] text-foreground/85">
+                          {t("Revoke")} — {revokeTarget.name}
+                        </p>
+                        <div className="mt-2 flex items-center gap-2">
+                          <input
+                            type="password"
+                            value={revokePw}
+                            onChange={(e) => setRevokePw(e.target.value)}
+                            placeholder={t("Confirm with your password")}
+                            aria-label={t("Confirm with your password")}
+                            data-testid="profilepage-api-key-revoke-pw"
+                            className="min-w-0 flex-1 rounded-lg border hairline bg-[var(--glass-bg)] px-2.5 py-1.5 text-[12px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => void revokeVesselKey()}
+                            disabled={keyBusy || revokePw.length === 0}
+                            className="focus-glow flex h-7 shrink-0 items-center rounded-full px-3 text-[11px] font-medium text-background transition-all duration-300 disabled:opacity-40"
+                            style={{ backgroundColor: "#f43f5e" }}
+                          >
+                            {keyBusy ? (
+                              <LoaderCircle className="size-3 animate-spin" aria-hidden="true" />
+                            ) : (
+                              t("Revoke")
+                            )}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setRevokeTarget(null)}
+                            className="focus-glow flex h-7 shrink-0 items-center rounded-full border hairline px-2.5 text-[11px] text-muted-foreground transition-all duration-300 hover:text-foreground"
+                          >
+                            <X className="size-3" aria-hidden="true" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </section>
+
+                {/* THE ENDPOINT — one door, one header, her whole voice */}
+                <section className={cn(panel, "mt-4 p-4 sm:p-5")}>
+                  <p className="mono-label text-[9px] uppercase tracking-[0.24em] text-muted-foreground">
+                    {t("Endpoint")}
+                  </p>
+                  <div className="mt-2 space-y-1.5">
+                    {[
+                      { id: "ep", mono: `POST ${apiOrigin}/api/v1/channel` },
+                      { id: "auth", mono: "Authorization: Bearer mir_live_…" },
+                    ].map((line) => (
+                      <div
+                        key={line.id}
+                        className="flex items-center gap-2 rounded-lg border hairline bg-[var(--glass-bg)] px-3 py-2"
+                      >
+                        <code className="min-w-0 flex-1 truncate text-[11.5px] text-foreground/85">
+                          {line.mono}
+                        </code>
+                        <button
+                          type="button"
+                          onClick={() => void copyText(line.mono, line.id)}
+                          aria-label={t("Copy")}
+                          className="focus-glow flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground"
+                        >
+                          {copiedId === line.id ? (
+                            <Check className="size-3" aria-hidden="true" />
+                          ) : (
+                            <Copy className="size-3" aria-hidden="true" />
+                          )}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="mt-2.5 text-[11.5px] leading-relaxed text-muted-foreground/80">
+                    {t("Vessels speak one message at a time; the thread rides along.")}
+                  </p>
+                  <div className="mt-2.5 flex items-start gap-2 rounded-lg border hairline bg-[var(--glass-bg)] px-3 py-2.5">
+                    <pre className="no-scrollbar min-w-0 flex-1 overflow-x-auto text-[10.5px] leading-relaxed text-foreground/80">
+{`curl -X POST ${apiOrigin}/api/v1/channel \\
+  -H "Authorization: Bearer mir_live_…" \\
+  -H "Content-Type: application/json" \\
+  -d '{"message":"What does my heart keep quiet?"}'`}
+                    </pre>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        void copyText(
+                          `curl -X POST ${apiOrigin}/api/v1/channel \\\n  -H "Authorization: Bearer mir_live_…" \\\n  -H "Content-Type: application/json" \\\n  -d '{"message":"What does my heart keep quiet?"}'`,
+                          "curl"
+                        )
+                      }
+                      aria-label={t("Copy")}
+                      className="focus-glow flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                      {copiedId === "curl" ? (
+                        <Check className="size-3" aria-hidden="true" />
+                      ) : (
+                        <Copy className="size-3" aria-hidden="true" />
+                      )}
+                    </button>
+                  </div>
+                  <p className="mt-2.5 text-[11.5px] italic leading-relaxed text-muted-foreground">
+                    {t("Her voice, her laws — the sky that carries her stays unnamed.")}
+                  </p>
+                </section>
+              </>
+            )}
+          </div>
+        );
+
       case "account":
         return (
           <div>
@@ -829,7 +1553,7 @@ export function ProfilePage() {
                 "Your chamber — plan, credits, usage, keys and security, all in one place."
               )}
             />
-            <section className={cn(panel, "p-5 sm:p-6")}>
+            <section className={cn(panel, "p-4 sm:p-5")}>
               {summaryLoading ? (
                 <p
                   className="flex items-center gap-2 py-3 text-[12.5px] text-muted-foreground"
@@ -939,7 +1663,7 @@ export function ProfilePage() {
         >
         {/* the head — one way back to the Mirror, one name */}
         <header className="shrink-0 border-b hairline bg-[var(--glass-bg-soft)] backdrop-blur-xl">
-          <div className="mx-auto flex w-full max-w-6xl items-center gap-3 px-4 py-3 sm:px-8">
+          <div className="mx-auto flex w-full max-w-6xl items-center gap-3 px-4 py-2.5 sm:px-8">
             <button
               type="button"
               onClick={close}

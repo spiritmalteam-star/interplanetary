@@ -73,6 +73,7 @@ export async function GET(req: NextRequest) {
         priceCents: plan.priceCents,
         features: plan.features,
         monthlyCredits: plan.monthlyCredits,
+        apiAccess: plan.apiAccess,
         status: subscription?.status ?? "active",
         cancelAtPeriodEnd: subscription?.cancelAtPeriodEnd ?? false,
         renewsAt: credits?.periodEnd ?? subscription?.currentPeriodEnd ?? null,

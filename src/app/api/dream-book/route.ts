@@ -537,6 +537,11 @@ function buildUserPrompt(body: {
       SEALED_NAME_LAW,
       ``,
       `Write the NEXT ${span === 2 ? "TWO pages" : `${span} pages`} (pages ${body.pageNumber} through ${(body.pageNumber ?? 2) + span - 1}) of the same volume, in the same voice. Let the book deepen: a new turn, a revelation earned by what came before, the world growing one ring wider. Open a new chapter here ONLY if the loom's rhythm asks for it.`,
+      ...(span > 2
+        ? [
+            `THE REVEAL STRIDE (absolute — the visitor asked the loom to channel the whole book): return ALL ${span} pages, never fewer — each page carries 1–2 paragraphs (3 only at a true turning point), every paragraph 2–4 sentences. The reader turns quickly; the telling stays whole but never lingers. Return exactly ${span} page objects, numbered in order, no gaps.`,
+          ]
+        : []),
       `Return the updated thread and the updated ledger.`
     );
   } else if (phase === "extend") {
@@ -719,11 +724,12 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
     const threads = typeof body?.threads === "string" ? body.threads.slice(0, 2000) : undefined;
     /* THE LEDGER (V10) — the room hands the book's own memory back */
     const incomingLedger = parseLedger(body?.ledger);
-    /* THE SPAN — the whole-book reveal strides four pages at a time;
-       every other call writes the classic pair */
+    /* THE SPAN — the whole-book reveal strides eight pages at a time;
+       every other call writes the classic pair. The wider stride is
+       the speed law: half the sky-crossings for the same book. */
     const spanRaw = Number(body?.span);
     const span = phase === "next" && Number.isFinite(spanRaw)
-      ? Math.min(4, Math.max(2, Math.round(spanRaw)))
+      ? Math.min(8, Math.max(2, Math.round(spanRaw)))
       : 2;
     const rewrites: string[] = Array.isArray(body?.rewrites)
       ? body.rewrites

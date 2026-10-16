@@ -63,6 +63,7 @@ import type { VoiceId } from "@/lib/i18n/core";
 import type { BookAudit, BookLedger } from "@/lib/book-ledger";
 import { AUDIT_DIMENSIONS } from "@/lib/book-ledger";
 import { downloadBookPdf } from "@/lib/book-pdf";
+import { recordDownload } from "@/lib/downloads-log";
 import { cn } from "@/lib/utils";
 
 /* ------------------------------------------------------------------ */
@@ -958,7 +959,7 @@ export function DreamBookView() {
           continue;
         }
         const before = pagesRef.current.length;
-        const ok = await weave("next", have + 1, 4, 240000);
+        const ok = await weave("next", have + 1, 8, 300000);
         if (cancelRevealRef.current) break;
         if (!ok) {
           /* a weave refused because another breath held the loom is
@@ -1004,6 +1005,11 @@ export function DreamBookView() {
     if (binding || !meta || pagesRef.current.length === 0) return;
     setBinding(true);
     try {
+      const bound = dedupeChapters(pagesRef.current).map((p) => ({
+        n: p.n,
+        ...(p.chapter ? { chapter: p.chapter } : {}),
+        paragraphs: p.paragraphs,
+      }));
       await downloadBookPdf(
         {
           title: meta.title,
@@ -1013,12 +1019,25 @@ export function DreamBookView() {
           dedication: meta.dedication,
           totalPages: meta.totalPages,
         },
-        dedupeChapters(pagesRef.current).map((p) => ({
-          n: p.n,
-          ...(p.chapter ? { chapter: p.chapter } : {}),
-          paragraphs: p.paragraphs,
-        }))
+        bound
       );
+      /* the shelf of bound works — the volume keeps itself on the
+         visitor's own device so the profile's downloads can hand it
+         back, bound again, whenever it is wanted */
+      recordDownload({
+        title: meta.title,
+        subtitle: meta.subtitle,
+        pages: bound.length,
+        meta: {
+          title: meta.title,
+          subtitle: meta.subtitle,
+          sigil: meta.sigil,
+          axiom: meta.axiom,
+          dedication: meta.dedication,
+          totalPages: meta.totalPages,
+        },
+        pageList: bound,
+      });
       toast.success(t("The book is bound — the PDF is yours"));
     } catch {
       toast.error(t("The binding press needs a breath — try again"));
@@ -2388,9 +2407,26 @@ export function DreamBookView() {
             </div>
             <p className="ink-hand ink-faint mt-5 max-w-[320px] text-center text-[11.5px] italic leading-relaxed text-muted-foreground">
               {t(
-                "The loom weaves four pages at a stride — long books take their time; the telling never breaks."
+                "The loom weaves in swift strides — long books take their time; the telling never breaks."
               )}
             </p>
+            {/* THE BINDING HAND DURING THE WALK — the visitor never has
+                to wait for the whole breath: whatever the loom has
+                already woven can be bound into its PDF right now */}
+            <button
+              type="button"
+              onClick={() => void downloadWhole()}
+              disabled={binding || wholeReveal.woven === 0}
+              data-testid="dream-download-mid-reveal"
+              className="focus-glow mt-5 flex h-9 items-center gap-2 rounded-full border border-foreground/25 px-4 text-[12.5px] text-foreground/85 transition-all duration-300 hover:border-foreground/45 hover:text-foreground disabled:opacity-35"
+            >
+              {binding ? (
+                <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
+              ) : (
+                <Download className="size-3.5" aria-hidden="true" />
+              )}
+              {t("Bind what is woven")}
+            </button>
           </motion.div>
         )}
       </AnimatePresence>
