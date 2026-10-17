@@ -2216,3 +2216,163 @@ html:not(.dark) .scope-lightcodes {
     animation: none;
   }
 }
+
+/* ==================================================================
+   THE FRONT PORCH — the landing page.
+   Light porcelain by default; under .dark it becomes the portal of
+   the mirror (void ground, gold/teal/lavender glows). Scoped entirely
+   under .landing so the chamber above stays untouched.
+   ================================================================== */
+.landing {
+  --lp-bg: #f8f5ef;
+  --lp-ink: #26242c;
+  --lp-muted: #6f6a78;
+  --lp-card: rgba(255, 255, 255, 0.8);
+  --lp-line: rgba(38, 36, 44, 0.1);
+  --lp-gold: #a97f2e;
+  --lp-teal: #2e8d7d;
+  --lp-lav: #7a68c0;
+  --lp-glow-gold: rgba(224, 186, 118, 0.42);
+  --lp-glow-teal: rgba(111, 212, 191, 0.3);
+  --lp-glow-lav: rgba(185, 167, 230, 0.34);
+  --lp-nav: color-mix(in srgb, #f8f5ef 80%, transparent);
+  --lp-panel: linear-gradient(160deg, #fdfcf9 0%, #f7f0e3 52%, #f2ebdd 100%);
+  --lp-shadow: 0 34px 90px -42px rgba(38, 36, 44, 0.4);
+
+  background: var(--lp-bg);
+  color: var(--lp-ink);
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--lp-ink) 22%, transparent) transparent;
+}
+.dark .landing {
+  --lp-bg: #0b0a12;
+  --lp-ink: #ece7dd;
+  --lp-muted: #a49db4;
+  --lp-card: rgba(255, 255, 255, 0.045);
+  --lp-line: rgba(236, 231, 221, 0.14);
+  --lp-gold: #e0ba76;
+  --lp-teal: #6fd4bf;
+  --lp-lav: #b9a7e6;
+  --lp-glow-gold: rgba(224, 186, 118, 0.22);
+  --lp-glow-teal: rgba(111, 212, 191, 0.17);
+  --lp-glow-lav: rgba(185, 167, 230, 0.22);
+  --lp-nav: color-mix(in srgb, #0b0a12 74%, transparent);
+  --lp-panel: linear-gradient(160deg, #13101d 0%, #0d0b14 52%, #110e1a 100%);
+  --lp-shadow: 0 34px 90px -42px rgba(0, 0, 0, 0.8);
+}
+.landing ::selection {
+  background: color-mix(in srgb, var(--lp-gold) 32%, transparent);
+}
+.landing::-webkit-scrollbar {
+  width: 10px;
+}
+.landing::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--lp-ink) 20%, transparent);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+/* — the portal mouth: the whole porch folds itself into the arch.
+     (the clip-path values themselves are set inline by React — the
+     css transformer drops ellipse()+var() declarations, so only the
+     transition lives here) — */
+.portal-open {
+  transition: clip-path 0.8s cubic-bezier(0.8, 0, 0.18, 1) 0.08s;
+  pointer-events: none;
+}
+.landing-bloom {
+  position: fixed;
+  z-index: 99;
+  width: 44px;
+  height: 44px;
+  margin: -22px 0 0 -22px;
+  border-radius: 9999px;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(
+    circle,
+    rgba(255, 243, 214, 0.98) 0%,
+    rgba(224, 186, 118, 0.62) 42%,
+    rgba(224, 186, 118, 0) 72%
+  );
+  animation: rm-bloom 0.95s cubic-bezier(0.22, 0.61, 0.21, 1) 0.05s forwards;
+}
+@keyframes rm-bloom {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(84);
+    opacity: 0;
+  }
+}
+
+/* — slow life: breathing arch rings and drifting glow orbs — */
+.portal-breathe {
+  animation: rm-portal-breathe 3.4s ease-in-out infinite;
+}
+@keyframes rm-portal-breathe {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.95;
+    transform: scale(1.035);
+  }
+}
+.landing-orb {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(64px);
+  pointer-events: none;
+  animation: rm-orb-drift 9s ease-in-out infinite;
+}
+@keyframes rm-orb-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(0, -18px, 0) scale(1.07);
+  }
+}
+
+/* — the softened ink wash behind the hero words — */
+.landing-wash {
+  background:
+    radial-gradient(52rem 30rem at 16% 8%, var(--lp-glow-gold), transparent 68%),
+    radial-gradient(44rem 28rem at 86% 22%, var(--lp-glow-teal), transparent 70%),
+    radial-gradient(50rem 34rem at 50% 100%, var(--lp-glow-lav), transparent 72%);
+}
+.landing-panel {
+  background: var(--lp-panel);
+}
+.landing-card {
+  background: var(--lp-card);
+  border: 1px solid var(--lp-line);
+  box-shadow: var(--lp-shadow);
+}
+
+/* — the visitor who prefers stillness: no fold, only a quiet fade — */
+@media (prefers-reduced-motion: reduce) {
+  .landing {
+    transition: opacity 0.3s ease !important;
+  }
+  .portal-open {
+    clip-path: none !important;
+    opacity: 0 !important;
+    transition: opacity 0.3s ease !important;
+  }
+  .landing-bloom,
+  .portal-breathe,
+  .landing-orb {
+    animation: none !important;
+  }
+}
