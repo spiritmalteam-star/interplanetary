@@ -3869,3 +3869,17 @@ Work Log:
 Stage Summary:
 - Task 58 stands verified end to end in both viewports; nothing was missing in the code — the visitor was looking at a lamp that never lit. The empty-commit push forces vercel to rebuild the porch-less chamber; after this deploy the door opens straight into the branches, the wall pours twenty by twenty after the walker's own evolution, and the kategory folds in one touch.
 - Artifacts: empty commit 5c653e1 on origin/main (deployment retrigger), this worklog entry; no code changed — the Task 58 code (2004ef4) is the code that ships.
+
+---
+Task ID: 58-c
+Agent: Z.ai Code (main)
+Task: The visitor asked about a gateway error ("session_failed / session init failed") — and the health check beside it exposed the Task 54 incident recurring: an external restore had swapped the whole workshop (.git + working tree) back to f9b1f59, the checkpoint before Task 58, while github kept every commit.
+
+Work Log:
+- THE GATEWAY ERROR: "session init failed" with the visitor's chat_id is the chat platform's own IM gateway failing to open a session — platform-side and transient (the same sign appeared during task 56 and healed itself). It never touched the project; the messages still arrived and the work stands.
+- THE ROLLBACK RECURRENCE: the health check found HEAD at f9b1f59 (post-task-57-worklog) with a clean tree and a TRUNCATED reflog — the signature of an external snapshot restore, exactly the task 54 pattern: the local workshop moved back in time while the remote kept the whole chain (ls-remote confirmed origin/main = 8e396ef).
+- THE CURE (the task 54 remedy, applied at once): fetch from the remote with the current token, hard reset to FETCH_HEAD — HEAD came home to 8e396ef with the full task 58 chain (2004ef4 → cb22827 → c5eb711 → 5c653e1 → 8e396ef). Working tree verified: src/components/landing/ gone, page.tsx renders <AppShell /> straight, GLYPH_FIRST/GLYPH_BATCH = 20 standing in BranchCanopy.
+- THE SERVER: dev server was serving the restored old tree — killed per the OOM law and started fresh (HTTP 200). Browser sanity at 390×844: no landing, twenty stones resting, the kategory pill in place, zero page errors.
+
+Stage Summary:
+- The workshop was dragged back in time a second time by an external restore; github never lost a stone. The hard reset brought the whole chain home again and the preview serves the true state: no porch, the tree at the door, the wall pouring by twenties. Future sessions: on any sign of "no changes been made", first read HEAD against ls-remote — the restore may strike again; the cure is fetch + reset --hard to origin/main.
