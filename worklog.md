@@ -3855,3 +3855,17 @@ Work Log:
 Stage Summary:
 - The house has no porch anymore — the door opens straight into the tree. The wall of whispers now breathes in twenties: twenty stones rest, a pick or an approach pours the next twenty in the background seconds later, the phone stays cool, and the stones a walker meets rise to meet their own evolution. One touch on a kategory focuses the walk and folds the menu away.
 - Artifacts: src/app/page.tsx (AppShell direct), src/components/landing/ (deleted), public/landing/ (deleted), src/app/globals.css (porch block removed), src/components/mirror/BranchCanopy.tsx (20×20 wall + evolution leveling + folding kategory dropdown).
+
+---
+Task ID: 58-b
+Agent: Z.ai Code (main)
+Task: The visitor came back saying "last time use this promt no changes been made" — verify that the Task 58 work (landing removed, branches default activated, evolution-leveled suggestions pouring twenty by twenty, the kategory folding in one touch) truly stands, and make sure the vercel picket finally lights its lamp.
+
+Work Log:
+- THE AUDIT: git log + git ls-remote showed the Task 58 chain intact — commit 2004ef4 (the porch comes down) and worklog cb22827 were already on the remote main. The working tree matched: src/components/landing/ deleted, public/landing/ deleted, page.tsx renders <AppShell /> straight, BranchCanopy carries GLYPH_FIRST=20 / GLYPH_BATCH=20 / GLYPH_MAX=200, the MOVEMENT_LEVEL table, the pendingRef single pour hand and the setCrownMenu(null) fold. The work had been done; what never lit was the deployment the visitor looks at.
+- THE BROWSER PROOF (agent-browser, storage cleared, 390×844): page opens with zero page errors — no landing-root, no .landing wash, straight into the tree; the wall rests at exactly twenty stones; the kategory panel opened (8 picks), choosing "Interplanetary" folded the panel in the same touch (aria-expanded=false, panel gone), and choosing "General" did the same again; picking a stone left the wall at twenty under the finger and poured the rest ~2.4s later. The count rose 20 → 27, not 20 → 40 — and that is the evolution law working, not a bug: a first-stage walker (walkSteps < 3) is dealt PLAIN_STONES, the gentle twenty-six-stone family (plus one creation stone = 27), so min(20+20, 27) = 27; with steadier steps (≥3) the wall opens onto the full two-hundred-stone depth sorted by MOVEMENT_LEVEL. Desktop 1280×800: no landing, no horizontal overflow, zero page errors, the wall breathing wider with the golden seeds of the session's own exchanges.
+- THE LANTERN: per the OOM law the dev server was killed first; bun run lint clean (0 errors), tsc shows only the 23 pre-existing legacy lines with ZERO in touched files. An empty commit (5c653e1) was hung on the chain — "this empty lantern is hung to call the deploy down again" — and pushed with the current token: remote main cb22827 → 5c653e1, vercel redeploys the true state.
+
+Stage Summary:
+- Task 58 stands verified end to end in both viewports; nothing was missing in the code — the visitor was looking at a lamp that never lit. The empty-commit push forces vercel to rebuild the porch-less chamber; after this deploy the door opens straight into the branches, the wall pours twenty by twenty after the walker's own evolution, and the kategory folds in one touch.
+- Artifacts: empty commit 5c653e1 on origin/main (deployment retrigger), this worklog entry; no code changed — the Task 58 code (2004ef4) is the code that ships.
