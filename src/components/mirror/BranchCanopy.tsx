@@ -1184,8 +1184,25 @@ function LightToggle({ testIdPrefix }: { testIdPrefix: string }) {
    (opacity + transform only, compositor work), no drift, no JS
    clocks — the phone stays cool. */
 
-const GLYPH_FIRST = 18; /* the resting family — the small-family law */
-const GLYPH_POOL = 36; /* the whole wall: first family + the deep rows */
+const GLYPH_FIRST = 20; /* the resting family — twenty stones, no more */
+const GLYPH_BATCH = 20; /* the wall grows twenty by twenty — each pour
+                           carved in the background, after a breath, so
+                           the phone never heats and never lags */
+const GLYPH_MAX = 200; /* the wall's whole depth — ten pours, bounded */
+
+/* THE WALK'S OWN LEVEL — the stones the visitor meets follow their
+   evolution: a young walk opens gentle doors (reflect, deepen,
+   pause) and the deep walk meets the forge-facing movements
+   (contrast, apply, create) at its head. Laid as a stable order OVER
+   the hour's own seeded shuffle, so the level never breaks the deal. */
+const MOVEMENT_LEVEL: Record<
+  "first" | "steady" | "deep",
+  Record<BranchType, number>
+> = {
+  first: { reflect: 0, deepen: 1, pause: 1, connect: 2, apply: 3, create: 4, contrast: 4 },
+  steady: { deepen: 0, connect: 0, reflect: 1, apply: 1, contrast: 2, create: 2, pause: 3 },
+  deep: { contrast: 0, apply: 0, create: 0, deepen: 1, connect: 2, reflect: 2, pause: 3 },
+};
 
 interface GlyphWhisper {
   text: string;
@@ -1478,6 +1495,7 @@ const GlyphTile = memo(function GlyphTile({
 const GlyphWall = memo(function GlyphWall({
   whispers,
   entry,
+  stage,
   golden,
   disabled,
   hour,
@@ -1493,6 +1511,9 @@ const GlyphWall = memo(function GlyphWall({
       carved from while the wall still advances (undefined once the
       deep grove owns the whole wall). */
   entry?: GlyphWhisper[];
+  /** THE WALK'S OWN LEVEL — the visitor's evolution, reading which
+      movements rise to the wall's head. */
+  stage: "first" | "steady" | "deep";
   golden: GenealogySeed[];
   disabled?: boolean;
   hour: number;
@@ -1504,9 +1525,19 @@ const GlyphWall = memo(function GlyphWall({
   testIdPrefix: string;
 }) {
   const t = useT();
-  /* the deep rows — the wall's second family, uncovered by sliding */
-  const [deep, setDeep] = useState(false);
+  /* THE WALL'S REVEAL — twenty stones stand first; every further
+     pour adds twenty more, carved in the background after a breath
+     (the pick's own pour and the sliding ear share one hand, so the
+     wall never grows twice at once and the phone stays cool) */
+  const [visible, setVisible] = useState(GLYPH_FIRST);
   const deepRef = useRef<HTMLDivElement | null>(null);
+  const pendingRef = useRef<number | null>(null);
+  useEffect(
+    () => () => {
+      if (pendingRef.current != null) window.clearTimeout(pendingRef.current);
+    },
+    []
+  );
 
   const tiles = useMemo(() => {
     const out: GlyphTileData[] = [];
@@ -1543,9 +1574,18 @@ const GlyphWall = memo(function GlyphWall({
           hashWalk(`wall-entry:${hour}:${salt}:${focusKey}`)
         )
       : null;
+    /* THE WALK'S OWN LEVEL — the grove's stones level themselves to
+       the visitor's evolution before the wall carves them */
+    const level = MOVEMENT_LEVEL[stage];
+    const leveled =
+      stage === "steady"
+        ? shuffled
+        : [...shuffled].sort(
+            (a, b) => (level[a.movement] ?? 2) - (level[b.movement] ?? 2)
+          );
     let resting = 0;
-    for (const w of entryShuffled ?? shuffled) {
-      if (resting >= GLYPH_FIRST || out.length >= GLYPH_POOL) break;
+    for (const w of entryShuffled ?? leveled) {
+      if (resting >= GLYPH_FIRST || out.length >= GLYPH_MAX) break;
       const k = w.text.toLowerCase();
       if (seen.has(k)) continue;
       seen.add(k);
@@ -1557,8 +1597,8 @@ const GlyphWall = memo(function GlyphWall({
       });
       resting++;
     }
-    for (const w of shuffled) {
-      if (out.length >= GLYPH_POOL) break;
+    for (const w of leveled) {
+      if (out.length >= GLYPH_MAX) break;
       const k = w.text.toLowerCase();
       if (seen.has(k)) continue;
       seen.add(k);
@@ -1585,37 +1625,64 @@ const GlyphWall = memo(function GlyphWall({
         creation: door,
         topic,
       });
-      if (out.length > GLYPH_POOL) out.pop();
+      if (out.length > GLYPH_MAX) out.pop();
     }
     return out;
-  }, [whispers, entry, golden, hour, salt, focusKey, t]);
+  }, [whispers, entry, stage, golden, hour, salt, focusKey, t]);
 
-  /* the deep rows rest again whenever the wall is re-poured — the
-     wall is keyed by its own deal at the render site, so a fresh
-     pour is a fresh wall (no effect, no state sync) */
+  /* the wall's length rides a ref — the deferred pours read it
+     without re-knitting their own closures (kept current by an
+     effect; the pours fire seconds later, long after it runs) */
+  const tilesLenRef = useRef(0);
+  useEffect(() => {
+    tilesLenRef.current = tiles.length;
+  }, [tiles.length]);
+  const schedulePour = useCallback((delay: number) => {
+    if (pendingRef.current != null) return;
+    pendingRef.current = window.setTimeout(() => {
+      pendingRef.current = null;
+      setVisible((v) => Math.min(v + GLYPH_BATCH, tilesLenRef.current));
+    }, delay);
+  }, []);
+
+  /* THE PICK'S OWN POUR — the moment a stone is pressed, the next
+     twenty begin carving themselves in the background; a few seconds
+     later they stand ready. No work under the finger, no heat. */
+  const handlePick = useCallback(
+    (text: string, move: BranchType) => {
+      schedulePour(2400);
+      onPick(text, move);
+    },
+    [onPick, schedulePour]
+  );
 
   /* THE DEEP EAR — one IntersectionObserver hears the visitor slide
-     toward the wall's foot and weaves the second family in; no scroll
-     clocks, no per-frame work, one reveal and it rests forever */
-  const hasDeep = tiles.length > GLYPH_FIRST;
+     toward the wall's foot and pours the next twenty in, after a
+     breath. The ear re-arms with every pour until the wall's whole
+     depth stands carved. */
+  const hasMore = tiles.length > visible;
   useEffect(() => {
-    if (deep || !hasDeep) return;
+    if (!hasMore) return;
     const el = deepRef.current;
     if (!el) return;
     const io = new IntersectionObserver(
       (es) => {
         if (es.some((e) => e.isIntersecting)) {
-          setDeep(true);
           io.disconnect();
+          schedulePour(1400);
         }
       },
       { root: el.closest("[data-glyph-scroll]"), rootMargin: "220px 0px" }
     );
     io.observe(el);
     return () => io.disconnect();
-  }, [deep, hasDeep]);
+  }, [hasMore, visible, schedulePour]);
 
-  const shown = deep ? tiles : tiles.slice(0, GLYPH_FIRST);
+  const shown = tiles.slice(0, visible);
+
+  /* the deep rows rest again whenever the wall is re-poured — the
+     wall is keyed by its own deal at the render site, so a fresh
+     pour is a fresh wall (no effect, no state sync) */
 
   return (
     <div
@@ -1654,7 +1721,7 @@ const GlyphWall = memo(function GlyphWall({
             key={`${i}:${tile.text}`}
             tile={tile}
             disabled={disabled}
-            onPick={onPick}
+            onPick={handlePick}
             onCreation={onCreation}
             testId={testIdPrefix}
             bloomDelay={Math.min(
@@ -1663,9 +1730,9 @@ const GlyphWall = memo(function GlyphWall({
             )}
           />
         ))}
-        {/* THE DEEP EAR — the sentinel resting between the two
-            families, heard only while the deep rows still sleep */}
-        {!deep && hasDeep && (
+        {/* THE DEEP EAR — the sentinel resting at the wall's foot,
+            heard only while deeper rows still wait beneath */}
+        {hasMore && (
           <div ref={deepRef} aria-hidden="true" className="col-span-full h-px" />
         )}
       </div>
@@ -1674,7 +1741,7 @@ const GlyphWall = memo(function GlyphWall({
           the stone anew. It stands ABOVE the whisper line: fully
           visible at the end of the wall, never behind the input — the
           breath of space below it belongs to the input bar. */}
-      {(deep || !hasDeep) && (
+      {!hasMore && (
         <div className="relative flex justify-center px-3 pb-44">
           <button
             type="button"
@@ -2185,7 +2252,7 @@ export function BranchCanopy({
         grove,
         hashWalk(`realm:${hour}:${salt}:${focusKey}`)
       )
-        .slice(0, GLYPH_POOL)
+        .slice(0, GLYPH_MAX)
         .map((w) => ({ ...w, score: 0 }));
     }
     if (grove.length === 0 || !field || !idf) return [];
@@ -3978,6 +4045,9 @@ export function BranchCanopy({
                     <button
                       type="button"
                       onClick={() => {
+                        /* the pick itself closes the dropdown — the
+                            visitor never clicks twice to walk on */
+                        setCrownMenu(null);
                         /* already the whole house — the walk rests */
                         if (mixIsGeneral(mix)) return;
                         applyMix({ on: allFamilyKeys(), weights: evenWeights() });
@@ -4029,7 +4099,11 @@ export function BranchCanopy({
                             /* THE FOCUS LAW — one touch on a category
                                focuses the whole walk on that nature: the
                                tree grows its branches and every room
-                               speaks with that world's own voice. */
+                               speaks with that world's own voice.
+                               THE FOLDING LAW — the dropdown folds
+                               itself the moment a kategory is chosen,
+                               so the walk continues in one touch. */
+                            setCrownMenu(null);
                             if (focused) return;
                             applyMix({ on: [f.key], weights: { [f.key]: 1 } });
                             import("sonner").then(({ toast }) =>
@@ -4265,6 +4339,7 @@ export function BranchCanopy({
             key={`${hour}:${salt}:${focusKey}`}
             whispers={glyphStage === "first" ? PLAIN_STONES : glyphWhispers}
             entry={glyphStage === "steady" ? PLAIN_STONES : undefined}
+            stage={glyphStage}
             golden={goldenSeeds}
             disabled={disabled}
             hour={hour}
