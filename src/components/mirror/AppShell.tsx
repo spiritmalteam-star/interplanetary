@@ -365,6 +365,7 @@ function AppShellViews() {
       <CosmicBackdrop />
       <StarField />
       <BranchCanopy
+        realm
         category={activeMode}
         open={true}
         onPick={(q, scope, attachments) => {
