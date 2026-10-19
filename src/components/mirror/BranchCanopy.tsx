@@ -4393,7 +4393,12 @@ export function BranchCanopy({
                 height: tree.geometry.height,
                 transform: `scale(${treeZoom})`,
                 transformOrigin: "0 0",
-                willChange: layerLive ? "transform" : undefined,
+                /* THE LAYER'S OWN LAW — once the family is zoomed, its
+                   layer stays promoted until the walk rests at scale 1:
+                   a layer torn down mid-gesture is a flash across the
+                   whole tree, the one flicker the walk must never show */
+                willChange:
+                  layerLive || treeZoom !== 1 ? "transform" : undefined,
                 isolation: "isolate",
               }}
             >
