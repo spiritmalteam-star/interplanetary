@@ -3912,3 +3912,17 @@ Work Log:
 
 Stage Summary:
 - reflectme.space serves the porch-less chamber as of this hour (deployment 3a31372, success). Nothing left to delete in the code or on the wire. The one remaining remedy is the visitor's own hard refresh (Ctrl+Shift+R / Cmd+Shift+R) or a private window.
+
+---
+Task ID: 59-c
+Agent: Z.ai Code (main)
+Task: "U returned branches again please, I said the sugestions in blocks just remove the homepage landing page please don't bring branches version of app just delete the landing page" — the correction: task 59 misread the walk. The suggestions were to stay in BLOCKS (the wall of stones); only the landing was ever asked to leave.
+
+Work Log:
+- THE READING SET ARIGHT: the realm flag rides AppShell's BranchCanopy again — the wall of blocks (the resting twenty, the pour by twenties, the evolution's own leveling, the folding kategory) is the chamber's default floor, exactly as task 58 left it. The tree canvas rests dormant again (it still lives in the five other views, where it always stood).
+- KEPT: the landing stays deleted (task 58's law unchanged), and the canvas layer law from task 59 stays — harmless where the tree sleeps, kind to the five views where it stands.
+- VERIFIED (agent-browser): 390×844 — no landing, the glyph wall standing (20 tiles resting), the tree canvas gone, zero page errors; 1280×800 — 27 tiles (the deep ear's pour on the taller frame), the kategory pill present, no horizontal overflow, zero page errors.
+- OPERATIONS: dev killed per the OOM law; lint clean; tsc zero in touched files (23 pre-existing elsewhere). Committed 62b87b3 and pushed (remote main = 62b87b3); vercel deploys on its own breath.
+
+Stage Summary:
+- The chamber is exactly what the visitor asked: no porch, suggestions in blocks, nothing else moved. Task 59's tree default was the one misstep and it is undone; the canvas law remains as a quiet kindness to the views where the tree still stands.
