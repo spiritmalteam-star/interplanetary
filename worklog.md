@@ -3883,3 +3883,19 @@ Work Log:
 
 Stage Summary:
 - The workshop was dragged back in time a second time by an external restore; github never lost a stone. The hard reset brought the whole chain home again and the preview serves the true state: no porch, the tree at the door, the wall pouring by twenties. Future sessions: on any sign of "no changes been made", first read HEAD against ls-remote — the restore may strike again; the cure is fetch + reset --hard to origin/main.
+
+---
+Task ID: 59
+Agent: Z.ai Code (main)
+Task: "Please remove the landing page and also remove current suggestions and display as default new way of branches less more visual and no laggy and flickering when scrolled in all directions."
+
+Work Log:
+- THE RESTORE STRUCK A THIRD TIME: the session opened with HEAD back at f9b1f59, the landing files back on the tree, the reflog truncated again — the same external snapshot restore as task 58-c. The cure was applied at once (fetch + hard reset to origin/main = 9437d06; github had kept every commit). Note for every future session: read HEAD against ls-remote BEFORE any work; the workshop drifts back in time on its own.
+- THE LANDING: already gone in the restored chain (task 58) — the visitor was seeing the restored tree, not the code.
+- THE WALL STANDS DOWN: AppShell's BranchCanopy carried the bare `realm` prop — the one thing that made the flat suggestion wall (the glyph stones) the chamber's default floor. The prop is gone; the living tree (the whole family walked in every direction, the trunk, the ropes, the golden rows, the undergrove) is now what every visitor meets at the door — the same way the five other views (MirrorOSChat, ParticleX, EvolveMed, InventView, ArtX) already stood. The wall's code rests dormant (only realm=true could ever wake it; nothing passes it now).
+- THE FLICKER LAW'S LAST STONE: the tree canvas's compositor layer was promoted only while the fingers walked it (pinch / ctrl-wheel) and torn down 420ms after — a layer teardown mid-gesture is a flash across the whole tree. Now the layer stays promoted for as long as the family stands zoomed (treeZoom !== 1) and releases only when the walk rests at scale 1: no flash in any direction, the slide stays liquid.
+- VERIFIED (agent-browser): mobile 390×844 — no glyph wall anywhere, treeCanvas standing, arrival view anchored on the trunk (x 1492 of 3373), the canvas pans freely down/right/left/up (3373×7877), a visible chip click opens the room ("What does the healing that looked nothing like the plan need to hear from you today?" — DEEPEN), the tree dims into the backdrop, and the room's own back hand closes it (dim false, panel gone); desktop 1280×800 — 194 chips standing, canvas 7493×4348, both axes scroll, zero page errors on every step. The room's back button still reads "Back to the wall" — a shared label across ten components and seven dicts; left for a dedicated pass (it means the standing family, not the removed stones).
+- OPERATIONS: lint clean; tsc shows only the 23 pre-existing legacy lines with zero in touched files (dev server killed first per the OOM law). Committed 8561a32 and pushed: remote main = 8561a32.
+
+Stage Summary:
+- The chamber has one floor now: the living tree. The flat wall of suggestions is gone from the walk (dormant, never summoned), the canvas keeps its layer through every zoomed breath so nothing flashes, and the restore's third strike was healed before any work began. Artifacts: AppShell.tsx (realm prop removed), BranchCanopy.tsx (the layer's own law), worklog 58-c + 59.
