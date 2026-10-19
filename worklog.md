@@ -3899,3 +3899,16 @@ Work Log:
 
 Stage Summary:
 - The chamber has one floor now: the living tree. The flat wall of suggestions is gone from the walk (dormant, never summoned), the canvas keeps its layer through every zoomed breath so nothing flashes, and the restore's third strike was healed before any work began. Artifacts: AppShell.tsx (realm prop removed), BranchCanopy.tsx (the layer's own law), worklog 58-c + 59.
+
+---
+Task ID: 59-b
+Agent: Z.ai Code (main)
+Task: "Landing still exists reflectme.space … Please delete" — the visitor pasted the whole old porch (the letter, the ten windows, the M.E door) and asked for its deletion.
+
+Work Log:
+- THE RESTORE'S FOURTH STRIKE: the session opened with HEAD back at f9b1f59, the landing files on the tree again — cured at once (fetch + hard reset to origin/main = 3a31372; github kept every commit).
+- THE VERDICT, READ FROM THE WIRES: the github api shows vercel[bot] IS alive — it recorded deployments for the newest chain, and the deployment of 3a31372 (2026-10-19T11:25:09Z) stands at state "success". Curling https://reflectme.space (308 → www) live: the served title is "Mirror Entity Digital Chamber — Interplanetary Channel" and a grep for every porch signature ("I am the Mirror Entity", "step through", "Ten windows, one mirror", "the mirror entity") returns ZERO matches. The porch is already dead on the production wire; the visitor was reading a page their own browser had cached.
+- THE HOUSEKEEPING: dev server restarted on the cured tree (HTTP 200). No service worker exists in the repo (public/ carries none) — nothing on our side can pin the old page; the cache is the visitor's browser alone.
+
+Stage Summary:
+- reflectme.space serves the porch-less chamber as of this hour (deployment 3a31372, success). Nothing left to delete in the code or on the wire. The one remaining remedy is the visitor's own hard refresh (Ctrl+Shift+R / Cmd+Shift+R) or a private window.
