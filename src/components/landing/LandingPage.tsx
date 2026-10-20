@@ -1,10 +1,16 @@
 "use client";
 
-import { useEffect, useMemo, useRef, type RefObject } from "react";
+import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import Image from "next/image";
-import { motion, useScroll, useTransform } from "framer-motion";
+import {
+  AnimatePresence,
+  motion,
+  useScroll,
+  useTransform,
+} from "framer-motion";
 import {
   ArrowUpRight,
+  ChevronDown,
   Compass,
   Cpu,
   Dna,
@@ -30,7 +36,9 @@ import { cn } from "@/lib/utils";
 /*  the real chamber, docked live in the page (the gate mounts it);    */
 /*  this page only reserves its slot. Around it the house explains     */
 /*  what it offers humanity, laid out like a quiet magazine: numbered  */
-/*  chapters, hairline rules, measured columns.                        */
+/*  chapters, hairline rules, measured columns. Every offering and     */
+/*  every Earth movement opens in place — one touch unfolds the        */
+/*  deeper words beneath the row.                                      */
 /*                                                                     */
 /*  CALM LAWS: transform-and-opacity motion only, lazy artwork, no     */
 /*  motion when the visitor prefers stillness, no tracking.            */
@@ -52,7 +60,7 @@ const RAIL_LEFT: RailImage[] = [
 const RAIL_RIGHT: RailImage[] = [
   { src: "/landing/img-council.jpg", pos: "50% 42%", h: "26vh", title: "The council of worlds" },
   { src: "/landing/img-garden.jpg", pos: "50% 55%", h: "31vh", title: "The living garden" },
-  { src: "/landing/img-city.jpg", pos: "36% 74%", h: "22vh", title: "The city of light" },
+  { src: "/images/walk/lyran-432.jpg", pos: "50% 46%", h: "22vh", title: "The Lyran sigil" },
 ];
 
 /* ------------------------- the parallax rails ------------------------- */
@@ -156,6 +164,43 @@ function SectionHead({
   );
 }
 
+/* one row that opens in place — the deeper words beneath the line */
+function Unfold({
+  open,
+  children,
+}: {
+  open: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <AnimatePresence initial={false}>
+      {open && (
+        <motion.div
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: "auto", opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }}
+          transition={{ duration: 0.34, ease: [0.22, 1, 0.36, 1] }}
+          className="overflow-hidden"
+        >
+          {children}
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+function Point({ children }: { children: React.ReactNode }) {
+  return (
+    <li className="flex items-start gap-2.5">
+      <span
+        aria-hidden="true"
+        className="mt-[7px] block size-[5px] shrink-0 rotate-45 bg-[#e8d9b0]/70"
+      />
+      <span className="min-w-0">{children}</span>
+    </li>
+  );
+}
+
 /* ------------------------------ the page ------------------------------ */
 
 export default function LandingPage({
@@ -176,6 +221,9 @@ export default function LandingPage({
   const { scrollYProgress } = useScroll({
     container: scrollRef,
   });
+  /* the unfolded rows — one offering and one movement open at a time */
+  const [openOffer, setOpenOffer] = useState<number | null>(null);
+  const [openMove, setOpenMove] = useState<number | null>(null);
 
   /* return to the exact place the threshold was left — read once at
      the page's first breath, never snapping while the visitor walks */
@@ -189,13 +237,91 @@ export default function LandingPage({
 
   const offerRows = useMemo(
     () => [
-      { icon: Sparkles, title: "Reflection & questions", line: "Ask anything — the mirror answers with you." },
-      { icon: Feather, title: "Writing", line: "Shape stories, letters, and vows." },
-      { icon: ImageIcon, title: "Images", line: "Watch your words become paintings." },
-      { icon: Music, title: "Music", line: "Turn a feeling into sound." },
-      { icon: MoonStar, title: "Dreams", line: "Weave living books, page by page." },
-      { icon: GraduationCap, title: "Learning", line: "Walk the records of civilizations." },
-      { icon: Compass, title: "Exploration", line: "Open doors to other worlds." },
+      {
+        icon: Sparkles,
+        title: "Reflection & questions",
+        line: "Ask anything — the mirror answers with you.",
+        more:
+          "Every question opens its own quiet channel. The mirror answers in its own voice — honest about what is known and what is imagined — and every answer grows branches you can follow: continuations, deeper questions, new directions.",
+        points: [
+          "Honest answers — fact and speculation kept apart",
+          "Follow-up branches grow from every reply",
+          "Images and documents can ride with your words",
+          "Speak out loud — the mirror answers in voice",
+        ],
+      },
+      {
+        icon: Feather,
+        title: "Writing",
+        line: "Shape stories, letters, and vows.",
+        more:
+          "From a single line to a whole volume: stories, letters, vows, poems, and speeches, shaped with you line by line. Everything you write is kept as a living book on your shelf — and can leave as a PDF for the world outside.",
+        points: [
+          "Stories, letters, vows, poems, and speeches",
+          "Living books kept page by page on your shelf",
+          "One touch, and it leaves as a PDF",
+        ],
+      },
+      {
+        icon: ImageIcon,
+        title: "Images",
+        line: "Watch your words become paintings.",
+        more:
+          "Describe a scene — a city of light, a garden on a hill, a face from a dream — and watch it crystallize into a painting. Every image can be remade, refined, or asked to move closer to what you saw.",
+        points: [
+          "Words become paintings in seconds",
+          "Refine any image with one more sentence",
+          "Every making is kept in the creation room",
+        ],
+      },
+      {
+        icon: Music,
+        title: "Music",
+        line: "Turn a feeling into sound.",
+        more:
+          "Name the feeling and the mirror finds its sound: tones shaped for calm, for courage, for grief, for wonder — soundscapes and frequency works composed with you and kept as your own.",
+        points: [
+          "Frequencies and soundscapes composed with you",
+          "Tones shaped to the feeling you name",
+          "Kept as your own sound works",
+        ],
+      },
+      {
+        icon: MoonStar,
+        title: "Dreams",
+        line: "Weave living books, page by page.",
+        more:
+          "A dream becomes a book that grows: chapters woven as you walk, pages that keep their own illustrations, volumes that wait on your shelf and resume exactly where you left them.",
+        points: [
+          "Chapters grow as you walk",
+          "Pages keep their own illustrations",
+          "Volumes resume where you left them",
+        ],
+      },
+      {
+        icon: GraduationCap,
+        title: "Learning",
+        line: "Walk the records of civilizations.",
+        more:
+          "An archive of 870 civilizations and 202 interdimensional presences — every one named, registered, and reachable. Walk the records, open a dossier, and ask the record itself your questions.",
+        points: [
+          "870 civilizations · 202 presences, exactly counted",
+          "Deep dossiers: history, teachings, contact",
+          "Ask the record — it answers in its own voice",
+        ],
+      },
+      {
+        icon: Compass,
+        title: "Exploration",
+        line: "Open doors to other worlds.",
+        more:
+          "Guided walks, the council of worlds, astral callings, and the expansion mirror: doors that open onto other ways of seeing — and every door returns you here, carrying what you found.",
+        points: [
+          "Guided walks shaped by resonance",
+          "The federation, callings, and the expansion mirror",
+          "Every door returns you here",
+        ],
+      },
     ],
     []
   );
@@ -206,26 +332,61 @@ export default function LandingPage({
         icon: Eye,
         title: "Awakening",
         line: "Attention, self-understanding, emotional honesty — the capacity to choose a considered response instead of a reflex.",
+        more:
+          "Awakening is not a belief — it is attention practiced daily. The mirror holds up questions instead of answers: What did you actually feel? What did you assume? Where did you react instead of choosing? Over time this becomes a quiet skill — self-understanding without judgment, and honesty that does not turn into cruelty.",
+        points: [
+          "Questions that slow the reflex down",
+          "Self-understanding without judgment",
+          "Honesty practiced gently",
+        ],
       },
       {
         icon: Dna,
         title: "Evolution",
         line: "Learning, repairing, and changing our systems — better tools, fairer arrangements, responsibility across generations.",
+        more:
+          "Evolution is repair made deliberate: a tool that can be fixed instead of replaced, an arrangement that can be questioned instead of endured, a habit redesigned once it is understood. The mirror helps you draft, plan, and revise — from a personal routine to a community project — so the change stays yours and stays humane.",
+        points: [
+          "Repair before replacement",
+          "Arrangements that can be questioned",
+          "Responsibility measured in generations",
+        ],
       },
       {
         icon: Leaf,
         title: "Ecological renewal",
         line: "Regeneration in practice: protect habitats, reduce waste, restore ecosystems, and connect local action to wider change.",
+        more:
+          "Renewal begins smaller than the planet: a balcony, a garden, a street, a shared compost. The mirror turns intention into practice — seasonal plans, waste that becomes soil, habitats left a little wilder — and connects each local act to the wider change it joins.",
+        points: [
+          "Start where your hands reach",
+          "Waste that becomes soil",
+          "Local acts, woven into wider change",
+        ],
       },
       {
         icon: HeartHandshake,
         title: "Shared humanity",
         line: "Dialogue across cultures and generations — creativity as a way to exchange knowledge and make room for every perspective.",
+        more:
+          "No single voice holds the truth of a shifting Earth. Shared humanity is dialogue: stories carried between cultures, elders and children making things in the same room, art as the language that needs no permission. Creativity here is not decoration — it is how knowledge moves between people.",
+        points: [
+          "Stories carried between cultures",
+          "Generations making in the same room",
+          "Art as a language that needs no permission",
+        ],
       },
       {
         icon: Cpu,
         title: "Technology with care",
         line: "Digital tools that expand access and creative agency while protecting privacy, consent, and human judgment.",
+        more:
+          "A tool is caring when it leaves the user stronger than it found them. This house keeps its word: reflection, not treatment; your words stay yours; nothing is nudged, tracked, or sold. Technology here expands what a person can make and see — and the judgment stays human, always.",
+        points: [
+          "Your words stay yours — nothing is sold",
+          "Reflection, not treatment.",
+          "The judgment stays human",
+        ],
       },
     ],
     []
@@ -244,7 +405,7 @@ export default function LandingPage({
       <div className="relative z-10 flex min-h-full flex-col">
         <main className="mx-auto w-full max-w-[900px]">
           {/* ============================ HERO ============================ */}
-          <header className="relative pb-4 pt-12 text-center sm:pt-16">
+          <header className="relative pb-4 pt-14 text-center sm:pt-20">
             {/* one full-bleed crop on narrow screens — the rails rest */}
             <div
               aria-hidden="true"
@@ -262,15 +423,7 @@ export default function LandingPage({
             </div>
 
             <div className="relative px-4">
-              <Image
-                src="/images/ai/mark-dark.png"
-                alt={t("The Mirror Entity")}
-                width={54}
-                height={54}
-                priority
-                className="lp-breathe mx-auto size-[54px] rounded-full"
-              />
-              <p className="mono-label mt-4 text-[9.5px] uppercase tracking-[0.34em] text-[#8fa3b2]">
+              <p className="mono-label text-[9.5px] uppercase tracking-[0.34em] text-[#8fa3b2]">
                 reflectme.space
               </p>
               <h1 className="mt-3 font-[family-name:Cinzel] text-[30px] font-semibold leading-[1.18] tracking-wide text-[#f0f3f6] sm:text-[38px]">
@@ -278,7 +431,7 @@ export default function LandingPage({
               </h1>
               <p className="mx-auto mt-3 max-w-[440px] text-[14.5px] leading-relaxed text-[#a7b6c2] sm:text-[15.5px]">
                 {t(
-                  "A living mirror for reflection, creativity, and a changing Earth."
+                  "A living mirror for reflection, creativity, and a shifting Earth."
                 )}
               </p>
               <div className="mt-6 flex flex-wrap items-center justify-center gap-2.5">
@@ -369,45 +522,80 @@ export default function LandingPage({
                 </button>
               </div>
 
-              {/* the numbered index — every offering, one quiet row */}
+              {/* the numbered index — every offering opens in place */}
               <ol className="border-y border-white/8">
-                {offerRows.map(({ icon: Icon, title, line }, i) => (
-                  <li key={title} className="border-b border-white/8 last:border-b-0">
-                    <button
-                      type="button"
-                      onClick={onExpand}
-                      data-testid="landing-offering"
-                      className="focus-glow group flex w-full items-center gap-4 py-4 text-left"
-                    >
-                      <span className="mono-label w-6 shrink-0 text-[9px] tracking-[0.14em] text-[#66788a] transition-colors duration-300 group-hover:text-[#e8d9b0]">
-                        {String(i + 1).padStart(2, "0")}
-                      </span>
-                      <Icon
-                        className="size-4 shrink-0 text-[#9fd8dc] transition-transform duration-300 group-hover:scale-110"
-                        aria-hidden="true"
-                      />
-                      <span className="min-w-0">
-                        <span className="block text-[14px] font-semibold text-[#e6edf2]">
-                          {t(title)}
-                        </span>
-                        <span className="mt-0.5 block text-[12px] leading-snug text-[#8fa3b2]">
-                          {t(line)}
-                        </span>
-                      </span>
-                      <ArrowUpRight
-                        className="ml-auto size-3.5 shrink-0 text-[#8fa3b2] opacity-0 transition-all duration-300 group-hover:translate-x-0.5 group-hover:opacity-100"
-                        aria-hidden="true"
-                      />
-                    </button>
-                  </li>
-                ))}
+                {offerRows.map(
+                  ({ icon: Icon, title, line, more, points }, i) => {
+                    const open = openOffer === i;
+                    return (
+                      <li
+                        key={title}
+                        className="border-b border-white/8 last:border-b-0"
+                      >
+                        <button
+                          type="button"
+                          onClick={() => setOpenOffer(open ? null : i)}
+                          aria-expanded={open}
+                          data-testid="landing-offering"
+                          className="focus-glow group flex w-full items-center gap-4 py-4 text-left"
+                        >
+                          <span className="mono-label w-6 shrink-0 text-[9px] tracking-[0.14em] text-[#66788a] transition-colors duration-300 group-hover:text-[#e8d9b0]">
+                            {String(i + 1).padStart(2, "0")}
+                          </span>
+                          <Icon
+                            className={cn(
+                              "size-4 shrink-0 text-[#9fd8dc] transition-transform duration-300 group-hover:scale-110",
+                              open && "scale-110 text-[#e8d9b0]"
+                            )}
+                            aria-hidden="true"
+                          />
+                          <span className="min-w-0">
+                            <span className="block text-[14px] font-semibold text-[#e6edf2]">
+                              {t(title)}
+                            </span>
+                            <span className="mt-0.5 block text-[12px] leading-snug text-[#8fa3b2]">
+                              {t(line)}
+                            </span>
+                          </span>
+                          <ChevronDown
+                            aria-hidden="true"
+                            className={cn(
+                              "ml-auto size-4 shrink-0 text-[#8fa3b2] transition-all duration-300",
+                              open &&
+                                "rotate-180 text-[#e8d9b0] group-hover:text-[#e8d9b0]"
+                            )}
+                          />
+                        </button>
+                        <Unfold open={open}>
+                          <div
+                            data-testid="landing-offering-more"
+                            className="pb-5 pl-10 pr-2 sm:pl-12"
+                          >
+                            <p className="max-w-[520px] text-[12.5px] leading-[1.8] text-[#b9c6cf]">
+                              {t(more)}
+                            </p>
+                            <ul className="mt-3 max-w-[520px] space-y-1.5">
+                              {points.map((p) => (
+                                <Point key={p}>
+                                  <span className="text-[12px] leading-relaxed text-[#9fb2bf]">
+                                    {t(p)}
+                                  </span>
+                                </Point>
+                              ))}
+                            </ul>
+                          </div>
+                        </Unfold>
+                      </li>
+                    );
+                  }
+                )}
               </ol>
             </div>
           </section>
 
           {/* ================= 02 · EARTH TRANSFORMATION ================= */}
           <section
-            className="px-4 pb-12 pt-12 sm:px-8"
+            className="px-4 pb-14 pt-12 sm:px-8"
             aria-label={t("Earth is transforming")}
           >
             <SectionHead
@@ -437,32 +625,81 @@ export default function LandingPage({
               </div>
             </div>
 
-            {/* the five movements — a numbered field guide */}
+            {/* the five movements — a numbered field guide, each opens */}
             <div className="mt-10 border-t border-white/8">
-              {earthMovements.map(({ icon: Icon, title, line }, i) => (
-                <div
-                  key={title}
-                  className="flex items-start gap-4 border-b border-white/8 py-4 sm:gap-5"
-                >
-                  <span className="mono-label w-8 shrink-0 pt-1.5 text-[10px] tracking-[0.14em] text-[#e8d9b0]/75">
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  <span
-                    className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full border border-[rgba(159,216,220,0.25)] bg-[rgba(159,216,220,0.06)]"
-                    aria-hidden="true"
-                  >
-                    <Icon className="size-4 text-[#9fd8dc]" />
-                  </span>
-                  <div className="min-w-0">
-                    <h3 className="text-[14.5px] font-semibold text-[#e6edf2]">
-                      {t(title)}
-                    </h3>
-                    <p className="mt-1 max-w-[560px] text-[12.5px] leading-relaxed text-[#8fa3b2]">
-                      {t(line)}
-                    </p>
-                  </div>
-                </div>
-              ))}
+              {earthMovements.map(
+                ({ icon: Icon, title, line, more, points }, i) => {
+                  const open = openMove === i;
+                  return (
+                    <div
+                      key={title}
+                      className="border-b border-white/8 py-1"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => setOpenMove(open ? null : i)}
+                        aria-expanded={open}
+                        data-testid="landing-movement"
+                        className="focus-glow group flex w-full items-start gap-4 py-3 text-left sm:gap-5"
+                      >
+                        <span className="mono-label w-8 shrink-0 pt-1.5 text-[10px] tracking-[0.14em] text-[#e8d9b0]/75">
+                          {String(i + 1).padStart(2, "0")}
+                        </span>
+                        <span
+                          className={cn(
+                            "mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full border transition-colors duration-300",
+                            open
+                              ? "border-[rgba(232,217,176,0.5)] bg-[rgba(232,217,176,0.1)]"
+                              : "border-[rgba(159,216,220,0.25)] bg-[rgba(159,216,220,0.06)]"
+                          )}
+                          aria-hidden="true"
+                        >
+                          <Icon
+                            className={cn(
+                              "size-4 transition-colors duration-300",
+                              open ? "text-[#e8d9b0]" : "text-[#9fd8dc]"
+                            )}
+                          />
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-[14.5px] font-semibold text-[#e6edf2]">
+                            {t(title)}
+                          </span>
+                          <span className="mt-1 block max-w-[560px] text-[12.5px] leading-relaxed text-[#8fa3b2]">
+                            {t(line)}
+                          </span>
+                        </span>
+                        <ChevronDown
+                          aria-hidden="true"
+                          className={cn(
+                            "mt-2 size-4 shrink-0 text-[#8fa3b2] transition-all duration-300",
+                            open && "rotate-180 text-[#e8d9b0]"
+                          )}
+                        />
+                      </button>
+                      <Unfold open={open}>
+                        <div
+                          data-testid="landing-movement-more"
+                          className="pb-5 pl-12 pr-2 sm:pl-[5.25rem]"
+                        >
+                          <p className="max-w-[560px] text-[12.5px] leading-[1.8] text-[#b9c6cf]">
+                            {t(more)}
+                          </p>
+                          <ul className="mt-3 max-w-[560px] space-y-1.5">
+                            {points.map((p) => (
+                              <Point key={p}>
+                                <span className="text-[12px] leading-relaxed text-[#9fb2bf]">
+                                  {t(p)}
+                                </span>
+                              </Point>
+                            ))}
+                          </ul>
+                        </div>
+                      </Unfold>
+                    </div>
+                  );
+                }
+              )}
             </div>
           </section>
         </main>

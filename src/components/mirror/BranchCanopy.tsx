@@ -99,6 +99,7 @@ import {
 } from "@/lib/genealogy";
 import { recordExpansion, readExpansionScore } from "@/lib/expansion";
 import { attachmentsToPayload, type ChatAttachment } from "./attachments";
+import { ChannelingOrb, ShimmerLabel } from "./ChannelingOrb";
 import { ExpansionRing } from "./ExpansionMirror";
 import { LiveCall } from "./LiveCall";
 import { ChatInputExtras, AttachmentChips } from "./ChatInputExtras";
@@ -3653,7 +3654,14 @@ export function BranchCanopy({
       className={cn(
         "absolute inset-0 z-20 flex min-h-0 flex-col bg-background transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]",
         shown
-          ? "pointer-events-auto translate-y-0 opacity-100"
+          ? cn(
+              "translate-y-0 opacity-100",
+              /* THE PASS-THROUGH — docked in the threshold (bare) the
+                 realm keeps no pointer surface of its own: touches that
+                 are not text and not a hand fall through the lens into
+                 the page, so the threshold scrolls on beneath it. */
+              !bare && "pointer-events-auto"
+            )
           : "pointer-events-none translate-y-2 opacity-0"
       )}
       style={
@@ -4360,7 +4368,9 @@ export function BranchCanopy({
         ) : realm && bare ? (
           /* THE BARE FLOOR — the miniature portal's quiet ground: the
              focused family's own light breathing behind the mark; the
-             whisper line below does the speaking. */
+             whisper line below does the speaking. WHILE CHANNELING —
+             the mark yields its place to the tiny orb of light: the
+             transmission's own companion, the same as every room. */
           <div
             data-testid={`${testIdPrefix}-bare-floor`}
             className="absolute inset-0 overflow-hidden"
@@ -4378,17 +4388,28 @@ export function BranchCanopy({
               />
             </div>
             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-5 pb-28">
-              <Image
-                src="/images/ai/mark-dark.png"
-                alt=""
-                width={64}
-                height={64}
-                className="lp-breathe size-16 rounded-full opacity-90"
-              />
-              <span
-                aria-hidden="true"
-                className="h-px w-16 bg-gradient-to-r from-transparent via-[color-mix(in_srgb,var(--scope-a,var(--gd))_50%,transparent)] to-transparent"
-              />
+              {liveLoading ? (
+                <>
+                  <ChannelingOrb size={56} />
+                  <ShimmerLabel className="mono-label text-[9px] uppercase tracking-[0.3em] text-muted-foreground">
+                    {t("Channeling")}
+                  </ShimmerLabel>
+                </>
+              ) : (
+                <>
+                  <Image
+                    src="/images/ai/mark-dark.png"
+                    alt=""
+                    width={64}
+                    height={64}
+                    className="lp-breathe size-16 rounded-full opacity-90"
+                  />
+                  <span
+                    aria-hidden="true"
+                    className="h-px w-16 bg-gradient-to-r from-transparent via-[color-mix(in_srgb,var(--scope-a,var(--gd))_50%,transparent)] to-transparent"
+                  />
+                </>
+              )}
             </div>
           </div>
         ) : (
@@ -4548,7 +4569,16 @@ export function BranchCanopy({
                 setAskAtts([]);
                 sendFromPanel(q, null, carried);
               }}
-              className="pointer-events-auto flex w-full max-w-[560px] items-center gap-2 rounded-full border bg-background/95 py-1.5 pl-2.5 pr-1.5 shadow-[0_10px_36px_-16px_rgba(0,0,0,0.55)] backdrop-blur-xl transition-colors duration-300 focus-within:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)]"
+              className={cn(
+                "pointer-events-auto flex w-full max-w-[560px] items-center gap-2 rounded-full border py-1.5 pl-2.5 pr-1.5 shadow-[0_10px_36px_-16px_rgba(0,0,0,0.55)] transition-colors duration-300 focus-within:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)]",
+                /* THE COOL FLOOR — docked in the threshold (bare) the
+                   line wears an opaque coat and no backdrop blur: a
+                   live blur over a scrolling page is heat the phone
+                   must not pay for a lens. */
+                bare
+                  ? "bg-background"
+                  : "bg-background/95 backdrop-blur-xl"
+              )}
               style={{
                 borderColor:
                   "color-mix(in srgb, var(--scope-a,var(--gd)) 26%, transparent)",
@@ -4789,18 +4819,11 @@ export function BranchCanopy({
                     </div>
                   ) : (
                     revealStage >= 2 && (
-                      <div className="flex items-center gap-2 py-5 text-muted-foreground" aria-live="polite">
-                        <span
-                          aria-hidden="true"
-                          className="animate-line-breathe h-4 w-px shrink-0"
-                          style={{
-                            background:
-                              "linear-gradient(180deg, var(--scope-a,var(--gd)), transparent)",
-                          }}
-                        />
-                        <span className="mono-label text-[10px] uppercase tracking-[0.22em]">
+                      <div className="flex items-center gap-3 py-5 text-muted-foreground" aria-live="polite">
+                        <ChannelingOrb size={30} className="shrink-0" />
+                        <ShimmerLabel className="mono-label text-[10px] uppercase tracking-[0.22em]">
                           {t("Channeling")}
-                        </span>
+                        </ShimmerLabel>
                       </div>
                     )
                   )}
@@ -4840,20 +4863,13 @@ export function BranchCanopy({
                           </p>
                           {turn.loading ? (
                             <p
-                              className="flex items-center gap-2 py-1 text-muted-foreground"
+                              className="flex items-center gap-2.5 py-1 text-muted-foreground"
                               aria-live="polite"
                             >
-                              <span
-                                aria-hidden="true"
-                                className="animate-line-breathe h-3.5 w-px shrink-0"
-                                style={{
-                                  background:
-                                    "linear-gradient(180deg, var(--scope-a,var(--gd)), transparent)",
-                                }}
-                              />
-                              <span className="mono-label text-[9.5px] uppercase tracking-[0.2em]">
+                              <ChannelingOrb size={18} className="shrink-0" />
+                              <ShimmerLabel className="mono-label text-[9.5px] uppercase tracking-[0.2em]">
                                 {t("The transmission is listening…")}
-                              </span>
+                              </ShimmerLabel>
                             </p>
                           ) : turn.a ? (
                             <div className="flex items-start gap-1">

@@ -149,7 +149,9 @@ export default function LandingGate() {
   }, []);
 
   /* THE DOCK — while the visitor walks the landing, the lens rides
-     exactly over its slot: one transform per scroll breath. */
+     exactly over its slot: one transform per scroll breath (rAF-held,
+     never more than one read-write pair per frame — the page stays
+     liquid and the phone stays cool). */
   const syncLens = useCallback(() => {
     const lens = lensRef.current;
     const slot = slotRef.current;
@@ -159,6 +161,15 @@ export default function LandingGate() {
       r.top
     )}px, 0)`;
   }, []);
+  const syncRaf = useRef(false);
+  const syncLensFrame = useCallback(() => {
+    if (syncRaf.current) return;
+    syncRaf.current = true;
+    requestAnimationFrame(() => {
+      syncRaf.current = false;
+      if (phaseRef.current === "landing") syncLens();
+    });
+  }, [syncLens]);
 
   useLayoutEffect(() => {
     if (phase !== "landing") return;
@@ -175,10 +186,32 @@ export default function LandingGate() {
   const handleLandingScroll = useCallback(
     (y: number) => {
       landingScroll.current = y;
-      if (phaseRef.current === "landing") syncLens();
+      syncLensFrame();
     },
-    [syncLens]
+    [syncLensFrame]
   );
+
+  /* THE DORMANT LAW — while the docked portal is scrolled away from
+     the eye, every breath inside it rests: no animation frames are
+     spent on what nobody sees. The realm wakes the moment its slot
+     returns. */
+  useEffect(() => {
+    if (phase !== "landing") return;
+    const lens = lensRef.current;
+    if (!lens || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        const seen = entries[entries.length - 1];
+        lens.classList.toggle("lens-dormant", !(seen?.isIntersecting ?? true));
+      },
+      { threshold: 0.02 }
+    );
+    io.observe(lens);
+    return () => {
+      io.disconnect();
+      lens.classList.remove("lens-dormant");
+    };
+  }, [phase, geo, Chamber]);
 
   /* THE EXPAND — nothing is opened: the same portal simply grows.
      The landing sinks beneath it; every word stays where it was. */
@@ -236,6 +269,8 @@ export default function LandingGate() {
   const fullscreen = phase === "opening" || phase === "through";
   const bare = phase !== "through";
 
+  const docked = phase === "landing";
+
   return (
     <>
       {/* ---------------- THE LANDING — the threshold ---------------- */}
@@ -266,7 +301,8 @@ export default function LandingGate() {
         <div
           ref={lensRef}
           className={cn(
-            "fixed left-0 top-0 z-[45] will-change-transform",
+            "fixed left-0 top-0 z-[45]",
+            docked && "lens-docked",
             animating && "lens-anim"
           )}
           style={{
@@ -281,7 +317,7 @@ export default function LandingGate() {
           >
             <div
               className={cn(
-                "absolute left-0 top-0 h-[var(--app-h,100dvh)] w-screen will-change-transform",
+                "absolute left-0 top-0 h-[var(--app-h,100dvh)] w-screen",
                 animating && "lens-inner-anim"
               )}
               style={{
@@ -304,7 +340,7 @@ export default function LandingGate() {
               aria-label={t("Enter the portal")}
               title={t("Enter the portal")}
               data-testid="lens-expand"
-              className="focus-glow absolute -top-4 left-1/2 z-10 flex h-8 -translate-x-1/2 items-center gap-1.5 rounded-full border border-[rgba(232,217,176,0.45)] bg-[rgba(9,13,21,0.94)] px-3.5 text-[11px] font-medium tracking-wide text-[#f0e7cd] shadow-[0_10px_30px_-12px_rgba(0,0,0,0.85)] backdrop-blur-md transition-all duration-300 hover:border-[rgba(232,217,176,0.85)] hover:text-[#f6ecd2]"
+              className="focus-glow pointer-events-auto absolute -top-4 left-1/2 z-10 flex h-8 -translate-x-1/2 items-center gap-1.5 rounded-full border border-[rgba(232,217,176,0.45)] bg-[rgba(9,13,21,0.94)] px-3.5 text-[11px] font-medium tracking-wide text-[#f0e7cd] shadow-[0_10px_30px_-12px_rgba(0,0,0,0.85)] transition-all duration-300 hover:border-[rgba(232,217,176,0.85)] hover:text-[#f6ecd2]"
             >
               <Maximize2 className="size-3" aria-hidden="true" />
               {t("Enter the portal")}
@@ -313,8 +349,11 @@ export default function LandingGate() {
         </div>
       )}
 
-      {/* THE MINIMIZE MEDALLION — one small hand that carries the
-          visitor back to the threshold, the portal folding behind it */}
+      {/* THE RETURN HAND — one small pill resting at the screen's very
+          top corner, beneath the realm's own crown toggle: it never
+          floats over the portal's floor, never covers a word of the
+          conversation, and always carries the visitor back to the
+          threshold in one touch. */}
       {phase === "through" && (
         <button
           type="button"
@@ -322,14 +361,14 @@ export default function LandingGate() {
           aria-label={t("Return to the landing")}
           title={t("Return to the landing")}
           data-testid="chamber-exit"
-          className="rm-me-exit focus-glow fixed z-[95] flex size-11 items-center justify-center rounded-full border border-white/16 bg-[color-mix(in_srgb,var(--background)_62%,transparent)] text-foreground/85 shadow-[0_2px_18px_rgba(0,0,0,0.4)] backdrop-blur-md transition-all duration-300 hover:border-[var(--hairline-active)] hover:text-foreground"
+          className="rm-me-exit focus-glow fixed z-[95] flex h-7 items-center gap-1.5 rounded-full border border-white/16 bg-[color-mix(in_srgb,var(--background)_78%,transparent)] px-2.5 text-[11px] font-medium text-foreground/85 shadow-[0_2px_14px_rgba(0,0,0,0.35)] transition-colors duration-300 hover:border-[var(--hairline-active)] hover:text-foreground"
           style={{
-            left: "50%",
-            transform: "translateX(-50%)",
-            bottom: "calc(5.9rem + env(safe-area-inset-bottom, 0px))",
+            top: "calc(max(0.5rem, env(safe-area-inset-top)) + 2.4rem)",
+            right: "max(0.75rem, env(safe-area-inset-right))",
           }}
         >
-          <Minimize2 className="size-4" aria-hidden="true" />
+          <Minimize2 className="size-3" aria-hidden="true" />
+          {t("Landing")}
         </button>
       )}
     </>
