@@ -99,6 +99,7 @@ import {
 } from "@/lib/genealogy";
 import { recordExpansion, readExpansionScore } from "@/lib/expansion";
 import { attachmentsToPayload, type ChatAttachment } from "./attachments";
+import { MirrorChanneling } from "./MirrorChanneling";
 import { ExpansionRing } from "./ExpansionMirror";
 import { LiveCall } from "./LiveCall";
 import { ChatInputExtras, AttachmentChips } from "./ChatInputExtras";
@@ -4805,18 +4806,11 @@ export function BranchCanopy({
                     </div>
                   ) : (
                     revealStage >= 2 && (
-                      <div className="flex items-center gap-2 py-5 text-muted-foreground" aria-live="polite">
-                        <span
-                          aria-hidden="true"
-                          className="animate-line-breathe h-4 w-px shrink-0"
-                          style={{
-                            background:
-                              "linear-gradient(180deg, var(--scope-a,var(--gd)), transparent)",
-                          }}
+                      <div className="py-5 text-muted-foreground">
+                        <MirrorChanneling
+                          label={t("Channeling")}
+                          className="mono-label text-[10px] uppercase tracking-[0.22em]"
                         />
-                        <span className="mono-label text-[10px] uppercase tracking-[0.22em]">
-                          {t("Channeling")}
-                        </span>
                       </div>
                     )
                   )}
@@ -4855,22 +4849,11 @@ export function BranchCanopy({
                             {turn.q}
                           </p>
                           {turn.loading ? (
-                            <p
-                              className="flex items-center gap-2 py-1 text-muted-foreground"
-                              aria-live="polite"
-                            >
-                              <span
-                                aria-hidden="true"
-                                className="animate-line-breathe h-3.5 w-px shrink-0"
-                                style={{
-                                  background:
-                                    "linear-gradient(180deg, var(--scope-a,var(--gd)), transparent)",
-                                }}
-                              />
-                              <span className="mono-label text-[9.5px] uppercase tracking-[0.2em]">
-                                {t("The transmission is listening…")}
-                              </span>
-                            </p>
+                            <MirrorChanneling
+                              compact
+                              label={t("The transmission is listening…")}
+                              className="py-1 mono-label text-[9.5px] uppercase tracking-[0.2em] text-muted-foreground"
+                            />
                           ) : turn.a ? (
                             <div className="flex items-start gap-1">
                               <p className="min-w-0 flex-1 whitespace-pre-wrap break-words text-[14.5px] leading-[1.7] text-foreground/90">

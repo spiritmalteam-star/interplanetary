@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useRef, type RefObject } from "react";
+import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import Image from "next/image";
 import { motion, useScroll, useTransform } from "framer-motion";
 import {
   ArrowUpRight,
+  ChevronDown,
   Compass,
   Cpu,
   Dna,
@@ -52,62 +53,7 @@ const RAIL_LEFT: RailImage[] = [
 const RAIL_RIGHT: RailImage[] = [
   { src: "/landing/img-council.jpg", pos: "50% 42%", h: "26vh", title: "The council of worlds" },
   { src: "/landing/img-garden.jpg", pos: "50% 55%", h: "31vh", title: "The living garden" },
-  { src: "/images/walk/lyran-432.jpg", pos: "50% 46%", h: "22vh", title: "The Lyran sigil" },
-];
-
-/* THE RESTORED WALK — six signals from the civilizations that walk
-   beside us: star-maps, meetings, fields of repair. Each tone of the
-   walk keeps its own picture; the gallery keeps them together. */
-type WalkSignal = {
-  src: string;
-  freq: string;
-  name: string;
-  line: string;
-  pos: string;
-};
-const WALK_GALLERY: WalkSignal[] = [
-  {
-    src: "/images/walk/lyran-432.jpg",
-    freq: "432 Hz",
-    name: "The Lyran sigil",
-    line: "A star-map carried from the first civilizations.",
-    pos: "50% 46%",
-  },
-  {
-    src: "/images/walk/communion-639.jpg",
-    freq: "639 Hz",
-    name: "Communion",
-    line: "Two frequencies meet and neither is lost.",
-    pos: "50% 50%",
-  },
-  {
-    src: "/images/walk/heart-528.jpg",
-    freq: "528 Hz",
-    name: "The heart field",
-    line: "The tone of repair — green gold over the deep.",
-    pos: "50% 50%",
-  },
-  {
-    src: "/images/walk/insight-852.jpg",
-    freq: "852 Hz",
-    name: "Insight",
-    line: "The universe opens its eye and looks back.",
-    pos: "50% 48%",
-  },
-  {
-    src: "/images/walk/root-396.jpg",
-    freq: "396 Hz",
-    name: "The rooted star",
-    line: "Light that grows roots and stays.",
-    pos: "50% 42%",
-  },
-  {
-    src: "/images/walk/clearing-741.jpg",
-    freq: "741 Hz",
-    name: "The clearing",
-    line: "Old noise dissolves; solutions surface.",
-    pos: "50% 50%",
-  },
+  { src: "/images/about/about-interplanetary.png", pos: "50% 50%", h: "24vh", title: "The orbiting worlds" },
 ];
 
 /* ------------------------- the parallax rails ------------------------- */
@@ -242,15 +188,56 @@ export default function LandingPage({
     // the threshold is restored once, at the page's first breath
   }, [initialScroll]);
 
+  /* THE OPEN DOORS — every numbered row is its own door: one touch
+     opens it and the fuller words step out. One door stands open at
+     a time in each chapter; the same touch closes it again. */
+  const [openOffer, setOpenOffer] = useState<number | null>(null);
+  const [openMove, setOpenMove] = useState<number | null>(null);
+
   const offerRows = useMemo(
     () => [
-      { icon: Sparkles, title: "Reflection & questions", line: "Ask anything — the mirror answers with you." },
-      { icon: Feather, title: "Writing", line: "Shape stories, letters, and vows." },
-      { icon: ImageIcon, title: "Images", line: "Watch your words become paintings." },
-      { icon: Music, title: "Music", line: "Turn a feeling into sound." },
-      { icon: MoonStar, title: "Dreams", line: "Weave living books, page by page." },
-      { icon: GraduationCap, title: "Learning", line: "Walk the records of civilizations." },
-      { icon: Compass, title: "Exploration", line: "Open doors to other worlds." },
+      {
+        icon: Sparkles,
+        title: "Reflection & questions",
+        line: "Ask anything — the mirror answers with you.",
+        more: "Bring anything — a doubt, a day, a decision. The mirror answers in your own voice, reflecting your words back until the question beneath the question comes into view.",
+      },
+      {
+        icon: Feather,
+        title: "Writing",
+        line: "Shape stories, letters, and vows.",
+        more: "Letters, vows, stories, pages of a book. Begin with a fragment or a feeling; the mirror keeps your tone and helps the piece grow without ever taking the pen from your hand.",
+      },
+      {
+        icon: ImageIcon,
+        title: "Images",
+        line: "Watch your words become paintings.",
+        more: "Describe what you see and watch it appear — scenes, sigils, dream-places, worlds that do not exist yet. Every image is made from your words and stays yours.",
+      },
+      {
+        icon: Music,
+        title: "Music",
+        line: "Turn a feeling into sound.",
+        more: "Name the feeling and the mirror composes. Short themes for moments, soundbeds for stillness, melodies you can carry — no instruments, no theory required.",
+      },
+      {
+        icon: MoonStar,
+        title: "Dreams",
+        line: "Weave living books, page by page.",
+        more: "A living book grows page by page from your dreams and questions. Chapters form over days, characters return, and the story remembers where you have been.",
+      },
+      {
+        icon: GraduationCap,
+        title: "Learning",
+        line: "Walk the records of civilizations.",
+        more: "Walk the records of civilizations — histories, symbol systems, sciences — and return with what is useful. The mirror reads with you, not at you.",
+      },
+      {
+        icon: Compass,
+        title: "Exploration",
+        line: "Open doors to other worlds.",
+        more: "Doors to other worlds: councils of star civilizations, living gardens, cities of light, ancient thresholds. Each one is a guided space for reflection and play.",
+      },
     ],
     []
   );
@@ -261,26 +248,31 @@ export default function LandingPage({
         icon: Eye,
         title: "Awakening",
         line: "Attention, self-understanding, emotional honesty — the capacity to choose a considered response instead of a reflex.",
+        more: "It begins small: noticing a reaction before it becomes a word, telling yourself the truth about one hard thing today. Attention slowly becomes a skill — and a chosen response becomes more available than a reflex.",
       },
       {
         icon: Dna,
         title: "Evolution",
         line: "Learning, repairing, and changing our systems — better tools, fairer arrangements, responsibility across generations.",
+        more: "Repair over replacement. Learn in the open, mend systems so the next person starts further ahead, and hold decisions lightly enough to change them when the evidence changes.",
       },
       {
         icon: Leaf,
         title: "Ecological renewal",
         line: "Regeneration in practice: protect habitats, reduce waste, restore ecosystems, and connect local action to wider change.",
+        more: "Compost, native plants, a repaired object instead of a new one, a river cleaned with neighbors — small local acts that link into wider change. Regeneration is a practice, not a slogan.",
       },
       {
         icon: HeartHandshake,
         title: "Shared humanity",
         line: "Dialogue across cultures and generations — creativity as a way to exchange knowledge and make room for every perspective.",
+        more: "Creativity is a shared language older than every border. Exchange stories, songs, and craft across cultures and generations — and make room at the table for the perspective that is missing.",
       },
       {
         icon: Cpu,
         title: "Technology with care",
         line: "Digital tools that expand access and creative agency while protecting privacy, consent, and human judgment.",
+        more: "Tools that widen access and creative agency while keeping privacy, consent, and human judgment at the center. The best technology is felt less as a screen and more as a capability.",
       },
     ],
     []
@@ -317,15 +309,7 @@ export default function LandingPage({
             </div>
 
             <div className="relative px-4">
-              <Image
-                src="/images/ai/mark-dark.png"
-                alt={t("The Mirror Entity")}
-                width={54}
-                height={54}
-                priority
-                className="lp-breathe mx-auto size-[54px] rounded-full"
-              />
-              <p className="mono-label mt-4 text-[9.5px] uppercase tracking-[0.34em] text-[#8fa3b2]">
+              <p className="mono-label text-[9.5px] uppercase tracking-[0.34em] text-[#8fa3b2]">
                 reflectme.space
               </p>
               <h1 className="mt-3 font-[family-name:Cinzel] text-[30px] font-semibold leading-[1.18] tracking-wide text-[#f0f3f6] sm:text-[38px]">
@@ -333,7 +317,7 @@ export default function LandingPage({
               </h1>
               <p className="mx-auto mt-3 max-w-[440px] text-[14.5px] leading-relaxed text-[#a7b6c2] sm:text-[15.5px]">
                 {t(
-                  "A living mirror for reflection, creativity, and a changing Earth."
+                  "A living mirror for reflection, creativity, and a shifting Earth."
                 )}
               </p>
               <div className="mt-6 flex flex-wrap items-center justify-center gap-2.5">
@@ -424,14 +408,16 @@ export default function LandingPage({
                 </button>
               </div>
 
-              {/* the numbered index — every offering, one quiet row */}
+              {/* the numbered index — every offering, one quiet row
+                  that opens to its fuller words */}
               <ol className="border-y border-white/8">
-                {offerRows.map(({ icon: Icon, title, line }, i) => (
+                {offerRows.map(({ icon: Icon, title, line, more }, i) => (
                   <li key={title} className="border-b border-white/8 last:border-b-0">
                     <button
                       type="button"
-                      onClick={onExpand}
+                      onClick={() => setOpenOffer(openOffer === i ? null : i)}
                       data-testid="landing-offering"
+                      aria-expanded={openOffer === i}
                       className="focus-glow group flex w-full items-center gap-4 py-4 text-left"
                     >
                       <span className="mono-label w-6 shrink-0 text-[9px] tracking-[0.14em] text-[#66788a] transition-colors duration-300 group-hover:text-[#e8d9b0]">
@@ -449,11 +435,21 @@ export default function LandingPage({
                           {t(line)}
                         </span>
                       </span>
-                      <ArrowUpRight
-                        className="ml-auto size-3.5 shrink-0 text-[#8fa3b2] opacity-0 transition-all duration-300 group-hover:translate-x-0.5 group-hover:opacity-100"
+                      <ChevronDown
                         aria-hidden="true"
+                        className={cn(
+                          "ml-auto size-3.5 shrink-0 text-[#8fa3b2] transition-transform duration-300",
+                          openOffer === i && "rotate-180 text-[#e8d9b0]"
+                        )}
                       />
                     </button>
+                    <div className="lp-acc" data-open={openOffer === i}>
+                      <div>
+                        <p className="lp-acc-inner px-10 pb-4 text-[12.5px] leading-[1.8] text-[#a7b6c2]">
+                          {t(more)}
+                        </p>
+                      </div>
+                    </div>
                   </li>
                 ))}
               </ol>
@@ -492,86 +488,56 @@ export default function LandingPage({
               </div>
             </div>
 
-            {/* the five movements — a numbered field guide */}
+            {/* the five movements — a numbered field guide whose rows
+                open to their practice */}
             <div className="mt-10 border-t border-white/8">
-              {earthMovements.map(({ icon: Icon, title, line }, i) => (
+              {earthMovements.map(({ icon: Icon, title, line, more }, i) => (
                 <div
                   key={title}
-                  className="flex items-start gap-4 border-b border-white/8 py-4 sm:gap-5"
+                  className="border-b border-white/8"
                 >
-                  <span className="mono-label w-8 shrink-0 pt-1.5 text-[10px] tracking-[0.14em] text-[#e8d9b0]/75">
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  <span
-                    className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full border border-[rgba(159,216,220,0.25)] bg-[rgba(159,216,220,0.06)]"
-                    aria-hidden="true"
-                  >
-                    <Icon className="size-4 text-[#9fd8dc]" />
-                  </span>
-                  <div className="min-w-0">
-                    <h3 className="text-[14.5px] font-semibold text-[#e6edf2]">
-                      {t(title)}
-                    </h3>
-                    <p className="mt-1 max-w-[560px] text-[12.5px] leading-relaxed text-[#8fa3b2]">
-                      {t(line)}
-                    </p>
+                  <h3>
+                    <button
+                      type="button"
+                      onClick={() => setOpenMove(openMove === i ? null : i)}
+                      aria-expanded={openMove === i}
+                      data-testid="landing-movement"
+                      className="focus-glow group flex w-full items-start gap-4 py-4 text-left sm:gap-5"
+                    >
+                      <span className="mono-label w-8 shrink-0 pt-1.5 text-[10px] tracking-[0.14em] text-[#e8d9b0]/75">
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
+                      <span
+                        className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full border border-[rgba(159,216,220,0.25)] bg-[rgba(159,216,220,0.06)] transition-colors duration-300 group-hover:border-[rgba(159,216,220,0.5)]"
+                        aria-hidden="true"
+                      >
+                        <Icon className="size-4 text-[#9fd8dc]" />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-[14.5px] font-semibold text-[#e6edf2]">
+                          {t(title)}
+                        </span>
+                        <span className="mt-1 block max-w-[560px] text-[12.5px] leading-relaxed text-[#8fa3b2]">
+                          {t(line)}
+                        </span>
+                      </span>
+                      <ChevronDown
+                        aria-hidden="true"
+                        className={cn(
+                          "mt-1.5 size-3.5 shrink-0 text-[#8fa3b2] transition-transform duration-300",
+                          openMove === i && "rotate-180 text-[#e8d9b0]"
+                        )}
+                      />
+                    </button>
+                  </h3>
+                  <div className="lp-acc" data-open={openMove === i}>
+                    <div>
+                      <p className="lp-acc-inner pb-4 pl-[3.75rem] pr-4 text-[12.5px] leading-[1.8] text-[#a7b6c2] sm:pl-[4.25rem]">
+                        {t(more)}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          </section>
-          {/* ============ 03 · THE SIX FREQUENCIES ============ */}
-          <section
-            className="px-4 pb-14 pt-12 sm:px-8"
-            aria-label={t("The six frequencies")}
-          >
-            <SectionHead
-              index="03"
-              kicker={t("Signals from the walk")}
-              title={t("The six frequencies")}
-            />
-            <p className="mt-6 max-w-[640px] text-[13.5px] leading-[1.85] text-[#b9c6cf]">
-              {t(
-                "Along the walk, six tones marked the way — each one a window opened over the worlds that walk beside us. Star-maps, meetings, fields of repair: pictures the mirror keeps of everything we are becoming."
-              )}
-            </p>
-
-            <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">
-              {WALK_GALLERY.map((g, i) => (
-                <figure
-                  key={g.src}
-                  className="group relative overflow-hidden rounded-2xl border border-white/8 bg-[rgba(8,12,20,0.5)] shadow-[0_18px_50px_-30px_rgba(0,0,0,0.9)]"
-                >
-                  <div className="relative aspect-[3/4] overflow-hidden">
-                    <Image
-                      src={g.src}
-                      alt={t(g.name)}
-                      fill
-                      loading="lazy"
-                      sizes="(min-width: 1024px) 280px, (min-width: 640px) 45vw, 50vw"
-                      className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-                      style={{ objectPosition: g.pos }}
-                    />
-                    <span
-                      aria-hidden="true"
-                      className="pointer-events-none absolute inset-0 rounded-t-none ring-1 ring-inset ring-white/10"
-                    />
-                    <span className="mono-label absolute left-2.5 top-2.5 rounded-full border border-white/12 bg-[rgba(5,7,13,0.72)] px-2 py-0.5 text-[8px] tracking-[0.18em] text-[#e8d9b0]">
-                      {g.freq}
-                    </span>
-                  </div>
-                  <figcaption className="p-3 sm:p-4">
-                    <p className="mono-label text-[8px] uppercase tracking-[0.22em] text-[#66788a]">
-                      {String(i + 1).padStart(2, "0")}
-                    </p>
-                    <p className="mt-1 text-[13.5px] font-semibold leading-snug text-[#e6edf2]">
-                      {t(g.name)}
-                    </p>
-                    <p className="mt-1 text-[11.5px] leading-snug text-[#8fa3b2]">
-                      {t(g.line)}
-                    </p>
-                  </figcaption>
-                </figure>
               ))}
             </div>
           </section>

@@ -2356,6 +2356,122 @@ html:not(.dark) .scope-lightcodes {
 .lp-pulse {
   animation: lp-breathe 1.8s ease-in-out infinite;
 }
+/* the threshold's quiet accordions — the numbered rows open to their
+   fuller words (grid rows carry the height, opacity carries the voice) */
+.lp-acc {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.lp-acc[data-open="true"] {
+  grid-template-rows: 1fr;
+}
+.lp-acc > div {
+  overflow: hidden;
+}
+.lp-acc-inner {
+  opacity: 0;
+  transform: translateY(-4px);
+  transition:
+    opacity 0.35s ease,
+    transform 0.35s ease;
+}
+.lp-acc[data-open="true"] .lp-acc-inner {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* THE MIRROR'S CHANNELING LIGHT — the little tell, the other AIs wear:
+   three soft orbs rippling in the scope's own hue while a narrow sheen
+   sweeps the word. Transform-and-opacity only; the stillness law rests
+   it entirely. */
+.mc-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.mc-orbs {
+  display: inline-flex;
+  align-items: center;
+  gap: 3.5px;
+}
+.mc-orb {
+  width: 4px;
+  height: 4px;
+  border-radius: 9999px;
+  background: var(--scope-a, #9fd8dc);
+  animation: mc-ripple 1.35s ease-in-out infinite;
+}
+.mc-orb:nth-child(2) {
+  animation-delay: 0.22s;
+}
+.mc-orb:nth-child(3) {
+  animation-delay: 0.44s;
+}
+@keyframes mc-ripple {
+  0%,
+  100% {
+    transform: translateY(0) scale(0.7);
+    opacity: 0.3;
+  }
+  45% {
+    transform: translateY(-3px) scale(1.15);
+    opacity: 1;
+  }
+}
+.mc-word {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+}
+.mc-word-text {
+  display: inline-block;
+  color: inherit;
+}
+.mc-sheen {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  left: 0;
+  width: 46%;
+  border-radius: 3px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--scope-a, #9fd8dc) 42%, transparent),
+    transparent
+  );
+  filter: blur(2px);
+  transform: translateX(-130%) skewX(-12deg);
+  animation: mc-sweep 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+@keyframes mc-sweep {
+  0% {
+    transform: translateX(-130%) skewX(-12deg);
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  62% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(340%) skewX(-12deg);
+    opacity: 0;
+  }
+}
+/* the mirror's channeling light rests on request */
+@media (prefers-reduced-motion: reduce) {
+  .mc-orb,
+  .mc-sheen {
+    animation: none !important;
+  }
+  .lp-acc,
+  .lp-acc-inner {
+    transition: none !important;
+  }
+}
 /* the return hand rising at the screen's top corner */
 .rm-me-exit {
   animation: rm-me-exit-in 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.35s backwards;
