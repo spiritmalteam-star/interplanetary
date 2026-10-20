@@ -1,14 +1,6 @@
 "use client";
 
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-  type ComponentType,
-} from "react";
-import { Maximize2, Minimize2 } from "lucide-react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ComponentType } from "react";
 import { useTheme } from "next-themes";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -328,49 +320,22 @@ export default function LandingGate() {
                     : "translate3d(0, 0, 0) scale(1)",
               }}
             >
-              <Chamber bare={bare} />
+              <Chamber bare={bare} onExpand={expandPortal} onMinimize={minimize} />
             </div>
           </div>
 
-          {/* THE EXPAND HAND — window chrome at the frame's crown */}
-          {phase === "landing" && (
-            <button
-              type="button"
-              onClick={expandPortal}
-              aria-label={t("Enter the portal")}
-              title={t("Enter the portal")}
-              data-testid="lens-expand"
-              className="focus-glow pointer-events-auto absolute -top-4 left-1/2 z-10 flex h-8 -translate-x-1/2 items-center gap-1.5 rounded-full border border-[rgba(232,217,176,0.45)] bg-[rgba(9,13,21,0.94)] px-3.5 text-[11px] font-medium tracking-wide text-[#f0e7cd] shadow-[0_10px_30px_-12px_rgba(0,0,0,0.85)] transition-all duration-300 hover:border-[rgba(232,217,176,0.85)] hover:text-[#f6ecd2]"
-            >
-              <Maximize2 className="size-3" aria-hidden="true" />
-              {t("Enter the portal")}
-            </button>
-          )}
+          {/* THE EXPAND HAND — the portal's own crown carries it now:
+              the fullscreen control stands between the about door and
+              the visitor's passage, exactly where the threshold's
+              other hands live. The hero's “Enter the portal” on the
+              page carries the same growth. */}
         </div>
       )}
 
-      {/* THE RETURN HAND — one small pill resting at the screen's very
-          top corner, beneath the realm's own crown toggle: it never
-          floats over the portal's floor, never covers a word of the
-          conversation, and always carries the visitor back to the
-          threshold in one touch. */}
-      {phase === "through" && (
-        <button
-          type="button"
-          onClick={minimize}
-          aria-label={t("Return to the landing")}
-          title={t("Return to the landing")}
-          data-testid="chamber-exit"
-          className="rm-me-exit focus-glow fixed z-[95] flex h-7 items-center gap-1.5 rounded-full border border-white/16 bg-[color-mix(in_srgb,var(--background)_78%,transparent)] px-2.5 text-[11px] font-medium text-foreground/85 shadow-[0_2px_14px_rgba(0,0,0,0.35)] transition-colors duration-300 hover:border-[var(--hairline-active)] hover:text-foreground"
-          style={{
-            top: "calc(max(0.5rem, env(safe-area-inset-top)) + 2.4rem)",
-            right: "max(0.75rem, env(safe-area-inset-right))",
-          }}
-        >
-          <Minimize2 className="size-3" aria-hidden="true" />
-          {t("Landing")}
-        </button>
-      )}
+      {/* THE RETURN HAND — the portal's own crown carries it now: the
+          landing control stands between the about door and the
+          visitor's passage, one touch folding the realm back into its
+          slot on the threshold. */}
     </>
   );
 }

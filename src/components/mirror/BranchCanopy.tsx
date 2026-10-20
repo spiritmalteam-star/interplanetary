@@ -1796,6 +1796,7 @@ export function BranchCanopy({
   realm,
   bare,
   headerExtra,
+  realmControls,
 }: {
   /** The branch of the living tree this chat belongs to. */
   category: BranchId;
@@ -1839,6 +1840,10 @@ export function BranchCanopy({
   /** Extra quiet controls riding the realm's crown (the purse, the
       theme) — rendered between the where-pill and the doors. */
   headerExtra?: ReactNode;
+  /** THE PORTAL'S OWN HANDS — the fullscreen and landing controls of
+      the one portal, standing in the crown exactly between the about
+      door and the visitor's passage, whichever way the portal faces. */
+  realmControls?: ReactNode;
 }) {
   const t = useT();
   const language = useMirror((s) => s.language);
@@ -4236,6 +4241,14 @@ export function BranchCanopy({
               <Info className="size-3" aria-hidden="true" />
             </button>
           </div>
+
+          {/* THE PORTAL'S OWN HANDS — between the about door and the
+              passage: the fullscreen hand while the portal is docked,
+              the landing hand while it fills the screen. One place,
+              one law: the crown always carries the way across. */}
+          {realm && realmControls && (
+            <div className="flex shrink-0 items-center gap-1">{realmControls}</div>
+          )}
 
           {/* THE WORLDS ARE GONE — their spirit lives inside the
               categories: a chosen kategory focuses the walk on that

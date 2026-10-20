@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { TreeDeciduous } from "lucide-react";
+import { Maximize2, Minimize2, TreeDeciduous } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { setLearningIdentity } from "@/lib/learning-branches";
 import { useT } from "@/lib/i18n";
@@ -59,18 +59,38 @@ const FRAME_LIFT = "[transform:translateY(calc(var(--app-shift,0px)*-1))]";
 /*  wall of suggestions rests until the portal is given the whole      */
 /*  screen.                                                            */
 /* ------------------------------------------------------------------ */
-export default function AppShell({ bare = false }: { bare?: boolean }) {
+export default function AppShell({
+  bare = false,
+  onExpand,
+  onMinimize,
+}: {
+  bare?: boolean;
+  /** THE DOCKED HAND — grows the one portal to the whole screen
+      (given by the threshold; the crown wears it while docked). */
+  onExpand?: () => void;
+  /** THE RETURN HAND — folds the portal back into its landing slot
+      (given by the threshold; the crown wears it at full size). */
+  onMinimize?: () => void;
+}) {
   return (
     <div className="paper-grain relative h-[var(--app-h,100dvh)] overflow-hidden">
       {/* the purse keeper rides above every world — the 402 watch, the
           Stripe greeting, the unlock modal */}
       <WalletGuard />
-      <AppShellViews bare={bare} />
+      <AppShellViews bare={bare} onExpand={onExpand} onMinimize={onMinimize} />
     </div>
   );
 }
 
-function AppShellViews({ bare }: { bare: boolean }) {
+function AppShellViews({
+  bare,
+  onExpand,
+  onMinimize,
+}: {
+  bare: boolean;
+  onExpand?: () => void;
+  onMinimize?: () => void;
+}) {
   const view = useMirror((s) => s.view);
   const activeMode = useMirror((s) => s.activeMode);
   const refreshMe = useMirror((s) => s.refreshMe);
@@ -412,6 +432,35 @@ function AppShellViews({ bare }: { bare: boolean }) {
           /* THE CROWN'S OWN PURSE — the theme has moved to the crown's
              centre: the house's seal (the logo) toggles the light. */
           <CreditBadge />
+        }
+        realmControls={
+          /* THE PORTAL'S OWN HANDS — standing in the crown between the
+             about door and the visitor's passage: the fullscreen hand
+             while the portal is docked on the threshold, the landing
+             hand while it fills the whole screen. */
+          bare && onExpand ? (
+            <button
+              type="button"
+              onClick={onExpand}
+              aria-label={t("Fullscreen")}
+              title={t("Fullscreen")}
+              data-testid="crown-expand"
+              className="focus-glow flex size-7 items-center justify-center rounded-full border border-[rgba(232,217,176,0.42)] bg-[rgba(232,217,176,0.08)] text-[#e8d9b0] transition-all duration-300 hover:border-[rgba(232,217,176,0.8)] hover:text-[#f6ecd2]"
+            >
+              <Maximize2 className="size-3" aria-hidden="true" />
+            </button>
+          ) : !bare && onMinimize ? (
+            <button
+              type="button"
+              onClick={onMinimize}
+              aria-label={t("Landing")}
+              title={t("Landing")}
+              data-testid="crown-minimize"
+              className="focus-glow flex size-7 items-center justify-center rounded-full border border-[rgba(232,217,176,0.42)] bg-[rgba(232,217,176,0.08)] text-[#e8d9b0] transition-all duration-300 hover:border-[rgba(232,217,176,0.8)] hover:text-[#f6ecd2]"
+            >
+              <Minimize2 className="size-3" aria-hidden="true" />
+            </button>
+          ) : undefined
         }
       />
 

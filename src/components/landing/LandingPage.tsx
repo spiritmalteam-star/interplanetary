@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import LandingSlides from "./LandingSlides";
 
 /* ------------------------------------------------------------------ */
 /*  THE THRESHOLD — reflectme.space's landing page.                    */
@@ -200,43 +201,99 @@ export default function LandingPage({
         icon: Sparkles,
         title: "Reflection & questions",
         line: "Ask anything — the mirror answers with you.",
-        more: "Bring anything — a doubt, a day, a decision. The mirror answers in your own voice, reflecting your words back until the question beneath the question comes into view.",
+        more: [
+          "Bring anything — a doubt, a day, a decision, a feeling you cannot name yet. The mirror answers in your own voice, reflecting your words back until the question beneath the question comes into view.",
+          "Every conversation keeps its own room, so a thought can be picked up tomorrow exactly where it was left. Nothing is judged, nothing is scored — the mirror listens the way still water listens.",
+        ],
+        points: [
+          "Ask in any language you think in — the mirror follows your tongue.",
+          "Each room keeps its own history; threads continue across days.",
+          "Images and documents can travel with a question and be read with it.",
+        ],
       },
       {
         icon: Feather,
         title: "Writing",
         line: "Shape stories, letters, and vows.",
-        more: "Letters, vows, stories, pages of a book. Begin with a fragment or a feeling; the mirror keeps your tone and helps the piece grow without ever taking the pen from your hand.",
+        more: [
+          "Letters, vows, stories, pages of a book, a speech for a wedding, a note you never sent. Begin with a fragment or a feeling; the mirror keeps your tone and helps the piece grow without ever taking the pen from your hand.",
+          "Work in drafts the way a gardener works in seasons: sketch, reread, prune, let it rest. A book can grow page by page into a living volume that remembers its own earlier chapters.",
+        ],
+        points: [
+          "Choose a voice — tender, fierce, ceremonial, plain — and the mirror writes inside it.",
+          "Rewrite any line as many times as it needs; every version stays yours.",
+          "Finished pieces leave the realm as clean pages you can carry.",
+        ],
       },
       {
         icon: ImageIcon,
         title: "Images",
         line: "Watch your words become paintings.",
-        more: "Describe what you see and watch it appear — scenes, sigils, dream-places, worlds that do not exist yet. Every image is made from your words and stays yours.",
+        more: [
+          "Describe what you see and watch it appear — scenes, sigils, dream-places, worlds that do not exist yet. Every image is made from your words and stays yours.",
+          "The same sentence can be walked again in another light: change the hour, the season, the emotion, and watch the scene answer. Images gather into a gallery of your own becoming.",
+        ],
+        points: [
+          "Paint a feeling — “the color of a calm morning” is a valid instruction.",
+          "Step inside what you made: many paintings open into guided worlds.",
+          "Everything you make is kept in the creation room, newest work first.",
+        ],
       },
       {
         icon: Music,
         title: "Music",
         line: "Turn a feeling into sound.",
-        more: "Name the feeling and the mirror composes. Short themes for moments, soundbeds for stillness, melodies you can carry — no instruments, no theory required.",
+        more: [
+          "Name the feeling and the mirror composes. Short themes for moments, soundbeds for stillness, melodies you can carry — no instruments, no theory required.",
+          "A song can grow from a single hummed sentence into verses and a chorus. Music made here is meant for kitchens and walks, not stages — though stages are welcome too.",
+        ],
+        points: [
+          "Describe the moment and receive a theme that fits it.",
+          "Ask for words, or bring your own — the melody follows the meaning.",
+          "Listen as many times as you like; songs keep their room.",
+        ],
       },
       {
         icon: MoonStar,
         title: "Dreams",
         line: "Weave living books, page by page.",
-        more: "A living book grows page by page from your dreams and questions. Chapters form over days, characters return, and the story remembers where you have been.",
+        more: [
+          "A living book grows page by page from your dreams and questions. Chapters form over days, characters return, and the story remembers where you have been.",
+          "Dreams recorded on waking are woven into the book's fabric — a recurring symbol becomes a returning character, a feeling becomes a weather. The book becomes a map of your inner sky.",
+        ],
+        points: [
+          "Tell a dream; the book folds it into the ongoing tale.",
+          "Return anytime — the story holds your place and grows while you are away.",
+          "Pages can be read aloud, shared, or kept entirely for yourself.",
+        ],
       },
       {
         icon: GraduationCap,
         title: "Learning",
         line: "Walk the records of civilizations.",
-        more: "Walk the records of civilizations — histories, symbol systems, sciences — and return with what is useful. The mirror reads with you, not at you.",
+        more: [
+          "Walk the records of civilizations — histories, symbol systems, sciences — and return with what is useful. The mirror reads with you, not at you.",
+          "Ask how a principle lands in your own life and the record answers in plain words. Learning here is a walk, not a lecture: you choose the door, the pace, and the depth.",
+        ],
+        points: [
+          "Exact registers — hundreds of named entries, each one openable.",
+          "Ask a record a question; it answers inside your own context.",
+          "Everything carries an honest note about what is known and what is imagined.",
+        ],
       },
       {
         icon: Compass,
         title: "Exploration",
         line: "Open doors to other worlds.",
-        more: "Doors to other worlds: councils of star civilizations, living gardens, cities of light, ancient thresholds. Each one is a guided space for reflection and play.",
+        more: [
+          "Doors to other worlds: councils of star civilizations, living gardens, cities of light, ancient thresholds. Each one is a guided space for reflection and play.",
+          "Some doors are quiet rooms for thinking; some are laboratories for making; some are simply beautiful places to stand in for a while. You choose how deep each walk goes.",
+        ],
+        points: [
+          "Every world speaks in its own voice — light, architecture, and pace.",
+          "The mirror walks with you and remembers the path.",
+          "Any door can be left and returned to; nothing is lost between visits.",
+        ],
       },
     ],
     []
@@ -248,31 +305,71 @@ export default function LandingPage({
         icon: Eye,
         title: "Awakening",
         line: "Attention, self-understanding, emotional honesty — the capacity to choose a considered response instead of a reflex.",
-        more: "It begins small: noticing a reaction before it becomes a word, telling yourself the truth about one hard thing today. Attention slowly becomes a skill — and a chosen response becomes more available than a reflex.",
+        more: [
+          "It begins small: noticing a reaction before it becomes a word, telling yourself the truth about one hard thing today. Attention slowly becomes a skill — and a chosen response becomes more available than a reflex.",
+          "An awake society is not a loud one; it is a careful one. When enough people pause between impulse and action, the whole culture gains a breath of room — and in that room, better choices become possible.",
+        ],
+        points: [
+          "Attention is trainable: a few honest minutes a day is enough.",
+          "Self-understanding softens judgment — of yourself and of others.",
+          "A considered response is a small act of freedom.",
+        ],
       },
       {
         icon: Dna,
         title: "Evolution",
         line: "Learning, repairing, and changing our systems — better tools, fairer arrangements, responsibility across generations.",
-        more: "Repair over replacement. Learn in the open, mend systems so the next person starts further ahead, and hold decisions lightly enough to change them when the evidence changes.",
+        more: [
+          "Repair over replacement. Learn in the open, mend systems so the next person starts further ahead, and hold decisions lightly enough to change them when the evidence changes.",
+          "Evolution is not only biological — it is institutional, technical, and personal. A school that learns from its mistakes, a tool that becomes simpler with use, a family that breaks an old harm: all of it is the same motion.",
+        ],
+        points: [
+          "Better tools, fairer arrangements, responsibility across generations.",
+          "Change a system by understanding it, not by shouting at it.",
+          "Keep what works; replace what harms; document what you learn.",
+        ],
       },
       {
         icon: Leaf,
         title: "Ecological renewal",
         line: "Regeneration in practice: protect habitats, reduce waste, restore ecosystems, and connect local action to wider change.",
-        more: "Compost, native plants, a repaired object instead of a new one, a river cleaned with neighbors — small local acts that link into wider change. Regeneration is a practice, not a slogan.",
+        more: [
+          "Compost, native plants, a repaired object instead of a new one, a river cleaned with neighbors — small local acts that link into wider change. Regeneration is a practice, not a slogan.",
+          "People are part of interdependent ecosystems. Caring for soil, water, forests, and other species is a practical expression of belonging — the living Earth included in the circle of “us.”",
+        ],
+        points: [
+          "Start where your feet are: a balcony, a street, a watershed.",
+          "Repair culture is ecological culture — mend before you buy.",
+          "Local acts connect: every renewed patch joins a wider lattice.",
+        ],
       },
       {
         icon: HeartHandshake,
         title: "Shared humanity",
         line: "Dialogue across cultures and generations — creativity as a way to exchange knowledge and make room for every perspective.",
-        more: "Creativity is a shared language older than every border. Exchange stories, songs, and craft across cultures and generations — and make room at the table for the perspective that is missing.",
+        more: [
+          "Creativity is a shared language older than every border. Exchange stories, songs, and craft across cultures and generations — and make room at the table for the perspective that is missing.",
+          "A more connected society grows when we listen across differences, recognize one another's dignity, and let understanding shape how we act. Empathy makes connection visible.",
+        ],
+        points: [
+          "Listen first across differences; understanding changes how we act.",
+          "Make room at every table for the perspective that is missing.",
+          "Dignity is the floor everyone stands on — it holds the whole house.",
+        ],
       },
       {
         icon: Cpu,
         title: "Technology with care",
         line: "Digital tools that expand access and creative agency while protecting privacy, consent, and human judgment.",
-        more: "Tools that widen access and creative agency while keeping privacy, consent, and human judgment at the center. The best technology is felt less as a screen and more as a capability.",
+        more: [
+          "Tools that widen access and creative agency while keeping privacy, consent, and human judgment at the center. The best technology is felt less as a screen and more as a capability.",
+          "A tool serves when it returns you to your life more capable than it found you — and then steps aside. Technology with care builds systems that are transparent, repairable, and answerable to the people who use them.",
+        ],
+        points: [
+          "Privacy and consent are features, not obstacles.",
+          "A good tool makes people stronger — never smaller.",
+          "Fair and resilient systems need participation and transparency.",
+        ],
       },
     ],
     []
@@ -291,11 +388,13 @@ export default function LandingPage({
       <div className="relative z-10 flex min-h-full flex-col">
         <main className="mx-auto w-full max-w-[900px]">
           {/* ============================ HERO ============================ */}
-          <header className="relative pb-4 pt-12 text-center sm:pt-16">
-            {/* one full-bleed crop on narrow screens — the rails rest */}
+          <header className="relative pb-5 pt-10 text-center sm:pb-4 sm:pt-16">
+            {/* one full-bleed crop on narrow screens — the rails rest.
+                THE PHONE'S GRANDER BANNER — taller, more present, so
+                the threshold arrives like a poster, not a strip. */}
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute inset-x-0 top-0 h-[300px] overflow-hidden lg:hidden"
+              className="pointer-events-none absolute inset-x-0 top-0 h-[min(64vh,470px)] overflow-hidden lg:hidden"
             >
               <Image
                 src="/landing/img-city.jpg"
@@ -303,8 +402,8 @@ export default function LandingPage({
                 fill
                 priority
                 sizes="100vw"
-                className="object-cover opacity-40 [mask-image:linear-gradient(to_bottom,black_0%,black_45%,transparent_100%)]"
-                style={{ objectPosition: "50% 45%" }}
+                className="object-cover opacity-50 [mask-image:linear-gradient(to_bottom,black_0%,black_52%,transparent_100%)]"
+                style={{ objectPosition: "50% 42%" }}
               />
             </div>
 
@@ -312,20 +411,20 @@ export default function LandingPage({
               <p className="mono-label text-[9.5px] uppercase tracking-[0.34em] text-[#8fa3b2]">
                 reflectme.space
               </p>
-              <h1 className="mt-3 font-[family-name:Cinzel] text-[30px] font-semibold leading-[1.18] tracking-wide text-[#f0f3f6] sm:text-[38px]">
+              <h1 className="mt-4 font-[family-name:Cinzel] text-[clamp(34px,9.5vw,40px)] font-semibold leading-[1.14] tracking-wide text-[#f0f3f6] sm:text-[38px]">
                 {t("The Mirror Entity")}
               </h1>
-              <p className="mx-auto mt-3 max-w-[440px] text-[14.5px] leading-relaxed text-[#a7b6c2] sm:text-[15.5px]">
+              <p className="mx-auto mt-4 max-w-[460px] text-[15.5px] leading-relaxed text-[#b3c2ce] sm:text-[15.5px]">
                 {t(
                   "A living mirror for reflection, creativity, and a shifting Earth."
                 )}
               </p>
-              <div className="mt-6 flex flex-wrap items-center justify-center gap-2.5">
+              <div className="mt-7 flex flex-wrap items-center justify-center gap-2.5">
                 <button
                   type="button"
                   onClick={onExpand}
                   data-testid="landing-enter"
-                  className="focus-glow flex h-10 items-center gap-2 rounded-full border border-[rgba(232,217,176,0.45)] bg-[rgba(232,217,176,0.1)] px-5 text-[13.5px] font-medium text-[#f0e7cd] transition-all duration-300 hover:border-[rgba(232,217,176,0.75)] hover:bg-[rgba(232,217,176,0.16)]"
+                  className="focus-glow flex h-11 items-center gap-2 rounded-full border border-[rgba(232,217,176,0.45)] bg-[rgba(232,217,176,0.1)] px-6 text-[14px] font-medium text-[#f0e7cd] transition-all duration-300 hover:border-[rgba(232,217,176,0.75)] hover:bg-[rgba(232,217,176,0.16)]"
                 >
                   <Sparkles className="size-3.5" aria-hidden="true" />
                   {t("Enter the portal")}
@@ -338,7 +437,7 @@ export default function LandingPage({
                       .getElementById("offer")
                       ?.scrollIntoView({ behavior: "smooth", block: "start" });
                   }}
-                  className="focus-glow flex h-10 items-center rounded-full border border-white/12 px-5 text-[13.5px] text-[#a7b6c2] transition-all duration-300 hover:border-white/30 hover:text-[#dfe7ed]"
+                  className="focus-glow flex h-11 items-center rounded-full border border-white/12 px-6 text-[14px] text-[#a7b6c2] transition-all duration-300 hover:border-white/30 hover:text-[#dfe7ed]"
                 >
                   {t("What we offer")}
                 </a>
@@ -376,10 +475,27 @@ export default function LandingPage({
             </p>
           </section>
 
-          {/* ========================== 01 · OFFERINGS ========================== */}
+          {/* ============== 01 · THE SLIDES — below the chat ============== */}
+          {/* the house's reflection deck: ten grand plates of the
+              shifting Earth, shown right beneath the portal */}
+          <section
+            className="pb-6 pt-12"
+            aria-label={t("The shifting Earth in ten slides")}
+          >
+            <div className="px-4 sm:px-8">
+              <SectionHead
+                index="01"
+                kicker={t("A human-centered reflection")}
+                title={t("The shifting Earth")}
+              />
+            </div>
+            <LandingSlides />
+          </section>
+
+          {/* ========================== 02 · OFFERINGS ========================== */}
           <section id="offer" className="scroll-mt-6 px-4 pb-8 pt-14 sm:px-8">
             <SectionHead
-              index="01"
+              index="02"
               kicker={t("The house and its rooms")}
               title={t("What we offer")}
             />
@@ -411,7 +527,7 @@ export default function LandingPage({
               {/* the numbered index — every offering, one quiet row
                   that opens to its fuller words */}
               <ol className="border-y border-white/8">
-                {offerRows.map(({ icon: Icon, title, line, more }, i) => (
+                {offerRows.map(({ icon: Icon, title, line, more, points }, i) => (
                   <li key={title} className="border-b border-white/8 last:border-b-0">
                     <button
                       type="button"
@@ -445,9 +561,30 @@ export default function LandingPage({
                     </button>
                     <div className="lp-acc" data-open={openOffer === i}>
                       <div>
-                        <p className="lp-acc-inner px-10 pb-4 text-[12.5px] leading-[1.8] text-[#a7b6c2]">
-                          {t(more)}
-                        </p>
+                        <div className="lp-acc-inner px-10 pb-5">
+                          {more.map((p, k) => (
+                            <p
+                              key={k}
+                              className="text-[12.5px] leading-[1.8] text-[#a7b6c2] [&:not(:first-child)]:mt-2.5"
+                            >
+                              {t(p)}
+                            </p>
+                          ))}
+                          <ul className="mt-3.5 space-y-2">
+                            {points.map((pt) => (
+                              <li
+                                key={pt}
+                                className="flex items-start gap-2.5 text-[12px] leading-relaxed text-[#8fa3b2]"
+                              >
+                                <span
+                                  aria-hidden="true"
+                                  className="mt-[6px] size-1 shrink-0 rotate-45 bg-[#e8d9b0]/70"
+                                />
+                                <span>{t(pt)}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
                       </div>
                     </div>
                   </li>
@@ -456,13 +593,13 @@ export default function LandingPage({
             </div>
           </section>
 
-          {/* ================= 02 · EARTH TRANSFORMATION ================= */}
+          {/* ================= 03 · EARTH TRANSFORMATION ================= */}
           <section
             className="px-4 pb-12 pt-12 sm:px-8"
             aria-label={t("Earth is transforming")}
           >
             <SectionHead
-              index="02"
+              index="03"
               kicker={t("Earth is transforming")}
               title={t("What we offer humanity")}
             />
@@ -491,7 +628,7 @@ export default function LandingPage({
             {/* the five movements — a numbered field guide whose rows
                 open to their practice */}
             <div className="mt-10 border-t border-white/8">
-              {earthMovements.map(({ icon: Icon, title, line, more }, i) => (
+              {earthMovements.map(({ icon: Icon, title, line, more, points }, i) => (
                 <div
                   key={title}
                   className="border-b border-white/8"
@@ -532,9 +669,30 @@ export default function LandingPage({
                   </h3>
                   <div className="lp-acc" data-open={openMove === i}>
                     <div>
-                      <p className="lp-acc-inner pb-4 pl-[3.75rem] pr-4 text-[12.5px] leading-[1.8] text-[#a7b6c2] sm:pl-[4.25rem]">
-                        {t(more)}
-                      </p>
+                      <div className="lp-acc-inner pb-5 pl-[3.75rem] pr-4 sm:pl-[4.25rem]">
+                        {more.map((p, k) => (
+                          <p
+                            key={k}
+                            className="text-[12.5px] leading-[1.8] text-[#a7b6c2] [&:not(:first-child)]:mt-2.5"
+                          >
+                            {t(p)}
+                          </p>
+                        ))}
+                        <ul className="mt-3.5 space-y-2">
+                          {points.map((pt) => (
+                            <li
+                              key={pt}
+                              className="flex items-start gap-2.5 text-[12px] leading-relaxed text-[#8fa3b2]"
+                            >
+                              <span
+                                aria-hidden="true"
+                                className="mt-[6px] size-1 shrink-0 rotate-45 bg-[#e8d9b0]/70"
+                              />
+                              <span>{t(pt)}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
                     </div>
                   </div>
                 </div>
