@@ -3653,7 +3653,14 @@ export function BranchCanopy({
       className={cn(
         "absolute inset-0 z-20 flex min-h-0 flex-col bg-background transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]",
         shown
-          ? "pointer-events-auto translate-y-0 opacity-100"
+          ? cn(
+              "translate-y-0 opacity-100",
+              /* THE PASS-THROUGH — docked in the threshold (bare) the
+                 realm keeps no pointer surface of its own: touches that
+                 are not text and not a hand fall through the lens into
+                 the page, so the threshold scrolls on beneath it. */
+              !bare && "pointer-events-auto"
+            )
           : "pointer-events-none translate-y-2 opacity-0"
       )}
       style={
@@ -4548,7 +4555,16 @@ export function BranchCanopy({
                 setAskAtts([]);
                 sendFromPanel(q, null, carried);
               }}
-              className="pointer-events-auto flex w-full max-w-[560px] items-center gap-2 rounded-full border bg-background/95 py-1.5 pl-2.5 pr-1.5 shadow-[0_10px_36px_-16px_rgba(0,0,0,0.55)] backdrop-blur-xl transition-colors duration-300 focus-within:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)]"
+              className={cn(
+                "pointer-events-auto flex w-full max-w-[560px] items-center gap-2 rounded-full border py-1.5 pl-2.5 pr-1.5 shadow-[0_10px_36px_-16px_rgba(0,0,0,0.55)] transition-colors duration-300 focus-within:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)]",
+                /* THE COOL FLOOR — docked in the threshold (bare) the
+                   line wears an opaque coat and no backdrop blur: a
+                   live blur over a scrolling page is heat the phone
+                   must not pay for a lens. */
+                bare
+                  ? "bg-background"
+                  : "bg-background/95 backdrop-blur-xl"
+              )}
               style={{
                 borderColor:
                   "color-mix(in srgb, var(--scope-a,var(--gd)) 26%, transparent)",

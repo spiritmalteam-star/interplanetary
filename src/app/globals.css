@@ -2282,20 +2282,62 @@ html:not(.dark) .scope-lightcodes {
 }
 /* the lens — the one portal, docked in the threshold:
    expand and minimize are transform-and-clip transitions only, the
-   chamber itself never re-mounts and never re-lays out */
+   chamber itself never re-mounts and never re-lays out. The layer
+   promotions live ONLY inside the animation classes — at rest the
+   lens keeps no permanent GPU layer, and the phone stays cool. */
 .lens-anim {
+  will-change: transform;
   transition:
     transform 0.58s cubic-bezier(0.22, 1, 0.36, 1),
     width 0.58s cubic-bezier(0.22, 1, 0.36, 1),
     height 0.58s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .lens-inner-anim {
+  will-change: transform;
   transition: transform 0.58s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .lens-frame {
   transition:
     border-radius 0.58s cubic-bezier(0.22, 1, 0.36, 1),
     border-color 0.4s ease;
+}
+
+/* THE PASS-THROUGH LAW — while the portal is docked (not expanded),
+   its space belongs to the page: every touch that is not text and
+   not a hand falls through the lens into the threshold beneath, so
+   the visitor can always scroll on and see the bottom of the house.
+   Text keeps its touch (rooms stay readable), every hand (button,
+   input, form, link) keeps its work; the quiet floor, the glows and
+   the empty membrane let the page scroll beneath them. */
+.lens-docked {
+  pointer-events: none;
+}
+.lens-docked button,
+.lens-docked input,
+.lens-docked textarea,
+.lens-docked select,
+.lens-docked a,
+.lens-docked form,
+.lens-docked p,
+.lens-docked h1,
+.lens-docked h2,
+.lens-docked h3,
+.lens-docked h4,
+.lens-docked h5,
+.lens-docked h6,
+.lens-docked blockquote,
+.lens-docked [data-touch-keep] {
+  pointer-events: auto;
+}
+
+/* THE DORMANT LAW — while the docked portal is scrolled out of the
+   eye, every breath inside it rests: no frame is spent on what
+   nobody sees. The realm wakes the moment its slot returns. */
+.lens-dormant,
+.lens-dormant *,
+.lens-dormant *::before,
+.lens-dormant *::after {
+  animation-play-state: paused !important;
 }
 @keyframes lp-breathe {
   0%,
@@ -2314,18 +2356,18 @@ html:not(.dark) .scope-lightcodes {
 .lp-pulse {
   animation: lp-breathe 1.8s ease-in-out infinite;
 }
-/* the minimize medallion rising above the chamber */
+/* the return hand rising at the screen's top corner */
 .rm-me-exit {
   animation: rm-me-exit-in 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.35s backwards;
 }
 @keyframes rm-me-exit-in {
   from {
     opacity: 0;
-    transform: translateX(-50%) translateY(10px);
+    transform: translateY(8px);
   }
   to {
     opacity: 1;
-    transform: translateX(-50%) translateY(0);
+    transform: translateY(0);
   }
 }
 /* the stillness law — every drift and pulse rests on request */

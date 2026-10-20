@@ -52,7 +52,62 @@ const RAIL_LEFT: RailImage[] = [
 const RAIL_RIGHT: RailImage[] = [
   { src: "/landing/img-council.jpg", pos: "50% 42%", h: "26vh", title: "The council of worlds" },
   { src: "/landing/img-garden.jpg", pos: "50% 55%", h: "31vh", title: "The living garden" },
-  { src: "/landing/img-city.jpg", pos: "36% 74%", h: "22vh", title: "The city of light" },
+  { src: "/images/walk/lyran-432.jpg", pos: "50% 46%", h: "22vh", title: "The Lyran sigil" },
+];
+
+/* THE RESTORED WALK — six signals from the civilizations that walk
+   beside us: star-maps, meetings, fields of repair. Each tone of the
+   walk keeps its own picture; the gallery keeps them together. */
+type WalkSignal = {
+  src: string;
+  freq: string;
+  name: string;
+  line: string;
+  pos: string;
+};
+const WALK_GALLERY: WalkSignal[] = [
+  {
+    src: "/images/walk/lyran-432.jpg",
+    freq: "432 Hz",
+    name: "The Lyran sigil",
+    line: "A star-map carried from the first civilizations.",
+    pos: "50% 46%",
+  },
+  {
+    src: "/images/walk/communion-639.jpg",
+    freq: "639 Hz",
+    name: "Communion",
+    line: "Two frequencies meet and neither is lost.",
+    pos: "50% 50%",
+  },
+  {
+    src: "/images/walk/heart-528.jpg",
+    freq: "528 Hz",
+    name: "The heart field",
+    line: "The tone of repair — green gold over the deep.",
+    pos: "50% 50%",
+  },
+  {
+    src: "/images/walk/insight-852.jpg",
+    freq: "852 Hz",
+    name: "Insight",
+    line: "The universe opens its eye and looks back.",
+    pos: "50% 48%",
+  },
+  {
+    src: "/images/walk/root-396.jpg",
+    freq: "396 Hz",
+    name: "The rooted star",
+    line: "Light that grows roots and stays.",
+    pos: "50% 42%",
+  },
+  {
+    src: "/images/walk/clearing-741.jpg",
+    freq: "741 Hz",
+    name: "The clearing",
+    line: "Old noise dissolves; solutions surface.",
+    pos: "50% 50%",
+  },
 ];
 
 /* ------------------------- the parallax rails ------------------------- */
@@ -462,6 +517,61 @@ export default function LandingPage({
                     </p>
                   </div>
                 </div>
+              ))}
+            </div>
+          </section>
+          {/* ============ 03 · THE SIX FREQUENCIES ============ */}
+          <section
+            className="px-4 pb-14 pt-12 sm:px-8"
+            aria-label={t("The six frequencies")}
+          >
+            <SectionHead
+              index="03"
+              kicker={t("Signals from the walk")}
+              title={t("The six frequencies")}
+            />
+            <p className="mt-6 max-w-[640px] text-[13.5px] leading-[1.85] text-[#b9c6cf]">
+              {t(
+                "Along the walk, six tones marked the way — each one a window opened over the worlds that walk beside us. Star-maps, meetings, fields of repair: pictures the mirror keeps of everything we are becoming."
+              )}
+            </p>
+
+            <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">
+              {WALK_GALLERY.map((g, i) => (
+                <figure
+                  key={g.src}
+                  className="group relative overflow-hidden rounded-2xl border border-white/8 bg-[rgba(8,12,20,0.5)] shadow-[0_18px_50px_-30px_rgba(0,0,0,0.9)]"
+                >
+                  <div className="relative aspect-[3/4] overflow-hidden">
+                    <Image
+                      src={g.src}
+                      alt={t(g.name)}
+                      fill
+                      loading="lazy"
+                      sizes="(min-width: 1024px) 280px, (min-width: 640px) 45vw, 50vw"
+                      className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                      style={{ objectPosition: g.pos }}
+                    />
+                    <span
+                      aria-hidden="true"
+                      className="pointer-events-none absolute inset-0 rounded-t-none ring-1 ring-inset ring-white/10"
+                    />
+                    <span className="mono-label absolute left-2.5 top-2.5 rounded-full border border-white/12 bg-[rgba(5,7,13,0.72)] px-2 py-0.5 text-[8px] tracking-[0.18em] text-[#e8d9b0]">
+                      {g.freq}
+                    </span>
+                  </div>
+                  <figcaption className="p-3 sm:p-4">
+                    <p className="mono-label text-[8px] uppercase tracking-[0.22em] text-[#66788a]">
+                      {String(i + 1).padStart(2, "0")}
+                    </p>
+                    <p className="mt-1 text-[13.5px] font-semibold leading-snug text-[#e6edf2]">
+                      {t(g.name)}
+                    </p>
+                    <p className="mt-1 text-[11.5px] leading-snug text-[#8fa3b2]">
+                      {t(g.line)}
+                    </p>
+                  </figcaption>
+                </figure>
               ))}
             </div>
           </section>
