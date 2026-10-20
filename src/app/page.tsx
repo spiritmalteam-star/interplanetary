@@ -1,5 +1,5 @@
-import AppShell from "@/components/mirror/AppShell";
+import LandingGate from "@/components/landing/LandingGate";
 
 export default function Page() {
-  return <AppShell />;
+  return <LandingGate />;
 }

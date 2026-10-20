@@ -128,7 +128,7 @@ function useAura(seed: string): Aura {
  * owned by the channel, so the moment of reveal can freeze exactly
  * what was on stage and dissolve it without a single changed pixel.
  */
-function LoadingTransmission({
+export function LoadingTransmission({
   query,
   phase,
   longWait = false,
@@ -395,7 +395,7 @@ function ExchangeVisual({ message }: { message: ChatMessage }) {
 
 /* ---------- one completed exchange ---------- */
 
-function Exchange({
+export function Exchange({
   message,
   index,
   animate,

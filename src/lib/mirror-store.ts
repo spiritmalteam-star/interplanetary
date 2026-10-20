@@ -701,7 +701,12 @@ interface MirrorState {
     /** THE CATEGORY'S OWN DOOR — when the walk stands focused on a
         category (or a family's own whisper is pressed), the ask rides
         that scope's own voice, never the general channel. */
-    scope?: string
+    scope?: string,
+    /** THE MINIATURE PORTAL'S OWN VOICE — when the ask arrives from a
+        small surface (the landing's mirror in miniature), the answer
+        travels as a presence across a line: one to three short spoken
+        sentences. The full portal always hears the whole transmission. */
+    opts?: { live?: boolean }
   ) => Promise<void>;
   /** The learning branches grown for one landed reply — attached once,
       quietly, so they persist with the exchange. Every thread of the
@@ -2113,7 +2118,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     }));
   },
 
-  askMirror: async (question, attachments, askScope) => {
+  askMirror: async (question, attachments, askScope, opts) => {
     const query = question.trim();
     const mode = get().activeMode;
     /* THE CATEGORY'S OWN DOOR — the ask speaks with the focused
@@ -2257,6 +2262,9 @@ export const useMirror = create<MirrorState>()((set, get) => ({
           history,
           depth: journeyDepth(),
           ...(payload ?? {}),
+          /* the miniature's own law — a small ask is met by a small,
+             warm presence (the route's live-call voice) */
+          ...(opts?.live ? { live: true } : {}),
         }),
       });
       const data = await res.json().catch(() => null);

@@ -2216,3 +2216,151 @@ html:not(.dark) .scope-lightcodes {
     animation: none;
   }
 }
+
+/* ------------------------------------------------------------------ */
+/*  THE THRESHOLD — the landing page of reflectme.space.               */
+/*  A midnight biotechnological ground: layered glows, a faint mesh,   */
+/*  and artwork shards drifting in slim rails along both edges.        */
+/*  Everything here is transform-and-opacity only, and every motion    */
+/*  rests when the visitor prefers stillness.                          */
+/* ------------------------------------------------------------------ */
+.lp-ground {
+  background:
+    radial-gradient(
+      58% 42% at 50% -4%,
+      rgba(103, 232, 249, 0.075),
+      transparent 70%
+    ),
+    radial-gradient(
+      42% 34% at 12% 16%,
+      rgba(245, 216, 142, 0.055),
+      transparent 72%
+    ),
+    radial-gradient(
+      46% 38% at 88% 30%,
+      rgba(159, 216, 220, 0.05),
+      transparent 72%
+    ),
+    radial-gradient(
+      60% 44% at 50% 108%,
+      rgba(103, 232, 249, 0.05),
+      transparent 70%
+    ),
+    #05070d;
+  color-scheme: dark;
+}
+.lp-ground::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    linear-gradient(rgba(159, 216, 220, 0.028) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(159, 216, 220, 0.028) 1px, transparent 1px);
+  background-size: 46px 46px;
+  mask-image: radial-gradient(
+    72% 58% at 50% 34%,
+    black 0%,
+    transparent 100%
+  );
+}
+/* the drifting shards — softly masked, low contrast, never blocking */
+.landing-shard {
+  opacity: 0.5;
+  filter: saturate(0.92) brightness(0.88);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 24px 60px -30px rgba(0, 0, 0, 0.9);
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    black 14%,
+    black 86%,
+    transparent 100%
+  );
+}
+/* the miniature portal — an arch of glass with a living rim */
+.lp-portal-rim {
+  background: conic-gradient(
+    from 210deg,
+    rgba(103, 232, 249, 0.55),
+    rgba(245, 216, 142, 0.5),
+    rgba(167, 139, 250, 0.4),
+    rgba(103, 232, 249, 0.15),
+    rgba(103, 232, 249, 0.55)
+  );
+  filter: blur(0.4px);
+  opacity: 0.85;
+}
+.lp-portal-breathe {
+  background: radial-gradient(
+      42% 30% at 50% 22%,
+      rgba(103, 232, 249, 0.08),
+      transparent 70%
+    ),
+    radial-gradient(
+      46% 30% at 50% 82%,
+      rgba(245, 216, 142, 0.07),
+      transparent 70%
+    );
+  animation: lp-breathe 6.5s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes lp-breathe {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.015);
+  }
+}
+.lp-breathe {
+  animation: lp-breathe 6.5s ease-in-out infinite;
+}
+.lp-pulse {
+  animation: lp-breathe 1.8s ease-in-out infinite;
+}
+.lp-whisper {
+  animation: lp-whisper-in 1.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes lp-whisper-in {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+/* the minimize medallion rising above the chamber */
+.rm-me-exit {
+  animation: rm-me-exit-in 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.35s backwards;
+}
+@keyframes rm-me-exit-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+/* the stillness law — every drift and pulse rests on request */
+@media (prefers-reduced-motion: reduce) {
+  .landing-shard,
+  .lp-portal-breathe,
+  .lp-breathe,
+  .lp-pulse,
+  .rm-me-exit {
+    animation: none !important;
+  }
+  .lp-whisper {
+    animation: none !important;
+  }
+}
