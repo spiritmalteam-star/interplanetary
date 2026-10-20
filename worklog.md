@@ -4017,3 +4017,22 @@ Work Log:
 Stage Summary:
 - The visitor's report was the restore again, and it is cured: the workshop rides origin/main 0506bc1 onward. On top of it, the threshold now speaks plainly — the six frequencies' chapter is gone with its pictures, both numbered chapters open their rows to real information and fold them shut again, the banner wears no logo, the Earth is shifting, and while the mirror channels, three soft orbs ripple and a sheen sweeps the word — the little tell every other intelligence wears, resting whenever the visitor is still or the portal is out of sight.
 - Artifacts: src/components/landing/LandingPage.tsx (chapter removed, accordions, rail shard, banner, shifting line), src/components/mirror/MirrorChanneling.tsx (new), src/components/mirror/BranchCanopy.tsx (room + thread channeling light), src/app/globals.css (.lp-acc + .mc-* + reduce laws), 7 dicts (14 dead keys out, 14 new in).
+
+---
+Task ID: 63
+Agent: Z.ai Code (main orchestrator)
+Task: Version-rollback diagnosis + new batch: bigger mobile hero banner, portal fullscreen/landing controls in the crown (between About and Profile), richer expandable landing sections, and a grand smooth slideshow below the chat (from the uploaded "Awakening and Earth Shift" 10-slide deck)
+
+Work Log:
+- Rollback diagnosis: git log/status/ls-remote confirmed local HEAD e581d35 == remote main (batches A+B intact, working tree clean); the "old version" the user saw was a stale deployment/cache — nothing was lost, no restore needed.
+- Extracted the 10 PDF slides (pymupdf, 2x render → 1152px JPEG q84) into public/landing/slides/slide-01..10.jpg (3.1MB total).
+- New src/components/landing/LandingSlides.tsx: 10-plate carousel below the chat — square stage (edge-to-edge on mobile, rounded 660px plate on desktop), 6.8s autoplay, opacity+transform-only 900ms crossfade, neighbours-only mounting, arrows + 10 gold dots, horizontal swipe, pause on hold/hidden/off-screen (IntersectionObserver), reduced-motion stillness, aria carousel roles.
+- LandingPage.tsx: mobile hero banner enlarged (h 300px → min(64vh,470px), opacity 40→50, stronger mask, clamp(34px,9.5vw,40px) title, taller CTAs h-11); inserted "01 · The shifting Earth" slideshow section directly beneath the docked portal; renumbered chapters (offer 02, earth 03); both accordion datasets restructured to more: string[] (2 paragraphs) + points: string[] (3 gold-diamond bullets) with new render blocks.
+- Crown controls (the one-portal law): BranchCanopy gained realmControls prop rendered between the About door and the Passage (profile) button; AppShell accepts onExpand/onMinimize and wears Maximize2 "Fullscreen" (docked, gold) or Minimize2 "Landing" (expanded, gold); LandingGate passes the callbacks and the two floating pills (lens-expand, chamber-exit) were removed — the crown is now the only crossing.
+- Fixed: missing useCallback import in LandingSlides (500 → 200); lint error react-hooks/set-state-in-effect in the IO fallback (quiet-tick pattern).
+- Verified via agent-browser: 390×844 (grander hero, crown buttons visible and working, full-bleed slides + dots + autoplay, accordion paragraphs/bullets, bottom+footer reachable, expand→minimize cycle) and 1280×800 (rails, diorama crown, 660px slide plate, movement accordion, expand→minimize cycle); zero console errors, bun run lint clean.
+- Delivery: dev server killed (OOM law), commit 4fa8632, pushed inline-token to spiritmalteam-star/interplanetary main (e581d35..4fa8632), ls-remote verified.
+
+Stage Summary:
+- All four new requirements live: bigger mobile hero; fullscreen/landing controls standing in the crown exactly between About us and the profile icon (each in its turn); landing sections open onto much fuller information (2 paragraphs + 3 points per row, both chapters); a big, smooth, self-walking 10-plate "The shifting Earth" slideshow now rests right below the chat, built from the user's uploaded deck.
+- Remote main = 4fa8632; Vercel will auto-deploy. The earlier "restored old version" report was stale cache/deploy — the repo never lost the batch A+B commits.
