@@ -1,6 +1,7 @@
 "use client";
 
 import { useTheme } from "next-themes";
+import Image from "next/image";
 import {
   Fragment,
   memo,
@@ -1792,6 +1793,7 @@ export function BranchCanopy({
   liveError,
   onLatch,
   realm,
+  bare,
   headerExtra,
 }: {
   /** The branch of the living tree this chat belongs to. */
@@ -1828,6 +1830,11 @@ export function BranchCanopy({
       the passage) ride beside them, the seed sits at the centre, the
       tree never folds, and one whisper line speaks from the floor. */
   realm?: boolean;
+  /** THE BARE FLOOR — the realm without its wall of suggestions:
+      the miniature portal's quiet ground (the crown, the rooms and
+      the whisper line stand exactly as ever; only the stones rest
+      until the portal is given the whole screen). */
+  bare?: boolean;
   /** Extra quiet controls riding the realm's crown (the purse, the
       theme) — rendered between the where-pill and the doors. */
   headerExtra?: ReactNode;
@@ -4334,7 +4341,7 @@ export function BranchCanopy({
             down uncovering the deep rows, the reload pouring the stone
             anew. One bloom per stone, compositor only: smooth, alive,
             and cool. The theme pages keep the genealogy tree. */}
-        {realm ? (
+        {realm && !bare ? (
           <GlyphWall
             key={`${hour}:${salt}:${focusKey}`}
             whispers={glyphStage === "first" ? PLAIN_STONES : glyphWhispers}
@@ -4350,6 +4357,40 @@ export function BranchCanopy({
             onReload={renew}
             testIdPrefix={testIdPrefix}
           />
+        ) : realm && bare ? (
+          /* THE BARE FLOOR — the miniature portal's quiet ground: the
+             focused family's own light breathing behind the mark; the
+             whisper line below does the speaking. */
+          <div
+            data-testid={`${testIdPrefix}-bare-floor`}
+            className="absolute inset-0 overflow-hidden"
+          >
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 flex items-center justify-center"
+            >
+              <div
+                className="lp-breathe h-64 w-72 rounded-full"
+                style={{
+                  background:
+                    "radial-gradient(ellipse at center, color-mix(in srgb, var(--scope-a,var(--gd)) 16%, transparent), transparent 70%)",
+                }}
+              />
+            </div>
+            <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-5 pb-28">
+              <Image
+                src="/images/ai/mark-dark.png"
+                alt=""
+                width={64}
+                height={64}
+                className="lp-breathe size-16 rounded-full opacity-90"
+              />
+              <span
+                aria-hidden="true"
+                className="h-px w-16 bg-gradient-to-r from-transparent via-[color-mix(in_srgb,var(--scope-a,var(--gd))_50%,transparent)] to-transparent"
+              />
+            </div>
+          </div>
         ) : (
         <>
         <div

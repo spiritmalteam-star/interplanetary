@@ -3,38 +3,104 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type ComponentType,
 } from "react";
-import { Minimize2 } from "lucide-react";
-import { useMirror } from "@/lib/mirror-store";
+import { Maximize2, Minimize2 } from "lucide-react";
+import { useTheme } from "next-themes";
 import { useT } from "@/lib/i18n";
+import { cn } from "@/lib/utils";
 import LandingPage from "./LandingPage";
 
-/* The chamber arrives as its own chunk — but it is asked for the moment
-   the browser first idles, so by the time the visitor steps through the
-   fold there is nothing left to load. */
+/* ------------------------------------------------------------------ */
+/*  THE THRESHOLD'S GATE.                                              */
+/*                                                                     */
+/*  There is only ONE portal in this house. The chamber itself — the   */
+/*  whole living application — stands docked inside the landing page   */
+/*  as the miniature portal: the real realm at its true proportions,   */
+/*  live and working, without its suggestion wall. The expand hand     */
+/*  opens nothing and carries nothing — the very same portal simply    */
+/*  grows to fill the screen, every word of the conversation already   */
+/*  inside it, and the minimize hand folds it back into its slot.      */
+/*                                                                     */
+/*  THE LENS: the chamber renders at the viewport's true size and is   */
+/*  read through a clipped window — on the phone the window is the     */
+/*  full width (the portal stretches fully on both sides at 1:1); on   */
+/*  the desk it is a diorama at four fifths, cropped around the        */
+/*  realm's own heart. Expand and minimize are transform-and-clip      */
+/*  animations only — the chamber never re-mounts, never re-lays out,  */
+/*  never loses a breath.                                              */
+/* ------------------------------------------------------------------ */
 
 type Phase = "landing" | "opening" | "through" | "closing";
-type WorldKey = "akashic" | "dreambook" | "evolvemed";
 
-const FOLD_EASE = "clip-path 0.82s cubic-bezier(0.7, 0, 0.84, 0)";
-const UNFOLD_EASE = "clip-path 0.9s cubic-bezier(0.16, 1, 0.3, 1)";
+/* the docked geometry — how the real chamber presents its miniature */
+type Geo = {
+  w: number | string;
+  h: number | string;
+  s: number;
+  tx: number;
+  ty: number;
+  radius: number;
+};
+
+function computeGeo(): Geo {
+  const vw = document.documentElement.clientWidth;
+  const vh = window.innerHeight;
+  /* THE PHONE'S LAW — the portal stretches fully on both sides and
+     stands at its true size: the whole realm, edge to edge. dvh keeps
+     the window and the chamber in lockstep when the keyboard rises. */
+  if (vw < 640) {
+    return { w: "100vw", h: "100dvh", s: 1, tx: 0, ty: 0, radius: 0 };
+  }
+  /* THE DESK'S DIORAMA — the realm at four fifths, cropped around its
+     own heart: the crown above, the whisper line below. */
+  const s = 0.8;
+  const rail = Math.min(210, Math.max(130, Math.round(vw * 0.13)));
+  const clear = vw >= 1024 ? 2 * rail + 44 : 44;
+  const w = Math.max(340, Math.min(600, Math.floor(s * vw) - 24, vw - clear));
+  const h = Math.max(420, Math.min(660, Math.floor(s * vh) - 16));
+  const cropW = w / s;
+  const cropH = h / s;
+  const cropX = Math.max(0, (vw - cropW) / 2);
+  const cropY = Math.max(0, (vh - cropH) * 0.82);
+  return {
+    w,
+    h,
+    s,
+    tx: -Math.round(s * cropX),
+    ty: -Math.round(s * cropY),
+    radius: 18,
+  };
+}
 
 export default function LandingGate() {
   const t = useT();
+  const { setTheme } = useTheme();
   const [phase, setPhase] = useState<Phase>("landing");
-  const [Chamber, setChamber] = useState<ComponentType | null>(null);
-  const [landingClip, setLandingClip] = useState<string | null>(null);
-  const [chamberClip, setChamberClip] = useState<string | null>(null);
-  const origin = useRef({ x: 0.5, y: 0.44 });
-  const landingScroll = useRef(0);
+  const [Chamber, setChamber] = useState<ComponentType<
+    { bare?: boolean }
+  > | null>(null);
+  const [geo, setGeo] = useState<Geo | null>(null);
+  const [pending, setPending] = useState(false);
+  const slotRef = useRef<HTMLDivElement | null>(null);
+  const lensRef = useRef<HTMLDivElement | null>(null);
   const busy = useRef(false);
+  const landingScroll = useRef(0);
+  const phaseRef = useRef<Phase>("landing");
+  phaseRef.current = phase;
+
+  /* THE THRESHOLD'S OWN LIGHT — the portal grows out of a midnight
+     page, so the chamber wears its dark vestment here (the realm's
+     own light-toggle keeps working; a chosen light stays chosen). */
+  useEffect(() => {
+    setTheme("dark");
+  }, [setTheme]);
 
   /* THE WARMING FLOOR — the chamber's chunk is pulled the first moment
-     the browser rests. Nothing renders early; the promise is only that
-     the door will open instantly when it is asked for. */
+     the browser rests, so the miniature portal arrives alive. */
   useEffect(() => {
     let cancelled = false;
     const w = window as Window & {
@@ -46,16 +112,18 @@ export default function LandingGate() {
     const pull = () => {
       if (cancelled) return;
       void import("@/components/mirror/AppShell").then((mod) => {
-        if (!cancelled) setChamber(() => mod.default as ComponentType);
+        if (!cancelled)
+          setChamber(
+            () => mod.default as ComponentType<{ bare?: boolean }>
+          );
       });
     };
     if (typeof w.requestIdleCallback === "function") {
       idleId = w.requestIdleCallback(pull);
-      /* some engines starve idle callbacks on busy pages — a quiet
-         backstop guarantees the pull happens */
-      timer = window.setTimeout(pull, 1800);
+      /* a quiet backstop guarantees the pull on busy pages */
+      timer = window.setTimeout(pull, 1500);
     } else {
-      timer = window.setTimeout(pull, 1100);
+      timer = window.setTimeout(pull, 900);
     }
     return () => {
       cancelled = true;
@@ -64,115 +132,189 @@ export default function LandingGate() {
     };
   }, []);
 
-  /* THE SWALLOW — the whole landing folds itself into the miniature
-     portal's mouth (an inline clip-path ellipse; the CSS transformer
-     drops ellipse+var declarations, so every value lives inline). */
-  const enterPortal = useCallback(
-    (world?: WorldKey, portalEl?: HTMLElement | null) => {
-      if (busy.current) return;
-      busy.current = true;
-      if (world) {
-        const s = useMirror.getState();
-        if (world === "akashic") s.openAkashic();
-        else if (world === "dreambook") s.openDreamBook();
-        else if (world === "evolvemed") s.openEvolveMed();
-      }
-      let px = Math.round(origin.current.x * window.innerWidth);
-      let py = Math.round(origin.current.y * window.innerHeight);
-      if (portalEl) {
-        const r = portalEl.getBoundingClientRect();
-        px = Math.round(r.left + r.width / 2);
-        py = Math.round(r.top + r.height / 2);
-      }
-      setPhase("opening");
-      requestAnimationFrame(() =>
-        requestAnimationFrame(() => {
-          setLandingClip(`ellipse(0% at ${px}px ${py}px)`);
-        })
-      );
-      window.setTimeout(() => {
-        setPhase("through");
-        busy.current = false;
-      }, 880);
+  /* the geometry follows the viewport, never the keyboard */
+  useEffect(() => {
+    const apply = () => setGeo(computeGeo());
+    apply();
+    let tm: number | undefined;
+    const onResize = () => {
+      window.clearTimeout(tm);
+      tm = window.setTimeout(apply, 180);
+    };
+    window.addEventListener("resize", onResize);
+    return () => {
+      window.removeEventListener("resize", onResize);
+      window.clearTimeout(tm);
+    };
+  }, []);
+
+  /* THE DOCK — while the visitor walks the landing, the lens rides
+     exactly over its slot: one transform per scroll breath. */
+  const syncLens = useCallback(() => {
+    const lens = lensRef.current;
+    const slot = slotRef.current;
+    if (!lens || !slot) return;
+    const r = slot.getBoundingClientRect();
+    lens.style.transform = `translate3d(${Math.round(r.left)}px, ${Math.round(
+      r.top
+    )}px, 0)`;
+  }, []);
+
+  useLayoutEffect(() => {
+    if (phase !== "landing") return;
+    syncLens();
+    let cancelled = false;
+    document.fonts?.ready.then(() => {
+      if (!cancelled && phaseRef.current === "landing") syncLens();
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [phase, geo, Chamber, syncLens]);
+
+  const handleLandingScroll = useCallback(
+    (y: number) => {
+      landingScroll.current = y;
+      if (phaseRef.current === "landing") syncLens();
     },
-    []
+    [syncLens]
   );
 
-  /* THE RETURN — the chamber folds itself into a drop of light and the
-     landing stands beneath it again, exactly where it was left. */
+  /* THE EXPAND — nothing is opened: the same portal simply grows.
+     The landing sinks beneath it; every word stays where it was. */
+  const expandPortal = useCallback(() => {
+    if (busy.current) return;
+    if (!Chamber) {
+      setPending(true);
+      return;
+    }
+    busy.current = true;
+    setPhase("opening");
+    window.setTimeout(() => {
+      setPhase("through");
+      busy.current = false;
+    }, 680);
+  }, [Chamber]);
+
+  /* an early ask to enter — honored the moment the chamber arrives */
+  useEffect(() => {
+    if (pending && Chamber) {
+      setPending(false);
+      expandPortal();
+    }
+  }, [pending, Chamber, expandPortal]);
+
+  /* THE RETURN — the portal folds back into its slot in the page */
   const minimize = useCallback(() => {
     if (busy.current) return;
     busy.current = true;
     setPhase("closing");
-    requestAnimationFrame(() =>
-      requestAnimationFrame(() => {
-        setChamberClip("ellipse(0% at 50% 44%)");
-      })
-    );
     window.setTimeout(() => {
       setPhase("landing");
-      setChamberClip(null);
       busy.current = false;
-    }, 860);
+    }, 700);
   }, []);
 
-  const landingVisible =
-    phase === "landing" || phase === "opening" || phase === "closing";
-  const chamberMounted = Chamber !== null;
+  /* the expanding lens flies to the screen's corners */
+  useLayoutEffect(() => {
+    if (phase !== "opening") return;
+    const lens = lensRef.current;
+    if (lens) lens.style.transform = "translate3d(0, 0, 0)";
+  }, [phase]);
+
+  /* during the closing the landing remounts and restores its own
+     scroll; only then can the lens find its slot again */
+  useEffect(() => {
+    if (phase !== "closing") return;
+    const id = window.setTimeout(() => {
+      requestAnimationFrame(() => requestAnimationFrame(syncLens));
+    }, 80);
+    return () => window.clearTimeout(id);
+  }, [phase, syncLens]);
+
+  const animating = phase === "opening" || phase === "closing";
+  const fullscreen = phase === "opening" || phase === "through";
+  const bare = phase !== "through";
 
   return (
     <>
-      {/* THE CHAMBER — mounted from the first idle breath, resting
-          beneath the landing until the fold asks for it */}
-      {chamberMounted && (
-        <div
-          aria-hidden={phase !== "through" && phase !== "closing"}
-          inert={phase !== "through" && phase !== "closing"}
-          data-testid="chamber-layer"
-          className="fixed inset-0 z-10 bg-background"
-          style={
-            chamberClip
-              ? {
-                  clipPath: chamberClip,
-                  transition: UNFOLD_EASE,
-                }
-              : undefined
-          }
-        >
-          <Chamber />
-        </div>
-      )}
-
-      {/* THE LANDING — the threshold above the floor */}
-      {landingVisible && (
+      {/* ---------------- THE LANDING — the threshold ---------------- */}
+      {phase !== "through" && (
         <div
           data-testid="landing-root"
-          className="fixed inset-0 z-30 overflow-y-auto overscroll-y-contain bg-[#05070d]"
-          style={
-            landingClip
-              ? {
-                  clipPath: landingClip,
-                  transition: FOLD_EASE,
-                }
-              : undefined
-          }
+          className={cn(
+            "fixed inset-0 z-30 overflow-y-auto overscroll-y-contain bg-[#05070d] transition-opacity duration-500",
+            phase === "opening" && "pointer-events-none opacity-0"
+          )}
         >
           <LandingPage
-            onEnter={enterPortal}
-            onOrigin={(x, y) => {
-              origin.current = { x, y };
-            }}
-            onScrollMemorize={(y) => {
-              landingScroll.current = y;
-            }}
+            slotRef={slotRef}
+            slotStyle={
+              geo
+                ? { width: geo.w, height: geo.h }
+                : { height: "min(100dvh, 660px)" }
+            }
+            onExpand={expandPortal}
+            onScroll={handleLandingScroll}
             initialScroll={landingScroll.current}
-            minimized={phase === "closing"}
           />
         </div>
       )}
 
-      {/* THE MINIMIZE MEDALLION — rides above the chamber, one small
-          hand that carries the visitor back to the threshold */}
+      {/* ------------- THE LENS — the one portal, docked ------------- */}
+      {Chamber && geo && (
+        <div
+          ref={lensRef}
+          className={cn(
+            "fixed left-0 top-0 z-[45] will-change-transform",
+            animating && "lens-anim"
+          )}
+          style={{
+            width: fullscreen ? "100vw" : geo.w,
+            height: fullscreen ? "100dvh" : geo.h,
+          }}
+        >
+          <div
+            data-testid="portal-lens"
+            className="lens-frame absolute inset-0 overflow-hidden border border-white/10 bg-background shadow-[0_40px_120px_-40px_rgba(0,0,0,0.95)]"
+            style={{ borderRadius: fullscreen ? 0 : geo.radius }}
+          >
+            <div
+              className={cn(
+                "absolute left-0 top-0 h-[var(--app-h,100dvh)] w-screen will-change-transform",
+                animating && "lens-inner-anim"
+              )}
+              style={{
+                transformOrigin: "0 0",
+                transform:
+                  phase === "landing" || phase === "closing"
+                    ? `translate3d(${geo.tx}px, ${geo.ty}px, 0) scale(${geo.s})`
+                    : "translate3d(0, 0, 0) scale(1)",
+              }}
+            >
+              <Chamber bare={bare} />
+            </div>
+          </div>
+
+          {/* THE EXPAND HAND — window chrome at the frame's crown */}
+          {phase === "landing" && (
+            <button
+              type="button"
+              onClick={expandPortal}
+              aria-label={t("Enter the portal")}
+              title={t("Enter the portal")}
+              data-testid="lens-expand"
+              className="focus-glow absolute -top-4 left-1/2 z-10 flex h-8 -translate-x-1/2 items-center gap-1.5 rounded-full border border-[rgba(232,217,176,0.45)] bg-[rgba(9,13,21,0.94)] px-3.5 text-[11px] font-medium tracking-wide text-[#f0e7cd] shadow-[0_10px_30px_-12px_rgba(0,0,0,0.85)] backdrop-blur-md transition-all duration-300 hover:border-[rgba(232,217,176,0.85)] hover:text-[#f6ecd2]"
+            >
+              <Maximize2 className="size-3" aria-hidden="true" />
+              {t("Enter the portal")}
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* THE MINIMIZE MEDALLION — one small hand that carries the
+          visitor back to the threshold, the portal folding behind it */}
       {phase === "through" && (
         <button
           type="button"

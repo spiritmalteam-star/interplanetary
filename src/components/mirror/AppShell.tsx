@@ -52,19 +52,25 @@ const FRAME_LIFT = "[transform:translateY(calc(var(--app-shift,0px)*-1))]";
 /*  the walk continues from the branches grown on every reply.         */
 /*  The old interface is gone — no rails, no handles, no composer      */
 /*  floor: one tree, its rooms, and four quiet doors.                  */
+/*                                                                     */
+/*  THE MINIATURE — the threshold docks this very realm inside the     */
+/*  landing page as the portal in miniature; there it stands `bare`:   */
+/*  the same crown, the same whisper line, the same rooms — only the   */
+/*  wall of suggestions rests until the portal is given the whole      */
+/*  screen.                                                            */
 /* ------------------------------------------------------------------ */
-export default function AppShell() {
+export default function AppShell({ bare = false }: { bare?: boolean }) {
   return (
     <div className="paper-grain relative h-[var(--app-h,100dvh)] overflow-hidden">
       {/* the purse keeper rides above every world — the 402 watch, the
           Stripe greeting, the unlock modal */}
       <WalletGuard />
-      <AppShellViews />
+      <AppShellViews bare={bare} />
     </div>
   );
 }
 
-function AppShellViews() {
+function AppShellViews({ bare }: { bare: boolean }) {
   const view = useMirror((s) => s.view);
   const activeMode = useMirror((s) => s.activeMode);
   const refreshMe = useMirror((s) => s.refreshMe);
@@ -370,6 +376,7 @@ function AppShellViews() {
       <StarField />
       <BranchCanopy
         realm
+        bare={bare}
         category={activeMode}
         open={true}
         onPick={(q, scope, attachments) => {
@@ -384,9 +391,9 @@ function AppShellViews() {
         onClose={() => {}}
         disabled={channelLoading}
         testIdPrefix="realm-tree"
-        introSub={t(
-          "Press a whisper to walk, or speak below."
-        )}
+        introSub={bare
+          ? t("Speak — the mirror is listening.")
+          : t("Press a whisper to walk, or speak below.")}
         contextText={channel.messages
           .slice(-6)
           .map((m) => `${m.query ?? ""}\n${m.text}`)

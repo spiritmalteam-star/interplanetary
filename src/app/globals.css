@@ -2280,32 +2280,22 @@ html:not(.dark) .scope-lightcodes {
     transparent 100%
   );
 }
-/* the miniature portal — an arch of glass with a living rim */
-.lp-portal-rim {
-  background: conic-gradient(
-    from 210deg,
-    rgba(103, 232, 249, 0.55),
-    rgba(245, 216, 142, 0.5),
-    rgba(167, 139, 250, 0.4),
-    rgba(103, 232, 249, 0.15),
-    rgba(103, 232, 249, 0.55)
-  );
-  filter: blur(0.4px);
-  opacity: 0.85;
+/* the lens — the one portal, docked in the threshold:
+   expand and minimize are transform-and-clip transitions only, the
+   chamber itself never re-mounts and never re-lays out */
+.lens-anim {
+  transition:
+    transform 0.58s cubic-bezier(0.22, 1, 0.36, 1),
+    width 0.58s cubic-bezier(0.22, 1, 0.36, 1),
+    height 0.58s cubic-bezier(0.22, 1, 0.36, 1);
 }
-.lp-portal-breathe {
-  background: radial-gradient(
-      42% 30% at 50% 22%,
-      rgba(103, 232, 249, 0.08),
-      transparent 70%
-    ),
-    radial-gradient(
-      46% 30% at 50% 82%,
-      rgba(245, 216, 142, 0.07),
-      transparent 70%
-    );
-  animation: lp-breathe 6.5s ease-in-out infinite;
-  pointer-events: none;
+.lens-inner-anim {
+  transition: transform 0.58s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.lens-frame {
+  transition:
+    border-radius 0.58s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.4s ease;
 }
 @keyframes lp-breathe {
   0%,
@@ -2324,19 +2314,6 @@ html:not(.dark) .scope-lightcodes {
 .lp-pulse {
   animation: lp-breathe 1.8s ease-in-out infinite;
 }
-.lp-whisper {
-  animation: lp-whisper-in 1.2s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-@keyframes lp-whisper-in {
-  from {
-    opacity: 0;
-    transform: translateY(5px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
 /* the minimize medallion rising above the chamber */
 .rm-me-exit {
   animation: rm-me-exit-in 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.35s backwards;
@@ -2354,13 +2331,14 @@ html:not(.dark) .scope-lightcodes {
 /* the stillness law — every drift and pulse rests on request */
 @media (prefers-reduced-motion: reduce) {
   .landing-shard,
-  .lp-portal-breathe,
   .lp-breathe,
   .lp-pulse,
   .rm-me-exit {
     animation: none !important;
   }
-  .lp-whisper {
-    animation: none !important;
+  .lens-anim,
+  .lens-inner-anim,
+  .lens-frame {
+    transition: none !important;
   }
 }
