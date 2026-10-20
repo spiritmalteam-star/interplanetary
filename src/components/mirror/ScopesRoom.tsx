@@ -1,0 +1,190 @@
+"use client";
+
+import { Atom, FlaskConical, Layers, Leaf, Wind } from "lucide-react";
+import { useMirror, type LandingScopeKey } from "@/lib/mirror-store";
+import { SCOPE_META, SCOPE_ORDER } from "@/lib/mirror/workspaces";
+import { useT } from "@/lib/i18n";
+
+/* ------------------------------------------------------------------ */
+/*  THE SCOPES ROOM — the fields' own workplace's body. The crown's    */
+/*  Scopes hand opens the independent scopes window and the fields'    */
+/*  subcategories render here: one card per field, the field's own     */
+/*  light inside, the chosen one marked. A chosen field dresses the    */
+/*  whole chat in its light and the back hand (the window header's     */
+/*  arrow) returns to the main landing chat.                           */
+/*                                                                     */
+/*  THE LAB FIELDS (the visitor named the wish): the Quantum and       */
+/*  HealX fields carry their own laboratory benches — instruments,     */
+/*  interactivity and progression standing inside the field's floor —  */
+/*  so each wears its honest lab mark here, beside the fields that     */
+/*  stay pure conversation. THE INTERPLANETARY FIELD no longer stands  */
+/*  among the scopes — its crossing lives in the codex now, as the     */
+/*  Interplanetary Bridge above the chronoscope's archive.             */
+/* ------------------------------------------------------------------ */
+
+/* the fields that open with a laboratory bench on their floor */
+const LAB_FIELDS: Record<
+  string,
+  { mark: string; tools: { icon: typeof Atom; label: string }[] }
+> = {
+  quantum: {
+    mark: "Lab bench inside",
+    tools: [
+      { icon: Atom, label: "State · Entanglement" },
+    ],
+  },
+  healing: {
+    mark: "Lab bench inside",
+    tools: [
+      { icon: Wind, label: "Breath · Body · Care log" },
+    ],
+  },
+  florax: {
+    mark: "Lab bench inside",
+    tools: [
+      { icon: Leaf, label: "Mortar · Extraction · Formulation" },
+    ],
+  },
+};
+
+export function ScopesRoom() {
+  const t = useT();
+  const landingScope = useMirror((s) => s.landingScope);
+  const setLandingScope = useMirror((s) => s.setLandingScope);
+  const closeScopes = useMirror((s) => s.closeScopes);
+
+  const pickScope = (key: LandingScopeKey) => {
+    /* every field is its own world — the choice dresses the whole chat,
+       and the room returns the visitor to the main chat landing wearing
+       the field's light */
+    setLandingScope(key);
+    closeScopes();
+  };
+
+  return (
+    <div
+      className="nice-scroll h-full overflow-y-auto overscroll-contain"
+      data-testid="scopes-room"
+    >
+      <div className="mx-auto w-full max-w-[720px] px-4 pb-10 pt-4 sm:px-6">
+        {/* the room's own quiet head */}
+        <div className="flex items-center gap-2.5">
+          <span
+            aria-hidden="true"
+            className="flex size-8 shrink-0 items-center justify-center rounded-full"
+            style={{
+              background:
+                "color-mix(in srgb, var(--scope-a,var(--gd)) 10%, transparent)",
+              boxShadow:
+                "inset 0 0 0 1px color-mix(in srgb, var(--scope-a,var(--gd)) 30%, transparent)",
+            }}
+          >
+            <Layers className="size-4 text-[var(--scope-a,var(--gd))]" aria-hidden="true" />
+          </span>
+          <div className="min-w-0">
+            <h2 className="font-serif text-[16px] font-semibold text-foreground">
+              {t("Scopes")}
+            </h2>
+            <p className="mono-label text-[9.5px] uppercase tracking-[0.18em] text-muted-foreground/70">
+              {t("The field the chat wears")}
+            </p>
+          </div>
+        </div>
+
+        {/* THE FIELDS — one card each, the field's own light worn inside.
+            Every family wears its own card; nothing else stands here. */}
+        <div className="mt-4 grid gap-2 sm:grid-cols-2">
+          {SCOPE_ORDER.map((key) => {
+            const s = SCOPE_META[key];
+            const focused = landingScope === key;
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => pickScope(key)}
+                aria-pressed={focused}
+                title={t(s.spirit)}
+                data-testid={`scopes-room-field-${key}`}
+                className="focus-glow group relative flex items-center gap-3 rounded-2xl border px-3.5 py-3 text-left transition-all duration-300"
+                style={
+                  focused
+                    ? {
+                        background: `color-mix(in srgb, ${s.accent} 10%, transparent)`,
+                        boxShadow: `inset 0 0 0 1px color-mix(in srgb, ${s.accent} 45%, transparent)`,
+                      }
+                    : {
+                        borderColor:
+                          "color-mix(in srgb, var(--scope-a,var(--gd)) 20%, var(--hairline))",
+                        background: "var(--glass-bg-soft, transparent)",
+                      }
+                }
+              >
+                <span
+                  aria-hidden="true"
+                  className="flex size-8 shrink-0 items-center justify-center rounded-full"
+                  style={{
+                    background: `color-mix(in srgb, ${s.accent} 16%, transparent)`,
+                    boxShadow: `inset 0 0 0 1px color-mix(in srgb, ${s.accent} 45%, transparent)`,
+                  }}
+                >
+                  <span
+                    className="size-2 rounded-full"
+                    style={{
+                      backgroundColor: s.accent,
+                      boxShadow: `0 0 8px 0 color-mix(in srgb, ${s.accent} 75%, transparent)`,
+                    }}
+                  />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[14px] font-medium text-foreground">
+                    {t(s.label)}
+                  </span>
+                  <span className="mono-label block truncate text-[9.5px] uppercase tracking-[0.14em] text-muted-foreground/70">
+                    {t(s.spirit)}
+                  </span>
+                  {/* THE LAB MARK — the fields that carry their own
+                      laboratory bench wear the honest instruments line */}
+                  {LAB_FIELDS[key] && (
+                    <span className="mt-1 flex items-center gap-1.5">
+                      <FlaskConical
+                        className="size-3 shrink-0"
+                        style={{ color: s.accent }}
+                        aria-hidden="true"
+                      />
+                      <span
+                        className="mono-label truncate text-[8.5px] uppercase tracking-[0.16em]"
+                        style={{ color: s.accent }}
+                      >
+                        {t(LAB_FIELDS[key].mark)} · {t(LAB_FIELDS[key].tools[0].label)}
+                      </span>
+                    </span>
+                  )}
+                </span>
+                {focused && (
+                  <span
+                    className="mono-label shrink-0 rounded-full border px-1.5 py-0.5 text-[8.5px] uppercase tracking-[0.14em]"
+                    style={{
+                      color: s.accent,
+                      borderColor: `color-mix(in srgb, ${s.accent} 40%, transparent)`,
+                      background: `color-mix(in srgb, ${s.accent} 9%, transparent)`,
+                    }}
+                  >
+                    {t("Here")}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* the honest word — the back hand of the workplace header lays
+            the whole room down and the main chat landing stands again */}
+        <p className="mt-8 text-center text-[11.5px] leading-relaxed text-muted-foreground/60">
+          {t(
+            "Choose a field and the chat wears its light — the arrow at the top returns to the chat."
+          )}
+        </p>
+      </div>
+    </div>
+  );
+}

@@ -2,24 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import ZAI from "@/lib/zai-client";
 import { meterRoute } from "@/lib/server/meter";
 
+import { LANGUAGE_NAMES } from "@/lib/server/akashic-record";
 /* ------------------------------------------------------------------ */
 /*  THE POOM LOOM — a poem woven as its own artifact, straight inside  */
 /*  the channel. The visitor's words are the loom's tuning: subject,   */
 /*  feeling, dedicatee — everything the words carry. No mirror speech  */
 /*  travels with it: the ink itself is the reply.                      */
-/* ------------------------------------------------------------------ */
-
-const LANGUAGE_NAMES: Record<string, string> = {
-  en: "English",
-  sq: "Albanian",
-  it: "Italian",
-  el: "Greek",
-  de: "German",
-  fr: "French",
-  es: "Spanish",
-  tr: "Turkish",
-};
-
 const SYSTEM_PROMPT = `You are THE POOM LOOM of the Mirror Entity Digital Chamber — the poem-hand of the weaving instrument. A visitor has set down words and the loom answers with ONE poem, woven from their very words.
 
 NATURE

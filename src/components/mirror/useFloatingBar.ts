@@ -21,14 +21,16 @@ import { useCallback, useEffect, useRef, useState } from "react";
 /*  Quantum, Evolve Med, Invent).                                      */
 /* ------------------------------------------------------------------ */
 
-/* the upward breath must travel this far before the bar rises — a
-   real turn toward the beginning, not a small adjustment */
-const REVEAL_TRAVEL_PX = 120;
-/* the finger's version of the same law — a drawn pull, not a nudge */
-const TOUCH_REVEAL_TRAVEL_PX = 96;
+/* the upward breath must travel this far before the bar rises — the
+   visitor named the law: a COUPLE of swipes toward the beginning
+   should be enough, never a long climb. Two deliberate swipes (~35px
+   each) cross this line inside one breath; a single twitch does not. */
+const REVEAL_TRAVEL_PX = 72;
+/* the finger's version of the same law — two short drawn pulls */
+const TOUCH_REVEAL_TRAVEL_PX = 56;
 /* a pause longer than this between upward movements starts a new
-   breath — slow drips never add up into a reveal */
-const UP_CONTINUITY_MS = 700;
+   breath — but a breath is allowed the time two real swipes take */
+const UP_CONTINUITY_MS = 900;
 
 export function useFloatingBarAutoHide({
   /** An ancestor of every scroller whose movement should hide the bar —
@@ -46,17 +48,33 @@ export function useFloatingBarAutoHide({
   /** Change to re-bind the listeners when the scroller remounts
       (the conversation is keyed by view). */
   rebindKey,
+  /** THE DESKTOP'S OWN LAW — when true, the wide screen keeps its
+      hands: on a desktop pointer (fine pointer, ≥1024px) the bar never
+      sinks away — the new chat and every room hand stand at the top
+      from the first word to the last. The phone keeps the reading
+      bar law as it always was. */
+  desktopPersistent = false,
 }: {
   rootRef: React.RefObject<HTMLElement | null>;
   barRef: React.RefObject<HTMLElement | null>;
   hold?: boolean;
   delayMs?: number;
   rebindKey?: string;
+  desktopPersistent?: boolean;
 }): boolean {
   /* whether the bar has sunk; an external hold (an open menu) raises
      it again for as long as it lasts — derived, never doubled */
   const [sank, setSank] = useState(false);
-  const hidden = sank && !hold;
+  const [desktop, setDesktop] = useState(false);
+  useEffect(() => {
+    if (!desktopPersistent) return;
+    const mq = window.matchMedia("(min-width: 1024px) and (pointer: fine)");
+    const apply = () => setDesktop(mq.matches);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, [desktopPersistent]);
+  const hidden = sank && !hold && !desktop;
 
   const timerRef = useRef<number | null>(null);
   const hoverRef = useRef(false);
@@ -250,9 +268,15 @@ export function useFloatingBarAutoHide({
     bar?.addEventListener("focusin", onBarFocusIn);
     bar?.addEventListener("focusout", onBarFocusOut);
 
+    /* a freshly bound bar (and a room that just turned its page)
+       stands visible first — the stillness law takes it from there.
+       One breath deferred (the setState never runs inside the effect
+       body itself, the cascading-render law keeps its peace). */
+    const rise = window.setTimeout(() => setSank(false), 0);
     arm();
 
     return () => {
+      window.clearTimeout(rise);
       clearTimer();
       root.removeEventListener("scroll", onScroll, { capture: true });
       root.removeEventListener("wheel", onWheel);

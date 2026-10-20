@@ -1,7 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { LoaderCircle, Mail } from "lucide-react";
+import {
+  Check,
+  Eye,
+  EyeOff,
+  KeyRound,
+  LoaderCircle,
+  Lock,
+  Mail,
+  MailCheck,
+  RefreshCw,
+  ShieldCheck,
+  UserRound,
+} from "lucide-react";
+import Image from "next/image";
 import { toast } from "sonner";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
@@ -16,59 +29,461 @@ import { cn } from "@/lib/utils";
 /*  Security law: nothing here ever stores the password — only the     */
 /*  door (the server) touches it; the answer is a signed httpOnly      */
 /*  cookie; the email's existence never leaks through one message.     */
+/*                                                                     */
+/*  THE PROFESSIONAL DOOR — a quiet branded head, two clear tabs,      */
+/*  guided fields with their own icons, a guarded secret phrase with   */
+/*  its show/hide hand, the house's promises spoken plainly — and the  */
+/*  RETURN DOOR: a forgotten secret phrase travels out as a letter,    */
+/*  and the letter's own key (?reset=…) opens the room where the       */
+/*  passage is carved anew. The verification letter's answer           */
+/*  (?verified=…) is spoken here as a gentle word too.                 */
+/*                                                                     */
+/*  THE PROOF OF THE MAILBOX — a new email passage receives a letter   */
+/*  with a six-digit code: the CODE room holds the visitor's hand      */
+/*  while it waits (resend with a cool-down, a change of address for   */
+/*  the letters that went astray), and the code — typed once — proves  */
+/*  the mailbox and carves the thirty-day session (the same passage    */
+/*  the Google door gives — no second sign-in). The code rests ten     */
+/*  minutes, works once, is stored only as a scrypt echo, and the      */
+/*  flood-gates keep the brute force out. The older letter-link rooms  */
+/*  (check / confirm) still serve any letter already in flight.        */
 /* ------------------------------------------------------------------ */
+
+type DoorView = "signin" | "register" | "forgot" | "reset" | "check" | "confirm" | "code" | "reset-code";
 
 export function AuthModal() {
   const t = useT();
   const authOpen = useMirror((s) => s.authOpen);
   const authMode = useMirror((s) => s.authMode);
   const googleConfigured = useMirror((s) => s.googleConfigured);
+  const mailConfigured = useMirror((s) => s.mailConfigured);
+  const me = useMirror((s) => s.me);
   const closeAuth = useMirror((s) => s.closeAuth);
   const setMe = useMirror((s) => s.setMe);
   const refreshMe = useMirror((s) => s.refreshMe);
 
-  const [tab, setTab] = useState<"signin" | "register">("signin");
+  const [view, setView] = useState<DoorView>("signin");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const [showPw, setShowPw] = useState(false);
+  /* the return door's own keeping */
+  const [resetToken, setResetToken] = useState<string | null>(null);
+  const [doorNote, setDoorNote] = useState<{ ok: boolean; text: string } | null>(null);
+  /* the proof of the mailbox — the check-email and confirm rooms */
+  const [pendingEmail, setPendingEmail] = useState("");
+  const [resendCool, setResendCool] = useState(0);
+  const [changeOpen, setChangeOpen] = useState(false);
+  const [changeEmail, setChangeEmail] = useState("");
+  /* THE SIX DOORS — the code rooms' own keeping */
+  const [code, setCode] = useState("");
+  const [verifyToken, setVerifyToken] = useState<string | null>(null);
+  const [verifyNext, setVerifyNext] = useState<string | null>(null);
+  const [verifyState, setVerifyState] = useState<"idle" | "busy" | "done" | "spent">("idle");
+  const [verifyNote, setVerifyNote] = useState<{ code: string; text: string } | null>(null);
 
   useEffect(() => {
     if (authOpen) {
-      setTab(authMode === "register" ? "register" : "signin");
+      /* THE LETTER'S PRIORITY — when the visitor arrived holding a
+         reset key or a verification key, the door is already standing
+         in that room; the opening hand never drags it back to sign-in. */
+      if (view === "reset" && resetToken) return;
+      if (view === "confirm" && verifyToken) return;
+      if (authMode === "check") {
+        /* the check room needs a signed passage; without one, the
+           sign-in room greets (the letter's resend asks for a session) */
+        if (useMirror.getState().me) {
+          setPendingEmail((prev) => prev || useMirror.getState().me!.email);
+          setView("check");
+        } else {
+          setView("signin");
+        }
+      } else {
+        setView(authMode === "register" ? "register" : "signin");
+      }
       setPassword("");
+      setShowPw(false);
+      setDoorNote(null);
     }
   }, [authOpen, authMode]);
 
-  if (!authOpen) return null;
+  /* the resend's own breath — one letter a minute */
+  useEffect(() => {
+    if (resendCool <= 0) return;
+    const id = window.setInterval(() => setResendCool((s) => (s > 0 ? s - 1 : 0)), 1000);
+    return () => window.clearInterval(id);
+  }, [resendCool]);
+
+  /* THE LETTER'S RETURN — when the visitor arrives holding a reset
+     key (?reset=…), the door opens straight into the room where the
+     passage is carved anew; the verification letter's answer
+     (?verified=…) is spoken once and the address left clean; and the
+     letter's own key (?verify=…&next=…) opens the confirm room, where
+     one touch proves the mailbox and carves the session. */
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const reset = params.get("reset");
+      const verified = params.get("verified");
+      const verify = params.get("verify");
+      const next = params.get("next");
+      if (reset && reset.length >= 20 && reset.length <= 200) {
+        setResetToken(reset);
+        setView("reset");
+        setDoorNote(null);
+        useMirror.getState().openAuth("signin");
+      } else if (verify && verify.length >= 20 && verify.length <= 200) {
+        setVerifyToken(verify);
+        setVerifyNext(next);
+        setVerifyState("idle");
+        setVerifyNote(null);
+        setView("confirm");
+        useMirror.getState().openAuth("signin");
+      } else if (verified) {
+        toast.success(
+          verified === "1"
+            ? t("Your email now belongs to your passage — the library keeps you on every device.")
+            : t("That key has already rested or was never carved. You can ask for a fresh letter anytime.")
+        );
+      }
+      if (reset || verified || verify || next) {
+        params.delete("reset");
+        params.delete("verified");
+        params.delete("verify");
+        params.delete("next");
+        const rest = params.toString();
+        window.history.replaceState(
+          null,
+          "",
+          `${window.location.pathname}${rest ? `?${rest}` : ""}`
+        );
+      }
+    } catch {
+      /* the address stays as it is — the door still serves */
+    }
+  }, []);
+
+  /* THE MACHINE'S LAW — while the first server verification is still
+     in flight (meStatus "loading"), the passage stays closed: nothing
+     can flash, and a visitor the server has already confirmed never
+     sees the sign-in form appear "again" at the letter's return. */
+  const meStatus = useMirror((s) => s.meStatus);
+
+  if (!authOpen || meStatus === "loading") return null;
+
+  /* THE RESIGNED LETTER — one fresh key flies to the pending address */
+  const resendLetter = async () => {
+    if (busy || resendCool > 0) return;
+    setBusy(true);
+    try {
+      const here = window.location.pathname + window.location.search;
+      const res = await fetch("/api/auth/verify/resend", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ next: here }),
+      });
+      const data = (await res.json().catch(() => null)) as
+        | { verified?: boolean; message?: string; error?: string }
+        | null;
+      if (data?.verified) {
+        toast.success(t("The passage already shines — the email is verified."));
+        setView("signin");
+        return;
+      }
+      if (!res.ok) {
+        toast.error(data?.error ?? t("The letter could not be written. Rest, then try again."));
+        return;
+      }
+      setResendCool(60);
+      toast.success(t(data?.message ?? "A letter of light is on its way."));
+    } catch {
+      toast.error(t("The letter could not be written. Rest, then try again."));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  /* THE NEW ADDRESS — a pending passage re-names itself; a fresh key
+     flies to the new address alone */
+  const submitChangeEmail = async () => {
+    if (busy) return;
+    const next = changeEmail.trim();
+    if (!next || !next.includes("@")) {
+      toast.error(t("That email does not look ready to receive light."));
+      return;
+    }
+    setBusy(true);
+    try {
+      const res = await fetch("/api/auth/email/change", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: next }),
+      });
+      const data = (await res.json().catch(() => null)) as
+        | { email?: string; message?: string; error?: string }
+        | null;
+      if (!res.ok) {
+        toast.error(data?.error ?? t("The address could not be re-named. Rest, then try again."));
+        return;
+      }
+      setPendingEmail(data?.email ?? next);
+      setChangeEmail("");
+      setChangeOpen(false);
+      setResendCool(60);
+      toast.success(t(data?.message ?? "A fresh letter of light flies to the new address."));
+      void refreshMe(true);
+    } catch {
+      toast.error(t("The address could not be re-named. Rest, then try again."));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  /* THE PROOF'S OWN HAND — one touch, one POST, the mailbox is proven
+     and the thirty-day session carved before the answer even lands */
+  const confirmVerify = async () => {
+    if (!verifyToken || verifyState === "busy" || verifyState === "done") return;
+    setVerifyState("busy");
+    setVerifyNote(null);
+    try {
+      const res = await fetch("/api/auth/verify/confirm", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: verifyToken, next: verifyNext }),
+      });
+      const data = (await res.json().catch(() => null)) as
+        | {
+            verified?: boolean;
+            next?: string | null;
+            user?: { email: string; name: string | null; emailVerified?: boolean };
+            error?: string;
+            code?: string;
+          }
+        | null;
+      if (!res.ok || !data?.verified) {
+        setVerifyState("spent");
+        setVerifyNote({ code: data?.code ?? "invalid", text: data?.error ?? t("That key does not answer.") });
+        return;
+      }
+      setVerifyState("done");
+      setMe({
+        email: data.user?.email ?? pendingEmail,
+        name: data.user?.name ?? null,
+        tier: "crystalline",
+        emailVerified: true,
+        admin: false,
+      });
+      void refreshMe(true);
+      toast.success(
+        t("The mailbox is proven — your passage now carries its full light. Welcome.")
+      );
+      /* THE INTENDED PAGE — the letter carried the room the visitor was
+         walking when the passage was carved; the proven session goes
+         back there in one clean step (a full navigation, so the fresh
+         cookie serves the very first ask) */
+      if (data.next && data.next.startsWith("/") && !data.next.startsWith("//")) {
+        window.location.replace(data.next);
+        return;
+      }
+      window.history.replaceState(null, "", window.location.pathname);
+      closeAuth();
+    } catch {
+      setVerifyState("spent");
+      setVerifyNote({ code: "error", text: t("The key could not be read. Rest, then try again.") });
+    }
+  };
 
   const submit = async () => {
     if (busy) return;
     setBusy(true);
+    setDoorNote(null);
     try {
-      const endpoint = tab === "register" ? "/api/auth/register" : "/api/auth/login";
+      if (view === "forgot") {
+        /* THE FORGOTTEN SECRET — the email alone summons a six-digit
+           code; the answer's shape never varies with the email's
+           existence, so no stranger learns who holds a passage here */
+        const res = await fetch("/api/auth/forgot-password", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        });
+        const data = (await res.json().catch(() => null)) as
+          | { message?: string; configured?: boolean; error?: string }
+          | null;
+        setPendingEmail(email.trim().toLowerCase());
+        setCode("");
+        setPassword("");
+        setResendCool(45);
+        setChangeOpen(false);
+        setChangeEmail("");
+        setView("reset-code");
+        setDoorNote({
+          ok: true,
+          text: t(
+            data?.message ??
+              "If a passage holds that email, a six-digit code is on its way. It rests for ten minutes."
+          ),
+        });
+        return;
+      }
+      if (view === "reset") {
+        const res = await fetch("/api/auth/password/reset", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token: resetToken, password }),
+        });
+        const data = (await res.json().catch(() => null)) as { message?: string; error?: string } | null;
+        if (!res.ok) {
+          setDoorNote({ ok: false, text: data?.error ?? t("The passage did not open. Rest, then try again.") });
+          return;
+        }
+        setResetToken(null);
+        setPassword("");
+        setView("signin");
+        setDoorNote({ ok: true, text: t(data?.message ?? "The passage is carved anew. Sign in with your new secret.") });
+        return;
+      }
+      const endpoint = view === "register" ? "/api/auth/register" : "/api/auth/login";
       const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(
-          tab === "register" ? { email, password, name } : { email, password }
+          view === "register"
+            ? {
+                email,
+                password,
+                name,
+                /* the room the visitor stands in rides the passage —
+                   the verification letter's click returns them here */
+                next: window.location.pathname + window.location.search,
+              }
+            : { email, password }
         ),
       });
       const data = (await res.json().catch(() => null)) as
-        | { user?: { email: string; name: string | null; tier: "crystalline" | "light" }; error?: string }
+        | {
+            user?: { email: string; name: string | null; tier: "crystalline" | "light"; emailVerified?: boolean };
+            verificationSent?: boolean;
+            mailConfigured?: boolean;
+            needsVerification?: boolean;
+            email?: string;
+            error?: string;
+            code?: string;
+          }
         | null;
+
+      /* THE CONFIRMATION DOOR — register leads through it when the
+         messenger stands; a sign-in of an unconfirmed passage meets the
+         same door (a fresh code flew the moment the password proved
+         the visitor) */
+      if (data?.needsVerification || data?.code === "email_unverified") {
+        setPendingEmail(data.email ?? email.trim().toLowerCase());
+        setCode("");
+        setPassword("");
+        setResendCool(45);
+        setChangeOpen(false);
+        setChangeEmail("");
+        setView("code");
+        toast.message(t("Six doors were sent to your email"), {
+          description: t("Read the newest letter — the code rests for ten minutes."),
+        });
+        return;
+      }
+
       if (!res.ok || !data?.user) {
         toast.error(data?.error ?? t("The passage did not open. Rest, then try again."));
         return;
       }
       setMe(data.user);
-      void refreshMe();
+      void refreshMe(true); // a passage opened — the glance must be fresh
+      if (view === "register" && data.verificationSent && !data.user.emailVerified) {
+        /* THE PROOF OF THE MAILBOX — the passage is carved and its
+           session rides home already; the check-email room holds the
+           visitor's hand while the letter flies (free chat goes on —
+           the account's full light wakes at the letter's click) */
+        setPendingEmail(data.user.email);
+        setResendCool(60);
+        setView("check");
+        toast.success(
+          t("Your passage is carved — a letter of proof flies to your email.")
+        );
+        return;
+      }
       closeAuth();
       toast.success(
-        tab === "register"
+        view === "register"
           ? t("Your passage is carved — your cosmic library travels with you now.")
           : t("Welcome back — your cosmic library remembers you.")
       );
+    } catch {
+      if (view !== "forgot" && view !== "reset") {
+        toast.error(t("The passage did not open. Rest, then try again."));
+      } else {
+        setDoorNote({ ok: false, text: t("The passage did not open. Rest, then try again.") });
+      }
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  /* THE SIX DOORS' OWN RESEND — a fresh code flies to the address
+     the visitor names (register flow), or to the passage's own email
+     (the reset flow); the flood-gates keep the pace honest. */
+  const resendCode = async (flow: "register" | "reset", to?: string) => {
+    if (busy || resendCool > 0) return;
+    const target = (to ?? (flow === "reset" ? pendingEmail : email)).trim().toLowerCase();
+    if (!target) return;
+    setBusy(true);
+    try {
+      const res = await fetch("/api/auth/resend-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: target, flow }),
+      });
+      const data = (await res.json().catch(() => null)) as { message?: string; error?: string } | null;
+      if (!res.ok) {
+        toast.error(data?.error ?? t("The letter could not be written. Rest, then try again."));
+        return;
+      }
+      setResendCool(45);
+      toast.message(t("A fresh code is on its way"), {
+        description: t("Read the newest letter — the code rests for ten minutes."),
+      });
+    } catch {
+      toast.error(t("The letter could not be written. Rest, then try again."));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  /* THE CODE'S OWN HAND — six digits typed once, the mailbox proven,
+     the thirty-day session carved in the same breath */
+  const submitCode = async () => {
+    if (busy || code.length !== 6) return;
+    setBusy(true);
+    try {
+      const res = await fetch("/api/auth/verify-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: pendingEmail, code }),
+      });
+      const data = (await res.json().catch(() => null)) as
+        | {
+            user?: { email: string; name: string | null; tier?: "crystalline" | "light"; emailVerified?: boolean; admin?: boolean; image?: string | null; provider?: string };
+            verified?: boolean;
+            error?: string;
+          }
+        | null;
+      if (!res.ok || !data?.user) {
+        toast.error(data?.error ?? t("That code does not open this door. Read the newest letter again."));
+        return;
+      }
+      setCode("");
+      setMe(data.user as never);
+      void refreshMe(true);
+      closeAuth();
+      toast.success(t("The email is yours now — the passage stands confirmed."));
     } catch {
       toast.error(t("The passage did not open. Rest, then try again."));
     } finally {
@@ -76,9 +491,42 @@ export function AuthModal() {
     }
   };
 
+  /* THE NEW SECRET, BEHIND SIX DOORS — the code claimed and the new
+     phrase set in the same stroke; the passage stands confirmed too */
+  const submitResetCode = async () => {
+    if (busy || code.length !== 6 || password.length < 8) return;
+    setBusy(true);
+    try {
+      const res = await fetch("/api/auth/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: pendingEmail, code, password }),
+      });
+      const data = (await res.json().catch(() => null)) as { error?: string } | null;
+      if (!res.ok) {
+        setDoorNote({ ok: false, text: data?.error ?? t("The new secret could not be set. Rest, then try again.") });
+        return;
+      }
+      setCode("");
+      setPassword("");
+      setEmail(pendingEmail);
+      setView("signin");
+      setDoorNote({ ok: true, text: t("The passage holds a new secret now — sign in with it.") });
+    } catch {
+      setDoorNote({ ok: false, text: t("The new secret could not be set. Rest, then try again.") });
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const google = () => {
     if (googleConfigured) {
-      window.location.href = "/api/auth/google";
+      /* THE WAY BACK IS KEPT — the room the visitor signs in from
+         rides the passage: the callback returns them exactly where
+         the ask was spoken, not to the threshold. */
+      const back =
+        window.location.pathname + window.location.search + window.location.hash;
+      window.location.href = `/api/auth/google?next=${encodeURIComponent(back)}`;
     } else {
       toast.message(t("The Google passage"), {
         description: t(
@@ -88,135 +536,738 @@ export function AuthModal() {
     }
   };
 
+  const fieldShell =
+    "mt-1.5 flex h-11 w-full items-center gap-2.5 rounded-xl border hairline bg-[var(--glass-bg)] px-3 transition-colors duration-300 focus-within:border-[var(--hairline-active)]";
+  const fieldInput =
+    "min-w-0 flex-1 bg-transparent text-[15px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none";
+
+  const head =
+    view === "register"
+      ? { title: t("Carve your passage"), description: t("The passage simply keeps your cosmic library — every transmission, every book — with you, on every device.") }
+      : view === "forgot"
+        ? { title: t("The letter of return"), description: t("Name the passage's email — a six-digit code travels out to you alone, resting for ten minutes.") }
+        : view === "reset"
+          ? { title: t("Carve the passage anew"), description: t("The letter's key opened this room. Choose a new secret phrase — then sign in with it as always.") }
+          : view === "code"
+            ? {
+                title: t("Confirm your email"),
+                description: t(
+                  "Six doors were sent to {email}. Enter them here and the passage opens — this once, then never again.",
+                  { email: pendingEmail || email }
+                ),
+              }
+            : view === "reset-code"
+              ? {
+                  title: t("A new secret for your passage"),
+                  description: t(
+                    "The code from the newest letter, and the new secret that will hold the door from now on."
+                  ),
+                }
+              : view === "check"
+                ? {
+                    title: t("Check your email"),
+                    description: t(
+                      "A letter of proof flies to your inbox — one touch and the mailbox is yours, the session already yours until then and after."
+                    ),
+                  }
+                : view === "confirm"
+                  ? {
+                      title: t("Prove the mailbox"),
+                      description: t(
+                        "The letter's key opened this room. One touch confirms this browser is the hand that holds the letter — and your thirty-day passage is carved at once."
+                      ),
+                    }
+                  : { title: t("Enter your passage"), description: t("Welcome back. Your cosmic library is waiting, exactly where you left it.") };
+
+  const canSubmit =
+    view === "forgot"
+      ? Boolean(email.trim())
+      : view === "reset"
+        ? password.length >= 8 && Boolean(resetToken)
+        : view === "code"
+          ? code.length === 6
+          : view === "reset-code"
+            ? code.length === 6 && password.length >= 8
+            : Boolean(email.trim()) && Boolean(password);
+
   return (
     <ModalShell
       open={authOpen}
       onOpenChange={(v) => {
         if (!busy) closeAuth();
       }}
-      title={tab === "register" ? t("Carve your passage") : t("Enter your passage")}
-      description={
-        tab === "register"
-          ? t("The passage simply keeps your cosmic library — every transmission, every book — with you, on every device.")
-          : t("Welcome back. Your cosmic library is waiting, exactly where you left it.")
-      }
+      title={head.title}
+      description={head.description}
       widthClass="sm:max-w-[460px]"
     >
-      <div className="px-5 pb-5 sm:px-6">
-        {/* the two doors */}
-        <div className="flex gap-1.5 rounded-full border hairline p-1" role="tablist" aria-label={t("The passage")}>
-          {(["signin", "register"] as const).map((k) => (
-            <button
-              key={k}
-              type="button"
-              role="tab"
-              aria-selected={tab === k}
-              onClick={() => setTab(k)}
-              data-testid={`auth-tab-${k}`}
-              className={cn(
-                "focus-glow h-8 flex-1 rounded-full text-[13px] font-medium transition-all duration-300",
-                tab === k
-                  ? "bg-foreground text-background"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              {k === "signin" ? t("Sign in") : t("Create passage")}
-            </button>
-          ))}
+      <div className="relative isolate px-5 pb-6 sm:px-6">
+        {/* THE LIGHT LANGUAGE AT THE DOOR — two grand seals resting in
+            the passage's quiet corners, printing as bronze ink on the
+            daylight glass and glowing silver in the crystal night;
+            they never take a touch and never cover a word. */}
+        <Image
+          src="/sigils/sigil_05.png"
+          alt=""
+          aria-hidden="true"
+          draggable={false}
+          loading="lazy"
+          width={300}
+          height={300}
+          className="pointer-events-none absolute -top-12 -right-10 -z-10 size-[150px] select-none lp-sigil-img opacity-[0.17] [transform:rotate(14deg)]"
+        />
+        <Image
+          src="/sigils/intricate_02.png"
+          alt=""
+          aria-hidden="true"
+          draggable={false}
+          loading="lazy"
+          width={340}
+          height={340}
+          className="pointer-events-none absolute -bottom-14 -left-12 -z-10 size-[170px] select-none lp-sigil-img opacity-[0.15] [transform:rotate(-9deg)]"
+        />
+        {/* the branded head — the house's own seal above its door,
+            wearing the gold, with the two kind colors braided beneath */}
+        <div className="mb-3 flex items-center justify-center gap-2.5" data-testid="auth-brand">
+          <Image
+            src="/images/ai/mark-dark.png"
+            alt=""
+            width={30}
+            height={30}
+            className="hidden size-[30px] rounded-full opacity-90 dark:block"
+          />
+          <Image
+            src="/images/ai/mark-light.png"
+            alt=""
+            width={30}
+            height={30}
+            className="size-[30px] rounded-full opacity-90 dark:hidden"
+          />
+          <span className="font-[family-name:var(--font-cinzel)] text-[14px] tracking-[0.22em] text-[var(--lp-gold)]">
+            reflectme.space
+          </span>
         </div>
+        <span
+          aria-hidden="true"
+          className="mx-auto mb-4 block h-px w-[74%] bg-[linear-gradient(90deg,transparent_0%,var(--lp-violet)_26%,var(--lp-feather)_52%,var(--lp-gold)_78%,transparent_100%)] opacity-60"
+        />
+
+        {/* the two doors — hidden while the return door serves */}
+        {(view === "signin" || view === "register") && (
+          <div className="flex gap-1.5 rounded-full border hairline bg-[var(--glass-bg)] p-1" role="tablist" aria-label={t("The passage")}>
+            {(["signin", "register"] as const).map((k) => (
+              <button
+                key={k}
+                type="button"
+                role="tab"
+                aria-selected={view === k}
+                onClick={() => setView(k)}
+                data-testid={`auth-tab-${k}`}
+                className={cn(
+                  "focus-glow h-9 flex-1 rounded-full border text-[14px] font-medium transition-all duration-300",
+                  view === k
+                    ? "border-[rgba(232,217,176,0.55)] bg-[linear-gradient(180deg,rgba(232,217,176,0.26),rgba(232,217,176,0.1))] text-[var(--lp-gold)] shadow-[inset_0_1px_0_rgba(255,255,255,0.3)]"
+                    : "border-transparent text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {k === "signin" ? t("Sign in") : t("Create passage")}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* THE CHECK-EMAIL ROOM — the letter of proof is flying */}
+        {view === "check" && (
+          <div className="mt-4" data-testid="passage-check">
+            <div className="flex flex-col items-center gap-2 rounded-2xl border hairline bg-[var(--glass-bg-soft)] px-4 py-5 text-center">
+              <span className="flex size-11 items-center justify-center rounded-full border border-[rgba(232,217,176,0.4)] bg-[color-mix(in_srgb,var(--lp-gold)_12%,transparent)]">
+                <MailCheck className="size-5 text-[var(--lp-gold)]" aria-hidden="true" />
+              </span>
+              <p className="text-[15px] font-medium text-foreground" data-testid="passage-check-email">
+                {pendingEmail || me?.email}
+              </p>
+              <p className="max-w-[38ch] text-[13.5px] leading-relaxed text-muted-foreground">
+                {t(
+                  "Open the letter and press its seal — the mailbox is proven and this browser's passage is carved for thirty days. The letter's room is one touch away."
+                )}
+              </p>
+            </div>
+            <div className="mt-3 space-y-2">
+              <button
+                type="button"
+                onClick={() => void resendLetter()}
+                disabled={busy || resendCool > 0}
+                data-testid="passage-resend"
+                className="focus-glow flex h-11 w-full items-center justify-center gap-2 rounded-xl border hairline bg-[var(--glass-bg)] text-[14.5px] font-medium text-foreground/85 transition-all duration-300 hover:border-[rgba(232,217,176,0.5)] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {busy ? (
+                  <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
+                ) : (
+                  <RefreshCw className="size-4" aria-hidden="true" />
+                )}
+                {resendCool > 0
+                  ? t("A fresh letter may fly in {n}s", { n: resendCool })
+                  : t("Send the letter again")}
+              </button>
+              {!changeOpen ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setChangeOpen(true);
+                    setChangeEmail("");
+                  }}
+                  data-testid="passage-change-email"
+                  className="focus-glow flex h-11 w-full items-center justify-center gap-2 rounded-xl border hairline bg-[var(--glass-bg-soft)] text-[14px] text-foreground/75 transition-colors duration-300 hover:text-foreground"
+                >
+                  <Mail className="size-3.5" aria-hidden="true" />
+                  {t("The letter went astray — change the address")}
+                </button>
+              ) : (
+                <div className="rounded-xl border hairline bg-[var(--glass-bg-soft)] p-3">
+                  <label
+                    htmlFor="passage-change-input"
+                    className="mono-label text-[10.5px] uppercase tracking-[0.22em] text-muted-foreground"
+                  >
+                    {t("The new address")}
+                  </label>
+                  <div className={fieldShell}>
+                    <Mail className="size-3.5 shrink-0 text-muted-foreground/70" aria-hidden="true" />
+                    <input
+                      id="passage-change-input"
+                      type="email"
+                      required
+                      value={changeEmail}
+                      onChange={(e) => setChangeEmail(e.target.value)}
+                      autoComplete="email"
+                      placeholder="you@somewhere.earth"
+                      data-testid="passage-change-input"
+                      className={fieldInput}
+                    />
+                  </div>
+                  <div className="mt-2 flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => void submitChangeEmail()}
+                      disabled={busy}
+                      data-testid="passage-change-save"
+                      className="focus-glow h-9 flex-1 rounded-lg bg-[linear-gradient(180deg,var(--lp-gold),var(--lp-gold-soft))] text-[13px] font-medium text-[var(--lp-veil-solid)] disabled:opacity-40"
+                    >
+                      {t("Send the fresh letter")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setChangeOpen(false)}
+                      className="focus-glow h-9 rounded-lg border hairline px-3 text-[13px] text-muted-foreground hover:text-foreground"
+                    >
+                      {t("Keep the old address")}
+                    </button>
+                  </div>
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={() => closeAuth()}
+                data-testid="passage-check-continue"
+                className="focus-glow w-full pt-1 text-center text-[13.5px] text-muted-foreground underline decoration-dotted underline-offset-4 transition-colors hover:text-foreground"
+              >
+                {t("Continue into the laboratory while the letter flies — the free rooms are all open")}
+              </button>
+            </div>
+            <p className="mt-3 text-center text-[12px] leading-relaxed text-muted-foreground/70">
+              {t(
+                "The letter proves this address receives your mail — it is a proof of the mailbox, never a judgment of who you are."
+              )}
+            </p>
+          </div>
+        )}
+
+        {/* THE CONFIRM ROOM — the letter's key waits for one human touch */}
+        {view === "confirm" && (
+          <div className="mt-4" data-testid="passage-confirm">
+            {verifyState !== "done" && (
+              <>
+                <div className="flex flex-col items-center gap-2 rounded-2xl border hairline bg-[var(--glass-bg-soft)] px-4 py-5 text-center">
+                  <span className="flex size-11 items-center justify-center rounded-full border border-[rgba(232,217,176,0.4)] bg-[color-mix(in_srgb,var(--lp-gold)_12%,transparent)]">
+                    <MailCheck className="size-5 text-[var(--lp-gold)]" aria-hidden="true" />
+                  </span>
+                  <p className="max-w-[40ch] text-[13.5px] leading-relaxed text-muted-foreground">
+                    {t(
+                      "Press the seal once — the key is spent by this touch alone, the mailbox is proven, and your thirty-day passage is carved in the same breath."
+                    )}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => void confirmVerify()}
+                  disabled={verifyState === "busy"}
+                  data-testid="passage-verify-confirm"
+                  className="focus-glow mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[linear-gradient(180deg,var(--lp-gold),var(--lp-gold-soft))] text-[15px] font-medium tracking-[0.02em] text-[var(--lp-veil-solid)] shadow-[0_12px_30px_-14px_rgba(154,120,30,0.6),inset_0_1px_0_rgba(255,255,255,0.35)] transition-all duration-300 hover:-translate-y-px hover:brightness-[1.06] disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {verifyState === "busy" ? (
+                    <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
+                  ) : (
+                    <MailCheck className="size-4" aria-hidden="true" />
+                  )}
+                  {t("Verify my email")}
+                </button>
+              </>
+            )}
+            {verifyNote && (
+              <div
+                role="alert"
+                data-testid="passage-verify-note"
+                className="mt-3 rounded-xl border border-[color-mix(in_srgb,#f43f5e_32%,transparent)] bg-[color-mix(in_srgb,#f43f5e_6%,var(--background))] px-3.5 py-3 text-[13.5px] leading-relaxed text-foreground/90"
+              >
+                {verifyNote.text}
+              </div>
+            )}
+            {(verifyState === "spent" || verifyState === "done") && (
+              <div className="mt-3 space-y-2">
+                {verifyState === "spent" && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (me && !me.email.startsWith("anon:")) {
+                        setPendingEmail(me.email);
+                        setView("check");
+                      } else {
+                        setView("signin");
+                        setDoorNote({
+                          ok: true,
+                          text: t(
+                            "Sign in first — then the fresh letter can be asked for from the profile's own room."
+                          ),
+                        });
+                      }
+                    }}
+                    data-testid="passage-verify-again"
+                    className="focus-glow flex h-11 w-full items-center justify-center gap-2 rounded-xl border hairline bg-[var(--glass-bg)] text-[14px] text-foreground/85 transition-colors duration-300 hover:border-[rgba(232,217,176,0.5)]"
+                  >
+                    <RefreshCw className="size-3.5" aria-hidden="true" />
+                    {t("Ask for a fresh letter")}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setVerifyToken(null);
+                    setView("signin");
+                  }}
+                  data-testid="passage-verify-back"
+                  className="focus-glow w-full pt-1 text-center text-[13px] text-muted-foreground underline decoration-dotted underline-offset-4 transition-colors hover:text-foreground"
+                >
+                  {t("Back to the passage")}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* THE SIX DOORS — the code room (registration's confirmation) */}
+        {view === "code" && (
+          <div className="mt-4" data-testid="passage-code">
+            <div className="flex flex-col items-center gap-2 rounded-2xl border hairline bg-[var(--glass-bg-soft)] px-4 py-5 text-center">
+              <span className="flex size-11 items-center justify-center rounded-full border border-[rgba(232,217,176,0.4)] bg-[color-mix(in_srgb,var(--lp-gold)_12%,transparent)]">
+                <ShieldCheck className="size-5 text-[var(--lp-gold)]" aria-hidden="true" />
+              </span>
+              <p className="text-[15px] font-medium text-foreground" data-testid="passage-code-email">
+                {pendingEmail || email}
+              </p>
+              <div className="mt-1 w-full max-w-[240px]">
+                <label htmlFor="passage-code-input" className="mono-label text-[10.5px] uppercase tracking-[0.22em] text-muted-foreground">
+                  {t("The six-digit code")}
+                </label>
+                <input
+                  id="passage-code-input"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={6}
+                  placeholder="······"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                  autoFocus
+                  data-testid="passage-code-input"
+                  className="mt-2 h-13 w-full rounded-xl border hairline bg-[var(--glass-bg)] px-3 text-center text-[24px] tracking-[0.4em] text-foreground focus:border-[var(--hairline-active)] focus:outline-none"
+                />
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => void submitCode()}
+              disabled={busy || code.length !== 6}
+              data-testid="passage-code-submit"
+              className="focus-glow mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[linear-gradient(180deg,var(--lp-gold),var(--lp-gold-soft))] text-[15px] font-medium tracking-[0.02em] text-[var(--lp-veil-solid)] shadow-[0_12px_30px_-14px_rgba(154,120,30,0.6),inset_0_1px_0_rgba(255,255,255,0.35)] transition-all duration-300 hover:-translate-y-px hover:brightness-[1.06] disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {busy ? (
+                <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
+              ) : (
+                <ShieldCheck className="size-4" aria-hidden="true" />
+              )}
+              {t("Confirm and enter")}
+            </button>
+            <div className="mt-3 space-y-2">
+              <button
+                type="button"
+                onClick={() => void resendCode("register")}
+                disabled={busy || resendCool > 0}
+                data-testid="passage-code-resend"
+                className="focus-glow flex h-11 w-full items-center justify-center gap-2 rounded-xl border hairline bg-[var(--glass-bg)] text-[14px] text-foreground/85 transition-colors duration-300 hover:border-[rgba(232,217,176,0.5)] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {busy ? (
+                  <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
+                ) : (
+                  <RefreshCw className="size-4" aria-hidden="true" />
+                )}
+                {resendCool > 0 ? t("A fresh code in {n}s", { n: resendCool }) : t("Send a fresh code")}
+              </button>
+              {!changeOpen ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setChangeOpen(true);
+                    setChangeEmail("");
+                  }}
+                  data-testid="passage-code-change-email"
+                  className="focus-glow flex h-11 w-full items-center justify-center gap-2 rounded-xl border hairline bg-[var(--glass-bg-soft)] text-[14px] text-foreground/75 transition-colors duration-300 hover:text-foreground"
+                >
+                  <Mail className="size-3.5" aria-hidden="true" />
+                  {t("The letter went astray — change the address")}
+                </button>
+              ) : (
+                <div className="rounded-xl border hairline bg-[var(--glass-bg-soft)] p-3">
+                  <label htmlFor="passage-code-change-input" className="mono-label text-[10.5px] uppercase tracking-[0.22em] text-muted-foreground">
+                    {t("The new address")}
+                  </label>
+                  <div className={fieldShell}>
+                    <Mail className="size-3.5 shrink-0 text-muted-foreground/70" aria-hidden="true" />
+                    <input
+                      id="passage-code-change-input"
+                      type="email"
+                      required
+                      value={changeEmail}
+                      onChange={(e) => setChangeEmail(e.target.value)}
+                      autoComplete="email"
+                      placeholder="you@somewhere.earth"
+                      data-testid="passage-code-change-input"
+                      className={fieldInput}
+                    />
+                  </div>
+                  <div className="mt-2 flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (changeEmail.trim()) {
+                          void resendCode("register", changeEmail.trim().toLowerCase());
+                          setPendingEmail(changeEmail.trim().toLowerCase());
+                        }
+                        setChangeOpen(false);
+                        setChangeEmail("");
+                      }}
+                      disabled={busy}
+                      className="focus-glow h-9 flex-1 rounded-lg bg-[linear-gradient(180deg,var(--lp-gold),var(--lp-gold-soft))] text-[13px] font-medium text-[var(--lp-veil-solid)] disabled:opacity-40"
+                    >
+                      {t("Send the fresh letter")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setChangeOpen(false)}
+                      className="focus-glow h-9 rounded-lg border hairline px-3 text-[13px] text-muted-foreground hover:text-foreground"
+                    >
+                      {t("Keep the old address")}
+                    </button>
+                  </div>
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={() => {
+                  setView("signin");
+                  setCode("");
+                }}
+                data-testid="passage-code-back"
+                className="focus-glow w-full pt-1 text-center text-[13.5px] text-muted-foreground underline decoration-dotted underline-offset-4 transition-colors hover:text-foreground"
+              >
+                {t("Back to the passage")}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* THE NEW SECRET, BEHIND SIX DOORS — the reset-code room */}
+        {view === "reset-code" && (
+          <div className="mt-4" data-testid="passage-reset-code">
+            <div className="flex flex-col items-center gap-2 rounded-2xl border hairline bg-[var(--glass-bg-soft)] px-4 py-5 text-center">
+              <span className="flex size-11 items-center justify-center rounded-full border border-[rgba(232,217,176,0.4)] bg-[color-mix(in_srgb,var(--lp-gold)_12%,transparent)]">
+                <KeyRound className="size-5 text-[var(--lp-gold)]" aria-hidden="true" />
+              </span>
+              <p className="text-[15px] font-medium text-foreground" data-testid="passage-reset-code-email">
+                {pendingEmail || email}
+              </p>
+              <div className="mt-1 w-full max-w-[240px]">
+                <label htmlFor="passage-reset-code-input" className="mono-label text-[10.5px] uppercase tracking-[0.22em] text-muted-foreground">
+                  {t("The six-digit code")}
+                </label>
+                <input
+                  id="passage-reset-code-input"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={6}
+                  placeholder="······"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                  autoFocus
+                  data-testid="passage-reset-code-input"
+                  className="mt-2 h-13 w-full rounded-xl border hairline bg-[var(--glass-bg)] px-3 text-center text-[24px] tracking-[0.4em] text-foreground focus:border-[var(--hairline-active)] focus:outline-none"
+                />
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => void submitResetCode()}
+              disabled={busy || code.length !== 6 || password.length < 8}
+              data-testid="passage-reset-code-submit"
+              className="focus-glow mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[linear-gradient(180deg,var(--lp-gold),var(--lp-gold-soft))] text-[15px] font-medium tracking-[0.02em] text-[var(--lp-veil-solid)] shadow-[0_12px_30px_-14px_rgba(154,120,30,0.6),inset_0_1px_0_rgba(255,255,255,0.35)] transition-all duration-300 hover:-translate-y-px hover:brightness-[1.06] disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {busy ? (
+                <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
+              ) : (
+                <KeyRound className="size-4" aria-hidden="true" />
+              )}
+              {t("Set the new secret")}
+            </button>
+            <p className="mt-2 text-center text-[12.5px] leading-relaxed text-muted-foreground">
+              {t("The new secret phrase stands ready in the field above — eight characters or more.")}
+            </p>
+            <div className="mt-3 space-y-2">
+              <button
+                type="button"
+                onClick={() => void resendCode("reset")}
+                disabled={busy || resendCool > 0}
+                className="focus-glow flex h-11 w-full items-center justify-center gap-2 rounded-xl border hairline bg-[var(--glass-bg)] text-[14px] text-foreground/85 transition-colors duration-300 hover:border-[rgba(232,217,176,0.5)] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {busy ? (
+                  <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
+                ) : (
+                  <RefreshCw className="size-4" aria-hidden="true" />
+                )}
+                {resendCool > 0 ? t("A fresh code in {n}s", { n: resendCool }) : t("Send a fresh code")}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setView("signin");
+                  setCode("");
+                  setPassword("");
+                }}
+                className="focus-glow w-full pt-1 text-center text-[13.5px] text-muted-foreground underline decoration-dotted underline-offset-4 transition-colors hover:text-foreground"
+              >
+                {t("Back to the passage")}
+              </button>
+            </div>
+          </div>
+        )}
 
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            void submit();
+            void (view === "code" ? submitCode() : view === "reset-code" ? submitResetCode() : submit());
           }}
-          className="mt-4 space-y-3"
+          className={cn(
+            "mt-5 space-y-3.5",
+            (view === "check" || view === "confirm" || view === "code" || view === "reset-code") && "hidden"
+          )}
         >
-          {tab === "register" && (
+          {view === "register" && (
             <div>
-              <label htmlFor="passage-name" className="mono-label text-[9.5px] uppercase tracking-[0.22em] text-muted-foreground">
+              <label htmlFor="passage-name" className="mono-label text-[10.5px] uppercase tracking-[0.22em] text-muted-foreground">
                 {t("A name (or none)")}
               </label>
-              <input
-                id="passage-name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                autoComplete="name"
-                className="mt-1.5 h-10 w-full rounded-xl border hairline bg-transparent px-3 text-[14px] text-foreground focus:border-[var(--hairline-active)] focus:outline-none"
-              />
+              <div className={fieldShell}>
+                <UserRound className="size-3.5 shrink-0 text-muted-foreground/70" aria-hidden="true" />
+                <input
+                  id="passage-name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  autoComplete="name"
+                  className={fieldInput}
+                />
+              </div>
             </div>
           )}
-          <div>
-            <label htmlFor="passage-email" className="mono-label text-[9.5px] uppercase tracking-[0.22em] text-muted-foreground">
-              {t("Email")}
-            </label>
-            <input
-              id="passage-email"
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              autoComplete="email"
-              data-testid="passage-email"
-              className="mt-1.5 h-10 w-full rounded-xl border hairline bg-transparent px-3 text-[14px] text-foreground focus:border-[var(--hairline-active)] focus:outline-none"
-            />
-          </div>
-          <div>
-            <label htmlFor="passage-password" className="mono-label text-[9.5px] uppercase tracking-[0.22em] text-muted-foreground">
-              {t("Secret phrase")}
-            </label>
-            <input
-              id="passage-password"
-              type="password"
-              required
-              minLength={8}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoComplete={tab === "register" ? "new-password" : "current-password"}
-              data-testid="passage-password"
-              className="mt-1.5 h-10 w-full rounded-xl border hairline bg-transparent px-3 text-[14px] text-foreground focus:border-[var(--hairline-active)] focus:outline-none"
-            />
-            {tab === "register" && (
-              <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
-                {t("Eight characters or more. The laboratory never sees it — only its echo, hashed beyond reading.")}
-              </p>
-            )}
-          </div>
+          {(view !== "reset" && view !== "code" && view !== "reset-code") && (
+            <div>
+              <label htmlFor="passage-email" className="mono-label text-[10.5px] uppercase tracking-[0.22em] text-muted-foreground">
+                {t("Email")}
+              </label>
+              <div className={fieldShell}>
+                <Mail className="size-3.5 shrink-0 text-muted-foreground/70" aria-hidden="true" />
+                <input
+                  id="passage-email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="email"
+                  placeholder="you@somewhere.earth"
+                  data-testid="passage-email"
+                  className={fieldInput}
+                />
+              </div>
+            </div>
+          )}
+          {(view === "signin" || view === "register" || view === "reset" || view === "reset-code") && (
+            <div>
+              <label htmlFor="passage-password" className="mono-label text-[10.5px] uppercase tracking-[0.22em] text-muted-foreground">
+                {view === "reset" ? t("The new secret phrase") : t("Secret phrase")}
+              </label>
+              <div className={cn(fieldShell, "pr-1.5")}>
+                <Lock className="size-3.5 shrink-0 text-muted-foreground/70" aria-hidden="true" />
+                <input
+                  id="passage-password"
+                  type={showPw ? "text" : "password"}
+                  required
+                  minLength={8}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete={view === "signin" ? "current-password" : "new-password"}
+                  placeholder="••••••••"
+                  data-testid={view === "reset-code" ? "passage-new-password" : "passage-password"}
+                  className={fieldInput}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPw((v) => !v)}
+                  aria-label={showPw ? t("Hide the secret phrase") : t("Show the secret phrase")}
+                  aria-pressed={showPw}
+                  data-testid="passage-pw-toggle"
+                  className="focus-glow flex size-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors duration-300 hover:text-foreground"
+                >
+                  {showPw ? (
+                    <EyeOff className="size-3.5" aria-hidden="true" />
+                  ) : (
+                    <Eye className="size-3.5" aria-hidden="true" />
+                  )}
+                </button>
+              </div>
+              {view !== "signin" && (
+                <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">
+                  {view === "register" && mailConfigured
+                    ? t("Eight characters or more. A proof letter flies at once — the free rooms never wait for it.")
+                    : t("Eight characters or more. The laboratory never sees it — only its echo, hashed beyond reading.")}
+                </p>
+              )}
+              {view === "signin" && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setView("forgot");
+                    setPassword("");
+                    setDoorNote(null);
+                  }}
+                  data-testid="passage-forgot"
+                  className="focus-glow mt-1.5 text-[13px] text-muted-foreground underline decoration-dotted underline-offset-4 transition-colors hover:text-foreground"
+                >
+                  {t("Forgot the secret phrase?")}
+                </button>
+              )}
+            </div>
+          )}
 
           <button
             type="submit"
-            disabled={busy || !email.trim() || !password}
+            disabled={busy || !canSubmit}
             data-testid="passage-submit"
-            className="focus-glow flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-foreground text-[13.5px] font-medium text-background transition-all duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40"
+            className="focus-glow flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[linear-gradient(180deg,var(--lp-gold),var(--lp-gold-soft))] text-[15px] font-medium tracking-[0.02em] text-[var(--lp-veil-solid)] shadow-[0_12px_30px_-14px_rgba(154,120,30,0.6),inset_0_1px_0_rgba(255,255,255,0.35)] transition-all duration-300 hover:-translate-y-px hover:brightness-[1.06] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0"
           >
             {busy ? (
               <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
+            ) : view === "forgot" ? (
+              <Mail className="size-4" aria-hidden="true" />
+            ) : view === "reset" ? (
+              <KeyRound className="size-4" aria-hidden="true" />
             ) : (
               <Mail className="size-4" aria-hidden="true" />
             )}
-            {tab === "register" ? t("Carve the passage") : t("Open the passage")}
+            {view === "register"
+              ? t("Carve the passage")
+              : view === "forgot"
+                ? t("Send the letter of return")
+                : view === "reset"
+                  ? t("Carve the passage anew")
+                  : t("Open the passage")}
           </button>
         </form>
 
-        {/* the Google passage */}
-        <div className="mt-4 flex items-center gap-3">
-          <span className="h-px flex-1 bg-[var(--hairline)]" aria-hidden="true" />
-          <span className="mono-label text-[9px] uppercase tracking-[0.22em] text-muted-foreground/70">
-            {t("or")}
-          </span>
-          <span className="h-px flex-1 bg-[var(--hairline)]" aria-hidden="true" />
-        </div>
-        <button
-          type="button"
-          onClick={google}
-          data-testid="passage-google"
-          className="focus-glow mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-xl border hairline text-[13.5px] font-medium text-foreground/85 transition-all duration-300 hover:border-[var(--hairline-hover)]"
-        >
-          <svg viewBox="0 0 24 24" className="size-4" aria-hidden="true">
-            <path fill="currentColor" d="M21.35 11.1h-9.17v2.73h6.51c-.33 3.81-3.5 5.44-6.5 5.44C8.36 19.27 5 16.25 5 12c0-4.1 3.2-7.27 7.2-7.27 3.09 0 4.9 1.97 4.9 1.97L19 4.72S16.56 2 12.1 2C6.42 2 2.03 6.8 2.03 12c0 5.05 4.13 10 10.22 10 5.35 0 9.25-3.67 9.25-9.09 0-1.15-.15-1.81-.15-1.81Z" />
-          </svg>
-          {t("Continue with Google")}
-        </button>
+        {doorNote && (
+          <div
+            role="status"
+            data-testid="passage-note"
+            className={cn(
+              "mt-3 flex items-start gap-2 rounded-xl border px-3.5 py-3 text-[13.5px] leading-relaxed",
+              doorNote.ok
+                ? "border-[color-mix(in_srgb,#8fc9a8_35%,transparent)] bg-[color-mix(in_srgb,#8fc9a8_7%,var(--background))] text-foreground/90"
+                : "border-[color-mix(in_srgb,#f43f5e_32%,transparent)] bg-[color-mix(in_srgb,#f43f5e_6%,var(--background))] text-foreground/90"
+            )}
+          >
+            {doorNote.ok ? <Check className="mt-0.5 size-3.5 shrink-0 text-[#8fc9a8]" aria-hidden="true" /> : null}
+            <span>{doorNote.text}</span>
+          </div>
+        )}
+
+        {/* the return door's way back */}
+        {(view === "forgot" || view === "reset") && (
+          <button
+            type="button"
+            onClick={() => {
+              setView("signin");
+              setPassword("");
+              setDoorNote(null);
+            }}
+            data-testid="passage-back-signin"
+            className="focus-glow mt-3 w-full text-center text-[13px] text-muted-foreground underline decoration-dotted underline-offset-4 transition-colors hover:text-foreground"
+          >
+            {t("Back to the passage")}
+          </button>
+        )}
+
+        {/* the register side's quiet promises */}
+        {view === "register" && (
+          <ul className="mt-4 space-y-1.5 rounded-xl border hairline bg-[var(--glass-bg-soft)] px-3.5 py-3" data-testid="auth-promises">
+            {[
+              "Every transmission kept in your cosmic library — on every device",
+              "Your settings travel with your passage",
+              "Everything you make stays yours",
+            ].map((line) => (
+              <li key={line} className="flex items-start gap-2 text-[13px] leading-relaxed text-muted-foreground">
+                <span aria-hidden="true" className="mt-[7px] size-1 shrink-0 rotate-45 bg-[#e8d9b0]" />
+                <span>{t(line)}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {/* the Google passage — resting while the return door serves */}
+        {(view === "signin" || view === "register") && (
+          <>
+            <div className="mt-4 flex items-center gap-3">
+              <span className="h-px flex-1 bg-[linear-gradient(90deg,transparent,var(--lp-edge))]" aria-hidden="true" />
+              <span className="mono-label text-[10px] uppercase tracking-[0.22em] text-muted-foreground/70">
+                {t("or")}
+              </span>
+              <span className="h-px flex-1 bg-[linear-gradient(90deg,var(--lp-edge),transparent)]" aria-hidden="true" />
+            </div>
+            <button
+              type="button"
+              onClick={google}
+              data-testid="passage-google"
+              className="focus-glow mt-3 flex h-11 w-full items-center justify-center gap-2.5 rounded-xl border hairline bg-[var(--glass-bg-soft)] text-[14.5px] font-medium text-foreground/85 transition-all duration-300 hover:border-[rgba(232,217,176,0.5)] hover:bg-[var(--glass-bg)]"
+            >
+              <svg viewBox="0 0 24 24" className="size-4" aria-hidden="true">
+                <path fill="currentColor" d="M21.35 11.1h-9.17v2.73h6.51c-.33 3.81-3.5 5.44-6.5 5.44C8.36 19.27 5 16.25 5 12c0-4.1 3.2-7.27 7.2-7.27 3.09 0 4.9 1.97 4.9 1.97L19 4.72S16.56 2 12.1 2C6.42 2 2.03 6.8 2.03 12c0 5.05 4.13 10 10.22 10 5.35 0 9.25-3.67 9.25-9.09 0-1.15-.15-1.81-.15-1.81Z" />
+              </svg>
+              {t("Continue with Google")}
+            </button>
+          </>
+        )}
       </div>
     </ModalShell>
   );

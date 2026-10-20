@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomBytes } from "crypto";
-import { publicOrigin } from "./callback/route";
+import { requestIsSecure } from "@/lib/server/access";
+import { publicOrigin, safeReturnPath } from "./callback/route";
 
 /* ------------------------------------------------------------------ */
 /*  GET /api/auth/google — the Google passage.                         */
@@ -38,12 +39,27 @@ export async function GET(req: NextRequest) {
   const res = NextResponse.redirect(
     `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`
   );
+  /* the crossing is a live handoff — no cache may keep its key */
+  res.headers.set("cache-control", "private, no-store");
   res.cookies.set("mirror_g_state", state, {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: requestIsSecure(req),
     path: "/",
     maxAge: 600,
   });
+  /* THE WAY BACK IS KEPT — the room the visitor signed in from rides
+     along (a validated same-origin path only; the callback honors it
+     once, then the cookie falls). */
+  const back = safeReturnPath(req.nextUrl.searchParams.get("next"));
+  if (back) {
+    res.cookies.set("mirror_g_next", encodeURIComponent(back), {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: requestIsSecure(req),
+      path: "/",
+      maxAge: 600,
+    });
+  }
   return res;
 }

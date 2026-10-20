@@ -27,6 +27,40 @@ import { db } from "@/lib/db";
 /*                     DREAM_BOOK | SUBSCRIPTION_GRANT |               */
 /*                     TOPUP_PURCHASE                                  */
 /*  (SQLite keeps no enums — these written values are the law.)        */
+/*                                                                     */
+/*  THE ECONOMY'S SHAPE (the creator-economy law):                     */
+/*   - The Mirror's conversation is FREE forever — no purse is ever    */
+/*     weighed at the chat's door.                                     */
+/*   - The paid creations are MUSIC (preview 2 · full 5 · endless      */
+/*     loop 15), the AKASHIC creative reading (5) and the BOOKS        */
+/*     (short 15 · extended 40) — one wallet across them all.          */
+/*   - The verified keeper (ADMIN_EMAIL) creates without their own     */
+/*     purse ever being drawn — their real usage is recorded, not      */
+/*     charged.                                                        */
+/*                                                                     */
+/*  THE DEPOSIT LAW (the keeper's well):                               */
+/*   The admin is the central DEPOSIT — the well every spendable       */
+/*   credit is poured from. Every grant that MINTS new spendable       */
+/*   credits draws the same amount OUT of the well (a DepositLedger    */
+/*   "out" row, written in the grant's own transaction). The flows:    */
+/*     MINT (draws OUT): stripe topup/pack webhook, subscription       */
+/*       first month + renewals, fuel distribution, the keeper's       */
+/*       console grant. When WALLET_ENFORCED and the well holds        */
+/*       less than the mint, the mint is REFUSED — the well is dry,    */
+/*       the keeper charges it first.                                  */
+/*     RETURN (never draws): refunds (refundWalletCredits gives back   */
+/*       light that was already paid for — it reverses a spend and     */
+/*       must not re-draw), the birth gift (ensureWallet lays the      */
+/*       free lights directly — the house's welcome, not the well's),  */
+/*       and the keeper's own draws (they destroy light; the well is   */
+/*       not re-filled by destruction).                                */
+/*     IN: a stripe purchase records a deposit "in" BEFORE the mint    */
+/*       (the money entered the house — the well can pay the light     */
+/*       it just sold), and the keeper charges the well from a stored  */
+/*       payment source at the fuel desk.                              */
+/*   NOTE: the per-user "great deposit" (depositCredits, reflection    */
+/*   pulses from the z.ai accumulation) is a DIFFERENT reservoir —     */
+/*   the skies' borrowed capacity on a wallet, not the keeper's well.  */
 /* ------------------------------------------------------------------ */
 
 export type PlanTier = "FREE" | "SEEKER" | "OBSERVATORY_PRO";
@@ -49,21 +83,116 @@ function walletCost(name: string, fallback: number): number {
 }
 
 export const WALLET_COSTS: Record<string, number> = {
-  CHAT: walletCost("CHAT", 1),
-  AKASHIC: walletCost("AKASHIC", 2),
+  CHAT: 0, // THE CHAT IS FREE FOREVER — the weigh never looks at it
+  AKASHIC: walletCost("AKASHIC", 5),
   ART_X: walletCost("ART_X", 5),
-  LIGHT_CODES: walletCost("LIGHT_CODES", 12),
-  DREAM_BOOK: walletCost("DREAM_BOOK", 2),
+  /* LIGHT CODES — the chamber's door never weighs a purse: the music
+     must always sound (and the resonance loom weaves on the visitor's
+     own machine when the engine's key rests). The keeper may price it
+     again from the vault (WALLET_COST_LIGHT_CODES) without a line. */
+  LIGHT_CODES: walletCost("LIGHT_CODES", 0),
+  DREAM_BOOK: walletCost("DREAM_BOOK", 15),
 };
 
-/** The meter operations that walk through the wallet's weigh. */
+/** The meter operations that walk through the wallet's weigh (flat
+    price doors). The conversation (chat) is NOT among them — free
+    forever. The music chamber and the book loom are weighed with
+    their own per-ask prices in the meter's dynamic weigh (preview
+    2 · full 5 · endless 15 · short book 15 · extended book 40). */
 export const WALLET_OPERATIONS: Record<string, WalletActionType> = {
-  chat: "CHAT",
   akashic: "AKASHIC",
   artx: "ART_X",
-  light_codes: "LIGHT_CODES",
-  dream_book: "DREAM_BOOK",
 };
+
+/* ------------------- the priced services' law ----------------------- */
+
+/** The paid creations' launch prices (credits) — the server decides,
+    env-tunable, and overridable live through the PlatformConfig row
+    "service_prices" (the keeper's own console writes it). */
+export interface ServicePrices {
+  musicPreview: number;
+  musicFull: number;
+  musicLoop: number;
+  akashicReading: number;
+  bookShort: number;
+  bookExtended: number;
+}
+
+const PRICE_FALLBACK: ServicePrices = {
+  musicPreview: walletCost("LC_PREVIEW", 2),
+  musicFull: walletCost("LC_FULL", 5),
+  musicLoop: walletCost("LC_LOOP", 15),
+  akashicReading: walletCost("AKASHIC", 5),
+  bookShort: walletCost("BOOK_SHORT", 15),
+  bookExtended: walletCost("BOOK_LONG", 40),
+};
+
+export async function servicePrices(): Promise<ServicePrices> {
+  try {
+    const row = await db.platformConfig.findUnique({ where: { key: "service_prices" } });
+    if (!row) return { ...PRICE_FALLBACK };
+    const v = (row.value ?? {}) as Partial<ServicePrices>;
+    const clean = (n: unknown, fb: number) => {
+      const x = typeof n === "number" ? n : NaN;
+      return Number.isFinite(x) && x >= 0 ? Math.floor(x) : fb;
+    };
+    return {
+      musicPreview: clean(v.musicPreview, PRICE_FALLBACK.musicPreview),
+      musicFull: clean(v.musicFull, PRICE_FALLBACK.musicFull),
+      musicLoop: clean(v.musicLoop, PRICE_FALLBACK.musicLoop),
+      akashicReading: clean(v.akashicReading, PRICE_FALLBACK.akashicReading),
+      bookShort: clean(v.bookShort, PRICE_FALLBACK.bookShort),
+      bookExtended: clean(v.bookExtended, PRICE_FALLBACK.bookExtended),
+    };
+  } catch {
+    return { ...PRICE_FALLBACK };
+  }
+}
+
+/* --------------------- the credit packs ----------------------------- */
+
+/** The one wallet's filling — the launch packs. Purchases ride one
+    wallet across music, books and the akashic readings. */
+export interface WalletPackDef {
+  id: string;
+  label: string;
+  credits: number;
+  priceCents: number;
+  currency: string;
+  note: string;
+}
+
+export const WALLET_PACKS: WalletPackDef[] = [
+  {
+    id: "pack_100",
+    label: "One hundred lights",
+    credits: walletCost("PACK_100_CREDITS", 100),
+    priceCents: envCents("WALLET_PACK_100_CENTS", 1000),
+    currency: "eur",
+    note: "A first fullness — plenty of previews and readings.",
+  },
+  {
+    id: "pack_250",
+    label: "Two hundred fifty lights",
+    credits: walletCost("PACK_250_CREDITS", 250),
+    priceCents: envCents("WALLET_PACK_250_CENTS", 2000),
+    currency: "eur",
+    note: "The maker's pouch — songs, books and readings.",
+  },
+  {
+    id: "pack_700",
+    label: "Seven hundred lights",
+    credits: walletCost("PACK_700_CREDITS", 700),
+    priceCents: envCents("WALLET_PACK_700_CENTS", 5000),
+    currency: "eur",
+    note: "The great reserve — for the long creator's road.",
+  },
+];
+
+export function packById(id: string | null | undefined): WalletPackDef | null {
+  if (!id) return null;
+  return WALLET_PACKS.find((p) => p.id === id) ?? null;
+}
 
 /* ---------------------------- the plans ----------------------------- */
 
@@ -125,10 +254,42 @@ export function planTierFor(priceId: string | null | undefined): PlanTier | null
 
 /* ------------------------- enforcement ------------------------------ */
 
-/** The wallet's law stands by default (the frontier pipeline is live);
-    the keeper may rest it with WALLET_ENFORCED=false in the vault. */
+/** THE ECONOMY LAW — the creator economy stands: the conversation is
+    free forever, and the paid creations (music, books, akashic
+    readings) are weighed at their own doors. WALLET_ENFORCED=false
+    in the vault lays the weigh down again and the whole house
+    returns to free creations. */
 export function walletEnforced(): boolean {
   return process.env.WALLET_ENFORCED !== "false";
+}
+
+/** THE KEEPER'S OWN LIGHT — an admin creation is never drawn from
+    their purse, but its real weight is still written down: one
+    ledger row, zero credits moved, the cost remembered. The keeper's
+    generosity is recorded, never charged. */
+export async function recordAdminUsage(
+  userId: string,
+  actionType: WalletActionType,
+  wouldCost: number,
+  description: string
+): Promise<void> {
+  try {
+    await ensureWallet(userId);
+    await db.creditLedger.create({
+      data: {
+        userId,
+        actionType,
+        creditsDeducted: 0,
+        metadata: {
+          admin: true,
+          wouldCost,
+          description: `The keeper's own creation (not charged) — ${description}`,
+        },
+      },
+    });
+  } catch {
+    /* the recording rests when the vault rests */
+  }
 }
 
 /* --------------------------- the wallet ----------------------------- */
@@ -137,10 +298,20 @@ export interface WalletSnapshot {
   planTier: PlanTier;
   freeCreditsRemaining: number;
   paidCreditsRemaining: number;
+  /** The great deposit — reflection pulses converted from the skies'
+      own API accumulation. It rides beside the spendable lights and
+      never dries: it is the house's borrowed reservoir. */
+  depositCredits: number;
+  depositSource: string | null;
   total: number;
 }
 
-const BIRTH_GIFT = 5; // the free lights every passage is born holding
+const BIRTH_GIFT = intEnvGift("WALLET_BIRTH_GIFT", 500); // the free lights every passage is born holding
+
+function intEnvGift(name: string, fallback: number): number {
+  const raw = Number(process.env[name]);
+  return Number.isFinite(raw) && raw >= 0 ? Math.floor(raw) : fallback;
+}
 
 /** The passage's wallet, laid down idempotently. Safe to call at every
     door — an existing wallet simply passes through untouched. */
@@ -157,7 +328,7 @@ export async function ensureWallet(userId: string): Promise<WalletSnapshot> {
         userId,
         actionType: "SUBSCRIPTION_GRANT",
         creditsDeducted: BIRTH_GIFT,
-        metadata: { source: "birth", description: "The passage's first five lights" },
+        metadata: { source: "birth", description: "The passage's first five hundred lights" },
       },
     });
     return snapshotOf(fresh);
@@ -173,17 +344,74 @@ type WalletRow = {
   planTier: string;
   freeCreditsRemaining: number;
   paidCreditsRemaining: number;
+  depositCredits: bigint;
+  depositSource: string | null;
 };
 
 function snapshotOf(row: WalletRow): WalletSnapshot {
+  const deposit = Number(row.depositCredits ?? 0);
   return {
     planTier: (["FREE", "SEEKER", "OBSERVATORY_PRO"].includes(row.planTier)
       ? row.planTier
       : "FREE") as PlanTier,
     freeCreditsRemaining: row.freeCreditsRemaining,
     paidCreditsRemaining: row.paidCreditsRemaining,
-    total: row.freeCreditsRemaining + row.paidCreditsRemaining,
+    depositCredits: deposit,
+    depositSource: row.depositSource,
+    total:
+      row.freeCreditsRemaining +
+      row.paidCreditsRemaining +
+      deposit,
   };
+}
+
+/* --------------------- the great deposit ---------------------------- */
+
+/** THE GREAT DEPOSIT — reflection pulses borrowed from the skies' own
+    API accumulation and laid into a passage's wallet. The house acts
+    as the middle man: the skies' raw capacity is converted into the
+    house's own currency and kept on deposit, ready to be distributed
+    onward. The amount rides a BigInt column (ten billion and beyond
+    cannot live in an Int) and is written once into the ledger with
+    its source named. */
+export async function grantDeposit(
+  userId: string,
+  input: { amount: number; source: string; note?: string }
+): Promise<{ ok: boolean; depositCredits: number; error?: string }> {
+  const amount = Math.max(0, Math.floor(input.amount));
+  if (amount <= 0) return { ok: false, depositCredits: 0, error: "no deposit named" };
+  try {
+    await ensureWallet(userId);
+    const wallet = await db.userWallet.update({
+      where: { userId },
+      data: {
+        depositCredits: { increment: BigInt(amount) },
+        depositSource: input.source.slice(0, 120),
+      },
+    });
+    await db.creditLedger.create({
+      data: {
+        userId,
+        actionType: "DEPOSIT_ZAI",
+        creditsDeducted: 0, // an Int column cannot hold the great numbers — the ledger's metadata carries them
+        metadata: {
+          kind: "zai_deposit",
+          deposit: String(amount),
+          source: input.source.slice(0, 120),
+          description:
+            input.note?.slice(0, 300) ??
+            "Reflection pulses converted from the z.ai API accumulation — the house stands as the middle man",
+        },
+      },
+    });
+    return { ok: true, depositCredits: Number(wallet.depositCredits) };
+  } catch (err) {
+    return {
+      ok: false,
+      depositCredits: 0,
+      error: err instanceof Error ? err.message.slice(0, 200) : "the deposit did not land",
+    };
+  }
 }
 
 export interface SpendResult {
@@ -345,6 +573,116 @@ export interface GrantResult {
   ok: boolean;
   total?: number;
   duplicate?: boolean;
+  /** the well was dry and the mint was refused (WALLET_ENFORCED) —
+      the keeper charges the deposit first */
+  depositDry?: boolean;
+}
+
+/** The keeper's well balance — sum(in) − sum(out) over DepositLedger. */
+export async function depositBalance(): Promise<number> {
+  const [inAgg, outAgg] = await Promise.all([
+    db.depositLedger.aggregate({ where: { direction: "in" }, _sum: { amount: true } }),
+    db.depositLedger.aggregate({ where: { direction: "out" }, _sum: { amount: true } }),
+  ]);
+  return (inAgg._sum.amount ?? 0) - (outAgg._sum.amount ?? 0);
+}
+
+type DepositTx = Parameters<Parameters<typeof db.$transaction>[0]>[0];
+
+/** The well's balance read INSIDE a grant's transaction — the mint and
+    its draw share one breath, so two racers can never both pour from
+    the same last light. */
+async function txDepositBalance(tx: DepositTx): Promise<number> {
+  const [inAgg, outAgg] = await Promise.all([
+    tx.depositLedger.aggregate({ where: { direction: "in" }, _sum: { amount: true } }),
+    tx.depositLedger.aggregate({ where: { direction: "out" }, _sum: { amount: true } }),
+  ]);
+  return (inAgg._sum.amount ?? 0) - (outAgg._sum.amount ?? 0);
+}
+
+/** A deposit IN — credits entering the well. Idempotent per reference:
+    the same stripe session/invoice never fills the well twice. */
+export async function recordDepositIn(input: {
+  amount: number;
+  sourceId?: string | null;
+  sourceName?: string | null;
+  reference?: string | null;
+  actorEmail?: string | null;
+  userId?: string | null;
+  note?: string | null;
+}): Promise<void> {
+  const amount = Math.max(0, Math.floor(input.amount));
+  if (amount <= 0) return;
+  try {
+    if (input.reference) {
+      const seen = await db.depositLedger.findFirst({
+        where: { direction: "in", reference: input.reference },
+        select: { id: true },
+      });
+      if (seen) return; // the same payment never enters the well twice
+    }
+    await db.depositLedger.create({
+      data: {
+        direction: "in",
+        amount,
+        sourceId: input.sourceId ?? null,
+        sourceName: input.sourceName?.slice(0, 120) ?? null,
+        reference: input.reference?.slice(0, 200) ?? null,
+        actorEmail: input.actorEmail?.slice(0, 200) ?? null,
+        userId: input.userId ?? null,
+        note: input.note?.slice(0, 300) ?? null,
+      },
+    });
+  } catch (err) {
+    console.error("[wallet] deposit-in failed:", err instanceof Error ? err.message : err);
+  }
+}
+
+export interface DepositMovement {
+  id: string;
+  direction: "in" | "out";
+  amount: number;
+  sourceName: string | null;
+  reference: string | null;
+  actorEmail: string | null;
+  userId: string | null;
+  note: string | null;
+  createdAt: string;
+}
+
+export interface DepositStatus {
+  balance: number;
+  totalIn: number;
+  totalOut: number;
+  movements: DepositMovement[];
+}
+
+/** The whole well, read for the keeper's desk: balance, the two tides
+    and the newest movements. */
+export async function depositStatus(movements = 30): Promise<DepositStatus> {
+  const [inAgg, outAgg, rows] = await Promise.all([
+    db.depositLedger.aggregate({ where: { direction: "in" }, _sum: { amount: true } }),
+    db.depositLedger.aggregate({ where: { direction: "out" }, _sum: { amount: true } }),
+    db.depositLedger.findMany({ orderBy: { createdAt: "desc" }, take: Math.max(1, movements) }),
+  ]);
+  const totalIn = inAgg._sum.amount ?? 0;
+  const totalOut = outAgg._sum.amount ?? 0;
+  return {
+    balance: totalIn - totalOut,
+    totalIn,
+    totalOut,
+    movements: rows.map((r) => ({
+      id: r.id,
+      direction: r.direction === "out" ? "out" : "in",
+      amount: r.amount,
+      sourceName: r.sourceName,
+      reference: r.reference,
+      actorEmail: r.actorEmail,
+      userId: r.userId,
+      note: r.note,
+      createdAt: r.createdAt.toISOString(),
+    })),
+  };
 }
 
 /**
@@ -352,6 +690,13 @@ export interface GrantResult {
  * into paidCreditsRemaining (and the plan lifted when one rides along).
  * Idempotent per referenceId: the same Stripe session or invoice can
  * never fill the purse twice.
+ *
+ * THE DEPOSIT LAW: this grant MINTS new spendable credits, so it draws
+ * the same amount OUT of the keeper's well inside this very transaction
+ * (a DepositLedger "out" row). When WALLET_ENFORCED and the well holds
+ * less than the mint, the whole grant is refused (depositDry) — the
+ * well is dry and the keeper charges it first. Refunds and the birth
+ * gift never pass through here — they are returns, not mints.
  */
 export async function grantWalletCredits(
   userId: string,
@@ -364,9 +709,20 @@ export async function grantWalletCredits(
     stripeCustomerId?: string | null;
     stripeSubscriptionId?: string | null;
     rawCostUsd?: number | null;
+    /** who moved the well (the keeper's email on fuel/console grants) */
+    actorEmail?: string | null;
+    /** set false only for grants that RETURN existing light — the
+        house's default is a mint that draws from the deposit.
+        THE COMPLIMENTARY GRANT passes false too: no deposit stands
+        behind it — the mode is honestly named DEVELOPMENT_ACCESS. */
+    mintFromDeposit?: boolean;
+    /** extra metadata riding the ledger row (complimentary's own
+        honest labels: complimentary · reason · package · value) */
+    extraMetadata?: Record<string, unknown> | null;
   }
 ): Promise<GrantResult> {
   const credits = Math.max(0, Math.floor(input.credits));
+  const mint = input.mintFromDeposit !== false && credits > 0;
   try {
     await ensureWallet(userId);
     const result = await db.$transaction(async (tx) => {
@@ -383,6 +739,24 @@ export async function grantWalletCredits(
           return m?.referenceId === input.referenceId;
         });
         if (seen) return { duplicate: true as const };
+      }
+
+      /* THE DEPOSIT DRAW — the mint pours from the well or is refused */
+      if (mint) {
+        if (walletEnforced()) {
+          const balance = await txDepositBalance(tx);
+          if (balance < credits) throw new Error("DEPOSIT_DRY");
+        }
+        await tx.depositLedger.create({
+          data: {
+            direction: "out",
+            amount: credits,
+            reference: input.referenceId?.slice(0, 200) ?? null,
+            actorEmail: input.actorEmail?.slice(0, 200) ?? null,
+            userId,
+            note: `mint → ${input.actionType.toLowerCase()} · ${input.description.slice(0, 180)}`,
+          },
+        });
       }
 
       const wallet = await tx.userWallet.update({
@@ -403,6 +777,7 @@ export async function grantWalletCredits(
           metadata: {
             description: input.description,
             referenceId: input.referenceId ?? null,
+            ...(input.extraMetadata ?? {}),
           },
         },
       });
@@ -414,14 +789,27 @@ export async function grantWalletCredits(
     if (result.duplicate) return { ok: true, duplicate: true };
     return { ok: true, total: result.total };
   } catch (err) {
+    if (err instanceof Error && err.message === "DEPOSIT_DRY") {
+      console.info(`[wallet] mint refused — the well is dry (${credits} credits, user ${userId})`);
+      return { ok: false, depositDry: true };
+    }
     console.error("[wallet] grant failed:", err instanceof Error ? err.message : err);
     return { ok: false };
   }
 }
 
-/** Reads the wallet without ever creating one — for the visitor's own
-    glance (the badge). Returns null when no wallet rests yet. */
+/** Reads the wallet for the visitor's own glance (the badge) — and, as
+    the UNIQUE-PROFILE repair, lays one down when it is somehow missing
+    (ensureWallet is idempotent: an existing wallet passes untouched,
+    a lost one is re-born with its birth gift and ledger row). Every
+    identity — email, google, anon-merged — thus always ends with
+    exactly one UserWallet: the column is unique, the read creates. */
 export async function peekWallet(userId: string): Promise<WalletSnapshot | null> {
   const row = await db.userWallet.findUnique({ where: { userId } });
-  return row ? snapshotOf(row) : null;
+  if (row) return snapshotOf(row);
+  try {
+    return await ensureWallet(userId);
+  } catch {
+    return null; // a stateless or racing visitor simply receives null
+  }
 }

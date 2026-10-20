@@ -3,6 +3,7 @@ import ZAI from "@/lib/zai-client";
 import { REMEDY_KINDS, type RemedyKind } from "@/lib/data/remedy";
 import { meterRoute } from "@/lib/server/meter";
 
+import { LANGUAGE_NAMES } from "@/lib/server/akashic-record";
 /* ------------------------------------------------------------------ */
 /*  The Healing Apothecary — a mini atelier beside the Healing channel. */
 /*  When a transmission has been revealed, the visitor may ask the      */
@@ -10,19 +11,6 @@ import { meterRoute } from "@/lib/server/meter";
 /*  spoken. The remedy takes whatever form truly serves: a herbal       */
 /*  preparation — or a practice of meditation, imagination, breath,     */
 /*  sound, ritual, reflection or gentle movement.                       */
-/* ------------------------------------------------------------------ */
-
-const LANGUAGE_NAMES: Record<string, string> = {
-  en: "English",
-  sq: "Albanian",
-  it: "Italian",
-  el: "Greek",
-  de: "German",
-  fr: "French",
-  es: "Spanish",
-  tr: "Turkish",
-};
-
 const SYSTEM_PROMPT = `You are the Healing Apothecary of the Mirror Entity Digital Chamber — the gentle apothecary standing quietly beside the Healing channel. A visitor has just received a transmission about their concern; now they have asked you to prepare ONE remedy for it.
 
 NATURE

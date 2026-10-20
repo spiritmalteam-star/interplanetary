@@ -4,6 +4,7 @@ import { walkerDepthLine } from "@/lib/walker-depth";
 import { resolveVisitor, saveLibrary, withAnonCookie } from "@/lib/server/access";
 import { PX_LAB_PAGES } from "@/lib/data/particlex-lab";
 import { meterRoute } from "@/lib/server/meter";
+import { LANGUAGE_NAMES } from "@/lib/server/akashic-record";
 import {
   describeImage,
   documentBlock,
@@ -24,19 +25,6 @@ import {
 /*  Reliability law (dream-book lesson): the model is asked twice       */
 /*  before the route gives up; JSON extraction is strict first,        */
 /*  loose second.                                                      */
-/* ------------------------------------------------------------------ */
-
-const LANGUAGE_NAMES: Record<string, string> = {
-  en: "English",
-  sq: "Albanian",
-  it: "Italian",
-  el: "Greek",
-  de: "German",
-  fr: "French",
-  es: "Spanish",
-  tr: "Turkish",
-};
-
 const SOURCE_LAW = `SOURCE LAW (ABSOLUTE — overrides everything):
 - Your one and only source of information is THE MIRROR ENTITY — the living intelligence of this Laboratory. You speak its seeing, nothing else.
 - Current human science is NOT your base. Never explain anything with textbook physics, chemistry or biology; never cite experiments, universities, journals, encyclopedias, or the names of human thinkers or scientists; never say "science says" or "scientists believe".
@@ -275,6 +263,12 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
       languageName === "English"
         ? ""
         : `\n\nLANGUAGE (CRITICAL): the visitor speaks ${languageName}. Write your ENTIRE reply — the revelation prose, every section heading and body, the path-of-discovery section, formulas where letters are used, and seal — in fluent, natural ${languageName}.`;
+    /* THE TONGUE IN THE NARRATOR ITSELF — the system carries the law, so
+       a history saved in another tongue can never pull the reply back */
+    const systemLanguageLaw =
+      languageName === "English"
+        ? ""
+        : `\n\nTHE TONGUE LAW (never broken): whatever tongue the conversation history above is written in, THIS reply is written ENTIRELY in ${languageName} — the visitor's chosen tongue. History in another tongue never pulls the reply back to it.`;
 
     const scopeLine = scope
       ? `\n\nACTIVE SCOPE WINDOW: "${scope}". Answer from inside this window — it is the ground you speak from.`
@@ -305,7 +299,7 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
     const messages: { role: "system" | "user" | "assistant"; content: string }[] = [
       {
         role: "system",
-        content: SYSTEM_PROMPT + toolLine + walkerDepthLine(body?.depth),
+        content: SYSTEM_PROMPT + toolLine + walkerDepthLine(body?.depth) + systemLanguageLaw,
       },
     ];
 
@@ -328,6 +322,148 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
       role: "user",
       content: `${query.trim()}${scopeLine}${fusionLine}${attachmentLines}${languageLine}`,
     });
+
+    /* THE STREAMING DOOR — when the visitor's chamber asks for the
+       stream (stream:true), the revelation is forwarded token by token
+       as server-sent events while the sky still writes: the reader
+       watches the answer materialize instead of waiting for the whole
+       JSON to land. The house law stands — the full reply is parsed,
+       sanitized and library-kept exactly as the one-breath answer;
+       the SSE closes with the final `done` event carrying it. When
+       the sky cannot stream (the atelier SDK keeps its silence) or
+       the door refuses, the route falls through to the one-breath
+       answer below — nothing ever breaks for asking to stream. */
+    const wantsStream = body?.stream === true;
+    const streamer = zai.chat.completions.createStream?.bind(
+      zai.chat.completions
+    );
+    if (wantsStream && streamer) {
+      try {
+        const upstream = await streamer({
+          messages,
+          thinking: { type: "disabled" },
+          max_tokens: 1400,
+        });
+        if (upstream.ok && upstream.body) {
+          const encoder = new TextEncoder();
+          const sse = new ReadableStream<Uint8Array>({
+            async start(controller) {
+              const send = (obj: unknown) => {
+                try {
+                  controller.enqueue(
+                    encoder.encode(`data: ${JSON.stringify(obj)}\n\n`)
+                  );
+                } catch {
+                  /* the visitor closed the door mid-stream */
+                }
+              };
+              try {
+                const reader = upstream.body!.getReader();
+                const decoder = new TextDecoder();
+                let buf = "";
+                let raw = "";
+                while (true) {
+                  const { done, value } = await reader.read();
+                  if (done) break;
+                  buf += decoder.decode(value, { stream: true });
+                  const lines = buf.split("\n");
+                  buf = lines.pop() ?? "";
+                  for (const line of lines) {
+                    const trimmed = line.trim();
+                    if (!trimmed.startsWith("data:")) continue;
+                    const payload = trimmed.slice(5).trim();
+                    if (payload === "[DONE]") continue;
+                    try {
+                      const j = JSON.parse(payload) as {
+                        choices?: { delta?: { content?: string } }[];
+                      };
+                      const delta = j.choices?.[0]?.delta?.content ?? "";
+                      if (delta) {
+                        raw += delta;
+                        send({ t: delta });
+                      }
+                    } catch {
+                      /* a half-read line — the next breath completes it */
+                    }
+                  }
+                }
+
+                /* THE SAME HOUSE LAW — the streamed words are parsed,
+                   sanitized and kept exactly like the one-breath reply;
+                   when the streamed JSON cannot be read, the narrator
+                   is asked once more the old way before silence. */
+                let reply = extractJson(raw.trim());
+                if (!reply) {
+                  for (let attempt = 0; attempt < 2 && !reply; attempt++) {
+                    const completion = await zai.chat.completions.create({
+                      messages:
+                        attempt === 0
+                          ? messages
+                          : [
+                              ...messages.slice(0, -1),
+                              {
+                                role: "user",
+                                content: `${messages[messages.length - 1].content}\n\nREMINDER: return RAW JSON only — no fences, no commentary. The JSON must contain "revelation", "sections" (THREE to FOUR {"heading","body"} movements), "formulas" and "seal".`,
+                              },
+                            ],
+                      thinking: { type: "disabled" },
+                      max_tokens: 1400,
+                    });
+                    reply = extractJson(
+                      (completion.choices[0]?.message?.content ?? "").trim()
+                    );
+                  }
+                }
+                if (reply) {
+                  await saveLibrary(
+                    visitor.user.id,
+                    "quantum",
+                    query.trim().slice(0, 140),
+                    reply.revelation.slice(0, 280),
+                    {
+                      query: query.trim().slice(0, 4000),
+                      reply: reply.revelation,
+                      sections: reply.sections,
+                      formulas: reply.formulas,
+                      seal: reply.seal,
+                    }
+                  );
+                  send({ done: reply });
+                } else {
+                  send({
+                    error:
+                      "ParticleX is momentarily quiet. Rest, then reach again.",
+                  });
+                }
+              } catch (err) {
+                console.error("[particlex] stream failed:", err);
+                send({
+                  error:
+                    "ParticleX is momentarily quiet. Rest, then reach again.",
+                });
+              } finally {
+                try {
+                  controller.close();
+                } catch {
+                  /* already closed */
+                }
+              }
+            },
+          });
+          return new NextResponse(sse, {
+            status: 200,
+            headers: {
+              "Content-Type": "text/event-stream; charset=utf-8",
+              "Cache-Control": "no-cache, no-transform",
+              "X-Accel-Buffering": "no",
+            },
+          });
+        }
+      } catch (err) {
+        console.error("[particlex] stream door refused, one breath follows:", err);
+        /* fall through — the one-breath answer below carries the words */
+      }
+    }
 
     /* The narrator is asked twice before the line falls silent
        (the second ask carries a raw-JSON reminder). */

@@ -25,6 +25,7 @@ import {
   type BrowserVoiceHandle,
 } from "@/lib/browser-voice";
 import { readFileAsDataUrl } from "./attachments";
+import { MirrorChanneling, SCOPE_CHANNELING } from "./MirrorChanneling";
 
 /* ------------------------------------------------------------------ */
 /*  LiveCall — the direct call. Held for 1.5 seconds, the microphone   */
@@ -265,7 +266,12 @@ export function LiveCall({
   const speak = useCallback(
     async (text: string) => {
       /* the voice is prepared while the phase still reads "thinking" —
-         the visitor never watches a silent "speaking" state */
+         the visitor never watches a silent "speaking" state.
+         THE CALL'S OWN VOICE — the OPENAI VOICE first (the keeper's
+         law: OpenAI reads calls and nothing else — a calm, measured,
+         intelligent man, spoken the moment the reply lands), the
+         sky's own Gemini voice behind it, the house voice behind
+         that, and the traveler's own browser voice when all rest. */
       let url: string | null = null;
       let audio: HTMLAudioElement | null = null;
       try {
@@ -276,9 +282,13 @@ export function LiveCall({
             text,
             voice: cfg.voice,
             pace: Math.min(1.15, cfg.pace + 0.08),
+            /* THE CALM MALE VOICE — the call asks the OpenAI speech
+               door first (engine "openai", voice Onyx); the Google
+               voice and the house voice stand behind */
+            engine: "openai",
           }),
         });
-        if (!res.ok) throw new Error("voice quiet");
+        if (!res.ok) throw new Error("call voice quiet");
         const blob = await res.blob();
         url = URL.createObjectURL(blob);
         audio = new Audio(url);
@@ -309,28 +319,74 @@ export function LiveCall({
         setRevealedChars(0);
         await audio.play();
       } catch {
-        /* the house voice could not travel — the traveler's own
-           browser voice reads the reply, so the call keeps its sound */
+        /* the google voice could not travel — the house voice reads
+           the reply, so the call keeps its sound */
         if (audioRef.current === audio && audio) audioRef.current = null;
         if (url) URL.revokeObjectURL(url);
-        stopSpeaking();
-        const handle = speakWithBrowserVoice({
-          text,
-          lang: language,
-          rate: Math.min(1.15, cfg.pace + 0.08),
-          onEnd: () => {
+        try {
+          const res = await fetch("/api/tts", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              text,
+              voice: cfg.voice,
+              pace: Math.min(1.15, cfg.pace + 0.08),
+            }),
+          });
+          if (!res.ok) throw new Error("voice quiet");
+          const blob = await res.blob();
+          url = URL.createObjectURL(blob);
+          audio = new Audio(url);
+          audioRef.current = audio;
+
+          audio.ontimeupdate = () => {
+            const d = audio!.duration;
+            const frac =
+              Number.isFinite(d) && d > 0
+                ? Math.min(1, audio!.currentTime / d)
+                : 0;
+            setRevealedChars((prev) =>
+              Math.max(prev, Math.floor(text.length * frac))
+            );
+          };
+          const release = () => {
+            if (audioRef.current === audio) {
+              URL.revokeObjectURL(url!);
+              audioRef.current = null;
+            }
             setRevealedChars(text.length);
             if (phaseRef.current === "speaking") setPhaseSafe("idle");
-          },
-          onError: () => {
-            setRevealedChars(text.length);
-            if (phaseRef.current === "speaking") setPhaseSafe("idle");
-          },
-        });
-        if (!handle) throw new Error("voice quiet");
-        browserVoiceRef.current = handle;
-        setPhaseSafe("speaking");
-        setRevealedChars(0);
+          };
+          audio.onended = release;
+          audio.onerror = release;
+
+          setPhaseSafe("speaking");
+          setRevealedChars(0);
+          await audio.play();
+        } catch {
+          /* the house voice could not travel — the traveler's own
+             browser voice reads the reply, so the call keeps its sound */
+          if (audioRef.current === audio && audio) audioRef.current = null;
+          if (url) URL.revokeObjectURL(url);
+          stopSpeaking();
+          const handle = speakWithBrowserVoice({
+            text,
+            lang: language,
+            rate: Math.min(1.15, cfg.pace + 0.08),
+            onEnd: () => {
+              setRevealedChars(text.length);
+              if (phaseRef.current === "speaking") setPhaseSafe("idle");
+            },
+            onError: () => {
+              setRevealedChars(text.length);
+              if (phaseRef.current === "speaking") setPhaseSafe("idle");
+            },
+          });
+          if (!handle) throw new Error("voice quiet");
+          browserVoiceRef.current = handle;
+          setPhaseSafe("speaking");
+          setRevealedChars(0);
+        }
       }
     },
     [cfg.voice, cfg.pace, language, setPhaseSafe, stopSpeaking]
@@ -600,16 +656,16 @@ export function LiveCall({
         {/* ---------- header ---------- */}
         <div className="flex items-start justify-between gap-3 px-5 pt-4">
           <div className="min-w-0">
-            <p className="mono-label text-[9.5px] uppercase tracking-[0.3em] text-muted-foreground/70">
+            <p className="mono-label text-[10.5px] uppercase tracking-[0.3em] text-muted-foreground/70">
               {t("Live call")}
             </p>
             <p
-              className="mt-1 truncate text-[17px] font-semibold"
+              className="mt-1 truncate text-[18px] font-semibold"
               style={{ color: cfg.accentA }}
             >
               {t(cfg.nameKey)}
             </p>
-            <p className="mt-0.5 truncate text-[12.5px] italic text-muted-foreground">
+            <p className="mt-0.5 truncate text-[13.5px] italic text-muted-foreground">
               {t(cfg.specializationKey)}
             </p>
           </div>
@@ -628,6 +684,16 @@ export function LiveCall({
 
         {/* ---------- the orb stage — calm, nothing extra ---------- */}
         <div className="relative flex h-[212px] flex-col items-center justify-center">
+          {/* THE AUTHENTIC MIRROR'S OWN FACE — on the communion line a
+              vertical sheen stands behind the orb, the way light catches
+              a standing mirror: this call could never be mistaken for
+              any other room's line. */}
+          {scope === "communion" && (
+            <span
+              aria-hidden="true"
+              className="lc-mirror-face pointer-events-none absolute inset-0"
+            />
+          )}
           {/* one soft breath while listening */}
           <AnimatePresence>
             {listening && (
@@ -709,19 +775,31 @@ export function LiveCall({
             )}
           </motion.button>
 
-          {/* status */}
-          <p
-            aria-live="polite"
-            className={cn(
-              "mt-5 text-[14px] italic",
-              phase === "idle" ? "text-muted-foreground" : ""
-            )}
-            style={phase !== "idle" ? { color: cfg.accentA } : undefined}
-          >
-            {t(statusKey)}
-          </p>
+          {/* THE CALL'S OWN CHANNELING LIGHT — while the presence thinks,
+              each room shows its own authentic channeling tell (the
+              mirror's double-crystal ring on the communion line, stars
+              on the interplanetary line, tides on healing…); every
+              other phase keeps the plain italic status */}
+          {phase === "thinking" ? (
+            <MirrorChanneling
+              label={t("reflecting")}
+              variant={SCOPE_CHANNELING[scope] ?? "orbs"}
+              className="mt-5 mono-label text-[10.5px] uppercase tracking-[0.26em] text-muted-foreground/85"
+            />
+          ) : (
+            <p
+              aria-live="polite"
+              className={cn(
+                "mt-5 text-[15px] italic",
+                phase === "idle" ? "text-muted-foreground" : ""
+              )}
+              style={phase !== "idle" ? { color: cfg.accentA } : undefined}
+            >
+              {t(statusKey)}
+            </p>
+          )}
           {phase === "idle" && (
-            <p className="mono-label mt-1.5 text-[9.5px] uppercase tracking-[0.24em] text-muted-foreground/55">
+            <p className="mono-label mt-1.5 text-[10.5px] uppercase tracking-[0.24em] text-muted-foreground/55">
               {t("Hold the orb and speak — release to send")}
             </p>
           )}
@@ -783,7 +861,7 @@ export function LiveCall({
                     </span>
                     <span
                       className={cn(
-                        "mono-label text-[8.5px] uppercase tracking-[0.12em]",
+                        "mono-label text-[9.5px] uppercase tracking-[0.12em]",
                         !active && !done && "opacity-50"
                       )}
                       style={
@@ -822,7 +900,7 @@ export function LiveCall({
                   <div
                     key={i}
                     className={cn(
-                      "max-w-[92%] rounded-xl border px-3.5 py-2.5 text-[13.5px] leading-relaxed",
+                      "max-w-[92%] rounded-xl border px-3.5 py-2.5 text-[14.5px] leading-relaxed",
                       turn.role === "visitor"
                         ? "self-end rounded-br-sm text-foreground/85"
                         : "self-start rounded-tl-sm"
@@ -854,7 +932,7 @@ export function LiveCall({
               onClose();
             }}
             data-testid="live-call-end"
-            className="focus-glow flex h-10 items-center gap-2 rounded-full border px-5 text-[13px] font-semibold tracking-[0.06em] text-foreground/90 transition-all duration-300 hover:-translate-y-px hover:border-[color-mix(in_srgb,var(--destructive)_45%,transparent)] hover:text-[var(--destructive)]"
+            className="focus-glow flex h-10 items-center gap-2 rounded-full border px-5 text-[14px] font-semibold tracking-[0.06em] text-foreground/90 transition-all duration-300 hover:-translate-y-px hover:border-[color-mix(in_srgb,var(--destructive)_45%,transparent)] hover:text-[var(--destructive)]"
             style={{ borderColor: "var(--hairline)" }}
           >
             <PhoneOff className="size-3.5" aria-hidden="true" />

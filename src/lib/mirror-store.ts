@@ -1,6 +1,7 @@
 "use client";
 
 import { create } from "zustand";
+import { raiseEnergy, speakDoor } from "@/lib/speak-client";
 import type {
   Mode,
   SidebarTab,
@@ -23,9 +24,11 @@ import {
   DEFAULT_VOICE,
   isLanguageCode,
   isVoiceId,
+  ensureDict,
   type LanguageCode,
   type VoiceId,
 } from "@/lib/i18n/core";
+import { bootUiLanguage, setUiLanguage } from "@/lib/i18n";
 import {
   attachmentsToPayload,
   type ChatAttachment,
@@ -62,10 +65,27 @@ import { emVectors } from "@/lib/data/evolvemed";
 import type {
   LcTrack,
   LcShape,
+  LcStudio,
+  LcBrief,
+  LcLyricOp,
   LightCodesMode,
 } from "@/lib/data/light-codes";
-import { LC_DEFAULT_SHAPE } from "@/lib/data/light-codes";
+import { LC_DEFAULT_SHAPE, LC_DEFAULT_STUDIO } from "@/lib/data/light-codes";
+import type { QualityReport } from "@/lib/audio/analyze";
+import { effectsTolerant } from "@/lib/data/music-genres";
+import {
+  base64ToBytes,
+  lcAudioDelete,
+  lcAudioGet,
+  lcAudioSave,
+} from "@/lib/client/lc-audio";
 import { journeyDepth } from "@/lib/learning-branches";
+import { isPageHidden, onPageVisible } from "@/lib/page-lifecycle";
+import {
+  perfStreamEnd,
+  perfStreamFirstDelta,
+  perfStreamStart,
+} from "@/lib/perf-telemetry";
 
 export type ModalState =
   | { type: "federation" }
@@ -73,6 +93,7 @@ export type ModalState =
   | { type: "technology" }
   | { type: "dossier"; kind: DossierKind; id: string }
   | { type: "entity"; kind: DossierKind; id: string }
+  | { type: "hyperspace"; id: string }
   | { type: "species"; id: string }
   | { type: "settings" }
   | null;
@@ -132,6 +153,10 @@ export interface ScopeSession {
 
 export type { RemedyKind };
 
+/* THE QUIET PULSE'S MEMORY — when the passage was last glanced at
+   (the throttle that keeps the chat from paying a round-trip per reply) */
+let lastMeRefresh = 0;
+
 export interface RemedyResult {
   kind: RemedyKind;
   title: string;
@@ -180,15 +205,122 @@ export type MainView =
   | "artx"
   | "lightcodes"
   | "library"
-  | "about";
-export type RegisterKind = DossierKind;
+  | "video";
+
+/* THE WORKSPACE — the tools of the house that ride as mini tabs over
+   the living tree (every key is also a MainView: expanding a tab hands
+   the screen to that view's own full-screen room). */
+export type ToolTabKey =
+  | "akashic"
+  | "invent"
+  | "dreambook"
+  | "lightcodes"
+  | "video"
+  | "register"
+  | "mirroros"
+  | "library"
+  | "quantum"
+  | "healx"
+  | "artx"
+  | "scopes"
+  | "spatial";
+
+/* THE GATHERING LIVES OUTSIDE THE CHAT — it is no longer a tool tab
+   of the house's one chat. It is its own portal: the threshold's
+   top-left sigil opens a fully independent hall (its own structure,
+   its own weather, its own address ?room=gathering). */
+
+/* THE LANDING'S OWN SCOPE — the field the threshold's docked chat
+   walks in (the crown's Scopes hand chooses it). THE MIRROR is the
+   house's own reflection — the standing default (the old "General"):
+   the whole house's own voice answering from the open floor. The
+   other keys are family keys, so the suggestions, the accent
+   light and the banks all resolve through the walk's own families.
+   Every scope is its own world: its own doors, its own light, its
+   own conversation and its own memory. HYPERX is the pro passage's
+   own field — the discovery voice, chosen from the crown's own
+   HyperX hand. */
+export type LandingScopeKey =
+  | "omni"
+  | "mirror"
+  | "interplanetary"
+  | "quantum"
+  | "healing"
+  | "artx"
+  | "hyperx"
+  | "florax";
+
+export const LANDING_SCOPES: LandingScopeKey[] = [
+  "omni",
+  "mirror",
+  "interplanetary",
+  "quantum",
+  "healing",
+  "artx",
+  "hyperx",
+  "florax",
+];
+
+/** The standing field of the threshold — THE MIRROR, always. */
+export const LANDING_DEFAULT_SCOPE: LandingScopeKey = "mirror";
+
+export type RegisterKind = DossierKind | "archive" | "hyperspace";
+
+/** The codex remembers which profile the visitor last opened —
+    kept on the device, so the register marks it red on return. */
+export interface CodexLastViewed {
+  kind: RegisterKind;
+  id: string;
+}
+
+const CODEX_LAST_KEY = "mirror-codex-last";
+
+function loadCodexLast(): CodexLastViewed | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(CODEX_LAST_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as CodexLastViewed;
+    if (
+      parsed &&
+      (parsed.kind === "civilization" ||
+        parsed.kind === "interdim" ||
+        parsed.kind === "hyperspace") &&
+      typeof parsed.id === "string" &&
+      parsed.id.length > 0
+    )
+      return parsed;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function saveCodexLast(value: CodexLastViewed | null) {
+  try {
+    if (value) localStorage.setItem(CODEX_LAST_KEY, JSON.stringify(value));
+    else localStorage.removeItem(CODEX_LAST_KEY);
+  } catch {
+    /* storage unavailable */
+  }
+}
 
 /* -------- the passage — the visitor's account and the free door -------- */
 
 export interface MeUser {
   email: string;
   name: string | null;
+  /** The Google passage's own face, when one was carried in. */
+  image?: string | null;
   tier: "crystalline" | "light";
+  /** The keeper's own light — true only for the ADMIN_EMAIL passage. */
+  admin?: boolean;
+  /** How the passage was carved: "email" (password), "google" or "anon". */
+  provider?: string;
+  /** True when the mailbox is proven — Google's word, or the letter's
+   *  clicked key. An unverified email passage waits at the account
+   *  features and the paid doors until the letter comes home. */
+  emailVerified?: boolean;
 }
 
 /* -------- the visitor's own light — the wallet at a glance ---------- */
@@ -197,6 +329,10 @@ export interface WalletBalance {
   planTier: "FREE" | "SEEKER" | "OBSERVATORY_PRO";
   freeCreditsRemaining: number;
   paidCreditsRemaining: number;
+  /** The great deposit — reflection pulses converted from the skies'
+      own API accumulation (present only where a deposit was laid). */
+  depositCredits?: number;
+  depositSource?: string | null;
   total: number;
 }
 
@@ -208,10 +344,32 @@ export interface WalletNotice {
   actionType?: string;
 }
 
+/** The paid creations' standing prices — the server's own law, read
+    from the wallet's glance and shown beside the hands that spend. */
+export interface WalletPrices {
+  musicPreview: number;
+  musicFull: number;
+  musicLoop: number;
+  akashicReading: number;
+  bookShort: number;
+  bookExtended: number;
+}
+
+/** A credit pack as the wallet's glance lays it out. */
+export interface WalletPack {
+  id: string;
+  label: string;
+  credits: number;
+  priceCents: number;
+  currency: string;
+  note: string;
+}
+
 /* -------- the dream book's keeping — a volume brought back -------- */
 
 export interface DreamBookResumePage {
   n: number;
+  part?: string;
   chapter?: string;
   paragraphs: string[];
 }
@@ -226,6 +384,12 @@ export interface DreamBookResume {
     /** The level of lecture the volume was woven at (older volumes may not carry one). */
     level?: string;
     topic: string;
+    /** The vision's own reading of the hand-drawn sketch the volume was
+     *  drawn from (volumes conjured before the sketch atelier rest bare). */
+    sketchVision?: string;
+    /** What the drawing was seen to hold — the transcribed elements
+     *  ("a little bird", "golden coins") the volume was born from. */
+    sketchSubjects?: string[];
   };
   meta: {
     title: string;
@@ -238,6 +402,20 @@ export interface DreamBookResume {
   pages: DreamBookResumePage[];
   threads: string;
   ended: boolean;
+  /** Where the reading rested — the resume reopens at the same leaf
+   *  (Adaptive Reading). Optional: older shelves never carried one. */
+  pageIdx?: number;
+  /** The volume's own face — the album cover painted by the sky
+   *  (optional: volumes woven before the cover brush rested bare). */
+  cover?: string;
+  /** THE STUDIO — the publishing workflow rides home with the volume
+   *  (story bible, editorial verdict, gate report, plates, stage). */
+  bible?: unknown;
+  editorial?: unknown;
+  gate?: unknown;
+  art?: unknown;
+  artPlan?: unknown;
+  stage?: string;
 }
 
 /* ------- the chat's own paused volume — the weaving instrument ------
@@ -300,6 +478,9 @@ function storeChatBook(book: ChatBookPause | null) {
 
 /* ------- LIGHT CODES — what the Mirror may hand to the chamber -------- */
 
+/* re-exported so the chamber's own surface reads one truth */
+export type { LcBrief, LcLyricOp } from "@/lib/data/light-codes";
+
 export interface LcPrefill {
   mode?: LightCodesMode;
   intention?: string;
@@ -310,8 +491,9 @@ export interface LcPrefill {
   style?: string;
   /** Generate at once when the chamber opens. */
   autoGenerate?: boolean;
-  /** Conversation themes carried into the interpretation. */
-  context?: string;
+  /** The visitor's words asked for lyrics and singing — the chamber
+      renders a true vocal song (never an instrumental approximation). */
+  vocalsRequested?: boolean;
 }
 
 /* -------- direct line to the Manifest OS (reality refining) ------- */
@@ -408,10 +590,10 @@ interface MirrorState {
   sidebarOpen: boolean;
   view: MainView;
   composerFocusNonce: number;
-  /** THE CANOPY'S SUMMON — the living tree of the main channels, called
-      back by the button beside the input. It fades by itself when an
-      answer lands; this flag only holds the visitor's summon. */
-  canopySummoned: boolean;
+  /** THE FLOOR'S OWN SEED — first words a threshold door hands the
+      realm's whisper line (the image door's inviting stem). Taken
+      once by the floor, then spent. */
+  floorSeed: string;
 
   /* THE SWIPE'S MEMORY — every view change is recorded, so a right
      swipe anywhere walks back through the journey and a left swipe
@@ -420,10 +602,6 @@ interface MirrorState {
   viewFuture: MainView[];
   navigateBack: () => void;
   navigateForward: () => void;
-
-  /** Meet with the Reflection of the Absolute — the whole app becomes
-      a living chat with the Mirror Entity's undirected pure awareness. */
-  communionOpen: boolean;
 
   /** One independent channel per scope. */
   sessions: Record<Mode, ScopeSession>;
@@ -438,6 +616,9 @@ interface MirrorState {
 
   /* Full-archive register */
   registerKind: RegisterKind;
+  /** The profile the visitor last opened — marked red in the codex. */
+  codexLastViewed: CodexLastViewed | null;
+  markCodexViewed: (kind: RegisterKind, id: string) => void;
 
   /* Mirror OS — Reality Guidance */
   labStage: "compose" | "charging" | "blueprint";
@@ -485,16 +666,34 @@ interface MirrorState {
   /* The passage — the visitor's account and modals. Everything is free:
      the passage only keeps the cosmic library with its one owner. */
   me: MeUser | null;
+  /* THE SESSION'S OWN BREATH — explicit states, never a guessed one:
+     "loading" is the quiet check after boot (no sign-in pitch, no
+     purchase dialog may open while it holds), "ready" means the first
+     glance has truly settled and the face on the wall is the truth. */
+  meStatus: "loading" | "ready";
   googleConfigured: boolean;
+  /** Whether a messenger stands (RESEND_API_KEY) — the verification
+   *  rooms and banners only speak when letters can truly fly. */
+  mailConfigured: boolean;
   authOpen: boolean;
-  authMode: "signin" | "register";
-  profileOpen: boolean;
+  authMode: "signin" | "register" | "check";
   accountOpen: boolean;
+  /* THE WELCOME WITHOUT A WALL — the eight-slide tour dialog and the
+     readable /about material, both reachable from the crown's own
+     About Us hand and from the ?room=about address. */
+  tourOpen: boolean;
+  aboutOpen: boolean;
+  openTour: () => void;
+  closeTour: () => void;
+  openAbout: () => void;
+  closeAbout: () => void;
 
   /* The visitor's own light — the wallet (planTier + both buckets),
      the unlock modal and its cause. The modal opens by itself when any
      door answers 402 INSUFFICIENT_CREDITS, and from the badge on tap. */
   wallet: WalletBalance | null;
+  walletPrices: WalletPrices | null;
+  walletPacks: WalletPack[] | null;
   walletModalOpen: boolean;
   walletNotice: WalletNotice | null;
   setWallet: (wallet: WalletBalance | null) => void;
@@ -502,12 +701,10 @@ interface MirrorState {
   openWalletModal: (notice?: WalletNotice | null) => void;
   closeWalletModal: () => void;
 
-  refreshMe: () => Promise<void>;
+  refreshMe: (force?: boolean) => Promise<void>;
   setMe: (user: MeUser | null) => void;
-  openAuth: (mode?: "signin" | "register") => void;
+  openAuth: (mode?: "signin" | "register" | "check") => void;
   closeAuth: () => void;
-  openProfile: () => void;
-  closeProfile: () => void;
   openAccount: () => void;
   closeAccount: () => void;
   signOut: () => Promise<void>;
@@ -558,11 +755,11 @@ interface MirrorState {
      branch's own words here, and the theme page that opens forges
      its making from them (made in the moment, never the same twice). */
   branchCreationSeed: {
-    kind: "akashic" | "book" | "invent";
+    kind: "akashic" | "book" | "invent" | "music" | "video";
     topic: string;
   } | null;
   setBranchCreationSeed: (seed: {
-    kind: "akashic" | "book" | "invent";
+    kind: "akashic" | "book" | "invent" | "music" | "video";
     topic: string;
   } | null) => void;
   /* THE TOOL WALL — the Forge's bench tools, worked by the inteligjence */
@@ -599,15 +796,32 @@ interface MirrorState {
   voice: VoiceId;
   pace: number;
 
+  /* THE VISITOR'S OWN LEVEL — how deep the house answers, held in the
+     visitor's own hand: -1 lets the walk's own DNA decide (the standing
+     law), 0–4 names the tier the visitor says their experience has
+     reached (the profile's settings room raises it). */
+  expLevel: number;
+  setExpLevel: (level: number) => void;
+
   /* THE MIX OF WORLDS — how much of each family the living tree
      carries, held in the store so the tree, the Laboratory's settings
      and the profile's own settings room all speak the same proportions. */
   treeMix: TreeMix;
   setTreeMix: (mix: TreeMix) => void;
 
+  /* THE LANDING'S OWN SCOPE — the threshold's docked chat wears one
+     field's light and suggestions; THE MIRROR is the standing default
+     (the house's own reflection, the old "General"). Kept for the
+     session only: a new visit wakes in the Mirror again. */
+  landingScope: LandingScopeKey;
+  setLandingScope: (scope: LandingScopeKey) => void;
+
   setLanguage: (code: LanguageCode) => void;
   setVoice: (id: VoiceId) => void;
   setPace: (value: number) => void;
+  /** The depth every channeling sends — the walk's own tier unless the
+      visitor raised their own level in the profile's settings. */
+  sendDepth: () => { steps: number; tier: number };
   /** Restore persisted preferences (called once after mount). */
   bootPreferences: () => void;
 
@@ -627,6 +841,21 @@ interface MirrorState {
   openProfilePage: () => void;
   closeProfilePage: () => void;
 
+  /* THE GATHERING'S PORTAL — the independent hall. Not a chat tab, not
+     a workspace room: a separate social space with its own address
+     (?room=gathering), raised by the threshold's top-left sigil and
+     folded only by its own return hand or the browser's Back. */
+  gatheringPortalOpen: boolean;
+  openGatheringPortal: () => void;
+  closeGatheringPortal: () => void;
+
+  /* THE TREE BOARD — the living tree, summoned over any world by the
+     crown's small map. When open, the branches' hub shows every
+     branch (no locked focus) — the whole grove at hand. */
+  treeBoardOpen: boolean;
+  openTreeBoard: () => void;
+  closeTreeBoard: () => void;
+
   setMode: (mode: Mode) => void;
   setSidebarTab: (tab: SidebarTab) => void;
   setSearch: (value: string) => void;
@@ -634,7 +863,6 @@ interface MirrorState {
   closeModal: () => void;
   setMobileNavOpen: (open: boolean) => void;
   setSidebarOpen: (open: boolean) => void;
-  setCanopySummoned: (open: boolean) => void;
 
   /** Inner Earth: consult the Mirror about one of the 59 peoples
       beneath the surface — closes overlays, opens the Interplanetary
@@ -644,14 +872,55 @@ interface MirrorState {
   /** Inner Earth: open one species' full encyclopedia page. */
   openSpecies: (id: string) => void;
 
+  /* THE WORKSPACE — the tools open as mini tabs over the walk; one
+     window carries every open room, one tab active at a time. */
+  toolTabs: ToolTabKey[];
+  activeToolTab: ToolTabKey | null;
+  /** THE LAST MAKER — the maker tab the visitor last stood in (the
+      InDream hand reopens it; "scopes" never rides here). */
+  lastMakerTab: Exclude<ToolTabKey, "scopes"> | null;
+  /** opts.bare — open from the landing's docked portal: the tab is
+      pushed and activated, but the view never leaves the landing. */
+  openToolTab: (key: ToolTabKey, opts?: { bare?: boolean }) => void;
+  closeToolTab: (key: ToolTabKey) => void;
+  activateToolTab: (key: ToolTabKey) => void;
+  /** THE ONE BACK — the whole workplace lays down at once: every tab
+      closes and the main chat landing stands again. */
+  closeWorkspace: () => void;
+  /** THE SCOPES' OWN BACK — the fields' workplace is independent: its
+      back hand lays only the scopes down (the InDream tabs keep
+      resting beneath) and the main chat landing stands again. */
+  closeScopes: () => void;
+
+  /* THE ROOM'S OWN ZOOM — store-held so the chamber's root can lay
+     its own transform down while a room stands zoomed (the transform
+     would otherwise hold the zoomed frame inside the docked lens). */
+  workspaceZoomed: boolean;
+  setWorkspaceZoomed: (z: boolean) => void;
+
+  /* THE MIRROR BRIDGE — a workspace's compact assistant may carry its
+     own context to the floor: the draft waits in the room's reply line
+     until the visitor's own hand sends it (the Mirror advises, never
+     speaks unbidden). */
+  bridgeDraft: { text: string; at: number } | null;
+  composeBridgePrompt: (text: string) => void;
+  consumeBridgeDraft: () => void;
+
+  /* THE CREATIONS' OWN DOOR — the profile's library rows hand their
+     sector to the creations room, so a saved work opens on its own
+     shelf (LibraryView clears it once it has taken the helm). */
+  libraryFocus: { sector: string; at: number } | null;
+  setLibraryFocus: (sector: string) => void;
+  clearLibraryFocus: () => void;
+
   /* The Akashic Library — the ancient one's papyrus records */
-  openAkashic: () => void;
+  openAkashic: (opts?: { bare?: boolean }) => void;
   exitAkashic: () => void;
 
   /* The Invent — the fourth book: the inventor's compact studio */
   openInvent: () => void;
   exitInvent: () => void;
-  openDreamBook: () => void;
+  openDreamBook: (opts?: { bare?: boolean }) => void;
   exitDreamBook: () => void;
 
   /* LIGHT CODES — the musical chamber of the Mirror Entity */
@@ -660,38 +929,147 @@ interface MirrorState {
   lcIntention: string;
   lcUserLyrics: string;
   lcShape: LcShape;
-  lcStatus: "idle" | "interpreting" | "polling" | "ready" | "error";
-  lcInterpretation: LcTrack | null; // the Mirror's written direction
+  /** The weave's length: the 30-second preview or the full song. */
+  lcLength: "preview" | "full" | "loop";
+  /** THE WORD MEASURE — the lyric sheet's chosen size: "auto" rides
+      the melody's own length; a number asks for about-N words (up to
+      1000). The Lyrics Laboratory's hands weave to it. */
+  lcLyricsLength: "auto" | 150 | 400 | 700 | 1000;
+  /* THE VISITOR'S OWN STYLE — the image look chosen through the "/"
+     hand in any composer; every crystallization wears it. */
+  visualStyle: string | null;
+  lcStatus: "idle" | "interpreting" | "rendering" | "polling" | "ready" | "error";
+  /** The resonance engine's own progress (0..1) while weaving locally. */
+  lcRenderProgress: number;
+  /** THE MIRROR'S BRIEF — the chamber's composition draft: the direction
+      the Mirror wrote (or one carried in from the chat), editable by
+      the visitor's own hand before any sound is woven. */
+  lcBrief: LcBrief | null;
+  /** the laboratory hand at work ("refine" | "lyrics:<op>") — the brief
+      stays readable while a craft runs */
+  lcBusyOp: string | null;
+  /** the lab's own word — what a craft hand changed, or where it slipped */
+  lcLabNote: string | null;
+  /** an honest word: refining after a weave means a NEW version, never
+      an edit of the sound already woven */
+  lcRefineNote: string | null;
+  /** the session's previous lyric sheets — the restore shelf */
+  lcLyricsDrafts: string[];
+  /** the visitor's image carried into the chamber (memory only, never
+      written to any shelf) */
+  lcCarriedImage: string | null;
   lcTrack: LcTrack | null; // the finished, playable transmission
+  /** THE MIRROR'S WRITTEN DIRECTION — the chamber's interpretation,
+      visible while the songs render (title, style, lyrics, notes). */
+  lcInterpretation: LcTrack | null;
   lcError: string | null;
+  /** A gentle word for the shelf — a sound the device no longer holds. */
+  lcNotice: string | null;
   lcHistory: LcTrack[];
-  openLightCodes: (prefill?: LcPrefill) => void;
+  /** THE FIRST LAW, LITERAL — "no style, just my words": when the
+      visitor holds this, the brief is composed from their free text
+      ALONE — no chamber, no shape, no voice selector rides with the
+      ask, in the compose or in the weave. */
+  lcRaw: boolean;
+  setLcRaw: (v: boolean) => void;
+  /* MUSIC ENGINE 2.0 — the studio's creative contract. The genre fusion
+     is a binding agreement (spiritual color only when it is asked for);
+     the studio controls narrow the intention, never replace it. */
+  lcGenres: string[];
+  lcStudio: LcStudio;
+  setLcGenres: (ids: string[]) => void;
+  setLcStudio: (patch: Partial<LcStudio>) => void;
+  /** The chamber's audio QA — the ear that measures what was born. */
+  lcQuality: QualityReport | null;
+  runLcQuality: () => Promise<void>;
+  favoriteLc: (trackId: string, favorite: boolean) => Promise<void>;
+  publishLc: (trackId: string, caption?: string) => Promise<boolean>;
+  /** Bumped on every successful publish — the hall's shelf listens. */
+  lcPublishedNonce: number;
+  openLightCodes: (prefill?: LcPrefill, opts?: { bare?: boolean }) => void;
   exitLightCodes: () => void;
+  /* THE VIDEO STUDIO — the motion picture's own room: a seed (the
+     conversation's own words) in, a narrated film out. */
+  videoSeed: { topic: string; sourceConvId?: string } | null;
+  openVideo: (seed?: { topic: string; sourceConvId?: string }) => void;
+  exitVideo: () => void;
+  setVideoSeed: (seed: { topic: string; sourceConvId?: string } | null) => void;
   setLcMode: (mode: LightCodesMode) => void;
   setLcCivilization: (id: string | null) => void;
   setLcIntention: (v: string) => void;
   setLcUserLyrics: (v: string) => void;
   setLcShape: (shape: Partial<LcShape>) => void;
-  /** Mirror translation → generation → poll → player. When called
-      with interpretOnly, only the Mirror's interpretation is asked. */
+  setLcLength: (length: "preview" | "full" | "loop") => void;
+  setLcLyricsLength: (v: "auto" | 150 | 400 | 700 | 1000) => void;
+  setVisualStyle: (style: string | null) => void;
+  /** Mirror translation → the weave → the player. The chamber's full
+      round: the Mirror composes the brief, then the engine renders it.
+      Kept for one-ask paths (chips, prefills, error retries). */
   generateLightCode: (opts?: {
     interpretOnly?: boolean;
-    context?: string;
     intention?: string;
     attachments?: ChatAttachment[];
+    vocalsRequested?: boolean;
   }) => Promise<void>;
+  /** THE FIRST DOOR ONLY — the Mirror composes the brief; nothing is
+      woven until the visitor's own hand strikes the generate. */
+  composeBrief: (opts?: {
+    intention?: string;
+    attachments?: ChatAttachment[];
+    /** The visitor's words asked for lyrics and singing — a true
+        vocal song, never an instrumental approximation. */
+    vocalsRequested?: boolean;
+  }) => Promise<boolean>;
+  /** THE SECOND DOOR — the standing brief is woven into sound. */
+  weaveBrief: () => Promise<void>;
+  /** The visitor's own hand on the brief — direct edits, no Mirror. */
+  updateBriefDraft: (patch: Partial<LcBrief>) => void;
+  /** Conversational refinement: the instruction reshapes the standing
+      brief. No audio is regenerated here — a new version is woven only
+      when the visitor strikes generate. */
+  refineBrief: (instruction: string) => Promise<void>;
+  /** THE LYRICS LABORATORY — one craft hand at a time on the brief's
+      lyric sheet. */
+  lyricsLabOp: (op: LcLyricOp) => Promise<void>;
+  /** Restore a previous lyric sheet from the session shelf. */
+  restoreLyricsDraft: (index: number) => void;
+  /** The Mirror chooses everything — a fresh brief from an empty ask. */
+  surpriseMe: () => Promise<void>;
+  /** Back to the brief from the player — a new version may be woven. */
+  newVersionFromTrack: () => void;
+  clearLcBrief: () => void;
+  /** Play a kept transmission — recalls the sound from the visitor's
+      own device; when the device no longer holds it, a gentle notice
+      stands in its place. A vault-kept transmission plays straight
+      from the house's serve door — any device, any visit. */
+  playLc: (track: LcTrack) => Promise<void>;
   reshapeLc: (track: LcTrack) => void;
   clearLcPlayer: () => void;
+  /** THE STAGE'S OWN DIAL — how the playlist turns when a transmission
+      ends: off (stop at the shelf's end), all (turn around), one
+      (the same piece again). */
+  lcRepeat: "off" | "one" | "all";
+  setLcRepeat: (mode: "off" | "one" | "all") => void;
+  /** THE QUEUE'S OWN HAND — step through the shelf of kept sounds:
+      1 = the next older transmission, -1 = the one before it. */
+  lcAdvance: (dir: 1 | -1) => Promise<void>;
   forgetLc: (id: string) => void;
+  /** THE VAULT SHELF — a signed passage's heart, laid or lifted on a
+      vault-kept row (the server holds the truth; the shelf follows). */
+  toggleLcFavorite: (id: string) => void;
+  /** THE KEEPING THREAD — fetch the vault shelf into the chamber's
+      history, and when weaves are still standing (a refresh mid-weave),
+      watch them through the same shelf until they land. Guests keep
+      their device-only keeping — this door stays shut for them. */
+  resumeLcLibrary: () => Promise<void>;
 
-  /* Communion — the Reflection of the Absolute */
-  openCommunion: () => void;
-  closeCommunion: () => void;
   /** ET Technology: consult the Mirror about a specific technology —
       closes modals, opens the Interplanetary channel, preloads the
       composer with a prepared question. */
   askAboutTechnology: (name: string) => void;
   setDraft: (value: string) => void;
+  seedFloor: (value: string) => void;
+  takeFloorSeed: () => string;
   focusComposer: () => void;
   returnToObservatory: () => void;
   clearChannel: (mode?: Mode | "forge") => void;
@@ -742,14 +1120,13 @@ interface MirrorState {
   /* Mirror OS — Reality Guidance (fully independent) */
   openMirrorOS: () => void;
   exitMirrorOS: () => void;
+
   /** A fresh chat inside one world: the manifest core, the quantum
       core or the med nexus returns to its quiet origin. */
   clearWorldChat: (world: "manifest" | "quantum" | "evolvemed" | "artx") => void;
 
   /* ParticleX — the quantum narrator (fully independent) */
   openParticleX: () => void;
-  /** The open door — the laboratory's own About page. */
-  openAbout: () => void;
   exitParticleX: () => void;
 
   setPxDraft: (v: string) => void;
@@ -808,8 +1185,6 @@ interface MirrorState {
     display?: string
   ) => Promise<void>;
 
-  openLab: () => void;
-  exitLab: () => void;
   setLabIntention: (v: string) => void;
   setLabEmotion: (id: string) => void;
   setLabIntensity: (v: number) => void;
@@ -858,6 +1233,24 @@ const tTemplateTech = (name: string) =>
 
 let messageCounter = 0;
 const nextMessageId = () => `m-${Date.now().toString(36)}-${(messageCounter++).toString(36)}`;
+
+/* ------------------------------------------------------------------ */
+/*  THE VERIFICATION GATE'S OWN VOICE — a paid door's 403              */
+/*  EMAIL_UNVERIFIED is never spoken as machinery: the check-email     */
+/*  room rises (resend + change email inside), and the door says one   */
+/*  gentle word. Returns the friendly message when the gate spoke,     */
+/*  null when the error belongs to the door itself.                    */
+/* ------------------------------------------------------------------ */
+export const EMAIL_GATE_WORD = "EMAIL_UNVERIFIED";
+export function applyVerificationGate(err: unknown): string | null {
+  const message = err instanceof Error ? err.message : "";
+  if (message !== EMAIL_GATE_WORD) return null;
+  useMirror.getState().openAuth("check");
+  return (
+    "Confirm your email first — the letter's key opens the paid doors. " +
+    "Check your inbox, or ask for a fresh letter in the room that just opened."
+  );
+}
 
 /* ------------------------------------------------------------------ */
 /*  IMAGE CRYSTALLIZATION — the shared plumbing. When the visitor      */
@@ -948,6 +1341,10 @@ async function crystallizeVisual(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         language: useMirror.getState().language,
+        /* the visitor's own style — chosen through the "/" hand — rides along */
+        ...(useMirror.getState().visualStyle
+          ? { style: useMirror.getState().visualStyle }
+          : {}),
         message: regenerateOf ? regenerateOf.request ?? request : request,
         history,
         ...(regenerateOf
@@ -1001,10 +1398,453 @@ async function crystallizeVisual(
 /* The archive's hydration hand — true while conversations return to
    the live rooms, so the autosave never writes back mid-restore. */
 let hydrating = false;
+
+/* THE CHANNEL'S OWN GENERATION — every reset of a channel (a new chat,
+   a kept volume restored, a category's fresh page) turns this wheel
+   once, and every in-flight answer carries the number it was born
+   with. An answer that comes home to a channel that has moved on is
+   laid down gently — never written into a conversation it does not
+   belong to. THIS IS THE CARRY LAW: without it, an ask made in one
+   room could land in another room's fresh page when the visitor walks
+   on while the mirror still speaks. */
+let channelGeneration = 0;
 /* The swipe's own hand — true while a back/forward turn is in flight,
    so the view recorder never mistakes the return for a fresh journey
    and wipes the road ahead. */
 let navLock = false;
+
+/* THE OS STREAM'S OWN BREATH — the Manifest OS chat gathers its
+   streaming deltas in one pending buffer that reaches the store at
+   most once per beat, so a flowing answer re-renders the room a
+   dozen times a second instead of once per token. The stream's own
+   end always flushes synchronously — the last words never wait. */
+const OS_FLUSH_MS = 80;
+const osStream = {
+  id: null as string | null,
+  text: null as string | null,
+  timer: null as number | null,
+};
+
+/* THE ASK'S OWN HAND — one live abort per channel surface (the
+   standing channel's modes): a fresh ask on a surface supersedes the
+   one still flying, so a channel turn mid-breath never leaves two
+   fetches racing for the same thread — and no answer lands twice. */
+const askAbort: Record<string, AbortController | null> = {};
+/* THE OS STREAM'S OWN HAND — the Manifest OS keeps one live stream;
+   a new ask cuts the old one the very breath it opens its own. */
+let osAskAbort: AbortController | null = null;
+
+/* ------------------------------------------------------------------ */
+/*  THE ENDLESS JOURNEY — the client's own thread of the six-part      */
+/*  weave. Each part is a real engine movement; the honest part count  */
+/*  rides in the notice ("weaving movement k of six" — never an        */
+/*  invented percentage). The journey's token rests between requests,  */
+/*  so a stumbled part resumes where it stood instead of weaving the   */
+/*  whole journey again. When the final movement lands, the joined     */
+/*  piece is fetched once from the journey's own door and kept on the  */
+/*  visitor's device.                                                  */
+/* ------------------------------------------------------------------ */
+const LOOP_PARTS = 6;
+const FULL_SONG_PARTS = 2;
+let journeyToken: string | null = null;
+let journeyPartsDone = 0;
+/* the thread's own shape — a stale token from another journey's shape
+   (endless vs the song's two movements) must never resume across */
+let journeyKind: "loop" | "full" | null = null;
+
+/* THE JOURNEY'S OWN LOOM — one engine for both long weaves: the
+   endless journey (six movements ≈ thirty minutes) and the full
+   song's own two movements (the opening and the closing, joined into
+   one composition past the two-minute wall). The journey was weighed
+   once at its first part; every continuation rides free, and a
+   stumbled part resumes where it stood. */
+async function runJourney(
+  get: () => MirrorState,
+  set: (partial: Partial<MirrorState>) => void,
+  kind: "loop" | "full"
+): Promise<void> {
+  const total = kind === "loop" ? LOOP_PARTS : FULL_SONG_PARTS;
+  /* a thread of another shape never resumes here */
+  if (journeyKind !== kind) {
+    journeyToken = null;
+    journeyPartsDone = 0;
+    journeyKind = kind;
+  }
+  const brief = get().lcBrief!;
+  const raw = get().lcRaw;
+  let lastStructure: string | undefined;
+  let lastNote: string | undefined;
+  for (let k = journeyPartsDone + 1; k <= total; k++) {
+    set({
+      lcNotice:
+        k === 1
+          ? kind === "loop"
+            ? "Weaving the journey's first movement — one of six. A long piece takes several breaths."
+            : `Weaving the song's opening movement — one of two. A full song takes several breaths.`
+          : kind === "loop"
+            ? `Weaving movement ${k} of six — the journey continues.`
+            : `Weaving the song's closing movement — two of two.`,
+    });
+    const resume = k > 1 && journeyToken;
+    const res = await fetch("/api/light-codes/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        mode: brief.mode,
+        intention: brief.intention,
+        civilization:
+          !raw && brief.mode === "other-stars"
+            ? (get().lcCivilization ?? undefined)
+            : undefined,
+        shape: raw ? undefined : get().lcShape,
+        instrumental: raw ? !brief.lyrics : get().lcShape.voice === "None" || !brief.lyrics,
+        language: get().language,
+        compose: true,
+        length: kind,
+        ...(resume
+          ? { loopToken: journeyToken, loopPart: { index: k, total, nonce: Math.random().toString(36).slice(2, 10) } }
+          : { loopPart: { index: 1, total } }),
+        interp: {
+          title: brief.title,
+          style: brief.style,
+          lyrics: brief.lyrics,
+          notes: brief.notes,
+        },
+        ...(k === 1 && get().lcCarriedImage ? { image: get().lcCarriedImage } : {}),
+      }),
+    });
+    const data = (await res.json().catch(() => null)) as
+      | {
+          loopToken?: string;
+          loopProgress?: string;
+          loopFinalized?: boolean;
+          audioUrl?: string;
+          loopDurationSec?: number;
+          loopNote?: string;
+          structure?: string;
+          error?: string;
+        }
+      | null;
+    if (!res.ok || !data) {
+      throw new Error(
+        (data && data.error) ||
+          "The weaving rested a moment. Ask again — it continues where it stood."
+      );
+    }
+    lastStructure =
+      typeof data.structure === "string" && data.structure ? data.structure : lastStructure;
+    lastNote = typeof data.loopNote === "string" ? data.loopNote : lastNote;
+    if (!data.loopFinalized) {
+      journeyToken = data.loopToken ?? journeyToken;
+      journeyPartsDone = k;
+      continue;
+    }
+    /* the journey is joined — fetch it once from its own door */
+    set({
+      lcNotice:
+        kind === "loop"
+          ? "Crossing the movements into one long journey…"
+          : "Crossing the song's movements into one whole piece…",
+    });
+    const audioRes = await fetch(data.audioUrl ?? "");
+    if (!audioRes.ok) {
+      const errData = (await audioRes.json().catch(() => null)) as { error?: string } | null;
+      throw new Error(
+        (errData && errData.error) ||
+          "The sound rested before it reached you. Ask again — the brief still stands."
+      );
+    }
+    const bytes = new Uint8Array(await audioRes.arrayBuffer());
+    const id = `lc-${Date.now()}`;
+    const audioUrl = URL.createObjectURL(new Blob([bytes.buffer as ArrayBuffer], { type: "audio/mpeg" }));
+    void lcAudioSave(id, bytes, "audio/mpeg");
+    const track: LcTrack = {
+      id,
+      title: brief.title,
+      mode: brief.mode,
+      intention: brief.intention,
+      audioUrl,
+      style: brief.style || undefined,
+      lyrics: brief.lyrics,
+      notes: brief.notes || undefined,
+      length: kind,
+      duration: data.loopDurationSec || undefined,
+      structure: [lastNote, lastStructure].filter(Boolean).join("\n\n") || undefined,
+      createdAt: Date.now(),
+    };
+    const history = [
+      { ...track, audioUrl: "" },
+      ...get().lcHistory.filter((t) => t.id !== track.id),
+    ].slice(0, 40);
+    try {
+      localStorage.setItem("mirror-lc-history", JSON.stringify(history));
+    } catch {
+      /* storage unavailable */
+    }
+    journeyToken = null;
+    journeyPartsDone = 0;
+    journeyKind = null;
+    set({
+      lcTrack: track,
+      lcStatus: "ready",
+      lcNotice: null,
+      lcHistory: history,
+      lcCarriedImage: null,
+    });
+    return;
+  }
+  /* every part landed but none declared itself final — the thread rested */
+  throw new Error(
+    "The journey's thread rested before its ending. Ask once more — the weaving continues where it stood."
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  THE VAULT SHELF — the house's own keeping for signed passages.     */
+/*  The chamber's weaves land as MusicTrack rows; this thread fetches  */
+/*  the shelf, merges it into the visitor's history (the local,        */
+/*  device-kept rows are never displaced), and — after a refresh       */
+/*  mid-weave — watches the standing jobs until they resolve, each     */
+/*  spoken to exactly once. Guests never walk this path: their keeping */
+/*  stays on their own device, exactly as it always has.               */
+/* ------------------------------------------------------------------ */
+
+interface LcLibraryTrack {
+  id: string;
+  title: string;
+  audioUrl: string;
+  durationSec: number | null;
+  status: string;
+  favorite: boolean;
+  createdAt: string;
+}
+
+interface LcLibraryJob {
+  id: string;
+  status: string;
+  providerTaskId: string | null;
+  creditsDrawn: number;
+  refunded: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface LcLibraryPayload {
+  tracks: LcLibraryTrack[];
+  jobs: LcLibraryJob[];
+}
+
+/* one watcher at a time, wherever in the house the visitor wanders */
+let lcVaultPoll: ReturnType<typeof setTimeout> | null = null;
+let lcVaultWatched = new Set<string>();
+let lcVaultTicks = 0;
+
+function persistLcHistory(history: LcTrack[]): void {
+  try {
+    localStorage.setItem("mirror-lc-history", JSON.stringify(history));
+  } catch {
+    /* storage unavailable */
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  THE RESONANCE LOOM — the chamber's own hand.                       */
+/*                                                                     */
+/*  When the sound engine's key is not placed (or the sky's allowance  */
+/*  rests), the chamber does not fall silent: the Mirror's standing    */
+/*  brief is woven RIGHT HERE on the visitor's machine into a real,    */
+/*  downloadable ambient transmission. The same shelf laws apply —     */
+/*  the sound also rests on the visitor's IndexedDB so the history     */
+/*  replays it, and the engineId carries the seed for a re-weave.      */
+/* ------------------------------------------------------------------ */
+async function weaveResonanceLocally(
+  brief: LcBrief,
+  shape: LcShape,
+  onProgress: (p: number) => void
+): Promise<LcTrack> {
+  const { renderResonanceTrack, encodeResonanceId } = await import(
+    "@/lib/resonance-engine"
+  );
+  const params = {
+    mode: brief.mode,
+    energy: shape.energy,
+    light: shape.light,
+    familiarity: shape.familiarity,
+    structure: shape.structure,
+    timeFeel: shape.timeFeel,
+    voice: shape.voice,
+    style: brief.style,
+    seed: (Math.random() * 0xffffffff) >>> 0,
+    title: brief.title,
+  };
+  const { blobUrl, duration } = await renderResonanceTrack(params, onProgress);
+  const id = `lc-${Date.now()}`;
+  /* the keeping law — the woven sound rests on the visitor's own shelf */
+  try {
+    const blob = await (await fetch(blobUrl)).blob();
+    const bytes = new Uint8Array(await blob.arrayBuffer());
+    void lcAudioSave(id, bytes, "audio/wav");
+  } catch {
+    /* memory only — the shelf may rest */
+  }
+  return {
+    id,
+    title: brief.title,
+    mode: brief.mode,
+    intention: brief.intention,
+    audioUrl: blobUrl,
+    duration,
+    style: brief.style || undefined,
+    lyrics: brief.lyrics,
+    notes: brief.notes || undefined,
+    length: "preview",
+    engineId: encodeResonanceId(params),
+    createdAt: Date.now(),
+  };
+}
+
+/** THE WORD MEASURE'S OWN SCALE — "auto" rides the melody's own
+    length (a preview carries few words, the endless journey many);
+    a chosen number is the visitor's own ask, capped at 1000. */
+function resolveLcLyricsWords(
+  choice: "auto" | 150 | 400 | 700 | 1000,
+  length: "preview" | "full" | "loop"
+): number {
+  if (choice !== "auto") return choice;
+  if (length === "loop") return 500;
+  if (length === "full") return 280;
+  return 130;
+}
+
+/** Fold the vault's rows into the chamber's shelf: server rows are the
+    truth for their own ids, local rows stand untouched beside them. */
+function mergeVaultShelf(
+  get: () => MirrorState,
+  set: (partial: Partial<MirrorState>) => void,
+  payload: LcLibraryPayload
+): void {
+  const existing = get().lcHistory;
+  const byLibrary = new Map<string, LcTrack>();
+  for (const t of existing) if (t.libraryId) byLibrary.set(t.libraryId, t);
+  const rows: LcTrack[] = [];
+  for (const row of payload.tracks) {
+    if (row.status === "failed" || !row.audioUrl) continue;
+    const prev = byLibrary.get(row.id);
+    const createdAt = Date.parse(row.createdAt) || 0;
+    rows.push(
+      prev
+        ? {
+            ...prev,
+            favorite: row.favorite,
+            duration: row.durationSec ?? prev.duration,
+            audioUrl: row.audioUrl,
+            durable: true,
+            createdAt: prev.createdAt || createdAt,
+          }
+        : {
+            id: row.id,
+            title: row.title,
+            mode: "light-transmission",
+            intention: "",
+            audioUrl: row.audioUrl,
+            duration: row.durationSec ?? undefined,
+            libraryId: row.id,
+            favorite: row.favorite,
+            durable: true,
+            createdAt,
+          }
+    );
+  }
+  const keptIds = new Set(
+    rows.map((r) => r.libraryId).filter((v): v is string => Boolean(v))
+  );
+  const merged = [
+    ...rows,
+    ...existing.filter((t) => t.libraryId && !keptIds.has(t.libraryId)),
+    ...existing.filter((t) => !t.libraryId),
+  ]
+    .sort((a, b) => b.createdAt - a.createdAt)
+    .slice(0, 48);
+  set({ lcHistory: merged });
+  persistLcHistory(merged);
+}
+
+/** The keeping thread — watch standing weave jobs through the shelf
+    itself (one door, no second machinery) until each resolves, then
+    speak honestly: what landed, and what light came home. */
+function watchVaultJobs(
+  get: () => MirrorState,
+  set: (partial: Partial<MirrorState>) => void,
+  jobs: LcLibraryJob[]
+): void {
+  const processing = jobs.filter((j) => j.status === "processing");
+  if (processing.length === 0) return;
+  for (const j of processing) lcVaultWatched.add(j.id);
+  if (lcVaultPoll !== null) return; // the watcher already walks
+
+  const schedule = (): void => {
+    if (lcVaultPoll !== null || lcVaultWatched.size === 0) return;
+    lcVaultPoll = setTimeout(() => {
+      void tick();
+    }, 5000);
+  };
+
+  const tick = async (): Promise<void> => {
+    lcVaultPoll = null;
+    const me = get().me;
+    if (!me || me.email.startsWith("anon:") || lcVaultWatched.size === 0) return;
+    lcVaultTicks += 1;
+    if (lcVaultTicks > 120) {
+      /* ten quiet minutes — the thread rests; the room's next mount
+         picks the watch up again */
+      lcVaultWatched.clear();
+      return;
+    }
+    let payload: LcLibraryPayload | null = null;
+    try {
+      const res = await fetch("/api/music-library");
+      if (res.status === 401) return; // the passage rested
+      payload = res.ok
+        ? ((await res.json().catch(() => null)) as LcLibraryPayload | null)
+        : null;
+    } catch {
+      payload = null;
+    }
+    if (!payload) {
+      schedule(); // one breath, then ask again
+      return;
+    }
+    mergeVaultShelf(get, set, payload);
+    const resolved = payload.jobs.filter(
+      (j) => j.status !== "processing" && lcVaultWatched.has(j.id)
+    );
+    for (const j of resolved) lcVaultWatched.delete(j.id);
+    if (resolved.length > 0) {
+      const recovered = resolved.filter((j) => j.status === "succeeded");
+      const failed = resolved.filter((j) => j.status === "failed");
+      const lights = failed.reduce((n, j) => n + (j.creditsDrawn || 0), 0);
+      const words: string[] = [];
+      if (recovered.length > 0) {
+        words.push(
+          "A weave that outlived the refresh has landed — its transmission now rests on your shelf."
+        );
+      }
+      if (failed.length > 0) {
+        words.push(
+          lights > 0
+            ? `A weave could not finish — its ${lights} ${
+                lights === 1 ? "light" : "lights"
+              } returned to your purse.`
+            : "A weave could not finish — nothing had been drawn from your purse."
+        );
+      }
+      if (words.length > 0) set({ lcNotice: words.join(" ") });
+    }
+    if (lcVaultWatched.size > 0) schedule();
+  };
+
+  schedule();
+}
 
 export const useMirror = create<MirrorState>()((set, get) => ({
   activeMode: "interplanetary",
@@ -1014,12 +1854,16 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   mobileNavOpen: false,
   sidebarOpen: true,
   view: "observatory",
+  toolTabs: [],
+  activeToolTab: null,
+  lastMakerTab: null,
+  bridgeDraft: null,
+  libraryFocus: null,
   composerFocusNonce: 0,
-  canopySummoned: false,
+  floorSeed: "",
   viewPast: [],
   viewFuture: [],
   archiveTick: 0,
-  communionOpen: false,
   sessions: emptySessions(),
 
   remedyStatus: "idle" as RemedyStatus,
@@ -1028,6 +1872,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   remedyError: null,
 
   registerKind: "civilization",
+  codexLastViewed: loadCodexLast(),
 
   labStage: "compose",
   labIntention: "",
@@ -1063,25 +1908,55 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   axScope: null,
 
   /* LIGHT CODES — the musical chamber */
-  lcMode: "light-transmission" as LightCodesMode,
+  lcMode: "freestyle" as LightCodesMode,
   lcCivilization: null,
   lcIntention: "",
   lcUserLyrics: "",
   lcShape: { ...LC_DEFAULT_SHAPE },
-  lcStatus: "idle" as "idle" | "interpreting" | "polling" | "ready" | "error",
-  lcInterpretation: null,
+  lcGenres: [] as string[],
+  lcStudio: { ...LC_DEFAULT_STUDIO },
+  lcQuality: null,
+  lcPublishedNonce: 0,
+  lcLength: "preview" as "preview" | "full" | "loop",
+  lcLyricsLength: "auto" as "auto" | 150 | 400 | 700 | 1000,
+  visualStyle: null,
+  lcStatus: "idle" as "idle" | "interpreting" | "rendering" | "polling" | "ready" | "error",
+  lcRenderProgress: 0,
+  lcBrief: null,
+  lcBusyOp: null,
+  lcLabNote: null,
+  lcRefineNote: null,
+  lcLyricsDrafts: [],
+  lcCarriedImage: null,
   lcTrack: null,
+  lcInterpretation: null,
   lcError: null,
+  lcNotice: null,
   lcHistory: [],
+  lcRepeat: "off" as "off" | "one" | "all",
+  /* THE FIRST LAW, DEFAULTED: the visitor's words need no style — the
+     no-style door stands open at birth, and the creativity leads until
+     the visitor's own hand chooses a chamber. */
+  lcRaw: true,
 
   me: null,
+  meStatus: "loading" as "loading" | "ready",
   googleConfigured: false,
+  /* whether a messenger stands — the verification rooms only speak
+     when letters can truly fly (RESEND_API_KEY in the vault) */
+  mailConfigured: false,
   accountOpen: false,
+  tourOpen: false,
+  aboutOpen: false,
   authOpen: false,
+  workspaceZoomed: false,
   authMode: "signin" as const,
-  profileOpen: false,
   profilePageOpen: false,
+  gatheringPortalOpen: false,
+  treeBoardOpen: false,
   wallet: null,
+  walletPrices: null,
+  walletPacks: null,
   walletModalOpen: false,
   walletNotice: null,
   expansionSeeds: [],
@@ -1105,6 +1980,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   language: "en" as LanguageCode,
   voice: DEFAULT_VOICE,
   pace: 0.95,
+  expLevel: -1,
 
   /* the whole house, mixed — the GENERAL walk stands until the
      visitor's own proportions join from their device */
@@ -1112,6 +1988,22 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   setTreeMix: (mix) => {
     set({ treeMix: mix });
     saveTreeMix(mix);
+  },
+
+  /* THE LANDING'S OWN SCOPE — THE MIRROR stands until the crown's
+     Scopes hand chooses another field; the choice rides the session's
+     own keeping (the setter writes it, bootPreferences wakes it).
+     Only the house's own keys are ever kept — anything else falls
+     back to the Mirror. */
+  landingScope: LANDING_DEFAULT_SCOPE,
+  setLandingScope: (scope) => {
+    const next = LANDING_SCOPES.includes(scope) ? scope : LANDING_DEFAULT_SCOPE;
+    set({ landingScope: next });
+    try {
+      window.sessionStorage.setItem("mirror:landing-scope", next);
+    } catch {
+      /* the session's keeping stays closed — the store carries */
+    }
   },
 
   setMode: (mode) =>
@@ -1123,7 +2015,6 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       return {
         activeMode: mode,
         sidebarTab: defaultTabForMode(mode),
-        canopySummoned: false,
         view:
           showChannel || s.view === "transmission"
             ? "transmission"
@@ -1137,7 +2028,6 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   closeModal: () => set({ modal: null }),
   setMobileNavOpen: (open) => set({ mobileNavOpen: open }),
   setSidebarOpen: (open) => set({ sidebarOpen: open }),
-  setCanopySummoned: (open) => set({ canopySummoned: open }),
 
   askAboutInnerEarth: (name) =>
     set((s) => ({
@@ -1158,34 +2048,131 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   openSpecies: (id) =>
     set({ modal: { type: "species", id }, mobileNavOpen: false }),
 
+  /* ---------------- THE WORKSPACE ----------------
+     The tools no longer swallow the whole screen: each one opens as a
+     mini tab over the one chat — one window, many rooms, one tab
+     active at a time. THE NEVER-YANK LAW — opening a tool tab NEVER
+     changes `view`: the realm IS the landing chat now, in both of its
+     gears (docked and fullscreen), so the window simply rises over
+     the chat wherever it stands. (The old yank — `view:
+     "observatory"` for non-bare callers — is gone with the walk; the
+     old expand hand that pulled a room out into a full-screen page
+     is gone with it — every room plays within the chat frame, the
+     visitor's word.) The opts param stays accepted (callers pass
+     {bare:true}); it no longer gears anything. */
+  openToolTab: (key, opts) => {
+    /* THE MAKER'S TRAIL — every open leaves one stone on the visit's
+       own path (sessionStorage, capped), so the history panel's trail
+       room can hand any opened tool back with one touch. */
+    recordMakerTrail(key);
+    return set((s) => ({
+      mobileNavOpen: false,
+      modal: null,
+      toolTabs: s.toolTabs.includes(key) ? s.toolTabs : [...s.toolTabs, key],
+      activeToolTab: key,
+      ...(key !== "scopes" ? { lastMakerTab: key } : {}),
+    }));
+  },
+  /* THE PARKED WORKPLACE — going back never lays the rooms down: the
+     tabs keep standing (hidden, still working — a weaving book keeps
+     weaving), and any maker's touch in the crown lifts the workplace
+     exactly where it was left. Only a room's own x lays that room
+     down (the house asks first). */
+  closeWorkspace: () => set({ activeToolTab: null }),
+  setWorkspaceZoomed: (z) => set({ workspaceZoomed: z }),
+  closeScopes: () =>
+    set((s) => ({
+      activeToolTab: s.activeToolTab === "scopes" ? null : s.activeToolTab,
+      toolTabs: s.toolTabs.filter((k) => k !== "scopes"),
+    })),
+  closeToolTab: (key) =>
+    set((s) => {
+      const tabs = s.toolTabs.filter((k) => k !== key);
+      const active =
+        s.activeToolTab === key ? (tabs[tabs.length - 1] ?? null) : s.activeToolTab;
+      return { toolTabs: tabs, activeToolTab: active };
+    }),
+  activateToolTab: (key) =>
+    set((s) => ({
+      activeToolTab: key,
+      ...(key !== "scopes" ? { lastMakerTab: key } : {}),
+    })),
+
+  /* THE MIRROR BRIDGE — the draft is stamped so the room's reply line
+     only lifts the newest carry (an older draft never re-fires). */
+  composeBridgePrompt: (text) =>
+    set({ bridgeDraft: { text, at: Date.now() } }),
+  consumeBridgeDraft: () => set({ bridgeDraft: null }),
+
+  /* THE CREATIONS' OWN DOOR */
+  setLibraryFocus: (sector) =>
+    set({ libraryFocus: { sector, at: Date.now() } }),
+  clearLibraryFocus: () => set({ libraryFocus: null }),
+
+  /* THE ONE FRAME — every room lives at the chat's own size, in both
+     of the chat's gears: there is no expansion beyond the frame any
+     more (the old expand hand that yanked the view into a full-screen
+     page is gone — the visitor's word: everything plays within the
+     chat frame, never a new page; the chat's own corner hand gears
+     the SIZE of the whole frame, and every room rides inside it). */
+
   /* ---------------- The Akashic Library ----------------
      The Library is its own ancient world: opening it suspends every
      other surface — one papyrus room, one record at a time. */
-  openAkashic: () =>
-    set({ view: "akashic", mobileNavOpen: false, modal: null }),
-  exitAkashic: () => set({ view: "observatory" }),
+  openAkashic: (opts) => get().openToolTab("akashic", opts),
+  /* the room's own back hand — from the full-screen room it returns to
+     the walk with the mini window still waiting (the tab stays); from
+     inside the mini window it lays the tab down (leaving the room) */
+  exitAkashic: () =>
+    set((s) =>
+      s.view === "akashic"
+        ? { view: "observatory" }
+        : {
+            view: "observatory",
+            toolTabs: s.toolTabs.filter((k) => k !== "akashic"),
+            activeToolTab:
+              s.activeToolTab === "akashic" ? null : s.activeToolTab,
+          }
+    ),
 
   /* -------- The Invent — the fourth book --------
      The inventor's compact studio: opening it suspends every other
      surface, exactly like the Manifest and the Akashic Library. */
-  openInvent: () =>
-    set({ view: "invent", mobileNavOpen: false, modal: null }),
-  exitInvent: () => set({ view: "observatory" }),
+  openInvent: () => get().openToolTab("invent"),
+  exitInvent: () =>
+    set((s) =>
+      s.view === "invent"
+        ? { view: "observatory" }
+        : {
+            view: "observatory",
+            toolTabs: s.toolTabs.filter((k) => k !== "invent"),
+            activeToolTab:
+              s.activeToolTab === "invent" ? null : s.activeToolTab,
+          }
+    ),
 
   /* -------- The Dream Book --------
      A world of its own: the magical atelier where tales are woven
      from resonance and read as they are being written.
      Free for every visitor. */
-  openDreamBook: () =>
-    set({ view: "dreambook", mobileNavOpen: false, modal: null }),
-  exitDreamBook: () => set({ view: "observatory" }),
+  openDreamBook: (opts) => get().openToolTab("dreambook", opts),
+  exitDreamBook: () =>
+    set((s) =>
+      s.view === "dreambook"
+        ? { view: "observatory" }
+        : {
+            view: "observatory",
+            toolTabs: s.toolTabs.filter((k) => k !== "dreambook"),
+            activeToolTab:
+              s.activeToolTab === "dreambook" ? null : s.activeToolTab,
+          }
+    ),
 
   /* -------- LIGHT CODES — the musical chamber --------
      Its own quiet world: intention in, transmission out. The Mirror
      interprets; the sound engine renders; the visitor listens. */
-  openLightCodes: (prefill) => {
+  openLightCodes: (prefill, opts) => {
     const hydrate: Partial<MirrorState> = {
-      view: "lightcodes",
       mobileNavOpen: false,
       modal: null,
       lcError: null,
@@ -1200,23 +2187,64 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       if (prefill.mode) hydrate.lcMode = prefill.mode;
       if (prefill.intention !== undefined) hydrate.lcIntention = prefill.intention;
       if (prefill.shape) hydrate.lcShape = { ...get().lcShape, ...prefill.shape };
-      hydrate.lcInterpretation = prefill.title || prefill.notes || prefill.style
-        ? {
-            id: "interpretation",
-            title: prefill.title ?? "",
-            mode: prefill.mode ?? get().lcMode,
-            intention: prefill.intention ?? "",
-            audioUrl: "",
-            notes: prefill.notes,
-            style: prefill.style,
-            createdAt: Date.now(),
-          }
-        : get().lcInterpretation;
+      const prefillBrief: LcBrief | null =
+        prefill.title || prefill.notes || prefill.style
+          ? {
+              title: prefill.title ?? "Untitled transmission",
+              style: prefill.style ?? "",
+              lyrics: null,
+              notes: prefill.notes ?? "",
+              intention: prefill.intention ?? "",
+              mode: prefill.mode ?? get().lcMode,
+            }
+          : null;
+      hydrate.lcBrief = prefillBrief ?? get().lcBrief;
     }
     set(hydrate);
-    if (prefill?.autoGenerate) void get().generateLightCode({ context: prefill.context });
+    /* the musical chamber rides as a mini tab — the tab call happens
+       BEFORE the auto-generate, so the chamber is standing when the
+       first transmission is asked for. opts.bare keeps the landing's
+       docked portal on the threshold (no view change). */
+    get().openToolTab("lightcodes", opts);
+    if (prefill?.autoGenerate) {
+      /* a brief carried in from the chat is woven as it stands — no
+         second interpretation is asked of the Mirror; the vocals ask
+         rides with it (a true song, never an approximation) */
+      if (get().lcBrief) void get().weaveBrief();
+      else
+        void get().generateLightCode({
+          vocalsRequested: prefill.vocalsRequested,
+        });
+    }
   },
-  exitLightCodes: () => set({ view: "observatory" }),
+  exitLightCodes: () =>
+    set((s) =>
+      s.view === "lightcodes"
+        ? { view: "observatory" }
+        : {
+            view: "observatory",
+            toolTabs: s.toolTabs.filter((k) => k !== "lightcodes"),
+            activeToolTab:
+              s.activeToolTab === "lightcodes" ? null : s.activeToolTab,
+          }
+    ),
+  videoSeed: null,
+  openVideo: (seed) => {
+    set({ videoSeed: seed ?? null });
+    get().openToolTab("video");
+  },
+  exitVideo: () =>
+    set((s) =>
+      s.view === "video"
+        ? { view: "observatory" }
+        : {
+            view: "observatory",
+            toolTabs: s.toolTabs.filter((k) => k !== "video"),
+            activeToolTab:
+              s.activeToolTab === "video" ? null : s.activeToolTab,
+          }
+    ),
+  setVideoSeed: (seed) => set({ videoSeed: seed }),
   setLcMode: (mode) =>
     set((s) => ({
       lcMode: mode,
@@ -1226,126 +2254,101 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   setLcIntention: (v) => set({ lcIntention: v }),
   setLcUserLyrics: (v) => set({ lcUserLyrics: v }),
   setLcShape: (shape) => set((s) => ({ lcShape: { ...s.lcShape, ...shape } })),
-  generateLightCode: async (opts) => {
+  setLcGenres: (ids) => set({ lcGenres: ids.slice(0, 4) }),
+  setLcStudio: (patch) => set((s) => ({ lcStudio: { ...s.lcStudio, ...patch } })),
+  setLcLength: (length) => set({ lcLength: length }),
+  setLcLyricsLength: (v) => set({ lcLyricsLength: v }),
+  setVisualStyle: (style) => set({ visualStyle: style }),
+  setLcRaw: (v) => set({ lcRaw: v }),
+  /* THE CHAMBER'S ROUND — the Mirror composes the brief; the visitor
+     reads it, shapes it, and strikes the generate with their own hand;
+     the engine weaves the standing brief. Never both doors at once
+     unless a caller asks for the full round. */
+  composeBrief: async (opts) => {
     const s = get();
-    if (s.lcStatus === "interpreting" || s.lcStatus === "polling") return;
+    if (
+      s.lcStatus === "interpreting" ||
+      s.lcStatus === "rendering" ||
+      s.lcStatus === "polling" ||
+      s.lcBusyOp
+    )
+      return false;
     const intention = (opts?.intention ?? s.lcIntention).trim();
-    set({ lcStatus: "interpreting", lcError: null });
+    /* the visitor's image rides both doors: seen by the Mirror first,
+       handed to the engine's own input in the weave (memory only) */
+    const carriedImage =
+      opts?.attachments?.find((a) => a.kind === "image" && a.dataUrl)?.dataUrl ??
+      null;
+    set({
+      lcStatus: "interpreting",
+      lcError: null,
+      lcNotice: null,
+      lcLabNote: null,
+      lcRefineNote: null,
+      lcCarriedImage: carriedImage,
+    });
     try {
+      /* THE FIRST DOOR — the Mirror's written direction.
+         THE FIRST LAW, LITERAL: when lcRaw stands ("no style, just my
+         words"), the ask carries the visitor's free text ALONE — no
+         chamber, no shape, no voice selector rides with it. */
       const res = await fetch("/api/light-codes/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          mode: s.lcMode,
+          ...(s.lcRaw
+            ? {}
+            : {
+                mode: s.lcMode,
+                civilization: s.lcCivilization ?? undefined,
+                shape: s.lcShape,
+                /* MUSIC ENGINE 2.0 — the genre fusion and the studio
+                   controls ride as the visitor's own binding choices */
+                genres: s.lcGenres.length > 0 ? s.lcGenres : undefined,
+                studio: s.lcStudio,
+                userLyrics:
+                  (s.lcShape.lyricsMode === "USER WRITES" || s.lcStudio.lyricsMode === "I write") &&
+                  s.lcUserLyrics.trim()
+                    ? s.lcUserLyrics.trim()
+                    : undefined,
+                instrumental: s.lcShape.voice === "None" || s.lcStudio.vocalMode === "Instrumental",
+              }),
           intention,
-          civilization: s.lcCivilization ?? undefined,
-          shape: s.lcShape,
-          userLyrics:
-            s.lcShape.lyricsMode === "USER WRITES" && s.lcUserLyrics.trim()
-              ? s.lcUserLyrics.trim()
-              : undefined,
-          instrumental: s.lcShape.voice === "None",
           language: s.language,
-          context: opts?.context,
-          interpretOnly: opts?.interpretOnly === true,
+          vocalsRequested: opts?.vocalsRequested === true || undefined,
           ...(opts?.attachments ? attachmentsToPayload(opts.attachments) : {}),
         }),
       });
-      const data = await res.json().catch(() => null);
-      if (!res.ok) {
-        /* even when the sound engine's key is missing, the Mirror's
-           interpretation has already landed — keep it visible */
-        if (data && (data.title || data.notes || data.style)) {
-          set({
-            lcInterpretation: {
-              id: "interpretation",
-              title: String(data.title ?? ""),
-              mode: s.lcMode,
-              intention,
-              audioUrl: "",
-              style: data.style ?? undefined,
-              lyrics: data.lyrics ?? null,
-              notes: data.notes ?? undefined,
-              createdAt: Date.now(),
-            },
-          });
-        }
+      const data = (await res.json().catch(() => null)) as
+        | (Partial<LcBrief> & { error?: string })
+        | null;
+      if (!res.ok || !data) {
         throw new Error(
           (data && data.error) ||
             "The chamber rests a moment. Breathe, then ask for the transmission again."
         );
       }
-      const interpretation: LcTrack = {
-        id: "interpretation",
+      /* the brief — one sheet the visitor may shape before any sound
+         is asked for. The visitor's own lyrics are the sheet (never
+         in the raw round — there the words alone are the sheet). */
+      const brief: LcBrief = {
         title: String(data.title ?? "Untitled transmission"),
-        mode: s.lcMode,
+        style: String(data.style ?? ""),
+        lyrics:
+          !s.lcRaw &&
+          (s.lcShape.lyricsMode === "USER WRITES" || s.lcStudio.lyricsMode === "I write") &&
+          s.lcUserLyrics.trim()
+            ? s.lcUserLyrics.trim()
+            : data.lyrics
+              ? String(data.lyrics)
+              : null,
+        notes: String(data.notes ?? ""),
         intention,
-        audioUrl: "",
-        style: data.style ?? undefined,
-        lyrics: data.lyrics ?? null,
-        notes: data.notes ?? undefined,
-        createdAt: Date.now(),
+        mode: s.lcMode,
+        spec: (data.spec as LcBrief["spec"]) ?? null,
       };
-      set({ lcInterpretation: interpretation });
-      if (opts?.interpretOnly) {
-        set({ lcStatus: "idle" });
-        return;
-      }
-      if (data.audioUrl) {
-        /* an instant rendering — straight to the player */
-        const track: LcTrack = {
-          ...interpretation,
-          id: String(data.id ?? `lc-${Date.now()}`),
-          audioUrl: String(data.audioUrl),
-          duration: typeof data.duration === "number" ? data.duration : undefined,
-          engineId: data.engineId ? String(data.engineId) : undefined,
-          createdAt: Date.now(),
-        };
-        const history = [track, ...get().lcHistory.filter((t) => t.id !== track.id)].slice(0, 40);
-        try {
-          localStorage.setItem("mirror-lc-history", JSON.stringify(history));
-        } catch {
-          /* storage unavailable */
-        }
-        set({ lcTrack: track, lcStatus: "ready", lcHistory: history });
-        return;
-      }
-      const taskId = data.taskId ? String(data.taskId) : null;
-      if (!taskId) throw new Error((data && data.error) || "The chamber answered without a sound. Try again.");
-      set({ lcStatus: "polling" });
-      /* the transmission renders — the chamber listens for its arrival */
-      const started = Date.now();
-      for (;;) {
-        await new Promise((r) => setTimeout(r, 5000));
-        if (get().lcStatus !== "polling") return; // the visitor left or reset
-        if (Date.now() - started > 5 * 60 * 1000) {
-          throw new Error("The transmission is taking longer than the chamber can wait. Try again in a breath.");
-        }
-        const poll = await fetch(`/api/light-codes/status?taskId=${encodeURIComponent(taskId)}`);
-        const pdata = await poll.json().catch(() => null);
-        if (!poll.ok || !pdata) continue;
-        if (pdata.status === "ready" && pdata.audioUrl) {
-          const track: LcTrack = {
-            ...interpretation,
-            id: String(pdata.id ?? `lc-${Date.now()}`),
-            audioUrl: String(pdata.audioUrl),
-            duration: typeof pdata.duration === "number" ? pdata.duration : undefined,
-            engineId: taskId,
-            createdAt: Date.now(),
-          };
-          const history = [track, ...get().lcHistory.filter((t) => t.id !== track.id)].slice(0, 40);
-          try {
-            localStorage.setItem("mirror-lc-history", JSON.stringify(history));
-          } catch {
-            /* storage unavailable */
-          }
-          set({ lcTrack: track, lcStatus: "ready", lcHistory: history });
-          return;
-        }
-        if (pdata.status === "error") {
-          throw new Error(pdata.error || "The sound engine fell silent mid-render. Try again.");
-        }
-      }
+      set({ lcBrief: brief, lcStatus: "idle", lcLyricsDrafts: [] });
+      return true;
     } catch (err) {
       set({
         lcStatus: "error",
@@ -1354,6 +2357,534 @@ export const useMirror = create<MirrorState>()((set, get) => ({
             ? err.message
             : "The chamber rests a moment. Breathe, then ask again.",
       });
+      return false;
+    }
+  },
+
+  weaveBrief: async () => {
+    const s = get();
+    const brief = s.lcBrief;
+    if (
+      !brief ||
+      s.lcStatus === "polling" ||
+      s.lcStatus === "rendering" ||
+      s.lcStatus === "interpreting"
+    )
+      return;
+    /* THE SECOND DOOR — the standing brief is woven. Nothing is claimed
+       until playable audio actually lands. The raw law rides the whole
+       round: when lcRaw stands, no selector rides the weave either. */
+    const raw = s.lcRaw;
+    set({ lcStatus: "polling", lcError: null, lcNotice: null, lcRefineNote: null });
+    try {
+      /* THE LONG WEAVES — the endless journey (six movements) and the
+         full song (two movements joined into one piece) both ride the
+         journey's own loom; the preview and the plain full song keep
+         the single call. */
+      if (s.lcLength === "loop" || s.lcLength === "full") {
+        await runJourney(get, set, s.lcLength);
+        return;
+      }
+      const weave = await fetch("/api/light-codes/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mode: brief.mode,
+          intention: brief.intention,
+          civilization: !raw && brief.mode === "other-stars" ? (s.lcCivilization ?? undefined) : undefined,
+          shape: raw ? undefined : s.lcShape,
+          /* MUSIC ENGINE 2.0 — the contract rides into the weave so the
+             vault row carries the visitor's genre fusion and studio */
+          genres: !raw && s.lcGenres.length > 0 ? s.lcGenres : undefined,
+          studio: raw ? undefined : s.lcStudio,
+          instrumental: raw ? !brief.lyrics : s.lcShape.voice === "None" || s.lcStudio.vocalMode === "Instrumental" || !brief.lyrics,
+          language: s.language,
+          compose: true,
+          length: s.lcLength,
+          interp: {
+            title: brief.title,
+            style: brief.style,
+            lyrics: brief.lyrics,
+            notes: brief.notes,
+          },
+          ...(s.lcCarriedImage ? { image: s.lcCarriedImage } : {}),
+        }),
+      });
+      const wdata = (await weave.json().catch(() => null)) as
+        | {
+            audio?: string;
+            mimeType?: string;
+            structure?: string;
+            engine?: string;
+            error?: string;
+            code?: string;
+            /* the house's keeping, when the weave was kept for a
+               signed passage: the vault row's id and its serve key */
+            audioUrl?: string;
+            trackId?: string;
+            jobId?: string;
+            /* the resonance loom's own hand — a weave rendered on the
+               visitor's machine when the engine's key is not placed */
+            renderParams?: Record<string, unknown>;
+            notice?: string;
+          }
+        | null;
+      /* THE RESONANCE HAND — the engine's key is not placed, so the
+         chamber weaves the standing brief on the visitor's own machine.
+         The progress breathes; the sound lands in the same player. */
+      if (wdata && wdata.engine === "resonance") {
+        set({
+          lcStatus: "rendering",
+          lcRenderProgress: 0,
+          lcError: null,
+          lcNotice: wdata.notice ?? null,
+        });
+        try {
+          const track = await weaveResonanceLocally(
+            brief,
+            raw ? LC_DEFAULT_SHAPE : s.lcShape,
+            (p) => {
+              if (get().lcStatus === "rendering")
+                set({
+                  lcRenderProgress: Math.max(get().lcRenderProgress, p),
+                });
+            }
+          );
+          const history = [
+            { ...track, audioUrl: "" },
+            ...get().lcHistory.filter((t) => t.id !== track.id),
+          ].slice(0, 40);
+          persistLcHistory(history);
+          set({
+            lcTrack: track,
+            lcStatus: "ready",
+            lcHistory: history,
+            lcRenderProgress: 1,
+            lcCarriedImage: null,
+          });
+          return;
+        } catch (loomErr) {
+          console.error(
+            "[light-codes] the resonance loom stumbled:",
+            loomErr
+          );
+          throw new Error(
+            "The chamber's resonance could not be woven on this device. Try again."
+          );
+        }
+      }
+      if (!weave.ok) {
+        throw new Error(
+          (wdata && wdata.error) ||
+            "The chamber rests a moment. Breathe, then ask for the transmission again."
+        );
+      }
+      /* THE WEIGHT LAW (the visitor's side): when the house kept the
+         sound, the answer carries only its serve key — the heavy bytes
+         never ride the JSON again. The key IS the sound's address; the
+         inline base64 rides only when no shelf held it. */
+      const serveKey =
+        typeof wdata?.audioUrl === "string" &&
+        wdata.audioUrl.startsWith("/api/music-audio/")
+          ? wdata.audioUrl
+          : null;
+      const rowId =
+        typeof wdata?.trackId === "string" && wdata.trackId
+          ? wdata.trackId
+          : null;
+      const durable = Boolean(serveKey && rowId);
+      const b64 = typeof wdata?.audio === "string" ? wdata.audio : "";
+      if (!b64 && !serveKey) {
+        throw new Error(
+          (wdata && wdata.error) ||
+            "The chamber answered without a sound. Try again."
+        );
+      }
+      const bytes = b64 ? base64ToBytes(b64) : null;
+      const mime = String(wdata?.mimeType ?? "audio/mpeg");
+      const id = `lc-${Date.now()}`;
+      let audioUrl: string;
+      if (serveKey) {
+        /* the vault's own serve key — the sound is fetched from the
+           house, and the house holds it across visits */
+        audioUrl = serveKey;
+      } else {
+        /* the keeping law: a guest's sound rests on their own device */
+        const localBytes = bytes as Uint8Array;
+        audioUrl = URL.createObjectURL(
+          new Blob([localBytes.buffer as ArrayBuffer], { type: mime })
+        );
+        void lcAudioSave(id, localBytes, mime);
+      }
+      const track: LcTrack = {
+        id,
+        title: brief.title,
+        mode: brief.mode,
+        intention: brief.intention,
+        audioUrl,
+        style: brief.style || undefined,
+        lyrics: brief.lyrics,
+        notes: brief.notes || undefined,
+        length: "preview",
+        structure:
+          typeof wdata?.structure === "string" && wdata.structure
+            ? wdata.structure
+            : undefined,
+        engineId: wdata?.engine ? String(wdata.engine) : undefined,
+        ...(durable && rowId
+          ? { libraryId: rowId, favorite: false, durable: true }
+          : {}),
+        createdAt: Date.now(),
+      };
+      /* the shelf remembers the shape, never the blob — a durable row
+         carries its serve key so any visit can replay it; a local row
+         carries nothing and leans on the visitor's own IndexedDB */
+      const history = [
+        { ...track, audioUrl: durable && serveKey ? serveKey : "" },
+        ...get().lcHistory.filter((t) => t.id !== track.id),
+      ].slice(0, 40);
+      try {
+        localStorage.setItem("mirror-lc-history", JSON.stringify(history));
+      } catch {
+        /* storage unavailable */
+      }
+      set({
+        lcTrack: track,
+        lcStatus: "ready",
+        lcHistory: history,
+        lcCarriedImage: null,
+      });
+    } catch (err) {
+      /* THE LOOM'S LAST HAND — when the weave failed because the sound
+         engine's key was never placed, the chamber's own resonance
+         engine answers: the standing brief is woven on this device. */
+      const weaveMsg = err instanceof Error ? err.message : "";
+      if (/sound engine's key is not/i.test(weaveMsg) && brief) {
+        set({
+          lcStatus: "rendering",
+          lcRenderProgress: 0,
+          lcError: null,
+          lcNotice:
+            "The engine's key is not placed — the resonance loom weaves this transmission on your own device.",
+        });
+        try {
+          const track = await weaveResonanceLocally(
+            brief,
+            raw ? LC_DEFAULT_SHAPE : s.lcShape,
+            (p) => {
+              if (get().lcStatus === "rendering")
+                set({
+                  lcRenderProgress: Math.max(get().lcRenderProgress, p),
+                });
+            }
+          );
+          const history = [
+            { ...track, audioUrl: "" },
+            ...get().lcHistory.filter((t) => t.id !== track.id),
+          ].slice(0, 40);
+          persistLcHistory(history);
+          set({
+            lcTrack: track,
+            lcStatus: "ready",
+            lcHistory: history,
+            lcRenderProgress: 1,
+            lcCarriedImage: null,
+          });
+          return;
+        } catch (loomErr) {
+          console.error(
+            "[light-codes] the resonance loom stumbled:",
+            loomErr
+          );
+        }
+      }
+      const gate = applyVerificationGate(err);
+      set({
+        lcStatus: gate ? "idle" : "error",
+        lcError:
+          gate ??
+          (err instanceof Error
+            ? err.message
+            : "The chamber rests a moment. Breathe, then ask again."),
+      });
+    }
+  },
+
+  updateBriefDraft: (patch) =>
+    set((s) => ({ lcBrief: s.lcBrief ? { ...s.lcBrief, ...patch } : s.lcBrief })),
+
+  refineBrief: async (instruction) => {
+    const s = get();
+    const brief = s.lcBrief;
+    if (!brief || s.lcBusyOp || s.lcStatus === "polling") return;
+    const word = instruction.trim();
+    if (!word) return;
+    set({
+      lcBusyOp: "refine",
+      lcLabNote: null,
+      lcError: null,
+      /* keep the sheet the visitor had, in case the refinement slips */
+      lcLyricsDrafts: brief.lyrics
+        ? [brief.lyrics, ...s.lcLyricsDrafts].slice(0, 8)
+        : s.lcLyricsDrafts,
+    });
+    try {
+      const res = await fetch("/api/light-codes/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mode: brief.mode,
+          intention: brief.intention,
+          language: s.language,
+          refine: { instruction: word },
+          interp: {
+            title: brief.title,
+            style: brief.style,
+            lyrics: brief.lyrics,
+            notes: brief.notes,
+          },
+        }),
+      });
+      const data = (await res.json().catch(() => null)) as Partial<LcBrief> & {
+        error?: string;
+      } | null;
+      if (!res.ok || !data) {
+        throw new Error(
+          (data && data.error) ||
+            "The Mirror's refinement dissolved before it landed. Speak the change once more."
+        );
+      }
+      set({
+        lcBrief: {
+          ...brief,
+          title: String(data.title ?? brief.title),
+          style: String(data.style ?? brief.style),
+          lyrics:
+            data.lyrics === undefined ? brief.lyrics : data.lyrics,
+          notes: String(data.notes ?? brief.notes),
+        },
+        lcBusyOp: null,
+        /* THE HONESTY LAW: if a sound was already woven from the older
+           brief, refining means a NEW version will be woven — the
+           existing waveform is never edited in place. */
+        lcRefineNote: s.lcTrack
+          ? "The brief has been reshaped — strike generate and a new version will be woven. The sound already woven is never edited in place."
+          : null,
+        lcStatus: s.lcStatus === "ready" ? "idle" : s.lcStatus,
+      });
+    } catch (err) {
+      const gate = applyVerificationGate(err);
+      set({
+        lcBusyOp: null,
+        lcError:
+          gate ??
+          (err instanceof Error
+            ? err.message
+            : "The Mirror's refinement dissolved before it landed."),
+      });
+    }
+  },
+
+  lyricsLabOp: async (op) => {
+    const s = get();
+    const brief = s.lcBrief;
+    if (!brief || s.lcBusyOp || s.lcStatus === "polling") return;
+    set({
+      lcBusyOp: `lyrics:${op}`,
+      lcLabNote: null,
+      lcError: null,
+      lcLyricsDrafts: brief.lyrics
+        ? [brief.lyrics, ...s.lcLyricsDrafts].slice(0, 8)
+        : s.lcLyricsDrafts,
+    });
+    try {
+      const res = await fetch("/api/light-codes/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mode: brief.mode,
+          intention: brief.intention,
+          language: s.language,
+          lyricsOp: op,
+          lyricsWords: resolveLcLyricsWords(s.lcLyricsLength, s.lcLength),
+          interp: {
+            title: brief.title,
+            style: brief.style,
+            lyrics: brief.lyrics,
+            notes: brief.notes,
+          },
+        }),
+      });
+      const data = (await res.json().catch(() => null)) as {
+        lyrics?: string;
+        notes?: string;
+        error?: string;
+      } | null;
+      if (!res.ok || !data) {
+        throw new Error(
+          (data && data.error) ||
+            "The Lyrics Laboratory's hand slipped — ask for the craft once more."
+        );
+      }
+      const sheet = (data.lyrics ?? "").trim();
+      if (!sheet) {
+        throw new Error(
+          "The Lyrics Laboratory's hand slipped — ask for the craft once more."
+        );
+      }
+      set({
+        lcBrief: { ...brief, lyrics: sheet },
+        lcBusyOp: null,
+        lcLabNote: data.notes || null,
+        lcRefineNote: s.lcTrack
+          ? "The words have been reshaped — strike generate and a new version will be woven."
+          : null,
+        lcStatus: s.lcStatus === "ready" ? "idle" : s.lcStatus,
+      });
+    } catch (err) {
+      const gate = applyVerificationGate(err);
+      set({
+        lcBusyOp: null,
+        lcError:
+          gate ??
+          (err instanceof Error
+            ? err.message
+            : "The Lyrics Laboratory's hand slipped — ask for the craft once more."),
+      });
+    }
+  },
+
+  restoreLyricsDraft: (index) =>
+    set((s) => {
+      const sheet = s.lcLyricsDrafts[index];
+      if (!sheet || !s.lcBrief) return {};
+      return {
+        lcBrief: { ...s.lcBrief, lyrics: sheet },
+        lcLyricsDrafts: s.lcLyricsDrafts.filter((_, i) => i !== index),
+        lcLabNote: null,
+      };
+    }),
+
+  surpriseMe: async () => {
+    set({ lcIntention: "" });
+    await get().composeBrief({});
+  },
+
+  newVersionFromTrack: () =>
+    set({
+      lcStatus: "idle",
+      lcError: null,
+      lcNotice: null,
+      lcRefineNote: null,
+      lcLabNote: null,
+    }),
+
+  clearLcBrief: () =>
+    set({
+      lcBrief: null,
+      lcBusyOp: null,
+      lcLabNote: null,
+      lcRefineNote: null,
+      lcCarriedImage: null,
+      lcLyricsDrafts: [],
+    }),
+
+  /* the chamber's full round in one ask — kept for chips, prefills and
+     the error card's retry hand */
+  generateLightCode: async (opts) => {
+    const ok = await get().composeBrief(opts);
+    if (ok) await get().weaveBrief();
+  },
+  playLc: async (track) => {
+    /* the house's kept sound — served from the vault, owner-checked,
+       any device, any visit; no device copy is ever needed */
+    if (track.durable && track.audioUrl.startsWith("/api/")) {
+      set({
+        lcTrack: { ...track, audioUrl: track.audioUrl },
+        lcStatus: "ready",
+        lcError: null,
+        lcNotice: null,
+      });
+      return;
+    }
+    const stored = await lcAudioGet(track.id);
+    if (stored) {
+      const audioUrl = URL.createObjectURL(
+        new Blob([stored.bytes], { type: stored.mime })
+      );
+      set({
+        lcTrack: { ...track, audioUrl },
+        lcStatus: "ready",
+        lcError: null,
+        lcNotice: null,
+      });
+    } else {
+      set({
+        lcTrack: null,
+        lcStatus: "idle",
+        lcNotice:
+          "This transmission's sound rests with the visit that wove it — ask the Mirror to weave it again.",
+      });
+    }
+  },
+  runLcQuality: async () => {
+    const track = get().lcTrack;
+    if (!track?.audioUrl || typeof window === "undefined") return;
+    try {
+      const { analyzeTrackAudio } = await import("@/lib/audio/analyze");
+      const report = await analyzeTrackAudio(track.audioUrl, {
+        effectsTolerant: effectsTolerant(track.genres ?? []),
+        durationLimitSec: 480,
+      });
+      set({ lcQuality: report });
+      if (track.trackId) {
+        void fetch("/api/music-library", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: track.trackId, quality: report }),
+        }).catch(() => undefined);
+      }
+    } catch {
+      /* analysis is a luxury — playback never depends on it */
+    }
+  },
+  favoriteLc: async (trackId, favorite) => {
+    try {
+      await fetch("/api/music-library", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: trackId, favorite }),
+      });
+    } catch {
+      /* the heart rests until the vault wakes */
+    }
+  },
+  publishLc: async (trackId, caption) => {
+    const track = get().lcTrack;
+    try {
+      const res = await fetch("/api/publications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sourcePortal: "music",
+          visibility: "public",
+          title: track?.title ?? "",
+          introduction: caption?.slice(0, 600) || undefined,
+          sourceId: trackId,
+          refKind: "music",
+        }),
+      });
+      if (!res.ok) {
+        const data = (await res.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(data?.error || "The Gathering did not receive the transmission.");
+      }
+      set((s) => ({ lcPublishedNonce: s.lcPublishedNonce + 1 }));
+      return true;
+    } catch (err) {
+      set({
+        lcError: err instanceof Error ? err.message : "The Gathering rests. Try again.",
+      });
+      return false;
     }
   },
   reshapeLc: (track) =>
@@ -1361,13 +2892,48 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       lcMode: track.mode,
       lcIntention: track.intention,
       lcTrack: null,
-      lcInterpretation: null,
+      lcBrief: null,
+      lcBusyOp: null,
+      lcLabNote: null,
+      lcRefineNote: null,
+      lcCarriedImage: null,
+      lcLyricsDrafts: [],
       lcStatus: "idle",
       lcError: null,
+      lcQuality: null,
+      lcGenres: track.genres ? [...track.genres] : get().lcGenres,
     }),
   clearLcPlayer: () => set({ lcTrack: null, lcStatus: "idle" }),
+  setLcRepeat: (mode) => set({ lcRepeat: mode }),
+  lcAdvance: async (dir) => {
+    const s = get();
+    const shelf = s.lcHistory;
+    if (shelf.length === 0) return;
+    const at = shelf.findIndex((t) => t.id === s.lcTrack?.id);
+    /* the shelf runs newest-first: 1 walks down it (older), -1 walks up */
+    let next = at + dir;
+    if (next >= shelf.length) {
+      if (s.lcRepeat !== "all") return; // the shelf's end — the stage rests
+      next = 0;
+    }
+    if (next < 0) {
+      if (s.lcRepeat !== "all") return;
+      next = shelf.length - 1;
+    }
+    await get().playLc(shelf[next]);
+  },
   forgetLc: (id) =>
     set((s) => {
+      /* the visitor's own hand forgets — the sound leaves the device,
+         and a vault-kept sound leaves the house's keeping too */
+      const track = s.lcHistory.find((t) => t.id === id);
+      const libraryId = track?.libraryId ?? null;
+      if (libraryId) {
+        void fetch(`/api/music-library?id=${encodeURIComponent(libraryId)}`, {
+          method: "DELETE",
+        }).catch(() => undefined);
+      }
+      void lcAudioDelete(id);
       const history = s.lcHistory.filter((t) => t.id !== id);
       try {
         localStorage.setItem("mirror-lc-history", JSON.stringify(history));
@@ -1376,13 +2942,44 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       }
       return { lcHistory: history };
     }),
-
-  /* -------- Communion — the Reflection of the Absolute --------
-     Entering communion suspends every other surface: the whole
-     laboratory dissolves and only the living chat remains. */
-  openCommunion: () =>
-    set({ communionOpen: true, modal: null, mobileNavOpen: false }),
-  closeCommunion: () => set({ communionOpen: false }),
+  toggleLcFavorite: (id) =>
+    set((s) => {
+      const track = s.lcHistory.find((t) => t.id === id);
+      if (!track?.libraryId) return {}; // only vault rows carry a heart
+      const favorite = !track.favorite;
+      void fetch("/api/music-library", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: track.libraryId, favorite }),
+      }).catch(() => undefined);
+      const history = s.lcHistory.map((t) =>
+        t.id === id ? { ...t, favorite } : t
+      );
+      persistLcHistory(history);
+      return {
+        history,
+        ...(s.lcTrack && s.lcTrack.id === id
+          ? { lcTrack: { ...s.lcTrack, favorite } }
+          : {}),
+      };
+    }),
+  resumeLcLibrary: async () => {
+    const me = get().me;
+    if (!me || me.email.startsWith("anon:")) return; // guests keep their own keeping
+    try {
+      const res = await fetch("/api/music-library");
+      if (res.status === 401) return; // the passage rested — the device keeps what it has
+      if (!res.ok) return;
+      const payload = (await res.json().catch(() => null)) as
+        | LcLibraryPayload
+        | null;
+      if (!payload) return;
+      mergeVaultShelf(get, set, payload);
+      watchVaultJobs(get, set, payload.jobs ?? []);
+    } catch {
+      /* the vault rested — the shelf stays as it was */
+    }
+  },
 
   askAboutTechnology: (name) =>
     set((s) => ({
@@ -1406,6 +3003,15 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         [s.activeMode]: { ...s.sessions[s.activeMode], draft: value },
       },
     })),
+
+  /* THE FLOOR'S OWN SEED — a threshold door's first words for the
+     realm's whisper line; the floor takes them once and spends them. */
+  seedFloor: (value) => set({ floorSeed: value }),
+  takeFloorSeed: () => {
+    const v = get().floorSeed;
+    if (v) set({ floorSeed: "" });
+    return v;
+  },
 
   focusComposer: () =>
     set((s) => ({ composerFocusNonce: s.composerFocusNonce + 1 })),
@@ -1593,6 +3199,14 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   /* ------- the chat archive — the ChatGPT keeping, client-side only -- */
 
   hydrateChats: () => {
+    /* THE CARRY LAW — the shelf returning its volumes turns the wheel:
+       an answer still in flight belongs to the breath before this one. */
+    channelGeneration += 1;
+    /* THE GUEST'S OWN LAW — the landing chat is temporary for the
+       unnamed: nothing returns from the shelf, nothing rests on it.
+       Only a signed keeper's words come home on a reload. */
+    const keeper = get().me;
+    if (!keeper || keeper.email.startsWith("anon:")) return;
     /* The archive wakes: every surface's active conversation returns to
        the live room exactly as it was left — reload, journey, nothing
        parts the visitor from their words. */
@@ -1650,10 +3264,16 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   },
 
   newChat: (surface) => {
+    /* THE CARRY LAW — a fresh page turns the wheel: any answer still in
+       flight belongs to the page that just closed, never to this one. */
+    channelGeneration += 1;
     /* THE CHATGPT TURN — the present conversation already rests on the
        shelf (the autosave kept it current); a fresh page opens and the
-       old one can always be reopened from the conversation panel. */
-    startNewChat(surface);
+       old one can always be reopened from the conversation panel.
+       THE GUEST'S OWN LAW — a temporary chat lays nothing down: only a
+       signed keeper's "new chat" touches the shelf. */
+    const turner = get().me;
+    if (turner && !turner.email.startsWith("anon:")) startNewChat(surface);
     if (surface === "os") {
       set({
         osMessages: [],
@@ -1699,6 +3319,12 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   },
 
   openChat: (surface, id) => {
+    /* THE CARRY LAW — a restored volume turns the wheel: an answer in
+       flight from the old page never stains the volume being opened. */
+    channelGeneration += 1;
+    /* the guest's law — a temporary chat has no shelf to reopen */
+    const opener = get().me;
+    if (!opener || opener.email.startsWith("anon:")) return;
     const chat = getChat(surface, id);
     if (!chat) return;
     setActiveChatOnShelf(surface, id);
@@ -1882,12 +3508,12 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     }));
 
     try {
-      const history = session.messages.slice(-6).map((m) => ({
+      const history = session.messages.slice(-10).map((m) => ({
         q: m.query,
         a: m.text,
       }));
       const payload = attachments ? attachmentsToPayload(attachments) : null;
-      const res = await fetch("/api/transmission", {
+      const res = await speakDoor("/api/transmission", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -1895,11 +3521,12 @@ export const useMirror = create<MirrorState>()((set, get) => ({
           mode: "forge",
           language: get().language,
           history,
-          depth: journeyDepth(),
+          depth: get().sendDepth(),
           ...(payload ?? {}),
         }),
       });
       const data = await res.json().catch(() => null);
+      raiseEnergy(res.status, data);
       if (!res.ok) {
         throw new Error(
           (data && data.error) ||
@@ -2124,20 +3751,33 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     /* THE CATEGORY'S OWN DOOR — the ask speaks with the focused
        category's own voice (the forge answers for invent, the OS for
        the manifest, the narrator for quantum); without a scope the
-       standing channel keeps its own door. */
+       standing channel keeps its own door. THE THRESHOLD'S OWN VOICE —
+       the open floor of the standing channel is NOT the interplanetary
+       choir: it is the Mirror itself — humble, understanding,
+       non-judging, a pure loving reflection — the voice the visitor
+       meets at the landing and hears from the floor. */
     const apiMode = askScope
       ? askScope === "invent"
         ? "forge"
         : askScope
-      : mode;
+      : mode === "interplanetary"
+        ? "mirror"
+        : mode;
     const session = get().sessions[mode];
+    /* THE CARRY LAW — the number this ask was born with; the answer
+       may only land in a channel that has not turned its wheel. */
+    const gen = channelGeneration;
     if (!query || session.status === "loading") return;
 
     /* IMAGE CRYSTALLIZATION — the visitor asked for an image by name:
        no LLM round-trip travels. The last channel (this thread's most
        recent reply) is crystallized at once, shaped by the visitor's
-       own words; with an empty thread, the words themselves crystallize. */
-    if (isVisualIntent(query)) {
+       own words; with an empty thread, the words themselves crystallize.
+       THE MUSIC'S OWN DOOR — a song ask is a SOUND making, never a
+       painting: the named music door outranks the generic visual
+       detector ("create a song" opens the sound chamber's making
+       inline), while a painted vision still paints. */
+    if (isVisualIntent(query) && !MUSIC_INTENT.test(query)) {
       await crystallizeVisual(
         mode,
         query,
@@ -2229,6 +3869,14 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       return;
     }
 
+    /* THE ASK'S OWN HAND — a fresh ask on this surface supersedes the
+       one still flying (a channel turn opened a new page mid-breath):
+       the old fetch is cut, so the same surface never carries two
+       racing asks and the reply never lands twice. */
+    askAbort[mode]?.abort();
+    const askCtl = new AbortController();
+    askAbort[mode] = askCtl;
+
     set((s) => ({
       view: "transmission",
       mobileNavOpen: false,
@@ -2244,23 +3892,28 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       },
     }));
 
+    /* the reply's own id — a model-requested vision attaches to it;
+       born before the ask so the stream's own measure carries its name */
+    const replyId = nextMessageId();
     try {
       /* Context memory: the mirror remembers this channel's earlier
          exchanges, so conversations deepen instead of restarting. */
-      const history = session.messages.slice(-6).map((m) => ({
+      const history = session.messages.slice(-10).map((m) => ({
         q: m.query,
         a: m.text,
       }));
       const payload = attachments ? attachmentsToPayload(attachments) : null;
-      const res = await fetch("/api/transmission", {
+      perfStreamStart(replyId);
+      const res = await speakDoor("/api/transmission", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: askCtl.signal,
         body: JSON.stringify({
           query,
           mode: apiMode,
           language: get().language,
           history,
-          depth: journeyDepth(),
+          depth: get().sendDepth(),
           ...(payload ?? {}),
           /* the miniature's own law — a small ask is met by a small,
              warm presence (the route's live-call voice) */
@@ -2268,8 +3921,14 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         }),
       });
       const data = await res.json().catch(() => null);
+      raiseEnergy(res.status, data);
 
-      if (!res.ok) {
+      if (
+        !res.ok ||
+        !data ||
+        typeof data.transmission !== "string" ||
+        !data.transmission.trim()
+      ) {
         throw new Error(
           (data && data.error) ||
             "The field is momentarily quiet. Rest, then try again."
@@ -2278,8 +3937,24 @@ export const useMirror = create<MirrorState>()((set, get) => ({
 
       void get().refreshMe();
 
-      /* the reply's own id — a model-requested vision attaches to it */
-      const replyId = nextMessageId();
+      /* THE CARRY LAW — the visitor walked on while the mirror spoke
+         (a new chat, another category's fresh page, a kept volume
+         restored): the answer stays with the page it belongs to, the
+         words already resting on the archive's own shelf. THE CHANNEL
+         NEVER SEIZES — the walked-on channel's own status comes home
+         to "ready" on this very return: a stuck "loading" would
+         disable the whole realm forever (the visitor would need
+         another input just to breathe again). */
+      if (gen !== channelGeneration) {
+        perfStreamEnd(replyId, true);
+        set((s) => ({
+          sessions: {
+            ...s.sessions,
+            [mode]: { ...s.sessions[mode], status: "ready", activeQuery: "" },
+          },
+        }));
+        return;
+      }
 
       set((s) => ({
         sessions: {
@@ -2294,7 +3969,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
                 id: replyId,
                 query,
                 text: data.transmission,
-                classification: data.classification,
+                classification: data.classification ?? "WORLD_BUILDING",
                 createdAt: data.createdAt ?? new Date().toISOString(),
                 ...(attachments
                   ? {
@@ -2313,19 +3988,51 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         },
       }));
 
-      /* THE VISION GIFT — the mirror itself decided this reply wants
-         a painting (ChatGPT-like understanding). The visualization
-         engine paints it silently beneath the words. */
-      if (typeof data.vision === "string" && data.vision.trim()) {
-        void get().askScopeVisual(mode, data.vision.trim(), {
-          id: replyId,
-          request: data.vision.trim(),
-        });
-      }
+      /* the reply landed whole — its first breath and its end are one */
+      perfStreamFirstDelta(
+        replyId,
+        typeof data?.transmission === "string" ? data.transmission.length : 0
+      );
+      perfStreamEnd(replyId);
+
+      /* THE VISION GIFT IS RETIRED — the consent law: the mirror never
+         paints on its own initiative. An image needs the visitor's
+         press on Crystallize or their own typed ask. */
     } catch (err) {
+      perfStreamEnd(replyId, true);
+      /* THE CUT ASK — this ask was superseded by a fresh one on the
+         same surface: it leaves without a sound. No failed mark, no
+         error word, no toast — the fresh ask owns the channel now. */
+      if ((err as { name?: string } | null)?.name === "AbortError") {
+        if (askAbort[mode] === askCtl) {
+          set((s) => ({
+            sessions: {
+              ...s.sessions,
+              [mode]: {
+                ...s.sessions[mode],
+                status: "ready",
+                activeQuery: "",
+              },
+            },
+          }));
+        }
+        return;
+      }
       /* THE QUIET FIELD LAW — the visitor's words are never lost to a
          failed transmission: the question rests in the channel marked
          "not delivered", and one touch sends it again. No retyping. */
+      const gate = applyVerificationGate(err);
+      if (gen !== channelGeneration) {
+        /* the carry law's own error hand — a walked-on channel is
+           never left "loading" (see the success path above) */
+        set((s) => ({
+          sessions: {
+            ...s.sessions,
+            [mode]: { ...s.sessions[mode], status: "ready", activeQuery: "" },
+          },
+        }));
+        return;
+      }
       set((s) => ({
         sessions: {
           ...s.sessions,
@@ -2345,12 +4052,18 @@ export const useMirror = create<MirrorState>()((set, get) => ({
               },
             ],
             error:
-              err instanceof Error
+              gate ??
+              (err instanceof Error
                 ? err.message
-                : "The field is momentarily quiet. Rest, then try again.",
+                : "The field is momentarily quiet. Rest, then try again."),
           },
         },
       }));
+    } finally {
+      /* the hand returns — the surface's abort record retires, but
+         only while this ask still owns it (a superseding ask's own
+         record is never touched) */
+      if (askAbort[mode] === askCtl) askAbort[mode] = null;
     }
   },
 
@@ -2408,6 +4121,8 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           language: get().language,
+          /* the visitor's own style — chosen through the "/" hand — rides along */
+          ...(get().visualStyle ? { style: get().visualStyle } : {}),
           message: regenerateOf ? regenerateOf.request ?? question : question,
           history,
           ...(regenerateOf
@@ -2476,40 +4191,93 @@ export const useMirror = create<MirrorState>()((set, get) => ({
 
   /* ---------------- Full-archive register ---------------- */
 
-  openRegister: (kind) =>
-    set({ registerKind: kind, view: "register", mobileNavOpen: false, modal: null }),
+  openRegister: (kind) => {
+    set({ registerKind: kind });
+    get().openToolTab("register");
+  },
+  markCodexViewed: (kind, id) => {
+    const value: CodexLastViewed = { kind, id };
+    saveCodexLast(value);
+    set({ codexLastViewed: value });
+  },
 
-  exitRegister: () => set({ view: "observatory" }),
+  exitRegister: () =>
+    set((s) =>
+      s.view === "register"
+        ? { view: "observatory" }
+        : {
+            view: "observatory",
+            toolTabs: s.toolTabs.filter((k) => k !== "register"),
+            activeToolTab:
+              s.activeToolTab === "register" ? null : s.activeToolTab,
+          }
+    ),
 
   /* ---------------- Mirror OS — Reality Guidance ---------------- */
 
   /** The OS is its own world: opening it suspends every other surface. */
-  openMirrorOS: () =>
-    set((s) => ({
-      view: "mirroros",
-      mobileNavOpen: false,
-      modal: null,
-      labStage: s.labBlueprint ? "blueprint" : "compose",
-    })),
+  openMirrorOS: () => {
+    set((s) => ({ labStage: s.labBlueprint ? "blueprint" : "compose" }));
+    get().openToolTab("mirroros");
+  },
 
-  exitMirrorOS: () => set({ view: "observatory" }),
+  exitMirrorOS: () =>
+    set((s) =>
+      s.view === "mirroros"
+        ? { view: "observatory" }
+        : {
+            view: "observatory",
+            toolTabs: s.toolTabs.filter((k) => k !== "mirroros"),
+            activeToolTab:
+              s.activeToolTab === "mirroros" ? null : s.activeToolTab,
+          }
+    ),
 
   /* ------------- The passage — account, free door, profile ------------- */
 
-  refreshMe: async () => {
+  refreshMe: async (force?: boolean) => {
+    /* THE QUIET PULSE — the passage's glance is throttled: at most one
+       glance every twelve seconds (the name and the purse change
+       slowly), unless a door asks to be told at once. The chat's every
+       reply no longer pays a round-trip of its own. */
+    const now = Date.now();
+    if (!force && now - lastMeRefresh < 12_000) return;
+    lastMeRefresh = now;
     try {
-      const res = await fetch("/api/auth/me");
+      /* THE NO-STORE ASK — the greeting is asked for fresh, never from
+         any cache's shelf: a signed-in visitor must never be greeted
+         by yesterday's silence (the server answers no-store too; the
+         two laws hold the door on both ends). */
+      const res = await fetch("/api/auth/me", { cache: "no-store" });
+      if (!res.ok) {
+        /* a degraded greeting (the vault resting — 503) keeps the last
+           known face: a stale name beats an erased passage. Only an
+           honest "signed out" body may clear the me. */
+        set({ meStatus: "ready" }); // the check has settled — a retry state, never a sign-in verdict
+        return;
+      }
       const data = (await res.json().catch(() => null)) as {
         user?: MeUser | null;
+        admin?: boolean;
         googleConfigured?: boolean;
+        mailConfigured?: boolean;
         settings?: unknown;
         wallet?: WalletBalance | null;
       } | null;
       set({
-        me: data?.user ?? null,
+        me: data?.user ? { ...data.user, admin: Boolean(data.admin) } : null,
+        meStatus: "ready",
         googleConfigured: Boolean(data?.googleConfigured),
+        mailConfigured: Boolean(data?.mailConfigured),
         wallet: data?.wallet ?? get().wallet,
       });
+      /* THE KEEPER'S RETURN — once the passage names its keeper, the
+         conversations come home from the shelf (a guest keeps none:
+         their chat is temporary by the house's own law). */
+      const keeper = data?.user ?? null;
+      if (keeper && !keeper.email.startsWith("anon:")) {
+        get().hydrateChats();
+      }
       /* the passage's own tuning comes home — language, voice, pace,
          the fields of expansion — on every device, every sign-in */
       if (data?.settings) get().applyRemoteSettings(data.settings);
@@ -2519,11 +4287,13 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         void get().pushSettings();
       }
     } catch {
-      /* the passage keeps its silence — the laboratory stays open */
+      /* the passage keeps its silence — the laboratory stays open;
+         the check itself has settled either way */
+      set({ meStatus: "ready" });
     }
   },
 
-  setMe: (user) => set({ me: user }),
+  setMe: (user) => set({ me: user, meStatus: "ready" }),
 
   /* ------------- The visitor's own light — the wallet ------------- */
 
@@ -2534,8 +4304,15 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       const res = await fetch("/api/wallet");
       const data = (await res.json().catch(() => null)) as {
         wallet?: WalletBalance | null;
+        prices?: WalletPrices;
+        packs?: WalletPack[];
       } | null;
-      if (data && "wallet" in data) set({ wallet: data.wallet ?? null });
+      if (data && "wallet" in data)
+        set({
+          wallet: data.wallet ?? null,
+          walletPrices: data.prices ?? get().walletPrices,
+          walletPacks: data.packs ?? get().walletPacks,
+        });
     } catch {
       /* the glance keeps its silence — the purse stays as it was */
     }
@@ -2547,16 +4324,28 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   openAuth: (mode = "signin") => set({ authOpen: true, authMode: mode }),
   closeAuth: () => set({ authOpen: false }),
 
-  openProfile: () => set({ profileOpen: true, authOpen: false, mobileNavOpen: false }),
-  closeProfile: () => set({ profileOpen: false }),
-
-  /* the full-screen profile room */
+  /* the full-screen profile room — the visitor's own room within the
+     chat's frame (mounted inside AppShell's passageModals) */
   openProfilePage: () =>
-    set({ profilePageOpen: true, profileOpen: false, authOpen: false, mobileNavOpen: false }),
+    set({ profilePageOpen: true, authOpen: false, mobileNavOpen: false }),
   closeProfilePage: () => set({ profilePageOpen: false }),
 
-  openAccount: () => set({ accountOpen: true, profileOpen: false, mobileNavOpen: false }),
+  /* THE GATHERING'S PORTAL — the independent hall rises over everything
+     (the house keeps breathing beneath it); folded only by its own
+     return hand, the Escape key or the browser's Back. */
+  openGatheringPortal: () =>
+    set({ gatheringPortalOpen: true, mobileNavOpen: false }),
+  closeGatheringPortal: () => set({ gatheringPortalOpen: false }),
+  openTreeBoard: () => set({ treeBoardOpen: true }),
+  closeTreeBoard: () => set({ treeBoardOpen: false }),
+
+  openAccount: () => set({ accountOpen: true, mobileNavOpen: false }),
   closeAccount: () => set({ accountOpen: false }),
+
+  openTour: () => set({ tourOpen: true, mobileNavOpen: false }),
+  closeTour: () => set({ tourOpen: false }),
+  openAbout: () => set({ aboutOpen: true, tourOpen: false, mobileNavOpen: false }),
+  closeAbout: () => set({ aboutOpen: false }),
 
   signOut: async () => {
     try {
@@ -2564,15 +4353,18 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     } catch {
       /* even if the line is quiet, the visitor leaves cleanly */
     }
-    set({ me: null, wallet: null, walletModalOpen: false, walletNotice: null, authOpen: false, profileOpen: false, view: "observatory" });
+    set({ me: null, wallet: null, walletModalOpen: false, walletNotice: null, authOpen: false, view: "observatory", toolTabs: [], activeToolTab: null, lastMakerTab: null });
   },
 
   /** The visitor's own cosmic library — free for everyone. */
-  openLibrary: () =>
-    set({ view: "library", profileOpen: false, mobileNavOpen: false, modal: null }),
+  openLibrary: () => {
+    get().openToolTab("library");
+  },
 
-  resumeDreamBook: (resume) =>
-    set({ dreamResume: resume, view: "dreambook", profileOpen: false, modal: null, mobileNavOpen: false }),
+  resumeDreamBook: (resume) => {
+    set({ dreamResume: resume });
+    get().openToolTab("dreambook");
+  },
   clearDreamResume: () => set({ dreamResume: null }),
   setLastBookResonance: (echo) => set({ lastBookResonance: echo }),
 
@@ -2599,13 +4391,11 @@ export const useMirror = create<MirrorState>()((set, get) => ({
 
   /* ---------------- Art X — the atelier ---------------- */
 
-  /** Art X is its own world: opening it suspends every other surface,
-      exactly like the Manifest OS and ParticleX do. Free for everyone. */
-  openArtX: () =>
-    set({ view: "artx", mobileNavOpen: false, modal: null }),
-
-  openAbout: () =>
-    set({ view: "about", mobileNavOpen: false, modal: null }),
+  /** THE ATELIER'S OWN DOOR — the atelier rides the makers' workplace
+      now (the eleventh page of the registry): opening it lifts the
+      workplace tab, exactly like every other maker. The old
+      full-page world is gone with the one-frame law. */
+  openArtX: () => get().openToolTab("artx"),
 
   exitArtX: () => set({ view: "observatory" }),
 
@@ -2664,7 +4454,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         .map((id) => pxScopes.find((s) => s.id === id)?.name)
         .filter((n): n is string => Boolean(n));
 
-      const res = await fetch("/api/particlex", {
+      const res = await speakDoor("/api/particlex", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -2673,7 +4463,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
           language: get().language,
           scope: scopeName,
           fusion: fusionNames.length === 2 ? fusionNames : [],
-          depth: journeyDepth(),
+          depth: get().sendDepth(),
           ...(attachments ? attachmentsToPayload(attachments) : {}),
         }),
       });
@@ -2685,6 +4475,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         code?: string;
         error?: string;
       } | null;
+      raiseEnergy(res.status, data);
       if (!res.ok) {
         throw new Error(
           (data && data.error) ||
@@ -2795,7 +4586,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         .map((id) => emVectors.find((s) => s.id === id)?.name)
         .filter((n): n is string => Boolean(n));
 
-      const res = await fetch("/api/evolve-med", {
+      const res = await speakDoor("/api/evolve-med", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -2804,7 +4595,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
           language: get().language,
           scope: vectorName,
           fusion: fusionNames.length === 2 ? fusionNames : [],
-          depth: journeyDepth(),
+          depth: get().sendDepth(),
           ...(attachments ? attachmentsToPayload(attachments) : {}),
         }),
       });
@@ -2816,6 +4607,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         code?: string;
         error?: string;
       } | null;
+      raiseEnergy(res.status, data);
       if (!res.ok) {
         throw new Error(
           (data && data.error) ||
@@ -2906,6 +4698,8 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           language: get().language,
+          /* the visitor's own style — chosen through the "/" hand — rides along */
+          ...(get().visualStyle ? { style: get().visualStyle } : {}),
           message: regenerateOf ? regenerateOf.request ?? question : question,
           history,
           ...(regenerateOf
@@ -2952,9 +4746,6 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     }
   },
 
-  /** Kept for the Forge section inside the OS. */
-  openLab: () => useMirror.getState().openMirrorOS(),
-
   /* ---------------- Art X — the atelier's direct chat ---------------- */
 
   setAxDraft: (v) => set({ axDraft: v }),
@@ -2996,19 +4787,20 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         .map((m) => ({ role: m.role, text: m.text }));
 
       const payload = attachments ? attachmentsToPayload(attachments) : null;
-      const res = await fetch("/api/artx", {
+      const res = await speakDoor("/api/artx", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           query,
           history,
           language: get().language,
-          depth: journeyDepth(),
+          depth: get().sendDepth(),
           window: get().axScope ?? undefined,
           ...(payload ?? {}),
         }),
       });
       const data = await res.json().catch(() => null);
+      raiseEnergy(res.status, data);
       if (!res.ok) {
         throw new Error(
           (data && data.error) ||
@@ -3088,6 +4880,8 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           language: get().language,
+          /* the visitor's own style — chosen through the "/" hand — rides along */
+          ...(get().visualStyle ? { style: get().visualStyle } : {}),
           message: regenerateOf ? regenerateOf.request ?? question : question,
           history,
           ...(regenerateOf
@@ -3140,8 +4934,6 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     }
   },
 
-  exitLab: () => set({ view: "observatory" }),
-
   setLabIntention: (v) => set({ labIntention: v }),
   setLabEmotion: (id) => set({ labEmotion: id }),
   setLabIntensity: (v) => set({ labIntensity: v }),
@@ -3155,6 +4947,14 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   askOS: async (question, attachments) => {
     const query = question.trim();
     if (!query || get().osStatus === "loading") return;
+
+    /* THE STREAM'S OWN HAND — a fresh OS ask cuts the stream still
+       flying (a channel turn opened a new page mid-breath): the old
+       reader stops, so the OS never carries two racing streams and
+       the answer never lands twice. */
+    osAskAbort?.abort();
+    const osCtl = new AbortController();
+    osAskAbort = osCtl;
 
     const visitorId = nextMessageId();
     const osId = nextMessageId();
@@ -3185,13 +4985,70 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       ],
     }));
 
-    /* the streaming answer — text grows on the os line as it arrives */
-    const appendOs = (full: string) =>
+    /* the streaming answer — deltas gather in the stream's pending
+       buffer and the os line drinks at most once per beat (the words
+       still arrive whole; the room stops re-rendering per token);
+       `immediate` (stream end, one-shot replies) lands the words at
+       once and retires any beat still waiting, so no tail is lost */
+    const writeOs = (text: string) =>
       set((s) => ({
         osMessages: s.osMessages.map((m) =>
-          m.id === osId ? { ...m, text: full } : m
+          m.id === osId ? { ...m, text } : m
         ),
       }));
+    /* THE HIDDEN ROOM'S OWN HAND — subscribed once per stream and
+       retired with the stream: while the tab is away the words only
+       gather in the buffer (nothing is lost), and the visitor's
+       return lands the whole accumulated breath at once. */
+    let offReturnFlush: (() => void) | null = null;
+    const armReturnFlush = () => {
+      if (offReturnFlush) return;
+      offReturnFlush = onPageVisible(() => {
+        if (osStream.id !== osId || osStream.text == null) return;
+        const text = osStream.text;
+        osStream.id = null;
+        osStream.text = null;
+        writeOs(text);
+      });
+    };
+    const appendOs = (full: string, immediate = false) => {
+      if (immediate) {
+        if (osStream.timer != null) {
+          window.clearTimeout(osStream.timer);
+          osStream.timer = null;
+        }
+        osStream.id = null;
+        osStream.text = null;
+        writeOs(full);
+        return;
+      }
+      osStream.id = osId;
+      osStream.text = full;
+      if (osStream.timer == null) {
+        osStream.timer = window.setTimeout(() => {
+          osStream.timer = null;
+          /* THE HIDDEN ROOM — nobody is looking: the beat passes the
+             words by and the buffer keeps every one of them; the
+             visitor's return lands the whole breath at once. */
+          if (isPageHidden()) {
+            armReturnFlush();
+            return;
+          }
+          const beatId = osStream.id;
+          const text = osStream.text;
+          osStream.id = null;
+          osStream.text = null;
+          if (!beatId || text == null) return;
+          set((s) => ({
+            osMessages: s.osMessages.map((m) =>
+              m.id === beatId ? { ...m, text } : m
+            ),
+          }));
+          /* the first rendered breath — the stream's own measure */
+          perfStreamFirstDelta(osId, text.length);
+        }, OS_FLUSH_MS);
+      }
+    };
 
     try {
       const history = get()
@@ -3200,14 +5057,16 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         .map((m) => ({ role: m.role, text: m.text }));
 
       const payload = attachments ? attachmentsToPayload(attachments) : null;
-      const res = await fetch("/api/mirror-os", {
+      perfStreamStart(osId);
+      const res = await speakDoor("/api/mirror-os", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: osCtl.signal,
         body: JSON.stringify({
           query,
           history,
           language: get().language,
-          depth: journeyDepth(),
+          depth: get().sendDepth(),
           stream: true,
           ...(payload ?? {}),
         }),
@@ -3216,15 +5075,21 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       /* a house without the streaming line — the whole reply at once */
       if (!res.ok || !res.body) {
         const data = await res.json().catch(() => null);
+        raiseEnergy(res.status, data);
         if (!res.ok) {
           throw new Error(
             (data && data.error) ||
               "The OS is momentarily quiet. Rest, then reach again."
           );
         }
-        appendOs(String(data.reply ?? ""));
+        appendOs(String(data.reply ?? ""), true);
         set({ osStatus: "ready" });
         void get().refreshMe();
+        perfStreamFirstDelta(
+          osId,
+          typeof data?.reply === "string" ? data.reply.length : 0
+        );
+        perfStreamEnd(osId);
         return;
       }
 
@@ -3262,9 +5127,10 @@ export const useMirror = create<MirrorState>()((set, get) => ({
           } else if (evt.type === "done") {
             settled = true;
             full = evt.reply || full;
-            appendOs(full);
+            appendOs(full, true);
             set({ osStatus: "ready" });
             void get().refreshMe();
+            perfStreamEnd(osId);
           } else if (evt.type === "error") {
             throw new Error(
               evt.error ||
@@ -3276,8 +5142,11 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       /* the line closed without a settled end — what arrived stays */
       if (!settled) {
         if (full.trim()) {
+          /* the tail lands now, synchronously */
+          appendOs(full, true);
           set({ osStatus: "ready" });
           void get().refreshMe();
+          perfStreamEnd(osId);
         } else {
           throw new Error(
             "The OS is momentarily quiet. Rest, then reach again."
@@ -3285,6 +5154,30 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         }
       }
     } catch (err) {
+      perfStreamEnd(osId, true);
+      /* THE CUT STREAM — this stream was superseded by a fresh ask on
+         the same door: it ends without a sound. No failed mark, no
+         error word — the fresh stream owns the room now. */
+      if ((err as { name?: string } | null)?.name === "AbortError") {
+        if (osAskAbort === osCtl) {
+          osAskAbort = null;
+          set({ osStatus: "ready" });
+        }
+        return;
+      }
+      /* the stream's last breath — this line's pending beat flushes
+         at once, so the error state never swallows words already
+         received; a line that never received a word still leaves */
+      if (osStream.id === osId) {
+        if (osStream.timer != null) {
+          window.clearTimeout(osStream.timer);
+          osStream.timer = null;
+        }
+        const last = osStream.text;
+        osStream.id = null;
+        osStream.text = null;
+        if (last != null && last.trim()) writeOs(last);
+      }
       /* the quiet law — the visitor's line stays in the thread, marked
          and retryable; the words are never asked twice by hand */
       set((s) => ({
@@ -3299,6 +5192,12 @@ export const useMirror = create<MirrorState>()((set, get) => ({
             ? err.message
             : "The OS is momentarily quiet. Rest, then reach again.",
       }));
+    } finally {
+      /* the stream retires — its return-flush subscription and its
+         hand on the abort record go with it (a superseding stream's
+         own records are never touched) */
+      (offReturnFlush as (() => void) | null)?.();
+      if (osAskAbort === osCtl) osAskAbort = null;
     }
   },
 
@@ -3349,6 +5248,8 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           language: get().language,
+          /* the visitor's own style — chosen through the "/" hand — rides along */
+          ...(get().visualStyle ? { style: get().visualStyle } : {}),
           message: regenerateOf ? regenerateOf.request ?? question : question,
           history,
           ...(regenerateOf
@@ -3408,6 +5309,10 @@ export const useMirror = create<MirrorState>()((set, get) => ({
 
   setLanguage: (code) => {
     set({ language: code });
+    /* THE LAZY VOICES — the chosen tongue travels at once, and the
+       language's own keeper hears the same word: every surface (the
+       landing included) follows instantly, no reload, no loss */
+    void setUiLanguage(code);
     try {
       localStorage.setItem("mirror-entity-language", code);
     } catch {
@@ -3437,6 +5342,32 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     void get().pushSettings();
   },
 
+  /* THE VISITOR'S OWN LEVEL — raised by the visitor's own hand in the
+     profile's settings room; -1 lays the decision back in the walk's
+     own DNA (the standing law). Kept on the device like the voice. */
+  setExpLevel: (level) => {
+    const sane = Number.isFinite(level)
+      ? Math.min(4, Math.max(-1, Math.floor(level)))
+      : -1;
+    set({ expLevel: sane });
+    try {
+      localStorage.setItem("mirror-entity-exp-level", String(sane));
+    } catch {
+      /* storage unavailable */
+    }
+    /* the level belongs to the passage too — it rides the visitor's
+       own tuning to every device they walk from */
+    void get().pushSettings();
+  },
+
+  sendDepth: () => {
+    const walk = journeyDepth();
+    const own = get().expLevel;
+    /* the visitor's own tier stands above the walk's automatic one —
+       but the walk still carries its honest step count */
+    return own >= 0 ? { steps: walk.steps, tier: own } : walk;
+  },
+
   setExpansionSeeds: (seeds) => {
     const clean = Array.from(
       new Set(
@@ -3460,10 +5391,12 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       language?: string;
       voice?: string;
       pace?: number;
+      depth?: number;
       seeds?: string[];
     };
     if (s.language && isLanguageCode(s.language)) {
       set({ language: s.language });
+      void setUiLanguage(s.language);
       try {
         localStorage.setItem("mirror-entity-language", s.language);
       } catch {
@@ -3487,6 +5420,15 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         /* storage unavailable */
       }
     }
+    if (typeof s.depth === "number" && Number.isFinite(s.depth)) {
+      const depth = Math.min(4, Math.max(-1, Math.floor(s.depth)));
+      set({ expLevel: depth });
+      try {
+        localStorage.setItem("mirror-entity-exp-level", String(depth));
+      } catch {
+        /* storage unavailable */
+      }
+    }
     if (Array.isArray(s.seeds)) {
       const clean = s.seeds
         .filter((x): x is string => typeof x === "string")
@@ -3503,14 +5445,20 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   },
 
   pushSettings: async () => {
-    const { me, language, voice, pace, expansionSeeds } = get();
+    const { me, language, voice, pace, expansionSeeds, expLevel } = get();
     if (!me || me.email.startsWith("anon:")) return;
     try {
       await fetch("/api/account/settings", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          settings: { language, voice, pace, seeds: expansionSeeds },
+          settings: {
+            language,
+            voice,
+            pace,
+            depth: expLevel,
+            seeds: expansionSeeds,
+          },
         }),
       });
     } catch {
@@ -3520,6 +5468,9 @@ export const useMirror = create<MirrorState>()((set, get) => ({
 
   bootPreferences: () => {
     if (typeof window === "undefined") return;
+    /* the language's own keeper wakes with the device's chosen voice —
+       the landing translates before the laboratory even mounts */
+    bootUiLanguage();
     /* the archive wakes first — the conversations return before the
        tuning is read, so the visitor lands back inside their words */
     get().hydrateChats();
@@ -3527,8 +5478,13 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       const lang = localStorage.getItem("mirror-entity-language");
       const voice = localStorage.getItem("mirror-entity-voice");
       const pace = Number(localStorage.getItem("mirror-entity-pace"));
+      /* the visitor's own level — only an actually-kept value speaks
+         (Number(null) is 0, and 0 is "first light", never a default) */
+      const rawExpLevel = localStorage.getItem("mirror-entity-exp-level");
+      const expLevel = rawExpLevel === null ? NaN : Number(rawExpLevel);
       const savedMix = loadTreeMix();
       const rawSeeds = localStorage.getItem("mirror-entity-seeds");
+      const landingScope = sessionStorage.getItem("mirror:landing-scope");
       const seeds = rawSeeds
         ? (JSON.parse(rawSeeds) as unknown[]).filter(
             (s): s is string => typeof s === "string" && s.trim().length >= 2
@@ -3540,9 +5496,20 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         ...(Number.isFinite(pace) && pace >= 0.5 && pace <= 2
           ? { pace }
           : {}),
+        ...(Number.isFinite(expLevel) && expLevel >= -1 && expLevel <= 4
+          ? { expLevel: Math.floor(expLevel) }
+          : {}),
         ...(seeds.length > 0 ? { expansionSeeds: seeds.slice(0, 6) } : {}),
         ...(savedMix ? { treeMix: savedMix } : {}),
+        /* THE LANDING'S OWN SCOPE — the session's choice wakes with
+           the threshold (only the house's own keys are honored; an
+           empty or stranger key falls back to the Mirror). */
+        ...(landingScope && LANDING_SCOPES.includes(landingScope as LandingScopeKey)
+          ? { landingScope: landingScope as LandingScopeKey }
+          : {}),
       });
+      /* THE LAZY VOICES — the visitor's own tongue wakes with the house */
+      void ensureDict(isLanguageCode(lang) ? lang : "en");
     } catch {
       /* storage unavailable */
     }
@@ -3577,6 +5544,9 @@ export const useMirror = create<MirrorState>()((set, get) => ({
 
     // Gentle charging animation while the field works.
     const timer = window.setInterval(() => {
+      /* the hidden chamber spends no frames on a transient bar — the
+         beat simply waits; on return it resumes and self-corrects */
+      if (isPageHidden()) return;
       const p = get().labProgress;
       if (p < 92) set({ labProgress: Math.min(92, p + 2 + Math.random() * 5) });
     }, 140);
@@ -3628,6 +5598,240 @@ export const archiveTotals = {
 };
 
 /* ------------------------------------------------------------------ */
+/*  THE MAKER'S TRAIL — every tool-tab open leaves one stone on the    */
+/*  visit's own path (sessionStorage, capped, newest first): the       */
+/*  history panel's trail room reads it, so the visitor can step back  */
+/*  into any room this visit has opened. Nothing travels anywhere.     */
+/* ------------------------------------------------------------------ */
+
+const MAKER_TRAIL_KEY = "mirror:maker-trail";
+const MAKER_TRAIL_MAX = 30;
+
+interface MakerTrailStone {
+  key: ToolTabKey;
+  at: number;
+}
+
+function recordMakerTrail(key: ToolTabKey): void {
+  if (typeof window === "undefined") return;
+  try {
+    const raw = window.sessionStorage.getItem(MAKER_TRAIL_KEY);
+    let trail: MakerTrailStone[] = [];
+    if (raw) {
+      const parsed: unknown = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        trail = parsed.filter(
+          (e): e is MakerTrailStone =>
+            Boolean(e) &&
+            typeof (e as { key?: unknown }).key === "string" &&
+            typeof (e as { at?: unknown }).at === "number"
+        );
+      }
+    }
+    const next: MakerTrailStone[] = [
+      { key, at: Date.now() },
+      ...trail,
+    ].slice(0, MAKER_TRAIL_MAX);
+    window.sessionStorage.setItem(MAKER_TRAIL_KEY, JSON.stringify(next));
+  } catch {
+    /* the visit's keeping stays closed — the tab still opens */
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  THE LIBRARY'S OWN AUTOSHELF — a signed keeper's conversations walk */
+/*  into the profile's Cosmic Library by themselves: after the         */
+/*  browser's shelf write, the active thread of every surface is       */
+/*  offered to /api/library (fire-and-forget — the words never wait).  */
+/*  A tiny pointer (mirror:library-autoptr) remembers what each        */
+/*  surface already laid on the shelf, so unchanged threads never      */
+/*  travel twice. The sectors are the honest ones the house's own      */
+/*  routes save to (mirror-os → manifest, the quantum world → quantum, */
+/*  the nexus → evolvemed, the atelier → artx, the forge → invent,     */
+/*  the main scopes → observatory).                                    */
+/* ------------------------------------------------------------------ */
+
+const LIBRARY_SECTOR_BY_SURFACE: Record<ChatSurface, string> = {
+  os: "manifest",
+  px: "quantum",
+  em: "evolvemed",
+  ax: "artx",
+  forge: "invent",
+  interplanetary: "observatory",
+  healing: "observatory",
+};
+
+const LIBRARY_AUTOPTR_KEY = "mirror:library-autoptr";
+/** one warn per visit — a shelf that refused never spams the console */
+let libraryAutosaveMuted = false;
+
+/** The conversation's own words, whatever shape the surface keeps. */
+function surfaceMessages(
+  surface: ChatSurface,
+  s: MirrorState
+): readonly unknown[] {
+  switch (surface) {
+    case "os":
+      return s.osMessages;
+    case "px":
+      return s.pxMessages;
+    case "em":
+      return s.emMessages;
+    case "ax":
+      return s.axMessages;
+    case "forge":
+      return s.forgeSession.messages;
+    case "interplanetary":
+    case "healing":
+      return s.sessions[surface].messages;
+  }
+}
+
+/** The visitor's own first words — the thread's title, the way the
+    archive names a chat (the scopes' pairs speak in `query`, the
+    direct lines in a visitor-role `text`). */
+function conversationFirstWhisper(messages: readonly unknown[]): string {
+  for (const m of messages) {
+    if (!m || typeof m !== "object") continue;
+    const rec = m as { query?: unknown; role?: unknown; text?: unknown };
+    const words =
+      typeof rec.query === "string" && rec.query.trim()
+        ? rec.query
+        : (rec.role === undefined || rec.role === "visitor") &&
+            typeof rec.text === "string" &&
+            rec.text.trim()
+          ? rec.text
+          : "";
+    if (words.trim()) return words.trim();
+  }
+  return "";
+}
+
+/** The mirror's last words — the excerpt the library's rows read. */
+function conversationLastReply(messages: readonly unknown[]): string {
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const m = messages[i];
+    if (!m || typeof m !== "object") continue;
+    const rec = m as { query?: unknown; role?: unknown; text?: unknown };
+    if (typeof rec.query === "string") {
+      /* the scopes' own pair — the text is the mirror's reply */
+      if (typeof rec.text === "string" && rec.text.trim())
+        return rec.text.trim();
+      continue;
+    }
+    const isVisitor = rec.role === undefined || rec.role === "visitor";
+    if (!isVisitor && typeof rec.text === "string" && rec.text.trim())
+      return rec.text.trim();
+  }
+  return "";
+}
+
+/** The thread in its smallest honest dress — the last pairs only,
+    each side trimmed, the travel kept light. */
+function conversationTurns(
+  messages: readonly unknown[]
+): { q?: string; a?: string }[] {
+  const turns: { q?: string; a?: string }[] = [];
+  for (const m of messages) {
+    if (!m || typeof m !== "object") continue;
+    const rec = m as { query?: unknown; role?: unknown; text?: unknown };
+    if (typeof rec.query === "string" && rec.query.trim()) {
+      turns.push({
+        q: rec.query.trim().slice(0, 2000),
+        ...(typeof rec.text === "string" && rec.text.trim()
+          ? { a: rec.text.trim().slice(0, 2000) }
+          : {}),
+      });
+      continue;
+    }
+    const words = typeof rec.text === "string" ? rec.text.trim() : "";
+    if (!words) continue;
+    if (rec.role === undefined || rec.role === "visitor") {
+      turns.push({ q: words.slice(0, 2000) });
+    } else if (turns.length > 0) {
+      turns[turns.length - 1].a = words.slice(0, 2000);
+    } else {
+      turns.push({ a: words.slice(0, 2000) });
+    }
+  }
+  return turns.slice(-30);
+}
+
+function hashWords(words: string): string {
+  let h = 5381;
+  for (let i = 0; i < words.length; i++)
+    h = ((h << 5) + h + words.charCodeAt(i)) | 0;
+  return (h >>> 0).toString(36);
+}
+
+function saveConversationToLibrary(surface: ChatSurface, s: MirrorState): void {
+  if (libraryAutosaveMuted || typeof window === "undefined") return;
+  try {
+    const messages = surfaceMessages(surface, s);
+    /* a thread needs two words before it may rest on the library's shelf */
+    if (messages.length < 2) return;
+    const exchanges = conversationTurns(messages);
+    if (exchanges.length === 0) return;
+    const hash = hashWords(JSON.stringify(exchanges));
+    let pointers: Record<string, { turns: number; hash: string }> = {};
+    try {
+      pointers = JSON.parse(
+        window.localStorage.getItem(LIBRARY_AUTOPTR_KEY) ?? "{}"
+      ) as typeof pointers;
+    } catch {
+      pointers = {};
+    }
+    const seen = pointers[surface];
+    if (seen && seen.turns === messages.length && seen.hash === hash) return;
+    const title = (conversationFirstWhisper(messages) || "A conversation").slice(
+      0,
+      60
+    );
+    const excerpt = conversationLastReply(messages).slice(0, 280);
+    void fetch("/api/library", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sector: LIBRARY_SECTOR_BY_SURFACE[surface],
+        surface,
+        title,
+        excerpt,
+        content: {
+          kind: "conversation",
+          surface,
+          turns: messages.length,
+          exchanges,
+        },
+      }),
+    })
+      .then((res) => {
+        if (res.ok) {
+          pointers[surface] = { turns: messages.length, hash };
+          try {
+            window.localStorage.setItem(
+              LIBRARY_AUTOPTR_KEY,
+              JSON.stringify(pointers)
+            );
+          } catch {
+            /* the pointer rests unwritten — the next pass saves again, harmlessly */
+          }
+          return;
+        }
+        libraryAutosaveMuted = true;
+        console.warn(
+          `[library] autosave rests — /api/library answered ${res.status}; the threads stay on the browser's own shelf`
+        );
+      })
+      .catch(() => {
+        libraryAutosaveMuted = true;
+        console.warn("[library] autosave could not reach the shelf");
+      });
+  } catch {
+    /* never let the autoshef disturb the words */
+  }
+}
+
+/* ------------------------------------------------------------------ */
 /*  THE ARCHIVE'S QUIET HANDS — client-side keeping, zero servers.     */
 /*  Every change to any conversation settles onto the browser's own    */
 /*  shelf (debounced); every view change is recorded so the whole-page */
@@ -3673,6 +5877,11 @@ if (typeof window !== "undefined") {
   /* the autosave — the words settle on the shelf shortly after they land */
   useMirror.subscribe((state) => {
     if (hydrating) return;
+    /* THE GUEST'S OWN LAW — nothing an unnamed visitor whispers ever
+       settles on the shelf: the landing chat stays temporary for the
+       non logged-in, and only a keeper's words survive the reload. */
+    const keeperNow = useMirror.getState().me;
+    if (!keeperNow || keeperNow.email.startsWith("anon:")) return;
     if (saveTimer) window.clearTimeout(saveTimer);
     saveTimer = window.setTimeout(() => {
       saveTimer = null;
@@ -3688,7 +5897,14 @@ if (typeof window !== "undefined") {
           "interplanetary",
           "healing",
         ];
-        for (const surface of surfaces) archiveSurface(surface, s);
+        for (const surface of surfaces) {
+          archiveSurface(surface, s);
+          /* THE LIBRARY'S OWN AUTOSHELF — the same thread walks into
+             the profile's Cosmic Library (keeper's pass only — the
+             gate above —, deduped by its own pointer, fire-and-forget:
+             the words never wait on the shelf). */
+          saveConversationToLibrary(surface, s);
+        }
       } catch {
         /* the shelf refused — the session copy still holds */
       } finally {
@@ -3712,4 +5928,12 @@ if (typeof window !== "undefined") {
 export function findDossier(kind: DossierKind, id: string) {
   const list = kind === "civilization" ? civilizations : interdimensional;
   return list.find((d) => d.id === id) ?? null;
+}
+
+/* THE DEVELOPER'S KEYHOLE — in development builds alone the store's
+   hand rests on the window, so the house's keepers (and the browser's
+   own tests) may read and set the chamber's state from the console.
+   Production builds carry no keyhole at all. */
+if (process.env.NODE_ENV !== "production" && typeof window !== "undefined") {
+  (window as unknown as Record<string, unknown>).__mirrorStore = useMirror;
 }
