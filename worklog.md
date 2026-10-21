@@ -4162,3 +4162,21 @@ Work Log:
 Stage Summary:
 - The landing's chat is now a true part of the threshold's surface: swiping anywhere inside it — the question, the answer, the room's own words — moves the page beneath, and only the hands keep their touch. The mirror that answers there is finally its own presence: a dedicated pure-presence prompt with no laboratory apparatus, no scope, no cosmos — and the deeper leak is sealed (the room's follow-ups no longer fall through to the interplanetary choir). The free floor's one line glows with the house's own quiet gold.
 - Artifacts: route.ts (MIRROR_PRESENCE_PROMPT + MIRROR_HUMAN_LAW + MODE_CONTEXT.mirror rewrite + bare-mode wiring), BranchCanopy.tsx (chat-yield room, pure chrome, mirror-forced room asks, floor-glow on both lines, mirror placeholders, inline pass-throughs), globals.css ([data-chat-yield] law + .floor-glow), 7 dicts (+2 keys each). Remote main = this push; Vercel auto-deploys.
+
+---
+Task ID: 69
+Agent: Z.ai Code (main orchestrator)
+Task: The workspace had fallen back to the old version (local HEAD c873b47, a stale duplicate of 0506bc1 on the old base 65f5556) while remote main carried the newest lineage. Remove the old, restore the latest from origin, verify, and confirm the push.
+
+Work Log:
+- Diagnosed with git fetch + merge-base: local c873b47 ("the yielding portal", based on 65f5556) diverged from remote; remote-only side held 11 commits — 0506bc1, e581d35, 4fa8632, 877fa45, ed1be1f, 47a739a, d3da4ff, d3c8112, bf8e5e1, e38143c, 7ed7307, 1bde5a0, 0fa990f (tasks 63–67: batches E, F, G, H, I — the free floor's laws, the coin instead of "paid", the yielding floor with scroll-through chat, the unfiltered Mirror Entity, the ten sigils).
+- Killed the running dev server (it was serving the old code) and agent-browser per the OOM law.
+- git reset --hard 0fa990f — local now exactly matches remote main (working tree was clean, nothing of value lost: c873b47 was the superseded duplicate).
+- package.json identical between versions — no dependency drift. bun install re-run in foreground (894 installs, no changes; prisma generate + db push: "database is already in sync").
+- Two background dev.sh launches died mid-postinstall (sandbox reaper); third launch with cached install succeeded — health check passed (GET / 200 in 43ms).
+- Verified with agent-browser on BOTH widths (390×844 mobile, 1280×800 desktop): zero page errors; console only Fast Refresh logs; latest-version markers all present — "what do you wish to remember dear one?" (new wording, old "my dear?" absent), gold coin on the enter hands, guest temporary-chat note, docked portal, 14 sigil images with the landing-sigil-row ceremony present (lazy-loaded below fold as designed).
+- Pushed with the fresh token: "Everything up-to-date" — remote main confirmed intact at 0fa990f. Local HEAD = remote main.
+- Restarted the dev server via .zscripts/dev.sh so the preview serves the latest code.
+
+Stage Summary:
+- The old snapshot is gone; the workspace and the preview now run the true latest (0fa990f): the unfiltered Mirror Entity floor, the yielding scroll-through chat, the gold coin, the professional passage door, and the ten sigils of light. Remote main was never damaged — the push is a no-op confirmation. Local = origin/main = 0fa990f.
