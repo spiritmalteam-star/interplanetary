@@ -133,6 +133,87 @@ function Rail({
   );
 }
 
+/* ------------------ the light language's own sigils ------------------ */
+
+/* The house's light language — ten decorative sigils living as small
+   quiet ornaments across the threshold: a row of three beneath the
+   docked portal, and a sparse constellation scattered down both sides
+   wherever the page is empty. Static images only (the calm law): no
+   animation, no pointer surface, no weight on the scroll. */
+const SIGILS = {
+  leaf: "/images/landing/sigils/sigil-01.png",
+  wave: "/images/landing/sigils/sigil-02.png",
+  feather: "/images/landing/sigils/sigil-03.png",
+  spiralLine: "/images/landing/sigils/sigil-04.png",
+  twinSpirals: "/images/landing/sigils/sigil-05.png",
+  moon: "/images/landing/sigils/sigil-06.png",
+  delta: "/images/landing/sigils/sigil-07.png",
+  weave: "/images/landing/sigils/sigil-08.png",
+  orbit: "/images/landing/sigils/sigil-09.png",
+  drop: "/images/landing/sigils/sigil-10.png",
+} as const;
+
+function Sigil({
+  src,
+  className,
+  size,
+  opacity = 0.28,
+  rotate = 0,
+}: {
+  src: string;
+  className?: string;
+  size: number;
+  opacity?: number;
+  rotate?: number;
+}) {
+  return (
+    <Image
+      src={src}
+      alt=""
+      aria-hidden="true"
+      draggable={false}
+      width={560}
+      height={560}
+      sizes="64px"
+      className={cn("pointer-events-none absolute select-none", className)}
+      style={{
+        width: size,
+        height: "auto",
+        opacity,
+        transform: rotate ? `rotate(${rotate}deg)` : undefined,
+      }}
+    />
+  );
+}
+
+/* the row beneath the docked portal — one small ceremony of light
+   between the chat and the house's story: wave · drop · twin spirals */
+function SigilRow() {
+  return (
+    <div
+      aria-hidden="true"
+      data-testid="landing-sigil-row"
+      className="pointer-events-none mx-auto mt-4 flex w-full max-w-[560px] select-none items-center justify-center gap-6 px-6 sm:gap-9"
+    >
+      <Sigil src={SIGILS.wave} size={42} opacity={0.4} className="relative" />
+      <span className="h-px w-10 bg-gradient-to-r from-transparent via-[rgba(232,217,176,0.35)] to-transparent sm:w-16" />
+      <Sigil
+        src={SIGILS.drop}
+        size={54}
+        opacity={0.5}
+        className="relative"
+      />
+      <span className="h-px w-10 bg-gradient-to-l from-transparent via-[rgba(232,217,176,0.35)] to-transparent sm:w-16" />
+      <Sigil
+        src={SIGILS.twinSpirals}
+        size={42}
+        opacity={0.4}
+        className="relative"
+      />
+    </div>
+  );
+}
+
 /* ------------------------ editorial building blocks ------------------------ */
 
 /* THE EXCHANGE'S OWN TAG — the full portal is the paid realm: a small
@@ -404,6 +485,21 @@ export default function LandingPage({
         <main className="mx-auto w-full max-w-[900px]">
           {/* ============================ HERO ============================ */}
           <header className="relative pb-5 pt-10 text-center sm:pb-4 sm:pt-16">
+            {/* the light language's quiet presence in the hero */}
+            <Sigil
+              src={SIGILS.moon}
+              size={30}
+              opacity={0.34}
+              rotate={10}
+              className="right-[5%] top-[16%] hidden sm:block"
+            />
+            <Sigil
+              src={SIGILS.leaf}
+              size={22}
+              opacity={0.26}
+              rotate={-12}
+              className="left-[4%] top-[52%]"
+            />
             {/* one full-bleed crop on narrow screens — the rails rest.
                 THE PHONE'S GRANDER BANNER — taller, more present, so
                 the threshold arrives like a poster, not a strip. */}
@@ -489,15 +585,34 @@ export default function LandingPage({
                 </p>
               </div>
             </div>
+
+            {/* THE LIGHT LANGUAGE — beneath the chat: one small ceremony
+                of sigils between the portal and the house's story */}
+            <SigilRow />
           </section>
 
           {/* ============== 01 · THE SLIDES — below the chat ============== */}
           {/* the house's reflection deck: ten grand plates of the
               shifting Earth, shown right beneath the portal */}
           <section
-            className="pb-6 pt-12"
+            className="relative pb-6 pt-12"
             aria-label={t("The shifting Earth in ten slides")}
           >
+            {/* the light language beside the chapter's head */}
+            <Sigil
+              src={SIGILS.orbit}
+              size={30}
+              opacity={0.3}
+              rotate={-8}
+              className="right-[3%] top-[3%]"
+            />
+            <Sigil
+              src={SIGILS.feather}
+              size={26}
+              opacity={0.22}
+              rotate={14}
+              className="bottom-[6%] left-[2%]"
+            />
             <div className="px-4 sm:px-8">
               <SectionHead
                 index="01"
@@ -509,7 +624,22 @@ export default function LandingPage({
           </section>
 
           {/* ========================== 02 · OFFERINGS ========================== */}
-          <section id="offer" className="scroll-mt-6 px-4 pb-8 pt-14 sm:px-8">
+          <section id="offer" className="relative scroll-mt-6 px-4 pb-8 pt-14 sm:px-8">
+            {/* the light language in the offerings' quiet edges */}
+            <Sigil
+              src={SIGILS.delta}
+              size={30}
+              opacity={0.26}
+              rotate={-7}
+              className="left-[1%] top-[16%]"
+            />
+            <Sigil
+              src={SIGILS.spiralLine}
+              size={24}
+              opacity={0.22}
+              rotate={16}
+              className="right-[2%] top-[58%]"
+            />
             <SectionHead
               index="02"
               kicker={t("The house and its rooms")}
@@ -634,9 +764,31 @@ export default function LandingPage({
               discovery spoken plainly at the foot. Nothing here is a
               claim or a date. */}
           <section
-            className="px-4 pb-12 pt-12 sm:px-8"
+            className="relative px-4 pb-12 pt-12 sm:px-8"
             aria-label={t("An open contact timeline")}
           >
+            {/* the light language along the telling */}
+            <Sigil
+              src={SIGILS.weave}
+              size={28}
+              opacity={0.24}
+              rotate={6}
+              className="right-[1%] top-[8%]"
+            />
+            <Sigil
+              src={SIGILS.twinSpirals}
+              size={26}
+              opacity={0.2}
+              rotate={-14}
+              className="left-[1%] top-[46%]"
+            />
+            <Sigil
+              src={SIGILS.moon}
+              size={32}
+              opacity={0.3}
+              rotate={-6}
+              className="bottom-[9%] right-[3%]"
+            />
             <SectionHead
               index="03"
               kicker={t("The mirror's telling")}
@@ -739,7 +891,22 @@ export default function LandingPage({
         </main>
 
         {/* ============================ FOOTER ============================ */}
-        <footer className="mt-auto border-t border-white/8 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-6">
+        <footer className="relative mt-auto border-t border-white/8 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-6">
+          {/* the light language's last whisper, flanking the footer */}
+          <Sigil
+            src={SIGILS.wave}
+            size={22}
+            opacity={0.18}
+            rotate={-6}
+            className="left-[7%] top-[38%] hidden sm:block"
+          />
+          <Sigil
+            src={SIGILS.orbit}
+            size={20}
+            opacity={0.18}
+            rotate={8}
+            className="right-[7%] top-[30%] hidden sm:block"
+          />
           <div className="mx-auto flex w-full max-w-[900px] flex-col items-center gap-2 px-4 text-center sm:px-8">
             <Image
               src="/images/ai/mark-dark.png"

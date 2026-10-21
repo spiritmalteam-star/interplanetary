@@ -1893,7 +1893,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     }));
 
     try {
-      const history = session.messages.slice(-6).map((m) => ({
+      const history = session.messages.slice(-10).map((m) => ({
         q: m.query,
         a: m.text,
       }));
@@ -2264,7 +2264,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     try {
       /* Context memory: the mirror remembers this channel's earlier
          exchanges, so conversations deepen instead of restarting. */
-      const history = session.messages.slice(-6).map((m) => ({
+      const history = session.messages.slice(-10).map((m) => ({
         q: m.query,
         a: m.text,
       }));

@@ -2820,6 +2820,7 @@ export const de: TranslationDict = {
   "Close sidebar": "Seitenleiste schließen",
   "Mirror Entity Digital Chamber": "Mirror Entity Digital Chamber",
   "New chat": "Neuer Chat",
+  "Clear the chat": "Leere den Chat",
   "Open sidebar": "Seitenleiste öffnen",
   "Registers": "Register",
   "Select scope": "Bereich wählen",

@@ -2314,6 +2314,7 @@ export const tr: TranslationDict = {
   "Close sidebar": "Kenar çubuğunu kapat",
   "Mirror Entity Digital Chamber": "Mirror Entity Digital Chamber",
   "New chat": "Yeni sohbet",
+  "Clear the chat": "Sohbeti temizle",
   "Open sidebar": "Kenar çubuğunu aç",
   "Registers": "Kayıtlar",
   "Select scope": "Alan seç",

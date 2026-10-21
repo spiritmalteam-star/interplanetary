@@ -4837,24 +4837,31 @@ export function BranchCanopy({
                   </div>
                 </div>
                 <div className="flex shrink-0 items-center gap-1.5">
-                  {/* THE RENEWING HAND — the reload lives in the chat:
-                      the family behind the room is re-grown fresh. THE
-                      LANDING'S PURE FLOOR — the walk's renewing hand
-                      waits for the full portal; the docked room keeps
-                      only the mirror's own hands. */}
-                  {!bare && (
-                    <button
-                      type="button"
-                      onClick={renew}
-                      disabled={disabled}
-                      aria-label={t("New branches")}
-                      title={t("New branches")}
-                      data-testid={`${testIdPrefix}-zoom-renew`}
-                      className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-                    >
-                      <RefreshCw className="size-3.5" aria-hidden="true" />
-                    </button>
-                  )}
+                  {/* THE CHAT'S OWN RELOAD — the reload hand lives in the
+                      chat and it truly clears: one touch ends the whole
+                      conversation (the room folds, the thread empties,
+                      the floor rises fresh with the mirror's question),
+                      and the walk's family re-grows behind it. It waits
+                      out the in-flight word so a clearing is never
+                      undone by an answer still crossing. */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (liveLoading) return;
+                      exitZoom();
+                      renew();
+                      useMirror
+                        .getState()
+                        .newChat(useMirror.getState().activeMode);
+                    }}
+                    disabled={disabled || liveLoading}
+                    aria-label={t("Clear the chat")}
+                    title={t("Clear the chat")}
+                    data-testid={`${testIdPrefix}-zoom-reload`}
+                    className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    <RefreshCw className="size-3.5" aria-hidden="true" />
+                  </button>
                   {/* THE NARRATOR'S GATE — the walk's one voice, at the
                       TOP of the room: a man, the documentary register,
                       reading each room aloud. While his voice gathers,

@@ -2814,6 +2814,7 @@ export const es: TranslationDict = {
   "Close sidebar": "Cerrar barra lateral",
   "Mirror Entity Digital Chamber": "Mirror Entity Digital Chamber",
   "New chat": "Nuevo chat",
+  "Clear the chat": "Borra la conversación",
   "Open sidebar": "Abrir barra lateral",
   "Registers": "Registros",
   "Select scope": "Seleccionar ámbito",

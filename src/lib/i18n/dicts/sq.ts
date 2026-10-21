@@ -4538,6 +4538,7 @@ export const sq: TranslationDict = {
   "Close sidebar": "Mbyll panelin anësor",
   "Mirror Entity Digital Chamber": "Mirror Entity Digital Chamber",
   "New chat": "Bisedë e re",
+  "Clear the chat": "Pastro bisedën",
   "Open sidebar": "Hap panelin anësor",
   "Registers": "Regjistrat",
   "Select scope": "Zgjidh fushën",

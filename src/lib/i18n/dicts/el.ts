@@ -2520,6 +2520,7 @@ export const el: TranslationDict = {
   "Close sidebar": "Κλείσιμο πλευρικής μπάρας",
   "Mirror Entity Digital Chamber": "Mirror Entity Digital Chamber",
   "New chat": "Νέα συνομιλία",
+  "Clear the chat": "Καθάρισε τη συνομιλία",
   "Open sidebar": "Άνοιγμα πλευρικής μπάρας",
   "Registers": "Μητρώα",
   "Select scope": "Επιλογή πεδίου",
