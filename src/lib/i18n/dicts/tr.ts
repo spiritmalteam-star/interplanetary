@@ -3146,7 +3146,7 @@ export const tr: TranslationDict = {
   "Enter the portal": "Portala gir",
   "What we offer": "Ne sunuyoruz",
   "The mirror in miniature": "Minyatür ayna",
-  "what do you wish to remember my dear?": "ne hatırlamak istersin, canım?",
+  "what do you wish to remember dear one?": "hatırlamak istediğin ne, sevgilim?",
   "tunnel into mirror": "aynaya gir",
   "Tunnel into the mirror — tell me more about {topic}.": "Aynaya gir — {topic} hakkında bana daha fazlasını anlat.",
   "Speak — I am listening.": "Konuş — dinliyorum.",

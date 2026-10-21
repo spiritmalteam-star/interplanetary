@@ -1859,6 +1859,14 @@ export function BranchCanopy({
      where it lives, the other restores a kept volume to the reading */
   const openChatSurface = useMirror((s) => s.openChat);
   const resumeKeptVolume = useMirror((s) => s.resumeDreamBook);
+  /* THE QUESTION'S QUIET — the mirror's question beneath the mark
+     stands only while the floor is quiet: the first word sent (or a
+     thread already carrying words) dissolves it, leaving the space
+     to the transmission itself. */
+  const floorQuiet = useMirror((s) => {
+    const sess = s.sessions[s.activeMode];
+    return sess.messages.length === 0 && sess.status !== "loading";
+  });
   /* THE WHOLE HOUSE'S DOORS — every kategory of the old website's
      sidebar, standing within the branches themselves: the worlds the
      tree grows toward, the archives, and the quiet hands. */
@@ -3161,9 +3169,14 @@ export function BranchCanopy({
       const makesSomething =
         detectArtifactIntent(text) !== null || isVisualIntent(text);
       if (!makesSomething) setZoom({ q: text, move });
-      onPick(text, askScopeFor(text), attachments);
+      /* THE LANDING'S OWN LAW — docked in the threshold the ask is
+         always the reflection mirror itself: no category, no scope —
+         the mirror's humble voice answers from the open floor. The
+         full portal keeps every scope's own door. */
+      onPick(text, bare ? undefined : askScopeFor(text), attachments);
     },
     [
+      bare,
       category,
       disabled,
       liveLoading,
@@ -3724,6 +3737,13 @@ export function BranchCanopy({
               TOP BAR — no logo stands in the crown; the light's own
               hand (a quiet sun/moon) rides with the doors instead. */}
           <div className="contents">
+          {/* THE LANDING'S QUIET CROWN — docked in the threshold the
+              crown keeps only its calm doors: the walk's menu and the
+              categories' mix stand down (no scope ever rules the
+              landing's floor), and the akashic and book doors wait for
+              the full portal. The light, the about door, the crossing
+              and the passage remain. */}
+          {!bare && (<>
           {/* THE MENU — where the walk stands, behind one quiet button:
               the compass, the depth, every step of the trail (one
               touch returns the tree to that step) and the quiet
@@ -4195,6 +4215,7 @@ export function BranchCanopy({
               </>
             )}
           </div>
+          </>) }
           </div>
 
           {/* THE LIGHT'S OWN HAND — the crown's quiet sun/moon: the
@@ -4210,6 +4231,9 @@ export function BranchCanopy({
               door (signed-in walkers leave from its account room, and
               guests are shown the way in there). */}
           <div className="flex shrink-0 items-center gap-1">
+            {/* the advanced doors wait for the full portal — the landing
+                keeps the calm crown */}
+            {!bare && (
             <button
               type="button"
               onClick={openAkashic}
@@ -4220,6 +4244,8 @@ export function BranchCanopy({
             >
               <ScrollText className="size-3" aria-hidden="true" />
             </button>
+            )}
+            {!bare && (
             <button
               type="button"
               onClick={openDreamBook}
@@ -4230,6 +4256,7 @@ export function BranchCanopy({
             >
               <BookOpen className="size-3" aria-hidden="true" />
             </button>
+            )}
             <button
               type="button"
               onClick={openAbout}
@@ -4398,7 +4425,7 @@ export function BranchCanopy({
                 }}
               />
             </div>
-            <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-5 pb-28">
+            <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-4 pb-28">
               <Image
                 src="/images/ai/mark-dark.png"
                 alt=""
@@ -4406,10 +4433,27 @@ export function BranchCanopy({
                 height={64}
                 className="lp-breathe size-16 rounded-full opacity-90"
               />
-              <span
-                aria-hidden="true"
-                className="h-px w-16 bg-gradient-to-r from-transparent via-[color-mix(in_srgb,var(--scope-a,var(--gd))_50%,transparent)] to-transparent"
-              />
+              <div className="flex flex-col items-center gap-3">
+                <span
+                  aria-hidden="true"
+                  className="h-px w-16 bg-gradient-to-r from-transparent via-[color-mix(in_srgb,var(--scope-a,var(--gd))_50%,transparent)] to-transparent"
+                />
+                {/* THE MIRROR'S QUESTION — below the mark, inside the
+                    chat box itself: it stands only while the floor is
+                    quiet, and the first word sent dissolves it, leaving
+                    the space to the transmission. Pointer events stay
+                    none by inline law — a bare <p> would re-arm the
+                    docked lens and stop the threshold's scroll. */}
+                {floorQuiet && (
+                  <p
+                    data-testid="mirror-ask"
+                    className="genea-bloom still-bloom max-w-[300px] px-6 text-center font-[family-name:var(--font-literata)] text-[13.5px] italic leading-relaxed text-[#e8d9b0] sm:max-w-[360px] sm:text-[14.5px]"
+                    style={{ pointerEvents: "none" }}
+                  >
+                    {t("what do you wish to remember dear one?")}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         ) : (
@@ -4588,21 +4632,31 @@ export function BranchCanopy({
                   left the whisper line: the cargo, the call, the words,
                   the send. */}
               {/* THE FLOOR'S OWN PAPERCLIP AND CAMERA — one image and
-                  up to three documents ride with the whisper */}
+                  up to three documents ride with the whisper. THE
+                  LANDING'S QUIET LINE — docked in the threshold the
+                  chat keeps its calm shape: no attachments, no cargo —
+                  only the voice, the words and the send. The full
+                  portal carries the advanced hands. */}
               <ChatInputExtras
                 scope={floorLiveScope}
                 size="2xs"
                 withCall={false}
+                withAttachments={!bare}
                 disabled={disabled || liveLoading}
                 accentVar="var(--scope-a,var(--gd))"
                 attachments={askAtts}
                 onAttachmentsChange={setAskAtts}
               />
               {/* THE CATEGORY'S OWN CALL — the focused category's direct
-                  line, one touch from the floor */}
+                  line, one touch from the floor. THE LANDING'S OWN
+                  VOICE — docked in the threshold the call is always the
+                  no-scope reflection itself (communion), never a
+                  category's voice. */}
               <button
                 type="button"
-                onClick={() => setLiveCallScope(floorLiveScope)}
+                onClick={() =>
+                  setLiveCallScope(bare ? "communion" : floorLiveScope)
+                }
                 disabled={disabled}
                 aria-label={t("Open the direct mirror connection")}
                 title={t("Open the direct mirror connection")}

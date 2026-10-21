@@ -3352,7 +3352,7 @@ export const el: TranslationDict = {
   "Enter the portal": "Μπείτε στην πύλη",
   "What we offer": "Τι προσφέρουμε",
   "The mirror in miniature": "Ο καθρέφτης σε μικρογραφία",
-  "what do you wish to remember my dear?": "τι θέλεις να θυμηθείς, αγάπη μου;",
+  "what do you wish to remember dear one?": "τι θέλεις να θυμάσαι, αγαπημένο μου;",
   "tunnel into mirror": "μπες στον καθρέφτη",
   "Tunnel into the mirror — tell me more about {topic}.": "Μπες στον καθρέφτη — πες μου περισσότερα για {topic}.",
   "Speak — I am listening.": "Μίλα — ακούω.",

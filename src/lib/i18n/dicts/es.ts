@@ -3646,7 +3646,7 @@ export const es: TranslationDict = {
   "Enter the portal": "Entra en el portal",
   "What we offer": "Lo que ofrecemos",
   "The mirror in miniature": "El espejo en miniatura",
-  "what do you wish to remember my dear?": "qué deseas recordar, querido mío?",
+  "what do you wish to remember dear one?": "¿qué deseas recordar, querido?",
   "tunnel into mirror": "entrar al espejo",
   "Tunnel into the mirror — tell me more about {topic}.": "Entra al espejo — cuéntame más sobre {topic}.",
   "Speak — I am listening.": "Habla — te escucho.",

@@ -5370,7 +5370,7 @@ export const sq: TranslationDict = {
   "Enter the portal": "Hyr në portal",
   "What we offer": "Çfarë ofrojmë",
   "The mirror in miniature": "Pasqyra në miniaturë",
-  "what do you wish to remember my dear?": "çfarë dëshiron të kujtosh, i dashuri imi?",
+  "what do you wish to remember dear one?": "çfarë dëshiron të mbash mend, i dashur?",
   "tunnel into mirror": "hyj në pasqyrë",
   "Tunnel into the mirror — tell me more about {topic}.": "Hyr në pasqyrë — më trego më shumë për {topic}.",
   "Speak — I am listening.": "Flit — po dëgjoj.",

@@ -13,7 +13,6 @@ import {
   motion,
   useScroll,
   useTransform,
-  type MotionValue,
 } from "framer-motion";
 import {
   ArrowUpRight,
@@ -172,78 +171,6 @@ function SectionHead({
   );
 }
 
-/* ------------------- the question beneath the portal -------------------
-   THE MIRROR'S OWN QUESTION — written below the portal and revealed
-   letter by letter as the visitor scrolls down. The moment a word is
-   sent, the question yields its place: it fades, leaving the space
-   open for the transmission itself. */
-
-function RevealLetter({
-  progress,
-  index,
-  total,
-  char,
-}: {
-  progress: MotionValue<number>;
-  index: number;
-  total: number;
-  char: string;
-}) {
-  /* each letter owns a small window of the page's first breath of
-     scroll — the phrase writes itself as the threshold opens */
-  const start = 0.01 + (index / Math.max(total, 1)) * 0.12;
-  const end = start + 0.045;
-  const opacity = useTransform(progress, [start, end], [0.06, 1]);
-  const y = useTransform(progress, [start, end], [4, 0]);
-  return (
-    <motion.span
-      aria-hidden="true"
-      style={{ opacity, y }}
-      className="inline-block whitespace-pre will-change-[opacity,transform]"
-    >
-      {char}
-    </motion.span>
-  );
-}
-
-function MirrorQuestion({
-  progress,
-  gone,
-}: {
-  progress: MotionValue<number>;
-  gone: boolean;
-}) {
-  const t = useT();
-  const phrase = t("what do you wish to remember my dear?");
-  const chars = useMemo(() => Array.from(phrase), [phrase]);
-  return (
-    <div
-      data-testid="mirror-question"
-      className="relative mt-3.5 px-4 text-center sm:px-0"
-    >
-      <motion.p
-        initial={false}
-        animate={{ opacity: gone ? 0 : 1 }}
-        transition={{ duration: 1.1, ease: "easeOut" }}
-        aria-hidden={gone}
-        className="pointer-events-none mx-auto max-w-[520px] font-[family-name:var(--font-literata)] text-[16px] italic leading-relaxed text-[#e8d9b0] sm:text-[17px]"
-      >
-        {chars.map((ch, i) => (
-          <RevealLetter
-            key={`${i}-${ch}`}
-            progress={progress}
-            index={i}
-            total={chars.length}
-            char={ch}
-          />
-        ))}
-        {/* the plain words remain for the ear that cannot see the play */}
-        <span className="sr-only">{phrase}</span>
-      </motion.p>
-    </div>
-  );
-}
-
 /* ------------------------------ the page ------------------------------ */
 
 export default function LandingPage({
@@ -280,15 +207,6 @@ export default function LandingPage({
      a time in each chapter; the same touch closes it again. */
   const [openOffer, setOpenOffer] = useState<number | null>(null);
   const [openMove, setOpenMove] = useState<number | null>(null);
-
-  /* THE QUESTION'S LISTENING — the question beneath the portal stands
-     only while the floor is quiet: the first word sent (or already
-     kept from an earlier walk) dissolves it, leaving space for the
-     transmission itself. */
-  const floorHasWords = useMirror((s) => {
-    const sess = s.sessions[s.activeMode];
-    return sess.messages.length > 0 || sess.status === "loading";
-  });
 
   /* THE TUNNEL INTO THE MIRROR — the small arrow under every opened
      row: one touch and the topic itself walks through the portal,
@@ -583,12 +501,6 @@ export default function LandingPage({
                 </p>
               </div>
             </div>
-            {/* THE MIRROR'S QUESTION — revealed by the scroll, gone
-                with the first word sent */}
-            <MirrorQuestion
-              progress={scrollYProgress}
-              gone={floorHasWords}
-            />
           </section>
 
           {/* ============== 01 · THE SLIDES — below the chat ============== */}

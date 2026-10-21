@@ -48,6 +48,10 @@ interface ChatInputExtrasProps {
   /** The call rides here by default; a host that already carries its
       own call hand (the realm's rooms) may dismiss it. */
   withCall?: boolean;
+  /** THE QUIET LINE — the paperclip and camera stand down when a host
+      keeps its input calm (the landing's free mirror): only the words,
+      the voice and the send remain. */
+  withAttachments?: boolean;
   attachments: ChatAttachment[];
   onAttachmentsChange: (
     next: ChatAttachment[] | ((prev: ChatAttachment[]) => ChatAttachment[])
@@ -61,6 +65,7 @@ export function ChatInputExtras({
   mobileLarger = false,
   accentVar = "var(--scope-a)",
   withCall = true,
+  withAttachments = true,
   attachments,
   onAttachmentsChange,
 }: ChatInputExtrasProps) {
@@ -198,38 +203,42 @@ export function ChatInputExtras({
       />
 
       {/* paperclip — one image, three documents */}
-      <button
-        type="button"
-        onClick={() => fileRef.current?.click()}
-        disabled={disabled}
-        aria-label={t("Attach an image or documents")}
-        title={t("Attach an image or documents")}
-        data-testid={`chat-attach-${scope}`}
-        className={cn(
-          "focus-glow flex shrink-0 items-center justify-center rounded-full border transition-all duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40",
-          btnSize
-        )}
-        style={{ borderColor: "color-mix(in srgb, " + accentVar + " 26%, transparent)" }}
-      >
-        <Paperclip className={cn(iconSize, "text-muted-foreground")} aria-hidden="true" />
-      </button>
+      {withAttachments && (
+        <button
+          type="button"
+          onClick={() => fileRef.current?.click()}
+          disabled={disabled}
+          aria-label={t("Attach an image or documents")}
+          title={t("Attach an image or documents")}
+          data-testid={`chat-attach-${scope}`}
+          className={cn(
+            "focus-glow flex shrink-0 items-center justify-center rounded-full border transition-all duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40",
+            btnSize
+          )}
+          style={{ borderColor: "color-mix(in srgb, " + accentVar + " 26%, transparent)" }}
+        >
+          <Paperclip className={cn(iconSize, "text-muted-foreground")} aria-hidden="true" />
+        </button>
+      )}
 
       {/* the camera — one touch photographs into the message */}
-      <button
-        type="button"
-        onClick={() => cameraRef.current?.click()}
-        disabled={disabled}
-        aria-label={t("Photograph into the message")}
-        title={t("Photograph into the message")}
-        data-testid={`chat-capture-${scope}`}
-        className={cn(
-          "focus-glow flex shrink-0 items-center justify-center rounded-full border transition-all duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40",
-          btnSize
-        )}
-        style={{ borderColor: "color-mix(in srgb, " + accentVar + " 26%, transparent)" }}
-      >
-        <Camera className={cn(iconSize, "text-muted-foreground")} aria-hidden="true" />
-      </button>
+      {withAttachments && (
+        <button
+          type="button"
+          onClick={() => cameraRef.current?.click()}
+          disabled={disabled}
+          aria-label={t("Photograph into the message")}
+          title={t("Photograph into the message")}
+          data-testid={`chat-capture-${scope}`}
+          className={cn(
+            "focus-glow flex shrink-0 items-center justify-center rounded-full border transition-all duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40",
+            btnSize
+          )}
+          style={{ borderColor: "color-mix(in srgb, " + accentVar + " 26%, transparent)" }}
+        >
+          <Camera className={cn(iconSize, "text-muted-foreground")} aria-hidden="true" />
+        </button>
+      )}
 
       {/* the call — one purpose only: a single click opens the scope's
           own direct mirror communication */}
