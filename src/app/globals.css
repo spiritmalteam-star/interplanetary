@@ -2302,6 +2302,33 @@ html:not(.dark) .scope-lightcodes {
     border-color 0.4s ease;
 }
 
+/* THE HOUSE'S OWN FRAME — the gilded filigree that stands around the
+   docked portal while it rests on the threshold: the landing's chat
+   lives inside the frame's borders. One painted PNG nine-sliced by
+   border-image (the corners keep their jewels, the edges weave) —
+   static, pointer-transparent, no filter, no animation: the phone
+   pays nothing for the gold. The wish: a thin bezel on the phone
+   (the realm is edge to edge there), a grand band on the desk's
+   diorama. */
+.portal-frame {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+  border-style: solid;
+  border-color: transparent;
+  border-image-source: url("/images/landing/frame-chat.png");
+  border-image-slice: 190;
+  border-image-repeat: round;
+  border-width: 12px;
+}
+@media (min-width: 640px) {
+  .portal-frame {
+    border-width: 38px;
+    border-image-slice: 200;
+  }
+}
+
 /* THE PASS-THROUGH LAW — while the portal is docked (not expanded),
    its space belongs to the page: every touch that is not text and
    not a hand falls through the lens into the threshold beneath, so

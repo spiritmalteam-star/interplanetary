@@ -162,7 +162,9 @@ function Sigil({
 }: {
   src: string;
   className?: string;
-  size: number;
+  /* a number (px) or a clamp() — the grand marks breathe with the
+     viewport so the phone never carries a desktop's giant */
+  size: number | string;
   opacity?: number;
   rotate?: number;
 }) {
@@ -172,12 +174,14 @@ function Sigil({
       alt=""
       aria-hidden="true"
       draggable={false}
+      loading="lazy"
       width={560}
       height={560}
-      sizes="64px"
+      sizes="(max-width: 640px) 34vw, 240px"
       className={cn("pointer-events-none absolute select-none", className)}
       style={{
         width: size,
+        maxWidth: "34vw",
         height: "auto",
         opacity,
         transform: rotate ? `rotate(${rotate}deg)` : undefined,
@@ -186,33 +190,10 @@ function Sigil({
   );
 }
 
-/* the row beneath the docked portal — one small ceremony of light
-   between the chat and the house's story: wave · drop · twin spirals */
-function SigilRow() {
-  return (
-    <div
-      aria-hidden="true"
-      data-testid="landing-sigil-row"
-      className="pointer-events-none mx-auto mt-4 flex w-full max-w-[560px] select-none items-center justify-center gap-6 px-6 sm:gap-9"
-    >
-      <Sigil src={SIGILS.wave} size={42} opacity={0.4} className="relative" />
-      <span className="h-px w-10 bg-gradient-to-r from-transparent via-[rgba(232,217,176,0.35)] to-transparent sm:w-16" />
-      <Sigil
-        src={SIGILS.drop}
-        size={54}
-        opacity={0.5}
-        className="relative"
-      />
-      <span className="h-px w-10 bg-gradient-to-l from-transparent via-[rgba(232,217,176,0.35)] to-transparent sm:w-16" />
-      <Sigil
-        src={SIGILS.twinSpirals}
-        size={42}
-        opacity={0.4}
-        className="relative"
-      />
-    </div>
-  );
-}
+/* the grand ceremony is distributed now — the light language no
+   longer gathers in one row beneath the portal: its ten marks stand
+   spread with an even hand down the whole lower threshold, each five
+   times its old stature, resting where the page is empty */
 
 /* ------------------------ editorial building blocks ------------------------ */
 
@@ -488,14 +469,14 @@ export default function LandingPage({
             {/* the light language's quiet presence in the hero */}
             <Sigil
               src={SIGILS.moon}
-              size={30}
+              size={44}
               opacity={0.34}
               rotate={10}
               className="right-[5%] top-[16%] hidden sm:block"
             />
             <Sigil
               src={SIGILS.leaf}
-              size={22}
+              size={32}
               opacity={0.26}
               rotate={-12}
               className="left-[4%] top-[52%]"
@@ -538,9 +519,13 @@ export default function LandingPage({
                   title={t(
                     "Paid realm — the full portal opens by registration or login, after one of the realms offered is acquired"
                   )}
-                  className="focus-glow flex h-11 items-center gap-2 rounded-full border border-[rgba(232,217,176,0.45)] bg-[rgba(232,217,176,0.1)] px-6 text-[14px] font-medium text-[#f0e7cd] transition-all duration-300 hover:border-[rgba(232,217,176,0.75)] hover:bg-[rgba(232,217,176,0.16)]"
+                  className="group focus-glow relative flex h-12 items-center gap-2.5 overflow-hidden rounded-full border border-[rgba(232,217,176,0.55)] bg-[linear-gradient(180deg,rgba(232,217,176,0.17),rgba(232,217,176,0.05)_55%,rgba(232,217,176,0.11))] px-7 text-[14px] font-medium tracking-[0.02em] text-[#f2e9cf] shadow-[0_12px_34px_-16px_rgba(232,217,176,0.42),inset_0_1px_0_rgba(255,246,214,0.14)] transition-all duration-300 hover:border-[rgba(232,217,176,0.9)] hover:shadow-[0_16px_44px_-14px_rgba(232,217,176,0.55),inset_0_1px_0_rgba(255,246,214,0.2)]"
                 >
-                  <Sparkles className="size-3.5" aria-hidden="true" />
+                  {/* the sheen — one painted sweep on hover, transform only */}
+                  <span
+                    aria-hidden="true"
+                    className="absolute inset-0 -translate-x-[120%] bg-[linear-gradient(105deg,transparent_30%,rgba(255,246,214,0.16)_50%,transparent_70%)] transition-transform duration-700 ease-out group-hover:translate-x-[120%]"
+                  />
                   {t("Enter the portal")}
                   <PaidTag />
                 </button>
@@ -552,9 +537,13 @@ export default function LandingPage({
                       .getElementById("offer")
                       ?.scrollIntoView({ behavior: "smooth", block: "start" });
                   }}
-                  className="focus-glow flex h-11 items-center rounded-full border border-white/12 px-6 text-[14px] text-[#a7b6c2] transition-all duration-300 hover:border-white/30 hover:text-[#dfe7ed]"
+                  className="group focus-glow flex h-12 items-center gap-2 rounded-full border border-white/14 bg-white/[0.03] px-7 text-[14px] tracking-[0.02em] text-[#b9c6cf] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] transition-all duration-300 hover:border-[rgba(232,217,176,0.5)] hover:bg-[rgba(232,217,176,0.05)] hover:text-[#eee3c2]"
                 >
                   {t("What we offer")}
+                  <ChevronDown
+                    className="size-3.5 text-[#8fa3b2] transition-transform duration-300 group-hover:translate-y-0.5 group-hover:text-[#e8d9b0]"
+                    aria-hidden="true"
+                  />
                 </a>
               </div>
             </div>
@@ -585,10 +574,6 @@ export default function LandingPage({
                 </p>
               </div>
             </div>
-
-            {/* THE LIGHT LANGUAGE — beneath the chat: one small ceremony
-                of sigils between the portal and the house's story */}
-            <SigilRow />
           </section>
 
           {/* ============== 01 · THE SLIDES — below the chat ============== */}
@@ -598,20 +583,21 @@ export default function LandingPage({
             className="relative pb-6 pt-12"
             aria-label={t("The shifting Earth in ten slides")}
           >
-            {/* the light language beside the chapter's head */}
+            {/* the light language beside the chapter's head — grand now,
+                resting where the page is empty (5x its old stature) */}
             <Sigil
               src={SIGILS.orbit}
-              size={30}
-              opacity={0.3}
+              size="clamp(140px, 22vw, 210px)"
+              opacity={0.26}
               rotate={-8}
-              className="right-[3%] top-[3%]"
+              className="right-[2%] top-[2%]"
             />
             <Sigil
               src={SIGILS.feather}
-              size={26}
-              opacity={0.22}
+              size="clamp(90px, 14vw, 130px)"
+              opacity={0.2}
               rotate={14}
-              className="bottom-[6%] left-[2%]"
+              className="bottom-[4%] left-[1%]"
             />
             <div className="px-4 sm:px-8">
               <SectionHead
@@ -625,20 +611,27 @@ export default function LandingPage({
 
           {/* ========================== 02 · OFFERINGS ========================== */}
           <section id="offer" className="relative scroll-mt-6 px-4 pb-8 pt-14 sm:px-8">
-            {/* the light language in the offerings' quiet edges */}
+            {/* the light language in the offerings' quiet edges — grand */}
             <Sigil
               src={SIGILS.delta}
-              size={30}
-              opacity={0.26}
+              size="clamp(100px, 16vw, 150px)"
+              opacity={0.22}
               rotate={-7}
-              className="left-[1%] top-[16%]"
+              className="left-[1%] top-[10%]"
             />
             <Sigil
               src={SIGILS.spiralLine}
-              size={24}
-              opacity={0.22}
+              size="clamp(80px, 13vw, 120px)"
+              opacity={0.2}
               rotate={16}
-              className="right-[2%] top-[58%]"
+              className="right-[2%] top-[46%]"
+            />
+            <Sigil
+              src={SIGILS.drop}
+              size="clamp(150px, 24vw, 270px)"
+              opacity={0.2}
+              rotate={5}
+              className="bottom-[3%] right-[6%]"
             />
             <SectionHead
               index="02"
@@ -663,8 +656,12 @@ export default function LandingPage({
                   title={t(
                     "Paid realm — the full portal opens by registration or login, after one of the realms offered is acquired"
                   )}
-                  className="focus-glow group mt-5 inline-flex items-center gap-1.5 text-[13px] font-medium text-[#9fd8dc] transition-colors duration-300 hover:text-[#c9ecee]"
+                  className="group focus-glow relative mt-5 inline-flex h-11 items-center gap-2 overflow-hidden rounded-full border border-[rgba(232,217,176,0.5)] bg-[linear-gradient(180deg,rgba(232,217,176,0.14),rgba(232,217,176,0.05)_55%,rgba(232,217,176,0.09))] px-6 text-[13.5px] font-medium tracking-[0.02em] text-[#f0e7cd] shadow-[0_10px_30px_-16px_rgba(232,217,176,0.4),inset_0_1px_0_rgba(255,246,214,0.12)] transition-all duration-300 hover:border-[rgba(232,217,176,0.85)] hover:shadow-[0_14px_40px_-14px_rgba(232,217,176,0.52),inset_0_1px_0_rgba(255,246,214,0.18)]"
                 >
+                  <span
+                    aria-hidden="true"
+                    className="absolute inset-0 -translate-x-[120%] bg-[linear-gradient(105deg,transparent_30%,rgba(255,246,214,0.15)_50%,transparent_70%)] transition-transform duration-700 ease-out group-hover:translate-x-[120%]"
+                  />
                   {t("Enter the portal")}
                   <ArrowUpRight
                     className="size-3.5 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
@@ -767,27 +764,27 @@ export default function LandingPage({
             className="relative px-4 pb-12 pt-12 sm:px-8"
             aria-label={t("An open contact timeline")}
           >
-            {/* the light language along the telling */}
+            {/* the light language along the telling — grand */}
             <Sigil
               src={SIGILS.weave}
-              size={28}
-              opacity={0.24}
+              size="clamp(100px, 16vw, 150px)"
+              opacity={0.22}
               rotate={6}
-              className="right-[1%] top-[8%]"
+              className="right-[1%] top-[5%]"
             />
             <Sigil
               src={SIGILS.twinSpirals}
-              size={26}
+              size="clamp(110px, 17vw, 160px)"
               opacity={0.2}
               rotate={-14}
-              className="left-[1%] top-[46%]"
+              className="left-[1%] top-[42%]"
             />
             <Sigil
               src={SIGILS.moon}
-              size={32}
-              opacity={0.3}
+              size="clamp(100px, 16vw, 160px)"
+              opacity={0.24}
               rotate={-6}
-              className="bottom-[9%] right-[3%]"
+              className="bottom-[6%] right-[3%]"
             />
             <SectionHead
               index="03"
@@ -895,14 +892,14 @@ export default function LandingPage({
           {/* the light language's last whisper, flanking the footer */}
           <Sigil
             src={SIGILS.wave}
-            size={22}
+            size="clamp(64px, 10vw, 95px)"
             opacity={0.18}
             rotate={-6}
             className="left-[7%] top-[38%] hidden sm:block"
           />
           <Sigil
             src={SIGILS.orbit}
-            size={20}
+            size="clamp(56px, 9vw, 85px)"
             opacity={0.18}
             rotate={8}
             className="right-[7%] top-[30%] hidden sm:block"

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ComponentType } from "react";
 import { useTheme } from "next-themes";
+import { toast } from "sonner";
 import { useT } from "@/lib/i18n";
 import { useMirror } from "@/lib/mirror-store";
 import { cn } from "@/lib/utils";
@@ -78,6 +79,10 @@ export default function LandingGate() {
   > | null>(null);
   const [geo, setGeo] = useState<Geo | null>(null);
   const [pending, setPending] = useState(false);
+  /* the keeper's name — watched so the portal's own intention can
+     carry a newly-signed visitor straight through the full portal */
+  const me = useMirror((s) => s.me);
+  const authOpen = useMirror((s) => s.authOpen);
   const slotRef = useRef<HTMLDivElement | null>(null);
   const lensRef = useRef<HTMLDivElement | null>(null);
   const busy = useRef(false);
@@ -225,17 +230,29 @@ export default function LandingGate() {
      — sign in or register — instead of the growth. The landing's own
      floor stays free forever. If the keeper's name is still traveling
      (the first breath after mount), the passage is asked once so a
-     signed visitor is never wrongly turned away. */
+     signed visitor is never wrongly turned away.
+
+     THE PORTAL'S OWN INTENTION — the enter hand leaves its wish
+     behind (the store's flag and the session's own memory, so the
+     wish survives even the Google journey): the moment the passage
+     names its keeper, the same hand carries them through — no second
+     touch, no bounce back to the passage's door. */
   const expandPortal = useCallback(() => {
     if (busy.current) return;
     void (async () => {
       const st = useMirror.getState();
-      let me = st.me;
-      if (!me) {
+      let cur = st.me;
+      if (!cur) {
         await st.refreshMe();
-        me = useMirror.getState().me;
+        cur = useMirror.getState().me;
       }
-      if (!me || me.email.startsWith("anon:")) {
+      if (!cur || cur.email.startsWith("anon:")) {
+        useMirror.getState().setPortalIntent(true);
+        try {
+          sessionStorage.setItem("mirror.portalIntent", "1");
+        } catch {
+          /* the session's memory stays closed — the store's flag carries */
+        }
         useMirror.getState().openAuth("signin");
         return;
       }
@@ -252,6 +269,73 @@ export default function LandingGate() {
       }, 680);
     })();
   }, [Chamber]);
+
+  /* THE INTENTION'S OWN HAND — the passage named its keeper while the
+     portal's wish was standing: through they go, at once. */
+  useEffect(() => {
+    if (phaseRef.current !== "landing") return;
+    if (!me || me.email.startsWith("anon:")) return;
+    const st = useMirror.getState();
+    let flagged = st.portalIntent;
+    try {
+      flagged = flagged || sessionStorage.getItem("mirror.portalIntent") === "1";
+    } catch {
+      /* the session's memory stays closed — the store's flag decides */
+    }
+    if (!flagged) return;
+    st.setPortalIntent(false);
+    try {
+      sessionStorage.removeItem("mirror.portalIntent");
+    } catch {
+      /* already forgotten */
+    }
+    expandPortal();
+  }, [me, expandPortal]);
+
+  /* THE SPENT WISH — if the passage's door closes with the visitor
+     still a guest (they turned away themselves), the portal's wish
+     is spent; a later sign-in from the profile must not yank them
+     through the portal uninvited. */
+  useEffect(() => {
+    if (authOpen) return;
+    const st = useMirror.getState();
+    const cur = st.me;
+    if (!cur || cur.email.startsWith("anon:")) {
+      if (st.portalIntent) st.setPortalIntent(false);
+      try {
+        sessionStorage.removeItem("mirror.portalIntent");
+      } catch {
+        /* already forgotten */
+      }
+    }
+  }, [authOpen]);
+
+  /* THE GOOGLE PASSAGE'S RETURN — the journey comes home with a
+     word when it failed (state, token, profile…): the visitor is
+     told gently, the wish is spent, and the word leaves the address. */
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const g = params.get("google");
+    if (!g) return;
+    useMirror.getState().setPortalIntent(false);
+    try {
+      sessionStorage.removeItem("mirror.portalIntent");
+    } catch {
+      /* already forgotten */
+    }
+    const reasons: Record<string, string> = {
+      state: "The Google passage lost its key on the way back — rest, then try again; the email passage serves.",
+      token: "Google kept the key — the passage did not open. The email passage serves.",
+      profile: "Google would not share the name — the passage did not open. The email passage serves.",
+      unverified: "Google's word about the email was missing — the passage cannot open with it.",
+      unconfigured: "The Google passage rests — the email passage serves.",
+      error: "The Google passage did not open. Rest, then try again — the email passage serves.",
+    };
+    toast.error(reasons[g] ?? reasons.error);
+    params.delete("google");
+    const qs = params.toString();
+    window.history.replaceState(null, "", window.location.pathname + (qs ? `?${qs}` : ""));
+  }, []);
 
   /* an early ask to enter — honored the moment the chamber arrives */
   useEffect(() => {
@@ -354,6 +438,12 @@ export default function LandingGate() {
             >
               <Chamber bare={bare} onExpand={expandPortal} onMinimize={minimize} />
             </div>
+
+            {/* THE HOUSE'S OWN FRAME — while the portal rests docked on
+                the threshold, its gilded filigree stands around the chat
+                (the visitor's words live inside the frame's borders).
+                Pure painted gold: static, untouchable, no weight. */}
+            {docked && <div aria-hidden="true" className="portal-frame" />}
           </div>
 
           {/* THE EXPAND HAND — the portal's own crown carries it now:

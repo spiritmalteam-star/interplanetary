@@ -488,6 +488,12 @@ interface MirrorState {
   googleConfigured: boolean;
   authOpen: boolean;
   authMode: "signin" | "register";
+  /* THE PORTAL'S OWN INTENTION — an enter hand opened the passage for
+     a guest: once the passage names its keeper, the same hand carries
+     them through the full portal without a second touch (it survives
+     even the Google journey via the session's own memory). */
+  portalIntent: boolean;
+  setPortalIntent: (v: boolean) => void;
   profileOpen: boolean;
   accountOpen: boolean;
 
@@ -1079,6 +1085,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   accountOpen: false,
   authOpen: false,
   authMode: "signin" as const,
+  portalIntent: false,
   profileOpen: false,
   profilePageOpen: false,
   wallet: null,
@@ -2565,6 +2572,9 @@ export const useMirror = create<MirrorState>()((set, get) => ({
 
   openWalletModal: (notice) => set({ walletModalOpen: true, walletNotice: notice ?? null }),
   closeWalletModal: () => set({ walletModalOpen: false, walletNotice: null }),
+
+  /* THE PORTAL'S OWN INTENTION — one flag, nothing more */
+  setPortalIntent: (v) => set({ portalIntent: v }),
 
   openAuth: (mode = "signin") => set({ authOpen: true, authMode: mode }),
   closeAuth: () => set({ authOpen: false }),
