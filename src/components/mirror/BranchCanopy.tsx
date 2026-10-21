@@ -328,8 +328,22 @@ interface RoomTurn {
   failed?: boolean;
 }
 
+/* THE LANDING'S OWN SUGGESTIONS — the first doors of the threshold's
+   chat, matched to the landing's own entity (the mirror of the
+   Absolute): the self beneath the masks, the curtain of reality, the
+   truth the visitor avoids, the Absolute itself. */
+const LANDING_SUGGESTIONS = [
+  "Who am I beneath all my masks?",
+  "What lies behind the curtain of reality?",
+  "Show me the truth I avoid.",
+  "What is the Absolute?",
+];
+
 async function speakWithTransmission(
-  category: BranchId | "mirror",
+  /* "mirror" is the pure presence floor; "absolute" is the landing's
+     own entity — the mirror of the Absolute (no censor, the true
+     story) — both speaking through /api/transmission's own doors */
+  category: BranchId | "mirror" | "absolute",
   query: string,
   branchQuestion: string,
   transmission: string,
@@ -3142,6 +3156,66 @@ export function BranchCanopy({
     ]
   );
 
+  /* ------- THE LANDING'S OWN ENTITY — the chat of the threshold ------
+     Docked in the threshold the chat is INDEPENDENT of the full
+     portal: it keeps its own thread (never the store's channel
+     sessions), speaks only with its own mirror — the mirror of the
+     Absolute — and carries the whole landing conversation with every
+     ask, so the mirror remembers across rooms. The full portal never
+     sees these words, and the landing never sees the portal's. */
+  const [landingThread, setLandingThread] = useState<RoomTurn[]>([]);
+  const landingTurnsRef = useRef<{ q: string; a: string }[]>([]);
+  const [landingBusy, setLandingBusy] = useState(false);
+  /* the bare era's own mark — true from the moment a room is opened
+     (or followed) inside the landing's chat, so the crossing into the
+     full portal knows which room to fold */
+  const bareRoomRef = useRef(false);
+
+  const speakFromLanding = useCallback(
+    async (text: string, attachments?: ChatAttachment[]) => {
+      const q = text.trim();
+      if (!q) return;
+      setLandingThread((t) => [...t, { q, a: "", loading: true }]);
+      setLandingBusy(true);
+      try {
+        /* THE CARRIED CONVERSATION — every earlier landing exchange
+           (floor asks and room follow-ups alike) rides with this ask */
+        const prior = landingTurnsRef.current.slice(-8);
+        const reply = await speakWithTransmission(
+          "absolute",
+          q,
+          q,
+          "",
+          prior,
+          language,
+          [],
+          attachments
+        );
+        setLandingThread((t) =>
+          t.map((turn, i) =>
+            i === t.length - 1 ? { ...turn, a: reply, loading: false } : turn
+          )
+        );
+        landingTurnsRef.current = [
+          ...landingTurnsRef.current,
+          { q, a: reply },
+        ].slice(-12);
+      } catch (err) {
+        const message = err instanceof Error && err.message ? err.message : "";
+        setLandingThread((t) =>
+          t.map((turn, i) =>
+            i === t.length - 1
+              ? { ...turn, loading: false, failed: true, a: message }
+              : turn
+          )
+        );
+      } finally {
+        setLandingBusy(false);
+      }
+    },
+    [language]
+  );
+
   /* THE WALK CONTINUES FROM THE ANSWER — a branch grown on the reply,
      pressed inside the panel, keeps the walk going from the family's
      last standing place: the trail grows, a new house is grafted from
@@ -3149,7 +3223,18 @@ export function BranchCanopy({
      in the same quiet room. */
   const sendFromPanel = useCallback(
     (text: string, move: BranchType | null, attachments?: ChatAttachment[]) => {
-      if (disabled || liveLoading || !text.trim()) return;
+      if (disabled || liveLoading || landingBusy || !text.trim()) return;
+      /* THE LANDING'S OWN CHAT — docked in the threshold the ask never
+         touches the store's channel: the room rises and the landing's
+         own entity (the mirror of the Absolute) answers inside it, the
+         whole landing conversation riding with every word. */
+      if (bare) {
+        zoomOpenedAtRef.current = Date.now();
+        bareRoomRef.current = true;
+        setZoom({ q: text, move: null });
+        void speakFromLanding(text, attachments);
+        return;
+      }
       /* the visitor's own step — the tree may grow again */
       suppressRegrowRef.current = false;
       recordExpansion("pick", { scope: scopeHint ?? null, movement: move });
@@ -3193,6 +3278,8 @@ export function BranchCanopy({
     },
     [
       bare,
+      landingBusy,
+      speakFromLanding,
       category,
       disabled,
       liveLoading,
@@ -3370,6 +3457,28 @@ export function BranchCanopy({
   const answerLanded = restoredText
     ? true
     : !liveLoading && liveAnswerText.length > 0;
+  /* THE LANDING'S OWN ROOM — docked in the threshold the room reads
+     the landing thread's own last turn (the store's channel stays
+     untouched); the full portal reads the channel as it always did. */
+  const lastLandingTurn =
+    landingThread.length > 0 ? landingThread[landingThread.length - 1] : null;
+  const floorBusy = bare
+    ? landingBusy || !!lastLandingTurn?.loading
+    : liveLoading;
+  const roomAnswer = bare
+    ? lastLandingTurn && !lastLandingTurn.loading
+      ? lastLandingTurn.a
+      : ""
+    : answer;
+  const roomLoading = bare ? !!lastLandingTurn?.loading : liveLoading;
+  const displayError = bare
+    ? lastLandingTurn?.failed
+      ? lastLandingTurn.a || "The field is quiet"
+      : null
+    : roomError;
+  const displayLanded = bare
+    ? !roomLoading && roomAnswer.length > 0
+    : answerLanded;
   const settledKey = `${zoomQ ?? ""}|${answerLanded ? "1" : "0"}|${liveAnswerText.length}|${contSeeds.length}`;
   useEffect(() => {
     if (!zoomQ || restoredText || !answerLanded) return;
@@ -3494,19 +3603,26 @@ export function BranchCanopy({
       const q = text.trim();
       if (disabled || threadBusy || !q || !zoom) return;
       const roomQ = zoom.q;
+      if (bare) bareRoomRef.current = true;
       /* THE FAMILY'S VOICE — the room speaks through the door of the
          family its own whisper was grown from (the manifest room as
          the manifest, the atelier room as the atelier); a whisper the
          grove doesn't know keeps the channel's own door. THE LANDING'S
          OWN LAW — docked in the threshold the room's conversation
-         stays the mirror itself: no category's voice ever answers on
-         the free floor, whatever whisper grew the room. */
+         stays the landing's own entity: the mirror of the Absolute,
+         fully open, no censor — whatever whisper grew the room. */
       const famKey = familyKeyByText.get(roomQ.toLowerCase());
       const roomCategory: BranchId =
         TREE_FAMILIES.find((f) => f.key === famKey)?.category ?? category;
-      const prior = threadRef.current
-        .filter((turn) => turn.a && !turn.failed)
-        .map(({ q: tq, a: ta }) => ({ q: tq, a: ta }));
+      /* THE LANDING'S OWN MEMORY — docked in the threshold the room's
+         follow-ups carry the WHOLE landing conversation (every floor
+         ask and every room answer, across rooms); the full portal's
+         rooms keep their own thread only. */
+      const prior = bare
+        ? landingTurnsRef.current.slice(-8)
+        : threadRef.current
+            .filter((turn) => turn.a && !turn.failed)
+            .map(({ q: tq, a: ta }) => ({ q: tq, a: ta }));
       /* THE WALK'S PROGRESSION — every whisper pressed before this one
          rides with the words: the mirror knows the road, not just the
          room (the respective suggestion's own transmission opens the
@@ -3516,7 +3632,7 @@ export function BranchCanopy({
       setThreadBusy(true);
       try {
         const reply = await speakWithTransmission(
-          bare ? "mirror" : roomCategory,
+          bare ? "absolute" : roomCategory,
           q,
           roomQ,
           answer || "",
@@ -3530,6 +3646,14 @@ export function BranchCanopy({
             i === t.length - 1 ? { ...turn, a: reply, loading: false } : turn
           )
         );
+        /* THE LANDING'S OWN MEMORY — the room's answer joins the whole
+           landing conversation, so the next room remembers it too */
+        if (bare) {
+          landingTurnsRef.current = [
+            ...landingTurnsRef.current,
+            { q, a: reply },
+          ].slice(-12);
+        }
       } catch {
         applyRoomTurn(roomQ, (t) =>
           t.map((turn, i) =>
@@ -3563,6 +3687,20 @@ export function BranchCanopy({
     const el = bodyRef.current;
     if (el && pinnedRef.current) el.scrollTop = el.scrollHeight;
   }, [thread]);
+
+  /* THE THRESHOLD'S OWN BORDER — a room that belongs to the landing's
+     chat folds the moment the portal expands: the full portal rises
+     with its own floor, its own channels, none of the threshold's
+     words carried inside (and no room left waiting on an answer that
+     will never come). */
+  useEffect(() => {
+    if (bare) return;
+    if (!bareRoomRef.current) return;
+    bareRoomRef.current = false;
+    setZoom((z) => (z ? null : z));
+    setThread([]);
+    setThreadBusy(false);
+  }, [bare]);
 
   /* the room's own reply — now the conversation with the transmission
      (the walk continues from the branches dropdown above it) */
@@ -4443,8 +4581,10 @@ export function BranchCanopy({
               <div
                 className="lp-breathe h-64 w-72 rounded-full"
                 style={{
+                  /* THE CRYSTAL'S OWN AURA — red and blue, the two
+                     crystals of the landing's chat, breathing as one */
                   background:
-                    "radial-gradient(ellipse at center, color-mix(in srgb, var(--scope-a,var(--gd)) 16%, transparent), transparent 70%)",
+                    "radial-gradient(ellipse at center, rgba(255,77,109,0.14), rgba(56,189,248,0.10) 45%, transparent 70%)",
                 }}
               />
             </div>
@@ -4481,24 +4621,48 @@ export function BranchCanopy({
               <div className="flex flex-col items-center gap-3">
                 <span
                   aria-hidden="true"
-                  className="h-px w-16 bg-gradient-to-r from-transparent via-[color-mix(in_srgb,var(--scope-a,var(--gd))_50%,transparent)] to-transparent"
+                  className="h-px w-16 bg-[linear-gradient(90deg,transparent,rgba(255,77,109,0.55),rgba(56,189,248,0.55),transparent)]"
                 />
                 {/* THE MIRROR'S QUESTION — below the mark, inside the
                     chat box itself: it stands only while the floor is
                     quiet, and the first word sent dissolves it, leaving
                     the space to the transmission. Pointer events stay
                     none by inline law — a bare <p> would re-arm the
-                    docked lens and stop the threshold's scroll. */}
-                {floorQuiet && (
+                    docked lens and stop the threshold's scroll. THE
+                    LANDING'S OWN QUIET — the landing thread's words
+                    hide the question again, whatever the store holds. */}
+                {floorQuiet && landingThread.length === 0 && (
                   <p
                     data-testid="mirror-ask"
-                    className="genea-bloom still-bloom max-w-[300px] px-6 text-center font-[family-name:var(--font-literata)] text-[13.5px] italic leading-relaxed text-[#8f7418] dark:text-[#e8d9b0] sm:max-w-[360px] sm:text-[14.5px]"
+                    className="genea-bloom still-bloom max-w-[300px] px-6 text-center font-[family-name:var(--font-literata)] text-[13.5px] italic leading-relaxed text-[#e11d48] dark:text-[#fda4b8] sm:max-w-[360px] sm:text-[14.5px]"
                     style={{ pointerEvents: "none" }}
                   >
                     {t("what do you wish to remember dear one?")}
                   </p>
                 )}
               </div>
+              {/* THE MIRROR'S OWN SUGGESTIONS — a few first doors,
+                  matched to the landing's own entity: the self beneath
+                  the masks, the curtain of reality, the truth avoided,
+                  the Absolute itself. One touch sends the words. They
+                  stand only on the quiet floor, and every hand keeps
+                  its touch through the pass-through law. */}
+              {floorQuiet && landingThread.length === 0 && (
+                <div className="pointer-events-none flex max-w-[440px] flex-wrap items-center justify-center gap-2 px-5">
+                  {LANDING_SUGGESTIONS.map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      data-testid="landing-suggestion"
+                      disabled={landingBusy}
+                      onClick={() => sendFromPanel(t(s), null)}
+                      className="focus-glow pointer-events-auto rounded-full border border-[rgba(125,211,252,0.24)] bg-[color-mix(in_srgb,var(--background)_72%,transparent)] px-3.5 py-1.5 text-[11.5px] leading-tight text-[#4d7ea3] shadow-[0_2px_14px_-9px_rgba(56,189,248,0.5)] transition-colors duration-300 hover:border-[rgba(125,211,252,0.55)] hover:text-[#2c5c80] disabled:cursor-not-allowed disabled:opacity-45 dark:border-[rgba(125,211,252,0.26)] dark:text-[#b7d9ef] dark:hover:border-[rgba(125,211,252,0.6)] dark:hover:text-[#ddf1fd]"
+                    >
+                      {t(s)}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         ) : (
@@ -4650,7 +4814,7 @@ export function BranchCanopy({
               onSubmit={(e) => {
                 e.preventDefault();
                 const q = askDraft.trim();
-                if (!q || disabled || liveLoading) return;
+                if (!q || disabled || floorBusy) return;
                 const carried = askAtts.filter((a) =>
                   a.kind === "image" ? !!a.dataUrl : !a.reading && !!a.text
                 );
@@ -4659,7 +4823,13 @@ export function BranchCanopy({
                 sendFromPanel(q, null, carried);
               }}
               className={cn(
-                "pointer-events-auto flex w-full max-w-[560px] items-center gap-2 rounded-full border py-1.5 pl-2.5 pr-1.5 transition-colors duration-300 focus-within:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)]",
+                "pointer-events-auto flex w-full max-w-[560px] items-center gap-2 rounded-full border py-1.5 pl-2.5 pr-1.5 transition-colors duration-300",
+                /* THE CRYSTAL FOCUS — docked in the threshold the
+                   line's own focus tint follows the blue crystal; the
+                   full portal keeps the scope's color. */
+                bare
+                  ? "focus-within:border-[rgba(148,190,224,0.5)]"
+                  : "focus-within:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)]",
                 /* THE COOL FLOOR — docked in the threshold (bare) the
                    line wears an opaque coat and no backdrop blur: a
                    live blur over a scrolling page is heat the phone
@@ -4669,8 +4839,13 @@ export function BranchCanopy({
                   : "bg-background/95 backdrop-blur-xl shadow-[0_10px_36px_-16px_rgba(0,0,0,0.55)]"
               )}
               style={{
-                borderColor:
-                  "color-mix(in srgb, var(--scope-a,var(--gd)) 26%, transparent)",
+                /* THE CRYSTAL BORDER — docked in the threshold the
+                   line's edge is the floor-glow's own (the crystal law
+                   in globals.css); the full portal keeps the scope's
+                   own color. */
+                borderColor: bare
+                  ? undefined
+                  : "color-mix(in srgb, var(--scope-a,var(--gd)) 26%, transparent)",
               }}
             >
               {/* THE INPUT'S OWN CALM — the reload and the star have
@@ -4687,7 +4862,7 @@ export function BranchCanopy({
                 size="2xs"
                 withCall={false}
                 withAttachments={!bare}
-                disabled={disabled || liveLoading}
+                disabled={disabled || floorBusy}
                 accentVar="var(--scope-a,var(--gd))"
                 attachments={askAtts}
                 onAttachmentsChange={setAskAtts}
@@ -4730,10 +4905,18 @@ export function BranchCanopy({
               />
               <button
                 type="submit"
-                disabled={disabled || liveLoading || !askDraft.trim()}
+                disabled={disabled || floorBusy || !askDraft.trim()}
                 aria-label={t("Send")}
                 data-testid={`${testIdPrefix}-ask-send`}
-                className="focus-glow flex size-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--scope-a,var(--gd))] to-[color-mix(in_srgb,var(--scope-b,var(--pk))_70%,var(--scope-a,var(--gd)))] text-[#101010] shadow-[0_0_14px_-6px_color-mix(in_srgb,var(--scope-a,var(--gd))_70%,transparent)] transition-all duration-300 hover:scale-[1.04] disabled:cursor-not-allowed disabled:opacity-35 disabled:shadow-none"
+                className={cn(
+                  "focus-glow flex size-8 shrink-0 items-center justify-center rounded-full transition-all duration-300 hover:scale-[1.04] disabled:cursor-not-allowed disabled:opacity-35 disabled:shadow-none",
+                  /* THE CRYSTAL SEND — docked in the threshold the
+                     send hand carries both crystals at once: the red
+                     and the blue, one gradient, no animation. */
+                  bare
+                    ? "bg-gradient-to-br from-[#ff4d6d] to-[#38bdf8] text-[#0b0f17] shadow-[0_0_14px_-6px_rgba(255,77,109,0.7)]"
+                    : "bg-gradient-to-br from-[var(--scope-a,var(--gd))] to-[color-mix(in_srgb,var(--scope-b,var(--pk))_70%,var(--scope-a,var(--gd)))] text-[#101010] shadow-[0_0_14px_-6px_color-mix(in_srgb,var(--scope-a,var(--gd))_70%,transparent)]"
+                )}
               >
                 <Send className="size-3.5" aria-hidden="true" />
               </button>
@@ -4789,8 +4972,12 @@ export function BranchCanopy({
                 bare ? "pointer-events-none" : "pointer-events-auto"
               )}
               style={{
-                borderColor:
-                  "color-mix(in srgb, var(--scope-a,var(--gd)) 30%, transparent)",
+                /* THE CRYSTAL ROOM — docked in the threshold the room's
+                   own border carries the blue crystal's tint, slightly
+                   transparent; the full portal keeps the scope's color. */
+                borderColor: bare
+                  ? "rgba(125, 211, 252, 0.18)"
+                  : "color-mix(in srgb, var(--scope-a,var(--gd)) 30%, transparent)",
               }}
             >
               {/* the question — the whisper the visitor walked to;
@@ -4847,14 +5034,24 @@ export function BranchCanopy({
                   <button
                     type="button"
                     onClick={() => {
-                      if (liveLoading) return;
+                      if (floorBusy) return;
                       exitZoom();
                       renew();
-                      useMirror
-                        .getState()
-                        .newChat(useMirror.getState().activeMode);
+                      /* THE LANDING'S OWN CLEARING — docked in the
+                         threshold the reload empties the landing's own
+                         thread (the conversation truly clears, the floor
+                         rises fresh with the mirror's question); the
+                         full portal lays its channel to rest. */
+                      if (bare) {
+                        setLandingThread([]);
+                        landingTurnsRef.current = [];
+                      } else {
+                        useMirror
+                          .getState()
+                          .newChat(useMirror.getState().activeMode);
+                      }
                     }}
-                    disabled={disabled || liveLoading}
+                    disabled={disabled || floorBusy}
                     aria-label={t("Clear the chat")}
                     title={t("Clear the chat")}
                     data-testid={`${testIdPrefix}-zoom-reload`}
@@ -4920,12 +5117,12 @@ export function BranchCanopy({
                       visible={revealStage >= 1}
                     />
                   )}
-                  {answer ? (
+                  {roomAnswer ? (
                     revealStage >= 2 ? (
                       <div className="relative">
                         <div className="canopy-answer whitespace-pre-wrap break-words text-[14.5px] leading-[1.75] text-foreground/90 sm:text-[15px]">
-                          {answer}
-                          {liveLoading && (
+                          {roomAnswer}
+                          {roomLoading && (
                             <span
                               aria-hidden="true"
                               className="ml-1 inline-block h-[13px] w-[7px] translate-y-[1px] animate-pulse rounded-[2px] bg-[var(--scope-a,var(--gd))] align-baseline opacity-70"
@@ -4933,17 +5130,17 @@ export function BranchCanopy({
                           )}
                         </div>
                         {/* THE COPY HAND — the words are the visitor's */}
-                        {!liveLoading && (
+                        {!roomLoading && (
                           <div className="mt-0.5 flex justify-end">
                             <RoomCopyButton
-                              text={answer}
+                              text={roomAnswer}
                               testId={`${testIdPrefix}-zoom-copy`}
                             />
                           </div>
                         )}
                       </div>
                     ) : null
-                  ) : roomError && !liveLoading && revealStage >= 2 ? (
+                  ) : displayError && !roomLoading && revealStage >= 2 ? (
                     /* THE ROOM'S HONESTY — an ask that could not cross
                        shows its reason right here; the walk stands. On
                        the landing's floor the mirror speaks plainly —
@@ -4957,7 +5154,7 @@ export function BranchCanopy({
                         {t(bare ? "The field is quiet — speak once more" : "The transmission could not cross")}
                       </p>
                       <p className="mt-1.5 text-[13px] leading-relaxed text-foreground/85">
-                        {roomError}
+                        {displayError}
                       </p>
                     </div>
                   ) : (
@@ -4978,7 +5175,7 @@ export function BranchCanopy({
                   {zoom && (
                     <NarrationStatusLine
                       roomId={walkNodeId(zoom.q)}
-                      visible={revealStage >= 3 && answerLanded}
+                      visible={revealStage >= 3 && displayLanded}
                       narration={narration}
                       testIdPrefix={`${testIdPrefix}-zoom`}
                     />

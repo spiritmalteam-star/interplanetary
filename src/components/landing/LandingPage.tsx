@@ -21,11 +21,11 @@ import {
   Compass,
   Feather,
   GraduationCap,
+  HelpCircle,
   Image as ImageIcon,
-  MoonStar,
+  Moon,
   MoveRight,
   Music,
-  Sparkles,
 } from "lucide-react";
 import { useT } from "@/lib/i18n";
 import { useMirror } from "@/lib/mirror-store";
@@ -351,7 +351,7 @@ export default function LandingPage({
   const offerRows = useMemo(
     () => [
       {
-        icon: Sparkles,
+        icon: HelpCircle,
         title: "Reflection & questions",
         line: "Ask anything — the mirror answers with you.",
         more: [
@@ -407,7 +407,7 @@ export default function LandingPage({
         ],
       },
       {
-        icon: MoonStar,
+        icon: Moon,
         title: "Dreams",
         line: "Weave living books, page by page.",
         more: [

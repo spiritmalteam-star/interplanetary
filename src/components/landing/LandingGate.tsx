@@ -50,7 +50,10 @@ function computeGeo(): Geo {
     return { w: "100vw", h: "100dvh", s: 1, tx: 0, ty: 0, radius: 0 };
   }
   /* THE DESK'S DIORAMA — the realm at four fifths, cropped around its
-     own heart: the crown above, the whisper line below. */
+     own heart: the crown above, the whisper line below. THE SMOOTH
+     BORDER — the docked chat wears a gently rounded, slightly
+     transparent border now (the frame is gone); the wider radius
+     keeps the edges soft against the threshold beneath. */
   const s = 0.8;
   const rail = Math.min(210, Math.max(130, Math.round(vw * 0.13)));
   const clear = vw >= 1024 ? 2 * rail + 44 : 44;
@@ -66,7 +69,7 @@ function computeGeo(): Geo {
     s,
     tx: -Math.round(s * cropX),
     ty: -Math.round(s * cropY),
-    radius: 18,
+    radius: 26,
   };
 }
 
@@ -105,41 +108,25 @@ export default function LandingGate() {
     setTheme("dark");
   }, [setTheme]);
 
-  /* THE WARMING FLOOR — the chamber's chunk is pulled the first moment
-     the browser rests, so the miniature portal arrives alive. */
+  /* THE INSTANT FLOOR — the chamber's chunk is pulled the moment the
+     gate itself mounts, with no idle wait and no backstop timer: the
+     import rides the same breath as the page's own hydration, so the
+     landing's chat is alive as fast as the network allows. */
   useEffect(() => {
     let cancelled = false;
-    const w = window as Window & {
-      requestIdleCallback?: (cb: () => void) => number;
-      cancelIdleCallback?: (id: number) => void;
-    };
-    let idleId: number | undefined;
-    let timer: number | undefined;
-    const pull = () => {
-      if (cancelled) return;
-      void import("@/components/mirror/AppShell").then((mod) => {
-        if (!cancelled)
-          setChamber(
-            () =>
-              mod.default as ComponentType<{
-                bare?: boolean;
-                onExpand?: () => void;
-                onMinimize?: () => void;
-              }>
-          );
-      });
-    };
-    if (typeof w.requestIdleCallback === "function") {
-      idleId = w.requestIdleCallback(pull);
-      /* a quiet backstop guarantees the pull on busy pages */
-      timer = window.setTimeout(pull, 1500);
-    } else {
-      timer = window.setTimeout(pull, 900);
-    }
+    void import("@/components/mirror/AppShell").then((mod) => {
+      if (!cancelled)
+        setChamber(
+          () =>
+            mod.default as ComponentType<{
+              bare?: boolean;
+              onExpand?: () => void;
+              onMinimize?: () => void;
+            }>
+        );
+    });
     return () => {
       cancelled = true;
-      if (idleId !== undefined) w.cancelIdleCallback?.(idleId);
-      if (timer !== undefined) window.clearTimeout(timer);
     };
   }, []);
 
@@ -420,7 +407,17 @@ export default function LandingGate() {
         >
           <div
             data-testid="portal-lens"
-            className="lens-frame absolute inset-0 overflow-hidden border border-white/10 bg-background shadow-[0_40px_120px_-40px_rgba(0,0,0,0.95)]"
+            className={cn(
+              "lens-frame absolute inset-0 overflow-hidden border bg-background",
+              /* THE SMOOTH BORDER — while the portal rests docked on the
+                 threshold its edge is a soft, slightly transparent line
+                 with a faint crystal breath of shadow (no filter, no
+                 animation — the phone pays nothing); the full portal
+                 keeps its own solid edge. */
+              docked
+                ? "border-white/[0.08] shadow-[0_40px_120px_-40px_rgba(0,0,0,0.95),0_0_44px_-20px_rgba(56,189,248,0.3),0_0_30px_-16px_rgba(255,77,109,0.22)]"
+                : "border-white/10 shadow-[0_40px_120px_-40px_rgba(0,0,0,0.95)]"
+            )}
             style={{ borderRadius: fullscreen ? 0 : geo.radius }}
           >
             <div
@@ -439,11 +436,9 @@ export default function LandingGate() {
               <Chamber bare={bare} onExpand={expandPortal} onMinimize={minimize} />
             </div>
 
-            {/* THE HOUSE'S OWN FRAME — while the portal rests docked on
-                the threshold, its gilded filigree stands around the chat
-                (the visitor's words live inside the frame's borders).
-                Pure painted gold: static, untouchable, no weight. */}
-            {docked && <div aria-hidden="true" className="portal-frame" />}
+            {/* THE FRAME IS GONE — the gilded filigree has left the
+                threshold: the chat stands on its own smooth, slightly
+                transparent border now, wearing the crystal light. */}
           </div>
 
           {/* THE EXPAND HAND — the portal's own crown carries it now:
