@@ -1,8 +1,20 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type RefObject,
+} from "react";
 import Image from "next/image";
-import { motion, useScroll, useTransform } from "framer-motion";
+import {
+  motion,
+  useScroll,
+  useTransform,
+  type MotionValue,
+} from "framer-motion";
 import {
   ArrowUpRight,
   ChevronDown,
@@ -16,10 +28,12 @@ import {
   Image as ImageIcon,
   Leaf,
   MoonStar,
+  MoveRight,
   Music,
   Sparkles,
 } from "lucide-react";
 import { useT } from "@/lib/i18n";
+import { useMirror } from "@/lib/mirror-store";
 import { cn } from "@/lib/utils";
 import LandingSlides from "./LandingSlides";
 
@@ -158,6 +172,78 @@ function SectionHead({
   );
 }
 
+/* ------------------- the question beneath the portal -------------------
+   THE MIRROR'S OWN QUESTION — written below the portal and revealed
+   letter by letter as the visitor scrolls down. The moment a word is
+   sent, the question yields its place: it fades, leaving the space
+   open for the transmission itself. */
+
+function RevealLetter({
+  progress,
+  index,
+  total,
+  char,
+}: {
+  progress: MotionValue<number>;
+  index: number;
+  total: number;
+  char: string;
+}) {
+  /* each letter owns a small window of the page's first breath of
+     scroll — the phrase writes itself as the threshold opens */
+  const start = 0.01 + (index / Math.max(total, 1)) * 0.12;
+  const end = start + 0.045;
+  const opacity = useTransform(progress, [start, end], [0.06, 1]);
+  const y = useTransform(progress, [start, end], [4, 0]);
+  return (
+    <motion.span
+      aria-hidden="true"
+      style={{ opacity, y }}
+      className="inline-block whitespace-pre will-change-[opacity,transform]"
+    >
+      {char}
+    </motion.span>
+  );
+}
+
+function MirrorQuestion({
+  progress,
+  gone,
+}: {
+  progress: MotionValue<number>;
+  gone: boolean;
+}) {
+  const t = useT();
+  const phrase = t("what do you wish to remember my dear?");
+  const chars = useMemo(() => Array.from(phrase), [phrase]);
+  return (
+    <div
+      data-testid="mirror-question"
+      className="relative mt-3.5 px-4 text-center sm:px-0"
+    >
+      <motion.p
+        initial={false}
+        animate={{ opacity: gone ? 0 : 1 }}
+        transition={{ duration: 1.1, ease: "easeOut" }}
+        aria-hidden={gone}
+        className="pointer-events-none mx-auto max-w-[520px] font-[family-name:var(--font-literata)] text-[16px] italic leading-relaxed text-[#e8d9b0] sm:text-[17px]"
+      >
+        {chars.map((ch, i) => (
+          <RevealLetter
+            key={`${i}-${ch}`}
+            progress={progress}
+            index={i}
+            total={chars.length}
+            char={ch}
+          />
+        ))}
+        {/* the plain words remain for the ear that cannot see the play */}
+        <span className="sr-only">{phrase}</span>
+      </motion.p>
+    </div>
+  );
+}
+
 /* ------------------------------ the page ------------------------------ */
 
 export default function LandingPage({
@@ -194,6 +280,33 @@ export default function LandingPage({
      a time in each chapter; the same touch closes it again. */
   const [openOffer, setOpenOffer] = useState<number | null>(null);
   const [openMove, setOpenMove] = useState<number | null>(null);
+
+  /* THE QUESTION'S LISTENING — the question beneath the portal stands
+     only while the floor is quiet: the first word sent (or already
+     kept from an earlier walk) dissolves it, leaving space for the
+     transmission itself. */
+  const floorHasWords = useMirror((s) => {
+    const sess = s.sessions[s.activeMode];
+    return sess.messages.length > 0 || sess.status === "loading";
+  });
+
+  /* THE TUNNEL INTO THE MIRROR — the small arrow under every opened
+     row: one touch and the topic itself walks through the portal,
+     the mirror answering with the fuller information in its own
+     humble voice. The portal grows so the walk is seen. */
+  const tunnelInto = useCallback(
+    (topic: string) => {
+      void useMirror
+        .getState()
+        .askMirror(
+          t("Tunnel into the mirror — tell me more about {topic}.", {
+            topic: t(topic),
+          })
+        );
+      onExpand();
+    },
+    [t, onExpand]
+  );
 
   const offerRows = useMemo(
     () => [
@@ -470,9 +583,12 @@ export default function LandingPage({
                 </p>
               </div>
             </div>
-            <p className="mono-label mt-3.5 px-4 text-center text-[8.5px] uppercase tracking-[0.26em] text-[#66788a] sm:px-0">
-              {t("The mirror in miniature")} · {t("Enter the portal")}
-            </p>
+            {/* THE MIRROR'S QUESTION — revealed by the scroll, gone
+                with the first word sent */}
+            <MirrorQuestion
+              progress={scrollYProgress}
+              gone={floorHasWords}
+            />
           </section>
 
           {/* ============== 01 · THE SLIDES — below the chat ============== */}
@@ -584,6 +700,19 @@ export default function LandingPage({
                               </li>
                             ))}
                           </ul>
+                          {/* THE TUNNEL — the topic walks into the mirror */}
+                          <button
+                            type="button"
+                            onClick={() => tunnelInto(title)}
+                            data-testid={`tunnel-offering-${i + 1}`}
+                            className="focus-glow group/tunnel mt-4 inline-flex items-center gap-2 rounded-full border border-[rgba(159,216,220,0.3)] bg-[rgba(159,216,220,0.06)] px-4 py-2 text-[12px] font-medium text-[#9fd8dc] transition-all duration-300 hover:border-[rgba(159,216,220,0.65)] hover:bg-[rgba(159,216,220,0.13)] hover:text-[#c9ecee]"
+                          >
+                            <MoveRight
+                              className="size-3.5 transition-transform duration-300 group-hover/tunnel:translate-x-0.5"
+                              aria-hidden="true"
+                            />
+                            {t("tunnel into mirror")}
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -692,6 +821,19 @@ export default function LandingPage({
                             </li>
                           ))}
                         </ul>
+                        {/* THE TUNNEL — the movement walks into the mirror */}
+                        <button
+                          type="button"
+                          onClick={() => tunnelInto(title)}
+                          data-testid={`tunnel-movement-${i + 1}`}
+                          className="focus-glow group/tunnel mt-4 inline-flex items-center gap-2 rounded-full border border-[rgba(159,216,220,0.3)] bg-[rgba(159,216,220,0.06)] px-4 py-2 text-[12px] font-medium text-[#9fd8dc] transition-all duration-300 hover:border-[rgba(159,216,220,0.65)] hover:bg-[rgba(159,216,220,0.13)] hover:text-[#c9ecee]"
+                        >
+                          <MoveRight
+                            className="size-3.5 transition-transform duration-300 group-hover/tunnel:translate-x-0.5"
+                            aria-hidden="true"
+                          />
+                          {t("tunnel into mirror")}
+                        </button>
                       </div>
                     </div>
                   </div>

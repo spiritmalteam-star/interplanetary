@@ -411,9 +411,7 @@ function AppShellViews({
         onClose={() => {}}
         disabled={channelLoading}
         testIdPrefix="realm-tree"
-        introSub={bare
-          ? t("Speak — the mirror is listening.")
-          : t("Press a whisper to walk, or speak below.")}
+        introSub={null}
         contextText={channel.messages
           .slice(-6)
           .map((m) => `${m.query ?? ""}\n${m.text}`)

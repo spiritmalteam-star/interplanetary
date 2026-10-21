@@ -2124,12 +2124,18 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     /* THE CATEGORY'S OWN DOOR — the ask speaks with the focused
        category's own voice (the forge answers for invent, the OS for
        the manifest, the narrator for quantum); without a scope the
-       standing channel keeps its own door. */
+       standing channel keeps its own door. THE THRESHOLD'S OWN VOICE —
+       the open floor of the standing channel is NOT the interplanetary
+       choir: it is the Mirror itself — humble, understanding,
+       non-judging, a pure loving reflection — the voice the visitor
+       meets at the landing and hears from the floor. */
     const apiMode = askScope
       ? askScope === "invent"
         ? "forge"
         : askScope
-      : mode;
+      : mode === "interplanetary"
+        ? "mirror"
+        : mode;
     const session = get().sessions[mode];
     if (!query || session.status === "loading") return;
 

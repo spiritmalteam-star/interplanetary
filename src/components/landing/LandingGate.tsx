@@ -86,8 +86,16 @@ export default function LandingGate() {
 
   /* THE THRESHOLD'S OWN LIGHT — the portal grows out of a midnight
      page, so the chamber wears its dark vestment here (the realm's
-     own light-toggle keeps working; a chosen light stays chosen). */
+     own light-toggle keeps working; a chosen light stays chosen).
+     THE ONE SEAL — the midnight is sealed exactly once, at the
+     gate's first breath: `setTheme`'s own identity changes whenever
+     the theme changes, so a bare [setTheme] dependency would slam
+     the door shut again the moment the visitor's hand picks the
+     light — the toggle would never leave the dark. */
+  const darkSealed = useRef(false);
   useEffect(() => {
+    if (darkSealed.current) return;
+    darkSealed.current = true;
     setTheme("dark");
   }, [setTheme]);
 
