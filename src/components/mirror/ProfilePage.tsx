@@ -543,6 +543,35 @@ export function ProfilePage() {
     );
   };
 
+  /* THE PASSAGE'S OWN FACE — the keeper's name and address resting
+     above the doors, the ChatGPT way: identity first, then the list. */
+  const identityInitial = me
+    ? (me.name || me.email).slice(0, 1).toUpperCase()
+    : "✦";
+  const identityMail =
+    me && !me.email.startsWith("anon:") ? me.email : t("A quiet guest");
+  const IdentityCard = () => (
+    <div
+      data-testid="profile-identity-card"
+      className="mb-3 flex items-center gap-2.5 rounded-2xl border hairline bg-[var(--glass-bg-soft)] px-3 py-2.5"
+    >
+      <span
+        className="mono-label flex size-9 shrink-0 items-center justify-center rounded-full border hairline bg-[var(--glass-bg)] text-[14px] text-foreground/85"
+        aria-hidden="true"
+      >
+        {identityInitial}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-[13px] font-medium leading-tight text-foreground/95">
+          {displayName}
+        </span>
+        <span className="mono-label block truncate text-[9px] uppercase tracking-[0.14em] text-muted-foreground">
+          {identityMail}
+        </span>
+      </span>
+    </div>
+  );
+
   /* a section's heading — title, its quiet description */
   const SectionHead = ({
     title,
@@ -1682,11 +1711,12 @@ export function ProfilePage() {
 
         {/* the room — a rail of doors on the left, one held panel on the right */}
         <div className="mx-auto flex w-full max-w-6xl min-h-0 flex-1 gap-0 px-0 sm:px-8">
-          {/* the rail — desktop */}
+          {/* the rail — desktop: the keeper's face above the doors */}
           <nav
             aria-label={t("Your profile")}
             className="hidden w-60 shrink-0 flex-col gap-1 overflow-y-auto border-r hairline py-6 pr-4 md:flex nice-scroll"
           >
+            <IdentityCard />
             {navItems
               .filter((n) => n.available)
               .map((item) => (
@@ -1701,35 +1731,27 @@ export function ProfilePage() {
 
           {/* the panel */}
           <div ref={scrollRef} className="nice-scroll min-w-0 flex-1 overflow-y-auto">
-            {/* the rail — mobile: a horizontal strip of doors */}
+            {/* the rail — mobile: THE VERTICAL WAY. No sliding strip of
+                doors: the same quiet list the desktop keeps — the
+                keeper's face above the doors, one door per row, the way
+                a passage should read. */}
             <nav
               aria-label={t("Your profile")}
-              className="no-scrollbar flex gap-1.5 overflow-x-auto border-b hairline px-4 py-3 md:hidden"
+              className="border-b hairline px-4 py-3 md:hidden"
             >
-              {navItems
-                .filter((n) => n.available)
-                .map((item) => {
-                  const Icon = item.icon;
-                  const active = section === item.id;
-                  return (
-                    <button
+              <IdentityCard />
+              <div className="flex flex-col gap-0.5">
+                {navItems
+                  .filter((n) => n.available)
+                  .map((item) => (
+                    <NavButton
                       key={item.id}
-                      type="button"
+                      item={item}
+                      active={section === item.id}
                       onClick={() => setSection(item.id)}
-                      data-testid={item.testId}
-                      aria-current={active ? "page" : undefined}
-                      className={cn(
-                        "focus-glow flex h-8 shrink-0 items-center gap-1.5 rounded-full border px-3 text-[12px] transition-all duration-300",
-                        active
-                          ? "border-transparent bg-foreground font-medium text-background"
-                          : "hairline text-muted-foreground"
-                      )}
-                    >
-                      <Icon className="size-3.5 shrink-0" aria-hidden="true" />
-                      <span className="whitespace-nowrap">{t(item.label)}</span>
-                    </button>
-                  );
-                })}
+                    />
+                  ))}
+              </div>
             </nav>
 
             <div className="mx-auto w-full max-w-2xl px-4 pb-20 pt-6 sm:px-6 sm:pt-8">

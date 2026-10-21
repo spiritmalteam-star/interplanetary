@@ -441,11 +441,20 @@ function AppShellViews({
               type="button"
               onClick={onExpand}
               aria-label={t("Fullscreen")}
-              title={t("Fullscreen")}
+              title={t("Fullscreen — opens the paid realm's advanced reflections")}
               data-testid="crown-expand"
-              className="focus-glow flex size-7 items-center justify-center rounded-full border border-[rgba(232,217,176,0.42)] bg-[rgba(232,217,176,0.08)] text-[#e8d9b0] transition-all duration-300 hover:border-[rgba(232,217,176,0.8)] hover:text-[#f6ecd2]"
+              className="focus-glow relative flex size-7 items-center justify-center rounded-full border border-[rgba(232,217,176,0.42)] bg-[rgba(232,217,176,0.08)] text-[#e8d9b0] transition-all duration-300 hover:border-[rgba(232,217,176,0.8)] hover:text-[#f6ecd2]"
             >
               <Maximize2 className="size-3" aria-hidden="true" />
+              {/* THE EXCHANGE'S OWN MARK — a small gold coin rides the
+                  crossing's corner: the full portal is the paid realm,
+                  opened by registration or login once one of the offered
+                  realms is acquired (the landing's floor stays free). */}
+              <span
+                aria-hidden="true"
+                data-testid="crown-expand-paid-dot"
+                className="absolute -right-0.5 -top-0.5 size-2 rounded-full bg-[#e8d9b0] shadow-[0_0_7px_1px_rgba(232,217,176,0.6)] ring-1 ring-[#0b0f17]"
+              />
             </button>
           ) : !bare && onMinimize ? (
             <button

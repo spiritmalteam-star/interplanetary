@@ -1867,6 +1867,10 @@ export function BranchCanopy({
     const sess = s.sessions[s.activeMode];
     return sess.messages.length === 0 && sess.status !== "loading";
   });
+  /* THE GUEST'S OWN LAW — the landing chat is temporary for the non
+     logged-in: a small honest line under the whisper line speaks it. */
+  const meIdentity = useMirror((s) => s.me);
+  const guest = !meIdentity || meIdentity.email.startsWith("anon:");
   /* THE WHOLE HOUSE'S DOORS — every kategory of the old website's
      sidebar, standing within the branches themselves: the worlds the
      tree grows toward, the archives, and the quiet hands. */
@@ -4232,7 +4236,8 @@ export function BranchCanopy({
               guests are shown the way in there). */}
           <div className="flex shrink-0 items-center gap-1">
             {/* the advanced doors wait for the full portal — the landing
-                keeps the calm crown */}
+                keeps the calm crown (the about door too: the threshold
+                already tells the house's story) */}
             {!bare && (
             <button
               type="button"
@@ -4257,6 +4262,7 @@ export function BranchCanopy({
               <BookOpen className="size-3" aria-hidden="true" />
             </button>
             )}
+            {!bare && (
             <button
               type="button"
               onClick={openAbout}
@@ -4267,6 +4273,7 @@ export function BranchCanopy({
             >
               <Info className="size-3" aria-hidden="true" />
             </button>
+            )}
           </div>
 
           {/* THE PORTAL'S OWN HANDS — between the about door and the
@@ -4292,13 +4299,12 @@ export function BranchCanopy({
             {realm ? (
               /* THE TOP ROW'S RIGHT HAND — at its very right stands the
                  visitor's own passage (the profile room, where the score
-                 mirror and the settings live). THE RENEWING HAND MOVED
-                 INSIDE THE CHAT — the floor's whisper line and every
-                 room carry the reload now, so the crown stays a calm
-                 compass of doors. THE ICON ITSELF — the passage always
-                 wears the visitor's own figure: a person, never an
-                 arrow. Guests find the way in INSIDE the passage;
-                 walkers leave from the same room. */
+                 mirror and the settings live). THE LANDING'S CALM CROWN
+                 — docked in the threshold the passage waits for the
+                 full portal: the free floor keeps no profile, no doors —
+                 only the light and the way across. Guests find the way
+                 in INSIDE the full portal's passage. */
+              !bare && (
               <button
                 type="button"
                 onClick={openProfilePage}
@@ -4315,6 +4321,7 @@ export function BranchCanopy({
               >
                 <UserRound className="size-3" aria-hidden="true" />
               </button>
+              )
             ) : (
               <>
                 <button
@@ -4426,13 +4433,35 @@ export function BranchCanopy({
               />
             </div>
             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-4 pb-28">
-              <Image
-                src="/images/ai/mark-dark.png"
-                alt=""
-                width={64}
-                height={64}
-                className="lp-breathe size-16 rounded-full opacity-90"
-              />
+              {/* THE MARK — the house's own seal, wearing the theme's
+                  face (the white emblem on the midnight, the dark one in
+                  the daylight, so the light's hand can never take it
+                  away), and one touch begins the chat anew. */}
+              <button
+                type="button"
+                onClick={() =>
+                  useMirror.getState().newChat(useMirror.getState().activeMode)
+                }
+                aria-label={t("New chat")}
+                title={t("New chat")}
+                data-testid={`${testIdPrefix}-mark-new-chat`}
+                className="focus-glow pointer-events-auto block rounded-full transition-transform duration-300 hover:scale-105"
+              >
+                <Image
+                  src="/images/ai/mark-dark.png"
+                  alt=""
+                  width={64}
+                  height={64}
+                  className="lp-breathe hidden size-16 rounded-full opacity-90 dark:block"
+                />
+                <Image
+                  src="/images/ai/mark-light.png"
+                  alt=""
+                  width={64}
+                  height={64}
+                  className="lp-breathe size-16 rounded-full opacity-90 dark:hidden"
+                />
+              </button>
               <div className="flex flex-col items-center gap-3">
                 <span
                   aria-hidden="true"
@@ -4447,7 +4476,7 @@ export function BranchCanopy({
                 {floorQuiet && (
                   <p
                     data-testid="mirror-ask"
-                    className="genea-bloom still-bloom max-w-[300px] px-6 text-center font-[family-name:var(--font-literata)] text-[13.5px] italic leading-relaxed text-[#e8d9b0] sm:max-w-[360px] sm:text-[14.5px]"
+                    className="genea-bloom still-bloom max-w-[300px] px-6 text-center font-[family-name:var(--font-literata)] text-[13.5px] italic leading-relaxed text-[#8f7418] dark:text-[#e8d9b0] sm:max-w-[360px] sm:text-[14.5px]"
                     style={{ pointerEvents: "none" }}
                   >
                     {t("what do you wish to remember dear one?")}
@@ -4688,6 +4717,17 @@ export function BranchCanopy({
                 <Send className="size-3.5" aria-hidden="true" />
               </button>
             </form>
+            {/* THE TEMPORARY CHAT'S OWN LINE — the landing's floor is
+                free and holds nothing: a quiet honest word for the
+                non logged-in, the way in named for the ones who stay. */}
+            {bare && guest && (
+              <p
+                data-testid="floor-temporary-note"
+                className="mono-label pointer-events-none text-[8px] uppercase tracking-[0.26em] text-muted-foreground/55"
+              >
+                {t("Temporary chat — sign in to keep your reflections")}
+              </p>
+            )}
           </div>
         )}
 

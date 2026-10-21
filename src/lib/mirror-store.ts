@@ -1593,6 +1593,11 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   /* ------- the chat archive — the ChatGPT keeping, client-side only -- */
 
   hydrateChats: () => {
+    /* THE GUEST'S OWN LAW — the landing chat is temporary for the
+       unnamed: nothing returns from the shelf, nothing rests on it.
+       Only a signed keeper's words come home on a reload. */
+    const keeper = get().me;
+    if (!keeper || keeper.email.startsWith("anon:")) return;
     /* The archive wakes: every surface's active conversation returns to
        the live room exactly as it was left — reload, journey, nothing
        parts the visitor from their words. */
@@ -1652,8 +1657,11 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   newChat: (surface) => {
     /* THE CHATGPT TURN — the present conversation already rests on the
        shelf (the autosave kept it current); a fresh page opens and the
-       old one can always be reopened from the conversation panel. */
-    startNewChat(surface);
+       old one can always be reopened from the conversation panel.
+       THE GUEST'S OWN LAW — a temporary chat lays nothing down: only a
+       signed keeper's "new chat" touches the shelf. */
+    const turner = get().me;
+    if (turner && !turner.email.startsWith("anon:")) startNewChat(surface);
     if (surface === "os") {
       set({
         osMessages: [],
@@ -1699,6 +1707,9 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   },
 
   openChat: (surface, id) => {
+    /* the guest's law — a temporary chat has no shelf to reopen */
+    const opener = get().me;
+    if (!opener || opener.email.startsWith("anon:")) return;
     const chat = getChat(surface, id);
     if (!chat) return;
     setActiveChatOnShelf(surface, id);
@@ -2516,6 +2527,11 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         googleConfigured: Boolean(data?.googleConfigured),
         wallet: data?.wallet ?? get().wallet,
       });
+      /* THE KEEPER'S RETURN — once the passage names its keeper, the
+         conversations come home from the shelf (a guest keeps none:
+         their chat is temporary by the house's own law). */
+      const keeper = data?.user ?? null;
+      if (keeper && !keeper.email.startsWith("anon:")) get().hydrateChats();
       /* the passage's own tuning comes home — language, voice, pace,
          the fields of expansion — on every device, every sign-in */
       if (data?.settings) get().applyRemoteSettings(data.settings);
@@ -3679,6 +3695,11 @@ if (typeof window !== "undefined") {
   /* the autosave — the words settle on the shelf shortly after they land */
   useMirror.subscribe((state) => {
     if (hydrating) return;
+    /* THE GUEST'S OWN LAW — nothing an unnamed visitor whispers ever
+       settles on the shelf: the landing chat stays temporary for the
+       non logged-in, and only a keeper's words survive the reload. */
+    const keeperNow = useMirror.getState().me;
+    if (!keeperNow || keeperNow.email.startsWith("anon:")) return;
     if (saveTimer) window.clearTimeout(saveTimer);
     saveTimer = window.setTimeout(() => {
       saveTimer = null;

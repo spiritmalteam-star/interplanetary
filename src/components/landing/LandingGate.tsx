@@ -73,7 +73,7 @@ export default function LandingGate() {
   const { setTheme } = useTheme();
   const [phase, setPhase] = useState<Phase>("landing");
   const [Chamber, setChamber] = useState<ComponentType<
-    { bare?: boolean }
+    { bare?: boolean; onExpand?: () => void; onMinimize?: () => void }
   > | null>(null);
   const [geo, setGeo] = useState<Geo | null>(null);
   const [pending, setPending] = useState(false);
@@ -114,7 +114,12 @@ export default function LandingGate() {
       void import("@/components/mirror/AppShell").then((mod) => {
         if (!cancelled)
           setChamber(
-            () => mod.default as ComponentType<{ bare?: boolean }>
+            () =>
+              mod.default as ComponentType<{
+                bare?: boolean;
+                onExpand?: () => void;
+                onMinimize?: () => void;
+              }>
           );
       });
     };

@@ -18,14 +18,9 @@ import {
   ArrowUpRight,
   ChevronDown,
   Compass,
-  Cpu,
-  Dna,
-  Eye,
   Feather,
   GraduationCap,
-  HeartHandshake,
   Image as ImageIcon,
-  Leaf,
   MoonStar,
   MoveRight,
   Music,
@@ -139,6 +134,25 @@ function Rail({
 
 /* ------------------------ editorial building blocks ------------------------ */
 
+/* THE EXCHANGE'S OWN TAG — the full portal is the paid realm: a small
+   gold pill riding the enter hands, its truth spoken in the title (the
+   way in is registration or login, after one of the offered realms is
+   acquired — the landing's own floor stays free). */
+function PaidTag() {
+  const t = useT();
+  return (
+    <span
+      title={t(
+        "Paid realm — the full portal opens by registration or login, after one of the realms offered is acquired"
+      )}
+      data-testid="paid-tag"
+      className="mono-label rounded-full border border-[rgba(232,217,176,0.45)] bg-[rgba(232,217,176,0.1)] px-1.5 py-[3px] text-[8px] uppercase tracking-[0.18em] text-[#e8d9b0]"
+    >
+      {t("Paid")}
+    </span>
+  );
+}
+
 function SectionHead({
   index,
   kicker,
@@ -170,6 +184,49 @@ function SectionHead({
     </div>
   );
 }
+
+/* -------------------- the open contact timeline -------------------- */
+
+/* The visionary deck's four stages — the illustrations cropped clean
+   from the handoff's cards, every caption carried as real HTML text. */
+const contactStages = [
+  {
+    img: "/images/timeline/open-contact-000.jpg",
+    kicker: "01 · Curiosity",
+    title: "Listen with humility",
+    body: "A shared human beginning: curiosity without certainty. Arcturus is a star; the Pleiades is a nearby star cluster. Civilizations associated with them belong to speculative and spiritual traditions, not confirmed astronomy. Life beyond Earth has not been confirmed.",
+    prepLabel: "How we prepare",
+    prep: "Support open astronomy, astrobiology, and careful public science communication.",
+    alt: "Families watch the stars beside radio telescopes, the Pleiades glowing above a curved horizon",
+  },
+  {
+    img: "/images/timeline/open-contact-001.jpg",
+    kicker: "02 · Verification",
+    title: "Test every signal",
+    body: "If an unusual signal is detected, repeat observations, check for natural and human-made explanations, publish methods, and invite independent teams to review the evidence. This careful process protects the public from hoaxes and turns genuine discoveries into shared knowledge.",
+    prepLabel: "Possible benefit",
+    prep: "Stronger global science and a clearer understanding of our place in the cosmos.",
+    alt: "A mission room reads a signal's waves on vast glowing screens beneath a great Earth",
+  },
+  {
+    img: "/images/timeline/open-contact-002.jpg",
+    kicker: "03 · First dialogue",
+    title: "Make contact reciprocal",
+    body: "In this imagined stage, any encounter begins with consent, translation, safety, and public transparency. No person or institution claims exclusive authority. If contact were ever verified, it could broaden perspective and inspire cooperation; those are possibilities, not promises.",
+    prepLabel: "How we prepare",
+    prep: "Build trust, science literacy, cross-cultural dialogue, and peaceful international coordination.",
+    alt: "Luminous visitors greet a family by the sea at sunset, ships of light above the water",
+  },
+  {
+    img: "/images/timeline/open-contact-003.jpg",
+    kicker: "04 · Shared future",
+    title: "Keep humanity in the choice",
+    body: "A hopeful scenario puts human agency first: evaluate every idea independently, protect rights and cultural diversity, care for Earth, and share any benefits fairly. The path we can build today is cooperation, education, ecological repair, and open inquiry.",
+    prepLabel: "Possible benefit",
+    prep: "New questions, cultural exchange, and carefully tested ideas that serve people broadly.",
+    alt: "People of many ages gather in a living garden city beneath a great green Earth",
+  },
+] as const;
 
 /* ------------------------------ the page ------------------------------ */
 
@@ -330,82 +387,6 @@ export default function LandingPage({
     []
   );
 
-  const earthMovements = useMemo(
-    () => [
-      {
-        icon: Eye,
-        title: "Awakening",
-        line: "Attention, self-understanding, emotional honesty — the capacity to choose a considered response instead of a reflex.",
-        more: [
-          "It begins small: noticing a reaction before it becomes a word, telling yourself the truth about one hard thing today. Attention slowly becomes a skill — and a chosen response becomes more available than a reflex.",
-          "An awake society is not a loud one; it is a careful one. When enough people pause between impulse and action, the whole culture gains a breath of room — and in that room, better choices become possible.",
-        ],
-        points: [
-          "Attention is trainable: a few honest minutes a day is enough.",
-          "Self-understanding softens judgment — of yourself and of others.",
-          "A considered response is a small act of freedom.",
-        ],
-      },
-      {
-        icon: Dna,
-        title: "Evolution",
-        line: "Learning, repairing, and changing our systems — better tools, fairer arrangements, responsibility across generations.",
-        more: [
-          "Repair over replacement. Learn in the open, mend systems so the next person starts further ahead, and hold decisions lightly enough to change them when the evidence changes.",
-          "Evolution is not only biological — it is institutional, technical, and personal. A school that learns from its mistakes, a tool that becomes simpler with use, a family that breaks an old harm: all of it is the same motion.",
-        ],
-        points: [
-          "Better tools, fairer arrangements, responsibility across generations.",
-          "Change a system by understanding it, not by shouting at it.",
-          "Keep what works; replace what harms; document what you learn.",
-        ],
-      },
-      {
-        icon: Leaf,
-        title: "Ecological renewal",
-        line: "Regeneration in practice: protect habitats, reduce waste, restore ecosystems, and connect local action to wider change.",
-        more: [
-          "Compost, native plants, a repaired object instead of a new one, a river cleaned with neighbors — small local acts that link into wider change. Regeneration is a practice, not a slogan.",
-          "People are part of interdependent ecosystems. Caring for soil, water, forests, and other species is a practical expression of belonging — the living Earth included in the circle of “us.”",
-        ],
-        points: [
-          "Start where your feet are: a balcony, a street, a watershed.",
-          "Repair culture is ecological culture — mend before you buy.",
-          "Local acts connect: every renewed patch joins a wider lattice.",
-        ],
-      },
-      {
-        icon: HeartHandshake,
-        title: "Shared humanity",
-        line: "Dialogue across cultures and generations — creativity as a way to exchange knowledge and make room for every perspective.",
-        more: [
-          "Creativity is a shared language older than every border. Exchange stories, songs, and craft across cultures and generations — and make room at the table for the perspective that is missing.",
-          "A more connected society grows when we listen across differences, recognize one another's dignity, and let understanding shape how we act. Empathy makes connection visible.",
-        ],
-        points: [
-          "Listen first across differences; understanding changes how we act.",
-          "Make room at every table for the perspective that is missing.",
-          "Dignity is the floor everyone stands on — it holds the whole house.",
-        ],
-      },
-      {
-        icon: Cpu,
-        title: "Technology with care",
-        line: "Digital tools that expand access and creative agency while protecting privacy, consent, and human judgment.",
-        more: [
-          "Tools that widen access and creative agency while keeping privacy, consent, and human judgment at the center. The best technology is felt less as a screen and more as a capability.",
-          "A tool serves when it returns you to your life more capable than it found you — and then steps aside. Technology with care builds systems that are transparent, repairable, and answerable to the people who use them.",
-        ],
-        points: [
-          "Privacy and consent are features, not obstacles.",
-          "A good tool makes people stronger — never smaller.",
-          "Fair and resilient systems need participation and transparency.",
-        ],
-      },
-    ],
-    []
-  );
-
   return (
     <div
       ref={scrollRef}
@@ -455,10 +436,14 @@ export default function LandingPage({
                   type="button"
                   onClick={onExpand}
                   data-testid="landing-enter"
+                  title={t(
+                    "Paid realm — the full portal opens by registration or login, after one of the realms offered is acquired"
+                  )}
                   className="focus-glow flex h-11 items-center gap-2 rounded-full border border-[rgba(232,217,176,0.45)] bg-[rgba(232,217,176,0.1)] px-6 text-[14px] font-medium text-[#f0e7cd] transition-all duration-300 hover:border-[rgba(232,217,176,0.75)] hover:bg-[rgba(232,217,176,0.16)]"
                 >
                   <Sparkles className="size-3.5" aria-hidden="true" />
                   {t("Enter the portal")}
+                  <PaidTag />
                 </button>
                 <a
                   href="#offer"
@@ -542,6 +527,9 @@ export default function LandingPage({
                 <button
                   type="button"
                   onClick={onExpand}
+                  title={t(
+                    "Paid realm — the full portal opens by registration or login, after one of the realms offered is acquired"
+                  )}
                   className="focus-glow group mt-5 inline-flex items-center gap-1.5 text-[13px] font-medium text-[#9fd8dc] transition-colors duration-300 hover:text-[#c9ecee]"
                 >
                   {t("Enter the portal")}
@@ -549,6 +537,7 @@ export default function LandingPage({
                     className="size-3.5 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
                     aria-hidden="true"
                   />
+                  <PaidTag />
                 </button>
               </div>
 
@@ -634,123 +623,113 @@ export default function LandingPage({
             </div>
           </section>
 
-          {/* ================= 03 · EARTH TRANSFORMATION ================= */}
+          {/* ============ 03 · THE OPEN CONTACT TIMELINE ============ */}
+          {/* A visionary, illustrated timeline — four steps humanity
+              could walk if an open contact ever came to pass. Presented
+              exactly as the handoff asks: one connected vertical line,
+              a clear progress marker per stage, the copy living as real
+              HTML text beside each artwork, and the science note spoken
+              plainly at the foot. Nothing here is a claim or a date. */}
           <section
             className="px-4 pb-12 pt-12 sm:px-8"
-            aria-label={t("Earth is transforming")}
+            aria-label={t("An open contact timeline")}
           >
             <SectionHead
               index="03"
-              kicker={t("Earth is transforming")}
-              title={t("What we offer humanity")}
+              kicker={t("A visionary timeline")}
+              title={t("Open contact, imagined")}
             />
 
-            {/* the essay — two measured columns on the desk */}
-            <div className="mt-8 grid gap-x-12 gap-y-4 text-[13.5px] leading-[1.85] text-[#b9c6cf] md:grid-cols-2">
-              <p>
+            <div className="mt-6 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
+              <span
+                data-testid="timeline-badge"
+                className="mono-label shrink-0 rounded-full border border-[rgba(232,217,176,0.4)] px-3 py-1 text-[8.5px] uppercase tracking-[0.24em] text-[#e8d9b0]"
+              >
+                {t("Visionary timeline · Not a prediction")}
+              </span>
+              <p className="min-w-0 flex-1 text-[12.5px] leading-relaxed text-[#8fa3b2]">
                 {t(
-                  "We see Earth's transformation as a shared practice. Awakening can begin with attention: seeing ourselves and one another more clearly. Evolution can mean learning, repairing, and changing systems so life can thrive. Ecological renewal asks us to care for soil, water, climate, and the living communities around us. Technology matters most when it supports dignity, access, imagination, and real human connection."
+                  "A shared beginning — curiosity without certainty. What follows is an imaginative exercise: four steps humanity could walk if an open contact ever came to pass. Nothing here is a claim, a date, or a promise."
                 )}
               </p>
-              <div>
-                <p>
-                  {t(
-                    "Nothing here asks anyone to believe anything. The mirror holds questions, images, stories, and tools — and returns them with the visitor's own signature on them. What grows in here is meant to be carried out there: into kitchens, classrooms, workshops, gardens, and conversations."
-                  )}
-                </p>
-                <p className="mt-4 border-l-2 border-[rgba(232,217,176,0.4)] pl-4 font-[family-name:var(--font-literata)] text-[13.5px] italic leading-relaxed text-[#e8d9b0]">
-                  {t(
-                    "Explore with curiosity. Keep your discernment. Bring the most useful ideas back into everyday life."
-                  )}
-                </p>
-              </div>
             </div>
 
-            {/* the five movements — a numbered field guide whose rows
-                open to their practice */}
-            <div className="mt-10 border-t border-white/8">
-              {earthMovements.map(({ icon: Icon, title, line, more, points }, i) => (
-                <div
-                  key={title}
-                  className="border-b border-white/8"
-                >
-                  <h3>
-                    <button
-                      type="button"
-                      onClick={() => setOpenMove(openMove === i ? null : i)}
-                      aria-expanded={openMove === i}
-                      data-testid="landing-movement"
-                      className="focus-glow group flex w-full items-start gap-4 py-4 text-left sm:gap-5"
+            {/* the connected line — a fine luminous thread holding the
+                four stages, each with its own progress marker */}
+            <div className="relative mt-10">
+              <span
+                aria-hidden="true"
+                className="absolute bottom-6 left-[8px] top-2 w-px bg-gradient-to-b from-[rgba(232,217,176,0.55)] via-[rgba(232,217,176,0.16)] to-transparent sm:left-[10px]"
+              />
+              <ol className="space-y-12">
+                {contactStages.map((stage) => (
+                  <li key={stage.kicker} className="relative pl-9 sm:pl-14">
+                    {/* the progress marker on the thread */}
+                    <span
+                      aria-hidden="true"
+                      className="absolute left-0 top-1 flex size-[17px] items-center justify-center rounded-full border border-[rgba(232,217,176,0.55)] bg-[#0a0e18] sm:size-[21px]"
                     >
-                      <span className="mono-label w-8 shrink-0 pt-1.5 text-[10px] tracking-[0.14em] text-[#e8d9b0]/75">
-                        {String(i + 1).padStart(2, "0")}
-                      </span>
-                      <span
-                        className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full border border-[rgba(159,216,220,0.25)] bg-[rgba(159,216,220,0.06)] transition-colors duration-300 group-hover:border-[rgba(159,216,220,0.5)]"
-                        aria-hidden="true"
-                      >
-                        <Icon className="size-4 text-[#9fd8dc]" />
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block text-[14.5px] font-semibold text-[#e6edf2]">
-                          {t(title)}
-                        </span>
-                        <span className="mt-1 block max-w-[560px] text-[12.5px] leading-relaxed text-[#8fa3b2]">
-                          {t(line)}
-                        </span>
-                      </span>
-                      <ChevronDown
-                        aria-hidden="true"
-                        className={cn(
-                          "mt-1.5 size-3.5 shrink-0 text-[#8fa3b2] transition-transform duration-300",
-                          openMove === i && "rotate-180 text-[#e8d9b0]"
-                        )}
-                      />
-                    </button>
-                  </h3>
-                  <div className="lp-acc" data-open={openMove === i}>
-                    <div>
-                      <div className="lp-acc-inner pb-5 pl-[3.75rem] pr-4 sm:pl-[4.25rem]">
-                        {more.map((p, k) => (
-                          <p
-                            key={k}
-                            className="text-[12.5px] leading-[1.8] text-[#a7b6c2] [&:not(:first-child)]:mt-2.5"
-                          >
-                            {t(p)}
-                          </p>
-                        ))}
-                        <ul className="mt-3.5 space-y-2">
-                          {points.map((pt) => (
-                            <li
-                              key={pt}
-                              className="flex items-start gap-2.5 text-[12px] leading-relaxed text-[#8fa3b2]"
-                            >
-                              <span
-                                aria-hidden="true"
-                                className="mt-[6px] size-1 shrink-0 rotate-45 bg-[#e8d9b0]/70"
-                              />
-                              <span>{t(pt)}</span>
-                            </li>
-                          ))}
-                        </ul>
-                        {/* THE TUNNEL — the movement walks into the mirror */}
-                        <button
-                          type="button"
-                          onClick={() => tunnelInto(title)}
-                          data-testid={`tunnel-movement-${i + 1}`}
-                          className="focus-glow group/tunnel mt-4 inline-flex items-center gap-2 rounded-full border border-[rgba(159,216,220,0.3)] bg-[rgba(159,216,220,0.06)] px-4 py-2 text-[12px] font-medium text-[#9fd8dc] transition-all duration-300 hover:border-[rgba(159,216,220,0.65)] hover:bg-[rgba(159,216,220,0.13)] hover:text-[#c9ecee]"
-                        >
-                          <MoveRight
-                            className="size-3.5 transition-transform duration-300 group-hover/tunnel:translate-x-0.5"
-                            aria-hidden="true"
-                          />
-                          {t("tunnel into mirror")}
-                        </button>
+                      <span className="size-[5px] rounded-full bg-[#e8d9b0] shadow-[0_0_6px_1px_rgba(232,217,176,0.5)]" />
+                    </span>
+
+                    {/* the stage's artwork — the illustration cropped
+                        clean from the visionary deck, its caption living
+                        as real HTML text below */}
+                    <figure className="overflow-hidden rounded-2xl ring-1 ring-white/10">
+                      <div className="relative h-44 w-full sm:h-64">
+                        <Image
+                          src={stage.img}
+                          alt={t(stage.alt)}
+                          fill
+                          sizes="(min-width: 640px) 830px, 100vw"
+                          className="object-cover"
+                        />
+                        <span
+                          aria-hidden="true"
+                          className="pointer-events-none absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-[rgba(4,7,12,0.72)] to-transparent"
+                        />
                       </div>
+                    </figure>
+
+                    <div className="mt-5">
+                      <p className="mono-label text-[9px] uppercase tracking-[0.28em] text-[#e8d9b0]">
+                        {t(stage.kicker)}
+                      </p>
+                      <h3 className="mt-2.5 font-[family-name:Cinzel] text-[21px] font-semibold leading-tight tracking-wide text-[#eef2f5] sm:text-[24px]">
+                        {t(stage.title)}
+                      </h3>
+                      <p className="mt-3 max-w-[640px] text-[13.5px] leading-[1.85] text-[#b9c6cf]">
+                        {t(stage.body)}
+                      </p>
+                      <p className="mono-label mt-3.5 text-[9px] uppercase tracking-[0.18em] text-[#7f95a5]">
+                        <span className="text-[#e8d9b0]">{t(stage.prepLabel)}</span>
+                        <span aria-hidden="true"> · </span>
+                        <span className="normal-case tracking-[0.02em]">{t(stage.prep)}</span>
+                      </p>
                     </div>
-                  </div>
-                </div>
-              ))}
+                  </li>
+                ))}
+              </ol>
+            </div>
+
+            {/* the science note — the honest frame beneath the vision */}
+            <div
+              data-testid="timeline-science-note"
+              className="mt-12 rounded-2xl border border-white/8 bg-[rgba(8,12,20,0.5)] p-5 sm:p-6"
+            >
+              <p className="mono-label text-[9px] uppercase tracking-[0.26em] text-[#e8d9b0]">
+                {t("Science note")}
+              </p>
+              <p className="mt-2.5 max-w-[680px] text-[12.5px] leading-[1.8] text-[#a7b6c2]">
+                {t(
+                  "NASA reports that life beyond Earth has not been confirmed, and no credible evidence of extraterrestrial life has been found. This timeline is an illustrated concept — a visionary exercise, not a prediction."
+                )}
+              </p>
+              <p className="mt-3 text-[11.5px] italic leading-relaxed text-[#66788a]">
+                {t(
+                  "Illustrated concept · No verified Arcturian or Pleiadian contact is asserted."
+                )}
+              </p>
             </div>
           </section>
         </main>

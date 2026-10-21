@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { LoaderCircle, Mail } from "lucide-react";
+import { Eye, EyeOff, LoaderCircle, Lock, Mail, UserRound } from "lucide-react";
+import Image from "next/image";
 import { toast } from "sonner";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
@@ -16,6 +17,10 @@ import { cn } from "@/lib/utils";
 /*  Security law: nothing here ever stores the password — only the     */
 /*  door (the server) touches it; the answer is a signed httpOnly      */
 /*  cookie; the email's existence never leaks through one message.     */
+/*                                                                     */
+/*  THE PROFESSIONAL DOOR — a quiet branded head, two clear tabs,      */
+/*  guided fields with their own icons, a guarded secret phrase with   */
+/*  its show/hide hand, and the house's promises spoken plainly.       */
 /* ------------------------------------------------------------------ */
 
 export function AuthModal() {
@@ -32,11 +37,13 @@ export function AuthModal() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const [showPw, setShowPw] = useState(false);
 
   useEffect(() => {
     if (authOpen) {
       setTab(authMode === "register" ? "register" : "signin");
       setPassword("");
+      setShowPw(false);
     }
   }, [authOpen, authMode]);
 
@@ -88,6 +95,11 @@ export function AuthModal() {
     }
   };
 
+  const fieldShell =
+    "mt-1.5 flex h-11 w-full items-center gap-2.5 rounded-xl border hairline bg-[var(--glass-bg)] px-3 transition-colors duration-300 focus-within:border-[var(--hairline-active)]";
+  const fieldInput =
+    "min-w-0 flex-1 bg-transparent text-[14px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none";
+
   return (
     <ModalShell
       open={authOpen}
@@ -102,9 +114,30 @@ export function AuthModal() {
       }
       widthClass="sm:max-w-[460px]"
     >
-      <div className="px-5 pb-5 sm:px-6">
+      <div className="px-5 pb-6 sm:px-6">
+        {/* the branded head — the house's own seal above its door */}
+        <div className="mb-4 flex items-center justify-center gap-2.5" data-testid="auth-brand">
+          <Image
+            src="/images/ai/mark-dark.png"
+            alt=""
+            width={30}
+            height={30}
+            className="hidden size-[30px] rounded-full opacity-90 dark:block"
+          />
+          <Image
+            src="/images/ai/mark-light.png"
+            alt=""
+            width={30}
+            height={30}
+            className="size-[30px] rounded-full opacity-90 dark:hidden"
+          />
+          <span className="font-[family-name:Cinzel] text-[13px] tracking-[0.22em] text-foreground/85">
+            reflectme.space
+          </span>
+        </div>
+
         {/* the two doors */}
-        <div className="flex gap-1.5 rounded-full border hairline p-1" role="tablist" aria-label={t("The passage")}>
+        <div className="flex gap-1.5 rounded-full border hairline bg-[var(--glass-bg)] p-1" role="tablist" aria-label={t("The passage")}>
           {(["signin", "register"] as const).map((k) => (
             <button
               key={k}
@@ -114,9 +147,9 @@ export function AuthModal() {
               onClick={() => setTab(k)}
               data-testid={`auth-tab-${k}`}
               className={cn(
-                "focus-glow h-8 flex-1 rounded-full text-[13px] font-medium transition-all duration-300",
+                "focus-glow h-9 flex-1 rounded-full text-[13px] font-medium transition-all duration-300",
                 tab === k
-                  ? "bg-foreground text-background"
+                  ? "bg-foreground text-background shadow-[0_2px_10px_-6px_rgba(0,0,0,0.6)]"
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
@@ -130,54 +163,79 @@ export function AuthModal() {
             e.preventDefault();
             void submit();
           }}
-          className="mt-4 space-y-3"
+          className="mt-5 space-y-3.5"
         >
           {tab === "register" && (
             <div>
               <label htmlFor="passage-name" className="mono-label text-[9.5px] uppercase tracking-[0.22em] text-muted-foreground">
                 {t("A name (or none)")}
               </label>
-              <input
-                id="passage-name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                autoComplete="name"
-                className="mt-1.5 h-10 w-full rounded-xl border hairline bg-transparent px-3 text-[14px] text-foreground focus:border-[var(--hairline-active)] focus:outline-none"
-              />
+              <div className={fieldShell}>
+                <UserRound className="size-3.5 shrink-0 text-muted-foreground/70" aria-hidden="true" />
+                <input
+                  id="passage-name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  autoComplete="name"
+                  className={fieldInput}
+                />
+              </div>
             </div>
           )}
           <div>
             <label htmlFor="passage-email" className="mono-label text-[9.5px] uppercase tracking-[0.22em] text-muted-foreground">
               {t("Email")}
             </label>
-            <input
-              id="passage-email"
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              autoComplete="email"
-              data-testid="passage-email"
-              className="mt-1.5 h-10 w-full rounded-xl border hairline bg-transparent px-3 text-[14px] text-foreground focus:border-[var(--hairline-active)] focus:outline-none"
-            />
+            <div className={fieldShell}>
+              <Mail className="size-3.5 shrink-0 text-muted-foreground/70" aria-hidden="true" />
+              <input
+                id="passage-email"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
+                placeholder="you@somewhere.earth"
+                data-testid="passage-email"
+                className={fieldInput}
+              />
+            </div>
           </div>
           <div>
             <label htmlFor="passage-password" className="mono-label text-[9.5px] uppercase tracking-[0.22em] text-muted-foreground">
               {t("Secret phrase")}
             </label>
-            <input
-              id="passage-password"
-              type="password"
-              required
-              minLength={8}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoComplete={tab === "register" ? "new-password" : "current-password"}
-              data-testid="passage-password"
-              className="mt-1.5 h-10 w-full rounded-xl border hairline bg-transparent px-3 text-[14px] text-foreground focus:border-[var(--hairline-active)] focus:outline-none"
-            />
+            <div className={cn(fieldShell, "pr-1.5")}>
+              <Lock className="size-3.5 shrink-0 text-muted-foreground/70" aria-hidden="true" />
+              <input
+                id="passage-password"
+                type={showPw ? "text" : "password"}
+                required
+                minLength={8}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete={tab === "register" ? "new-password" : "current-password"}
+                placeholder="••••••••"
+                data-testid="passage-password"
+                className={fieldInput}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPw((v) => !v)}
+                aria-label={showPw ? t("Hide the secret phrase") : t("Show the secret phrase")}
+                aria-pressed={showPw}
+                data-testid="passage-pw-toggle"
+                className="focus-glow flex size-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors duration-300 hover:text-foreground"
+              >
+                {showPw ? (
+                  <EyeOff className="size-3.5" aria-hidden="true" />
+                ) : (
+                  <Eye className="size-3.5" aria-hidden="true" />
+                )}
+              </button>
+            </div>
             {tab === "register" && (
-              <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
+              <p className="mt-1.5 text-[12px] leading-relaxed text-muted-foreground">
                 {t("Eight characters or more. The laboratory never sees it — only its echo, hashed beyond reading.")}
               </p>
             )}
@@ -187,7 +245,7 @@ export function AuthModal() {
             type="submit"
             disabled={busy || !email.trim() || !password}
             data-testid="passage-submit"
-            className="focus-glow flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-foreground text-[13.5px] font-medium text-background transition-all duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40"
+            className="focus-glow flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-foreground text-[13.5px] font-medium text-background transition-all duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0"
           >
             {busy ? (
               <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
@@ -197,6 +255,22 @@ export function AuthModal() {
             {tab === "register" ? t("Carve the passage") : t("Open the passage")}
           </button>
         </form>
+
+        {/* the register side's quiet promises */}
+        {tab === "register" && (
+          <ul className="mt-4 space-y-1.5 rounded-xl border hairline bg-[var(--glass-bg-soft)] px-3.5 py-3" data-testid="auth-promises">
+            {[
+              "Every transmission kept in your cosmic library — on every device",
+              "Your settings travel with your passage",
+              "Everything you make stays yours",
+            ].map((line) => (
+              <li key={line} className="flex items-start gap-2 text-[12px] leading-relaxed text-muted-foreground">
+                <span aria-hidden="true" className="mt-[7px] size-1 shrink-0 rotate-45 bg-[#e8d9b0]" />
+                <span>{t(line)}</span>
+              </li>
+            ))}
+          </ul>
+        )}
 
         {/* the Google passage */}
         <div className="mt-4 flex items-center gap-3">
@@ -210,7 +284,7 @@ export function AuthModal() {
           type="button"
           onClick={google}
           data-testid="passage-google"
-          className="focus-glow mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-xl border hairline text-[13.5px] font-medium text-foreground/85 transition-all duration-300 hover:border-[var(--hairline-hover)]"
+          className="focus-glow mt-3 flex h-11 w-full items-center justify-center gap-2.5 rounded-xl border hairline text-[13.5px] font-medium text-foreground/85 transition-all duration-300 hover:border-[var(--hairline-hover)] hover:bg-[var(--glass-bg)]"
         >
           <svg viewBox="0 0 24 24" className="size-4" aria-hidden="true">
             <path fill="currentColor" d="M21.35 11.1h-9.17v2.73h6.51c-.33 3.81-3.5 5.44-6.5 5.44C8.36 19.27 5 16.25 5 12c0-4.1 3.2-7.27 7.2-7.27 3.09 0 4.9 1.97 4.9 1.97L19 4.72S16.56 2 12.1 2C6.42 2 2.03 6.8 2.03 12c0 5.05 4.13 10 10.22 10 5.35 0 9.25-3.67 9.25-9.09 0-1.15-.15-1.81-.15-1.81Z" />
