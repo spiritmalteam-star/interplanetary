@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Maximize2, Minimize2, TreeDeciduous } from "lucide-react";
+import { Coins, Maximize2, Minimize2, TreeDeciduous } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { setLearningIdentity } from "@/lib/learning-branches";
 import { useT } from "@/lib/i18n";
@@ -448,13 +448,15 @@ function AppShellViews({
               <Maximize2 className="size-3" aria-hidden="true" />
               {/* THE EXCHANGE'S OWN MARK — a small gold coin rides the
                   crossing's corner: the full portal is the paid realm,
-                  opened by registration or login once one of the offered
+                  opened by login (registration) once one of the offered
                   realms is acquired (the landing's floor stays free). */}
               <span
                 aria-hidden="true"
                 data-testid="crown-expand-paid-dot"
-                className="absolute -right-0.5 -top-0.5 size-2 rounded-full bg-[#e8d9b0] shadow-[0_0_7px_1px_rgba(232,217,176,0.6)] ring-1 ring-[#0b0f17]"
-              />
+                className="absolute -right-1 -top-1 flex size-3 items-center justify-center rounded-full border border-[rgba(232,217,176,0.6)] bg-[#0b0f17] text-[#e8d9b0] shadow-[0_0_6px_1px_rgba(232,217,176,0.45)]"
+              >
+                <Coins className="size-2" />
+              </span>
             </button>
           ) : !bare && onMinimize ? (
             <button

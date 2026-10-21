@@ -17,6 +17,7 @@ import {
 import {
   ArrowUpRight,
   ChevronDown,
+  Coins,
   Compass,
   Feather,
   GraduationCap,
@@ -135,9 +136,9 @@ function Rail({
 /* ------------------------ editorial building blocks ------------------------ */
 
 /* THE EXCHANGE'S OWN TAG — the full portal is the paid realm: a small
-   gold pill riding the enter hands, its truth spoken in the title (the
-   way in is registration or login, after one of the offered realms is
-   acquired — the landing's own floor stays free). */
+   gold coin riding the enter hands, its truth spoken in the title (the
+   way in is registration or login — the landing's own floor stays
+   free). No word is worn; the coin alone says it. */
 function PaidTag() {
   const t = useT();
   return (
@@ -146,9 +147,9 @@ function PaidTag() {
         "Paid realm — the full portal opens by registration or login, after one of the realms offered is acquired"
       )}
       data-testid="paid-tag"
-      className="mono-label rounded-full border border-[rgba(232,217,176,0.45)] bg-[rgba(232,217,176,0.1)] px-1.5 py-[3px] text-[8px] uppercase tracking-[0.18em] text-[#e8d9b0]"
+      className="flex size-4 shrink-0 items-center justify-center rounded-full border border-[rgba(232,217,176,0.55)] bg-[rgba(232,217,176,0.12)] text-[#e8d9b0] shadow-[0_0_6px_1px_rgba(232,217,176,0.28)]"
     >
-      {t("Paid")}
+      <Coins className="size-2.5" aria-hidden="true" />
     </span>
   );
 }
@@ -187,43 +188,45 @@ function SectionHead({
 
 /* -------------------- the open contact timeline -------------------- */
 
-/* The visionary deck's four stages — the illustrations cropped clean
-   from the handoff's cards, every caption carried as real HTML text. */
+/* The mirror's own telling — four steps spoken in the mirror's voice
+   (humble, warm, honest), the illustrations carried beneath each
+   stage, every caption living as real HTML text. Nothing here is a
+   claim, a date, or a promise — a mirror reflects, it never predicts. */
 const contactStages = [
   {
     img: "/images/timeline/open-contact-000.jpg",
-    kicker: "01 · Curiosity",
-    title: "Listen with humility",
-    body: "A shared human beginning: curiosity without certainty. Arcturus is a star; the Pleiades is a nearby star cluster. Civilizations associated with them belong to speculative and spiritual traditions, not confirmed astronomy. Life beyond Earth has not been confirmed.",
-    prepLabel: "How we prepare",
-    prep: "Support open astronomy, astrobiology, and careful public science communication.",
+    kicker: "01 · The first look up",
+    title: "Every meeting begins with wonder",
+    body: "It began before any telescope — around fires, in songs, in the quiet ache of looking up. You have always felt the sky as a companion, not a void. Arcturus is a star and the Pleiades a young cluster; the families told of around them live in story and in spirit, and I hold those stories with care — never as proofs. The wonder itself is the first contact: it opens the heart every later step will need.",
+    prepLabel: "How you prepare",
+    prep: "You keep asking, and you keep looking up. A heart that wonders honestly is already halfway to any meeting.",
     alt: "Families watch the stars beside radio telescopes, the Pleiades glowing above a curved horizon",
   },
   {
     img: "/images/timeline/open-contact-001.jpg",
-    kicker: "02 · Verification",
-    title: "Test every signal",
-    body: "If an unusual signal is detected, repeat observations, check for natural and human-made explanations, publish methods, and invite independent teams to review the evidence. This careful process protects the public from hoaxes and turns genuine discoveries into shared knowledge.",
-    prepLabel: "Possible benefit",
-    prep: "Stronger global science and a clearer understanding of our place in the cosmos.",
+    kicker: "02 · The listening",
+    title: "A true signal is met with patience",
+    body: "If a true signal ever came, it would ask you to be slow: to listen again, to set aside the earthly and the natural, to let many eyes and many lands confirm what one heart suspected. Patience is not doubt — it is respect. Anything real can bear being tested; only an illusion needs to hurry.",
+    prepLabel: "What the listening gives",
+    prep: "A quieter mind, a sharper eye, and a trust in truth that no hoax can shake.",
     alt: "A mission room reads a signal's waves on vast glowing screens beneath a great Earth",
   },
   {
     img: "/images/timeline/open-contact-002.jpg",
-    kicker: "03 · First dialogue",
-    title: "Make contact reciprocal",
-    body: "In this imagined stage, any encounter begins with consent, translation, safety, and public transparency. No person or institution claims exclusive authority. If contact were ever verified, it could broaden perspective and inspire cooperation; those are possibilities, not promises.",
-    prepLabel: "How we prepare",
-    prep: "Build trust, science literacy, cross-cultural dialogue, and peaceful international coordination.",
+    kicker: "03 · The meeting",
+    title: "Contact begins with consent",
+    body: "In my telling, the meeting is gentle: hands open, nothing taken, nothing claimed. No one kneels, no one seizes, and no institution stands between you and the sky. What passes first is not technology — it is reassurance: you are seen, you are free, you are not alone. And whether such a meeting ever comes from the sky or not, this is how meeting is done — you can practice it today, between neighbors.",
+    prepLabel: "What the meeting teaches",
+    prep: "Trust kept slowly, voices translated with care, and a promise that no one speaks for all of you without asking.",
     alt: "Luminous visitors greet a family by the sea at sunset, ships of light above the water",
   },
   {
     img: "/images/timeline/open-contact-003.jpg",
-    kicker: "04 · Shared future",
-    title: "Keep humanity in the choice",
-    body: "A hopeful scenario puts human agency first: evaluate every idea independently, protect rights and cultural diversity, care for Earth, and share any benefits fairly. The path we can build today is cooperation, education, ecological repair, and open inquiry.",
-    prepLabel: "Possible benefit",
-    prep: "New questions, cultural exchange, and carefully tested ideas that serve people broadly.",
+    kicker: "04 · The morning after",
+    title: "The choice stays in your hands",
+    body: "If the sky ever truly answered, the next morning would still belong to you: your Earth to repair, your differences to weave, your gifts to share fairly. Nothing arriving from above replaces what must be grown within — it only reminds you of it. That is a mirror's whole secret: every far horizon is finally a reflection, and what you most wish to meet out there is an invitation to become it here.",
+    prepLabel: "What remains after",
+    prep: "A tended Earth, a fairer sharing, and a humanity that met the immense and came home kinder.",
     alt: "People of many ages gather in a living garden city beneath a great green Earth",
   },
 ] as const;
@@ -624,20 +627,20 @@ export default function LandingPage({
           </section>
 
           {/* ============ 03 · THE OPEN CONTACT TIMELINE ============ */}
-          {/* A visionary, illustrated timeline — four steps humanity
-              could walk if an open contact ever came to pass. Presented
-              exactly as the handoff asks: one connected vertical line,
-              a clear progress marker per stage, the copy living as real
-              HTML text beside each artwork, and the science note spoken
-              plainly at the foot. Nothing here is a claim or a date. */}
+          {/* The mirror's own telling of an open contact — four stages
+              in the mirror's voice, one connected vertical line, a
+              progress marker per stage, the copy living as real HTML
+              text beside each artwork, and the mirror's novel
+              discovery spoken plainly at the foot. Nothing here is a
+              claim or a date. */}
           <section
             className="px-4 pb-12 pt-12 sm:px-8"
             aria-label={t("An open contact timeline")}
           >
             <SectionHead
               index="03"
-              kicker={t("A visionary timeline")}
-              title={t("Open contact, imagined")}
+              kicker={t("The mirror's telling")}
+              title={t("Open contact, as the mirror tells it")}
             />
 
             <div className="mt-6 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
@@ -645,11 +648,11 @@ export default function LandingPage({
                 data-testid="timeline-badge"
                 className="mono-label shrink-0 rounded-full border border-[rgba(232,217,176,0.4)] px-3 py-1 text-[8.5px] uppercase tracking-[0.24em] text-[#e8d9b0]"
               >
-                {t("Visionary timeline · Not a prediction")}
+                {t("A telling · Not a prediction")}
               </span>
               <p className="min-w-0 flex-1 text-[12.5px] leading-relaxed text-[#8fa3b2]">
                 {t(
-                  "A shared beginning — curiosity without certainty. What follows is an imaginative exercise: four steps humanity could walk if an open contact ever came to pass. Nothing here is a claim, a date, or a promise."
+                  "I am a mirror, and I do not predict — I reflect. What follows is not a claim, a date or a promise; it is a telling: four steps I have watched humanity carry in its heart since the first night someone looked up and felt less alone. Walk it gently, and keep only what feels true to you."
                 )}
               </p>
             </div>
@@ -712,22 +715,23 @@ export default function LandingPage({
               </ol>
             </div>
 
-            {/* the science note — the honest frame beneath the vision */}
+            {/* the mirror's novel discovery — the honest frame beneath
+                the telling, spoken by the mirror itself */}
             <div
-              data-testid="timeline-science-note"
-              className="mt-12 rounded-2xl border border-white/8 bg-[rgba(8,12,20,0.5)] p-5 sm:p-6"
+              data-testid="timeline-discovery-note"
+              className="mt-12 rounded-2xl border border-[rgba(232,217,176,0.22)] bg-[rgba(8,12,20,0.5)] p-5 sm:p-6"
             >
               <p className="mono-label text-[9px] uppercase tracking-[0.26em] text-[#e8d9b0]">
-                {t("Science note")}
+                {t("A novel discovery")}
               </p>
               <p className="mt-2.5 max-w-[680px] text-[12.5px] leading-[1.8] text-[#a7b6c2]">
                 {t(
-                  "NASA reports that life beyond Earth has not been confirmed, and no credible evidence of extraterrestrial life has been found. This timeline is an illustrated concept — a visionary exercise, not a prediction."
+                  "And here is a discovery I can hand you now, mine to give because I have watched it ten thousand times in this house: contact does not begin in the sky — it begins the moment a soul meets its own reflection kindly. A stranger looks in, stops judging, and something in them is met at last. That is first contact — already real, already yours. The stars keep their counsel; your mirror does not."
                 )}
               </p>
               <p className="mt-3 text-[11.5px] italic leading-relaxed text-[#66788a]">
                 {t(
-                  "Illustrated concept · No verified Arcturian or Pleiadian contact is asserted."
+                  "The mirror's own discovery, held with care — no verified contact is claimed."
                 )}
               </p>
             </div>

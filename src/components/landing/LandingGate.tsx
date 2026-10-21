@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ComponentType } from "react";
 import { useTheme } from "next-themes";
 import { useT } from "@/lib/i18n";
+import { useMirror } from "@/lib/mirror-store";
 import { cn } from "@/lib/utils";
 import LandingPage from "./LandingPage";
 
@@ -218,20 +219,38 @@ export default function LandingGate() {
     };
   }, [phase, geo, Chamber]);
 
-  /* THE EXPAND — nothing is opened: the same portal simply grows.
-     The landing sinks beneath it; every word stays where it was. */
+  /* THE FULL PORTAL'S DOOR — the crossing is for signed keepers only.
+     A guest's touch on any enter hand (the hero's button, the offer's
+     link, the crown's fullscreen hand) opens the passage's threshold
+     — sign in or register — instead of the growth. The landing's own
+     floor stays free forever. If the keeper's name is still traveling
+     (the first breath after mount), the passage is asked once so a
+     signed visitor is never wrongly turned away. */
   const expandPortal = useCallback(() => {
     if (busy.current) return;
-    if (!Chamber) {
-      setPending(true);
-      return;
-    }
-    busy.current = true;
-    setPhase("opening");
-    window.setTimeout(() => {
-      setPhase("through");
-      busy.current = false;
-    }, 680);
+    void (async () => {
+      const st = useMirror.getState();
+      let me = st.me;
+      if (!me) {
+        await st.refreshMe();
+        me = useMirror.getState().me;
+      }
+      if (!me || me.email.startsWith("anon:")) {
+        useMirror.getState().openAuth("signin");
+        return;
+      }
+      if (busy.current) return;
+      if (!Chamber) {
+        setPending(true);
+        return;
+      }
+      busy.current = true;
+      setPhase("opening");
+      window.setTimeout(() => {
+        setPhase("through");
+        busy.current = false;
+      }, 680);
+    })();
   }, [Chamber]);
 
   /* an early ask to enter — honored the moment the chamber arrives */
