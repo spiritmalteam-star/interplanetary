@@ -4003,6 +4003,8 @@ export const it: TranslationDict = {
   "About us": "Chi siamo",
   "Passage": "Il Passaggio",
   "Whisper to the tree…": "Sussurra all'albero…",
+  "Whisper to the mirror…": "Sussurra allo specchio…",
+  "Reflecting": "Riflettendo",
   "The whole house grows from the seed — press a whisper to walk, or speak below.": "Tutta la casa cresce dal seme — premi un sussurro per camminare, o parla qui sotto.",
   "Create · a record of akasha": "Creare · un registro dell'akasha",
   "Create · a book from this branch": "Creare · un libro da questo ramo",

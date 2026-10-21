@@ -3585,6 +3585,8 @@ export const de: TranslationDict = {
   "About us": "Über uns",
   "Passage": "Der Durchgang",
   "Whisper to the tree…": "Flüstere dem Baum zu…",
+  "Whisper to the mirror…": "Flüstere dem Spiegel zu…",
+  "Reflecting": "Spiegelnd",
   "The whole house grows from the seed — press a whisper to walk, or speak below.": "Das ganze Haus wächst aus dem Samen — drücke ein Geflüster, um zu gehen, oder sprich unten.",
   "Create · a record of akasha": "Schaffen · eine Aufzeichnung der Akasha",
   "Create · a book from this branch": "Schaffen · ein Buch aus diesem Zweig",

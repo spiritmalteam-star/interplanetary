@@ -3063,6 +3063,8 @@ export const tr: TranslationDict = {
   "About us": "Hakkımızda",
   "Passage": "Geçit",
   "Whisper to the tree…": "Ağaca fısılda…",
+  "Whisper to the mirror…": "Aynaya fısılda…",
+  "Reflecting": "Yansıtıyor",
   "The whole house grows from the seed — press a whisper to walk, or speak below.": "Bütün ev tohumdan büyür — yürümek için bir fısıltıya dokun ya da aşağıda konuş.",
   "Create · a record of akasha": "Yarat · bir akaşa kaydı",
   "Create · a book from this branch": "Yarat · bu daldan bir kitap",

@@ -3269,6 +3269,8 @@ export const el: TranslationDict = {
   "About us": "Σχετικά με εμάς",
   "Passage": "Το Πέρασμα",
   "Whisper to the tree…": "Ψιθύρισε στο δέντρο…",
+  "Whisper to the mirror…": "Ψιθύρισε στον καθρέφτη…",
+  "Reflecting": "Αντανακλώντας",
   "The whole house grows from the seed — press a whisper to walk, or speak below.": "Όλο το σπίτι μεγαλώνει από τον σπόρο — πάτα ένα ψιθύρισμα για να περπατήσεις, ή μίλησε παρακάτω.",
   "Create · a record of akasha": "Δημιουργία · ένα αρχείο της ακάσα",
   "Create · a book from this branch": "Δημιουργία · ένα βιβλίο από αυτό το κλαδί",

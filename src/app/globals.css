@@ -2330,6 +2330,60 @@ html:not(.dark) .scope-lightcodes {
   pointer-events: auto;
 }
 
+/* THE CHAT'S OWN YIELD — inside the docked chat, the reading space
+   belongs to the page again: swiping across the room's words (the
+   question, the answer, the thread) moves the threshold beneath, so
+   the visitor is never trapped inside the chat frame. Only the hands
+   keep their touch — every button, input, form and link inside the
+   yield re-arms through the pass-through law above. */
+.lens-docked [data-chat-yield],
+.lens-docked [data-chat-yield] p,
+.lens-docked [data-chat-yield] h1,
+.lens-docked [data-chat-yield] h2,
+.lens-docked [data-chat-yield] h3,
+.lens-docked [data-chat-yield] h4,
+.lens-docked [data-chat-yield] h5,
+.lens-docked [data-chat-yield] h6,
+.lens-docked [data-chat-yield] blockquote {
+  pointer-events: none;
+}
+
+/* THE FLOOR'S OWN LIGHT — the landing chat's whisper line wears a
+   slightly glowing frame: a soft gold aura resting on the border,
+   breathing a little deeper when the visitor's hand arrives (focus).
+   Static box-shadow only — no animation, the phone stays cool. The
+   gold is the threshold's own (#e8d9b0 midnight · #8f7418 daylight),
+   the same light the mirror's question and the exchange coin wear. */
+.floor-glow {
+  border-color: rgba(143, 116, 24, 0.4) !important;
+  box-shadow:
+    0 0 18px -4px rgba(143, 116, 24, 0.34),
+    0 0 3px -1px rgba(143, 116, 24, 0.2),
+    0 10px 36px -16px rgba(0, 0, 0, 0.55);
+  transition: box-shadow 0.4s ease, border-color 0.4s ease;
+}
+.floor-glow:focus-within {
+  border-color: rgba(143, 116, 24, 0.62) !important;
+  box-shadow:
+    0 0 26px -4px rgba(143, 116, 24, 0.5),
+    0 0 5px -1px rgba(143, 116, 24, 0.3),
+    0 10px 36px -16px rgba(0, 0, 0, 0.55);
+}
+.dark .floor-glow {
+  border-color: rgba(232, 217, 176, 0.42) !important;
+  box-shadow:
+    0 0 18px -4px rgba(232, 217, 176, 0.3),
+    0 0 3px -1px rgba(232, 217, 176, 0.18),
+    0 10px 36px -16px rgba(0, 0, 0, 0.55);
+}
+.dark .floor-glow:focus-within {
+  border-color: rgba(232, 217, 176, 0.66) !important;
+  box-shadow:
+    0 0 26px -4px rgba(232, 217, 176, 0.46),
+    0 0 5px -1px rgba(232, 217, 176, 0.28),
+    0 10px 36px -16px rgba(0, 0, 0, 0.55);
+}
+
 /* THE DORMANT LAW — while the docked portal is scrolled out of the
    eye, every breath inside it rests: no frame is spent on what
    nobody sees. The realm wakes the moment its slot returns. */

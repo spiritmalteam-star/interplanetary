@@ -5287,6 +5287,8 @@ export const sq: TranslationDict = {
   "About us": "Rreth nesh",
   "Passage": "Kalimi",
   "Whisper to the tree…": "Pëshpëriti pemës…",
+  "Whisper to the mirror…": "Pëshpëriti pasqyrës…",
+  "Reflecting": "Po pasqyron",
   "The whole house grows from the seed — press a whisper to walk, or speak below.": "E gjithë shtëpia rritet nga fara — shtyp një pëshpëritje për të ecur, ose fol më poshtë.",
   "Create · a record of akasha": "Krijo · një regjistrim të akashës",
   "Create · a book from this branch": "Krijo · një libër nga kjo degë",

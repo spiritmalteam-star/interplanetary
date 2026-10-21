@@ -329,7 +329,7 @@ interface RoomTurn {
 }
 
 async function speakWithTransmission(
-  category: BranchId,
+  category: BranchId | "mirror",
   query: string,
   branchQuestion: string,
   transmission: string,
@@ -1025,6 +1025,7 @@ const ZoomReplyForm = memo(function ZoomReplyForm({
   testIdPrefix,
   leading,
   scopeKey,
+  bare = false,
 }: {
   roomKey: string;
   disabled?: boolean;
@@ -1035,6 +1036,10 @@ const ZoomReplyForm = memo(function ZoomReplyForm({
   /** THE EXTRAS' OWN SCOPE — the call already rides as `leading`, so
       the extras only carry the paperclip and the camera's eye. */
   scopeKey: LiveScopeKey;
+  /** THE LANDING'S PURE FLOOR — docked in the threshold the room's
+      own line keeps the quiet shape: no attachments, a softly glowing
+      frame, the mirror's own word. */
+  bare?: boolean;
 }) {
   const t = useT();
   const [draft, setDraft] = useState("");
@@ -1070,10 +1075,14 @@ const ZoomReplyForm = memo(function ZoomReplyForm({
           e.preventDefault();
           send();
         }}
-        className="flex items-center gap-1.5 rounded-full border py-1 pl-2 pr-1 transition-colors duration-300 focus-within:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)]"
+        className={cn(
+          "flex items-center gap-1.5 rounded-full border py-1 pl-2 pr-1 transition-colors duration-300 focus-within:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)]",
+          bare && "floor-glow"
+        )}
         style={{
-          borderColor:
-            "color-mix(in srgb, var(--hairline) 80%, transparent)",
+          borderColor: bare
+            ? undefined
+            : "color-mix(in srgb, var(--hairline) 80%, transparent)",
         }}
       >
         {leading}
@@ -1081,19 +1090,22 @@ const ZoomReplyForm = memo(function ZoomReplyForm({
           scope={scopeKey}
           size="2xs"
           withCall={false}
+          withAttachments={!bare}
           disabled={disabled}
           accentVar="var(--scope-a,var(--gd))"
           attachments={atts}
           onAttachmentsChange={setAtts}
         />
         <label htmlFor={`${testIdPrefix}-zoom-reply`} className="sr-only">
-          {t("Speak with the transmission…")}
+          {bare ? t("Whisper to the mirror…") : t("Speak with the transmission…")}
         </label>
         <input
           id={`${testIdPrefix}-zoom-reply`}
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          placeholder={t("Speak with the transmission…")}
+          placeholder={
+            bare ? t("Whisper to the mirror…") : t("Speak with the transmission…")
+          }
           disabled={disabled}
           autoComplete="off"
           data-testid={`${testIdPrefix}-zoom-reply`}
@@ -3485,7 +3497,10 @@ export function BranchCanopy({
       /* THE FAMILY'S VOICE — the room speaks through the door of the
          family its own whisper was grown from (the manifest room as
          the manifest, the atelier room as the atelier); a whisper the
-         grove doesn't know keeps the channel's own door. */
+         grove doesn't know keeps the channel's own door. THE LANDING'S
+         OWN LAW — docked in the threshold the room's conversation
+         stays the mirror itself: no category's voice ever answers on
+         the free floor, whatever whisper grew the room. */
       const famKey = familyKeyByText.get(roomQ.toLowerCase());
       const roomCategory: BranchId =
         TREE_FAMILIES.find((f) => f.key === famKey)?.category ?? category;
@@ -3501,7 +3516,7 @@ export function BranchCanopy({
       setThreadBusy(true);
       try {
         const reply = await speakWithTransmission(
-          roomCategory,
+          bare ? "mirror" : roomCategory,
           q,
           roomQ,
           answer || "",
@@ -3530,6 +3545,7 @@ export function BranchCanopy({
     [
       answer,
       applyRoomTurn,
+      bare,
       category,
       disabled,
       familyKeyByText,
@@ -4643,14 +4659,14 @@ export function BranchCanopy({
                 sendFromPanel(q, null, carried);
               }}
               className={cn(
-                "pointer-events-auto flex w-full max-w-[560px] items-center gap-2 rounded-full border py-1.5 pl-2.5 pr-1.5 shadow-[0_10px_36px_-16px_rgba(0,0,0,0.55)] transition-colors duration-300 focus-within:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)]",
+                "pointer-events-auto flex w-full max-w-[560px] items-center gap-2 rounded-full border py-1.5 pl-2.5 pr-1.5 transition-colors duration-300 focus-within:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)]",
                 /* THE COOL FLOOR — docked in the threshold (bare) the
                    line wears an opaque coat and no backdrop blur: a
                    live blur over a scrolling page is heat the phone
                    must not pay for a lens. */
                 bare
-                  ? "bg-background"
-                  : "bg-background/95 backdrop-blur-xl"
+                  ? "bg-background floor-glow"
+                  : "bg-background/95 backdrop-blur-xl shadow-[0_10px_36px_-16px_rgba(0,0,0,0.55)]"
               )}
               style={{
                 borderColor:
@@ -4695,13 +4711,18 @@ export function BranchCanopy({
                 <Phone className="size-3.5" aria-hidden="true" />
               </button>
               <label htmlFor={`${testIdPrefix}-ask`} className="sr-only">
-                {t("Whisper to the tree…")}
+                {bare ? t("Whisper to the mirror…") : t("Whisper to the tree…")}
               </label>
               <input
                 id={`${testIdPrefix}-ask`}
                 value={askDraft}
                 onChange={(e) => setAskDraft(e.target.value)}
-                placeholder={t("Whisper to the tree…")}
+                placeholder={
+                  /* THE LANDING'S OWN WORD — docked in the threshold the
+                     line whispers to the mirror itself: no tree, no walk,
+                     no scope — pure presence. */
+                  bare ? t("Whisper to the mirror…") : t("Whisper to the tree…")
+                }
                 disabled={disabled}
                 autoComplete="off"
                 data-testid={`${testIdPrefix}-ask-input`}
@@ -4723,7 +4744,8 @@ export function BranchCanopy({
             {bare && guest && (
               <p
                 data-testid="floor-temporary-note"
-                className="mono-label pointer-events-none text-[8px] uppercase tracking-[0.26em] text-muted-foreground/55"
+                className="mono-label text-[8px] uppercase tracking-[0.26em] text-muted-foreground/55"
+                style={{ pointerEvents: "none" }}
               >
                 {t("Temporary chat — sign in to keep your reflections")}
               </p>
@@ -4754,7 +4776,18 @@ export function BranchCanopy({
             <section
               data-testid={`${testIdPrefix}-zoom`}
               aria-label={zoom.q}
-              className="canopy-panel pointer-events-auto flex min-h-0 w-full max-w-[860px] flex-col overflow-hidden rounded-3xl border bg-background shadow-[0_28px_80px_-32px_rgba(0,0,0,0.65)]"
+              /* THE CHAT'S OWN YIELD — docked in the threshold (bare) the
+                  room's reading space keeps no pointer surface: swiping
+                  across the words moves the page beneath, so the visitor
+                  is never trapped inside the chat frame. The hands (the
+                  copy, the voice, the words' own line) re-arm through
+                  the pass-through law; the full portal keeps the solid
+                  room it always was. */
+              data-chat-yield={bare ? "" : undefined}
+              className={cn(
+                "canopy-panel flex min-h-0 w-full max-w-[860px] flex-col overflow-hidden rounded-3xl border bg-background shadow-[0_28px_80px_-32px_rgba(0,0,0,0.65)]",
+                bare ? "pointer-events-none" : "pointer-events-auto"
+              )}
               style={{
                 borderColor:
                   "color-mix(in srgb, var(--scope-a,var(--gd)) 30%, transparent)",
@@ -4779,14 +4812,16 @@ export function BranchCanopy({
                 }}
               >
                 <div className="flex min-w-0 items-start gap-2.5">
-                  <span
-                    className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--scope-a,var(--gd))_42%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_10%,transparent)]"
-                    aria-hidden="true"
-                  >
-                    <ZoomIcon className="size-3.5 text-[var(--scope-a,var(--gd))]" />
-                  </span>
+                  {!bare && (
+                    <span
+                      className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--scope-a,var(--gd))_42%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_10%,transparent)]"
+                      aria-hidden="true"
+                    >
+                      <ZoomIcon className="size-3.5 text-[var(--scope-a,var(--gd))]" />
+                    </span>
+                  )}
                   <div className="min-w-0">
-                    {zoom.move && (
+                    {!bare && zoom.move && (
                       <p className="mono-label text-[8px] uppercase tracking-[0.2em] text-muted-foreground/70">
                         {t(BRANCH_TYPE_LABELS[zoom.move])}
                       </p>
@@ -4803,18 +4838,23 @@ export function BranchCanopy({
                 </div>
                 <div className="flex shrink-0 items-center gap-1.5">
                   {/* THE RENEWING HAND — the reload lives in the chat:
-                      the family behind the room is re-grown fresh. */}
-                  <button
-                    type="button"
-                    onClick={renew}
-                    disabled={disabled}
-                    aria-label={t("New branches")}
-                    title={t("New branches")}
-                    data-testid={`${testIdPrefix}-zoom-renew`}
-                    className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-                  >
-                    <RefreshCw className="size-3.5" aria-hidden="true" />
-                  </button>
+                      the family behind the room is re-grown fresh. THE
+                      LANDING'S PURE FLOOR — the walk's renewing hand
+                      waits for the full portal; the docked room keeps
+                      only the mirror's own hands. */}
+                  {!bare && (
+                    <button
+                      type="button"
+                      onClick={renew}
+                      disabled={disabled}
+                      aria-label={t("New branches")}
+                      title={t("New branches")}
+                      data-testid={`${testIdPrefix}-zoom-renew`}
+                      className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      <RefreshCw className="size-3.5" aria-hidden="true" />
+                    </button>
+                  )}
                   {/* THE NARRATOR'S GATE — the walk's one voice, at the
                       TOP of the room: a man, the documentary register,
                       reading each room aloud. While his voice gathers,
@@ -4866,7 +4906,7 @@ export function BranchCanopy({
                 className="nice-scroll min-h-0 flex-1 overflow-y-auto px-4 py-3 sm:px-6 sm:py-4"
               >
                 <div key={zoom.q} className="room-swap mx-auto max-w-[720px]">
-                  {zoom && (
+                  {zoom && !bare && (
                     <ResonantStageBadge
                       category={categoryForMove(zoomMove)}
                       moveLabel={zoom.move ? t(BRANCH_TYPE_LABELS[zoom.move]) : null}
@@ -4898,14 +4938,16 @@ export function BranchCanopy({
                     ) : null
                   ) : roomError && !liveLoading && revealStage >= 2 ? (
                     /* THE ROOM'S HONESTY — an ask that could not cross
-                       shows its reason right here; the walk stands. */
+                       shows its reason right here; the walk stands. On
+                       the landing's floor the mirror speaks plainly —
+                       no laboratory words on the free ground. */
                     <div
                       className="my-2 rounded-2xl border border-[color-mix(in_srgb,#f43f5e_38%,transparent)] bg-[color-mix(in_srgb,#f43f5e_7%,var(--background))] px-4 py-3.5"
                       role="alert"
                       data-testid={`${testIdPrefix}-zoom-error`}
                     >
                       <p className="mono-label text-[8.5px] uppercase tracking-[0.2em] text-[#f43f5e]">
-                        {t("The transmission could not cross")}
+                        {t(bare ? "The field is quiet — speak once more" : "The transmission could not cross")}
                       </p>
                       <p className="mt-1.5 text-[13px] leading-relaxed text-foreground/85">
                         {roomError}
@@ -4915,7 +4957,7 @@ export function BranchCanopy({
                     revealStage >= 2 && (
                       <div className="py-5 text-muted-foreground">
                         <MirrorChanneling
-                          label={t("Channeling")}
+                          label={t(bare ? "Reflecting" : "Channeling")}
                           className="mono-label text-[10px] uppercase tracking-[0.22em]"
                         />
                       </div>
@@ -4958,7 +5000,7 @@ export function BranchCanopy({
                           {turn.loading ? (
                             <MirrorChanneling
                               compact
-                              label={t("The transmission is listening…")}
+                              label={t(bare ? "Reflecting" : "The transmission is listening…")}
                               className="py-1 mono-label text-[9.5px] uppercase tracking-[0.2em] text-muted-foreground"
                             />
                           ) : turn.a ? (
@@ -4998,8 +5040,11 @@ export function BranchCanopy({
                     "color-mix(in srgb, var(--hairline) 70%, transparent)",
                 }}
               >
-                {/* STAGE 4 — the next horizon, dropped down to explore */}
-                {!liveLoading && answer && revealStage >= 4 && contSeeds.length > 0 && (
+                {/* STAGE 4 — the next horizon, dropped down to explore.
+                    THE LANDING'S PURE FLOOR — the walk's branches belong
+                    to the full portal: the docked room keeps only the
+                    mirror's own words and its own line. */}
+                {!bare && !liveLoading && answer && revealStage >= 4 && contSeeds.length > 0 && (
                   <div className="flex flex-col gap-2.5">
                     <button
                       type="button"
@@ -5093,6 +5138,7 @@ export function BranchCanopy({
                   onSend={sendReplyFromPanel}
                   testIdPrefix={testIdPrefix}
                   scopeKey={roomLiveScope}
+                  bare={bare}
                   leading={
                     /* THE CATEGORY'S OWN CALL — the room's direct line */
                     <button
