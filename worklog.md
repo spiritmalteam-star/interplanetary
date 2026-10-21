@@ -4036,3 +4036,23 @@ Work Log:
 Stage Summary:
 - All four new requirements live: bigger mobile hero; fullscreen/landing controls standing in the crown exactly between About us and the profile icon (each in its turn); landing sections open onto much fuller information (2 paragraphs + 3 points per row, both chapters); a big, smooth, self-walking 10-plate "The shifting Earth" slideshow now rests right below the chat, built from the user's uploaded deck.
 - Remote main = 4fa8632; Vercel will auto-deploy. The earlier "restored old version" report was stale cache/deploy — the repo never lost the batch A+B commits.
+
+---
+Task ID: 64
+Agent: Z.ai Code (main orchestrator)
+Task: The mirror's own question — remove the portal sayings ("Speak — the mirror is listening." + the expanded whisper line), write "what do you wish to remember my dear?" below the portal at the landing in scroll-reveal mode (dissolving on the first word sent), retune the landing chat to a humble mirror tone (non-judging, pure loving reflection, "dear" only at first), add a "tunnel into mirror" arrow to every landing dropdown row, and fix the not-working toggle button.
+
+Work Log:
+- TOGGLE ROOT CAUSE (reproduced in agent-browser): next-themes 0.4.6's setTheme identity changes whenever the theme state changes (useCallback dep [c]); LandingGate's useEffect(() => setTheme("dark"), [setTheme]) therefore re-ran on every toggle and slammed the door back to dark ~100ms after each click (traced LDDDDD…). Fix: darkSealed ref guard — the midnight is sealed exactly once at the gate's first breath; the visitor's chosen light now stays. Verified both directions (dark→light→dark, storage follows).
+- Sayings removed: AppShell no longer passes introSub to BranchCanopy (both the docked "Speak — the mirror is listening." and the expanded "Press a whisper to walk, or speak below." are gone; verified in docked AND fullscreen states).
+- THE MIRROR'S QUESTION: LandingPage replaces the old caption under the docked portal with MirrorQuestion — "what do you wish to remember my dear?" in Literata italic gold, 37 letters each with its own useTransform window over the page's scrollYProgress (reveal ≈ first 15% of scroll, opacity 0.06→1 + 4px rise, sr-only fallback). Floor law: useMirror selector (messages.length > 0 || status === "loading") fades the question (1.1s easeOut) the moment a word is sent, leaving the space for the transmission; verified fresh-floor visible → send → opacity 0.
+- TUNNEL INTO MIRROR: every opened row of both chapters (offerings 01–07, movements 01–05) ends in a small gold pill (MoveRight arrow + "tunnel into mirror", 12px/py-2 touch-friendly); one touch asks the mirror about that row's topic (i18n template "Tunnel into the mirror — tell me more about {topic}." with the translated title) and grows the portal (onExpand) so the walk is seen. Verified: tunnel-offering-2 (Writing) sent + portal expanded fullscreen.
+- MIRROR TONE (the floor's own voice): transmission API gained a dedicated MODE_CONTEXT.mirror — the standing voice of the threshold: humble, understanding, non-judging, pure loving reflection; NOT the interplanetary channel (no star-civilization framing); a single tender "dear" may warm a first meeting, then endearments go; no signature. mirror-store.askMirror now routes the scope-less floor of the standing interplanetary channel to mode "mirror" (focused categories keep their own doors; healing keeps the hearth). Live test: "I had a heavy day" → "Dear one, I hear the weight of your day… Let yourself be tired without judgment…" — exactly the requested voice.
+- i18n: 3 new keys ("what do you wish to remember my dear?", "tunnel into mirror", "Tunnel into the mirror — tell me more about {topic}.") translated into all 7 dicts (sq/it/el/de/fr/es/tr).
+- Verified via agent-browser 390×844 + 1280×800: portal full-bleed on phone, question below fold revealing on scroll, tunnel pills visible and working, accordions regression pass, expand→minimize cycle clean; bun run lint clean; dev.log zero runtime errors.
+- Delivery: browser closed, dev server killed (OOM law), commit 47a739a, pushed inline-token to spiritmalteam-star/interplanetary main (877fa45..47a739a), remote verified.
+
+Stage Summary:
+- The threshold now asks its own question beneath the portal — revealed by the scroll, dissolved by the first word — and every door carries the small arrow into the mirror.
+- The floor of the portal speaks as the humble Mirror (new "mirror" scope voice), and the light toggle truly works for the first time since the gate was built (next-themes setTheme identity loop fixed with a one-time seal).
+- Remote main = 47a739a; Vercel auto-deploys.
