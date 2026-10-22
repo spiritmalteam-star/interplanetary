@@ -139,7 +139,7 @@ export default function GuideShowcase({
       >
         <div
           data-testid="guide-showcase-stage"
-          className="guide-stage relative aspect-[4/5] w-full overflow-hidden bg-[var(--lp-deep)] ring-1 ring-[var(--lp-edge)] sm:aspect-[16/10] sm:rounded-[26px] lg:aspect-[2/1]"
+          className="guide-stage relative aspect-[4/5] w-full overflow-hidden bg-[var(--lp-deep)] ring-1 ring-[var(--lp-edge)] sm:aspect-[4/3] sm:rounded-[26px] lg:aspect-[3/2]"
         >
           {GUIDES.map((g, i) =>
             near.has(i) ? (

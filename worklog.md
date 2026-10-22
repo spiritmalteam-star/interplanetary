@@ -4699,3 +4699,17 @@ Work Log:
 Stage Summary:
 - The hero stands whiter in both skies (white ink, deep halo, pearl-white doors), the three dots are gone, and the feathered green + plum violet now breathe around the app — aurora corners, violet timeline badge and hand, braided footer rule — while the chat and the portal remain exactly as they were.
 - Committed and pushed to origin/main with the session token (redacted here by the house's law); dev server restarted after the push.
+
+---
+Task ID: 85
+Agent: Z.ai Code (main)
+Task: Taller images that reveal more; fix the scroll lag and the dead area left where the landing chat stood when minimized; a more appealing, matching theme with sigils for the login page.
+
+Work Log:
+- THE GLASS IN THE FLOW (the scroll fix, at the root): the docked lens no longer floats above the page carried by per-scroll JS transform writes (the lag source — every scroll breath repainted the whole chat glass, and stale fixed positions left the old chat area feeling dead after folding/minimizing). The lens now renders INSIDE its slot in the page's own flow (new slotChildren prop on LandingPage): the native scroll carries it — zero JavaScript per scroll, the glass can never drift, freeze or block. LandingGate shed the entire anchoring machinery (lensPos, applyLensScreenPos, syncLens, the opening flight, the closing phase); the landing root is never unmounted anymore — through the portal's fullscreen reign it only rests unseen (visibility alone), so scroll position, slot and words all keep their places; expand/minimize cross under the crystal tunnel's full light (220ms/260ms cover delays so the swap is never seen). Verified delta slot-vs-glass = 0 at every scroll depth, mobile and desktop.
+- THE TALLER IMAGES: the phone's hero banner grew to min(78vh,580px) with the reveal mask extended to 68%; the desktop parallax rails each grew by roughly a third (30–31vh → 35–42vh); the ten slides rose from square to 4/5 (phone) and 5/6 (desk); the open-contact plates grew h-44/h-64 → h-60/h-80; the guides' showcase rose to 4/3 (desk) and 3/2 (wide).
+- THE PASSAGE'S OWN DRESS (login page): the brand wears the gold with the violet→feather→gold braid beneath; the two tabs became gold glass pills; the submit door is the house's gold gradient with the adaptive ink (cream on dark gold by day, near-black on light gold by night); the Google door wears the soft gold edge; two grand seals (the veil and the wave) rest in the passage's corners as bronze ink in daylight and silver glow at night (pointer-events-none, behind the words, clipped by the door's own rounding).
+- QA: lint clean; agent-browser at 390×844 and 1280×800, both skies — banner and rails taller, slides taller, chat glued at every scroll (delta 0), fold collapses the space to the 68px invitation with completely free scrolling through where the chat stood, unfold returns every word, expand→tunnel→fullscreen→minimize→return keeps the conversation, login page dressed in both skies, zero console errors.
+
+Stage Summary:
+- The scroll lag is gone at the root (the chat rides the page's own flow; no scroll handler touches the glass anymore), the folded chat leaves no dead area, every artwork on the threshold stands taller and reveals more of itself, and the passage door now wears the house's gold, its two kind colors and its light language.

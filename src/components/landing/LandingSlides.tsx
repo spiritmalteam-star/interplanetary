@@ -147,7 +147,7 @@ export default function LandingSlides() {
       >
         <div
           data-testid="landing-slides-stage"
-          className="relative aspect-square w-full overflow-hidden bg-[var(--lp-deep)] sm:rounded-[26px]"
+          className="relative aspect-[4/5] w-full overflow-hidden bg-[var(--lp-deep)] sm:aspect-[5/6] sm:rounded-[26px]"
         >
           {SLIDES.map((s, i) =>
             near.has(i) ? (

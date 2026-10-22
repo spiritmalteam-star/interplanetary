@@ -124,10 +124,35 @@ export function AuthModal() {
       }
       widthClass="sm:max-w-[460px]"
     >
-      <div className="px-5 pb-6 sm:px-6" {...hold.bind}>
+      <div className="relative isolate px-5 pb-6 sm:px-6" {...hold.bind}>
         <HoldVeil holding={hold.holding} pct={hold.pct} label="Hold four seconds — the door opens by itself…" />
-        {/* the branded head — the house's own seal above its door */}
-        <div className="mb-4 flex items-center justify-center gap-2.5" data-testid="auth-brand">
+        {/* THE LIGHT LANGUAGE AT THE DOOR — two grand seals resting in
+            the passage's quiet corners, printing as bronze ink on the
+            daylight glass and glowing silver in the crystal night;
+            they never take a touch and never cover a word. */}
+        <Image
+          src="/sigils/sigil_05.png"
+          alt=""
+          aria-hidden="true"
+          draggable={false}
+          loading="lazy"
+          width={300}
+          height={300}
+          className="pointer-events-none absolute -top-12 -right-10 -z-10 size-[150px] select-none lp-sigil-img opacity-[0.17] [transform:rotate(14deg)]"
+        />
+        <Image
+          src="/sigils/intricate_02.png"
+          alt=""
+          aria-hidden="true"
+          draggable={false}
+          loading="lazy"
+          width={340}
+          height={340}
+          className="pointer-events-none absolute -bottom-14 -left-12 -z-10 size-[170px] select-none lp-sigil-img opacity-[0.15] [transform:rotate(-9deg)]"
+        />
+        {/* the branded head — the house's own seal above its door,
+            wearing the gold, with the two kind colors braided beneath */}
+        <div className="mb-3 flex items-center justify-center gap-2.5" data-testid="auth-brand">
           <Image
             src="/images/ai/mark-dark.png"
             alt=""
@@ -142,10 +167,14 @@ export function AuthModal() {
             height={30}
             className="size-[30px] rounded-full opacity-90 dark:hidden"
           />
-          <span className="font-[family-name:Cinzel] text-[14px] tracking-[0.22em] text-foreground/85">
+          <span className="font-[family-name:Cinzel] text-[14px] tracking-[0.22em] text-[var(--lp-gold)]">
             reflectme.space
           </span>
         </div>
+        <span
+          aria-hidden="true"
+          className="mx-auto mb-4 block h-px w-[74%] bg-[linear-gradient(90deg,transparent_0%,var(--lp-violet)_26%,var(--lp-feather)_52%,var(--lp-gold)_78%,transparent_100%)] opacity-60"
+        />
 
         {/* the two doors */}
         <div className="flex gap-1.5 rounded-full border hairline bg-[var(--glass-bg)] p-1" role="tablist" aria-label={t("The passage")}>
@@ -158,10 +187,10 @@ export function AuthModal() {
               onClick={() => setTab(k)}
               data-testid={`auth-tab-${k}`}
               className={cn(
-                "focus-glow h-9 flex-1 rounded-full text-[14px] font-medium transition-all duration-300",
+                "focus-glow h-9 flex-1 rounded-full border text-[14px] font-medium transition-all duration-300",
                 tab === k
-                  ? "bg-foreground text-background shadow-[0_2px_10px_-6px_rgba(0,0,0,0.6)]"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "border-[rgba(232,217,176,0.55)] bg-[linear-gradient(180deg,rgba(232,217,176,0.26),rgba(232,217,176,0.1))] text-[var(--lp-gold)] shadow-[inset_0_1px_0_rgba(255,255,255,0.3)]"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
               )}
             >
               {k === "signin" ? t("Sign in") : t("Create passage")}
@@ -256,7 +285,7 @@ export function AuthModal() {
             type="submit"
             disabled={busy || !email.trim() || !password}
             data-testid="passage-submit"
-            className="focus-glow flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-foreground text-[14.5px] font-medium text-background transition-all duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0"
+            className="focus-glow flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[linear-gradient(180deg,var(--lp-gold),var(--lp-gold-soft))] text-[15px] font-medium tracking-[0.02em] text-[var(--lp-veil-solid)] shadow-[0_12px_30px_-14px_rgba(154,120,30,0.6),inset_0_1px_0_rgba(255,255,255,0.35)] transition-all duration-300 hover:-translate-y-px hover:brightness-[1.06] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0"
           >
             {busy ? (
               <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
@@ -285,17 +314,17 @@ export function AuthModal() {
 
         {/* the Google passage */}
         <div className="mt-4 flex items-center gap-3">
-          <span className="h-px flex-1 bg-[var(--hairline)]" aria-hidden="true" />
+          <span className="h-px flex-1 bg-[linear-gradient(90deg,transparent,var(--lp-edge))]" aria-hidden="true" />
           <span className="mono-label text-[10px] uppercase tracking-[0.22em] text-muted-foreground/70">
             {t("or")}
           </span>
-          <span className="h-px flex-1 bg-[var(--hairline)]" aria-hidden="true" />
+          <span className="h-px flex-1 bg-[linear-gradient(90deg,var(--lp-edge),transparent)]" aria-hidden="true" />
         </div>
         <button
           type="button"
           onClick={google}
           data-testid="passage-google"
-          className="focus-glow mt-3 flex h-11 w-full items-center justify-center gap-2.5 rounded-xl border hairline text-[14.5px] font-medium text-foreground/85 transition-all duration-300 hover:border-[var(--hairline-hover)] hover:bg-[var(--glass-bg)]"
+          className="focus-glow mt-3 flex h-11 w-full items-center justify-center gap-2.5 rounded-xl border hairline bg-[var(--glass-bg-soft)] text-[14.5px] font-medium text-foreground/85 transition-all duration-300 hover:border-[rgba(232,217,176,0.5)] hover:bg-[var(--glass-bg)]"
         >
           <svg viewBox="0 0 24 24" className="size-4" aria-hidden="true">
             <path fill="currentColor" d="M21.35 11.1h-9.17v2.73h6.51c-.33 3.81-3.5 5.44-6.5 5.44C8.36 19.27 5 16.25 5 12c0-4.1 3.2-7.27 7.2-7.27 3.09 0 4.9 1.97 4.9 1.97L19 4.72S16.56 2 12.1 2C6.42 2 2.03 6.8 2.03 12c0 5.05 4.13 10 10.22 10 5.35 0 9.25-3.67 9.25-9.09 0-1.15-.15-1.81-.15-1.81Z" />

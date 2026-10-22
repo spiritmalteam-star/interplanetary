@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ComponentType, type CSSProperties } from "react";
+import { useCallback, useEffect, useRef, useState, type ComponentType, type CSSProperties } from "react";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
 import { useMirror } from "@/lib/mirror-store";
@@ -18,6 +18,15 @@ import LandingPage from "./LandingPage";
 /*  every word of the conversation already inside it, and the minimize */
 /*  hand folds it back into its slot.                                  */
 /*                                                                     */
+/*  THE GLASS IN THE FLOW — the docked lens no longer floats above the */
+/*  page carried by scroll handlers: it stands INSIDE its slot in the  */
+/*  page's own flow, so the native scroll carries it — zero JavaScript */
+/*  per scroll breath, zero lag, and the glass can never drift, freeze */
+/*  or leave a dead area behind (the old fixed-lens anchoring is gone).*/
+/*  Expand and minimize cross the crystal tunnel — the tunnel's light  */
+/*  covers the swap completely, the chamber never re-mounts and never  */
+/*  loses a word.                                                      */
+/*                                                                     */
 /*  THE WHOLE MIRROR — the docked chamber is never cropped again: it   */
 /*  lays out at the window's own size (its own --app-h), so the crown, */
 /*  the quiet floor and the whisper line all stand inside the window — */
@@ -27,7 +36,7 @@ import LandingPage from "./LandingPage";
 /*  the conversation never losing a breath.                            */
 /* ------------------------------------------------------------------ */
 
-type Phase = "landing" | "opening" | "through" | "closing";
+type Phase = "landing" | "opening" | "through";
 
 /* THE INSTANT FLOOR — the chamber's chunk is pulled the moment this
    module itself is evaluated — before React even hydrates — so the
@@ -117,7 +126,6 @@ export default function LandingGate() {
      carry a newly-signed visitor straight through the full portal */
   const me = useMirror((s) => s.me);
   const authOpen = useMirror((s) => s.authOpen);
-  const slotRef = useRef<HTMLDivElement | null>(null);
   const lensRef = useRef<HTMLDivElement | null>(null);
   const busy = useRef(false);
   const landingScroll = useRef(0);
@@ -203,84 +211,16 @@ export default function LandingGate() {
     };
   }, []);
 
-  /* THE ANCHORED CHAT — the glass is STUCK TO ITS SECTION like an
-     image stuck on the website: its place is measured once in the
-     landing's own CONTENT coordinates (rect + scrollTop — a sum that
-     is the same at every scroll breath), and the walk itself moves it
-     with the page — when the threshold scrolls, the chat rides its own
-     section ("The mirror is waking…") exactly, never floating over the
-     house's other rooms, never riding the viewport, never lagging a
-     frame behind (one transform write per scroll breath, in the same
-     breath as the scroll itself). */
-  const lensPos = useRef({ x: 0, y: 0 });
-
-  /* the glass's screen place — its content place minus the walk */
-  const applyLensScreenPos = useCallback(() => {
-    const lens = lensRef.current;
-    if (!lens) return;
-    if (phaseRef.current === "opening" || phaseRef.current === "through") return;
-    const { x, y } = lensPos.current;
-    lens.style.transform = `translate3d(${x}px, ${Math.round(y - landingScroll.current)}px, 0)`;
+  /* THE GLASS IN THE FLOW — the lens lives inside its slot (the slot
+     itself is rendered by the landing page), so the page's own native
+     scroll carries the docked chat: no handler writes a transform on
+     the walk, the glass and its section are one thing, and the old
+     fixed-lens drift, the momentum freeze and the dead area where the
+     chat used to stand are all gone at the root. The scroll is only
+     remembered here, for the return's own keeping. */
+  const handleLandingScroll = useCallback((y: number) => {
+    landingScroll.current = y;
   }, []);
-
-  const syncLens = useCallback(() => {
-    const lens = lensRef.current;
-    const slot = slotRef.current;
-    if (!lens || !slot) return;
-    const r = slot.getBoundingClientRect();
-    /* the landing's own scroll — found by walking up from the slot to
-       the first genuinely scrollable ancestor (the threshold's ground) */
-    let scroller: HTMLElement | null = slot.parentElement;
-    let scrollTop = landingScroll.current;
-    while (scroller) {
-      const oy = window.getComputedStyle(scroller).overflowY;
-      if ((oy === "auto" || oy === "scroll") && scroller.scrollHeight > scroller.clientHeight + 1) {
-        scrollTop = scroller.scrollTop;
-        break;
-      }
-      scroller = scroller.parentElement;
-    }
-    lensPos.current = {
-      x: Math.round(r.left),
-      y: Math.round(r.top + scrollTop),
-    };
-    applyLensScreenPos();
-  }, [applyLensScreenPos]);
-
-  useLayoutEffect(() => {
-    if (phase !== "landing") return;
-    syncLens();
-    let cancelled = false;
-    document.fonts?.ready.then(() => {
-      if (!cancelled && phaseRef.current === "landing") syncLens();
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [phase, geo, Chamber, syncLens]);
-
-  /* THE UNFOLD'S OWN SYNC — the fold is TRUE now: the slot itself
-     collapses with the chat (the space folds away, not just the
-     glass), and when the chat rises again the slot regrows — the
-     lens finds its place twice, once at the first breath and once
-     after the slot's own height transition settles. */
-  useEffect(() => {
-    if (phase !== "landing" || chatFolded) return;
-    syncLens();
-    const id = window.setTimeout(syncLens, 560);
-    return () => window.clearTimeout(id);
-  }, [chatFolded, phase, syncLens]);
-
-  /* THE ANCHOR'S LAW — the scroll is remembered for the return (the
-     closing's restore) and the glass moves WITH it in the same breath:
-     the chat stays glued to its section at every step of the walk. */
-  const handleLandingScroll = useCallback(
-    (y: number) => {
-      landingScroll.current = y;
-      applyLensScreenPos();
-    },
-    [applyLensScreenPos]
-  );
 
   /* THE DORMANT LAW — while the docked portal is scrolled away from
      the eye, every breath inside it rests: no animation frames are
@@ -340,7 +280,11 @@ export default function LandingGate() {
       }
       busy.current = true;
       setTunnel("on");
-      setPhase("opening");
+      /* THE COVERED CROSSING — the tunnel's light is given a breath to
+         stand fully (pt-in's own 0.42s rise), and only beneath that
+         light does the lens step up to the whole screen: the visitor
+         never watches the chamber jump — the tunnel is the crossing. */
+      window.setTimeout(() => setPhase("opening"), 220);
       window.setTimeout(() => {
         setPhase("through");
         setTunnel("fading");
@@ -439,11 +383,12 @@ export default function LandingGate() {
   }, [pending, Chamber, expandPortal]);
 
   /* THE RETURN — the portal folds back into its slot in the page.
-     THE RETURN'S OWN CROSSING — the chamber re-fits itself to the
-     window behind the crystal tunnel's light (the same passage the
-     crossing in uses), so the visitor never watches the re-fit —
-     the tunnel opens, the portal folds, the tunnel's light fades
-     and the landing's own chat stands there, every word kept. */
+     THE COVERED CROSSING — the tunnel's light is raised first (the
+     screen is its own for a breath), and only beneath that full light
+     does the lens step out of the fullscreen and stand in its slot
+     again: the visitor never watches the swap, and the landing's own
+     chat stands there, every word kept. No flight, no animation — the
+     tunnel is the crossing. */
   const minimize = useCallback(() => {
     if (busy.current) return;
     busy.current = true;
@@ -461,99 +406,49 @@ export default function LandingGate() {
     }
     setTunnel("on");
     window.setTimeout(() => {
-      setPhase("closing");
-    }, 150);
+      setPhase("landing");
+    }, 260);
     window.setTimeout(() => {
       setTunnel("fading");
       busy.current = false;
-      /* THE FOLD'S OWN END — the closing was a phase without a way
-         home before: the lens kept its animation cloak (every move
-         lagged a breath behind) and the docked laws never returned.
-         The fold's completion now lands the threshold back in its own
-         phase — the docked glass laws wake again, exactly as the
-         window settles into its slot. */
-      setPhase("landing");
-      window.setTimeout(() => setTunnel("off"), 900);
-    }, 800);
+    }, 860);
+    window.setTimeout(() => setTunnel("off"), 1760);
   }, []);
 
-  /* the expanding lens flies to the screen's corners */
-  useLayoutEffect(() => {
-    if (phase !== "opening") return;
-    const lens = lensRef.current;
-    if (lens) lens.style.transform = "translate3d(0, 0, 0)";
-  }, [phase]);
-
-  /* during the closing the landing remounts and restores its own
-     scroll; only then can the lens find its slot again */
-  useEffect(() => {
-    if (phase !== "closing") return;
-    const id = window.setTimeout(() => {
-      requestAnimationFrame(() => requestAnimationFrame(syncLens));
-    }, 80);
-    return () => window.clearTimeout(id);
-  }, [phase, syncLens]);
-
-  const animating = phase === "opening" || phase === "closing";
   const fullscreen = phase === "opening" || phase === "through";
   const bare = phase !== "through";
 
   const docked = phase === "landing";
 
-  return (
-    <>
-      {/* ---------------- THE LANDING — the threshold ---------------- */}
-      {phase !== "through" && (
-        <div
-          data-testid="landing-root"
-          className={cn(
-            "fixed inset-0 z-30 overflow-y-auto overscroll-y-contain bg-[var(--lp-deep)] transition-opacity duration-500",
-            phase === "opening" && "pointer-events-none opacity-0"
-          )}
-        >
-          <LandingPage
-            slotRef={slotRef}
-            slotStyle={
-              geo
-                ? /* THE TRUE FOLD — when the chat is folded the slot
-                     itself collapses to a slim invitation bar, so the
-                     chat's space folds away with it; the words stay
-                     mounted in the lens (invisible, remembering). */
-                  chatFolded
-                  ? { width: geo.w, height: 68 }
-                  : { width: geo.w, height: geo.h }
-                : { height: "min(100dvh, 660px)" }
-            }
-            onExpand={expandPortal}
-            onScroll={handleLandingScroll}
-            initialScroll={landingScroll.current}
-            chatFolded={chatFolded}
-            onUnfoldChat={() => setChatFolded(false)}
-            onGuideOpenChange={setGuideOpen}
-          />
-        </div>
-      )}
-
-      {/* ------------- THE LENS — the one portal, docked ------------- */}
-      {Chamber && geo && (
-        <div
-          ref={lensRef}
-          className={cn(
-            "fixed left-0 top-0 z-[45] transition-opacity duration-500",
-            docked && "lens-docked",
-            animating && "lens-anim",
-            /* THE FOLDED CHAT — the whole chat section steps out of
-               the eye (still mounted, still remembering) while the
-               threshold beneath shows the way back. THE GUIDE'S PAGE —
-               a full-screen guide covers the anchored chat the same
-               way: the page is the guide's alone. */
-            docked && (chatFolded || guideOpen) && "pointer-events-none opacity-0"
-          )}
-          style={{
-            width: fullscreen ? "100vw" : geo.w,
-            height: fullscreen ? "100dvh" : geo.h,
-          }}
-        >
+  /* ------------- THE LENS — the one portal, in its slot -------------
+     Docked, the lens stands INSIDE the landing's slot (in the page's
+     own flow — the native scroll carries it, never a handler).
+     Fullscreen (the opening's breath and the through), it steps out
+     with position: fixed — same node, same chamber, not one word
+     lost — while the landing beneath rests hidden (visibility only,
+     the lens's own word keeps it seen). */
+  const lens =
+    Chamber && geo ? (
+      <div
+        ref={lensRef}
+        className={cn(
+          "left-0 top-0 z-[45] transition-opacity duration-500",
+          fullscreen ? "fixed" : "absolute",
+          docked && "lens-docked",
+          /* THE FOLDED CHAT — the whole chat section steps out of
+             the eye (still mounted, still remembering) while the
+             threshold beneath shows the way back. THE GUIDE'S PAGE —
+             a full-screen guide covers the anchored chat the same
+             way: the page is the guide's alone. The hidden word is
+             spoken inline so it also stills the tab and the touch. */
+          docked && (chatFolded || guideOpen) && "pointer-events-none opacity-0"
+        )}
+        style={{
+          width: fullscreen ? "100vw" : geo.w,
+          height: fullscreen ? "100dvh" : geo.h,
+          visibility: docked && (chatFolded || guideOpen) ? "hidden" : "visible",
+        }}
+      >
           <div
             data-testid="portal-lens"
             className={cn(
@@ -574,9 +469,7 @@ export default function LandingGate() {
                 --app-h (its crown, floor and whisper line all stand
                 complete inside — nothing cut) and the keyboard's own
                 shift rests (the window itself never moves). Fullscreen,
-                the chamber takes the true viewport again. The chamber
-                rides centred in its lens, so the closing's fold keeps
-                it steady inside the shrinking window. */}
+                the chamber takes the true viewport again. */}
             <div
               className="absolute inset-0 m-auto"
               style={
@@ -610,7 +503,44 @@ export default function LandingGate() {
               no second pair of hands rides the lens edge. The hero's
               “Enter the portal” on the page carries the same growth. */}
         </div>
-      )}
+    ) : null;
+
+  return (
+    <>
+      {/* ---------------- THE LANDING — the threshold ----------------
+          The threshold is NEVER unmounted now: through the portal's
+          fullscreen reign it only rests unseen (visibility alone), so
+          the lens's slot, the walk's own scroll and every word of the
+          house keep their places — the return is instant and whole. */}
+      <div
+        data-testid="landing-root"
+        className={cn(
+          "fixed inset-0 z-30 overflow-y-auto overscroll-y-contain bg-[var(--lp-deep)]",
+          phase === "opening" && "pointer-events-none",
+          phase === "through" && "invisible"
+        )}
+      >
+        <LandingPage
+          slotStyle={
+            geo
+              ? /* THE TRUE FOLD — when the chat is folded the slot
+                   itself collapses to a slim invitation bar, so the
+                   chat's space folds away with it; the words stay
+                   mounted in the lens (invisible, remembering). */
+                chatFolded
+                ? { width: geo.w, height: 68 }
+                : { width: geo.w, height: geo.h }
+              : { height: "min(100dvh, 660px)" }
+          }
+          onExpand={expandPortal}
+          onScroll={handleLandingScroll}
+          initialScroll={landingScroll.current}
+          chatFolded={chatFolded}
+          onUnfoldChat={() => setChatFolded(false)}
+          onGuideOpenChange={setGuideOpen}
+          slotChildren={lens}
+        />
+      </div>
 
       {/* THE RETURN HAND — the portal's own crown carries it now: the
           landing control stands between the about door and the

@@ -6,7 +6,6 @@ import {
   useMemo,
   useRef,
   useState,
-  type RefObject,
 } from "react";
 import Image from "next/image";
 import {
@@ -57,16 +56,18 @@ type RailImage = {
   title: string;
 };
 
-/* the slideshow's own images, three on each side, in parallax */
+/* the slideshow's own images, three on each side, in parallax
+   THE TALLER SHARDS — each band grew by a third, so the artwork
+   reveals more of itself down both shoulders of the desk */
 const RAIL_LEFT: RailImage[] = [
-  { src: "/landing/img-city.jpg", pos: "50% 42%", h: "30vh", title: "The city of light" },
-  { src: "/landing/img-threshold.jpg", pos: "50% 40%", h: "23vh", title: "The ancient threshold" },
-  { src: "/landing/img-contact.jpg", pos: "42% 50%", h: "27vh", title: "The moment of contact" },
+  { src: "/landing/img-city.jpg", pos: "50% 42%", h: "40vh", title: "The city of light" },
+  { src: "/landing/img-threshold.jpg", pos: "50% 40%", h: "31vh", title: "The ancient threshold" },
+  { src: "/landing/img-contact.jpg", pos: "42% 50%", h: "36vh", title: "The moment of contact" },
 ];
 const RAIL_RIGHT: RailImage[] = [
-  { src: "/landing/img-council.jpg", pos: "50% 42%", h: "26vh", title: "The council of worlds" },
-  { src: "/landing/img-garden.jpg", pos: "50% 55%", h: "31vh", title: "The living garden" },
-  { src: "/images/about/about-interplanetary.png", pos: "50% 50%", h: "24vh", title: "The orbiting worlds" },
+  { src: "/landing/img-council.jpg", pos: "50% 42%", h: "35vh", title: "The council of worlds" },
+  { src: "/landing/img-garden.jpg", pos: "50% 55%", h: "42vh", title: "The living garden" },
+  { src: "/images/about/about-interplanetary.png", pos: "50% 50%", h: "32vh", title: "The orbiting worlds" },
 ];
 
 /* ------------------------- the parallax rails ------------------------- */
@@ -322,7 +323,6 @@ const contactStages = [
 /* ------------------------------ the page ------------------------------ */
 
 export default function LandingPage({
-  slotRef,
   slotStyle,
   onExpand,
   onScroll,
@@ -330,8 +330,8 @@ export default function LandingPage({
   chatFolded,
   onUnfoldChat,
   onGuideOpenChange,
+  slotChildren,
 }: {
-  slotRef: RefObject<HTMLDivElement | null>;
   slotStyle: { width?: number | string; height?: number | string };
   onExpand: () => void;
   onScroll: (y: number) => void;
@@ -341,6 +341,10 @@ export default function LandingPage({
   /* the gate listens here — called with true/false as the guide's
      full-screen page opens and closes */
   onGuideOpenChange?: (open: boolean) => void;
+  /* THE GLASS IN THE FLOW — the gate's own lens (the whole docked
+     chamber) renders INSIDE the slot, in the page's own flow: the
+     native scroll carries it, and it never drifts from its section. */
+  slotChildren?: React.ReactNode;
 }) {
   const t = useT();
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -556,15 +560,15 @@ export default function LandingPage({
                 background image; the light language lives in the empty
                 shoulders further down the walk */}
             {/* one full-bleed crop on narrow screens — the rails rest.
-                THE PHONE'S GRANDER BANNER — taller, more present, so
-                the threshold arrives like a poster, not a strip.
+                THE PHONE'S GRANDER BANNER — taller still, so the
+                threshold arrives like a poster, not a strip.
                 THE OPEN BANNER — the artwork stands nearly bare (the
                 veil is a thin wash at the very top alone), so the
                 image at the top of the website is SEEN, never covered;
                 the words keep their edge on the wash's own breath. */}
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute inset-x-0 top-0 h-[min(64vh,470px)] overflow-hidden lg:hidden"
+              className="pointer-events-none absolute inset-x-0 top-0 h-[min(78vh,580px)] overflow-hidden lg:hidden"
             >
               <Image
                 src="/landing/img-city.jpg"
@@ -572,7 +576,7 @@ export default function LandingPage({
                 fill
                 priority
                 sizes="100vw"
-                className="object-cover [mask-image:linear-gradient(to_bottom,black_0%,black_58%,transparent_100%)]"
+                className="object-cover [mask-image:linear-gradient(to_bottom,black_0%,black_68%,transparent_100%)]"
                 style={{
                   objectPosition: "50% 42%",
                   opacity: "var(--lp-hero-img)",
@@ -636,15 +640,14 @@ export default function LandingPage({
           </header>
 
           {/* ==================== THE PORTAL, DOCKED ==================== */}
-          {/* the slot is reserved here; the gate anchors the real
-              chamber over it — FIXED on the screen: the page walks
-              beneath, the glass itself never moves */}
+          {/* the slot is reserved here and the gate's own lens renders
+              INSIDE it (slotChildren) — the page's native scroll
+              carries the glass; nothing floats, nothing lags */}
           <section
             className="pb-2 pt-5 sm:pt-7"
             aria-label={t("The Mirror Entity")}
           >
             <div
-              ref={slotRef}
               data-testid="portal-slot"
               style={slotStyle}
               className="relative mx-auto w-full transition-[height] duration-500 ease-out"
@@ -688,6 +691,7 @@ export default function LandingPage({
                   </>
                 )}
               </div>
+              {slotChildren}
             </div>
           </section>
 
@@ -1049,9 +1053,11 @@ export default function LandingPage({
 
                     {/* the stage's artwork — the illustration cropped
                         clean from the visionary deck, its caption living
-                        as real HTML text below */}
+                        as real HTML text below. THE TALLER PLATES —
+                        each grew in height, so the artwork reveals
+                        more of itself. */}
                     <figure className="overflow-hidden rounded-2xl ring-1 ring-[var(--lp-edge)]">
-                      <div className="relative h-44 w-full sm:h-64">
+                      <div className="relative h-60 w-full sm:h-80">
                         <Image
                           src={stage.img}
                           alt={t(stage.alt)}
