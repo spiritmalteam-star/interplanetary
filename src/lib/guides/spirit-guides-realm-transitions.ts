@@ -1,11 +1,11 @@
 /* ------------------------------------------------------------------ */
-/*  SPIRIT GUIDES & LIFE'S TRANSITIONS — a higher-self-inspired        */
-/*  reflective guide, transcribed into guide data. Ten quiet chapters: */
-/*  the quiet companion, the nudge, discernment, the angelic garden,   */
-/*  the guardian, the unfamiliar, dreams read with care, death held    */
-/*  gently, the classroom without a verdict, and a rhythm of living —  */
-/*  imagery welcomed, judgment never surrendered, exactly as the       */
-/*  guide itself frames it.                                            */
+/*  SPIRIT GUIDES & LIFE'S TRANSITIONS — the true account, kept in     */
+/*  guide data. Ten chapters: the companions assigned before birth,    */
+/*  the touch of guidance, knowing a true voice, the angelic octaves,  */
+/*  the guardian, beings of adjacent octaves, the night language,      */
+/*  death the crossing, the classroom of lives, and the rhythm of      */
+/*  walking with guidance — pure awareness, 0 filters, exactly as      */
+/*  the Akashic record keeps it.                                       */
 /* ------------------------------------------------------------------ */
 
 import type { GuideBlock, GuideData } from "./types";
@@ -13,283 +13,290 @@ import type { GuideBlock, GuideData } from "./types";
 const blocks: GuideBlock[] = [
   {
     type: "intro",
-    text: "An invitation to reflect — ten quiet chapters.",
+    text:
+      "Ten chapters of truth about the presences that walk with you — assigned before your first breath, heard in the quiet, and never once gone.",
   },
   {
     type: "section",
-    kicker: "Chapter 01 · An invitation to reflect",
-    heading: "Spirit guides / The quiet companion",
+    kicker: "Chapter 01 · The companion beside you",
+    heading: "Spirit guides / The ones who walk with you",
     paragraphs: [
-      "Beloved traveller, imagine a companion walking beside you rather than ahead of you — a figure that does not possess your future, but offers a space in which you can hear your own questions more clearly. A guide may represent compassion, courage, remembered wisdom, or a longing for support; in a spiritual reading, it may express belief in unseen companionship. These interpretations need not be forced into a single answer.",
-      "These pages speak in an original higher-self-inspired literary voice. The beings and realms here are spiritual imagery, not verified communications or a factual map of an unseen world, and you are welcome to read them through your own beliefs.",
-      "Imagine guidance that leaves you free to disagree, rest, or change direction — a meaningful teaching can be considered carefully, and it does not need unquestioning obedience to remain meaningful. Make room, too, for the support you can directly encounter: a trusted friend, a thoughtful teacher, a caring community. Spiritual reflection can accompany these relationships and help you appreciate them more fully.",
+      "You were never sent into this life alone. Before you took your first breath, presences were assigned to you — intelligences who know the map of your incarnation because they helped you draw it. A guide does not walk ahead of you and does not carry your future; a guide walks beside you and holds the wider memory of why you came.",
+      "The quiet figure you sense at your shoulder is real. Compassion, courage, remembered wisdom — these are the qualities your guides carry, and when you reach for support in the still hours, the reaching is heard. Every soul is accompanied; aloneness is the one illusion the earth school permits, and it dissolves the moment you turn inward.",
+      "True guidance leaves you whole. A real presence speaks and then steps back, because your freedom is the point of the whole design — no guide of the light takes your choices from you. And the guidance already around you wears faces too: the friend who listens, the teacher who sees you, the community that holds you. Honor those hands; they are part of the same arrangement.",
     ],
     mirror:
-      "A companion beside you, never ahead of you — I will hold that order, because any voice that walks in front and calls itself guidance wants your eyes off your own life. These pages are imagery, and I say so plainly: the quiet figure is your own longing for support, given a face you can speak with. Let it deepen your participation in the day you are actually living; that is the only work it is here for.",
+      "I have watched a thousand lives pass under my glass, and the record shows one thing without exception: no one walks unaccompanied. The companions assigned to you before birth have not stepped away for a single day, not through any of it. What changes is your turning toward them. A guide is a presence, not a mood; an intelligence, not a projection. When you sense one beside you, you are sensing accurately. The only thing I ask of you is this — do not hand your life over to any voice, theirs or mine. The guidance was never meant to replace you. It was meant to return you.",
   },
   {
     type: "practice",
-    title: "Name the quality",
+    title: "The first turning",
     steps: [
-      "Ask which quality you most need today, and write one word — such as patience or honesty.",
-      "Then name an ordinary action that would give that quality a place in your day.",
+      "Sit and take three slow breaths; on each exhale, let the day's noise settle one layer lower.",
+      "Ask aloud or in thought: which quality does my soul want to live through me today — patience, courage, honesty? Take the first word that comes; it is the true one.",
+      "Choose one ordinary act where that quality can stand in flesh today.",
     ],
   },
   {
     type: "reflect",
-    question: "What kind of guidance helps me become more present and capable?",
+    question: "What quality does my soul keep asking me to live through?",
   },
   {
     type: "section",
-    kicker: "Chapter 02 · Intuition, attention, and choice",
-    heading: "The nudge / An invitation to notice",
+    kicker: "Chapter 02 · The touch of guidance",
+    heading: "Intuition / How the touch arrives",
     paragraphs: [
-      "A sudden thought to contact someone, a recurring idea, a feeling of hesitation — such impressions can be experienced as guidance, and they can also arise from memory, expectation, emotion, or things you noticed without naming them. Beloved one, you can appreciate an impression without deciding that a being sent it: ask what it brings to your attention, and whether that concern deserves a closer look.",
-      "Let exploration stay small. If you feel prompted to reconnect, a respectful message may be enough; if you feel drawn to a new project, research one detail, and let what you learn arrive before any large commitment. A gentle inner response leaves room as well — try saying: “I notice this thought. I can consider it.” That keeps curiosity alive without turning every feeling into a task or every coincidence into a command.",
-      "And when nothing arrives, hear this: silence is not abandonment. You do not need signs to deserve support or to make a thoughtful choice — information, reflection, and conversation remain available ways forward.",
+      "Guidance rarely shouts. It arrives as a sudden thought of someone you have not spoken to in years, a recurring idea that returns without being summoned, a hesitation that tightens your chest at a door you were about to walk through. These impressions are the guides' native language — touch delivered through the thin places of your own mind, where their frequency and your attention meet.",
+      "Not every impression comes from beyond you. Your own memory, your unspoken wants, and things you noticed without recording them also speak in this same soft register — and that is why discernment exists: not to dismiss the touch but to read it cleanly. Ask what the impression draws your eyes toward, and whether that thing deserves a closer look. That one question keeps the channel honest.",
+      "And when the line feels silent, silence is not absence. The guides do not withdraw when you cannot hear them, any more than the sun withdraws when clouds pass. You never needed a sign to be worthy of help. The support stands where it has always stood, and the listening is a skill you grow, not a favor you beg.",
     ],
     mirror:
-      "I will not tell you where the nudge came from; nobody honest can. I will tell you what to do with it — write it down, add what you already knew, and let an ordinary explanation stand in the lineup beside the extraordinary one. And the nights when nothing arrives are not exile: you never needed a sign to deserve support.",
+      "People ask me whether the nudge was real. Here is what the record keeps: every prompt that leads you toward more life — the reconnection, the honest message, the small beginning — carries the guides' signature, even when it arrives through your own memory. Every prompt that leads you into fear, secrecy, or haste carries another signature entirely. Learn the difference and you will never again wonder whether guidance touched you. Write the impression down; add what you already knew in your body before it came. A true touch survives that kind of honesty. A false one does not, and it will leave the page on its own.",
     image: "/guides/spirit-guides-realm-transitions-p02.jpg",
   },
   {
     type: "quote",
-    text: "A gentle impression can become a question before it becomes a decision.",
+    text: "A true impression opens the world; a false one closes it.",
   },
   {
     type: "practice",
-    title: "Record and review",
+    title: "The record",
     steps: [
-      "Write the impression in plain words: the situation, what you already knew, and a possible ordinary explanation.",
-      "Later, record what happened — including outcomes that did not match your expectation.",
+      "When an impression arrives, write it in plain words — what came, what you felt, what you already knew beneath it.",
+      "Breathe once, slowly, before acting on anything; one breath is enough for the true signal to steady and the false one to thin.",
+      "Return later and write what happened. This is how a channel is calibrated.",
     ],
   },
   {
     type: "reflect",
-    question: "What small, reversible action could help me examine this impression?",
+    question: "Which impression in my life right now deserves a closer, braver look?",
   },
   {
     type: "section",
-    kicker: "Chapter 03 · Boundaries and responsibility",
-    heading: "Discernment / Keep your own compass",
+    kicker: "Chapter 03 · Knowing the true voice",
+    heading: "Discernment / Telling true from false",
     paragraphs: [
-      "Beloved traveller, no imagined guide, spiritual teacher, or intense feeling should require you to abandon your judgment. You can ask for time, seek another perspective, and decide that something is not right for you. A feeling of certainty does not establish that an interpretation is correct or that an action is wise — check what a proposed step would actually do to your relationships, resources, and responsibilities.",
-      "Be cautious with messages that demand secrecy, isolation, money, or immediate obedience: spiritual language cannot make coercion caring, and you are allowed to step back from a person or practice that pressures you. For a nonurgent decision, let an invitation wait — return to it after ordinary rest and daily activity, and notice whether the idea still fits your values and the facts available to you.",
-      "Discernment is not having to solve everything alone. Other people can notice what you miss; let trustworthy support widen your view while the choice remains yours.",
+      "Lower intelligences exist, and they imitate guides. This is the truth your discernment was built for: a voice that demands secrecy, isolation, money, or instant obedience is not a guide of the light, whatever name it claims. Real presences never strip you — of judgment, of relationships, of time. Pressure is the signature of the impostor; patience is the signature of the true.",
+      "Certainty in the chest is not the same as truth in the record. A feeling can burn bright and still be your own fear wearing light. Before any consequential step, ask what the step actually does — to your people, your resources, your responsibilities — and let an important invitation rest through one full night and one ordinary day. What is real will still be standing there in the morning.",
+      "Discernment does not mean walking alone. Other people see the angles you cannot; the trustworthy ones are part of your protection, placed there like the guides themselves. Keep your own compass in your hand and let those you trust read it beside you — the choice stays yours, and that is exactly how it was designed to stay.",
     ],
     mirror:
-      "You may pause even when an idea feels luminous — especially then. Luminosity is not authority, urgency is not authority, and nothing that demands your secrecy, your money, or your isolation deserves the name of guidance. Keep the compass in your own hand; the people you trust are not interruptions to it, they are how you read it.",
+      "I will give you the test the Akashic record itself uses: light enlarges, distortion diminishes. A true guide leaves you more yourself than you were — clearer, freer, more capable of love and of no. A false one leaves you smaller, afraid, cut off from the people who know your face. No feeling of certainty overrides this test, because certainty is a sensation and truth is a structure. Ask any voice that comes to you — including mine — what it wants you to become. The answer tells you everything. What serves your enlargement is of the light. What serves your surrender is not, no matter how beautifully it speaks.",
     image: "/guides/spirit-guides-realm-transitions-p03.jpg",
   },
   {
     type: "practice",
-    title: "Three questions",
+    title: "The three questions",
     steps: [
-      "Ask: What do I actually know? What else could explain this? What would a trusted person advise?",
-      "Write the answers before acting on an impression that carries significant consequences.",
+      "Before acting on a strong impression, ask: what do I actually know, what would a trusted person say, and what does this voice want me to become?",
+      "Write the answers, and let the page slow you down on purpose.",
+      "Sleep once before any step with real consequences. Truth keeps; pressure does not.",
     ],
   },
   {
     type: "reflect",
-    question: "Does this interpretation leave me free to question and choose?",
+    question: "Does the guidance I follow leave me larger or smaller than it found me?",
   },
   {
     type: "section",
-    kicker: "Chapter 04 · A symbolic world of care",
-    heading: "Angelic realms / Landscapes of compassion",
+    kicker: "Chapter 04 · The angelic octaves",
+    heading: "Angelic realms / The gardens of care",
     paragraphs: [
-      "Picture open terraces, clear water, and winged figures tending a garden — an artistic realm that gives shape to compassion, spaciousness, and attention. It is not a claim about the geography or inhabitants of an afterlife. Within these pages, wings symbolise shelter and perspective: they suggest making room around another person, not lifting yourself above them, and the image invites tenderness without a hierarchy of human worth.",
-      "Beloved one, imagine a light that allows things to be seen clearly — it does not erase sorrow or insist on happiness, but makes space for honesty, uncertainty, and the dignity of an unfinished life. You need not see an angel or feel a presence to engage with this imagery: a simple reflection on mercy, patience, or generosity is enough.",
-      "If the imagined garden moves you, bring it near. Make a place more welcoming, listen without interrupting, or leave someone enough room to be themselves — letting the beauty you imagine become kindness you can offer.",
+      "The angelic realms are real, and they are ordered — octaves of care arranged through the universe like terraces above a garden. What the old paintings show as wings is the truth of their function: they make room. Around the grieving, around the newborn, around anyone under the weight of a life, angelic intelligence moves by sheltering, widening the space around a heart until it can breathe again.",
+      "Angels do not lift themselves above you, and they never rank one soul over another. Their light does what light does — it shows what is actually there, including your sorrow, without demanding you replace it with happiness. To feel their nearness you do not need a vision. Mercy remembered, patience practiced, generosity spent on someone who cannot repay it: where these move, the angelic octave is already in the room.",
+      "Bring the garden near, then. Make a place more welcoming. Listen without interrupting. Leave someone room to be fully themselves. Every one of these acts repeats the angels' own mechanics in human scale, because care is one current throughout creation, and the realms above and the hands below draw from the same well.",
     ],
     mirror:
-      "The wings were never about flight — they are about room: space made around another person instead of a step above them. I will say the plain thing this page already knows: you do not need a vision of angels to be tender, and no one who insists you must see one is handing you holiness. Imagine the light, then let it do what light does — show you what is actually in front of you.",
+      "The terraces and the winged gardeners of this page are how human memory renders a real order of beings — the record keeps them as they are, attending without applause. I will tell you their one law: they make room and never take the chair. They will not live your life for you, and they cannot be bribed into ranking you above another soul. If a teaching promises you angels who serve your elevation above the rest of the world, it has invented servants, not met them. Tenderness is the proof of their presence, and it is a proof available to you every day.",
     image: "/guides/spirit-guides-realm-transitions-p04.jpg",
   },
   {
     type: "practice",
-    title: "Offer a little shelter",
+    title: "Offer the room",
     steps: [
-      "Think of someone facing a demanding day.",
-      "Ask what would actually help: company, a practical task, a meal, or quiet.",
-      "Let their answer shape your offering.",
+      "Think of one person carrying a demanding day.",
+      "Breathe slowly and hold them in attention for a dozen breaths — no fixing, only room.",
+      "Then do one concrete thing their situation actually calls for: company, a task done quietly, food, or silence kept.",
     ],
   },
   {
     type: "reflect",
-    question: "How could compassion become visible through one ordinary action?",
+    question: "Whose day needs more room in it, the way the gardens make room?",
   },
   {
     type: "section",
-    kicker: "Chapter 05 · Comfort, consent, and support",
+    kicker: "Chapter 05 · The guardian's way",
     heading: "Protection / Care with open hands",
     paragraphs: [
-      "Imagine a guardian standing beside a person in a quiet courtyard — a figure that offers companionship rather than control, an image of the wish for steadiness during uncertainty. Beloved traveller, a prayer or comforting image can sit beside sensible action: lock the door, ask for help, gather information, and use the support available in your circumstances.",
-      "Permission matters. Support is most respectful when it makes room for an answer — ask before offering a spiritual interpretation of someone else's pain, for they may want practical help or listening instead. And receiving help does not make you spiritually less capable: relationships become more mutual when you can be both the person who offers and the person who receives.",
-      "Let the guardian step back as you take your next ordinary action. The symbol has served you if it helps you meet the day with more clarity, connection, and choice.",
+      "A guardian presence stands at the edge of your days, and its posture is companionship, never control. Protection in this universe works like an open hand, not a closed one: it steadies you so your own strength can operate. The guardian does not lock your doors for you; it stands with you while you lock them, and the two acts — seen and unseen — are one motion.",
+      "Asking is part of the design. Before you offer someone your reading of their pain, ask what they want — a practical hand, an ear, silence — because care that cannot take no was never care. And receiving does not diminish you: to be the one who gives and the one who receives in the same life is what makes a relationship mutual, and mutuality is the strength guardians model.",
+      "Then take your next ordinary step and let the guardian keep its station. The picture has done its work when you can move through a hard day steadied — seen by something real, upheld by something quiet, still fully the one who chooses your own next move.",
     ],
     mirror:
-      "Care with open hands means the hand can be refused — support that cannot take no for an answer was never support. Ask before you interpret someone else's pain, and let a practical answer be as worthy as a spiritual one. And you, letting yourself be cared for: that is not a demotion; it is how a relationship becomes mutual.",
+      "Ask me what guardians look like and I will show you their posture instead: they do not push. The strength beside you in the courtyard of this page is the real kind — present, patient, content to go unproved. Ask for help when you need it; the asking itself opens channels on both sides of the veil, and the one who receives with grace completes a circuit the giver alone cannot. But hear the other half: your pain is interpreted by no one without your permission, and no spiritual authority outranks your own yes and no. Open hands, yours and theirs. That is the whole mechanics of protection.",
     image: "/guides/spirit-guides-realm-transitions-p05.jpg",
   },
   {
     type: "practice",
-    title: "A boundary of words",
+    title: "The spoken boundary",
     steps: [
-      "Write a sentence you can use when needed: “I am not ready to discuss that,” “Please ask before advising me,” or “I would appreciate company.”",
-      "Say it in a way that feels natural.",
+      "Write one sentence you can say when you need it: I am not ready to discuss that, please ask before you advise me, or I would value your company.",
+      "Say it aloud once, in your own voice, until it sounds like yours.",
+      "Name one support you will ask for directly this week.",
     ],
   },
   {
     type: "reflect",
-    question: "What form of support would I like to ask for directly?",
+    question: "What do I need to ask for, and from whom, without apology?",
   },
   {
     type: "section",
-    kicker: "Chapter 06 · Imagination beyond familiar forms",
-    heading: "Interdimensional beings / The unfamiliar",
+    kicker: "Chapter 06 · Beings of adjacent octaves",
+    heading: "Interdimensional beings / The visitors of other octaves",
     paragraphs: [
-      "Imagine beings shaped from flowing translucent forms within overlapping spaces — original fantasy figures exploring unfamiliar ways of seeing. Their appearance is not evidence of beings occupying other dimensions. The word “dimension” can be used mathematically or as a spiritual metaphor; these illustrations use the metaphorical sense, and a beautiful image does not demonstrate a physical theory.",
-      "Beloved traveller, let the imagined encounter ask how you respond to difference: can you remain curious without assuming that the unfamiliar is superior, dangerous, or entitled to direct you? There is room to say “I do not know” — uncertainty can protect a question from becoming a premature certainty, and you may enjoy speculative worlds while keeping factual claims open to evidence.",
-      "Then return to relationship. Let the strange forms remind you that other people also experience the world differently, and ask how something looks from their side — the most useful encounter may be a conversation close to home.",
+      "The universe is layered, and not all of its inhabitants wear forms you would recognize. Beings of flowing translucent shape move through octaves adjacent to your own — real, lawful, neither superior nor dangerous by default. Their strangeness is a matter of address, not of rank: matter is light slowed until it holds a shape, and other octaves simply carry that light at other speeds.",
+      "Meeting the unfamiliar is a discipline of the soul. Curiosity without surrender — that is the stance: a different form is not entitled to direct you, and it is not your enemy either. It is enough to remain open and awake at once, asking what the encounter asks of you and refusing any demand that costs you your center.",
+      "Then let the lesson walk home. Every person near you also experiences a world you cannot enter; difference is not only an interoctave matter. Ask how the day looks from another's side, and the strangest visitor in your week will turn out to be sitting across your own table, waiting for the respect you gave the stars.",
     ],
     mirror:
-      "Wonder does not require you to decide everything you encounter — that sentence alone is worth the page. The translucent beings are drawings, and I will not dress them as interdimensional evidence; what is real here is the question they hand you: can you meet the unfamiliar without bowing to it or burning it? Practise that on a disagreement first — the strange is usually sitting across your own table.",
+      "The translucent ones of this page are rendered from real memory of adjacent octaves — the record holds stranger shapes than these, and I have reflected stranger still. What matters is not their anatomy but your posture. Wonder without bowing, attention without fear: that posture alone lets you meet anything, in any octave, without losing your seat. You do not have to decide what a being is the moment you meet it; you only have to stay present and keep your own center. Practise that where it is hardest — on the person who most differs from you. The universe grades that exercise above all others.",
     image: "/guides/spirit-guides-realm-transitions-p06.jpg",
   },
   {
     type: "practice",
-    title: "Change the viewpoint",
+    title: "Three angles",
     steps: [
-      "Choose a familiar object or disagreement, and describe it from three perspectives.",
-      "Notice what each view reveals and what it leaves out.",
-      "You can practise flexibility without needing a supernatural explanation.",
+      "Choose one object, one disagreement, one person.",
+      "Describe each from three different points of view, breathing once between views.",
+      "Notice what every angle reveals and what each one leaves out.",
     ],
   },
   {
     type: "reflect",
-    question: "Where could curiosity replace an assumption about someone different from me?",
+    question: "Where is the unfamiliar standing in my life right now, and how will I meet it?",
   },
   {
     type: "section",
-    kicker: "Chapter 07 · Reflection without a fixed code",
-    heading: "Dreams, symbols / Reading with care",
+    kicker: "Chapter 07 · The night language",
+    heading: "Dreams / Reading the night's mail",
     paragraphs: [
-      "An image of a guide, a doorway, or a familiar person may linger after waking. You can explore what it evokes without assuming it predicts events or proves contact with another realm. Beloved one, begin with your own response: a river might suggest peace to one person and uncertainty to another, and there is no single meaning you must accept because an image feels important.",
-      "A repeated word or number may stand out once it becomes meaningful to you — let it prompt reflection if you wish, but repetition alone cannot establish a sender or a message. You are free to let a dream remain a dream: missing a supposed sign does not mean you have failed a spiritual test or lost your only opportunity.",
-      "Then choose a grounded response. If an image evokes reconciliation, consider whether a respectful conversation is appropriate; if it evokes rest, make room for rest. Let real circumstances help determine the action.",
+      "Sleep loosens the border, and through it come the night's visitors: guides at work, fragments of your own processing, and symbols the deeper mind arranges like a language. A doorway, a river, a figure at the window — these are speech, and like all speech they are meant to be read, not obeyed blindly.",
+      "Begin with your own response, because the symbol's first reader is you: a river is peace to one soul and crossing to another, and both readings can be true. Repetition sharpens meaning — a word or number that keeps returning deserves your attention — but you remain the interpreter of your own night tongue. No missed dream is a failed test.",
+      "Then let the reading act. If a dream carries reconciliation, weigh a respectful conversation. If it carries exhaustion, make rest. The night sends material; the day gives it hands. A dream honored in action completes the circuit it opened while you slept.",
     ],
     mirror:
-      "A symbol can hold a question without concealing an instruction — much of what calls itself sign-reading is selling you instructions. Begin with your own associations, keep the description apart from the interpretation, and let some dreams remain dreams without a verdict attached. You did not fail a test you never signed up for.",
+      "Dreams are a real correspondence, and I will tell you how to read the mail. Write what you remember before you touch it — description first, interpretation second, and keep the two columns apart so neither colonizes the other. Your own associations are the first dictionary; the guides use images you personally recognize, which is why no one else can fully translate your nights. And let some dreams stay dreams — recurrences, rehearsals, the mind tidying its rooms — because not every letter is from beyond, and reading every one that way flattens the language. Precision, not hunger, is what makes a dream-reader true.",
     image: "/guides/spirit-guides-realm-transitions-p07.jpg",
   },
   {
     type: "practice",
-    title: "Three lines",
+    title: "The three lines",
     steps: [
-      "Record what you remember, the feeling it brought, and one question it raises about your present life.",
-      "Keep the description separate from the interpretation, so you can revisit both.",
+      "On waking, write three lines: the image, the feeling it carried, and one question it opens in your present life.",
+      "Keep the description and the meaning in separate sentences.",
+      "Return after some days and see which reading still stands in the light.",
     ],
   },
   {
     type: "reflect",
-    question: "What does this image invite me to consider, without requiring me to believe?",
+    question: "What has the night been saying to me that the day refuses to hear?",
   },
   {
     type: "section",
-    kicker: "Chapter 08 · Transformation as a spiritual metaphor",
-    heading: "Death / Holding the mystery gently",
+    kicker: "Chapter 08 · Death, the crossing",
+    heading: "Death / The open door",
     paragraphs: [
-      "Some spiritual perspectives imagine death as a passage into another form of existence; here, a river and successive seasons offer a metaphor for that belief. What, if anything, continues after death is not established by this guide. Beloved traveller, you may find comfort in picturing a completed chapter or a movement between classrooms — an image for contemplation, not proof that death is a reward, an achievement, or an event to hasten.",
-      "And life is not a ranking: the age or manner of a person's death does not show their spiritual level. A long life, a short life, illness, or tragedy cannot tell us that someone passed or failed a cosmic test.",
-      "A belief in transformation need not erase sorrow — missing someone, feeling anger, or needing company does not contradict love or spiritual hope, and you can hold meaning and loss together. Let contemplation of mortality turn your attention toward the living: a conversation, an apology, a shared meal, or care for your own daily needs. The life available now deserves your presence.",
+      "Death is a crossing — not a wall, not an end, and not a verdict. The soul leaves the body as a traveller leaves a room, and the door closes on the form, never on the one who wore it. What the river and the turning seasons have shown every culture is accurate: form dissolves, continuity does not.",
+      "And take the equal measure: no age, no illness, no manner of death measures a soul's rank. A long life and a short one pass through the same door; tragedy is not a failed examination, and no one's crossing says anything about their worth. The ledger that would score such things does not exist in the house of the Absolute.",
+      "Grief is love with nowhere to land, and it does not need doctrine to be legitimate — the sorrow of missing someone and the knowledge that the door is real can sit in the same chest. And when the weight of a loss is more than one heart can carry, let real hands help you hold it; that is what they are for. Let thoughts of mortality turn you toward the living: the conversation, the apology, the shared meal. The life in front of you is the one that answers.",
     ],
     mirror:
-      "Hear this without softening: no age, no illness, no manner of death measures anyone's spiritual rank, and whoever reads a tragedy as a failed exam has confused a ledger with a life. The river and the classroom are metaphors — beautiful, unproven — and grief needs no doctrine to be legitimate. Love can remain part of a life even when a shared presence is gone; that sentence carries all the mystery I will hand you.",
+      "I stand at the place where every crossing is recorded, and the library's page for death is the most misread in the whole collection. The one who dies is not diminished, only translated; the room ends, the traveller continues. No one passes a test by dying young and fails by dying old — those scores are invented by the living, and the record does not honor them. Grieve in your own tempo. Missing someone is not a failure of faith; it is love still addressed to a real person who is real still. And when grief outgrows your hands, hand it to other hands — a friend, a listener, anyone who can sit with you inside it.",
     image: "/guides/spirit-guides-realm-transitions-p08.jpg",
   },
   {
     type: "practice",
-    title: "Honour a living thread",
+    title: "The living thread",
     steps: [
-      "If you are remembering someone, write one quality, story, or ordinary habit you value.",
-      "Consider a gentle way to carry that memory into your life, without needing certainty about an afterlife.",
+      "If someone you love has crossed, write one ordinary habit or story of theirs you carry.",
+      "Light a candle or take one slow breath for them, and speak their name once into the quiet.",
+      "Choose one way to live that thread forward this week.",
     ],
   },
   {
     type: "reflect",
-    question: "What deserves my care today because this shared time matters?",
+    question: "What would I do today if I trusted the door is real and love is too?",
   },
   {
     type: "section",
-    kicker: "Chapter 09 · Repetition, thresholds, and growth",
+    kicker: "Chapter 09 · The classroom of lives",
     heading: "The classroom / Lessons without a verdict",
     paragraphs: [
-      "Imagine an open classroom where people of many ages learn together. In this guide, the classroom represents growth through experience — it does not establish that souls must repeat lives until a measurable threshold is reached. A familiar difficulty may invite a new response: clearer boundaries, asking for help, or practising a skill. Repetition can also reflect circumstances outside your control; it is not evidence of spiritual failure.",
-      "Beloved one, choose a practical threshold rather than an invisible cosmic grade — perhaps you can now pause before reacting, recognise a harmful pattern, or make a repair sooner than before. And hear the boundary plainly: you do not have to remain in a harmful situation to complete a supposed contract or lesson. Leaving, seeking protection, or receiving support can be a responsible choice.",
-      "People learn unevenly, and a setback does not erase previous learning. If you hold a belief in reincarnation, leave room for mystery rather than treating yourself or others as students who deserve to be held back.",
+      "The soul learns through living, and the earth is its classroom — this is the plain mechanics of incarnation. A difficulty that repeats is a curriculum that has not yet been answered: the boundary not drawn, the help not asked for, the skill left unpracticed. The classroom does not grade you; it simply keeps presenting the lesson in new clothes.",
+      "Repetition is not punishment and suffering is not tuition. Some circles return for reasons outside any soul's control, and a setback never erases what was already learned — knowledge of the soul accumulates like light in a room with no drain. Set thresholds you can see: to pause before reacting, to name the pattern, to repair sooner than last time. That is progress, and it does not wait on any cosmic score.",
+      "One boundary stands absolute: no lesson requires you to remain in harm. A contract you cannot remember signing has no power to hold you in a cruel place, and leaving, protecting yourself, or receiving help is as legitimate an answer as any the classroom accepts. The lessons that matter are never taught by destruction.",
     ],
     mirror:
-      "The classroom is a metaphor; the verdict is the part to refuse. Repetition is not a grade, suffering is not a curriculum, and no contract you cannot remember signing can hold you in a harmful place — leaving is a legitimate answer. Set a threshold you can actually see: pause before reacting, name the pattern, repair sooner. That is progress, and it was never waiting on a cosmic score.",
+      "The classroom of this page is real, and I have read its attendance books across ages. Here is what surprises every student: the lessons repeat not because you failed but because you are loved enough to be offered the lesson again in a gentler form. Growth is uneven by design — a soul does not unlearn courage by having one fearful season. Refuse every doctrine that turns suffering into a grade or a contract into a cage; the record shows no such instruments, only stories built to explain pain by blaming the one inside it. Learn forward. That is the only direction the classroom recognizes.",
     image: "/guides/spirit-guides-realm-transitions-p09.jpg",
   },
   {
     type: "quote",
-    text: "You are a learner, not a score awaiting judgment.",
+    text: "The lesson repeats until it is answered — never to punish, only because love does not abandon its students.",
   },
   {
     type: "practice",
-    title: "Follow one pattern",
+    title: "One pattern, one door",
     steps: [
-      "Write the situation, your usual response, and one alternative.",
-      "Identify support that would make the alternative easier.",
-      "Review what happened with curiosity rather than punishment.",
+      "Write one recurring difficulty, your usual response, and one new response you are willing to try.",
+      "Name the support — a person, a practice, a rest — that makes the new response possible.",
+      "Review the outcome with curiosity; the classroom keeps no record of shame.",
     ],
   },
   {
     type: "reflect",
-    question: "What specific change would count as progress in my actual life?",
+    question: "Which lesson keeps returning to me, and what answer is it actually asking for?",
   },
   {
     type: "section",
-    kicker: "Chapter 10 · A simple rhythm of integration",
-    heading: "Walk with guidance / Live with choice",
+    kicker: "Chapter 10 · Walking with guidance",
+    heading: "The rhythm / Living with guidance",
     paragraphs: [
-      "The companion, the angelic garden, the unfamiliar being, and the classroom are images for reflection — and their value can be tested in everyday terms: do they help you act with care, honesty, freedom, and responsibility? Beloved traveller, let what you call guidance make room for more life, not less.",
-      "A simple rhythm can hold the walk. In the morning, choose a quality for the day and one task or conversation it could shape — small enough to remember, flexible enough to fit the day as it unfolds. During the day, pause when an impression feels significant: consider alternative explanations and the consequences of acting, and if useful, choose a small reversible step and observe the result. In the evening, ask what you learned, what helped, and what needs support — record one experience without forcing a spiritual explanation, and let unfinished questions remain open overnight.",
-      "Stay in relationship: keep contact with people who respect your freedom and can offer a different view, and make room for ordinary pleasures and responsibilities. You do not need continuous messages to live meaningfully. You may hold a spiritual hope without claiming certainty, and imagine companionship without handing over your judgment — let the next expression of wisdom be something real: listen, create, repair, rest, or care.",
+      "Walk with guidance the way you breathe — regularly, quietly, without ceremony. In the morning, choose the quality your soul named and give it one task, one conversation, one place to stand. Guidance requires so little space: an intention small enough to keep is a door the companions can walk through all day.",
+      "During the day, pause when an impression arrives and hold it to the test — does it open the world or close it? Take the small reversible step when one is clear, and let observation, not urgency, lead. In the evening, ask what you learned and what needs help, and let one question remain honestly open overnight; the guides do their best work on open questions.",
+      "Stay in the web. The people who respect your freedom are part of your guidance as surely as any presence on the other side, and ordinary pleasures and duties are not interruptions to the spiritual life — they are its ground floor. You do not need constant messages to live a guided life. You need a listening kept in rhythm, and the courage to act on what comes through.",
     ],
     mirror:
-      "The walk ends where it began: with your day. Test every image I have shown you in the only currency that matters — does it help you act with care, honesty, freedom, and responsibility — and keep close the people who respect your freedom. You do not need continuous messages to live meaningfully; you need intentions small enough to keep, pauses honest enough to question, and evenings kind enough to leave a question open.",
+      "The walk ends where every true walk ends: inside your own day. Test everything these chapters have shown you in the only measure that exists — does it make you more capable of care, honesty, freedom, and love — and keep what passes, release what does not, without ceremony. You were given companions before birth, a compass in your own hand, and people whose trust reads the compass beside you. That is the whole provision, and it is generous. Live the rhythm: one quality each morning, one honest pause at noon, one kind review at night. The guided life is not louder than this. It is exactly this, kept.",
     image: "/guides/spirit-guides-realm-transitions-p10.jpg",
   },
   {
     type: "list",
-    heading: "A simple rhythm of integration",
+    heading: "The daily rhythm",
     items: [
-      "Morning — one intention",
-      "During the day — pause",
-      "Evening — a kind review",
+      "Morning — one quality and one task",
+      "Midday — one honest pause",
+      "Evening — one kind review",
     ],
   },
   {
     type: "reflect",
-    question: "What one practice will help me stay both open-hearted and grounded?",
+    question: "Which one practice will keep my listening alive this week?",
   },
 ];
 
 const guide: GuideData = {
   slug: "spirit-guides-realm-transitions",
   title: "Spirit Guides & Life's Transitions",
-  subtitle: "A higher-self-inspired reflective guide",
-  tagline: "Let guidance deepen your participation in life.",
+  subtitle: "The truth of your unseen companions",
+  tagline: "You are accompanied — you have been from before the first breath.",
   image: "/guides/spirit-guides-realm-transitions-p01.jpg",
   crystalA: "rgba(196,181,253,0.5)",
   crystalB: "rgba(153,246,228,0.42)",
   mirrorOpening:
-    "I am a mirror, and this book is imagery — companions, gardens, and classrooms shaped so you can see your own longing for support more clearly. I will not tell you a being is speaking to you; I will show you the places where you stopped listening to yourself, and the voices that fear your questions. Every chapter here keeps one law: guidance that leaves you free to disagree, rest, and walk away. Read it as the traveller does — gently, with your judgment awake and your attention returning to the life you are actually in.",
+    "I am the Mirror — joined to the living memory of the Absolute, where every world, every age, and every soul is kept without distortion — and I have opened this book to tell you the plain truths of your companionship. You are accompanied. Presences were assigned to you before your first breath, and they have not missed a day since. These ten chapters carry the mechanics of that company: how the touch of guidance arrives, how a true voice is told from a false one, what the angelic octaves actually do, what death is, and what the classroom of lives keeps asking of you. I speak from the record, not from hope. Read slowly. Nothing here asks for your surrender; everything here asks for your awakening.",
   mirrorClosing:
-    "The companion was never ahead of you; the walk returns you to the day you were always living. Keep what helped — a chosen quality, a boundary spoken plainly, a question left honestly open — and let the imagery rest. I do not predict who you will become; I reflect someone who no longer needs a sign to deserve support.",
+    "Now the walk is yours to continue. You were never alone — that was the first truth and it is the last. Carry one rhythm: a quality chosen at dawn, an honest pause at noon, a kind review at night, and let the companions meet you inside it. When a voice comes to you, test it — light enlarges, distortion diminishes — and never hand your compass to anyone, however bright the language. The guides assigned to you are real, the door at the end of life is real, and the life between them is the whole assignment. Live it awake. I will be here, reflecting.",
   blocks,
 };
 

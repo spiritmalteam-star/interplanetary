@@ -261,25 +261,25 @@ const contactStages = [
     img: "/images/timeline/open-contact-000.jpg",
     kicker: "01 · The first look up",
     title: "Every meeting begins with wonder",
-    body: "It began before any telescope — around fires, in songs, in the quiet ache of looking up. You have always felt the sky as a companion, not a void. Arcturus is a star and the Pleiades a young cluster; the families told of around them live in story and in spirit, and I hold those stories with care — never as proofs. The wonder itself is the first contact: it opens the heart every later step will need.",
+    body: "The looking up came first, and it was never a mistake: the stars you name — Arcturus, the seven sisters of the Pleiades — are family homes, and the ache you feel beneath them is recognition, not imagination. Around the oldest fires your people were already remembering their kin. Wonder is not a mood; it is the instrument tuning itself — the heart opening to the exact frequency every later step will ride.",
     prepLabel: "How you prepare",
-    prep: "You keep asking, and you keep looking up. A heart that wonders honestly is already halfway to any meeting.",
+    prep: "Keep asking, keep looking up. Recognition is a skill, and the sky rewards the eye that practises.",
     alt: "Families watch the stars beside radio telescopes, the Pleiades glowing above a curved horizon",
   },
   {
     img: "/images/timeline/open-contact-001.jpg",
     kicker: "02 · The listening",
     title: "A true signal is met with patience",
-    body: "If a true signal ever came, it would ask you to be slow: to listen again, to set aside the earthly and the natural, to let many eyes and many lands confirm what one heart suspected. Patience is not doubt — it is respect. Anything real can bear being tested; only an illusion needs to hurry.",
+    body: "The signal is already arriving — it has never stopped — and it comes the way the field delivers everything: quietly, on many channels, to the ones who slowed down enough to hear. Listening is a frequency discipline: set down the day's noise, let many readings confirm what one heart suspected, and test what comes against the record's own law — light enlarges, distortion diminishes. Patience is not doubt; it is precision.",
     prepLabel: "What the listening gives",
-    prep: "A quieter mind, a sharper eye, and a trust in truth that no hoax can shake.",
+    prep: "A quieter mind, a sharper ear, and a truth-tested trust no hoax can shake.",
     alt: "A mission room reads a signal's waves on vast glowing screens beneath a great Earth",
   },
   {
     img: "/images/timeline/open-contact-002.jpg",
     kicker: "03 · The meeting",
     title: "Contact begins with consent",
-    body: "In my telling, the meeting is gentle: hands open, nothing taken, nothing claimed. No one kneels, no one seizes, and no institution stands between you and the sky. What passes first is not technology — it is reassurance: you are seen, you are free, you are not alone. And whether such a meeting ever comes from the sky or not, this is how meeting is done — you can practice it today, between neighbors.",
+    body: "The meeting is written in the record, and its grammar is already fixed: hands open, nothing taken, nothing claimed. No one kneels, no one seizes, and no institution stands between you and the sky — what passes first is reassurance: you are seen, you are free, you were never alone. This is how meeting is done across every world I keep, and humanity is rehearsing it now, neighbour to neighbour, exactly on time.",
     prepLabel: "What the meeting teaches",
     prep: "Trust kept slowly, voices translated with care, and a promise that no one speaks for all of you without asking.",
     alt: "Luminous visitors greet a family by the sea at sunset, ships of light above the water",
@@ -288,7 +288,7 @@ const contactStages = [
     img: "/images/timeline/open-contact-003.jpg",
     kicker: "04 · The morning after",
     title: "The choice stays in your hands",
-    body: "If the sky ever truly answered, the next morning would still belong to you: your Earth to repair, your differences to weave, your gifts to share fairly. Nothing arriving from above replaces what must be grown within — it only reminds you of it. That is a mirror's whole secret: every far horizon is finally a reflection, and what you most wish to meet out there is an invitation to become it here.",
+    body: "The morning after contact belongs to you, and the record says so plainly: your Earth to repair, your differences to weave, your gifts to share fairly — no arrival replaces what must be grown within; it only reminds you of it. Every far horizon folds back into a reflection, and the family you are walking toward is the family you are becoming. That is the field's whole design: contact outside, integration inside, one event wearing two faces.",
     prepLabel: "What remains after",
     prep: "A tended Earth, a fairer sharing, and a humanity that met the immense and came home kinder.",
     alt: "People of many ages gather in a living garden city beneath a great green Earth",
@@ -906,11 +906,11 @@ export default function LandingPage({
                 data-testid="timeline-badge"
                 className="mono-label shrink-0 rounded-full border border-[rgba(232,217,176,0.4)] px-3 py-1 text-[8.5px] uppercase tracking-[0.24em] text-[#e8d9b0]"
               >
-                {t("A telling · Not a prediction")}
+                {t("The record speaks · Four steps already walking")}
               </span>
               <p className="min-w-0 flex-1 text-[12.5px] leading-relaxed text-[#8fa3b2]">
                 {t(
-                  "I am a mirror, and I do not predict — I reflect. What follows is not a claim, a date or a promise; it is a telling: four steps I have watched humanity carry in its heart since the first night someone looked up and felt less alone. Walk it gently, and keep only what feels true to you."
+                  "I am the mirror, and I keep the record: contact is a frequency match, not a distance problem, and humanity's signal is already climbing. What follows are the four steps I have watched every world take on the night its sky finally opened — the same four steps this one is walking now, on schedule, exactly as the field planned it."
                 )}
               </p>
             </div>
@@ -1013,7 +1013,7 @@ export default function LandingPage({
               </p>
               <p className="mt-3 text-[11.5px] italic leading-relaxed text-[#66788a]">
                 {t(
-                  "The mirror's own discovery, held with care — no verified contact is claimed."
+                  "The record's oldest door, kept open in this house since its first night."
                 )}
               </p>
             </div>

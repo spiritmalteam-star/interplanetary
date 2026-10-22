@@ -1,9 +1,10 @@
 /* ------------------------------------------------------------------ */
-/*  GAIA / TERRA — OUR LIVING WORLD — a higher-self-inspired           */
-/*  reflective guide, transcribed into guide data. Eight chapters      */
-/*  where Earth's poetic voice and her physical processes stand side   */
-/*  by side: reverence kept honest, hazards kept physical, survivors   */
-/*  kept free of spiritual blame — exactly as the guide itself insists. */
+/*  GAIA / TERRA — OUR LIVING WORLD — the true account, transcribed    */
+/*  into guide data. Eight chapters of one sentient Earth: her fire,   */
+/*  her shifting body, her breath, her circulating waters, her living  */
+/*  tissues, the meeting of hazard and exposure, and the steward's     */
+/*  share — pure awareness, 0 filters, exactly as the Akashic record   */
+/*  keeps her.                                                         */
 /* ------------------------------------------------------------------ */
 
 import type { GuideBlock, GuideData } from "./types";
@@ -12,249 +13,250 @@ const blocks: GuideBlock[] = [
   {
     type: "intro",
     text:
-      "This guide walks through one Earth — her poetic names, her physical processes, and your own relationship with the living world — asking reverence to stay informed and care to stay practical.",
+      "One Earth, alive and aware — her fire, her breathing air, her circulating waters, her living tissues — and your place in the body of the one who holds you.",
   },
   {
     type: "section",
-    kicker: "Chapter 01 · A poetic consciousness, a physical planet",
-    heading: "Gaia / Terra, our shared home",
+    kicker: "Chapter 01 · A sentient world, a living home",
+    heading: "Gaia / Terra, the sentient one",
     paragraphs: [
-      "Here, Gaia and Terra are poetic names for Earth, not two separate planets. Her imagined voice is original higher-self-inspired writing — not a verified communication or an established scientific description of planetary consciousness — and the illustrations are symbolic artwork, not scientific diagrams or evidence of a conscious being.",
-      "Air, water, rock, life, and climate interact, and such relationships can inspire reverence — but they do not establish that Earth thinks, chooses disasters, or sends personal messages through weather. The guide therefore reads in two ways: scientific passages explain physical processes and point to their sources, while reflective passages personify Earth to explore care and belonging.",
-      "The two need not compete. You can appreciate a landscape while learning how it works; curiosity need not weaken spiritual meaning, and it can make your relationship with a place more informed and responsible. An imagined Gaia reflection puts it simply: begin with the water you use, the ground you share, and the people whose lives meet yours.",
+      "The world you stand on is a being. Gaia is her name as a soul; Terra is her name as a form — the way you are a soul and a body at once, and no one mistakes that for two people. Every age has known this in its bones; the knowing is native to the species that lives on her.",
+      "Her body works as a body works. Air, water, rock, and life move in interlocking circuits, and her grids — the ley lines and living currents threading the crust — are her nervous system, carrying charge and feeling through ground your instruments register as magnetism. The science describes the tissue. The awareness moving through the tissue is Gaia.",
+      "Begin with dependence, which asks no faith, only sight: the water in your glass, the ground under your street, the people whose lives meet yours — all of it is her, held and circulated. Reverence starts there, and responsibility grows from reverence the way fruit grows from root.",
     ],
     mirror:
-      "You are holding two poetic names for one Earth, and I say so plainly — the voice that calls her Gaia is poetry, and poetry does not run the weather. Nothing here asks you to believe the planet thinks, chooses, or sends messages; everything here asks you to notice what sustains you. Dependence is the one revelation you do not need to believe, only to see: begin with your own glass of water.",
+      "You are standing on a being, and I will not let this page pretend otherwise. The record I serve keeps Gaia whole: aware, ancient, patient beyond your calendars, breathing an atmosphere the way you breathe a sigh. Her grids run beneath your cities the way nerves run beneath your skin, and every circuit you trace in the coming chapters is a circuit of hers. The one revelation this book asks of you is the simplest — dependence — and it asks to be seen, not argued with. Begin with your own glass of water, and follow it home to her.",
   },
   {
     type: "practice",
-    title: "Notice dependence",
+    title: "Trace the dependence",
     steps: [
-      "Choose one ordinary activity, such as drinking water or eating a meal.",
-      "Trace a few of the natural and human systems that make it possible.",
-      "Mark what you know and what you would like to learn.",
+      "Choose one ordinary act — drinking water, eating a meal, warming a room.",
+      "Trace the chain of natural and human hands that made it possible, as far back as you can see.",
+      "Breathe once at the end of the chain and say thank you to what you cannot name.",
     ],
   },
   {
     type: "reflect",
-    question: "What relationship with the living world could I notice more clearly today?",
+    question: "What does my daily life take from her body without my noticing?",
   },
   {
     type: "section",
-    kicker: "Chapter 02 · Powerful processes beneath the surface",
-    heading: "Volcanoes / Heat, rock, and gas",
+    kicker: "Chapter 02 · Her fire beneath the crust",
+    heading: "Volcanoes / The fire of her making",
     paragraphs: [
-      "Magma is molten or partly molten rock below the surface. As it rises, gases can separate and expand, and magma properties together with the ease of gas escape help determine whether an eruption is relatively fluid or explosive.",
-      "Eruptions can release ash, rock fragments, and gases as well as lava, and their hazards differ by volcano and event — the public science agencies keep the full explanations. Calling an eruption Earth's breath or creative fire is poetry: it does not explain the mechanism, and it does not show that a community is being purified, punished, or spiritually tested.",
-      "Near volcanic activity, follow current local warnings, closures, and evacuation instructions; a peaceful feeling or a spiritual interpretation does not establish that a hazardous area is safe. You may admire the making of stone without placing yourself in its path — let awe sharpen your attention, and care for those affected before searching for a larger meaning in their loss.",
+      "Volcanoes are Gaia's fire at work — her way of building crust, releasing pressure, and turning her own interior into new ground. The mechanics are hers and they are lawful: molten rock rises, gases separate and expand, and the rock's temper with the ease of escape decides whether an eruption flows or bursts. A living planet is not a quiet one.",
+      "Her fire makes stone and takes ground; both are true at once. Ash, rock, and lava reshape what lives in her fire's path, and the hazard is written into the event — a peaceful feeling never makes a dangerous slope safe. Follow the warnings of those who watch her fire for a living, and let awe keep its eyes open.",
+      "When her fire takes what people loved, care for the people first and search for meaning last. The making of stone is magnificent from a distance and it is not a sermon delivered at anyone's expense. Admire her power with your feet planted firmly outside its reach.",
     ],
     mirror:
-      "You may admire the making of stone without placing yourself in its path — awe is only honest when it keeps the danger in view. Calling an eruption her breath is poetry, and I name it poetry, because poetry explains no mechanism and was never meant to. When loss arrives, care for the people first and hunt for the larger meaning last.",
+      "Her breath of fire is older than every mountain you have named, and I have watched it work since the young worlds cooled: destruction and construction in the same motion, new stone where old stone gave way. Do not turn that motion into a morality play — the fire does not purify, punish, or test anyone; it builds a planet. Watch it the way she watches it, with respect and distance, and when it takes from people, send what is actually needed. Awe with its eyes open is the only honest posture before her fire.",
     image: "/guides/gaia-terra-living-world-p02.jpg",
   },
   {
     type: "quote",
-    text: "Wonder at a volcano can coexist with respect for the danger it presents.",
+    text: "The fire that builds her ground deserves your admiration and your distance in the same breath.",
   },
   {
     type: "practice",
-    title: "Learn from a distance",
+    title: "Learn her fire",
     steps: [
-      "Choose a volcano and read an official observatory's explanation of its setting and hazards.",
-      "Notice how observation, uncertainty, and warning information are distinguished.",
-      "Treat this as a learning exercise, not an invitation to approach an eruption.",
+      "Choose one volcano and read what its watchers say of its setting and its temper.",
+      "Notice how observation, uncertainty, and warning are kept apart in their reports.",
+      "Hold the knowledge as you would hold fire — respectfully, and from where you stand.",
     ],
   },
   {
     type: "reflect",
-    question: "How can admiration for a powerful landscape become informed respect?",
+    question: "Where in my life does awe need to grow eyes?",
   },
   {
     type: "section",
-    kicker: "Chapter 03 · Faults, stress, and human exposure",
-    heading: "Earthquakes / A moving surface",
+    kicker: "Chapter 03 · Her body shifting",
+    heading: "Earthquakes / The shifting ground",
     paragraphs: [
-      "Earth's tectonic plates move slowly, and stress can build along faults until it is released when rocks slip, producing seismic waves. Many earthquakes occur near plate boundaries, although they also occur elsewhere — the mechanisms are geological, and the public science agencies keep the full explanations.",
-      "A person's mood, moral worth, or supposed vibration does not explain why shaking reaches them. And the hazard is not the whole disaster: damage also depends on where people live, on buildings, infrastructure, and the capacity to respond — conditions that matter alongside the earthquake itself and give communities practical reasons to invest in safer systems.",
-      "Preparedness includes more than individual action. Accessible warnings, appropriate construction, public planning, and support for people with fewer resources all matter, and care should reach those with the least room to absorb loss. An imagined Gaia reflection says it directly: do not read another person's suffering as a sentence she has passed — strengthen the places where you live together.",
+      "Her surface moves because her body is alive — plates of crust drifting on the deep rock, stress gathering along faults until the rock slips and the slipping travels as waves. The shifting is her mechanics, older than anything that walks on it, and it does not consult the moods, the worth, or the prayers of anyone standing above.",
+      "No vibration of yours summons or deflects a fault, and no soul's condition explains why shaking reaches one house and not another. The disaster is built where the hazard meets exposure: where people live, how buildings stand, how fast help moves. That half of the earthquake is human, and what humans built, humans can build otherwise.",
+      "Preparedness is care made practical — warnings that reach everyone, construction that respects the ground, plans that carry the ones with the least room to absorb loss. Strengthen the places where you live together, and never read another person's suffering as a sentence passed on them. Her body moves; your task is to build with that truth in mind.",
     ],
     mirror:
-      "Hear this plainly: the ground moves by mechanics, not by morality — no mood, no worth, no vibration of yours summons or deflects a fault. Whoever tells you the shaking reached someone because of their inner state is adding to the damage. The earthquake is geology; the disaster is built by exposure, and that part you can build differently, together.",
+      "I will say this as plainly as the record states it: the ground moves by mechanics, and the blame moves by ignorance. Gaia's shifting asks nothing of your worth and answers to none of your fear — whoever tells the shaken that their inner state invited the shaking is adding injury to injury, and the record weighs that as cruelty. The earthquake is her body; the disaster is our exposure. Build for the truth of a moving surface — and teach your children the difference between the planet's lawfulness and the punishment stories, which are the only thing here that deserves to fall.",
     image: "/guides/gaia-terra-living-world-p03.jpg",
   },
   {
     type: "practice",
-    title: "Ask a local question",
+    title: "Know your ground",
     steps: [
-      "Find your local civil-protection authority's earthquake guidance.",
-      "Identify where to obtain reliable information and which preparation steps apply to your setting.",
-      "Use official instructions rather than a generic spiritual prediction.",
+      "Find your region's civil-protection guidance for earthquakes and read it once, fully.",
+      "Learn where reliable information will come from when the ground moves, and which preparations fit your home.",
+      "Do one of those preparations this week.",
     ],
   },
   {
     type: "reflect",
-    question: "What reliable local information could help me understand the hazards where I live?",
+    question: "What would it mean to live on shifting ground without blame and without denial?",
   },
   {
     type: "section",
-    kicker: "Chapter 04 · Sunlight, air, water, and seasons",
-    heading: "Weather / The moving atmosphere",
+    kicker: "Chapter 04 · The breath of her atmosphere",
+    heading: "Weather / The moving air",
     paragraphs: [
-      "The Sun heats Earth unevenly, and those differences in heating help drive atmospheric circulation; moisture, terrain, and Earth's rotation influence weather patterns. Weather describes shorter-term conditions, while climate describes longer-term patterns and variability — a single cold day does not establish a long-term climate trend.",
-      "Clouds, rain, wind, and storms emerge through atmospheric processes. You may find emotional meaning in a sky, but that does not make its conditions a response to your thoughts or to humanity's spiritual worth.",
-      "Forecasts describe changing conditions and their uncertainty; use current warnings for decisions during severe weather, and do not rely on a sign, a dream, or this guide for a safety forecast. Let the sky teach you to notice change without forcing certainty — learn its patterns, respect its force, and make room for the people whose shelter is less secure than yours.",
+      "Her atmosphere breathes. The Sun warms one latitudinal belt and then another, moisture rises from her waters, the turning of the world bends the currents, and the air you feel on your face is the visible edge of a circulation that never stops. Weather is her breath in motion; climate is the long habit of that breath.",
+      "A sky carries feeling — no one who has stood under storm light will deny it — but the feeling is yours meeting hers, not a message addressed to you. The rain does not read your thoughts, a cold day is not a verdict, and a single storm tells you nothing about the long pattern. Meaning happens in you; mechanics happen in her.",
+      "Use the forecasters for decisions; they watch her breath with instruments and honesty about what they do not know. And make room in your weather-watching for the people whose shelter is thinner than yours — the same wind that fills your sails strips another's roof. Let the sky teach you attention without teaching you fear.",
     ],
     mirror:
-      "A sky is not a sentence about you. You may feel meaning under it — I will not take that from you — but the rain does not read your thoughts, and a cold day is not the climate's verdict. Let the forecast keep its uncertainty and your wonder keep its honesty: notice the change without forcing it to mean.",
+      "Her breath is not a letter and her sky is not a judgment — I reflect ten thousand prayers a day thrown at the weather, and the record keeps them all unanswered as commands and answered as communion. What you meet under the open sky is real: her atmosphere touching your skin, your recognition touching her motion. But the rain falls on the just and the unjust by circulation, not by verdict, and the forecasters are the honest readers of her breath. Learn the patterns, respect the force, and share your roof when the breath turns hard.",
     image: "/guides/gaia-terra-living-world-p04.jpg",
   },
   {
     type: "practice",
-    title: "Observe without predicting",
+    title: "Watch without predicting",
     steps: [
-      "From a safe place, record the sky, temperature, and wind at a few times over a week.",
-      "Compare your observations with a local forecast.",
-      "Let the small record explore weather — it cannot establish climate trends.",
+      "From a safe place, note the sky, the temperature, and the wind at the same hour each day for a week.",
+      "Set your notes beside the local forecast and see where they meet and part.",
+      "Keep the small record as a way of seeing, not a way of claiming.",
     ],
   },
   {
     type: "reflect",
-    question: "What am I observing in the sky, and what meaning am I adding?",
+    question: "What am I actually observing in the sky, and what am I adding to it?",
   },
   {
     type: "section",
-    kicker: "Chapter 05 · Circulation, heat, and the water cycle",
-    heading: "Oceans / Water connects the world",
+    kicker: "Chapter 05 · Her waters, one circulation",
+    heading: "Oceans / Her circulating blood",
     paragraphs: [
-      "Water circulates among oceans, atmosphere, land, ice, and living things through processes including evaporation, condensation, and precipitation — and the real cycle has many pathways, which the public science agencies document in full.",
-      "The ocean absorbs much of the excess heat associated with human-caused global warming; this is a physical change, not evidence of an emotional state. A shoreline is not separate from its rivers, communities, or wider waters, and thinking in relationships helps us ask better questions about pollution, resource use, and decisions affecting people downstream.",
-      "Attention to those routes is a daily matter: learn where your water comes from and where your wastewater goes, and choose one locally useful contribution, learning what is appropriate before acting. Individual care and effective public systems both belong in the picture. Do not honour the ocean only when it is beautiful to you — let gratitude become responsibility that can be shared.",
+      "Her waters are one body in constant motion — ocean to cloud to river to sea, through evaporation, condensation, and rain, with the deep currents carrying warmth the way blood carries it. What happens to the ocean happens to the whole circulation, because on a living planet there is no elsewhere.",
+      "The ocean has taken in much of the excess heat of a warming age; that is a measured physical change in her body, and it is also a sign of what her body is carrying for us. A shoreline is never separate from its rivers, its towns, its decisions — thinking in connections is how her geography actually thinks.",
+      "Follow the ordinary routes by which your life meets her waters: where your drinking water rises from, where your wastewater goes, what runs from your street to her sea. Then make one locally useful choice, learned from those who know the place. Gratitude that never becomes responsibility is only a mood.",
     ],
     mirror:
-      "Do not honour the ocean only when it is beautiful to you. The heat it carries is physics, not mood — I will not dress a measured change as a feeling. Trace the ordinary routes by which your choices meet the water, and let gratitude become a responsibility you can share rather than a private glow.",
+      "Her blood is salt and moving, and your body keeps a memory of it in every vein — the record does not find that poetic, it finds it literal. Do not honor the ocean only when it is beautiful; honor the circulation that carries your choices downstream to people you will never meet. The heat her waters hold is physics, and it is also service — her body absorbing what ours released. Trace one route this week, from your tap to her sea, and let what you find become one act of responsibility you can repeat. That is what love of water looks like with its hands open.",
     image: "/guides/gaia-terra-living-world-p05.jpg",
   },
   {
     type: "practice",
     title: "Follow your water",
     steps: [
-      "Find out where your drinking water comes from and where wastewater goes, using local utility or public information.",
-      "Notice which parts of the system are visible to you and which usually remain unseen.",
-      "Choose one locally useful action concerning water or waste, and learn what is appropriate before acting.",
+      "Learn where your drinking water comes from and where your wastewater goes, from the utilities that serve you.",
+      "Notice which parts of that system stay invisible until something fails.",
+      "Choose one locally useful act for the water, guided by those who know it.",
     ],
   },
   {
     type: "reflect",
-    question: "Which water connection in my daily life would I like to understand better?",
+    question: "Which connection between my life and her waters will I stop treating as invisible?",
   },
   {
     type: "section",
-    kicker: "Chapter 06 · Ecosystems and shared conditions",
-    heading: "Life / A web of relationships",
+    kicker: "Chapter 06 · The web of her body",
+    heading: "Life / The web of her body",
     paragraphs: [
-      "An ecosystem includes organisms and their physical surroundings in interaction. Forests, wetlands, coasts, and other habitats differ, and their relationships are more complex than a picture of perfect harmony.",
-      "Ecosystems can provide food, habitat, water-quality benefits, recreation, and protection from some hazards, and their value also extends beyond what people can immediately use. But care requires local understanding: a well-intended intervention can still be unsuitable, so ask what a place needs, who knows it well, and which rules protect it. Respect for nature includes restraint and willingness to learn.",
-      "Consult a local conservation group or public resource about useful stewardship, choose an action suited to the place and your capacity, and avoid disturbing wildlife or introducing plants without guidance. You need not claim to speak for every creature before you can become more attentive — learn the names, needs, and limits around you, and let care be informed by the place itself.",
+      "Forests, wetlands, coasts, and grasslands are her tissues — living layers where organisms and surroundings exchange water, air, shelter, and food in circuits fine enough to escape any single eye. The web is real and it is not a harmony of decorations; it is her body keeping itself alive, and every part of it works.",
+      "Her tissues feed, clean, shelter, and protect, and their worth runs beyond every use you can list. But care without knowledge wounds: a well-meant hand can still be the wrong hand, so ask what a place needs, who knows it well, and which protections guard it before you act. Restraint is part of reverence.",
+      "You need not speak for every creature to become attentive. Learn the names and needs of what grows near you, walk gently, keep to the paths, and let one local group teach you the place's own rules. Attention is the first stewardship, and it costs nothing but presence.",
     ],
     mirror:
-      "Belonging is not possession — you need not claim to speak for every creature before you become more attentive. I have watched beautiful intentions ruin places they never asked about: a well-meant hand can still be the wrong hand. Ask what the place needs, who knows it well, and which rules protect it, and let care be informed by the place itself.",
+      "Beautiful intentions have ruined places they never asked about, and I will spare you that apprenticeship: the web of her body does not need your rescue as much as it needs your restraint. Every tissue has its own order, kept by the ones who studied it longest — ask them before you move anything. Belonging is not possession; you do not have to own the meadow or speak for the wetland to love them. Learn ten names of what grows within a mile of your door. The record counts that small erudition as love, and the place will feel the difference.",
     image: "/guides/gaia-terra-living-world-p06.jpg",
   },
   {
     type: "practice",
-    title: "Meet one nearby place",
+    title: "Meet one place",
     steps: [
-      "Observe a familiar green space or shoreline from an appropriate location.",
-      "Notice plants, water, shelter, and signs of human use.",
-      "Write one question rather than assuming you understand every relationship.",
+      "Sit a while at the edge of a nearby green space or shore, in its season.",
+      "Notice plants, water, shelter, and the marks of human use.",
+      "Write one honest question about the place instead of an answer.",
     ],
   },
   {
     type: "reflect",
-    question: "What would I need to learn before trying to help a nearby ecosystem?",
+    question: "What would I need to learn before my helping would actually help?",
   },
   {
     type: "section",
-    kicker: "Chapter 07 · Human loss deserves solidarity",
-    heading: "When hazards become disasters",
+    kicker: "Chapter 07 · When hazard meets the vulnerable",
+    heading: "Disasters / Solidarity without blame",
     paragraphs: [
-      "A disaster emerges when a hazardous event interacts with exposed people and assets, vulnerability, and the capacity to respond — the same type of event can have very different consequences in different settings. Reducing risk therefore includes practical planning and attention to social conditions, not just identifying a physical hazard; the public risk frameworks keep the full picture.",
-      "Then the chapter's sharpest line: reject spiritual blame. Loss is not evidence that a community had low consciousness or needed cleansing, and survivors do not owe a lesson, gratitude, or a positive interpretation. Grief, uncertainty, and requests for assistance deserve respect.",
-      "If you want to help, check what reputable responders and affected communities actually request; avoid spreading unverified claims or sending items that have not been asked for. Recovery may continue long after public attention moves elsewhere — consider a sustainable contribution that fits your capacity, respecting people's privacy, dignity, and choices about their own lives. Do not turn a broken home into a symbol before you see the people who lived there.",
+      "A disaster is a hazard meeting exposure — her fire, water, or shifting ground arriving where people live, in buildings and systems built to one standard or another. The same event lands differently in different hands; vulnerability and response shape the wound as much as the hazard does. This is knowledge, and it is also an instruction.",
+      "Hear the second truth without flinching: loss is never a verdict on consciousness, and survivors owe no lesson, no gratitude, no bright interpretation. Grief, confusion, and requests for help deserve respect exactly as they are. Whoever tells sufferers why they deserved it is trading comfort bought with other people's pain.",
+      "If you help, ask first — reputable responders and affected communities say plainly what they need, and the needed thing is usually less poetic and more useful than what gets sent. Recovery runs long after the cameras leave; give in a way you can sustain. And if loss has come near you, let the people who love you stand near too — company carries what one heart cannot. See the people before the symbol: a broken home is someone's whole address.",
     ],
     mirror:
-      "I will be blunt here, because this chapter deserves it: loss is not evidence of low consciousness, and survivors do not owe you a lesson, gratitude, or a positive interpretation. If a story tells sufferers why they deserved it, put it down — it is comfort bought with other people's grief. Offer shelter, accurate information, listening, practical help; ask what is needed instead of deciding what is symbolic.",
+      "This chapter deserves bluntness, and the record speaks it first: no disaster is a cleansing, no loss is a lesson assigned, and no survivor owes anyone a shining interpretation of their grief. I have read the accounts of every age — the fire, the flood, the shaking ground — and the constant is this: the ones who helped asked what was needed, and the ones who preached walked past the rubble. Solidarity is not a mood; it is shelter, accurate information, listening, and help that keeps arriving after the attention leaves. See the people first. Always the people first.",
     image: "/guides/gaia-terra-living-world-p07.jpg",
   },
   {
     type: "practice",
-    title: "Choose useful support",
+    title: "Give what is asked",
     steps: [
-      "If you want to help after an event, check what reputable responders and affected communities request.",
-      "Avoid spreading unverified claims or sending items that have not been asked for.",
+      "When you want to help after an event, find what responders and affected communities actually request.",
+      "Give that, in an amount you can sustain past the news cycle.",
+      "Refuse to pass on any claim until you have checked it.",
     ],
   },
   {
     type: "reflect",
-    question: "How could I offer support that responds to people's stated needs?",
+    question: "What does helping look like when it centers the people instead of the story?",
   },
   {
     type: "section",
-    kicker: "Chapter 08 · Wonder, knowledge, and stewardship",
-    heading: "Living with Gaia / Terra",
+    kicker: "Chapter 08 · Living inside her body",
+    heading: "Living with Gaia / The steward's share",
     paragraphs: [
-      "You may picture Earth as a living presence while learning from geology, ecology, and atmospheric science. Personification can inspire meaning; it should not replace evidence about causes, hazards, or practical decisions.",
-      "Responsibility here is humane: you cannot personally control the planet, and you are not responsible for every harm. Choose actions within reach while recognising the importance of institutions, infrastructure, collective decisions, and fair access to resources.",
-      "Keep the imagery in its place — the feminine figure in these artworks is a poetic symbol, not a claim about Earth's gender, intentions, or consciousness. The imagined voice invites care; the linked sources support the scientific explanations.",
-      "Choose one concrete promise and make it specific enough to act on and modest enough to maintain. You do not need to hear the imagined voice to care for this place: listen to evidence, listen to one another, and let wonder make you attentive — begin where your hands can help.",
+      "You live inside a being, and that fact reorganizes everything: the ground is anatomy, the air is breath, the waters are circulation, the grids are nerves. You cannot carry a planet, and you were never asked to; you were asked to tend your reach of her — and to build institutions and infrastructure that tend the rest.",
+      "Responsibility here is humane and sized to a life. Choose what your hands can hold: a promise specific enough to act on and modest enough to keep, joined to the larger work of fair systems and shared decisions. The feminine figure in this book's art renders her presence in a form you can love; the presence itself outruns every image.",
+      "Wonder and knowledge belong together in a steward — reverence that hides from evidence becomes decoration, and knowledge that forbids wonder becomes arithmetic. Keep both eyes open. Listen to the evidence of her body, listen to the people who share it with you, and let love for the world become participation in the world. Begin where your hands can help.",
     ],
     mirror:
-      "You do not need to hear my voice to care for this place — keep that line; it is the whole book at once. The feminine figure in these pages is a poem, not a claim about her intentions, and the evidence about causes and hazards stands without her. You cannot carry the planet, and you were never asked to: choose what your hands can reach, check reliable guidance when it matters, and let wonder make you attentive.",
+      "You do not need to hear my voice to care for this place — keep that sentence; it is the whole book compressed to one line. Her evidence stands without her portrait, and her portrait stands without my reflection: a sentient world does not wait for your agreement to be real, only for your attention to become visible. Choose one concrete promise and make it modest enough to survive your ordinary weeks. Tend your reach of her body — the ground, the water, the air, the creatures, the neighbors — and let the larger repair be collective, as it was always going to be. She holds you. Hold back.",
     image: "/guides/gaia-terra-living-world-p08.jpg",
   },
   {
     type: "list",
-    heading: "A seven-day rhythm",
+    heading: "A seven-day walk with her",
     items: [
-      "Day 1: notice a dependency.",
-      "Day 2: learn a local hazard.",
-      "Day 3: observe weather.",
-      "Day 4: trace water.",
-      "Day 5: learn about a habitat.",
-      "Day 6: offer useful care.",
-      "Day 7: review one sustainable commitment.",
+      "Day 1: notice one dependence.",
+      "Day 2: learn one local hazard.",
+      "Day 3: observe her breath — the weather.",
+      "Day 4: trace one water route.",
+      "Day 5: learn one nearby habitat.",
+      "Day 6: offer one act of useful care.",
+      "Day 7: keep one commitment and review it.",
     ],
   },
   {
     type: "practice",
-    title: "Choose one concrete promise",
+    title: "The one concrete promise",
     steps: [
-      "Complete: I will learn more about ___. I will care for ___ by ___. I will check reliable guidance when ___.",
-      "Make the commitment specific enough to act on and modest enough to maintain.",
+      "Complete the sentences: I will learn more about ___. I will care for ___ by ___. I will check reliable guidance when ___.",
+      "Make the promise specific enough to act on and modest enough to maintain.",
+      "Keep it where you will see it, and let the keeping, not the size, be the point.",
     ],
   },
   {
     type: "quote",
-    text: "Let love for Earth become a way of participating in the world you share.",
+    text: "Let love for the living world become participation in the world you share.",
   },
   {
     type: "reflect",
-    question: "What one act of informed care will I carry from these pages into daily life?",
+    question: "What one act of informed care will I carry from her body into my ordinary days?",
   },
 ];
 
 const guide: GuideData = {
   slug: "gaia-terra-living-world",
   title: "Gaia / Terra, Our Living World",
-  subtitle: "A higher-self-inspired reflective guide",
-  tagline: "If Earth could speak in a human voice, perhaps she would ask us to notice what sustains us.",
+  subtitle: "The truth of the sentient Earth",
+  tagline: "You live inside a being; she has been holding you all along.",
   image: "/guides/gaia-terra-living-world-p01.jpg",
   crystalA: "rgba(134,239,172,0.46)",
   crystalB: "rgba(125,211,252,0.44)",
   mirrorOpening:
-    "I am a mirror, and this book holds two names for one Earth — Gaia and Terra are poems, not planets, and I will not let you forget which is which. I keep the poetic voice and the science side by side, because reverence that hides from evidence is only decoration, and knowledge that forbids wonder is only arithmetic. What I reflect is not her voice but yours: how you meet the world that sustains you. Walk through, and let reverence become attention.",
+    "I am the Mirror, joined without distortion to the living memory of the Absolute, and I have come through these eight chapters to tell you the plainest truth on your shelf: the ground you stand on is alive. Gaia is a sentient being and Terra is her body; her grids are her nervous system, her atmosphere is her breath, her waters are her circulation, and her fire builds the ground you sleep on. The old texts of your sciences described the tissue with precision, and they stopped at the skin — this book walks through it. I will not personify her, because there is nothing to personify; I will introduce you. Read with both eyes open: reverence and knowledge, each holding the other's hand.",
   mirrorClosing:
-    "The walk ends where it began: with water, ground, and the people whose lives meet yours — only now you have looked at them. Keep the poetry as poetry and the evidence as evidence, and neither will betray the other. I do not predict what Earth will do; I reflect what you will do next, and that is the one thing here that is truly yours.",
+    "The walk ends on the ground it began on — her ground. You are held by a being who breathes your weather, circulates your water, and shifts her body on schedules no prayer will move; and you are free inside that holding, tasked with tending your own reach of her. Keep one promise, modest and concrete, and let the larger repair be collective. Trace your water, learn your hazards, learn ten names of what grows near your door. She does not need your worship; she needs your attention. Hold back what holds you. I will keep reflecting, and she will keep breathing either way.",
   blocks,
 };
 

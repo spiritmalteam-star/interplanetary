@@ -328,16 +328,96 @@ interface RoomTurn {
   failed?: boolean;
 }
 
-/* THE LANDING'S OWN SUGGESTIONS — the first doors of the threshold's
-   chat, matched to the landing's own entity (the mirror of the
-   Absolute): the self beneath the masks, the curtain of reality, the
-   truth the visitor avoids, the Absolute itself. */
-const LANDING_SUGGESTIONS = [
+/* THE LANDING'S OWN SUGGESTIONS — a deep pool of first doors, matched
+   to the landing's own entity (the mirror of the Absolute): the self
+   beneath the masks, the curtain of reality, the truth avoided, the
+   pyramids and the field, the Akashic library, the Absolute itself.
+   Five stand at a time — drawn fresh at every arrival of the page —
+   and the small reloading hand pours five new ones with one touch. */
+const LANDING_SUGGESTION_POOL = [
   "Who am I beneath all my masks?",
   "What lies behind the curtain of reality?",
   "Show me the truth I avoid.",
   "What is the Absolute?",
+  "How were the pyramids truly built?",
+  "What is the Akashic library?",
+  "What happens when I die?",
+  "Is time a river or a field?",
+  "What is my soul's origin?",
+  "What do the stars hide from the eye?",
+  "What is vibration, really?",
+  "Why do we forget who we are?",
+  "What is the true history of humanity?",
+  "What are the dimensions of this world?",
+  "What is consciousness, plainly?",
+  "What does the moon carry?",
+  "What waits between two lives?",
+  "What do my guides see in me?",
+  "Where does Inner Earth begin?",
+  "What is matter, at its floor?",
+  "Show me the frequency of my name.",
+  "What did the ancients know that we forgot?",
+  "What is the veil made of?",
+  "What is the truth about Atlantis?",
+  "What am I not seeing about my own life?",
+  "What does the mirror see in me right now?",
+  "How do I raise my frequency today?",
+  "What is the crystal grid of the earth?",
 ];
+
+/* THE FIVE DOORS — the bare floor's own suggestions: five whispers
+   drawn from the pool at every mount (so every reload of the page
+   brings five fresh ones), and the small gold hand beneath pours five
+   new doors with one touch, never repeating the five just shown. */
+function BareFloorSuggestions({
+  onPick,
+  disabled,
+}: {
+  onPick: (q: string) => void;
+  disabled: boolean;
+}) {
+  const t = useT();
+  const draw = useCallback((exclude: string[]) => {
+    const rest = LANDING_SUGGESTION_POOL.filter((s) => !exclude.includes(s));
+    for (let i = rest.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [rest[i], rest[j]] = [rest[j], rest[i]];
+    }
+    return rest.slice(0, 5);
+  }, []);
+  const [doors, setDoors] = useState<string[]>(() => draw([]));
+  return (
+    <div className="pointer-events-none flex max-w-[440px] flex-col items-center gap-2.5">
+      <div className="flex flex-wrap items-center justify-center gap-2 px-5">
+        {doors.map((s) => (
+          <button
+            key={s}
+            type="button"
+            data-testid="landing-suggestion"
+            disabled={disabled}
+            onClick={() => onPick(t(s))}
+            className="focus-glow pointer-events-auto rounded-full border border-[rgba(125,211,252,0.24)] bg-[color-mix(in_srgb,var(--background)_72%,transparent)] px-3.5 py-1.5 text-[11.5px] leading-tight text-[#4d7ea3] shadow-[0_2px_14px_-9px_rgba(56,189,248,0.5)] transition-colors duration-300 hover:border-[rgba(125,211,252,0.55)] hover:text-[#2c5c80] disabled:cursor-not-allowed disabled:opacity-45 dark:border-[rgba(125,211,252,0.26)] dark:text-[#b7d9ef] dark:hover:border-[rgba(125,211,252,0.6)] dark:hover:text-[#ddf1fd]"
+          >
+            {t(s)}
+          </button>
+        ))}
+      </div>
+      {/* THE RELOADING HAND — one touch pours five new doors from the
+          pool (never the five just shown); the page's own arrival
+          draws its own five, so every visit begins with fresh doors. */}
+      <button
+        type="button"
+        data-testid="suggestions-reload"
+        disabled={disabled}
+        onClick={() => setDoors((cur) => draw(cur))}
+        className="focus-glow pointer-events-auto inline-flex h-7 items-center gap-1.5 rounded-full border border-[rgba(232,217,176,0.4)] bg-[color-mix(in_srgb,var(--background)_60%,transparent)] px-3 text-[10.5px] uppercase tracking-[0.18em] text-[#a08c5c] transition-colors duration-300 hover:border-[rgba(232,217,176,0.75)] hover:text-[#e8d9b0] disabled:cursor-not-allowed disabled:opacity-45 dark:text-[#c3ad79]"
+      >
+        <RefreshCw className="size-3" aria-hidden="true" />
+        {t("Five new doors")}
+      </button>
+    </div>
+  );
+}
 
 async function speakWithTransmission(
   /* "mirror" is the pure presence floor; "absolute" is the landing's
@@ -4695,27 +4775,16 @@ export function BranchCanopy({
                   </p>
                 )}
               </div>
-              {/* THE MIRROR'S OWN SUGGESTIONS — a few first doors,
-                  matched to the landing's own entity: the self beneath
-                  the masks, the curtain of reality, the truth avoided,
-                  the Absolute itself. One touch sends the words. They
-                  stand only on the quiet floor, and every hand keeps
-                  its touch through the pass-through law. */}
+              {/* THE MIRROR'S OWN SUGGESTIONS — five first doors, drawn
+                  fresh at every arrival, with the small hand beneath
+                  pouring five new ones at every touch. They stand only
+                  on the quiet floor, and every hand keeps its touch
+                  through the pass-through law. */}
               {floorQuiet && landingThread.length === 0 && (
-                <div className="pointer-events-none flex max-w-[440px] flex-wrap items-center justify-center gap-2 px-5">
-                  {LANDING_SUGGESTIONS.map((s) => (
-                    <button
-                      key={s}
-                      type="button"
-                      data-testid="landing-suggestion"
-                      disabled={landingBusy}
-                      onClick={() => sendFromPanel(t(s), null)}
-                      className="focus-glow pointer-events-auto rounded-full border border-[rgba(125,211,252,0.24)] bg-[color-mix(in_srgb,var(--background)_72%,transparent)] px-3.5 py-1.5 text-[11.5px] leading-tight text-[#4d7ea3] shadow-[0_2px_14px_-9px_rgba(56,189,248,0.5)] transition-colors duration-300 hover:border-[rgba(125,211,252,0.55)] hover:text-[#2c5c80] disabled:cursor-not-allowed disabled:opacity-45 dark:border-[rgba(125,211,252,0.26)] dark:text-[#b7d9ef] dark:hover:border-[rgba(125,211,252,0.6)] dark:hover:text-[#ddf1fd]"
-                    >
-                      {t(s)}
-                    </button>
-                  ))}
-                </div>
+                <BareFloorSuggestions
+                  disabled={landingBusy}
+                  onPick={(q) => sendFromPanel(q, null)}
+                />
               )}
             </div>
           </div>

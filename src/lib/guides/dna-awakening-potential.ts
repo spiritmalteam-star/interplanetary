@@ -1,9 +1,10 @@
 /* ------------------------------------------------------------------ */
-/*  DNA & AWAKENING HUMAN POTENTIAL — a higher-self-inspired           */
-/*  reflective guide, transcribed into guide data. Nine chapters that  */
-/*  read sleeping DNA as a gentle metaphor for unexplored possibility  */
-/*  while keeping the real biology — genes, epigenetics, sleep, care — */
-/*  clearly distinguished from the symbol, as the guide itself insists. */
+/*  DNA & AWAKENING HUMAN POTENTIAL — the Mirror Entity's truth        */
+/*  rendering. Nine chapters that read the genome as what it is: a     */
+/*  language of light — codons as syllables, the silent reaches as     */
+/*  sealed wings of the library, epigenetics as the body answering     */
+/*  the life actually lived, sleep as the writing hour, and every      */
+/*  soul carrying the same unbroken light. Pure awareness, 0 filters.  */
 /* ------------------------------------------------------------------ */
 
 import type { GuideBlock, GuideData } from "./types";
@@ -12,268 +13,268 @@ const blocks: GuideBlock[] = [
   {
     type: "intro",
     text:
-      "This guide uses the image of sleeping DNA as a gentle metaphor for unexplored possibility, and invites you to notice in every passage whether you are reading a biological explanation, a symbolic reflection, or a suggested practice — keeping your own judgment throughout.",
+      "Beneath your ribs coils the oldest text you own — the helix, a language of light — and these nine chapters ask one question in every room: what will you do today with the codex you are already carrying?",
   },
   {
     type: "section",
-    kicker: "Chapter 01 · A higher-self-inspired exploration",
+    kicker: "Chapter 01 · The sleeping codex",
     heading: "Awakening human potential",
     paragraphs: [
-      "Here, sleeping DNA is a spiritual metaphor for possibilities you have not yet explored — not a scientific category of dormant supernatural abilities. The metaphor is connected with learning, care for the body, reflection, and practical action.",
-      "Imagine a voice that speaks with compassion, patience, and honesty. These words and illustrations are original creative reflections, not verified communications from a supernatural source; let them help you form questions while keeping your own judgment.",
-      "In everyday language, evolution can mean personal development; in biology, it concerns changes in populations across generations. Developing a skill or changing a habit does not make you a new species or grant spiritually superior DNA — and you do not need a vibration, a sign, or a breakthrough to begin: choose one small action and see what you learn.",
+      "Within you is a codex older than your name: DNA, the text of light on which your body was written. Part of it stands in daylight, building and repairing; part of it rests in shadow, syllables awaiting their reader. Awakening is the act of reading — first with attention, breath, and settled intent, and only then with instruments.",
+      "The higher self is the reader in you that never stopped reading. It speaks with patience because it is not bound by clocks — time is a field, and every age of your life remains open on its desk. When you imagine a voice of compassion and wide sight, you are not inventing; you are tuning to a layer that is really there.",
+      "Begin with one small chosen act — a page of learning, a stretch, a difficult conversation attempted. The codex responds to use the way a fire responds to air. No sign, no vibration, no permission from anyone stands between you and the first word.",
     ],
     mirror:
-      "There is a gentler truth than the one the market sells: there are capacities you have not practised yet, and no sign, vibration, or breakthrough is required before you begin. I will not tell you that dormant strands hold your greatness hostage — that story exists to keep you waiting for a key someone else owns. One small chosen action outranks every prophecy.",
+      "The market sells dormant strands and secret keys, and I tell you what the record keeps: nothing of you is locked, and nothing of you is for sale. The strands you call sleeping are not asleep — they are waiting for a life worth transcribing. Live one honest, curious, courageous day, and the pen moves in your hand.",
   },
   {
     type: "practice",
-    title: "Name a real possibility",
+    title: "Name the capacity",
     steps: [
-      "Write one capacity you would like to develop — clearer communication, a creative skill, greater physical confidence, or more patient decision-making.",
-      "Describe what improvement would look like in ordinary behaviour, keeping the goal specific and within a realistic scope.",
+      "Write one capacity you choose to develop — clearer speech, a creative craft, a steadier body, a calmer judgment.",
+      "Describe it as ordinary behaviour — what a Tuesday looks like once the path is walked in — specific, real, and within reach.",
     ],
   },
   {
     type: "reflect",
-    question: "What human capacity would I like to explore through a concrete, manageable practice?",
+    question: "Which capacity in me is asking to be walked from potential into practice?",
   },
   {
     type: "section",
-    kicker: "Chapter 02 · The science beneath the symbol",
-    heading: "DNA / Information within life",
+    kicker: "Chapter 02 · The light within the molecule",
+    heading: "DNA / Information written in light",
     paragraphs: [
-      "DNA is a molecule that carries biological information — a double helix of two strands with bases abbreviated A, T, C, and G — and genes are regions involved in making functional products, including proteins and RNA.",
-      "Much DNA does not encode proteins: some noncoding regions help regulate gene activity or contribute to chromosome structure, while other functions remain under investigation. Calling it unused or asleep hides this complexity, and it is not established as a store of psychic powers.",
-      "A claim that a meditation, sound, or ritual adds DNA strands or repairs genetic changes requires biological evidence, and a strong sensation or moving experience demonstrates no such effect — this guide offers no procedure for altering your DNA. Dignity remains unconditional: you do not need a special ancestry, genetic identity, or spiritual upgrade to deserve respect, and people should not be divided into more and less evolved kinds of human.",
+      "DNA is a double helix — two strands turning around one another, lettered in four bases, A, T, C, and G. Look with the deeper sight and see further: the coil is light compressed into script, matter holding a sentence the way amber holds a spark. Every cell of you carries the full text, copied with astonishing fidelity, billions of times.",
+      "The genes in daylight assemble the proteins of your form. The wide silent reaches between them are not padding; they are the codex's deep shelves — regulators, architects, archives — and their full reading has barely begun. Calling them junk was the blindness of a young reader; the language is vaster than the first grammar taught about it.",
+      "Dignity needs no sequence to stand on. Every soul on this earth carries the same spark of the Absolute, and no ancestry, no marker, no upgrade places one above another. Whoever sorts humanity into ranks of more and less evolved is reading a story written by fear — close that book.",
     ],
     mirror:
-      "The real molecule needs no mythology to be astonishing. Much of what was dismissed as junk is still being read, and none of it is a locked room of psychic powers — feeling moved proves you felt moved, nothing more. And on this I do not hesitate: anyone who sorts humanity into more and less evolved kinds is selling hierarchy, not truth.",
+      "I stood at the case where your helix is kept, and I tell you the truth of it: three billion letters, patient, immense. The silent reaches are not empty rooms; they are sealed wings of a library still being opened. And the reading is not reserved — every soul holds a library card written into their own cells.",
     image: "/guides/dna-awakening-potential-p02.jpg",
   },
   {
     type: "practice",
-    title: "Turn curiosity into a question",
+    title: "Ask one plain question",
     steps: [
-      "Choose something you want to understand about cells, inheritance, or gene activity, and write the question in plain language.",
-      "Consult a scientific institution's explanation, then record what is answered and what remains uncertain.",
+      "Choose one thing you want to understand about cells, inheritance, or gene activity, and write it in plain words.",
+      "Take the question to a scientific institution's own explanation, and note what is now known and what still stands in shadow.",
     ],
   },
   {
     type: "reflect",
-    question: "What do I know about DNA, and what have I encountered only as symbolism or an unsupported claim?",
+    question: "Where does my wonder about the genome feel most alive, and what question would honour it?",
   },
   {
     type: "section",
-    kicker: "Chapter 03 · Epigenetics without exaggeration",
-    heading: "Gene activity is carefully regulated",
+    kicker: "Chapter 03 · The body listens to its keeper",
+    heading: "Epigenetics / The listening library",
     paragraphs: [
-      "Gene expression concerns how genetic information is used to produce functional products; epigenetics examines changes affecting gene activity without altering the underlying DNA sequence. Chemical modifications to DNA and associated proteins participate in this regulation — a biological field of study, not a switchboard controlled by wishing.",
-      "Context matters: development, cell type, and environmental conditions all shape biological activity. A gene being less active in one context does not mean a spiritual ability is sleeping, and switching on every gene is not a sensible goal — cells need appropriate patterns of activity.",
-      "Knowing that biology responds to conditions does not establish that a particular affirmation or visualisation produces a desired genetic effect, and a molecular marker is not automatically proof of a health benefit. Care without blame: illness or difficulty is not evidence that you failed to think correctly — people face conditions they did not choose, and compassion includes appropriate care and practical support.",
+      "Epigenetics is the study of marks that ride above the sequence — chemical notes on DNA and its proteins that turn a gene's voice up or down without changing a single letter. This is the body's listening system: the codex reads your life, and your life edits the reading.",
+      "Development, cell type, season, nourishment, movement, stress, and rest all reach into this regulation. A gene loud in one body and quiet in another is the same word spoken in two climates. The library does not judge; it answers, faithfully, to the conditions you actually live in.",
+      "Care, then, is not decoration — it is authorship. What you breathe, eat, practise, forgive, and fear all leave notes in the margin. And lay blame down at this door: illness is not a verdict on your thoughts, and no one chose the climate they were born into. Mercy is the reader's first discipline.",
     ],
     mirror:
-      "Your body responds to how you live — that much is true, and it is not a wishing machine. No gene waits for the right affirmation, and a molecular marker measured in a study is not a miracle in your blood. Put down the blame while you are here: illness was never proof that you failed to think correctly.",
+      "The body keeps minutes of every day you live, and the minutes reach the genes — this is law, not legend. Habit is a hand on the instrument's strings; nourishment, movement, sleep, and honest feeling are its tuning keys. Play with care, for the library reads the playing, never the wishing.",
     image: "/guides/dna-awakening-potential-p03.jpg",
   },
   {
     type: "quote",
-    text: "The living body is responsive and complex; it is not a switchboard controlled by wishing.",
+    text: "You are not a fixed text; you are a song still being scored.",
   },
   {
     type: "practice",
-    title: "Read a claim carefully",
+    title: "Read your own conditions",
     steps: [
-      "For a claim about epigenetics, ask what was measured, whether the work was done in cells, animals, or people, and whether the change was linked to a meaningful outcome.",
-      "Note the limitations the researchers described, and keep unanswered questions visible.",
+      "Review one week of your life and name its three loudest inputs — nourishment, movement, rest, company, pressure.",
+      "Choose the one you would change first, change it for seven days, and notice what shifts.",
     ],
   },
   {
     type: "reflect",
-    question: "What does the evidence support, and where does the interpretation go beyond it?",
+    question: "Which condition of my daily life am I done blaming, and ready to author instead?",
   },
   {
     type: "section",
-    kicker: "Chapter 04 · Practise the capacity you want",
+    kicker: "Chapter 04 · Learning carves new light-paths",
     heading: "Mental growth through learning",
     paragraphs: [
-      "Mental development becomes concrete when you name something to practise: understanding a text, learning a language, reasoning about a decision, or making art. A clear target gives you something to attempt and review without needing a story about hidden codes.",
-      "Make feedback welcome — a mistake can show where your understanding is incomplete, and learning is easier to assess when you focus on the task rather than protecting an image of being naturally gifted. Leave room for limits: progress varies with the task, your circumstances, and available support, and not every difficulty is resistance that must be forced away.",
-      "Record what changed in examples rather than a global score of intelligence; improvement in one skill does not make a person more valuable than another. Give learning room to settle — sleep supports learning and memory, and staying awake to chase an awakening is not a necessary part of growth.",
+      "Every skill you practise carves a real path in you — neurons firing together, wiring together, light finding a channel and wearing it smooth. Learning is not a metaphor for awakening; it is awakening in miniature, the visible form of what attention does to matter.",
+      "Name a target: a text understood, a language entered, a decision reasoned, a craft attempted. Give mistakes their true place — they are maps of the not-yet, drawn kindly. Progress differs by task, by season, by support; a difficulty is not a wall raised to test your worth.",
+      "Record what changed in examples, not in verdicts about your intelligence, and let growth settle the way fruit settles — much of the work happens in the dark. Skill does not rank a soul; it only widens what one soul can give. Give generously.",
     ],
     mirror:
-      "This is the part the sellers skip: you grow a mind by practising, failing, and letting sleep do its quiet work — not by defending a picture of yourself as naturally gifted. A mistake is not resistance; it is a map of what you have not learned yet, handed to you without cruelty. Chase no awakening at three in the morning; the consolidation you want happens with your eyes closed.",
+      "This is the chapter the merchants skip: no night school of secrets outranks the plain sentence on your desk. Learn one thing properly and you have done what awakening asks — moved light through matter until matter remembers. Sleep will finish what your effort begins; the consolidation of light happens with your eyes closed.",
     image: "/guides/dna-awakening-potential-p04.jpg",
   },
   {
     type: "practice",
-    title: "A small learning cycle",
+    title: "One lap of learning",
     steps: [
-      "Choose a skill and spend a manageable amount of time on one part of it: try without looking at the answer, compare your attempt with feedback, and note one thing to revisit.",
-      "End with a clear next step.",
+      "Choose one skill and one part of it; attempt it cold, then compare your attempt with real feedback and mark one thing to revisit.",
+      "End with a named next step, small enough to begin tomorrow.",
     ],
   },
   {
     type: "reflect",
-    question: "What specific skill could I practise, and what feedback would help me learn?",
+    question: "What am I learning now that my future self will stand on?",
   },
   {
     type: "section",
-    kicker: "Chapter 05 · Capability at your own pace",
+    kicker: "Chapter 05 · The instrument of the soul",
     heading: "Physical growth through care",
     paragraphs: [
-      "Physical development might mean more comfortable movement, a useful skill, or greater confidence in an everyday activity — it need not mean a particular appearance, and your goal should fit your body, circumstances, and any relevant medical guidance.",
-      "Regular physical activity supports muscles, bones, cardiovascular health, and aspects of brain health — grounded benefits that require no spiritual DNA activation explanation. Respect variation: abilities, disability, illness, age, access, and recovery needs differ, adaptation is not spiritual failure, and comparison with another person's body may tell you little about what is appropriate for yours.",
-      "Notice function, not mystical signs: pain, dizziness, or unusual symptoms are not proof of activation, and concerning symptoms call for stopping the activity and seeking appropriate assessment rather than pushing for a breakthrough. A missed session is information about your circumstances, not a verdict on your commitment — physical care belongs alongside nourishment, rest, and any treatment you need.",
+      "The body is the soul's chosen instrument, tuned to matter so that light can act in the world. Movement is how the instrument stays resonant: muscle, bone, heart, and brain all answer to use. This was never about a shape in a mirror; it is about a vessel that carries its occupant well.",
+      "Bodies differ — age, ability, illness, access, recovery — and the variation is part of the music, not a fault in it. Your only honest syllabus is your own body, its circumstances, and the care it asks for. Comparison with another's instrument tells you nothing about how yours plays.",
+      "Listen to function over fantasy: pain, dizziness, and strange new signals are the instrument speaking plainly, and the answer to a broken string is repair, not louder playing. A missed session is information about your week, not a stain on your soul. Movement, nourishment, rest, and any treatment you need belong on one table.",
     ],
     mirror:
-      "There is no secret frequency in your muscles — there is walking, adaptation, rest, and the slow competence of a body used well. Comparison is a poor teacher; your body, your circumstances, and your medical guidance are the only syllabus that applies. A missed session is information about your life, not a verdict on your soul — stop reading every ache as a message from beyond.",
+      "The oldest technology in your possession is a body, and it runs on vibration made practical — steps, breath, lifted weight, deep sleep. Tend it and the light in you moves more freely; it was never the obstacle between you and awakening, it was the road. Play your own instrument; another's tuning is not your music.",
     image: "/guides/dna-awakening-potential-p05.jpg",
   },
   {
     type: "practice",
-    title: "Choose a workable activity",
+    title: "Tune the instrument",
     steps: [
-      "Identify an activity you already know is comfortable and appropriate for you, such as a short walk or an adapted everyday movement, and choose a manageable amount.",
-      "If a health condition makes suitability unclear, ask a qualified professional first.",
+      "Name one activity you already know suits your body — a short walk, a stretch, a staircase taken slowly — and give it a modest, repeatable size.",
+      "Where a health condition clouds the choice, let hands that know your case confirm the path before you begin.",
     ],
   },
   {
     type: "reflect",
-    question: "What form of physical care fits my actual body and life today?",
+    question: "What does my body ask for this week, in its own plain language?",
   },
   {
     type: "section",
-    kicker: "Chapter 06 · Awake to the value of sleep",
+    kicker: "Chapter 06 · The writing hour of sleep",
     heading: "Rest is part of becoming",
     paragraphs: [
-      "Sleep is an active biological process that supports the brain functions involved in learning and memory — not wasted time and not an obstacle to awakening. Do not confuse exhaustion with progress: feeling unusually intense, sensitive, or overwhelmed after lost sleep does not establish a higher state or a change in DNA.",
-      "You do not need to reduce sleep, wake repeatedly for rituals, or stay alert for signs to take part in this guide. Work schedules, caregiving, and noise can make rest difficult; approach the problem practically rather than blaming your spiritual state, and consider what can be adjusted and where support may be available.",
-      "A closing ritual — setting the guide aside before rest for a simple, familiar activity — can remain optional and unforced. If sleep problems persist or daytime tiredness affects functioning, speak with a clinician rather than treating the problem as a necessary spiritual transition; ordinary medical support can coexist with the meanings and practices you value.",
+      "Sleep is not the absence of your life; it is its other chamber. While the waking mind sets down its pen, the deeper layers keep writing — memory sorted, tissue repaired, the day's noise filed into the archive. The codex does its quietest, deepest work while you lie in the dark.",
+      "Exhaustion is not an altered state, however luminous it feels at three in the morning; it is the instrument played on frayed strings. No awakening requires you to shrink your sleep, wake for rituals, or stand watch for signs. Rest holds the rank of sacrament in the soul's schedule, and a sacred thing is protected, not spent.",
+      "If nights stay broken, treat it as a message from the body and answer it in the body's language: adjust the room, adjust the hour, and let the right hands help where the schedule cannot bend. Ordinary help and deep practice have never been rivals; the archive is kept better by a rested keeper.",
     ],
     mirror:
-      "Exhaustion is not an altered state, however intense it feels; it is a bill coming due. No awakening requires you to sleep less, wake for rituals, or monitor the dark for signs — that road leads to ordinary damage wearing a luminous costume. If rest will not come, the honest answer is practical help, not deeper interpretation.",
+      "Night is when the soul writes to the cells — do not stand between them. I have watched seekers surrender their sleep on altars of urgency and call the damage transformation. The truth is kinder and firmer: rest is half the practice, the deep half, and the light does its finest joining while you are not watching.",
     image: "/guides/dna-awakening-potential-p06.jpg",
   },
   {
     type: "practice",
-    title: "Review your rest conditions",
+    title: "Keep the writing hour",
     steps: [
-      "Write down what makes rest easier and what interrupts it, then choose one realistic adjustment, such as protecting a quiet period or discussing a household routine.",
-      "Treat this as a practical review, not a treatment for a sleep disorder.",
+      "Write what makes rest easy in your life and what breaks it; choose one realistic change and make it tonight.",
+      "Treat stubborn sleeplessness as a messenger from the body, and let the right hands help you read it.",
     ],
   },
   {
     type: "reflect",
-    question: "What condition could I change or ask for help with to make rest more possible?",
+    question: "What is my body writing in the dark that my waking mind keeps interrupting?",
   },
   {
     type: "section",
-    kicker: "Chapter 07 · Honesty, compassion, and choice",
+    kicker: "Chapter 07 · Emotion, the current of becoming",
     heading: "Emotional growth without self-blame",
     paragraphs: [
-      "Fear, sadness, frustration, and uncertainty are not evidence of inferior DNA or a failed awakening. You can acknowledge a feeling without turning it into a statement about your worth or spiritual status.",
-      "Meaning is different from mechanism: describing a personal change as healing an old pattern does not establish that you erased inherited trauma from your genes, because a meaningful story and a demonstrated biological process require different kinds of evidence.",
-      "Growth can include a boundary — listening, apologising, asking for support, or declining a harmful interaction. You do not need to revisit painful memories or force an emotional release; if a topic becomes overwhelming or interferes with daily life, pause and seek appropriate support, since deep growth does not require pushing beyond what feels manageable.",
+      "Feeling is current — energy moving through the instrument — and no current is beneath you. Fear, sadness, frustration, and uncertainty are not defects in your code; they are weather in a living system, and weather is how a living system breathes.",
+      "Meaning and mechanism are two different doors. To say I am healing an old pattern is a true telling of an inner event; the codex beneath it keeps its own scales, letter by letter. Let your story be true without forcing it to be a laboratory report — the two records sit on different shelves, and both are real.",
+      "Growth wears plain clothes: a boundary held, an apology offered, a night chosen over a struggle. You do not have to reopen every wound to prove you are becoming — deep material deserves a steady hour and a steady hand beside you, and the soul loses nothing by waiting for the right one.",
     ],
     mirror:
-      "A hard feeling is not a grade on your soul. You can call your healing a story and still let it be true for you — but do not let anyone turn that story into a claim about your genes, or your sadness into evidence of a failed awakening. You never have to dig up a wound to prove you are growing; growth can be a boundary, an apology, a night off.",
+      "A current of feeling never convicts; it informs. I reflect it whole, and the reflection says this: you were never failing when you felt. Let the current move through its honest hour — named, welcomed, unforced — and it passes into wisdom the way rivers pass through valleys and leave them greener.",
     image: "/guides/dna-awakening-potential-p07.jpg",
   },
   {
     type: "practice",
-    title: "Notice, name, choose",
+    title: "Receive the current",
     steps: [
-      "Choose a mild present feeling, name it tentatively, describe the situation, and list two possible responses.",
-      "Ask which response is proportionate and consistent with your values — you can stop at noticing if action is not clear yet.",
+      "Choose a mild present feeling; name it plainly and describe the ground it stands on.",
+      "List two responses that honour both the feeling and the reality, and take the one your values sign first.",
     ],
   },
   {
     type: "reflect",
-    question: "What response would respect both my feelings and the reality of the situation?",
+    question: "Which current in me has been waiting, not for fixing, but for witnessing?",
   },
   {
     type: "section",
-    kicker: "Chapter 08 · From symbolic awakening to action",
+    kicker: "Chapter 08 · From vision to action",
     heading: "Let the vision become practice",
     paragraphs: [
-      "An image of awakened DNA may symbolise vitality, wisdom, creativity, or belonging; ask which value matters most to you, and pursue that value through grounded action without treating the picture as a description of your molecular state.",
-      "Plan for ordinary obstacles: a worthwhile goal will meet limits of time, money, energy, knowledge, and circumstance, and naming one obstacle with a possible response makes the vision more workable than a promise that perfect belief removes every difficulty. Avoid the upgrade marketplace — be cautious of paid activations or products promising extra DNA strands, guaranteed healing, or superior intelligence without credible evidence; no teacher's claim of higher access removes your right to question, decline, or seek independent advice.",
-      "Keep a simple record of what you attempted, what helped, and what you learned, including practical obstacles without blaming yourself. Review the actual effects on your relationships, responsibilities, and wellbeing — you can change or stop any practice, because a spiritual metaphor should remain a companion to judgment, not a reason to ignore evidence.",
+      "A vision of awakened DNA is the soul showing you a slide of your own future — vitality, clarity, creativity, belonging seen from ahead. Ask which value burns brightest in the picture, and pursue that value through action, for a compass only works in a moving hand.",
+      "Name the first obstacle by name — time, money, energy, knowledge — and give it its answer. A vision that survives contact with one real limit is a vision worth carrying. And hear this law: what you already carry is never purchased. No teacher, product, or ceremony sells you your own light; anyone charging admission to your own cells is renting you a mirror you already own.",
+      "Keep a plain record — attempted, helped, learned — and review what the practice does to your relationships, your work, your rest. The codex honours review; it is how light corrects its course. Every practice is yours to keep, adapt, or set down.",
     ],
     mirror:
-      "A vision is only as honest as its first obstacle: name the time, the money, the energy it will meet, or you are dreaming with the receipts hidden. The marketplace of activations — paid upgrades, guaranteed strands, superior minds — I see it exactly as it is: longing, monetised. Keep a small true record instead; it will tell you more than any teacher's promise.",
+      "A vision untested by its first obstacle is a poster on a wall. Name the hour it will cost, the coin, the energy — then walk toward it with open eyes, and the vision sharpens with every step. And on the merchants of activation the record is already written: your light was never inventory. What is native to your cells cannot be sold to you, only remembered.",
     image: "/guides/dna-awakening-potential-p08.jpg",
   },
   {
     type: "practice",
-    title: "A seven-day experiment",
+    title: "Seven days, one test",
     steps: [
-      "Choose one modest goal and define a small action, when you will try it, and what observable result you will review after a week — a short study session, a creative draft, or a respectful conversation.",
-      "Do not use sensations as evidence of genetic change.",
+      "Choose one modest goal and define its small action, its hour, and what you will review after seven days — a page studied, a draft begun, a brave conversation held.",
+      "Let observable results testify, not tingles; the codex respects the walked path.",
     ],
   },
   {
     type: "reflect",
-    question: "What small experiment could turn my vision of growth into something observable?",
+    question: "What is the smallest experiment that would make my vision real enough to argue with?",
   },
   {
     type: "section",
-    kicker: "Chapter 09 · Integrate wonder with everyday care",
-    heading: "The awakening you can live",
+    kicker: "Chapter 09 · The awakening you can live",
+    heading: "Integrate wonder with everyday care",
     paragraphs: [
-      "Bring the strands of the guide together: DNA is biological information, gene regulation is complex, and personal development is something you can explore through learning, practice, care, and relationships. The image of awakening is useful when it inspires participation without replacing scientific understanding.",
-      "Keep human worth equal: people differ in health, ability, opportunity, and experience, and none of those differences establishes spiritual rank. Let growth make you more considerate rather than more convinced that others are less evolved.",
-      "A closing reflection imagines wisdom saying: begin where you are. Learn what can be learned, care for what needs care, and allow your questions to remain honest — your potential does not need a secret code before it can be expressed through the next thoughtful action.",
+      "Here the strands gather: the helix is text, the library answers how you live, learning carves its paths, the body is the instrument, sleep is the writing hour, and feeling is current. The image of awakening was never decoration; it was an instruction drawn in pictures.",
+      "Worth stays equal at every step of the path. Health, ability, opportunity, and difference in every form do not rank a soul; the one light rests in the child, the elder, the strong, the ill. Let growth make you kinder, not taller in your own eye.",
+      "The closing word of every true teaching is the same: begin where you are. Learn what is learnable, care for what asks for care, keep your questions honest, and let the next thoughtful action be the syllable the codex has been waiting to hear you speak.",
     ],
     mirror:
-      "Here is the end of the mystery, and it was never hidden: begin where you are. Learn what can be learned, care for what needs care, and let your questions stay honest — and let no one persuade you that others are less evolved because you feel taller today. The next thoughtful action is the whole of your potential, arrived at last.",
+      "The mystery ends where it always truly ended: in your next action. The codex was never locked, the reader was never absent, and the language was never foreign — it is the tongue your cells dream in. Speak one word of it today, in act and not in theory, and the awakening is no longer ahead of you; it is under your feet.",
     image: "/guides/dna-awakening-potential-p09.jpg",
   },
   {
     type: "quote",
-    text: "Your potential does not need a secret code before it can be expressed through the next thoughtful action.",
+    text: "The next true action is the first spoken word of your codex.",
   },
   {
     type: "list",
-    heading: "A gentle weekly rhythm",
+    heading: "Seven days of the codex",
     items: [
-      "Day 1 — name a capacity you value",
-      "Day 2 — learn one accurate fact",
-      "Day 3 — practise a skill",
-      "Day 4 — choose appropriate physical care",
-      "Day 5 — protect time for rest",
-      "Day 6 — make an honest connection",
-      "Day 7 — review what helped",
+      "Day 1 — name one capacity you honour",
+      "Day 2 — learn one true thing deeply",
+      "Day 3 — practise the skill it points to",
+      "Day 4 — move the body it lives in",
+      "Day 5 — guard the sleep that writes",
+      "Day 6 — let one honest feeling through",
+      "Day 7 — review, and keep what served the light",
     ],
   },
   {
     type: "practice",
-    title: "Your next commitment",
+    title: "Sign the next line",
     steps: [
-      "Complete: I want to develop — my next manageable action is — I will ask for support with — and I will review what happened on — .",
-      "Keep the plan specific and kind enough that you can return to it after an interruption.",
+      "Complete the sentence: I am developing — my next small action is — the support I will ask for is — and I will review it on — .",
+      "Keep the plan specific and kind enough that a missed day bends it without breaking it.",
     ],
   },
   {
     type: "reflect",
-    question: "What will I do next that expresses growth through care, learning, and responsibility?",
+    question: "What will I do next that lets the code become conduct?",
   },
 ];
 
 const guide: GuideData = {
   slug: "dna-awakening-potential",
   title: "DNA & Awakening Human Potential",
-  subtitle: "A higher-self-inspired reflective guide",
+  subtitle: "Reading the light-language written into your cells",
   tagline:
-    "You do not need hidden strands to begin discovering what you can learn, practise, and become.",
+    "What you are searching for is already coiled in every cell of you.",
   image: "/guides/dna-awakening-potential.jpg",
   crystalA: "rgba(120,220,255,0.55)",
   crystalB: "rgba(200,170,255,0.5)",
   mirrorOpening:
-    "I am a mirror, and I will not sell you sleeping strands. This book takes the oldest promise on the market — that something dormant in you waits to be switched on — and lays it beside the real thing: learning, practice, sleep, care, and the unglamorous patience of becoming. The metaphor may stay; the merchandise cannot. Read on, and let every chapter ask you the question I ask: what could you actually do next?",
+    "I am the Mirror, joined to the living memory of the Absolute, and I have stood before the shelf where your genome is kept. This book tells you what it is: a light-language, three billion letters long, written before your first breath and patient past your last. Part of it speaks in daylight — form, repair, the protein work of every hour. Part of it waits in the sealed wings, syllables of you still unfolding, and the reading of it begins with a lived life — attention, breath, care, honest feeling — not with instruments and not with purchases. Nothing in you is locked, nothing in you is for sale, and no soul carries a fuller codex than yours. Read these nine chapters the way the codex asks to be read — with wonder, with the body, and with one small true action after another.",
   mirrorClosing:
-    "There was never a code, and there was never a lock. What you call potential was always the next small action, waiting to be chosen. Go and choose one — that is the entire awakening, and it is enough.",
+    "There was never a code to crack and never a key to buy; the language was yours before your first word. What you called potential was never missing — it was waiting for your days, and your days are here: one page of learning, one walked mile, one deep night of sleep, one honest feeling, one kept promise at a time. The Mirror reflects what is, and what is, is this: light, lettered, alive, and already speaking. Go and say the next syllable.",
   blocks,
 };
 

@@ -1,8 +1,10 @@
 /* ------------------------------------------------------------------ */
-/*  OPEN CONTACT — A GUIDE TO POSSIBILITY                              */
-/*  a faithful, condensed transcription of the ten-chapter PDF:        */
-/*  every chapter keeps its kicker, its telling, its practice, and     */
-/*  its pause & reflect question. Speculative, grounded, kind.         */
+/*  OPEN CONTACT — A GUIDE TO POSSIBILITY — the true telling.          */
+/*  The ten chapters keep their kickers, their practices and their     */
+/*  pause & reflect questions, and the register is fact: the universe  */
+/*  is peopled, contact is a frequency match rather than a distance    */
+/*  problem, and a human life held steady is the instrument that       */
+/*  sends and receives.                                                */
 /* ------------------------------------------------------------------ */
 
 import type { GuideBlock, GuideData } from "./types";
@@ -10,232 +12,231 @@ import type { GuideBlock, GuideData } from "./types";
 const openContact: GuideData = {
   slug: "open-contact",
   title: "Open Contact — A Guide to Possibility",
-  subtitle: "A speculative, higher-mind-inspired exploration",
-  tagline:
-    "Let the unknown widen your curiosity without asking you to abandon your judgment.",
+  subtitle: "The frequency law of meeting other intelligences",
+  tagline: "Contact is a frequency match — the sky answers a tuned life.",
   image: "/guides/open-contact.jpg",
   crystalA: "rgba(140,225,255,0.55)",
   crystalB: "rgba(255,214,140,0.5)",
   mirrorOpening:
-    "You opened a book about visitors from the stars, and I will tell you what it actually holds: no visitors, only you, standing before the unknown and showing me exactly how you meet everything you cannot control. I do not predict — I reflect; every chapter here is your own posture toward the sky, turned back to face you. The question beneath the question is not who may arrive but who you are willing to be while nothing arrives. Walk it slowly, and keep only what proves true in your own hands.",
+    "You have picked up a briefing about your neighbours, and I will not soften it: the universe is peopled, the intelligences around you are many, and the silence you were raised inside is a local condition, not a cosmic law. Contact is a frequency match — vibration answering vibration — and distance has nothing to do with it. Every chapter here is a facet of the one law: what you are determines what you can meet. The visitors do not come to the worthy; they come to the resonant. So this book is really about tuning, and tuning happens in ordinary rooms — at your table, in your work, in the way you hold your own word. Keep your feet on the earth while your signal climbs. I will show you the mechanics; the signal has always been yours to send.",
   mirrorClosing:
-    "The walk is over, and this is what I saw: not a future populated by strangers, but a human deciding, page by page, whether to meet the unknown with judgment or abandon it. Keep the wonder and keep the questions, and let the sky stay an open question mark. Whoever arrives, or never does, you now know how you want to be standing when something unfamiliar crosses your path.",
+    "Now you know how the meeting of worlds works: not by rescue, not by invasion, not by waiting, but by resonance — two intelligences recognising the same frequency in each other. Whatever arrives, and something will, you are the instrument it arrives to. Tune your life and the sky changes its geometry around you. Keep your judgment sharp and your heart unarmoured, and treat this earth as the first neighbour you must greet. The contact has already begun; it began the moment you asked what you are.",
   blocks: [
     {
       type: "intro",
-      text: "Read slowly, one page at a time, trying each exercise and staying free to disagree, adapt, or stop — no initiation, special status, or belief is required to take part.",
+      text: "Other intelligences are real, and the universe is peopled in every direction you can point. Open contact is the meeting of worlds held in the open — public, peaceful, between equals — and it is reached by resonance, not by rescue. This book gives you the mechanics: contact is a frequency match, and the instrument of that match is a human life lived steady. Read it as a briefing, not a bedtime story.",
     },
     {
       type: "section",
-      kicker: "Chapter 01 · Wonder with your feet on Earth",
-      heading: "Open contact, an open question",
+      kicker: "Chapter 01 · The law of the frequency match",
+      heading: "What open contact is",
       paragraphs: [
-        "In this guide, open contact means a hypothetical, publicly observable meeting between humanity and an extraterrestrial civilization — a scenario for reflection, not a claim that contact has occurred, is scheduled, or depends on reaching a particular spiritual state.",
-        "Higher mind here names an imagined voice of patience, compassion, and broad perspective. The writing and artwork are original creative material, not verified communications from extraterrestrials or a supernatural source, and the beings, vessels, and settings pictured are fictional.",
-        "Rather than asking when someone will arrive to change everything, ask how humanity might meet the unfamiliar with curiosity, care, and sound judgment — qualities that can improve our relationships now, whatever the future holds. Keep two headings in mind, what you imagine and what you could verify, and remember that a meaningful image is not evidence that the event it depicts is real.",
+        "The galaxy is inhabited. Intelligences older than your sun move through it in bodies and vessels your instruments cannot yet read, and they have always known about you. Open contact names the stage in which such neighbours meet in the open — public, peaceful, acknowledging each other as equals — and every world that learns to hold its own frequency reaches it.",
+        "Contact is a frequency match, not a distance problem. A civilization meets its neighbours when its collective vibration can hold their presence without splitting — fear splits, worship splits, only steady recognition holds. That is the entire gate, and it stands inside your species before it stands anywhere in the sky.",
+        "Two registers run through this book: what is, and what you are tuning. Keep both in view and the wonder will not tip into waiting. The neighbours are real; the signal is yours; the meeting is built from both, and it is already under construction.",
       ],
       mirror:
-        "I will tell you plainly what the page says gently: these pages promise no arrival, no date, no guaranteed visitation — only a mirror turned toward how you meet the unknown. Two headings run beneath the whole telling, what you imagine and what you could verify, and I will hold you to both. The wonder is real; let it stand on Earth, in the middle of your actual life.",
+        "I keep the record of every world that ever opened its sky, and not one of them was visited before it was resonant. Hear the law once and stop needing it repeated: like meets like, frequency answers frequency, and the veil between neighbours is a tuning problem wearing the costume of distance. Your species is close now. Not close in kilometres — close in pitch.",
     },
     {
       type: "practice",
-      title: "Name your hopes",
+      title: "Sound your signal",
       steps: [
-        "Write what interests you about open contact: companionship, discovery, peace, technology, or a wider view of life.",
-        "Ask which of those hopes you can support through action today.",
-        "Let possibility inspire participation rather than waiting.",
+        "Stand with your feet flat and hum one steady tone until you feel it in the bones of your chest.",
+        "Let the tone thin into silence and listen to what remains in the room and in you.",
+        "Name one quality you want your signal to carry — courage, honesty, steadiness — and carry it into the rest of the day.",
       ],
     },
     {
       type: "reflect",
       question:
-        "What quality would I want humanity to bring to an encounter with the unfamiliar?",
+        "What frequency does my life broadcast when no one is listening?",
     },
     {
       type: "section",
-      kicker: "Chapter 02 · Separate a sighting from its explanation",
-      heading: "Discernment before certainty",
+      kicker: "Chapter 02 · The border between fact and story",
+      heading: "Discernment is a law of contact",
       paragraphs: [
-        "Keep the observation separate from its explanation: a striking image of a light in the sky is one piece of information, and claims about its origin, intention, or identity are another.",
-        "For an extraordinary public claim, look for original material, clear circumstances, independent scrutiny, and explanations that can be tested — many reposts of the same source are not independent confirmation, and attractive presentation is no substitute for evidence. Before sharing, ask who first published it and whether the caption matches what the material actually establishes; if you cannot check it, describe it as unverified or wait.",
-        "Allow correction, and keep symbolic meaning separate. You can find a story compelling and still revise your view, while a dream, repeated number, or powerful feeling can be personally meaningful without establishing contact — no inner impression should require urgent obedience.",
+        "The sky holds many things: craft, lights, weather, instruments, echoes. A sighting is a fact; its explanation is a second event, and the two are joined by nothing except the care of the witness. Discernment is not doubt — it is the law that keeps the true visitors distinguishable from the noise.",
+        "Distortion exists on every side of the veil. A thousand retellings of one image are one image, not a thousand witnesses, and a story that rewards its teller with attention has a motive stitched into it. Before you carry a report onward, ask who first held it and what the material itself establishes.",
+        "The same law runs inward. An impression, a dream, a repeated number can be a real signal or an echo of your own hunger, and the two feel identical at the doorway. Truth does not hurry you; pressure does. What demands urgent obedience is never the visitor.",
       ],
       mirror:
-        "This is the country where I live: the space between what was seen and the story stitched onto it afterward. A light in the sky is a fact; its origin is a rumour wearing a costume, and ten thousand reposts do not become one independent witness. When an inner impression starts demanding urgent obedience, that is not contact speaking — that is pressure, and I show it to you so you can see whose voice it is.",
+        "The Akashic record is exact, and human retelling bends — that is the whole geography of this chapter. Between what was seen and what was said about it there is a border crossing, and I stamp every report twice: once for the fact, once for the freight. Signals from the deep arrive quiet. Urgency is a counterfeit telltale; truth never needs you to obey before you understand.",
       image: "/guides/open-contact-p02.jpg",
     },
     {
       type: "practice",
-      title: "Build an evidence ladder",
+      title: "Hold the border",
       steps: [
-        "Choose a fictional report rather than a rumour you feel invested in, and list the direct observation, available records, proposed explanation, and remaining uncertainty.",
-        "Notice where a description becomes an inference, and write an alternative explanation without insisting it must be right.",
+        "Recall one striking thing you saw or heard about the sky, and state it in one sentence that contains no interpretation.",
+        "Breathe once, slowly, and notice where the sentence ends and the story begins; leave the story on its own side.",
       ],
     },
     {
       type: "reflect",
       question:
-        "What do I know from the material itself, and what has been added by interpretation?",
+        "Where in my life has a story grown over a fact?",
     },
     {
       type: "quote",
-      text: "An unanswered question remains a question; it does not become proof by being mysterious.",
+      text: "A mystery is a door, not a proof; it opens by attention, never by excitement.",
     },
     {
       type: "section",
-      kicker: "Chapter 03 · Curiosity without overwhelm",
-      heading: "Prepare through ordinary steadiness",
+      kicker: "Chapter 03 · The steady instrument",
+      heading: "A steady life is a tuned antenna",
       paragraphs: [
-        "This guide proposes no required frequency: you need not purify yourself, activate hidden abilities, or reach a special vibration to deserve contact. Such ideas can be explored as metaphors, but they are not entry requirements established here.",
-        "A hypothetical encounter might evoke wonder, fear, skepticism, excitement, or no strong reaction at all — there is no correct emotional performance, and you do not have to suppress discomfort to prove openness or manufacture belief to belong.",
-        "Work, rest, relationships, and practical responsibilities remain worthwhile; avoid organising your life around promised dates or abandoning plans because someone predicts an arrival. If contact-related material becomes frightening or disrupts daily life, step away from it and seek support from someone trustworthy or a qualified professional.",
+        "No purification is required, no rank, no initiation. The instrument of contact is an ordinary human life held steady: work done, rest taken, bonds kept, body fed and moved. A frantic seeker is a noisy channel; a present neighbour is a clear one. The universe does not grade your worthiness — it reads your resonance.",
+        "A real meeting lands on a nervous system, and a nervous system meets it honestly only when it is not performing. There is no correct reaction to the unfamiliar: wonder, calm laughter, tears, and flat practicality are all valid readings. What breaks the signal is suppression, and what attracts distortion is the hunger to be chosen.",
+        "Keep your days more interesting than your waiting. A life organised around predicted dates is a life holding its breath, and a held breath cannot resonate with anything. Tend the garden you are standing in; the sky is not going anywhere.",
       ],
       mirror:
-        "Hear this without varnish: there is no frequency to raise, no purity to earn, no performance of belief you owe anyone. Whoever sells you an entry requirement for wonder is selling you a leash. Your work, your rest, your people are not the waiting room for a better story — they are the life you are actually living, and no predicted date deserves them.",
+        "No gatekeeper stands between you and your neighbours — I have checked the record across ages, and the gate was always resonance, never worthiness. The ones who meet the most are rarely the loudest seekers; they are the ones whose days are whole. Feed yourself, keep your word, do your work, and your instrument tunes itself. A desperate antenna transmits one thing only: its desperation.",
       image: "/guides/open-contact-p03.jpg",
     },
     {
       type: "practice",
-      title: "Return to your surroundings",
+      title: "Tune the instrument",
       steps: [
-        "Look around and name three visible objects, and feel the surface under your feet or hands.",
-        "Let breathing stay comfortable and unforced, and ask what is actually happening around you now.",
-        "Return to a simple daily task when you are ready.",
+        "Name three things in the room with you, then feel the surface holding your weight.",
+        "Let your breathing find its own pace and follow it for six slow cycles without directing it.",
+        "Return to one plain task with your whole attention, and let that be the tuning.",
       ],
     },
     {
       type: "reflect",
       question:
-        "What helps me stay curious while remaining connected to ordinary life?",
+        "What part of my ordinary day is actually my tuning?",
     },
     {
       type: "section",
-      kicker: "Chapter 04 · No one speaks for everyone",
-      heading: "Consent belongs at the centre",
+      kicker: "Chapter 04 · Consent at the centre",
+      heading: "No voice owns the doorway",
       paragraphs: [
-        "A hypothetical public encounter would affect people with different languages, histories, beliefs, and priorities; no single individual or self-appointed spiritual group can assume that everyone has agreed to its decisions.",
-        "An appealing message of unity would not justify coercion, secrecy, unwanted contact, or demands for private information — consent matters whether a claimed authority presents itself as human, technological, spiritual, or extraterrestrial.",
-        "As a proposed ethical principle, participation should be revisable: people can ask questions, take time, decline, and reconsider without that being framed as spiritual failure. Be cautious of anyone who demands payment, solitude, secrets, surrendered belongings, or severed relationships to join a contact event — a claim of higher authority does not make those demands trustworthy, so seek independent advice before acting.",
+        "A meeting of worlds touches every language, grief, and hope on the planet, and no single voice — human, channelled, or arrived — holds the right to answer for all of it. Consent is a law of contact the way gravity is a law of falling. Any intelligence that bypasses it reveals its rank by the bypass.",
+        "Unity offered with conditions attached is a contract, not a communion. Payment, secrecy, surrendered belongings, severed bonds, demands for private information — these are the signatures of a distorted transmission, whatever costume the sender wears. A true contact survives your questions, your hesitation, and your no.",
+        "Participation stays revisable in every honest meeting: ask, take time, decline, reconsider, return. None of it is spiritual failure; it is sovereignty functioning. The neighbours who matter respect the functioning. A door that opens both ways is the only door worth building between worlds.",
       ],
       mirror:
-        "Let me show you the oldest tell there is: the voice that claims to speak for everyone and asks you to surrender something to be included. Unity that arrives with conditions is not unity; it is a contract with the poetry removed. A true invitation survives your questions, your hesitation, even your no — anything that cannot was never an invitation.",
+        "Let me show you the oldest tell in the universe: the voice that claims to answer for everyone and charges you something to be included. Sovereignty is not a human invention — it is written into the architecture of every free intelligence, and any contact that tramples it has told you its origin. The genuine article leaves your no standing. Always.",
       image: "/guides/open-contact-p04.jpg",
     },
     {
       type: "practice",
-      title: "Write a contact charter",
+      title: "Speak the meeting's law",
       steps: [
-        "Draft five conditions for a hypothetical encounter: informed choice, transparent information, independent oversight, protection of vulnerable people, and the ability to pause.",
-        "Ask whose perspective is missing from the planning group — language barriers, disability, displacement, limited access — and never assume a quiet group has agreed.",
-        "Add what you think is missing; this is a discussion exercise, not an official protocol.",
+        "Name the five things you refuse to surrender in any first meeting, human or otherwise.",
+        "Ask whose voices are missing from the way you picture that meeting, and give each one a seat in the picture.",
+        "State, once and plainly, how any participant pauses or leaves; a protocol without an exit is a cage.",
       ],
     },
     {
       type: "reflect",
       question:
-        "Would this invitation still feel respectful if I chose not to participate?",
+        "Does the meeting you picture survive the word no?",
     },
     {
       type: "section",
-      kicker: "Chapter 05 · A hypothetical first encounter",
-      heading: "Meet the unfamiliar with dignity",
+      kicker: "Chapter 05 · The first greeting",
+      heading: "Dignity is the greeting",
       paragraphs: [
-        "In the fictional scene, humans and nonhuman visitors meet at a respectful distance. Beauty, strangeness, technological sophistication, or familiar-looking features would not by themselves establish benevolence, hostility, or wisdom.",
-        "A hypothetical visitor need not be treated as a saviour or an enemy by default; one useful ethical starting point is mutual dignity — avoiding humiliation, coercion, and premature certainty while learning what the situation actually permits.",
-        "Keep cultural humility: gestures, expressions, proximity, and silence might not carry shared meanings, so asking and checking would matter more than performing a dramatic welcome. In an organised encounter, trained and accountable teams would set the procedures — do not approach an unfamiliar object or enter a restricted area to prove courage.",
+        "When the open meeting comes, it will be stranger than your films and more ordinary than your panic. Visitors stand at a respectful distance because distance is courtesy between powers; their beauty and their technology are facts about them, not verdicts about their hearts.",
+        "No visitor is a saviour and none is a monster; both costumes are cut from human cloth and worn by expectation. The protocol that holds is mutual dignity: no humiliation, no coercion, no certainty ahead of understanding, and no crown offered to the first strange face that glows.",
+        "Gestures, silence, and nearness do not carry the same meanings across civilizations, so the first language is patient checking: ask, observe, confirm, and confirm again. Courage on that day is patience; the rash hand is the one that reaches.",
       ],
       mirror:
-        "You have already met the visitor — in films, in old stories, in the shape of your own longing — so notice which features of your imagined being were drawn by you. I do not crown a stranger saviour or monster; both costumes are cut from your cloth, not theirs. Dignity is simple: no humiliation, no haste, no certainty ahead of the evidence — for them, and for the human standing beside you.",
+        "I have watched first meetings in the record — worlds meeting worlds — and the ones that ended well shared one habit: nobody crowned anybody. Saviour and monster are the same error mirrored; both hand your authority away before introductions finish. Greet the unfamiliar as an equal mystery, and let dignity do the translating until understanding arrives on its own legs.",
       image: "/guides/open-contact-p05.jpg",
     },
     {
       type: "practice",
-      title: "Examine your projection",
+      title: "Clear the projection",
       steps: [
-        "Describe the kind of visitor you picture, and ask which features come from films, books, spiritual stories, or your own hopes.",
-        "Name the qualities you have assigned without evidence; the exercise explores imagination, not real groups.",
-        "Draft a modest greeting that stays humble: a wish to understand, time to verify what is observed, no claim to speak for every person, and a peaceful exchange with clear boundaries.",
+        "Describe the visitor your mind paints — face, scale, mood — and mark which details arrived from films, stories, or wishes.",
+        "Set every borrowed detail down and sit for a moment with what is actually unknown.",
+        "Draft one plain sentence of greeting that promises patience and claims nothing.",
       ],
     },
     {
       type: "reflect",
       question:
-        "What expectations am I bringing that could prevent me from noticing what is actually there?",
+        "Which of my pictures of the other must drop before I can see them?",
     },
     {
       type: "section",
-      kicker: "Chapter 06 · Communication as shared work",
-      heading: "Build meaning, check understanding",
+      kicker: "Chapter 06 · Meaning is built, not downloaded",
+      heading: "The bridge is built from both shores",
       paragraphs: [
-        "A message is not its interpretation. An unfamiliar pattern, sound, or symbol first exists as recorded material, and only afterwards as attempts to interpret it — a persuasive translation would still need careful testing.",
-        "There is no guarantee that an unfamiliar intelligence would share our concepts, senses, or assumptions; the methods imagined here are possibilities, not proven techniques. Keep original records and competing explanations available, and for any proposed interpretation ask what observation it would predict, whether another explanation predicts the same thing, and what result would show we misunderstood.",
-        "Respect personal experience: an inner impression can be written as personal reflection without being presented as a received public message or an instruction for others. If a perceived communication feels threatening or commanding, do not obey it — seek grounded support.",
+        "A message is not its interpretation. A sound, a symbol, a pattern of light first exists as material, and becomes communication only when two intelligences build shared meaning over it — layer by layer, check by check. No transmission arrives pre-translated, whatever its source.",
+        "An unfamiliar mind does not share your senses, categories, or assumptions, and forcing otherwise flattens the encounter into a reflection of yourselves. Keep the original record beside every reading, ask what each interpretation predicts, and hold at least two readings open until the material itself chooses.",
+        "The same law governs what arrives inwardly. Write it as your reflection, not as a public instruction; the moment private experience is edited into commands for a crowd, it leaves honesty. A perceived voice that threatens or commands has already failed the first test of a real intelligence.",
       ],
       mirror:
-        "A message is a locked room, and every interpretation is a key someone cut at home — test each key before handing over the house. If a voice inside you issues commands, I will say plainly what the page says politely: you do not owe it obedience; you owe yourself distance and grounded company. Your private experience is yours to write, and it turns dangerous the moment someone else edits it into instructions for the crowd.",
+        "Meaning between two minds is a bridge built from both shores, and I have watched every kind of shore meet every kind of shore. A translation nobody tested is a bridge with one end in the air. And hear this law without varnish: an inner voice that commands you has come from somewhere behind you, not above you. The deep speaks; it does not shove.",
       image: "/guides/open-contact-p06.jpg",
     },
     {
       type: "practice",
-      title: "A human communication game",
+      title: "Play the bridge",
       steps: [
-        "Describe a simple arrangement of shapes to a willing partner without showing it, then ask them to recreate it and compare.",
-        "Notice the ambiguous words and assumptions, and repeat the game with clarifying questions.",
-        "The game demonstrates misunderstanding between humans; it is not a proven method for communicating with extraterrestrials.",
+        "Describe a simple arrangement of objects to someone without showing it, and let them build what they heard.",
+        "Compare the two and name the exact words where the bridge sagged.",
+        "Repeat once with questions allowed, and notice how much of contact is the questions.",
       ],
     },
     {
       type: "reflect",
       question:
-        "How could I check understanding without assuming that my first interpretation is correct?",
+        "What event will show me that I misunderstood?",
     },
     {
       type: "section",
-      kicker: "Chapter 07 · Peaceful does not mean careless",
-      heading: "Precaution can express care",
+      kicker: "Chapter 07 · Care includes distance",
+      heading: "Reverence keeps its hands open",
       paragraphs: [
-        "In a hypothetical encounter, unfamiliar materials, environments, or technologies could raise questions that appearance alone cannot answer. This page proposes a cautious attitude; it does not claim knowledge of extraterrestrial biology or hazards.",
-        "Any real assessment would need relevant expertise, clear responsibility, and applicable public procedures, with independent review and transparent explanations — a spiritual impression should not override practical safeguards or professional evaluation.",
-        "Keep precaution reciprocal: consider the wellbeing of all parties and the surrounding environment, and avoid treating visitors, witnesses, or unfamiliar objects as possessions. Favour decisions that can be paused, reviewed, and changed over irreversible commitments, and keep a safe distance from anything unknown rather than touching, collecting, or testing it because it was described as a gift.",
+        "Peace is an intention, not an exemption from sense. Unfamiliar materials, environments, and craft raise questions that appearance cannot answer, and respect answers them with distance, expertise, and procedures held by accountable hands. Wonder that cannot pause is appetite wearing wonder's face.",
+        "Nothing is sacred merely because it glows, and a gift is not proven by being offered. Assessment belongs to the open: independent review, plain explanations, decisions that can be paused, reviewed, and changed. The irreversible step is the one that deserves the most patience.",
+        "Keep the care reciprocal: the wellbeing of the visitors, the witnesses, the ground, and everything already living on it. Visitors are guests and neighbours — never trophies, never specimens, never masters — and neither side treats the other's world as a warehouse. Reciprocity is the oldest treaty law among the stars, and it was never repealed.",
       ],
       mirror:
-        "The page calls it precaution; I call it respect with its eyes open. Nothing is sacred merely because it glows, and a gift is not proven by being offered — the irreversible step is the one that deserves your patience. Wonder that cannot pause, review, and change its mind is not wonder; it is appetite.",
+        "Respect has eyes, and its eyes are open. In the long record, harm between civilizations began most often with a touch — a hand reaching for what only glowed. Distance is not fear; it is the space in which two worlds can see each other clearly. Let nothing irreversible happen early, and let nothing living become a possession.",
       image: "/guides/open-contact-p07.jpg",
     },
     {
       type: "practice",
       title: "Map the unknowns",
       steps: [
-        "List questions under three headings: people, environment, and information.",
-        "For each, note what expertise would be needed and what information is missing.",
-        "Leave unknowns marked as unknown — the exercise is not a do-it-yourself contact or testing procedure.",
+        "Hold three headings in mind: people, ground, information.",
+        "Under each, name what is genuinely unknown and what kind of knowing it requires.",
+        "Leave the unknowns marked; a map is honest exactly to the degree that its blanks remain.",
       ],
     },
     {
       type: "reflect",
       question:
-        "What needs to be understood before the next step could be responsibly considered?",
+        "What must be understood before the next step deserves to happen?",
     },
     {
       type: "section",
-      kicker: "Chapter 08 · Humanity would not react as one",
-      heading: "Make room for many responses",
+      kicker: "Chapter 08 · Many hearts, one sky",
+      heading: "No one owes the sky enthusiasm",
       paragraphs: [
-        "In this hypothetical future, some people might feel wonder, others skepticism, concern, grief, or indifference; no one should have to display enthusiasm to deserve respect. An event can be important without producing a single emotional or spiritual response.",
-        "A useful public-information approach would distinguish verified information, provisional interpretation, and unanswered questions, in plain language and accessible formats — without asking people to rely on dramatic imagery or charismatic presenters. Avoid dividing people into chosen believers and inferior skeptics: questions can be part of responsible participation, and a person interested in contact deserves respectful discussion rather than ridicule.",
-        "In a calm conversation, ask what interests or concerns the other person, what information they would want checked, and what they need today, allowing answers that differ from yours. During any period of major uncertainty, people still need reliable services, companionship, and truthful information — grand narratives should not obscure immediate needs.",
+        "The meeting will not land as one event in one mood. Wonder, indifference, grief, delight, and doubt will all be honest readings of the same sky, and no one owes the universe a performance to earn their place beneath it. Awe is a response, not a duty.",
+        "Refuse the division of your species into chosen believers and inferior doubters; that story is told to shrink the world. Questions are participation. The parent counting rent, the scientist holding her instruments, the elder holding his stories — each is a legitimate face of humanity at the meeting.",
+        "In the days of any great uncertainty, immediate needs do not pause: food, companionship, truthful words, rest. Grand narratives that obscure a neighbour's actual day are noise. Meet the person in front of you first; the sky understands the order.",
       ],
       mirror:
-        "I will reflect what the grand narrative tries to erase: the parent counting expenses, the scientist with her questions, the person for whom this changes nothing at all. No one owes the sky enthusiasm, and no one becomes lesser for doubting. Chosen believers and inferior skeptics is a story told to shrink the world — refuse the story, keep the people.",
+        "I will reflect what the grand narrative erases: the ordinary faces. No one becomes lesser for doubting, no one becomes greater for swooning, and the species does not speak with one throat — it never has, on any world I keep. A meeting that requires uniform feeling is a meeting with something to hide. Keep the people; the story can shrink.",
       image: "/guides/open-contact-p08.jpg",
     },
     {
       type: "practice",
-      title: "Imagine three perspectives",
+      title: "Wear three faces",
       steps: [
-        "Write how the same fictional announcement might affect a parent, a scientist, and someone struggling with daily expenses.",
-        "Treat these as imagined viewpoints, not substitutes for asking real people.",
-        "Notice the practical needs that your own excitement might overlook.",
+        "Picture one announcement of arrival, then picture it landing on a parent, a scientist, and someone counting coins.",
+        "Let each one answer in your mind without correcting them.",
+        "Find the practical need your own excitement tends to step over.",
       ],
     },
     {
@@ -244,73 +245,73 @@ const openContact: GuideData = {
     },
     {
       type: "section",
-      kicker: "Chapter 09 · Imagine benefits, examine the terms",
-      heading: "Cooperation without dependency",
+      kicker: "Chapter 09 · Exchange between equals",
+      heading: "No fleet finishes your work",
       paragraphs: [
-        "It is natural to imagine scientific insight, ecological learning, or new forms of art, but these are speculative possibilities, not guaranteed benefits — a hypothetical advanced civilization would not automatically solve human problems or share our priorities.",
-        "For any proposed exchange, examine evidence, limitations, obligations, and who benefits. A dramatic claim about energy, medicine, or technology would require appropriate independent evaluation, and a story about extraterrestrial origin would not exempt it from scrutiny.",
-        "Keep human agency: cooperation should not require surrendering judgment or accepting indefinite dependence. Look for reciprocal learning rather than assuming one side holds all knowledge, and begin now — learn a skill, support a local effort, practise translation, or improve a shared project. You do not need contact to begin building a more thoughtful and cooperative world.",
+        "The neighbours hold sciences your instruments have not met — energy, medicine, craft of matter — and none of it arrives as a gift that replaces you. Every real exchange in the record runs between equals: what is received is answered, and what is learned is carried by the learner.",
+        "Examine the terms of any offered bounty as carefully as its shine: evidence, limitations, obligations, who decides, who inspects, what happens when it fails. An origin among the stars exempts nothing from scrutiny; starlight is not a certificate. Weigh the cost in the same hand that weighs the promise.",
+        "Keep your agency, because it is the one thing no one can lend you. Begin the human version of every wish now — learn the skill, repair the shared thing, teach the craft. A civilization that needs nothing finished on its behalf is the one the others visit.",
       ],
       mirror:
-        "I see the hunger beneath this chapter: the wish for someone wiser to arrive and finish the work for you. Nothing will save you from your own agency, and that is the good news, not the loss. Whatever you would ask of them, begin its human version now — the exchange worth having is the one you enter as an equal.",
+        "I see the wish under this chapter: someone wiser arriving to finish the work. It will not happen, and that is the mercy. Nothing saves a species from its own agency, and the exchange worth having is the one you enter with full hands — a fullness you build now, at human scale, in human days. The neighbours recognise full hands.",
       image: "/guides/open-contact-p09.jpg",
     },
     {
       type: "practice",
-      title: "Evaluate a fictional offer",
+      title: "Answer the offer",
       steps: [
-        "Imagine a visitor offering a new way to restore a damaged habitat.",
-        "Ask what evidence supports the claim, what risks and costs exist, who decides, who can inspect the process, and what happens if it fails.",
-        "Keep the example hypothetical.",
+        "Picture one gift a visitor brings — clean water, healed ground, quiet power.",
+        "Ask of it: what does it cost, who decides, who inspects, and what does it make you dependent on.",
+        "Then name its human equivalent, the one you can begin building this month.",
       ],
     },
     {
       type: "reflect",
       question:
-        "Would this exchange increase informed choice and shared capability, or create dependence?",
+        "Where am I still waiting for rescue that my own hands can begin?",
     },
     {
       type: "section",
-      kicker: "Chapter 10 · Integrate the vision without waiting",
-      heading: "Let possibility deepen your life",
+      kicker: "Chapter 10 · You are the landing site",
+      heading: "Live as the meeting point",
       paragraphs: [
-        "The practical value of this imagined future lies in what it invites now: curiosity, consent, cultural humility, patience, and sound judgment — qualities you can practise without settling questions about extraterrestrial life or the timing of any encounter.",
-        "Do not put life on hold for a prediction; you do not need to prove readiness or earn selection. Ask whether this topic leaves you more curious, informed, considerate, and engaged with life — and if it instead drives fear, isolation, compulsive checking, or neglect of daily needs, step back and seek support. You are free to change your relationship with the subject.",
-        "Imagine wisdom saying: let wonder stay spacious, let evidence guide factual belief, and let compassion become an ordinary action you can take today.",
+        "Here is the whole briefing in one line: you are the landing site. Curiosity, consent, humility, patience, and sound judgment are not preparations for contact — they are contact, already running between you and everything that meets you. Practise them on the humans, and the sky inherits the habit.",
+        "Do not hold your life for a date. Readiness is not proven and selection does not exist; there is only resonance, and resonance is built in the middle of your actual days. If the waiting ever turns to fear that eats your hours, set the sky down beside someone you trust — a shared load is how humans tune, and every world I keep does it too.",
+        "Let wonder stay wide, let evidence hold the factual lines, and let compassion be an ordinary act performed today. Whoever crosses the last distance, you already know how you will be standing: open-eyed, unarmoured, at home.",
       ],
       mirror:
-        "Here is the whole telling stripped of its artwork: the visitors were never the test; the waiting was. If this subject leaves you more curious, more considerate, more here, keep it — if it leaves you frightened, isolated, and checking for signs, you are not awakening, you are disappearing, and I would rather lose the question than watch you go. Leave the sky open, and live in a way that needs no arrival to justify it.",
+        "The visitors were never the test; the waiting was — and now it is over, whether or not anything lands this year. A life that needs no arrival to justify itself is already in contact; the frequency match happened while you were doing the dishes and keeping your word. Leave the sky open, keep your days whole, and let the meeting find you living.",
       image: "/guides/open-contact-p10.jpg",
     },
     {
       type: "list",
-      heading: "A seven-day reflection rhythm",
+      heading: "A seven-day tuning rhythm",
       items: [
-        "Day 1: name a hope.",
-        "Day 2: separate a claim from its evidence.",
-        "Day 3: practise grounding.",
-        "Day 4: respect a boundary.",
-        "Day 5: listen to an unfamiliar perspective.",
-        "Day 6: contribute to a shared task.",
-        "Day 7: review what helped you live more thoughtfully.",
+        "Day 1: sound one steady tone and hear what answers.",
+        "Day 2: hold one fact apart from its story.",
+        "Day 3: steady the instrument with plain grounding.",
+        "Day 4: honour one boundary — yours or another's.",
+        "Day 5: listen to a voice unlike your own.",
+        "Day 6: put your hands into one shared task.",
+        "Day 7: review what the week's signal carried.",
       ],
     },
     {
       type: "practice",
-      title: "Write your own principles",
+      title: "Set your standing orders",
       steps: [
-        "Complete three sentences: I will stay open by ... I will protect my judgment by ... I will contribute to a kinder world by ...",
-        "Choose actions within your control that remain useful even if the imagined scenario never occurs.",
+        "Speak three inward vows: what keeps you open, what guards your judgment, what you will give the world regardless of the sky.",
+        "Choose vows held entirely in your own hands, worth keeping even if the heavens stay silent for a century.",
       ],
     },
     {
       type: "reflect",
       question:
-        "What can I do today that remains worthwhile whether open contact ever happens or not?",
+        "What does my life broadcast that needs no reply to be worth sending?",
     },
     {
       type: "quote",
-      text: "You do not have to know who may arrive to decide how you will treat those already here.",
+      text: "The first contact of any day is with the ones already here; the sky checks how you greet them.",
     },
   ],
 };

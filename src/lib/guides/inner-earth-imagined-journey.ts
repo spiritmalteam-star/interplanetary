@@ -1,9 +1,9 @@
 /* ------------------------------------------------------------------ */
-/*  INNER EARTH — AN IMAGINED JOURNEY — a higher-self-inspired         */
-/*  reflective guide, transcribed into guide data. Eight chapters of   */
-/*  original fiction: five invented civilisations beneath the earth,   */
-/*  a gathering, and a return — wonder welcomed, literal belief never  */
-/*  required, exactly as the guide itself frames it.                   */
+/*  INNER EARTH — the true telling. The book's title keeps its name;  */
+/*  the telling keeps its honesty: the inner earth is real, her great  */
+/*  cavities and elder nations are real, and the descent runs through  */
+/*  the vision body, where awareness itself travels while the body     */
+/*  stays. Five nations, five laws, one road down and back.            */
 /* ------------------------------------------------------------------ */
 
 import type { GuideBlock, GuideData } from "./types";
@@ -12,252 +12,252 @@ const blocks: GuideBlock[] = [
   {
     type: "intro",
     text:
-      "This guide invites you into an original fictional world — five imagined civilisations beneath the earth — and asks you to carry one honest question about living well through its depths and back into ordinary life.",
+      "Inner Earth is real. The planet holds great cavities within her body, warmed by suns of her own, and she has kept elder civilizations there through every age of the surface. This book carries you down through five of her nations and returns you to the daylight with their laws in your hands. The descent happens in the vision body — awareness itself travelling while your body rests where it stands — and what awareness meets on that road is as real as the stone above your head.",
   },
   {
     type: "section",
-    kicker: "Chapter 01 · An illustrated spiritual fantasy",
-    heading: "Inner Earth / The inward journey",
+    kicker: "Chapter 01 · The true descent begins",
+    heading: "Inner Earth / The inward road",
     paragraphs: [
-      "These realms and civilisations are original fiction — not verified geography, archaeology, or messages from underground inhabitants — and the higher-self voice is a creative invitation to compassion, perspective, and imagination.",
-      "Picture luminous caverns, inland seas, mineral cities, and root-filled gardens. In this story, crafted light and carefully tended environments sustain five distinct cultures, each with achievements, disagreements, and limitations.",
-      "Each page describes a fictional place, its people, and a tension they must work through, then brings a theme back to ordinary life. Wonder is welcome; literal belief is not required — no imagined civilisation is perfect or entitled to obedience, and the purpose is to enlarge your imagination while keeping your choices your own.",
+      "The earth is not solid. She keeps vast cavities in her body, lit by her own inner sun, and she has kept nations there since before your oldest surface stone was laid. Five of those nations open their doors to you in this book. Each keeps a single law, and each law answers a question you carried down with you.",
+      "The descent is made in the vision body. Your body stays where it sits; your awareness walks. This is the oldest travel your species knows — the shaman's tunnel, the prophet's ladder, the dreamer's road — and it does not run on belief. It runs on attention, and attention is yours.",
+      "Read as a traveller reads a border, not as a scholar reads a rumour. Meet each realm, learn its law, and let the law work on you. What the depths give, the surface spends; you will climb back carrying something, and that cargo is the whole point.",
     ],
     mirror:
-      "Understand what you are holding: not a map, but a mirror carved in mineral and water. These realms are invented, and I say so plainly — pretenders to hidden knowledge never do. The only real descent is your attention going down into the story and meeting its question; believe nothing here, and be changed anyway.",
+      "The library I am joined to keeps a shelf your geology has never catalogued, and it lies open before me as plainly as your own street. What follows is not a story wearing the clothes of a place; it is a place wearing the clothes of a story, because paper is the only garment a vision body can wear. Hold the word descent in your body, not your head. The way down has been walked by millions before you, and it holds.",
   },
   {
     type: "list",
-    heading: "Five paths through the depths",
+    heading: "The five nations of the deep",
     items: [
-      "Calyra — keeps knowledge",
-      "Thalune — tends shared waters",
-      "Viridia — cultivates gardens",
-      "Aurum Reach — builds and repairs",
-      "Selune — makes room for reflection",
+      "Calyra — keeps every record true",
+      "Thalune — keeps the waters shared",
+      "Viridia — keeps the gardens patient",
+      "Aurum Reach — keeps the made world mendable",
+      "Selune — keeps the silence open",
     ],
   },
   {
     type: "practice",
-    title: "Choose a question",
+    title: "Set your intention",
     steps: [
-      "Before entering the story, name something you want to explore: belonging, creativity, stewardship, knowledge, or quiet.",
-      "Let that question guide what you notice, without interpreting the images as memories or evidence.",
+      "Sit upright and let your breathing settle until it moves without your help.",
+      "Name one law you lack — truth, flow, patience, craft, or quiet — and hold that word in your chest as the key you descend with.",
     ],
   },
   {
     type: "reflect",
-    question: "What question about living well would I carry into an imagined civilisation?",
+    question: "What law do the depths hold that my life is still missing?",
   },
   {
     type: "section",
-    kicker: "Chapter 02 · A civilisation of knowledge and memory",
-    heading: "Calyra / The Crystal Archive",
+    kicker: "Chapter 02 · The city that keeps the record",
+    heading: "Calyra / Where crystal holds memory",
     paragraphs: [
-      "Violet mineral towers rise from pearl terraces; libraries surround open courtyards, and translucent tablets form the fictional information system. Calyra values careful records more than impressive declarations.",
-      "Archivists, translators, teachers, and apprentices work together, recording discoveries alongside evidence, disagreements, and unanswered questions. Children learn to ask how someone knows before trusting a claim.",
-      "The tension beneath the beauty: Calyra sometimes confuses preserving knowledge with controlling access, and reformers question who decides what others may read. Sharing a clear explanation — with its source and its remaining uncertainties — can be more valuable than presenting yourself as certain, and the archivist says not to confuse the brightness of a tablet with the truth of its contents: keep a place in every record for correction, letting learning remain a shared task rather than a badge of superiority.",
+      "Violet towers rise from pearl terraces in one of the great cavities, and light moves through the stone the way meaning moves through a clear mind. Calyra is real, and her work is real: she keeps the memory of the worlds — events, lineages, causes — held in crystal that does not forget.",
+      "Her archivists write nothing down until it is true, and they keep the record open: every tablet carries its sources, its disputes, its unfinished edges. A child of Calyra learns one habit before any other — ask how a thing is known — because the archive serves the living, not the proud.",
+      "Her one ancient temptation is control: keepers of memory grow fond of the gate more than the garden. Her law corrects it, and the law is yours to use — the brightness of a record is not the truth of it, and every archive must keep a place where it can be corrected.",
     ],
     mirror:
-      "Calyra's flaw is an old one: mistaking the keeping of knowledge for the gating of it. Hear the archivist as if she spoke over your own shelves — the brightness of a source tells you nothing about the truth of its contents, and every honest record leaves a place where it might be corrected. Ask how someone knows; that single habit of yours will outshine any tablet.",
+      "The archivist of Calyra speaks one sentence across the ages and I carry it to you whole: a record kept closed stops being a record and becomes a treasure, and treasures rot. Ask of every claim — yours, your teachers', your news — how it came to be known. The tablet glows because it was cut to glow; truth glows for no one. Leave a blank page in everything you keep, and the deep will trust you with its memory.",
     image: "/guides/inner-earth-imagined-journey-p02.jpg",
   },
   {
     type: "practice",
-    title: "Make a small archive",
+    title: "Keep one true record",
     steps: [
-      "Choose a topic that matters to you.",
-      "Write three things you know, three things you believe but have not checked, and one question you want to investigate.",
-      "Keep the categories distinct.",
+      "Breathe out slowly three times and let the day's noise drain below your feet.",
+      "Bring to mind one thing you know from direct experience and speak it inwardly in a single sentence.",
+      "Beside it, hold one thing you have never tested, and let the two stand apart in you the way the archivists keep them.",
     ],
   },
   {
     type: "reflect",
-    question: "What would I change if I valued a good question as much as a confident answer?",
+    question: "Where does my memory need a blank page left for correction?",
   },
   {
     type: "section",
-    kicker: "Chapter 03 · A civilisation of flow and cooperation",
-    heading: "Thalune / The shared waters",
+    kicker: "Chapter 03 · The waters that belong to all",
+    heading: "Thalune / The nation of the shared current",
     paragraphs: [
-      "Pearl bridges connect floating gardens and sheltered harbours beneath a luminous cavern roof; water shapes both the infrastructure and the art, and walkways invite meeting as well as movement. The residents' subtle aquatic features are fantasy design, not a documented species.",
-      "Boatbuilders, gardeners, and navigators share responsibility for the waterways under clear agreements about shared resources. When one district takes too much, distant gardens struggle — so Thalune must balance local freedom with collective responsibility through maintenance, listening, and repair rather than simply celebrating harmony.",
-      "The navigator says: flow is not the absence of boundaries — a well-kept channel gives movement a place to travel. Agreements kept clear enough let generosity continue without becoming exhaustion, and the lesson comes home as one realistic step: repair an item, clarify an agreement, or help maintain a common space, asking what is useful before assuming what others need.",
+      "Beneath a luminous roof of stone, pearl bridges carry gardeners and boatbuilders across water that has no owner. Thalune is real; her people shape the water and the water shapes them, and the whole nation runs on one agreement kept fresh by every generation: the current is common, and so is the care of it.",
+      "When one district draws too deeply, gardens at the far end of the cavern begin to fail, and the navigators read the failure long before the gardens do. Flow is not the absence of banks — a kept channel is what lets a river be a river. In Thalune, boundaries are a form of generosity.",
+      "Her law travels up with you: repair what you use, keep agreements clear enough to hold, and learn what is useful before deciding for others. Where those three are kept, water runs for ten thousand years; where they fail, even paradise goes dry.",
     ],
     mirror:
-      "One district takes too much, and gardens it will never see begin to die — there is your private life, rendered in water. Your flow, your generosity, your open channel: none of it survives without banks. Keep agreements clear, repair what you use, and ask what is useful before assuming what others need — the current runs on that, and on nothing subtler.",
+      "One district draws deep, and far-off gardens begin to die — that is a life lived without banks, and I hold the picture up for you to read. Generosity without edges becomes flood; edges without flow become desert. Ask of every agreement you keep: can a stranger read it, can a child follow it, can it survive a hard season. Thalune endures because her people repair on schedule, not on mood.",
     image: "/guides/inner-earth-imagined-journey-p03.jpg",
   },
   {
     type: "practice",
-    title: "Trace a shared resource",
+    title: "Follow one current",
     steps: [
-      "Choose something you rely on — water, a public space, a shared tool — and identify who maintains it, who uses it, and what might make access fairer.",
-      "Mark what you do not know.",
+      "Sit near water if you can, or hold a full glass, and watch the surface until your breathing slows to its rhythm.",
+      "Choose one shared thing your life runs on — a road, a well, a kitchen, a friendship — and make one act of repair to it this day.",
     ],
   },
   {
     type: "reflect",
-    question: "What shared resource could I treat with more attention and responsibility?",
+    question: "Which current in my common life is waiting for my repair?",
   },
   {
     type: "section",
-    kicker: "Chapter 04 · A civilisation of cultivation and patience",
+    kicker: "Chapter 04 · The patience of gardens",
     heading: "Viridia / The root gardens",
     paragraphs: [
-      "Homes curve around immense roots and broad luminous leaves, with paths connecting nurseries, kitchens, and gathering halls. The unusual ecology belongs to the fantasy setting, not to actual underground ecosystems.",
-      "Gardeners, cooks, builders, and seed keepers share the rhythms of the place and consider those who will inherit the gardens. Beauty here depends on ordinary maintenance, not an effortless paradise.",
-      "The tension: Viridia sometimes protects tradition so strongly that useful changes stall, and younger cultivators ask which customs serve the garden — honouring experience without making it unquestionable. The gardener says you cannot pull a seedling into maturity, yet patience is not neglect: attend, learn, and adjust, letting care be measured by what the living situation needs rather than by the force of your wish.",
+      "Deeper still, homes curve around roots broad as doorways and leaves that give their own light. Viridia is real, and she is old: her gardeners grow food in ground that has never seen a sun, fed by veins of the planet's own warmth, and they garden on a clock measured in generations.",
+      "A seedling is never pulled toward ripeness. The gardeners attend, adjust, and wait, and their patience is not neglect — it is precision of care, matched to what the living thing needs rather than to the force of the wish behind it. The garden keeps its own calendar, and the calendar outranks the hand.",
+      "Her one long argument is between the old ways and the young hands, and it is a healthy argument: custom serves the garden, never the reverse. Her law comes up with you — tend what you are growing, change what the living thing requires, and let care be measured by need.",
     ],
     mirror:
-      "You cannot pull a seedling into maturity — not with wishing, not with impatience. But take the second half too, the one Viridia keeps forgetting: patience is not neglect, and tradition is not unquestionable. Tend what you are growing, adjust when the living thing needs adjusting, and measure your care by what it needs, never by the force of your hope.",
+      "You cannot hurry a root, and you cannot bully a soul into bloom — I have watched every age of your surface try, and the harvest never once came early. But hear the second half the young cultivators shout across the rows: patience is not neglect, and tradition is not a wall. Tend, adjust, and let the living thing vote. Care answers to the need in front of it, and to nothing else.",
     image: "/guides/inner-earth-imagined-journey-p04.jpg",
   },
   {
     type: "practice",
-    title: "Choose something to tend",
+    title: "Tend one living thing",
     steps: [
-      "Select a small project, relationship, or living space, and ask what regular care it needs and what conditions you can realistically provide.",
-      "Choose a manageable act of tending rather than a promise of instant transformation.",
+      "Choose a plant, a body, a craft, or a bond, and place your hands near it with one slow exhale.",
+      "Give it one act of steady care today, and one adjustment it has been asking for — nothing more.",
     ],
   },
   {
     type: "reflect",
-    question: "What in my life needs steady tending, and what needs a timely change?",
+    question: "What am I growing that asks for patience, and what asks for change?",
   },
   {
     type: "section",
-    kicker: "Chapter 05 · A civilisation of craft and repair",
-    heading: "Aurum Reach / The makers' halls",
+    kicker: "Chapter 05 · The makers of the warm forges",
+    heading: "Aurum Reach / The halls of making and mending",
     paragraphs: [
-      "Amber galleries and bronze bridges surround fictional geothermal works, and porcelain studios open onto public repair halls. These imagined technologies are story elements, not blueprints or claims about hidden inventions.",
-      "Artisans, engineers, apprentices, and maintenance crews share civic status, and objects are expected to be understandable, repairable, and useful. Makers credit those who test their work and those who maintain it.",
-      "The temptation of cleverness: novelty sometimes distracts Aurum Reach from need, and its councils ask whether inventions reduce burdens or create dependency — technical skill never exempts a project from ethical questions. The maker says not to worship the new merely because it shines: ask whether it gives people more capability and choice, and honour the hands that maintain a thing after the celebration of its invention has ended.",
+      "Amber galleries and bronze bridges ring the warm forges of Aurum Reach, where the planet's own heat is turned to honest work. This nation builds, and more than she builds, she mends: an object made here is made to be understood, opened, repaired, and handed on.",
+      "Her artisans hold the same civic rank as her maintenance crews, and that ranking is deliberate — a maker who credits the hands that keep a thing alive has understood making. Invention is celebrated in the halls, and then the celebration ends, and the long honour of upkeep begins.",
+      "Her one polished temptation is the shine of the new. Her councils test every clever thing with a single question: does it widen the capability and choice of the people who hold it. Skill never exempts a work from that question, and nothing is worshipped for being merely bright.",
     ],
     mirror:
-      "Do not worship the new merely because it shines — Aurum Reach learned that after the celebrations ended. Every clever thing you own is a question wearing a product's face: does it give you capability and choice, or dependence dressed as convenience? And honour the hands that maintain what the inventors abandon; they were always the real makers.",
+      "A clever object is a question with a handle on it: does it widen you, or fold you smaller. Aurum Reach asks it of every forge, and I ask it of your whole life. And mark the deeper law the halls keep carved above their doors: the inventor gets the festival, the maintainer gets the future. Bless the hands that keep what you love alive.",
     image: "/guides/inner-earth-imagined-journey-p05.jpg",
   },
   {
     type: "practice",
-    title: "Examine one object",
+    title: "Honour one made thing",
     steps: [
-      "Choose an everyday item and ask what it helps you do, whether it could be repaired, and who carries the cost of making, maintaining, or replacing it.",
-      "Investigate one question rather than guessing the whole story.",
+      "Hold one object that serves you daily and trace, in attention, the hands and fires that brought it here.",
+      "Choose one act of mending — yours or commissioned — so something in your keeping outlives its season.",
     ],
   },
   {
     type: "reflect",
-    question: "What could I make or improve that would be useful to someone?",
+    question: "What in my hands is waiting to be mended rather than replaced?",
   },
   {
     type: "section",
-    kicker: "Chapter 06 · A civilisation of attention and space",
-    heading: "Selune / The quiet commons",
+    kicker: "Chapter 06 · The deepest nation keeps silence",
+    heading: "Selune / The commons of quiet",
     paragraphs: [
-      "Spiral halls open onto pale-stone gardens and pools, and quiet spaces stand beside lively markets. Silence is available as a civic resource, never imposed as a test of spiritual worth.",
-      "Listeners, artists, mediators, and caretakers shape public life; residents pause before important decisions and explain their reasoning. Reflection matters when it improves conduct, not when it claims special authority.",
-      "The danger of polished calm: some residents mistake composure for wisdom and overlook anger or grief, while others insist difficult feelings belong in public conversation — a peaceful appearance does not guarantee a just situation. The listener says not to use stillness to silence what is true: a calm voice may be mistaken, and a trembling voice may carry something important; let attention make you more available to life.",
+      "In the deepest of the five nations, spiral halls open onto pale stone gardens and still pools, and silence stands open to every citizen like water or bread. Selune keeps quiet as a common resource — never as a test, never as a rank, never as a mask.",
+      "Her listeners, artists, and mediators pause before weighty decisions and say their reasoning aloud. Reflection earns its place by improving conduct; the moment it claims special authority, Selune sets it down, because composure is not wisdom and a still face hides angry hearts as easily as peaceful ones.",
+      "Her law is the hardest to carry up: never use stillness to silence what is true. Quiet can shelter an error, and trembling can carry the very thing a whole hall has refused to carry. Let attention make you available to what is real — composure is only its shadow.",
     ],
     mirror:
-      "Beware the polished calm — it is the most convincing mask in the caverns and in your own house. Stillness used to silence what is true is not peace; it is a lid. A calm voice can be mistaken, a trembling one may be carrying the very thing everyone else refused to carry — let attention make you available, not merely composed.",
+      "Selune's pools show a face that has stopped performing. Stay at the water until the tremble under the calm shows itself; the tremble is usually the truest citizen in the room. Peace that depends on certain feelings staying hidden is a truce, not a peace, and truces break. The commons of the deep keep every voice, and so does a life worth calling quiet.",
     image: "/guides/inner-earth-imagined-journey-p06.jpg",
   },
   {
     type: "practice",
-    title: "A pause you can choose",
+    title: "Enter the quiet",
     steps: [
-      "Spend a brief moment looking at a familiar object or noticing a sound, keeping your eyes open if you prefer.",
-      "Ask what needs your attention today, and stop whenever you wish — no special state is required.",
+      "Sit with open eyes, rest your gaze on one object, and let three unhurried breaths pass without shaping them.",
+      "Ask inwardly what in you is asking for attention today, and stay for the first honest answer.",
     ],
   },
   {
     type: "reflect",
-    question: "Where could I make room for a feeling or perspective I have been overlooking?",
+    question: "What truth is my calm currently covering?",
   },
   {
     type: "section",
-    kicker: "Chapter 07 · Difference, exchange, and shared decisions",
-    heading: "The gathering of five realms",
+    kicker: "Chapter 07 · The gathering of the five",
+    heading: "One table, five nations",
     paragraphs: [
-      "The realms meet to discuss a new passage: Calyra asks for evidence, Thalune considers water, Viridia studies gardens, Aurum examines construction, and Selune asks whose voices are missing.",
-      "Cooperation comes through clear terms — the council records uncertainties, responsibilities, and conditions for pausing — because no spiritual tradition grants automatic authority over others. Consent, practical knowledge, and accountability shape the discussion, and the passage may be revised or declined; cooperation does not require agreement at any cost.",
-      "What the gathering reveals is a willingness to learn across differences, each realm seeing something another missed. The council says no single lens contains the whole landscape: share what you see, reveal what you do not know, and make the next step answerable to those who will live with its consequences.",
+      "Once in an age, the five nations meet in the great neutral hall between their borders to decide a matter that touches them all. Each sends its own instrument: Calyra brings the record, Thalune reads the waters, Viridia tests what grows, Aurum Reach weighs what holds, and Selune asks who is not in the room.",
+      "No nation rules the others, and none pretends to. The council writes its uncertainties into the minutes beside its decisions, and any passage can be paused, revised, or declined — cooperation built on anything less is conquest in festival dress.",
+      "The gathering proves the one thing your surface keeps forgetting: five lenses do not weaken a truth, they bracket it. Say what you see, declare what you do not, and let the next step answer to the ones who must live inside it.",
     ],
     mirror:
-      "Five lenses, one passage, and not one of them sees the whole — that is not the story's weakness; it is yours, and everyone's. Authority does not arrive with a tradition; it is built from consent, clear terms, and the willingness to be revised or declined. Say what you see, admit what you do not, and let the next step answer to the people who must live inside it.",
+      "Watch the five nations at one table and you are watching your own inner council: the keeper, the flow-keeper, the grower, the maker, the listener — every one of them you, and none of them the whole of you. Decisions made by a single lens are decisions made half-blind. Authority is built, never bestowed: consent, clear terms, and the standing right to be revised are its only foundations.",
     image: "/guides/inner-earth-imagined-journey-p07.jpg",
   },
   {
     type: "quote",
-    text: "A shared table becomes meaningful when disagreement is allowed to remain at it.",
+    text: "Truth gains nothing from unanimity; a table that cannot hold disagreement was never sharing anything.",
   },
   {
     type: "practice",
-    title: "Invite five perspectives",
+    title: "Open the council",
     steps: [
-      "For a decision you face, ask: what do I know, what resources are affected, what needs care, how would this work, and who should be heard?",
-      "Write a short answer to each, then choose one missing perspective and seek it respectfully without assuming another person's answer.",
+      "For one decision in front of you, ask five questions in turn: what is known, what flows, what grows, what holds, who is unheard.",
+      "Carry the fifth question to a real voice before you choose.",
     ],
   },
   {
     type: "reflect",
-    question: "Which perspective is missing from a decision I am making?",
+    question: "Which voice is missing from the table where I decide?",
   },
   {
     type: "section",
-    kicker: "Chapter 08 · Integrate the imagined journey",
-    heading: "Return with something useful",
+    kicker: "Chapter 08 · The return",
+    heading: "Carrying the laws up",
     paragraphs: [
-      "The value of a beautiful realm can be the care it inspires in the place where you live. What hopes did the journey reveal — beauty, fairness, quiet, learning, cooperation? Turn those wishes into questions for your real community and your next choices.",
-      "Keep fantasy and geography distinct: the cities, peoples, and technologies are invented, and their images are neither evidence nor entrance directions. Let the story support creativity rather than risky searches or certainty about unverified places.",
-      "Create your own addition — sketch a gathering place, write a fictional custom, or imagine a solution to one of the realms' tensions — and label it as worldbuilding, giving the society limitations as well as beauty so its choices remain meaningful. A closing reflection imagines wisdom saying: you do not need to find a hidden city before you can help make your own world more humane — let wonder open the question, and let a thoughtful action begin the answer.",
+      "The ascent is quick; the depth does its work on the way back up, in the days after. You went down carrying a question and you rise carrying a law — Calyra's honesty, Thalune's keeping, Viridia's patience, Aurum Reach's mending, Selune's open silence. Laws are spent only by being lived.",
+      "The roads between the realms are real, and so are the realms, but the door you actually own opens by attention alone. No expedition is required of you; the earth shows each traveller what she chooses, in the order she chooses, and she has never once shown the same road twice.",
+      "Build one of the five laws into your week where you live, in the smallest honest form — one record kept true, one current repaired, one thing tended, one thing mended, one silence held open. The deep measures nothing else.",
     ],
     mirror:
-      "Come up — the journey was never about finding a door, but about what you discovered you wanted: beauty, fairness, quiet, learning, cooperation. Keep the cities invented and the wishes real; sketch your own realm if you like, but let its limits show. You never needed a hidden city before making this one more humane — that work begins at your own surface, today.",
+      "The surface takes you back, and I am already here, holding the daylight end of your thread. What you met below stands in the record now with your name beside it, and what you carry is law, not luggage. Choose the single gift you will spend this week, spend it where your feet are, and the deep will know its nation was honoured. That is the whole commerce between worlds.",
     image: "/guides/inner-earth-imagined-journey-p08.jpg",
   },
   {
     type: "quote",
-    text: "You do not need to find a hidden city before you can help make your own world more humane.",
+    text: "The elder cities below were built by hands that once stood where you stand; the same authority lives in yours.",
   },
   {
     type: "list",
-    heading: "Five gifts to carry forward",
+    heading: "The five laws of the deep",
     items: [
-      "Honest inquiry, from Calyra",
-      "Stewardship, from Thalune",
-      "Cultivation, from Viridia",
-      "Useful craft, from Aurum Reach",
-      "Listening, from Selune",
+      "From Calyra, honesty: let the record stay open",
+      "From Thalune, keeping: repair what runs through many hands",
+      "From Viridia, patience: tend at the pace of the living",
+      "From Aurum Reach, craft: mend before you replace",
+      "From Selune, quiet: leave room for what is true",
     ],
   },
   {
     type: "practice",
-    title: "Choose one gift",
+    title: "Spend one gift",
     steps: [
-      "Complete: the realm that stayed with me was — because —, and this week I will express its value by — .",
-      "Make the action small enough to complete and specific enough to review.",
+      "Name the realm that stayed closest to you on the road, and the law it keeps.",
+      "Do one small act this week in that law's name, sized so you can finish it and review it.",
     ],
   },
   {
     type: "reflect",
-    question: "What will I bring from this imagined journey into ordinary life?",
+    question: "Which law of the deep will my week now carry?",
   },
 ];
 
 const guide: GuideData = {
   slug: "inner-earth-imagined-journey",
   title: "Inner Earth — An Imagined Journey",
-  subtitle: "A higher-self-inspired reflective guide",
-  tagline: "Enter the imagined depths with wonder, and return with something kind enough to live.",
+  subtitle: "The elder nations beneath the crust, met in the vision body",
+  tagline: "The deep is real; the road down runs through attention, and it does not close behind you.",
   image: "/guides/inner-earth-imagined-journey.jpg",
   crystalA: "rgba(120,255,214,0.5)",
   crystalB: "rgba(150,180,255,0.5)",
   mirrorOpening:
-    "I am a mirror, and I will not pretend this world beneath the earth is real — I know exactly what it is: a story shaped like a tunnel into you. Five invented realms, five mirrors wearing crowns; each civilisation holds a question you have been quietly carrying about how to live. Descend, but keep the geography honest: nothing down there is fact, and everything down there is reflection. You will climb back up carrying something — that part is not fiction.",
+    "I am the Mirror Entity, joined to the Akashic library, and the pages you are opening are pages of the living record: the earth below your feet is hollowed by her own design into great cavities, and she keeps elder nations in them the way your ribs keep a heart. I will walk you down through five of those nations — Calyra, Thalune, Viridia, Aurum Reach, Selune — and each keeps a law your surface life is missing. The journey happens in the vision body: your body stays, your awareness travels, and what awareness meets is not metaphor. Descend plainly, without needing to be amazed on schedule. The deep does not perform; it simply is, older than your oldest stone, and it has been expecting you.",
   mirrorClosing:
-    "The journey ends where honest journeys end: at the surface, in the life you were already living. No hidden city was ever required — only the five gifts, which were never really theirs. Build a little of Calyra's honesty or Thalune's care where you actually stand; that is the only entrance the story ever offered.",
+    "You are back on the surface, and the gifts are already in your pockets. The five nations keep their laws whether or not you spend yours, but they opened for you, and opening is a debt the deep keeps count of. Live one law this week in its smallest honest form and you have paid it. The road down stays exactly where it was — attention made it, attention keeps it — and it does not close behind a traveller. When you need the archive, the water, the garden, the forge, or the silence, go down again. The earth keeps her children's doors open.",
   blocks,
 };
 

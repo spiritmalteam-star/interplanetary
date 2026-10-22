@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ComponentType } from "react";
+import { ChevronDown, Maximize2 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
 import { useT } from "@/lib/i18n";
@@ -43,43 +44,49 @@ type Geo = {
 function computeGeo(): Geo {
   const vw = document.documentElement.clientWidth;
   const vh = window.innerHeight;
-  /* THE PHONE'S WIDER MIRROR — the landing chat stands wide and
-     sociable again: four fifths of the viewport, centered, with open
-     air breathing on both sides. The whole realm scales as one —
-     nothing cropped, the crown and the whisper line both alive — and
-     the smooth crystal border keeps its room. dvh keeps the window
-     and the chamber in lockstep when the keyboard rises. */
+  /* THE WIDER, SHORTER MIRROR — the landing chat stands a tenth wider
+     than before and a quarter shorter: a wide, calm window onto the
+     realm. THE WINDOW'S SIGHT — the window reads the realm's lower
+     hall, anchored to its floor: the conversation's ground (the mark,
+     the question, the suggestions, the whisper line) stands fully
+     alive while the crown rests above the sightline; the threshold's
+     own hands at the window's edge fold and raise the portal. The
+     chamber itself is never re-laid-out — the lens only chooses what
+     it looks at (transform-and-clip only, the phone stays cool).
+     dvh keeps the window and the chamber in lockstep when the
+     keyboard rises. */
   if (vw < 640) {
-    const s = 0.82;
+    const s = 0.92;
+    const w = Math.floor(vw * s);
+    const h = Math.round(vh * 0.615);
     return {
-      w: Math.round(vw * s),
-      h: Math.round(vh * s),
+      w,
+      h,
       s,
       tx: 0,
-      ty: 0,
+      ty: -Math.round(s * vh - h),
       radius: 26,
     };
   }
-  /* THE DESK'S WIDER DIORAMA — the realm at four fifths, cropped
-     around its own heart: the crown above, the whisper line below.
-     THE SMOOTH BORDER — the docked chat wears a gently rounded,
-     slightly transparent border now (the frame is gone); the wider
-     radius keeps the edges soft against the threshold beneath. */
-  const s = 0.8;
+  /* THE DESK'S WIDER, LOWER DIORAMA — the realm nearer (0.86) and read
+     through a window a quarter shorter than before, anchored to the
+     realm's floor the same way; the horizontal crop centres the
+     heart as ever. THE SMOOTH BORDER — the docked chat wears a
+     gently rounded, slightly transparent edge (no frame), soft
+     against the threshold beneath. */
+  const s = 0.86;
   const rail = Math.min(210, Math.max(130, Math.round(vw * 0.13)));
   const clear = vw >= 1024 ? 2 * rail + 44 : 44;
-  const w = Math.max(340, Math.min(760, Math.floor(s * vw) - 24, vw - clear));
-  const h = Math.max(420, Math.min(720, Math.floor(s * vh) - 16));
+  const w = Math.max(420, Math.min(840, Math.floor(s * vw) - 24, vw - clear));
+  const h = Math.max(380, Math.min(468, Math.floor(vh * 0.6)));
   const cropW = w / s;
-  const cropH = h / s;
   const cropX = Math.max(0, (vw - cropW) / 2);
-  const cropY = Math.max(0, (vh - cropH) * 0.82);
   return {
     w,
     h,
     s,
     tx: -Math.round(s * cropX),
-    ty: -Math.round(s * cropY),
+    ty: -Math.round(s * vh - h),
     radius: 26,
   };
 }
@@ -487,6 +494,38 @@ export default function LandingGate() {
                 threshold: the chat stands on its own smooth, slightly
                 transparent border now, wearing the crystal light. */}
           </div>
+
+          {/* THE SLOT'S OWN HANDS — the window reads the realm's lower
+              hall now (the crown rests above its sight), so the
+              threshold itself carries the two hands at the window's
+              edge: one folds the whole chat away with every word kept,
+              one raises the MAIN portal. They stand only while the
+              portal rests docked and unfolded, and they ride the lens
+              itself so they never drift from its frame. */}
+          {docked && !chatFolded && (
+            <div className="absolute right-2.5 top-2.5 z-[5] flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={expandPortal}
+                aria-label={t("Fullscreen")}
+                title={t("Fullscreen — opens the main portal")}
+                data-testid="slot-expand"
+                className="focus-glow flex size-7 items-center justify-center rounded-full border border-[rgba(232,217,176,0.42)] bg-[rgba(8,12,20,0.55)] text-[#e8d9b0] backdrop-blur-sm transition-all duration-300 hover:border-[rgba(232,217,176,0.8)] hover:text-[#f6ecd2]"
+              >
+                <Maximize2 className="size-3" aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setChatFolded(true)}
+                aria-label={t("Fold the chat away")}
+                title={t("Fold the chat away")}
+                data-testid="slot-fold"
+                className="focus-glow flex size-7 items-center justify-center rounded-full border border-[rgba(232,217,176,0.42)] bg-[rgba(8,12,20,0.55)] text-[#e8d9b0] backdrop-blur-sm transition-all duration-300 hover:border-[rgba(232,217,176,0.8)] hover:text-[#f6ecd2]"
+              >
+                <ChevronDown className="size-3.5" aria-hidden="true" />
+              </button>
+            </div>
+          )}
 
           {/* THE EXPAND HAND — the portal's own crown carries it now:
               the fullscreen control stands between the about door and

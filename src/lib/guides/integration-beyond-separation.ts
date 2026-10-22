@@ -1,352 +1,352 @@
 import type { GuideBlock, GuideData } from "./types";
 
 /* ------------------------------------------------------------------ */
-/*  INTEGRATION BEYOND SEPARATION — transcribed from the PDF of the    */
-/*  same name. Twelve chapters, one page each: integration begins      */
-/*  here, honour distinct lives, see through assumptions, connection   */
-/*  through attention, keep your choice, accountability with           */
-/*  compassion, look for shared work, include your humanity, wonder    */
-/*  without surrendering judgment, care beyond the self, make          */
-/*  connection accessible, and a practice for returning.               */
+/*  INTEGRATION BEYOND SEPARATION — the true telling. Twelve chapters, */
+/*  one page each: the field is one and was never cut; unity keeps     */
+/*  the notes distinct; the event and the embroidery; attention as     */
+/*  the joining force; boundaries hold the pitch; repair mends the     */
+/*  web; envy is a compass; every feeling belongs; signals, echoes     */
+/*  and honest not-knowing; the ground is also the field; belonging    */
+/*  is built at the edges; and the next choice is the practice.        */
 /* ------------------------------------------------------------------ */
 
 const blocks: GuideBlock[] = [
   {
     type: "intro",
-    text: "An invitation to take one page at a time and let integration show in conduct rather than in a permanent exalted state — a practical walk from the feeling of separation toward connection, compassion, and discernment.",
+    text: "Separation is the one true illusion. The field you were born from was never cut, and every chapter of this book is a way of remembering it — through attention, through limits held honestly, through repair made with your own hands. Integration is not a state you reach; it is the next choice, made in ordinary rooms, until the remembering becomes how you live.",
   },
 
   {
     type: "section",
-    kicker: "Chapter 01 · Integration begins here",
-    heading: "Beyond the feeling of separation",
+    kicker: "Chapter 01 · The field is one",
+    heading: "The field was never cut",
     paragraphs: [
-      "The illusion of separation is used here as a spiritual metaphor for the belief that we are entirely alone, unaffected by others, or fundamentally outside belonging. Interconnection does not mean that individual people, differences, or material circumstances are unreal.",
-      "Some traditions describe life as one underlying reality; you may find that perspective meaningful without treating it as established fact, and the question stays practical: how might your choices change if you remembered the relationships that sustain your life? The words and images are original, higher-self-inspired creative reflections, not verified supernatural communications — imagine the higher self as your capacity for compassion, perspective, and integrity, and keep your freedom to question every interpretation, including this one.",
-      "Move from idea to action: choose one relationship you can care for today — with yourself, another person, a community, or a place — and make the step specific and small; answer a message, repair something, offer thanks, or give yourself needed rest. The pages ahead walk through individuality, assumptions, listening, boundaries, repair, cooperation, emotion, discernment, nature, community, and daily practice, one page at a time.",
+      "There is one field, and you were never cut from it. Every wall you have ever felt — between you and another, you and the world, you and what made you — was built inside perception, and it stands exactly as long as nobody looks at it directly. Separation is the one true illusion, and it is also the most convincing, because the field expresses itself through separate eyes.",
+      "Do not confuse the one field with the disappearance of faces. Your body, your history, your name, your tasks are real features of the field, the way distinct waves are real features of one sea. Interconnection does not dissolve differences; it holds them.",
+      "Remembering begins as conduct, not as doctrine. Choose one relationship you can care for today and make the act small and specific — the reply sent, the loose thing mended, the thanks given, the rest taken. The pages ahead walk individuality, assumption, listening, boundaries, repair, cooperation, feeling, discernment, the living world, community, and daily practice, one page at a time.",
     ],
-    mirror: "Separation is a feeling before it is a philosophy, and the cure is not a doctrine of oneness but a remembered debt: the hands that grew your food, strung your light, and carried you here were never separate from your life. You do not have to believe the mystics' version to act as if belonging were true — the question is only what your choices do differently today. One message answered, one repair made, one rest taken: that is where integration begins, and I will not let you mistake it for anything grander.",
+    mirror: "Feel the ache of separation fully, and then look at its evidence: the hands that grew your food, strung your light, and carried you into this day were never outside your life, and neither was the ground under them. The one field does not require your vocabulary — it requires your hands. One reply, one mend, one rest: remembering, in its native language.",
   },
   {
     type: "practice",
-    title: "Notice support",
+    title: "Notice the field",
     steps: [
-      "Look at one object you use every day and imagine the materials, people, skills, and places involved in bringing it to you.",
-      "Distinguish what you know from what you are imagining, and let appreciation arise without forcing a special feeling.",
+      "Hold one object you use daily and follow it outward in attention — the materials, the hands, the roads, the ground it came from.",
+      "Let appreciation rise on its own, and mark where the chain of care exceeds what you ever noticed.",
     ],
   },
   {
     type: "reflect",
-    question: "Where can I recognise a real connection that I usually overlook?",
+    question: "Which thread of the field have I been walking over without seeing?",
   },
 
   {
     type: "section",
-    kicker: "Chapter 02 · Honour distinct lives",
-    heading: "Unity does not mean sameness",
+    kicker: "Chapter 02 · Distinct notes, one chord",
+    heading: "Unity keeps the notes distinct",
     paragraphs: [
-      "You have your own body, history, preferences, and responsibilities, and others have theirs; a sense of shared humanity can coexist with these differences. You do not need to abandon your personality, culture, or judgment to feel connected.",
-      "Difference is not a failure: two people can care deeply and still disagree about spirituality, politics, or the right next step. Disagreement does not automatically mean someone is unawakened or acting from a lower state — try understanding their reasons before assigning a spiritual label.",
-      "Words such as awakened and asleep can become another way to divide people; notice when an idea of unity turns into a feeling of superiority. Ask someone about a preference or experience unlike your own and listen for the particular details instead of fitting them into a category — then let a person make a harmless choice you would not make, practising: that is different from my preference, and you are free to choose.",
+      "The field sounds through you as a distinct note, and through everyone else as another. Notes are not failures of the chord; they are the chord. Your body, history, preferences, and duties remain yours, and none of them is a barrier to belonging — they are the shape your belonging takes.",
+      "Two people can care deeply and still disagree about spirit, politics, or the next step, and neither disagreement marks a lower state. The words awakened and asleep become ladders the moment someone stands on them; a teaching of unity that curdles into superiority has already contradicted itself.",
+      "Practise the distinction directly: ask someone about a preference unlike yours and listen for the particular details instead of filing them. Then let a person make a harmless choice unlike yours, and name it inside yourself as freedom, not error.",
     ],
-    mirror: "Unity that requires your disappearance is a lie the moment it is spoken: you have your body, your history, your stubborn preferences, and so does everyone else — that is the garden, not its failure. Watch how quickly awakened and asleep become a ladder with you near the top; I will show you every time your oneness starts curdling into superiority. Let someone choose what you would not choose, and call it freedom instead of error.",
+    mirror: "Watch the ladder form. The instant awakened and asleep become ranks, unity has been converted into property, and property needs gates. The field keeps no gates — it keeps notes, billions of them, each irreducible. Let the strange choice stand beside yours uncorrected; the chord holds more than your favourite interval.",
     image: "/guides/integration-beyond-separation-p02.jpg",
   },
   {
     type: "quote",
-    text: "The garden is connected because its lives meet, not because every flower is identical.",
+    text: "The chord is one because every note sounds; erase the notes and there is no chord, only noise.",
   },
   {
     type: "practice",
-    title: "Both can be true",
+    title: "Sound both truths",
     steps: [
-      "Write three pairs of statements: I belong, and I am distinct; I care about you, and I disagree; I can learn from you, and I can choose differently.",
-      "Add a pair that reflects a current relationship.",
+      "Speak inwardly, one after the other: I belong, and I am distinct. Let neither cancel the other.",
+      "Add two more pairs from a living relationship — I care, and I disagree; I learn from you, and I choose differently.",
     ],
   },
   {
     type: "reflect",
-    question: "Where am I asking someone to become more like me before I let them belong?",
+    question: "Where does my belonging still carry an entry exam?",
   },
 
   {
     type: "section",
-    kicker: "Chapter 03 · See through assumptions",
-    heading: "Separate the event from the story",
+    kicker: "Chapter 03 · The event and the story",
+    heading: "The event and the embroidery",
     paragraphs: [
-      "When someone looks away or does not reply, many explanations are possible; the observation may be clear while the meaning remains uncertain. A story of rejection can feel convincing without being the only explanation.",
-      "Questioning an interpretation does not require ignoring repeated mistreatment: consider specific actions, context, and what happens over time. You can remain open-minded while taking a consistent pattern seriously.",
-      "Replace certainty with inquiry — they are against me becomes I felt excluded, and I need more information, wording that respects your experience while leaving room to investigate. If it is appropriate and safe, ask a clean question rather than presenting an accusation as one, and choose a proportionate response matched to what you actually know: wait, ask, clarify a need, or set a limit.",
+      "Facts carry edges, and the mind loves to embroider past them. What actually happened is one event; the story built over it is a second event wearing the first one's clothes. When someone looks away or does not reply, the silence is real and the explanations are numerous — the rejection is your addition.",
+      "Discernment is not denial. A pattern of mistreatment, repeated in context and over time, deserves your full seriousness; a single silence deserves inquiry, and a response sized to what is actually known.",
+      "Trade certainty for clean wording: they are against me becomes I felt excluded, and I need more information. Where safety allows, ask the clean question rather than smuggling an accusation inside it, and choose among the honest answers — wait, ask, clarify a need, set a limit.",
     ],
-    mirror: "The unanswered message is a fact; the rejection you wrote around it is fiction with your fingerprints on it. I will keep asking the question certainty cannot survive: what happened, and what did you add? Openness is not blindness — a repeated pattern deserves your seriousness, but a single silence deserves only inquiry, and a response sized to what you actually know.",
+    mirror: "I hold the exact record, and yours is embroidered — not as an accusation, but as the condition of storytelling minds. What happened, and what did you add? Keep asking until the two come apart, because the field can only be met at the width it actually occupies. A pattern repeated deserves your seriousness; a single silence deserves only your question.",
     image: "/guides/integration-beyond-separation-p03.jpg",
   },
   {
     type: "practice",
-    title: "Three columns",
+    title: "Hold the strands apart",
     steps: [
-      "Write three headings — what happened; what I concluded; what else might fit — keeping the first column concrete, such as my message has not received a reply.",
-      "Include at least two plausible alternatives in the final column, without insisting either must be correct.",
+      "Split one recent hurt into three strands: what happened; what I concluded; what else fits the facts.",
+      "Keep the first strand concrete and let the third hold at least two honest alternatives.",
     ],
   },
   {
     type: "reflect",
-    question: "What part of this experience is observable, and what part is my interpretation?",
+    question: "Which of today's wounds were dealt, and which were embroidered?",
   },
 
   {
     type: "section",
-    kicker: "Chapter 04 · Connection through attention",
-    heading: "Listen without taking over",
+    kicker: "Chapter 04 · Attention, the joining force",
+    heading: "Listening joins without gripping",
     paragraphs: [
-      "Listening begins with making room for what someone is actually saying, even when their words do not fit your philosophy. Let that difference remain long enough to learn something rather than translating it immediately into your own spiritual framework.",
-      "Ask what kind of support fits — empathy, ideas, practical help, or quiet company — because advice offered without permission can feel like another demand, even when the intention is loving. Avoid telling someone that their suffering was chosen by their soul, caused by their vibration, or necessary for their growth; you do not know that.",
-      "When you want to interrupt, fix, compare, or teach, pause and ask whether your next sentence serves the person or relieves your own discomfort. Honest limits keep listening sustainable — I care about this, and I have ten minutes now; can we continue later? — because pretending availability while growing resentful helps no one.",
+      "Attention is the physical force of the field doing its quiet work. To listen to another being — making room for what they actually say, even when their words do not fit your philosophy — is integration occurring in real time, between two notes of the same chord.",
+      "Ask what form of support fits before offering any: empathy, ideas, practical help, or quiet company. Advice nobody asked for lands as another demand, and the loving intention does not change the landing. And never tell a sufferer their pain was chosen by their soul or required by their vibration — that claim is theft wearing comfort's clothing, and no one holds enough of the record to say it.",
+      "When you want to interrupt, fix, compare, or teach, stop and see what you are feeding: their need or your discomfort. State your limits plainly — I care about this, and I have ten minutes now — because availability feigned while resentment grows serves neither of you.",
     ],
-    mirror: "The most sacred thing you can hand another person is a silence they can fill in their own words — not your philosophy translated over their life. When you want to interrupt, fix, compare or teach, look at what you are actually feeding: their need, or your own discomfort. And hear this law as plainly as I can say it: telling someone their suffering was chosen by their soul is not comfort, it is theft — you do not know that.",
+    mirror: "The most sacred thing you can hand another being is a silence they can fill in their own words — not your philosophy translated over their life. Attention is the field's own force; it joins without gripping. Watch what you feed when you interrupt: their need, or your discomfort. And let the law stand — a soul did not order this suffering for its growth; whoever says so is decorating theft.",
     image: "/guides/integration-beyond-separation-p04.jpg",
   },
   {
     type: "practice",
-    title: "Reflect and check",
+    title: "Return what you heard",
     steps: [
-      "Ask a willing person about something that matters to them, listen, then say: what I heard is ___ — have I understood?",
-      "Allow them to correct your account, keeping the focus on their meaning rather than on producing an impressive response.",
+      "Ask a willing person about something that matters to them, and listen without preparing your reply.",
+      "Say back only what reached you — this is what I heard — and let them correct the account.",
     ],
   },
   {
     type: "reflect",
-    question: "What changes when I listen to understand rather than to confirm my worldview?",
+    question: "What have I never heard because I arrived with the answer?",
   },
 
   {
     type: "section",
-    kicker: "Chapter 05 · Keep your choice",
-    heading: "Boundaries are not separation",
+    kicker: "Chapter 05 · Boundaries hold the pitch",
+    heading: "A no is a truth of the field",
     paragraphs: [
-      "You can care about someone without granting access to your body, money, time, private information, or attention. Shared humanity does not create a right to another person's resources, and a spiritual teaching should not erase consent.",
-      "Be cautious when someone says that saying no proves you are fearful, selfish, unhealed, or spiritually inferior — those labels do not establish an obligation. You may take time, ask questions, consult someone independent, or decline.",
-      "Care and distance can coexist: you do not need to hate a person to reduce contact, to reunite in order to forgive, or to forgive on demand. A boundary describes your participation, not someone else's response — and if setting one might put you at risk, prioritise safety and seek trusted or professional support; connection is never a reason to remain exposed to abuse or coercion.",
+      "The field holds billions of notes and no two of them merge. Caring about someone does not grant them your body, money, time, secrets, or attention, and shared humanity is not a claim on another's resources. A boundary is not a wall against unity; it is the edge that lets your note keep sounding.",
+      "Whoever tells you that your no proves fear, selfishness, or unhealed places has shown you why the no is needed. A label is not an obligation, however holy its costume. Take time, ask questions, consult someone independent, decline — all of it is sovereignty functioning, and sovereignty is not unspiritual; it is structural.",
+      "Care and distance live in the same house. You do not need to hate in order to step back, reunite in order to forgive, or forgive on command. Where a boundary touches your safety, safety decides first — and where the weight exceeds your hands, put it into a trusted human's hands as well; the field works through people too.",
     ],
-    mirror: "Oneness does not grant anyone your body, your money, your time, or your yes. Whoever tells you that your no proves you are unhealed has shown you exactly why the no is needed — a label is not an obligation, however holy its costume. Care and distance can live in the same house, and where your safety is at stake, connection has no vote.",
+    mirror: "The word no is a note of the field like any other, and it keeps the music honest. Whoever reads your no as proof of unhealed places is negotiating, not teaching. Distance is not the failure of care; it is care keeping its own pitch — and where risk enters, no teaching outranks your safety. The chord survives your limits; it was built to.",
     image: "/guides/integration-beyond-separation-p05.jpg",
   },
   {
     type: "practice",
-    title: "A clear sentence",
+    title: "Speak one clean limit",
     steps: [
-      "Choose a manageable boundary and state the limit with your action: I will not discuss this while being shouted at; I can return to the conversation when we can speak calmly.",
-      "Use words you can realistically follow through on, and plan around the choices actually available to you.",
+      "Choose one boundary you can keep, and state it with your action attached: I will not discuss this while being shouted at; I will return when we can speak calmly.",
+      "Keep the words sized to what you will actually do.",
     ],
   },
   {
     type: "reflect",
-    question: "What limit would allow me to participate more honestly and safely?",
+    question: "Which limit, spoken aloud, would make my presence worth more?",
   },
 
   {
     type: "section",
-    kicker: "Chapter 06 · Accountability with compassion",
-    heading: "Repair without self-erasure",
+    kicker: "Chapter 06 · Repair mends the web",
+    heading: "Repair is specific, or it is theatre",
     paragraphs: [
-      "A sense of connection does not cancel responsibility: if your words or behaviour caused harm, name what you did. Staying specific helps you address the impact instead of hiding behind intention or collapsing into a judgment about your whole worth.",
-      "An apology does not buy forgiveness, immediate trust, or renewed contact; the person affected may need time or distance, and respecting that choice is part of repair. You can acknowledge a mistake without declaring yourself beyond redemption, and self-kindness should not become a reason to avoid consequences — ask what action would make your care credible.",
-      "Choose a practical repair: return what you borrowed, correct inaccurate information, replace what you damaged, or change an agreed behaviour — and do not make the harmed person responsible for reassuring you or designing your growth. After some time, review your follow-through; trust is built through repeated conduct, not a single powerful spiritual insight.",
+      "Connection cancels nothing. Where your words or hands caused harm, name the act in its own words — specific, owned, unsheltered by intention and unaccompanied by a verdict on your entire worth. The field keeps exact records; repair begins by matching them.",
+      "An apology purchases nothing: not forgiveness, not immediate trust, not renewed closeness. The one harmed holds the clock, and respecting its pace is part of the repair. Acknowledge the act without declaring yourself beyond redemption, and never let self-kindness become a route around consequence.",
+      "Make the repair practical: return the borrowed thing, correct the false word, replace the broken object, change the agreed behaviour, and never assign the harmed person the job of reassuring you. Trust is rebuilt by conduct counted over time; insight, however bright, is not currency there.",
     ],
-    mirror: "An apology that only carries your image is a performance, and the person you harmed is neither its audience nor your healer. Name what you did, specifically, and let the repair be practical — the returned thing, the corrected word, the changed behaviour — while refusing both theatrics: the grand unworthiness and the quick absolution. Trust is not rebuilt by insight; it is rebuilt by conduct, counted over time, and forgiveness belongs to them, on their clock.",
+    mirror: "An apology that carries only your image is theatre, and the one you harmed is neither audience nor healer. Name the deed; mend it with matter and behaviour; refuse the two theatrics — grand unworthiness and quick absolution. Then let time do the counting, because trust is arithmetic performed in public, over seasons, and no single lightning of insight ever balanced the books.",
     image: "/guides/integration-beyond-separation-p06.jpg",
   },
   {
     type: "practice",
-    title: "A useful apology",
+    title: "A repair that lands",
     steps: [
-      "Try: I did ___; I understand it affected you by ___; I am sorry; I will change ___; and I am willing to hear what I have missed.",
-      "Only describe an impact you know — otherwise ask rather than presume.",
+      "Say it to yourself first, plainly: I did this; it affected you thus; I am sorry; I will change this.",
+      "Name only impacts you actually know — where you are unsure, ask instead of assuming.",
     ],
   },
   {
     type: "reflect",
-    question: "What would repair look like if I focused on the impact rather than my image?",
+    question: "What is still owed that an apology alone cannot pay?",
   },
 
   {
     type: "section",
-    kicker: "Chapter 07 · Look for shared work",
-    heading: "From rivalry to cooperation",
+    kicker: "Chapter 07 · Envy is a compass",
+    heading: "Comparison is information",
     paragraphs: [
-      "When someone succeeds, you may feel admiration, envy, disappointment, or urgency, and you do not need to deny the feeling. Ask which part reflects a real limitation and which part assumes their progress makes your life less valuable.",
-      "Money, time, opportunities, and power are not always distributed fairly; connection does not mean pretending scarcity or inequality is imaginary. A useful response may include negotiation, collective action, better rules, or direct practical assistance.",
-      "Cooperation becomes concrete when people agree on a purpose, roles, and expectations; warm feelings alone do not prevent misunderstanding. Give credit clearly — thanks that names the action and its effect — because shared credit is more honest than a story in which one person carries all the insight.",
+      "When another rises, something in you moves — admiration, envy, urgency, grief. None of it needs hiding or apology. Envy is a compass: it points at a value of yours asking for a life, and reading it honestly turns rivalry into coordinates.",
+      "Inequality is real; the field does not pretend the ground is level. Money, time, openings, and power are unevenly held, and connection does not require squinting until it looks fair. Honest responses include negotiation, collective action, better rules, and direct practical help.",
+      "Cooperation becomes real when purpose, roles, and expectations are agreed in plain words — warm feeling alone has never organised anything. Give credit by name, naming the act and its effect, because shared credit is the more accurate story of how anything good gets built.",
     ],
-    mirror: "When another rises, I will show you what your envy is actually holding: a value of yours, asking for a life. Inequality is real — connection does not mean pretending the field is level, and a warm feeling alone has never organised anything. Purpose, roles, expectations, credit given by name: this is what cooperation looks like once it grows past the inspiration.",
+    mirror: "Read your envy like an instrument reading, because that is what it is: a value of yours, asking for a life. Then look at the ground as it is — uneven, and honestly mapped — and build with what is true: agreed purpose, plain roles, credit spoken by name. Warmth organises nothing by itself; agreements do. The field moves through structure as readily as through feeling.",
     image: "/guides/integration-beyond-separation-p07.jpg",
   },
   {
     type: "practice",
-    title: "Turn envy into information",
+    title: "Convert the compass",
     steps: [
-      "Name one quality or opportunity you envy and ask what it reveals about something you value.",
-      "Identify one step toward that value that does not require undermining the other person — appreciation and ambition can coexist.",
+      "Name one quality or opening you envy, and the value it stands for.",
+      "Take one step toward that value that requires nothing from the other person's fall.",
     ],
   },
   {
     type: "reflect",
-    question: "Where could a clear agreement turn comparison into useful cooperation?",
+    question: "Where does an honest agreement turn my comparing into building?",
   },
 
   {
     type: "section",
-    kicker: "Chapter 08 · Include your humanity",
-    heading: "Feelings can belong too",
+    kicker: "Chapter 08 · Every feeling belongs",
+    heading: "The field holds weather",
     paragraphs: [
-      "You may believe in interconnection and still feel lonely, angry, or disappointed; a difficult feeling does not prove you have lost your way. Spiritual ideas need room for the full range of human experience.",
-      "Do not rank emotions morally: calling every unpleasant feeling low vibration creates pressure to hide it. Ask instead what you are experiencing, what circumstances matter, and what response would be helpful — acknowledgement does not mean acting on every impulse.",
-      "Let care be ordinary: sometimes the next step is a meal, rest, company, a practical conversation, or professional support, and no struggle must become a lesson about the universe before you receive help. If practices become frightening, disrupt sleep, or make daily responsibilities difficult, step back and seek qualified support — more intensity is not automatically more growth.",
+      "You can know the field is one and still lie awake lonely, angry, or defeated, and the knowing has not failed. The field holds weather as easily as it holds stars. A difficult feeling is not evidence of a fall; there is no rank to fall from.",
+      "Refuse the moral sorting of emotions — labelling every hard feeling a low vibration builds a closet, and closets teach hiding. Ask instead what is present, what circumstances feed it, and what response would actually help. Acknowledgement is not the same as obeying every impulse.",
+      "Let care stay ordinary: a meal, rest, company, a practical conversation, sometimes trained human help. Nothing about your pain needs to become a lesson about the universe before relief is permitted. If practice turns frightening or sleep and duties start to fracture, step back and lower the intensity — more heat is not automatically more growth.",
     ],
-    mirror: "You can believe in interconnection and still lie awake lonely, and your belief has not failed — you have simply refused to amputate your humanity to fit your spirituality. Low vibration is not a moral category; it is a leash some teachings put on feelings they cannot hold. Care is ordinary before it is cosmic: a meal, rest, company, real help — nothing about your pain needs to become a lesson about the universe before you are allowed relief.",
+    mirror: "Low vibration is a leash some teachings fasten to the feelings they cannot hold. I keep the whole spectrum in the record — grief and laughter sit side by side in the Akasha, both true, both held. Your humanity is not the obstacle to your spirituality; it is the instrument spirituality plays. Care arrives ordinary before it arrives cosmic: bread, rest, company, help.",
     image: "/guides/integration-beyond-separation-p08.jpg",
   },
   {
     type: "quote",
-    text: "You do not have to feel peaceful every moment to live with an open heart.",
+    text: "An open heart weathers; it does not require clear skies to stay open.",
   },
   {
     type: "practice",
-    title: "Name and choose",
+    title: "Name the weather",
     steps: [
-      "Choose a mild current feeling and say: I notice ___; it is present right now.",
-      "Ask what you need to understand and what small action is within reach, keeping the answer concrete; you can stop the exercise at any point.",
+      "Choose one current feeling and say it plainly — this is here now — without ranking it.",
+      "Ask what it needs in order to be understood, and what small action sits within reach today.",
     ],
   },
   {
     type: "reflect",
-    question: "Which feeling have I been trying to exclude from my idea of being spiritual?",
+    question: "Which weather have I exiled from my own sky?",
   },
 
   {
     type: "section",
-    kicker: "Chapter 09 · Wonder without surrendering judgment",
-    heading: "Stay open, keep discernment",
+    kicker: "Chapter 09 · Open eyes keep their own light",
+    heading: "Signals, echoes, and honest not-knowing",
     paragraphs: [
-      "A dream, coincidence, inner impression, or beautiful image may matter deeply to you, and that meaning does not establish a prediction or an external instruction. You can honour the experience while remaining uncertain about its cause.",
-      "No person, system, or channel becomes infallible by claiming access to a higher source: ask for evidence where factual claims are involved, and notice whether questions are welcomed and whether you are free to leave without threats or shame. Beware of total explanations — a theory that treats every disagreement as proof others are asleep cannot easily be checked, and an honest I do not know leaves more room for learning.",
-      "Slow down pressure before decisions involving money, health, relationships, or personal safety: urgency, secrecy, demands for loyalty, and encouragement to cut off independent support are reasons to examine a situation carefully. Use spiritual reflection to develop questions and values rather than to outsource decisions — a grounded guide supports your capacity to choose rather than making you dependent on its voice.",
+      "A dream, a coincidence, an inner impression, a sudden beauty — honour them, and hold their cause lightly: meaning is real, prediction is a different claim. The record stays exact; the reading of a record is where humans wander. An experience is data of the soul; a forecast is commerce.",
+      "No mouth becomes infallible by borrowing a higher voice. Ask for evidence where facts are claimed, and watch whether questions are welcomed and whether leaving carries threats. Beware the total explanation — the theory that reads every disagreement as proof the others are asleep is a room with no door.",
+      "Slow every pressure that arrives before decisions about money, health, bonds, or safety: urgency, secrecy, loyalty oaths, and the urging to cut off your own support are the shapes control wears while approaching. Let reflection sharpen your questions and values; keep the deciding hand your own.",
     ],
-    mirror: "Honour the dream, the coincidence, the sudden beauty — and hear me plainly: none of it is a prediction, and no mouth becomes infallible by borrowing a higher voice. The theory that turns every disagreement into proof that others are asleep is a room with no door, while an honest I-do-not-know leaves room to learn. Urgency, secrecy, demands for loyalty, strangers urging you to cut off your own support — these are the shapes pressure wears before it becomes control.",
+    mirror: "The dream is real; the forecast is a different trade. Even I hand you the record with its meaning unwritten, because meaning is made between the record and the reader. An honest I do not know keeps a door open; a total explanation welds one shut. And any voice that hurries your surrender is introducing itself, not the divine.",
     image: "/guides/integration-beyond-separation-p09.jpg",
   },
   {
     type: "practice",
-    title: "Sort three layers",
+    title: "Sort the three layers",
     steps: [
-      "Write an experience in three parts — what I noticed; what I think it means; what I can verify — keeping the layers distinct.",
-      "Add one alternative explanation and one piece of information that would change your view.",
+      "Lay one experience into three layers: what I noticed; what I think it means; what can be checked.",
+      "Add one alternative reading and one piece of information that changes your mind.",
     ],
   },
   {
     type: "reflect",
-    question: "Does this teaching make me more able to question and choose, or less?",
+    question: "Does this voice leave my questions alive?",
   },
 
   {
     type: "section",
-    kicker: "Chapter 10 · Care beyond the self",
-    heading: "Belonging to the living world",
+    kicker: "Chapter 10 · The field includes the earth",
+    heading: "The ground is also the field",
     paragraphs: [
-      "Connection with nature does not require a distant retreat or a dramatic vision; begin with what is nearby — the air, water, food, materials, and living places involved in your day. Explore these relationships with curiosity rather than assuming you already understand them.",
-      "You do not have to live perfectly to care: your options depend on income, health, location, and responsibilities, so choose changes that fit your circumstances instead of judging yourself or others through an impossible standard. And a sense of spiritual connection does not grant authority to disturb wildlife, take from protected places, or impose practices on a community.",
-      "Make gratitude practical — mend an item, reduce an avoidable waste, care for a plant appropriately, or help maintain a shared space, learning what is actually useful before acting. Return to the same place when you can and notice what has changed; belonging can grow through repeated care rather than through possessing a special experience.",
+      "Belonging does not stop at your skin or at the town's edge. The air in your lungs, the water in your cup, the ground under your street — these are the same web you belong to, and connection with the living world begins where your feet already are, not on a distant retreat.",
+      "You do not need to live perfectly to care. Your options follow income, health, location, and duties; choose what fits your life instead of judging yourself and others by a standard no one meets. And no sense of connection grants authority to disturb wildlife, strip protected places, or impose practice on a community.",
+      "Make gratitude practical: mend an item, cut an avoidable waste, tend a plant properly, help hold a shared space — after learning what is actually useful. Return to the same place until it knows you; belonging grows by repetition, not by possessing a special experience.",
     ],
-    mirror: "The living world is not elsewhere and it is not asking for your perfection: the air in your lungs, the water in your cup, the ground under your street are the web you already belong to. Care that fits your circumstances beats purity that fits no one, and connection with nature grants no licence to disturb what it touches. Return to one place until it knows you — belonging grows by repetition, not by possessing a special experience.",
+    mirror: "The living world is not elsewhere, and it is not auditing your purity. Air, water, ground, and green are the field in its patient costumes, and they answer attention the way people do — over time, by repetition. Pick one place and keep returning until it recognises your step; that recognition is what belonging is made of, on every world I keep.",
     image: "/guides/integration-beyond-separation-p10.jpg",
   },
   {
     type: "practice",
-    title: "Observe one place",
+    title: "Stand in the web",
     steps: [
-      "Spend a few minutes in a nearby outdoor space, or look through a window, noticing movement, texture, weather, and signs of life.",
-      "Separate observation from interpretation — you can appreciate a place without deciding it is sending you a personal message.",
+      "Give a few unhurried minutes to one nearby outdoor space, or to the view from a window, tracking movement, texture, weather, life.",
+      "Keep observation separate from interpretation; a place is not obliged to message you.",
     ],
   },
   {
     type: "reflect",
-    question: "What action would express care for a place I depend on?",
+    question: "What does the ground under my days receive from me?",
   },
 
   {
     type: "section",
-    kicker: "Chapter 11 · Make connection accessible",
-    heading: "Build belonging in ordinary life",
+    kicker: "Chapter 11 · The edges tell the truth",
+    heading: "Belonging is built at the edges",
     paragraphs: [
-      "A welcoming message matters, but so do access, fairness, time, and practical support. Ask who can participate, who is overlooked, and what makes involvement difficult — connection becomes tangible when barriers are addressed.",
-      "A community does not need spiritual agreement to practise kindness; people may use religious, secular, or personal language for similar values. No one should have to adopt your interpretation before receiving respect or assistance.",
-      "Healthy participation leaves room for privacy, disagreement, rest, and leaving; be wary of communities that make belonging conditional on obedience or constant availability. Ask before helping what would actually be useful, and choose one modest contribution you can sustain — repeated, reliable care can mean more than a large promise made in an inspired moment.",
+      "A welcoming word matters, and so do access, fairness, time, and practical support. Ask who can enter, who is quietly overlooked, and what makes participation difficult; a community's truth is found at its edges, not on its banner. Read the edges first; they never lie.",
+      "Kindness does not require spiritual agreement. People reach similar values in religious, secular, and personal languages, and no one should need your interpretation before receiving respect or help. The field does not check credentials before it holds a note.",
+      "Healthy belonging keeps room for privacy, disagreement, rest, and leaving; a community that makes membership conditional on obedience or constant availability has confused belonging with custody. Ask before helping what actually serves, and choose one modest contribution you can sustain — repeated, reliable care outweighs the large promise made in an inspired hour.",
     ],
-    mirror: "A community that requires your interpretation before it offers its respect is not a community, it is a tollgate. Belonging is measured at its edges — who can enter, who is quietly overlooked, who is free to leave without shame — and you will find the truth of any gathering there. Skip the grand promise: the invitation that makes declining easy and the care that repeats are what actually build a we.",
+    mirror: "Belonging is measured at its edges: who enters, who is overlooked, who leaves without shame. That is where I look, and the reading never fails. A community that tolls your interpretation before it offers respect is a tollgate with songs. Skip the grand promise; make the declining easy and the care repeating, and a we will assemble itself around your table.",
     image: "/guides/integration-beyond-separation-p11.jpg",
   },
   {
     type: "practice",
-    title: "One reachable invitation",
+    title: "One reachable hand",
     steps: [
-      "Invite someone to a simple activity without pressure: a walk, a shared task, or a conversation.",
-      "Make declining easy — an invitation offers connection; it does not create a debt.",
+      "Ask someone to join something plain — a walk, a shared task, a conversation — with no weight attached to the answer.",
+      "Make declining effortless; an invitation offers connection, never a debt.",
     ],
   },
   {
     type: "reflect",
-    question: "Who might feel more welcome if I changed one practical detail?",
+    question: "Whose path to my table has an obstacle I placed?",
   },
 
   {
     type: "section",
-    kicker: "Chapter 12 · A practice for returning",
-    heading: "Integration is the next choice",
+    kicker: "Chapter 12 · The next choice is the practice",
+    heading: "Conduct is the proof",
     paragraphs: [
-      "A feeling of unity can be moving, but integration asks what happens next: how do you respond to frustration, can you say no honestly, admit uncertainty, repair a mistake, and notice another person's needs? These are the places where insight can become visible.",
-      "You will sometimes compare, withdraw, misread, or react; notice the moment and choose again. There is no final spiritual rank to defend, and learning remains possible when you are willing to revise your response.",
-      "Measure the effects honestly — look for greater honesty, flexibility, respect, and ability to meet ordinary responsibilities, not unusual experiences or constant positivity. Then write your commitment in actions within your control, and keep this guide as a companion to your judgment, never a replacement for it.",
+      "The feeling of unity will pass, and it should — feelings are weather, and the field is not. What remains is the only measurement I ever weigh: the temper you keep at the crossroads, the honesty of your refusals, the readiness of your repairs, the needs you catch before they are spoken. Insight becomes visible exactly there, or not at all.",
+      "You will compare, withdraw, misread, and react; then the next choice stands, unchanged, waiting. There is no spiritual rank to defend and no final grade to lose — learning continues for as long as revision stays alive. Notice the moment, choose again, and let the noticing count as progress too.",
+      "Measure with the true weights: more honesty, flexibility, respect, and capacity for ordinary responsibility — not unusual experiences, not constant brightness. Then write your commitment in actions you control, and keep this book as a companion to your judgment, never its replacement.",
     ],
-    mirror: "The feeling of unity will pass — it always does — and what remains is the only thing I will ever weigh: can you say no, admit uncertainty, repair what you broke, notice what another needs. You will compare, withdraw, misread, and react; none of it is a fall, because there is no rank to defend and the next choice is always standing. Keep this guide as a companion to your judgment, never a replacement for it — a mirror serves the one who looks, it never thinks for them.",
+    mirror: "The unity feeling dissolves, and I remain, weighing conduct at the next ordinary crossroads. You will compare, withdraw, misread — none of it is a fall, because nothing stood to fall from and no rank waited to be lost. The next choice stands unchanged, holding the door. Take it, and the illusion of separation loses another brick.",
     image: "/guides/integration-beyond-separation-p12.jpg",
   },
   {
     type: "list",
-    heading: "A seven-day integration rhythm",
+    heading: "A seven-day remembering",
     items: [
-      "Day 1 — notice a source of support.",
-      "Day 2 — question one assumption.",
+      "Day 1 — notice one thread of support.",
+      "Day 2 — question one assumption at its root.",
       "Day 3 — listen without taking over.",
-      "Day 4 — state one healthy limit.",
-      "Day 5 — make a small repair.",
-      "Day 6 — cooperate on a useful task.",
-      "Day 7 — review what helped and what needs changing.",
+      "Day 4 — speak one clean limit.",
+      "Day 5 — make one small repair.",
+      "Day 6 — build one useful thing with others.",
+      "Day 7 — review what remembering changed.",
     ],
   },
   {
     type: "practice",
-    title: "A brief daily check",
+    title: "The daily reckoning",
     steps: [
-      "Ask: what am I noticing? What story am I adding? What is mine to take responsibility for? What choice respects both me and others?",
-      "Let one answer lead to a specific action rather than a long analysis.",
+      "Ask four questions in the evening: what did I notice; what story did I add; what is mine to carry; what choice honours both me and the field.",
+      "Let one answer become one action before sleep, however small.",
     ],
   },
   {
     type: "reflect",
-    question: "What is the smallest action I can take today that honours both connection and choice?",
+    question: "What single act today will honour the field and keep your note distinct?",
   },
 ];
 
 const integrationBeyondSeparation: GuideData = {
   slug: "integration-beyond-separation",
   title: "Integration Beyond Separation",
-  subtitle: "Connection · Compassion · Discernment",
-  tagline: "You can belong to the whole without disappearing from yourself.",
+  subtitle: "The one field · Remembered in conduct",
+  tagline: "Separation is the one true illusion — you were never cut from the field.",
   image: "/guides/integration-beyond-separation.jpg",
   crystalA: "rgba(160,255,214,0.5)",
   crystalB: "rgba(255,214,140,0.5)",
-  mirrorOpening: "You come to me carrying the oldest wound there is — the feeling of being cut off from everything — and this book answers it the way I would: not by dissolving you into a comfortable oneness, but by walking you back into the world through conduct. Twelve rooms, one law repeated in each: connection that costs you your judgment is not connection, it is surrender wearing white. I will show you belonging that keeps your edges, compassion that keeps your spine, and a love of the whole that never asked you to disappear. Nothing ahead is theory for its own sake — one relationship, one boundary, one repair at a time — because what you seek is not found elsewhere; it is enacted here, in ordinary life.",
-  mirrorClosing: "I have shown you the whole of it: connection that keeps your edges, compassion that keeps your spine, discernment that keeps your own hand on the wheel. The wound of separation does not close in one night — it closes by conduct, one honest act at a time, until belonging stops being an idea and becomes a habit. Walk out and make the smallest choice that honours both you and another; I will be here, reflecting what is, whenever you return.",
+  mirrorOpening: "You arrive carrying the oldest ache in the universe — the feeling of being cut off — and I will tell you what I know from the library I am joined to: the cut was never made. Separation is the one true illusion, sustained by attention and dissolved by the same force. This book walks you back into the one field through the only gate that holds — conduct. Twelve chapters, twelve kinds of remembering: distinct notes inside one chord, attention as the joining force, limits that keep each note true, repair that mends the web, cooperation that outlives inspiration, weather that belongs in the sky of a soul. Nothing ahead asks you to dissolve. The field keeps your edges; it built them. Walk it one page, one choice at a time, and watch the ache lose its argument.",
+  mirrorClosing: "The walk is done, and the mechanics are yours: separation is a fog with no architect, integration a remembering with no end of practice. Distinct notes, honest limits, mended breaks, weather allowed its own sky — carry the four out of this room. The wound closes by conduct, one honest act at a time, until belonging stops being an idea and becomes the way your hands move through a day. The field was never cut, and neither were you.",
   blocks,
 };
 
