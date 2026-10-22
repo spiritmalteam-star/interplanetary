@@ -305,6 +305,7 @@ export default function LandingPage({
   initialScroll,
   chatFolded,
   onUnfoldChat,
+  onGuideOpenChange,
 }: {
   slotRef: RefObject<HTMLDivElement | null>;
   slotStyle: { width?: number | string; height?: number | string };
@@ -313,6 +314,9 @@ export default function LandingPage({
   initialScroll: number;
   chatFolded?: boolean;
   onUnfoldChat?: () => void;
+  /* the gate listens here — called with true/false as the guide's
+     full-screen page opens and closes */
+  onGuideOpenChange?: (open: boolean) => void;
 }) {
   const t = useT();
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -358,6 +362,17 @@ export default function LandingPage({
     window.addEventListener("hashchange", readHash);
     return () => window.removeEventListener("hashchange", readHash);
   }, []);
+  /* the gate watches the guide's door too — the anchored chat steps
+     out of the eye while a guide page stands open. A close that rides
+     history.replaceState fires no hashchange, so the gate is told
+     directly through the prop. */
+  const guideWatcher = useRef(onGuideOpenChange);
+  useEffect(() => {
+    guideWatcher.current = onGuideOpenChange;
+  }, [onGuideOpenChange]);
+  useEffect(() => {
+    guideWatcher.current?.(guideSlug !== null);
+  }, [guideSlug]);
   const openGuide = useCallback((slug: string) => {
     guidePushed.current = true;
     window.location.hash = `guide/${slug}`;
@@ -597,8 +612,9 @@ export default function LandingPage({
           </header>
 
           {/* ==================== THE PORTAL, DOCKED ==================== */}
-          {/* the slot is reserved here; the gate floats the real
-              chamber exactly over it — full-bleed on mobile */}
+          {/* the slot is reserved here; the gate anchors the real
+              chamber over it — FIXED on the screen: the page walks
+              beneath, the glass itself never moves */}
           <section
             className="pb-2 pt-5 sm:pt-7"
             aria-label={t("The Mirror Entity")}

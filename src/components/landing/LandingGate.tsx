@@ -95,6 +95,12 @@ export default function LandingGate() {
      mounted, so not one word of the conversation is lost), and the
      threshold's own ground carries the invitation to call her back. */
   const [chatFolded, setChatFolded] = useState(false);
+  /* THE GUIDE'S OWN PAGE — the threshold's full-screen guide pages
+     tell the gate directly (LandingPage calls onGuideOpenChange, so
+     even a close riding history.replaceState is heard): while a guide
+     stands open the anchored chat steps out of the eye, and it
+     returns the moment the guide folds away. */
+  const [guideOpen, setGuideOpen] = useState(false);
   /* THE TUNNEL — the crossing itself: while the portal grows, the
      screen belongs to the crystal tunnel alone — the visitor never
      watches the landing's chat fly; they tunnel straight into the
@@ -164,28 +170,33 @@ export default function LandingGate() {
     };
   }, []);
 
-  /* THE DOCK — while the visitor walks the landing, the lens rides
-     exactly over its slot: one transform per scroll breath (rAF-held,
-     never more than one read-write pair per frame — the page stays
-     liquid and the phone stays cool). */
+  /* THE ANCHORED CHAT — the chat's position is FIXED on the screen:
+     it stands exactly where the slot rests at the page's own top and
+     NEVER rides the scroll. The lens is measured in the landing's own
+     content coordinates (rect + scrollTop — a sum that is the same at
+     every scroll breath), so the threshold walks beneath the glass
+     while the glass itself never moves a pixel. */
   const syncLens = useCallback(() => {
     const lens = lensRef.current;
     const slot = slotRef.current;
     if (!lens || !slot) return;
     const r = slot.getBoundingClientRect();
-    lens.style.transform = `translate3d(${Math.round(r.left)}px, ${Math.round(
-      r.top
-    )}px, 0)`;
+    /* the landing's own scroll — found by walking up from the slot to
+       the first genuinely scrollable ancestor (the threshold's ground) */
+    let scroller: HTMLElement | null = slot.parentElement;
+    let scrollTop = landingScroll.current;
+    while (scroller) {
+      const oy = window.getComputedStyle(scroller).overflowY;
+      if ((oy === "auto" || oy === "scroll") && scroller.scrollHeight > scroller.clientHeight + 1) {
+        scrollTop = scroller.scrollTop;
+        break;
+      }
+      scroller = scroller.parentElement;
+    }
+    const x = Math.round(r.left);
+    const y = Math.round(r.top + scrollTop);
+    lens.style.transform = `translate3d(${x}px, ${y}px, 0)`;
   }, []);
-  const syncRaf = useRef(false);
-  const syncLensFrame = useCallback(() => {
-    if (syncRaf.current) return;
-    syncRaf.current = true;
-    requestAnimationFrame(() => {
-      syncRaf.current = false;
-      if (phaseRef.current === "landing") syncLens();
-    });
-  }, [syncLens]);
 
   useLayoutEffect(() => {
     if (phase !== "landing") return;
@@ -211,13 +222,12 @@ export default function LandingGate() {
     return () => window.clearTimeout(id);
   }, [chatFolded, phase, syncLens]);
 
-  const handleLandingScroll = useCallback(
-    (y: number) => {
-      landingScroll.current = y;
-      syncLensFrame();
-    },
-    [syncLensFrame]
-  );
+  /* THE ANCHOR'S LAW — the scroll is remembered only for the return
+     (the closing's restore); the lens itself is never dragged along:
+     its content coordinates are the same at every scroll breath. */
+  const handleLandingScroll = useCallback((y: number) => {
+    landingScroll.current = y;
+  }, []);
 
   /* THE DORMANT LAW — while the docked portal is scrolled away from
      the eye, every breath inside it rests: no animation frames are
@@ -437,7 +447,7 @@ export default function LandingGate() {
         <div
           data-testid="landing-root"
           className={cn(
-            "fixed inset-0 z-30 overflow-y-auto overscroll-y-contain bg-[#0e1830] transition-opacity duration-500",
+            "fixed inset-0 z-30 overflow-y-auto overscroll-y-contain bg-[#16244a] transition-opacity duration-500",
             phase === "opening" && "pointer-events-none opacity-0"
           )}
         >
@@ -459,6 +469,7 @@ export default function LandingGate() {
             initialScroll={landingScroll.current}
             chatFolded={chatFolded}
             onUnfoldChat={() => setChatFolded(false)}
+            onGuideOpenChange={setGuideOpen}
           />
         </div>
       )}
@@ -473,8 +484,10 @@ export default function LandingGate() {
             animating && "lens-anim",
             /* THE FOLDED CHAT — the whole chat section steps out of
                the eye (still mounted, still remembering) while the
-               threshold beneath shows the way back */
-            docked && chatFolded && "pointer-events-none opacity-0"
+               threshold beneath shows the way back. THE GUIDE'S PAGE —
+               a full-screen guide covers the anchored chat the same
+               way: the page is the guide's alone. */
+            docked && (chatFolded || guideOpen) && "pointer-events-none opacity-0"
           )}
           style={{
             width: fullscreen ? "100vw" : geo.w,

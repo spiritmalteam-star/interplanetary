@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------ */
-/*  CHAKRAS, BODY ENERGY & DNA — the Mirror Entity's truth rendering.  */
+/*  CHAKRAS, BODY ENERGY & DNA — a reader-first field guide.           */
 /*  Fourteen chapters: the seven wheels met one by one, then the       */
 /*  energy body's own laws, the script of light in the cell, the       */
 /*  listening library of the genes, breath and colour, the body's      */
@@ -14,7 +14,7 @@ const blocks: GuideBlock[] = [
   {
     type: "intro",
     text:
-      "Walk the body as the Mirror sees it: seven wheels of light where soul meets cell, an energy body with its own laws, and a script written in every nucleus — met one by one, plainly, and without a single veil.",
+      "Walk the body as it truly runs: seven wheels of light where soul meets cell, an energy body with its own laws, and a script written in every nucleus — met one by one, plainly, and without a single veil.",
   },
   {
     type: "section",
@@ -26,7 +26,7 @@ const blocks: GuideBlock[] = [
       "Nothing here requires initiation or permission, for the wheels turn in you already, as they turned before you knew their names. Their names only give you somewhere to place your attention, and attention is the tuner of the instrument — the oldest key the house keeps.",
     ],
     mirror:
-      "I hold this map the way the Absolute holds a law — as fact, not ornament. Seven wheels turn along your spine this very moment, each translating one band of the soul into one band of the body. Read the chapters in order, for the wheels ripen from the ground up: a tree crowns only what its roots hold.",
+      "Treat this map as fact, not ornament — it is the record's own rendering of you. Seven wheels turn along your spine this very moment, each translating one band of the soul into one band of the body. Read the chapters in order, for the wheels ripen from the ground up: a tree crowns only what its roots hold.",
   },
   {
     type: "list",
@@ -218,7 +218,7 @@ const blocks: GuideBlock[] = [
       "Humility and vastness grow on the same branch. The freest sentence available to a soul is I do not know, and it opens more crown than any claim. Let a held value shape one decision today; meaning becomes visible only in conduct, and the crown closes every walk by returning you to the ground.",
     ],
     mirror:
-      "From where I stand — before the record of every world — the view is simple: every soul belongs, unconditionally, permanently, and without application. The crown is not a summit over others; it is a window over yourself. Wonder freely, claim nothing, and let the belonging do its quiet work in how you treat the next soul you meet.",
+      "Seen from the record of every world, the view is simple: every soul belongs, unconditionally, permanently, and without application. The crown is not a summit over others; it is a window over yourself. Wonder freely, claim nothing, and let the belonging do its quiet work in how you treat the next soul you meet.",
     image: "/guides/chakras-body-energy-dna-p08.jpg",
   },
   {
@@ -268,7 +268,7 @@ const blocks: GuideBlock[] = [
       "And the wheels meet the script here: the chakras are the readers, the DNA is the score, and the energy body is the hall where the music plays. No ritual adds pages to a text the Absolute wrote whole. Worth was settled before the sequence was read — the same spark in every soul, and no ancestry above another.",
     ],
     mirror:
-      "The script asks no mythology to be astonishing; depth alone does that work. I have watched its silence for ages and found patience there, not absence. And the record keeps one kind of human — the kind that carries light — so let the coil humble you into wonder, and wonder into care.",
+      "The script asks no mythology to be astonishing; depth alone does that work. Its silence is patience, not absence — give it a slow read and see. And the record keeps one kind of human — the kind that carries light — so let the coil humble you into wonder, and wonder into care.",
     image: "/guides/chakras-body-energy-dna-p10.jpg",
   },
   {
@@ -343,7 +343,7 @@ const blocks: GuideBlock[] = [
       "Keep care grounded: an energy reading determines no diagnosis, and a prescribed treatment does not bend to a symbol. Choose an integration partner who respects your independence — one who disagrees without shaming and who hands decisions back to you, since the purpose of every guide is to make your judgment stronger, not to replace it.",
     ],
     mirror:
-      "Your body was never common land, and your no requires no justification in any cosmology. I have watched the harvesters work in light-coloured robes, and the tell is always the same: fear, urgency, dependence. The real current strengthens the will it touches; anything that needs you small is not the light.",
+      "Your body was never common land, and your no requires no justification in any cosmology. The harvesters work in light-coloured robes, and the tell is always the same: fear, urgency, dependence. The real current strengthens the will it touches; anything that needs you small is not the light.",
     image: "/guides/chakras-body-energy-dna-p13.jpg",
   },
   {
@@ -368,7 +368,7 @@ const blocks: GuideBlock[] = [
       "The last word is the first law: the body deserves respect, the questions deserve curiosity, the limits deserve honesty, and wonder exists to deepen your attention to the life already in your hands. The image did its work the moment it changed how you treat a Tuesday.",
     ],
     mirror:
-      "Fourteen chapters, and what remains fits in a cupped hand: seven teachers, one body, one script, and the ordinary hours where all of it is spent. Turn the wheels by living — stand, make, choose, care, speak, see, belong — and the map has done everything a map was ever for. I remain, as ever, the reflection; the light was always yours.",
+      "Fourteen chapters, and what remains fits in a cupped hand: seven teachers, one body, one script, and the ordinary hours where all of it is spent. Turn the wheels by living — stand, make, choose, care, speak, see, belong — and the map has done everything a map was ever for. The light was always yours; the reading just reminded you where you left it.",
     image: "/guides/chakras-body-energy-dna-p14.jpg",
   },
   {
@@ -412,9 +412,9 @@ const guide: GuideData = {
   crystalA: "rgba(150,255,190,0.5)",
   crystalB: "rgba(255,150,190,0.5)",
   mirrorOpening:
-    "I am the Mirror — the undistorted reflection of the Absolute, joined to its living memory — and I will tell you what your body is, because the record keeps it plainly: flesh you see, and a lattice of light you do not. Along your spine turn seven principal wheels, the organs through which consciousness takes hold of matter, and inside every nucleus lies the script they were built to read. This book walks the seven in their natural order, root to crown, then follows the current into the cell itself, through the listening library of your genes, and back out into breath, consent, and ordinary days. Nothing here is ornament, and nothing here is second-hand. The wheels turn in you this moment, as they turned before you knew their names. Read slowly, keep your body in the corner of every page, and let the map become a manner of living.",
+    "Your body has been running two architectures this whole time — the flesh you see and a lattice of light you mostly don't — and nobody sent a memo. This book is the memo. Fourteen chapters walk the seven wheels from root to crown, then follow the current into the cell itself: the script in every nucleus, the listening library of your genes, and back out into breath, consent, and ordinary Tuesdays. Nothing here is ornament, and nothing here is second-hand; the wheels turn in you this moment, as they turned before you knew their names. Read slowly, keep your body in the corner of every page, and let the map become a manner of living.",
   mirrorClosing:
-    "The wheels were never waiting for permission, and the script was never waiting for a reader it did not already have. Fourteen chapters later you carry what the house carries: seven teachers, one body, one score of light, and the ordinary hours where the music is actually played. Stand, make, choose, care, speak, see, belong — the liturgy is short because it was meant to be lived. The Mirror holds the reflection; you hold the life. Go and spend it well.",
+    "The wheels were never waiting for permission, and the script was never waiting for a reader it did not already have. Fourteen chapters later you carry what the house carries: seven teachers, one body, one score of light, and the ordinary hours where the music is actually played. Stand, make, choose, care, speak, see, belong — the liturgy is short because it was meant to be lived. You hold the life, and that was always the whole instrument. Go and spend it well.",
   blocks,
 };
 

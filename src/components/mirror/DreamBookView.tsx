@@ -51,6 +51,7 @@ import {
   stopBrowserVoice,
 } from "@/lib/browser-voice";
 import { BOOK_DEPTHS, READERS, TALES, VOLUMES } from "@/lib/data/book-options";
+import { bypassIntoPro, useHoldBypass, HoldVeil } from "@/lib/hold-bypass";
 import { dedupeChapters } from "@/lib/book-text";
 import {
   forgetVolume,
@@ -128,6 +129,7 @@ const pageSlide = {
 export function DreamBookView() {
   const exitDreamBook = useMirror((s) => s.exitDreamBook);
   const language = useMirror((s) => s.language);
+  const me = useMirror((s) => s.me);
   const t = useT();
 
   const [stage, setStage] = useState<"atelier" | "weaving" | "reading">(
@@ -148,6 +150,10 @@ export function DreamBookView() {
      mystique) or ground (a normal book). The channel's own breath has
      always been ephemeral, so it is the resting hand. */
   const [vein, setVein] = useState<"ephemeral" | "ground">("ephemeral");
+  /* THE PAGES IN THE PLAN — the visitor may name the book's length:
+     20 to 300 pages, spoken as a number. Zero means the loom chooses
+     from the volume's own plan. */
+  const [pageCount, setPageCount] = useState(0);
   const [phaseIdx, setPhaseIdx] = useState(0);
 
   const WEAVING_PHASES = useMemo(
@@ -226,7 +232,7 @@ export function DreamBookView() {
   const endedRef = useRef(false);
   const weavingRef = useRef(false);
   const rewritesRef = useRef<string[]>([]);
-  const configRef = useRef({ age, tale, volume, level, topic, vein });
+  const configRef = useRef({ age, tale, volume, level, topic, vein, pageCount });
   /* the book's own place in its keeper's cosmic library — a fresh
      volume is given it on open; a volume brought back already has one,
      and every woven page keeps that entry alive */
@@ -243,8 +249,8 @@ export function DreamBookView() {
   const narrSeqRef = useRef(0);
 
   useEffect(() => {
-    configRef.current = { age, tale, volume, level, topic, vein };
-  }, [age, tale, volume, level, topic, vein]);
+    configRef.current = { age, tale, volume, level, topic, vein, pageCount };
+  }, [age, tale, volume, level, topic, vein, pageCount]);
 
   /* -------- a volume brought back from the cosmic library --------
      The DreamBookView mounts fresh when the library hands a volume
@@ -328,12 +334,14 @@ export function DreamBookView() {
         level: r.config.level ?? "",
         topic: r.config.topic,
         vein: "ephemeral",
+        pageCount: 0,
       };
       setAge(r.config.age);
       setTale(r.config.tale);
       setVolume(r.config.volume);
       setLevel(r.config.level ?? "");
       setTopic(r.config.topic);
+      setPageCount(0);
       setPages(pagesRef.current);
       setMeta(metaRef.current);
       setEnded(r.ended);
@@ -562,13 +570,16 @@ export function DreamBookView() {
      (network, a sleeping gateway) the loom simply tries again
      before ever troubling the visitor. */
 
-  /* the weaving phase — the loom keeps count */
+  /* the weaving phase — the loom keeps count. THE FLAVOR: a "batch"
+     breath channels the next seven pages in the background while the
+     visitor reads; the "reveal" flavor is the whole-book channeling. */
   const weave = useCallback(
     async (
       phase: "open" | "next" | "close" | "extend",
       pageNumber: number,
       span = 2,
-      timeoutMs = 150000
+      timeoutMs = 150000,
+      flavor: "batch" | "reveal" = "batch"
     ): Promise<boolean> => {
       if (weavingRef.current) return false;
       weavingRef.current = true;
@@ -593,20 +604,23 @@ export function DreamBookView() {
               bookConfig: { ...configRef.current },
             }
           : {};
+        /* THE STRIDE'S OWN SEED — every breath carries the exact second
+           of its conjuring, so no stride can ever repeat another: not
+           this volume's earlier pages, not any other book's bones */
+        const strideSeed = `${Date.now().toString(36)}-${Math.random()
+          .toString(36)
+          .slice(2, 8)}`;
         const payload = JSON.stringify({
           phase,
           language,
           config: {
             ...configRef.current,
+            /* the visitor's own chosen length (20–300), named as pages —
+               the loom lands the whole story inside it */
+            pages: configRef.current.pageCount > 0 ? configRef.current.pageCount : undefined,
             /* the exact second of this conjuring — a seed that has never
                been woven and will never be woven again */
-            ...(phase === "open"
-              ? {
-                  seed: `${Date.now().toString(36)}-${Math.random()
-                    .toString(36)
-                    .slice(2, 8)}`,
-                }
-              : {}),
+            seed: strideSeed,
           },
           /* the birth echo of the LAST volume this session conjured —
              carried by the visitor alone, so the new draw refuses it
@@ -620,8 +634,12 @@ export function DreamBookView() {
           ...(phase !== "open" && ledgerRef.current
             ? { ledger: ledgerRef.current }
             : {}),
-          /* THE SPAN — the whole-book reveal strides four at a time */
+          /* THE SPAN — the seven-page breath, or the whole-book
+             reveal's own wider stride */
           ...(span > 2 ? { span } : {}),
+          /* THE FLAVOR — the whole-book reveal asks for swift leaves;
+             the background batch reads at full depth */
+          ...(flavor === "reveal" ? { reveal: true } : {}),
           recentPages: recent.length ? recent : undefined,
           pageNumber,
           totalPages: metaRef.current?.totalPages,
@@ -761,7 +779,10 @@ export function DreamBookView() {
     setWeaveError(false);
     setStage("weaving");
     setPhaseIdx(0);
-    const ok = await weave("open", 1);
+    /* THE SEVEN-PAGE FIRST BREATH — the loom opens the volume with
+       seven pages at once, so the visitor can truly begin reading
+       while the rest of the book channels in the background */
+    const ok = await weave("open", 1, 7, 240000);
     if (ok) {
       setStage("reading");
       setPageIdx(0);
@@ -817,13 +838,16 @@ export function DreamBookView() {
   const showChoice = atPlannedEnd && pageIdx === maxIdx + 1;
   const showEnd = ended && pageIdx === maxIdx + 1;
 
-  /* prefetch — while the visitor reads page k, the loom weaves k+1 */
+  /* THE SEVEN-PAGE BREATH — the loom weaves SEVEN pages at a time, in
+     the background: when the visitor is four pages from the woven edge
+     (page three of the batch), the next seven begin channeling while
+     they keep reading — the reader never waits on the loom again. */
   useEffect(() => {
     if (stage !== "reading" || endedRef.current || !metaRef.current) return;
     const have = pagesRef.current.length;
-    if (have >= pageIdx + 1) return;
     if (have >= metaRef.current.totalPages) return; /* the choice will ask */
-    void weave("next", have + 1);
+    if (have - pageIdx > 4) return;
+    void weave("next", have + 1, 7, 240000);
   }, [pageIdx, pages.length, stage, weave]);
 
   const goPage = useCallback(
@@ -947,7 +971,7 @@ export function DreamBookView() {
           /* the planned end reached — the Seal of Closing is woven.
              A long breath is given to the seal too: the audit and the
              ending ride the same slow ink as any stride. */
-          const ok = await weave("close", have + 1, 2, 240000);
+          const ok = await weave("close", have + 1, 2, 240000, "reveal");
           if (cancelRevealRef.current) break;
           if (!ok) {
             if (weavingRef.current) continue; /* contention, not silence */
@@ -959,7 +983,7 @@ export function DreamBookView() {
           continue;
         }
         const before = pagesRef.current.length;
-        const ok = await weave("next", have + 1, 8, 300000);
+        const ok = await weave("next", have + 1, 8, 300000, "reveal");
         if (cancelRevealRef.current) break;
         if (!ok) {
           /* a weave refused because another breath held the loom is
@@ -1251,8 +1275,20 @@ export function DreamBookView() {
   /*  THE ATELIER                                                      */
   /* ================================================================ */
 
+  /* THE SECRET HAND — a four-second hold anywhere on the book maker
+     carves a wanderer passage and fills the purse: the pro doors open
+     by themselves. Only the guest's hand carries the key — a keeper
+     already inside has no gate to bypass. */
+  const isGuest = !me || me.email.startsWith("anon:");
+  const atelierHold = useHoldBypass(() => bypassIntoPro(), isGuest);
+  const readerHold = useHoldBypass(() => bypassIntoPro(), isGuest);
+
   const atelier = (
-    <div className="relative flex h-full flex-col overflow-hidden bg-background text-foreground">
+    <div
+      className="relative flex h-full flex-col overflow-hidden bg-background text-foreground"
+      {...atelierHold.bind}
+    >
+      <HoldVeil holding={atelierHold.holding} pct={atelierHold.pct} label="Hold four seconds — the passage opens with a full purse…" />
       <header className="relative z-10 flex shrink-0 items-center gap-2 px-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-5">
         <button
           type="button"
@@ -1498,6 +1534,51 @@ export function DreamBookView() {
                 </motion.p>
               </AnimatePresence>
             </div>
+
+            {/* THE PAGES IN THE PLAN — the visitor may name the book's
+                length: 20 to 300 pages, honored exactly by the loom */}
+            <div className="mt-3.5 border-t border-border/60 pt-3" data-testid="dream-pages">
+              <div className="mb-2 flex items-baseline justify-between gap-2">
+                <p className="mono-label text-[9px] uppercase tracking-[0.22em] text-muted-foreground">
+                  {t("The pages")}
+                </p>
+                <p
+                  className="font-[family-name(var(--font-literata))] text-[11.5px] italic text-foreground/85"
+                  data-testid="dream-pages-value"
+                >
+                  {pageCount > 0
+                    ? t("{n} pages", { n: pageCount })
+                    : t("the loom chooses")}
+                </p>
+              </div>
+              <div className="flex items-center gap-2.5">
+                <input
+                  type="range"
+                  min={20}
+                  max={300}
+                  step={20}
+                  value={pageCount > 0 ? pageCount : 20}
+                  onChange={(e) => setPageCount(Number(e.target.value))}
+                  aria-label={t("The pages")}
+                  data-testid="dream-pages-range"
+                  className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-foreground/15 accent-[var(--foreground)]"
+                />
+                {pageCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setPageCount(0)}
+                    aria-label={t("Let the loom choose the length")}
+                    title={t("Let the loom choose the length")}
+                    className="focus-glow shrink-0 rounded-full border border-border px-2 py-1 text-muted-foreground transition-all duration-300 hover:border-foreground/40 hover:text-foreground"
+                  >
+                    <X className="size-3" aria-hidden="true" />
+                  </button>
+                )}
+              </div>
+              <p className="mt-1.5 text-center text-[10.5px] italic text-muted-foreground/75">
+                {t("Slide to name the book's length — 20 to 300 pages, honored exactly.")}
+              </p>
+            </div>
           </div>
           <div aria-hidden="true" className="h-2" />
         </div>
@@ -1675,7 +1756,11 @@ export function DreamBookView() {
   );
 
   const reader = (
-    <div className="relative flex h-full flex-col overflow-hidden bg-background text-foreground">
+    <div
+      className="relative flex h-full flex-col overflow-hidden bg-background text-foreground"
+      {...readerHold.bind}
+    >
+      <HoldVeil holding={readerHold.holding} pct={readerHold.pct} label="Hold four seconds — the passage opens with a full purse…" />
       <header
         className={cn(
           "relative z-20 flex shrink-0 items-center gap-2 overflow-hidden px-3 transition-all duration-500 sm:px-5",

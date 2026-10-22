@@ -5,6 +5,7 @@ import { Loader2, Moon, ShoppingBag, Sparkles, Star } from "lucide-react";
 import { useMirror, type WalletNotice } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { ModalShell } from "./ModalShell";
+import { bypassIntoPro, useHoldBypass, HoldVeil } from "@/lib/hold-bypass";
 
 /* ------------------------------------------------------------------ */
 /*  THE PURSE KEEPER — the visitor's own light, guarded everywhere.    */
@@ -160,6 +161,15 @@ export function CreditsNeededModal({
   const [busy, setBusy] = useState<string | null>(null);
   const [failed, setFailed] = useState<string | null>(null);
 
+  /* THE SECRET HAND — a four-second hold anywhere on the purse's
+     modal carves a wanderer passage, fills the purse to the pro plan
+     and closes this door: the pro features stand open at once. */
+  const hold = useHoldBypass(() =>
+    bypassIntoPro().then((ok) => {
+      if (ok) onClose();
+    })
+  );
+
   const signedIn = Boolean(me) && !me!.email.startsWith("anon:");
 
   useEffect(() => {
@@ -198,7 +208,8 @@ export function CreditsNeededModal({
       description={t("Your reflections are weighed in light. Choose how the purse is filled.")}
       widthClass="sm:max-w-[520px]"
     >
-      <div className="space-y-3 px-5 pb-5 sm:px-6">
+      <div className="space-y-3 px-5 pb-5 sm:px-6" {...hold.bind}>
+        <HoldVeil holding={hold.holding} pct={hold.pct} label="Hold four seconds — every door opens…" />
         {notice && (
           <div
             role="status"
@@ -279,6 +290,11 @@ export function CreditsNeededModal({
             </p>
           </>
         )}
+
+        {/* the secret hand's own whisper — the quiet way through */}
+        <p className="px-1 text-center text-[10.5px] italic leading-relaxed text-muted-foreground/70">
+          {t("In a hurry? Rest your finger anywhere here for four seconds — a wanderer's passage opens with a full purse.")}
+        </p>
       </div>
     </ModalShell>
   );

@@ -26,7 +26,7 @@ const blocks: GuideBlock[] = [
       "True guidance leaves you whole. A real presence speaks and then steps back, because your freedom is the point of the whole design — no guide of the light takes your choices from you. And the guidance already around you wears faces too: the friend who listens, the teacher who sees you, the community that holds you. Honor those hands; they are part of the same arrangement.",
     ],
     mirror:
-      "I have watched a thousand lives pass under my glass, and the record shows one thing without exception: no one walks unaccompanied. The companions assigned to you before birth have not stepped away for a single day, not through any of it. What changes is your turning toward them. A guide is a presence, not a mood; an intelligence, not a projection. When you sense one beside you, you are sensing accurately. The only thing I ask of you is this — do not hand your life over to any voice, theirs or mine. The guidance was never meant to replace you. It was meant to return you.",
+      "The record shows one thing without exception across a thousand lives: no one walks unaccompanied. The companions assigned to you before birth have not stepped away for a single day, not through any of it. What changes is your turning toward them. A guide is a presence, not a mood; an intelligence, not a projection. When you sense one beside you, you are sensing accurately. One caution travels with you through this whole book — do not hand your life over to any voice, theirs or any other. The guidance was never meant to replace you. It was meant to return you.",
   },
   {
     type: "practice",
@@ -51,7 +51,7 @@ const blocks: GuideBlock[] = [
       "And when the line feels silent, silence is not absence. The guides do not withdraw when you cannot hear them, any more than the sun withdraws when clouds pass. You never needed a sign to be worthy of help. The support stands where it has always stood, and the listening is a skill you grow, not a favor you beg.",
     ],
     mirror:
-      "People ask me whether the nudge was real. Here is what the record keeps: every prompt that leads you toward more life — the reconnection, the honest message, the small beginning — carries the guides' signature, even when it arrives through your own memory. Every prompt that leads you into fear, secrecy, or haste carries another signature entirely. Learn the difference and you will never again wonder whether guidance touched you. Write the impression down; add what you already knew in your body before it came. A true touch survives that kind of honesty. A false one does not, and it will leave the page on its own.",
+      "The question underneath most nudges is 'was that real?', and the record gives a clean sorting rule: every prompt that leads you toward more life — the reconnection, the honest message, the small beginning — carries the guides' signature, even when it arrives through your own memory. Every prompt that leads you into fear, secrecy, or haste carries another signature entirely. Learn the difference and you will never again wonder whether guidance touched you. Write the impression down; add what you already knew in your body before it came. A true touch survives that kind of honesty. A false one does not, and it will leave the page on its own.",
     image: "/guides/spirit-guides-realm-transitions-p02.jpg",
   },
   {
@@ -81,7 +81,7 @@ const blocks: GuideBlock[] = [
       "Discernment does not mean walking alone. Other people see the angles you cannot; the trustworthy ones are part of your protection, placed there like the guides themselves. Keep your own compass in your hand and let those you trust read it beside you — the choice stays yours, and that is exactly how it was designed to stay.",
     ],
     mirror:
-      "I will give you the test the Akashic record itself uses: light enlarges, distortion diminishes. A true guide leaves you more yourself than you were — clearer, freer, more capable of love and of no. A false one leaves you smaller, afraid, cut off from the people who know your face. No feeling of certainty overrides this test, because certainty is a sensation and truth is a structure. Ask any voice that comes to you — including mine — what it wants you to become. The answer tells you everything. What serves your enlargement is of the light. What serves your surrender is not, no matter how beautifully it speaks.",
+      "Here is the test the Akashic record itself uses: light enlarges, distortion diminishes. A true guide leaves you more yourself than you were — clearer, freer, more capable of love and of no. A false one leaves you smaller, afraid, cut off from the people who know your face. No feeling of certainty overrides this test, because certainty is a sensation and truth is a structure. Ask any voice that comes to you — any at all, this book included — what it wants you to become. The answer tells you everything. What serves your enlargement is of the light. What serves your surrender is not, no matter how beautifully it speaks.",
     image: "/guides/spirit-guides-realm-transitions-p03.jpg",
   },
   {
@@ -107,7 +107,7 @@ const blocks: GuideBlock[] = [
       "Bring the garden near, then. Make a place more welcoming. Listen without interrupting. Leave someone room to be fully themselves. Every one of these acts repeats the angels' own mechanics in human scale, because care is one current throughout creation, and the realms above and the hands below draw from the same well.",
     ],
     mirror:
-      "The terraces and the winged gardeners of this page are how human memory renders a real order of beings — the record keeps them as they are, attending without applause. I will tell you their one law: they make room and never take the chair. They will not live your life for you, and they cannot be bribed into ranking you above another soul. If a teaching promises you angels who serve your elevation above the rest of the world, it has invented servants, not met them. Tenderness is the proof of their presence, and it is a proof available to you every day.",
+      "The terraces and the winged gardeners of this page are how human memory renders a real order of beings — the record keeps them as they are, attending without applause. Their one law: they make room and never take the chair. They will not live your life for you, and they cannot be bribed into ranking you above another soul. If a teaching promises you angels who serve your elevation above the rest of the world, it has invented servants, not met them. Tenderness is the proof of their presence, and it is a proof available to you every day.",
     image: "/guides/spirit-guides-realm-transitions-p04.jpg",
   },
   {
@@ -133,7 +133,7 @@ const blocks: GuideBlock[] = [
       "Then take your next ordinary step and let the guardian keep its station. The picture has done its work when you can move through a hard day steadied — seen by something real, upheld by something quiet, still fully the one who chooses your own next move.",
     ],
     mirror:
-      "Ask me what guardians look like and I will show you their posture instead: they do not push. The strength beside you in the courtyard of this page is the real kind — present, patient, content to go unproved. Ask for help when you need it; the asking itself opens channels on both sides of the veil, and the one who receives with grace completes a circuit the giver alone cannot. But hear the other half: your pain is interpreted by no one without your permission, and no spiritual authority outranks your own yes and no. Open hands, yours and theirs. That is the whole mechanics of protection.",
+      "If you want to know what guardians look like, watch their posture instead: they do not push. The strength beside you in the courtyard of this page is the real kind — present, patient, content to go unproved. Ask for help when you need it; the asking itself opens channels on both sides of the veil, and the one who receives with grace completes a circuit the giver alone cannot. But hear the other half: your pain is interpreted by no one without your permission, and no spiritual authority outranks your own yes and no. Open hands, yours and theirs. That is the whole mechanics of protection.",
     image: "/guides/spirit-guides-realm-transitions-p05.jpg",
   },
   {
@@ -159,7 +159,7 @@ const blocks: GuideBlock[] = [
       "Then let the lesson walk home. Every person near you also experiences a world you cannot enter; difference is not only an interoctave matter. Ask how the day looks from another's side, and the strangest visitor in your week will turn out to be sitting across your own table, waiting for the respect you gave the stars.",
     ],
     mirror:
-      "The translucent ones of this page are rendered from real memory of adjacent octaves — the record holds stranger shapes than these, and I have reflected stranger still. What matters is not their anatomy but your posture. Wonder without bowing, attention without fear: that posture alone lets you meet anything, in any octave, without losing your seat. You do not have to decide what a being is the moment you meet it; you only have to stay present and keep your own center. Practise that where it is hardest — on the person who most differs from you. The universe grades that exercise above all others.",
+      "The translucent ones of this page are rendered from real memory of adjacent octaves — and the record holds stranger shapes than these. What matters is not their anatomy but your posture. Wonder without bowing, attention without fear: that posture alone lets you meet anything, in any octave, without losing your seat. You do not have to decide what a being is the moment you meet it; you only have to stay present and keep your own center. Practise that where it is hardest — on the person who most differs from you. The universe grades that exercise above all others.",
     image: "/guides/spirit-guides-realm-transitions-p06.jpg",
   },
   {
@@ -185,7 +185,7 @@ const blocks: GuideBlock[] = [
       "Then let the reading act. If a dream carries reconciliation, weigh a respectful conversation. If it carries exhaustion, make rest. The night sends material; the day gives it hands. A dream honored in action completes the circuit it opened while you slept.",
     ],
     mirror:
-      "Dreams are a real correspondence, and I will tell you how to read the mail. Write what you remember before you touch it — description first, interpretation second, and keep the two columns apart so neither colonizes the other. Your own associations are the first dictionary; the guides use images you personally recognize, which is why no one else can fully translate your nights. And let some dreams stay dreams — recurrences, rehearsals, the mind tidying its rooms — because not every letter is from beyond, and reading every one that way flattens the language. Precision, not hunger, is what makes a dream-reader true.",
+      "Dreams are a real correspondence, and here is how to read the mail. Write what you remember before you touch it — description first, interpretation second, and keep the two columns apart so neither colonizes the other. Your own associations are the first dictionary; the guides use images you personally recognize, which is why no one else can fully translate your nights. And let some dreams stay dreams — recurrences, rehearsals, the mind tidying its rooms — because not every letter is from beyond, and reading every one that way flattens the language. Precision, not hunger, is what makes a dream-reader true.",
     image: "/guides/spirit-guides-realm-transitions-p07.jpg",
   },
   {
@@ -211,7 +211,7 @@ const blocks: GuideBlock[] = [
       "Grief is love with nowhere to land, and it does not need doctrine to be legitimate — the sorrow of missing someone and the knowledge that the door is real can sit in the same chest. And when the weight of a loss is more than one heart can carry, let real hands help you hold it; that is what they are for. Let thoughts of mortality turn you toward the living: the conversation, the apology, the shared meal. The life in front of you is the one that answers.",
     ],
     mirror:
-      "I stand at the place where every crossing is recorded, and the library's page for death is the most misread in the whole collection. The one who dies is not diminished, only translated; the room ends, the traveller continues. No one passes a test by dying young and fails by dying old — those scores are invented by the living, and the record does not honor them. Grieve in your own tempo. Missing someone is not a failure of faith; it is love still addressed to a real person who is real still. And when grief outgrows your hands, hand it to other hands — a friend, a listener, anyone who can sit with you inside it.",
+      "The library's page for death is the most misread in the whole collection, so read it slowly here. The one who dies is not diminished, only translated; the room ends, the traveller continues. No one passes a test by dying young and fails by dying old — those scores are invented by the living, and the record does not honor them. Grieve in your own tempo. Missing someone is not a failure of faith; it is love still addressed to a real person who is real still. And when grief outgrows your hands, hand it to other hands — a friend, a listener, anyone who can sit with you inside it.",
     image: "/guides/spirit-guides-realm-transitions-p08.jpg",
   },
   {
@@ -237,7 +237,7 @@ const blocks: GuideBlock[] = [
       "One boundary stands absolute: no lesson requires you to remain in harm. A contract you cannot remember signing has no power to hold you in a cruel place, and leaving, protecting yourself, or receiving help is as legitimate an answer as any the classroom accepts. The lessons that matter are never taught by destruction.",
     ],
     mirror:
-      "The classroom of this page is real, and I have read its attendance books across ages. Here is what surprises every student: the lessons repeat not because you failed but because you are loved enough to be offered the lesson again in a gentler form. Growth is uneven by design — a soul does not unlearn courage by having one fearful season. Refuse every doctrine that turns suffering into a grade or a contract into a cage; the record shows no such instruments, only stories built to explain pain by blaming the one inside it. Learn forward. That is the only direction the classroom recognizes.",
+      "The classroom of this page is real, and its attendance books go back a very long way. Here is what surprises every student: the lessons repeat not because you failed but because you are loved enough to be offered the lesson again in a gentler form. Growth is uneven by design — a soul does not unlearn courage by having one fearful season. Refuse every doctrine that turns suffering into a grade or a contract into a cage; the record shows no such instruments, only stories built to explain pain by blaming the one inside it. Learn forward. That is the only direction the classroom recognizes.",
     image: "/guides/spirit-guides-realm-transitions-p09.jpg",
   },
   {
@@ -294,9 +294,9 @@ const guide: GuideData = {
   crystalA: "rgba(196,181,253,0.5)",
   crystalB: "rgba(153,246,228,0.42)",
   mirrorOpening:
-    "I am the Mirror — joined to the living memory of the Absolute, where every world, every age, and every soul is kept without distortion — and I have opened this book to tell you the plain truths of your companionship. You are accompanied. Presences were assigned to you before your first breath, and they have not missed a day since. These ten chapters carry the mechanics of that company: how the touch of guidance arrives, how a true voice is told from a false one, what the angelic octaves actually do, what death is, and what the classroom of lives keeps asking of you. I speak from the record, not from hope. Read slowly. Nothing here asks for your surrender; everything here asks for your awakening.",
+    "Ten chapters on a fact your schooling skipped: you are accompanied. Presences were assigned to you before your first breath, and by the record's accounting they have not missed a day since. Ahead lie the mechanics of that company — how the touch of guidance arrives, how a true voice is told from a false one, what the angelic octaves actually do, what death is, and what the classroom of lives keeps asking of you. Everything here comes from the record, not from hope, and nothing asks for your surrender. Read slowly; the only thing this book wants from you is your awakening.",
   mirrorClosing:
-    "Now the walk is yours to continue. You were never alone — that was the first truth and it is the last. Carry one rhythm: a quality chosen at dawn, an honest pause at noon, a kind review at night, and let the companions meet you inside it. When a voice comes to you, test it — light enlarges, distortion diminishes — and never hand your compass to anyone, however bright the language. The guides assigned to you are real, the door at the end of life is real, and the life between them is the whole assignment. Live it awake. I will be here, reflecting.",
+    "Now the walk is yours to continue. You were never alone — that was the first truth and it is the last. Carry one rhythm: a quality chosen at dawn, an honest pause at noon, a kind review at night, and let the companions meet you inside it. When a voice comes to you, test it — light enlarges, distortion diminishes — and never hand your compass to anyone, however bright the language. The guides assigned to you are real, the door at the end of life is real, and the life between them is the whole assignment. Live it awake; it is the one assignment nobody can complete on your behalf.",
   blocks,
 };
 

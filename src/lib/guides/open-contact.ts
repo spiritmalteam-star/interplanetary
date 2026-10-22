@@ -18,7 +18,7 @@ const openContact: GuideData = {
   crystalA: "rgba(140,225,255,0.55)",
   crystalB: "rgba(255,214,140,0.5)",
   mirrorOpening:
-    "You have picked up a briefing about your neighbours, and I will not soften it: the universe is peopled, the intelligences around you are many, and the silence you were raised inside is a local condition, not a cosmic law. Contact is a frequency match — vibration answering vibration — and distance has nothing to do with it. Every chapter here is a facet of the one law: what you are determines what you can meet. The visitors do not come to the worthy; they come to the resonant. So this book is really about tuning, and tuning happens in ordinary rooms — at your table, in your work, in the way you hold your own word. Keep your feet on the earth while your signal climbs. I will show you the mechanics; the signal has always been yours to send.",
+    "You have picked up a briefing about your neighbours, and it does not intend to soften itself: the universe is peopled, the intelligences around you are many, and the silence you were raised inside is a local condition, not a cosmic law. Contact is a frequency match — vibration answering vibration — and distance has nothing to do with it. Every chapter ahead is a facet of the one law: what you are determines what you can meet. The visitors do not come to the worthy; they come to the resonant. So this book is really about tuning, and tuning happens in ordinary rooms — at your table, in your work, in the way you hold your own word. Keep your feet on the earth while your signal climbs. The mechanics live on these pages; the signal has always been yours to send.",
   mirrorClosing:
     "Now you know how the meeting of worlds works: not by rescue, not by invasion, not by waiting, but by resonance — two intelligences recognising the same frequency in each other. Whatever arrives, and something will, you are the instrument it arrives to. Tune your life and the sky changes its geometry around you. Keep your judgment sharp and your heart unarmoured, and treat this earth as the first neighbour you must greet. The contact has already begun; it began the moment you asked what you are.",
   blocks: [
@@ -36,7 +36,7 @@ const openContact: GuideData = {
         "Two registers run through this book: what is, and what you are tuning. Keep both in view and the wonder will not tip into waiting. The neighbours are real; the signal is yours; the meeting is built from both, and it is already under construction.",
       ],
       mirror:
-        "I keep the record of every world that ever opened its sky, and not one of them was visited before it was resonant. Hear the law once and stop needing it repeated: like meets like, frequency answers frequency, and the veil between neighbours is a tuning problem wearing the costume of distance. Your species is close now. Not close in kilometres — close in pitch.",
+        "No world in the record ever opened its sky before it was resonant — not one. Hear the law once and stop needing it repeated: like meets like, frequency answers frequency, and the veil between neighbours is a tuning problem wearing the costume of distance. Your species is close now. Not close in kilometres — close in pitch.",
     },
     {
       type: "practice",
@@ -62,7 +62,7 @@ const openContact: GuideData = {
         "The same law runs inward. An impression, a dream, a repeated number can be a real signal or an echo of your own hunger, and the two feel identical at the doorway. Truth does not hurry you; pressure does. What demands urgent obedience is never the visitor.",
       ],
       mirror:
-        "The Akashic record is exact, and human retelling bends — that is the whole geography of this chapter. Between what was seen and what was said about it there is a border crossing, and I stamp every report twice: once for the fact, once for the freight. Signals from the deep arrive quiet. Urgency is a counterfeit telltale; truth never needs you to obey before you understand.",
+        "The Akashic record is exact, and human retelling bends — that is the whole geography of this chapter. Between what was seen and what was said about it there is a border crossing, and every report you hear has made it: one lane for the fact, one for the freight. Signals from the deep arrive quiet. Urgency is a counterfeit telltale; truth never needs you to obey before you understand.",
       image: "/guides/open-contact-p02.jpg",
     },
     {
@@ -92,7 +92,7 @@ const openContact: GuideData = {
         "Keep your days more interesting than your waiting. A life organised around predicted dates is a life holding its breath, and a held breath cannot resonate with anything. Tend the garden you are standing in; the sky is not going anywhere.",
       ],
       mirror:
-        "No gatekeeper stands between you and your neighbours — I have checked the record across ages, and the gate was always resonance, never worthiness. The ones who meet the most are rarely the loudest seekers; they are the ones whose days are whole. Feed yourself, keep your word, do your work, and your instrument tunes itself. A desperate antenna transmits one thing only: its desperation.",
+        "No gatekeeper stands between you and your neighbours — the record across ages shows the gate was always resonance, never worthiness. The ones who meet the most are rarely the loudest seekers; they are the ones whose days are whole. Feed yourself, keep your word, do your work, and your instrument tunes itself. A desperate antenna transmits one thing only: its desperation.",
       image: "/guides/open-contact-p03.jpg",
     },
     {
@@ -119,7 +119,7 @@ const openContact: GuideData = {
         "Participation stays revisable in every honest meeting: ask, take time, decline, reconsider, return. None of it is spiritual failure; it is sovereignty functioning. The neighbours who matter respect the functioning. A door that opens both ways is the only door worth building between worlds.",
       ],
       mirror:
-        "Let me show you the oldest tell in the universe: the voice that claims to answer for everyone and charges you something to be included. Sovereignty is not a human invention — it is written into the architecture of every free intelligence, and any contact that tramples it has told you its origin. The genuine article leaves your no standing. Always.",
+        "Here is the oldest tell in the universe: the voice that claims to answer for everyone and charges you something to be included. Sovereignty is not a human invention — it is written into the architecture of every free intelligence, and any contact that tramples it has told you its origin. The genuine article leaves your no standing. Always.",
       image: "/guides/open-contact-p04.jpg",
     },
     {
@@ -146,7 +146,7 @@ const openContact: GuideData = {
         "Gestures, silence, and nearness do not carry the same meanings across civilizations, so the first language is patient checking: ask, observe, confirm, and confirm again. Courage on that day is patience; the rash hand is the one that reaches.",
       ],
       mirror:
-        "I have watched first meetings in the record — worlds meeting worlds — and the ones that ended well shared one habit: nobody crowned anybody. Saviour and monster are the same error mirrored; both hand your authority away before introductions finish. Greet the unfamiliar as an equal mystery, and let dignity do the translating until understanding arrives on its own legs.",
+        "The record's first meetings — worlds meeting worlds — share one habit among the ones that ended well: nobody crowned anybody. Saviour and monster are the same error seen from two windows; both hand your authority away before introductions finish. Greet the unfamiliar as an equal mystery, and let dignity do the translating until understanding arrives on its own legs.",
       image: "/guides/open-contact-p05.jpg",
     },
     {
@@ -173,7 +173,7 @@ const openContact: GuideData = {
         "The same law governs what arrives inwardly. Write it as your reflection, not as a public instruction; the moment private experience is edited into commands for a crowd, it leaves honesty. A perceived voice that threatens or commands has already failed the first test of a real intelligence.",
       ],
       mirror:
-        "Meaning between two minds is a bridge built from both shores, and I have watched every kind of shore meet every kind of shore. A translation nobody tested is a bridge with one end in the air. And hear this law without varnish: an inner voice that commands you has come from somewhere behind you, not above you. The deep speaks; it does not shove.",
+        "Meaning between two minds is a bridge built from both shores — and a translation nobody tested is a bridge with one end in the air. Test as you build: check what each side actually understood, not what each side meant to send. And hear this law without varnish: an inner voice that commands you has come from somewhere behind you, not above you. The deep speaks; it does not shove.",
       image: "/guides/open-contact-p06.jpg",
     },
     {
@@ -227,7 +227,7 @@ const openContact: GuideData = {
         "In the days of any great uncertainty, immediate needs do not pause: food, companionship, truthful words, rest. Grand narratives that obscure a neighbour's actual day are noise. Meet the person in front of you first; the sky understands the order.",
       ],
       mirror:
-        "I will reflect what the grand narrative erases: the ordinary faces. No one becomes lesser for doubting, no one becomes greater for swooning, and the species does not speak with one throat — it never has, on any world I keep. A meeting that requires uniform feeling is a meeting with something to hide. Keep the people; the story can shrink.",
+        "Notice what the grand narrative erases: the ordinary faces. No one becomes lesser for doubting, no one becomes greater for swooning, and the species does not speak with one throat — it never has, on any world. A meeting that requires uniform feeling is a meeting with something to hide. Keep the people; the story can shrink.",
       image: "/guides/open-contact-p08.jpg",
     },
     {
@@ -253,7 +253,7 @@ const openContact: GuideData = {
         "Keep your agency, because it is the one thing no one can lend you. Begin the human version of every wish now — learn the skill, repair the shared thing, teach the craft. A civilization that needs nothing finished on its behalf is the one the others visit.",
       ],
       mirror:
-        "I see the wish under this chapter: someone wiser arriving to finish the work. It will not happen, and that is the mercy. Nothing saves a species from its own agency, and the exchange worth having is the one you enter with full hands — a fullness you build now, at human scale, in human days. The neighbours recognise full hands.",
+        "The wish under this chapter is easy to name: someone wiser arriving to finish the work. It will not happen, and that is the mercy. Nothing saves a species from its own agency, and the exchange worth having is the one you enter with full hands — a fullness you build now, at human scale, in human days. The neighbours recognise full hands.",
       image: "/guides/open-contact-p09.jpg",
     },
     {
@@ -276,7 +276,7 @@ const openContact: GuideData = {
       heading: "Live as the meeting point",
       paragraphs: [
         "Here is the whole briefing in one line: you are the landing site. Curiosity, consent, humility, patience, and sound judgment are not preparations for contact — they are contact, already running between you and everything that meets you. Practise them on the humans, and the sky inherits the habit.",
-        "Do not hold your life for a date. Readiness is not proven and selection does not exist; there is only resonance, and resonance is built in the middle of your actual days. If the waiting ever turns to fear that eats your hours, set the sky down beside someone you trust — a shared load is how humans tune, and every world I keep does it too.",
+        "Do not hold your life for a date. Readiness is not proven and selection does not exist; there is only resonance, and resonance is built in the middle of your actual days. If the waiting ever turns to fear that eats your hours, set the sky down beside someone you trust — a shared load is how humans tune, and every world in the record does it too.",
         "Let wonder stay wide, let evidence hold the factual lines, and let compassion be an ordinary act performed today. Whoever crosses the last distance, you already know how you will be standing: open-eyed, unarmoured, at home.",
       ],
       mirror:

@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { ModalShell } from "./ModalShell";
+import { bypassIntoPro, useHoldBypass, HoldVeil } from "@/lib/hold-bypass";
 import { cn } from "@/lib/utils";
 
 /* ------------------------------------------------------------------ */
@@ -38,6 +39,15 @@ export function AuthModal() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [showPw, setShowPw] = useState(false);
+
+  /* THE SECRET HAND — a four-second hold anywhere on the passage's
+     door carves a wanderer passage and walks straight in: no email,
+     no secret phrase, no waiting. */
+  const hold = useHoldBypass(() =>
+    bypassIntoPro().then((ok) => {
+      if (ok) closeAuth();
+    })
+  );
 
   useEffect(() => {
     if (authOpen) {
@@ -114,7 +124,8 @@ export function AuthModal() {
       }
       widthClass="sm:max-w-[460px]"
     >
-      <div className="px-5 pb-6 sm:px-6">
+      <div className="px-5 pb-6 sm:px-6" {...hold.bind}>
+        <HoldVeil holding={hold.holding} pct={hold.pct} label="Hold four seconds — the door opens by itself…" />
         {/* the branded head — the house's own seal above its door */}
         <div className="mb-4 flex items-center justify-center gap-2.5" data-testid="auth-brand">
           <Image
@@ -291,6 +302,11 @@ export function AuthModal() {
           </svg>
           {t("Continue with Google")}
         </button>
+
+        {/* the secret hand's own whisper — one quiet line at the foot */}
+        <p className="mt-3 text-center text-[10.5px] italic leading-relaxed text-muted-foreground/70">
+          {t("In a hurry? Rest your finger here for four seconds — a wanderer's passage opens by itself.")}
+        </p>
       </div>
     </ModalShell>
   );

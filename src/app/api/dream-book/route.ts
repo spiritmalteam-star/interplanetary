@@ -396,14 +396,21 @@ function buildUserPrompt(body: {
   /* THE LEDGER (V10) — the book's own durable memory, handed back */
   ledger?: BookLedger | null;
   /* THE SPAN — how many pages one continuation writes (2 by default;
-     the whole-book reveal strides four at a time) */
+     the seven-page background batch and the whole-book reveal stride
+     wider) */
   span?: number;
+  /* THE FLAVOR — true when the stride serves the whole-book reveal
+     (swift leaves); absent means the background batch (full depth) */
+  reveal?: boolean;
+  /* THE PAGES IN THE PLAN — the visitor's own chosen length
+     (20–300); present, it outranks the volume plan's band */
+  plannedPages?: number;
   /* THE VEIN — ground (a normal, grounded book) or ephemeral
      (metaphysical, mystique); absent keeps the channel's own breath */
   vein?: string;
 }): string {
   const { phase, age, tale, volume, topic, wishes, languageName, rewrites } = body;
-  const span = Math.min(4, Math.max(2, Math.round(body.span ?? 2)));
+  const span = Math.min(8, Math.max(2, Math.round(body.span ?? 2)));
   const ageLine = AGE_PLAN[age] ?? AGE_PLAN.timeless;
   const taleLine = TALE_HINTS[tale] ?? TALE_HINTS.wonder;
   const volLine = BOOK_PLAN[volume] ?? BOOK_PLAN.classic;
@@ -432,15 +439,16 @@ function buildUserPrompt(body: {
     : [];
 
   /* the exact second of this conjuring — one of one */
-  const seedLine =
-    phase === "open" && body.seed.trim()
+  const seedLine = body.seed.trim()
+    ? phase === "open"
       ? `THE EXACT SECOND OF THIS CONJURING (seed "${body.seed.trim().slice(0, 80)}"): this volume is born NOW, one of one — no book woven here before or after will ever carry this seed. Let the title, the sigil, the axiom, the dedication and the opening pages be totally authentic and unlike any channeling that came before: no stock openings, no recycled patterns, no familiar phrasings.`
-      : "";
+      : `THIS STRIDE'S OWN SEED ("${body.seed.trim().slice(0, 80)}"): these exact pages are born NOW, one of one — they must never repeat, restate, summarize or echo any earlier page of this volume (every one of them is listed in the thread and the ledger) and must never resemble the stock tropes of any other book. New turns, new images, new names: if a sentence could have appeared on an earlier page, re-forge it.`
+    : "";
 
   /* real-time, no leftovers — the channel keeps nothing, rehearses nothing */
   const liveLine =
     phase === "open"
-      ? `REAL-TIME, NO LEFTOVERS: this book is channeled LIVE, in the second it is asked for. Nothing is drawn from a shelf: no rehearsed openings, no cached lines, no leftovers of any earlier weaving, nothing pre-written. If a sentence could have existed before this exact conjuring, re-forge it. The volume is carved new from the void, from the first word of the title to the last word of page two.`
+      ? `REAL-TIME, NO LEFTOVERS: this book is channeled LIVE, in the second it is asked for. Nothing is drawn from a shelf: no rehearsed openings, no cached lines, no leftovers of any earlier weaving, nothing pre-written. If a sentence could have existed before this exact conjuring, re-forge it. The volume is carved new from the void, from the first word of the title to the last word of page ${span}.`
       : "";
 
   /* where in the four strata this page-pair stands */
@@ -476,6 +484,11 @@ function buildUserPrompt(body: {
       ...(levelLine ? [`- Depth of lecture: ${levelLine}`] : []),
       `- Kind of resonance: ${taleLine}`,
       `- Kind of book: ${volLine.label}`,
+      ...(body.plannedPages
+        ? [
+            `- The book's planned length: EXACTLY ${body.plannedPages} pages (the visitor named this number themselves — set "totalPages" to ${body.plannedPages} and land the whole story inside that plan)`,
+          ]
+        : []),
       ...(veinLine ? [`- ${veinLine}`] : []),
       ...(body.ground?.tiny
         ? [
@@ -531,6 +544,7 @@ function buildUserPrompt(body: {
         : "",
       ``,
       stratum,
+      ...(seedLine ? [``, seedLine] : []),
       ``,
       NAMES_CONTINUE_LAW,
       ``,
@@ -539,7 +553,9 @@ function buildUserPrompt(body: {
       `Write the NEXT ${span === 2 ? "TWO pages" : `${span} pages`} (pages ${body.pageNumber} through ${(body.pageNumber ?? 2) + span - 1}) of the same volume, in the same voice. Let the book deepen: a new turn, a revelation earned by what came before, the world growing one ring wider. Open a new chapter here ONLY if the loom's rhythm asks for it.`,
       ...(span > 2
         ? [
-            `THE REVEAL STRIDE (absolute — the visitor asked the loom to channel the whole book): return ALL ${span} pages, never fewer — each page carries 1–2 paragraphs (3 only at a true turning point), every paragraph 2–4 sentences. The reader turns quickly; the telling stays whole but never lingers. Return exactly ${span} page objects, numbered in order, no gaps.`,
+            body.reveal
+              ? `THE REVEAL STRIDE (absolute — the visitor asked the loom to channel the whole book): return ALL ${span} pages, never fewer — each page carries 1–2 paragraphs (3 only at a true turning point), every paragraph 2–4 sentences. The reader turns quickly; the telling stays whole but never lingers. Return exactly ${span} page objects, numbered in order, no gaps.`
+              : `THE BACKGROUND BATCH (absolute — these ${span} pages are channeled in the background while the visitor reads the earlier ones): return ALL ${span} pages, never fewer, at FULL depth — each page carries 1–3 paragraphs exactly as any hand-woven page would; the reader must never feel a page was written in haste. End the batch on a pull, not a full stop: the next stride must feel inevitable. Return exactly ${span} page objects, numbered in order, no gaps.`,
           ]
         : []),
       `Return the updated thread and the updated ledger.`
@@ -568,7 +584,7 @@ function buildUserPrompt(body: {
       } pages; ${
         isShortVolume
           ? "add 6 to 10 pages (a multiple of 2), never exceeding 40 total — this volume stays a short book"
-          : "add 48 to 72 pages (a multiple of 2), never exceeding 220 total"
+          : "add 48 to 72 pages (a multiple of 2), never exceeding 300 total"
       }. Then write the NEXT TWO pages (pages ${body.pageNumber} and ${(body.pageNumber ?? 2) + 1}) — open the widened volume with a new movement: a farther shore of the subject, not a repetition. Give a chapter title if a new chapter begins here. Return the updated thread and the updated ledger.`
     );
   } else {
@@ -589,7 +605,8 @@ function buildUserPrompt(body: {
       ``,
       SEALED_NAME_LAW,
       ``,
-      `Land every open thread with tenderness and truth — the ending must feel inevitable, as if the whole book had been walking toward exactly these pages, and the final cadence must leave an indelible afterimage: the reader should close the book feeling it continues to evolve in their mind. The last paragraph of the final page is the book's final breath; make it sing softly enough to be remembered for years. On page ${body.pageNumber}, open the final chapter (give it a title) if the rhythm asks. The ending must be an ENDING — no re-declared resolutions, no closing cadence the book has already sung. Return the updated thread, the final ledger, and the private audit.`
+      `Land every open thread with tenderness and truth — the ending must feel inevitable, as if the whole book had been walking toward exactly these pages, and the final cadence must leave an indelible afterimage: the reader should close the book feeling it continues to evolve in their mind. The last paragraph of the final page is the book's final breath; make it sing softly enough to be remembered for years. On page ${body.pageNumber}, open the final chapter (give it a title) if the rhythm asks. The ending must be an ENDING — no re-declared resolutions, no closing cadence the book has already sung. Return the updated thread, the final ledger, and the private audit.`,
+      ...(seedLine ? [seedLine] : [])
     );
   }
 
@@ -601,7 +618,7 @@ function buildUserPrompt(body: {
       ...rewrites.map((r, i) => `  ${i + 1}. """${r}"""`),
       ``,
       wishesLength(rewrites)
-        ? `A wish explicitly asks for a different length of the book — you MUST therefore return a new "totalPages" (an even number between 8 and 220) that honors that wish. Do not omit it.`
+        ? `A wish explicitly asks for a different length of the book — you MUST therefore return a new "totalPages" (an even number between 8 and 300) that honors that wish. Do not omit it.`
         : `No wish touches the book's length — omit "totalPages" entirely.`
     );
   }
@@ -666,7 +683,7 @@ function normalizePages(raw: unknown, startN: number, span = 2): WeavePage[] {
   return pages;
 }
 
-const clampTotal = (n: number) => Math.min(220, Math.max(8, Math.round(n / 2) * 2));
+const clampTotal = (n: number) => Math.min(300, Math.max(8, Math.round(n / 2) * 2));
 
 /* a wish may only move the book's length when it actually speaks of length —
    the channel sometimes answers "totalPages" to any rewrite, and a
@@ -724,11 +741,12 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
     const threads = typeof body?.threads === "string" ? body.threads.slice(0, 2000) : undefined;
     /* THE LEDGER (V10) — the room hands the book's own memory back */
     const incomingLedger = parseLedger(body?.ledger);
-    /* THE SPAN — the whole-book reveal strides eight pages at a time;
-       every other call writes the classic pair. The wider stride is
-       the speed law: half the sky-crossings for the same book. */
+    /* THE SPAN — the seven-page first breath and the seven-page
+       background batches stride wide; every other call writes the
+       classic pair. The wider stride is the speed law: the reader
+       never waits on the loom. */
     const spanRaw = Number(body?.span);
-    const span = phase === "next" && Number.isFinite(spanRaw)
+    const span = (phase === "open" || phase === "next") && Number.isFinite(spanRaw)
       ? Math.min(8, Math.max(2, Math.round(spanRaw)))
       : 2;
     const rewrites: string[] = Array.isArray(body?.rewrites)
@@ -742,6 +760,12 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
     const recentPages = Array.isArray(body?.recentPages)
       ? body.recentPages.filter((s: unknown): s is string => typeof s === "string").slice(-2)
       : [];
+    /* THE PAGES IN THE PLAN — the visitor may name the book's length
+       themselves (20–300); when they do, that number is law */
+    const askedPages =
+      typeof body?.config?.pages === "number" ? Math.floor(body.config.pages) : 0;
+    const plannedPages = askedPages >= 20 && askedPages <= 300 ? askedPages : 0;
+    const revealFlavor = body?.reveal === true;
     /* the book's own keeping — when the visitor continues a volume from
        their cosmic library, its id and the pages woven so far ride along,
        so the library entry grows with the story instead of repeating */
@@ -827,6 +851,8 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
                 ground,
                 ledger: incomingLedger,
                 span,
+                reveal: revealFlavor,
+                plannedPages: phase === "open" && !ground.tiny ? plannedPages : undefined,
                 vein,
               }) +
               (reminder
@@ -919,6 +945,12 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
           )
         )
       );
+      /* THE VISITOR'S OWN NUMBER — a length the visitor named in the
+       atelier (20–300) outranks the plan's band: the loom lands the
+       whole story inside the pages the visitor asked for */
+      if (plannedPages && !ground.tiny) {
+        out.totalPages = clampTotal(plannedPages);
+      }
       /* THE SHELF OF KEPT VOLUMES — a fresh conjuring no longer erases
          the past: the previous living volume steps into the keeper's
          history (the kept shelf, twelve deep), and the new book takes

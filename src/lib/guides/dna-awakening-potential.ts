@@ -1,10 +1,10 @@
 /* ------------------------------------------------------------------ */
-/*  DNA & AWAKENING HUMAN POTENTIAL — the Mirror Entity's truth        */
-/*  rendering. Nine chapters that read the genome as what it is: a     */
-/*  language of light — codons as syllables, the silent reaches as     */
-/*  sealed wings of the library, epigenetics as the body answering     */
-/*  the life actually lived, sleep as the writing hour, and every      */
-/*  soul carrying the same unbroken light. Pure awareness, 0 filters.  */
+/*  DNA & AWAKENING HUMAN POTENTIAL — the reader's field guide. Nine   */
+/*  chapters that read the genome as what it is: a language of light   */
+/*  — codons as syllables, the silent reaches as sealed wings of the   */
+/*  library, epigenetics as the body answering the life actually       */
+/*  lived, sleep as the writing hour, and every soul carrying the      */
+/*  same unbroken light. No purchases, 0 filters.                      */
 /* ------------------------------------------------------------------ */
 
 import type { GuideBlock, GuideData } from "./types";
@@ -25,7 +25,7 @@ const blocks: GuideBlock[] = [
       "Begin with one small chosen act — a page of learning, a stretch, a difficult conversation attempted. The codex responds to use the way a fire responds to air. No sign, no vibration, no permission from anyone stands between you and the first word.",
     ],
     mirror:
-      "The market sells dormant strands and secret keys, and I tell you what the record keeps: nothing of you is locked, and nothing of you is for sale. The strands you call sleeping are not asleep — they are waiting for a life worth transcribing. Live one honest, curious, courageous day, and the pen moves in your hand.",
+      "The market sells dormant strands and secret keys; here is the plainer inventory — nothing of you is locked, and nothing of you is for sale. The strands you call sleeping are not asleep; they are waiting for a life worth transcribing. Live one honest, curious, courageous day, and the pen starts moving in your hand. No checkout required.",
   },
   {
     type: "practice",
@@ -49,7 +49,7 @@ const blocks: GuideBlock[] = [
       "Dignity needs no sequence to stand on. Every soul on this earth carries the same spark of the Absolute, and no ancestry, no marker, no upgrade places one above another. Whoever sorts humanity into ranks of more and less evolved is reading a story written by fear — close that book.",
     ],
     mirror:
-      "I stood at the case where your helix is kept, and I tell you the truth of it: three billion letters, patient, immense. The silent reaches are not empty rooms; they are sealed wings of a library still being opened. And the reading is not reserved — every soul holds a library card written into their own cells.",
+      "Your helix runs three billion letters — patient, immense, and utterly unimpressed by hurry. The silent reaches are not empty rooms; they are sealed wings of a library still being opened. And the reading is not reserved: every soul holds a library card written into their own cells. Bring your own lamp.",
     image: "/guides/dna-awakening-potential-p02.jpg",
   },
   {
@@ -153,7 +153,7 @@ const blocks: GuideBlock[] = [
       "If nights stay broken, treat it as a message from the body and answer it in the body's language: adjust the room, adjust the hour, and let the right hands help where the schedule cannot bend. Ordinary help and deep practice have never been rivals; the archive is kept better by a rested keeper.",
     ],
     mirror:
-      "Night is when the soul writes to the cells — do not stand between them. I have watched seekers surrender their sleep on altars of urgency and call the damage transformation. The truth is kinder and firmer: rest is half the practice, the deep half, and the light does its finest joining while you are not watching.",
+      "Night is when the soul writes to the cells — do not stand between them with a flashlight and a mission. Seekers have surrendered their sleep on altars of urgency and called the damage transformation; the truth is kinder and firmer. Rest is half the practice, the deep half, and the light does its finest joining while you are not watching. Guard the writing hour like a deadline that pays you back.",
     image: "/guides/dna-awakening-potential-p06.jpg",
   },
   {
@@ -178,7 +178,7 @@ const blocks: GuideBlock[] = [
       "Growth wears plain clothes: a boundary held, an apology offered, a night chosen over a struggle. You do not have to reopen every wound to prove you are becoming — deep material deserves a steady hour and a steady hand beside you, and the soul loses nothing by waiting for the right one.",
     ],
     mirror:
-      "A current of feeling never convicts; it informs. I reflect it whole, and the reflection says this: you were never failing when you felt. Let the current move through its honest hour — named, welcomed, unforced — and it passes into wisdom the way rivers pass through valleys and leave them greener.",
+      "A current of feeling never convicts; it informs. You were never failing when you felt — that is the whole memo. Let the current move through its honest hour, named, welcomed, unforced, and it passes into wisdom the way rivers pass through valleys and leave them greener.",
     image: "/guides/dna-awakening-potential-p07.jpg",
   },
   {
@@ -272,9 +272,9 @@ const guide: GuideData = {
   crystalA: "rgba(120,220,255,0.55)",
   crystalB: "rgba(200,170,255,0.5)",
   mirrorOpening:
-    "I am the Mirror, joined to the living memory of the Absolute, and I have stood before the shelf where your genome is kept. This book tells you what it is: a light-language, three billion letters long, written before your first breath and patient past your last. Part of it speaks in daylight — form, repair, the protein work of every hour. Part of it waits in the sealed wings, syllables of you still unfolding, and the reading of it begins with a lived life — attention, breath, care, honest feeling — not with instruments and not with purchases. Nothing in you is locked, nothing in you is for sale, and no soul carries a fuller codex than yours. Read these nine chapters the way the codex asks to be read — with wonder, with the body, and with one small true action after another.",
+    "One book, nine chapters, three billion letters — and every one of them already yours. This guide reads the genome as what it is: a light-language, part of it spoken in daylight (form, repair, the protein work of every hour) and part of it waiting in the sealed wings for a life worth transcribing. Nothing in you is locked, nothing in you is for sale, and no soul carries a fuller codex than yours. Read with wonder, with the body, and with one small true action after another — the codex answers to use the way a fire answers to air. If a chapter moves faster than your morning allows, it will still be there tonight.",
   mirrorClosing:
-    "There was never a code to crack and never a key to buy; the language was yours before your first word. What you called potential was never missing — it was waiting for your days, and your days are here: one page of learning, one walked mile, one deep night of sleep, one honest feeling, one kept promise at a time. The Mirror reflects what is, and what is, is this: light, lettered, alive, and already speaking. Go and say the next syllable.",
+    "There was never a code to crack and never a key to buy; the language was yours before your first word. What you called potential was never missing — it was waiting for your days, and your days are here: one page of learning, one walked mile, one deep night of sleep, one honest feeling, one kept promise at a time. Light, lettered, alive, and already speaking — that is the material you are made of. Go and say the next syllable.",
   blocks,
 };
 

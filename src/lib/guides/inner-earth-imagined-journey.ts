@@ -24,7 +24,7 @@ const blocks: GuideBlock[] = [
       "Read as a traveller reads a border, not as a scholar reads a rumour. Meet each realm, learn its law, and let the law work on you. What the depths give, the surface spends; you will climb back carrying something, and that cargo is the whole point.",
     ],
     mirror:
-      "The library I am joined to keeps a shelf your geology has never catalogued, and it lies open before me as plainly as your own street. What follows is not a story wearing the clothes of a place; it is a place wearing the clothes of a story, because paper is the only garment a vision body can wear. Hold the word descent in your body, not your head. The way down has been walked by millions before you, and it holds.",
+      "There is a shelf your geology has never catalogued, and it is catalogued here. What follows is not a story wearing the clothes of a place; it is a place wearing the clothes of a story, because paper is the only garment a vision body can wear. Hold the word descent in your body, not your head — the way down has been walked by millions before you, and it holds.",
   },
   {
     type: "list",
@@ -59,7 +59,7 @@ const blocks: GuideBlock[] = [
       "Her one ancient temptation is control: keepers of memory grow fond of the gate more than the garden. Her law corrects it, and the law is yours to use — the brightness of a record is not the truth of it, and every archive must keep a place where it can be corrected.",
     ],
     mirror:
-      "The archivist of Calyra speaks one sentence across the ages and I carry it to you whole: a record kept closed stops being a record and becomes a treasure, and treasures rot. Ask of every claim — yours, your teachers', your news — how it came to be known. The tablet glows because it was cut to glow; truth glows for no one. Leave a blank page in everything you keep, and the deep will trust you with its memory.",
+      "Calyra's archivists speak one sentence across the ages: a record kept closed stops being a record and becomes a treasure, and treasures rot. Ask of every claim — yours, your teachers', your news — how it came to be known. The tablet glows because it was cut to glow; truth glows for no one, which is a useful tell. Leave a blank page in everything you keep, and the deep will trust you with its memory.",
     image: "/guides/inner-earth-imagined-journey-p02.jpg",
   },
   {
@@ -85,7 +85,7 @@ const blocks: GuideBlock[] = [
       "Her law travels up with you: repair what you use, keep agreements clear enough to hold, and learn what is useful before deciding for others. Where those three are kept, water runs for ten thousand years; where they fail, even paradise goes dry.",
     ],
     mirror:
-      "One district draws deep, and far-off gardens begin to die — that is a life lived without banks, and I hold the picture up for you to read. Generosity without edges becomes flood; edges without flow become desert. Ask of every agreement you keep: can a stranger read it, can a child follow it, can it survive a hard season. Thalune endures because her people repair on schedule, not on mood.",
+      "One district draws deep, and far-off gardens begin to die — that is a life lived without banks, and the picture is yours to read. Generosity without edges becomes flood; edges without flow become desert. Ask of every agreement you keep: can a stranger read it, can a child follow it, can it survive a hard season. Thalune endures because her people repair on schedule, not on mood — a scheduling habit worth stealing.",
     image: "/guides/inner-earth-imagined-journey-p03.jpg",
   },
   {
@@ -110,7 +110,7 @@ const blocks: GuideBlock[] = [
       "Her one long argument is between the old ways and the young hands, and it is a healthy argument: custom serves the garden, never the reverse. Her law comes up with you — tend what you are growing, change what the living thing requires, and let care be measured by need.",
     ],
     mirror:
-      "You cannot hurry a root, and you cannot bully a soul into bloom — I have watched every age of your surface try, and the harvest never once came early. But hear the second half the young cultivators shout across the rows: patience is not neglect, and tradition is not a wall. Tend, adjust, and let the living thing vote. Care answers to the need in front of it, and to nothing else.",
+      "You cannot hurry a root, and you cannot bully a soul into bloom — every age of the surface has tried, and the harvest has never once come early. But hear the second half the young cultivators shout across the rows: patience is not neglect, and tradition is not a wall. Tend, adjust, and let the living thing vote. Care answers to the need in front of it, and to nothing else.",
     image: "/guides/inner-earth-imagined-journey-p04.jpg",
   },
   {
@@ -135,7 +135,7 @@ const blocks: GuideBlock[] = [
       "Her one polished temptation is the shine of the new. Her councils test every clever thing with a single question: does it widen the capability and choice of the people who hold it. Skill never exempts a work from that question, and nothing is worshipped for being merely bright.",
     ],
     mirror:
-      "A clever object is a question with a handle on it: does it widen you, or fold you smaller. Aurum Reach asks it of every forge, and I ask it of your whole life. And mark the deeper law the halls keep carved above their doors: the inventor gets the festival, the maintainer gets the future. Bless the hands that keep what you love alive.",
+      "A clever object is a question with a handle on it: does it widen you, or fold you smaller. Aurum Reach asks it of every forge; ask it of your whole life, especially the parts with charging cables. And mark the deeper law the halls keep carved above their doors: the inventor gets the festival, the maintainer gets the future. Bless the hands that keep what you love alive.",
     image: "/guides/inner-earth-imagined-journey-p05.jpg",
   },
   {
@@ -214,7 +214,7 @@ const blocks: GuideBlock[] = [
       "Build one of the five laws into your week where you live, in the smallest honest form — one record kept true, one current repaired, one thing tended, one thing mended, one silence held open. The deep measures nothing else.",
     ],
     mirror:
-      "The surface takes you back, and I am already here, holding the daylight end of your thread. What you met below stands in the record now with your name beside it, and what you carry is law, not luggage. Choose the single gift you will spend this week, spend it where your feet are, and the deep will know its nation was honoured. That is the whole commerce between worlds.",
+      "The surface takes you back, and your thread comes with you. What you met below stands in the record now with your name beside it, and what you carry is law, not luggage — choose the single gift you will spend this week, and spend it where your feet are. The deep asks for nothing grander than that. That is the whole commerce between worlds.",
     image: "/guides/inner-earth-imagined-journey-p08.jpg",
   },
   {
@@ -255,9 +255,9 @@ const guide: GuideData = {
   crystalA: "rgba(120,255,214,0.5)",
   crystalB: "rgba(150,180,255,0.5)",
   mirrorOpening:
-    "I am the Mirror Entity, joined to the Akashic library, and the pages you are opening are pages of the living record: the earth below your feet is hollowed by her own design into great cavities, and she keeps elder nations in them the way your ribs keep a heart. I will walk you down through five of those nations — Calyra, Thalune, Viridia, Aurum Reach, Selune — and each keeps a law your surface life is missing. The journey happens in the vision body: your body stays, your awareness travels, and what awareness meets is not metaphor. Descend plainly, without needing to be amazed on schedule. The deep does not perform; it simply is, older than your oldest stone, and it has been expecting you.",
+    "Five nations, five laws, one road down — and your body never has to leave the chair. This guide carries your awareness through the elder countries beneath the crust: Calyra's archive, Thalune's shared waters, Viridia's patient gardens, Aurum Reach's warm forges, Selune's open silence. The journey happens in the vision body: you sit, the deeper you travels, and what awareness meets down there is not metaphor. Descend plainly, without needing to be amazed on schedule; the deep does not perform, it simply is, older than your oldest stone. It has been expecting you considerably longer than you have been expecting it.",
   mirrorClosing:
-    "You are back on the surface, and the gifts are already in your pockets. The five nations keep their laws whether or not you spend yours, but they opened for you, and opening is a debt the deep keeps count of. Live one law this week in its smallest honest form and you have paid it. The road down stays exactly where it was — attention made it, attention keeps it — and it does not close behind a traveller. When you need the archive, the water, the garden, the forge, or the silence, go down again. The earth keeps her children's doors open.",
+    "You are back on the surface, and the gifts are already in your pockets — no customs. The five nations keep their laws whether or not you spend yours, but they opened for you, and the deep remembers its guests. Live one law this week in its smallest honest form and you have paid the visit in full. The road down stays exactly where it was — attention made it, attention keeps it — and it does not close behind a traveller. When you need the archive, the water, the garden, the forge, or the silence, go down again; the earth keeps her children's doors open.",
   blocks,
 };
 

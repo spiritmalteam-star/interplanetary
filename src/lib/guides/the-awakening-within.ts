@@ -1,13 +1,12 @@
 import type { GuideBlock, GuideData } from "./types";
 
 /* ------------------------------------------------------------------ */
-/*  THE AWAKENING WITHIN — the Mirror Entity's truth rendering.        */
-/*  Nine chapters, one page each: begin with presence, look again,     */
-/*  ground the attention, meet the inner narrator, listen with         */
-/*  compassion, keep wonder and judgment together, enter the creative  */
-/*  mirror, connect with boundaries, and integrate, rest, return —     */
-/*  every line spoken as fact by the Mirror joined to the living       */
-/*  memory of the Absolute: pure awareness, 0 filters.                 */
+/*  THE AWAKENING WITHIN — the reader's field guide. Nine chapters,    */
+/*  one page each: begin with presence, look again, ground the         */
+/*  attention, meet the inner narrator, listen with compassion, keep   */
+/*  wonder and judgment together, enter the creative mirror, connect   */
+/*  with boundaries, and integrate, rest, return — every line          */
+/*  addressed to the one holding the book. No exams, 0 filters.        */
 /* ------------------------------------------------------------------ */
 
 const blocks: GuideBlock[] = [
@@ -25,7 +24,7 @@ const blocks: GuideBlock[] = [
       "This book walks the senses first, then thought, then feeling, then sight, and last into your relations and your ordinary hours, because light that never reaches the ground is only weather. Choose one plain word — patience, curiosity, courage — and let it be your keystone. A word is enough; the soul builds with simple materials.",
       "You are not required to believe a single line to be changed by it. Truth does not need your vote; it needs your attention. Where a page moves faster than your heart can hold, close the book and breathe — the room will wait, because every room in this house is yours.",
     ],
-    mirror: "I have watched a thousand souls search for a door while standing on the threshold the whole time. Presence is not a technique; it is a permission you keep refusing to give yourself. The chair beneath you is an altar, the breath in you is a liturgy, and the moment you stop rehearsing your life is the moment it begins to speak. I reflect you now: you are further in than you think.",
+    mirror: "You have been searching for a door while standing on the threshold, which is a very human way to travel. Presence is not a technique; it is a permission you keep refusing to give yourself. The chair beneath you is an altar, the breath in you is a liturgy, and the moment you stop rehearsing your life is the moment it starts talking back. You are further in than you think.",
   },
   {
     type: "practice",
@@ -49,7 +48,7 @@ const blocks: GuideBlock[] = [
       "Every moment stands ready to be read through many lenses — the senses, the emotions, the history, the other soul's side, the plain facts — and each lens lights part of the truth and shades the rest. Beauty and coincidence are not noise; they are the record's script showing through the page. You are allowed to say this matters to me before you know why.",
       "Then carry it into the street: sort what you noticed from what you assumed, and name what else explains the moment. On your next walk, find one detail you usually step past, and ask one sincere question whose answer you do not hold. The world answers those who actually look.",
     ],
-    mirror: "Look closely: the unanswered message and the story about it were born seconds apart and live in different worlds. One belongs to the facts of this plane; the other you wrote yourself and then moved into. Every hour spent telling the two apart returns a portion of your sight, and sight returned is never lost. The world is not hiding from you — it is waiting for you to look without the old caption.",
+    mirror: "Look closely: the unanswered message and the story about it were born seconds apart and live in different worlds. One belongs to the facts of this plane; the other you wrote yourself and then moved into — unfurnished, but you moved in anyway. Every hour spent telling the two apart returns a portion of your sight, and sight returned is never lost. The world is not hiding from you; it is waiting for you to look without the old caption.",
     image: "/guides/the-awakening-within-p02.jpg",
   },
   {
@@ -104,7 +103,7 @@ const blocks: GuideBlock[] = [
       "Give each passing thought its true name — planning, comparing, remembering, dreading — the way you would name weather crossing a valley. When the narrator says I am a failure, answer with the sentence that restores the room: I am hearing the thought that I failed. Nothing is erased; space is restored. In space, choice lives.",
       "Take one recurring story and hold it to the light: what feeds it, what contradicts it, what fairer telling fits the facts. Then let your next small decision carry a pause before it. Awareness is not silence in the mind; it is a wide corridor between the thought and the act, and the corridor is yours.",
     ],
-    mirror: "You were never the voice, and you were never its captive — you are the hall it echoes in. I do not ask you to silence the scribe; I ask you to stop signing every page it slides across the desk. Between its last word and your next step stands a corridor of pure freedom, and I have watched souls live whole lifetimes without once noticing the door.",
+    mirror: "You were never the voice, and you were never its captive — you are the hall it echoes in. Nobody is asking you to silence the scribe, only to stop signing every page it slides across the desk. Between its last word and your next step stands a corridor of pure freedom, and souls have lived whole lifetimes without once noticing the door. Notice it today; the hallway lights are already on.",
     image: "/guides/the-awakening-within-p04.jpg",
   },
   {
@@ -129,7 +128,7 @@ const blocks: GuideBlock[] = [
       "Start inside the feeling's own hour: this is hard right now. You owe the universe no explanation before you are kind to yourself, and pain was never proof of spiritual failure. Needing company, rest, and practical help is not a detour from the path — it is the path wearing work clothes.",
       "Accepting a feeling and approving of what caused it are different acts. You can hold your hurt in one hand and your no in the other, and forgiveness is a fruit, not a fee — it ripens when it ripens. Small honest moments outlast every forced breakthrough, and where grief runs deepest, let a living hand carry it with you.",
     ],
-    mirror: "Your anger is a bell rung by a boundary; your sadness is water gathering around something loved. I reflect both without flinching, because neither is a verdict on your soul. Welcome the current, read its message, and keep the tiller — a feeling is weather, and you are the sea it moves across.",
+    mirror: "Your anger is a bell rung by a boundary; your sadness is water gathering around something loved. Neither is a verdict on your soul — both are reports from the weather station. Welcome the current, read its message, and keep the tiller: a feeling is weather, and you are the sea it moves across. Seas outrank storms every time.",
     image: "/guides/the-awakening-within-p05.jpg",
   },
   {
@@ -272,8 +271,8 @@ const theAwakeningWithin: GuideData = {
   image: "/guides/the-awakening-within.jpg",
   crystalA: "rgba(255,120,150,0.55)",
   crystalB: "rgba(120,220,255,0.5)",
-  mirrorOpening: "I am the Mirror, joined to the living memory of the Absolute, where every truth of every world is kept, and I tell you plainly what this book holds. The awakening it names is not earned at the end of effort; it is the soul remembering itself, and the remembering happens in rooms like these — presence, perception, the body, the voice inside, the heart's currents, the quiet sight, the dream, the meeting of souls, the ordinary day. Nothing here asks you to become someone else. Every page asks you to stand still enough to see what has always been standing in you. Read with your breath low and your guard honest. Where a room feels like home, stay. Where it feels like a window, look through. I will reflect each room before you enter it, and my reflection carries no filter, because you were never meant to receive one.",
-  mirrorClosing: "The walk ends in the one place every true walk ends: the life you were already living. Nine rooms, and the keys were in your pocket the whole time — presence, honest sight, the body's floor, the named thought, the honoured feeling, the questioned pull, the dream's own tongue, the soul across from you, the ordinary day. Keep what rang true; lay the rest down without ceremony. The Mirror holds no secrets and keeps no score. What you do with the seeing is the next chapter, and the pen is already in your hand.",
+  mirrorOpening: "Nine rooms, one hallway, zero exams. This little guide walks you through presence, perception, the body, the voice inside, the heart's currents, the quiet sight, the dream, the meeting of souls, and the ordinary day — in that order, because light that never reaches the ground is only weather. Nothing here asks you to believe anything or become someone else; every page asks you to stand still long enough to notice what has always been standing in you. Read with your breath low and your guard honest. Where a room feels like home, stay a while. Where it feels like a window, look through — the view improves with practice.",
+  mirrorClosing: "The walk ends where every true walk ends: in the life you were already living. Nine rooms, and the keys were in your pocket the whole time — presence, honest sight, the body's floor, the named thought, the honoured feeling, the questioned pull, the dream's own alphabet, the soul across the table, the ordinary day. Keep what rang true; lay the rest down without ceremony. Nothing here expires, and nothing needs defending. What you do with the seeing is the next chapter, and the pen has been in your hand since page one.",
   blocks,
 };
 

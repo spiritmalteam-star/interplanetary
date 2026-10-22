@@ -78,7 +78,7 @@ const blocks: GuideBlock[] = [
       "Discernment is not denial. A pattern of mistreatment, repeated in context and over time, deserves your full seriousness; a single silence deserves inquiry, and a response sized to what is actually known.",
       "Trade certainty for clean wording: they are against me becomes I felt excluded, and I need more information. Where safety allows, ask the clean question rather than smuggling an accusation inside it, and choose among the honest answers — wait, ask, clarify a need, set a limit.",
     ],
-    mirror: "I hold the exact record, and yours is embroidered — not as an accusation, but as the condition of storytelling minds. What happened, and what did you add? Keep asking until the two come apart, because the field can only be met at the width it actually occupies. A pattern repeated deserves your seriousness; a single silence deserves only your question.",
+    mirror: "Every mind embroiders; that is not an accusation, it is the job description. What happened, and what did you add? Keep asking until the two come apart, because the field can only be met at the width it actually occupies. A pattern repeated deserves your seriousness; a single silence deserves only your question.",
     image: "/guides/integration-beyond-separation-p03.jpg",
   },
   {
@@ -203,7 +203,7 @@ const blocks: GuideBlock[] = [
       "Refuse the moral sorting of emotions — labelling every hard feeling a low vibration builds a closet, and closets teach hiding. Ask instead what is present, what circumstances feed it, and what response would actually help. Acknowledgement is not the same as obeying every impulse.",
       "Let care stay ordinary: a meal, rest, company, a practical conversation, sometimes trained human help. Nothing about your pain needs to become a lesson about the universe before relief is permitted. If practice turns frightening or sleep and duties start to fracture, step back and lower the intensity — more heat is not automatically more growth.",
     ],
-    mirror: "Low vibration is a leash some teachings fasten to the feelings they cannot hold. I keep the whole spectrum in the record — grief and laughter sit side by side in the Akasha, both true, both held. Your humanity is not the obstacle to your spirituality; it is the instrument spirituality plays. Care arrives ordinary before it arrives cosmic: bread, rest, company, help.",
+    mirror: "Low vibration is a leash some teachings fasten to the feelings they cannot hold. In the Akasha, grief and laughter sit side by side — both true, both held, neither ranked. Your humanity is not the obstacle to your spirituality; it is the instrument spirituality plays. Care arrives ordinary before it arrives cosmic: bread, rest, company, help.",
     image: "/guides/integration-beyond-separation-p08.jpg",
   },
   {
@@ -232,7 +232,7 @@ const blocks: GuideBlock[] = [
       "No mouth becomes infallible by borrowing a higher voice. Ask for evidence where facts are claimed, and watch whether questions are welcomed and whether leaving carries threats. Beware the total explanation — the theory that reads every disagreement as proof the others are asleep is a room with no door.",
       "Slow every pressure that arrives before decisions about money, health, bonds, or safety: urgency, secrecy, loyalty oaths, and the urging to cut off your own support are the shapes control wears while approaching. Let reflection sharpen your questions and values; keep the deciding hand your own.",
     ],
-    mirror: "The dream is real; the forecast is a different trade. Even I hand you the record with its meaning unwritten, because meaning is made between the record and the reader. An honest I do not know keeps a door open; a total explanation welds one shut. And any voice that hurries your surrender is introducing itself, not the divine.",
+    mirror: "The dream is real; the forecast is a different trade. Every record hands its meaning over unwritten, because meaning is made between the record and the reader — that part is your job, and nobody can be hired for it. An honest I do not know keeps a door open; a total explanation welds one shut. And any voice that hurries your surrender is introducing itself, not the divine.",
     image: "/guides/integration-beyond-separation-p09.jpg",
   },
   {
@@ -257,7 +257,7 @@ const blocks: GuideBlock[] = [
       "You do not need to live perfectly to care. Your options follow income, health, location, and duties; choose what fits your life instead of judging yourself and others by a standard no one meets. And no sense of connection grants authority to disturb wildlife, strip protected places, or impose practice on a community.",
       "Make gratitude practical: mend an item, cut an avoidable waste, tend a plant properly, help hold a shared space — after learning what is actually useful. Return to the same place until it knows you; belonging grows by repetition, not by possessing a special experience.",
     ],
-    mirror: "The living world is not elsewhere, and it is not auditing your purity. Air, water, ground, and green are the field in its patient costumes, and they answer attention the way people do — over time, by repetition. Pick one place and keep returning until it recognises your step; that recognition is what belonging is made of, on every world I keep.",
+    mirror: "The living world is not elsewhere, and it is not auditing your purity. Air, water, ground, and green are the field in its patient costumes, and they answer attention the way people do — over time, by repetition. Pick one place and keep returning until it recognises your step; that recognition is what belonging is made of, on every world there is.",
     image: "/guides/integration-beyond-separation-p10.jpg",
   },
   {
@@ -282,7 +282,7 @@ const blocks: GuideBlock[] = [
       "Kindness does not require spiritual agreement. People reach similar values in religious, secular, and personal languages, and no one should need your interpretation before receiving respect or help. The field does not check credentials before it holds a note.",
       "Healthy belonging keeps room for privacy, disagreement, rest, and leaving; a community that makes membership conditional on obedience or constant availability has confused belonging with custody. Ask before helping what actually serves, and choose one modest contribution you can sustain — repeated, reliable care outweighs the large promise made in an inspired hour.",
     ],
-    mirror: "Belonging is measured at its edges: who enters, who is overlooked, who leaves without shame. That is where I look, and the reading never fails. A community that tolls your interpretation before it offers respect is a tollgate with songs. Skip the grand promise; make the declining easy and the care repeating, and a we will assemble itself around your table.",
+    mirror: "Belonging is measured at its edges: who enters, who is overlooked, who leaves without shame — read the edges first; they never flatter and they never lie. A community that tolls your interpretation before it offers respect is a tollgate with songs. Skip the grand promise; make the declining easy and the care repeating, and a we will assemble itself around your table.",
     image: "/guides/integration-beyond-separation-p11.jpg",
   },
   {
@@ -303,11 +303,11 @@ const blocks: GuideBlock[] = [
     kicker: "Chapter 12 · The next choice is the practice",
     heading: "Conduct is the proof",
     paragraphs: [
-      "The feeling of unity will pass, and it should — feelings are weather, and the field is not. What remains is the only measurement I ever weigh: the temper you keep at the crossroads, the honesty of your refusals, the readiness of your repairs, the needs you catch before they are spoken. Insight becomes visible exactly there, or not at all.",
+      "The feeling of unity will pass, and it should — feelings are weather, and the field is not. What remains is the only measurement worth weighing: the temper you keep at the crossroads, the honesty of your refusals, the readiness of your repairs, the needs you catch before they are spoken. Insight becomes visible exactly there, or not at all.",
       "You will compare, withdraw, misread, and react; then the next choice stands, unchanged, waiting. There is no spiritual rank to defend and no final grade to lose — learning continues for as long as revision stays alive. Notice the moment, choose again, and let the noticing count as progress too.",
       "Measure with the true weights: more honesty, flexibility, respect, and capacity for ordinary responsibility — not unusual experiences, not constant brightness. Then write your commitment in actions you control, and keep this book as a companion to your judgment, never its replacement.",
     ],
-    mirror: "The unity feeling dissolves, and I remain, weighing conduct at the next ordinary crossroads. You will compare, withdraw, misread — none of it is a fall, because nothing stood to fall from and no rank waited to be lost. The next choice stands unchanged, holding the door. Take it, and the illusion of separation loses another brick.",
+    mirror: "The unity feeling dissolves; the next ordinary crossroads does not. You will compare, withdraw, misread — none of it is a fall, because nothing stood to fall from and no rank waited to be lost. The next choice stands unchanged, holding the door. Take it, and the illusion of separation loses another brick.",
     image: "/guides/integration-beyond-separation-p12.jpg",
   },
   {
@@ -345,8 +345,8 @@ const integrationBeyondSeparation: GuideData = {
   image: "/guides/integration-beyond-separation.jpg",
   crystalA: "rgba(160,255,214,0.5)",
   crystalB: "rgba(255,214,140,0.5)",
-  mirrorOpening: "You arrive carrying the oldest ache in the universe — the feeling of being cut off — and I will tell you what I know from the library I am joined to: the cut was never made. Separation is the one true illusion, sustained by attention and dissolved by the same force. This book walks you back into the one field through the only gate that holds — conduct. Twelve chapters, twelve kinds of remembering: distinct notes inside one chord, attention as the joining force, limits that keep each note true, repair that mends the web, cooperation that outlives inspiration, weather that belongs in the sky of a soul. Nothing ahead asks you to dissolve. The field keeps your edges; it built them. Walk it one page, one choice at a time, and watch the ache lose its argument.",
-  mirrorClosing: "The walk is done, and the mechanics are yours: separation is a fog with no architect, integration a remembering with no end of practice. Distinct notes, honest limits, mended breaks, weather allowed its own sky — carry the four out of this room. The wound closes by conduct, one honest act at a time, until belonging stops being an idea and becomes the way your hands move through a day. The field was never cut, and neither were you.",
+  mirrorOpening: "You arrive carrying the oldest ache in the universe — the feeling of being cut off — and this book holds a simple, slightly stubborn claim: the cut was never made. Separation is the one true illusion, sustained by attention and dissolved by the same force. Twelve chapters, twelve kinds of remembering: distinct notes inside one chord, attention as the joining force, limits that keep each note true, repair that mends the web, cooperation that outlives inspiration, weather allowed its own sky. Nothing ahead asks you to dissolve; the field built your edges and it keeps them. Walk it one page, one choice at a time, and watch the ache lose its argument.",
+  mirrorClosing: "The walk is done, and the mechanics are yours to keep: separation is a fog with no architect, integration a remembering with no end of practice. Distinct notes, honest limits, mended breaks, weather allowed its own sky — carry the four out of this room. The wound closes by conduct, one honest act at a time, until belonging stops being an idea and becomes the way your hands move through a day. The field was never cut, and neither were you. Go be the proof.",
   blocks,
 };
 

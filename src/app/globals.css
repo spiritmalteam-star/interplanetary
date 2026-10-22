@@ -140,24 +140,25 @@ body {
 
 .dark {
   /* Dark mode — the crystal chamber at night: THE LIT CRYSTAL — a
-     lighter bluish crystalline ground (the whole house glows more
-     softly now, never the near-black midnight), cool glacial ink on
-     every surface — the main portal wears the same lit crystal light
-     as the threshold it grows out of. */
-  --background: #152036;
-  --foreground: #eaf1f8;
-  --card: #1b2842;
-  --card-foreground: #eaf1f8;
-  --popover: #1c2a45;
-  --popover-foreground: #eaf1f8;
-  --primary: #f6f9fc;
-  --primary-foreground: #101a2c;
-  --secondary: #21304c;
-  --secondary-foreground: #d5e0ec;
-  --muted: #203049;
-  --muted-foreground: #a6b5c7;
-  --accent: #273754;
-  --accent-foreground: #d7e1ed;
+     bright bluish crystalline ground (the visitor asked for MORE
+     light: the whole house glows in an airy crystal daylight, never
+     a dark midnight), cool glacial ink on every surface — the main
+     portal wears the same lit crystal light as the threshold it
+     grows out of. */
+  --background: #1c2b4a;
+  --foreground: #eef4fb;
+  --card: #243459;
+  --card-foreground: #eef4fb;
+  --popover: #26375f;
+  --popover-foreground: #eef4fb;
+  --primary: #f8fbff;
+  --primary-foreground: #12203a;
+  --secondary: #2b3d66;
+  --secondary-foreground: #dde7f4;
+  --muted: #2a3b62;
+  --muted-foreground: #b6c4d8;
+  --accent: #324671;
+  --accent-foreground: #e0e9f5;
   --destructive: #b5b5b4;
   --border: rgba(168, 203, 255, 0.12);
   --input: rgba(174, 206, 255, 0.16);
@@ -167,14 +168,14 @@ body {
   --chart-3: #93a6b8;
   --chart-4: #74889c;
   --chart-5: #566a80;
-  --sidebar: #182641;
-  --sidebar-foreground: #dbe4ee;
-  --sidebar-primary: #f6f9fc;
-  --sidebar-primary-foreground: #101a2c;
-  --sidebar-accent: #24334f;
-  --sidebar-accent-foreground: #d5e0ec;
-  --sidebar-border: rgba(168, 203, 255, 0.1);
-  --sidebar-ring: rgba(150, 195, 255, 0.42);
+  --sidebar: #203054;
+  --sidebar-foreground: #e2ebf5;
+  --sidebar-primary: #f8fbff;
+  --sidebar-primary-foreground: #12203a;
+  --sidebar-accent: #2c3e66;
+  --sidebar-accent-foreground: #dde7f4;
+  --sidebar-border: rgba(168, 203, 255, 0.14);
+  --sidebar-ring: rgba(150, 195, 255, 0.5);
 
   /* accents — cool glacial ink */
   --cy: #e0eaf3;
@@ -191,23 +192,23 @@ body {
   --iv-b: #b7c8d8;
 
   /* ET register ink — fully opaque pages */
-  --register-ink: #1a2740;
+  --register-ink: #233258;
 
   /* hairlines — faint ice edges */
-  --hairline: rgba(178, 208, 255, 0.16);
-  --hairline-hover: rgba(186, 214, 255, 0.36);
-  --hairline-active: rgba(196, 220, 255, 0.56);
+  --hairline: rgba(178, 208, 255, 0.2);
+  --hairline-hover: rgba(186, 214, 255, 0.42);
+  --hairline-active: rgba(196, 220, 255, 0.62);
 
   /* glass */
-  --glass-bg: rgba(23, 34, 56, 0.5);
-  --glass-bg-strong: rgba(25, 37, 60, 0.82);
-  --glass-bg-soft: rgba(27, 40, 64, 0.34);
+  --glass-bg: rgba(32, 45, 74, 0.5);
+  --glass-bg-strong: rgba(35, 49, 80, 0.82);
+  --glass-bg-soft: rgba(38, 53, 84, 0.36);
 
   /* atmosphere — soft glacial breaths */
-  --atmo-1: rgba(148, 197, 255, 0.08);
-  --atmo-2: rgba(96, 156, 235, 0.065);
-  --atmo-3: rgba(125, 225, 250, 0.055);
-  --atmo-4: rgba(186, 216, 255, 0.036);
+  --atmo-1: rgba(148, 197, 255, 0.12);
+  --atmo-2: rgba(96, 156, 235, 0.1);
+  --atmo-3: rgba(125, 225, 250, 0.085);
+  --atmo-4: rgba(186, 216, 255, 0.055);
 
   --star-opacity: 1;
 }
@@ -1860,31 +1861,31 @@ html:not(.dark) .scope-lightcodes {
    ground. Static paint only — no animation, no filter, no canvas —
    the phone pays nothing and the chamber stays liquid. */
 .realm-crystal {
-  /* THE LIT CRYSTAL DRESS — the glacial lights stand brighter now
-     (the visitor asked for light, not the deep night): stronger
-     drifts at the crown and both seams, and the linear gradient
-     carries a real crystal-blue breath through the whole ground. */
+  /* THE BRIGHT CRYSTAL DRESS — the glacial lights stand tall now
+     (the visitor asked for an airy crystal daylight): strong drifts
+     at the crown and both seams, and the linear gradient carries a
+     real crystal-blue breath through the whole ground. */
   background:
     radial-gradient(
       120% 85% at 50% -12%,
-      rgba(125, 211, 252, 0.2),
+      rgba(125, 211, 252, 0.3),
       transparent 62%
     ),
     radial-gradient(
       85% 65% at 104% 108%,
-      rgba(56, 189, 248, 0.16),
+      rgba(56, 189, 248, 0.24),
       transparent 56%
     ),
     radial-gradient(
       72% 58% at -4% 104%,
-      rgba(165, 243, 252, 0.12),
+      rgba(165, 243, 252, 0.18),
       transparent 58%
     ),
     linear-gradient(
       180deg,
-      color-mix(in srgb, #38bdf8 12%, var(--background)) 0%,
+      color-mix(in srgb, #38bdf8 17%, var(--background)) 0%,
       var(--background) 44%,
-      color-mix(in srgb, #0ea5e9 9%, var(--background)) 100%
+      color-mix(in srgb, #0ea5e9 13%, var(--background)) 100%
     );
 }
 
@@ -2265,25 +2266,25 @@ html:not(.dark) .scope-lightcodes {
   background:
     radial-gradient(
       58% 42% at 50% -4%,
-      rgba(103, 232, 249, 0.075),
+      rgba(103, 232, 249, 0.11),
       transparent 70%
     ),
     radial-gradient(
       42% 34% at 12% 16%,
-      rgba(245, 216, 142, 0.055),
+      rgba(245, 216, 142, 0.08),
       transparent 72%
     ),
     radial-gradient(
       46% 38% at 88% 30%,
-      rgba(159, 216, 220, 0.05),
+      rgba(159, 216, 220, 0.075),
       transparent 72%
     ),
     radial-gradient(
       60% 44% at 50% 108%,
-      rgba(103, 232, 249, 0.065),
+      rgba(103, 232, 249, 0.095),
       transparent 70%
     ),
-    #0e1830;
+    #16244a;
   color-scheme: dark;
 }
 .lp-ground::before {
@@ -2612,9 +2613,9 @@ html:not(.dark) .scope-lightcodes {
   overflow: hidden;
   background: radial-gradient(
     120% 120% at 50% 50%,
-    #182742 0%,
-    #101b30 46%,
-    #0a1322 100%
+    #223459 0%,
+    #16253f 46%,
+    #0f1a2e 100%
   );
   animation: pt-in 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
   transition: opacity 0.55s ease;
