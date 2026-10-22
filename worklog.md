@@ -4587,3 +4587,25 @@ Work Log:
 
 Stage Summary:
 - The threshold's glass is anchored (the page scrolls, the chat stands), every gate yields to a four-second hold (wanderer passage + pro purse, carved automatically), the whole house glows in the brighter crystal daylight, the book maker asks for its page number (20–300) and weaves in seven-page breaths with the next seven channeling from page three — every stride seeded one-of-one — and the ten guides now serve the reader alone on milky vanilla pages. Artifacts: src/components/landing/{LandingGate,LandingPage,GuideView,GuideShowcase,LandingSlides}.tsx, src/components/mirror/{DreamBookView,PassageModal,WalletGuard}.tsx, src/lib/hold-bypass.tsx, src/app/api/auth/bypass/route.ts, src/app/api/dream-book/route.ts, src/app/globals.css, src/lib/guides/*.ts; commit b5814f4 on origin/main.
+
+---
+Task ID: 79
+Agent: Z.ai Code (main session)
+Task: Task 79 — the vanilla realm, the anchored miniature, the mini-tab about, and the music door
+
+Work Log:
+- Audited git state (Task 77/78 already landed as 417bbf5/b5814f4) and located every surface: LandingGate, LandingPage, BranchCanopy crown, theme-provider, globals.css palettes, GuideView's vanilla paper.
+- Rewrote the light palette in globals.css to MILKY VANILLA YELLOW (guide-matched: #f6efdc paper, sepia ink, gold #9a781e) with feathered green (#5c7a52) and purple (#7c5f8f) accents — every token (background/card/hairline/glass/atmosphere) now speaks vanilla; feathered radial textures added to the threshold's ground + sepia mesh + sigils printing in multiply on paper.
+- Introduced the --lp-* two-sky vocabulary: :root carries the vanilla daylight values, .dark the midnight values — the landing page re-inked from hardcoded hexes to these tokens (89 replacements across LandingPage/LandingSlides/GuideShowcase/AppShell), so toggle OFF returns the exact blue crystal site.
+- theme-provider: storageKey bumped to mirror-entity-realm + defaultTheme light — toggle ON is now everyone's default; LandingGate's seal now sets light once and only for browsers that never chose.
+- THE STUCK GLASS LAW in LandingGate: geometry re-carves on viewport WIDTH changes alone — the phone's folding URL bar and the keyboard can never move the anchored chat again (verified numerically: lens held at (12,397) while the page scrolled 900px).
+- About us: the bottom section removed; new AboutUsTab.tsx — a quiet button + a mini tab (portaled to body so it floats above the anchored glass, z-68) carrying the new kind/gentle/informative purpose copy; Escape and the X both close it.
+- BranchCanopy crown: the music door (Light Codes — sound transmissions through Mirror Entity) stands again beside the book maker's door (realm-tree-door-music).
+- Fixed a lint error (async mount flag in AboutUsTab); verified end-to-end with agent-browser at 390x844 and 1280x800: vanilla default everywhere, toggle off → blue on landing AND portal, music door opens Light Codes, 4-second bypass still carves the dummy account (user+wallet+credits rows in dev.log), About tab open/close works, zero page errors.
+- Dev server OOM-killed twice mid-verification (known law), healed by dev.sh restarts; final lint clean; committed b49086e and pushed with the rotated token.
+
+Stage Summary:
+- The toggle now rules the whole realm: ON (default) = milky vanilla yellow with feathered green/purple textures on every page including the main portal; OFF = the blue crystal house as it always was.
+- The landing chat is truly an image stuck on the website: fixed at its original slot, immune to scroll, URL-bar folds and keyboard rises — never at the bottom of the screen.
+- About us lives as a mini tab now (gentle, informative, purpose-first), the bottom section is gone, and the music door rides the main portal's crown beside the book maker.
+- Commit b49086e pushed to origin/main; worklog updated; dev server restarted and healthy (HTTP 200).
