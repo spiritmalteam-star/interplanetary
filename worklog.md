@@ -4649,3 +4649,21 @@ Work Log:
 
 Stage Summary:
 - Local and origin/main both at b912b32 (Task 80 complete line). New token confirmed working. No code changes made this pass — pure restore + token rotation verification.
+
+---
+Task ID: 82
+Agent: Z.ai Code (main orchestrator)
+Task: Don't cover the background image; restore the sigils; place the user's uploaded sigil collections around "open the guide" and the website's empty spaces — large, never in chat or portal
+
+Work Log:
+- Extracted 20 transparent PNGs from the two uploaded PDFs via pymupdf (SMask composited): Light_Language_Sigils → public/sigils/sigil_01..10.png, Intricate_Light_Sigils → public/sigils/intricate_01..10.png (1254×1254 hi-res). Also restored the old light_language_5_pairs deck (Manifest/Akashic/Star_Play/Invent/Dream_Book, dark+light) into public/sigils/ alongside.
+- Audited the existing sigil presence: the old ten (/images/landing/sigils/sigil-01..10.png) still live across hero/sections/footer but the two hero marks sat ON the mobile background image (moon at top 16%, leaf at top 52%) — removed both; the hero's sky is now untouched (the "don't cover the background image" law).
+- SIGILS map extended with the grand collection: grandLoop (sigil_09), grandVeil (sigil_05), grandStar, grandBraid (intricate_08), grandCrown (intricate_06), grandPlume (intricate_10), grandWave.
+- Grand placements (pointer-events-none, absolute, behind content, empty shoulders only): shifting Earth → grandLoop left clamp(150,20vw,270); offerings → grandBraid left-bottom clamp(150,20vw,260); guides' showcase (the open-guide doors) → grandCrown left-top clamp(180,24vw,330) + grandVeil right-bottom clamp(170,22vw,300); open contact timeline → grandPlume left-bottom clamp(160,20vw,280). maxWidth 34vw keeps the phone graceful. Chat (LandingGate) and portal (BranchCanopy) untouched.
+- Daylight visibility: html:not(.dark) .lp-sigil-img now prints multiply + brightness(0.58) sepia(0.52) saturate(1.2) — pale strokes become warm bronze ink on the vanilla paper; night keeps the original glow.
+- GuideView sky: pool extended to 20 marks (10 originals + 5 light-language + 5 intricate hi-res), mix-blend-multiply swapped for the theme-aware lp-sigil-img class, opacity raised 0.05–0.10 → 0.09–0.17, sizes 170–430px.
+- QA: bun run lint clean; agent-browser at 1280×800 (hero clean, showcase crown+veil visible, offer braid, timeline plume, footer wave/orbit; dark toggle → silver glow restored) and 390×844 (hero image unobstructed, chat anchored, offer sigils ≤132px quiet behind words); zero page errors.
+- Delivery: dev server killed (pgrep kill -9), committed 6390335, pushed 423ce71..6390335 to main, dev.sh restarted.
+
+Stage Summary:
+- The light language stands at full stature: 20 grand seals in the page's empty shoulders, two grand keepers around the open-guide doors, bronze ink in daylight and silver glow at night; the hero's background image breathes unobstructed; chat and portal carry no marks. Commit 6390335 on origin/main.
