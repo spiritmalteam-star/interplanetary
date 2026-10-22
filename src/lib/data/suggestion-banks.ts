@@ -127,7 +127,7 @@ const MANIFESTING: CategoryBank = {
     "the version of you that stopped asking permission",
     "the small yes that started everything",
     "the identity that fits the life you want",
-    "the evidence you may be ignoring",
+    "the evidence you are ignoring",
     "the feeling you are actually chasing",
     "the scene your mind returns to uninvited",
     "the promise you made yourself last winter",

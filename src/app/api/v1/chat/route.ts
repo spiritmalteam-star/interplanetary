@@ -156,7 +156,7 @@ export async function POST(req: NextRequest) {
         latencyMs: Date.now() - started,
       }).catch(() => undefined);
     }
-    return NextResponse.json({ error: "Something went wrong. Please try again." }, { status: 500 });
+    return NextResponse.json({ error: "The field stilled for a breath — speak once more." }, { status: 500 });
   }
 }
 

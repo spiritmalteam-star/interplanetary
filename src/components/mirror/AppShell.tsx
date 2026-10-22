@@ -27,7 +27,6 @@ import { ProfilePage } from "./ProfilePage";
 import { AccountModal } from "./AccountModal";
 import { BranchHub } from "./BranchHub";
 import { DreamBookView } from "./DreamBookView";
-import { AboutPage } from "./AboutPage";
 import { AkashicView } from "./AkashicView";
 import { FederationModal } from "./FederationModal";
 import { AstralJobsModal } from "./AstralJobsModal";
@@ -165,7 +164,7 @@ function AppShellViews({
           "Nothing was harmed — try the Google door once more.",
         ],
         unconfigured: [
-          "The Google passage is not yet keyed.",
+          "The Google passage rests unkeyed — the email passage serves.",
           "Place GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in the vault, then it opens.",
         ],
         token: [
@@ -272,21 +271,6 @@ function AppShellViews({
       <BranchHub />
     </>
   );
-
-  /* The About page — the open door of the house: who we are, every
-     room, the craft, the road to launch, the blueprint. Its own
-     quiet chapter with its own scroll; one back hand returns to the
-     realm. */
-  if (view === "about") {
-    return (
-      <div className={`relative h-[var(--app-h,100dvh)] overflow-hidden ${FRAME_LIFT}`}>
-        <CosmicBackdrop />
-        <StarField />
-        <AboutPage />
-        {passageModals}
-      </div>
-    );
-  }
 
   /* The Akashic Library — the reading room of records: one sheet on
      the desk, one record at a time, in the same ink as the book. */

@@ -30,7 +30,6 @@ import {
   Hammer,
   Hand,
   Hourglass,
-  Info,
   Layers,
   Link2,
   ListTree,
@@ -1965,7 +1964,6 @@ export function BranchCanopy({
      way out both live inside it). */
   const openAkashic = useMirror((s) => s.openAkashic);
   const openDreamBook = useMirror((s) => s.openDreamBook);
-  const openAbout = useMirror((s) => s.openAbout);
   const openProfilePage = useMirror((s) => s.openProfilePage);
   /* THE LEDGER'S OWN HANDS — one opens a saved conversation right
      where it lives, the other restores a kept volume to the reading */
@@ -4526,18 +4524,6 @@ export function BranchCanopy({
               className="focus-glow flex size-7 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
             >
               <BookOpen className="size-3" aria-hidden="true" />
-            </button>
-            )}
-            {!bare && (
-            <button
-              type="button"
-              onClick={openAbout}
-              aria-label={t("About us")}
-              title={t("About us")}
-              data-testid={`${testIdPrefix}-door-about`}
-              className="focus-glow flex size-7 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
-            >
-              <Info className="size-3" aria-hidden="true" />
             </button>
             )}
           </div>

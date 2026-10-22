@@ -575,7 +575,7 @@ export const federationPrincipleProfiles: Record<string, PrincipleProfile> = {
     codified:
       "Written after the Counsel Floods, in the same season as the Keeping of Quiet Hours, by councils who had answered too fast too often.",
     clauses: [
-      "Wisdom before speed — an answer that cannot wait a full turning probably was not an answer.",
+      "Wisdom before speed — an answer that cannot wait a full turning was never an answer.",
       "Haste is disclosed: any advice given quickly carries its quickness attached.",
     ],
     practice:

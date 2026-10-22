@@ -1,10 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ComponentType } from "react";
-import { ChevronDown, Maximize2 } from "lucide-react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ComponentType, type CSSProperties } from "react";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
-import { useT } from "@/lib/i18n";
 import { useMirror } from "@/lib/mirror-store";
 import { cn } from "@/lib/utils";
 import LandingPage from "./LandingPage";
@@ -14,85 +12,61 @@ import LandingPage from "./LandingPage";
 /*                                                                     */
 /*  There is only ONE portal in this house. The chamber itself — the   */
 /*  whole living application — stands docked inside the landing page   */
-/*  as the miniature portal: the real realm at its true proportions,   */
-/*  live and working, without its suggestion wall. The expand hand     */
-/*  opens nothing and carries nothing — the very same portal simply    */
-/*  grows to fill the screen, every word of the conversation already   */
-/*  inside it, and the minimize hand folds it back into its slot.      */
+/*  as the miniature portal: the real realm, live and working, without */
+/*  its suggestion wall. The expand hand opens nothing and carries     */
+/*  nothing — the very same portal simply grows to fill the screen,    */
+/*  every word of the conversation already inside it, and the minimize */
+/*  hand folds it back into its slot.                                  */
 /*                                                                     */
-/*  THE LENS: the chamber renders at the viewport's true size and is   */
-/*  read through a clipped window — on the phone the window is the     */
-/*  full width (the portal stretches fully on both sides at 1:1); on   */
-/*  the desk it is a diorama at four fifths, cropped around the        */
-/*  realm's own heart. Expand and minimize are transform-and-clip      */
-/*  animations only — the chamber never re-mounts, never re-lays out,  */
-/*  never loses a breath.                                              */
+/*  THE WHOLE MIRROR — the docked chamber is never cropped again: it   */
+/*  lays out at the window's own size (its own --app-h), so the crown, */
+/*  the quiet floor and the whisper line all stand inside the window — */
+/*  nothing cut in the middle. The window itself stands smaller in     */
+/*  height and a touch wider than before. Expand and minimize cross    */
+/*  the crystal tunnel — the chamber re-fits behind the tunnel's light,*/
+/*  the conversation never losing a breath.                            */
 /* ------------------------------------------------------------------ */
 
 type Phase = "landing" | "opening" | "through" | "closing";
 
-/* the docked geometry — how the real chamber presents its miniature */
+/* the docked geometry — the window the whole chamber lays out inside */
 type Geo = {
-  w: number | string;
-  h: number | string;
-  s: number;
-  tx: number;
-  ty: number;
+  w: number;
+  h: number;
   radius: number;
 };
 
 function computeGeo(): Geo {
   const vw = document.documentElement.clientWidth;
   const vh = window.innerHeight;
-  /* THE WIDER, SHORTER MIRROR — the landing chat stands a tenth wider
-     than before and a quarter shorter: a wide, calm window onto the
-     realm. THE WINDOW'S SIGHT — the window reads the realm's lower
-     hall, anchored to its floor: the conversation's ground (the mark,
-     the question, the suggestions, the whisper line) stands fully
-     alive while the crown rests above the sightline; the threshold's
-     own hands at the window's edge fold and raise the portal. The
-     chamber itself is never re-laid-out — the lens only chooses what
-     it looks at (transform-and-clip only, the phone stays cool).
-     dvh keeps the window and the chamber in lockstep when the
-     keyboard rises. */
+  /* THE UNCUT MIRROR — the landing chat is smaller in height and a
+     touch wider than before, and it is never cut in the middle: the
+     chamber itself lays out at the window's own size (the scoped
+     --app-h below), so the crown, the quiet floor and the whisper
+     line all stand complete inside the window. No crop, no slice —
+     a whole small portal on the threshold. */
   if (vw < 640) {
-    const s = 0.92;
-    const w = Math.floor(vw * s);
-    const h = Math.round(vh * 0.615);
     return {
-      w,
-      h,
-      s,
-      tx: 0,
-      ty: -Math.round(s * vh - h),
+      w: Math.floor(vw * 0.94),
+      h: Math.round(vh * 0.55),
       radius: 26,
     };
   }
-  /* THE DESK'S WIDER, LOWER DIORAMA — the realm nearer (0.86) and read
-     through a window a quarter shorter than before, anchored to the
-     realm's floor the same way; the horizontal crop centres the
-     heart as ever. THE SMOOTH BORDER — the docked chat wears a
-     gently rounded, slightly transparent edge (no frame), soft
-     against the threshold beneath. */
-  const s = 0.86;
+  /* THE DESK'S WIDE, CALM WINDOW — a touch wider and lower than
+     before, the whole realm laid out inside it at true size.
+     THE SMOOTH BORDER — the docked chat wears a gently rounded,
+     slightly transparent edge (no frame), soft against the
+     threshold beneath. */
   const rail = Math.min(210, Math.max(130, Math.round(vw * 0.13)));
   const clear = vw >= 1024 ? 2 * rail + 44 : 44;
-  const w = Math.max(420, Math.min(840, Math.floor(s * vw) - 24, vw - clear));
-  const h = Math.max(380, Math.min(468, Math.floor(vh * 0.6)));
-  const cropW = w / s;
-  const cropX = Math.max(0, (vw - cropW) / 2);
   return {
-    w,
-    h,
-    s,
-    tx: -Math.round(s * cropX),
-    ty: -Math.round(s * vh - h),
+    w: Math.max(420, Math.min(880, Math.floor(vw * 0.86) - 24, vw - clear)),
+    h: Math.max(360, Math.min(440, Math.round(vh * 0.55))),
     radius: 26,
   };
 }
 
 export default function LandingGate() {
-  const t = useT();
   const { setTheme } = useTheme();
   const [phase, setPhase] = useState<Phase>("landing");
   const [Chamber, setChamber] = useState<ComponentType<
@@ -375,15 +349,36 @@ export default function LandingGate() {
     }
   }, [pending, Chamber, expandPortal]);
 
-  /* THE RETURN — the portal folds back into its slot in the page */
+  /* THE RETURN — the portal folds back into its slot in the page.
+     THE RETURN'S OWN CROSSING — the chamber re-fits itself to the
+     window behind the crystal tunnel's light (the same passage the
+     crossing in uses), so the visitor never watches the re-fit —
+     the tunnel opens, the portal folds, the tunnel's light fades
+     and the landing's own chat stands there, every word kept. */
   const minimize = useCallback(() => {
     if (busy.current) return;
     busy.current = true;
-    setPhase("closing");
+    /* THE TWO ROOMS' LAW — whatever the main portal still held open
+       (the passage's door a guest left standing, a modal of the realm)
+       stays with the realm: the return folds the portal's own sheets
+       away, so no portal information rides back into the landing's
+       chat. The two rooms stay two different things. */
+    {
+      const st = useMirror.getState();
+      if (st.authOpen) st.closeAuth();
+      if (st.profileOpen) st.closeProfile();
+      if (st.profilePageOpen) st.closeProfilePage();
+      if (st.accountOpen) st.closeAccount();
+    }
+    setTunnel("on");
     window.setTimeout(() => {
-      setPhase("landing");
+      setPhase("closing");
+    }, 150);
+    window.setTimeout(() => {
+      setTunnel("fading");
       busy.current = false;
-    }, 700);
+      window.setTimeout(() => setTunnel("off"), 900);
+    }, 800);
   }, []);
 
   /* the expanding lens flies to the screen's corners */
@@ -469,18 +464,26 @@ export default function LandingGate() {
             )}
             style={{ borderRadius: fullscreen ? 0 : geo.radius }}
           >
+            {/* THE WHOLE CHAMBER IN ITS WINDOW — docked, the chamber
+                lays out at the window's own size through a scoped
+                --app-h (its crown, floor and whisper line all stand
+                complete inside — nothing cut) and the keyboard's own
+                shift rests (the window itself never moves). Fullscreen,
+                the chamber takes the true viewport again. The chamber
+                rides centred in its lens, so the closing's fold keeps
+                it steady inside the shrinking window. */}
             <div
-              className={cn(
-                "absolute left-0 top-0 h-[var(--app-h,100dvh)] w-screen",
-                animating && "lens-inner-anim"
-              )}
-              style={{
-                transformOrigin: "0 0",
-                transform:
-                  phase === "landing" || phase === "closing"
-                    ? `translate3d(${geo.tx}px, ${geo.ty}px, 0) scale(${geo.s})`
-                    : "translate3d(0, 0, 0) scale(1)",
-              }}
+              className="absolute inset-0 m-auto"
+              style={
+                fullscreen
+                  ? { width: "100vw", height: "100dvh" }
+                  : ({
+                      width: geo.w,
+                      height: geo.h,
+                      "--app-h": `${geo.h}px`,
+                      "--app-shift": "0px",
+                    } as CSSProperties)
+              }
             >
               <Chamber
                 bare={bare}
@@ -495,43 +498,12 @@ export default function LandingGate() {
                 transparent border now, wearing the crystal light. */}
           </div>
 
-          {/* THE SLOT'S OWN HANDS — the window reads the realm's lower
-              hall now (the crown rests above its sight), so the
-              threshold itself carries the two hands at the window's
-              edge: one folds the whole chat away with every word kept,
-              one raises the MAIN portal. They stand only while the
-              portal rests docked and unfolded, and they ride the lens
-              itself so they never drift from its frame. */}
-          {docked && !chatFolded && (
-            <div className="absolute right-2.5 top-2.5 z-[5] flex items-center gap-1.5">
-              <button
-                type="button"
-                onClick={expandPortal}
-                aria-label={t("Fullscreen")}
-                title={t("Fullscreen — opens the main portal")}
-                data-testid="slot-expand"
-                className="focus-glow flex size-7 items-center justify-center rounded-full border border-[rgba(232,217,176,0.42)] bg-[rgba(8,12,20,0.55)] text-[#e8d9b0] backdrop-blur-sm transition-all duration-300 hover:border-[rgba(232,217,176,0.8)] hover:text-[#f6ecd2]"
-              >
-                <Maximize2 className="size-3" aria-hidden="true" />
-              </button>
-              <button
-                type="button"
-                onClick={() => setChatFolded(true)}
-                aria-label={t("Fold the chat away")}
-                title={t("Fold the chat away")}
-                data-testid="slot-fold"
-                className="focus-glow flex size-7 items-center justify-center rounded-full border border-[rgba(232,217,176,0.42)] bg-[rgba(8,12,20,0.55)] text-[#e8d9b0] backdrop-blur-sm transition-all duration-300 hover:border-[rgba(232,217,176,0.8)] hover:text-[#f6ecd2]"
-              >
-                <ChevronDown className="size-3.5" aria-hidden="true" />
-              </button>
-            </div>
-          )}
-
-          {/* THE EXPAND HAND — the portal's own crown carries it now:
-              the fullscreen control stands between the about door and
-              the visitor's passage, exactly where the threshold's
-              other hands live. The hero's “Enter the portal” on the
-              page carries the same growth. */}
+          {/* THE CROWN'S OWN HANDS — the whole chamber stands inside
+              its window now, so the portal's own crown carries every
+              hand again: the crossing (crown-expand) and the fold
+              (the crown's own dropdown hand) live in the top row —
+              no second pair of hands rides the lens edge. The hero's
+              “Enter the portal” on the page carries the same growth. */}
         </div>
       )}
 
