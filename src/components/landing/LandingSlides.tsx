@@ -147,7 +147,7 @@ export default function LandingSlides() {
       >
         <div
           data-testid="landing-slides-stage"
-          className="relative aspect-square w-full overflow-hidden bg-[#16253f] sm:rounded-[26px]"
+          className="relative aspect-square w-full overflow-hidden bg-[var(--lp-deep)] sm:rounded-[26px]"
         >
           {SLIDES.map((s, i) =>
             near.has(i) ? (
@@ -183,7 +183,7 @@ export default function LandingSlides() {
       {/* the plate's own words — the standing slide speaks its title */}
       <p
         data-testid="landing-slides-title"
-        className="mx-auto mt-4 max-w-[660px] px-4 text-center font-[family-name:var(--font-literata)] text-[14.5px] italic leading-relaxed text-[#e8d9b0]"
+        className="mx-auto mt-4 max-w-[660px] px-4 text-center font-[family-name:var(--font-literata)] text-[14.5px] italic leading-relaxed text-[var(--lp-gold)]"
       >
         {t(SLIDES[active].title)}
       </p>
@@ -207,15 +207,15 @@ export default function LandingSlides() {
             className={cn(
               "focus-glow mono-label flex size-7 items-center justify-center rounded-full border text-[9px] tracking-normal transition-all duration-300",
               i === active
-                ? "border-[rgba(232,217,176,0.85)] bg-[rgba(232,217,176,0.14)] text-[#f0e7cd]"
-                : "border-white/12 text-[#8fa3b2] hover:border-white/30 hover:text-[#c6d2db]"
+                ? "border-[rgba(232,217,176,0.85)] bg-[rgba(232,217,176,0.14)] text-[var(--lp-gold-ink)]"
+                : "border-[var(--lp-edge)] text-[var(--lp-mute)] hover:border-[var(--hairline-hover)] hover:text-[var(--lp-body)]"
             )}
           >
             {i + 1}
           </button>
         ))}
       </div>
-      <p className="mono-label mt-3 text-center text-[8.5px] uppercase tracking-[0.26em] text-[#66788a]">
+      <p className="mono-label mt-3 text-center text-[8.5px] uppercase tracking-[0.26em] text-[var(--lp-faint)]">
         {t("Awareness · Connection · Change")}
       </p>
     </div>

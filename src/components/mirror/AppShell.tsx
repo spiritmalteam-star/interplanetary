@@ -439,7 +439,7 @@ function AppShellViews({
               aria-label={t("Fullscreen")}
               title={t("Fullscreen — opens the paid realm's advanced reflections")}
               data-testid="crown-expand"
-              className="focus-glow relative flex size-7 items-center justify-center rounded-full border border-[rgba(232,217,176,0.42)] bg-[rgba(232,217,176,0.08)] text-[#e8d9b0] transition-all duration-300 hover:border-[rgba(232,217,176,0.8)] hover:text-[#f6ecd2]"
+              className="focus-glow relative flex size-7 items-center justify-center rounded-full border border-[rgba(232,217,176,0.42)] bg-[rgba(232,217,176,0.08)] text-[var(--lp-gold)] transition-all duration-300 hover:border-[rgba(232,217,176,0.8)] hover:text-[var(--lp-gold-soft)]"
             >
               <Maximize2 className="size-3" aria-hidden="true" />
               {/* THE EXCHANGE'S OWN MARK — a small gold coin rides the
@@ -449,7 +449,7 @@ function AppShellViews({
               <span
                 aria-hidden="true"
                 data-testid="crown-expand-paid-dot"
-                className="absolute -right-1 -top-1 flex size-3 items-center justify-center rounded-full border border-[rgba(232,217,176,0.6)] bg-[#0b0f17] text-[#e8d9b0] shadow-[0_0_6px_1px_rgba(232,217,176,0.45)]"
+                className="absolute -right-1 -top-1 flex size-3 items-center justify-center rounded-full border border-[rgba(232,217,176,0.6)] bg-[var(--lp-veil-solid)] text-[var(--lp-gold)] shadow-[0_0_6px_1px_rgba(232,217,176,0.45)]"
               >
                 <Coins className="size-2" />
               </span>
@@ -461,7 +461,7 @@ function AppShellViews({
               aria-label={t("Landing")}
               title={t("Landing")}
               data-testid="crown-minimize"
-              className="focus-glow flex size-7 items-center justify-center rounded-full border border-[rgba(232,217,176,0.42)] bg-[rgba(232,217,176,0.08)] text-[#e8d9b0] transition-all duration-300 hover:border-[rgba(232,217,176,0.8)] hover:text-[#f6ecd2]"
+              className="focus-glow flex size-7 items-center justify-center rounded-full border border-[rgba(232,217,176,0.42)] bg-[rgba(232,217,176,0.08)] text-[var(--lp-gold)] transition-all duration-300 hover:border-[rgba(232,217,176,0.8)] hover:text-[var(--lp-gold-soft)]"
             >
               <Minimize2 className="size-3" aria-hidden="true" />
             </button>

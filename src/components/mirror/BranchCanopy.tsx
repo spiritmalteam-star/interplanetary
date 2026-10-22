@@ -37,6 +37,7 @@ import {
   Maximize2,
   Menu,
   Moon,
+  Music,
   NotebookPen,
   Palette,
   Phone,
@@ -4536,6 +4537,18 @@ export function BranchCanopy({
               className="focus-glow flex size-7 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
             >
               <BookOpen className="size-3" aria-hidden="true" />
+            </button>
+            )}
+            {!bare && (
+            <button
+              type="button"
+              onClick={() => openLightCodes()}
+              aria-label={t("Music")}
+              title={t("Music — sound transmissions through Mirror Entity")}
+              data-testid={`${testIdPrefix}-door-music`}
+              className="focus-glow flex size-7 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+            >
+              <Music className="size-3" aria-hidden="true" />
             </button>
             )}
           </div>

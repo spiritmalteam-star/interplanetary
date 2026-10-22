@@ -118,19 +118,24 @@ export default function LandingGate() {
   const phaseRef = useRef<Phase>("landing");
   phaseRef.current = phase;
 
-  /* THE THRESHOLD'S OWN LIGHT — the portal grows out of a midnight
-     page, so the chamber wears its dark vestment here (the realm's
-     own light-toggle keeps working; a chosen light stays chosen).
-     THE ONE SEAL — the midnight is sealed exactly once, at the
-     gate's first breath: `setTheme`'s own identity changes whenever
-     the theme changes, so a bare [setTheme] dependency would slam
-     the door shut again the moment the visitor's hand picks the
-     light — the toggle would never leave the dark. */
+  /* THE THRESHOLD'S OWN LIGHT — the realm wears the toggle's own
+     default: the milky vanilla daylight (TOGGLE ON). The seal falls
+     once, at the gate's first breath, and only when this browser has
+     never chosen: a visitor who has already picked the blue crystal
+     (toggle off) keeps their choice — the stored word decides.
+     `setTheme`'s own identity changes whenever the theme changes, so
+     the seal watches the storage, never the callback's face. */
   const darkSealed = useRef(false);
   useEffect(() => {
     if (darkSealed.current) return;
     darkSealed.current = true;
-    setTheme("dark");
+    let chosen: string | null = null;
+    try {
+      chosen = window.localStorage.getItem("mirror-entity-realm");
+    } catch {
+      /* the private keeping stays closed — the default serves */
+    }
+    if (chosen !== "dark" && chosen !== "light") setTheme("light");
   }, [setTheme]);
 
   /* THE INSTANT FLOOR — the chunk already rides (pulled at the
@@ -154,12 +159,21 @@ export default function LandingGate() {
     };
   }, []);
 
-  /* the geometry follows the viewport, never the keyboard */
+  /* the geometry follows the viewport's WIDTH alone — never the
+     keyboard, never the phone's folding URL bar. THE STUCK GLASS LAW:
+     the anchored chat is an image stuck on the website — height-only
+     drifts (the bar's collapse while scrolling, the keyboard's rise)
+     are ignored, so the glass never moves, never grows, never
+     shifts a pixel after its first carving. */
   useEffect(() => {
     const apply = () => setGeo(computeGeo());
     apply();
+    let lastW = document.documentElement.clientWidth;
     let tm: number | undefined;
     const onResize = () => {
+      const w = document.documentElement.clientWidth;
+      if (w === lastW) return;
+      lastW = w;
       window.clearTimeout(tm);
       tm = window.setTimeout(apply, 180);
     };
@@ -447,7 +461,7 @@ export default function LandingGate() {
         <div
           data-testid="landing-root"
           className={cn(
-            "fixed inset-0 z-30 overflow-y-auto overscroll-y-contain bg-[#16244a] transition-opacity duration-500",
+            "fixed inset-0 z-30 overflow-y-auto overscroll-y-contain bg-[var(--lp-deep)] transition-opacity duration-500",
             phase === "opening" && "pointer-events-none opacity-0"
           )}
         >
@@ -504,7 +518,7 @@ export default function LandingGate() {
                  animation — the phone pays nothing); the full portal
                  keeps its own solid edge. */
               docked
-                ? "border-white/[0.08] shadow-[0_40px_120px_-40px_rgba(0,0,0,0.95),0_0_44px_-20px_rgba(56,189,248,0.3),0_0_30px_-16px_rgba(255,77,109,0.22)]"
+                ? "border-[var(--lp-edge)] shadow-[0_40px_120px_-40px_rgba(0,0,0,0.95),0_0_44px_-20px_rgba(56,189,248,0.3),0_0_30px_-16px_rgba(255,77,109,0.22)]"
                 : "border-white/10 shadow-[0_40px_120px_-40px_rgba(0,0,0,0.95)]"
             )}
             style={{ borderRadius: fullscreen ? 0 : geo.radius }}

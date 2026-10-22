@@ -68,74 +68,96 @@ body {
 :root {
   --radius: 0.75rem;
 
-  /* Light mode — the paper page. A smooth, barely-warm white sheet
-     with graphite ink: the tablet book reader, no colors anywhere. */
-  --background: #fbfbfa;
-  --foreground: #1b1b1c;
-  --card: #ffffff;
-  --card-foreground: #1b1b1c;
-  --popover: #ffffff;
-  --popover-foreground: #1b1b1c;
-  --primary: #1b1b1c;
-  --primary-foreground: #ffffff;
-  --secondary: #f4f4f3;
-  --secondary-foreground: #1b1b1c;
-  --muted: #f4f4f3;
-  --muted-foreground: #71717a;
-  --accent: #f4f4f3;
-  --accent-foreground: #1b1b1c;
-  --destructive: #52525b;
-  --border: rgba(0, 0, 0, 0.1);
-  --input: rgba(0, 0, 0, 0.14);
-  --ring: rgba(0, 0, 0, 0.35);
-  --chart-1: #3f3f46;
-  --chart-2: #52525b;
-  --chart-3: #71717a;
-  --chart-4: #a1a1aa;
-  --chart-5: #d4d4d8;
-  --sidebar: #fbfbfa;
-  --sidebar-foreground: #1b1b1c;
-  --sidebar-primary: #1b1b1c;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #f4f4f3;
-  --sidebar-accent-foreground: #1b1b1c;
-  --sidebar-border: rgba(0, 0, 0, 0.08);
-  --sidebar-ring: rgba(0, 0, 0, 0.3);
+  /* Light mode — MILKY VANILLA YELLOW. The whole house reads on the
+     same warm paper as the guide's pages: sepia ink on cream, warm
+     hairlines, and two feathered accents (green and purple) breaking
+     the contrast the way a feather rests on a sheet. THE TOGGLE'S
+     ON — this is the theme the visitor meets by default; the blue
+     crystal night waits behind the toggle's other face. */
+  --background: #f6efdc;
+  --foreground: #3a3121;
+  --card: #fffdf4;
+  --card-foreground: #3a3121;
+  --popover: #fffdf4;
+  --popover-foreground: #3a3121;
+  --primary: #3a3121;
+  --primary-foreground: #f8f3e2;
+  --secondary: #f0e6c8;
+  --secondary-foreground: #4a3d26;
+  --muted: #f1e8cf;
+  --muted-foreground: #8d7c5c;
+  --accent: #ece0bd;
+  --accent-foreground: #4a3d26;
+  --destructive: #a44a3f;
+  --border: rgba(122, 100, 58, 0.24);
+  --input: rgba(122, 100, 58, 0.3);
+  --ring: rgba(154, 120, 30, 0.45);
+  --chart-1: #6b5a38;
+  --chart-2: #8d7c5c;
+  --chart-3: #5c7a52;
+  --chart-4: #7c5f8f;
+  --chart-5: #c2b088;
+  --sidebar: #f3ecd8;
+  --sidebar-foreground: #3a3121;
+  --sidebar-primary: #3a3121;
+  --sidebar-primary-foreground: #f8f3e2;
+  --sidebar-accent: #ece0bd;
+  --sidebar-accent-foreground: #4a3d26;
+  --sidebar-border: rgba(122, 100, 58, 0.2);
+  --sidebar-ring: rgba(154, 120, 30, 0.45);
 
-  /* accents — neutral ink, never colored */
-  --cy: #3f3f46;
-  --pk: #52525b;
-  --gd: #52525b;
-  --ok: #3f3f46;
+  /* accents — feathered green and purple, gold from the guide */
+  --cy: #5c7a52;
+  --pk: #7c5f8f;
+  --gd: #9a781e;
+  --ok: #5c7a52;
 
-  /* star play — graphite silver (no violet any more) */
-  --sp-a: #52525b;
-  --sp-b: #71717a;
+  /* star play — feathered green and violet */
+  --sp-a: #6b8457;
+  --sp-b: #8a6aa3;
 
-  /* invent — graphite, the fourth book */
-  --iv-a: #52525b;
-  --iv-b: #6b6b74;
+  /* invent — sage and warm bronze */
+  --iv-a: #6b7a52;
+  --iv-b: #8a7448;
 
   /* ET register ink — fully opaque pages */
-  --register-ink: #f4f4f3;
+  --register-ink: #f1e7cc;
 
-  /* hairlines — extremely thin, neutral */
-  --hairline: rgba(0, 0, 0, 0.09);
-  --hairline-hover: rgba(0, 0, 0, 0.26);
-  --hairline-active: rgba(0, 0, 0, 0.42);
+  /* hairlines — warm sepia edges */
+  --hairline: rgba(122, 100, 58, 0.22);
+  --hairline-hover: rgba(122, 100, 58, 0.42);
+  --hairline-active: rgba(122, 100, 58, 0.6);
 
-  /* glass — white veils on the white page */
-  --glass-bg: rgba(255, 255, 255, 0.68);
-  --glass-bg-strong: rgba(255, 255, 255, 0.9);
-  --glass-bg-soft: rgba(255, 255, 255, 0.55);
+  /* glass — cream veils on the vanilla paper */
+  --glass-bg: rgba(255, 253, 244, 0.68);
+  --glass-bg-strong: rgba(255, 253, 244, 0.9);
+  --glass-bg-soft: rgba(255, 253, 244, 0.55);
 
-  /* atmosphere — faint gray breaths, barely there */
-  --atmo-1: rgba(0, 0, 0, 0.032);
-  --atmo-2: rgba(0, 0, 0, 0.02);
-  --atmo-3: rgba(0, 0, 0, 0.026);
-  --atmo-4: rgba(0, 0, 0, 0.016);
+  /* atmosphere — feathered green and purple breaths */
+  --atmo-1: rgba(92, 122, 82, 0.1);
+  --atmo-2: rgba(124, 95, 143, 0.09);
+  --atmo-3: rgba(154, 120, 30, 0.06);
+  --atmo-4: rgba(122, 100, 58, 0.045);
 
   --star-opacity: 0;
+
+  /* THE THRESHOLD'S TWO SKIES — the landing page reads its ink from
+     these tokens: milky vanilla daylight when the toggle is on, the
+     crystal midnight when it is off. One vocabulary, two skies. */
+  --lp-deep: #efe6cc;
+  --lp-head: #33291a;
+  --lp-body: #5a4c33;
+  --lp-body-soft: #6d5c3c;
+  --lp-mute: #8d7c5c;
+  --lp-faint: #a5946f;
+  --lp-gold: #9a781e;
+  --lp-gold-soft: #7a5c14;
+  --lp-gold-ink: #6d5410;
+  --lp-feather: #5c7a52;
+  --lp-feather-bright: #47663f;
+  --lp-veil: rgba(255, 253, 244, 0.62);
+  --lp-veil-solid: #f9f3df;
+  --lp-edge: rgba(122, 100, 58, 0.24);
 }
 
 .dark {
@@ -144,7 +166,8 @@ body {
      light: the whole house glows in an airy crystal daylight, never
      a dark midnight), cool glacial ink on every surface — the main
      portal wears the same lit crystal light as the threshold it
-     grows out of. */
+     grows out of. TOGGLE OFF — the blue crystal sky, as it has
+     always been, waiting behind the vanilla daylight's other face. */
   --background: #1c2b4a;
   --foreground: #eef4fb;
   --card: #243459;
@@ -211,6 +234,23 @@ body {
   --atmo-4: rgba(186, 216, 255, 0.055);
 
   --star-opacity: 1;
+
+  /* the threshold's midnight vocabulary — the landing's ink when the
+     toggle is off and the blue crystal sky holds the house */
+  --lp-deep: #16244a;
+  --lp-head: #eef2f5;
+  --lp-body: #b9c6cf;
+  --lp-body-soft: #a7b6c2;
+  --lp-mute: #8fa3b2;
+  --lp-faint: #66788a;
+  --lp-gold: #e8d9b0;
+  --lp-gold-soft: #f0e7cd;
+  --lp-gold-ink: #f2e9cf;
+  --lp-feather: #9fd8dc;
+  --lp-feather-bright: #c9ecee;
+  --lp-veil: rgba(8, 12, 20, 0.55);
+  --lp-veil-solid: #0a0e18;
+  --lp-edge: rgba(255, 255, 255, 0.12);
 }
 
 @layer base {
@@ -325,9 +365,10 @@ body {
   color: transparent;
 }
 
-/* Light mode: the hero text is plain clean ink — no gradient */
+/* Light mode: the hero text reads in warm sepia ink on the vanilla
+   paper — no gradient, the same ink the guide's pages wear */
 html:not(.dark) .text-hero {
-  background-image: linear-gradient(104deg, #1b1b1c 0%, #45454d 70%, #1b1b1c 100%);
+  background-image: linear-gradient(104deg, #3a3121 0%, #6d5c3c 70%, #3a3121 100%);
 }
 
 .title-gradient {
@@ -2286,6 +2327,58 @@ html:not(.dark) .scope-lightcodes {
     ),
     #16244a;
   color-scheme: dark;
+}
+
+/* THE VANILLA THRESHOLD — when the toggle is on, the threshold reads
+   on the same milky vanilla paper as the guide's pages, and two
+   feathered textures (green from the west, purple from the east)
+   break the contrast the way feathers rest on a warm sheet. */
+html:not(.dark) .lp-ground {
+  color-scheme: light;
+  background:
+    radial-gradient(
+      54% 36% at 4% 0%,
+      rgba(92, 122, 82, 0.17),
+      transparent 62%
+    ),
+    radial-gradient(
+      46% 32% at 98% 7%,
+      rgba(124, 95, 143, 0.14),
+      transparent 64%
+    ),
+    radial-gradient(
+      40% 28% at 90% 44%,
+      rgba(92, 122, 82, 0.08),
+      transparent 66%
+    ),
+    radial-gradient(
+      44% 30% at 2% 66%,
+      rgba(124, 95, 143, 0.08),
+      transparent 66%
+    ),
+    radial-gradient(
+      60% 42% at 50% 108%,
+      rgba(154, 120, 30, 0.1),
+      transparent 64%
+    ),
+    radial-gradient(
+      58% 40% at 50% -6%,
+      rgba(255, 250, 226, 0.92),
+      transparent 60%
+    ),
+    #f6efdc;
+}
+html:not(.dark) .lp-ground::before {
+  background-image:
+    linear-gradient(rgba(122, 100, 58, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(122, 100, 58, 0.055) 1px, transparent 1px);
+}
+
+/* THE SIGILS ON PAPER — the light language's marks are drawn for the
+   midnight, so on the vanilla paper they print like ink (multiply),
+   the way the guide's own pages have always worn them */
+html:not(.dark) .lp-sigil-img {
+  mix-blend-mode: multiply;
 }
 .lp-ground::before {
   content: "";
