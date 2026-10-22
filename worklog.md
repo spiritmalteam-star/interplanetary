@@ -4633,3 +4633,19 @@ Stage Summary:
 - The landing chat is truly an image stuck on the website — glued to its waking section at every scroll breath, lag-free after every portal return.
 - The guide wears one small fine circle for a back hand and nothing at its foot; the tunnel and the toggle follow the realm's two skies; light is the default of every fresh visit; every word in the house steps one size larger; the words on the artwork glow bright; and the calm laws keep the phone cool.
 - Commit 4e05c5f on origin/main.
+
+---
+Task ID: 81
+Agent: Z.ai Code (main orchestrator)
+Task: Restore latest version and push with the rotated token (token rotated this session, redacted here)
+
+Work Log:
+- Found local main struck back to c873b47 (stale pre-Task-63 line); remote was 35 commits ahead at b912b32 (Task 80 worklog — Tasks 77/78/79/80 all implemented and already on origin/main).
+- Audit: git cherry HEAD FETCH_HEAD — all + marks (remote-only); reverse cherry — single local unique commit c873b47, already preserved on backup/yielding-orb-c873b47.
+- git reset --hard FETCH_HEAD → local main = b912b32, working tree clean.
+- Push with the NEW token: "Everything up-to-date" — token valid, branch synced.
+- Dev server healthy (HTTP 200, prisma fine, no errors in dev.log tail).
+- agent-browser verified at 390×844 and 1280×800: vanilla daylight default, chat glued to its waking section, logo visible, captions bright, zero page errors.
+
+Stage Summary:
+- Local and origin/main both at b912b32 (Task 80 complete line). New token confirmed working. No code changes made this pass — pure restore + token rotation verification.
