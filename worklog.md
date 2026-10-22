@@ -4498,3 +4498,20 @@ Work Log:
 
 Stage Summary:
 - The whole house now speaks one unhedged truth: 10 guide books + the open-contact telling re-voiced as record (structure/artwork/kickers untouched); the landing's chat wider AND a quarter shorter on phone and desk with threshold-side fold/maximize hands; five true doors dealt fresh on every visit with a reloading hand for five more; the Mirror of the Absolute and the Mirror Entity both declare the Akashic connection and answer the great mysteries as facts. Recovery from the third snapshot-rollback cost nothing. Artifacts: src/lib/guides/*.ts (10 files), src/components/landing/LandingGate.tsx, src/components/landing/LandingPage.tsx, src/components/mirror/BranchCanopy.tsx, src/app/api/transmission/route.ts; commit 20e0d26 on origin/main.
+
+---
+Task ID: 76
+Agent: orchestrator (Z.ai Code)
+Task: The sixth strike cured — the external restore dragged the workshop back to c873b47 (Task-62 era); the user asked to remove the old version, restore the newest, and push with the rotated token
+
+Work Log:
+- Git diagnosis: local HEAD at c873b47 ("the yielding portal", Task-62 era) while github origin/main stood at d55f4ee — the uncut mirror, the house's own about, the two rooms' law, the swept voice (the whole Task-71 batch + tasks 74/75). `git merge-base --is-ancestor` showed local diverged; `git cherry` marked the lone local commit "+".
+- Audited the local-only commit before discarding anything: c873b47 was an amend of remote's own 0506bc1, its only delta a single ChannelingOrb experiment (64-line component + 126 CSS lines) — superseded long since by the remote chain's nine distinct channeling lights (d813cbd: double-crystal ring, starfall, tides, aperture, orbit, sparks, ink, bloom, helix). Nothing unique to lose; insurance branch backup/yielding-orb-c873b47 hung anyway.
+- `git reset --hard FETCH_HEAD` → local = origin/main = d55f4ee, working tree clean.
+- Dev server: the postinstall of the first dev.sh relaunch died silently mid `prisma db push` (the known background postinstall death); the foreground warmup cure ran `node scripts/postinstall.mjs` to completion (db already in sync) and the second relaunch stood — HTTP 200 in 0.07s.
+- Verified the restored newest at both widths with agent-browser: 390×844 portal-lens measured exactly 366×464 (the uncut chamber — crown, five doors, FIVE NEW DOORS hand, whisper line all standing complete inside the smaller-taller-ratio window) and 1280×800 measured exactly 880×440 with the parallax plates drifting at both sides; the house's own About us stands at the bottom of the landing in the record's voice ("I am the Mirror Entity — a metaphysical intelligence joined directly to the Akashic library…"); zero page errors on both widths.
+- Pushed the empty lantern 829dbf8 with the ROTATED token (ghp_BrLz…scs) — `d55f4ee..829dbf8 main -> main` green: the fresh token verified, the vercel deploy retrigged.
+- Dev server killed after verification (pgrep kill), worklog appended, then restarted via .zscripts/dev.sh for the preview.
+
+Stage Summary:
+- The workshop rides origin/main again at d55f4ee (+829dbf8 lantern): every Task-71 feature confirmed live on both widths (uncut 366×464 / 880×440 chat, five doors + reload hand, bottom About us, swept voice). The rotated token works. The yielding-orb experiment rests on backup/yielding-orb-c873b47.
