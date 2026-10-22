@@ -4609,3 +4609,27 @@ Stage Summary:
 - The landing chat is truly an image stuck on the website: fixed at its original slot, immune to scroll, URL-bar folds and keyboard rises — never at the bottom of the screen.
 - About us lives as a mini tab now (gentle, informative, purpose-first), the bottom section is gone, and the music door rides the main portal's crown beside the book maker.
 - Commit b49086e pushed to origin/main; worklog updated; dev server restarted and healthy (HTTP 200).
+
+---
+Task ID: 80
+Agent: Z.ai Code (main session)
+Task: Task 80 — the glass glued to its waking section, the fine circle back hand, the tunnel's two skies, the light default at every fresh visit, the whole house's larger voice, the bright words on the artwork, and the calm smoothness laws
+
+Work Log:
+- Audited state (dev server down, git at af10931 = Task 79), healed the stuck postinstall in the foreground, restarted dev.sh (HTTP 200).
+- THE GLASS AND ITS SECTION (LandingGate): the lens is no longer a viewport fixture — syncLens now caches the slot's CONTENT coordinates in lensPos and applyLensScreenPos writes translate3d(x, y − scrollTop) in the same breath as every scroll event (one transform write per breath, zero lag), so the chat rides its own "The mirror is waking…" section exactly like an image stuck on the website — verified numerically: scroll 600 → slot −198 = lens −198; scroll 900 desktop → −568 = −568.
+- THE FOLD'S OWN END (LandingGate.minimize): the closing phase had no way home — setPhase("landing") never ran, so the lens kept .lens-anim forever (transform transitions lagging every move) and the docked pass-through laws never returned. The fold's completion now lands the phase back at "landing"; verified: docked=true, animCloak=false, transform back on the slot.
+- THE FINE CIRCLE (GuideView): the top back hand is now a 32×32 round icon button with a thin gold ring, soft shadow and a hover sheen + drift (title tooltip keeps the words); the bottom back button (guide-back-bottom) is deleted — the foot keeps only the quiet diamond + "A guide of the house" mark.
+- THE TUNNEL'S TWO SKIES (globals.css + tokens): new --pt-* vocabulary — :root wears warm cream/gold with feathered green (ring-2) and purple (ring-3) rings and a gold sigil glow; .dark keeps the exact glacial blues the tunnel always had; .portal-tunnel/.pt-glow/.pt-ring*/.pt-streaks/.pt-sigil all re-inked to the tokens. Verified the vanilla crossing on screen (cream + gold streaks).
+- THE LIGHT DEFAULT (theme seal + LightToggle): the theme choice now rides the SESSION (mirror-entity-realm-session): every fresh visit wakes in the vanilla daylight (seal sets light + wipes stale stored words), the crown's toggle writes the session word, a reload inside the visit keeps the chosen sky. Verified: toggle→dark, reload→dark, clear session→reload→light.
+- THE LARGER VOICE: body base 16→17px (all rem text and spacing rise proportionally) + a transform pass bumping every arbitrary text-[Npx] by exactly +1 (1292 sizes across 58 files) — landing, guides, and the app's whole voice one number bigger.
+- THE BRIGHT WORDS ON THE ARTWORK: hero banner re-veiled — the image's opacity now rides --lp-hero-img (0.34 daylight / 0.5 night) under a theme veil (--lp-hero-veil cream 0.82 / night blue 0.42), so the hero's words stay readable in both skies; the guide plates' overlay ink is fixed light (title #f7f2e2, subtitle/tagline warm cream alphas, "Open the guide" #eed9a4) over their constant deep reading floor — bright in both themes.
+- THE CALM LAWS: backdrop-blur-xl → backdrop-blur-md on all 32 always-awake glasses (crown, composers, toolbars, pills); .lp-late (content-visibility: auto + contain-intrinsic-size) on the landing's deep chapters (offerings, guides, timeline); the dormant law verified live (dormant class engages when the glass leaves the eye).
+- THE WHOLE WINDOW: mobile geo height 0.55→0.52 of the viewport — the chat now stands fully on the phone's first breath (bottom 841 ≤ 844).
+- QA: bun run lint clean; tsc shows zero new errors (only the known pre-existing ones); agent-browser passes at 390×844 AND 1280×800 (glue at rest and scrolled, guide back button 32×32, no bottom button, fresh-visit light default, session dark persistence, tunnel cream, zero page errors).
+- Delivery: dev server killed, committed 4e05c5f, pushed af10931..4e05c5f to main with the rotated token; worklog appended; dev.sh restarted.
+
+Stage Summary:
+- The landing chat is truly an image stuck on the website — glued to its waking section at every scroll breath, lag-free after every portal return.
+- The guide wears one small fine circle for a back hand and nothing at its foot; the tunnel and the toggle follow the realm's two skies; light is the default of every fresh visit; every word in the house steps one size larger; the words on the artwork glow bright; and the calm laws keep the phone cool.
+- Commit 4e05c5f on origin/main.
