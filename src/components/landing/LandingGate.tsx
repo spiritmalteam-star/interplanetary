@@ -29,6 +29,22 @@ import LandingPage from "./LandingPage";
 
 type Phase = "landing" | "opening" | "through" | "closing";
 
+/* THE INSTANT FLOOR — the chamber's chunk is pulled the moment this
+   module itself is evaluated — before React even hydrates — so the
+   landing's chat rides the network's very first breath instead of
+   waiting for the gate's first effect. */
+const chamberChunk: Promise<{
+  default: ComponentType<{
+    bare?: boolean;
+    onExpand?: () => void;
+    onMinimize?: () => void;
+    onFoldChat?: () => void;
+  }>;
+}> | null =
+  typeof window === "undefined"
+    ? null
+    : import("@/components/mirror/AppShell");
+
 /* the docked geometry — the window the whole chamber lays out inside */
 type Geo = {
   w: number;
@@ -111,13 +127,11 @@ export default function LandingGate() {
     setTheme("dark");
   }, [setTheme]);
 
-  /* THE INSTANT FLOOR — the chamber's chunk is pulled the moment the
-     gate itself mounts, with no idle wait and no backstop timer: the
-     import rides the same breath as the page's own hydration, so the
-     landing's chat is alive as fast as the network allows. */
+  /* THE INSTANT FLOOR — the chunk already rides (pulled at the
+     module's own breath above): this effect only receives it. */
   useEffect(() => {
     let cancelled = false;
-    void import("@/components/mirror/AppShell").then((mod) => {
+    void (chamberChunk ?? import("@/components/mirror/AppShell")).then((mod) => {
       if (!cancelled)
         setChamber(
           () =>
@@ -184,6 +198,18 @@ export default function LandingGate() {
       cancelled = true;
     };
   }, [phase, geo, Chamber, syncLens]);
+
+  /* THE UNFOLD'S OWN SYNC — the fold is TRUE now: the slot itself
+     collapses with the chat (the space folds away, not just the
+     glass), and when the chat rises again the slot regrows — the
+     lens finds its place twice, once at the first breath and once
+     after the slot's own height transition settles. */
+  useEffect(() => {
+    if (phase !== "landing" || chatFolded) return;
+    syncLens();
+    const id = window.setTimeout(syncLens, 560);
+    return () => window.clearTimeout(id);
+  }, [chatFolded, phase, syncLens]);
 
   const handleLandingScroll = useCallback(
     (y: number) => {
@@ -411,7 +437,7 @@ export default function LandingGate() {
         <div
           data-testid="landing-root"
           className={cn(
-            "fixed inset-0 z-30 overflow-y-auto overscroll-y-contain bg-[#05070d] transition-opacity duration-500",
+            "fixed inset-0 z-30 overflow-y-auto overscroll-y-contain bg-[#0e1830] transition-opacity duration-500",
             phase === "opening" && "pointer-events-none opacity-0"
           )}
         >
@@ -419,7 +445,13 @@ export default function LandingGate() {
             slotRef={slotRef}
             slotStyle={
               geo
-                ? { width: geo.w, height: geo.h }
+                ? /* THE TRUE FOLD — when the chat is folded the slot
+                     itself collapses to a slim invitation bar, so the
+                     chat's space folds away with it; the words stay
+                     mounted in the lens (invisible, remembering). */
+                  chatFolded
+                  ? { width: geo.w, height: 68 }
+                  : { width: geo.w, height: geo.h }
                 : { height: "min(100dvh, 660px)" }
             }
             onExpand={expandPortal}

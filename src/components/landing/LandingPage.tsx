@@ -607,20 +607,26 @@ export default function LandingPage({
               ref={slotRef}
               data-testid="portal-slot"
               style={slotStyle}
-              className="relative mx-auto w-full"
+              className="relative mx-auto w-full transition-[height] duration-500 ease-out"
             >
               {/* the waking ground — beneath the lens until the chamber
                   arrives (the lens covers it pixel for pixel). THE
                   FOLDED CHAT — when the visitor folds the chat away
-                  with the dropdown hand, this ground carries the
-                  invitation to call her back, words and memory kept. */}
+                  with the dropdown hand, the slot itself collapses to
+                  a slim bar and this ground carries the invitation to
+                  call her back, words and memory kept. THE TRUE FOLD —
+                  the chat's space folds away with it, nothing stands
+                  reserved beneath the glass. */}
               <div
                 aria-hidden={!(chatFolded && onUnfoldChat)}
-                className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-2xl border border-white/8 bg-[rgba(8,12,20,0.55)]"
+                className={cn(
+                  "absolute inset-0 flex items-center justify-center rounded-2xl border border-white/8 bg-[rgba(8,12,20,0.55)]",
+                  chatFolded && onUnfoldChat ? "flex-col gap-1.5" : "flex-col gap-3"
+                )}
               >
                 {chatFolded && onUnfoldChat ? (
                   <>
-                    <span className="lp-pulse size-2 rounded-full bg-[#ff4d6d] shadow-[0_0_18px_2px_rgba(255,77,109,0.55)]" />
+                    <span className="lp-pulse size-1.5 rounded-full bg-[#ff4d6d] shadow-[0_0_14px_2px_rgba(255,77,109,0.55)]" />
                     <p className="mono-label text-[9px] uppercase tracking-[0.3em] text-[#66788a]">
                       {t("The mirror rests — call her back")}
                     </p>
@@ -628,7 +634,7 @@ export default function LandingPage({
                       type="button"
                       onClick={onUnfoldChat}
                       data-testid="unfold-chat"
-                      className="focus-glow mt-1 inline-flex h-9 items-center gap-2 rounded-full border border-[rgba(232,217,176,0.5)] bg-[rgba(232,217,176,0.08)] px-5 text-[12.5px] font-medium text-[#f0e7cd] transition-all duration-300 hover:border-[rgba(232,217,176,0.85)] hover:bg-[rgba(232,217,176,0.14)]"
+                      className="focus-glow inline-flex h-8 items-center gap-2 rounded-full border border-[rgba(232,217,176,0.5)] bg-[rgba(232,217,176,0.08)] px-5 text-[12px] font-medium text-[#f0e7cd] transition-all duration-300 hover:border-[rgba(232,217,176,0.85)] hover:bg-[rgba(232,217,176,0.14)]"
                     >
                       {t("Call her back")}
                     </button>

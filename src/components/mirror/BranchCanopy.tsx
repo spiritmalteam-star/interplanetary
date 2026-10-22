@@ -3764,12 +3764,24 @@ export function BranchCanopy({
     ]
   );
 
-  /* the thread's own pin — the newest answer keeps the eye while the
-     visitor stays at the bottom of the room */
+  /* THE TRANSMISSION'S OWN BEGINNING — a new turn never yanks the eye
+     to the bottom of the room: the view rises to the new transmission's
+     first word (the visitor's own question standing at the top of the
+     glass), and the answer grows beneath it — the visitor reads down
+     by their own hand, never dragged. */
   useEffect(() => {
     if (thread.length === 0) return;
     const el = bodyRef.current;
-    if (el && pinnedRef.current) el.scrollTop = el.scrollHeight;
+    if (!el || !pinnedRef.current) return;
+    const turns = el.querySelectorAll<HTMLElement>("[data-room-turn]");
+    const last = turns.length > 0 ? turns[turns.length - 1] : null;
+    if (!last) {
+      el.scrollTop = el.scrollHeight;
+      return;
+    }
+    const eyeTop = el.getBoundingClientRect().top;
+    const turnTop = last.getBoundingClientRect().top;
+    el.scrollTop += turnTop - eyeTop - 10;
   }, [thread]);
 
   /* THE TWO REALMS' OWN BORDER — the landing chat and the main portal
@@ -4708,7 +4720,21 @@ export function BranchCanopy({
                 }}
               />
             </div>
-            <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-4 pb-28">
+            {/* THE WHOLE MARK STANDS — the quiet floor's column scrolls
+                when the window runs short: the column centers when it
+                fits and scrolls from its own top when it doesn't, so
+                the house's seal is never clipped away by a small
+                height. At the scroll's edges the breath chains to the
+                threshold beneath (the pass-through law holds). */}
+            <div
+              className="nice-scroll absolute inset-0 overflow-y-auto"
+              style={{
+                overscrollBehavior: "auto",
+                touchAction: "pan-y",
+                WebkitOverflowScrolling: "touch",
+              }}
+            >
+              <div className="pointer-events-none flex min-h-full flex-col items-center justify-center gap-3 px-6 pb-24 pt-3">
               {/* THE MARK — the house's own seal, wearing the theme's
                   face (the white emblem on the midnight, the dark one in
                   the daylight, so the light's hand can never take it
@@ -4772,6 +4798,7 @@ export function BranchCanopy({
                   onPick={(q) => sendFromPanel(q, null)}
                 />
               )}
+              </div>
             </div>
           </div>
         ) : (
@@ -5216,7 +5243,19 @@ export function BranchCanopy({
                 ref={bodyRef}
                 onScroll={onBodyScroll}
                 data-testid={`${testIdPrefix}-zoom-answer`}
-                className="nice-scroll min-h-0 flex-1 overflow-y-auto px-4 py-3 sm:px-6 sm:py-4"
+                className={cn(
+                  "nice-scroll min-h-0 flex-1 overflow-y-auto px-4 py-3 sm:px-6 sm:py-4",
+                  /* THE ROOM'S OWN SCROLL — docked in the threshold the
+                     reading space keeps its touch: the visitor scrolls
+                     WITHIN the chat now — the words move under their
+                     hand, and when the transmission's end is reached
+                     the breath chains to the threshold beneath. */
+                  bare && "pointer-events-auto"
+                )}
+                style={{
+                  overscrollBehavior: "auto",
+                  WebkitOverflowScrolling: "touch",
+                }}
               >
                 <div key={zoom.q} className="room-swap mx-auto max-w-[720px]">
                   {zoom && !bare && (
@@ -5310,6 +5349,7 @@ export function BranchCanopy({
                       {thread.map((turn, i) => (
                         <div
                           key={`${zoomQ}-${i}`}
+                          data-room-turn=""
                           className="flex flex-col gap-2"
                         >
                           <p className="ml-auto max-w-[88%] whitespace-pre-wrap break-words text-[13px] font-medium leading-relaxed text-foreground">

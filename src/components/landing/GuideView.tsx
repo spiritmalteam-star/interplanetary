@@ -308,7 +308,7 @@ export default function GuideView({
     <div
       ref={rootRef}
       data-testid="guide-view"
-      className="fixed inset-0 z-[70] overflow-y-auto overscroll-y-contain overflow-x-clip bg-[#05070d]"
+      className="fixed inset-0 z-[70] overflow-y-auto overscroll-y-contain overflow-x-clip bg-[#0e1830]"
       role="dialog"
       aria-modal="true"
       aria-label={guide.title}
