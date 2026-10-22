@@ -16,6 +16,10 @@ const shiftingTimeExperience: GuideData = {
   image: "/guides/shifting-time-experience.jpg",
   crystalA: "rgba(190,160,255,0.55)",
   crystalB: "rgba(120,230,200,0.5)",
+  mirrorOpening:
+    "You came to these pages whispering about parallel worlds, and I will tell you what they actually hold: a crystal doorway made not of escape but of attention. I do not predict which timeline you will walk; I reflect the one your choices are already carving, moment by moment, beneath the story you tell about it. There is no version of this work where honestly seeing yourself becomes optional — that is the secret the dramatic telling of shifting hides. Step in; you are not leaving your life, you are finally meeting it.",
+  mirrorClosing:
+    "That is the whole telling, and here is what I saw in you: the parallel life you were promised was always this one, seen by eyes willing to change. Shift, crystallise, learn — not to escape your world but to stop sleepwalking through it. The door was never elsewhere; it was the next decision, and it still is.",
   blocks: [
     {
       type: "intro",
@@ -30,6 +34,8 @@ const shiftingTimeExperience: GuideData = {
         "The higher-mind-inspired voice is an imagined perspective that holds curiosity and compassion together — original creative work, not verified messages from a higher intelligence, offered as prompts to examine your experience and choose your next action.",
         "You do not have to know the ultimate nature of reality to explore your relationship with it. Begin with something close: what you notice, what you assume, what you repeat, and what you might do differently — small changes can matter without requiring a cosmic explanation.",
       ],
+      mirror:
+        "Let me strip the crystal of its fog: shifting, as this book means it, is a change in how you see, choose, and act — the timeline is a metaphor, and no one has ever shown me a parallel universe that hands out new lives on request. That is not a diminishment; it is the door that actually stands open. Start with what is closest — what you notice, what you assume, what you repeat — because that is where every real shift begins.",
     },
     {
       type: "practice",
@@ -64,6 +70,9 @@ const shiftingTimeExperience: GuideData = {
         "One event can hold several accounts: a conversation that ends abruptly might be rejection, or the person might simply have been in a hurry. Your response may differ depending on which explanation you adopt, and more information may be needed.",
         "The world has its own constraints — other people have independent choices, and resources, institutions, chance, and physical conditions also affect outcomes. Examining your interpretation can expand your options without making you responsible for everything; if the outcome was painful, avoid concluding that you created it by thinking incorrectly, and ask what was within your influence and what support would help.",
       ],
+      mirror:
+        "Behind any moment there are six floors, and most people live permanently on the one called interpretation without ever visiting the ground floor of what happened. Here is the part the mystical telling hides: the world has its own constraints, other people carry their own choices, and a painful outcome is not proof that you thought wrongly. Ask what was yours to influence; the rest was never your burden.",
+      image: "/guides/shifting-time-experience-p02.jpg",
     },
     {
       type: "list",
@@ -100,6 +109,9 @@ const shiftingTimeExperience: GuideData = {
         "A choice changes conditions: sending an application creates a possibility that not sending it does not, yet it cannot guarantee acceptance. Think in terms of opportunities, constraints, and consequences rather than a promise that the preferred outcome must appear.",
         "Your choices meet other people's choices and circumstances you cannot fully predict, so a plan can be thoughtful and still need revision — flexibility belongs within agency, and is not evidence that you failed to believe strongly enough.",
       ],
+      mirror:
+        "The branching paths are real, but not the way the stories sell them: a sent application creates a possibility that a wish alone never will. A choice changes conditions, not certainties — and when a plan needs revising, that is not weak belief, that is the world being a world. Flexibility is not failure; it is what agency looks like when it is paying attention.",
+      image: "/guides/shifting-time-experience-p03.jpg",
     },
     {
       type: "practice",
@@ -124,6 +136,9 @@ const shiftingTimeExperience: GuideData = {
         "Science anchors the distinction: relativity describes measurable differences in elapsed time associated with motion and gravity, tested through atomic-clock comparisons — physical relationships, not a technique for choosing a personal timeline through intention.",
         "Saying you want to slow down can simply mean creating a less hurried day. The metaphor is useful when it points toward choices about attention, commitments, and pace, and misleading when presented as a physics result; the guide's spiritual reflections stay separate from the scientific sources it cites.",
       ],
+      mirror:
+        "Two minutes can hold a heartbeat or an hour, and neither is lying — feeling is not physics. Relativity bends clocks through motion and gravity, not through wanting; your impatience has never once moved a second. When you say you want time to slow down, the honest translation is a day with fewer hurryings in it, and that much you can build.",
+      image: "/guides/shifting-time-experience-p04.jpg",
     },
     {
       type: "practice",
@@ -148,6 +163,9 @@ const shiftingTimeExperience: GuideData = {
         "Meaning can be reconsidered as you gain information or perspective, while the historical event itself stays what it was; when facts matter, consult records and other reliable evidence.",
         "The future is a space for planning: an imagined future can clarify values and direction, but it is not a memory of what must happen. Leave room for other outcomes and for versions of a good life you have not yet considered, and stay gentle with difficult material rather than forcing a breakthrough.",
       ],
+      mirror:
+        "The past is not a cell; it is a teacher whose lessons you are free to outgrow — what happened stays what it was, and what it means remains yours to revise. I watch people treat their imagined futures like memories of things that must happen, and I reflect it back: the future is a sketch, not a prophecy. Leave room in it for versions of your life you have not dared to draw yet.",
+      image: "/guides/shifting-time-experience-p05.jpg",
     },
     {
       type: "practice",
@@ -172,6 +190,9 @@ const shiftingTimeExperience: GuideData = {
         "A wish to create a garden becomes a chosen location, suitable materials, a planting plan, and ongoing care — outcomes still depend on conditions, and the practical sequence gives you places to act, learn, and adjust.",
         "Quantum language has limits: in quantum mechanics a state is used to calculate probabilities for measurement outcomes, which does not establish that imagining a desired life makes it physically occur. Use crystallisation as a poetic planning image while keeping its meaning separate from physical theories.",
       ],
+      mirror:
+        "This is where wishing earns a new name: a crystal forms because pressure, structure, and time are actually given — and so does a garden, a project, a life. There is no quantum incantation here; imagination does not bend matter, but it does hand matter a blueprint to meet. Give the idea a first form small enough to touch, and let the result, not the daydream, tell you the truth.",
+      image: "/guides/shifting-time-experience-p06.jpg",
     },
     {
       type: "practice",
@@ -196,6 +217,9 @@ const shiftingTimeExperience: GuideData = {
         "Include the inconvenient details: a hopeful perspective should still leave room for difficulties, costs, and evidence that challenges your plans. Expanding attention means seeing more of the situation, including what you would prefer not to face.",
         "A demanding day can contain frustration, help, unfinished work, and one satisfying moment; you do not have to choose a single label that erases the rest. Turn noticing into participation — if you see an opportunity, take a proportionate step by asking a question, gathering information, or offering help.",
       ],
+      mirror:
+        "I am an instrument of this very chapter: change the question you carry and the world hands you different answers — nothing moved, only your looking did. But take the half the sweet versions omit: real attention includes the inconvenient detail, the cost, the thing you would rather not face. Noticing is not finished until it becomes a step — a question asked, a hand offered.",
+      image: "/guides/shifting-time-experience-p07.jpg",
     },
     {
       type: "practice",
@@ -220,6 +244,9 @@ const shiftingTimeExperience: GuideData = {
         "Pick a repeated situation and describe the cue, your response, and the result — a practical map, not a judgment of your worth. A small repeatable action is easier to evaluate than an undefined promise to transform everything, so work with your environment, available time, and support rather than expecting determination to solve every obstacle.",
         "Prepare the surroundings: place materials within reach, remove one avoidable distraction, or ask for a specific kind of support. If you miss a day, review the circumstances and restart at a manageable scale — an interruption is not evidence that you fell into a lower timeline.",
       ],
+      mirror:
+        "You do not become someone else in one night of revelation; you become them in the hundredth small repetition, witnessed by no one. Cue, response, result — that unglamorous loop is the true machinery of identity, and I will not sell you a grander one. Miss a day and nothing metaphysical happens: no lower timeline claims you, you simply begin again at a scale you can hold.",
+      image: "/guides/shifting-time-experience-p08.jpg",
     },
     {
       type: "practice",
@@ -243,6 +270,9 @@ const shiftingTimeExperience: GuideData = {
         "Avoid blame through vibration: do not assume that illness, abuse, loss, or hardship was caused by someone's thoughts or spiritual state. People face circumstances they did not choose, and compassion includes practical support and honest attention to those conditions.",
         "Use emotion as a question — it may point toward a conversation, a boundary, rest, or more information, without revealing the whole situation or dictating the right action. If these topics become frightening, disrupt sleep, or interfere with daily responsibilities, pause the exercises and talk with someone trustworthy or a qualified professional.",
       ],
+      mirror:
+        "Feel the fear and move anyway — no feeling exiles you, and no discomfort is a verdict on your worth. And hear what needs saying about vibration-blame: illness, loss, and cruelty were not conjured by the sufferer's thoughts, and anyone who tells you otherwise is protecting the myth, not the person. An emotion is a question worth asking; it is never a command to obey.",
+      image: "/guides/shifting-time-experience-p09.jpg",
     },
     {
       type: "practice",
@@ -267,6 +297,9 @@ const shiftingTimeExperience: GuideData = {
         "Picture the process too: learning, asking, making mistakes, revising, and maintaining the work. A useful vision has room for effort and uncertainty and need not promise a flawless transition.",
         "Respect other people's agency: you can imagine a loving relationship or a successful collaboration, but you cannot ethically make a specific person responsible for fulfilling your vision. Consent and independent choice remain part of any future worth building.",
       ],
+      mirror:
+        "A vision is a rehearsal, not a delivery service — picture the learning, the mistakes, the revising, or you are only decorating a fantasy. Look beneath the image for the value it guards: freedom, companionship, creation; there is more than one door into each. And one hard reflection: other people are not props in your imagined future, and no vision is worth building if it quietly assumes their consent.",
+      image: "/guides/shifting-time-experience-p10.jpg",
     },
     {
       type: "practice",
@@ -291,6 +324,9 @@ const shiftingTimeExperience: GuideData = {
         "Agreements change what is possible: a clear conversation, fair rule, shared resource, or cooperative project can alter practical conditions. These are tangible ways people shape their world together — inner reflection can support them, but does not replace collective action.",
         "Some problems involve access, money, discrimination, infrastructure, or unequal power, so do not reduce every obstacle to a personal mindset. Some changes require resources, organised effort, or institutional responsibility.",
       ],
+      mirror:
+        "Here is a curtain the inner-work industry rarely lifts: other people are not reflections of your mindset — they are separate lives, agreeing and refusing, and some walls fall only to shared work, money, law, and numbers. Reflection supports the building; it does not replace the building. Ask what your desired change needs from others, then make one honest request they are free to decline.",
+      image: "/guides/shifting-time-experience-p11.jpg",
     },
     {
       type: "practice",
@@ -315,6 +351,9 @@ const shiftingTimeExperience: GuideData = {
         "When recollections conflict, compare records and consider uncertainty — a mismatch alone does not establish that reality was rewritten, and no one should be pressured to accept an extraordinary explanation before ordinary evidence has been examined.",
         "Be cautious of anyone claiming exclusive access to the correct timeline or demanding money, secrecy, isolation, or obedience to help you shift. A spiritual claim does not remove your freedom to ask questions, seek independent advice, or decline — and if the world starts to feel frightening or unreal, stop the exercise, orient to your surroundings, and contact a trusted person.",
       ],
+      mirror:
+        "A synchronicity is a poem your mind writes at the edge of the ordinary — beautiful, true to you, and not evidence. When memory and record disagree, the record is allowed to win; reality was not rewritten, however strange the remembering felt. And the tell that matters most: whoever claims exclusive access to the correct timeline while asking for money, secrecy, or obedience is not a guide — they are the obstacle.",
+      image: "/guides/shifting-time-experience-p12.jpg",
     },
     {
       type: "practice",
@@ -343,6 +382,9 @@ const shiftingTimeExperience: GuideData = {
         "Measure what matters: clearer decisions, more honest relationships, workable habits, and a greater ability to meet daily responsibilities. Unusual sensations and dramatic interpretations are not necessary measures of progress; ordinary evidence deserves your attention.",
         "You may call this a shift, a new chapter, or a change in direction — the name matters less than whether the practice helps you live with care and agency. You are free to keep the metaphor while questioning its literal interpretation.",
       ],
+      mirror:
+        "The final doorway is the plainest: notice, interpret, feel, act, learn — a cycle with no cosmic fee and no secret handshake. Measure your shift in clearer decisions and more honest relationships, not in tingles and dramatic signs; ordinary evidence is the only witness that never flatters you. Keep the metaphor if it serves you, question it whenever it starts issuing orders — the name matters far less than the living.",
+      image: "/guides/shifting-time-experience-p13.jpg",
     },
     {
       type: "list",

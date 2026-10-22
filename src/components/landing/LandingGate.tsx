@@ -43,11 +43,23 @@ type Geo = {
 function computeGeo(): Geo {
   const vw = document.documentElement.clientWidth;
   const vh = window.innerHeight;
-  /* THE PHONE'S LAW — the portal stretches fully on both sides and
-     stands at its true size: the whole realm, edge to edge. dvh keeps
-     the window and the chamber in lockstep when the keyboard rises. */
+  /* THE PHONE'S SMALLER MIRROR — the landing chat no longer swallows
+     the whole screen: it stands a third smaller and floats with open
+     air on both sides (two thirds of the viewport, centered). The
+     whole realm scales as one — nothing cropped, the crown and the
+     whisper line both alive — and the smooth crystal border finally
+     has room to be seen. dvh keeps the window and the chamber in
+     lockstep when the keyboard rises. */
   if (vw < 640) {
-    return { w: "100vw", h: "100dvh", s: 1, tx: 0, ty: 0, radius: 0 };
+    const s = 0.67;
+    return {
+      w: Math.round(vw * s),
+      h: Math.round(vh * s),
+      s,
+      tx: 0,
+      ty: 0,
+      radius: 26,
+    };
   }
   /* THE DESK'S DIORAMA — the realm at four fifths, cropped around its
      own heart: the crown above, the whisper line below. THE SMOOTH
@@ -217,21 +229,17 @@ export default function LandingGate() {
     };
   }, [phase, geo, Chamber]);
 
-  /* THE FULL PORTAL'S DOOR — the crossing is for signed keepers only.
-     A guest's touch on any enter hand (the hero's button, the offer's
-     link, the crown's fullscreen hand) opens the passage's threshold
-     — sign in or register — instead of the growth. The landing's own
-     floor stays free forever. If the keeper's name is still traveling
-     (the first breath after mount), the passage is asked once so a
-     signed visitor is never wrongly turned away.
-
-     THE PORTAL'S OWN INTENTION — the enter hand leaves its wish
-     behind (the store's flag and the session's own memory, so the
-     wish survives even the Google journey): the moment the passage
-     names its keeper, the same hand carries them through — no second
-     touch, no bounce back to the passage's door. */
+  /* THE FULL PORTAL'S DOOR — every enter hand (the hero's button, the
+     offer's link, the crown's fullscreen hand) now carries the visitor
+     into the MAIN portal itself: the realm grows to the whole screen,
+     and a guest meets the passage's door standing inside it — never a
+     bounce back into the landing's chat. The paid law still stands:
+     the realm's own offerings open by registration or login (the
+     wallet and the credits keep their watch); the door itself shows
+     the main hall. The landing's own floor stays free forever. */
   const expandPortal = useCallback(() => {
     if (busy.current) return;
+    if (phaseRef.current === "through") return;
     setChatFolded(false);
     void (async () => {
       const st = useMirror.getState();
@@ -240,26 +248,29 @@ export default function LandingGate() {
         await st.refreshMe();
         cur = useMirror.getState().me;
       }
-      if (!cur || cur.email.startsWith("anon:")) {
-        useMirror.getState().setPortalIntent(true);
-        try {
-          sessionStorage.setItem("mirror.portalIntent", "1");
-        } catch {
-          /* the session's memory stays closed — the store's flag carries */
-        }
-        useMirror.getState().openAuth("signin");
-        return;
-      }
       if (busy.current) return;
       if (!Chamber) {
         setPending(true);
         return;
       }
+      const guest = !cur || cur.email.startsWith("anon:");
       busy.current = true;
       setPhase("opening");
       window.setTimeout(() => {
         setPhase("through");
         busy.current = false;
+        /* the guest's passage — the door opens inside the main
+           portal, and the wish stands so the moment the passage
+           names its keeper the walk simply continues */
+        if (guest) {
+          useMirror.getState().setPortalIntent(true);
+          try {
+            sessionStorage.setItem("mirror.portalIntent", "1");
+          } catch {
+            /* the session's memory stays closed — the store's flag carries */
+          }
+          useMirror.getState().openAuth("signin");
+        }
       }, 680);
     })();
   }, [Chamber]);

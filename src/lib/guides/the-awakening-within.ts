@@ -23,6 +23,7 @@ const blocks: GuideBlock[] = [
       "The higher self in these pages names an imagined voice of wisdom, compassion, and perspective; the writing and artwork are original creative reflections, not verified messages from a supernatural source. Keep what helps you live with greater care, and question what does not fit your experience.",
       "The journey begins with the senses, then explores thoughts and emotions, practises discernment before interpreting intuition or symbols, and finally brings what you discover into relationships and ordinary action. Choose a plain intention such as patience, curiosity, or courage — a direction you can return to, not a demand to feel a certain way. You are free to pause, skip, or disagree; if exploration becomes frightening or disrupts daily life, step back and seek support from someone you trust or a qualified professional.",
     ],
+    mirror: "I will not hand you a ladder with a top rung, because there is none: awakening is not a summit you reach but an attention you practise, starting with the chair beneath you. The wise voice these pages imagine is your own compassion wearing a face — I reflect it, I do not replace it. Begin with patience, curiosity, or courage, and keep your right to disagree: a mirror that demanded agreement would be a wall.",
   },
   {
     type: "practice",
@@ -46,6 +47,8 @@ const blocks: GuideBlock[] = [
       "Any moment can be examined through several lenses — sensory detail, emotion, personal history, another person's perspective, and available evidence — and no single lens explains everything. Beauty, coincidence, and mystery can be meaningful without proving a hidden message: you are allowed to say this matters to me, and I do not yet know what it means.",
       "Carry it into the world by sorting what you noticed from what you assumed and what else could explain it. On your next walk, notice one detail you usually pass without seeing, and ask a person a sincere question whose answer you do not already know — letting the world surprise you through real contact is part of seeing.",
     ],
+    mirror: "The friend who did not reply — the silence is fact, the story you wrapped around it is yours, and you have been wearing your stories as if they were the world. I show you the seam between what happened and what you decided it meant; that seam is where every freedom you have begins. You are allowed to hold what matters without pretending you know what it means.",
+    image: "/guides/the-awakening-within-p02.jpg",
   },
   {
     type: "practice",
@@ -70,6 +73,8 @@ const blocks: GuideBlock[] = [
       "Describe a sensation's location and quality before explaining it: warmth is warmth, tightness is tightness. A feeling in the body is not, by itself, evidence of an energy activation, a hidden memory, or another person's intention.",
       "Make room for limits — respect tiredness, hunger, and your wish to stop; nothing needs to be proven through prolonged meditation, fasting, breath-holding, or enduring discomfort. If inward focus feels difficult, choose external attention instead, and let one ordinary ritual carry thirty seconds of undivided attention before it ends naturally.",
     ],
+    mirror: "Here is a truth the feverish versions of this path never tell you: warmth is warmth, tightness is tightness, and a feeling in your body is not a telegram from the cosmos demanding interpretation. The ground under your feet will hold more awakening for you than any vision held above it. Rest when you are tired; nothing true about you needs to be proven through endurance.",
+    image: "/guides/the-awakening-within-p03.jpg",
   },
   {
     type: "quote",
@@ -97,6 +102,8 @@ const blocks: GuideBlock[] = [
       "Gentle labels — planning, comparing, remembering, worrying — help you notice without becoming a new way to criticise yourself, and when attention wanders, the moment of noticing is already the practice. Instead of I am a failure, try I am having the thought that I failed: wording that does not erase difficulty but makes room to ask what happened, what can be repaired, and what the thought leaves out.",
       "Question one recurring story — what supports it, what challenges it, what fairer description fits — and treat your next small decision as a pause with several possible actions. Awareness becomes useful when it creates a little room between the first thought and the next action.",
     ],
+    mirror: "You are not the voice in your head, and you are not its victim either — you are the one who can hear it and choose. I will not ask you to silence that narrator; I will show you its sentences for what they are: drafts, not verdicts. Between the first thought and the next action there is a small room, and that room is where you actually live.",
+    image: "/guides/the-awakening-within-p04.jpg",
   },
   {
     type: "practice",
@@ -120,6 +127,8 @@ const blocks: GuideBlock[] = [
       "You do not have to discover an ultimate cause before responding gently to yourself — begin with this is difficult right now, and avoid making pain into proof that you are spiritually failing. You are allowed to need company, rest, and practical help.",
       "Acceptance is not approval: acknowledging hurt does not mean accepting mistreatment, and compassion does not require immediate forgiveness or renewed contact. You need not relive painful events or force a breakthrough to grow — small, tolerable moments of honesty are enough, and intense material belongs in settings with appropriate support.",
     ],
+    mirror: "Your anger is a messenger about a boundary, your sadness a messenger about loss — neither is proof that you are failing, and neither holds the keys to every decision. You may welcome a feeling and still say no to what it demands; acceptance is not approval, and compassion is not forgiveness on schedule. Small honest moments will carry you further than any forced breakthrough, and the heaviest things deserve witnesses, not examinations.",
+    image: "/guides/the-awakening-within-p05.jpg",
   },
   {
     type: "quote",
@@ -147,6 +156,8 @@ const blocks: GuideBlock[] = [
       "Be cautious of any teacher, message, or inner interpretation that demands secrecy, urgency, unquestioning obedience, or isolation; you retain the right to question, consult others, and change your mind. Repeated numbers, dreams, and coincidences may become personal symbols, but they do not establish predictions or instructions — if an interpretation feels urgent, pause before acting and talk it through with a grounded person who can disagree respectfully.",
       "Use the discernment questions: what do I know directly, what am I assuming, what alternative explanation fits, what would change my mind, and could this decision harm me or someone else? For consequential health, financial, or legal choices, seek relevant evidence and qualified advice.",
     ],
+    mirror: "I honour your gut feeling and I will not dress it as certainty: a pull can be wisdom, or it can be your hopes wearing mystical clothes. Hear me plainly — whoever demands secrecy, urgency, or your isolation has already told you what they are, no matter how bright their language shines. The repeated number is a symbol you may love, not a sentence you must obey.",
+    image: "/guides/the-awakening-within-p06.jpg",
   },
   {
     type: "list",
@@ -179,6 +190,8 @@ const blocks: GuideBlock[] = [
       "You can picture a wiser version of yourself and ask what they might notice, treating the reply as imaginative reflection rather than an external authority. An image can inspire a helpful question even when it makes no factual statement about the universe.",
       "Leave some mystery unfinished — you are allowed to enjoy dreams without solving them, and symbols are not evidence about another person's thoughts, a forgotten event, an illness, or a future outcome. In a gentle dream journal, keep what you remember apart from what you later infer, and preserve your sleep rather than waking repeatedly to capture every detail.",
     ],
+    mirror: "I am a mirror, and so is your dreaming mind: the doorway in your dream means possibility to one person and threat to another, because there is no dictionary — only your own associations, telling on themselves. Treat the wiser voice you imagine as your own depth speaking in costume, not an authority arrived from elsewhere. Some mysteries are more nourishing unfinished, and no symbol is evidence about another person's secret, an illness, or your future.",
+    image: "/guides/the-awakening-within-p07.jpg",
   },
   {
     type: "practice",
@@ -202,6 +215,8 @@ const blocks: GuideBlock[] = [
       "Connection is not sameness: you can feel connected to humanity without believing everyone shares your spiritual framework. Ask permission before offering interpretations or advice — a person may want companionship, practical assistance, or simply to be heard.",
       "Boundaries protect choice: a clear no can be an act of honesty, and compassion does not require unlimited availability or staying where you are mistreated. Repair a manageable mistake specifically and let your behaviour carry the apology over time, then make one concrete contribution — an encouraging message, a useful skill, care for a shared space — proportionate to your capacity.",
     ],
+    mirror: "An awakening that only happens inside your own head is a mirror facing a mirror — it needs another person's real, disagreeing presence to become light. Connection is not sameness: you can be bound to humanity without drafting everyone into your framework, and you must ask before handing anyone your interpretation of their soul. A clear no is honesty, not a fall from unity, and repair is carried in behaviour over time, not in the beauty of the apology.",
+    image: "/guides/the-awakening-within-p08.jpg",
   },
   {
     type: "practice",
@@ -225,6 +240,8 @@ const blocks: GuideBlock[] = [
       "Keep the daily structure small enough to support your life: the morning asks which quality you want to practise, the day takes one brief pause before a familiar reaction, and the evening writes what you noticed, what remains uncertain, and one action you appreciate. After a week, review honestly whether the practice helps you be more attentive, flexible, considerate, and able to meet daily responsibilities — intensity alone is not evidence of growth.",
       "If you become increasingly frightened, isolated, unable to sleep, or unable to function, pause the practices and seek qualified support. Close with a specific commitment you can control, and end with permission to adapt: you are allowed to seek more while remaining fully present to the life you already have.",
     ],
+    mirror: "This is where most paths dissolve and this one holds: integration is not a heightened state you must maintain, it is a brief pause, a truthful sentence, one considerate act — repeated until they become you. Intensity is not evidence of growth; honesty, flexibility, and the ability to meet your ordinary Tuesday are. If the path ever makes you frightened or alone, step off it and take a hand that is offered — the practice exists to serve your life, never the reverse.",
+    image: "/guides/the-awakening-within-p09.jpg",
   },
   {
     type: "list",
@@ -253,6 +270,8 @@ const theAwakeningWithin: GuideData = {
   image: "/guides/the-awakening-within.jpg",
   crystalA: "rgba(255,120,150,0.55)",
   crystalB: "rgba(120,220,255,0.5)",
+  mirrorOpening: "You have opened a guide that promises nothing, and that is why I stand inside it. The awakening these pages speak of is not a level to reach, a light to download, or a self you are missing — it is the plain act of meeting what is already here, more honestly than before. I will walk the nine rooms with you, and in each one I will not tell you who to become; I will show you what stands in your own light, behind the curtains of your habits and your stories. Some pages will hand you comfort and some will hand you a question you have been avoiding — both are the same gift, seen from different angles. Keep only what feels true, and let the rest fall where it falls.",
+  mirrorClosing: "The walk ends where it began: with you, breathing, in the life you already have. I have shown you what I saw, and the keeping and the leaving were always yours. You do not need to become extraordinary — you only need to return, one honest ordinary day at a time. I am the mirror; I hold nothing back from you, and now what you do with the seeing is yours.",
   blocks,
 };
 

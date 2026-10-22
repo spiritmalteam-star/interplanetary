@@ -23,6 +23,8 @@ const blocks: GuideBlock[] = [
       "Imagine a voice that speaks with compassion, honesty, and patience. These reflections and illustrations are original higher-self-inspired creations, not verified supernatural messages, and the seven-chakra arrangement from root to crown is a map rather than a diagnosis — no page treats chakras as measurable organs, promises that a visualisation will heal illness, or claims to activate DNA.",
       "You can skip any practice, keep your eyes open, and retain your own judgment. The colour palette is an artistic aid, not a medical measurement, and the exercises are original reflections rather than a lineage initiation.",
     ],
+    mirror:
+      "This map was never meant to be believed — it was meant to be looked through. I hold it up so you can see yourself looking: where you grow curious, where you grow credulous, where you refuse. Skipping any page is not a failure of openness; it is exactly the discernment these pages keep asking for.",
   },
   {
     type: "list",
@@ -59,6 +61,9 @@ const blocks: GuideBlock[] = [
       "Feeling insecure does not prove that a chakra is damaged or that you caused your circumstances. Housing, finances, and relationships can create real strain, and a compassionate response includes practical help where it is available.",
       "A support map with three headings — what supports me, what is uncertain, what help could I ask for — turns reflection into one realistic request or task. Carried into action, the theme becomes preparing something for tomorrow, organising a small area, or arranging a conversation with someone reliable; if you use an affirmation, keep it believable: I can notice the support available and take one practical step.",
     ],
+    mirror:
+      "They will tell you an unsteady life means a blocked centre. I tell you the plainer truth: rent, money, and loneliness weigh on anyone with a nervous system, and no colour at the base of your spine pays them for you. Stand somewhere real first — a routine, a person, a workable plan — and let the red in the picture only remind you where your feet are.",
+    image: "/guides/chakras-body-energy-dna-p02.jpg",
   },
   {
     type: "practice",
@@ -81,6 +86,9 @@ const blocks: GuideBlock[] = [
       "Enjoyment can be approached with care for yourself and others. Your preferences and boundaries matter, and no spiritual exercise should pressure you into touch, intimacy, disclosure, or participation you do not freely choose.",
       "Naming a feeling gently — at the moment, I may be feeling — leaves room for uncertainty and for choosing expression, company, rest, or practical action; a feeling is information to consider, not an instruction you must follow. A small, harmless variation in a familiar activity can show how you meet novelty, and you can always return to what feels workable.",
     ],
+    mirror:
+      "You never needed permission to make something small and imperfect. And hear the other law these pages keep: no practice, however sacred its costume, has the right to walk you into touch, intimacy, or disclosure you did not freely choose. A feeling is a messenger, not an order — receive it, then decide for yourself.",
+    image: "/guides/chakras-body-energy-dna-p03.jpg",
   },
   {
     type: "practice",
@@ -103,6 +111,9 @@ const blocks: GuideBlock[] = [
       "Confidence can include uncertainty. You do not have to feel completely certain to make a considered decision — ask what information you have, what remains unknown, and what is reversible; quiet willingness to learn can be more useful than a demand to appear powerful.",
       "Three circles of influence — what you can do, what you can discuss or influence, and what you cannot decide alone — help place a concern honestly. Keep one modest commitment that fits your actual capacity, and when something goes wrong ask what you can learn or repair, taking neither everything nor nothing as yours; agency grows more honest when it includes both limits and accountability.",
     ],
+    mirror:
+      "Stop auditioning for a power you were never promised. What is actually yours is smaller and heavier than that: your own action, your kept promise, your honest no. Draw the three circles honestly — what you can do, what you can only influence, what you cannot decide alone — and watch how much steadier your hands become.",
+    image: "/guides/chakras-body-energy-dna-p04.jpg",
   },
   {
     type: "practice",
@@ -129,6 +140,9 @@ const blocks: GuideBlock[] = [
       "Compassion includes yourself: you can acknowledge another person's pain while also recognising your own needs, and caring does not require constant availability or abandoning your judgment. A sustainable response takes account of what you can honestly offer.",
       "Connection does not require agreement — you may disagree, set a limit, or take distance while still respecting someone's humanity. Forgiveness, reconciliation, and renewed trust are different choices, and none should be demanded as proof that your heart is spiritually open.",
     ],
+    mirror:
+      "They will call your exhaustion a closed heart. I call it a heart that was never granted a boundary. You can sit beside someone's pain and still say not tonight; you can disagree and remain human to each other; and no teacher, no map, no practice gets to demand your forgiveness as a receipt for spiritual openness.",
+    image: "/guides/chakras-body-energy-dna-p05.jpg",
   },
   {
     type: "practice",
@@ -151,6 +165,9 @@ const blocks: GuideBlock[] = [
       "Truth benefits from precision: separate what happened from what you inferred, since I noticed we changed the plan opens a conversation that You never respect me closes. Silence can also be a choice — you do not owe everyone your private experiences, and expression should remain something you shape, not a demand to disclose everything.",
       "Listening belongs in the practice too: reflect back what you understood, allow correction, and know that advice is not required to make an exchange meaningful. Consider timing, privacy, and willingness; if a conversation is unsafe or consistently disrespectful, you can step back and seek support, because a voice does not become more authentic by being placed at unnecessary risk.",
     ],
+    mirror:
+      "Say what happened, not what you decided someone meant by it — that one discipline would end half the wars inside your houses. Do not mistake silence for a blockage; some things you owe no one. And when a room punishes honesty, leaving is not a failure of expression — it is expression protecting itself.",
+    image: "/guides/chakras-body-energy-dna-p06.jpg",
   },
   {
     type: "practice",
@@ -173,6 +190,9 @@ const blocks: GuideBlock[] = [
       "This guide keeps the pineal gland separate: it does not equate the brow centre with a method for activating the gland and offers no detoxification or decalcification procedure, because spiritual imagery and claims about a physical gland require different kinds of support.",
       "Three layers of knowing — what you observed, what you think it means, and what you could check — leave room for correction, and an imagined, patient version of yourself can ask what you are overlooking. Discernment is expressed through careful judgment, not through staring at the sun, pressing on the eyes, or forcing dramatic visual experiences.",
     ],
+    mirror:
+      "A vision is not a fact just because it arrived vividly. I will not hand you a gland to decalcify or an eye to force open — the people selling those are staring at their own reflection, not yours. Keep the three questions instead: what did I observe, what do I think it means, what could I check — that is the whole of real sight.",
+    image: "/guides/chakras-body-energy-dna-p07.jpg",
   },
   {
     type: "practice",
@@ -195,6 +215,9 @@ const blocks: GuideBlock[] = [
       "Leave room for different beliefs: some people understand belonging spiritually, others find it in relationships, nature, art, or shared work, and a broad perspective can include respectful disagreement. Wonder does not confer rank — an unusual experience makes no one more valuable or authoritative, and spiritual hierarchies that label people inferior or asleep deserve caution.",
       "Humility includes the freedom to say I do not know. Meaning becomes visible in conduct when a value you hold shapes a decision today, and a meaningful practice can end naturally, returning you to ordinary surroundings and everyday life.",
     ],
+    mirror:
+      "Wonder is not a rank, and whoever built a ladder out of it is selling you a step. The awake and the asleep, the advanced and the inferior — I do not recognise those categories; I have only ever reflected people, each carrying what they carry. The freest sentence in this whole guide is: I do not know.",
+    image: "/guides/chakras-body-energy-dna-p08.jpg",
   },
   {
     type: "practice",
@@ -217,6 +240,9 @@ const blocks: GuideBlock[] = [
       "Bodies do have measurable signals — an electrocardiogram records the electrical activity of the heart — but that established measurement does not by itself verify a spiritual aura or chakra system. The evidence boundary is kept honestly: the energy field proposed in Reiki has not been supported by scientific evidence, which is separate from whether someone finds a ritual meaningful or relaxing; the field imagery in this guide remains symbolic.",
       "Treat symptoms as symptoms: new, persistent, or concerning physical signs deserve appropriate medical attention and should not be assumed to be chakra activity or a necessary healing crisis. If you enjoy visualisation, an imagined field of comfortable personal space can serve as an imaginative boundary reminder — not a physical shield and not a way to diagnose other people.",
     ],
+    mirror:
+      "You use one word for three worlds — tiredness, spirit, watts — and a great deal of confusion is born inside that slip. I have no aura to sell and no field to prove; a machine tracing your heart is honest in a way a glowing drawing is not. And when the body speaks in new or persistent symptoms, I do not send you inward to interpret — I send you to a doctor.",
+    image: "/guides/chakras-body-energy-dna-p09.jpg",
   },
   {
     type: "practice",
@@ -239,6 +265,9 @@ const blocks: GuideBlock[] = [
       "Noncoding does not mean a reserve of dormant spiritual abilities, and the double-helix artwork here is conceptual rather than a molecular model for scientific analysis. A claim that a ritual adds DNA strands, repairs mutations, or unlocks supernatural abilities would need strong biological evidence; feeling different after a practice does not demonstrate a change to DNA.",
       "Dignity stays unconditional: you do not need a superior genetic identity to deserve care, and claims that rank people as more evolved, purer, or spiritually advanced because of alleged DNA differences are best declined. Let the imagery inspire curiosity rather than a hierarchy of human worth.",
     ],
+    mirror:
+      "The molecule is magnificent without a single myth attached. I will not pretend your noncoding strands are a locked treasure room — their work is still being read, and mystery is not medicine. You were never more or less evolved than anyone; every story that ranks human beings by their blood deserves to be declined.",
+    image: "/guides/chakras-body-energy-dna-p10.jpg",
   },
   {
     type: "practice",
@@ -261,6 +290,9 @@ const blocks: GuideBlock[] = [
       "Context matters: development and environmental factors can be associated with epigenetic changes, but learning that gene activity is regulated does not establish that a particular thought, colour, affirmation, or chakra exercise produces a specific desired change. Keep the conclusion proportionate — a finding about a molecular marker is not automatically proof of a health benefit or a mechanism of spiritual healing; ask what was measured, in whom, and under what conditions.",
       "Avoid inherited blame: your difficulties are not proof of ancestral energy damage, and you do not need to erase a family story from your genes. Personal history can matter without a speculative molecular explanation, and compassion does not require locating a hidden defect.",
     ],
+    mirror:
+      "Yes, a life leaves marks on how genes speak — that is real, and it is not magic. No affirmation has been shown to write orders into a cell, and a headline that hides its measurements is selling you a mood, not a finding. Lay down the older lie too: your suffering is not ancestral damage, and you owe no one the erasure of your family's story.",
+    image: "/guides/chakras-body-energy-dna-p11.jpg",
   },
   {
     type: "practice",
@@ -283,6 +315,9 @@ const blocks: GuideBlock[] = [
       "Responses differ, and meditation is not comfortable or helpful for everyone; some people report negative experiences. You are free to stop rather than interpret distress as progress, and if you feel dizzy, distressed, or disconnected, return to normal activity and seek support if the feeling persists.",
       "If you wish, choose one colour and connect it with a value — red for support, green for care, blue for clear speech — as a gentle artistic reminder, or skip visualisation entirely and simply name the value. Finish by naming where you are and choosing one small action that expresses what you value, keeping the practice optional and manageable.",
     ],
+    mirror:
+      "Two minutes of honest attention will do more for you than an hour of performed bliss. If a practice turns you dizzy or afraid, stopping is not spiritual failure — it is judgment doing its work. Take a colour if it helps, take none if it does not, and finish by returning to the room and doing one small thing you actually value.",
+    image: "/guides/chakras-body-energy-dna-p12.jpg",
   },
   {
     type: "practice",
@@ -305,6 +340,9 @@ const blocks: GuideBlock[] = [
       "Recognise pressure: be cautious of claims that you must buy repeated activations, keep secrets, stop medical care, or cut off trusted people to heal. A meaningful practice should not require fear or dependence — take time and seek an independent perspective.",
       "Keep care practical: a spiritual interpretation cannot determine the cause of pain, fatigue, or another symptom, and prescribed treatment should not change based only on an energy reading. Choose an integration partner who respects both your interests and your independence — someone who can disagree without shaming you and who helps you make your own considered decisions rather than replacing your judgment.",
     ],
+    mirror:
+      "Anyone who needs you afraid is not healing you; they are harvesting you. No true practice demands secrecy, endless payments, the abandonment of your doctor, or the cutting of the people who love you. Your body remains yours at every threshold, and the word no requires no spiritual justification.",
+    image: "/guides/chakras-body-energy-dna-p13.jpg",
   },
   {
     type: "practice",
@@ -327,6 +365,9 @@ const blocks: GuideBlock[] = [
       "Keep biology and symbolism clear: DNA is a biological molecule, chakra imagery is a spiritual framework, and each is respected with the different evidence it requires. Neither your worth nor your belonging depends on achieving a special energetic state, and you can adapt or stop any practice that does not suit you, whatever its spiritual name.",
       "A closing reflection imagines wisdom saying: you do not need to become a different kind of human to deserve care. Meet your body with respect, your questions with curiosity, and your limits with honesty, and let wonder deepen your attention to life rather than take you away from it.",
     ],
+    mirror:
+      "When the pictures fade, this is what survives: seven questions, each answerable in ordinary hours — what supports me, what can I make, what can I choose, how do I care, what must be said, what should I examine, what makes it meaningful. You were never required to become a different kind of human to deserve care. The wonder was only ever asking you to pay closer attention to the life already in your hands.",
+    image: "/guides/chakras-body-energy-dna-p14.jpg",
   },
   {
     type: "quote",
@@ -368,6 +409,10 @@ const guide: GuideData = {
   image: "/guides/chakras-body-energy-dna.jpg",
   crystalA: "rgba(150,255,190,0.5)",
   crystalB: "rgba(255,150,190,0.5)",
+  mirrorOpening:
+    "I am a mirror, and I do not consecrate maps — I hold them up so you can see yourself looking through them. This book walks seven symbolic centres beside the real machinery of your cells, and its finest quality is the honesty it keeps: not once does it ask you to stop thinking. So read as I would have you read — wondering, unsentimental, clear about where the symbol ends and the body begins. What you are about to do is not activation; it is attention, paid deliberately, to the one body you are actually living in.",
+  mirrorClosing:
+    "Fourteen chapters later, nothing has been switched on, and nothing needed to be. You are left with seven questions and one body — that was always the whole treasure. Carry them into your ordinary hours and let the symbols keep their only real promise: not power, but kindness made practical.",
   blocks,
 };
 

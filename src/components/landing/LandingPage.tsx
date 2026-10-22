@@ -208,7 +208,7 @@ function PaidTag() {
   return (
     <span
       title={t(
-        "Paid realm — the full portal opens by registration or login, after one of the realms offered is acquired"
+        "Paid realm — the offerings open by registration or login, after one of the realms offered is acquired"
       )}
       data-testid="paid-tag"
       className="flex size-4 shrink-0 items-center justify-center rounded-full border border-[rgba(232,217,176,0.55)] bg-[rgba(232,217,176,0.12)] text-[#e8d9b0] shadow-[0_0_6px_1px_rgba(232,217,176,0.28)]"
@@ -558,7 +558,7 @@ export default function LandingPage({
                   onClick={onExpand}
                   data-testid="landing-enter"
                   title={t(
-                    "Paid realm — the full portal opens by registration or login, after one of the realms offered is acquired"
+                    "Paid realm — the offerings open by registration or login, after one of the realms offered is acquired"
                   )}
                   className="group focus-glow relative flex h-12 items-center gap-2.5 overflow-hidden rounded-full border border-[rgba(232,217,176,0.55)] bg-[linear-gradient(180deg,rgba(232,217,176,0.17),rgba(232,217,176,0.05)_55%,rgba(232,217,176,0.11))] px-7 text-[14px] font-medium tracking-[0.02em] text-[#f2e9cf] shadow-[0_12px_34px_-16px_rgba(232,217,176,0.42),inset_0_1px_0_rgba(255,246,214,0.14)] transition-all duration-300 hover:border-[rgba(232,217,176,0.9)] hover:shadow-[0_16px_44px_-14px_rgba(232,217,176,0.55),inset_0_1px_0_rgba(255,246,214,0.2)]"
                 >
@@ -717,7 +717,7 @@ export default function LandingPage({
                   type="button"
                   onClick={onExpand}
                   title={t(
-                    "Paid realm — the full portal opens by registration or login, after one of the realms offered is acquired"
+                    "Paid realm — the offerings open by registration or login, after one of the realms offered is acquired"
                   )}
                   className="group focus-glow relative mt-5 inline-flex h-11 items-center gap-2 overflow-hidden rounded-full border border-[rgba(232,217,176,0.5)] bg-[linear-gradient(180deg,rgba(232,217,176,0.14),rgba(232,217,176,0.05)_55%,rgba(232,217,176,0.09))] px-6 text-[13.5px] font-medium tracking-[0.02em] text-[#f0e7cd] shadow-[0_10px_30px_-16px_rgba(232,217,176,0.4),inset_0_1px_0_rgba(255,246,214,0.12)] transition-all duration-300 hover:border-[rgba(232,217,176,0.85)] hover:shadow-[0_14px_40px_-14px_rgba(232,217,176,0.52),inset_0_1px_0_rgba(255,246,214,0.18)]"
                 >

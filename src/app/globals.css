@@ -139,72 +139,73 @@ body {
 }
 
 .dark {
-  /* Dark mode — the reading room at night: smooth graphite,
-     silver ink, not a single hue anywhere. */
-  --background: #0b0b0c;
-  --foreground: #ececeb;
-  --card: #131314;
-  --card-foreground: #ececeb;
-  --popover: #111112;
-  --popover-foreground: #ececeb;
-  --primary: #fafafa;
-  --primary-foreground: #101010;
-  --secondary: #1a1a1b;
-  --secondary-foreground: #d6d6d5;
-  --muted: #1b1b1c;
-  --muted-foreground: #9d9d9c;
-  --accent: #212122;
-  --accent-foreground: #d6d6d5;
+  /* Dark mode — the crystal chamber at night: deep blueish crystal
+     navy, cool glacial ink — the main portal wears the same midnight
+     crystal light as the threshold it grows out of. */
+  --background: #0a0f1a;
+  --foreground: #e8eef5;
+  --card: #101624;
+  --card-foreground: #e8eef5;
+  --popover: #111828;
+  --popover-foreground: #e8eef5;
+  --primary: #f4f8fb;
+  --primary-foreground: #0c1220;
+  --secondary: #151d2c;
+  --secondary-foreground: #cfdae7;
+  --muted: #16202f;
+  --muted-foreground: #97a6b7;
+  --accent: #1a2536;
+  --accent-foreground: #d3deea;
   --destructive: #b5b5b4;
-  --border: rgba(255, 255, 255, 0.11);
-  --input: rgba(255, 255, 255, 0.15);
-  --ring: rgba(255, 255, 255, 0.42);
-  --chart-1: #d4d4d3;
-  --chart-2: #b3b3b2;
-  --chart-3: #949493;
-  --chart-4: #757574;
-  --chart-5: #575756;
-  --sidebar: #0e0e0f;
-  --sidebar-foreground: #dddcda;
-  --sidebar-primary: #fafafa;
-  --sidebar-primary-foreground: #101010;
-  --sidebar-accent: #1a1a1b;
-  --sidebar-accent-foreground: #d6d6d5;
-  --sidebar-border: rgba(255, 255, 255, 0.09);
-  --sidebar-ring: rgba(255, 255, 255, 0.35);
+  --border: rgba(168, 203, 255, 0.12);
+  --input: rgba(174, 206, 255, 0.16);
+  --ring: rgba(140, 190, 255, 0.5);
+  --chart-1: #d3dde8;
+  --chart-2: #b2c2d2;
+  --chart-3: #93a6b8;
+  --chart-4: #74889c;
+  --chart-5: #566a80;
+  --sidebar: #0c1322;
+  --sidebar-foreground: #d9e2ec;
+  --sidebar-primary: #f4f8fb;
+  --sidebar-primary-foreground: #0c1220;
+  --sidebar-accent: #17202f;
+  --sidebar-accent-foreground: #cfdae7;
+  --sidebar-border: rgba(168, 203, 255, 0.1);
+  --sidebar-ring: rgba(150, 195, 255, 0.42);
 
-  /* accents — silver ink, no hue */
-  --cy: #e4e4e3;
-  --pk: #c7c7c6;
-  --gd: #b0b0af;
-  --ok: #d9d9d8;
+  /* accents — cool glacial ink */
+  --cy: #e0eaf3;
+  --pk: #c2d2e2;
+  --gd: #abbccb;
+  --ok: #d4e1ec;
 
-  /* star play — silver mysticism */
-  --sp-a: #a8a8a7;
-  --sp-b: #c9c9c8;
+  /* star play — crystal mysticism */
+  --sp-a: #a2b4c8;
+  --sp-b: #c3d3e2;
 
-  /* invent — graphite */
-  --iv-a: #a0a0a0;
-  --iv-b: #bdbdbc;
+  /* invent — glacial graphite */
+  --iv-a: #9aaebe;
+  --iv-b: #b7c8d8;
 
   /* ET register ink — fully opaque pages */
-  --register-ink: #101011;
+  --register-ink: #0f141f;
 
-  /* hairlines */
-  --hairline: rgba(255, 255, 255, 0.12);
-  --hairline-hover: rgba(255, 255, 255, 0.3);
-  --hairline-active: rgba(255, 255, 255, 0.5);
+  /* hairlines — faint ice edges */
+  --hairline: rgba(178, 208, 255, 0.13);
+  --hairline-hover: rgba(186, 214, 255, 0.32);
+  --hairline-active: rgba(196, 220, 255, 0.52);
 
   /* glass */
-  --glass-bg: rgba(14, 14, 15, 0.5);
-  --glass-bg-strong: rgba(16, 16, 17, 0.8);
-  --glass-bg-soft: rgba(18, 18, 19, 0.32);
+  --glass-bg: rgba(11, 17, 28, 0.5);
+  --glass-bg-strong: rgba(12, 18, 30, 0.82);
+  --glass-bg-soft: rgba(14, 21, 33, 0.34);
 
-  /* atmosphere — soft graphite breaths */
-  --atmo-1: rgba(255, 255, 255, 0.05);
-  --atmo-2: rgba(255, 255, 255, 0.035);
-  --atmo-3: rgba(255, 255, 255, 0.028);
-  --atmo-4: rgba(255, 255, 255, 0.02);
+  /* atmosphere — soft glacial breaths */
+  --atmo-1: rgba(148, 197, 255, 0.06);
+  --atmo-2: rgba(96, 156, 235, 0.05);
+  --atmo-3: rgba(125, 225, 250, 0.042);
+  --atmo-4: rgba(186, 216, 255, 0.028);
 
   --star-opacity: 1;
 }
@@ -1849,6 +1850,36 @@ html:not(.dark) .scope-lightcodes {
   mix-blend-mode: overlay;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)'/%3E%3C/svg%3E");
   background-size: 240px 240px;
+}
+
+/* THE MAIN PORTAL'S CRYSTAL DRESS — the realm's ground wears a
+   blueish crystalline gradient, kin to the threshold's midnight:
+   three faint glacial lights drifting over the deep crystal-navy
+   ground. Static paint only — no animation, no filter, no canvas —
+   the phone pays nothing and the chamber stays liquid. */
+.realm-crystal {
+  background:
+    radial-gradient(
+      120% 85% at 50% -12%,
+      rgba(125, 211, 252, 0.085),
+      transparent 62%
+    ),
+    radial-gradient(
+      85% 65% at 104% 108%,
+      rgba(56, 189, 248, 0.07),
+      transparent 56%
+    ),
+    radial-gradient(
+      72% 58% at -4% 104%,
+      rgba(165, 243, 252, 0.05),
+      transparent 58%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, #38bdf8 4%, var(--background)) 0%,
+      var(--background) 44%,
+      color-mix(in srgb, #0ea5e9 3.5%, var(--background)) 100%
+    );
 }
 
 /* THE BRANCH CANOPY — one staggered bloom on the visible limbs; the

@@ -573,7 +573,7 @@ export function CanopyRestStrip({
   if (open) return null;
   return (
     <div
-      className="relative z-10 shrink-0 border-t bg-background hairline"
+      className="relative z-10 shrink-0 border-t bg-background/85 hairline"
       style={{ borderTopColor: "color-mix(in srgb, var(--scope-a,var(--gd)) 26%, transparent)" }}
     >
       <button
@@ -3834,7 +3834,7 @@ export function BranchCanopy({
       data-testid={testIdPrefix}
       aria-hidden={!shown}
       className={cn(
-        "absolute inset-0 z-20 flex min-h-0 flex-col bg-background transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]",
+        "realm-crystal absolute inset-0 z-20 flex min-h-0 flex-col transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]",
         shown
           ? cn(
               "translate-y-0 opacity-100",
@@ -3884,7 +3884,7 @@ export function BranchCanopy({
         >
       <div
         className={cn(
-          "shrink-0 bg-background px-3 pb-1 sm:px-5",
+          "shrink-0 bg-background/85 px-3 pb-1 sm:px-5",
           !realm && "pt-10 md:pt-1.5"
         )}
         style={
