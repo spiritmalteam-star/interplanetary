@@ -4667,3 +4667,18 @@ Work Log:
 
 Stage Summary:
 - The light language stands at full stature: 20 grand seals in the page's empty shoulders, two grand keepers around the open-guide doors, bronze ink in daylight and silver glow at night; the hero's background image breathes unobstructed; chat and portal carry no marks. Commit 6390335 on origin/main.
+
+---
+Task ID: 83
+Agent: Z.ai Code (main)
+Task: Make the landing chat 15 percent taller; stop covering the website's top banner image; add touches of green and purple across the website to break the contrast.
+
+Work Log:
+- LandingGate.computeGeo: the docked chat grew fifteen percent taller at every width — the phone's window 0.52→0.598 of the viewport height (≈439→505px at 844h), the desk window min 360→414 / cap 440→506 (0.55→0.633 of vh); comments updated (THE TALLER GLASS). The whole chamber still lays out at the window's own size, nothing cut.
+- Banner uncovered: the hero's artwork stood buried — --lp-hero-img was 0.34 with an 82%-alpha cream veil painted solid over the top 52%. Now --lp-hero-img 0.85 in both skies, veil 0.40 (day cream) / 0.34 (night) as a thin wash fading out by 46% of the banner, image mask extended to 58%; a soft per-theme text halo (--lp-hero-halo) keeps the hero words' edge on the bare artwork. The banner image is now SEEN in both the vanilla daylight and the crystal night.
+- Green & purple touches (the two kind colors): new tokens --lp-violet / --lp-violet-bright per theme (#7c5f8f / #6a5180 day; #b9a5d0 / #cbb9e0 night); SectionHead gained an accent prop — chapter indices alternate feather-green (01, 03) and plum-violet (02, 04) instead of all-gold; every chapter hairline now runs violet→feather→transparent; hero wears three gems (gold, green, violet) above the name; "What we offer" secondary button hovers feather-green; offering bullet diamonds turned violet; the timeline thread flows gold→violet→feather; the discovery note wears a violet left bar and violet label; the docked lens glow swapped cyan/pink for feather/violet; the daylight paper's green/violet ground breaths strengthened (0.17→0.24, 0.14→0.20) plus two new quiet breaths.
+- Verified with agent-browser at 390×844 and 1280×800, both themes: banner fully visible day and night, taller chat holds the whole chamber (crown, sigil, welcome, five suggestions, doors line), gems/indices/hairlines/bullets/thread/discovery note render, footer rests at the page's end, zero console errors; lint clean. Fixed two flaky dev-server deaths by starting `bun run dev` directly (dev.sh's post-health step kept dying and took the server with it).
+
+Stage Summary:
+- The visitor's three asks stand: the chat is fifteen percent taller (mobile 0.598vh, desk cap 506), the website's top banner image is uncovered in both skies (artwork at 0.85, thin top wash, word halo), and the feathered green + plum violet now walk beside the gold everywhere — gems, chapter numbers, hairlines, bullets, thread, notes, glow and the paper's own breaths.
+- Commits on main: LandingGate geometry + LandingPage accents + globals.css tokens; no tokens/secrets in any file; dev server restarted after push.

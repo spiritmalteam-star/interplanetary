@@ -55,25 +55,27 @@ type Geo = {
 function computeGeo(): Geo {
   const vw = document.documentElement.clientWidth;
   const vh = window.innerHeight;
-  /* THE UNCUT MIRROR — the landing chat is smaller in height and a
-     touch wider than before, and it is never cut in the middle: the
-     chamber itself lays out at the window's own size (the scoped
+  /* THE UNCUT MIRROR — the landing chat is never cut in the middle:
+     the chamber itself lays out at the window's own size (the scoped
      --app-h below), so the crown, the quiet floor and the whisper
      line all stand complete inside the window. No crop, no slice —
-     a whole small portal on the threshold. */
+     a whole small portal on the threshold.
+     THE TALLER GLASS — the visitor asked for a grander window: the
+     docked chat stands fifteen percent taller at every width (0.598
+     of the phone's height, a 506px desk cap), still whole. */
   if (vw < 640) {
     return {
       w: Math.floor(vw * 0.94),
-      /* THE WHOLE WINDOW ON THE FIRST BREATH — 0.52 keeps the glass
-         fully inside the phone's first screen (hero above, slot at
-         ~0.48vh): the whisper line and the floor never slip beneath
-         the fold, and the window still carries the whole chamber. */
-      h: Math.round(vh * 0.52),
+      /* the phone's window — 0.52 grew to 0.598 (fifteen percent
+         taller): the whole chamber inside a taller glass, the crown
+         and the whisper line never slipping beneath the fold. */
+      h: Math.round(vh * 0.598),
       radius: 26,
     };
   }
-  /* THE DESK'S WIDE, CALM WINDOW — a touch wider and lower than
-     before, the whole realm laid out inside it at true size.
+  /* THE DESK'S WIDE, CALM WINDOW — a touch wider and taller than
+     before (360→414, 440→506, 0.55→0.633 of the height), the whole
+     realm laid out inside it at true size.
      THE SMOOTH BORDER — the docked chat wears a gently rounded,
      slightly transparent edge (no frame), soft against the
      threshold beneath. */
@@ -81,7 +83,7 @@ function computeGeo(): Geo {
   const clear = vw >= 1024 ? 2 * rail + 44 : 44;
   return {
     w: Math.max(420, Math.min(880, Math.floor(vw * 0.86) - 24, vw - clear)),
-    h: Math.max(360, Math.min(440, Math.round(vh * 0.55))),
+    h: Math.max(414, Math.min(506, Math.round(vh * 0.633))),
     radius: 26,
   };
 }
@@ -562,7 +564,7 @@ export default function LandingGate() {
                  animation — the phone pays nothing); the full portal
                  keeps its own solid edge. */
               docked
-                ? "border-[var(--lp-edge)] shadow-[0_40px_120px_-40px_rgba(0,0,0,0.95),0_0_44px_-20px_rgba(56,189,248,0.3),0_0_30px_-16px_rgba(255,77,109,0.22)]"
+                ? "border-[var(--lp-edge)] shadow-[0_40px_120px_-40px_rgba(0,0,0,0.95),0_0_44px_-20px_rgba(92,122,82,0.4),0_0_30px_-16px_rgba(124,95,143,0.35)]"
                 : "border-white/10 shadow-[0_40px_120px_-40px_rgba(0,0,0,0.95)]"
             )}
             style={{ borderRadius: fullscreen ? 0 : geo.radius }}

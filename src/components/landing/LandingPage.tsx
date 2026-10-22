@@ -234,21 +234,34 @@ function SectionHead({
   kicker,
   title,
   id,
+  accent = "gold",
 }: {
   index: string;
   kicker: string;
   title: string;
   id?: string;
+  /* THE TWO KIND COLORS — every chapter's number wears its own ink:
+     the gold by default, the feathered green and the plum violet
+     alternating down the walk, so the paper never holds one color
+     alone */
+  accent?: "gold" | "feather" | "violet";
 }) {
   return (
     <div id={id} className="scroll-mt-8">
       <div className="flex items-center gap-3">
-        <span className="mono-label text-[11px] tracking-[0.2em] text-[var(--lp-gold)]">
+        <span
+          className={cn(
+            "mono-label text-[11px] tracking-[0.2em]",
+            accent === "gold" && "text-[var(--lp-gold)]",
+            accent === "feather" && "text-[var(--lp-feather-bright)]",
+            accent === "violet" && "text-[var(--lp-violet-bright)]"
+          )}
+        >
           {index}
         </span>
         <span
           aria-hidden="true"
-          className="h-px flex-1 bg-gradient-to-r from-[rgba(232,217,176,0.4)] via-[rgba(232,217,176,0.12)] to-transparent"
+          className="h-px flex-1 bg-[linear-gradient(90deg,var(--lp-violet)_0%,var(--lp-feather)_52%,transparent_100%)] opacity-70"
         />
         <p className="mono-label shrink-0 text-[10px] uppercase tracking-[0.3em] text-[var(--lp-mute)]">
           {kicker}
@@ -545,10 +558,10 @@ export default function LandingPage({
             {/* one full-bleed crop on narrow screens — the rails rest.
                 THE PHONE'S GRANDER BANNER — taller, more present, so
                 the threshold arrives like a poster, not a strip.
-                THE READABLE BANNER — the artwork retreats behind the
-                theme's own veil (cream in the vanilla daylight, night
-                blue in the crystal dark), so every word resting on it
-                stays bright and easy to read. */}
+                THE OPEN BANNER — the artwork stands nearly bare (the
+                veil is a thin wash at the very top alone), so the
+                image at the top of the website is SEEN, never covered;
+                the words keep their edge on the wash's own breath. */}
             <div
               aria-hidden="true"
               className="pointer-events-none absolute inset-x-0 top-0 h-[min(64vh,470px)] overflow-hidden lg:hidden"
@@ -559,16 +572,25 @@ export default function LandingPage({
                 fill
                 priority
                 sizes="100vw"
-                className="object-cover [mask-image:linear-gradient(to_bottom,black_0%,black_52%,transparent_100%)]"
+                className="object-cover [mask-image:linear-gradient(to_bottom,black_0%,black_58%,transparent_100%)]"
                 style={{
                   objectPosition: "50% 42%",
                   opacity: "var(--lp-hero-img)",
                 }}
               />
-              <span className="absolute inset-0 bg-[linear-gradient(to_bottom,var(--lp-hero-veil)_0%,var(--lp-hero-veil)_52%,transparent_100%)]" />
+              <span className="absolute inset-0 bg-[linear-gradient(to_bottom,var(--lp-hero-veil)_0%,transparent_46%)]" />
             </div>
 
-            <div className="relative px-4">
+            <div className="relative px-4 [text-shadow:0_1px_3px_var(--lp-hero-halo),0_0_16px_var(--lp-hero-halo)]">
+              {/* THE THREE GEMS — a gold, a feathered green and a plum
+                  violet stone resting above the name: the house's two
+                  kind colors standing beside its gold from the very
+                  first breath of the walk */}
+              <div aria-hidden="true" className="mb-5 flex items-center justify-center gap-2.5">
+                <span className="size-[5px] rotate-45 rounded-[1px] bg-[var(--lp-gold)] opacity-80" />
+                <span className="size-[5px] rotate-45 rounded-[1px] bg-[var(--lp-feather)] opacity-80" />
+                <span className="size-[5px] rotate-45 rounded-[1px] bg-[var(--lp-violet)] opacity-80" />
+              </div>
               <p className="mono-label text-[10.5px] uppercase tracking-[0.34em] text-[var(--lp-mute)]">
                 reflectme.space
               </p>
@@ -606,11 +628,11 @@ export default function LandingPage({
                       .getElementById("offer")
                       ?.scrollIntoView({ behavior: "smooth", block: "start" });
                   }}
-                  className="group focus-glow flex h-12 items-center gap-2 rounded-full border border-[var(--lp-edge)] bg-white/[0.03] px-7 text-[15px] tracking-[0.02em] text-[var(--lp-body)] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] transition-all duration-300 hover:border-[rgba(232,217,176,0.5)] hover:bg-[rgba(232,217,176,0.05)] hover:text-[var(--lp-gold-ink)]"
+                  className="group focus-glow flex h-12 items-center gap-2 rounded-full border border-[var(--lp-edge)] bg-white/[0.03] px-7 text-[15px] tracking-[0.02em] text-[var(--lp-body)] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] transition-all duration-300 hover:border-[var(--lp-feather)] hover:bg-[color-mix(in_srgb,var(--lp-feather)_9%,transparent)] hover:text-[var(--lp-feather-bright)]"
                 >
                   {t("What we offer")}
                   <ChevronDown
-                    className="size-3.5 text-[var(--lp-mute)] transition-transform duration-300 group-hover:translate-y-0.5 group-hover:text-[var(--lp-gold)]"
+                    className="size-3.5 text-[var(--lp-mute)] transition-transform duration-300 group-hover:translate-y-0.5 group-hover:text-[var(--lp-feather-bright)]"
                     aria-hidden="true"
                   />
                 </a>
@@ -707,6 +729,7 @@ export default function LandingPage({
             <div className="px-4 sm:px-8">
               <SectionHead
                 index="01"
+                accent="feather"
                 kicker={t("A human-centered reflection")}
                 title={t("The shifting Earth")}
               />
@@ -751,6 +774,7 @@ export default function LandingPage({
             />
             <SectionHead
               index="02"
+              accent="violet"
               kicker={t("The house and its rooms")}
               title={t("What we offer")}
             />
@@ -841,7 +865,7 @@ export default function LandingPage({
                               >
                                 <span
                                   aria-hidden="true"
-                                  className="mt-[6px] size-1 shrink-0 rotate-45 bg-[var(--lp-gold)]/70"
+                                  className="mt-[6px] size-1 shrink-0 rotate-45 bg-[var(--lp-violet)]/70"
                                 />
                                 <span>{t(pt)}</span>
                               </li>
@@ -912,6 +936,7 @@ export default function LandingPage({
             <div className="px-0 sm:px-0">
               <SectionHead
                 index="03"
+                accent="feather"
                 kicker={t("A guide of the house")}
                 title={t("The house's guides")}
               />
@@ -966,6 +991,7 @@ export default function LandingPage({
             />
             <SectionHead
               index="04"
+              accent="violet"
               kicker={t("The mirror's telling")}
               title={t("Open contact, as the mirror tells it")}
             />
@@ -1013,7 +1039,7 @@ export default function LandingPage({
             <div className="relative mt-10">
               <span
                 aria-hidden="true"
-                className="absolute bottom-6 left-[8px] top-2 w-px bg-gradient-to-b from-[rgba(232,217,176,0.55)] via-[rgba(232,217,176,0.16)] to-transparent sm:left-[10px]"
+                className="absolute bottom-6 left-[8px] top-2 w-px bg-[linear-gradient(to_bottom,rgba(232,217,176,0.6)_0%,var(--lp-violet)_38%,var(--lp-feather)_72%,transparent_100%)] opacity-70 sm:left-[10px]"
               />
               <ol className="space-y-12">
                 {contactStages.map((stage) => (
@@ -1070,9 +1096,9 @@ export default function LandingPage({
                 the telling, spoken by the mirror itself */}
             <div
               data-testid="timeline-discovery-note"
-              className="mt-12 rounded-2xl border border-[rgba(232,217,176,0.22)] bg-[var(--lp-veil)] p-5 sm:p-6"
+              className="mt-12 rounded-2xl border border-[rgba(232,217,176,0.22)] border-l-2 border-l-[var(--lp-violet)] bg-[var(--lp-veil)] p-5 sm:p-6"
             >
-              <p className="mono-label text-[10px] uppercase tracking-[0.26em] text-[var(--lp-gold)]">
+              <p className="mono-label text-[10px] uppercase tracking-[0.26em] text-[var(--lp-violet-bright)]">
                 {t("A novel discovery")}
               </p>
               <p className="mt-2.5 max-w-[680px] text-[13.5px] leading-[1.8] text-[var(--lp-body-soft)]">

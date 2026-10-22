@@ -155,14 +155,22 @@ body {
   --lp-gold-ink: #6d5410;
   --lp-feather: #5c7a52;
   --lp-feather-bright: #47663f;
+  /* the two kind colors — feathered green and the plum violet, the
+     house's own accents that break the gold's hold on the paper */
+  --lp-violet: #7c5f8f;
+  --lp-violet-bright: #6a5180;
   --lp-veil: rgba(255, 253, 244, 0.62);
   --lp-veil-solid: #f9f3df;
   --lp-edge: rgba(122, 100, 58, 0.24);
 
-  /* the banner's own veil — the hero's artwork retreats so the words
-     on it stay bright and readable (the vanilla daylight's cream) */
-  --lp-hero-img: 0.34;
-  --lp-hero-veil: rgba(246, 239, 220, 0.82);
+  /* the banner's own veil — THE OPEN SKY: the hero's artwork stands
+     nearly bare (0.85), with only a breath of cream at the very top
+     so the words keep their edge — the banner is seen, not covered */
+  --lp-hero-img: 0.85;
+  --lp-hero-veil: rgba(246, 239, 220, 0.4);
+  /* the words' halo over the open banner — a breath of light behind
+     the ink so every word keeps its edge on the bare artwork */
+  --lp-hero-halo: rgba(255, 250, 232, 0.7);
 
   /* THE CROSSING'S TWO SKIES — the tunnel wears the realm's own
      light: warm cream and gold with feathered green and purple rings
@@ -271,14 +279,22 @@ body {
   --lp-gold-ink: #f2e9cf;
   --lp-feather: #9fd8dc;
   --lp-feather-bright: #c9ecee;
+  /* the two kind colors at night — the crystal sky wears its own
+     feathered green and a lighter plum violet */
+  --lp-violet: #b9a5d0;
+  --lp-violet-bright: #cbb9e0;
   --lp-veil: rgba(8, 12, 20, 0.55);
   --lp-veil-solid: #0a0e18;
   --lp-edge: rgba(255, 255, 255, 0.12);
 
-  /* the banner's night veil — the hero's artwork dims under the
-     crystal sky so the light words on it keep their breath */
-  --lp-hero-img: 0.5;
-  --lp-hero-veil: rgba(10, 14, 24, 0.42);
+  /* the banner's night veil — THE OPEN NIGHT SKY: the hero's artwork
+     stands nearly bare under the crystal sky, a thin night wash at
+     the top alone keeping the light words readable */
+  --lp-hero-img: 0.85;
+  --lp-hero-veil: rgba(10, 14, 24, 0.34);
+  /* the words' halo at night — a breath of night behind the light
+     ink so every word keeps its edge on the bare artwork */
+  --lp-hero-halo: rgba(8, 12, 20, 0.65);
 
   /* the crossing's crystal night — the tunnel's blues when the
      toggle is off (the sky it has always worn) */
@@ -2382,26 +2398,34 @@ html:not(.dark) .scope-lightcodes {
    break the contrast the way feathers rest on a warm sheet. */
 html:not(.dark) .lp-ground {
   color-scheme: light;
+  /* THE TWO KIND COLORS IN THE AIR — feathered green and plum violet
+     breathing through the vanilla paper (a little stronger now, so
+     the gold's warmth is gently broken) */
   background:
     radial-gradient(
       54% 36% at 4% 0%,
-      rgba(92, 122, 82, 0.17),
+      rgba(92, 122, 82, 0.24),
       transparent 62%
     ),
     radial-gradient(
       46% 32% at 98% 7%,
-      rgba(124, 95, 143, 0.14),
+      rgba(124, 95, 143, 0.2),
       transparent 64%
     ),
     radial-gradient(
       40% 28% at 90% 44%,
-      rgba(92, 122, 82, 0.08),
+      rgba(92, 122, 82, 0.11),
       transparent 66%
     ),
     radial-gradient(
       44% 30% at 2% 66%,
-      rgba(124, 95, 143, 0.08),
+      rgba(124, 95, 143, 0.13),
       transparent 66%
+    ),
+    radial-gradient(
+      42% 30% at 98% 82%,
+      rgba(92, 122, 82, 0.1),
+      transparent 64%
     ),
     radial-gradient(
       60% 42% at 50% 108%,
