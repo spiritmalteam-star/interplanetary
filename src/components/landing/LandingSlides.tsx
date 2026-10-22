@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
@@ -178,45 +177,42 @@ export default function LandingSlides() {
             ) : null
           )}
 
-          {/* the hands — quiet arrows at the stage's edges */}
-          <button
-            type="button"
-            onClick={prev}
-            aria-label={t("The slide before")}
-            data-testid="landing-slides-prev"
-            className="focus-glow absolute left-2 top-1/2 z-10 flex size-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/14 bg-[rgba(6,10,18,0.55)] text-[#dfe7ed] transition-all duration-300 hover:border-[rgba(232,217,176,0.6)] hover:text-[#f0e7cd] sm:left-3"
-          >
-            <ChevronLeft className="size-4" aria-hidden="true" />
-          </button>
-          <button
-            type="button"
-            onClick={next}
-            aria-label={t("The next slide")}
-            data-testid="landing-slides-next"
-            className="focus-glow absolute right-2 top-1/2 z-10 flex size-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/14 bg-[rgba(6,10,18,0.55)] text-[#dfe7ed] transition-all duration-300 hover:border-[rgba(232,217,176,0.6)] hover:text-[#f0e7cd] sm:right-3"
-          >
-            <ChevronRight className="size-4" aria-hidden="true" />
-          </button>
         </div>
       </div>
 
-      {/* the reading rail — where the walk stands, and how to steer it */}
-      <div className="mx-auto mt-4 flex w-full max-w-[660px] items-center justify-center gap-2.5 px-4">
+      {/* the plate's own words — the standing slide speaks its title */}
+      <p
+        data-testid="landing-slides-title"
+        className="mx-auto mt-4 max-w-[660px] px-4 text-center font-[family-name:var(--font-literata)] text-[14.5px] italic leading-relaxed text-[#e8d9b0]"
+      >
+        {t(SLIDES[active].title)}
+      </p>
+
+      {/* the reading rail — no arrows anywhere: the stage is swept by
+          the hand, and a quiet row of numbers steers it from below */}
+      <div
+        role="tablist"
+        aria-label={t("Choose a slide by its number")}
+        className="mx-auto mt-3.5 flex w-full max-w-[660px] flex-wrap items-center justify-center gap-1.5 px-4"
+      >
         {SLIDES.map((s, i) => (
           <button
             key={s.src}
             type="button"
+            role="tab"
+            aria-selected={i === active}
             onClick={() => go(i)}
             aria-label={t(`Go to slide ${i + 1} — ${s.title}`)}
-            aria-current={i === active}
-            data-testid="landing-slides-dot"
+            data-testid="landing-slides-num"
             className={cn(
-              "focus-glow h-1.5 rounded-full transition-all duration-500",
+              "focus-glow mono-label flex size-7 items-center justify-center rounded-full border text-[9px] tracking-normal transition-all duration-300",
               i === active
-                ? "w-6 bg-[#e8d9b0]"
-                : "w-1.5 bg-white/22 hover:bg-white/45"
+                ? "border-[rgba(232,217,176,0.85)] bg-[rgba(232,217,176,0.14)] text-[#f0e7cd]"
+                : "border-white/12 text-[#8fa3b2] hover:border-white/30 hover:text-[#c6d2db]"
             )}
-          />
+          >
+            {i + 1}
+          </button>
         ))}
       </div>
       <p className="mono-label mt-3 text-center text-[8.5px] uppercase tracking-[0.26em] text-[#66788a]">

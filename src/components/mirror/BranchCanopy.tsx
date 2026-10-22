@@ -1821,6 +1821,7 @@ export function BranchCanopy({
   onLatch,
   realm,
   bare,
+  onFoldChat,
   headerExtra,
   realmControls,
 }: {
@@ -1863,6 +1864,11 @@ export function BranchCanopy({
       the whisper line stand exactly as ever; only the stones rest
       until the portal is given the whole screen). */
   bare?: boolean;
+  /** THE FOLD HAND — the landing chat's dropdown hand: while the
+      portal is docked bare in the threshold, the crown's chevron
+      folds the whole chat section away without ending the
+      conversation (the threshold's own ground carries the way back). */
+  onFoldChat?: () => void;
   /** Extra quiet controls riding the realm's crown (the purse, the
       theme) — rendered between the where-pill and the doors. */
   headerExtra?: ReactNode;
@@ -4516,11 +4522,33 @@ export function BranchCanopy({
             type="button"
             onClick={() => {
               setCrownMenu(null);
+              /* THE LANDING'S FOLD HAND — while the chat stands bare in
+                 the threshold, the dropdown hand folds the whole chat
+                 section away: the conversation keeps every word, and
+                 the threshold's own ground carries the invitation to
+                 call her back. Inside the full portal the same hand
+                 keeps its old work — showing and hiding the top bar. */
+              if (bare && onFoldChat) {
+                onFoldChat();
+                return;
+              }
               setCrownUp((u) => !u);
             }}
-            aria-expanded={!crownUp}
-            aria-label={crownUp ? t("Show the top bar") : t("Hide the top bar")}
-            title={crownUp ? t("Show the top bar") : t("Hide the top bar")}
+            aria-expanded={bare && onFoldChat ? undefined : !crownUp}
+            aria-label={
+              bare && onFoldChat
+                ? t("Fold the chat away")
+                : crownUp
+                  ? t("Show the top bar")
+                  : t("Hide the top bar")
+            }
+            title={
+              bare && onFoldChat
+                ? t("Fold the chat away")
+                : crownUp
+                  ? t("Show the top bar")
+                  : t("Hide the top bar")
+            }
             data-testid={`${testIdPrefix}-crown-toggle`}
             className="focus-glow absolute z-40 flex size-7 items-center justify-center rounded-full border bg-background text-muted-foreground shadow-[0_8px_22px_-12px_rgba(0,0,0,0.55)] transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
             style={{

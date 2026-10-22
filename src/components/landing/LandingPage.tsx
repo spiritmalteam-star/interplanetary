@@ -31,6 +31,8 @@ import { useT } from "@/lib/i18n";
 import { useMirror } from "@/lib/mirror-store";
 import { cn } from "@/lib/utils";
 import LandingSlides from "./LandingSlides";
+import GuideShowcase from "./GuideShowcase";
+import GuideView from "./GuideView";
 
 /* ------------------------------------------------------------------ */
 /*  THE THRESHOLD — reflectme.space's landing page.                    */
@@ -301,12 +303,16 @@ export default function LandingPage({
   onExpand,
   onScroll,
   initialScroll,
+  chatFolded,
+  onUnfoldChat,
 }: {
   slotRef: RefObject<HTMLDivElement | null>;
   slotStyle: { width?: number | string; height?: number | string };
   onExpand: () => void;
   onScroll: (y: number) => void;
   initialScroll: number;
+  chatFolded?: boolean;
+  onUnfoldChat?: () => void;
 }) {
   const t = useT();
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -329,6 +335,41 @@ export default function LandingPage({
      a time in each chapter; the same touch closes it again. */
   const [openOffer, setOpenOffer] = useState<number | null>(null);
   const [openMove, setOpenMove] = useState<number | null>(null);
+
+  /* THE GUIDES' DOOR — the guide pages live behind a hash
+     (#guide/<slug>): opening one pushes a history entry, so the
+     browser's own back button returns to the slideshow exactly as
+     the page's own back hands do, and the threshold beneath never
+     unmounts — the slideshow keeps its plate and its scroll. */
+  const [guideSlug, setGuideSlug] = useState<string | null>(null);
+  const guidePushed = useRef(false);
+  useEffect(() => {
+    const readHash = () => {
+      const h = window.location.hash.replace(/^#/, "");
+      setGuideSlug(h.startsWith("guide/") ? decodeURIComponent(h.slice(6)) : null);
+    };
+    readHash();
+    window.addEventListener("hashchange", readHash);
+    return () => window.removeEventListener("hashchange", readHash);
+  }, []);
+  const openGuide = useCallback((slug: string) => {
+    guidePushed.current = true;
+    window.location.hash = `guide/${slug}`;
+  }, []);
+  const closeGuide = useCallback(() => {
+    /* the door we pushed is closed by stepping back through it; a
+       door the visitor arrived with (a shared link) is simply unlatched */
+    if (guidePushed.current) {
+      window.history.back();
+    } else {
+      window.history.replaceState(
+        null,
+        "",
+        window.location.pathname + window.location.search
+      );
+      setGuideSlug(null);
+    }
+  }, []);
 
   /* THE TUNNEL INTO THE MIRROR — the small arrow under every opened
      row: one touch and the topic itself walks through the portal,
@@ -563,15 +604,37 @@ export default function LandingPage({
               className="relative mx-auto w-full"
             >
               {/* the waking ground — beneath the lens until the chamber
-                  arrives (the lens covers it pixel for pixel) */}
+                  arrives (the lens covers it pixel for pixel). THE
+                  FOLDED CHAT — when the visitor folds the chat away
+                  with the dropdown hand, this ground carries the
+                  invitation to call her back, words and memory kept. */}
               <div
-                aria-hidden="true"
+                aria-hidden={!(chatFolded && onUnfoldChat)}
                 className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-2xl border border-white/8 bg-[rgba(8,12,20,0.55)]"
               >
-                <span className="lp-pulse size-2 rounded-full bg-[#9fd8dc]" />
-                <p className="mono-label text-[9px] uppercase tracking-[0.3em] text-[#66788a]">
-                  {t("The mirror is waking…")}
-                </p>
+                {chatFolded && onUnfoldChat ? (
+                  <>
+                    <span className="lp-pulse size-2 rounded-full bg-[#ff4d6d] shadow-[0_0_18px_2px_rgba(255,77,109,0.55)]" />
+                    <p className="mono-label text-[9px] uppercase tracking-[0.3em] text-[#66788a]">
+                      {t("The mirror rests — call her back")}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={onUnfoldChat}
+                      data-testid="unfold-chat"
+                      className="focus-glow mt-1 inline-flex h-9 items-center gap-2 rounded-full border border-[rgba(232,217,176,0.5)] bg-[rgba(232,217,176,0.08)] px-5 text-[12.5px] font-medium text-[#f0e7cd] transition-all duration-300 hover:border-[rgba(232,217,176,0.85)] hover:bg-[rgba(232,217,176,0.14)]"
+                    >
+                      {t("Call her back")}
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <span className="lp-pulse size-2 rounded-full bg-[#9fd8dc]" />
+                    <p className="mono-label text-[9px] uppercase tracking-[0.3em] text-[#66788a]">
+                      {t("The mirror is waking…")}
+                    </p>
+                  </>
+                )}
               </div>
             </div>
           </section>
@@ -753,7 +816,47 @@ export default function LandingPage({
             </div>
           </section>
 
-          {/* ============ 03 · THE OPEN CONTACT TIMELINE ============ */}
+          {/* ============ 03 · THE GUIDES' SHOWCASE ============ */}
+          {/* the massive exhibition beneath the offerings: seven
+              plates, one for every illustrated guide born from the
+              house's books — swept by the hand, steered by numbers,
+              every plate a door into its own page */}
+          <section
+            className="relative px-4 pb-10 pt-14 sm:px-8"
+            aria-label={t("The house's guides")}
+            data-testid="guide-showcase-section"
+          >
+            {/* the light language in the guides' quiet edges */}
+            <Sigil
+              src={SIGILS.spiralLine}
+              size="clamp(100px, 16vw, 150px)"
+              opacity={0.2}
+              rotate={10}
+              className="left-[1%] top-[6%]"
+            />
+            <Sigil
+              src={SIGILS.leaf}
+              size="clamp(90px, 14vw, 130px)"
+              opacity={0.18}
+              rotate={-12}
+              className="right-[2%] top-[52%]"
+            />
+            <div className="px-0 sm:px-0">
+              <SectionHead
+                index="03"
+                kicker={t("A guide of the house")}
+                title={t("The house's guides")}
+              />
+              <p className="mx-auto mt-4 max-w-[620px] text-[13px] leading-[1.8] text-[#8fa3b2]">
+                {t(
+                  "Seven illustrated guides, one image each — swipe, or choose a number below."
+                )}
+              </p>
+            </div>
+            <GuideShowcase onOpen={openGuide} />
+          </section>
+
+          {/* ============ 04 · THE OPEN CONTACT TIMELINE ============ */}
           {/* The mirror's own telling of an open contact — four stages
               in the mirror's voice, one connected vertical line, a
               progress marker per stage, the copy living as real HTML
@@ -787,7 +890,7 @@ export default function LandingPage({
               className="bottom-[6%] right-[3%]"
             />
             <SectionHead
-              index="03"
+              index="04"
               kicker={t("The mirror's telling")}
               title={t("Open contact, as the mirror tells it")}
             />
@@ -921,6 +1024,15 @@ export default function LandingPage({
           </div>
         </footer>
       </div>
+
+      {/* ============== THE GUIDES' OWN PAGES ============== */}
+      {/* one page per guide, opened above the threshold — the page
+          beneath never unmounts, so the slideshow keeps its plate,
+          and every back hand (the browser's own included) returns to
+          the exact place the guide was chosen from */}
+      {guideSlug ? (
+        <GuideView slug={guideSlug} onClose={closeGuide} />
+      ) : null}
     </div>
   );
 }

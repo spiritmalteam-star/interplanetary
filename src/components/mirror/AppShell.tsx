@@ -63,6 +63,7 @@ export default function AppShell({
   bare = false,
   onExpand,
   onMinimize,
+  onFoldChat,
 }: {
   bare?: boolean;
   /** THE DOCKED HAND — grows the one portal to the whole screen
@@ -71,13 +72,21 @@ export default function AppShell({
   /** THE RETURN HAND — folds the portal back into its landing slot
       (given by the threshold; the crown wears it at full size). */
   onMinimize?: () => void;
+  /** THE FOLD HAND — the landing chat's dropdown hand: folds the
+      whole chat section away without ending the conversation. */
+  onFoldChat?: () => void;
 }) {
   return (
     <div className="paper-grain relative h-[var(--app-h,100dvh)] overflow-hidden">
       {/* the purse keeper rides above every world — the 402 watch, the
           Stripe greeting, the unlock modal */}
       <WalletGuard />
-      <AppShellViews bare={bare} onExpand={onExpand} onMinimize={onMinimize} />
+      <AppShellViews
+        bare={bare}
+        onExpand={onExpand}
+        onMinimize={onMinimize}
+        onFoldChat={onFoldChat}
+      />
     </div>
   );
 }
@@ -86,10 +95,12 @@ function AppShellViews({
   bare,
   onExpand,
   onMinimize,
+  onFoldChat,
 }: {
   bare: boolean;
   onExpand?: () => void;
   onMinimize?: () => void;
+  onFoldChat?: () => void;
 }) {
   const view = useMirror((s) => s.view);
   const activeMode = useMirror((s) => s.activeMode);
@@ -397,6 +408,7 @@ function AppShellViews({
       <BranchCanopy
         realm
         bare={bare}
+        onFoldChat={onFoldChat}
         category={activeMode}
         open={true}
         onPick={(q, scope, attachments) => {

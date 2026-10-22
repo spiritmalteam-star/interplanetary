@@ -78,10 +78,15 @@ export default function LandingGate() {
   const { setTheme } = useTheme();
   const [phase, setPhase] = useState<Phase>("landing");
   const [Chamber, setChamber] = useState<ComponentType<
-    { bare?: boolean; onExpand?: () => void; onMinimize?: () => void }
+    { bare?: boolean; onExpand?: () => void; onMinimize?: () => void; onFoldChat?: () => void }
   > | null>(null);
   const [geo, setGeo] = useState<Geo | null>(null);
   const [pending, setPending] = useState(false);
+  /* THE FOLDED CHAT — the landing chat's dropdown hand folds the
+     whole chat section away (the lens itself rests, invisible but
+     mounted, so not one word of the conversation is lost), and the
+     threshold's own ground carries the invitation to call her back. */
+  const [chatFolded, setChatFolded] = useState(false);
   /* the keeper's name — watched so the portal's own intention can
      carry a newly-signed visitor straight through the full portal */
   const me = useMirror((s) => s.me);
@@ -122,6 +127,7 @@ export default function LandingGate() {
               bare?: boolean;
               onExpand?: () => void;
               onMinimize?: () => void;
+              onFoldChat?: () => void;
             }>
         );
     });
@@ -226,6 +232,7 @@ export default function LandingGate() {
      touch, no bounce back to the passage's door. */
   const expandPortal = useCallback(() => {
     if (busy.current) return;
+    setChatFolded(false);
     void (async () => {
       const st = useMirror.getState();
       let cur = st.me;
@@ -387,6 +394,8 @@ export default function LandingGate() {
             onExpand={expandPortal}
             onScroll={handleLandingScroll}
             initialScroll={landingScroll.current}
+            chatFolded={chatFolded}
+            onUnfoldChat={() => setChatFolded(false)}
           />
         </div>
       )}
@@ -396,9 +405,13 @@ export default function LandingGate() {
         <div
           ref={lensRef}
           className={cn(
-            "fixed left-0 top-0 z-[45]",
+            "fixed left-0 top-0 z-[45] transition-opacity duration-500",
             docked && "lens-docked",
-            animating && "lens-anim"
+            animating && "lens-anim",
+            /* THE FOLDED CHAT — the whole chat section steps out of
+               the eye (still mounted, still remembering) while the
+               threshold beneath shows the way back */
+            docked && chatFolded && "pointer-events-none opacity-0"
           )}
           style={{
             width: fullscreen ? "100vw" : geo.w,
@@ -433,7 +446,12 @@ export default function LandingGate() {
                     : "translate3d(0, 0, 0) scale(1)",
               }}
             >
-              <Chamber bare={bare} onExpand={expandPortal} onMinimize={minimize} />
+              <Chamber
+                bare={bare}
+                onExpand={expandPortal}
+                onMinimize={minimize}
+                onFoldChat={() => setChatFolded(true)}
+              />
             </div>
 
             {/* THE FRAME IS GONE — the gilded filigree has left the
