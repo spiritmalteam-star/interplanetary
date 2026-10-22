@@ -2157,8 +2157,12 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     /* IMAGE CRYSTALLIZATION — the visitor asked for an image by name:
        no LLM round-trip travels. The last channel (this thread's most
        recent reply) is crystallized at once, shaped by the visitor's
-       own words; with an empty thread, the words themselves crystallize. */
-    if (isVisualIntent(query)) {
+       own words; with an empty thread, the words themselves crystallize.
+       THE MUSIC'S OWN DOOR — a song ask is a SOUND making, never a
+       painting: the named music door outranks the generic visual
+       detector ("create a song" opens the sound chamber's making
+       inline), while a painted vision still paints. */
+    if (isVisualIntent(query) && !MUSIC_INTENT.test(query)) {
       await crystallizeVisual(
         mode,
         query,

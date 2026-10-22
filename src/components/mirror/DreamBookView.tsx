@@ -11,6 +11,7 @@ import {
   type UIEvent as ReactUIEvent,
   type WheelEvent as ReactWheelEvent,
 } from "react";
+import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -1289,6 +1290,32 @@ export function DreamBookView() {
       {...atelierHold.bind}
     >
       <HoldVeil holding={atelierHold.holding} pct={atelierHold.pct} label="Hold four seconds — the passage opens with a full purse…" />
+      {/* THE SHELF'S QUIET MARKS — the house's light language resting in
+          the empty shoulders of the book selection: bronze ink on the
+          daylight paper, silver glow in the crystal night. They never
+          take a touch, never cover a word and never move (the stillness
+          law); the top-right mark lives above the cards, the wide mark
+          only visits the desktop's empty left margin. */}
+      <Image
+        src="/sigils/sigil_08.png"
+        alt=""
+        aria-hidden="true"
+        draggable={false}
+        loading="lazy"
+        width={300}
+        height={300}
+        className="lp-sigil-img pointer-events-none absolute -top-8 -right-9 z-0 size-[clamp(130px,30vw,250px)] select-none opacity-[0.13] [transform:rotate(10deg)]"
+      />
+      <Image
+        src="/sigils/intricate_07.png"
+        alt=""
+        aria-hidden="true"
+        draggable={false}
+        loading="lazy"
+        width={340}
+        height={340}
+        className="lp-sigil-img pointer-events-none absolute left-[-34px] top-[36%] z-0 hidden size-[clamp(150px,16vw,230px)] select-none opacity-[0.1] [transform:rotate(-8deg)] lg:block"
+      />
       <header className="relative z-10 flex shrink-0 items-center gap-2 px-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-5">
         <button
           type="button"
@@ -1344,7 +1371,12 @@ export function DreamBookView() {
             <h1 className="ink-title text-[22px] leading-tight sm:text-[25px]">
               {t("Dream Book")}
             </h1>
-            <span className="h-px flex-1 bg-border" aria-hidden="true" />
+            {/* the title's own gold hairline — the house's gold drawn
+                out thin, fading into the paper's quiet */}
+            <span
+              className="h-px flex-1 bg-[linear-gradient(90deg,color-mix(in_srgb,var(--lp-gold)_52%,transparent),color-mix(in_srgb,var(--lp-gold)_16%,transparent)_72%,transparent)]"
+              aria-hidden="true"
+            />
           </div>
           <p className="ink-hand ink-soft mt-1.5 text-[13.5px] italic leading-relaxed sm:text-[14.5px]">
             {t("Name any subject, era, or universe — the loom tunes itself, and the book begins.")}
@@ -1404,7 +1436,7 @@ export function DreamBookView() {
                     </span>
                     <span
                       className={cn(
-                        "font-[family-name(var(--font-literata))] text-[14.5px] font-semibold tracking-wide transition-colors duration-300",
+                        "min-w-0 leading-snug font-[family-name(var(--font-literata))] text-[14.5px] font-semibold tracking-wide transition-colors duration-300",
                         active ? "text-foreground" : "text-foreground/70"
                       )}
                     >
@@ -1459,7 +1491,7 @@ export function DreamBookView() {
                 {BOOK_DEPTHS.map((lv, i) => {
                   const active = level === lv.id;
                   const fills = [0.07, 0.12, 0.18, 0.26, 0.36];
-                  const heights = [16, 20, 24, 28, 32];
+                  const heights = [18, 22, 26, 30, 34];
                   return (
                     <button
                       key={lv.id}
@@ -1469,7 +1501,7 @@ export function DreamBookView() {
                       aria-label={`${t(lv.label)} — depth ${lv.numeral}`}
                       data-testid={`dream-depth-${lv.id}`}
                       title={t(lv.label)}
-                      className="focus-glow group flex min-w-0 flex-1 flex-col items-center gap-1"
+                      className="focus-glow flex min-w-0 flex-1 items-end justify-center"
                     >
                       <span
                         className={cn(
@@ -1486,8 +1518,10 @@ export function DreamBookView() {
                             : `color-mix(in srgb, var(--foreground) ${fills[i]}%, transparent)`,
                         }}
                       >
+                        {/* the numeral keeps a breath above the marker —
+                            the two never touch */}
                         <span
-                          className="font-[family-name(var(--font-literata))] text-[11px] font-semibold leading-none tracking-[0.08em]"
+                          className="pb-[3px] font-[family-name(var(--font-literata))] text-[11px] font-semibold leading-none tracking-[0.08em]"
                           style={{
                             color: active
                               ? "var(--background)"
@@ -1504,19 +1538,22 @@ export function DreamBookView() {
                           />
                         )}
                       </span>
-                      <span
-                        className={cn(
-                          "w-full truncate text-center font-[family-name(var(--font-literata))] text-[10.5px] italic leading-tight transition-colors duration-300",
-                          active
-                            ? "text-foreground"
-                            : "text-muted-foreground/75 group-hover:text-foreground"
-                        )}
-                      >
-                        {t(lv.label)}
-                      </span>
                     </button>
                   );
                 })}
+              </div>
+              {/* the held step's own name — one full-width line beneath
+                  the steps, so no name is ever squeezed or cut; the row
+                  keeps its height whether a step is held or not */}
+              <div className="mt-1.5 flex h-5 items-center justify-center" aria-live="polite">
+                {levelMeta && (
+                  <span
+                    className="font-[family-name(var(--font-literata))] text-[11.5px] italic tracking-wide text-foreground/85"
+                    data-testid="dream-depth-name"
+                  >
+                    {levelMeta.numeral} · {t(levelMeta.label)}
+                  </span>
+                )}
               </div>
               {/* the active depth's own whisper — one line, only when held */}
               <AnimatePresence initial={false} mode="wait">
@@ -1585,7 +1622,13 @@ export function DreamBookView() {
       </div>
 
       {/* the one input — speak, send, and the channeling begins */}
-      <div className="relative z-10 shrink-0 border-t border-border bg-background px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2.5 sm:px-6">
+      <div className="relative z-10 shrink-0 bg-background px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2.5 sm:px-6">
+        {/* the composer's gold seam — the house's gold drawn out thin
+            across the top of the input, quieter than any border */}
+        <span
+          aria-hidden="true"
+          className="absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,color-mix(in_srgb,var(--lp-gold)_36%,transparent)_20%,color-mix(in_srgb,var(--lp-gold)_36%,transparent)_80%,transparent)]"
+        />
         <div className="mx-auto w-full max-w-[680px]">
           {/* the one gentle gate — the loom only asks for a single
               thread before it may begin; nothing more is ever forced */}
@@ -1673,7 +1716,7 @@ export function DreamBookView() {
           </>
         ) : (
           <>
-            <div className="mt-8 h-[26px]">
+            <div className="mt-8 min-h-[26px]">
               <AnimatePresence mode="wait">
                 <motion.p
                   key={phaseIdx}
@@ -1763,12 +1806,17 @@ export function DreamBookView() {
       <HoldVeil holding={readerHold.holding} pct={readerHold.pct} label="Hold four seconds — the passage opens with a full purse…" />
       <header
         className={cn(
-          "relative z-20 flex shrink-0 items-center gap-2 overflow-hidden px-3 transition-all duration-500 sm:px-5",
+          "relative z-20 shrink-0 overflow-hidden px-3 transition-all duration-500 sm:px-5",
           immersed
             ? "pointer-events-none max-h-0 -translate-y-5 opacity-0"
-            : "max-h-24 translate-y-0 pt-3 opacity-100"
+            : "max-h-44 translate-y-0 pt-[max(0.75rem,env(safe-area-inset-top))] opacity-100"
         )}
       >
+        {/* THE READING DESK — two calm rows that can wrap but never
+            squeeze: the book's name keeps its own width between the two
+            quiet hands, and the instruments rest in a centered row
+            beneath, wrapping instead of colliding on narrow screens */}
+        <div className="flex items-center gap-2">
         <button
           type="button"
           onClick={backFromReader}
@@ -1792,14 +1840,27 @@ export function DreamBookView() {
         <h1 className="ink-hand min-w-0 flex-1 truncate text-center text-[15px] text-foreground/85 sm:text-[17px]">
           {meta?.title ?? ""}
         </h1>
-        <div className="flex items-center gap-1.5">
+        {/* THE QUIET X — one touch closes the book and returns to the
+            branches, from the reader and from the whole-book alike */}
+        <button
+          type="button"
+          onClick={exitTheBook}
+          aria-label={t("Close the book")}
+          title={t("Close the book")}
+          data-testid="dream-reader-close"
+          className={inkIconBtn}
+        >
+          <X className="size-4" aria-hidden="true" />
+        </button>
+        </div>
+        <div className="mt-1.5 flex flex-wrap items-center justify-center gap-1 pb-1">
           {/* the rewriting hand — a fancy button at the very top */}
           <button
             type="button"
             onClick={() => setRewriteOpen(true)}
             aria-label={t("Rewrite the coming pages")}
             title={t("Rewrite the coming pages")}
-            className="dream-fancy focus-glow relative flex h-9 items-center gap-1.5 rounded-full pl-3 pr-3.5"
+            className="dream-fancy focus-glow relative flex h-9 shrink-0 items-center gap-1.5 rounded-full pl-3 pr-3.5"
           >
             <Sparkles className="size-3.5" aria-hidden="true" />
             <span className="font-[family-name(var(--font-literata))] text-[13.5px] italic tracking-wide">
@@ -1822,7 +1883,7 @@ export function DreamBookView() {
             aria-label={t("Whole book")}
             title={t("Whole book")}
             data-testid="dream-whole-reveal"
-            className="dream-fancy focus-glow relative flex h-9 items-center gap-1.5 rounded-full pl-3 pr-3.5 disabled:opacity-55"
+            className="dream-fancy focus-glow relative flex h-9 shrink-0 items-center gap-1.5 rounded-full pl-3 pr-3.5 disabled:opacity-55"
           >
             <BookOpenText className="size-3.5" aria-hidden="true" />
             <span className="hidden font-[family-name(var(--font-literata))] text-[13.5px] italic tracking-wide sm:inline">
@@ -1837,7 +1898,7 @@ export function DreamBookView() {
             aria-label={t("Download the whole book")}
             title={t("Download the whole book")}
             data-testid="dream-download"
-            className={cn(inkIconBtn, "disabled:opacity-35")}
+            className={cn(inkIconBtn, "shrink-0 disabled:opacity-35")}
           >
             {binding ? (
               <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
@@ -1852,6 +1913,7 @@ export function DreamBookView() {
             title={narrating ? t("Stop") : t("Listen to the story")}
             className={cn(
               inkIconBtn,
+              "shrink-0",
               (narrating || narrLoading) &&
                 "border-transparent bg-foreground text-background hover:opacity-90"
             )}
@@ -1889,6 +1951,7 @@ export function DreamBookView() {
             }
             className={cn(
               inkIconBtn,
+              "shrink-0",
               autoNarrate &&
                 "border-transparent bg-foreground text-background hover:opacity-90"
             )}
@@ -1913,6 +1976,7 @@ export function DreamBookView() {
               title={narrPaused ? t("Play") : t("Pause")}
               className={cn(
                 inkIconBtn,
+                "shrink-0",
                 narrPaused &&
                   "border-transparent bg-foreground text-background hover:opacity-90"
               )}
@@ -1930,7 +1994,7 @@ export function DreamBookView() {
             disabled={zoom === 0}
             aria-label={t("Smaller text")}
             title={t("Smaller text")}
-            className={cn(inkIconBtn, "disabled:opacity-35")}
+            className={cn(inkIconBtn, "shrink-0 disabled:opacity-35")}
           >
             <ZoomOut className="size-4" aria-hidden="true" />
           </button>
@@ -1940,28 +2004,10 @@ export function DreamBookView() {
             disabled={zoom === ZOOM_STEPS.length - 1}
             aria-label={t("Larger text")}
             title={t("Larger text")}
-            className={cn(inkIconBtn, "disabled:opacity-35")}
+            className={cn(inkIconBtn, "shrink-0 disabled:opacity-35")}
           >
             <ZoomIn className="size-4" aria-hidden="true" />
           </button>
-          {/* THE QUIET X — one touch closes the book and returns to the
-              branches, from the reader and from the whole-book alike */}
-          <button
-            type="button"
-            onClick={exitTheBook}
-            aria-label={t("Close the book")}
-            title={t("Close the book")}
-            data-testid="dream-reader-close"
-            className={cn(inkIconBtn, "ml-0.5")}
-          >
-            <X className="size-4" aria-hidden="true" />
-          </button>
-          {/* the page-marker slide — it rests among the reading's own
-              instruments and vanishes with the whole top bar the moment
-              the reading immerses; narrow hands keep the bar uncluttered
-              and change rooms from the atelier instead */}
-          <div className="hidden md:block">
-          </div>
         </div>
       </header>
 
@@ -2600,28 +2646,46 @@ export function DreamBookView() {
   const shelfRow = (v: ShelfVolume, local: boolean) => (
     <div
       key={`${local ? "local" : "lib"}-${v.bookId}-${v.savedAt}`}
-      className="flex items-start gap-3 rounded-xl border border-border/80 bg-card/40 px-3.5 py-3"
+      className="rounded-xl border border-border/80 bg-card/40 px-3.5 py-3"
       data-testid={local ? "shelf-volume-local" : "shelf-volume-library"}
     >
-      <span
-        className="ink-hand flex size-9 shrink-0 items-center justify-center text-[17px] text-foreground/40"
-        aria-hidden="true"
-      >
-        {v.sigil || "❧"}
-      </span>
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-[14.5px] font-medium text-foreground/90">
-          {v.title}
-        </p>
-        <p className="mt-0.5 line-clamp-2 text-[13px] leading-relaxed text-muted-foreground">
-          {v.axiom || v.subtitle || v.pages[0]?.paragraphs[0]?.slice(0, 120) || "…"}
-        </p>
-        <p className="mono-label mt-1.5 text-[9.5px] uppercase tracking-[0.16em] text-muted-foreground/60">
-          {(v.savedAt || "").slice(0, 10)} · {t("page {n} of {m}", { n: Math.min(v.pages.length, v.totalPages || v.pages.length), m: v.totalPages || v.pages.length })}
-          {v.ended ? ` · ${t("Read again")}` : ""}
-        </p>
+      {/* the volume's words — the title, the whisper and the keeping
+          line own their full width, with no button pressing against
+          them at narrow sizes */}
+      <div className="flex items-start gap-3">
+        <span
+          className="ink-hand flex size-9 shrink-0 items-center justify-center text-[17px] text-foreground/40"
+          aria-hidden="true"
+        >
+          {v.sigil || "❧"}
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[14.5px] font-medium text-foreground/90">
+            {v.title}
+          </p>
+          <p className="mt-0.5 line-clamp-2 text-[13px] leading-relaxed text-muted-foreground">
+            {v.axiom || v.subtitle || v.pages[0]?.paragraphs[0]?.slice(0, 120) || "…"}
+          </p>
+          <p className="mono-label mt-1.5 text-[9.5px] uppercase tracking-[0.16em] text-muted-foreground/60">
+            {(v.savedAt || "").slice(0, 10)} · {t("page {n} of {m}", { n: Math.min(v.pages.length, v.totalPages || v.pages.length), m: v.totalPages || v.pages.length })}
+            {v.ended ? ` · ${t("Read again")}` : ""}
+          </p>
+        </div>
       </div>
-      <div className="flex shrink-0 flex-col items-end gap-1.5">
+      {/* the volume's own hands — a quiet row beneath the words, so
+          the buttons never collide with the title on narrow widths */}
+      <div className="mt-2.5 flex items-center justify-end gap-1.5 border-t border-border/50 pt-2.5">
+        {local && (
+          <button
+            type="button"
+            onClick={() => forgetLocal(v.bookId)}
+            aria-label={t("Forget this volume")}
+            title={t("Forget this volume")}
+            className="focus-glow flex size-9 items-center justify-center rounded-full text-muted-foreground/60 transition-colors hover:text-foreground"
+          >
+            <X className="size-3.5" aria-hidden="true" />
+          </button>
+        )}
         <button
           type="button"
           onClick={() => resumeVolume(v)}
@@ -2631,17 +2695,6 @@ export function DreamBookView() {
           <Feather className="size-3" aria-hidden="true" />
           {v.ended ? t("Read again") : t("Continue the story")}
         </button>
-        {local && (
-          <button
-            type="button"
-            onClick={() => forgetLocal(v.bookId)}
-            aria-label={t("Forget this volume")}
-            title={t("Forget this volume")}
-            className="focus-glow text-muted-foreground/60 transition-colors hover:text-foreground"
-          >
-            <X className="size-3.5" aria-hidden="true" />
-          </button>
-        )}
       </div>
     </div>
   );

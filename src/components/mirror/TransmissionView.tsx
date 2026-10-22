@@ -308,9 +308,10 @@ function TransmissionBody({ text }: { text: string }) {
   );
 }
 
-/* ---------- the vision itself — one exchange may carry an image ------- */
-
-function ExchangeVisual({ message }: { message: ChatMessage }) {
+/* ---------- the vision itself — one exchange may carry an image -------
+   Exported: the realm's own rooms render the vision inline now — the
+   making never leaves the conversation (the working room is gone). */
+export function ExchangeVisual({ message }: { message: ChatMessage }) {
   const t = useT();
   const askScopeVisual = useMirror((s) => s.askScopeVisual);
   const activeMode = useMirror((s) => s.activeMode);

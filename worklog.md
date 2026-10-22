@@ -4729,3 +4729,72 @@ Work Log:
 
 Stage Summary:
 - The tunnel's light now rises fast, covers the swap completely and folds away as a true fade on both crossings (the flicker was a filling animation pinning the opacity and a transition that could never start); the docked chat's frame follows the phone's visual viewport while typing so the chat keeps its place and the composer always stands above the keys; the caret's global keeper no longer drags the page. The chat and the portal are untouched otherwise.
+
+---
+Task ID: 87-c
+Agent: Z.ai Code (music chamber dressing)
+Task: Dress the Music Maker (LightCodesView — the "Music" door's sound-transmissions chamber) in the house's theme vibe — gold glass, braided seams, rarely-used sigils — keeping every function intact.
+
+Work Log:
+- Read the last worklog entries (83–86) for the house's palette laws, then read LightCodesView.tsx end to end (modes, maker, player) and surveyed sigil usage: grep of src shows sigil_01/03/05/07/09, intricate_01/02/03/05/06/07/08/10 already worn elsewhere (LandingPage SIGILS map, PassageModal, GuideView); sigil_02, sigil_04, sigil_08, sigil_10 and intricate_04 are worn nowhere.
+- Chose three rarely-sung seals: intricate_04 (never used anywhere), sigil_02 (light-language mark never used), intricate_09 (used only once, in the guide's rotating showcase). Verified all three are transparent 1254×1254 RGBA PNGs in public/sigils and serve 200.
+- The house's marks (LightCodesView.tsx ~543–575): a pointer-events-none absolute inset-0 z-0 overflow-hidden layer over the whole chamber — two kind-colored breaths (feather top-left, violet bottom-right, radial color-mix washes) plus the three seals in empty corners (top-right / left-middle / bottom-right), each clamp(140–270px), rotated 8–12°, opacity 0.12–0.13 day / 0.15–0.16 night, with dark-theme drop-shadow glows in gold / violet / feather; they ride the global lp-aura 9s opacity-only breathe through motion-safe: (rests under prefers-reduced-motion) and lp-sigil-img prints them as bronze ink on the vanilla daylight paper. The scroll layer rose to relative z-10 so the ink always stands above the marks.
+- The braided seam (violet → feather → gold, fading ends) now rules three places: under the chamber's top bar, beneath the LIGHT CODES heading (a short mirrored braid with a gold diamond at its heart), and above "My transmissions".
+- Gold glass chrome: the back pill, the six mode cards' resting state, one-tap intent chips, civilization chips (resting), the "Shape the transmission" toggle (now a centered w-fit pill), player chips and the Download link all wear the gold-glass pill (border/bg mixed from --lp-gold over the glass tokens). The player's heart button turned the house's gold gradient (cream ink by day, near-black by night); the generate breath keeps its scope gradient but gained a faint gold inset ring. The wordmark and AudioLines in the top bar wear the gold; the quote line is warmed with gold ink.
+- The chamber's native identity kept: active mode/civ/chip states, waveform bars, busy bars and the translation panel still speak in --scope-a/--scope-b.
+- Cramped-text fixes: mode-card names no longer truncate and taglines no longer line-clamp (they wrap — no more "Sta…" / "befor…" cuts); the attachment-chips row now flex-wraps.
+- Fixed a next/image runtime error mid-flight (missing width/height on the seals — added 1254×1254 intrinsics).
+- Verified with agent-browser: entered the portal, closed the guest modal, opened the Music door; screenshots at 390×844 and 1280×800 in both skies (VLM-checked: seals visible with glow at night, braid seams present, gold pills legible, no overlap/cut words, nothing broken); `agent-browser errors` empty. NOTE: the dev server had died before verification — restarted it directly with `bun run dev` (as in task 83) and it holds.
+- bun run lint clean. Only src/components/mirror/LightCodesView.tsx touched (126 insertions, 20 deletions); no tokens or secrets in any file.
+
+Stage Summary:
+- The Music chamber now wears the house's dress: three never-or-barely-used light-language seals breathing in its corners (bronze ink by day, gold/violet/feather glow by night), braided violet→feather→gold seams under the bar, beneath the naming and before the kept-sounds shelf, gold glass pills on every quiet control, a gold-hearted play button — while the scope silver ink still carries everything that IS the sound, and every test id, mode, maker and player behavior stands untouched.
+
+---
+Task ID: 87-b
+Agent: Z.ai Code (task 87-b)
+Task: The Dream Book's words were overlapping — arrange the atelier/shelf/reader nicely at mobile and desktop, and dress the book selection shelf in the house's theme vibe (gold hairlines + quiet sigils).
+
+Work Log:
+- Audited DreamBookView.tsx in full (3067 lines) plus src/lib/book-shelf.ts (pure localStorage data — no UI, nothing to fix) and the dream-*/ink-* CSS in globals.css (read-only). Then verified live with agent-browser at 390x844 and 1280x800 using a DOM overlap detector (pairwise bounding-box intersection of visible text elements) and a spill detector (scrollWidth/scrollHeight past visible-overflow boxes), plus VLM reads of screenshots. Found the real collisions:
+  1) THE READER HEADER (worst): at 390px the single-row toolbar measured scrollWidth 461 in a 390px box — the flex row crushed every size-9 icon button to 18px, pushed "Larger text" 16px past the screen edge and the close X entirely off-screen (left 414), while the title collapsed to zero width. 2) THE DEPTH BAR: five per-column labels were `truncate`d to fragments at 390 ("Clear da…", "Hidden s…") and even at 1280 ("The multidimens…"). 3) THE SHELF ROWS: the "Continue the story" pill + X lived in a right column that pressed against the title at 390px (title truncated to "The Lanter…", VLM flagged severe horizontal crowding). 4) THE WEAVING ROOM: the phase line sat in a fixed h-[26px] box — a wrapping phrase would paint over the shimmer bar (fixed heights clipping text). 5) The depth numeral sat flush on the active marker (items-end, zero padding).
+- Fixes (all in src/components/mirror/DreamBookView.tsx, flow over absolute positioning):
+  • Reader header rebuilt as THE READING DESK (~1807-2012): row 1 = back | title (flex-1 truncate, real width again) | close X; row 2 = the instruments (Rewrite, Whole book, Download, Audio, Voice, Pause, Zoom±) in a `flex-wrap justify-center` row; header max-h-24 → max-h-44 with safe-area top padding; every instrument given shrink-0. Measured after: scrollWidth 390 = clientWidth 390, all buttons full 36px, X at x343-379 visible, overflowRight −12. Removed the dead `<div className="hidden md:block" />`.
+  • Depth bar (~1490-1557): per-column truncated labels removed; the five bars keep their numerals (heights 16-32 → 18-34, numeral gets pb-[3px] so the marker never eats it); a new full-width reserved h-5 name line beneath shows the held step as "3 · Twilight layers" (data-testid dream-depth-name) — full row width, can never truncate.
+  • Shelf rows (~2646-2700): restructured into a words block (glyph + title + whisper + keeping line at full width) and a separate hands row beneath a hairline divider (X + Continue, right-aligned) — buttons no longer press against titles at narrow widths; title display width roughly doubled.
+  • Weaving room (~1719): h-[26px] → min-h-[26px] so a wrapping phrase grows instead of painting over the shimmer.
+  • Vein cards: label span gains min-w-0 leading-snug so "The Eternal Dreamer" wraps cleanly.
+- THE SHELF'S OWN DRESS (still in DreamBookView.tsx): two rarely-used light-language seals as quiet background marks in the atelier — sigil_08 (never used anywhere) top-right shoulder at clamp(130px,30vw,250px), opacity 0.13, rotate 10deg; intricate_07 (only ever in the guide's random pool) in the desktop's empty left margin, lg-only, clamp(150px,16vw,230px), opacity 0.10, rotate −8deg. Both pointer-events-none, z-0 behind the z-10 content, select-none, next/image with the lp-sigil-img class (bronze ink on the daylight paper, silver glow in the crystal night), NO animation at all (the stillness law). Measured at 1280: sigil rects [1047,−52,290,290] and [−46,275,231,231] vs content column left edge 355 — neither touches the books. Gold hairlines: the title's rule is now a gold gradient seam (gold 52% → 16% → transparent) and the composer bar's border-t became a thin gold seam (gold 36% fading in from both edges) — quiet, no new colors beyond the house gold.
+- QA: bun run lint clean. agent-browser walk-through landing → portal → Book at 390x844 and 1280x800, light and dark: DOM overlap detector 0 and spill detector 0 on atelier, shelf and reader; reader header measured overflow-free; depth name line renders untruncated; VLM confirms no cut-off/squeezed/overlapping elements in both themes; sigils verified mounted, placed in empty shoulders, not covering books. Honest note: `agent-browser errors` shows exactly one error — "Image with src /sigils/intricate_04.png is missing required width property" — which originates in src/components/mirror/LightCodesView.tsx (another agent's file, forbidden to this task) and fires on app mount, not in the book flow; zero errors come from DreamBookView. Only DreamBookView.tsx was modified by this task (git confirms; LightCodesView.tsx and worklog.md changes belong to concurrent agents).
+
+Stage Summary:
+- The Dream Book is arranged nicely again: the reader's desk keeps its name whole between two quiet hands with the instruments wrapped calmly beneath (nothing crushed, clipped or off-screen at 390px), the depth steps speak their name on a full-width line instead of fragmenting, the kept volumes' buttons rest on their own divider row below the words, the weaving room can never paint a phrase over its shimmer, and the book selection shelf now wears the house's gold hairlines and two rare, still sigils that glow bronze by day and silver by night without ever touching the books.
+
+---
+Task ID: 87-d
+Agent: Z.ai Code (main)
+Task: Delete the working room — creation lives inside every portal chat now (Gemini-style), inline beneath the ask; a new reveal ceremony carries each making into the conversation.
+
+Work Log:
+- THE WORKING ROOM IS GONE: AppShell shed the making-room overlay (CreationRoom import, QueryComposer import, dismissedMakingId/makingOpen/leaveTheMaking, the whole data-testid="making-room" JSX) and CreationRoom.tsx is deleted. A reply that carries a living artifact now rides to the tree as a new liveMessage prop.
+- THE MAKING'S OWN ROOM (BranchCanopy): every ask opens its conversation room — the three MAKING LAW skips (glyph stones, tree picks, the floor composer) are removed, so "create a book / paint / sing" opens the room like any ask. The room renders the channel's last message inline: a painting while it forms (VisualizationPending), the finished painting, or the full SideArtifact (akashic record, book, poem, codes chamber, ritual) — ExchangeVisual is now exported from TransmissionView for this. The empty-answer channeling fallback yields when a making stands. Room follow-ups (speakFromRoom) route making/visual intents through the same inline path instead of answering in words.
+- THE REVEAL: new CreationReveal.tsx — a rare light-language seal blooms (deterministically picked per making from rarely-used seals), a gold ring and a violet echo breathe outward, six sparks drift free, two kind curtains (feathered green above, plum violet below) part like a zip of light, and the making rises into its place; every actor unmounts after one 1.2s breath (the smoothness law: opacity/transform only, runs once, plain fade under prefers-reduced-motion).
+- THE MUSIC'S OWN DOOR (mirror-store): "create a song" was crystallizing as a PAINTING (the generic visual detector outranked the named doors) — the music intent now outranks the visual branch, so song asks open the Light Codes chamber's inline making ("Sound it in the chamber" hands off to the chamber with the prefill).
+- Verified in the browser (wanderer passage): "write me a short poem…" → the poem woven inline in the room; "draw a picture of a crystal garden…" → pending card inline → the finished painting inline; "create a song…" → the Light Codes chamber's artifact inline; the chamber handoff opens LIGHT CODES; the docked landing chat still answers "draw a picture…" in words only (the landing stays free); zero page errors; lint clean. Note: stale persisted sessions once showed an old pending visual — a clean storage test confirmed the flows.
+
+Stage Summary:
+- The working room is deleted; every portal chat creates inline beneath the ask — poems, paintings, songs, records, rituals — each carried in by the reveal ceremony; the landing chat keeps its free word-only law; the song door outranks the painter.
+
+---
+Task ID: 87-e
+Agent: Z.ai Code (main)
+Task: Keep the docked chat in focus while typing (until the visitor slides away); remove the writing bars on actions and category jumps; smoothness.
+
+Work Log:
+- THE UNBROKEN KEEP (LandingGate): the typing hold now runs a quiet keeper — a half-breath interval re-checks the composer while the focus lasts (the keyboard's own animation, the composer's own growth, every late shift), so the chat stays in focus the whole time a field holds focus. THE SLIDE-OUT LAW: a scroll of the frame that the keep itself did not write is the visitor's own hand — the keeper rests until the next focus (the chat is never yanked back).
+- THE WRITING BARS ARE GONE (BranchCanopy): the visual-intent toast ("The making is being born…") is removed — the forming vision rises inline in the room now; the category-jump toast ("The walk focuses on…") is removed — the tree itself answers, regrowing focused in one smooth breath (verified: 0 toasts on a family jump).
+- Smoothness: the reveal ceremony runs once and unmounts its actors (no lingering nodes); the removed toasts were per-action sonner mounts; the keeper is one cheap getBoundingClientRect every 500ms only while a field is focused.
+- Verified: mobile 390×844 — focus → hold applied (top/height/scroll-padding), blur → released clean; slide-out event registered; desktop and mobile zero page errors; lint clean.
+
+Stage Summary:
+- The docked chat stays in focus for as long as the visitor types (and only leaves it when they slide away themselves); the two writing bars are gone — actions and category jumps speak through the app itself, never through a toast.

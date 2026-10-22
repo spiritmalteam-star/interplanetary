@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Coins, Maximize2, Minimize2, TreeDeciduous } from "lucide-react";
+import { useEffect } from "react";
+import { Coins, Maximize2, Minimize2 } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { setLearningIdentity } from "@/lib/learning-branches";
 import { useT } from "@/lib/i18n";
@@ -11,8 +11,6 @@ import { WalletGuard } from "./WalletGuard";
 import { CreditBadge } from "./CreditBadge";
 import { BranchCanopy } from "./BranchCanopy";
 import { ReplyBranches } from "./ReplyBranches";
-import { CreationRoom } from "./CreationRoom";
-import { QueryComposer } from "./QueryComposer";
 import { MirrorOS } from "./MirrorOS";
 import { ParticleX } from "./ParticleX";
 import { ArtX } from "./ArtX";
@@ -116,35 +114,14 @@ function AppShellViews({
     channel.messages.length > 0
       ? channel.messages[channel.messages.length - 1]
       : null;
-  const returnToObservatory = useMirror((s) => s.returnToObservatory);
 
-  /* THE CREATION ROOM — a reply that carries a living artifact (a book
-     being woven, a record, a card, a song, a poem, a painting) rises
-     as its own room above the tree, where the artifact conducts its
-     own generation; a plain answer never does — it lives in the
-     tree's own room. THE REALM'S VIEW — the tree stands in the
-     observatory's own view, so the observatory rises the making too:
-     a whisper that crystallized into a painting finds its room here
-     instead of a zoom that would wait forever. THE ROOM STAYS WHILE
-     IT FORMS — an ask sent from inside the room keeps the room standing
-     (the newest work rests at the top while the next one forms beneath
-     it); a plain view still walks back to the tree. THE BACK HAND'S
-     LAW — once the visitor leaves a making, it rests: the same
-     artifact never rises twice, a NEW one always does. */
-  const [dismissedMakingId, setDismissedMakingId] = useState<string | null>(
-    null
-  );
-  const makingOpen =
-    (view === "transmission" || view === "observatory") &&
-    (channel.status === "ready" ||
-      (channel.status === "loading" && view === "transmission")) &&
-    !!lastChannelMsg &&
-    !!(lastChannelMsg.sideArtifact || lastChannelMsg.artifact) &&
-    dismissedMakingId !== lastChannelMsg.id;
-  const leaveTheMaking = () => {
-    setDismissedMakingId(lastChannelMsg?.id ?? null);
-    returnToObservatory();
-  };
+  /* THE WORKING ROOM IS GONE — a reply that carries a living artifact
+     (a book being woven, a record, a card, a song, a poem, a painting)
+     now rises INLINE inside the realm's own conversation room, exactly
+     where the ask was spoken — the way the generic ais serve their
+     makers. The channel's last message rides to the tree as
+     liveMessage; the room reads the making from it. The landing's
+     docked chat stays free: its floor never touches the channel. */
 
   /* Restore persisted preferences and greet the passage (the visitor's
      account, if one is held, and today's remaining transmissions). */
@@ -425,6 +402,7 @@ function AppShellViews({
         }
         liveAnswer={channelLoading ? null : lastChannelMsg?.text || null}
         liveError={channel.error}
+        liveMessage={lastChannelMsg}
         headerExtra={
           /* THE CROWN'S OWN PURSE — the theme has moved to the crown's
              centre: the house's seal (the logo) toggles the light. */
@@ -485,40 +463,6 @@ function AppShellViews({
           disabled={channelLoading}
           onPick={() => {}}
         />
-      )}
-
-      {/* THE CREATION ROOM — books, records, cards, songs, poems,
-          paintings: the makings rise above the tree, the newest work
-          at the top and the earlier ones resting beneath it; one hand
-          returns to the walk. The room's shell is its first breath —
-          the works unfold inside it, never the whole thread at once. */}
-      {makingOpen && (
-        <div
-          className="absolute inset-0 z-40 flex flex-col bg-background"
-          data-testid="making-room"
-        >
-          <div className="flex shrink-0 items-center gap-2 border-b hairline px-3 py-2 sm:px-5">
-            <button
-              type="button"
-              onClick={leaveTheMaking}
-              aria-label={t("Back to the walk")}
-              title={t("Back to the walk")}
-              data-testid="making-room-back"
-              className="focus-glow flex size-8 items-center justify-center rounded-full border hairline text-muted-foreground transition-colors duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
-            >
-              <TreeDeciduous className="size-4" aria-hidden="true" />
-            </button>
-            <p className="mono-label text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-              {t("The creation room")}
-            </p>
-          </div>
-          <div className="nice-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain">
-            <div className="mx-auto w-full max-w-[760px] px-4 pb-4 sm:px-6">
-              <CreationRoom />
-            </div>
-          </div>
-          <QueryComposer />
-        </div>
       )}
 
       {/* the reading rooms' own modals — every door keeps its keys */}

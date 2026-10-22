@@ -103,6 +103,10 @@ import { MirrorChanneling, SCOPE_CHANNELING } from "./MirrorChanneling";
 import { ExpansionRing } from "./ExpansionMirror";
 import { LiveCall } from "./LiveCall";
 import { ChatInputExtras, AttachmentChips } from "./ChatInputExtras";
+import { CreationReveal } from "./CreationReveal";
+import { ExchangeVisual } from "./TransmissionView";
+import { SideArtifact } from "./ChatArtifacts";
+import type { ChatMessage } from "@/lib/mirror-store";
 import type { LiveScopeKey } from "@/lib/live-scopes";
 import { useT } from "@/lib/i18n";
 import { useMirror } from "@/lib/mirror-store";
@@ -1907,6 +1911,7 @@ export function BranchCanopy({
   liveAnswer,
   liveLoading,
   liveError,
+  liveMessage,
   onLatch,
   realm,
   bare,
@@ -1940,6 +1945,12 @@ export function BranchCanopy({
   liveLoading?: boolean;
   /** The channel's own error — the room speaks it instead of folding. */
   liveError?: string | null;
+  /** THE CHANNEL'S LAST WORD — the full message the channel last
+      appended, artifacts and all: the room reads it so a making (a
+      painting, a woven book, a song, a record) rises INLINE in the
+      conversation, exactly where the ask was spoken — the working
+      room is gone, the chat is where everything is made now. */
+  liveMessage?: ChatMessage | null;
   /** THE LATCH — true while the answer lives in the tree (the zoom);
       the chat keeps its rest strip resting while the walk holds. */
   onLatch?: (latched: boolean) => void;
@@ -2082,9 +2093,11 @@ export function BranchCanopy({
        wait forever: the making rises in its own room above the tree
        when it stands, and one quiet word speaks the wait. */
     if (isVisualIntent(liveKey)) {
-      import("sonner").then(({ toast }) =>
-        toast(t("The making is being born — its room rises when it stands."))
-      );
+      /* THE MAKING'S OWN ROOM — a visual ask opens the same conversation
+         room as every ask: the forming vision rises inline inside it
+         (the forming card is the room's own answer) — no toast, no
+         separate room, no waiting outside the walk. */
+      if (zoom?.q !== liveKey) setZoom({ q: liveKey, move: null });
     } else if (zoom?.q !== liveKey) setZoom({ q: liveKey, move: null });
   } else if (!liveLoading && seenLiveKey !== null) {
     /* the next transmission zooms again — even the very same words */
@@ -2354,9 +2367,10 @@ export function BranchCanopy({
         [...ln.filter((l) => l.text !== text), { id: null, text }].slice(-10)
       );
       zoomOpenedAtRef.current = Date.now();
-      const makesSomething =
-        detectArtifactIntent(text) !== null || isVisualIntent(text);
-      if (!makesSomething) setZoom({ q: text, move });
+      /* THE MAKING'S OWN ROOM — every ask opens its conversation room,
+         makings included: the creation rises inline beneath the ask
+         (the working room is gone — the chat is the workshop now). */
+      setZoom({ q: text, move });
       onPick(text, askScopeFor(text));
     },
     [
@@ -3216,15 +3230,12 @@ export function BranchCanopy({
         }
       }
       /* THE ZOOM — the answer rises inside the tree, instantly.
-         THE MAKING LAW: when the whisper asks the laboratory to MAKE
-         something (a record, a book, a card, a song, a poem, a
-         painting) the making is born in its own room above the tree —
-         the room rises by itself, so the walk never flashes an empty
-         answer here. */
+         THE MAKING'S OWN ROOM — makings included: a whisper that asks
+         the laboratory to MAKE something opens its conversation room
+         like every ask, and the creation rises inline beneath the ask
+         (the working room is gone — the chat is the workshop now). */
       zoomOpenedAtRef.current = Date.now();
-      const makesSomething =
-        detectArtifactIntent(node.text) !== null || isVisualIntent(node.text);
-      if (!makesSomething) setZoom({ q: node.text, move: node.movement });
+      setZoom({ q: node.text, move: node.movement });
       onPick(node.text, askScopeFor(node.text));
     },
     [
@@ -3361,9 +3372,9 @@ export function BranchCanopy({
         }
       }
       zoomOpenedAtRef.current = Date.now();
-      const makesSomething =
-        detectArtifactIntent(text) !== null || isVisualIntent(text);
-      if (!makesSomething) setZoom({ q: text, move });
+      /* THE MAKING'S OWN ROOM — every ask opens its conversation room,
+         makings included: the creation rises inline beneath the ask. */
+      setZoom({ q: text, move });
       /* THE LANDING'S OWN LAW — docked in the threshold the ask is
          always the reflection mirror itself: no category, no scope —
          the mirror's humble voice answers from the open floor. The
@@ -3543,6 +3554,15 @@ export function BranchCanopy({
      THE ROOM NEVER FOLDS — an ask that could not cross shows its
      error right here (the chat behind holds nothing anymore). */
   const liveBelongsToRoom = !!zoomQ && liveQuestion === zoomQ;
+  /* THE MAKING IN THE ROOM — the channel's last message, when it is
+     this room's own ask, carries the making: the room renders it
+     inline, exactly where the ask was spoken. The working room is
+     gone — the conversation is where everything is made now (the
+     landing's chat stays free: bare never reads the channel). */
+  const roomMessage = !bare && liveBelongsToRoom ? liveMessage ?? null : null;
+  const roomMaking =
+    !!roomMessage &&
+    !!(roomMessage.sideArtifact || roomMessage.artifact || roomMessage.visual);
   const liveAnswerText = liveBelongsToRoom ? (liveAnswer ?? "").trim() : "";
   const roomError =
     liveBelongsToRoom || !liveLoading ? liveError ?? null : null;
@@ -3696,6 +3716,19 @@ export function BranchCanopy({
     async (text: string, attachments?: ChatAttachment[]) => {
       const q = text.trim();
       if (disabled || threadBusy || !q || !zoom) return;
+      /* THE MAKING'S OWN ROOM — a follow-up that asks for a MAKING (a
+         painting, a woven book, a song, a record, a ritual) never
+         speaks as plain words: it opens its own conversation room and
+         rides the channel like every ask, and the creation rises
+         inline beneath it — the chat is the workshop now, in every
+         room, without ever walking to a working room. (The landing's
+         chat keeps its own law: the free floor answers in words.) */
+      if (!bare && (detectArtifactIntent(q) !== null || isVisualIntent(q))) {
+        zoomOpenedAtRef.current = Date.now();
+        setZoom({ q, move: null });
+        onPick(q, askScopeFor(q), attachments);
+        return;
+      }
       const roomQ = zoom.q;
       if (bare) bareRoomRef.current = true;
       /* THE FAMILY'S VOICE — the room speaks through the door of the
@@ -3763,12 +3796,14 @@ export function BranchCanopy({
     [
       answer,
       applyRoomTurn,
+      askScopeFor,
       bare,
       category,
       disabled,
       familyKeyByText,
       language,
       lineage,
+      onPick,
       threadBusy,
       zoom,
     ]
@@ -4436,11 +4471,9 @@ export function BranchCanopy({
                             setCrownMenu(null);
                             if (focused) return;
                             applyMix({ on: [f.key], weights: { [f.key]: 1 } });
-                            import("sonner").then(({ toast }) =>
-                              toast(t("The walk focuses on {name}", {
-                                name: t(familyLabelKeys[f.key] ?? f.key),
-                              }))
-                            );
+                            /* THE QUIET FOCUS — no toast, no bar: the tree
+                               itself answers — it regrows focused on the
+                               chosen nature in one smooth breath. */
                           }}
                           aria-pressed={focused}
                           title={t(familyLabelKeys[f.key] ?? f.key)}
@@ -5327,7 +5360,7 @@ export function BranchCanopy({
                         {displayError}
                       </p>
                     </div>
-                  ) : (
+                  ) : roomMaking && revealStage >= 2 ? null : (
                     revealStage >= 2 && (
                       <div className="py-5 text-muted-foreground">
                         <MirrorChanneling
@@ -5341,6 +5374,35 @@ export function BranchCanopy({
                         />
                       </div>
                     )
+                  )}
+
+                  {/* THE MAKING IN THE ROOM — the creation rises INLINE,
+                      inside its own breath of light: a rare seal blooms,
+                      the two kind curtains part, and the making takes its
+                      place in the conversation — a painting while it
+                      forms, a woven book, a song, a record, a ritual,
+                      exactly where the ask was spoken. The working room
+                      is gone; the chat is where everything is made now,
+                      the way the generic ais serve their makers. */}
+                  {roomMaking && roomMessage && revealStage >= 2 && (
+                    <CreationReveal
+                      signature={`${roomMessage.sideArtifact?.kind ?? "visual"}-${roomMessage.id}`}
+                      testIdPrefix={`${testIdPrefix}-making`}
+                    >
+                      {roomMessage.sideArtifact &&
+                      !roomMessage.artifact &&
+                      !roomMessage.visual ? (
+                        <SideArtifact
+                          kind={roomMessage.sideArtifact.kind}
+                          resonance={roomMessage.sideArtifact.resonance}
+                          resume={roomMessage.sideArtifact.resume}
+                          themes={roomMessage.sideArtifact.themes}
+                          tool={roomMessage.sideArtifact.tool}
+                        />
+                      ) : (
+                        <ExchangeVisual message={roomMessage} />
+                      )}
+                    </CreationReveal>
                   )}
 
                   {/* STAGE 3 — the narrator's honest status: the loading

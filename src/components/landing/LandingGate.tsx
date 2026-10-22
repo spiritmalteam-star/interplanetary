@@ -220,7 +220,13 @@ export default function LandingGate() {
      now ends exactly where the keys begin, so the frame never leaps
      away with the keyboard's pan (the chat keeps its place) and the
      caret's own keeping — the browser's and the chamber's — stands the
-     composer just above the keys: what is typed is always seen. On
+     composer just above the keys: what is typed is always seen.
+     THE UNBROKEN KEEP — a quiet keeper re-checks the composer every
+     half-breath while the focus lasts (the keyboard's own animation,
+     the composer's own growth, every late shift), so the chat stays in
+     focus the whole time. THE SLIDE-OUT LAW — the keeper only serves
+     while the visitor stays with the chat: the moment their own hand
+     scrolls the frame away, the keeper rests until the next focus. On
      blur the frame returns to the whole screen. */
   useEffect(() => {
     if (phase !== "landing") return;
@@ -231,12 +237,21 @@ export default function LandingGate() {
     if (!vv) return;
 
     let focused = false;
+    let keeper: number | undefined;
+    let selfScrolling = false;
+    let slidOut = false;
 
-    const apply = () => {
+    const isEditable = (el: HTMLElement) =>
+      el.tagName === "TEXTAREA" ||
+      el.tagName === "INPUT" ||
+      el.isContentEditable;
+
+    const keep = () => {
       if (!focused) return;
       root.style.top = `${vv.offsetTop}px`;
       root.style.height = `${vv.height}px`;
       root.style.scrollPaddingBottom = "18px";
+      if (slidOut) return;
       /* THE GENTLE KEEP — the frame's scroll lifts by only what the
          keys actually buried: the page never leaps half a screen, and
          once the composer stands clear (need ≤ 0) not a pixel moves. */
@@ -244,31 +259,40 @@ export default function LandingGate() {
       if (
         el instanceof HTMLElement &&
         lens.contains(el) &&
-        (el.tagName === "TEXTAREA" ||
-          el.tagName === "INPUT" ||
-          el.isContentEditable)
+        isEditable(el)
       ) {
         const r = el.getBoundingClientRect();
         const need = Math.ceil(r.bottom - vv.offsetTop + 14 - vv.height);
-        if (need > 0) root.scrollTop += need;
+        if (need > 0) {
+          selfScrolling = true;
+          root.scrollTop += need;
+          window.setTimeout(() => {
+            selfScrolling = false;
+          }, 120);
+        }
       }
+    };
+    const startKeeper = () => {
+      window.clearInterval(keeper);
+      keeper = window.setInterval(keep, 500);
     };
     const release = () => {
       focused = false;
+      slidOut = false;
+      window.clearInterval(keeper);
+      keeper = undefined;
       root.style.top = "";
       root.style.height = "";
       root.style.scrollPaddingBottom = "";
     };
-    const isField = (el: EventTarget | null): el is HTMLElement => {
-      if (!(el instanceof HTMLElement)) return false;
-      const tag = el.tagName;
-      return tag === "TEXTAREA" || tag === "INPUT" || el.isContentEditable;
-    };
     const onFocusIn = (e: FocusEvent) => {
       const el = e.target;
-      if (!isField(el) || !lens.contains(el)) return;
+      if (!(el instanceof HTMLElement) || !isEditable(el)) return;
+      if (!lens.contains(el)) return;
       focused = true;
-      apply();
+      slidOut = false;
+      keep();
+      startKeeper();
     };
     const onFocusOut = (e: FocusEvent) => {
       if (!focused) return;
@@ -276,15 +300,25 @@ export default function LandingGate() {
       if (next instanceof Node && lens.contains(next)) return;
       release();
     };
-    vv.addEventListener("resize", apply);
-    vv.addEventListener("scroll", apply);
+    /* THE SLIDE-OUT LAW — a scroll of the frame that our own keep did
+       not write is the visitor's own hand: they slid away from the
+       chat on purpose, and the keeper rests (the next focus begins
+       the keeping again). */
+    const onRootScroll = () => {
+      if (focused && !selfScrolling) slidOut = true;
+    };
+    vv.addEventListener("resize", keep);
+    vv.addEventListener("scroll", keep);
+    root.addEventListener("scroll", onRootScroll, { passive: true });
     window.addEventListener("focusin", onFocusIn);
     window.addEventListener("focusout", onFocusOut);
     return () => {
-      vv.removeEventListener("resize", apply);
-      vv.removeEventListener("scroll", apply);
+      vv.removeEventListener("resize", keep);
+      vv.removeEventListener("scroll", keep);
+      root.removeEventListener("scroll", onRootScroll);
       window.removeEventListener("focusin", onFocusIn);
       window.removeEventListener("focusout", onFocusOut);
+      window.clearInterval(keeper);
       release();
     };
   }, [phase, geo, Chamber]);

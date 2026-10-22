@@ -17,6 +17,7 @@ import {
   Wand2,
   X,
 } from "lucide-react";
+import Image from "next/image";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import {
@@ -40,6 +41,44 @@ const RENDERING_PHRASES = [
   "Frequencies are finding their places…",
   "The sound is being woven — hold still…",
 ];
+
+/* ------------------------- the house's dress ------------------------- */
+/*  The musical chamber keeps its own silver ink (--scope-a/--scope-b)
+    for everything that IS the sound — modes, waveform, the generate
+    breath — while the room's quiet chrome wears the house palette:
+    gold glass pills, the braided seam (plum violet → feather green →
+    gold) and three rarely-sung light-language seals in the corners.  */
+
+/** The braided seam — a section rule woven of the two kind colors and
+ *  the gold, fading at both ends so it never cuts the page. */
+const BRAID_RULE =
+  "bg-[linear-gradient(90deg,transparent_0%,color-mix(in_srgb,var(--lp-violet)_55%,transparent)_22%,color-mix(in_srgb,var(--lp-feather)_52%,transparent)_50%,color-mix(in_srgb,var(--lp-gold)_72%,transparent)_78%,transparent_100%)]";
+
+/** Gold glass — the pill chrome of the chamber's quiet controls. */
+const GOLD_PILL =
+  "border-[color-mix(in_srgb,var(--lp-gold)_32%,var(--hairline))] bg-[color-mix(in_srgb,var(--lp-gold)_7%,var(--glass-bg-soft))] hover:border-[color-mix(in_srgb,var(--lp-gold)_58%,transparent)]";
+
+/** A rarely-used light-language seal resting in an empty corner —
+ *  printed as warm bronze ink on the vanilla daylight paper through
+ *  lp-sigil-img, glowing softly in the crystal night. It never takes
+ *  a touch and never covers a control. */
+function SigilMark({ src, className }: { src: string; className: string }) {
+  return (
+    <Image
+      src={src}
+      alt=""
+      aria-hidden="true"
+      draggable={false}
+      loading="lazy"
+      width={1254}
+      height={1254}
+      className={cn(
+        "lp-sigil-img pointer-events-none absolute select-none opacity-[0.13] dark:opacity-[0.16]",
+        className
+      )}
+    />
+  );
+}
 
 /** A tiny deterministic pseudo-wave, so every track has its own face. */
 function waveHeights(seed: string, bars = 34): number[] {
@@ -84,23 +123,26 @@ function ModeCard({
         "focus-glow group relative flex flex-col gap-0.5 rounded-xl border px-3 py-2.5 text-left transition-all duration-300",
         active
           ? "border-[color-mix(in_srgb,var(--scope-a)_55%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_10%,transparent)] glow-sm"
-          : "border-[color-mix(in_srgb,var(--hairline)_80%,transparent)] hover:border-[var(--hairline-hover)] hover:bg-[color-mix(in_srgb,var(--scope-a)_5%,transparent)]"
+          : cn(
+              GOLD_PILL,
+              "bg-[color-mix(in_srgb,var(--lp-gold)_5%,var(--glass-bg-soft))] hover:bg-[color-mix(in_srgb,var(--lp-gold)_9%,var(--glass-bg-soft))]"
+            )
       )}
     >
       <span className="flex items-center gap-1.5">
-        <span className="mono-label text-[10px] text-muted-foreground/60">
+        <span className="mono-label text-[10px] text-[color-mix(in_srgb,var(--lp-gold)_60%,var(--muted-foreground))]">
           {mode.n}
         </span>
         <span
           className={cn(
-            "truncate text-[13.5px] font-semibold tracking-wide",
+            "text-[13.5px] font-semibold leading-tight tracking-wide",
             active ? "text-[var(--scope-a)]" : "text-foreground/85"
           )}
         >
           {t(mode.name)}
         </span>
       </span>
-      <span className="line-clamp-2 text-[12px] leading-snug text-muted-foreground">
+      <span className="text-[12px] leading-snug text-muted-foreground">
         {t(mode.tagline)}
       </span>
     </button>
@@ -247,7 +289,7 @@ function Player() {
           onClick={toggle}
           data-testid="lc-play"
           aria-label={playing ? t("Pause") : t("Play")}
-          className="focus-glow flex size-10 items-center justify-center rounded-full bg-foreground text-background transition-all duration-300 hover:-translate-y-px"
+          className="focus-glow flex size-10 items-center justify-center rounded-full bg-gradient-to-r from-[var(--lp-gold)] to-[color-mix(in_srgb,var(--lp-gold)_58%,var(--lp-violet))] text-[#f8f3e6] shadow-[0_4px_20px_-8px_color-mix(in_srgb,var(--lp-gold)_85%,transparent)] transition-all duration-300 hover:-translate-y-px dark:to-[color-mix(in_srgb,var(--lp-gold)_78%,white)] dark:text-[#2a2313]"
         >
           {playing ? (
             <Pause className="size-4" aria-hidden="true" />
@@ -273,7 +315,10 @@ function Player() {
           target="_blank"
           rel="noreferrer"
           data-testid="lc-download"
-          className="focus-glow flex h-8 items-center gap-1.5 rounded-full border px-2.5 text-[12.5px] text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+          className={cn(
+            "focus-glow flex h-8 items-center gap-1.5 rounded-full border px-2.5 text-[12.5px] text-muted-foreground transition-all duration-300 hover:text-foreground",
+            GOLD_PILL
+          )}
         >
           <Download className="size-3" aria-hidden="true" />
           {t("Download")}
@@ -364,7 +409,10 @@ function PlayerChip({
         "focus-glow flex h-8 items-center gap-1.5 rounded-full border px-2.5 text-[12.5px] transition-all duration-300",
         active
           ? "border-[color-mix(in_srgb,var(--scope-a)_55%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_12%,transparent)] text-[var(--scope-a)]"
-          : "border-[color-mix(in_srgb,var(--hairline)_80%,transparent)] text-muted-foreground hover:border-[var(--hairline-hover)] hover:text-foreground"
+          : cn(
+              GOLD_PILL,
+              "text-muted-foreground hover:text-foreground"
+            )
       )}
     >
       <Icon className="size-3" aria-hidden="true" />
@@ -495,13 +543,49 @@ export function LightCodesView() {
 
   return (
     <div className="scope-lightcodes relative flex h-full flex-col">
+      {/* THE HOUSE'S MARKS — two kind-colored breaths and three rarely-sung
+          light-language seals resting in the chamber's empty corners:
+          bronze ink on the vanilla daylight paper, a soft glow in the
+          crystal night. They breathe on one slow opacity cycle, never
+          take a touch and never cover a control. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 z-0 overflow-hidden motion-safe:[animation:lp-aura_9s_ease-in-out_infinite]"
+      >
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage:
+              "radial-gradient(42% 30% at 0% 10%, color-mix(in srgb, var(--lp-feather) 11%, transparent), transparent 70%), radial-gradient(40% 30% at 100% 92%, color-mix(in srgb, var(--lp-violet) 13%, transparent), transparent 72%)",
+          }}
+        />
+        {/* intricate_04 — unsung anywhere else in the realm */}
+        <SigilMark
+          src="/sigils/intricate_04.png"
+          className="-right-8 -top-9 size-[clamp(140px,26vw,250px)] [transform:rotate(12deg)] opacity-[0.12] sm:-right-4 dark:opacity-[0.16] dark:[filter:drop-shadow(0_0_18px_color-mix(in_srgb,var(--lp-gold)_55%,transparent))]"
+        />
+        {/* sigil_02 — a light-language mark no other room has worn */}
+        <SigilMark
+          src="/sigils/sigil_02.png"
+          className="-left-12 top-[38%] size-[clamp(150px,24vw,270px)] [transform:rotate(-8deg)] opacity-[0.12] sm:-left-8 dark:opacity-[0.15] dark:[filter:drop-shadow(0_0_18px_color-mix(in_srgb,var(--lp-violet)_55%,transparent))]"
+        />
+        {/* intricate_09 — sung once, long ago, in the guide's pages */}
+        <SigilMark
+          src="/sigils/intricate_09.png"
+          className="-bottom-10 -right-8 size-[clamp(140px,24vw,260px)] [transform:rotate(9deg)] opacity-[0.13] sm:-right-5 dark:opacity-[0.16] dark:[filter:drop-shadow(0_0_18px_color-mix(in_srgb,var(--lp-feather)_60%,transparent))]"
+        />
+      </div>
+
       {/* ---------- top bar ---------- */}
-      <header className="relative z-30 shrink-0 border-b hairline bg-[var(--glass-bg)] backdrop-blur-md">
+      <header className="relative z-30 shrink-0 bg-[var(--glass-bg)] backdrop-blur-md">
         <div className="bar-safe flex items-center justify-between gap-2 px-3 sm:px-5">
           <button
             type="button"
             onClick={exitLightCodes}
-            className="focus-glow group flex h-9 items-center gap-2 rounded-full border hairline px-3 text-[15px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground sm:px-3.5"
+            className={cn(
+              "focus-glow group flex h-9 items-center gap-2 rounded-full border px-3 text-[15px] font-medium text-muted-foreground transition-all duration-300 hover:text-foreground sm:px-3.5",
+              GOLD_PILL
+            )}
           >
             <ArrowLeft
               className="size-3.5 transition-transform duration-300 group-hover:-translate-x-0.5"
@@ -511,17 +595,19 @@ export function LightCodesView() {
             <span className="sm:hidden">{t("Back")}</span>
           </button>
           <span className="flex items-center gap-2" aria-hidden="true">
-            <AudioLines className="size-4 text-[var(--scope-a)]" />
-            <span className="mono-label hidden text-[11px] uppercase tracking-[0.28em] text-muted-foreground sm:inline">
+            <AudioLines className="size-4 text-[var(--lp-gold)]" />
+            <span className="mono-label hidden text-[11px] uppercase tracking-[0.28em] text-[color-mix(in_srgb,var(--lp-gold)_78%,var(--foreground))] sm:inline">
               {t("Light Codes")}
             </span>
           </span>
         </div>
+        {/* the braided seam under the crown of the room */}
+        <div className={cn("h-px w-full", BRAID_RULE)} aria-hidden="true" />
       </header>
 
       {/* ---------- the chamber ---------- */}
       <div
-        className="nice-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain"
+        className="nice-scroll relative z-10 min-h-0 flex-1 overflow-y-auto overscroll-contain"
         data-testid="light-codes"
       >
         <div className="mx-auto w-full max-w-[760px] px-4 pb-10 pt-6 sm:px-6">
@@ -533,9 +619,18 @@ export function LightCodesView() {
             <p className="mt-1 text-[14px] text-muted-foreground">
               {t("Sound transmissions through Mirror Entity")}
             </p>
-            <p className="mt-0.5 font-serif text-[14.5px] italic text-foreground/75">
+            <p className="mt-0.5 font-serif text-[14.5px] italic text-[color-mix(in_srgb,var(--lp-gold)_52%,var(--foreground))]">
               {t("“Translate intention into sound.”")}
             </p>
+            {/* the braided seam beneath the naming — violet, feather, gold */}
+            <div
+              className="mt-3 flex items-center justify-center gap-2"
+              aria-hidden="true"
+            >
+              <span className={cn("h-px w-16 sm:w-24", BRAID_RULE)} />
+              <span className="size-1.5 rotate-45 rounded-[1px] bg-[color-mix(in_srgb,var(--lp-gold)_75%,transparent)]" />
+              <span className={cn("h-px w-16 sm:w-24", BRAID_RULE)} />
+            </div>
           </div>
 
           {/* intention */}
@@ -554,7 +649,7 @@ export function LightCodesView() {
               className="focus-glow w-full resize-none rounded-xl border hairline bg-[var(--glass-bg-soft)] px-3.5 py-2.5 text-[15.5px] leading-relaxed text-foreground placeholder:text-muted-foreground/60"
             />
             {/* what the intention carries — chips and the paperclip/camera */}
-            <div className="mt-2 flex items-center gap-2">
+            <div className="mt-2 flex flex-wrap items-center gap-2">
               <AttachmentChips
                 attachments={attachments}
                 onRemove={(id) =>
@@ -577,7 +672,10 @@ export function LightCodesView() {
                     key={intent}
                     type="button"
                     onClick={() => setLcIntention(intent)}
-                    className="focus-glow rounded-full border px-2.5 py-1 text-[12.5px] text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+                    className={cn(
+                      "focus-glow rounded-full border px-2.5 py-1 text-[12.5px] text-muted-foreground transition-all duration-300 hover:text-foreground",
+                      GOLD_PILL
+                    )}
                   >
                     {t(intent)}
                   </button>
@@ -599,7 +697,10 @@ export function LightCodesView() {
                       "focus-glow rounded-full border px-2.5 py-1 text-[12.5px] transition-all duration-300",
                       lcCivilization === c.id
                         ? "border-[color-mix(in_srgb,var(--scope-a)_55%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_12%,transparent)] text-[var(--scope-a)]"
-                        : "border-[color-mix(in_srgb,var(--hairline)_80%,transparent)] text-muted-foreground hover:text-foreground"
+                        : cn(
+                            GOLD_PILL,
+                            "text-muted-foreground hover:text-foreground"
+                          )
                     )}
                   >
                     {t(c.name)}
@@ -645,7 +746,10 @@ export function LightCodesView() {
               onClick={() => setShapeOpen((v) => !v)}
               aria-expanded={shapeOpen}
               data-testid="lc-shape-toggle"
-              className="focus-glow flex w-full items-center justify-center gap-1.5 text-[12.5px] uppercase tracking-[0.2em] text-muted-foreground transition-colors hover:text-foreground"
+              className={cn(
+                "focus-glow mx-auto flex w-fit items-center gap-1.5 rounded-full border px-4 py-1.5 text-[12.5px] uppercase tracking-[0.2em] text-muted-foreground transition-all duration-300 hover:text-foreground",
+                GOLD_PILL
+              )}
             >
               {t("Shape the transmission")}
               <ChevronDown
@@ -665,7 +769,7 @@ export function LightCodesView() {
                   transition={{ duration: 0.35, ease: "easeOut" }}
                   className="overflow-hidden"
                 >
-                  <div className="mt-3 space-y-3 rounded-xl border hairline bg-[var(--glass-bg-soft)] p-3.5">
+                  <div className="mt-3 space-y-3 rounded-xl border hairline bg-[color-mix(in_srgb,var(--lp-gold)_4%,var(--glass-bg-soft))] p-3.5">
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                       <ShapeDial
                         label="Energy"
@@ -735,7 +839,7 @@ export function LightCodesView() {
                 void generateLightCode({ attachments: carried });
               }}
               data-testid="lc-generate"
-              className="focus-glow group flex h-12 items-center gap-2.5 rounded-full bg-gradient-to-r from-[var(--scope-a)] to-[color-mix(in_srgb,var(--scope-b)_80%,var(--scope-a))] px-8 text-[15.5px] font-semibold tracking-wide text-[#f6f4ef] shadow-[0_6px_28px_-10px_color-mix(in_srgb,var(--scope-a)_75%,transparent)] transition-all duration-300 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+              className="focus-glow group flex h-12 items-center gap-2.5 rounded-full bg-gradient-to-r from-[var(--scope-a)] to-[color-mix(in_srgb,var(--scope-b)_80%,var(--scope-a))] px-8 text-[15.5px] font-semibold tracking-wide text-[#f6f4ef] shadow-[0_6px_28px_-10px_color-mix(in_srgb,var(--scope-a)_75%,transparent)] ring-1 ring-inset ring-[color-mix(in_srgb,var(--lp-gold)_35%,transparent)] transition-all duration-300 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {mode.id === "mirror-transmission" ? (
                 <Sparkles className="size-4" aria-hidden="true" />
@@ -836,6 +940,8 @@ export function LightCodesView() {
           {/* MY TRANSMISSIONS */}
           {lcHistory.length > 0 && (
             <section className="mt-8" aria-label={t("My transmissions")}>
+              {/* the braided seam before the shelf of kept sounds */}
+              <div className={cn("mb-3 h-px w-full", BRAID_RULE)} aria-hidden="true" />
               <p className="mono-label mb-2 text-[10.5px] uppercase tracking-[0.24em] text-muted-foreground">
                 {t("My transmissions")}
               </p>
@@ -843,7 +949,7 @@ export function LightCodesView() {
                 {lcHistory.map((track) => (
                   <div
                     key={track.id}
-                    className="group flex items-center gap-2.5 rounded-xl border hairline bg-[var(--glass-bg-soft)] px-3 py-2"
+                    className="group flex items-center gap-2.5 rounded-xl border border-[color-mix(in_srgb,var(--lp-gold)_24%,var(--hairline))] bg-[var(--glass-bg-soft)] px-3 py-2"
                   >
                     <button
                       type="button"
