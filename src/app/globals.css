@@ -2834,12 +2834,28 @@ html:not(.dark) .lp-sigil-img {
     var(--pt-bg-b) 46%,
     var(--pt-bg-c) 100%
   );
-  animation: pt-in 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: pt-in 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
   transition: opacity 0.55s ease;
 }
 .portal-tunnel-fading {
-  opacity: 0;
+  /* THE HONEST FOLD — a finished pt-in would pin the root's opacity at
+     1 for as long as it lives (a filling animation outranks every
+     class), and a plain opacity flip cannot transition away from a
+     finished animation's fill — the engine cancels the animation and
+     the light vanished in one hard cut, the flicker on both crossings.
+     So the fold is an animation of its own: pt-out replaces pt-in at
+     the very value it ended on (1) and carries the light down gently,
+     while the rings and the heart keep breathing beneath it. */
+  animation: pt-out 0.55s ease both;
   pointer-events: none;
+}
+@keyframes pt-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
 }
 @keyframes pt-in {
   from {

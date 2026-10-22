@@ -4713,3 +4713,19 @@ Work Log:
 
 Stage Summary:
 - The scroll lag is gone at the root (the chat rides the page's own flow; no scroll handler touches the glass anymore), the folded chat leaves no dead area, every artwork on the threshold stands taller and reveals more of itself, and the passage door now wears the house's gold, its two kind colors and its light language.
+
+---
+Task ID: 86
+Agent: Z.ai Code (main)
+Task: The chat of landing moves up totally as we type; what is typed hides behind the phone's keyboard; the tunnel's light cuts instead of fading on both crossings.
+
+Work Log:
+- THE TUNNEL'S HONEST FOLD (the flicker's root, both crossings): .portal-tunnel-fading set opacity:0, but the finished pt-in animation (fill: both) outranks every class and pinned the root's opacity at 1 — and a plain opacity flip cannot transition away from a finished animation's fill (the engine cancels the animation; Chromium measured opacity 1 → 0 between two 80ms samples). The fold is now its own animation: pt-out (0.55s ease both, from 1 to 0) replaces pt-in at the very value it ended on, so the light folds away gently while the rings and the heart keep breathing beneath it. Measured fades: 1 → 0.81 → 0.48 → 0.25 → 0.11 → 0.05 → 0 (no step).
+- THE FULL COVER: the geometry swaps (lens slot ↔ fullscreen) moved 220/260ms → 540ms — past pt-in's whole rise (0.42s → 0.32s now) even under dev-mode main-thread lag, so the chamber never jumps through a half-lit veil (measured 0.994 tunnel opacity at the swap moment). Expand: swap 540, through+fade 1000, off 1900. Minimize: swap 540, fade 940, off 1840.
+- THE TYPING HOLD (the docked chat vs the keyboard, at the root): the docked lens intentionally overrides the chamber's keyboard fit (--app-shift: 0, the stuck-glass law), so on a phone nothing lifted the composer — iOS panned the visual viewport and the whole fixed landing frame rode up out of sight ("the chat moves up totally") while the input stayed behind the keys. New effect in LandingGate: while a field inside the docked lens holds focus, the landing frame itself follows the visual viewport (top = vv.offsetTop, height = vv.height, scroll-padding-bottom 18px) — the frame ends exactly where the keys begin, so it never leaps with the pan; a gentle keep lifts the frame's scroll only by what the keys actually buried (need ≤ 0 → not a pixel moves); on blur the frame returns whole. The glass itself never changes size (the stuck-glass law stands).
+- THE CARET'S OWN KEEP made kind: AppShell's global focus keeper scrolled block:"center" — in the docked world that centered the composer through the landing scroll and dragged half the page with every tap; now block:"nearest" (the smallest possible move) in every world.
+- Verified with agent-browser: desktop and 390×844 — tunnel opacity timelines sampled on both crossings (rise smooth, swap under full cover, fade gradual, no step, unmount after the fold completes); composer focus → hold applied (top/height/scroll-padding), typing moves nothing, blur releases the frame (styles cleared); minimize returns the landing with scroll and slot intact; zero page errors; lint clean. Note: dev-mode CSS staleness — globals.css changes required a clean .next rebuild to be served (TSX hot-reloads, the CSS chunk watched nothing); restart with rm -rf .next when CSS edits don't appear.
+- Delivery: dev server restarted clean, all crossings re-verified after the rebuild.
+
+Stage Summary:
+- The tunnel's light now rises fast, covers the swap completely and folds away as a true fade on both crossings (the flicker was a filling animation pinning the opacity and a transition that could never start); the docked chat's frame follows the phone's visual viewport while typing so the chat keeps its place and the composer always stands above the keys; the caret's global keeper no longer drags the page. The chat and the portal are untouched otherwise.

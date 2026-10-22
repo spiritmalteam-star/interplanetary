@@ -127,6 +127,7 @@ export default function LandingGate() {
   const me = useMirror((s) => s.me);
   const authOpen = useMirror((s) => s.authOpen);
   const lensRef = useRef<HTMLDivElement | null>(null);
+  const landingRootRef = useRef<HTMLDivElement | null>(null);
   const busy = useRef(false);
   const landingScroll = useRef(0);
   const phaseRef = useRef<Phase>("landing");
@@ -211,6 +212,83 @@ export default function LandingGate() {
     };
   }, []);
 
+  /* THE TYPING HOLD — while a field inside the docked glass is focused
+     on a phone, the landing's own FRAME follows the visual viewport:
+     its top rides the keyboard's pan and its height becomes the visible
+     band alone. The glass itself never changes size (the stuck-glass
+     law stands — the window is carved once), but the frame it lives in
+     now ends exactly where the keys begin, so the frame never leaps
+     away with the keyboard's pan (the chat keeps its place) and the
+     caret's own keeping — the browser's and the chamber's — stands the
+     composer just above the keys: what is typed is always seen. On
+     blur the frame returns to the whole screen. */
+  useEffect(() => {
+    if (phase !== "landing") return;
+    const root = landingRootRef.current;
+    const lens = lensRef.current;
+    if (!root || !lens) return;
+    const vv = window.visualViewport;
+    if (!vv) return;
+
+    let focused = false;
+
+    const apply = () => {
+      if (!focused) return;
+      root.style.top = `${vv.offsetTop}px`;
+      root.style.height = `${vv.height}px`;
+      root.style.scrollPaddingBottom = "18px";
+      /* THE GENTLE KEEP — the frame's scroll lifts by only what the
+         keys actually buried: the page never leaps half a screen, and
+         once the composer stands clear (need ≤ 0) not a pixel moves. */
+      const el = document.activeElement;
+      if (
+        el instanceof HTMLElement &&
+        lens.contains(el) &&
+        (el.tagName === "TEXTAREA" ||
+          el.tagName === "INPUT" ||
+          el.isContentEditable)
+      ) {
+        const r = el.getBoundingClientRect();
+        const need = Math.ceil(r.bottom - vv.offsetTop + 14 - vv.height);
+        if (need > 0) root.scrollTop += need;
+      }
+    };
+    const release = () => {
+      focused = false;
+      root.style.top = "";
+      root.style.height = "";
+      root.style.scrollPaddingBottom = "";
+    };
+    const isField = (el: EventTarget | null): el is HTMLElement => {
+      if (!(el instanceof HTMLElement)) return false;
+      const tag = el.tagName;
+      return tag === "TEXTAREA" || tag === "INPUT" || el.isContentEditable;
+    };
+    const onFocusIn = (e: FocusEvent) => {
+      const el = e.target;
+      if (!isField(el) || !lens.contains(el)) return;
+      focused = true;
+      apply();
+    };
+    const onFocusOut = (e: FocusEvent) => {
+      if (!focused) return;
+      const next = e.relatedTarget;
+      if (next instanceof Node && lens.contains(next)) return;
+      release();
+    };
+    vv.addEventListener("resize", apply);
+    vv.addEventListener("scroll", apply);
+    window.addEventListener("focusin", onFocusIn);
+    window.addEventListener("focusout", onFocusOut);
+    return () => {
+      vv.removeEventListener("resize", apply);
+      vv.removeEventListener("scroll", apply);
+      window.removeEventListener("focusin", onFocusIn);
+      window.removeEventListener("focusout", onFocusOut);
+      release();
+    };
+  }, [phase, geo, Chamber]);
+
   /* THE GLASS IN THE FLOW — the lens lives inside its slot (the slot
      itself is rendered by the landing page), so the page's own native
      scroll carries the docked chat: no handler writes a transform on
@@ -280,11 +358,13 @@ export default function LandingGate() {
       }
       busy.current = true;
       setTunnel("on");
-      /* THE COVERED CROSSING — the tunnel's light is given a breath to
-         stand fully (pt-in's own 0.42s rise), and only beneath that
-         light does the lens step up to the whole screen: the visitor
-         never watches the chamber jump — the tunnel is the crossing. */
-      window.setTimeout(() => setPhase("opening"), 220);
+      /* THE COVERED CROSSING — the tunnel's light is given the WHOLE of
+         its rise (pt-in's own 0.32s, plus a settling breath) before the
+         lens steps up to the whole screen: the swap happens beneath a
+         FULLY opaque tunnel, never through a half-lit veil — the visitor
+         never watches the chamber jump, not even for a frame — the
+         tunnel is the crossing. */
+      window.setTimeout(() => setPhase("opening"), 540);
       window.setTimeout(() => {
         setPhase("through");
         setTunnel("fading");
@@ -303,7 +383,7 @@ export default function LandingGate() {
           }
           useMirror.getState().openAuth("signin");
         }
-      }, 680);
+      }, 1000);
     })();
   }, [Chamber]);
 
@@ -405,14 +485,19 @@ export default function LandingGate() {
       if (st.accountOpen) st.closeAccount();
     }
     setTunnel("on");
+    /* THE FULL COVER ON THE WAY HOME — the lens folds back into its
+       slot only after the tunnel stands fully risen (0.32s + a
+       settling breath), so the fullscreen-to-slot swap is never seen
+       through a half-lit veil. The landing then rests beneath the
+       light until the fold begins. */
     window.setTimeout(() => {
       setPhase("landing");
-    }, 260);
+    }, 540);
     window.setTimeout(() => {
       setTunnel("fading");
       busy.current = false;
-    }, 860);
-    window.setTimeout(() => setTunnel("off"), 1760);
+    }, 940);
+    window.setTimeout(() => setTunnel("off"), 1840);
   }, []);
 
   const fullscreen = phase === "opening" || phase === "through";
@@ -513,6 +598,7 @@ export default function LandingGate() {
           the lens's slot, the walk's own scroll and every word of the
           house keep their places — the return is instant and whole. */}
       <div
+        ref={landingRootRef}
         data-testid="landing-root"
         className={cn(
           "fixed inset-0 z-30 overflow-y-auto overscroll-y-contain bg-[var(--lp-deep)]",

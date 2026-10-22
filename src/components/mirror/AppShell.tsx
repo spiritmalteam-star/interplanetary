@@ -224,10 +224,13 @@ function AppShellViews({
   }, []);
 
   /* Wherever words are typed, the caret must stay in sight: when any
-     field receives focus, gently bring it to the middle of its own
-     scrolling ancestor once the keyboard has settled (twice — the
-     first pass while the viewport still moves, the second after it
-     rests). This guards every composer in every world. */
+     field receives focus, gently bring it just INTO view once the
+     keyboard has settled (twice — the first pass while the viewport
+     still moves, the second after it rests). "nearest" — never
+     "center": the smallest possible move, so a composer already in
+     sight never drags the whole page with it (the docked landing
+     glass once jumped half a page on every tap). This guards every
+     composer in every world. */
   useEffect(() => {
     const onFocusIn = (e: FocusEvent) => {
       const el = e.target as HTMLElement | null;
@@ -241,7 +244,7 @@ function AppShellViews({
         return;
       const show = () => {
         try {
-          el.scrollIntoView({ block: "center", behavior: "smooth" });
+          el.scrollIntoView({ block: "nearest", behavior: "smooth" });
         } catch {
           /* older engines — silent */
         }
