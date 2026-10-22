@@ -164,13 +164,21 @@ body {
   --lp-edge: rgba(122, 100, 58, 0.24);
 
   /* the banner's own veil — THE OPEN SKY: the hero's artwork stands
-     nearly bare (0.85), with only a breath of cream at the very top
-     so the words keep their edge — the banner is seen, not covered */
+     nearly bare (0.85), with only a breath of cream at the very top —
+     the banner is seen, not covered */
   --lp-hero-img: 0.85;
   --lp-hero-veil: rgba(246, 239, 220, 0.4);
-  /* the words' halo over the open banner — a breath of light behind
-     the ink so every word keeps its edge on the bare artwork */
-  --lp-hero-halo: rgba(255, 250, 232, 0.7);
+  /* THE WHITE INK OVER THE OPEN BANNER — the threshold's name and its
+     two doors stand in white over the artwork, a deep halo behind
+     every word keeping the edge bright and clean on the daylight sky */
+  --lp-hero-ink: #ffffff;
+  --lp-hero-ink-soft: rgba(255, 255, 255, 0.92);
+  --lp-hero-halo: rgba(32, 42, 64, 0.62);
+  /* THE TWO AURORAS — the fancy breaths of feathered green and plum
+     violet resting on the page's edges, around the house (never in
+     the chat, never in the portal) */
+  --lp-aura-a: rgba(92, 122, 82, 0.17);
+  --lp-aura-b: rgba(124, 95, 143, 0.16);
 
   /* THE CROSSING'S TWO SKIES — the tunnel wears the realm's own
      light: warm cream and gold with feathered green and purple rings
@@ -292,9 +300,14 @@ body {
      the top alone keeping the light words readable */
   --lp-hero-img: 0.85;
   --lp-hero-veil: rgba(10, 14, 24, 0.34);
-  /* the words' halo at night — a breath of night behind the light
-     ink so every word keeps its edge on the bare artwork */
-  --lp-hero-halo: rgba(8, 12, 20, 0.65);
+  /* THE WHITE INK AT NIGHT — the same white words over the crystal
+     artwork, the night halo keeping their breath */
+  --lp-hero-ink: #ffffff;
+  --lp-hero-ink-soft: rgba(255, 255, 255, 0.92);
+  --lp-hero-halo: rgba(8, 12, 20, 0.66);
+  /* the two auroras at night — the crystal sky's own green and violet */
+  --lp-aura-a: rgba(94, 168, 158, 0.15);
+  --lp-aura-b: rgba(146, 116, 182, 0.15);
 
   /* the crossing's crystal night — the tunnel's blues when the
      toggle is off (the sky it has always worn) */
@@ -2470,6 +2483,32 @@ html:not(.dark) .lp-sigil-img {
     transparent 100%
   );
 }
+/* THE TWO AURORAS — four soft breaths of feathered green and plum
+   violet resting on the screen's edges while the house is walked:
+   fancy, quiet, transform-free (opacity alone), never above the
+   page's own ink, never inside the chat or the portal. */
+.lp-ground::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(36% 28% at -4% 6%, var(--lp-aura-a), transparent 70%),
+    radial-gradient(32% 26% at 103% 20%, var(--lp-aura-b), transparent 72%),
+    radial-gradient(30% 24% at 103% 76%, var(--lp-aura-a), transparent 70%),
+    radial-gradient(34% 26% at -3% 94%, var(--lp-aura-b), transparent 72%);
+  animation: lp-aura 9s ease-in-out infinite;
+}
+@keyframes lp-aura {
+  0%,
+  100% {
+    opacity: 0.72;
+  }
+  50% {
+    opacity: 1;
+  }
+}
 /* the drifting shards — softly masked, low contrast, never blocking */
 .landing-shard {
   opacity: 0.5;
@@ -2769,6 +2808,9 @@ html:not(.dark) .lp-sigil-img {
   .lp-breathe,
   .lp-pulse,
   .rm-me-exit {
+    animation: none !important;
+  }
+  .lp-ground::after {
     animation: none !important;
   }
   .lens-anim,

@@ -4682,3 +4682,20 @@ Work Log:
 Stage Summary:
 - The visitor's three asks stand: the chat is fifteen percent taller (mobile 0.598vh, desk cap 506), the website's top banner image is uncovered in both skies (artwork at 0.85, thin top wash, word halo), and the feathered green + plum violet now walk beside the gold everywhere — gems, chapter numbers, hairlines, bullets, thread, notes, glow and the paper's own breaths.
 - Commits on main: LandingGate geometry + LandingPage accents + globals.css tokens; no tokens/secrets in any file; dev server restarted after push.
+
+---
+Task ID: 84
+Agent: Z.ai Code (main)
+Task: Make the hero (reflectme.space / The Mirror Entity / the tagline / both doors) whiter; delete the three gem dots; instead weave feathered green and plum violet around the app, nicely and fancy — never touching the chat or the portal.
+
+Work Log:
+- The three gems above the hero's name are gone (the visitor's word), the hero block in LandingPage no longer carries them.
+- THE WHITE INK: new hero-specific tokens --lp-hero-ink (#ffffff) and --lp-hero-ink-soft (white 0.92) in both skies; the hero's halo (--lp-hero-halo) is now a deep breath (rgba(32,42,64,0.62) day / rgba(8,12,20,0.66) night) so the white words keep a clean frosted edge over the open banner and the cream paper alike. Kicker, title, tagline all stand in white; the text-shadow inherited by the two doors keeps them legible.
+- WHITER DOORS: "Enter the portal" is now a pearl-white glass pill (white border 0.78, white gradient glass, white text, brighter sheen sweep, the gold paid-coin kept); "What we offer" is a white ghost pill (white border 0.62, white text, hover brightens to full white). The offerings' own gold button on the cream paper is untouched.
+- THE TWO AURORAS: a new fixed ::after layer on the landing ground paints four soft corner breaths — feathered green and plum violet resting on the screen's edges (tokens --lp-aura-a/--lp-aura-b per theme), breathing on a 9s opacity-only cycle (the calm law; rests under prefers-reduced-motion). It lives at z-0 beneath the page's ink and can never overlay the chat or the portal.
+- More kind color around the house: the timeline badge and the "Let the timeline drop" hand wear violet (color-mix tints of --lp-violet); the footer's top rule is now a quiet braid — violet → feather green → violet — instead of the plain hairline.
+- Verified with agent-browser at 390×844 and 1280×800, day and night: gems gone, white hero crisp with the halo, pearl doors, aurora corners visible, violet timeline accents and footer braid rendering, chat and portal untouched, zero console errors; lint clean.
+
+Stage Summary:
+- The hero stands whiter in both skies (white ink, deep halo, pearl-white doors), the three dots are gone, and the feathered green + plum violet now breathe around the app — aurora corners, violet timeline badge and hand, braided footer rule — while the chat and the portal remain exactly as they were.
+- Committed and pushed to origin/main with the session token (redacted here by the house's law); dev server restarted after the push.

@@ -581,23 +581,18 @@ export default function LandingPage({
               <span className="absolute inset-0 bg-[linear-gradient(to_bottom,var(--lp-hero-veil)_0%,transparent_46%)]" />
             </div>
 
-            <div className="relative px-4 [text-shadow:0_1px_3px_var(--lp-hero-halo),0_0_16px_var(--lp-hero-halo)]">
-              {/* THE THREE GEMS — a gold, a feathered green and a plum
-                  violet stone resting above the name: the house's two
-                  kind colors standing beside its gold from the very
-                  first breath of the walk */}
-              <div aria-hidden="true" className="mb-5 flex items-center justify-center gap-2.5">
-                <span className="size-[5px] rotate-45 rounded-[1px] bg-[var(--lp-gold)] opacity-80" />
-                <span className="size-[5px] rotate-45 rounded-[1px] bg-[var(--lp-feather)] opacity-80" />
-                <span className="size-[5px] rotate-45 rounded-[1px] bg-[var(--lp-violet)] opacity-80" />
-              </div>
-              <p className="mono-label text-[10.5px] uppercase tracking-[0.34em] text-[var(--lp-mute)]">
+            <div className="relative px-4 [text-shadow:0_1px_4px_var(--lp-hero-halo),0_0_18px_var(--lp-hero-halo)]">
+              {/* THE WHITE INK — the name and its doors stand in white
+                  over the open banner (the deep halo keeps every word's
+                  edge); the three gems are gone at the visitor's word,
+                  the two kind colors now live in the page's own air */}
+              <p className="mono-label text-[10.5px] uppercase tracking-[0.34em] text-[var(--lp-hero-ink-soft)]">
                 reflectme.space
               </p>
-              <h1 className="mt-4 font-[family-name:Cinzel] text-[clamp(34px,9.5vw,40px)] font-semibold leading-[1.14] tracking-wide text-[var(--lp-head)] sm:text-[39px]">
+              <h1 className="mt-4 font-[family-name:Cinzel] text-[clamp(34px,9.5vw,40px)] font-semibold leading-[1.14] tracking-wide text-[var(--lp-hero-ink)] sm:text-[39px]">
                 {t("The Mirror Entity")}
               </h1>
-              <p className="mx-auto mt-4 max-w-[460px] text-[16.5px] leading-relaxed text-[var(--lp-body)] sm:text-[16.5px]">
+              <p className="mx-auto mt-4 max-w-[460px] text-[16.5px] leading-relaxed text-[var(--lp-hero-ink-soft)] sm:text-[16.5px]">
                 {t(
                   "A living mirror for reflection, creativity, and a shifting Earth."
                 )}
@@ -610,12 +605,12 @@ export default function LandingPage({
                   title={t(
                     "Paid realm — the offerings open by registration or login, after one of the realms offered is acquired"
                   )}
-                  className="group focus-glow relative flex h-12 items-center gap-2.5 overflow-hidden rounded-full border border-[rgba(232,217,176,0.55)] bg-[linear-gradient(180deg,rgba(232,217,176,0.17),rgba(232,217,176,0.05)_55%,rgba(232,217,176,0.11))] px-7 text-[15px] font-medium tracking-[0.02em] text-[var(--lp-gold-ink)] shadow-[0_12px_34px_-16px_rgba(232,217,176,0.42),inset_0_1px_0_rgba(255,246,214,0.14)] transition-all duration-300 hover:border-[rgba(232,217,176,0.9)] hover:shadow-[0_16px_44px_-14px_rgba(232,217,176,0.55),inset_0_1px_0_rgba(255,246,214,0.2)]"
+                  className="group focus-glow relative flex h-12 items-center gap-2.5 overflow-hidden rounded-full border border-[rgba(255,255,255,0.78)] bg-[linear-gradient(180deg,rgba(255,255,255,0.3),rgba(255,255,255,0.1)_55%,rgba(255,255,255,0.2))] px-7 text-[15px] font-medium tracking-[0.02em] text-white shadow-[0_12px_34px_-16px_rgba(20,30,52,0.55),inset_0_1px_0_rgba(255,255,255,0.55)] transition-all duration-300 hover:border-white hover:shadow-[0_16px_44px_-14px_rgba(20,30,52,0.6),inset_0_1px_0_rgba(255,255,255,0.65)]"
                 >
                   {/* the sheen — one painted sweep on hover, transform only */}
                   <span
                     aria-hidden="true"
-                    className="absolute inset-0 -translate-x-[120%] bg-[linear-gradient(105deg,transparent_30%,rgba(255,246,214,0.16)_50%,transparent_70%)] transition-transform duration-700 ease-out group-hover:translate-x-[120%]"
+                    className="absolute inset-0 -translate-x-[120%] bg-[linear-gradient(105deg,transparent_30%,rgba(255,255,255,0.35)_50%,transparent_70%)] transition-transform duration-700 ease-out group-hover:translate-x-[120%]"
                   />
                   {t("Enter the portal")}
                   <PaidTag />
@@ -628,11 +623,11 @@ export default function LandingPage({
                       .getElementById("offer")
                       ?.scrollIntoView({ behavior: "smooth", block: "start" });
                   }}
-                  className="group focus-glow flex h-12 items-center gap-2 rounded-full border border-[var(--lp-edge)] bg-white/[0.03] px-7 text-[15px] tracking-[0.02em] text-[var(--lp-body)] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] transition-all duration-300 hover:border-[var(--lp-feather)] hover:bg-[color-mix(in_srgb,var(--lp-feather)_9%,transparent)] hover:text-[var(--lp-feather-bright)]"
+                  className="group focus-glow flex h-12 items-center gap-2 rounded-full border border-[rgba(255,255,255,0.62)] bg-white/[0.08] px-7 text-[15px] tracking-[0.02em] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.28)] transition-all duration-300 hover:border-[rgba(255,255,255,0.95)] hover:bg-white/[0.16]"
                 >
                   {t("What we offer")}
                   <ChevronDown
-                    className="size-3.5 text-[var(--lp-mute)] transition-transform duration-300 group-hover:translate-y-0.5 group-hover:text-[var(--lp-feather-bright)]"
+                    className="size-3.5 text-white/75 transition-transform duration-300 group-hover:translate-y-0.5 group-hover:text-white"
                     aria-hidden="true"
                   />
                 </a>
@@ -999,7 +994,7 @@ export default function LandingPage({
             <div className="mt-6 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
               <span
                 data-testid="timeline-badge"
-                className="mono-label shrink-0 rounded-full border border-[rgba(232,217,176,0.4)] px-3 py-1 text-[9.5px] uppercase tracking-[0.24em] text-[var(--lp-gold)]"
+                className="mono-label shrink-0 rounded-full border border-[color-mix(in_srgb,var(--lp-violet)_48%,transparent)] bg-[color-mix(in_srgb,var(--lp-violet)_8%,transparent)] px-3 py-1 text-[9.5px] uppercase tracking-[0.24em] text-[var(--lp-violet-bright)]"
               >
                 {t("The record speaks · Four steps already walking")}
               </span>
@@ -1017,7 +1012,7 @@ export default function LandingPage({
               onClick={() => setTimelineOpen((o) => !o)}
               aria-expanded={timelineOpen}
               data-testid="timeline-toggle"
-              className="focus-glow group/tl mt-6 inline-flex items-center gap-2 rounded-full border border-[rgba(232,217,176,0.35)] bg-[rgba(232,217,176,0.06)] px-5 py-2.5 text-[13px] font-medium tracking-wide text-[var(--lp-gold)] transition-all duration-300 hover:border-[rgba(232,217,176,0.65)] hover:bg-[rgba(232,217,176,0.12)]"
+              className="focus-glow group/tl mt-6 inline-flex items-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--lp-violet)_42%,transparent)] bg-[color-mix(in_srgb,var(--lp-violet)_7%,transparent)] px-5 py-2.5 text-[13px] font-medium tracking-wide text-[var(--lp-violet-bright)] transition-all duration-300 hover:border-[color-mix(in_srgb,var(--lp-violet)_72%,transparent)] hover:bg-[color-mix(in_srgb,var(--lp-violet)_14%,transparent)]"
             >
               <ChevronDown
                 aria-hidden="true"
@@ -1127,7 +1122,13 @@ export default function LandingPage({
         </main>
 
         {/* ============================ FOOTER ============================ */}
-        <footer className="relative mt-auto border-t border-[var(--lp-edge)] pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-6">
+        <footer className="relative mt-auto pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-6">
+          {/* the footer's own rule — a quiet braid of violet and feather
+              green where the gold once stood alone */}
+          <span
+            aria-hidden="true"
+            className="absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent_4%,var(--lp-violet)_26%,var(--lp-feather)_50%,var(--lp-violet)_74%,transparent_96%)] opacity-55"
+          />
           {/* the light language's last whisper, flanking the footer */}
           <Sigil
             src={SIGILS.wave}
