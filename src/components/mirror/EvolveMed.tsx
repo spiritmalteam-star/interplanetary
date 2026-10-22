@@ -119,7 +119,7 @@ function EmThinking() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -4 }}
           transition={{ duration: 0.35 }}
-          className="font-serif text-[14px] italic text-muted-foreground"
+          className="font-serif text-[15px] italic text-muted-foreground"
         >
           {t(emGatheringPhrases[phraseIdx])}
         </motion.span>
@@ -174,7 +174,7 @@ function EmVisualBlock({
         className="glass rounded-2xl border border-[color-mix(in_srgb,var(--hairline)_65%,transparent)] px-4 py-3.5"
         data-testid={`${testIdPrefix}-error`}
       >
-        <p className="text-[14px] italic leading-relaxed text-foreground/80">
+        <p className="text-[15px] italic leading-relaxed text-foreground/80">
           {t(
             "The atelier is quiet — the vision could not be composed. Rest a breath, then ask again."
           )}
@@ -184,7 +184,7 @@ function EmVisualBlock({
             type="button"
             onClick={() => void askEMVisual(visualRequest)}
             data-testid={`${testIdPrefix}-retry`}
-            className="focus-glow mt-2.5 flex h-9 items-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--scope-a)_35%,transparent)] px-4 text-[13px] text-foreground/90 transition-all duration-300 hover:-translate-y-px"
+            className="focus-glow mt-2.5 flex h-9 items-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--scope-a)_35%,transparent)] px-4 text-[14px] text-foreground/90 transition-all duration-300 hover:-translate-y-px"
           >
             <RefreshCw className="size-3.5" aria-hidden="true" />
             {t("Be still and receive")}
@@ -271,7 +271,7 @@ function EmExchange({
       >
         <p
           className={cn(
-            "max-w-[78%] rounded-2xl rounded-br-md border border-[color-mix(in_srgb,var(--scope-a)_24%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_9%,transparent)] px-4 py-2.5 text-[15px] leading-relaxed text-foreground/90",
+            "max-w-[78%] rounded-2xl rounded-br-md border border-[color-mix(in_srgb,var(--scope-a)_24%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_9%,transparent)] px-4 py-2.5 text-[16px] leading-relaxed text-foreground/90",
             failed && "opacity-70"
           )}
         >
@@ -282,7 +282,7 @@ function EmExchange({
             data-testid="failed-msg"
             className="mt-1.5 flex max-w-[78%] flex-wrap items-center justify-end gap-1.5"
           >
-            <span className="mono-label flex items-center gap-1 rounded-full border border-[var(--destructive)]/25 bg-[color-mix(in_srgb,var(--destructive)_6%,transparent)] px-2 py-1 text-[9.5px] text-muted-foreground">
+            <span className="mono-label flex items-center gap-1 rounded-full border border-[var(--destructive)]/25 bg-[color-mix(in_srgb,var(--destructive)_6%,transparent)] px-2 py-1 text-[10.5px] text-muted-foreground">
               <CircleAlert
                 className="size-3 text-[var(--destructive)]"
                 aria-hidden="true"
@@ -294,7 +294,7 @@ function EmExchange({
               data-testid="retry-failed"
               disabled={retryDisabled}
               onClick={() => useMirror.getState().retryFailed("em", messageId)}
-              className="focus-glow flex items-center gap-1 rounded-full border hairline px-2.5 py-1 text-[11px] text-foreground/85 transition-all duration-300 hover:border-[var(--hairline-hover)] disabled:cursor-not-allowed disabled:opacity-40"
+              className="focus-glow flex items-center gap-1 rounded-full border hairline px-2.5 py-1 text-[12px] text-foreground/85 transition-all duration-300 hover:border-[var(--hairline-hover)] disabled:cursor-not-allowed disabled:opacity-40"
             >
               <RotateCcw className="size-3" aria-hidden="true" />
               {t("Send again")}
@@ -322,7 +322,7 @@ function EmExchange({
         <Activity className="size-3.5 text-[var(--scope-a)]" />
       </span>
       <div className="min-w-0 max-w-[85%]">
-        <p className="mono-label text-[9.5px] text-[var(--scope-a)]">EVOLVE MED</p>
+        <p className="mono-label text-[10.5px] text-[var(--scope-a)]">EVOLVE MED</p>
         {hasVisual && messageId ? (
           <div className="mt-1.5">
             {text.trim() && (
@@ -356,7 +356,7 @@ function EmExchange({
                       "linear-gradient(90deg, transparent, var(--scope-a), transparent)",
                   }}
                 />
-                <p className="mono-label flex items-center gap-1.5 text-[9px] uppercase tracking-[0.22em] text-muted-foreground">
+                <p className="mono-label flex items-center gap-1.5 text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
                   <Microscope className="size-3" aria-hidden="true" />
                   {t("The mechanisms that run it")}
                 </p>
@@ -364,7 +364,7 @@ function EmExchange({
                   {formulaList.map((f, i) => (
                     <p
                       key={i}
-                      className="px-formula-line text-center font-serif text-[15.5px] italic leading-relaxed text-foreground/90"
+                      className="px-formula-line text-center font-serif text-[16.5px] italic leading-relaxed text-foreground/90"
                     >
                       {f}
                     </p>
@@ -374,7 +374,7 @@ function EmExchange({
             )}
 
             {seal && (
-              <p className="ink-soft mt-2.5 text-center font-serif text-[14px] italic">
+              <p className="ink-soft mt-2.5 text-center font-serif text-[15px] italic">
                 {seal}
               </p>
             )}
@@ -655,10 +655,10 @@ function EvolveMedChat() {
             )}
             {emStatus === "error" && emError && (
               <div className="ml-11 rounded-xl border border-[var(--destructive)]/25 bg-[color-mix(in_srgb,var(--destructive)_6%,transparent)] px-4 py-3">
-                <p className="text-[14.5px] leading-relaxed text-foreground/85">
+                <p className="text-[15.5px] leading-relaxed text-foreground/85">
                   {t("Evolve Med could not finish the revealing.")}
                 </p>
-                <p className="mt-1 text-[14px] italic text-muted-foreground">
+                <p className="mt-1 text-[15px] italic text-muted-foreground">
                   {emError}
                 </p>
               </div>
@@ -720,7 +720,7 @@ function EvolveMedChat() {
           <div className="mx-auto flex w-full max-w-[720px] flex-wrap items-center gap-1.5">
             {activeVector && (
               <span
-                className="mono-label flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9.5px] uppercase tracking-[0.18em] text-foreground/80"
+                className="mono-label flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10.5px] uppercase tracking-[0.18em] text-foreground/80"
                 style={{
                   borderColor:
                     "color-mix(in srgb, var(--scope-a) 40%, transparent)",
@@ -752,7 +752,7 @@ function EvolveMedChat() {
             )}
             {fusionPair.length === 2 && (
               <span
-                className="mono-label flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9.5px] uppercase tracking-[0.18em] text-foreground/80"
+                className="mono-label flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10.5px] uppercase tracking-[0.18em] text-foreground/80"
                 style={{
                   borderColor:
                     "color-mix(in srgb, var(--scope-a) 40%, transparent)",
@@ -803,7 +803,7 @@ function EvolveMedChat() {
       {/* composer — THE ONE INPUT LAW: the room's reply line is the
           only input while the answer lives in the tree */}
       {!canopyLatch && (
-      <div className="relative z-30 shrink-0 border-t hairline bg-[var(--glass-bg)] px-3 py-2.5 backdrop-blur-xl sm:px-4">
+      <div className="relative z-30 shrink-0 border-t hairline bg-[var(--glass-bg)] px-3 py-2.5 backdrop-blur-md sm:px-4">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -840,7 +840,7 @@ function EvolveMedChat() {
                 }
               }}
               placeholder={t("Ask Evolve Med…")}
-              className="nice-scroll max-h-[120px] flex-1 resize-none bg-transparent py-2 text-[15px] leading-relaxed text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
+              className="nice-scroll max-h-[120px] flex-1 resize-none bg-transparent py-2 text-[16px] leading-relaxed text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
             />
             <ChatInputExtras
               scope="evolvemed"
@@ -907,7 +907,7 @@ export function EvolveMed() {
           <button
             type="button"
             onClick={exitEvolveMed}
-            className="focus-glow pointer-events-auto group flex h-9 shrink-0 items-center gap-2 rounded-full border hairline bg-[var(--glass-bg)]/80 px-3 text-[14px] font-medium text-muted-foreground backdrop-blur-xl transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground sm:px-3.5"
+            className="focus-glow pointer-events-auto group flex h-9 shrink-0 items-center gap-2 rounded-full border hairline bg-[var(--glass-bg)]/80 px-3 text-[15px] font-medium text-muted-foreground backdrop-blur-md transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground sm:px-3.5"
           >
             <ArrowLeft
               className="size-3.5 transition-transform duration-300 group-hover:-translate-x-0.5"
@@ -925,7 +925,7 @@ export function EvolveMed() {
               placeholder="Tools"
               onSelect={(id) => setPlace(id as EmPlace)}
               testIdPrefix="em-tools"
-              triggerClassName="bg-[var(--glass-bg)]/80 backdrop-blur-xl"
+              triggerClassName="bg-[var(--glass-bg)]/80 backdrop-blur-md"
               onOpenChange={setToolsOpen}
             />
           </div>
@@ -970,7 +970,7 @@ export function EvolveMed() {
                     <button
                       type="button"
                       onClick={() => setPlace("chat")}
-                      className="focus-glow group flex h-8 items-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--scope-a)_30%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_7%,transparent)] px-3.5 text-[13.5px] font-medium text-foreground/85 transition-all duration-300 hover:border-[color-mix(in_srgb,var(--scope-a)_50%,transparent)]"
+                      className="focus-glow group flex h-8 items-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--scope-a)_30%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_7%,transparent)] px-3.5 text-[14.5px] font-medium text-foreground/85 transition-all duration-300 hover:border-[color-mix(in_srgb,var(--scope-a)_50%,transparent)]"
                     >
                       <Activity className="size-3.5 text-[var(--scope-a)]" aria-hidden="true" />
                       {t("Back to the Nexus")}

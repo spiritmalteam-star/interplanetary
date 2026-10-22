@@ -80,15 +80,15 @@ function WorkCard({
           aria-hidden="true"
         />
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-[13.5px] font-medium text-foreground/85">
+          <span className="block truncate text-[14.5px] font-medium text-foreground/85">
             {message.query || t("An unnamed whisper")}
           </span>
-          <span className="mt-0.5 block truncate text-[12px] text-muted-foreground">
+          <span className="mt-0.5 block truncate text-[13px] text-muted-foreground">
             {message.text.replace(/\s+/g, " ").slice(0, 120)}
           </span>
         </span>
         {(makingLabel || hasVisual) && (
-          <span className="mono-label flex shrink-0 items-center gap-1 rounded-full border hairline px-2 py-0.5 text-[9px] text-muted-foreground">
+          <span className="mono-label flex shrink-0 items-center gap-1 rounded-full border hairline px-2 py-0.5 text-[10px] text-muted-foreground">
             {hasVisual ? (
               <Sparkles className="size-2.5" aria-hidden="true" />
             ) : (
@@ -183,11 +183,11 @@ export function CreationRoom() {
       {earlier.length > 0 && (
         <section className="mt-8" aria-label={t("Earlier works")}>
           <div className="mb-3 flex items-center gap-3">
-            <p className="mono-label text-[9.5px] uppercase tracking-[0.22em] text-muted-foreground/80">
+            <p className="mono-label text-[10.5px] uppercase tracking-[0.22em] text-muted-foreground/80">
               {t("Earlier works")}
             </p>
             <span className="h-px flex-1 bg-gradient-to-r from-[var(--hairline)] to-transparent" aria-hidden="true" />
-            <span className="mono-label text-[9px] text-muted-foreground/60">
+            <span className="mono-label text-[10px] text-muted-foreground/60">
               {t("{n} kept", { n: earlier.length })}
             </span>
           </div>

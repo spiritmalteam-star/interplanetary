@@ -81,10 +81,10 @@ export function InventionDraft({
       data-testid="creation-draft"
     >
       {/* the drafting paper's corner marks */}
-      <span aria-hidden="true" className="mono-label absolute left-2.5 top-2 text-[8px] uppercase tracking-[0.2em] text-muted-foreground/50">
+      <span aria-hidden="true" className="mono-label absolute left-2.5 top-2 text-[9px] uppercase tracking-[0.2em] text-muted-foreground/50">
         FIG. {fig}
       </span>
-      <span aria-hidden="true" className="mono-label absolute right-2.5 top-2 text-[8px] uppercase tracking-[0.2em] text-muted-foreground/50">
+      <span aria-hidden="true" className="mono-label absolute right-2.5 top-2 text-[9px] uppercase tracking-[0.2em] text-muted-foreground/50">
         {form}
       </span>
       <svg

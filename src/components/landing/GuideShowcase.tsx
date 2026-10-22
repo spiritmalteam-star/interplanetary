@@ -184,20 +184,24 @@ export default function GuideShowcase({
                   className="pointer-events-none absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-[rgba(4,7,12,0.92)] via-[rgba(4,7,12,0.45)] to-transparent"
                 />
                 <span className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col items-center gap-2 p-5 text-center sm:p-7">
-                  <span className="mono-label text-[8.5px] uppercase tracking-[0.3em] text-[var(--lp-mute)]">
+                  {/* THE BRIGHT WORDS ON THE PLATE — the words resting on
+                      the artwork always wear their own light ink (the
+                      deep reading floor beneath is their constant), so
+                      they stay bright and readable in both skies. */}
+                  <span className="mono-label text-[9.5px] uppercase tracking-[0.3em] text-[rgba(240,231,205,0.78)]">
                     {g.subtitle}
                   </span>
-                  <span className="font-[family-name:Cinzel] text-[20px] font-semibold leading-tight tracking-wide text-[var(--lp-head)] drop-shadow-[0_2px_14px_rgba(0,0,0,0.8)] sm:text-[26px]">
+                  <span className="font-[family-name:Cinzel] text-[21px] font-semibold leading-tight tracking-wide text-[#f7f2e2] drop-shadow-[0_2px_16px_rgba(0,0,0,0.85)] sm:text-[27px]">
                     {g.title}
                   </span>
-                  <span className="hidden max-w-[560px] font-[family-name:var(--font-literata)] text-[13px] italic leading-relaxed text-[var(--lp-body)] sm:block">
+                  <span className="hidden max-w-[560px] font-[family-name:var(--font-literata)] text-[14px] italic leading-relaxed text-[rgba(240,231,205,0.82)] drop-shadow-[0_1px_10px_rgba(0,0,0,0.7)] sm:block">
                     {g.tagline}
                   </span>
                   <span
-                    className="mono-label mt-1 inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[8.5px] uppercase tracking-[0.22em] transition-colors duration-300 group-hover:bg-[rgba(232,217,176,0.14)]"
+                    className="mono-label mt-1 inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[9.5px] uppercase tracking-[0.22em] transition-colors duration-300 group-hover:bg-[rgba(232,217,176,0.22)]"
                     style={{
                       borderColor: g.crystalA,
-                      color: "var(--lp-gold-ink)",
+                      color: "#eed9a4",
                     }}
                   >
                     {t("Open the guide")}
@@ -217,7 +221,7 @@ export default function GuideShowcase({
           the slide, always written where the eye rests */}
       <p
         data-testid="guide-showcase-title"
-        className="mx-auto mt-4 max-w-[900px] px-4 text-center font-[family-name:var(--font-literata)] text-[15px] italic leading-relaxed text-[var(--lp-gold)]"
+        className="mx-auto mt-4 max-w-[900px] px-4 text-center font-[family-name:var(--font-literata)] text-[16px] italic leading-relaxed text-[var(--lp-gold)]"
       >
         {current.tagline}
       </p>
@@ -240,7 +244,7 @@ export default function GuideShowcase({
             title={g.title}
             data-testid={`guide-num-${i + 1}`}
             className={cn(
-              "focus-glow mono-label flex size-7 items-center justify-center rounded-full border text-[9px] tracking-normal transition-all duration-300",
+              "focus-glow mono-label flex size-7 items-center justify-center rounded-full border text-[10px] tracking-normal transition-all duration-300",
               i === active
                 ? "border-[rgba(232,217,176,0.85)] bg-[rgba(232,217,176,0.14)] text-[var(--lp-gold-ink)]"
                 : "border-[var(--lp-edge)] text-[var(--lp-mute)] hover:border-[var(--hairline-hover)] hover:text-[#c6d2db]"
@@ -250,7 +254,7 @@ export default function GuideShowcase({
           </button>
         ))}
       </div>
-      <p className="mono-label mt-3 text-center text-[8.5px] uppercase tracking-[0.26em] text-[var(--lp-faint)]">
+      <p className="mono-label mt-3 text-center text-[9.5px] uppercase tracking-[0.26em] text-[var(--lp-faint)]">
         {t("Ten illustrated guides — one image each")}
       </p>
     </div>

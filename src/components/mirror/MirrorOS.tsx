@@ -92,7 +92,7 @@ function FormulaCard({ index, formulaId }: { index: number; formulaId: string })
         className="focus-glow flex w-full items-center gap-3.5 px-5 py-4 text-left sm:px-6"
       >
         <span
-          className="emoji-ink flex size-10 shrink-0 items-center justify-center rounded-full border text-[17px]"
+          className="emoji-ink flex size-10 shrink-0 items-center justify-center rounded-full border text-[18px]"
           style={{
             borderColor: "color-mix(in srgb, var(--scope-a) 40%, transparent)",
             background: "color-mix(in srgb, var(--scope-a) 8%, transparent)",
@@ -102,10 +102,10 @@ function FormulaCard({ index, formulaId }: { index: number; formulaId: string })
           {formula.glyph}
         </span>
         <span className="min-w-0 flex-1">
-          <span className="scope-gradient-text block text-[15.5px] font-semibold sm:text-[17px]">
+          <span className="scope-gradient-text block text-[16.5px] font-semibold sm:text-[18px]">
             {t(formula.name)}
           </span>
-          <span className="mt-0.5 block truncate text-[14px] text-muted-foreground">
+          <span className="mt-0.5 block truncate text-[15px] text-muted-foreground">
             {t(formula.tagline)}
           </span>
         </span>
@@ -126,7 +126,7 @@ function FormulaCard({ index, formulaId }: { index: number; formulaId: string })
           className="overflow-hidden"
         >
           <div className="border-t hairline px-5 pb-5 pt-4 sm:px-6">
-            <p className="text-[14.5px] italic leading-relaxed text-muted-foreground">
+            <p className="text-[15.5px] italic leading-relaxed text-muted-foreground">
               {t(formula.tagline)}
             </p>
 
@@ -134,7 +134,7 @@ function FormulaCard({ index, formulaId }: { index: number; formulaId: string })
               {formula.steps.map((step, i) => (
                 <li key={i} className="flex items-start gap-3">
                   <span
-                    className="mono-label mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border text-[10.5px]"
+                    className="mono-label mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border text-[11.5px]"
                     style={{
                       borderColor: "color-mix(in srgb, var(--scope-a) 40%, transparent)",
                       color: "var(--scope-a)",
@@ -142,7 +142,7 @@ function FormulaCard({ index, formulaId }: { index: number; formulaId: string })
                   >
                     {i + 1}
                   </span>
-                  <span className="text-[15px] leading-[1.75] text-foreground/88">
+                  <span className="text-[16px] leading-[1.75] text-foreground/88">
                     {t(step)}
                   </span>
                 </li>
@@ -156,10 +156,10 @@ function FormulaCard({ index, formulaId }: { index: number; formulaId: string })
                 background: "color-mix(in srgb, var(--scope-a) 6%, transparent)",
               }}
             >
-              <p className="mono-label text-[10px] text-[var(--scope-a)]">
+              <p className="mono-label text-[11px] text-[var(--scope-a)]">
                 {t("Seal")}
               </p>
-              <p className="scope-gradient-text mx-auto mt-1.5 max-w-[440px] font-serif text-[17px] italic leading-relaxed">
+              <p className="scope-gradient-text mx-auto mt-1.5 max-w-[440px] font-serif text-[18px] italic leading-relaxed">
                 “{t(formula.seal)}”
               </p>
             </div>
@@ -183,12 +183,12 @@ function HigherMindTab() {
     <div className="space-y-8">
       {/* orientation */}
       <div className="rounded-2xl glass p-5 sm:p-6">
-        <h3 className="mono-label text-[11px] text-[var(--scope-a)]">
+        <h3 className="mono-label text-[12px] text-[var(--scope-a)]">
           {t("The Higher Mind — the one that holds the view")}
         </h3>
         <div className="mt-3 space-y-3">
           {higherMindIntro.map((p, i) => (
-            <p key={i} className="text-[15.5px] leading-[1.85] text-foreground/88">
+            <p key={i} className="text-[16.5px] leading-[1.85] text-foreground/88">
               {t(p)}
             </p>
           ))}
@@ -197,7 +197,7 @@ function HigherMindTab() {
 
       {/* ladder */}
       <div>
-        <h3 className="mono-label text-[11px] text-[var(--scope-a)]">
+        <h3 className="mono-label text-[12px] text-[var(--scope-a)]">
           {t("The Ladder of Arrival — six rungs into the higher view")}
         </h3>
         <div className="relative mt-4 space-y-0">
@@ -221,7 +221,7 @@ function HigherMindTab() {
                 />
               )}
               <span
-                className="mono-label z-10 flex size-9 shrink-0 items-center justify-center rounded-full border bg-[var(--glass-bg-strong)] text-[12px] font-semibold"
+                className="mono-label z-10 flex size-9 shrink-0 items-center justify-center rounded-full border bg-[var(--glass-bg-strong)] text-[13px] font-semibold"
                 style={{
                   borderColor: "color-mix(in srgb, var(--scope-a) 45%, transparent)",
                   color: "var(--scope-a)",
@@ -230,10 +230,10 @@ function HigherMindTab() {
                 {rung.rung}
               </span>
               <div className="min-w-0 pt-1">
-                <p className="text-[15.5px] font-semibold text-foreground">
+                <p className="text-[16.5px] font-semibold text-foreground">
                   {t(rung.title)}
                 </p>
-                <p className="mt-1 text-[14.5px] leading-relaxed text-muted-foreground">
+                <p className="mt-1 text-[15.5px] leading-relaxed text-muted-foreground">
                   {t(rung.line)}
                 </p>
               </div>
@@ -244,14 +244,14 @@ function HigherMindTab() {
 
       {/* protocols */}
       <div>
-        <h3 className="mono-label text-[11px] text-[var(--scope-a)]">
+        <h3 className="mono-label text-[12px] text-[var(--scope-a)]">
           {t("Contact protocols")}
         </h3>
         <div className="mt-4 grid gap-4 md:grid-cols-3">
           {higherProtocols.map((p) => (
             <div key={p.id} className="rounded-2xl glass p-5">
               <span
-                className="emoji-ink flex size-9 items-center justify-center rounded-full border text-[16.5px]"
+                className="emoji-ink flex size-9 items-center justify-center rounded-full border text-[17.5px]"
                 style={{
                   borderColor: "color-mix(in srgb, var(--scope-a) 38%, transparent)",
                   background: "color-mix(in srgb, var(--scope-a) 8%, transparent)",
@@ -260,10 +260,10 @@ function HigherMindTab() {
               >
                 {p.glyph}
               </span>
-              <h4 className="scope-gradient-text mt-3 text-[16px] font-semibold">
+              <h4 className="scope-gradient-text mt-3 text-[17px] font-semibold">
                 {t(p.name)}
               </h4>
-              <p className="mt-1.5 text-[14px] leading-relaxed text-muted-foreground">
+              <p className="mt-1.5 text-[15px] leading-relaxed text-muted-foreground">
                 {t(p.purpose)}
               </p>
               <ol className="mt-3 space-y-2">
@@ -274,7 +274,7 @@ function HigherMindTab() {
                       style={{ background: "var(--scope-a)" }}
                       aria-hidden="true"
                     />
-                    <span className="text-[14.5px] leading-[1.7] text-foreground/85">
+                    <span className="text-[15.5px] leading-[1.7] text-foreground/85">
                       {t(s)}
                     </span>
                   </li>
@@ -287,7 +287,7 @@ function HigherMindTab() {
 
       {/* discernment */}
       <div className="rounded-2xl glass p-5 sm:p-6">
-        <h3 className="mono-label flex items-center gap-2 text-[11px] text-[var(--scope-a)]">
+        <h3 className="mono-label flex items-center gap-2 text-[12px] text-[var(--scope-a)]">
           <ShieldCheck className="size-3.5" aria-hidden="true" />
           {t("Discernment — how to know it is the Higher Mind")}
         </h3>
@@ -299,7 +299,7 @@ function HigherMindTab() {
                 style={{ background: "var(--scope-a)" }}
                 aria-hidden="true"
               />
-              <span className="text-[14.5px] leading-[1.75] text-foreground/85">
+              <span className="text-[15.5px] leading-[1.75] text-foreground/85">
                 {t(line)}
               </span>
             </li>
@@ -319,7 +319,7 @@ function BeliefReframer() {
 
   return (
     <div className="rounded-2xl glass p-5 sm:p-6">
-      <h3 className="mono-label flex items-center gap-2 text-[11px] text-[var(--scope-a)]">
+      <h3 className="mono-label flex items-center gap-2 text-[12px] text-[var(--scope-a)]">
         <Wind className="size-3.5" aria-hidden="true" />
         {t("Belief Reframer")}
       </h3>
@@ -333,7 +333,7 @@ function BeliefReframer() {
               aria-pressed={active}
               onClick={() => setDomainId(active ? null : d.id)}
               className={cn(
-                "focus-glow flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[14px] transition-all duration-300",
+                "focus-glow flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[15px] transition-all duration-300",
                 active
                   ? "border-[var(--scope-a)] font-semibold text-foreground"
                   : "hairline text-muted-foreground hover:text-foreground"
@@ -362,8 +362,8 @@ function BeliefReframer() {
           className="mt-4 space-y-3"
         >
           <div className="rounded-xl border border-[var(--destructive)]/20 bg-[color-mix(in_srgb,var(--destructive)_5%,transparent)] p-3.5">
-            <p className="mono-label text-[10px] text-muted-foreground">{t("Pattern")}</p>
-            <p className="mt-1 text-[14.5px] leading-relaxed text-foreground/85">
+            <p className="mono-label text-[11px] text-muted-foreground">{t("Pattern")}</p>
+            <p className="mt-1 text-[15.5px] leading-relaxed text-foreground/85">
               {t(domain.pattern)}
             </p>
           </div>
@@ -374,14 +374,14 @@ function BeliefReframer() {
               background: "color-mix(in srgb, var(--scope-a) 7%, transparent)",
             }}
           >
-            <p className="mono-label text-[10px] text-[var(--scope-a)]">{t("Reframe")}</p>
-            <p className="mt-1 text-[14.5px] leading-relaxed text-foreground/88">
+            <p className="mono-label text-[11px] text-[var(--scope-a)]">{t("Reframe")}</p>
+            <p className="mt-1 text-[15.5px] leading-relaxed text-foreground/88">
               {t(domain.reframe)}
             </p>
           </div>
           <div className="rounded-xl border hairline p-3.5">
-            <p className="mono-label text-[10px] text-muted-foreground">{t("Practice")}</p>
-            <p className="mt-1 text-[14.5px] leading-relaxed text-foreground/85">
+            <p className="mono-label text-[11px] text-muted-foreground">{t("Practice")}</p>
+            <p className="mt-1 text-[15.5px] leading-relaxed text-foreground/85">
               {t(domain.practice)}
             </p>
           </div>
@@ -398,7 +398,7 @@ function VibrationBridge() {
 
   return (
     <div className="rounded-2xl glass p-5 sm:p-6">
-      <h3 className="mono-label flex items-center gap-2 text-[11px] text-[var(--scope-a)]">
+      <h3 className="mono-label flex items-center gap-2 text-[12px] text-[var(--scope-a)]">
         <Waves className="size-3.5" aria-hidden="true" />
         {t("Vibration Bridge")}
       </h3>
@@ -412,7 +412,7 @@ function VibrationBridge() {
               aria-pressed={active}
               onClick={() => setStateId(active ? null : v.id)}
               className={cn(
-                "focus-glow flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[14px] transition-all duration-300",
+                "focus-glow flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[15px] transition-all duration-300",
                 active
                   ? "border-[var(--scope-a)] font-semibold text-foreground"
                   : "hairline text-muted-foreground hover:text-foreground"
@@ -447,14 +447,14 @@ function VibrationBridge() {
               background: "color-mix(in srgb, var(--scope-a) 7%, transparent)",
             }}
           >
-            <p className="mono-label text-[10px] text-[var(--scope-a)]">{t("The bridge")}</p>
-            <p className="mt-1 text-[14.5px] leading-relaxed text-foreground/88">
+            <p className="mono-label text-[11px] text-[var(--scope-a)]">{t("The bridge")}</p>
+            <p className="mt-1 text-[15.5px] leading-relaxed text-foreground/88">
               {t(state.bridge)}
             </p>
           </div>
           <div className="rounded-xl border hairline py-4 text-center">
-            <p className="mono-label text-[10px] text-muted-foreground">{t("Anchor phrase")}</p>
-            <p className="scope-gradient-text mx-auto mt-1.5 max-w-[380px] font-serif text-[15.5px] italic leading-relaxed">
+            <p className="mono-label text-[11px] text-muted-foreground">{t("Anchor phrase")}</p>
+            <p className="scope-gradient-text mx-auto mt-1.5 max-w-[380px] font-serif text-[16.5px] italic leading-relaxed">
               “{t(state.anchor)}”
             </p>
           </div>
@@ -474,17 +474,17 @@ function DailyProtocolCard() {
 
   return (
     <div className="rounded-2xl glass p-5 sm:p-6">
-      <h3 className="mono-label flex items-center gap-2 text-[11px] text-[var(--scope-a)]">
+      <h3 className="mono-label flex items-center gap-2 text-[12px] text-[var(--scope-a)]">
         <Sun className="size-3.5" aria-hidden="true" />
         {t("Daily Protocol")}
       </h3>
-      <p className="mono-label mt-1 text-[10px] text-muted-foreground/70">{today.key}</p>
+      <p className="mono-label mt-1 text-[11px] text-muted-foreground/70">{today.key}</p>
       <div className="mt-4 space-y-3">
         <div className="flex items-start gap-3">
           <Sun className="mt-0.5 size-4 shrink-0 text-[var(--scope-a)]" aria-hidden="true" />
           <div>
-            <p className="mono-label text-[10px] text-muted-foreground">{t("Morning")}</p>
-            <p className="mt-0.5 text-[14.5px] leading-relaxed text-foreground/88">
+            <p className="mono-label text-[11px] text-muted-foreground">{t("Morning")}</p>
+            <p className="mt-0.5 text-[15.5px] leading-relaxed text-foreground/88">
               {t(today.protocol.morning)}
             </p>
           </div>
@@ -492,8 +492,8 @@ function DailyProtocolCard() {
         <div className="flex items-start gap-3">
           <Moon className="mt-0.5 size-4 shrink-0 text-[var(--scope-a)]" aria-hidden="true" />
           <div>
-            <p className="mono-label text-[10px] text-muted-foreground">{t("Evening")}</p>
-            <p className="mt-0.5 text-[14.5px] leading-relaxed text-foreground/88">
+            <p className="mono-label text-[11px] text-muted-foreground">{t("Evening")}</p>
+            <p className="mt-0.5 text-[15.5px] leading-relaxed text-foreground/88">
               {t(today.protocol.evening)}
             </p>
           </div>
@@ -505,8 +505,8 @@ function DailyProtocolCard() {
             background: "color-mix(in srgb, var(--scope-a) 6%, transparent)",
           }}
         >
-          <p className="mono-label text-[10px] text-[var(--scope-a)]">{t("Focus of the day")}</p>
-          <p className="scope-gradient-text mx-auto mt-1.5 max-w-[380px] font-serif text-[15.5px] italic leading-relaxed">
+          <p className="mono-label text-[11px] text-[var(--scope-a)]">{t("Focus of the day")}</p>
+          <p className="scope-gradient-text mx-auto mt-1.5 max-w-[380px] font-serif text-[16.5px] italic leading-relaxed">
             “{t(today.protocol.focus)}”
           </p>
         </div>
@@ -567,7 +567,7 @@ export function MirrorOS() {
           <button
             type="button"
             onClick={exitMirrorOS}
-            className="focus-glow pointer-events-auto group flex h-9 shrink-0 items-center gap-2 rounded-full border hairline bg-[var(--glass-bg)]/80 px-3 text-[14px] font-medium text-muted-foreground backdrop-blur-xl transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground sm:px-3.5"
+            className="focus-glow pointer-events-auto group flex h-9 shrink-0 items-center gap-2 rounded-full border hairline bg-[var(--glass-bg)]/80 px-3 text-[15px] font-medium text-muted-foreground backdrop-blur-md transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground sm:px-3.5"
           >
             <ArrowLeft
               className="size-3.5 transition-transform duration-300 group-hover:-translate-x-0.5"
@@ -585,7 +585,7 @@ export function MirrorOS() {
               placeholder="Tools"
               onSelect={(id) => setPlace(id as OsPlace)}
               testIdPrefix="os-tools"
-              triggerClassName="bg-[var(--glass-bg)]/80 backdrop-blur-xl"
+              triggerClassName="bg-[var(--glass-bg)]/80 backdrop-blur-md"
               onOpenChange={setToolsOpen}
             />
           </div>
@@ -632,7 +632,7 @@ export function MirrorOS() {
                       <button
                         type="button"
                         onClick={() => setPlace("chat")}
-                        className="focus-glow group flex h-8 items-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--scope-a)_30%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_7%,transparent)] px-3.5 text-[13.5px] font-medium text-foreground/85 transition-all duration-300 hover:border-[color-mix(in_srgb,var(--scope-a)_50%,transparent)]"
+                        className="focus-glow group flex h-8 items-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--scope-a)_30%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_7%,transparent)] px-3.5 text-[14.5px] font-medium text-foreground/85 transition-all duration-300 hover:border-[color-mix(in_srgb,var(--scope-a)_50%,transparent)]"
                       >
                         <MessagesSquare className="size-3.5 text-[var(--scope-a)]" aria-hidden="true" />
                         {t("Back to the OS core")}
@@ -641,7 +641,7 @@ export function MirrorOS() {
 
                     {place === "formulas" && (
                       <div className="space-y-4">
-                        <p className="mx-auto max-w-[560px] text-center text-[14.5px] leading-relaxed text-muted-foreground">
+                        <p className="mx-auto max-w-[560px] text-center text-[15.5px] leading-relaxed text-muted-foreground">
                           {t(
                             "Six complete formulas for shifting the line you live on. Open one, walk it slowly, and let the field do the arithmetic."
                           )}
@@ -654,7 +654,7 @@ export function MirrorOS() {
                           <button
                             type="button"
                             onClick={() => setPlace("chat")}
-                            className="dream-btn focus-glow group flex h-10 items-center gap-2.5 rounded-full px-5 text-[14.5px] font-medium text-foreground transition-all duration-300 hover:-translate-y-px"
+                            className="dream-btn focus-glow group flex h-10 items-center gap-2.5 rounded-full px-5 text-[15.5px] font-medium text-foreground transition-all duration-300 hover:-translate-y-px"
                           >
                             <Orbit className="size-3.5 text-[var(--gd)]" aria-hidden="true" />
                             {t("Walk it with the Manifest OS")}

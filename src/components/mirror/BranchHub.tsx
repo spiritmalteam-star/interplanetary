@@ -164,7 +164,7 @@ export function BranchHub() {
         data-testid="branch-hub"
       >
         <DialogHeader>
-          <DialogTitle className="scope-gradient-text text-[16px] font-semibold">
+          <DialogTitle className="scope-gradient-text text-[17px] font-semibold">
             {t("The living tree")}
           </DialogTitle>
           <DialogDescription>

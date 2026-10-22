@@ -183,7 +183,7 @@ export default function LandingSlides() {
       {/* the plate's own words — the standing slide speaks its title */}
       <p
         data-testid="landing-slides-title"
-        className="mx-auto mt-4 max-w-[660px] px-4 text-center font-[family-name:var(--font-literata)] text-[14.5px] italic leading-relaxed text-[var(--lp-gold)]"
+        className="mx-auto mt-4 max-w-[660px] px-4 text-center font-[family-name:var(--font-literata)] text-[15.5px] italic leading-relaxed text-[var(--lp-gold)]"
       >
         {t(SLIDES[active].title)}
       </p>
@@ -205,7 +205,7 @@ export default function LandingSlides() {
             aria-label={t(`Go to slide ${i + 1} — ${s.title}`)}
             data-testid="landing-slides-num"
             className={cn(
-              "focus-glow mono-label flex size-7 items-center justify-center rounded-full border text-[9px] tracking-normal transition-all duration-300",
+              "focus-glow mono-label flex size-7 items-center justify-center rounded-full border text-[10px] tracking-normal transition-all duration-300",
               i === active
                 ? "border-[rgba(232,217,176,0.85)] bg-[rgba(232,217,176,0.14)] text-[var(--lp-gold-ink)]"
                 : "border-[var(--lp-edge)] text-[var(--lp-mute)] hover:border-[var(--hairline-hover)] hover:text-[var(--lp-body)]"
@@ -215,7 +215,7 @@ export default function LandingSlides() {
           </button>
         ))}
       </div>
-      <p className="mono-label mt-3 text-center text-[8.5px] uppercase tracking-[0.26em] text-[var(--lp-faint)]">
+      <p className="mono-label mt-3 text-center text-[9.5px] uppercase tracking-[0.26em] text-[var(--lp-faint)]">
         {t("Awareness · Connection · Change")}
       </p>
     </div>

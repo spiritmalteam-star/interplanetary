@@ -505,7 +505,7 @@ function AppShellViews({
             >
               <TreeDeciduous className="size-4" aria-hidden="true" />
             </button>
-            <p className="mono-label text-[9px] uppercase tracking-[0.2em] text-muted-foreground">
+            <p className="mono-label text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
               {t("The creation room")}
             </p>
           </div>

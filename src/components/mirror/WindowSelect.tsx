@@ -68,7 +68,7 @@ export function WindowSelect({
           aria-label={active ? `${t(placeholder)}: ${t(active.name)}` : t(placeholder)}
           title={active ? t(active.tagline ?? active.name) : t(placeholder)}
           className={cn(
-            "focus-glow flex h-8 max-w-full items-center gap-1.5 rounded-full border px-3 text-[12.5px] transition-all duration-300",
+            "focus-glow flex h-8 max-w-full items-center gap-1.5 rounded-full border px-3 text-[13.5px] transition-all duration-300",
             active
               ? "font-semibold text-foreground"
               : "hairline text-muted-foreground hover:text-foreground",
@@ -125,11 +125,11 @@ export function WindowSelect({
                   />
                 )}
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[13px] font-medium text-foreground/90">
+                  <span className="block truncate text-[14px] font-medium text-foreground/90">
                     {t(item.name)}
                   </span>
                   {item.tagline && (
-                    <span className="block truncate text-[11px] text-muted-foreground">
+                    <span className="block truncate text-[12px] text-muted-foreground">
                       {t(item.tagline)}
                     </span>
                   )}

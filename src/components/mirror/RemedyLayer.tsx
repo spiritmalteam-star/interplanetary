@@ -123,13 +123,13 @@ function RemedyCard() {
           <Leaf className="size-3.5" style={{ color: HERB }} />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="mono-label text-[9.5px] uppercase tracking-[0.2em] text-muted-foreground/75">
+          <p className="mono-label text-[10.5px] uppercase tracking-[0.2em] text-muted-foreground/75">
             {t(KIND_LABEL[remedy.kind])}
           </p>
-          <p className="mt-0.5 truncate font-serif text-[16.5px] leading-snug text-foreground">
+          <p className="mt-0.5 truncate font-serif text-[17.5px] leading-snug text-foreground">
             {remedy.title}
           </p>
-          <p className="mono-label mt-0.5 text-[9.5px] uppercase tracking-[0.18em]" style={{ color: `color-mix(in srgb, ${GOLD} 80%, white)` }}>
+          <p className="mono-label mt-0.5 text-[10.5px] uppercase tracking-[0.18em]" style={{ color: `color-mix(in srgb, ${GOLD} 80%, white)` }}>
             {t("The remedy is ready")}
           </p>
         </div>
@@ -147,14 +147,14 @@ function RemedyCard() {
       {/* body — scrollable so the tab never crowds the chat */}
       <div className="nice-scroll max-h-[min(52vh,420px)] overflow-y-auto px-4 py-4">
         {concern && (
-          <p className="mb-4 text-[13px] italic leading-relaxed text-muted-foreground">
+          <p className="mb-4 text-[14px] italic leading-relaxed text-muted-foreground">
             “{concern}”
           </p>
         )}
 
         {remedy.needs.length > 0 && (
           <section aria-label={t("What you will need")}>
-            <p className="mono-label text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">
+            <p className="mono-label text-[11px] uppercase tracking-[0.2em] text-muted-foreground/70">
               {t("What you will need")}
             </p>
             <ul className="mt-2 space-y-1.5">
@@ -165,7 +165,7 @@ function RemedyCard() {
                     style={{ background: `color-mix(in srgb, ${HERB} 80%, white)` }}
                     aria-hidden="true"
                   />
-                  <span className="text-[14px] leading-relaxed text-foreground/88">
+                  <span className="text-[15px] leading-relaxed text-foreground/88">
                     {item}
                   </span>
                 </li>
@@ -175,20 +175,20 @@ function RemedyCard() {
         )}
 
         <section className="mt-4" aria-label={t(stepsLabel)}>
-          <p className="mono-label text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">
+          <p className="mono-label text-[11px] uppercase tracking-[0.2em] text-muted-foreground/70">
             {t(stepsLabel)}
           </p>
           <ol className="mt-2 space-y-2.5">
             {remedy.steps.map((step, i) => (
               <li key={i} className="flex items-start gap-3">
                 <span
-                  className="mono-label mt-0.5 shrink-0 text-[10px] tabular-nums"
+                  className="mono-label mt-0.5 shrink-0 text-[11px] tabular-nums"
                   style={{ color: `color-mix(in srgb, ${ROSE} 75%, white)` }}
                   aria-hidden="true"
                 >
                   {String(i + 1).padStart(2, "0")}
                 </span>
-                <span className="text-[14px] leading-relaxed text-foreground/88">
+                <span className="text-[15px] leading-relaxed text-foreground/88">
                   {step}
                 </span>
               </li>
@@ -222,15 +222,15 @@ function CraftingPhases({ concern }: { concern: string }) {
       aria-busy="true"
       data-testid="remedy-crafting"
     >
-      <p className="mono-label mb-4 text-center text-[10px] uppercase tracking-[0.24em] text-muted-foreground/75">
+      <p className="mono-label mb-4 text-center text-[11px] uppercase tracking-[0.24em] text-muted-foreground/75">
         {t("Preparing a remedy")}
       </p>
       <CraftingVessel />
-      <p className="mt-4 text-center text-[13.5px] leading-relaxed text-muted-foreground">
+      <p className="mt-4 text-center text-[14.5px] leading-relaxed text-muted-foreground">
         {t(CRAFT_PHASES[phase] ?? CRAFT_PHASES[0])}
       </p>
       {concern && (
-        <p className="mx-auto mt-1.5 max-w-[320px] truncate text-center text-[12px] italic text-muted-foreground/70">
+        <p className="mx-auto mt-1.5 max-w-[320px] truncate text-center text-[13px] italic text-muted-foreground/70">
           “{concern}”
         </p>
       )}
@@ -279,13 +279,13 @@ export function RemedyLayer() {
 
             {status === "error" && (
               <div className="px-4 py-6 text-center" data-testid="remedy-error">
-                <p className="text-[14px] italic leading-relaxed text-foreground/80">
+                <p className="text-[15px] italic leading-relaxed text-foreground/80">
                   {t(
                     "The apothecary is quiet — the remedy could not be prepared. Rest a breath, then ask again."
                   )}
                 </p>
                 {error && (
-                  <p className="mt-1.5 text-[12.5px] italic text-muted-foreground/70">
+                  <p className="mt-1.5 text-[13.5px] italic text-muted-foreground/70">
                     {error}
                   </p>
                 )}
@@ -293,7 +293,7 @@ export function RemedyLayer() {
                   type="button"
                   onClick={() => void askRemedy(concern)}
                   data-testid="remedy-retry"
-                  className="focus-glow mt-3 inline-flex h-9 items-center gap-2 rounded-full border px-4 text-[13px] text-foreground/90 transition-all duration-300 hover:-translate-y-px"
+                  className="focus-glow mt-3 inline-flex h-9 items-center gap-2 rounded-full border px-4 text-[14px] text-foreground/90 transition-all duration-300 hover:-translate-y-px"
                   style={{
                     borderColor: `color-mix(in srgb, ${HERB} 40%, transparent)`,
                   }}

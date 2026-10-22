@@ -92,7 +92,7 @@ export function ChatHistoryPanel({
           >
             {/* header — the shelf's name and the fresh hand */}
             <div className="flex shrink-0 items-center justify-between gap-2 border-b hairline px-4 py-3">
-              <p className="text-[15px] font-semibold tracking-[0.01em] text-foreground">
+              <p className="text-[16px] font-semibold tracking-[0.01em] text-foreground">
                 {t("Your conversations")}
               </p>
               <button
@@ -113,7 +113,7 @@ export function ChatHistoryPanel({
             <div className="nice-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 py-2">
               {!keeper ? (
                 <div className="px-3 py-6 text-center">
-                  <p className="text-[13.5px] italic leading-relaxed text-muted-foreground">
+                  <p className="text-[14.5px] italic leading-relaxed text-muted-foreground">
                     {t("Your chat here is temporary — it lives only in this visit.")}
                   </p>
                   <button
@@ -123,13 +123,13 @@ export function ChatHistoryPanel({
                       openAuth("signin");
                     }}
                     data-testid="history-signin"
-                    className="focus-glow mt-3 inline-flex h-9 items-center gap-2 rounded-full bg-foreground px-4 text-[12.5px] font-medium text-background transition-all duration-300 hover:opacity-85"
+                    className="focus-glow mt-3 inline-flex h-9 items-center gap-2 rounded-full bg-foreground px-4 text-[13.5px] font-medium text-background transition-all duration-300 hover:opacity-85"
                   >
                     {t("Enter the passage")}
                   </button>
                 </div>
               ) : chats.length === 0 ? (
-                <p className="px-3 py-8 text-center text-[13.5px] italic leading-relaxed text-muted-foreground">
+                <p className="px-3 py-8 text-center text-[14.5px] italic leading-relaxed text-muted-foreground">
                   {t("Nothing rests on the shelf yet.")}
                 </p>
               ) : (
@@ -154,10 +154,10 @@ export function ChatHistoryPanel({
                           }
                           className="focus-glow min-w-0 flex-1 rounded-lg px-3 py-2 pr-9 text-left transition-colors duration-200 hover:bg-[color-mix(in_srgb,var(--scope-a)_8%,transparent)]"
                         >
-                          <span className="block truncate text-[13.5px] leading-snug text-foreground/90">
+                          <span className="block truncate text-[14.5px] leading-snug text-foreground/90">
                             {chat.title}
                           </span>
-                          <span className="mt-0.5 block text-[11px] text-muted-foreground/70">
+                          <span className="mt-0.5 block text-[12px] text-muted-foreground/70">
                             {new Intl.DateTimeFormat(undefined, {
                               month: "short",
                               day: "numeric",
@@ -184,7 +184,7 @@ export function ChatHistoryPanel({
             </div>
 
             {/* the zero-database law, spoken quietly */}
-            <p className="shrink-0 border-t hairline px-4 py-3 text-[11px] leading-relaxed text-muted-foreground/70">
+            <p className="shrink-0 border-t hairline px-4 py-3 text-[12px] leading-relaxed text-muted-foreground/70">
               {keeper
                 ? t(
                     "Kept only on this device — the Mirror holds nothing on any server."

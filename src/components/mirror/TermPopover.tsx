@@ -100,11 +100,11 @@ export function TermPopover() {
           role="dialog"
           aria-label={t("The meaning of {term}", { term: term.term })}
           data-testid="term-popover"
-          className="fixed z-[90] rounded-2xl border border-[color-mix(in_srgb,var(--hairline)_80%,transparent)] bg-[var(--glass-bg)] p-4 shadow-[0_18px_50px_-20px_rgba(0,0,0,0.45)] backdrop-blur-xl"
+          className="fixed z-[90] rounded-2xl border border-[color-mix(in_srgb,var(--hairline)_80%,transparent)] bg-[var(--glass-bg)] p-4 shadow-[0_18px_50px_-20px_rgba(0,0,0,0.45)] backdrop-blur-md"
           style={{ left, top, width: CARD_W }}
         >
           <div className="flex items-start justify-between gap-2">
-            <p className="ink-hand text-[15px] font-semibold leading-snug text-foreground">
+            <p className="ink-hand text-[16px] font-semibold leading-snug text-foreground">
               {t(term.term)}
             </p>
             <button
@@ -116,14 +116,14 @@ export function TermPopover() {
               <X className="size-3.5" aria-hidden="true" />
             </button>
           </div>
-          <p className="mt-1.5 font-serif text-[13px] leading-relaxed text-muted-foreground">
+          <p className="mt-1.5 font-serif text-[14px] leading-relaxed text-muted-foreground">
             {t(term.meaning)}
           </p>
           <button
             type="button"
             onClick={crystallize}
             data-testid="term-crystallize"
-            className="focus-glow mt-3 flex h-8 w-full items-center justify-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--scope-a,transparent)_35%,transparent)] px-3 text-[12.5px] text-foreground/90 transition-all duration-300 hover:-translate-y-px"
+            className="focus-glow mt-3 flex h-8 w-full items-center justify-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--scope-a,transparent)_35%,transparent)] px-3 text-[13.5px] text-foreground/90 transition-all duration-300 hover:-translate-y-px"
           >
             <Sparkles className="size-3.5" aria-hidden="true" />
             {t("Crystallize this meaning")}

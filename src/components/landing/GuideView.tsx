@@ -142,7 +142,7 @@ function Block({ block, a, b }: { block: GuideBlock; a: string; b: string }) {
   switch (block.type) {
     case "intro":
       return (
-        <p className="mx-auto max-w-[620px] text-center font-[family-name:var(--font-literata)] text-[16px] italic leading-[1.85] text-[#6d5c3c]">
+        <p className="mx-auto max-w-[620px] text-center font-[family-name:var(--font-literata)] text-[17px] italic leading-[1.85] text-[#6d5c3c]">
           {block.text}
         </p>
       );
@@ -151,20 +151,20 @@ function Block({ block, a, b }: { block: GuideBlock; a: string; b: string }) {
         <section className="mx-auto max-w-[680px]">
           {block.kicker ? (
             <p
-              className="mono-label text-[9px] uppercase tracking-[0.28em]"
+              className="mono-label text-[10px] uppercase tracking-[0.28em]"
               style={{ color: `color-mix(in srgb, ${a} 62%, ${GOLD})` }}
             >
               {block.kicker}
             </p>
           ) : null}
-          <h2 className="mt-2.5 font-[family-name:Cinzel] text-[22px] font-semibold leading-tight tracking-wide text-[#372e1c] sm:text-[26px]">
+          <h2 className="mt-2.5 font-[family-name:Cinzel] text-[23px] font-semibold leading-tight tracking-wide text-[#372e1c] sm:text-[27px]">
             {block.heading}
           </h2>
           <div className="mt-4 space-y-3.5">
             {block.paragraphs.map((p, i) => (
               <p
                 key={i}
-                className="text-[14px] leading-[1.9] text-[#544731]"
+                className="text-[15px] leading-[1.9] text-[#544731]"
               >
                 {p}
               </p>
@@ -181,12 +181,12 @@ function Block({ block, a, b }: { block: GuideBlock; a: string; b: string }) {
               data-mirror-whisper=""
             >
               <p
-                className="mono-label text-[8.5px] uppercase tracking-[0.26em]"
+                className="mono-label text-[9.5px] uppercase tracking-[0.26em]"
                 style={{ color: `color-mix(in srgb, ${a} 55%, ${GOLD})` }}
               >
                 {t("A note in the margin")}
               </p>
-              <p className="mt-2 font-[family-name:var(--font-literata)] text-[14.5px] italic leading-[1.8] text-[#7a5c14]">
+              <p className="mt-2 font-[family-name:var(--font-literata)] text-[15.5px] italic leading-[1.8] text-[#7a5c14]">
                 {block.mirror}
               </p>
             </div>
@@ -221,14 +221,14 @@ function Block({ block, a, b }: { block: GuideBlock; a: string; b: string }) {
           className="mx-auto max-w-[680px] rounded-2xl border p-5 sm:p-6"
           style={{ borderColor: EDGE, backgroundColor: CARD_BG }}
         >
-          <h3 className="font-[family-name:Cinzel] text-[15px] font-semibold tracking-wide text-[#7a5c14]">
+          <h3 className="font-[family-name:Cinzel] text-[16px] font-semibold tracking-wide text-[#7a5c14]">
             {block.heading}
           </h3>
           <ul className="mt-3.5 space-y-2.5">
             {block.items.map((item, i) => (
               <li
                 key={i}
-                className="flex items-start gap-2.5 text-[13px] leading-relaxed text-[#544731]"
+                className="flex items-start gap-2.5 text-[14px] leading-relaxed text-[#544731]"
               >
                 <span
                   aria-hidden="true"
@@ -251,19 +251,19 @@ function Block({ block, a, b }: { block: GuideBlock; a: string; b: string }) {
           }}
         >
           <p
-            className="mono-label text-[9px] uppercase tracking-[0.26em]"
+            className="mono-label text-[10px] uppercase tracking-[0.26em]"
             style={{ color: `color-mix(in srgb, ${a} 55%, ${GOLD})` }}
           >
             {t("The practice")}
           </p>
-          <h3 className="mt-2 font-[family-name:Cinzel] text-[15.5px] font-semibold tracking-wide text-[#372e1c]">
+          <h3 className="mt-2 font-[family-name:Cinzel] text-[16.5px] font-semibold tracking-wide text-[#372e1c]">
             {block.title}
           </h3>
           <ol className="mt-3.5 space-y-2.5">
             {block.steps.map((s, i) => (
-              <li key={i} className="flex items-start gap-3 text-[13.5px] leading-[1.8] text-[#544731]">
+              <li key={i} className="flex items-start gap-3 text-[14.5px] leading-[1.8] text-[#544731]">
                 <span
-                  className="mono-label mt-[3px] flex size-5 shrink-0 items-center justify-center rounded-full border text-[8.5px]"
+                  className="mono-label mt-[3px] flex size-5 shrink-0 items-center justify-center rounded-full border text-[9.5px]"
                   style={{
                     borderColor: `color-mix(in srgb, ${a} 50%, ${EDGE})`,
                     color: `color-mix(in srgb, ${a} 55%, ${GOLD})`,
@@ -287,12 +287,12 @@ function Block({ block, a, b }: { block: GuideBlock; a: string; b: string }) {
           }}
         >
           <p
-            className="mono-label text-[9px] uppercase tracking-[0.26em]"
+            className="mono-label text-[10px] uppercase tracking-[0.26em]"
             style={{ color: `color-mix(in srgb, ${b} 50%, ${GOLD})` }}
           >
             {t("Pause & reflect")}
           </p>
-          <p className="mt-2.5 font-[family-name:var(--font-literata)] text-[15px] italic leading-[1.8] text-[#5f5033]">
+          <p className="mt-2.5 font-[family-name:var(--font-literata)] text-[16px] italic leading-[1.8] text-[#5f5033]">
             {block.question}
           </p>
         </section>
@@ -305,7 +305,7 @@ function Block({ block, a, b }: { block: GuideBlock; a: string; b: string }) {
             className="mx-auto size-3 rotate-45"
             style={{ color: `color-mix(in srgb, ${a} 60%, ${GOLD})` }}
           />
-          <p className="mt-3 font-[family-name:var(--font-literata)] text-[17px] italic leading-[1.75] text-[#7a5c14]">
+          <p className="mt-3 font-[family-name:var(--font-literata)] text-[18px] italic leading-[1.75] text-[#7a5c14]">
             {block.text}
           </p>
         </blockquote>
@@ -351,32 +351,39 @@ export default function GuideView({
 
         <div className="relative z-10">
           {/* the back hand — one touch folds the page away and the
-              slideshow stands exactly where it was left */}
+              slideshow stands exactly where it was left. THE SMALL,
+              FINE HAND — a single quiet circle now: a thin gold ring,
+              a soft sheen on hover, no heavy bar of words. */}
           <div
-            className="sticky top-0 z-10 -mx-4 mb-2 flex items-center justify-between gap-3 border-b px-4 py-3 backdrop-blur-sm sm:-mx-8 sm:px-8"
+            className="sticky top-0 z-10 -mx-4 mb-2 flex items-center justify-between gap-3 border-b px-4 py-2.5 backdrop-blur-sm sm:-mx-8 sm:px-8"
             style={{ borderColor: EDGE, backgroundColor: "rgba(246, 238, 218, 0.88)" }}
           >
             <button
               type="button"
               onClick={onClose}
               data-testid="guide-back"
-              className="focus-glow group inline-flex h-9 items-center gap-2 rounded-full border bg-[rgba(255,253,244,0.7)] px-4 text-[12.5px] text-[#5a4c33] transition-all duration-300 hover:border-[rgba(154,120,30,0.55)] hover:text-[#372e1c]"
-              style={{ borderColor: EDGE }}
+              title={t("Back to the slideshow")}
+              aria-label={t("Back to the slideshow")}
+              className="focus-glow group relative flex size-8 shrink-0 items-center justify-center rounded-full border bg-[rgba(255,253,244,0.78)] text-[#6d5410] shadow-[0_6px_18px_-10px_rgba(122,100,58,0.55)] transition-all duration-300 hover:-translate-x-0.5 hover:border-[rgba(154,120,30,0.7)] hover:bg-[rgba(255,253,244,0.95)] hover:shadow-[0_9px_24px_-10px_rgba(154,120,30,0.6)]"
+              style={{ borderColor: "rgba(154, 120, 30, 0.38)" }}
             >
               <ArrowLeft
-                className="size-3.5 transition-transform duration-300 group-hover:-translate-x-0.5"
+                className="size-3.5 transition-transform duration-300 group-hover:-translate-x-px"
                 aria-hidden="true"
               />
-              {t("Back to the slideshow")}
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 rounded-full bg-[linear-gradient(120deg,transparent_35%,rgba(255,246,214,0.55)_50%,transparent_65%)] opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+              />
             </button>
-            <span className="mono-label hidden text-[8.5px] uppercase tracking-[0.26em] text-[#8d7c5c] sm:block">
+            <span className="mono-label truncate text-[9.5px] uppercase tracking-[0.26em] text-[#8d7c5c]">
               {guide.subtitle}
             </span>
           </div>
 
           {/* the hero — the guide's own artwork and name */}
           <header className="pt-6 text-center sm:pt-10">
-            <p className="mono-label text-[9px] uppercase tracking-[0.3em] text-[#8d7c5c]">
+            <p className="mono-label text-[10px] uppercase tracking-[0.3em] text-[#8d7c5c]">
               {guide.subtitle}
             </p>
             <h1 className="mt-3.5 font-[family-name:Cinzel] text-[clamp(28px,7.5vw,42px)] font-semibold leading-[1.14] tracking-wide text-[#332b1a]">
@@ -403,7 +410,7 @@ export default function GuideView({
                 className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[rgba(246,238,218,0.85)] to-transparent"
               />
             </div>
-            <p className="mx-auto mt-6 max-w-[620px] font-[family-name:var(--font-literata)] text-[16.5px] italic leading-[1.8] text-[#7a5c14]">
+            <p className="mx-auto mt-6 max-w-[620px] font-[family-name:var(--font-literata)] text-[17.5px] italic leading-[1.8] text-[#7a5c14]">
               {guide.tagline}
             </p>
           </header>
@@ -426,12 +433,12 @@ export default function GuideView({
                 style={{ color: `color-mix(in srgb, ${guide.crystalA} 60%, ${GOLD})` }}
               />
               <p
-                className="mono-label mt-3 text-[9px] uppercase tracking-[0.3em]"
+                className="mono-label mt-3 text-[10px] uppercase tracking-[0.3em]"
                 style={{ color: `color-mix(in srgb, ${guide.crystalA} 50%, ${GOLD})` }}
               >
                 {t("Before you step in")}
               </p>
-              <p className="mt-3 font-[family-name:var(--font-literata)] text-[15px] italic leading-[1.85] text-[#5f5033]">
+              <p className="mt-3 font-[family-name:var(--font-literata)] text-[16px] italic leading-[1.85] text-[#5f5033]">
                 {guide.mirrorOpening}
               </p>
             </div>
@@ -460,33 +467,27 @@ export default function GuideView({
                 className="mx-auto size-3 rotate-45"
                 style={{ color: `color-mix(in srgb, ${guide.crystalB} 55%, ${GOLD})` }}
               />
-              <p className="mt-3 font-[family-name:var(--font-literata)] text-[15.5px] italic leading-[1.85] text-[#5f5033]">
+              <p className="mt-3 font-[family-name:var(--font-literata)] text-[16.5px] italic leading-[1.85] text-[#5f5033]">
                 {guide.mirrorClosing}
               </p>
             </div>
           ) : null}
 
-          {/* the foot — the way back to the shelf of guides */}
-          <div className="mt-14 flex flex-col items-center gap-4 border-t pt-10 text-center" style={{ borderColor: EDGE }}>
-            <p className="mono-label text-[8.5px] uppercase tracking-[0.28em] text-[#8d7c5c]">
+          {/* the foot — a quiet mark where the walk ends (the bottom
+              back hand is gone: the small circle at the page's head and
+              the browser's own back carry the way home) */}
+          <div
+            className="mt-14 flex flex-col items-center gap-3 border-t pt-9 text-center"
+            style={{ borderColor: EDGE }}
+          >
+            <Diamond
+              aria-hidden="true"
+              className="size-2.5 rotate-45"
+              style={{ color: `color-mix(in srgb, ${guide.crystalB} 55%, ${GOLD})` }}
+            />
+            <p className="mono-label text-[9.5px] uppercase tracking-[0.28em] text-[#8d7c5c]">
               {t("A guide of the house")}
             </p>
-            <button
-              type="button"
-              onClick={onClose}
-              data-testid="guide-back-bottom"
-              className="focus-glow group inline-flex h-11 items-center gap-2.5 rounded-full border px-6 text-[13.5px] font-medium text-[#4a3d22] shadow-[0_14px_34px_-22px_rgba(122,100,58,0.6)] transition-all duration-300 hover:border-[rgba(154,120,30,0.7)] hover:bg-[rgba(255,253,244,0.9)]"
-              style={{
-                borderColor: `color-mix(in srgb, ${GOLD} 42%, ${EDGE})`,
-                backgroundColor: "rgba(255, 253, 244, 0.6)",
-              }}
-            >
-              <ArrowLeft
-                className="size-3.5 transition-transform duration-300 group-hover:-translate-x-0.5"
-                aria-hidden="true"
-              />
-              {t("Choose another guide")}
-            </button>
           </div>
         </div>
       </div>

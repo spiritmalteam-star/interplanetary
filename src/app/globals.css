@@ -158,6 +158,29 @@ body {
   --lp-veil: rgba(255, 253, 244, 0.62);
   --lp-veil-solid: #f9f3df;
   --lp-edge: rgba(122, 100, 58, 0.24);
+
+  /* the banner's own veil — the hero's artwork retreats so the words
+     on it stay bright and readable (the vanilla daylight's cream) */
+  --lp-hero-img: 0.34;
+  --lp-hero-veil: rgba(246, 239, 220, 0.82);
+
+  /* THE CROSSING'S TWO SKIES — the tunnel wears the realm's own
+     light: warm cream and gold with feathered green and purple rings
+     in the vanilla daylight, the glacial crystal blues when the
+     toggle is off. One passage, two skies. */
+  --pt-bg-a: #fbf5e2;
+  --pt-bg-b: #efe4c4;
+  --pt-bg-c: #e0d1a6;
+  --pt-glow: rgba(154, 120, 30, 0.16);
+  --pt-glow-soft: rgba(154, 120, 30, 0.05);
+  --pt-ring: rgba(154, 120, 30, 0.4);
+  --pt-ring-2: rgba(92, 122, 82, 0.32);
+  --pt-ring-3: rgba(124, 95, 143, 0.3);
+  --pt-ring-4: rgba(154, 120, 30, 0.26);
+  --pt-ring-shadow: rgba(154, 120, 30, 0.45);
+  --pt-ring-shadow-soft: rgba(92, 122, 82, 0.28);
+  --pt-streak: rgba(122, 100, 58, 0.06);
+  --pt-sigil-glow: rgba(154, 120, 30, 0.5);
 }
 
 .dark {
@@ -251,6 +274,27 @@ body {
   --lp-veil: rgba(8, 12, 20, 0.55);
   --lp-veil-solid: #0a0e18;
   --lp-edge: rgba(255, 255, 255, 0.12);
+
+  /* the banner's night veil — the hero's artwork dims under the
+     crystal sky so the light words on it keep their breath */
+  --lp-hero-img: 0.5;
+  --lp-hero-veil: rgba(10, 14, 24, 0.42);
+
+  /* the crossing's crystal night — the tunnel's blues when the
+     toggle is off (the sky it has always worn) */
+  --pt-bg-a: #223459;
+  --pt-bg-b: #16253f;
+  --pt-bg-c: #0f1a2e;
+  --pt-glow: rgba(125, 190, 255, 0.16);
+  --pt-glow-soft: rgba(125, 190, 255, 0.05);
+  --pt-ring: rgba(148, 200, 255, 0.34);
+  --pt-ring-2: rgba(173, 216, 255, 0.26);
+  --pt-ring-3: rgba(255, 122, 145, 0.2);
+  --pt-ring-4: rgba(190, 225, 255, 0.22);
+  --pt-ring-shadow: rgba(125, 190, 255, 0.5);
+  --pt-ring-shadow-soft: rgba(125, 190, 255, 0.35);
+  --pt-streak: rgba(148, 200, 255, 0.05);
+  --pt-sigil-glow: rgba(125, 190, 255, 0.55);
 }
 
 @layer base {
@@ -267,7 +311,10 @@ body {
     @apply bg-background text-foreground;
     font-feature-settings: "ss01", "cv11";
     letter-spacing: 0.005em;
-    font-size: 16px;
+    /* THE WHOLE HOUSE'S LARGER VOICE — every word one step bigger:
+       the base breathes at 17px, so all rem-set text (the app's own
+       voice included) rises with it, and the page keeps its shape. */
+    font-size: 17px;
     line-height: 1.7;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
@@ -2534,6 +2581,14 @@ html:not(.dark) .lp-sigil-img {
 .lens-dormant *::after {
   animation-play-state: paused !important;
 }
+
+/* THE CALM SCROLL — the threshold's deep chapters render only when
+   the eye approaches them: the page's first paint stays light, the
+   walk stays smooth, and the phone keeps its cool. */
+.lp-late {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 760px;
+}
 @keyframes lp-breathe {
   0%,
   100% {
@@ -2706,9 +2761,9 @@ html:not(.dark) .lp-sigil-img {
   overflow: hidden;
   background: radial-gradient(
     120% 120% at 50% 50%,
-    #223459 0%,
-    #16253f 46%,
-    #0f1a2e 100%
+    var(--pt-bg-a) 0%,
+    var(--pt-bg-b) 46%,
+    var(--pt-bg-c) 100%
   );
   animation: pt-in 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
   transition: opacity 0.55s ease;
@@ -2734,8 +2789,8 @@ html:not(.dark) .lp-sigil-img {
   transform: translate(-50%, -50%);
   background: radial-gradient(
     circle,
-    rgba(125, 190, 255, 0.16) 0%,
-    rgba(125, 190, 255, 0.05) 26%,
+    var(--pt-glow) 0%,
+    var(--pt-glow-soft) 26%,
     transparent 52%
   );
   animation: pt-breathe 2.6s ease-in-out infinite;
@@ -2759,23 +2814,23 @@ html:not(.dark) .lp-sigil-img {
   width: 156vmax;
   height: 156vmax;
   border-radius: 9999px;
-  border: 1.5px solid rgba(148, 200, 255, 0.34);
+  border: 1.5px solid var(--pt-ring);
   box-shadow:
-    0 0 60px -18px rgba(125, 190, 255, 0.5),
-    inset 0 0 80px -40px rgba(125, 190, 255, 0.35);
+    0 0 60px -18px var(--pt-ring-shadow),
+    inset 0 0 80px -40px var(--pt-ring-shadow-soft);
   animation: pt-rush 1.9s cubic-bezier(0.5, 0, 0.75, 0.4) infinite;
 }
 .pt-ring-2 {
   animation-delay: 0.48s;
-  border-color: rgba(173, 216, 255, 0.26);
+  border-color: var(--pt-ring-2);
 }
 .pt-ring-3 {
   animation-delay: 0.96s;
-  border-color: rgba(255, 122, 145, 0.2);
+  border-color: var(--pt-ring-3);
 }
 .pt-ring-4 {
   animation-delay: 1.42s;
-  border-color: rgba(190, 225, 255, 0.22);
+  border-color: var(--pt-ring-4);
 }
 @keyframes pt-rush {
   0% {
@@ -2797,7 +2852,7 @@ html:not(.dark) .lp-sigil-img {
   background:
     repeating-conic-gradient(
       from 0deg at 50% 50%,
-      rgba(148, 200, 255, 0.05) 0deg 0.5deg,
+      var(--pt-streak) 0deg 0.5deg,
       transparent 0.5deg 11deg
     );
   mask-image: radial-gradient(circle, transparent 18%, black 42%, black 78%, transparent);
@@ -2821,7 +2876,7 @@ html:not(.dark) .lp-sigil-img {
   height: clamp(88px, 18vmin, 150px);
   transform: translate(-50%, -50%);
   opacity: 0.85;
-  filter: drop-shadow(0 0 26px rgba(125, 190, 255, 0.55));
+  filter: drop-shadow(0 0 26px var(--pt-sigil-glow));
   animation: pt-heart 2.2s ease-in-out infinite;
 }
 .pt-sigil img {

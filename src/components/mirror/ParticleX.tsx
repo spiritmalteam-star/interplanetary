@@ -111,7 +111,7 @@ function PxThinking() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -4 }}
           transition={{ duration: 0.35 }}
-          className="font-serif text-[14px] italic text-muted-foreground"
+          className="font-serif text-[15px] italic text-muted-foreground"
         >
           {t(pxGatheringPhrases[phraseIdx])}
         </motion.span>
@@ -159,7 +159,7 @@ function PxExchange({
       >
         <p
           className={cn(
-            "max-w-[78%] rounded-2xl rounded-br-md border border-[color-mix(in_srgb,var(--scope-a)_24%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_9%,transparent)] px-4 py-2.5 text-[15px] leading-relaxed text-foreground/90",
+            "max-w-[78%] rounded-2xl rounded-br-md border border-[color-mix(in_srgb,var(--scope-a)_24%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_9%,transparent)] px-4 py-2.5 text-[16px] leading-relaxed text-foreground/90",
             failed && "opacity-70"
           )}
         >
@@ -170,7 +170,7 @@ function PxExchange({
             data-testid="failed-msg"
             className="mt-1.5 flex max-w-[78%] flex-wrap items-center justify-end gap-1.5"
           >
-            <span className="mono-label flex items-center gap-1 rounded-full border border-[var(--destructive)]/25 bg-[color-mix(in_srgb,var(--destructive)_6%,transparent)] px-2 py-1 text-[9.5px] text-muted-foreground">
+            <span className="mono-label flex items-center gap-1 rounded-full border border-[var(--destructive)]/25 bg-[color-mix(in_srgb,var(--destructive)_6%,transparent)] px-2 py-1 text-[10.5px] text-muted-foreground">
               <CircleAlert
                 className="size-3 text-[var(--destructive)]"
                 aria-hidden="true"
@@ -182,7 +182,7 @@ function PxExchange({
               data-testid="retry-failed"
               disabled={retryDisabled}
               onClick={() => useMirror.getState().retryFailed("px", messageId)}
-              className="focus-glow flex items-center gap-1 rounded-full border hairline px-2.5 py-1 text-[11px] text-foreground/85 transition-all duration-300 hover:border-[var(--hairline-hover)] disabled:cursor-not-allowed disabled:opacity-40"
+              className="focus-glow flex items-center gap-1 rounded-full border hairline px-2.5 py-1 text-[12px] text-foreground/85 transition-all duration-300 hover:border-[var(--hairline-hover)] disabled:cursor-not-allowed disabled:opacity-40"
             >
               <RotateCcw className="size-3" aria-hidden="true" />
               {t("Send again")}
@@ -210,7 +210,7 @@ function PxExchange({
         <Atom className="size-3.5 text-[var(--scope-a)]" />
       </span>
       <div className="min-w-0 max-w-[85%]">
-        <p className="mono-label text-[9.5px] text-[var(--scope-a)]">PARTICLEX</p>
+        <p className="mono-label text-[10.5px] text-[var(--scope-a)]">PARTICLEX</p>
         <div className="mt-1.5 rounded-2xl rounded-tl-md glass px-4 py-3">
           <RevelationProse text={text} />
         </div>
@@ -227,7 +227,7 @@ function PxExchange({
                   "linear-gradient(90deg, transparent, var(--scope-a), transparent)",
               }}
             />
-            <p className="mono-label flex items-center gap-1.5 text-[9px] uppercase tracking-[0.22em] text-muted-foreground">
+            <p className="mono-label flex items-center gap-1.5 text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
               <Atom className="size-3" aria-hidden="true" />
               {t("The formulas that run it")}
             </p>
@@ -235,7 +235,7 @@ function PxExchange({
               {formulaList.map((f, i) => (
                 <p
                   key={i}
-                  className="px-formula-line text-center font-serif text-[15.5px] italic leading-relaxed text-foreground/90"
+                  className="px-formula-line text-center font-serif text-[16.5px] italic leading-relaxed text-foreground/90"
                 >
                   {f}
                 </p>
@@ -245,7 +245,7 @@ function PxExchange({
         )}
 
         {seal && (
-          <p className="ink-soft mt-2.5 text-center font-serif text-[14px] italic">
+          <p className="ink-soft mt-2.5 text-center font-serif text-[15px] italic">
             {seal}
           </p>
         )}
@@ -502,10 +502,10 @@ function ParticleXChat() {
             )}
             {pxStatus === "error" && pxError && (
               <div className="ml-11 rounded-xl border border-[var(--destructive)]/25 bg-[color-mix(in_srgb,var(--destructive)_6%,transparent)] px-4 py-3">
-                <p className="text-[14.5px] leading-relaxed text-foreground/85">
+                <p className="text-[15.5px] leading-relaxed text-foreground/85">
                   {t("ParticleX could not finish the revealing.")}
                 </p>
-                <p className="mt-1 text-[14px] italic text-muted-foreground">
+                <p className="mt-1 text-[15px] italic text-muted-foreground">
                   {pxError}
                 </p>
               </div>
@@ -567,7 +567,7 @@ function ParticleXChat() {
           <div className="mx-auto flex w-full max-w-[720px] flex-wrap items-center gap-1.5">
             {activeScope && (
               <span
-                className="mono-label flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9.5px] uppercase tracking-[0.18em] text-foreground/80"
+                className="mono-label flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10.5px] uppercase tracking-[0.18em] text-foreground/80"
                 style={{
                   borderColor:
                     "color-mix(in srgb, var(--scope-a) 40%, transparent)",
@@ -599,7 +599,7 @@ function ParticleXChat() {
             )}
             {fusionPair.length === 2 && (
               <span
-                className="mono-label flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9.5px] uppercase tracking-[0.18em] text-foreground/80"
+                className="mono-label flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10.5px] uppercase tracking-[0.18em] text-foreground/80"
                 style={{
                   borderColor:
                     "color-mix(in srgb, var(--scope-a) 40%, transparent)",
@@ -650,7 +650,7 @@ function ParticleXChat() {
       {/* composer — THE ONE INPUT LAW: the room's reply line is the
           only input while the answer lives in the tree */}
       {!canopyLatch && (
-      <div className="relative z-30 shrink-0 border-t hairline bg-[var(--glass-bg)] px-3 py-2.5 backdrop-blur-xl sm:px-4">
+      <div className="relative z-30 shrink-0 border-t hairline bg-[var(--glass-bg)] px-3 py-2.5 backdrop-blur-md sm:px-4">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -687,7 +687,7 @@ function ParticleXChat() {
                 }
               }}
               placeholder={t("Ask ParticleX…")}
-              className="nice-scroll max-h-[120px] flex-1 resize-none bg-transparent py-2 text-[15px] leading-relaxed text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
+              className="nice-scroll max-h-[120px] flex-1 resize-none bg-transparent py-2 text-[16px] leading-relaxed text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
             />
             <ChatInputExtras
               scope="quantum"
@@ -754,7 +754,7 @@ export function ParticleX() {
           <button
             type="button"
             onClick={exitParticleX}
-            className="focus-glow pointer-events-auto group flex h-9 shrink-0 items-center gap-2 rounded-full border hairline bg-[var(--glass-bg)]/80 px-3 text-[14px] font-medium text-muted-foreground backdrop-blur-xl transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground sm:px-3.5"
+            className="focus-glow pointer-events-auto group flex h-9 shrink-0 items-center gap-2 rounded-full border hairline bg-[var(--glass-bg)]/80 px-3 text-[15px] font-medium text-muted-foreground backdrop-blur-md transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground sm:px-3.5"
           >
             <ArrowLeft
               className="size-3.5 transition-transform duration-300 group-hover:-translate-x-0.5"
@@ -772,7 +772,7 @@ export function ParticleX() {
               placeholder="Tools"
               onSelect={(id) => setPlace(id as PxPlace)}
               testIdPrefix="px-tools"
-              triggerClassName="bg-[var(--glass-bg)]/80 backdrop-blur-xl"
+              triggerClassName="bg-[var(--glass-bg)]/80 backdrop-blur-md"
               onOpenChange={setToolsOpen}
             />
           </div>
@@ -817,7 +817,7 @@ export function ParticleX() {
                     <button
                       type="button"
                       onClick={() => setPlace("chat")}
-                      className="focus-glow group flex h-8 items-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--scope-a)_30%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_7%,transparent)] px-3.5 text-[13.5px] font-medium text-foreground/85 transition-all duration-300 hover:border-[color-mix(in_srgb,var(--scope-a)_50%,transparent)]"
+                      className="focus-glow group flex h-8 items-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--scope-a)_30%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_7%,transparent)] px-3.5 text-[14.5px] font-medium text-foreground/85 transition-all duration-300 hover:border-[color-mix(in_srgb,var(--scope-a)_50%,transparent)]"
                     >
                       <Atom className="size-3.5 text-[var(--scope-a)]" aria-hidden="true" />
                       {t("Back to the Core")}

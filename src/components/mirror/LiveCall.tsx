@@ -601,16 +601,16 @@ export function LiveCall({
         {/* ---------- header ---------- */}
         <div className="flex items-start justify-between gap-3 px-5 pt-4">
           <div className="min-w-0">
-            <p className="mono-label text-[9.5px] uppercase tracking-[0.3em] text-muted-foreground/70">
+            <p className="mono-label text-[10.5px] uppercase tracking-[0.3em] text-muted-foreground/70">
               {t("Live call")}
             </p>
             <p
-              className="mt-1 truncate text-[17px] font-semibold"
+              className="mt-1 truncate text-[18px] font-semibold"
               style={{ color: cfg.accentA }}
             >
               {t(cfg.nameKey)}
             </p>
-            <p className="mt-0.5 truncate text-[12.5px] italic text-muted-foreground">
+            <p className="mt-0.5 truncate text-[13.5px] italic text-muted-foreground">
               {t(cfg.specializationKey)}
             </p>
           </div>
@@ -729,13 +729,13 @@ export function LiveCall({
             <MirrorChanneling
               label={t("reflecting")}
               variant={SCOPE_CHANNELING[scope] ?? "orbs"}
-              className="mt-5 mono-label text-[9.5px] uppercase tracking-[0.26em] text-muted-foreground/85"
+              className="mt-5 mono-label text-[10.5px] uppercase tracking-[0.26em] text-muted-foreground/85"
             />
           ) : (
             <p
               aria-live="polite"
               className={cn(
-                "mt-5 text-[14px] italic",
+                "mt-5 text-[15px] italic",
                 phase === "idle" ? "text-muted-foreground" : ""
               )}
               style={phase !== "idle" ? { color: cfg.accentA } : undefined}
@@ -744,7 +744,7 @@ export function LiveCall({
             </p>
           )}
           {phase === "idle" && (
-            <p className="mono-label mt-1.5 text-[9.5px] uppercase tracking-[0.24em] text-muted-foreground/55">
+            <p className="mono-label mt-1.5 text-[10.5px] uppercase tracking-[0.24em] text-muted-foreground/55">
               {t("Hold the orb and speak — release to send")}
             </p>
           )}
@@ -806,7 +806,7 @@ export function LiveCall({
                     </span>
                     <span
                       className={cn(
-                        "mono-label text-[8.5px] uppercase tracking-[0.12em]",
+                        "mono-label text-[9.5px] uppercase tracking-[0.12em]",
                         !active && !done && "opacity-50"
                       )}
                       style={
@@ -845,7 +845,7 @@ export function LiveCall({
                   <div
                     key={i}
                     className={cn(
-                      "max-w-[92%] rounded-xl border px-3.5 py-2.5 text-[13.5px] leading-relaxed",
+                      "max-w-[92%] rounded-xl border px-3.5 py-2.5 text-[14.5px] leading-relaxed",
                       turn.role === "visitor"
                         ? "self-end rounded-br-sm text-foreground/85"
                         : "self-start rounded-tl-sm"
@@ -877,7 +877,7 @@ export function LiveCall({
               onClose();
             }}
             data-testid="live-call-end"
-            className="focus-glow flex h-10 items-center gap-2 rounded-full border px-5 text-[13px] font-semibold tracking-[0.06em] text-foreground/90 transition-all duration-300 hover:-translate-y-px hover:border-[color-mix(in_srgb,var(--destructive)_45%,transparent)] hover:text-[var(--destructive)]"
+            className="focus-glow flex h-10 items-center gap-2 rounded-full border px-5 text-[14px] font-semibold tracking-[0.06em] text-foreground/90 transition-all duration-300 hover:-translate-y-px hover:border-[color-mix(in_srgb,var(--destructive)_45%,transparent)] hover:text-[var(--destructive)]"
             style={{ borderColor: "var(--hairline)" }}
           >
             <PhoneOff className="size-3.5" aria-hidden="true" />

@@ -74,7 +74,7 @@ function SuggestionChip({
       aria-disabled={disabled}
       data-testid={testId ?? "suggestion-chip"}
       title={label}
-      className="focus-glow shrink-0 whitespace-nowrap rounded-full border hairline bg-[var(--glass-bg)] px-3.5 py-1.5 font-serif text-[12.5px] italic leading-snug text-muted-foreground backdrop-blur-xl transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50 sm:text-[13px]"
+      className="focus-glow shrink-0 whitespace-nowrap rounded-full border hairline bg-[var(--glass-bg)] px-3.5 py-1.5 font-serif text-[13.5px] italic leading-snug text-muted-foreground backdrop-blur-md transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50 sm:text-[14px]"
     >
       {label}
     </button>

@@ -494,11 +494,11 @@ export function AkashicView() {
               >
                 <span
                   aria-hidden="true"
-                  className="ink-soft mb-5 block text-[22px] leading-none"
+                  className="ink-soft mb-5 block text-[23px] leading-none"
                 >
                   ❧
                 </span>
-                <p className="ink-hand mx-auto max-w-[460px] text-[18px] leading-[1.9] sm:text-[20px]">
+                <p className="ink-hand mx-auto max-w-[460px] text-[19px] leading-[1.9] sm:text-[21px]">
                   {t(
                     "Set down a resonance — a name, a question, a feeling — and the Librarian will draw out the record it belongs to. Or leave the desk silent, and the Library will choose for you."
                   )}
@@ -521,7 +521,7 @@ export function AkashicView() {
                 data-testid="akashic-seeking"
               >
                 <AkashicLoading className="mx-auto size-24 text-foreground sm:size-28" />
-                <p className="ink-hand ink-faint mt-8 text-center text-[16px] italic">
+                <p className="ink-hand ink-faint mt-8 text-center text-[17px] italic">
                   {replyAttempt
                     ? t("the Librarian weighs your reply...")
                     : t("the Librarian is fetching your record...")}
@@ -538,7 +538,7 @@ export function AkashicView() {
                 className="papyrus papyrus-frame relative mx-auto w-full rounded-2xl px-6 py-12 text-center sm:px-12"
                 data-testid="akashic-error"
               >
-                <p className="ink-hand mx-auto max-w-[420px] text-[17px] leading-[1.85]">
+                <p className="ink-hand mx-auto max-w-[420px] text-[18px] leading-[1.85]">
                   {t(
                     "The shelf is momentarily quiet. Rest a breath, then ask the Library again."
                   )}
@@ -549,7 +549,7 @@ export function AkashicView() {
                     void seek(draft.trim() || null, Boolean(record))
                   }
                   data-testid="akashic-retry"
-                  className="papyrus-btn focus-glow mt-7 inline-flex h-10 items-center gap-2 rounded-full px-5 text-[12px] font-semibold tracking-[0.08em]"
+                  className="papyrus-btn focus-glow mt-7 inline-flex h-10 items-center gap-2 rounded-full px-5 text-[13px] font-semibold tracking-[0.08em]"
                 >
                   <Feather className="size-3.5" aria-hidden="true" />
                   {replyAttempt
@@ -573,19 +573,19 @@ export function AkashicView() {
                 {/* corner folios — the top-right corner belongs to the way back */}
                 <span
                   aria-hidden="true"
-                  className="ink-soft pointer-events-none absolute left-3 top-2.5 text-[11px] opacity-60"
+                  className="ink-soft pointer-events-none absolute left-3 top-2.5 text-[12px] opacity-60"
                 >
                   ◆
                 </span>
                 <span
                   aria-hidden="true"
-                  className="ink-soft pointer-events-none absolute bottom-2.5 left-3 text-[11px] opacity-60"
+                  className="ink-soft pointer-events-none absolute bottom-2.5 left-3 text-[12px] opacity-60"
                 >
                   ◆
                 </span>
                 <span
                   aria-hidden="true"
-                  className="ink-soft pointer-events-none absolute bottom-2.5 right-3 text-[11px] opacity-60"
+                  className="ink-soft pointer-events-none absolute bottom-2.5 right-3 text-[12px] opacity-60"
                 >
                   ◆
                 </span>
@@ -593,13 +593,13 @@ export function AkashicView() {
                 {/* title & era */}
                 <header className="text-center">
                   <h2
-                    className="ink-title text-[24px] font-semibold leading-tight tracking-[0.04em] sm:text-[28px]"
+                    className="ink-title text-[25px] font-semibold leading-tight tracking-[0.04em] sm:text-[29px]"
                     data-testid="akashic-title"
                   >
                     {record.title}
                   </h2>
                   <p
-                    className="ink-hand ink-faint mt-2 text-[15.5px] italic"
+                    className="ink-hand ink-faint mt-2 text-[16.5px] italic"
                     data-testid="akashic-era"
                   >
                     {record.era}
@@ -620,9 +620,9 @@ export function AkashicView() {
                     <p
                       key={i}
                       className={cn(
-                        "ink-hand whitespace-pre-wrap text-[18.5px] leading-[1.95] sm:text-[20px]",
+                        "ink-hand whitespace-pre-wrap text-[19.5px] leading-[1.95] sm:text-[21px]",
                         i === 0 &&
-                          "first-letter:float-left first-letter:mr-3 first-letter:mt-[7px] first-letter:text-[54px] first-letter:font-semibold first-letter:leading-[0.78]"
+                          "first-letter:float-left first-letter:mr-3 first-letter:mt-[7px] first-letter:text-[55px] first-letter:font-semibold first-letter:leading-[0.78]"
                       )}
                     >
                       {para}
@@ -633,7 +633,7 @@ export function AkashicView() {
                 {/* the closing line — unsigned; the letter simply ends in the hand */}
                 {record.seal ? (
                   <p
-                    className="ink-hand ink-soft mt-9 text-center text-[16.5px] italic"
+                    className="ink-hand ink-soft mt-9 text-center text-[17.5px] italic"
                     data-testid="akashic-seal"
                   >
                     {record.seal}
@@ -648,7 +648,7 @@ export function AkashicView() {
                     disabled={seeking}
                     title={t("Continue the story")}
                     data-testid="akashic-continue"
-                    className="papyrus-btn focus-glow inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 text-[10.5px] font-medium tracking-[0.05em] disabled:cursor-not-allowed disabled:opacity-40 sm:px-3.5"
+                    className="papyrus-btn focus-glow inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 text-[11.5px] font-medium tracking-[0.05em] disabled:cursor-not-allowed disabled:opacity-40 sm:px-3.5"
                   >
                     <BookOpen className="size-3.5 shrink-0" aria-hidden="true" />
                     <span className="hidden sm:inline">
@@ -660,7 +660,7 @@ export function AkashicView() {
                     onClick={() => void handleCopy()}
                     title={t("Copy")}
                     data-testid="akashic-copy"
-                    className="papyrus-btn focus-glow inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 text-[10.5px] font-medium tracking-[0.05em] sm:px-3.5"
+                    className="papyrus-btn focus-glow inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 text-[11.5px] font-medium tracking-[0.05em] sm:px-3.5"
                   >
                     {copied ? (
                       <Check className="size-3.5 shrink-0" aria-hidden="true" />
@@ -676,7 +676,7 @@ export function AkashicView() {
                     onClick={() => void handleShare()}
                     title={t("Share")}
                     data-testid="akashic-share"
-                    className="papyrus-btn focus-glow inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 text-[10.5px] font-medium tracking-[0.05em] sm:px-3.5"
+                    className="papyrus-btn focus-glow inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 text-[11.5px] font-medium tracking-[0.05em] sm:px-3.5"
                   >
                     <Share2 className="size-3.5 shrink-0" aria-hidden="true" />
                     <span className="hidden sm:inline">{t("Share")}</span>
@@ -702,7 +702,7 @@ export function AkashicView() {
                         : t("Let every record read itself aloud")
                     }
                     className={cn(
-                      "papyrus-btn focus-glow inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 text-[10.5px] font-medium tracking-[0.05em] sm:px-3.5",
+                      "papyrus-btn focus-glow inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 text-[11.5px] font-medium tracking-[0.05em] sm:px-3.5",
                       autoVoice &&
                         "bg-[color-mix(in_srgb,var(--foreground)_10%,transparent)]"
                     )}
@@ -728,7 +728,7 @@ export function AkashicView() {
                         : t("Listen to the Librarian's voice")
                     }
                     className={cn(
-                      "papyrus-btn focus-glow inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 text-[10.5px] font-medium tracking-[0.05em] sm:px-3.5",
+                      "papyrus-btn focus-glow inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 text-[11.5px] font-medium tracking-[0.05em] sm:px-3.5",
                       listening &&
                         "bg-[color-mix(in_srgb,var(--foreground)_8%,transparent)]"
                     )}
@@ -778,7 +778,7 @@ export function AkashicView() {
                   className="papyrus papyrus-frame rounded-2xl px-6 py-8 text-center"
                   data-testid="akashic-visual-error"
                 >
-                  <p className="ink-hand text-[16px] leading-[1.85]">
+                  <p className="ink-hand text-[17px] leading-[1.85]">
                     {t(
                       "The atelier is quiet — the vision could not be composed. Rest a breath, then ask again."
                     )}
@@ -787,7 +787,7 @@ export function AkashicView() {
                     type="button"
                     onClick={() => void requestVisualization(visual.request)}
                     data-testid="akashic-visual-retry"
-                    className="papyrus-btn focus-glow mt-5 inline-flex h-9 items-center gap-2 rounded-full px-4 text-[11.5px] font-semibold tracking-[0.06em]"
+                    className="papyrus-btn focus-glow mt-5 inline-flex h-9 items-center gap-2 rounded-full px-4 text-[12.5px] font-semibold tracking-[0.06em]"
                   >
                     <RotateCcw className="size-3.5" aria-hidden="true" />
                     {t("Be still and receive")}
@@ -888,7 +888,7 @@ export function AkashicView() {
                   : t("What do you wish to read about?")
               }
               data-testid="akashic-wish-input"
-              className="focus-glow h-11 min-w-0 flex-1 rounded-full border hairline bg-background/70 px-4 text-[15px] text-foreground placeholder:text-muted-foreground/60 transition-all duration-300"
+              className="focus-glow h-11 min-w-0 flex-1 rounded-full border hairline bg-background/70 px-4 text-[16px] text-foreground placeholder:text-muted-foreground/60 transition-all duration-300"
             />
             <ChatInputExtras
               scope="akashic"
@@ -919,7 +919,7 @@ export function AkashicView() {
             disabled={seeking}
             title={t("Receive unasked")}
             data-testid="akashic-unasked"
-            className="mono-label mx-auto mt-1.5 flex h-6 items-center justify-center gap-1.5 text-[9.5px] uppercase tracking-[0.22em] text-muted-foreground/70 transition-colors duration-300 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+            className="mono-label mx-auto mt-1.5 flex h-6 items-center justify-center gap-1.5 text-[10.5px] uppercase tracking-[0.22em] text-muted-foreground/70 transition-colors duration-300 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
           >
             <Orbit className="size-3" aria-hidden="true" />
             {t("or leave it empty — receive unasked")}

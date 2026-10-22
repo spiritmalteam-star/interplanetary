@@ -264,7 +264,7 @@ export function AccountModal() {
             <RefreshCw className="mx-auto size-5 animate-spin text-muted-foreground" aria-hidden="true" />
           </div>
         ) : !summary ? (
-          <div className="py-10 text-center text-[13px] text-muted-foreground">
+          <div className="py-10 text-center text-[14px] text-muted-foreground">
             {t("Sign in first — the chamber opens to a named passage.")}
           </div>
         ) : (
@@ -272,7 +272,7 @@ export function AccountModal() {
             {notice && (
               <div
                 role="status"
-                className="rounded-xl border hairline bg-[var(--glass-bg-soft)] px-4 py-3 text-[12.5px] leading-relaxed text-foreground/85"
+                className="rounded-xl border hairline bg-[var(--glass-bg-soft)] px-4 py-3 text-[13.5px] leading-relaxed text-foreground/85"
               >
                 {notice}
               </div>
@@ -282,10 +282,10 @@ export function AccountModal() {
             <section aria-label={t("Plan")} className="rounded-xl border hairline bg-[var(--glass-bg-soft)] p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="mono-label text-[8.5px] uppercase tracking-[0.18em] text-muted-foreground">{t("Plan")}</p>
-                  <p className="mt-1 text-[16px] font-medium text-foreground/90">
+                  <p className="mono-label text-[9.5px] uppercase tracking-[0.18em] text-muted-foreground">{t("Plan")}</p>
+                  <p className="mt-1 text-[17px] font-medium text-foreground/90">
                     {plan?.label ?? "Free"}
-                    <span className="ml-2 text-[12px] text-muted-foreground">
+                    <span className="ml-2 text-[13px] text-muted-foreground">
                       {plan && plan.priceCents > 0 ? `$${(plan.priceCents / 100).toFixed(0)}/${t("mo")}` : t("Free forever — every world open")}
                     </span>
                   </p>
@@ -297,7 +297,7 @@ export function AccountModal() {
                         type="button"
                         onClick={() => void billingCall({ plan: "PRO" }, "upgrade")}
                         disabled={busy === "upgrade"}
-                        className="focus-glow rounded-full border hairline px-3.5 py-1.5 text-[12px] text-foreground/90 transition-all hover:border-[var(--hairline-hover)] hover:glow-sm disabled:opacity-50"
+                        className="focus-glow rounded-full border hairline px-3.5 py-1.5 text-[13px] text-foreground/90 transition-all hover:border-[var(--hairline-hover)] hover:glow-sm disabled:opacity-50"
                       >
                         {t("Upgrade")}
                       </button>
@@ -305,13 +305,13 @@ export function AccountModal() {
                         type="button"
                         onClick={() => void portalCall()}
                         disabled={busy === "portal"}
-                        className="focus-glow rounded-full border hairline px-3.5 py-1.5 text-[12px] text-foreground/90 transition-all hover:border-[var(--hairline-hover)] hover:glow-sm disabled:opacity-50"
+                        className="focus-glow rounded-full border hairline px-3.5 py-1.5 text-[13px] text-foreground/90 transition-all hover:border-[var(--hairline-hover)] hover:glow-sm disabled:opacity-50"
                       >
                         {t("Manage billing")}
                       </button>
                     </>
                   ) : (
-                    <span className="mono-label flex items-center gap-1.5 rounded-full border hairline px-3 py-1.5 text-[8.5px] uppercase tracking-[0.14em] text-muted-foreground">
+                    <span className="mono-label flex items-center gap-1.5 rounded-full border hairline px-3 py-1.5 text-[9.5px] uppercase tracking-[0.14em] text-muted-foreground">
                       <Gem className="size-3" aria-hidden="true" />
                       Stripe
                     </span>
@@ -319,7 +319,7 @@ export function AccountModal() {
                 </div>
               </div>
               {plan?.renewsAt && (
-                <p className="mt-2 text-[12px] text-muted-foreground">
+                <p className="mt-2 text-[13px] text-muted-foreground">
                   {t("Renews")}: {fmtDate(plan.renewsAt)}
                 </p>
               )}
@@ -329,10 +329,10 @@ export function AccountModal() {
             <section aria-label={t("Credits")} className="rounded-xl border hairline bg-[var(--glass-bg-soft)] p-4">
               <div className="flex items-end justify-between">
                 <div>
-                  <p className="mono-label text-[8.5px] uppercase tracking-[0.18em] text-muted-foreground">{t("Credits")}</p>
-                  <p className="mt-1 text-[22px] font-semibold tracking-tight text-foreground/95" data-testid="account-credit-balance">
+                  <p className="mono-label text-[9.5px] uppercase tracking-[0.18em] text-muted-foreground">{t("Credits")}</p>
+                  <p className="mt-1 text-[23px] font-semibold tracking-tight text-foreground/95" data-testid="account-credit-balance">
                     {balance != null ? fmtCredits(balance) : "—"}
-                    <span className="ml-1.5 text-[12px] font-normal text-muted-foreground">/ {fmtCredits(grant)}</span>
+                    <span className="ml-1.5 text-[13px] font-normal text-muted-foreground">/ {fmtCredits(grant)}</span>
                   </p>
                 </div>
                 {summary.capabilities.stripe && (
@@ -340,7 +340,7 @@ export function AccountModal() {
                     type="button"
                     onClick={() => void billingCall({ pack: "pack_10k" }, "pack")}
                     disabled={busy === "pack"}
-                    className="focus-glow rounded-full border hairline px-3.5 py-1.5 text-[12px] text-foreground/90 transition-all hover:border-[var(--hairline-hover)] hover:glow-sm disabled:opacity-50"
+                    className="focus-glow rounded-full border hairline px-3.5 py-1.5 text-[13px] text-foreground/90 transition-all hover:border-[var(--hairline-hover)] hover:glow-sm disabled:opacity-50"
                   >
                     {t("Buy credits")}
                   </button>
@@ -352,7 +352,7 @@ export function AccountModal() {
                   style={{ width: `${usedPct}%` }}
                 />
               </div>
-              <p className="mt-2 flex items-center gap-1.5 text-[11.5px] text-muted-foreground">
+              <p className="mt-2 flex items-center gap-1.5 text-[12.5px] text-muted-foreground">
                 <Gauge className="size-3 shrink-0" aria-hidden="true" />
                 {credits?.enforced
                   ? t("Every passage is weighed by the server — never by the browser.")
@@ -363,15 +363,15 @@ export function AccountModal() {
             {/* -------- the usage -------- */}
             <section aria-label={t("Usage this month")} className="rounded-xl border hairline bg-[var(--glass-bg-soft)] p-4">
               <div className="flex items-center justify-between">
-                <p className="mono-label text-[8.5px] uppercase tracking-[0.18em] text-muted-foreground">{t("Usage this month")}</p>
-                <p className="text-[11.5px] text-muted-foreground">
+                <p className="mono-label text-[9.5px] uppercase tracking-[0.18em] text-muted-foreground">{t("Usage this month")}</p>
+                <p className="text-[12.5px] text-muted-foreground">
                   {fmtCredits(summary.usage.events30d)} {t("operations")} · {fmtCredits(summary.usage.credits30d)} {t("credits used")}
                 </p>
               </div>
               {summary.usage.byOperation.length > 0 ? (
                 <ul className="mt-3 space-y-1.5">
                   {summary.usage.byOperation.slice(0, 5).map((op) => (
-                    <li key={op.operation} className="flex items-center gap-2.5 text-[12px]">
+                    <li key={op.operation} className="flex items-center gap-2.5 text-[13px]">
                       <span className="w-28 shrink-0 truncate text-foreground/80">{op.operation}</span>
                       <span className="h-1 flex-1 overflow-hidden rounded-full bg-[var(--glass-bg)]">
                         <span
@@ -384,17 +384,17 @@ export function AccountModal() {
                   ))}
                 </ul>
               ) : (
-                <p className="mt-2 text-[12px] text-muted-foreground">{t("The registers rest — no passages woven yet.")}</p>
+                <p className="mt-2 text-[13px] text-muted-foreground">{t("The registers rest — no passages woven yet.")}</p>
               )}
             </section>
 
             {/* -------- the ledger -------- */}
             {summary.transactions.length > 0 && (
               <section aria-label={t("Recent ledger")} className="rounded-xl border hairline bg-[var(--glass-bg-soft)] p-4">
-                <p className="mono-label text-[8.5px] uppercase tracking-[0.18em] text-muted-foreground">{t("Recent ledger")}</p>
+                <p className="mono-label text-[9.5px] uppercase tracking-[0.18em] text-muted-foreground">{t("Recent ledger")}</p>
                 <ul className="mt-2.5 max-h-36 space-y-1.5 overflow-y-auto nice-scroll">
                   {summary.transactions.map((tx) => (
-                    <li key={tx.id} className="flex items-center justify-between gap-3 text-[12px]">
+                    <li key={tx.id} className="flex items-center justify-between gap-3 text-[13px]">
                       <span className="min-w-0 flex-1 truncate text-muted-foreground">{tx.description}</span>
                       <span className={`shrink-0 tabular-nums ${tx.amount >= 0 ? "text-[var(--cy)]" : "text-foreground/70"}`}>
                         {tx.amount >= 0 ? "+" : "−"}{fmtCredits(Math.abs(tx.amount))}
@@ -408,8 +408,8 @@ export function AccountModal() {
             {/* -------- security -------- */}
             <section aria-label={t("Security")} className="rounded-xl border hairline bg-[var(--glass-bg-soft)] p-4">
               <div className="flex items-center justify-between gap-3">
-                <p className="mono-label text-[8.5px] uppercase tracking-[0.18em] text-muted-foreground">{t("Security")}</p>
-                <span className="flex items-center gap-1.5 text-[11.5px] text-muted-foreground">
+                <p className="mono-label text-[9.5px] uppercase tracking-[0.18em] text-muted-foreground">{t("Security")}</p>
+                <span className="flex items-center gap-1.5 text-[12.5px] text-muted-foreground">
                   {summary.user.emailVerified ? (
                     <>
                       <BadgeCheck className="size-3.5 text-[var(--cy)]" aria-hidden="true" />
@@ -441,7 +441,7 @@ export function AccountModal() {
                   onChange={(e) => setCurrentPw(e.target.value)}
                   placeholder={t("Current password")}
                   autoComplete="current-password"
-                  className="focus-glow h-10 rounded-xl border hairline bg-[var(--glass-bg)] px-3 text-[13px] text-foreground/90 placeholder:text-muted-foreground/60"
+                  className="focus-glow h-10 rounded-xl border hairline bg-[var(--glass-bg)] px-3 text-[14px] text-foreground/90 placeholder:text-muted-foreground/60"
                 />
                 <input
                   type="password"
@@ -449,38 +449,38 @@ export function AccountModal() {
                   onChange={(e) => setNextPw(e.target.value)}
                   placeholder={t("New password")}
                   autoComplete="new-password"
-                  className="focus-glow h-10 rounded-xl border hairline bg-[var(--glass-bg)] px-3 text-[13px] text-foreground/90 placeholder:text-muted-foreground/60"
+                  className="focus-glow h-10 rounded-xl border hairline bg-[var(--glass-bg)] px-3 text-[14px] text-foreground/90 placeholder:text-muted-foreground/60"
                 />
                 <button
                   type="button"
                   onClick={() => void changePassword()}
                   disabled={busy === "pw" || nextPw.length < 8}
-                  className="focus-glow h-10 rounded-xl border hairline px-4 text-[12.5px] text-foreground/90 transition-all hover:border-[var(--hairline-hover)] hover:glow-sm disabled:opacity-50"
+                  className="focus-glow h-10 rounded-xl border hairline px-4 text-[13.5px] text-foreground/90 transition-all hover:border-[var(--hairline-hover)] hover:glow-sm disabled:opacity-50"
                 >
                   {busy === "pw" ? "…" : t("Update password")}
                 </button>
               </div>
-              {pwMsg && <p className="mt-2 text-[12px] text-muted-foreground">{pwMsg}</p>}
+              {pwMsg && <p className="mt-2 text-[13px] text-muted-foreground">{pwMsg}</p>}
             </section>
 
             {/* -------- developer keys -------- */}
             <section aria-label={t("API keys")} className="rounded-xl border hairline bg-[var(--glass-bg-soft)] p-4">
               <div className="flex items-center justify-between gap-3">
-                <p className="mono-label flex items-center gap-1.5 text-[8.5px] uppercase tracking-[0.18em] text-muted-foreground">
+                <p className="mono-label flex items-center gap-1.5 text-[9.5px] uppercase tracking-[0.18em] text-muted-foreground">
                   <KeyRound className="size-3" aria-hidden="true" />
                   {t("API keys")}
                 </p>
-                <span className="mono-label text-[8.5px] uppercase tracking-[0.14em] text-muted-foreground">POST /api/v1/chat</span>
+                <span className="mono-label text-[9.5px] uppercase tracking-[0.14em] text-muted-foreground">POST /api/v1/chat</span>
               </div>
 
               {freshSecret && (
                 <div className="mt-3 rounded-xl border border-[var(--cy)]/30 bg-[var(--glass-bg)] p-3">
-                  <p className="flex items-center gap-1.5 text-[11.5px] text-[var(--cy)]">
+                  <p className="flex items-center gap-1.5 text-[12.5px] text-[var(--cy)]">
                     <Sparkles className="size-3 shrink-0" aria-hidden="true" />
                     {t("Copy this key now — it will never be shown again.")}
                   </p>
                   <div className="mt-2 flex items-center gap-2">
-                    <code className="min-w-0 flex-1 truncate rounded-lg bg-background/40 px-2.5 py-2 text-[11.5px] text-foreground/90" data-testid="fresh-api-secret">
+                    <code className="min-w-0 flex-1 truncate rounded-lg bg-background/40 px-2.5 py-2 text-[12.5px] text-foreground/90" data-testid="fresh-api-secret">
                       {freshSecret}
                     </code>
                     <button
@@ -505,13 +505,13 @@ export function AccountModal() {
                   onChange={(e) => setNewKeyName(e.target.value)}
                   placeholder={t("Name your key")}
                   maxLength={60}
-                  className="focus-glow h-9 min-w-0 flex-1 rounded-xl border hairline bg-[var(--glass-bg)] px-3 text-[12.5px] text-foreground/90 placeholder:text-muted-foreground/60"
+                  className="focus-glow h-9 min-w-0 flex-1 rounded-xl border hairline bg-[var(--glass-bg)] px-3 text-[13.5px] text-foreground/90 placeholder:text-muted-foreground/60"
                 />
                 <button
                   type="button"
                   onClick={() => void createKey()}
                   disabled={busy === "key"}
-                  className="focus-glow flex h-9 shrink-0 items-center gap-1.5 rounded-xl border hairline px-3 text-[12px] text-foreground/90 transition-all hover:border-[var(--hairline-hover)] hover:glow-sm disabled:opacity-50"
+                  className="focus-glow flex h-9 shrink-0 items-center gap-1.5 rounded-xl border hairline px-3 text-[13px] text-foreground/90 transition-all hover:border-[var(--hairline-hover)] hover:glow-sm disabled:opacity-50"
                 >
                   <Plus className="size-3.5" aria-hidden="true" />
                   {t("Create key")}
@@ -521,10 +521,10 @@ export function AccountModal() {
               {keys.length > 0 ? (
                 <ul className="mt-3 space-y-2">
                   {keys.map((k) => (
-                    <li key={k.id} className="flex items-center gap-2.5 rounded-lg bg-[var(--glass-bg)] px-3 py-2 text-[12px]">
-                      <code className="shrink-0 text-[11px] text-muted-foreground">{k.prefix}…</code>
+                    <li key={k.id} className="flex items-center gap-2.5 rounded-lg bg-[var(--glass-bg)] px-3 py-2 text-[13px]">
+                      <code className="shrink-0 text-[12px] text-muted-foreground">{k.prefix}…</code>
                       <span className="min-w-0 flex-1 truncate text-foreground/85">{k.name}</span>
-                      <span className="hidden shrink-0 text-[10.5px] text-muted-foreground sm:block">
+                      <span className="hidden shrink-0 text-[11.5px] text-muted-foreground sm:block">
                         {k.revokedAt
                           ? t("Revoked")
                           : k.lastUsedAt
@@ -548,12 +548,12 @@ export function AccountModal() {
                   ))}
                 </ul>
               ) : (
-                <p className="mt-2.5 text-[12px] text-muted-foreground">{t("No keys yet — create one to reach the public sky.")}</p>
+                <p className="mt-2.5 text-[13px] text-muted-foreground">{t("No keys yet — create one to reach the public sky.")}</p>
               )}
 
               {revokeTarget && (
                 <div className="mt-3 rounded-xl border hairline bg-[var(--glass-bg)] p-3">
-                  <p className="text-[12px] text-foreground/85">
+                  <p className="text-[13px] text-foreground/85">
                     {t("Confirm with your password")} — <span className="text-muted-foreground">{revokeTarget.name}</span>
                   </p>
                   <div className="mt-2 flex gap-2">
@@ -562,20 +562,20 @@ export function AccountModal() {
                       value={revokePw}
                       onChange={(e) => setRevokePw(e.target.value)}
                       autoComplete="current-password"
-                      className="focus-glow h-9 min-w-0 flex-1 rounded-xl border hairline bg-background/30 px-3 text-[12.5px]"
+                      className="focus-glow h-9 min-w-0 flex-1 rounded-xl border hairline bg-background/30 px-3 text-[13.5px]"
                     />
                     <button
                       type="button"
                       onClick={() => void revokeKey()}
                       disabled={busy === "revoke" || !revokePw}
-                      className="focus-glow h-9 shrink-0 rounded-xl border hairline px-3 text-[12px] text-foreground/90 disabled:opacity-50"
+                      className="focus-glow h-9 shrink-0 rounded-xl border hairline px-3 text-[13px] text-foreground/90 disabled:opacity-50"
                     >
                       {t("Revoke")}
                     </button>
                     <button
                       type="button"
                       onClick={() => setRevokeTarget(null)}
-                      className="focus-glow h-9 shrink-0 rounded-xl px-2 text-[12px] text-muted-foreground"
+                      className="focus-glow h-9 shrink-0 rounded-xl px-2 text-[13px] text-muted-foreground"
                     >
                       ✕
                     </button>
@@ -588,7 +588,7 @@ export function AccountModal() {
             <button
               type="button"
               onClick={() => void signOut()}
-              className="focus-glow flex w-full items-center justify-center gap-2 rounded-xl border hairline px-4 py-2.5 text-[12.5px] text-muted-foreground transition-all hover:border-[var(--hairline-hover)] hover:text-foreground"
+              className="focus-glow flex w-full items-center justify-center gap-2 rounded-xl border hairline px-4 py-2.5 text-[13.5px] text-muted-foreground transition-all hover:border-[var(--hairline-hover)] hover:text-foreground"
             >
               <ShieldCheck className="size-3.5" aria-hidden="true" />
               {t("Leave the passage")}

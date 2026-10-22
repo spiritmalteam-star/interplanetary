@@ -149,12 +149,12 @@ export function LibraryView() {
   return (
     <div className="relative flex h-full flex-col">
       {/* ---------- top bar ---------- */}
-      <header className="relative z-30 shrink-0 border-b hairline bg-[var(--glass-bg)] backdrop-blur-xl">
+      <header className="relative z-30 shrink-0 border-b hairline bg-[var(--glass-bg)] backdrop-blur-md">
         <div className="bar-safe flex items-center justify-between gap-2 px-3 sm:px-5">
           <button
             type="button"
             onClick={exitLibrary}
-            className="focus-glow group flex h-9 items-center gap-2 rounded-full border hairline px-3 text-[14px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground sm:px-3.5"
+            className="focus-glow group flex h-9 items-center gap-2 rounded-full border hairline px-3 text-[15px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground sm:px-3.5"
           >
             <ArrowLeft
               className="size-3.5 transition-transform duration-300 group-hover:-translate-x-0.5"
@@ -204,11 +204,11 @@ export function LibraryView() {
           {entries === null ? (
             <div className="flex h-[50vh] flex-col items-center justify-center gap-3 text-muted-foreground" aria-live="polite" aria-busy="true">
               <LoaderCircle className="size-5 animate-spin" aria-hidden="true" />
-              <p className="font-serif text-[14px] italic">{t("The library is gathering your stars…")}</p>
+              <p className="font-serif text-[15px] italic">{t("The library is gathering your stars…")}</p>
             </div>
           ) : failed ? (
             <div className="mx-auto max-w-[420px] rounded-2xl border hairline p-6 text-center">
-              <p className="text-[14.5px] leading-relaxed text-foreground/85">
+              <p className="text-[15.5px] leading-relaxed text-foreground/85">
                 {t("The library is momentarily veiled. Rest, then return.")}
               </p>
             </div>
@@ -216,10 +216,10 @@ export function LibraryView() {
             <motion.div key="library" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
               {/* the keeping headline */}
               <div className="text-center">
-                <h1 className="scope-gradient-text font-[family-name(var(--font-literata))] text-[22px] font-semibold">
+                <h1 className="scope-gradient-text font-[family-name(var(--font-literata))] text-[23px] font-semibold">
                   {t("Your Cosmic Library")}
                 </h1>
-                <p className="mx-auto mt-2 max-w-[460px] text-[14px] leading-relaxed text-muted-foreground">
+                <p className="mx-auto mt-2 max-w-[460px] text-[15px] leading-relaxed text-muted-foreground">
                   {t("Every transmission the house has carried for you, kept in its own sector — yours alone, always.")}
                 </p>
               </div>
@@ -227,7 +227,7 @@ export function LibraryView() {
               {total === 0 ? (
                 <div className="mx-auto mt-10 max-w-[420px] rounded-2xl border hairline p-8 text-center">
                   <Sparkles className="mx-auto size-5 text-muted-foreground" aria-hidden="true" />
-                  <p className="mt-3 font-serif text-[15px] italic text-muted-foreground">
+                  <p className="mt-3 font-serif text-[16px] italic text-muted-foreground">
                     {t("The shelves are waiting for their first light — send a transmission and it will be kept here.")}
                   </p>
                 </div>
@@ -242,8 +242,8 @@ export function LibraryView() {
                           <span className="flex size-8 items-center justify-center rounded-full border hairline" aria-hidden="true">
                             <Icon className="size-3.5 text-muted-foreground" />
                           </span>
-                          <h2 className="text-[15.5px] font-semibold text-foreground/90">{t(sector.label)}</h2>
-                          <span className="mono-label rounded-full border hairline px-2 py-0.5 text-[9px] text-muted-foreground">
+                          <h2 className="text-[16.5px] font-semibold text-foreground/90">{t(sector.label)}</h2>
+                          <span className="mono-label rounded-full border hairline px-2 py-0.5 text-[10px] text-muted-foreground">
                             {items.length}
                           </span>
                         </div>
@@ -266,12 +266,12 @@ export function LibraryView() {
                                   className="block w-full text-left"
                                 >
                                   <div className="flex items-baseline justify-between gap-3">
-                                    <span className="truncate text-[14px] font-medium text-foreground/90">{e.title}</span>
-                                    <span className="mono-label shrink-0 text-[9px] text-muted-foreground/70">
+                                    <span className="truncate text-[15px] font-medium text-foreground/90">{e.title}</span>
+                                    <span className="mono-label shrink-0 text-[10px] text-muted-foreground/70">
                                       {DAYFmt.format(new Date(e.createdAt))} · {TIMEFmt.format(new Date(e.createdAt))}
                                     </span>
                                   </div>
-                                  <p className="mt-1 line-clamp-2 text-[13px] leading-relaxed text-muted-foreground">
+                                  <p className="mt-1 line-clamp-2 text-[14px] leading-relaxed text-muted-foreground">
                                     {e.excerpt}
                                   </p>
                                 </button>
@@ -303,12 +303,12 @@ export function LibraryView() {
                                       });
                                     }}
                                     data-testid="library-continue"
-                                    className="focus-glow mt-2 inline-flex items-center gap-1.5 rounded-full border hairline px-2.5 py-1 text-[11px] font-medium text-foreground/85 transition-all duration-300 hover:border-[var(--hairline-active)] hover:glow-sm"
+                                    className="focus-glow mt-2 inline-flex items-center gap-1.5 rounded-full border hairline px-2.5 py-1 text-[12px] font-medium text-foreground/85 transition-all duration-300 hover:border-[var(--hairline-active)] hover:glow-sm"
                                   >
                                     <BookMarked className="size-3" aria-hidden="true" />
                                     {tEntry(e.content?.ended ? "Read again" : "Continue the story")}
                                     {!e.content?.ended && (
-                                      <span className="mono-label text-[9px] text-muted-foreground/70">
+                                      <span className="mono-label text-[10px] text-muted-foreground/70">
                                         {tEntry("page {n} of {m}", {
                                           n: bookPages.length,
                                           m: e.content?.totalPages ?? "…",
@@ -331,16 +331,16 @@ export function LibraryView() {
             <motion.div key="shift" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
               {/* the quantum shift headline */}
               <div className="text-center">
-                <p className="mono-label text-[10px] uppercase tracking-[0.24em] text-muted-foreground/70">
+                <p className="mono-label text-[11px] uppercase tracking-[0.24em] text-muted-foreground/70">
                   {t("The Quantum Shift")}
                 </p>
-                <h1 className="scope-gradient-text mt-2 font-[family-name(var(--font-literata))] text-[24px] font-semibold" data-testid="shift-phase">
+                <h1 className="scope-gradient-text mt-2 font-[family-name(var(--font-literata))] text-[25px] font-semibold" data-testid="shift-phase">
                   {t(phase.name)}
                 </h1>
-                <p className="mx-auto mt-2 max-w-[440px] font-serif text-[14.5px] italic leading-relaxed text-muted-foreground">
+                <p className="mx-auto mt-2 max-w-[440px] font-serif text-[15.5px] italic leading-relaxed text-muted-foreground">
                   {t(phase.line)}
                 </p>
-                <p className="mono-label mt-3 text-[10px] text-muted-foreground/70" data-testid="shift-total">
+                <p className="mono-label mt-3 text-[11px] text-muted-foreground/70" data-testid="shift-total">
                   {t("{n} transmissions carried", { n: total })}
                 </p>
               </div>
@@ -348,7 +348,7 @@ export function LibraryView() {
               {/* the thread */}
               {total === 0 ? (
                 <div className="mx-auto mt-10 max-w-[420px] rounded-2xl border hairline p-8 text-center">
-                  <p className="font-serif text-[15px] italic text-muted-foreground">
+                  <p className="font-serif text-[16px] italic text-muted-foreground">
                     {t("The thread is still quiet — your first transmission will light its first node.")}
                   </p>
                 </div>
@@ -362,7 +362,7 @@ export function LibraryView() {
                   <div className="space-y-8">
                     {timeline.map((group) => (
                       <div key={group.day}>
-                        <p className="mono-label mb-3 pl-9 text-[9px] uppercase tracking-[0.2em] text-muted-foreground/60 sm:pl-0 sm:text-center">
+                        <p className="mono-label mb-3 pl-9 text-[10px] uppercase tracking-[0.2em] text-muted-foreground/60 sm:pl-0 sm:text-center">
                           {DAYFmt.format(new Date(`${group.day}T12:00:00`))}
                         </p>
                         <div className="space-y-5">
@@ -398,13 +398,13 @@ export function LibraryView() {
                                     data-testid="shift-node"
                                     className="focus-glow block w-full rounded-xl border hairline bg-[var(--glass-bg-soft)] px-4 py-3 text-left transition-all duration-300 hover:border-[var(--hairline-hover)]"
                                   >
-                                    <span className="mono-label flex items-center gap-1.5 text-[9px] uppercase tracking-[0.18em] text-muted-foreground/80 sm:justify-end">
+                                    <span className="mono-label flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] text-muted-foreground/80 sm:justify-end">
                                       <Icon className="size-3" aria-hidden="true" />
                                       {t(sector?.label ?? "")}
                                       <span className="text-muted-foreground/50">{TIMEFmt.format(new Date(e.createdAt))}</span>
                                     </span>
-                                    <span className="mt-1.5 block truncate text-[14px] font-medium text-foreground/90">{e.title}</span>
-                                    <span className="mt-0.5 line-clamp-2 block text-[12.5px] leading-relaxed text-muted-foreground">
+                                    <span className="mt-1.5 block truncate text-[15px] font-medium text-foreground/90">{e.title}</span>
+                                    <span className="mt-0.5 line-clamp-2 block text-[13.5px] leading-relaxed text-muted-foreground">
                                       {e.excerpt}
                                     </span>
                                   </button>
@@ -434,18 +434,18 @@ export function LibraryView() {
       >
         {reading && (
           <div className="max-h-[68vh] overflow-y-auto px-5 pb-6 sm:px-6" data-testid="library-reader">
-            <p className="mono-label text-[9px] uppercase tracking-[0.2em] text-muted-foreground/70">
+            <p className="mono-label text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">
               {DAYFmt.format(new Date(reading.createdAt))} · {TIMEFmt.format(new Date(reading.createdAt))}
             </p>
             {reading.content?.query && (
               <div className="mt-3 rounded-xl border hairline bg-[color-mix(in_srgb,var(--foreground)_4%,transparent)] px-4 py-3">
-                <p className="whitespace-pre-wrap text-[14px] leading-relaxed text-foreground/90">
+                <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-foreground/90">
                   {reading.content.query}
                 </p>
               </div>
             )}
             {reading.content?.axiom && (
-              <p className="mt-3 font-serif text-[14px] italic leading-relaxed text-muted-foreground">
+              <p className="mt-3 font-serif text-[15px] italic leading-relaxed text-muted-foreground">
                 {reading.content.axiom}
               </p>
             )}
@@ -454,7 +454,7 @@ export function LibraryView() {
                 {String(reading.content.reply)
                   .split(/\n{2,}/)
                   .map((p, i) => (
-                    <p key={i} className="whitespace-pre-wrap text-[14.5px] leading-[1.8] text-foreground/88">
+                    <p key={i} className="whitespace-pre-wrap text-[15.5px] leading-[1.8] text-foreground/88">
                       {p}
                     </p>
                   ))}
@@ -469,7 +469,7 @@ export function LibraryView() {
                   ? reading.content.firstPage.paragraphs
                   : (reading.content?.pages?.[0]?.paragraphs ?? [])
                 ).map((p, i) => (
-                  <p key={i} className="whitespace-pre-wrap font-serif text-[14.5px] leading-[1.85] text-foreground/88">
+                  <p key={i} className="whitespace-pre-wrap font-serif text-[15.5px] leading-[1.85] text-foreground/88">
                     {p}
                   </p>
                 ))}
@@ -478,14 +478,14 @@ export function LibraryView() {
             {reading.content?.formulas && reading.content.formulas.length > 0 && (
               <div className="px-formula mt-4 rounded-xl px-4 py-3">
                 {reading.content.formulas.map((f, i) => (
-                  <p key={i} className="px-formula-line py-1 text-center font-serif text-[14.5px] italic text-foreground/90">
+                  <p key={i} className="px-formula-line py-1 text-center font-serif text-[15.5px] italic text-foreground/90">
                     {f}
                   </p>
                 ))}
               </div>
             )}
             {reading.content?.seal && (
-              <p className="ink-soft mt-4 text-center font-serif text-[13.5px] italic">{reading.content.seal}</p>
+              <p className="ink-soft mt-4 text-center font-serif text-[14.5px] italic">{reading.content.seal}</p>
             )}
           </div>
         )}

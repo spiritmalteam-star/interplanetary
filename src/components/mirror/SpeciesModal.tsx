@@ -98,7 +98,7 @@ function SpeciesBody({
         type="button"
         onClick={() => useMirror.getState().closeModal()}
         data-testid="species-back"
-        className="focus-glow group inline-flex items-center gap-1.5 rounded-full border hairline px-3 py-1.5 text-[12.5px] text-muted-foreground transition-colors hover:border-[var(--hairline-hover)] hover:text-foreground"
+        className="focus-glow group inline-flex items-center gap-1.5 rounded-full border hairline px-3 py-1.5 text-[13.5px] text-muted-foreground transition-colors hover:border-[var(--hairline-hover)] hover:text-foreground"
       >
         <ArrowLeft
           className="size-3.5 transition-transform duration-300 group-hover:-translate-x-0.5"
@@ -117,17 +117,17 @@ function SpeciesBody({
 
       {/* identity chips */}
       <div className="flex flex-wrap items-center gap-1.5">
-        <span className="mono-label rounded-full border border-[var(--gd)]/30 bg-[color-mix(in_srgb,var(--gd)_8%,transparent)] px-2.5 py-1 text-[10.5px] text-[var(--gd)]">
+        <span className="mono-label rounded-full border border-[var(--gd)]/30 bg-[color-mix(in_srgb,var(--gd)_8%,transparent)] px-2.5 py-1 text-[11.5px] text-[var(--gd)]">
           {t("Species dossier")}
         </span>
-        <span className="mono-label rounded-full border hairline px-2.5 py-1 text-[10.5px] text-muted-foreground">
+        <span className="mono-label rounded-full border hairline px-2.5 py-1 text-[11.5px] text-muted-foreground">
           {t("Inner Earth")}
         </span>
       </div>
 
       {/* at a glance */}
       <section className="clear-both">
-        <h4 className="mono-label text-[10.5px] text-[var(--gd)]">
+        <h4 className="mono-label text-[11.5px] text-[var(--gd)]">
           {t("At a glance")}
         </h4>
         <div className="mt-2 grid grid-cols-2 gap-2">
@@ -141,7 +141,7 @@ function SpeciesBody({
 
       {/* the three archive sections */}
       <ProfileSection index="01" label={t("where they dwell")} tone="gd">
-        <p className="text-[14.5px] leading-relaxed text-foreground/85">{hall}</p>
+        <p className="text-[15.5px] leading-relaxed text-foreground/85">{hall}</p>
       </ProfileSection>
 
       {/* the second plate — a scene of the deep realms */}
@@ -153,11 +153,11 @@ function SpeciesBody({
       />
 
       <ProfileSection index="02" label={t("how they appear")} tone="gd">
-        <p className="text-[14.5px] leading-relaxed text-foreground/85">{form}</p>
+        <p className="text-[15.5px] leading-relaxed text-foreground/85">{form}</p>
       </ProfileSection>
 
       <ProfileSection index="03" label={t("what they mirror")} tone="gd">
-        <p className="text-[14.5px] leading-relaxed text-foreground/85">{gift}</p>
+        <p className="text-[15.5px] leading-relaxed text-foreground/85">{gift}</p>
       </ProfileSection>
 
       {/* the third plate — the hall where they are met */}
@@ -172,14 +172,14 @@ function SpeciesBody({
       <button
         type="button"
         onClick={onConsult}
-        className="focus-glow clear-both flex w-full items-center justify-center gap-2 rounded-xl border border-[color-mix(in_srgb,var(--gd)_35%,transparent)] bg-[color-mix(in_srgb,var(--gd)_10%,transparent)] px-4 py-2.5 text-[13.5px] font-semibold text-foreground transition-all duration-300 hover:glow-sm"
+        className="focus-glow clear-both flex w-full items-center justify-center gap-2 rounded-xl border border-[color-mix(in_srgb,var(--gd)_35%,transparent)] bg-[color-mix(in_srgb,var(--gd)_10%,transparent)] px-4 py-2.5 text-[14.5px] font-semibold text-foreground transition-all duration-300 hover:glow-sm"
       >
         <MessageCircle className="size-3.5 text-[var(--gd)]" aria-hidden="true" />
         {t("Consult the Mirror")}
       </button>
 
       {/* the register mark */}
-      <p className="mono-label flex items-center justify-center gap-1.5 pb-1 text-center text-[9px] text-muted-foreground/60">
+      <p className="mono-label flex items-center justify-center gap-1.5 pb-1 text-center text-[10px] text-muted-foreground/60">
         <Mountain className="size-3" aria-hidden="true" />
         {t("Inner Earth register — the deep halls of the archive")}
       </p>

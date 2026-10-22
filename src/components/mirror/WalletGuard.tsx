@@ -213,7 +213,7 @@ export function CreditsNeededModal({
         {notice && (
           <div
             role="status"
-            className="rounded-xl border hairline bg-[var(--glass-bg-soft)] px-4 py-3 text-[12.5px] leading-relaxed text-foreground/85"
+            className="rounded-xl border hairline bg-[var(--glass-bg-soft)] px-4 py-3 text-[13.5px] leading-relaxed text-foreground/85"
           >
             {t("The purse holds {current} of light — this reflection asks for {required}.", {
               current: notice.current,
@@ -224,7 +224,7 @@ export function CreditsNeededModal({
 
         {!signedIn ? (
           <div className="rounded-xl border hairline bg-[var(--glass-bg-soft)] p-4">
-            <p className="text-[13.5px] leading-relaxed text-foreground/85">
+            <p className="text-[14.5px] leading-relaxed text-foreground/85">
               {t(
                 "The purse belongs to a passage. Open yours — it arrives already holding five lights."
               )}
@@ -235,7 +235,7 @@ export function CreditsNeededModal({
                 onClose();
                 openAuth("register");
               }}
-              className="focus-glow mt-3 w-full rounded-full bg-foreground py-2.5 text-[13px] font-medium text-background transition-opacity hover:opacity-90"
+              className="focus-glow mt-3 w-full rounded-full bg-foreground py-2.5 text-[14px] font-medium text-background transition-opacity hover:opacity-90"
             >
               {t("Open the passage")}
             </button>
@@ -254,19 +254,19 @@ export function CreditsNeededModal({
                     <Icon className="size-4 text-muted-foreground" aria-hidden="true" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-[13.5px] font-medium text-foreground/90">
+                    <p className="text-[14.5px] font-medium text-foreground/90">
                       {p.name}
-                      <span className="ml-2 text-[12px] font-normal text-muted-foreground">
+                      <span className="ml-2 text-[13px] font-normal text-muted-foreground">
                         {p.price} {t(p.cadence)}
                       </span>
                     </p>
-                    <p className="text-[12px] text-muted-foreground">{t(p.credits)} · {t(p.note)}</p>
+                    <p className="text-[13px] text-muted-foreground">{t(p.credits)} · {t(p.note)}</p>
                   </div>
                   <button
                     type="button"
                     onClick={() => void choose(p.id, p.plan)}
                     disabled={busy !== null}
-                    className="focus-glow shrink-0 rounded-full border hairline px-3.5 py-1.5 text-[12px] text-foreground/90 transition-all hover:border-[var(--hairline-hover)] hover:glow-sm disabled:opacity-50"
+                    className="focus-glow shrink-0 rounded-full border hairline px-3.5 py-1.5 text-[13px] text-foreground/90 transition-all hover:border-[var(--hairline-hover)] hover:glow-sm disabled:opacity-50"
                   >
                     {active ? (
                       <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
@@ -278,11 +278,11 @@ export function CreditsNeededModal({
               );
             })}
             {failed && (
-              <p role="alert" className="px-1 text-[12px] text-red-500/90">
+              <p role="alert" className="px-1 text-[13px] text-red-500/90">
                 {failed}
               </p>
             )}
-            <p className="flex items-start gap-1.5 px-1 pt-1 text-[11.5px] leading-relaxed text-muted-foreground">
+            <p className="flex items-start gap-1.5 px-1 pt-1 text-[12.5px] leading-relaxed text-muted-foreground">
               <Sparkles className="mt-0.5 size-3 shrink-0" aria-hidden="true" />
               {t(
                 "Every reflection is weighed before it is served — a whisper 1 · a reading 2 · the atelier 5 · the light codes 12."
@@ -292,7 +292,7 @@ export function CreditsNeededModal({
         )}
 
         {/* the secret hand's own whisper — the quiet way through */}
-        <p className="px-1 text-center text-[10.5px] italic leading-relaxed text-muted-foreground/70">
+        <p className="px-1 text-center text-[11.5px] italic leading-relaxed text-muted-foreground/70">
           {t("In a hurry? Rest your finger anywhere here for four seconds — a wanderer's passage opens with a full purse.")}
         </p>
       </div>

@@ -1129,7 +1129,7 @@ export function PxBioMech() {
               data-testid={`px-biomech-mech-${m.id}`}
               title={t(m.engine)}
               className={cn(
-                "focus-glow flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] transition-all duration-300",
+                "focus-glow flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[14px] transition-all duration-300",
                 active
                   ? "font-semibold text-foreground"
                   : "hairline text-muted-foreground hover:text-foreground"
@@ -1161,17 +1161,17 @@ export function PxBioMech() {
 
         <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
           <div>
-            <p className="mono-label text-[10px] uppercase tracking-[0.22em] text-[var(--scope-a)]">
+            <p className="mono-label text-[11px] uppercase tracking-[0.22em] text-[var(--scope-a)]">
               {t("The storyboard engine")}
             </p>
-            <h4 className="scope-gradient-text mt-1 text-[17px] font-semibold">
+            <h4 className="scope-gradient-text mt-1 text-[18px] font-semibold">
               {t(mech.name)}
-              <span className="ml-2 font-serif text-[13.5px] font-normal italic text-muted-foreground">
+              <span className="ml-2 font-serif text-[14.5px] font-normal italic text-muted-foreground">
                 {t(mech.role)}
               </span>
             </h4>
           </div>
-          <p className="max-w-[380px] text-[13px] leading-snug text-muted-foreground">
+          <p className="max-w-[380px] text-[14px] leading-snug text-muted-foreground">
             {t(mech.engine)}
           </p>
         </div>
@@ -1211,7 +1211,7 @@ export function PxBioMech() {
                   className="flex h-full flex-col"
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <p className="mono-label text-[9px] uppercase tracking-[0.22em] text-[var(--scope-a)]">
+                    <p className="mono-label text-[10px] uppercase tracking-[0.22em] text-[var(--scope-a)]">
                       {t("Panel")} {i + 1} · {t(p.title)}
                     </p>
                     <span
@@ -1231,10 +1231,10 @@ export function PxBioMech() {
                     <BxDefs uid={uid} />
                     {bxScene(mech.id, i, params, uid)}
                   </svg>
-                  <p className="mono-label mt-2 text-[9px] uppercase tracking-[0.18em] text-muted-foreground/70">
+                  <p className="mono-label mt-2 text-[10px] uppercase tracking-[0.18em] text-muted-foreground/70">
                     ({t(p.sub)})
                   </p>
-                  <p className="mt-1 font-serif text-[13.5px] italic leading-relaxed text-foreground/85">
+                  <p className="mt-1 font-serif text-[14.5px] italic leading-relaxed text-foreground/85">
                     {t(p.caption)}
                   </p>
                 </div>
@@ -1292,7 +1292,7 @@ export function PxBioMech() {
               aria-pressed={playing}
               aria-label={playing ? t("Pause the storyboard") : t("Play the storyboard")}
               data-testid="px-biomech-play"
-              className="focus-glow flex h-8 items-center gap-1.5 rounded-full border px-3 text-[12.5px] font-medium text-foreground/85 transition-all duration-300 hover:-translate-y-px"
+              className="focus-glow flex h-8 items-center gap-1.5 rounded-full border px-3 text-[13.5px] font-medium text-foreground/85 transition-all duration-300 hover:-translate-y-px"
               style={{
                 borderColor:
                   "color-mix(in srgb, var(--scope-a) 38%, transparent)",
@@ -1320,7 +1320,7 @@ export function PxBioMech() {
 
         {/* the dials — defined per mechanism */}
         <div className="mt-5 border-t hairline pt-4">
-          <p className="mono-label text-[9.5px] uppercase tracking-[0.22em] text-muted-foreground">
+          <p className="mono-label text-[10.5px] uppercase tracking-[0.22em] text-muted-foreground">
             {t("Tune the engine")}
           </p>
           <div className={cn("mt-2.5 grid gap-4", mech.sliders.length > 1 ? "sm:grid-cols-2 lg:grid-cols-3" : "max-w-[340px]")}>
@@ -1332,12 +1332,12 @@ export function PxBioMech() {
                   <div className="flex items-center justify-between gap-2">
                     <label
                       htmlFor={id}
-                      className="mono-label text-[9.5px] uppercase tracking-[0.18em] text-muted-foreground"
+                      className="mono-label text-[10.5px] uppercase tracking-[0.18em] text-muted-foreground"
                     >
                       {t(meta.label)}
                     </label>
                     <span
-                      className="mono-label text-[11px] text-[var(--scope-a)]"
+                      className="mono-label text-[12px] text-[var(--scope-a)]"
                       data-testid={`px-biomech-slider-${key}-value`}
                     >
                       {vals[key]} {meta.unit}
@@ -1366,7 +1366,7 @@ export function PxBioMech() {
 
         {/* the live feedback */}
         <div className="mt-4 border-t hairline pt-4">
-          <p className="mono-label text-[9.5px] uppercase tracking-[0.22em] text-muted-foreground">
+          <p className="mono-label text-[10.5px] uppercase tracking-[0.22em] text-muted-foreground">
             {t("Live feedback")}
           </p>
           <div className="mt-3 grid items-center gap-5 md:grid-cols-[minmax(0,300px)_auto_1fr]">
@@ -1387,14 +1387,14 @@ export function PxBioMech() {
 
             {/* the half-life readout */}
             <div data-testid="px-biomech-half-life" className="min-w-[130px]">
-              <p className="mono-label text-[9.5px] uppercase tracking-[0.2em] text-muted-foreground">
+              <p className="mono-label text-[10.5px] uppercase tracking-[0.2em] text-muted-foreground">
                 {t("Target half-life")}
               </p>
-              <p className="mt-1 font-serif text-[26px] leading-none text-foreground">
+              <p className="mt-1 font-serif text-[27px] leading-none text-foreground">
                 {metrics.halfLife.toFixed(1)}
-                <span className="ml-1.5 text-[14px] text-muted-foreground">h</span>
+                <span className="ml-1.5 text-[15px] text-muted-foreground">h</span>
               </p>
-              <p className="mt-1.5 text-[12px] italic text-muted-foreground">
+              <p className="mt-1.5 text-[13px] italic text-muted-foreground">
                 {metrics.halfLife < 12
                   ? t("the engines are biting")
                   : t("the engines are idling")}
@@ -1403,7 +1403,7 @@ export function PxBioMech() {
 
             {/* the off-target heat strip */}
             <div>
-              <p className="mono-label text-[9.5px] uppercase tracking-[0.2em] text-muted-foreground">
+              <p className="mono-label text-[10.5px] uppercase tracking-[0.2em] text-muted-foreground">
                 {t("Off-target binding")}
               </p>
               <div
@@ -1427,7 +1427,7 @@ export function PxBioMech() {
                   />
                 ))}
               </div>
-              <p className="mt-1.5 text-[12px] text-muted-foreground" aria-live="polite">
+              <p className="mt-1.5 text-[13px] text-muted-foreground" aria-live="polite">
                 {t("{n} of 12 bystander proteins run hot", { n: metrics.hot })}
               </p>
             </div>
@@ -1444,13 +1444,13 @@ export function PxBioMech() {
       <div data-testid="px-biomech" className="space-y-5">
         {/* the kategori's opening line */}
         <div className="text-center">
-          <h3 className="scope-gradient-text text-[19px] font-semibold">
+          <h3 className="scope-gradient-text text-[20px] font-semibold">
             {t(pxBioChamber.name)}
           </h3>
-          <p className="mt-1 font-serif text-[14px] italic text-muted-foreground">
+          <p className="mt-1 font-serif text-[15px] italic text-muted-foreground">
             {t(pxBioChamber.subtitle)}
           </p>
-          <p className="mx-auto mt-2 max-w-[560px] text-[14px] leading-relaxed text-muted-foreground">
+          <p className="mx-auto mt-2 max-w-[560px] text-[15px] leading-relaxed text-muted-foreground">
             {t(pxBioChamber.reveals)}
           </p>
         </div>
@@ -1483,11 +1483,11 @@ export function PxBioMech() {
 
             <div className="nice-scroll relative z-10 mx-auto h-full w-full max-w-[1080px] overflow-y-auto px-4 pb-10 pt-5 sm:px-8">
               <div className="mb-4 flex items-center justify-between gap-3">
-                <p className="mono-label text-[10px] uppercase tracking-[0.24em] text-white/60">
+                <p className="mono-label text-[11px] uppercase tracking-[0.24em] text-white/60">
                   {t(pxBioChamber.name)} — {t("full screen")}
                 </p>
                 <div className="flex items-center gap-2">
-                  <kbd className="mono-label rounded-full border border-white/15 px-2 py-1 text-[9px] text-white/50">
+                  <kbd className="mono-label rounded-full border border-white/15 px-2 py-1 text-[10px] text-white/50">
                     ESC
                   </kbd>
                   <button

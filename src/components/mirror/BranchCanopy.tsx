@@ -396,7 +396,7 @@ function BareFloorSuggestions({
             data-testid="landing-suggestion"
             disabled={disabled}
             onClick={() => onPick(t(s))}
-            className="focus-glow pointer-events-auto rounded-full border border-[rgba(125,211,252,0.24)] bg-[color-mix(in_srgb,var(--background)_72%,transparent)] px-3.5 py-1.5 text-[11.5px] leading-tight text-[#4d7ea3] shadow-[0_2px_14px_-9px_rgba(56,189,248,0.5)] transition-colors duration-300 hover:border-[rgba(125,211,252,0.55)] hover:text-[#2c5c80] disabled:cursor-not-allowed disabled:opacity-45 dark:border-[rgba(125,211,252,0.26)] dark:text-[#b7d9ef] dark:hover:border-[rgba(125,211,252,0.6)] dark:hover:text-[#ddf1fd]"
+            className="focus-glow pointer-events-auto rounded-full border border-[rgba(125,211,252,0.24)] bg-[color-mix(in_srgb,var(--background)_72%,transparent)] px-3.5 py-1.5 text-[12.5px] leading-tight text-[#4d7ea3] shadow-[0_2px_14px_-9px_rgba(56,189,248,0.5)] transition-colors duration-300 hover:border-[rgba(125,211,252,0.55)] hover:text-[#2c5c80] disabled:cursor-not-allowed disabled:opacity-45 dark:border-[rgba(125,211,252,0.26)] dark:text-[#b7d9ef] dark:hover:border-[rgba(125,211,252,0.6)] dark:hover:text-[#ddf1fd]"
           >
             {t(s)}
           </button>
@@ -410,7 +410,7 @@ function BareFloorSuggestions({
         data-testid="suggestions-reload"
         disabled={disabled}
         onClick={() => setDoors((cur) => draw(cur))}
-        className="focus-glow pointer-events-auto inline-flex h-7 items-center gap-1.5 rounded-full border border-[rgba(232,217,176,0.4)] bg-[color-mix(in_srgb,var(--background)_60%,transparent)] px-3 text-[10.5px] uppercase tracking-[0.18em] text-[#a08c5c] transition-colors duration-300 hover:border-[rgba(232,217,176,0.75)] hover:text-[#e8d9b0] disabled:cursor-not-allowed disabled:opacity-45 dark:text-[#c3ad79]"
+        className="focus-glow pointer-events-auto inline-flex h-7 items-center gap-1.5 rounded-full border border-[rgba(232,217,176,0.4)] bg-[color-mix(in_srgb,var(--background)_60%,transparent)] px-3 text-[11.5px] uppercase tracking-[0.18em] text-[#a08c5c] transition-colors duration-300 hover:border-[rgba(232,217,176,0.75)] hover:text-[#e8d9b0] disabled:cursor-not-allowed disabled:opacity-45 dark:text-[#c3ad79]"
       >
         <RefreshCw className="size-3" aria-hidden="true" />
         {t("Five new doors")}
@@ -677,7 +677,7 @@ export function CanopyRestStrip({
           className="size-3.5 text-[var(--scope-a,var(--gd))] transition-transform duration-300 group-hover:-translate-y-px"
           aria-hidden="true"
         />
-        <span className="mono-label text-[9px] uppercase tracking-[0.22em]">
+        <span className="mono-label text-[10px] uppercase tracking-[0.22em]">
           {t("The living tree")}
         </span>
         <ChevronUp
@@ -990,7 +990,7 @@ const TreeCanvas = memo(function TreeCanvas({
             }
             className={cn(
               "genea-bloom tree-chip focus-glow absolute z-10 flex flex-col items-start gap-[3px] rounded-2xl border px-[13px] py-[9px] text-left shadow-[0_3px_14px_-8px_rgba(0,0,0,0.55)] transition-colors duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-50",
-              narrow ? "px-[11px] text-[12px] leading-[17px]" : "text-[13px] leading-[18px]",
+              narrow ? "px-[11px] text-[13px] leading-[17px]" : "text-[14px] leading-[18px]",
               n.golden
                 ? "border-[color-mix(in_srgb,#f59e0b_52%,transparent)] bg-[color-mix(in_srgb,#f59e0b_14%,var(--background)_86%)] font-serif italic text-foreground shadow-[0_0_16px_-6px_color-mix(in_srgb,#f59e0b_60%,transparent)]"
                 : isPicked
@@ -1203,7 +1203,7 @@ const ZoomReplyForm = memo(function ZoomReplyForm({
           disabled={disabled}
           autoComplete="off"
           data-testid={`${testIdPrefix}-zoom-reply`}
-          className="min-w-0 flex-1 bg-transparent py-1 text-[13px] text-foreground placeholder:text-muted-foreground/55 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+          className="min-w-0 flex-1 bg-transparent py-1 text-[14px] text-foreground placeholder:text-muted-foreground/55 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
         />
         <button
           type="submit"
@@ -1258,7 +1258,16 @@ function LightToggle({ testIdPrefix }: { testIdPrefix: string }) {
         const root = document.documentElement;
         const dark = root.classList.contains("dark");
         root.classList.add("theme-anim");
-        setTheme(dark ? "light" : "dark");
+        const next = dark ? "light" : "dark";
+        setTheme(next);
+        /* THE SESSION'S OWN WORD — the choice rides the visit: the
+           website's default stays the vanilla daylight at every fresh
+           arrival, and the blue crystal waits through this visit only. */
+        try {
+          window.sessionStorage.setItem("mirror-entity-realm-session", next);
+        } catch {
+          /* the session's keeping stays closed — the realm's state carries */
+        }
         window.setTimeout(() => root.classList.remove("theme-anim"), 560);
       }}
       aria-label={t("Toggle the light")}
@@ -1555,7 +1564,7 @@ const GlyphTile = memo(function GlyphTile({
       {/* THE CARVING — the whisper's own words */}
       <span
         className={cn(
-          "relative mt-1.5 line-clamp-4 break-words text-[11.5px] leading-[15.5px] sm:text-[12px] sm:leading-[16px]",
+          "relative mt-1.5 line-clamp-4 break-words text-[12.5px] leading-[15.5px] sm:text-[13px] sm:leading-[16px]",
           tile.golden
             ? "font-serif italic text-foreground"
             : "text-foreground/90"
@@ -1580,7 +1589,7 @@ const GlyphTile = memo(function GlyphTile({
         {/* THE KIND — every stone says what it opens, in its own ink */}
         <span
           className={cn(
-            "mono-label shrink-0 text-[7px] uppercase tracking-[0.14em]",
+            "mono-label shrink-0 text-[8px] uppercase tracking-[0.14em]",
             tile.golden
               ? "text-[#f59e0b]"
               : "text-[var(--tile-a)] opacity-70"
@@ -1869,7 +1878,7 @@ const GlyphWall = memo(function GlyphWall({
               className="size-3.5 shrink-0 text-[var(--scope-a,var(--gd))]"
               aria-hidden="true"
             />
-            <span className="text-[12px] italic">
+            <span className="text-[13px] italic">
               {t("The wall has spoken — pour it again")}
             </span>
           </button>
@@ -4074,11 +4083,11 @@ export function BranchCanopy({
                       className="size-3.5 shrink-0 text-[var(--scope-a,var(--gd))]"
                       aria-hidden="true"
                     />
-                    <span className="mono-label min-w-0 flex-1 truncate text-[9px] uppercase tracking-[0.16em] text-foreground/85">
+                    <span className="mono-label min-w-0 flex-1 truncate text-[10px] uppercase tracking-[0.16em] text-foreground/85">
                       {mixTitle(mix, t)}
                     </span>
                     <span
-                      className="mono-label shrink-0 text-[9px] tabular-nums text-muted-foreground/70"
+                      className="mono-label shrink-0 text-[10px] tabular-nums text-muted-foreground/70"
                       aria-hidden="true"
                     >
                       ·{lineage.length}
@@ -4090,7 +4099,7 @@ export function BranchCanopy({
                       data-testid={`${testIdPrefix}-trail`}
                       className="mt-2 flex flex-col"
                     >
-                      <p className="mono-label px-2 pb-1 text-[8px] uppercase tracking-[0.2em] text-muted-foreground/60">
+                      <p className="mono-label px-2 pb-1 text-[9px] uppercase tracking-[0.2em] text-muted-foreground/60">
                         {t("Your walk")}
                       </p>
                       {[...lineage].map((l, i) => {
@@ -4113,7 +4122,7 @@ export function BranchCanopy({
                             <span
                               aria-hidden="true"
                               className={cn(
-                                "mono-label w-4 shrink-0 text-[8px] tabular-nums",
+                                "mono-label w-4 shrink-0 text-[9px] tabular-nums",
                                 latest
                                   ? "text-[var(--scope-a,var(--gd))]"
                                   : "text-muted-foreground/50"
@@ -4123,7 +4132,7 @@ export function BranchCanopy({
                             </span>
                             <span
                               className={cn(
-                                "min-w-0 flex-1 truncate text-[12px]",
+                                "min-w-0 flex-1 truncate text-[13px]",
                                 latest
                                   ? "font-medium text-[var(--scope-a,var(--gd))]"
                                   : "text-foreground/85"
@@ -4132,7 +4141,7 @@ export function BranchCanopy({
                               {l.text}
                             </span>
                             {latest && (
-                              <span className="mono-label shrink-0 animate-pulse text-[7.5px] uppercase tracking-[0.16em] text-[var(--scope-a,var(--gd))]">
+                              <span className="mono-label shrink-0 animate-pulse text-[8.5px] uppercase tracking-[0.16em] text-[var(--scope-a,var(--gd))]">
                                 {t("You are here")}
                               </span>
                             )}
@@ -4151,12 +4160,12 @@ export function BranchCanopy({
                       walkLedger.chats.length > 0 ||
                       walkLedger.journey.length > 0) && (
                     <div data-testid={`${testIdPrefix}-ledger`} className="mt-1.5">
-                      <p className="mono-label px-2 pb-1 text-[8px] uppercase tracking-[0.2em] text-muted-foreground/60">
+                      <p className="mono-label px-2 pb-1 text-[9px] uppercase tracking-[0.2em] text-muted-foreground/60">
                         {t("The walk's ledger")}
                       </p>
                       {walkLedger.volumes.length > 0 && (
                         <div data-testid={`${testIdPrefix}-ledger-books`}>
-                          <p className="px-2 pb-0.5 text-[10px] italic text-muted-foreground/70">
+                          <p className="px-2 pb-0.5 text-[11px] italic text-muted-foreground/70">
                             {t("Kept volumes")}
                           </p>
                           {walkLedger.volumes.slice(0, 4).map((v) => (
@@ -4192,10 +4201,10 @@ export function BranchCanopy({
                                 className="size-3 shrink-0 text-muted-foreground/70"
                                 aria-hidden="true"
                               />
-                              <span className="min-w-0 flex-1 truncate text-[12px] text-foreground/85">
+                              <span className="min-w-0 flex-1 truncate text-[13px] text-foreground/85">
                                 {v.title}
                               </span>
-                              <span className="mono-label shrink-0 text-[8px] tabular-nums text-muted-foreground/60">
+                              <span className="mono-label shrink-0 text-[9px] tabular-nums text-muted-foreground/60">
                                 {v.pages.length}/{v.totalPages}
                               </span>
                             </button>
@@ -4207,7 +4216,7 @@ export function BranchCanopy({
                           data-testid={`${testIdPrefix}-ledger-chats`}
                           className="mt-1.5"
                         >
-                          <p className="px-2 pb-0.5 text-[10px] italic text-muted-foreground/70">
+                          <p className="px-2 pb-0.5 text-[11px] italic text-muted-foreground/70">
                             {t("Saved conversations")}
                           </p>
                           {walkLedger.chats.slice(0, 6).map((c) => (
@@ -4227,10 +4236,10 @@ export function BranchCanopy({
                                 className="size-3 shrink-0 text-muted-foreground/70"
                                 aria-hidden="true"
                               />
-                              <span className="min-w-0 flex-1 truncate text-[12px] text-foreground/85">
+                              <span className="min-w-0 flex-1 truncate text-[13px] text-foreground/85">
                                 {c.title}
                               </span>
-                              <span className="mono-label shrink-0 text-[8px] uppercase tracking-[0.1em] text-muted-foreground/60">
+                              <span className="mono-label shrink-0 text-[9px] uppercase tracking-[0.1em] text-muted-foreground/60">
                                 {c.label}
                               </span>
                             </button>
@@ -4242,7 +4251,7 @@ export function BranchCanopy({
                           data-testid={`${testIdPrefix}-ledger-journey`}
                           className="mt-1.5"
                         >
-                          <p className="px-2 pb-0.5 text-[10px] italic text-muted-foreground/70">
+                          <p className="px-2 pb-0.5 text-[11px] italic text-muted-foreground/70">
                             {t("The journey kept")}
                           </p>
                           {walkLedger.journey.slice(0, 5).map((j, i) => (
@@ -4252,14 +4261,14 @@ export function BranchCanopy({
                             >
                               <span
                                 aria-hidden="true"
-                                className="mono-label w-14 shrink-0 text-[8px] tabular-nums text-muted-foreground/50"
+                                className="mono-label w-14 shrink-0 text-[9px] tabular-nums text-muted-foreground/50"
                               >
                                 {new Date(j.at).toLocaleDateString(undefined, {
                                   month: "short",
                                   day: "numeric",
                                 })}
                               </span>
-                              <span className="min-w-0 flex-1 truncate text-[11.5px] text-muted-foreground/85">
+                              <span className="min-w-0 flex-1 truncate text-[12.5px] text-muted-foreground/85">
                                 {j.b}
                                 {j.s ? ` · ${j.s}` : ""}
                               </span>
@@ -4296,7 +4305,7 @@ export function BranchCanopy({
                       className="size-3.5 shrink-0 text-muted-foreground"
                       aria-hidden="true"
                     />
-                    <span className="min-w-0 flex-1 truncate text-[12.5px] text-foreground/90">
+                    <span className="min-w-0 flex-1 truncate text-[13.5px] text-foreground/90">
                       {t("Recalibrate the field")}
                     </span>
                   </button>
@@ -4329,7 +4338,7 @@ export function BranchCanopy({
               <ListTree className="size-3" aria-hidden="true" />
               <span
                 className={cn(
-                  "mono-label whitespace-nowrap text-[9px] uppercase tracking-[0.14em]",
+                  "mono-label whitespace-nowrap text-[10px] uppercase tracking-[0.14em]",
                   realm && "hidden sm:inline"
                 )}
               >
@@ -4358,7 +4367,7 @@ export function BranchCanopy({
                       "color-mix(in srgb, var(--scope-a,var(--gd)) 30%, transparent)",
                   }}
                 >
-                  <p className="mono-label text-[8.5px] uppercase tracking-[0.2em] text-muted-foreground">
+                  <p className="mono-label text-[9.5px] uppercase tracking-[0.2em] text-muted-foreground">
                     {t("The categories of the house")}
                   </p>
                   <div className="mt-2 flex flex-col">
@@ -4387,15 +4396,15 @@ export function BranchCanopy({
                         aria-hidden="true"
                       />
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-[12.5px] font-medium text-foreground">
+                        <span className="block truncate text-[13.5px] font-medium text-foreground">
                           {t("General")}
                         </span>
-                        <span className="mono-label block truncate text-[8.5px] uppercase tracking-[0.14em] text-muted-foreground/70">
+                        <span className="mono-label block truncate text-[9.5px] uppercase tracking-[0.14em] text-muted-foreground/70">
                           {t("The whole house, mixed")}
                         </span>
                       </span>
                       {mixIsGeneral(mix) && (
-                        <span className="mono-label shrink-0 text-[8.5px] uppercase tracking-[0.14em] text-[var(--scope-a,var(--gd))]">
+                        <span className="mono-label shrink-0 text-[9.5px] uppercase tracking-[0.14em] text-[var(--scope-a,var(--gd))]">
                           {t("Even voices")}
                         </span>
                       )}
@@ -4456,24 +4465,24 @@ export function BranchCanopy({
                           </span>
                           <span className="min-w-0 flex-1">
                             <span className="flex items-center gap-2">
-                              <span className="truncate text-[12.5px] text-foreground/90">
+                              <span className="truncate text-[13.5px] text-foreground/90">
                                 {t(familyLabelKeys[f.key] ?? f.key)}
                               </span>
                               {share.on && share.pct !== 100 && (
                                 <span
-                                  className="mono-label shrink-0 text-[9px] tabular-nums"
+                                  className="mono-label shrink-0 text-[10px] tabular-nums"
                                   style={{ color: f.accent }}
                                 >
                                   {share.pct}%
                                 </span>
                               )}
                               {focused && (
-                                <span className="mono-label shrink-0 text-[8px] uppercase tracking-[0.14em] text-[var(--scope-a,var(--gd))]">
+                                <span className="mono-label shrink-0 text-[9px] uppercase tracking-[0.14em] text-[var(--scope-a,var(--gd))]">
                                   {t("You are here")}
                                 </span>
                               )}
                             </span>
-                            <span className="mono-label mt-0.5 block truncate text-[8.5px] normal-case tracking-[0.02em] text-muted-foreground/70">
+                            <span className="mono-label mt-0.5 block truncate text-[9.5px] normal-case tracking-[0.02em] text-muted-foreground/70">
                               {t(spirit?.spirit ?? f.key)}
                             </span>
                           </span>
@@ -4482,7 +4491,7 @@ export function BranchCanopy({
                     })}
                   </div>
                   <p
-                    className="mt-2.5 border-t px-1 pt-2 text-[10.5px] italic leading-relaxed text-muted-foreground/75"
+                    className="mt-2.5 border-t px-1 pt-2 text-[11.5px] italic leading-relaxed text-muted-foreground/75"
                     style={{
                       borderColor:
                         "color-mix(in srgb, var(--hairline) 70%, transparent)",
@@ -4793,7 +4802,7 @@ export function BranchCanopy({
                 {floorQuiet && landingThread.length === 0 && (
                   <p
                     data-testid="mirror-ask"
-                    className="genea-bloom still-bloom max-w-[300px] px-6 text-center font-[family-name:var(--font-literata)] text-[13.5px] italic leading-relaxed text-[#e11d48] dark:text-[#fda4b8] sm:max-w-[360px] sm:text-[14.5px]"
+                    className="genea-bloom still-bloom max-w-[300px] px-6 text-center font-[family-name:var(--font-literata)] text-[14.5px] italic leading-relaxed text-[#e11d48] dark:text-[#fda4b8] sm:max-w-[360px] sm:text-[15.5px]"
                     style={{ pointerEvents: "none" }}
                   >
                     {t("what do you wish to remember dear one?")}
@@ -4891,12 +4900,12 @@ export function BranchCanopy({
           {!realm && (introSub || introSubExtra || introExtra) && (
             <div className="pointer-events-none sticky bottom-2 z-10 flex flex-col items-center gap-2 px-4 text-center">
               {introSub && (
-                <p className="genea-bloom still-bloom max-w-[460px] rounded-2xl border border-[color-mix(in_srgb,var(--scope-a,var(--gd))_22%,transparent)] bg-background px-4 py-2.5 text-[13.5px] leading-relaxed text-muted-foreground shadow-[0_6px_24px_-14px_rgba(0,0,0,0.45)]">
+                <p className="genea-bloom still-bloom max-w-[460px] rounded-2xl border border-[color-mix(in_srgb,var(--scope-a,var(--gd))_22%,transparent)] bg-background px-4 py-2.5 text-[14.5px] leading-relaxed text-muted-foreground shadow-[0_6px_24px_-14px_rgba(0,0,0,0.45)]">
                   {introSub}
                 </p>
               )}
               {introSubExtra && (
-                <p className="genea-bloom still-bloom max-w-[440px] rounded-2xl border border-[color-mix(in_srgb,var(--scope-a,var(--gd))_16%,transparent)] bg-background px-4 py-2 text-[13px] italic leading-relaxed text-muted-foreground/80 shadow-[0_6px_24px_-14px_rgba(0,0,0,0.45)]">
+                <p className="genea-bloom still-bloom max-w-[440px] rounded-2xl border border-[color-mix(in_srgb,var(--scope-a,var(--gd))_16%,transparent)] bg-background px-4 py-2 text-[14px] italic leading-relaxed text-muted-foreground/80 shadow-[0_6px_24px_-14px_rgba(0,0,0,0.45)]">
                   {introSubExtra}
                 </p>
               )}
@@ -4944,7 +4953,7 @@ export function BranchCanopy({
             className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex flex-col items-center gap-2 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
           >
             {introSub && (
-              <p className="genea-bloom still-bloom max-w-[520px] rounded-2xl border border-[color-mix(in_srgb,var(--scope-a,var(--gd))_20%,transparent)] bg-background px-4 py-2 text-center text-[12.5px] leading-relaxed text-muted-foreground shadow-[0_6px_24px_-14px_rgba(0,0,0,0.45)]">
+              <p className="genea-bloom still-bloom max-w-[520px] rounded-2xl border border-[color-mix(in_srgb,var(--scope-a,var(--gd))_20%,transparent)] bg-background px-4 py-2 text-center text-[13.5px] leading-relaxed text-muted-foreground shadow-[0_6px_24px_-14px_rgba(0,0,0,0.45)]">
                 {introSub}
               </p>
             )}
@@ -4985,7 +4994,7 @@ export function BranchCanopy({
                    must not pay for a lens. */
                 bare
                   ? "bg-background floor-glow"
-                  : "bg-background/95 backdrop-blur-xl shadow-[0_10px_36px_-16px_rgba(0,0,0,0.55)]"
+                  : "bg-background/95 backdrop-blur-md shadow-[0_10px_36px_-16px_rgba(0,0,0,0.55)]"
               )}
               style={{
                 /* THE CRYSTAL BORDER — docked in the threshold the
@@ -5050,7 +5059,7 @@ export function BranchCanopy({
                 disabled={disabled}
                 autoComplete="off"
                 data-testid={`${testIdPrefix}-ask-input`}
-                className="min-w-0 flex-1 bg-transparent py-1 text-[13.5px] text-foreground placeholder:text-muted-foreground/55 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                className="min-w-0 flex-1 bg-transparent py-1 text-[14.5px] text-foreground placeholder:text-muted-foreground/55 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
               />
               <button
                 type="submit"
@@ -5076,7 +5085,7 @@ export function BranchCanopy({
             {bare && guest && (
               <p
                 data-testid="floor-temporary-note"
-                className="mono-label text-[8px] uppercase tracking-[0.26em] text-muted-foreground/55"
+                className="mono-label text-[9px] uppercase tracking-[0.26em] text-muted-foreground/55"
                 style={{ pointerEvents: "none" }}
               >
                 {t("Temporary chat — sign in to keep your reflections")}
@@ -5158,16 +5167,16 @@ export function BranchCanopy({
                   )}
                   <div className="min-w-0">
                     {!bare && zoom.move && (
-                      <p className="mono-label text-[8px] uppercase tracking-[0.2em] text-muted-foreground/70">
+                      <p className="mono-label text-[9px] uppercase tracking-[0.2em] text-muted-foreground/70">
                         {t(BRANCH_TYPE_LABELS[zoom.move])}
                       </p>
                     )}
                     {zoom.restored && (
-                      <p className="mono-label text-[8px] uppercase tracking-[0.2em] text-[var(--scope-a,var(--gd))]">
+                      <p className="mono-label text-[9px] uppercase tracking-[0.2em] text-[var(--scope-a,var(--gd))]">
                         {t("Returned to the walk")}
                       </p>
                     )}
-                    <p className="break-words text-[14px] font-medium leading-snug text-foreground">
+                    <p className="break-words text-[15px] font-medium leading-snug text-foreground">
                       {zoom.q}
                     </p>
                   </div>
@@ -5281,7 +5290,7 @@ export function BranchCanopy({
                   {roomAnswer ? (
                     revealStage >= 2 ? (
                       <div className="relative">
-                        <div className="canopy-answer whitespace-pre-wrap break-words text-[14.5px] leading-[1.75] text-foreground/90 sm:text-[15px]">
+                        <div className="canopy-answer whitespace-pre-wrap break-words text-[15.5px] leading-[1.75] text-foreground/90 sm:text-[16px]">
                           {roomAnswer}
                           {roomLoading && (
                             <span
@@ -5311,10 +5320,10 @@ export function BranchCanopy({
                       role="alert"
                       data-testid={`${testIdPrefix}-zoom-error`}
                     >
-                      <p className="mono-label text-[8.5px] uppercase tracking-[0.2em] text-[#f43f5e]">
+                      <p className="mono-label text-[9.5px] uppercase tracking-[0.2em] text-[#f43f5e]">
                         {t(bare ? "The field is quiet — speak once more" : "The transmission could not cross")}
                       </p>
-                      <p className="mt-1.5 text-[13px] leading-relaxed text-foreground/85">
+                      <p className="mt-1.5 text-[14px] leading-relaxed text-foreground/85">
                         {displayError}
                       </p>
                     </div>
@@ -5328,7 +5337,7 @@ export function BranchCanopy({
                               ? "mirror"
                               : SCOPE_CHANNELING[roomLiveScope] ?? "orbs"
                           }
-                          className="mono-label text-[10px] uppercase tracking-[0.22em]"
+                          className="mono-label text-[11px] uppercase tracking-[0.22em]"
                         />
                       </div>
                     )
@@ -5365,7 +5374,7 @@ export function BranchCanopy({
                           data-room-turn=""
                           className="flex flex-col gap-2"
                         >
-                          <p className="ml-auto max-w-[88%] whitespace-pre-wrap break-words text-[13px] font-medium leading-relaxed text-foreground">
+                          <p className="ml-auto max-w-[88%] whitespace-pre-wrap break-words text-[14px] font-medium leading-relaxed text-foreground">
                             {turn.q}
                           </p>
                           {turn.loading ? (
@@ -5377,11 +5386,11 @@ export function BranchCanopy({
                                   ? "mirror"
                                   : SCOPE_CHANNELING[roomLiveScope] ?? "orbs"
                               }
-                              className="py-1 mono-label text-[9.5px] uppercase tracking-[0.2em] text-muted-foreground"
+                              className="py-1 mono-label text-[10.5px] uppercase tracking-[0.2em] text-muted-foreground"
                             />
                           ) : turn.a ? (
                             <div className="flex items-start gap-1">
-                              <p className="min-w-0 flex-1 whitespace-pre-wrap break-words text-[14.5px] leading-[1.7] text-foreground/90">
+                              <p className="min-w-0 flex-1 whitespace-pre-wrap break-words text-[15.5px] leading-[1.7] text-foreground/90">
                                 {turn.a}
                               </p>
                               <RoomCopyButton
@@ -5390,7 +5399,7 @@ export function BranchCanopy({
                               />
                             </div>
                           ) : turn.failed ? (
-                            <p className="mono-label text-[9.5px] uppercase tracking-[0.2em] text-muted-foreground/60">
+                            <p className="mono-label text-[10.5px] uppercase tracking-[0.2em] text-muted-foreground/60">
                               {t("The field is quiet — speak once more")}
                             </p>
                           ) : null}
@@ -5440,11 +5449,11 @@ export function BranchCanopy({
                         className="size-3.5 shrink-0 text-[var(--scope-a,var(--gd))]"
                         aria-hidden="true"
                       />
-                      <span className="mono-label min-w-0 flex-1 truncate text-[9px] uppercase tracking-[0.2em] text-muted-foreground">
+                      <span className="mono-label min-w-0 flex-1 truncate text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
                         {t("Branches of this transmission")}
                       </span>
                       <span
-                        className="mono-label shrink-0 rounded-full border px-1.5 py-0.5 text-[8.5px] leading-none tabular-nums"
+                        className="mono-label shrink-0 rounded-full border px-1.5 py-0.5 text-[9.5px] leading-none tabular-nums"
                         style={{
                           borderColor:
                             "color-mix(in srgb, var(--scope-a,var(--gd)) 32%, transparent)",
@@ -5490,10 +5499,10 @@ export function BranchCanopy({
                                 aria-hidden="true"
                               />
                               <span className="min-w-0 flex-1">
-                                <span className="mono-label block text-[8px] uppercase tracking-[0.18em] text-muted-foreground/60">
+                                <span className="mono-label block text-[9px] uppercase tracking-[0.18em] text-muted-foreground/60">
                                   {t(BRANCH_TYPE_LABELS[b.type])}
                                 </span>
-                                <span className="mt-1 block whitespace-pre-wrap break-words text-[13.5px] leading-snug text-foreground/90">
+                                <span className="mt-1 block whitespace-pre-wrap break-words text-[14.5px] leading-snug text-foreground/90">
                                   {b.question}
                                 </span>
                               </span>

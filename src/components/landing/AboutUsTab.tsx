@@ -63,7 +63,7 @@ export default function AboutUsTab() {
           aria-expanded={open}
           aria-haspopup="dialog"
           data-testid="about-tab-button"
-          className="focus-glow group inline-flex h-11 items-center gap-2.5 rounded-full border border-[var(--lp-edge)] bg-[var(--lp-veil)] px-6 text-[13.5px] font-medium tracking-[0.02em] text-[var(--lp-body)] shadow-[0_14px_34px_-22px_rgba(60,45,20,0.55)] transition-all duration-300 hover:border-[color-mix(in_srgb,var(--lp-gold)_55%,transparent)] hover:text-[var(--lp-gold-soft)]"
+          className="focus-glow group inline-flex h-11 items-center gap-2.5 rounded-full border border-[var(--lp-edge)] bg-[var(--lp-veil)] px-6 text-[14.5px] font-medium tracking-[0.02em] text-[var(--lp-body)] shadow-[0_14px_34px_-22px_rgba(60,45,20,0.55)] transition-all duration-300 hover:border-[color-mix(in_srgb,var(--lp-gold)_55%,transparent)] hover:text-[var(--lp-gold-soft)]"
         >
           <Info
             className="size-3.5 text-[var(--lp-gold)] transition-transform duration-300 group-hover:rotate-12"
@@ -99,10 +99,10 @@ export default function AboutUsTab() {
           {/* the tab's own little crown row */}
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="mono-label text-[9px] uppercase tracking-[0.28em] text-[var(--lp-gold)]">
+              <p className="mono-label text-[10px] uppercase tracking-[0.28em] text-[var(--lp-gold)]">
                 {t("A word from the house")}
               </p>
-              <h2 className="mt-2 font-[family-name:Cinzel] text-[21px] font-semibold leading-tight tracking-wide text-[var(--lp-head)]">
+              <h2 className="mt-2 font-[family-name:Cinzel] text-[22px] font-semibold leading-tight tracking-wide text-[var(--lp-head)]">
                 {t("About us")}
               </h2>
             </div>
@@ -119,29 +119,29 @@ export default function AboutUsTab() {
           </div>
 
           <div className="mt-4 space-y-3.5">
-            <p className="text-[13.5px] leading-[1.85] text-[var(--lp-body)]">
+            <p className="text-[14.5px] leading-[1.85] text-[var(--lp-body)]">
               {t(
                 "Reflectme began with a simple wish: to build a calm corner of the internet where a person can think out loud, create without pressure, and be answered kindly. No feed, no noise, no one watching over your shoulder — just a quiet room that is always glad to see you."
               )}
             </p>
-            <p className="text-[13.5px] leading-[1.85] text-[var(--lp-body)]">
+            <p className="text-[14.5px] leading-[1.85] text-[var(--lp-body)]">
               {t(
                 "Inside, you can talk with the mirror — a reflective companion that answers your questions in your own words. You can write together, watch your descriptions become paintings, turn a feeling into music, walk the records of old civilizations, and keep a living book that weaves your dreams page by page. Everything you make stays yours; the house only keeps the lamp lit."
               )}
             </p>
-            <p className="text-[13.5px] leading-[1.85] text-[var(--lp-body)]">
+            <p className="text-[14.5px] leading-[1.85] text-[var(--lp-body)]">
               {t(
                 "Our purpose is not to impress you — it is to be useful. An honest answer when you ask for one, a soft place when the day is loud, and a door you can step through whenever you need one. If a thing here feels unclear, just ask: nothing in this house minds repeating itself."
               )}
             </p>
-            <p className="text-[13.5px] leading-[1.85] text-[var(--lp-body)]">
+            <p className="text-[14.5px] leading-[1.85] text-[var(--lp-body)]">
               {t(
                 "The threshold you are standing on is free to walk. The deeper rooms open by registration, once one of the offered realms is acquired — and until then, the floor asks nothing."
               )}
             </p>
           </div>
 
-          <p className="mono-label mt-5 border-t border-[var(--lp-edge)] pt-4 text-[9px] uppercase tracking-[0.2em] text-[var(--lp-faint)]">
+          <p className="mono-label mt-5 border-t border-[var(--lp-edge)] pt-4 text-[10px] uppercase tracking-[0.2em] text-[var(--lp-faint)]">
             {t("reflectme.space · made with patience")}
           </p>
         </div>

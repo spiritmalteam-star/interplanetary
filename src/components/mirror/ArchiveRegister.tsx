@@ -87,17 +87,17 @@ function RegisterRow({
         </span>
         <span className="min-w-0 flex-1">
           <span className="flex items-baseline gap-2">
-            <span className="truncate text-[16px] font-semibold leading-tight text-foreground transition-colors group-hover:text-[var(--cy)]">
+            <span className="truncate text-[17px] font-semibold leading-tight text-foreground transition-colors group-hover:text-[var(--cy)]">
               {rep.name}
             </span>
-            <span className="ml-auto shrink-0 font-mono text-[11px] text-muted-foreground/55">
+            <span className="ml-auto shrink-0 font-mono text-[12px] text-muted-foreground/55">
               {entityRegistryLine(rep, kind)}
             </span>
           </span>
-          <span className="mt-1 block truncate text-[14px] text-muted-foreground">
+          <span className="mt-1 block truncate text-[15px] text-muted-foreground">
             {group?.name} · {rep.origin} · {rep.density}
           </span>
-          <span className="mt-0.5 block truncate text-[13.5px] italic leading-relaxed text-foreground/65">
+          <span className="mt-0.5 block truncate text-[14.5px] italic leading-relaxed text-foreground/65">
             {rep.specialty}
           </span>
         </span>
@@ -176,14 +176,14 @@ export function ArchiveRegister() {
     >
       {/* header */}
       <div className="text-center">
-        <span className="mono-label inline-flex items-center gap-1.5 rounded-full border hairline px-2.5 py-1 text-[10.5px] text-muted-foreground">
+        <span className="mono-label inline-flex items-center gap-1.5 rounded-full border hairline px-2.5 py-1 text-[11.5px] text-muted-foreground">
           <Layers className="size-3" aria-hidden="true" />
           {t("Mirror archive · full register")}
         </span>
-        <h1 className="hero-text mt-3 text-[24px] font-semibold leading-tight tracking-[-0.01em] sm:text-[28px]">
+        <h1 className="hero-text mt-3 text-[25px] font-semibold leading-tight tracking-[-0.01em] sm:text-[29px]">
           {t(meta.title)}
         </h1>
-        <p className="mx-auto mt-2.5 max-w-[560px] text-[14.5px] leading-relaxed text-muted-foreground">
+        <p className="mx-auto mt-2.5 max-w-[560px] text-[15.5px] leading-relaxed text-muted-foreground">
           {t(meta.subtitle)}
         </p>
       </div>
@@ -191,32 +191,32 @@ export function ArchiveRegister() {
       {/* exact counters */}
       <div className="mt-5 grid grid-cols-3 gap-2.5">
         <div className="rounded-xl border hairline bg-[var(--glass-bg-soft)] px-3 py-3 text-center">
-          <p className="font-mono text-[18px] font-semibold tabular-nums text-foreground sm:text-[22px]">
+          <p className="font-mono text-[19px] font-semibold tabular-nums text-foreground sm:text-[23px]">
             {total}
           </p>
-          <p className="mono-label mt-1 text-[9.5px] text-muted-foreground">
+          <p className="mono-label mt-1 text-[10.5px] text-muted-foreground">
             {t("named entries · exact")}
           </p>
         </div>
         <div className="rounded-xl border hairline bg-[var(--glass-bg-soft)] px-3 py-3 text-center">
-          <p className="font-mono text-[18px] font-semibold tabular-nums text-foreground sm:text-[22px]">
+          <p className="font-mono text-[19px] font-semibold tabular-nums text-foreground sm:text-[23px]">
             {groupChips.length}
           </p>
-          <p className="mono-label mt-1 text-[9.5px] text-muted-foreground">
+          <p className="mono-label mt-1 text-[10.5px] text-muted-foreground">
             {t(meta.groupLabel).toLowerCase()} {t("catalogued")}
           </p>
         </div>
         <div className="rounded-xl border hairline bg-[var(--glass-bg-soft)] px-3 py-3 text-center">
           <p
             className={cn(
-              "font-mono text-[18px] font-semibold tabular-nums sm:text-[22px]",
+              "font-mono text-[19px] font-semibold tabular-nums sm:text-[23px]",
               revealed >= filtered.length ? "text-[var(--ok)]" : "text-foreground"
             )}
           >
             {revealed}
-            <span className="text-[14px] text-muted-foreground">/{filtered.length}</span>
+            <span className="text-[15px] text-muted-foreground">/{filtered.length}</span>
           </p>
-          <p className="mono-label mt-1 text-[9.5px] text-muted-foreground">
+          <p className="mono-label mt-1 text-[10.5px] text-muted-foreground">
             {t("revealed on this page")}
           </p>
         </div>
@@ -239,7 +239,7 @@ export function ArchiveRegister() {
                 ? t("Search the full civilization register")
                 : t("Search the full interdimensional register")
             }
-            className="focus-glow h-10 w-full rounded-xl border hairline bg-transparent pl-10 pr-9 text-[14.5px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
+            className="focus-glow h-10 w-full rounded-xl border hairline bg-transparent pl-10 pr-9 text-[15.5px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
           />
           {query && (
             <button
@@ -259,7 +259,7 @@ export function ArchiveRegister() {
             onClick={() => setGroupId(null)}
             aria-pressed={groupId === null}
             className={cn(
-              "focus-glow mono-label rounded-full border px-2.5 py-1 text-[10.5px] transition-all duration-300",
+              "focus-glow mono-label rounded-full border px-2.5 py-1 text-[11.5px] transition-all duration-300",
               groupId === null
                 ? "border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--cy)_12%,transparent)] text-foreground"
                 : "hairline text-muted-foreground hover:text-foreground"
@@ -277,7 +277,7 @@ export function ArchiveRegister() {
               onClick={() => setGroupId(groupId === g.id ? null : g.id)}
               aria-pressed={groupId === g.id}
               className={cn(
-                "focus-glow mono-label rounded-full border px-2.5 py-1 text-[10.5px] transition-all duration-300",
+                "focus-glow mono-label rounded-full border px-2.5 py-1 text-[11.5px] transition-all duration-300",
                 groupId === g.id
                   ? "border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--cy)_12%,transparent)] text-foreground"
                   : "hairline text-muted-foreground hover:text-foreground"
@@ -292,7 +292,7 @@ export function ArchiveRegister() {
       {/* result status line */}
       <div className="mt-4 flex items-center justify-center gap-2">
         <BadgeCheck className="size-3.5 text-[var(--ok)]" aria-hidden="true" />
-        <p className="mono-label text-[10.5px] text-muted-foreground/80">
+        <p className="mono-label text-[11.5px] text-muted-foreground/80">
           {revealed < filtered.length
             ? t("Revealed {a} of {b} — scroll to keep revealing", {
                 a: revealed,
@@ -313,10 +313,10 @@ export function ArchiveRegister() {
 
       {shown.length === 0 && (
         <div className="mt-6 rounded-2xl border hairline bg-[var(--glass-bg-soft)] px-6 py-10 text-center">
-          <p className="text-[15px] text-foreground/85">
+          <p className="text-[16px] text-foreground/85">
             {t("No entries match this filter.")}
           </p>
-          <p className="mt-1.5 text-[13.5px] italic text-muted-foreground">
+          <p className="mt-1.5 text-[14.5px] italic text-muted-foreground">
             {t(
               "Every name in the archive exists — try a softer search, or clear the filters."
             )}
@@ -331,7 +331,7 @@ export function ArchiveRegister() {
           <button
             type="button"
             onClick={() => setRevealed((r) => Math.min(r + BATCH, filtered.length))}
-            className="focus-glow rounded-full border hairline px-4 py-2 text-[14px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+            className="focus-glow rounded-full border hairline px-4 py-2 text-[15px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
           >
             {t("Reveal {n} more", {
               n: Math.min(BATCH, filtered.length - revealed),
@@ -340,7 +340,7 @@ export function ArchiveRegister() {
           <button
             type="button"
             onClick={() => setRevealed(filtered.length)}
-            className="focus-glow rounded-full border border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--cy)_12%,transparent)] px-4 py-2 text-[14px] font-semibold text-foreground transition-all duration-300 hover:glow-sm"
+            className="focus-glow rounded-full border border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--cy)_12%,transparent)] px-4 py-2 text-[15px] font-semibold text-foreground transition-all duration-300 hover:glow-sm"
           >
             {t("Reveal all {n}", { n: filtered.length })}
           </button>
@@ -352,7 +352,7 @@ export function ArchiveRegister() {
         <button
           type="button"
           onClick={exitRegister}
-          className="focus-glow group flex items-center gap-2 rounded-full border hairline px-4 py-2 text-[14px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+          className="focus-glow group flex items-center gap-2 rounded-full border hairline px-4 py-2 text-[15px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
         >
           <ArrowLeft
             className="size-3.5 transition-transform duration-300 group-hover:-translate-x-0.5"
@@ -365,7 +365,7 @@ export function ArchiveRegister() {
           onClick={() =>
             openRegister(registerKind === "civilization" ? "interdim" : "civilization")
           }
-          className="focus-glow flex items-center gap-2 rounded-full border hairline px-4 py-2 text-[14px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+          className="focus-glow flex items-center gap-2 rounded-full border hairline px-4 py-2 text-[15px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
         >
           <Layers className="size-3.5" aria-hidden="true" />
           {t("Switch to the {register}", {

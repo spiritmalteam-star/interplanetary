@@ -88,19 +88,19 @@ function ModeCard({
       )}
     >
       <span className="flex items-center gap-1.5">
-        <span className="mono-label text-[9px] text-muted-foreground/60">
+        <span className="mono-label text-[10px] text-muted-foreground/60">
           {mode.n}
         </span>
         <span
           className={cn(
-            "truncate text-[12.5px] font-semibold tracking-wide",
+            "truncate text-[13.5px] font-semibold tracking-wide",
             active ? "text-[var(--scope-a)]" : "text-foreground/85"
           )}
         >
           {t(mode.name)}
         </span>
       </span>
-      <span className="line-clamp-2 text-[11px] leading-snug text-muted-foreground">
+      <span className="line-clamp-2 text-[12px] leading-snug text-muted-foreground">
         {t(mode.tagline)}
       </span>
     </button>
@@ -203,12 +203,12 @@ function Player() {
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p
-            className="mono-label text-[9.5px] uppercase tracking-[0.22em] text-muted-foreground"
+            className="mono-label text-[10.5px] uppercase tracking-[0.22em] text-muted-foreground"
             data-testid="lc-player-mode"
           >
             {t(modeName)}
           </p>
-          <h3 className="mt-0.5 truncate font-serif text-[17px] font-semibold text-foreground">
+          <h3 className="mt-0.5 truncate font-serif text-[18px] font-semibold text-foreground">
             {track.title}
           </h3>
         </div>
@@ -235,7 +235,7 @@ function Player() {
       >
         <Waveform seed={track.id + track.title} progress={progress} playing={playing} />
       </div>
-      <div className="mt-1.5 flex items-center justify-between font-mono text-[10.5px] text-muted-foreground">
+      <div className="mt-1.5 flex items-center justify-between font-mono text-[11.5px] text-muted-foreground">
         <span>{fmtTime(time)}</span>
         <span>{fmtTime(dur)}</span>
       </div>
@@ -273,7 +273,7 @@ function Player() {
           target="_blank"
           rel="noreferrer"
           data-testid="lc-download"
-          className="focus-glow flex h-8 items-center gap-1.5 rounded-full border px-2.5 text-[11.5px] text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+          className="focus-glow flex h-8 items-center gap-1.5 rounded-full border px-2.5 text-[12.5px] text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
         >
           <Download className="size-3" aria-hidden="true" />
           {t("Download")}
@@ -299,10 +299,10 @@ function Player() {
       {/* TRANSMISSION NOTES */}
       {track.notes && (
         <div className="mt-3.5 border-t hairline pt-3">
-          <p className="mono-label text-[9.5px] uppercase tracking-[0.22em] text-muted-foreground">
+          <p className="mono-label text-[10.5px] uppercase tracking-[0.22em] text-muted-foreground">
             {t("Transmission notes")}
           </p>
-          <p className="mt-1 text-[13.5px] italic leading-relaxed text-foreground/80">
+          <p className="mt-1 text-[14.5px] italic leading-relaxed text-foreground/80">
             {track.notes}
           </p>
         </div>
@@ -320,15 +320,15 @@ function Player() {
           >
             <div className="mt-3 space-y-2 rounded-xl border hairline bg-[color-mix(in_srgb,var(--scope-a)_5%,transparent)] p-3">
               {track.style && (
-                <p className="text-[12px] leading-relaxed text-muted-foreground">
-                  <span className="mono-label mr-1.5 text-[9px] uppercase tracking-[0.18em]">
+                <p className="text-[13px] leading-relaxed text-muted-foreground">
+                  <span className="mono-label mr-1.5 text-[10px] uppercase tracking-[0.18em]">
                     {t("Sonic language")}
                   </span>
                   {track.style}
                 </p>
               )}
               {track.lyrics && (
-                <p className="whitespace-pre-line font-serif text-[13px] italic leading-relaxed text-foreground/85">
+                <p className="whitespace-pre-line font-serif text-[14px] italic leading-relaxed text-foreground/85">
                   {track.lyrics}
                 </p>
               )}
@@ -361,7 +361,7 @@ function PlayerChip({
       data-testid={testId}
       aria-pressed={active}
       className={cn(
-        "focus-glow flex h-8 items-center gap-1.5 rounded-full border px-2.5 text-[11.5px] transition-all duration-300",
+        "focus-glow flex h-8 items-center gap-1.5 rounded-full border px-2.5 text-[12.5px] transition-all duration-300",
         active
           ? "border-[color-mix(in_srgb,var(--scope-a)_55%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_12%,transparent)] text-[var(--scope-a)]"
           : "border-[color-mix(in_srgb,var(--hairline)_80%,transparent)] text-muted-foreground hover:border-[var(--hairline-hover)] hover:text-foreground"
@@ -389,9 +389,9 @@ function ShapeDial({
   const t = useT();
   return (
     <div>
-      <p className="mono-label mb-1 flex items-center justify-between text-[9px] uppercase tracking-[0.18em] text-muted-foreground">
+      <p className="mono-label mb-1 flex items-center justify-between text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
         <span>{t(label)}</span>
-        <span className="text-[9.5px] normal-case tracking-normal text-[var(--scope-a)]">
+        <span className="text-[10.5px] normal-case tracking-normal text-[var(--scope-a)]">
           {t(ends[value] ?? "")}
         </span>
       </p>
@@ -412,7 +412,7 @@ function ShapeDial({
           />
         ))}
       </div>
-      <div className="mt-0.5 flex justify-between text-[9px] text-muted-foreground/60">
+      <div className="mt-0.5 flex justify-between text-[10px] text-muted-foreground/60">
         <span>{t(ends[0])}</span>
         <span>{t(ends[ends.length - 1])}</span>
       </div>
@@ -434,13 +434,13 @@ function ShapeSelect({
   const t = useT();
   return (
     <label className="block">
-      <span className="mono-label mb-1 block text-[9px] uppercase tracking-[0.18em] text-muted-foreground">
+      <span className="mono-label mb-1 block text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
         {t(label)}
       </span>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="focus-glow h-8 w-full rounded-lg border hairline bg-[var(--glass-bg)] px-2 text-[12px] text-foreground"
+        className="focus-glow h-8 w-full rounded-lg border hairline bg-[var(--glass-bg)] px-2 text-[13px] text-foreground"
       >
         {options.map((o) => (
           <option key={o} value={o}>
@@ -496,12 +496,12 @@ export function LightCodesView() {
   return (
     <div className="scope-lightcodes relative flex h-full flex-col">
       {/* ---------- top bar ---------- */}
-      <header className="relative z-30 shrink-0 border-b hairline bg-[var(--glass-bg)] backdrop-blur-xl">
+      <header className="relative z-30 shrink-0 border-b hairline bg-[var(--glass-bg)] backdrop-blur-md">
         <div className="bar-safe flex items-center justify-between gap-2 px-3 sm:px-5">
           <button
             type="button"
             onClick={exitLightCodes}
-            className="focus-glow group flex h-9 items-center gap-2 rounded-full border hairline px-3 text-[14px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground sm:px-3.5"
+            className="focus-glow group flex h-9 items-center gap-2 rounded-full border hairline px-3 text-[15px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground sm:px-3.5"
           >
             <ArrowLeft
               className="size-3.5 transition-transform duration-300 group-hover:-translate-x-0.5"
@@ -512,7 +512,7 @@ export function LightCodesView() {
           </button>
           <span className="flex items-center gap-2" aria-hidden="true">
             <AudioLines className="size-4 text-[var(--scope-a)]" />
-            <span className="mono-label hidden text-[10px] uppercase tracking-[0.28em] text-muted-foreground sm:inline">
+            <span className="mono-label hidden text-[11px] uppercase tracking-[0.28em] text-muted-foreground sm:inline">
               {t("Light Codes")}
             </span>
           </span>
@@ -527,13 +527,13 @@ export function LightCodesView() {
         <div className="mx-auto w-full max-w-[760px] px-4 pb-10 pt-6 sm:px-6">
           {/* heading */}
           <div className="text-center">
-            <h1 className="scope-gradient-text text-[22px] font-semibold tracking-[0.14em] sm:text-[26px]">
+            <h1 className="scope-gradient-text text-[23px] font-semibold tracking-[0.14em] sm:text-[27px]">
               {t("LIGHT CODES")}
             </h1>
-            <p className="mt-1 text-[13px] text-muted-foreground">
+            <p className="mt-1 text-[14px] text-muted-foreground">
               {t("Sound transmissions through Mirror Entity")}
             </p>
-            <p className="mt-0.5 font-serif text-[13.5px] italic text-foreground/75">
+            <p className="mt-0.5 font-serif text-[14.5px] italic text-foreground/75">
               {t("“Translate intention into sound.”")}
             </p>
           </div>
@@ -551,7 +551,7 @@ export function LightCodesView() {
               placeholder={t(mode.placeholder)}
               maxLength={600}
               data-testid="lc-intention"
-              className="focus-glow w-full resize-none rounded-xl border hairline bg-[var(--glass-bg-soft)] px-3.5 py-2.5 text-[14.5px] leading-relaxed text-foreground placeholder:text-muted-foreground/60"
+              className="focus-glow w-full resize-none rounded-xl border hairline bg-[var(--glass-bg-soft)] px-3.5 py-2.5 text-[15.5px] leading-relaxed text-foreground placeholder:text-muted-foreground/60"
             />
             {/* what the intention carries — chips and the paperclip/camera */}
             <div className="mt-2 flex items-center gap-2">
@@ -577,7 +577,7 @@ export function LightCodesView() {
                     key={intent}
                     type="button"
                     onClick={() => setLcIntention(intent)}
-                    className="focus-glow rounded-full border px-2.5 py-1 text-[11.5px] text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+                    className="focus-glow rounded-full border px-2.5 py-1 text-[12.5px] text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
                   >
                     {t(intent)}
                   </button>
@@ -596,7 +596,7 @@ export function LightCodesView() {
                     }
                     aria-pressed={lcCivilization === c.id}
                     className={cn(
-                      "focus-glow rounded-full border px-2.5 py-1 text-[11.5px] transition-all duration-300",
+                      "focus-glow rounded-full border px-2.5 py-1 text-[12.5px] transition-all duration-300",
                       lcCivilization === c.id
                         ? "border-[color-mix(in_srgb,var(--scope-a)_55%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_12%,transparent)] text-[var(--scope-a)]"
                         : "border-[color-mix(in_srgb,var(--hairline)_80%,transparent)] text-muted-foreground hover:text-foreground"
@@ -620,7 +620,7 @@ export function LightCodesView() {
                   onChange={(e) => setLcUserLyrics(e.target.value)}
                   placeholder={t("Your words — the Mirror will set them to sound.")}
                   maxLength={600}
-                  className="focus-glow w-full resize-none rounded-xl border hairline bg-transparent px-3 py-2 font-serif text-[13.5px] italic leading-relaxed text-foreground placeholder:text-muted-foreground/60"
+                  className="focus-glow w-full resize-none rounded-xl border hairline bg-transparent px-3 py-2 font-serif text-[14.5px] italic leading-relaxed text-foreground placeholder:text-muted-foreground/60"
                 />
               </div>
             )}
@@ -645,7 +645,7 @@ export function LightCodesView() {
               onClick={() => setShapeOpen((v) => !v)}
               aria-expanded={shapeOpen}
               data-testid="lc-shape-toggle"
-              className="focus-glow flex w-full items-center justify-center gap-1.5 text-[11.5px] uppercase tracking-[0.2em] text-muted-foreground transition-colors hover:text-foreground"
+              className="focus-glow flex w-full items-center justify-center gap-1.5 text-[12.5px] uppercase tracking-[0.2em] text-muted-foreground transition-colors hover:text-foreground"
             >
               {t("Shape the transmission")}
               <ChevronDown
@@ -735,7 +735,7 @@ export function LightCodesView() {
                 void generateLightCode({ attachments: carried });
               }}
               data-testid="lc-generate"
-              className="focus-glow group flex h-12 items-center gap-2.5 rounded-full bg-gradient-to-r from-[var(--scope-a)] to-[color-mix(in_srgb,var(--scope-b)_80%,var(--scope-a))] px-8 text-[14.5px] font-semibold tracking-wide text-[#f6f4ef] shadow-[0_6px_28px_-10px_color-mix(in_srgb,var(--scope-a)_75%,transparent)] transition-all duration-300 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+              className="focus-glow group flex h-12 items-center gap-2.5 rounded-full bg-gradient-to-r from-[var(--scope-a)] to-[color-mix(in_srgb,var(--scope-b)_80%,var(--scope-a))] px-8 text-[15.5px] font-semibold tracking-wide text-[#f6f4ef] shadow-[0_6px_28px_-10px_color-mix(in_srgb,var(--scope-a)_75%,transparent)] transition-all duration-300 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {mode.id === "mirror-transmission" ? (
                 <Sparkles className="size-4" aria-hidden="true" />
@@ -771,7 +771,7 @@ export function LightCodesView() {
                       />
                     ))}
                   </div>
-                  <p className="mt-2 text-[13px] italic text-muted-foreground">
+                  <p className="mt-2 text-[14px] italic text-muted-foreground">
                     {lcStatus === "interpreting"
                       ? t(RENDERING_PHRASES[0])
                       : t("The sound is being woven — hold still…")}
@@ -786,13 +786,13 @@ export function LightCodesView() {
                   exit={{ opacity: 0 }}
                   className="mt-4 rounded-xl border border-[color-mix(in_srgb,var(--destructive)_30%,transparent)] bg-[color-mix(in_srgb,var(--destructive)_6%,transparent)] px-4 py-3 text-center"
                 >
-                  <p className="text-[13.5px] leading-relaxed text-foreground/85">
+                  <p className="text-[14.5px] leading-relaxed text-foreground/85">
                     {lcError}
                   </p>
                   <button
                     type="button"
                     onClick={() => void generateLightCode()}
-                    className="focus-glow mt-2 text-[12.5px] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+                    className="focus-glow mt-2 text-[13.5px] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
                   >
                     {t("Ask again")}
                   </button>
@@ -810,16 +810,16 @@ export function LightCodesView() {
               className="scope-frame-card relative mt-6 rounded-2xl p-4 sm:p-5"
               data-testid="lc-interpretation"
             >
-              <p className="mono-label text-[9.5px] uppercase tracking-[0.22em] text-muted-foreground">
+              <p className="mono-label text-[10.5px] uppercase tracking-[0.22em] text-muted-foreground">
                 {t("The Mirror's interpretation")}
               </p>
               {interpretation.title && (
-                <h3 className="mt-0.5 font-serif text-[16.5px] font-semibold text-foreground">
+                <h3 className="mt-0.5 font-serif text-[17.5px] font-semibold text-foreground">
                   {interpretation.title}
                 </h3>
               )}
               {interpretation.notes && (
-                <p className="mt-1.5 text-[13.5px] italic leading-relaxed text-foreground/80">
+                <p className="mt-1.5 text-[14.5px] italic leading-relaxed text-foreground/80">
                   {interpretation.notes}
                 </p>
               )}
@@ -836,7 +836,7 @@ export function LightCodesView() {
           {/* MY TRANSMISSIONS */}
           {lcHistory.length > 0 && (
             <section className="mt-8" aria-label={t("My transmissions")}>
-              <p className="mono-label mb-2 text-[9.5px] uppercase tracking-[0.24em] text-muted-foreground">
+              <p className="mono-label mb-2 text-[10.5px] uppercase tracking-[0.24em] text-muted-foreground">
                 {t("My transmissions")}
               </p>
               <div className="nice-scroll max-h-64 space-y-1.5 overflow-y-auto pr-1">
@@ -856,10 +856,10 @@ export function LightCodesView() {
                       <Play className="size-3 translate-x-[1px]" aria-hidden="true" />
                     </button>
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-[13px] font-medium text-foreground/85">
+                      <span className="block truncate text-[14px] font-medium text-foreground/85">
                         {track.title}
                       </span>
-                      <span className="mono-label block text-[8.5px] uppercase tracking-[0.16em] text-muted-foreground/70">
+                      <span className="mono-label block text-[9.5px] uppercase tracking-[0.16em] text-muted-foreground/70">
                         {t(
                           LC_MODES.find((m) => m.id === track.mode)?.name ??
                             track.mode

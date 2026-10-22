@@ -99,7 +99,7 @@ export function QueryComposer() {
 
   return (
     <div
-      className="shrink-0 border-t hairline bg-[var(--glass-bg)] px-3 pb-[max(0.45rem,env(safe-area-inset-bottom))] pt-1.5 backdrop-blur-xl sm:px-6 sm:pb-2"
+      className="shrink-0 border-t hairline bg-[var(--glass-bg)] px-3 pb-[max(0.45rem,env(safe-area-inset-bottom))] pt-1.5 backdrop-blur-md sm:px-6 sm:pb-2"
       role="search"
       aria-label={t("Ask the mirror")}
     >
@@ -146,7 +146,7 @@ export function QueryComposer() {
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={onKeyDown}
             placeholder={t("Ask the mirror...")}
-            className="nice-scroll max-h-[96px] min-h-[24px] flex-1 resize-none bg-transparent py-1 text-[15px] leading-snug text-foreground placeholder:text-muted-foreground/60 focus:outline-none sm:min-h-[22px] sm:py-[2px] sm:text-[14.5px]"
+            className="nice-scroll max-h-[96px] min-h-[24px] flex-1 resize-none bg-transparent py-1 text-[16px] leading-snug text-foreground placeholder:text-muted-foreground/60 focus:outline-none sm:min-h-[22px] sm:py-[2px] sm:text-[15.5px]"
           />
           <ChatInputExtras
             scope={activeMode as LiveScopeKey}

@@ -62,7 +62,7 @@ function AxThinking() {
       aria-busy="true"
     >
       <ManifestLoading className="size-16 text-foreground sm:size-20" />
-      <span className="mono-label text-[11px] text-muted-foreground">
+      <span className="mono-label text-[12px] text-muted-foreground">
         {t("the atelier is mixing its light")}
       </span>
     </div>
@@ -101,7 +101,7 @@ function AxVisualBlock({
         className="glass rounded-2xl border border-[color-mix(in_srgb,var(--hairline)_65%,transparent)] px-4 py-3.5"
         data-testid={`${testIdPrefix}-error`}
       >
-        <p className="text-[14px] italic leading-relaxed text-foreground/80">
+        <p className="text-[15px] italic leading-relaxed text-foreground/80">
           {t(
             "The atelier is quiet — the vision could not be composed. Rest a breath, then ask again."
           )}
@@ -111,7 +111,7 @@ function AxVisualBlock({
             type="button"
             onClick={() => void askArtXVisual(visualRequest, null, null)}
             data-testid={`${testIdPrefix}-retry`}
-            className="focus-glow mt-2.5 flex h-9 items-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--scope-a)_35%,transparent)] px-4 text-[13px] text-foreground/90 transition-all duration-300 hover:-translate-y-px"
+            className="focus-glow mt-2.5 flex h-9 items-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--scope-a)_35%,transparent)] px-4 text-[14px] text-foreground/90 transition-all duration-300 hover:-translate-y-px"
           >
             <RefreshCw className="size-3.5" aria-hidden="true" />
             {t("Be still and receive")}
@@ -201,14 +201,14 @@ function AxExchange({
           (attachments.images > 0 || attachments.docNames.length > 0) && (
             <div className="mb-1.5 flex max-w-[78%] flex-wrap justify-end gap-1">
               {attachments.images > 0 && (
-                <span className="mono-label flex items-center gap-1 rounded-full border border-[color-mix(in_srgb,var(--scope-a)_24%,transparent)] px-2 py-0.5 text-[9.5px] text-muted-foreground">
+                <span className="mono-label flex items-center gap-1 rounded-full border border-[color-mix(in_srgb,var(--scope-a)_24%,transparent)] px-2 py-0.5 text-[10.5px] text-muted-foreground">
                   {t("an image")}
                 </span>
               )}
               {attachments.docNames.map((name) => (
                 <span
                   key={name}
-                  className="mono-label flex max-w-[200px] items-center gap-1 rounded-full border border-[color-mix(in_srgb,var(--scope-a)_24%,transparent)] px-2 py-0.5 text-[9.5px] text-muted-foreground"
+                  className="mono-label flex max-w-[200px] items-center gap-1 rounded-full border border-[color-mix(in_srgb,var(--scope-a)_24%,transparent)] px-2 py-0.5 text-[10.5px] text-muted-foreground"
                 >
                   <span className="truncate">{name}</span>
                 </span>
@@ -217,7 +217,7 @@ function AxExchange({
           )}
         <p
           className={cn(
-            "max-w-[78%] rounded-2xl rounded-br-md border border-[color-mix(in_srgb,var(--scope-a)_24%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_9%,transparent)] px-4 py-2.5 text-[15px] leading-relaxed text-foreground/90",
+            "max-w-[78%] rounded-2xl rounded-br-md border border-[color-mix(in_srgb,var(--scope-a)_24%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_9%,transparent)] px-4 py-2.5 text-[16px] leading-relaxed text-foreground/90",
             failed && "opacity-70"
           )}
         >
@@ -228,7 +228,7 @@ function AxExchange({
             data-testid="failed-msg"
             className="mt-1.5 flex max-w-[78%] flex-wrap items-center justify-end gap-1.5"
           >
-            <span className="mono-label flex items-center gap-1 rounded-full border border-[var(--destructive)]/25 bg-[color-mix(in_srgb,var(--destructive)_6%,transparent)] px-2 py-1 text-[9.5px] text-muted-foreground">
+            <span className="mono-label flex items-center gap-1 rounded-full border border-[var(--destructive)]/25 bg-[color-mix(in_srgb,var(--destructive)_6%,transparent)] px-2 py-1 text-[10.5px] text-muted-foreground">
               <CircleAlert
                 className="size-3 text-[var(--destructive)]"
                 aria-hidden="true"
@@ -240,7 +240,7 @@ function AxExchange({
               data-testid="retry-failed"
               disabled={retryDisabled}
               onClick={() => useMirror.getState().retryFailed("ax", messageId)}
-              className="focus-glow flex items-center gap-1 rounded-full border hairline px-2.5 py-1 text-[11px] text-foreground/85 transition-all duration-300 hover:border-[var(--hairline-hover)] disabled:cursor-not-allowed disabled:opacity-40"
+              className="focus-glow flex items-center gap-1 rounded-full border hairline px-2.5 py-1 text-[12px] text-foreground/85 transition-all duration-300 hover:border-[var(--hairline-hover)] disabled:cursor-not-allowed disabled:opacity-40"
             >
               <RotateCcw className="size-3" aria-hidden="true" />
               {t("Send again")}
@@ -265,7 +265,7 @@ function AxExchange({
         <Palette className="size-3.5 text-[var(--scope-a)]" />
       </span>
       <div className="min-w-0 max-w-[85%]">
-        <p className="mono-label text-[9.5px] text-[var(--scope-a)]">
+        <p className="mono-label text-[10.5px] text-[var(--scope-a)]">
           MIRROR ENTITY · ART X
         </p>
         {hasVisual && messageId ? (
@@ -275,7 +275,7 @@ function AxExchange({
                 {text.split(/\n{2,}/).map((p, i) => (
                   <p
                     key={i}
-                    className="text-[15px] leading-[1.8] text-foreground/88"
+                    className="text-[16px] leading-[1.8] text-foreground/88"
                   >
                     {p}
                   </p>
@@ -293,7 +293,7 @@ function AxExchange({
               {text.split(/\n{2,}/).map((p, i) => (
                 <p
                   key={i}
-                  className="text-[15px] leading-[1.8] text-foreground/88"
+                  className="text-[16px] leading-[1.8] text-foreground/88"
                 >
                   {p}
                 </p>
@@ -542,10 +542,10 @@ export function ArtXChat() {
             )}
             {axStatus === "error" && axError && (
               <div className="ml-11 rounded-xl border border-[var(--destructive)]/25 bg-[color-mix(in_srgb,var(--destructive)_6%,transparent)] px-4 py-3">
-                <p className="text-[14.5px] leading-relaxed text-foreground/85">
+                <p className="text-[15.5px] leading-relaxed text-foreground/85">
                   {t("Art X could not finish the work.")}
                 </p>
-                <p className="mt-1 text-[14px] italic text-muted-foreground">
+                <p className="mt-1 text-[15px] italic text-muted-foreground">
                   {axError}
                 </p>
               </div>
@@ -584,10 +584,10 @@ export function ArtXChat() {
               className="w-full max-w-[440px] rounded-2xl border border-[color-mix(in_srgb,var(--scope-a)_24%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_6%,transparent)] px-4 py-3"
               data-testid="artx-window-whisper"
             >
-              <p className="mono-label text-[9.5px] text-[var(--scope-a)]">
+              <p className="mono-label text-[10.5px] text-[var(--scope-a)]">
                 {t(activeWindow.label)}
               </p>
-              <p className="mt-1 text-[13.5px] italic leading-relaxed text-foreground/80">
+              <p className="mt-1 text-[14.5px] italic leading-relaxed text-foreground/80">
                 {t(activeWindow.whisper)}
               </p>
             </div>
@@ -625,7 +625,7 @@ export function ArtXChat() {
       {/* composer — THE ONE INPUT LAW: the room's reply line is the
           only input while the answer lives in the tree */}
       {!canopyLatch && (
-      <div className="relative z-30 shrink-0 border-t hairline bg-[var(--glass-bg)] px-3 py-2.5 backdrop-blur-xl sm:px-4">
+      <div className="relative z-30 shrink-0 border-t hairline bg-[var(--glass-bg)] px-3 py-2.5 backdrop-blur-md sm:px-4">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -663,7 +663,7 @@ export function ArtXChat() {
                 }
               }}
               placeholder={t("Ask Art X…")}
-              className="nice-scroll max-h-[120px] flex-1 resize-none bg-transparent py-2 text-[15px] leading-relaxed text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
+              className="nice-scroll max-h-[120px] flex-1 resize-none bg-transparent py-2 text-[16px] leading-relaxed text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
             />
             <ChatInputExtras
               scope="artx"
@@ -739,7 +739,7 @@ export function ArtX() {
             type="button"
             onClick={exitArtX}
             data-testid="artx-back"
-            className="focus-glow pointer-events-auto group flex h-9 shrink-0 items-center gap-2 rounded-full border hairline bg-[var(--glass-bg)]/80 px-3 text-[14px] font-medium text-muted-foreground backdrop-blur-xl transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground sm:px-3.5"
+            className="focus-glow pointer-events-auto group flex h-9 shrink-0 items-center gap-2 rounded-full border hairline bg-[var(--glass-bg)]/80 px-3 text-[15px] font-medium text-muted-foreground backdrop-blur-md transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground sm:px-3.5"
           >
             <ArrowLeft
               className="size-3.5 transition-transform duration-300 group-hover:-translate-x-0.5"
@@ -757,7 +757,7 @@ export function ArtX() {
               placeholder="Windows"
               onSelect={(id) => setAxScope(id === "chat" ? null : id)}
               testIdPrefix="artx-windows"
-              triggerClassName="bg-[var(--glass-bg)]/80 backdrop-blur-xl"
+              triggerClassName="bg-[var(--glass-bg)]/80 backdrop-blur-md"
               onOpenChange={setWindowsOpen}
             />
           </div>

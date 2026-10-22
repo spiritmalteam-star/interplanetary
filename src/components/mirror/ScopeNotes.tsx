@@ -36,7 +36,7 @@ export function ScopeNotes({
           className="size-3.5 shrink-0 text-[var(--scope-a)]"
           aria-hidden="true"
         />
-        <p className="mono-label text-[9.5px] uppercase tracking-[0.2em] text-muted-foreground/80">
+        <p className="mono-label text-[10.5px] uppercase tracking-[0.2em] text-muted-foreground/80">
           {t("Notes from this window")}
           <span className="mx-1.5 text-[var(--scope-a)]" aria-hidden="true">
             ·
@@ -81,10 +81,10 @@ export function ScopeNotes({
               {Scene ? <Scene /> : null}
 
               {/* the information */}
-              <h4 className="ink-hand mt-3.5 text-[15.5px] font-semibold leading-snug text-[var(--scope-a)]">
+              <h4 className="ink-hand mt-3.5 text-[16.5px] font-semibold leading-snug text-[var(--scope-a)]">
                 {t(note.title)}
               </h4>
-              <p className="mt-1.5 text-[13.5px] leading-[1.75] text-foreground/80">
+              <p className="mt-1.5 text-[14.5px] leading-[1.75] text-foreground/80">
                 {t(note.text)}
               </p>
             </motion.article>

@@ -140,10 +140,10 @@ export function SettingsModal() {
       <div className="nice-scroll max-h-[62vh] space-y-6 overflow-y-auto px-5 pb-6 sm:px-6 max-md:max-h-[60dvh]">
         {/* ---------------- The mix of worlds ---------------- */}
         <section aria-label={t("The mix of worlds")}>
-          <p className="mono-label mb-1 text-[11.5px] text-muted-foreground">
+          <p className="mono-label mb-1 text-[12.5px] text-muted-foreground">
             {t("The mix of worlds")}
           </p>
-          <p className="mb-3 text-[12px] leading-relaxed text-muted-foreground/80">
+          <p className="mb-3 text-[13px] leading-relaxed text-muted-foreground/80">
             {t(
               "How much of each family the living tree carries — the percentages decide which suggestions visit more often."
             )}
@@ -163,7 +163,7 @@ export function SettingsModal() {
                         opacity: share.on ? 1 : 0.3,
                       }}
                     />
-                    <span className="w-[92px] shrink-0 truncate text-[12.5px] text-foreground/85">
+                    <span className="w-[92px] shrink-0 truncate text-[13.5px] text-foreground/85">
                       {t(familyLabelKeys[f.key] ?? f.key)}
                     </span>
                     <input
@@ -184,7 +184,7 @@ export function SettingsModal() {
                       style={{ accentColor: f.accent }}
                     />
                     <span
-                      className="w-8 shrink-0 text-right text-[10.5px] tabular-nums"
+                      className="w-8 shrink-0 text-right text-[11.5px] tabular-nums"
                       style={{ color: share.on ? f.accent : undefined }}
                     >
                       {share.pct}%
@@ -204,7 +204,7 @@ export function SettingsModal() {
                 })
               }
               data-testid="settings-mix-even"
-              className="focus-glow mt-3.5 w-full rounded-full border px-3 py-1.5 text-[11.5px] text-muted-foreground transition-all duration-300 hover:text-foreground"
+              className="focus-glow mt-3.5 w-full rounded-full border px-3 py-1.5 text-[12.5px] text-muted-foreground transition-all duration-300 hover:text-foreground"
               style={{
                 borderColor:
                   "color-mix(in srgb, var(--hairline) 80%, transparent)",
@@ -217,7 +217,7 @@ export function SettingsModal() {
 
         {/* ---------------- Language ---------------- */}
         <section aria-label={t("Language")}>
-          <p className="mono-label mb-2.5 text-[11.5px] text-muted-foreground">
+          <p className="mono-label mb-2.5 text-[12.5px] text-muted-foreground">
             {t("Language of everything")}
           </p>
           <div className="grid grid-cols-2 gap-2">
@@ -237,10 +237,10 @@ export function SettingsModal() {
                   )}
                 >
                   <span className="min-w-0">
-                    <span className="block truncate text-[15px] font-semibold text-foreground">
+                    <span className="block truncate text-[16px] font-semibold text-foreground">
                       {l.native}
                     </span>
-                    <span className="mono-label mt-0.5 block truncate text-[10.5px] text-muted-foreground">
+                    <span className="mono-label mt-0.5 block truncate text-[11.5px] text-muted-foreground">
                       {l.english}
                     </span>
                   </span>
@@ -258,7 +258,7 @@ export function SettingsModal() {
 
         {/* ---------------- Transcript voice ---------------- */}
         <section aria-label={t("Voice for transcript")}>
-          <p className="mono-label mb-2.5 text-[11.5px] text-muted-foreground">
+          <p className="mono-label mb-2.5 text-[12.5px] text-muted-foreground">
             {t("Voice for transcript")}
           </p>
           <div className="space-y-2">
@@ -292,10 +292,10 @@ export function SettingsModal() {
                       aria-hidden="true"
                     />
                     <span className="min-w-0">
-                      <span className="block truncate text-[14.5px] font-semibold text-foreground">
+                      <span className="block truncate text-[15.5px] font-semibold text-foreground">
                         {v.name}
                       </span>
-                      <span className="block truncate text-[13.5px] text-muted-foreground">
+                      <span className="block truncate text-[14.5px] text-muted-foreground">
                         {v.id === "aurora"
                           ? t(v.character)
                           : v.character}
@@ -333,7 +333,7 @@ export function SettingsModal() {
 
         {/* ---------------- Narration pace ---------------- */}
         <section aria-label={t("Narration pace")}>
-          <p className="mono-label mb-2.5 text-[11.5px] text-muted-foreground">
+          <p className="mono-label mb-2.5 text-[12.5px] text-muted-foreground">
             {t("Narration pace")}
           </p>
           <div className="flex flex-wrap gap-2">
@@ -346,7 +346,7 @@ export function SettingsModal() {
                   onClick={() => setPace(p.value)}
                   aria-pressed={selected}
                   className={cn(
-                    "focus-glow rounded-full border px-4 py-2 text-[14px] font-medium transition-all duration-300",
+                    "focus-glow rounded-full border px-4 py-2 text-[15px] font-medium transition-all duration-300",
                     selected
                       ? "border-[var(--hairline-active)] bg-[var(--accent)] text-foreground"
                       : "hairline text-muted-foreground hover:border-[var(--hairline-hover)] hover:text-foreground"
@@ -359,7 +359,7 @@ export function SettingsModal() {
           </div>
         </section>
 
-        <p className="mono-label text-center text-[10.5px] leading-relaxed text-muted-foreground/70">
+        <p className="mono-label text-center text-[11.5px] leading-relaxed text-muted-foreground/70">
           {t(
             "Every word of the interface and every new transmission follows the selected language."
           )}

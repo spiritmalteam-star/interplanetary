@@ -64,7 +64,11 @@ function computeGeo(): Geo {
   if (vw < 640) {
     return {
       w: Math.floor(vw * 0.94),
-      h: Math.round(vh * 0.55),
+      /* THE WHOLE WINDOW ON THE FIRST BREATH — 0.52 keeps the glass
+         fully inside the phone's first screen (hero above, slot at
+         ~0.48vh): the whisper line and the floor never slip beneath
+         the fold, and the window still carries the whole chamber. */
+      h: Math.round(vh * 0.52),
       radius: 26,
     };
   }
@@ -119,23 +123,36 @@ export default function LandingGate() {
   phaseRef.current = phase;
 
   /* THE THRESHOLD'S OWN LIGHT — the realm wears the toggle's own
-     default: the milky vanilla daylight (TOGGLE ON). The seal falls
-     once, at the gate's first breath, and only when this browser has
-     never chosen: a visitor who has already picked the blue crystal
-     (toggle off) keeps their choice — the stored word decides.
+     default: the milky vanilla daylight (TOGGLE ON) is the WEBSITE'S
+     DEFAULT, at every fresh visit. The choice itself lives for the
+     SESSION: a visitor who turns the toggle off walks the blue crystal
+     house for as long as the visit lasts (the word rides the session's
+     own keeping, and the crown's hand writes it there), and the moment
+     a new visit begins the realm wakes in the vanilla daylight again.
+     The seal falls once, at the gate's first breath.
      `setTheme`'s own identity changes whenever the theme changes, so
      the seal watches the storage, never the callback's face. */
   const darkSealed = useRef(false);
   useEffect(() => {
     if (darkSealed.current) return;
     darkSealed.current = true;
-    let chosen: string | null = null;
+    let session: string | null = null;
     try {
-      chosen = window.localStorage.getItem("mirror-entity-realm");
+      session = window.sessionStorage.getItem("mirror-entity-realm-session");
     } catch {
-      /* the private keeping stays closed — the default serves */
+      /* the session's keeping stays closed — the default serves */
     }
-    if (chosen !== "dark" && chosen !== "light") setTheme("light");
+    if (session === "dark") {
+      setTheme("dark");
+      return;
+    }
+    setTheme("light");
+    try {
+      window.sessionStorage.setItem("mirror-entity-realm-session", "light");
+      window.localStorage.setItem("mirror-entity-realm", "light");
+    } catch {
+      /* the keepings stay closed — the realm's own state carries */
+    }
   }, [setTheme]);
 
   /* THE INSTANT FLOOR — the chunk already rides (pulled at the
@@ -184,12 +201,26 @@ export default function LandingGate() {
     };
   }, []);
 
-  /* THE ANCHORED CHAT — the chat's position is FIXED on the screen:
-     it stands exactly where the slot rests at the page's own top and
-     NEVER rides the scroll. The lens is measured in the landing's own
-     content coordinates (rect + scrollTop — a sum that is the same at
-     every scroll breath), so the threshold walks beneath the glass
-     while the glass itself never moves a pixel. */
+  /* THE ANCHORED CHAT — the glass is STUCK TO ITS SECTION like an
+     image stuck on the website: its place is measured once in the
+     landing's own CONTENT coordinates (rect + scrollTop — a sum that
+     is the same at every scroll breath), and the walk itself moves it
+     with the page — when the threshold scrolls, the chat rides its own
+     section ("The mirror is waking…") exactly, never floating over the
+     house's other rooms, never riding the viewport, never lagging a
+     frame behind (one transform write per scroll breath, in the same
+     breath as the scroll itself). */
+  const lensPos = useRef({ x: 0, y: 0 });
+
+  /* the glass's screen place — its content place minus the walk */
+  const applyLensScreenPos = useCallback(() => {
+    const lens = lensRef.current;
+    if (!lens) return;
+    if (phaseRef.current === "opening" || phaseRef.current === "through") return;
+    const { x, y } = lensPos.current;
+    lens.style.transform = `translate3d(${x}px, ${Math.round(y - landingScroll.current)}px, 0)`;
+  }, []);
+
   const syncLens = useCallback(() => {
     const lens = lensRef.current;
     const slot = slotRef.current;
@@ -207,10 +238,12 @@ export default function LandingGate() {
       }
       scroller = scroller.parentElement;
     }
-    const x = Math.round(r.left);
-    const y = Math.round(r.top + scrollTop);
-    lens.style.transform = `translate3d(${x}px, ${y}px, 0)`;
-  }, []);
+    lensPos.current = {
+      x: Math.round(r.left),
+      y: Math.round(r.top + scrollTop),
+    };
+    applyLensScreenPos();
+  }, [applyLensScreenPos]);
 
   useLayoutEffect(() => {
     if (phase !== "landing") return;
@@ -236,12 +269,16 @@ export default function LandingGate() {
     return () => window.clearTimeout(id);
   }, [chatFolded, phase, syncLens]);
 
-  /* THE ANCHOR'S LAW — the scroll is remembered only for the return
-     (the closing's restore); the lens itself is never dragged along:
-     its content coordinates are the same at every scroll breath. */
-  const handleLandingScroll = useCallback((y: number) => {
-    landingScroll.current = y;
-  }, []);
+  /* THE ANCHOR'S LAW — the scroll is remembered for the return (the
+     closing's restore) and the glass moves WITH it in the same breath:
+     the chat stays glued to its section at every step of the walk. */
+  const handleLandingScroll = useCallback(
+    (y: number) => {
+      landingScroll.current = y;
+      applyLensScreenPos();
+    },
+    [applyLensScreenPos]
+  );
 
   /* THE DORMANT LAW — while the docked portal is scrolled away from
      the eye, every breath inside it rests: no animation frames are
@@ -427,6 +464,13 @@ export default function LandingGate() {
     window.setTimeout(() => {
       setTunnel("fading");
       busy.current = false;
+      /* THE FOLD'S OWN END — the closing was a phase without a way
+         home before: the lens kept its animation cloak (every move
+         lagged a breath behind) and the docked laws never returned.
+         The fold's completion now lands the threshold back in its own
+         phase — the docked glass laws wake again, exactly as the
+         window settles into its slot. */
+      setPhase("landing");
       window.setTimeout(() => setTunnel("off"), 900);
     }, 800);
   }, []);

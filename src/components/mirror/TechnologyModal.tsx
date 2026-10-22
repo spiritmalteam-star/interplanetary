@@ -79,7 +79,7 @@ function TechnologyRegister() {
               onClick={() => setFamily(null)}
               aria-pressed={family === null}
               className={cn(
-                "focus-glow mono-label shrink-0 whitespace-nowrap rounded-full border px-3 py-1.5 text-[11px] transition-all duration-300",
+                "focus-glow mono-label shrink-0 whitespace-nowrap rounded-full border px-3 py-1.5 text-[12px] transition-all duration-300",
                 family === null
                   ? "border-[color-mix(in_srgb,var(--sp-a)_55%,transparent)] bg-[color-mix(in_srgb,var(--sp-a)_14%,transparent)] text-foreground"
                   : "hairline text-muted-foreground hover:text-foreground"
@@ -94,7 +94,7 @@ function TechnologyRegister() {
                 onClick={() => setFamily(family === f.id ? null : f.id)}
                 aria-pressed={family === f.id}
                 className={cn(
-                  "focus-glow mono-label shrink-0 whitespace-nowrap rounded-full border px-3 py-1.5 text-[11px] transition-all duration-300",
+                  "focus-glow mono-label shrink-0 whitespace-nowrap rounded-full border px-3 py-1.5 text-[12px] transition-all duration-300",
                   family === f.id
                     ? "border-[color-mix(in_srgb,var(--sp-a)_55%,transparent)] bg-[color-mix(in_srgb,var(--sp-a)_14%,transparent)] text-foreground"
                     : "hairline text-muted-foreground hover:text-foreground"
@@ -164,11 +164,11 @@ function RevealGrid({
           <button
             type="button"
             onClick={() => setShown((s) => Math.min(s + PAGE, entries.length))}
-            className="focus-glow rounded-full border hairline px-5 py-2 text-[14px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+            className="focus-glow rounded-full border hairline px-5 py-2 text-[15px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
           >
             {t("Reveal more")}
           </button>
-          <p className="mono-label text-[10px] text-muted-foreground/60">
+          <p className="mono-label text-[11px] text-muted-foreground/60">
             {t("Revealed {a} of {b} — scroll to keep revealing", {
               a: visible.length,
               b: entries.length,
@@ -204,16 +204,16 @@ function TechCard({
         />
       </div>
       <div className="px-3 pb-3.5 pt-2.5">
-        <span className="mono-label block text-[10.5px] uppercase tracking-[0.16em] text-[var(--sp-a)]">
+        <span className="mono-label block text-[11.5px] uppercase tracking-[0.16em] text-[var(--sp-a)]">
           {t(entry.family)}
         </span>
-        <span className="mt-1 block text-[16px] font-semibold leading-snug text-foreground">
+        <span className="mt-1 block text-[17px] font-semibold leading-snug text-foreground">
           {entry.name}
         </span>
-        <span className="mt-1 block text-[13.5px] text-muted-foreground">
+        <span className="mt-1 block text-[14.5px] text-muted-foreground">
           {entry.origin} · {entry.noun}
         </span>
-        <span className="mt-1.5 block line-clamp-2 text-[13.5px] italic leading-relaxed text-foreground/75">
+        <span className="mt-1.5 block line-clamp-2 text-[14.5px] italic leading-relaxed text-foreground/75">
           {entry.whisper}
         </span>
       </div>
@@ -308,7 +308,7 @@ function TechDetail({
       <button
         type="button"
         onClick={onBack}
-        className="focus-glow group flex items-center gap-2 rounded-full border hairline px-3.5 py-1.5 text-[13.5px] text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+        className="focus-glow group flex items-center gap-2 rounded-full border hairline px-3.5 py-1.5 text-[14.5px] text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
       >
         <ArrowLeft
           className="size-3.5 transition-transform duration-300 group-hover:-translate-x-0.5"
@@ -317,20 +317,20 @@ function TechDetail({
         {t("Back to the register")}
       </button>
 
-      <p className="mono-label mt-4 text-[11px] uppercase tracking-[0.22em] text-[var(--sp-a)]">
+      <p className="mono-label mt-4 text-[12px] uppercase tracking-[0.22em] text-[var(--sp-a)]">
         {entry.registry}
       </p>
 
       <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2">
-        <h3 className="text-[21px] font-semibold leading-tight text-foreground sm:text-[24px]">
+        <h3 className="text-[22px] font-semibold leading-tight text-foreground sm:text-[25px]">
           {entry.name}
         </h3>
-        <span className="mono-label rounded-full border border-[color-mix(in_srgb,var(--sp-a)_45%,transparent)] bg-[color-mix(in_srgb,var(--sp-a)_12%,transparent)] px-2.5 py-1 text-[10.5px] uppercase tracking-[0.16em] text-foreground">
+        <span className="mono-label rounded-full border border-[color-mix(in_srgb,var(--sp-a)_45%,transparent)] bg-[color-mix(in_srgb,var(--sp-a)_12%,transparent)] px-2.5 py-1 text-[11.5px] uppercase tracking-[0.16em] text-foreground">
           {entry.classificationTone} · {entry.grade}
         </span>
       </div>
 
-      <p className="mt-1.5 text-[13.5px] text-muted-foreground">
+      <p className="mt-1.5 text-[14.5px] text-muted-foreground">
         {entry.origin} · {entry.noun} craft · {entry.adjectiveField}
       </p>
 
@@ -344,13 +344,13 @@ function TechDetail({
         />
       </div>
 
-      <p className="mt-4 border-l-2 border-[color-mix(in_srgb,var(--sp-a)_35%,transparent)] pl-3 text-[14.5px] italic leading-relaxed text-foreground/85">
+      <p className="mt-4 border-l-2 border-[color-mix(in_srgb,var(--sp-a)_35%,transparent)] pl-3 text-[15.5px] italic leading-relaxed text-foreground/85">
         {entry.whisper}
       </p>
 
       {/* at a glance — the fact console */}
       <section className="mt-5 clear-both">
-        <h4 className="mono-label text-[10.5px] text-[var(--sp-a)]">
+        <h4 className="mono-label text-[11.5px] text-[var(--sp-a)]">
           {t("At a glance")}
         </h4>
         <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -369,10 +369,10 @@ function TechDetail({
           {meters.map((m) => (
             <div key={m.label}>
               <div className="flex items-baseline justify-between">
-                <span className="mono-label text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                <span className="mono-label text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
                   {m.label}
                 </span>
-                <span className="font-mono text-[12px] tabular-nums text-foreground/80">
+                <span className="font-mono text-[13px] tabular-nums text-foreground/80">
                   {m.value}
                 </span>
               </div>
@@ -391,7 +391,7 @@ function TechDetail({
       </ProfileSection>
 
       <ProfileSection index="02" label={t("What it is")}>
-        <p className="text-[14.5px] leading-relaxed text-foreground/90">
+        <p className="text-[15.5px] leading-relaxed text-foreground/90">
           {entry.overview}
         </p>
       </ProfileSection>
@@ -409,10 +409,10 @@ function TechDetail({
         <ol className="mt-2 space-y-2">
           {entry.principles.map((p, i) => (
             <li key={i} className="flex gap-3">
-              <span className="mono-label shrink-0 pt-0.5 text-[11px] text-[var(--sp-a)]">
+              <span className="mono-label shrink-0 pt-0.5 text-[12px] text-[var(--sp-a)]">
                 {String(i + 1).padStart(2, "0")}
               </span>
-              <span className="text-[14.5px] leading-relaxed text-foreground/85">
+              <span className="text-[15.5px] leading-relaxed text-foreground/85">
                 {p}
               </span>
             </li>
@@ -429,7 +429,7 @@ function TechDetail({
                 aria-hidden="true"
                 className="mt-[7px] size-1.5 shrink-0 rotate-45 bg-[color-mix(in_srgb,var(--sp-a)_70%,transparent)]"
               />
-              <span className="text-[14.5px] leading-relaxed text-foreground/85">
+              <span className="text-[15.5px] leading-relaxed text-foreground/85">
                 {a}
               </span>
             </li>
@@ -446,7 +446,7 @@ function TechDetail({
 
       {/* ethics */}
       <ProfileSection index="05" label={t("Ethics")} tone="pk">
-        <p className="text-[14.5px] leading-relaxed text-foreground/85">
+        <p className="text-[15.5px] leading-relaxed text-foreground/85">
           {entry.ethics}
         </p>
       </ProfileSection>
@@ -467,10 +467,10 @@ function TechDetail({
                 className="size-11 shrink-0 rounded-full"
               />
               <span className="min-w-0">
-                <span className="block truncate text-[13.5px] font-medium leading-tight text-foreground">
+                <span className="block truncate text-[14.5px] font-medium leading-tight text-foreground">
                   {a.name}
                 </span>
-                <span className="mono-label block text-[9.5px] text-muted-foreground">
+                <span className="mono-label block text-[10.5px] text-muted-foreground">
                   {a.id}
                 </span>
               </span>
@@ -483,7 +483,7 @@ function TechDetail({
         <button
           type="button"
           onClick={() => askAboutTechnology(entry.name)}
-          className="star-btn focus-glow flex h-11 items-center gap-2.5 rounded-full px-6 text-[14.5px] font-semibold tracking-[0.08em] text-foreground transition-all duration-300 hover:-translate-y-px"
+          className="star-btn focus-glow flex h-11 items-center gap-2.5 rounded-full px-6 text-[15.5px] font-semibold tracking-[0.08em] text-foreground transition-all duration-300 hover:-translate-y-px"
         >
           <Orbit className="size-4 text-[var(--sp-a)]" aria-hidden="true" />
           {t("Consult the Mirror about this technology")}

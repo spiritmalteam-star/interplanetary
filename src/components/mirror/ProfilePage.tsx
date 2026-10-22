@@ -524,7 +524,7 @@ export function ProfilePage() {
         data-testid={item.testId}
         aria-current={active ? "page" : undefined}
         className={cn(
-          "focus-glow flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-[13px] transition-all duration-300",
+          "focus-glow flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-[14px] transition-all duration-300",
           active
             ? "bg-[var(--glass-bg)] font-medium text-foreground shadow-[0_1px_0_0_var(--hairline)]"
             : "text-muted-foreground hover:bg-[color-mix(in_srgb,var(--foreground)_4%,transparent)] hover:text-foreground"
@@ -556,16 +556,16 @@ export function ProfilePage() {
       className="mb-3 flex items-center gap-2.5 rounded-2xl border hairline bg-[var(--glass-bg-soft)] px-3 py-2.5"
     >
       <span
-        className="mono-label flex size-9 shrink-0 items-center justify-center rounded-full border hairline bg-[var(--glass-bg)] text-[14px] text-foreground/85"
+        className="mono-label flex size-9 shrink-0 items-center justify-center rounded-full border hairline bg-[var(--glass-bg)] text-[15px] text-foreground/85"
         aria-hidden="true"
       >
         {identityInitial}
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-[13px] font-medium leading-tight text-foreground/95">
+        <span className="block truncate text-[14px] font-medium leading-tight text-foreground/95">
           {displayName}
         </span>
-        <span className="mono-label block truncate text-[9px] uppercase tracking-[0.14em] text-muted-foreground">
+        <span className="mono-label block truncate text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
           {identityMail}
         </span>
       </span>
@@ -585,12 +585,12 @@ export function ProfilePage() {
     <div className="mb-4">
       <h2
         data-testid={testId}
-        className="text-[16.5px] font-semibold leading-snug tracking-[-0.01em] text-foreground"
+        className="text-[17.5px] font-semibold leading-snug tracking-[-0.01em] text-foreground"
       >
         {title}
       </h2>
       {desc && (
-        <p className="mt-0.5 text-[12.5px] leading-relaxed text-muted-foreground">
+        <p className="mt-0.5 text-[13.5px] leading-relaxed text-muted-foreground">
           {desc}
         </p>
       )}
@@ -618,19 +618,19 @@ export function ProfilePage() {
             <section aria-label={t("Identity")} className={cn(panel, "p-4 sm:p-5")}>
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                 <span
-                  className="mono-label flex size-12 shrink-0 items-center justify-center rounded-2xl border hairline bg-[var(--glass-bg)] text-[20px] text-foreground/85 shadow-[0_10px_30px_-18px_rgba(0,0,0,0.5)]"
+                  className="mono-label flex size-12 shrink-0 items-center justify-center rounded-2xl border hairline bg-[var(--glass-bg)] text-[21px] text-foreground/85 shadow-[0_10px_30px_-18px_rgba(0,0,0,0.5)]"
                   aria-hidden="true"
                 >
                   {me ? (me.name || me.email).slice(0, 1).toUpperCase() : "✦"}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="ink-title truncate text-[17px] font-semibold leading-tight text-foreground/95">
+                  <p className="ink-title truncate text-[18px] font-semibold leading-tight text-foreground/95">
                     {displayName}
                   </p>
                   <div className="mt-2 flex flex-wrap items-center gap-1.5">
                     {signedIn && (
                       <span
-                        className="mono-label rounded-full px-2 py-0.5 text-[8px] uppercase tracking-[0.16em] text-[var(--cy)]"
+                        className="mono-label rounded-full px-2 py-0.5 text-[9px] uppercase tracking-[0.16em] text-[var(--cy)]"
                         style={{ border: "1px solid color-mix(in srgb, var(--cy) 34%, transparent)" }}
                       >
                         {t("Keeper of a cosmic library")}
@@ -638,7 +638,7 @@ export function ProfilePage() {
                     )}
                     {totalEntries > 0 && (
                       <span
-                        className="mono-label rounded-full px-2 py-0.5 text-[8px] uppercase tracking-[0.16em] text-muted-foreground"
+                        className="mono-label rounded-full px-2 py-0.5 text-[9px] uppercase tracking-[0.16em] text-muted-foreground"
                         style={{ border: "1px solid var(--hairline)" }}
                       >
                         {totalEntries} {t("kept works")}
@@ -653,7 +653,7 @@ export function ProfilePage() {
                         type="button"
                         onClick={() => exitTo(openAccount)}
                         data-testid="profilepage-account"
-                        className="focus-glow flex h-9 items-center gap-2 rounded-full bg-foreground px-4 text-[12.5px] font-medium text-background transition-all duration-300 hover:opacity-85"
+                        className="focus-glow flex h-9 items-center gap-2 rounded-full bg-foreground px-4 text-[13.5px] font-medium text-background transition-all duration-300 hover:opacity-85"
                       >
                         <UserRound className="size-3.5" aria-hidden="true" />
                         {t("Account & Credits")}
@@ -662,7 +662,7 @@ export function ProfilePage() {
                         type="button"
                         onClick={() => void signOut()}
                         data-testid="profilepage-signout"
-                        className="focus-glow flex h-9 items-center gap-2 rounded-full border hairline px-4 text-[12.5px] text-foreground/80 transition-all duration-300 hover:border-[var(--hairline-hover)]"
+                        className="focus-glow flex h-9 items-center gap-2 rounded-full border hairline px-4 text-[13.5px] text-foreground/80 transition-all duration-300 hover:border-[var(--hairline-hover)]"
                       >
                         <LogOut className="size-3.5" aria-hidden="true" />
                         {t("Leave the passage")}
@@ -673,7 +673,7 @@ export function ProfilePage() {
                       type="button"
                       onClick={() => exitTo(() => openAuth("signin"))}
                       data-testid="profilepage-signin"
-                      className="focus-glow flex h-9 items-center gap-2 rounded-full bg-foreground px-4 text-[12.5px] font-medium text-background transition-all duration-300 hover:opacity-85"
+                      className="focus-glow flex h-9 items-center gap-2 rounded-full bg-foreground px-4 text-[13.5px] font-medium text-background transition-all duration-300 hover:opacity-85"
                     >
                       <LogIn className="size-3.5" aria-hidden="true" />
                       {t("Enter the passage")}
@@ -685,7 +685,7 @@ export function ProfilePage() {
 
             {/* the sectors — the library at a glance */}
             <div className="mt-6">
-              <p className="mono-label mb-2.5 text-[9px] uppercase tracking-[0.24em] text-muted-foreground">
+              <p className="mono-label mb-2.5 text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
                 {t("Cosmic Library")}
               </p>
               <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
@@ -697,16 +697,16 @@ export function ProfilePage() {
                     className="focus-glow group flex items-center gap-3 rounded-xl border hairline bg-[var(--glass-bg-soft)] px-3.5 py-3 text-left transition-all duration-300 hover:border-[var(--hairline-hover)]"
                   >
                     <span
-                      className="mono-label flex size-8 shrink-0 items-center justify-center rounded-lg border hairline text-[13px] text-muted-foreground"
+                      className="mono-label flex size-8 shrink-0 items-center justify-center rounded-lg border hairline text-[14px] text-muted-foreground"
                       aria-hidden="true"
                     >
                       {meta.icon}
                     </span>
                     <span className="min-w-0">
-                      <span className="block truncate text-[12.5px] font-medium text-foreground/85">
+                      <span className="block truncate text-[13.5px] font-medium text-foreground/85">
                         {t(meta.label)}
                       </span>
-                      <span className="mono-label block text-[8.5px] uppercase tracking-[0.16em] text-muted-foreground">
+                      <span className="mono-label block text-[9.5px] uppercase tracking-[0.16em] text-muted-foreground">
                         {counts[key] ?? 0} {t("kept works")}
                       </span>
                     </span>
@@ -716,7 +716,7 @@ export function ProfilePage() {
             </div>
 
             {!signedIn && (
-              <p className="mt-4 text-[12px] italic text-muted-foreground/80">
+              <p className="mt-4 text-[13px] italic text-muted-foreground/80">
                 {t("Sign in and your settings travel with you on every device.")}
               </p>
             )}
@@ -735,7 +735,7 @@ export function ProfilePage() {
               <div className="flex flex-col gap-2 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
                 <label
                   htmlFor="profile-language"
-                  className="text-[13.5px] font-medium text-foreground/90"
+                  className="text-[14.5px] font-medium text-foreground/90"
                 >
                   {t("Language")}
                 </label>
@@ -747,7 +747,7 @@ export function ProfilePage() {
                     if (meta) setLanguage(meta.code);
                   }}
                   data-testid="profilepage-language"
-                  className="w-full rounded-xl border hairline bg-[var(--glass-bg)] px-3 py-2 text-[13.5px] text-foreground transition-colors focus:outline-none focus-visible:border-[color-mix(in_srgb,var(--scope-a)_45%,transparent)] sm:w-[280px]"
+                  className="w-full rounded-xl border hairline bg-[var(--glass-bg)] px-3 py-2 text-[14.5px] text-foreground transition-colors focus:outline-none focus-visible:border-[color-mix(in_srgb,var(--scope-a)_45%,transparent)] sm:w-[280px]"
                 >
                   {LANGUAGES.map((l) => (
                     <option key={l.code} value={l.code}>
@@ -760,7 +760,7 @@ export function ProfilePage() {
               <div className="flex flex-col gap-2 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
                 <label
                   htmlFor="profile-voice"
-                  className="text-[13.5px] font-medium text-foreground/90"
+                  className="text-[14.5px] font-medium text-foreground/90"
                 >
                   {t("The voice that reads")}
                 </label>
@@ -769,7 +769,7 @@ export function ProfilePage() {
                   value={voice}
                   onChange={(e) => setVoice(e.target.value as VoiceId)}
                   data-testid="profilepage-voice"
-                  className="w-full rounded-xl border hairline bg-[var(--glass-bg)] px-3 py-2 text-[13.5px] text-foreground transition-colors focus:outline-none focus-visible:border-[color-mix(in_srgb,var(--scope-a)_45%,transparent)] sm:w-[280px]"
+                  className="w-full rounded-xl border hairline bg-[var(--glass-bg)] px-3 py-2 text-[14.5px] text-foreground transition-colors focus:outline-none focus-visible:border-[color-mix(in_srgb,var(--scope-a)_45%,transparent)] sm:w-[280px]"
                 >
                   {VOICES.map((v) => (
                     <option key={v.id} value={v.id}>
@@ -782,7 +782,7 @@ export function ProfilePage() {
               <div className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
                 <label
                   htmlFor="profile-pace"
-                  className="text-[13.5px] font-medium text-foreground/90"
+                  className="text-[14.5px] font-medium text-foreground/90"
                 >
                   {t("Narration pace")}
                 </label>
@@ -798,7 +798,7 @@ export function ProfilePage() {
                     data-testid="profilepage-pace"
                     className="w-full accent-[var(--scope-a)]"
                   />
-                  <span className="mono-label w-12 shrink-0 text-right text-[9.5px] text-muted-foreground">
+                  <span className="mono-label w-12 shrink-0 text-right text-[10.5px] text-muted-foreground">
                     ×{pace.toFixed(2)}
                   </span>
                 </div>
@@ -809,10 +809,10 @@ export function ProfilePage() {
                 data-testid="profilepage-mix"
               >
                 <div>
-                  <p className="text-[13.5px] font-medium text-foreground/90">
+                  <p className="text-[14.5px] font-medium text-foreground/90">
                     {t("The mix of worlds")}
                   </p>
-                  <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground/80">
+                  <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground/80">
                     {t(
                       "How much of each family the living tree carries — the percentages decide which suggestions visit more often."
                     )}
@@ -832,7 +832,7 @@ export function ProfilePage() {
                             opacity: share.on ? 1 : 0.3,
                           }}
                         />
-                        <span className="w-[92px] shrink-0 truncate text-[12.5px] text-foreground/85">
+                        <span className="w-[92px] shrink-0 truncate text-[13.5px] text-foreground/85">
                           {t(familyLabelKeys[f.key] ?? f.key)}
                         </span>
                         <input
@@ -857,7 +857,7 @@ export function ProfilePage() {
                           style={{ accentColor: f.accent }}
                         />
                         <span
-                          className="w-8 shrink-0 text-right text-[10.5px] tabular-nums"
+                          className="w-8 shrink-0 text-right text-[11.5px] tabular-nums"
                           style={{ color: share.on ? f.accent : undefined }}
                         >
                           {share.pct}%
@@ -877,7 +877,7 @@ export function ProfilePage() {
                     })
                   }
                   data-testid="profilepage-mix-even"
-                  className="focus-glow w-full rounded-full border px-3 py-1.5 text-[11.5px] text-muted-foreground transition-all duration-300 hover:text-foreground sm:w-[280px] sm:self-end"
+                  className="focus-glow w-full rounded-full border px-3 py-1.5 text-[12.5px] text-muted-foreground transition-all duration-300 hover:text-foreground sm:w-[280px] sm:self-end"
                   style={{
                     borderColor:
                       "color-mix(in srgb, var(--hairline) 80%, transparent)",
@@ -888,7 +888,7 @@ export function ProfilePage() {
               </div>
             </section>
             {!signedIn && (
-              <p className="mt-4 text-[12px] italic text-muted-foreground/80">
+              <p className="mt-4 text-[13px] italic text-muted-foreground/80">
                 {t("Sign in and your settings travel with you on every device.")}
               </p>
             )}
@@ -907,14 +907,14 @@ export function ProfilePage() {
             <section className={cn(panel, "p-4 sm:p-5")}>
               {bound === null ? (
                 <p
-                  className="flex items-center gap-2 py-3 text-[12.5px] text-muted-foreground"
+                  className="flex items-center gap-2 py-3 text-[13.5px] text-muted-foreground"
                   aria-busy="true"
                 >
                   <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
                   {t("The shelves are being read…")}
                 </p>
               ) : bound.length === 0 ? (
-                <p className="py-3 text-[12.5px] italic text-muted-foreground">
+                <p className="py-3 text-[13.5px] italic text-muted-foreground">
                   {t(
                     "Nothing rests here yet — every book you bind keeps itself here, on your own device."
                   )}
@@ -934,10 +934,10 @@ export function ProfilePage() {
                         <BookMarked className="size-3.5" />
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-[13px] font-medium text-foreground/90">
+                        <span className="block truncate text-[14px] font-medium text-foreground/90">
                           {e.title}
                         </span>
-                        <span className="mono-label block text-[8.5px] uppercase tracking-[0.14em] text-muted-foreground">
+                        <span className="mono-label block text-[9.5px] uppercase tracking-[0.14em] text-muted-foreground">
                           {e.pages} {t("pages")} · {(e.boundAt || "").slice(0, 10)}
                         </span>
                       </span>
@@ -947,7 +947,7 @@ export function ProfilePage() {
                         disabled={bindingOne === e.id}
                         aria-label={`${t("Bind again")}: ${e.title}`}
                         data-testid="profilepage-download-bind"
-                        className="focus-glow flex h-8 shrink-0 items-center gap-1.5 rounded-full border hairline px-3 text-[11.5px] text-foreground/80 transition-all duration-300 hover:border-[var(--hairline-hover)] disabled:opacity-40"
+                        className="focus-glow flex h-8 shrink-0 items-center gap-1.5 rounded-full border hairline px-3 text-[12.5px] text-foreground/80 transition-all duration-300 hover:border-[var(--hairline-hover)] disabled:opacity-40"
                       >
                         {bindingOne === e.id ? (
                           <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
@@ -991,7 +991,7 @@ export function ProfilePage() {
                   placeholder={t("e.g. the mathematics of music · how trees communicate")}
                   aria-label={t("A field you wish to expand in")}
                   data-testid="profilepage-seed-input"
-                  className="min-w-0 flex-1 rounded-xl border hairline bg-[var(--glass-bg)] px-3 py-2 text-[13px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus-visible:border-[color-mix(in_srgb,var(--gd)_45%,transparent)]"
+                  className="min-w-0 flex-1 rounded-xl border hairline bg-[var(--glass-bg)] px-3 py-2 text-[14px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus-visible:border-[color-mix(in_srgb,var(--gd)_45%,transparent)]"
                 />
                 <button
                   type="button"
@@ -1005,7 +1005,7 @@ export function ProfilePage() {
                 </button>
               </div>
               {seedError && (
-                <p className="mt-1.5 text-[11.5px] italic text-muted-foreground" role="note">
+                <p className="mt-1.5 text-[12.5px] italic text-muted-foreground" role="note">
                   {seedError}
                 </p>
               )}
@@ -1014,7 +1014,7 @@ export function ProfilePage() {
                   {seeds.map((s) => (
                     <span
                       key={s}
-                      className="focus-within:glow-sm flex max-w-full items-center gap-1.5 rounded-full border border-[color-mix(in_srgb,var(--gd)_30%,transparent)] bg-[color-mix(in_srgb,var(--gd)_5%,transparent)] py-1 pl-3 pr-1.5 text-[12px] text-foreground/85"
+                      className="focus-within:glow-sm flex max-w-full items-center gap-1.5 rounded-full border border-[color-mix(in_srgb,var(--gd)_30%,transparent)] bg-[color-mix(in_srgb,var(--gd)_5%,transparent)] py-1 pl-3 pr-1.5 text-[13px] text-foreground/85"
                       data-testid="profilepage-seed-chip"
                     >
                       <span className="truncate">{s}</span>
@@ -1030,12 +1030,12 @@ export function ProfilePage() {
                   ))}
                 </div>
               ) : (
-                <p className="mono-label mt-3 text-[8.5px] uppercase tracking-[0.18em] text-muted-foreground/50">
+                <p className="mono-label mt-3 text-[9.5px] uppercase tracking-[0.18em] text-muted-foreground/50">
                   {t("The soil rests empty — plant the first field")}
                 </p>
               )}
               {!signedIn && (
-                <p className="mt-3 text-[11px] italic text-muted-foreground/70">
+                <p className="mt-3 text-[12px] italic text-muted-foreground/70">
                   {t("Sign in and your settings travel with you on every device.")}
                 </p>
               )}
@@ -1058,7 +1058,7 @@ export function ProfilePage() {
                   {Object.entries(SECTOR_META).map(([key, meta]) => (
                     <span
                       key={key}
-                      className="mono-label flex items-center gap-1.5 rounded-full border hairline px-2.5 py-1 text-[8.5px] uppercase tracking-[0.14em] text-muted-foreground"
+                      className="mono-label flex items-center gap-1.5 rounded-full border hairline px-2.5 py-1 text-[9.5px] uppercase tracking-[0.14em] text-muted-foreground"
                     >
                       <span aria-hidden="true">{meta.icon}</span>
                       {t(meta.label)}
@@ -1070,7 +1070,7 @@ export function ProfilePage() {
                   type="button"
                   onClick={() => exitTo(openLibrary)}
                   data-testid="profilepage-library-open"
-                  className="focus-glow flex h-8 shrink-0 items-center gap-1.5 rounded-full border hairline px-3 text-[11.5px] text-foreground/80 transition-all duration-300 hover:border-[var(--hairline-hover)]"
+                  className="focus-glow flex h-8 shrink-0 items-center gap-1.5 rounded-full border hairline px-3 text-[12.5px] text-foreground/80 transition-all duration-300 hover:border-[var(--hairline-hover)]"
                 >
                   {t("Open the library")}
                   <ChevronRight className="size-3.5" aria-hidden="true" />
@@ -1080,14 +1080,14 @@ export function ProfilePage() {
               <div className="mt-4 space-y-1.5 border-t hairline pt-4">
                 {entries === null ? (
                   <p
-                    className="flex items-center gap-2 py-3 text-[12.5px] text-muted-foreground"
+                    className="flex items-center gap-2 py-3 text-[13.5px] text-muted-foreground"
                     aria-busy="true"
                   >
                     <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
                     {t("The shelves are being read…")}
                   </p>
                 ) : recent.length === 0 ? (
-                  <p className="py-3 text-[12.5px] italic text-muted-foreground">
+                  <p className="py-3 text-[13.5px] italic text-muted-foreground">
                     {t(
                       "Nothing rests here yet — every transmission you make is kept in your own sectors."
                     )}
@@ -1101,20 +1101,20 @@ export function ProfilePage() {
                       className="group flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-left transition-colors duration-300 hover:bg-[var(--glass-bg)]"
                     >
                       <span
-                        className="mono-label flex size-7 shrink-0 items-center justify-center rounded-lg border hairline text-[11px] text-muted-foreground"
+                        className="mono-label flex size-7 shrink-0 items-center justify-center rounded-lg border hairline text-[12px] text-muted-foreground"
                         aria-hidden="true"
                       >
                         {SECTOR_META[e.sector]?.icon ?? "✦"}
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-[13px] font-medium text-foreground/90">
+                        <span className="block truncate text-[14px] font-medium text-foreground/90">
                           {e.title}
                         </span>
-                        <span className="block truncate text-[11px] text-muted-foreground">
+                        <span className="block truncate text-[12px] text-muted-foreground">
                           {e.excerpt || SECTOR_META[e.sector]?.label || e.sector}
                         </span>
                       </span>
-                      <span className="mono-label shrink-0 text-[8px] uppercase tracking-[0.14em] text-muted-foreground/50">
+                      <span className="mono-label shrink-0 text-[9px] uppercase tracking-[0.14em] text-muted-foreground/50">
                         {(e.createdAt || "").slice(0, 10)}
                       </span>
                     </button>
@@ -1168,14 +1168,14 @@ export function ProfilePage() {
                 >
                   <Lock className="size-4" />
                 </span>
-                <p className="text-[13px] leading-relaxed text-muted-foreground">
+                <p className="text-[14px] leading-relaxed text-muted-foreground">
                   {t("The channel answers only a signed-in keeper — enter the passage first.")}
                 </p>
                 <button
                   type="button"
                   onClick={() => exitTo(() => openAuth("signin"))}
                   data-testid="profilepage-api-signin"
-                  className="focus-glow flex h-8 items-center gap-2 rounded-full bg-foreground px-4 text-[12px] font-medium text-background transition-all duration-300 hover:opacity-85"
+                  className="focus-glow flex h-8 items-center gap-2 rounded-full bg-foreground px-4 text-[13px] font-medium text-background transition-all duration-300 hover:opacity-85"
                 >
                   <LogIn className="size-3.5" aria-hidden="true" />
                   {t("Enter the passage")}
@@ -1190,7 +1190,7 @@ export function ProfilePage() {
                     onClick={() => void askMirrorOfferings()}
                     disabled={asking}
                     data-testid="profilepage-api-ask"
-                    className="focus-glow flex h-8 items-center gap-2 rounded-full bg-foreground px-4 text-[12px] font-medium text-background transition-all duration-300 hover:opacity-85 disabled:opacity-50"
+                    className="focus-glow flex h-8 items-center gap-2 rounded-full bg-foreground px-4 text-[13px] font-medium text-background transition-all duration-300 hover:opacity-85 disabled:opacity-50"
                   >
                     {asking ? (
                       <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
@@ -1201,7 +1201,7 @@ export function ProfilePage() {
                   </button>
                   {asking && (
                     <p
-                      className="mt-3 flex items-center gap-2 text-[12.5px] text-muted-foreground"
+                      className="mt-3 flex items-center gap-2 text-[13.5px] text-muted-foreground"
                       aria-live="polite"
                       aria-busy="true"
                     >
@@ -1217,20 +1217,20 @@ export function ProfilePage() {
                     </p>
                   )}
                   {offerError && !asking && (
-                    <p className="mt-3 text-[12px] italic text-muted-foreground" role="alert">
+                    <p className="mt-3 text-[13px] italic text-muted-foreground" role="alert">
                       {t("The transmission could not cross")}
                     </p>
                   )}
                   {offerAnswer && !asking && (
                     <div className="mt-3 border-t hairline pt-3">
-                      <p className="whitespace-pre-wrap break-words text-[13.5px] italic leading-[1.75] text-foreground/90 [font-family-name:var(--font-literata)]">
+                      <p className="whitespace-pre-wrap break-words text-[14.5px] italic leading-[1.75] text-foreground/90 [font-family-name:var(--font-literata)]">
                         {offerAnswer}
                       </p>
                       <div className="mt-1 flex justify-end">
                         <button
                           type="button"
                           onClick={() => void copyText(offerAnswer, "offer")}
-                          className="focus-glow flex h-7 items-center gap-1.5 rounded-full border hairline px-2.5 text-[11px] text-muted-foreground transition-all duration-300 hover:text-foreground"
+                          className="focus-glow flex h-7 items-center gap-1.5 rounded-full border hairline px-2.5 text-[12px] text-muted-foreground transition-all duration-300 hover:text-foreground"
                         >
                           {copiedId === "offer" ? (
                             <Check className="size-3" aria-hidden="true" />
@@ -1247,17 +1247,17 @@ export function ProfilePage() {
                 {/* THE LIGHT THE VESSEL READS BY — usage & recharge, in the
                     house's own ink: a stone card, a gauge, the same coins */}
                 <section className={cn(panel, "mt-4 p-4 sm:p-5")}>
-                  <p className="mono-label text-[9px] uppercase tracking-[0.24em] text-muted-foreground">
+                  <p className="mono-label text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
                     {t("Recharge the light")}
                   </p>
-                  <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground/80">
+                  <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground/80">
                     {t(
                       "The vessel's words are carried by the same credits the whole house reads by."
                     )}
                   </p>
                   {summaryLoading ? (
                     <p
-                      className="mt-3 flex items-center gap-2 py-2 text-[12.5px] text-muted-foreground"
+                      className="mt-3 flex items-center gap-2 py-2 text-[13.5px] text-muted-foreground"
                       aria-busy="true"
                     >
                       <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
@@ -1268,21 +1268,21 @@ export function ProfilePage() {
                       <div className="mt-3 grid grid-cols-2 gap-2">
                         <div className="rounded-xl border hairline bg-[var(--glass-bg)] px-3 py-2.5">
                           <Gem className="size-3.5 text-[var(--cy)]" aria-hidden="true" />
-                          <p className="mt-1.5 truncate text-[16px] font-semibold leading-none text-foreground/95">
+                          <p className="mt-1.5 truncate text-[17px] font-semibold leading-none text-foreground/95">
                             {summary.credits.balance != null
                               ? summary.credits.balance.toLocaleString("en-US")
                               : "—"}
                           </p>
-                          <p className="mono-label mt-1 truncate text-[8px] uppercase tracking-[0.16em] text-muted-foreground">
+                          <p className="mono-label mt-1 truncate text-[9px] uppercase tracking-[0.16em] text-muted-foreground">
                             {t("Credits")} · {summary.plan.label}
                           </p>
                         </div>
                         <div className="rounded-xl border hairline bg-[var(--glass-bg)] px-3 py-2.5">
                           <CreditCard className="size-3.5 text-[var(--cy)]" aria-hidden="true" />
-                          <p className="mt-1.5 truncate text-[16px] font-semibold leading-none text-foreground/95">
+                          <p className="mt-1.5 truncate text-[17px] font-semibold leading-none text-foreground/95">
                             {summary.usage.events30d}
                           </p>
-                          <p className="mono-label mt-1 truncate text-[8px] uppercase tracking-[0.16em] text-muted-foreground">
+                          <p className="mono-label mt-1 truncate text-[9px] uppercase tracking-[0.16em] text-muted-foreground">
                             {t("Usage this month")} · {t("operations")}
                           </p>
                         </div>
@@ -1298,7 +1298,7 @@ export function ProfilePage() {
                                 onClick={() => void recharge({ packId: p.id }, p.id)}
                                 disabled={rechargeBusy === p.id}
                                 data-testid={`profilepage-api-pack-${p.id}`}
-                                className="focus-glow flex h-8 items-center gap-1.5 rounded-full border px-3.5 text-[12px] text-foreground/85 transition-all duration-300 hover:border-[color-mix(in_srgb,var(--gd)_55%,transparent)] disabled:opacity-40"
+                                className="focus-glow flex h-8 items-center gap-1.5 rounded-full border px-3.5 text-[13px] text-foreground/85 transition-all duration-300 hover:border-[color-mix(in_srgb,var(--gd)_55%,transparent)] disabled:opacity-40"
                                 style={{
                                   borderColor:
                                     "color-mix(in srgb, var(--gd) 34%, transparent)",
@@ -1312,7 +1312,7 @@ export function ProfilePage() {
                                   <Gem className="size-3 text-[var(--gd)]" aria-hidden="true" />
                                 )}
                                 {p.label}
-                                <span className="mono-label text-[9px] text-muted-foreground">
+                                <span className="mono-label text-[10px] text-muted-foreground">
                                   €{Math.round(p.priceCents / 100)}
                                 </span>
                               </button>
@@ -1320,7 +1320,7 @@ export function ProfilePage() {
                           <button
                             type="button"
                             onClick={() => exitTo(openAccount)}
-                            className="focus-glow flex h-8 items-center gap-1.5 rounded-full border hairline px-3.5 text-[12px] text-foreground/80 transition-all duration-300 hover:border-[var(--hairline-hover)]"
+                            className="focus-glow flex h-8 items-center gap-1.5 rounded-full border hairline px-3.5 text-[13px] text-foreground/80 transition-all duration-300 hover:border-[var(--hairline-hover)]"
                           >
                             {t("Open the account chamber")}
                             <ChevronRight className="size-3.5" aria-hidden="true" />
@@ -1328,7 +1328,7 @@ export function ProfilePage() {
                         </div>
                       )}
                       {!summary.plan.apiAccess && (
-                        <p className="mt-3 text-[11.5px] italic text-muted-foreground">
+                        <p className="mt-3 text-[12.5px] italic text-muted-foreground">
                           {t(
                             "The plan must carry API access — bring the vessel to a plan that does."
                           )}
@@ -1337,7 +1337,7 @@ export function ProfilePage() {
                     </>
                   ) : null}
                   {rechargeNote && (
-                    <p className="mt-2 text-[11.5px] italic text-muted-foreground" role="note">
+                    <p className="mt-2 text-[12.5px] italic text-muted-foreground" role="note">
                       {rechargeNote}
                     </p>
                   )}
@@ -1345,7 +1345,7 @@ export function ProfilePage() {
 
                 {/* THE VESSEL KEYS — carved here, shown once, revoked at will */}
                 <section className={cn(panel, "mt-4 p-4 sm:p-5")}>
-                  <p className="mono-label text-[9px] uppercase tracking-[0.24em] text-muted-foreground">
+                  <p className="mono-label text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
                     {t("Your vessel key")}
                   </p>
                   <div className="mt-2.5 flex items-center gap-2">
@@ -1362,14 +1362,14 @@ export function ProfilePage() {
                       placeholder={t("Name the key (optional)")}
                       aria-label={t("Name the key (optional)")}
                       data-testid="profilepage-api-key-name"
-                      className="min-w-0 flex-1 rounded-xl border hairline bg-[var(--glass-bg)] px-3 py-2 text-[13px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus-visible:border-[color-mix(in_srgb,var(--gd)_45%,transparent)]"
+                      className="min-w-0 flex-1 rounded-xl border hairline bg-[var(--glass-bg)] px-3 py-2 text-[14px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus-visible:border-[color-mix(in_srgb,var(--gd)_45%,transparent)]"
                     />
                     <button
                       type="button"
                       onClick={() => void carveKey()}
                       disabled={keyBusy}
                       data-testid="profilepage-api-key-carve"
-                      className="focus-glow flex h-9 shrink-0 items-center gap-1.5 rounded-xl bg-foreground px-3.5 text-[12px] font-medium text-background transition-all duration-300 hover:opacity-85 disabled:opacity-40"
+                      className="focus-glow flex h-9 shrink-0 items-center gap-1.5 rounded-xl bg-foreground px-3.5 text-[13px] font-medium text-background transition-all duration-300 hover:opacity-85 disabled:opacity-40"
                     >
                       {keyBusy ? (
                         <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
@@ -1388,17 +1388,17 @@ export function ProfilePage() {
                       }}
                       data-testid="profilepage-api-key-secret"
                     >
-                      <p className="mono-label text-[8px] uppercase tracking-[0.18em] text-[#b45309] dark:text-[#fbbf24]">
+                      <p className="mono-label text-[9px] uppercase tracking-[0.18em] text-[#b45309] dark:text-[#fbbf24]">
                         {t("The key is carved — copy it now; it is never shown again.")}
                       </p>
                       <div className="mt-1.5 flex items-center gap-2">
-                        <code className="min-w-0 flex-1 truncate text-[12px] text-foreground/90">
+                        <code className="min-w-0 flex-1 truncate text-[13px] text-foreground/90">
                           {freshSecret}
                         </code>
                         <button
                           type="button"
                           onClick={() => void copyText(freshSecret, "secret")}
-                          className="focus-glow flex h-7 shrink-0 items-center gap-1.5 rounded-full border hairline px-2.5 text-[11px] text-muted-foreground transition-all duration-300 hover:text-foreground"
+                          className="focus-glow flex h-7 shrink-0 items-center gap-1.5 rounded-full border hairline px-2.5 text-[12px] text-muted-foreground transition-all duration-300 hover:text-foreground"
                         >
                           {copiedId === "secret" ? (
                             <Check className="size-3" aria-hidden="true" />
@@ -1413,14 +1413,14 @@ export function ProfilePage() {
                   <div className="mt-3 space-y-1.5 border-t hairline pt-3">
                     {vesselKeys === null ? (
                       <p
-                        className="flex items-center gap-2 py-2 text-[12.5px] text-muted-foreground"
+                        className="flex items-center gap-2 py-2 text-[13.5px] text-muted-foreground"
                         aria-busy="true"
                       >
                         <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
                         {t("The shelves are being read…")}
                       </p>
                     ) : vesselKeys.filter((k) => !k.revokedAt).length === 0 ? (
-                      <p className="py-2 text-[12.5px] italic text-muted-foreground">
+                      <p className="py-2 text-[13.5px] italic text-muted-foreground">
                         {t("No keys yet — carve the first vessel key.")}
                       </p>
                     ) : (
@@ -1433,10 +1433,10 @@ export function ProfilePage() {
                             data-testid="profilepage-api-key-row"
                           >
                             <span className="min-w-0 flex-1">
-                              <span className="block truncate text-[12.5px] font-medium text-foreground/90">
+                              <span className="block truncate text-[13.5px] font-medium text-foreground/90">
                                 {k.name}
                               </span>
-                              <span className="mono-label block truncate text-[8px] uppercase tracking-[0.14em] text-muted-foreground">
+                              <span className="mono-label block truncate text-[9px] uppercase tracking-[0.14em] text-muted-foreground">
                                 {k.prefix}••••{" · "}
                                 {k.lastUsedAt
                                   ? `${t("last used")} ${(k.lastUsedAt || "").slice(0, 10)}`
@@ -1450,7 +1450,7 @@ export function ProfilePage() {
                                 setRevokePw("");
                               }}
                               data-testid="profilepage-api-key-revoke"
-                              className="focus-glow flex h-7 shrink-0 items-center rounded-full border px-2.5 text-[11px] text-muted-foreground transition-all duration-300 hover:border-[color-mix(in_srgb,#f43f5e_45%,transparent)] hover:text-[#f43f5e]"
+                              className="focus-glow flex h-7 shrink-0 items-center rounded-full border px-2.5 text-[12px] text-muted-foreground transition-all duration-300 hover:border-[color-mix(in_srgb,#f43f5e_45%,transparent)] hover:text-[#f43f5e]"
                             >
                               {t("Revoke")}
                             </button>
@@ -1465,7 +1465,7 @@ export function ProfilePage() {
                         }}
                         data-testid="profilepage-api-key-revoke-confirm"
                       >
-                        <p className="text-[12px] text-foreground/85">
+                        <p className="text-[13px] text-foreground/85">
                           {t("Revoke")} — {revokeTarget.name}
                         </p>
                         <div className="mt-2 flex items-center gap-2">
@@ -1476,13 +1476,13 @@ export function ProfilePage() {
                             placeholder={t("Confirm with your password")}
                             aria-label={t("Confirm with your password")}
                             data-testid="profilepage-api-key-revoke-pw"
-                            className="min-w-0 flex-1 rounded-lg border hairline bg-[var(--glass-bg)] px-2.5 py-1.5 text-[12px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none"
+                            className="min-w-0 flex-1 rounded-lg border hairline bg-[var(--glass-bg)] px-2.5 py-1.5 text-[13px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none"
                           />
                           <button
                             type="button"
                             onClick={() => void revokeVesselKey()}
                             disabled={keyBusy || revokePw.length === 0}
-                            className="focus-glow flex h-7 shrink-0 items-center rounded-full px-3 text-[11px] font-medium text-background transition-all duration-300 disabled:opacity-40"
+                            className="focus-glow flex h-7 shrink-0 items-center rounded-full px-3 text-[12px] font-medium text-background transition-all duration-300 disabled:opacity-40"
                             style={{ backgroundColor: "#f43f5e" }}
                           >
                             {keyBusy ? (
@@ -1494,7 +1494,7 @@ export function ProfilePage() {
                           <button
                             type="button"
                             onClick={() => setRevokeTarget(null)}
-                            className="focus-glow flex h-7 shrink-0 items-center rounded-full border hairline px-2.5 text-[11px] text-muted-foreground transition-all duration-300 hover:text-foreground"
+                            className="focus-glow flex h-7 shrink-0 items-center rounded-full border hairline px-2.5 text-[12px] text-muted-foreground transition-all duration-300 hover:text-foreground"
                           >
                             <X className="size-3" aria-hidden="true" />
                           </button>
@@ -1506,7 +1506,7 @@ export function ProfilePage() {
 
                 {/* THE ENDPOINT — one door, one header, her whole voice */}
                 <section className={cn(panel, "mt-4 p-4 sm:p-5")}>
-                  <p className="mono-label text-[9px] uppercase tracking-[0.24em] text-muted-foreground">
+                  <p className="mono-label text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
                     {t("Endpoint")}
                   </p>
                   <div className="mt-2 space-y-1.5">
@@ -1518,7 +1518,7 @@ export function ProfilePage() {
                         key={line.id}
                         className="flex items-center gap-2 rounded-lg border hairline bg-[var(--glass-bg)] px-3 py-2"
                       >
-                        <code className="min-w-0 flex-1 truncate text-[11.5px] text-foreground/85">
+                        <code className="min-w-0 flex-1 truncate text-[12.5px] text-foreground/85">
                           {line.mono}
                         </code>
                         <button
@@ -1536,11 +1536,11 @@ export function ProfilePage() {
                       </div>
                     ))}
                   </div>
-                  <p className="mt-2.5 text-[11.5px] leading-relaxed text-muted-foreground/80">
+                  <p className="mt-2.5 text-[12.5px] leading-relaxed text-muted-foreground/80">
                     {t("Vessels speak one message at a time; the thread rides along.")}
                   </p>
                   <div className="mt-2.5 flex items-start gap-2 rounded-lg border hairline bg-[var(--glass-bg)] px-3 py-2.5">
-                    <pre className="no-scrollbar min-w-0 flex-1 overflow-x-auto text-[10.5px] leading-relaxed text-foreground/80">
+                    <pre className="no-scrollbar min-w-0 flex-1 overflow-x-auto text-[11.5px] leading-relaxed text-foreground/80">
 {`curl -X POST ${apiOrigin}/api/v1/channel \\
   -H "Authorization: Bearer mir_live_…" \\
   -H "Content-Type: application/json" \\
@@ -1564,7 +1564,7 @@ export function ProfilePage() {
                       )}
                     </button>
                   </div>
-                  <p className="mt-2.5 text-[11.5px] italic leading-relaxed text-muted-foreground">
+                  <p className="mt-2.5 text-[12.5px] italic leading-relaxed text-muted-foreground">
                     {t("Her voice, her laws — the sky that carries her stays unnamed.")}
                   </p>
                 </section>
@@ -1585,7 +1585,7 @@ export function ProfilePage() {
             <section className={cn(panel, "p-4 sm:p-5")}>
               {summaryLoading ? (
                 <p
-                  className="flex items-center gap-2 py-3 text-[12.5px] text-muted-foreground"
+                  className="flex items-center gap-2 py-3 text-[13.5px] text-muted-foreground"
                   aria-busy="true"
                 >
                   <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
@@ -1631,10 +1631,10 @@ export function ProfilePage() {
                           className="size-3.5 text-[var(--cy)]"
                           aria-hidden="true"
                         />
-                        <p className="mt-2 truncate text-[17px] font-semibold leading-none text-foreground/95">
+                        <p className="mt-2 truncate text-[18px] font-semibold leading-none text-foreground/95">
                           {tile.value}
                         </p>
-                        <p className="mt-1.5 truncate text-[11.5px] text-muted-foreground">
+                        <p className="mt-1.5 truncate text-[12.5px] text-muted-foreground">
                           {tile.label}
                         </p>
                       </div>
@@ -1642,7 +1642,7 @@ export function ProfilePage() {
                   })}
                 </div>
               ) : (
-                <p className="py-3 text-[12.5px] italic text-muted-foreground">
+                <p className="py-3 text-[13.5px] italic text-muted-foreground">
                   {t(
                     "Your chamber — plan, credits, usage, keys and security, all in one place."
                   )}
@@ -1652,7 +1652,7 @@ export function ProfilePage() {
                 <button
                   type="button"
                   onClick={() => exitTo(openAccount)}
-                  className="focus-glow flex h-9 items-center gap-2 rounded-full border hairline px-4 text-[12.5px] text-foreground/85 transition-all duration-300 hover:border-[var(--hairline-hover)]"
+                  className="focus-glow flex h-9 items-center gap-2 rounded-full border hairline px-4 text-[13.5px] text-foreground/85 transition-all duration-300 hover:border-[var(--hairline-hover)]"
                 >
                   {t("Open the account chamber")}
                   <ChevronRight className="size-3.5" aria-hidden="true" />
@@ -1661,7 +1661,7 @@ export function ProfilePage() {
                   <button
                     type="button"
                     onClick={() => void signOut()}
-                    className="focus-glow flex h-9 items-center gap-2 rounded-full border hairline px-4 text-[12.5px] text-foreground/80 transition-all duration-300 hover:border-[var(--hairline-hover)]"
+                    className="focus-glow flex h-9 items-center gap-2 rounded-full border hairline px-4 text-[13.5px] text-foreground/80 transition-all duration-300 hover:border-[var(--hairline-hover)]"
                   >
                     <LogOut className="size-3.5" aria-hidden="true" />
                     {t("Leave the passage")}
@@ -1691,19 +1691,19 @@ export function ProfilePage() {
           aria-label={t("Your profile")}
         >
         {/* the head — one way back to the Mirror, one name */}
-        <header className="shrink-0 border-b hairline bg-[var(--glass-bg-soft)] backdrop-blur-xl">
+        <header className="shrink-0 border-b hairline bg-[var(--glass-bg-soft)] backdrop-blur-md">
           <div className="mx-auto flex w-full max-w-6xl items-center gap-3 px-4 py-2.5 sm:px-8">
             <button
               type="button"
               onClick={close}
               data-testid="profile-back"
-              className="focus-glow flex h-9 items-center gap-2 rounded-full border hairline px-3.5 text-[12.5px] font-medium text-foreground/85 transition-all duration-300 hover:border-[var(--hairline-hover)] hover:bg-[var(--glass-bg)]"
+              className="focus-glow flex h-9 items-center gap-2 rounded-full border hairline px-3.5 text-[13.5px] font-medium text-foreground/85 transition-all duration-300 hover:border-[var(--hairline-hover)] hover:bg-[var(--glass-bg)]"
             >
               <ArrowLeft className="size-4" aria-hidden="true" />
               <span className="hidden sm:inline">{t("Back to the Mirror")}</span>
               <span className="sm:hidden">{t("Back")}</span>
             </button>
-            <span className="mono-label ml-auto hidden text-[9px] uppercase tracking-[0.26em] text-muted-foreground/60 sm:block">
+            <span className="mono-label ml-auto hidden text-[10px] uppercase tracking-[0.26em] text-muted-foreground/60 sm:block">
               {t("The Mirror Entity Digital Chamber")}
             </span>
           </div>

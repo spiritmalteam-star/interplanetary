@@ -51,16 +51,16 @@ export function ProfileModal() {
         {/* the profile head */}
         <div className="flex items-center gap-3" data-testid="profile-head">
           <span
-            className="mono-label flex size-11 shrink-0 items-center justify-center rounded-full border hairline bg-[var(--glass-bg)] text-[15px] text-foreground/85"
+            className="mono-label flex size-11 shrink-0 items-center justify-center rounded-full border hairline bg-[var(--glass-bg)] text-[16px] text-foreground/85"
             aria-hidden="true"
           >
             {me ? (me.name || me.email).slice(0, 1).toUpperCase() : "✦"}
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block truncate text-[13.5px] font-medium text-foreground/85">
+            <span className="block truncate text-[14.5px] font-medium text-foreground/85">
               {me ? me.email : t("A quiet guest")}
             </span>
-            <span className="mono-label block text-[8.5px] uppercase tracking-[0.16em] text-muted-foreground">
+            <span className="mono-label block text-[9.5px] uppercase tracking-[0.16em] text-muted-foreground">
               {me
                 ? t("Keeper of a cosmic library")
                 : t("Your library is already being kept")}
@@ -77,7 +77,7 @@ export function ProfileModal() {
           >
             <div className="flex items-center gap-2">
               <Dna className="size-3.5 shrink-0 text-[var(--gd)]" aria-hidden="true" />
-              <span className="mono-label text-[9px] uppercase tracking-[0.2em] text-muted-foreground/60">
+              <span className="mono-label text-[10px] uppercase tracking-[0.2em] text-muted-foreground/60">
                 {t("The path you have walked")}
               </span>
             </div>
@@ -99,10 +99,10 @@ export function ProfileModal() {
         >
           <LibraryBig className="size-4.5 shrink-0 text-[var(--cy)]" aria-hidden="true" />
           <span className="min-w-0 flex-1">
-            <span className="block text-[14px] font-medium text-foreground/90">
+            <span className="block text-[15px] font-medium text-foreground/90">
               {t("Cosmic Library")}
             </span>
-            <span className="block text-[12px] leading-relaxed text-muted-foreground">
+            <span className="block text-[13px] leading-relaxed text-muted-foreground">
               {t("Every transmission and book, in its own sector — open one and continue the story.")}
             </span>
           </span>
@@ -122,10 +122,10 @@ export function ProfileModal() {
           >
             <CreditCard className="size-4.5 shrink-0 text-[var(--mg)]" aria-hidden="true" />
             <span className="min-w-0 flex-1">
-              <span className="block text-[14px] font-medium text-foreground/90">
+              <span className="block text-[15px] font-medium text-foreground/90">
                 {t("Account & Credits")}
               </span>
-              <span className="block text-[12px] leading-relaxed text-muted-foreground">
+              <span className="block text-[13px] leading-relaxed text-muted-foreground">
                 {t("Your chamber — plan, credits, usage, keys and security, all in one place.")}
               </span>
             </span>
@@ -141,7 +141,7 @@ export function ProfileModal() {
             className="focus-glow mt-2 flex w-full items-center gap-3 rounded-xl border hairline px-4 py-3 text-left transition-all duration-300 hover:border-[var(--hairline-hover)]"
           >
             <LogOut className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-            <span className="flex-1 text-[14px] text-foreground/85">
+            <span className="flex-1 text-[15px] text-foreground/85">
               {t("Leave the passage")}
             </span>
           </button>
@@ -156,7 +156,7 @@ export function ProfileModal() {
             className="focus-glow mt-2 flex w-full items-center gap-3 rounded-xl border hairline px-4 py-3 text-left transition-all duration-300 hover:border-[var(--hairline-hover)]"
           >
             <LogIn className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-            <span className="flex-1 text-[14px] text-foreground/85">
+            <span className="flex-1 text-[15px] text-foreground/85">
               {t("Enter the passage — keep your library on every device")}
             </span>
             <Sparkles className="size-3.5 shrink-0 text-muted-foreground/60" aria-hidden="true" />

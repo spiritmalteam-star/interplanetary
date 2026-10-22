@@ -288,13 +288,13 @@ export function ReplyBranches({
       >
         <span className="flex min-w-0 items-center gap-2">
           <ListTree className="size-3.5 shrink-0 text-[var(--scope-a,var(--gd))]" aria-hidden="true" />
-          <span className="mono-label truncate text-[9px] uppercase tracking-[0.22em] text-foreground/85">
+          <span className="mono-label truncate text-[10px] uppercase tracking-[0.22em] text-foreground/85">
             {t("Branches of this exchange")}
           </span>
         </span>
         <span className="flex shrink-0 items-center gap-2">
           <span
-            className="mono-label rounded-full px-1.5 text-[8px] uppercase tracking-[0.14em] leading-[1.6] text-[var(--scope-a,var(--gd))]"
+            className="mono-label rounded-full px-1.5 text-[9px] uppercase tracking-[0.14em] leading-[1.6] text-[var(--scope-a,var(--gd))]"
             style={{ border: "1px solid color-mix(in srgb, var(--scope-a, var(--gd)) 48%, transparent)" }}
           >
             {chipCount}
@@ -327,10 +327,10 @@ export function ReplyBranches({
               className="max-w-full rounded-2xl border border-dashed border-[color-mix(in_srgb,var(--scope-a,var(--gd))_44%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_10%,var(--glass-bg))] px-3 py-1.5"
               data-testid="reply-branch-pause"
             >
-              <span className="mono-label mr-1.5 inline-block rounded-full px-1.5 align-middle text-[8px] uppercase tracking-[0.14em] leading-[1.6] text-[var(--scope-a,var(--gd))]">
+              <span className="mono-label mr-1.5 inline-block rounded-full px-1.5 align-middle text-[9px] uppercase tracking-[0.14em] leading-[1.6] text-[var(--scope-a,var(--gd))]">
                 {t("Pause & integrate")}
               </span>
-              <span className="align-middle text-[12px] italic leading-[1.5] text-foreground/90">
+              <span className="align-middle text-[13px] italic leading-[1.5] text-foreground/90">
                 {b.question}
               </span>
             </div>
@@ -343,10 +343,10 @@ export function ReplyBranches({
               aria-disabled={disabled}
               data-testid="reply-branch-chip"
               title={b.reason ? `${b.question} — ${b.reason}` : b.question}
-              className="focus-glow max-w-full rounded-full border border-[color-mix(in_srgb,var(--scope-a,var(--gd))_52%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_14%,var(--glass-bg))] px-3 py-1.5 text-left font-serif text-[12.5px] italic leading-snug text-foreground shadow-[0_1px_10px_-6px_color-mix(in_srgb,var(--scope-a,var(--gd))_50%,transparent)] backdrop-blur-xl transition-all duration-300 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_70%,transparent)] hover:bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_22%,var(--glass-bg))] disabled:cursor-not-allowed disabled:opacity-50 sm:text-[13px]"
+              className="focus-glow max-w-full rounded-full border border-[color-mix(in_srgb,var(--scope-a,var(--gd))_52%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_14%,var(--glass-bg))] px-3 py-1.5 text-left font-serif text-[13.5px] italic leading-snug text-foreground shadow-[0_1px_10px_-6px_color-mix(in_srgb,var(--scope-a,var(--gd))_50%,transparent)] backdrop-blur-md transition-all duration-300 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_70%,transparent)] hover:bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_22%,var(--glass-bg))] disabled:cursor-not-allowed disabled:opacity-50 sm:text-[14px]"
             >
               <span
-                className="mono-label mr-1.5 inline-block rounded-full px-1.5 align-middle text-[8px] uppercase tracking-[0.14em] not-italic leading-[1.6] text-[var(--scope-a,var(--gd))]"
+                className="mono-label mr-1.5 inline-block rounded-full px-1.5 align-middle text-[9px] uppercase tracking-[0.14em] not-italic leading-[1.6] text-[var(--scope-a,var(--gd))]"
                 style={{
                   border:
                     "1px solid color-mix(in srgb, var(--scope-a, var(--gd)) 46%, transparent)",
@@ -369,7 +369,7 @@ export function ReplyBranches({
               aria-disabled={disabled}
               data-testid="reply-branch-chip"
               title={s}
-              className="focus-glow max-w-full rounded-full border border-[color-mix(in_srgb,var(--scope-a,var(--gd))_44%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_10%,var(--glass-bg))] px-3 py-1.5 text-left font-serif text-[12.5px] italic leading-snug text-foreground/90 backdrop-blur-xl transition-all duration-300 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_62%,transparent)] hover:bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_16%,var(--glass-bg))] hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50 sm:text-[13px]"
+              className="focus-glow max-w-full rounded-full border border-[color-mix(in_srgb,var(--scope-a,var(--gd))_44%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_10%,var(--glass-bg))] px-3 py-1.5 text-left font-serif text-[13.5px] italic leading-snug text-foreground/90 backdrop-blur-md transition-all duration-300 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_62%,transparent)] hover:bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_16%,var(--glass-bg))] hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50 sm:text-[14px]"
             >
               {t(s)}
             </button>
@@ -384,7 +384,7 @@ export function ReplyBranches({
                 onClick={() => driftTreeTo(branchFor(kind))}
                 aria-label={t("Find them on the tree")}
                 data-testid="reply-branches-hub"
-                className="mono-label flex items-center gap-1.5 rounded-full px-2 py-1 text-[8.5px] uppercase tracking-[0.18em] text-muted-foreground/60 transition-colors duration-300 hover:text-foreground"
+                className="mono-label flex items-center gap-1.5 rounded-full px-2 py-1 text-[9.5px] uppercase tracking-[0.18em] text-muted-foreground/60 transition-colors duration-300 hover:text-foreground"
               >
                 <ListTree className="size-3" aria-hidden="true" />
                 {t("Find them on the tree")}

@@ -299,7 +299,7 @@ export function AttachmentChips({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, scale: 0.94 }}
             transition={{ duration: 0.25, ease: "easeOut" }}
-            className="flex max-w-full items-center gap-1.5 rounded-full border py-1 pl-1.5 pr-1.5 text-[11.5px] leading-none"
+            className="flex max-w-full items-center gap-1.5 rounded-full border py-1 pl-1.5 pr-1.5 text-[12.5px] leading-none"
             style={{
               borderColor: `color-mix(in srgb, ${accentVar} 24%, transparent)`,
               background: `color-mix(in srgb, ${accentVar} 7%, transparent)`,

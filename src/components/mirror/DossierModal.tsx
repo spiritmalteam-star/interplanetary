@@ -40,7 +40,7 @@ function Badge({
   return (
     <span
       className={cn(
-        "mono-label rounded-full border px-2.5 py-1 text-[10.5px]",
+        "mono-label rounded-full border px-2.5 py-1 text-[11.5px]",
         tone === "cy" &&
           "border-[var(--cy)]/30 bg-[color-mix(in_srgb,var(--cy)_8%,transparent)] text-[var(--cy)]",
         tone === "pk" &&
@@ -121,13 +121,13 @@ function EntityDossier({
 
         {/* identity — text flowing beside the portrait, like a printed page */}
         <div className="min-w-0">
-          <p className="text-[16.5px] font-semibold leading-snug text-foreground/95">
+          <p className="text-[17.5px] font-semibold leading-snug text-foreground/95">
             {rep.name}
           </p>
-          <p className="mt-0.5 font-mono text-[11.5px] text-muted-foreground/70">
+          <p className="mt-0.5 font-mono text-[12.5px] text-muted-foreground/70">
             {profile.archiveNo} · {profile.designation}
           </p>
-          <p className="mt-1 text-[14px] italic leading-relaxed text-muted-foreground">
+          <p className="mt-1 text-[15px] italic leading-relaxed text-muted-foreground">
             {profile.rank}
           </p>
           <button
@@ -135,7 +135,7 @@ function EntityDossier({
             onClick={() =>
               openModal({ type: "dossier", kind, id: entry.id })
             }
-            className="focus-glow mt-2 inline-flex items-center gap-1 rounded-full border hairline px-2.5 py-1 text-[12.5px] text-muted-foreground transition-colors hover:text-foreground"
+            className="focus-glow mt-2 inline-flex items-center gap-1 rounded-full border hairline px-2.5 py-1 text-[13.5px] text-muted-foreground transition-colors hover:text-foreground"
           >
             <ArrowLeft className="size-3" aria-hidden="true" />
             {t("Back to {name}", { name: entry.name })}
@@ -151,7 +151,7 @@ function EntityDossier({
 
         {/* at a glance — the fact console clears the lead plate */}
         <section className="clear-both">
-          <h4 className="mono-label text-[10.5px] text-[var(--cy)]">
+          <h4 className="mono-label text-[11.5px] text-[var(--cy)]">
             {t("At a glance")}
           </h4>
           <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -180,17 +180,17 @@ function EntityDossier({
         />
 
         <ProfileSection index="01" label={t("Specialty")}>
-          <p className="text-[14.5px] font-medium leading-relaxed text-foreground/90">{rep.specialty}</p>
+          <p className="text-[15.5px] font-medium leading-relaxed text-foreground/90">{rep.specialty}</p>
         </ProfileSection>
 
         <ProfileSection index="02" label={t("Presence & form")}>
-          <p className="text-[14.5px] leading-relaxed text-foreground/85">{profile.form}</p>
+          <p className="text-[15.5px] leading-relaxed text-foreground/85">{profile.form}</p>
         </ProfileSection>
         <ProfileSection index="03" label={t("How they communicate")}>
-          <p className="text-[14.5px] leading-relaxed text-foreground/85">{profile.modality}</p>
+          <p className="text-[15.5px] leading-relaxed text-foreground/85">{profile.modality}</p>
         </ProfileSection>
         <ProfileSection index="04" label={t("Aura impression")}>
-          <p className="text-[14.5px] leading-relaxed text-foreground/85">{profile.aura}</p>
+          <p className="text-[15.5px] leading-relaxed text-foreground/85">{profile.aura}</p>
         </ProfileSection>
 
         {/* gifts */}
@@ -206,22 +206,22 @@ function EntityDossier({
                 className="flex items-start gap-2.5 rounded-lg border hairline bg-[color-mix(in_srgb,var(--cy)_5%,transparent)] px-3 py-2"
               >
                 <span
-                  className="mono-label mt-0.5 shrink-0 text-[10px]"
+                  className="mono-label mt-0.5 shrink-0 text-[11px]"
                   style={{ color: "var(--cy)" }}
                 >
                   {String(i + 1).padStart(2, "0")}
                 </span>
-                <p className="text-[14px] leading-relaxed text-foreground/85">{g}</p>
+                <p className="text-[15px] leading-relaxed text-foreground/85">{g}</p>
               </div>
             ))}
           </div>
         </ProfileSection>
 
         <ProfileSection index="06" label={t("Growth edge — what they mirror in us")}>
-          <p className="text-[14.5px] leading-relaxed text-foreground/85">{profile.trial}</p>
+          <p className="text-[15.5px] leading-relaxed text-foreground/85">{profile.trial}</p>
         </ProfileSection>
         <ProfileSection index="07" label={t("Current assignment toward Earth")}>
-          <p className="text-[14.5px] leading-relaxed text-foreground/85">{profile.mission}</p>
+          <p className="text-[15.5px] leading-relaxed text-foreground/85">{profile.mission}</p>
         </ProfileSection>
 
         {/* the third plate — the milieu, wrapped by what follows */}
@@ -240,11 +240,11 @@ function EntityDossier({
               "color-mix(in srgb, var(--cy) 6%, transparent)",
           }}
         >
-          <h4 className="mono-label flex items-center gap-1.5 text-[10px] text-[var(--cy)]">
+          <h4 className="mono-label flex items-center gap-1.5 text-[11px] text-[var(--cy)]">
             <MessageCircleHeart className="size-3" aria-hidden="true" />
             {t("Signature teaching")}
           </h4>
-          <p className="mt-2 font-serif text-[15.5px] italic leading-relaxed text-foreground/90">
+          <p className="mt-2 font-serif text-[16.5px] italic leading-relaxed text-foreground/90">
             “{profile.teaching}”
           </p>
         </div>
@@ -252,10 +252,10 @@ function EntityDossier({
         {/* contact */}
         <ProfileSection index="08" label={t("Contact protocol")} className="clear-both">
           <div className="rounded-xl border hairline bg-[var(--glass-bg-soft)] p-3.5">
-            <p className="text-[14px] leading-relaxed text-foreground/85">
+            <p className="text-[15px] leading-relaxed text-foreground/85">
               {profile.contactProtocol}
             </p>
-            <p className="mt-2.5 flex items-center gap-1.5 text-[13px] text-muted-foreground">
+            <p className="mt-2.5 flex items-center gap-1.5 text-[14px] text-muted-foreground">
               <Clock className="size-3 shrink-0" aria-hidden="true" />
               {t("Clearest signal: {v}", { v: profile.contactWindow })}
             </p>
@@ -263,22 +263,22 @@ function EntityDossier({
         </ProfileSection>
 
         <ProfileSection index="09" label={t("Seal of correspondence")}>
-          <p className="text-[14.5px] leading-relaxed text-foreground/85">{profile.emblem}</p>
+          <p className="text-[15.5px] leading-relaxed text-foreground/85">{profile.emblem}</p>
         </ProfileSection>
 
         {/* quote */}
         <blockquote className="clear-both border-l-2 pl-4" style={{ borderColor: "color-mix(in srgb, var(--cy) 45%, transparent)" }}>
-          <p className="font-serif text-[16.5px] leading-relaxed text-foreground/90">
+          <p className="font-serif text-[17.5px] leading-relaxed text-foreground/90">
             “{profile.quote}”
           </p>
-          <footer className="mono-label mt-2 text-[10px] text-muted-foreground">
+          <footer className="mono-label mt-2 text-[11px] text-muted-foreground">
             {t("— {name}, spoken through the archive", { name: rep.name })}
           </footer>
         </blockquote>
 
         <div className="clear-both rounded-xl border hairline bg-[color-mix(in_srgb,var(--gd)_6%,transparent)] p-3.5">
-          <h4 className="mono-label text-[10px] text-[var(--gd)]">{t("Context note")}</h4>
-          <p className="mt-1.5 text-[14px] leading-relaxed text-muted-foreground">
+          <h4 className="mono-label text-[11px] text-[var(--gd)]">{t("Context note")}</h4>
+          <p className="mt-1.5 text-[15px] leading-relaxed text-muted-foreground">
             {t(
               "This dossier reflects channeled tradition and worldbuilding within the Mirror archive. It is offered for reflection and wonder — not as established science."
             )}
@@ -290,7 +290,7 @@ function EntityDossier({
         <button
           type="button"
           onClick={askQuestion}
-          className="focus-glow flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--cy)_12%,transparent)] px-4 py-2.5 text-[13.5px] font-semibold text-foreground transition-all duration-300 hover:glow-sm"
+          className="focus-glow flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--cy)_12%,transparent)] px-4 py-2.5 text-[14.5px] font-semibold text-foreground transition-all duration-300 hover:glow-sm"
         >
           <Orbit className="size-3.5 text-[var(--cy)]" aria-hidden="true" />
           {t("Ask the Mirror about {name}", { name: rep.name })}
@@ -392,7 +392,7 @@ function GroupDossierBody({
         <button
           type="button"
           onClick={() => useMirror.getState().closeModal()}
-          className="focus-glow group inline-flex items-center gap-1.5 rounded-full border hairline px-3 py-1.5 text-[12.5px] text-muted-foreground transition-colors hover:border-[var(--hairline-hover)] hover:text-foreground"
+          className="focus-glow group inline-flex items-center gap-1.5 rounded-full border hairline px-3 py-1.5 text-[13.5px] text-muted-foreground transition-colors hover:border-[var(--hairline-hover)] hover:text-foreground"
         >
           <ArrowLeft
             className="size-3.5 transition-transform duration-300 group-hover:-translate-x-0.5"
@@ -416,13 +416,13 @@ function GroupDossierBody({
         </div>
 
         <ProfileSection index="01" label={t("Essence")}>
-          <p className="text-[14.5px] font-medium leading-relaxed text-foreground/90">{entry.essence}</p>
+          <p className="text-[15.5px] font-medium leading-relaxed text-foreground/90">{entry.essence}</p>
         </ProfileSection>
         <ProfileSection index="02" label={t("Role in human awakening")}>
-          <p className="text-[14.5px] leading-relaxed text-foreground/85">{entry.role}</p>
+          <p className="text-[15.5px] leading-relaxed text-foreground/85">{entry.role}</p>
         </ProfileSection>
         <ProfileSection index="03" label={t("Signs of resonance")}>
-          <p className="text-[14.5px] leading-relaxed text-foreground/85">{entry.signal}</p>
+          <p className="text-[15.5px] leading-relaxed text-foreground/85">{entry.signal}</p>
         </ProfileSection>
 
         {/* the second plate — the milieu, wrapped by the deep sections */}
@@ -438,13 +438,13 @@ function GroupDossierBody({
           <>
             <div className="h-px w-full bg-gradient-to-r from-[color-mix(in_srgb,var(--cy)_35%,transparent)] to-transparent" />
             <ProfileSection index="04" label={t("Recorded history")}>
-              <p className="text-[14.5px] leading-relaxed text-foreground/85">{extras_.history}</p>
+              <p className="text-[15.5px] leading-relaxed text-foreground/85">{extras_.history}</p>
             </ProfileSection>
             <ProfileSection index="05" label={t("How their society is organized")}>
-              <p className="text-[14.5px] leading-relaxed text-foreground/85">{extras_.structure}</p>
+              <p className="text-[15.5px] leading-relaxed text-foreground/85">{extras_.structure}</p>
             </ProfileSection>
             <ProfileSection index="06" label={t("Ships, temples & artifacts")}>
-              <p className="text-[14.5px] leading-relaxed text-foreground/85">{extras_.artifacts}</p>
+              <p className="text-[15.5px] leading-relaxed text-foreground/85">{extras_.artifacts}</p>
             </ProfileSection>
 
             {/* the third plate — the homelands, wrapped by what follows */}
@@ -454,7 +454,7 @@ function GroupDossierBody({
               testid="group-gallery-homelands"
             />
             <ProfileSection index="07" label={t("Contact protocol")}>
-              <p className="text-[14.5px] leading-relaxed text-foreground/85">{extras_.contactProtocol}</p>
+              <p className="text-[15.5px] leading-relaxed text-foreground/85">{extras_.contactProtocol}</p>
             </ProfileSection>
 
             <ProfileSection index="08" label={t("Three core teachings")}>
@@ -466,7 +466,7 @@ function GroupDossierBody({
                       style={{ background: "var(--cy)" }}
                       aria-hidden="true"
                     />
-                    <span className="font-serif text-[14.5px] italic leading-relaxed text-foreground/85">
+                    <span className="font-serif text-[15.5px] italic leading-relaxed text-foreground/85">
                       {teaching}
                     </span>
                   </li>
@@ -483,10 +483,10 @@ function GroupDossierBody({
             </ProfileSection>
 
             <div className="clear-both rounded-xl border hairline bg-[color-mix(in_srgb,var(--gd)_6%,transparent)] p-3.5">
-              <h4 className="mono-label text-[10px] text-[var(--gd)]">
+              <h4 className="mono-label text-[11px] text-[var(--gd)]">
                 {t("Discernment note")}
               </h4>
-              <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">
+              <p className="mt-1.5 text-[14px] leading-relaxed text-muted-foreground">
                 {extras_.discernment}
               </p>
             </div>
@@ -496,7 +496,7 @@ function GroupDossierBody({
         {/* representatives — full reveal */}
         <section className="clear-both">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h4 className="mono-label flex items-center gap-1.5 text-[10.5px] text-[var(--cy)]">
+            <h4 className="mono-label flex items-center gap-1.5 text-[11.5px] text-[var(--cy)]">
               <Fingerprint className="size-3" aria-hidden="true" />
               {t("Named representatives — the full register")}
             </h4>
@@ -527,7 +527,7 @@ function GroupDossierBody({
                 aria-label={t("Filter named representatives of the {name}", {
                   name: entry.name,
                 })}
-                className="focus-glow h-8 w-full rounded-lg border hairline bg-transparent pl-8 pr-3 text-[13.5px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
+                className="focus-glow h-8 w-full rounded-lg border hairline bg-transparent pl-8 pr-3 text-[14.5px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
               />
             </div>
           )}
@@ -560,21 +560,21 @@ function GroupDossierBody({
                     />
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[13.5px] text-foreground/80 transition-colors group-hover:text-[var(--cy)]">
+                    <span className="block truncate text-[14.5px] text-foreground/80 transition-colors group-hover:text-[var(--cy)]">
                       {rep.name}
                     </span>
-                    <span className="block truncate font-mono text-[10px] text-muted-foreground/55">
+                    <span className="block truncate font-mono text-[11px] text-muted-foreground/55">
                       {getEntityProfile(rep, kind).archiveNo}
                     </span>
                   </span>
-                  <span className="shrink-0 font-mono text-[11px] text-muted-foreground/60">
+                  <span className="shrink-0 font-mono text-[12px] text-muted-foreground/60">
                     {rep.density}
                   </span>
                 </button>
               </li>
             ))}
             {filteredReps.length === 0 && (
-              <li className="px-2 py-3 text-[13px] italic text-muted-foreground">
+              <li className="px-2 py-3 text-[14px] italic text-muted-foreground">
                 {t(
                   "No names match this filter — every one of the {n} exists, try a shorter search.",
                   { n: entry.count }
@@ -591,7 +591,7 @@ function GroupDossierBody({
                 onClick={() =>
                   setVisible((v) => Math.min(v + BATCH, filteredReps.length))
                 }
-                className="focus-glow rounded-full border hairline px-3 py-1.5 text-[12px] text-muted-foreground transition-colors hover:text-foreground"
+                className="focus-glow rounded-full border hairline px-3 py-1.5 text-[13px] text-muted-foreground transition-colors hover:text-foreground"
               >
                 {t("Reveal {n} more", {
                   n: Math.min(BATCH, filteredReps.length - visible),
@@ -600,7 +600,7 @@ function GroupDossierBody({
               <button
                 type="button"
                 onClick={() => setVisible(filteredReps.length)}
-                className="focus-glow rounded-full border border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--cy)_12%,transparent)] px-3 py-1.5 text-[12px] font-semibold text-foreground transition-all duration-300 hover:glow-sm"
+                className="focus-glow rounded-full border border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--cy)_12%,transparent)] px-3 py-1.5 text-[13px] font-semibold text-foreground transition-all duration-300 hover:glow-sm"
               >
                 {t("Reveal all {n}", { n: filteredReps.length })}
               </button>
@@ -609,8 +609,8 @@ function GroupDossierBody({
         </section>
 
         <div className="clear-both rounded-xl border hairline bg-[color-mix(in_srgb,var(--gd)_6%,transparent)] p-3.5">
-          <h4 className="mono-label text-[10px] text-[var(--gd)]">{t("Context note")}</h4>
-          <p className="mt-1.5 text-[14px] leading-relaxed text-muted-foreground">
+          <h4 className="mono-label text-[11px] text-[var(--gd)]">{t("Context note")}</h4>
+          <p className="mt-1.5 text-[15px] leading-relaxed text-muted-foreground">
             {t(
               "This dossier reflects channeled tradition and worldbuilding within the Mirror archive. It is offered for reflection and wonder — not as established science."
             )}
@@ -634,7 +634,7 @@ function GroupDossierBody({
             useMirror.getState().closeModal();
             useMirror.getState().askMirror(q);
           }}
-          className="focus-glow flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--cy)_12%,transparent)] px-4 py-2.5 text-[13.5px] font-semibold text-foreground transition-all duration-300 hover:glow-sm"
+          className="focus-glow flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--cy)_12%,transparent)] px-4 py-2.5 text-[14.5px] font-semibold text-foreground transition-all duration-300 hover:glow-sm"
         >
           <BadgeCheck className="size-3.5 text-[var(--cy)]" aria-hidden="true" />
           {t("Ask the Mirror about the {name}", { name: entry.name })}

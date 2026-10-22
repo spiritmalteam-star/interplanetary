@@ -79,7 +79,7 @@ function TermsScene() {
         {tiles.map((tile, i) => (
           <motion.span
             key={i}
-            className="absolute flex size-7 items-center justify-center rounded-[5px] border text-[12px] text-[var(--scope-a)]"
+            className="absolute flex size-7 items-center justify-center rounded-[5px] border text-[13px] text-[var(--scope-a)]"
             style={{
               left: `calc(50% + ${tile.x - 14}px)`,
               top: `calc(50% + ${tile.y - 14}px)`,
@@ -813,7 +813,7 @@ function VoteScene() {
                 style={{ backfaceVisibility: "hidden" }}
               />
               <span
-                className="absolute inset-0 flex items-center justify-center text-[11px] text-[var(--scope-a)]"
+                className="absolute inset-0 flex items-center justify-center text-[12px] text-[var(--scope-a)]"
                 style={{
                   backfaceVisibility: "hidden",
                   transform: "rotateY(180deg)",

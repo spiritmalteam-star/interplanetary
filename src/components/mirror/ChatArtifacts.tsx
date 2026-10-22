@@ -210,9 +210,9 @@ function InkSigil({ text, size = 44 }: { text: string; size?: number }) {
 /* ---------- shared bits ---------- */
 
 const btnGhost =
-  "focus-glow inline-flex h-9 items-center gap-2 rounded-full border hairline px-4 text-[12.5px] font-medium text-foreground/90 transition-all duration-300 hover:-translate-y-px hover:border-[var(--hairline-hover)] hover:text-foreground";
+  "focus-glow inline-flex h-9 items-center gap-2 rounded-full border hairline px-4 text-[13.5px] font-medium text-foreground/90 transition-all duration-300 hover:-translate-y-px hover:border-[var(--hairline-hover)] hover:text-foreground";
 const btnSolid =
-  "focus-glow inline-flex h-9 items-center gap-2 rounded-full bg-foreground px-4 text-[12.5px] font-semibold text-background transition-all duration-300 hover:-translate-y-px hover:opacity-88 disabled:cursor-not-allowed disabled:opacity-35";
+  "focus-glow inline-flex h-9 items-center gap-2 rounded-full bg-foreground px-4 text-[13.5px] font-semibold text-background transition-all duration-300 hover:-translate-y-px hover:opacity-88 disabled:cursor-not-allowed disabled:opacity-35";
 const inkLine =
   "linear-gradient(90deg, transparent, color-mix(in srgb, var(--scope-a) 40%, transparent), transparent)";
 
@@ -228,7 +228,7 @@ function ArtifactLoading({ phrase, bars = 3 }: { phrase: string; bars?: number }
           />
         ))}
       </div>
-      <p className="ink-hand ink-faint mt-4 text-center text-[13.5px] italic">{phrase}</p>
+      <p className="ink-hand ink-faint mt-4 text-center text-[14.5px] italic">{phrase}</p>
     </div>
   );
 }
@@ -242,7 +242,7 @@ function ArtifactError({ message, onRetry, retryLabel, testid }: {
   const t = useT();
   return (
     <div className="py-1 text-center">
-      <p className="text-[13.5px] italic leading-relaxed text-muted-foreground">{t(message)}</p>
+      <p className="text-[14.5px] italic leading-relaxed text-muted-foreground">{t(message)}</p>
       <button type="button" onClick={onRetry} data-testid={testid} className={cn(btnGhost, "mt-3")}>
         <RotateCcw className="size-3.5" aria-hidden="true" />
         {t(retryLabel)}
@@ -313,8 +313,8 @@ export function KindleReader({
       <div className="flex shrink-0 items-center gap-3 border-b hairline px-4 py-3 sm:px-6">
         <ScrollText className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
         <div className="min-w-0 flex-1">
-          <p className="ink-title truncate text-[15px] font-semibold leading-tight">{record.title}</p>
-          <p className="ink-faint truncate text-[11.5px] italic">{record.era}</p>
+          <p className="ink-title truncate text-[16px] font-semibold leading-tight">{record.title}</p>
+          <p className="ink-faint truncate text-[12.5px] italic">{record.era}</p>
         </div>
         <div className="flex shrink-0 items-center gap-1">
           <button
@@ -338,7 +338,7 @@ export function KindleReader({
             <Plus className="size-3.5" aria-hidden="true" />
           </button>
         </div>
-        <span className="mono-label hidden w-10 shrink-0 text-right text-[10px] text-muted-foreground sm:block">
+        <span className="mono-label hidden w-10 shrink-0 text-right text-[11px] text-muted-foreground sm:block">
           {Math.round(progress)}%
         </span>
         <button
@@ -377,12 +377,12 @@ export function KindleReader({
       >
         <div className="mx-auto max-w-[680px] px-6 py-10 sm:px-8 sm:py-14">
           <h1
-            className="ink-title text-center text-[26px] font-semibold leading-tight tracking-[0.03em] sm:text-[30px]"
+            className="ink-title text-center text-[27px] font-semibold leading-tight tracking-[0.03em] sm:text-[31px]"
             style={{ fontSize: undefined }}
           >
             {record.title}
           </h1>
-          <p className="ink-hand ink-faint mt-2 text-center text-[15px] italic">{record.era}</p>
+          <p className="ink-hand ink-faint mt-2 text-center text-[16px] italic">{record.era}</p>
           <span aria-hidden="true" className="mx-auto mt-6 block h-px w-40" style={{ background: inkLine }} />
           <div className="mt-8 space-y-5">
             {paras.map((para, i) => (
@@ -391,7 +391,7 @@ export function KindleReader({
                 className={cn(
                   "ink-hand whitespace-pre-wrap leading-[1.95]",
                   i === 0 &&
-                    "first-letter:float-left first-letter:mr-3 first-letter:mt-[7px] first-letter:text-[54px] first-letter:font-semibold first-letter:leading-[0.78]"
+                    "first-letter:float-left first-letter:mr-3 first-letter:mt-[7px] first-letter:text-[55px] first-letter:font-semibold first-letter:leading-[0.78]"
                 )}
                 style={{ fontSize: READER_SIZES[sizeIdx] }}
               >
@@ -399,8 +399,8 @@ export function KindleReader({
               </p>
             ))}
           </div>
-          <p className="ink-hand ink-soft mt-10 text-center text-[15.5px] italic">{record.seal}</p>
-          <p className="mono-label mt-8 text-center text-[9px] uppercase tracking-[0.26em] text-muted-foreground/50">
+          <p className="ink-hand ink-soft mt-10 text-center text-[16.5px] italic">{record.seal}</p>
+          <p className="mono-label mt-8 text-center text-[10px] uppercase tracking-[0.26em] text-muted-foreground/50">
             {footerLabel ?? t("The Akashic Library")}
           </p>
         </div>
@@ -477,16 +477,16 @@ function AkashicLetter({ resonance }: { resonance: string }) {
         >
           {/* the letter, lying on the channel's desk */}
           <div className="relative mx-auto max-w-[560px] rounded-xl border hairline bg-card/70 px-5 py-6 sm:px-7">
-            <span aria-hidden="true" className="ink-faint pointer-events-none absolute right-3 top-2 text-[10px] opacity-60">◆</span>
-            <h4 className="ink-title text-[17.5px] font-semibold leading-snug" data-testid="chat-akashic-title">
+            <span aria-hidden="true" className="ink-faint pointer-events-none absolute right-3 top-2 text-[11px] opacity-60">◆</span>
+            <h4 className="ink-title text-[18.5px] font-semibold leading-snug" data-testid="chat-akashic-title">
               {record.title}
             </h4>
-            <p className="ink-faint mt-1 text-[13px] italic">{record.era}</p>
+            <p className="ink-faint mt-1 text-[14px] italic">{record.era}</p>
             <span aria-hidden="true" className="mt-3.5 block h-px w-full" style={{ background: inkLine }} />
             <div className="relative mt-4">
-              <div className="ink-hand space-y-3.5 text-[14.5px] leading-[1.9]">
+              <div className="ink-hand space-y-3.5 text-[15.5px] leading-[1.9]">
                 {preview.map((para, i) => (
-                  <p key={i} className={cn(i === 0 && "first-letter:float-left first-letter:mr-2.5 first-letter:mt-[5px] first-letter:text-[42px] first-letter:font-semibold first-letter:leading-[0.8]")}>
+                  <p key={i} className={cn(i === 0 && "first-letter:float-left first-letter:mr-2.5 first-letter:mt-[5px] first-letter:text-[43px] first-letter:font-semibold first-letter:leading-[0.8]")}>
                     {para}
                   </p>
                 ))}
@@ -615,20 +615,20 @@ function TimelineRecord({
         >
           {/* the seeker's own book, lying open beneath the words */}
           <div className="relative mx-auto max-w-[560px] rounded-xl border hairline bg-card/70 px-5 py-6 sm:px-7">
-            <span aria-hidden="true" className="ink-faint pointer-events-none absolute right-3 top-2 text-[10px] opacity-60">◆</span>
-            <p className="mono-label flex items-center gap-1.5 text-[8.5px] uppercase tracking-[0.24em] text-muted-foreground/70">
+            <span aria-hidden="true" className="ink-faint pointer-events-none absolute right-3 top-2 text-[11px] opacity-60">◆</span>
+            <p className="mono-label flex items-center gap-1.5 text-[9.5px] uppercase tracking-[0.24em] text-muted-foreground/70">
               <NotebookText className="size-3 shrink-0" aria-hidden="true" />
               {t("Drawn from your own timeline")}
             </p>
-            <h4 className="ink-title mt-2 text-[17.5px] font-semibold leading-snug" data-testid={`${testid}-title`}>
+            <h4 className="ink-title mt-2 text-[18.5px] font-semibold leading-snug" data-testid={`${testid}-title`}>
               {record.title}
             </h4>
-            <p className="ink-faint mt-1 text-[13px] italic">{record.era}</p>
+            <p className="ink-faint mt-1 text-[14px] italic">{record.era}</p>
             <span aria-hidden="true" className="mt-3.5 block h-px w-full" style={{ background: inkLine }} />
             <div className="relative mt-4">
-              <div className="ink-hand space-y-3.5 text-[14.5px] leading-[1.9]">
+              <div className="ink-hand space-y-3.5 text-[15.5px] leading-[1.9]">
                 {preview.map((para, i) => (
-                  <p key={i} className={cn(i === 0 && "first-letter:float-left first-letter:mr-2.5 first-letter:mt-[5px] first-letter:text-[42px] first-letter:font-semibold first-letter:leading-[0.8]")}>
+                  <p key={i} className={cn(i === 0 && "first-letter:float-left first-letter:mr-2.5 first-letter:mt-[5px] first-letter:text-[43px] first-letter:font-semibold first-letter:leading-[0.8]")}>
                     {para}
                   </p>
                 ))}
@@ -696,7 +696,7 @@ export function TimelineRecordSection({
         />
       ) : (
         <div className="flex items-center justify-between gap-3">
-          <span className="mono-label text-[9px] uppercase tracking-[0.22em] text-muted-foreground/60">
+          <span className="mono-label text-[10px] uppercase tracking-[0.22em] text-muted-foreground/60">
             {t("The record of your own timeline")}
           </span>
           <button
@@ -705,7 +705,7 @@ export function TimelineRecordSection({
             data-testid={`exchange-akashic-${index}`}
             aria-label={t("Open your record")}
             title={t("Open your record")}
-            className="focus-glow flex h-8 shrink-0 items-center gap-1.5 rounded-full border hairline px-3 text-[11.5px] font-medium text-foreground/85 transition-all duration-300 hover:-translate-y-px hover:border-[var(--hairline-hover)] hover:text-foreground"
+            className="focus-glow flex h-8 shrink-0 items-center gap-1.5 rounded-full border hairline px-3 text-[12.5px] font-medium text-foreground/85 transition-all duration-300 hover:-translate-y-px hover:border-[var(--hairline-hover)] hover:text-foreground"
           >
             <NotebookText className="size-3.5" aria-hidden="true" />
             {t("Akashic")}
@@ -789,7 +789,7 @@ function ManifestRitual({ resonance }: { resonance: string }) {
     <div className="mx-auto max-w-[560px]" data-testid="chat-manifest">
       {stage === "compose" && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-          <label htmlFor="chat-manifest-intention" className="mono-label text-[9.5px] uppercase tracking-[0.2em] text-[var(--scope-a)]">
+          <label htmlFor="chat-manifest-intention" className="mono-label text-[10.5px] uppercase tracking-[0.2em] text-[var(--scope-a)]">
             {t("Intention · what do you choose to create?")}
           </label>
           <textarea
@@ -800,7 +800,7 @@ function ManifestRitual({ resonance }: { resonance: string }) {
             maxLength={400}
             placeholder={t("Speak it plainly — the chamber understands plain words best…")}
             data-testid="chat-manifest-intention"
-            className="focus-glow mt-2 w-full resize-none rounded-xl border hairline bg-background/50 px-3.5 py-2.5 text-[14px] leading-relaxed text-foreground placeholder:text-muted-foreground/60"
+            className="focus-glow mt-2 w-full resize-none rounded-xl border hairline bg-background/50 px-3.5 py-2.5 text-[15px] leading-relaxed text-foreground placeholder:text-muted-foreground/60"
           />
           {/* what the intention carries — chips and the paperclip/camera */}
           <div className="mt-2 flex items-center gap-2">
@@ -818,7 +818,7 @@ function ManifestRitual({ resonance }: { resonance: string }) {
               onAttachmentsChange={setAttachments}
             />
           </div>
-          <p className="mono-label mt-3 text-[9.5px] uppercase tracking-[0.2em] text-[var(--scope-a)]">
+          <p className="mono-label mt-3 text-[10.5px] uppercase tracking-[0.2em] text-[var(--scope-a)]">
             {t("Emotional frequency · the carrier wave")}
           </p>
           <div className="mt-2 flex flex-wrap gap-1.5" role="radiogroup" aria-label={t("Emotional frequency · the carrier wave")}>
@@ -834,7 +834,7 @@ function ManifestRitual({ resonance }: { resonance: string }) {
                   onClick={() => setEmotion(f.id)}
                   data-testid={`chat-manifest-freq-${f.id}`}
                   className={cn(
-                    "focus-glow flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[12px] transition-all duration-300",
+                    "focus-glow flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[13px] transition-all duration-300",
                     active
                       ? "border-[var(--scope-a)] font-semibold text-foreground"
                       : "hairline text-muted-foreground hover:text-foreground"
@@ -848,7 +848,7 @@ function ManifestRitual({ resonance }: { resonance: string }) {
             })}
           </div>
           <div className="mt-4 flex items-center gap-3">
-            <span className="mono-label shrink-0 text-[9.5px] uppercase tracking-[0.2em] text-[var(--scope-a)]">
+            <span className="mono-label shrink-0 text-[10.5px] uppercase tracking-[0.2em] text-[var(--scope-a)]">
               {t("Chamber intensity")}
             </span>
             <input
@@ -861,7 +861,7 @@ function ManifestRitual({ resonance }: { resonance: string }) {
               data-testid="chat-manifest-intensity"
               className="h-1 min-w-0 flex-1 accent-[var(--scope-a)]"
             />
-            <span className="mono-label w-8 text-right text-[11px] text-muted-foreground">{intensity}</span>
+            <span className="mono-label w-8 text-right text-[12px] text-muted-foreground">{intensity}</span>
           </div>
           <div className="mt-4 flex justify-center">
             <button type="button" onClick={() => void charge()} disabled={!intention.trim()} data-testid="chat-manifest-charge" className={btnSolid}>
@@ -870,7 +870,7 @@ function ManifestRitual({ resonance }: { resonance: string }) {
             </button>
           </div>
           {error && (
-            <p className="mt-3 text-center text-[13px] italic text-muted-foreground">
+            <p className="mt-3 text-center text-[14px] italic text-muted-foreground">
               {t("The chamber stayed quiet — rest, then charge again.")}
             </p>
           )}
@@ -893,11 +893,11 @@ function ManifestRitual({ resonance }: { resonance: string }) {
                 style={{ transition: "stroke-dashoffset 120ms linear" }}
               />
             </svg>
-            <span className="mono-label absolute inset-0 flex items-center justify-center text-[13px] font-semibold" style={{ color: "var(--scope-a)" }}>
+            <span className="mono-label absolute inset-0 flex items-center justify-center text-[14px] font-semibold" style={{ color: "var(--scope-a)" }}>
               {Math.round(progress)}%
             </span>
           </div>
-          <p className="ink-faint mt-3 text-[13.5px] italic">{t("Charging the field…")}</p>
+          <p className="ink-faint mt-3 text-[14.5px] italic">{t("Charging the field…")}</p>
         </div>
       )}
 
@@ -911,29 +911,29 @@ function ManifestRitual({ resonance }: { resonance: string }) {
           <div className="flex items-center gap-3.5">
             <InkSigil text={blueprint.title} size={52} />
             <div className="min-w-0">
-              <h4 className="ink-title text-[17px] font-semibold leading-snug">{blueprint.title}</h4>
-              <p className="ink-faint mt-0.5 text-[12.5px] italic">{t("A charged blueprint")}</p>
+              <h4 className="ink-title text-[18px] font-semibold leading-snug">{blueprint.title}</h4>
+              <p className="ink-faint mt-0.5 text-[13.5px] italic">{t("A charged blueprint")}</p>
             </div>
           </div>
-          <p className="ink-hand mt-4 text-[14px] leading-[1.85] text-foreground/90">{blueprint.field_state}</p>
-          <p className="ink-faint mt-3 border-l-2 pl-3 text-[13.5px] italic leading-[1.8]" style={{ borderColor: "color-mix(in srgb, var(--scope-a) 45%, transparent)" }}>
+          <p className="ink-hand mt-4 text-[15px] leading-[1.85] text-foreground/90">{blueprint.field_state}</p>
+          <p className="ink-faint mt-3 border-l-2 pl-3 text-[14.5px] italic leading-[1.8]" style={{ borderColor: "color-mix(in srgb, var(--scope-a) 45%, transparent)" }}>
             {blueprint.visualization}
           </p>
           <ol className="mt-4 space-y-2">
             {blueprint.micro_actions.slice(0, 3).map((a, i) => (
               <li key={i} className="flex items-start gap-2.5">
                 <span
-                  className="mono-label mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border text-[9px]"
+                  className="mono-label mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border text-[10px]"
                   style={{ borderColor: "color-mix(in srgb, var(--scope-a) 40%, transparent)", color: "var(--scope-a)" }}
                 >
                   {i + 1}
                 </span>
-                <span className="text-[13.5px] leading-relaxed text-foreground/88">{a}</span>
+                <span className="text-[14.5px] leading-relaxed text-foreground/88">{a}</span>
               </li>
             ))}
           </ol>
-          <p className="ink-hand mt-4 text-center text-[15px] font-medium italic leading-[1.8]">“{blueprint.affirmation}”</p>
-          <p className="ink-faint mt-3 text-center text-[12px] italic">{blueprint.window}</p>
+          <p className="ink-hand mt-4 text-center text-[16px] font-medium italic leading-[1.8]">“{blueprint.affirmation}”</p>
+          <p className="ink-faint mt-3 text-center text-[13px] italic">{blueprint.window}</p>
           <div className="mt-4 flex justify-center">
             <button
               type="button"
@@ -1039,7 +1039,7 @@ function ForgeStrike({ resonance }: { resonance: string }) {
     testid: string,
   ) => (
     <div>
-      <p className="mono-label text-[9.5px] uppercase tracking-[0.2em] text-[var(--scope-a)]">{label}</p>
+      <p className="mono-label text-[10.5px] uppercase tracking-[0.2em] text-[var(--scope-a)]">{label}</p>
       <div className="mt-1.5 flex flex-wrap gap-1.5">
         {options.map((o) => {
           const active = dials[key] === o.id;
@@ -1056,7 +1056,7 @@ function ForgeStrike({ resonance }: { resonance: string }) {
               title={t(o.hint)}
               data-testid={`${testid}-${o.id}`}
               className={cn(
-                "focus-glow flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[12px] transition-all duration-300",
+                "focus-glow flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[13px] transition-all duration-300",
                 active
                   ? "border-[var(--scope-a)] font-semibold text-foreground"
                   : "hairline text-muted-foreground hover:text-foreground",
@@ -1080,7 +1080,7 @@ function ForgeStrike({ resonance }: { resonance: string }) {
     <div className="mx-auto max-w-[560px]" data-testid="chat-forge">
       {directive && !manual ? (
         <div className="text-center">
-          <p className="mono-label text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+          <p className="mono-label text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
             {t("the forge heard your words — shaping them now")}
           </p>
           {stage === "idle" && (
@@ -1088,7 +1088,7 @@ function ForgeStrike({ resonance }: { resonance: string }) {
               type="button"
               onClick={() => setManual(true)}
               data-testid="chat-forge-manual"
-              className="mono-label mt-2 text-[9px] uppercase tracking-[0.2em] text-muted-foreground/70 underline-offset-2 transition-colors duration-300 hover:text-foreground hover:underline"
+              className="mono-label mt-2 text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70 underline-offset-2 transition-colors duration-300 hover:text-foreground hover:underline"
             >
               {t("turn the dials instead")}
             </button>
@@ -1117,7 +1117,7 @@ function ForgeStrike({ resonance }: { resonance: string }) {
 
       {stage === "forging" && (
         <p
-          className="mono-label mt-4 flex items-center justify-center gap-2 text-[10px] text-muted-foreground"
+          className="mono-label mt-4 flex items-center justify-center gap-2 text-[11px] text-muted-foreground"
           aria-busy="true"
         >
           <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
@@ -1125,7 +1125,7 @@ function ForgeStrike({ resonance }: { resonance: string }) {
         </p>
       )}
       {stage === "error" && (
-        <p className="mt-4 text-center text-[13px] italic text-muted-foreground">
+        <p className="mt-4 text-center text-[14px] italic text-muted-foreground">
           {t("The forge stayed quiet — strike again.")}
         </p>
       )}
@@ -1154,11 +1154,11 @@ function ForgeStrike({ resonance }: { resonance: string }) {
           >
             <div className="flex items-center gap-3.5">
               <InkSigil text={mystery.name} size={48} />
-              <h4 className="ink-title text-[16.5px] font-semibold leading-snug">{mystery.name}</h4>
+              <h4 className="ink-title text-[17.5px] font-semibold leading-snug">{mystery.name}</h4>
             </div>
-            <p className="mt-3 text-[13.5px] leading-[1.85] text-foreground/88">{mystery.essence}</p>
-            <p className="mt-2.5 text-[13.5px] leading-[1.85] text-foreground/88">
-              <span className="mono-label mr-1.5 text-[9px] uppercase tracking-[0.18em] text-muted-foreground">{t("What it changes")}</span>
+            <p className="mt-3 text-[14.5px] leading-[1.85] text-foreground/88">{mystery.essence}</p>
+            <p className="mt-2.5 text-[14.5px] leading-[1.85] text-foreground/88">
+              <span className="mono-label mr-1.5 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">{t("What it changes")}</span>
               {mystery.purpose}
             </p>
             <div
@@ -1168,10 +1168,10 @@ function ForgeStrike({ resonance }: { resonance: string }) {
                 background: "color-mix(in srgb, var(--scope-a) 7%, transparent)",
               }}
             >
-              <span className="mono-label text-[9px] uppercase tracking-[0.18em] text-muted-foreground">{t("The first stroke")}</span>
-              <p className="mt-1 text-[13.5px] leading-relaxed text-foreground/92">{mystery.first_stroke}</p>
+              <span className="mono-label text-[10px] uppercase tracking-[0.18em] text-muted-foreground">{t("The first stroke")}</span>
+              <p className="mt-1 text-[14.5px] leading-relaxed text-foreground/92">{mystery.first_stroke}</p>
             </div>
-            <p className="ink-faint mt-3.5 text-center text-[12.5px] italic">{mystery.whisper}</p>
+            <p className="ink-faint mt-3.5 text-center text-[13.5px] italic">{mystery.whisper}</p>
             <div className="mt-4 flex justify-center">
               <button type="button" onClick={() => void strike()} data-testid="chat-forge-again" className={btnGhost}>
                 <RotateCcw className="size-3.5" aria-hidden="true" />
@@ -1271,11 +1271,11 @@ function PoemCard({ resonance }: { resonance: string }) {
           data-testid="chat-poem-body"
         >
           <div className="text-center">
-            <h4 className="ink-title text-[17px] font-semibold leading-snug">
+            <h4 className="ink-title text-[18px] font-semibold leading-snug">
               {poem.title}
             </h4>
             {poem.epigraph && (
-              <p className="ink-faint mt-1.5 text-[12.5px] italic">{poem.epigraph}</p>
+              <p className="ink-faint mt-1.5 text-[13.5px] italic">{poem.epigraph}</p>
             )}
           </div>
           <div
@@ -1292,7 +1292,7 @@ function PoemCard({ resonance }: { resonance: string }) {
                 {stanza.map((line, j) => (
                   <p
                     key={j}
-                    className="ink-hand text-[14.5px] leading-[1.9] text-foreground/90"
+                    className="ink-hand text-[15.5px] leading-[1.9] text-foreground/90"
                   >
                     {line}
                   </p>
@@ -1301,7 +1301,7 @@ function PoemCard({ resonance }: { resonance: string }) {
             ))}
           </div>
           {poem.seal && (
-            <p className="ink-faint mt-5 text-right text-[12.5px] italic">
+            <p className="ink-faint mt-5 text-right text-[13.5px] italic">
               — {poem.seal}
             </p>
           )}
@@ -1838,24 +1838,24 @@ function BookWeaver({
         {/* settled answers — the shape already chosen */}
         <div className="mb-3 space-y-1.5">
           {topic && (
-            <p className="ink-hand text-[14px] italic text-muted-foreground">
-              <span className="mono-label mr-2 text-[8.5px] uppercase tracking-[0.2em] not-italic">
+            <p className="ink-hand text-[15px] italic text-muted-foreground">
+              <span className="mono-label mr-2 text-[9.5px] uppercase tracking-[0.2em] not-italic">
                 {t("The subject")}
               </span>
               {topic}
             </p>
           )}
           {step > 1 && (
-            <p className="ink-hand text-[14px] italic text-muted-foreground">
-              <span className="mono-label mr-2 text-[8.5px] uppercase tracking-[0.2em] not-italic">
+            <p className="ink-hand text-[15px] italic text-muted-foreground">
+              <span className="mono-label mr-2 text-[9.5px] uppercase tracking-[0.2em] not-italic">
                 {t("The reader")}
               </span>
               {t(readerLabel)}
             </p>
           )}
           {step > 2 && (
-            <p className="ink-hand text-[14px] italic text-muted-foreground">
-              <span className="mono-label mr-2 text-[8.5px] uppercase tracking-[0.2em] not-italic">
+            <p className="ink-hand text-[15px] italic text-muted-foreground">
+              <span className="mono-label mr-2 text-[9.5px] uppercase tracking-[0.2em] not-italic">
                 {t("The shape")}
               </span>
               {t(taleLabel)}
@@ -1865,7 +1865,7 @@ function BookWeaver({
 
         {step === 0 && (
           <div>
-            <p className="ink-hand text-[15.5px] leading-relaxed text-foreground/90">
+            <p className="ink-hand text-[16.5px] leading-relaxed text-foreground/90">
               {t(
                 "A volume, woven right here. What shall it breathe — name the subject, the world, the wish it carries?"
               )}
@@ -1885,7 +1885,7 @@ function BookWeaver({
                 data-testid="book-topic-input"
                 placeholder={t("A book about…")}
                 aria-label={t("The subject of the book")}
-                className="min-w-0 flex-1 bg-transparent py-1.5 text-[14px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
+                className="min-w-0 flex-1 bg-transparent py-1.5 text-[15px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
               />
               <button
                 type="submit"
@@ -1901,7 +1901,7 @@ function BookWeaver({
 
         {step === 1 && (
           <div>
-            <p className="ink-hand text-[15.5px] leading-relaxed text-foreground/90">
+            <p className="ink-hand text-[16.5px] leading-relaxed text-foreground/90">
               {t("And who will hold it — whose eyes are these pages for?")}
             </p>
             <div className="mt-3 flex flex-wrap gap-1.5">
@@ -1914,7 +1914,7 @@ function BookWeaver({
                     setStep(2);
                   }}
                   data-testid={`book-reader-${r.id}`}
-                  className="focus-glow rounded-full border border-border px-3 py-1.5 text-[12px] text-muted-foreground transition-all duration-300 hover:border-foreground/40 hover:text-foreground"
+                  className="focus-glow rounded-full border border-border px-3 py-1.5 text-[13px] text-muted-foreground transition-all duration-300 hover:border-foreground/40 hover:text-foreground"
                 >
                   {t(r.label)}
                 </button>
@@ -1925,7 +1925,7 @@ function BookWeaver({
 
         {step === 2 && (
           <div>
-            <p className="ink-hand text-[15.5px] leading-relaxed text-foreground/90">
+            <p className="ink-hand text-[16.5px] leading-relaxed text-foreground/90">
               {t("And what shape shall the tale take?")}
             </p>
             <div className="mt-3">
@@ -1934,7 +1934,7 @@ function BookWeaver({
                   <button
                     type="button"
                     data-testid="book-tale-trigger"
-                    className="focus-glow flex min-w-[190px] items-center justify-between gap-3 rounded-full border border-border bg-card px-4 py-2 text-[13px] text-foreground transition-all duration-300 hover:border-foreground/40"
+                    className="focus-glow flex min-w-[190px] items-center justify-between gap-3 rounded-full border border-border bg-card px-4 py-2 text-[14px] text-foreground transition-all duration-300 hover:border-foreground/40"
                   >
                     <span className="truncate">{t(taleLabel)}</span>
                     <ChevronsUpDown
@@ -1956,7 +1956,7 @@ function BookWeaver({
                       }}
                       data-testid={`book-tale-${tl.id}`}
                       className={cn(
-                        "cursor-pointer justify-between gap-3 text-[13px]",
+                        "cursor-pointer justify-between gap-3 text-[14px]",
                         tl.id === tale &&
                           "bg-foreground/8 font-medium text-foreground"
                       )}
@@ -1975,7 +1975,7 @@ function BookWeaver({
 
         {step === 3 && (
           <div>
-            <p className="ink-hand text-[15.5px] leading-relaxed text-foreground/90">
+            <p className="ink-hand text-[16.5px] leading-relaxed text-foreground/90">
               {t("So it is set:")}{" "}
               <span className="italic">
                 {t(taleLabel)} · {t(readerLabel)}
@@ -1996,7 +1996,7 @@ function BookWeaver({
                   void weave("open");
                 }}
                 data-testid="book-weave-btn"
-                className="focus-glow flex h-9 items-center gap-2 rounded-full bg-foreground px-4 text-[13px] font-medium text-background transition-all duration-300 hover:-translate-y-px"
+                className="focus-glow flex h-9 items-center gap-2 rounded-full bg-foreground px-4 text-[14px] font-medium text-background transition-all duration-300 hover:-translate-y-px"
               >
                 <BookMarked className="size-3.5" aria-hidden="true" />
                 {t("Weave the book")}
@@ -2004,7 +2004,7 @@ function BookWeaver({
               <button
                 type="button"
                 onClick={() => setStep(0)}
-                className="focus-glow flex h-9 items-center gap-2 rounded-full border border-border px-4 text-[13px] text-muted-foreground transition-all duration-300 hover:text-foreground"
+                className="focus-glow flex h-9 items-center gap-2 rounded-full border border-border px-4 text-[14px] text-muted-foreground transition-all duration-300 hover:text-foreground"
               >
                 <RotateCcw className="size-3.5" aria-hidden="true" />
                 {t("Adjust the shape")}
@@ -2024,11 +2024,11 @@ function BookWeaver({
         data-testid="book-weaving"
       >
         <LoaderCircle className="size-5 animate-spin text-muted-foreground" aria-hidden="true" />
-        <p className="ink-hand text-[14.5px] italic text-muted-foreground">
+        <p className="ink-hand text-[15.5px] italic text-muted-foreground">
           {t("The loom weaves the first pages…")}
         </p>
         {weaveFailed && (
-          <p className="ink-hand text-[13.5px] italic text-muted-foreground">
+          <p className="ink-hand text-[14.5px] italic text-muted-foreground">
             {t(
               "The loom fell silent for a moment. Breathe, then weave again."
             )}{" "}
@@ -2062,7 +2062,7 @@ function BookWeaver({
           aria-pressed={night}
           title={night ? t("Read in daylight") : t("Read by night")}
           data-testid="book-chat-ink-toggle"
-          className="mono-label flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[8.5px] uppercase tracking-[0.16em] transition-all duration-300"
+          className="mono-label flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9.5px] uppercase tracking-[0.16em] transition-all duration-300"
           style={{
             borderColor: night ? "rgba(233,226,210,0.24)" : "rgba(44,40,34,0.2)",
             color: "inherit",
@@ -2078,16 +2078,16 @@ function BookWeaver({
       </div>
       {meta?.title && (
         <div className="mb-4 text-center">
-          <p className="ink-title text-[19px] font-semibold leading-snug">
+          <p className="ink-title text-[20px] font-semibold leading-snug">
             {meta.title}
           </p>
           {meta.subtitle && (
-            <p className="ink-hand ink-faint mt-1 text-[13px] italic">
+            <p className="ink-hand ink-faint mt-1 text-[14px] italic">
               {meta.subtitle}
             </p>
           )}
           {meta.sigil && (
-            <p className="ink-hand ink-faint mt-1.5 text-[12.5px] italic">
+            <p className="ink-hand ink-faint mt-1.5 text-[13.5px] italic">
               ✦ {meta.sigil}
             </p>
           )}
@@ -2103,7 +2103,7 @@ function BookWeaver({
           exactly where the book came back to them */}
       {resumed && (
         <p
-          className="ink-hand mb-3 text-center text-[13px] italic text-muted-foreground"
+          className="ink-hand mb-3 text-center text-[14px] italic text-muted-foreground"
           data-testid="book-resumed-note"
         >
           ✦ {t("Brought back to page {n}.", { n: String(spread * 2 + 1) })}
@@ -2118,7 +2118,7 @@ function BookWeaver({
         {spreadPages.map((p) => (
           <div key={p.n}>
             {p.chapter && (
-              <p className="ink-hand mb-2.5 text-center text-[14px] italic text-muted-foreground">
+              <p className="ink-hand mb-2.5 text-center text-[15px] italic text-muted-foreground">
                 {p.chapter}
               </p>
             )}
@@ -2127,19 +2127,19 @@ function BookWeaver({
                 <p
                   key={i}
                   className={cn(
-                    "ink-hand whitespace-pre-wrap text-[15.5px] leading-[1.9] text-foreground/92",
+                    "ink-hand whitespace-pre-wrap text-[16.5px] leading-[1.9] text-foreground/92",
                     /* the great letter rises only where a chapter truly
                        opens — most pages begin as plain, clean prose */
                     p.chapter &&
                       i === 0 &&
-                      "first-letter:float-left first-letter:mr-3 first-letter:mt-[6px] first-letter:text-[42px] first-letter:font-semibold first-letter:leading-[0.8]"
+                      "first-letter:float-left first-letter:mr-3 first-letter:mt-[6px] first-letter:text-[43px] first-letter:font-semibold first-letter:leading-[0.8]"
                   )}
                 >
                   {para}
                 </p>
               ))}
             </div>
-            <p className="mt-3 text-center text-[10.5px] text-muted-foreground/60">
+            <p className="mt-3 text-center text-[11.5px] text-muted-foreground/60">
               {p.n}
             </p>
           </div>
@@ -2169,7 +2169,7 @@ function BookWeaver({
             >
               <ChevronLeft className="size-3.5" aria-hidden="true" />
             </button>
-            <span className="mono-label text-[9.5px] tracking-[0.18em] text-muted-foreground">
+            <span className="mono-label text-[10.5px] tracking-[0.18em] text-muted-foreground">
               {t("page")} {spread * 2 + 1}
               {spreadPages[1] ? `–${spreadPages[1].n}` : ""} /{" "}
               {meta?.totalPages ?? pages.length}
@@ -2192,7 +2192,7 @@ function BookWeaver({
             type="button"
             onClick={() => setFullOpen(true)}
             data-testid="book-fullscreen"
-            className="focus-glow flex h-8 items-center gap-1.5 rounded-full border border-border px-3.5 text-[12px] text-muted-foreground transition-all duration-300 hover:border-foreground/40 hover:text-foreground"
+            className="focus-glow flex h-8 items-center gap-1.5 rounded-full border border-border px-3.5 text-[13px] text-muted-foreground transition-all duration-300 hover:border-foreground/40 hover:text-foreground"
           >
             <Maximize2 className="size-3" aria-hidden="true" />
             {t("Full screen")}
@@ -2203,7 +2203,7 @@ function BookWeaver({
               onClick={turnPage}
               disabled={weaving}
               data-testid="book-turn"
-              className="focus-glow flex h-8 items-center gap-1.5 rounded-full bg-foreground px-3.5 text-[12px] font-medium text-background transition-all duration-300 hover:-translate-y-px disabled:opacity-40"
+              className="focus-glow flex h-8 items-center gap-1.5 rounded-full bg-foreground px-3.5 text-[13px] font-medium text-background transition-all duration-300 hover:-translate-y-px disabled:opacity-40"
             >
               <BookOpen className="size-3" aria-hidden="true" />
               {buffer
@@ -2219,7 +2219,7 @@ function BookWeaver({
             data-testid="book-copy"
             aria-label={copied ? t("Book copied") : t("Copy the book")}
             title={copied ? t("Book copied") : t("Copy the book")}
-            className="focus-glow flex h-8 items-center gap-1.5 rounded-full border border-border px-3.5 text-[12px] text-muted-foreground transition-all duration-300 hover:border-foreground/40 hover:text-foreground"
+            className="focus-glow flex h-8 items-center gap-1.5 rounded-full border border-border px-3.5 text-[13px] text-muted-foreground transition-all duration-300 hover:border-foreground/40 hover:text-foreground"
           >
             {copied ? (
               <Check className="size-3" aria-hidden="true" />
@@ -2232,7 +2232,7 @@ function BookWeaver({
             type="button"
             onClick={saveBook}
             data-testid="book-save"
-            className="focus-glow flex h-8 items-center gap-1.5 rounded-full border border-border px-3.5 text-[12px] text-muted-foreground transition-all duration-300 hover:border-foreground/40 hover:text-foreground"
+            className="focus-glow flex h-8 items-center gap-1.5 rounded-full border border-border px-3.5 text-[13px] text-muted-foreground transition-all duration-300 hover:border-foreground/40 hover:text-foreground"
           >
             <Bookmark className="size-3" aria-hidden="true" />
             {t("Rest the book here")}
@@ -2242,7 +2242,7 @@ function BookWeaver({
               type="button"
               onClick={() => void weave("close")}
               disabled={weaving}
-              className="focus-glow flex h-8 items-center gap-1.5 rounded-full border border-border px-3.5 text-[12px] text-muted-foreground transition-all duration-300 hover:text-foreground disabled:opacity-40"
+              className="focus-glow flex h-8 items-center gap-1.5 rounded-full border border-border px-3.5 text-[13px] text-muted-foreground transition-all duration-300 hover:text-foreground disabled:opacity-40"
             >
               {t("Let the story rest")}
             </button>
@@ -2257,7 +2257,7 @@ function BookWeaver({
       </div>
 
       {weaveFailed && (
-        <p className="ink-hand mt-2.5 text-[13.5px] italic text-muted-foreground">
+        <p className="ink-hand mt-2.5 text-[14.5px] italic text-muted-foreground">
           {t("The loom fell silent for a moment. Breathe, then weave again.")}{" "}
           <button
             type="button"
@@ -2269,7 +2269,7 @@ function BookWeaver({
         </p>
       )}
       {ended && (
-        <p className="ink-hand mt-3 text-center text-[14px] italic text-muted-foreground">
+        <p className="ink-hand mt-3 text-center text-[15px] italic text-muted-foreground">
           ❧ {t("The end")}
         </p>
       )}
@@ -2304,11 +2304,11 @@ function BookWeaver({
                   aria-hidden="true"
                 />
                 <div className="min-w-0 flex-1">
-                  <p className="ink-title truncate text-[15px] font-semibold leading-tight">
+                  <p className="ink-title truncate text-[16px] font-semibold leading-tight">
                     {meta?.title}
                   </p>
                   {meta?.subtitle && (
-                    <p className="ink-faint truncate text-[11.5px] italic">
+                    <p className="ink-faint truncate text-[12.5px] italic">
                       {meta.subtitle}
                     </p>
                   )}
@@ -2364,16 +2364,16 @@ function BookWeaver({
               className="nice-scroll flex-1 overflow-y-auto"
             >
               <div className="mx-auto max-w-[680px] px-6 py-10 sm:px-8 sm:py-14">
-                <h1 className="ink-title text-center text-[26px] font-semibold leading-tight tracking-[0.03em] sm:text-[30px]">
+                <h1 className="ink-title text-center text-[27px] font-semibold leading-tight tracking-[0.03em] sm:text-[31px]">
                   {meta?.title}
                 </h1>
                 {meta?.sigil && (
-                  <p className="ink-hand ink-faint mt-2 text-center text-[14px] italic">
+                  <p className="ink-hand ink-faint mt-2 text-center text-[15px] italic">
                     ✦ {meta.sigil}
                   </p>
                 )}
                 {meta?.axiom && (
-                  <p className="ink-hand ink-faint mt-1.5 text-center text-[13.5px] italic">
+                  <p className="ink-hand ink-faint mt-1.5 text-center text-[14.5px] italic">
                     {meta.axiom}
                   </p>
                 )}
@@ -2386,7 +2386,7 @@ function BookWeaver({
                   {displayPages.map((p) => (
                     <div key={p.n}>
                       {p.chapter && (
-                        <p className="ink-hand mb-2.5 text-center text-[15px] italic text-muted-foreground">
+                        <p className="ink-hand mb-2.5 text-center text-[16px] italic text-muted-foreground">
                           {p.chapter}
                         </p>
                       )}
@@ -2400,7 +2400,7 @@ function BookWeaver({
                                  opening — every other page stays clean */
                               p.chapter &&
                                 i === 0 &&
-                                "first-letter:float-left first-letter:mr-3 first-letter:mt-[6px] first-letter:text-[46px] first-letter:font-semibold first-letter:leading-[0.8]"
+                                "first-letter:float-left first-letter:mr-3 first-letter:mt-[6px] first-letter:text-[47px] first-letter:font-semibold first-letter:leading-[0.8]"
                             )}
                             style={{ fontSize: [16.5, 18.5, 20.5][fontSize] }}
                           >
@@ -2408,18 +2408,18 @@ function BookWeaver({
                           </p>
                         ))}
                       </div>
-                      <p className="mt-3 text-center text-[10.5px] text-muted-foreground/50">
+                      <p className="mt-3 text-center text-[11.5px] text-muted-foreground/50">
                         {p.n}
                       </p>
                     </div>
                   ))}
                 </div>
                 {ended ? (
-                  <p className="ink-hand ink-soft mt-10 text-center text-[15.5px] italic">
+                  <p className="ink-hand ink-soft mt-10 text-center text-[16.5px] italic">
                     ❧ {t("The end")}
                   </p>
                 ) : (
-                  <p className="mono-label mt-10 text-center text-[9px] uppercase tracking-[0.22em] text-muted-foreground/50">
+                  <p className="mono-label mt-10 text-center text-[10px] uppercase tracking-[0.22em] text-muted-foreground/50">
                     {buffering
                       ? t("The loom weaves the next pages…")
                       : t("the next pages rest below the fold")}
@@ -2447,7 +2447,7 @@ function BookWeaver({
                     onClick={turnPage}
                     disabled={weaving}
                     data-testid="book-fullscreen-next"
-                    className="focus-glow flex h-11 items-center gap-2 rounded-full px-7 text-[13.5px] font-medium shadow-[0_10px_30px_-12px_rgba(0,0,0,0.5)] transition-all duration-300 hover:-translate-y-px disabled:opacity-60"
+                    className="focus-glow flex h-11 items-center gap-2 rounded-full px-7 text-[14.5px] font-medium shadow-[0_10px_30px_-12px_rgba(0,0,0,0.5)] transition-all duration-300 hover:-translate-y-px disabled:opacity-60"
                     style={{
                       background: "var(--foreground)",
                       color: night ? "#16130e" : "#faf6ec",
@@ -2606,7 +2606,7 @@ function CodesTransmission({
               ))}
             </div>
             <h4
-              className="ink-title mt-4 text-center text-[17px] font-semibold leading-snug"
+              className="ink-title mt-4 text-center text-[18px] font-semibold leading-snug"
               data-testid="chat-codes-title"
             >
               {interp.title}
@@ -2617,13 +2617,13 @@ function CodesTransmission({
               style={{ background: inkLine }}
             />
             <p
-              className="ink-hand mt-3.5 text-[14px] leading-[1.85]"
+              className="ink-hand mt-3.5 text-[15px] leading-[1.85]"
               data-testid="chat-codes-notes"
             >
               {interp.notes}
             </p>
             {interp.lyrics && (
-              <p className="ink-hand ink-faint mt-3 border-t hairline pt-3 text-[13.5px] italic leading-relaxed">
+              <p className="ink-hand ink-faint mt-3 border-t hairline pt-3 text-[14.5px] italic leading-relaxed">
                 {interp.lyrics}
               </p>
             )}
@@ -2774,7 +2774,7 @@ function NexusReveal({
             <RevelationProse
               text={reply.revelation}
               className="space-y-3.5"
-              paragraphClassName="ink-hand text-[14.5px] leading-[1.9]"
+              paragraphClassName="ink-hand text-[15.5px] leading-[1.9]"
             />
             <RevelationSections
               sections={reply.sections}
@@ -2786,14 +2786,14 @@ function NexusReveal({
                 className="mt-4 border-t hairline pt-4"
                 data-testid={`${testid}-formulas`}
               >
-                <p className="mono-label text-[8.5px] uppercase tracking-[0.24em] text-muted-foreground/70">
+                <p className="mono-label text-[9.5px] uppercase tracking-[0.24em] text-muted-foreground/70">
                   {t("The formulas beneath it")}
                 </p>
                 <div className="mt-2.5 space-y-2">
                   {reply.formulas.map((f, i) => (
                     <p
                       key={i}
-                      className="rounded-lg border hairline bg-background/40 px-3.5 py-2.5 text-center font-mono text-[13px] leading-relaxed"
+                      className="rounded-lg border hairline bg-background/40 px-3.5 py-2.5 text-center font-mono text-[14px] leading-relaxed"
                       style={{ color: "var(--scope-a)" }}
                     >
                       {f}
@@ -2803,7 +2803,7 @@ function NexusReveal({
               </div>
             )}
             {reply.seal && (
-              <p className="ink-faint mt-4 text-right text-[12.5px] italic">
+              <p className="ink-faint mt-4 text-right text-[13.5px] italic">
                 {reply.seal}
               </p>
             )}
@@ -2901,7 +2901,7 @@ export function SideArtifact({
         <span className="relative block size-[18px] shrink-0">
           <WorldSigil world={KIND_SIGIL[kind]} />
         </span>
-        <span className="mono-label text-[9px] uppercase tracking-[0.24em] text-muted-foreground/75">{label}</span>
+        <span className="mono-label text-[10px] uppercase tracking-[0.24em] text-muted-foreground/75">{label}</span>
         <span className="h-px flex-1" style={{ background: "linear-gradient(90deg, color-mix(in srgb, var(--scope-a) 22%, transparent), transparent)" }} aria-hidden="true" />
       </div>
       {kind === "akashic" && <AkashicLetter resonance={resonance} />}

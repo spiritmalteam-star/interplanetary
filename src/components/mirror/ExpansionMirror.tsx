@@ -97,7 +97,7 @@ export function ExpansionRing() {
             style={{ transition: "stroke-dashoffset 900ms cubic-bezier(0.22,1,0.36,1)" }}
           />
         </svg>
-        <span className="relative text-[9.5px] font-semibold tabular-nums" style={{ color: hue }}>
+        <span className="relative text-[10.5px] font-semibold tabular-nums" style={{ color: hue }}>
           {score}
         </span>
       </button>
@@ -106,10 +106,10 @@ export function ExpansionRing() {
         <div
           role="dialog"
           aria-label={t("Your expansion mirror")}
-          className="absolute right-0 top-10 z-40 w-[272px] rounded-2xl border border-[color-mix(in_srgb,var(--hairline)_90%,transparent)] bg-[color-mix(in_srgb,var(--background)_96%,transparent)] p-4 shadow-[0_18px_50px_-18px_rgba(0,0,0,0.5)] backdrop-blur-xl"
+          className="absolute right-0 top-10 z-40 w-[272px] rounded-2xl border border-[color-mix(in_srgb,var(--hairline)_90%,transparent)] bg-[color-mix(in_srgb,var(--background)_96%,transparent)] p-4 shadow-[0_18px_50px_-18px_rgba(0,0,0,0.5)] backdrop-blur-md"
         >
           <div className="mb-2 flex items-start justify-between gap-2">
-            <p className="text-[13px] font-semibold leading-tight" style={{ color: hue }}>
+            <p className="text-[14px] font-semibold leading-tight" style={{ color: hue }}>
               {t(stageInfo.name)}
             </p>
             <button
@@ -121,17 +121,17 @@ export function ExpansionRing() {
               <X className="size-3.5" aria-hidden="true" />
             </button>
           </div>
-          <p className="mb-2.5 font-serif text-[12px] italic leading-relaxed text-muted-foreground">
+          <p className="mb-2.5 font-serif text-[13px] italic leading-relaxed text-muted-foreground">
             {t(stageInfo.whisper)}
           </p>
           <div className="mb-2.5 flex items-baseline gap-2">
-            <span className="text-[22px] font-semibold tabular-nums text-foreground">{score}</span>
-            <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+            <span className="text-[23px] font-semibold tabular-nums text-foreground">{score}</span>
+            <span className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
               {t("Expansion Index")}
             </span>
             {mirror && mirror.delta !== 0 && (
               <span
-                className="ml-auto flex items-center gap-0.5 text-[11px] font-medium tabular-nums"
+                className="ml-auto flex items-center gap-0.5 text-[12px] font-medium tabular-nums"
                 style={{ color: mirror.delta > 0 ? "#34d399" : "#f87171" }}
               >
                 <TrendingUp
@@ -149,7 +149,7 @@ export function ExpansionRing() {
               setOpen(false);
               openProfilePage();
             }}
-            className="focus-glow flex w-full items-center justify-center gap-1.5 rounded-xl border px-3 py-2 text-[11.5px] font-medium transition-colors"
+            className="focus-glow flex w-full items-center justify-center gap-1.5 rounded-xl border px-3 py-2 text-[12.5px] font-medium transition-colors"
             style={{
               borderColor: `color-mix(in srgb, ${hue} 45%, transparent)`,
               color: hue,
@@ -172,8 +172,8 @@ function SignalBar({ label, value, hue }: { label: string; value: number; hue: s
   return (
     <div>
       <div className="mb-1 flex items-center justify-between gap-2">
-        <span className="text-[11px] text-muted-foreground">{label}</span>
-        <span className="text-[10.5px] font-medium tabular-nums" style={{ color: hue }}>
+        <span className="text-[12px] text-muted-foreground">{label}</span>
+        <span className="text-[11.5px] font-medium tabular-nums" style={{ color: hue }}>
           {pct}%
         </span>
       </div>
@@ -233,24 +233,24 @@ export function ExpansionMirrorPanel() {
             />
           </svg>
           <div className="text-center">
-            <p className="text-[26px] font-semibold leading-none tabular-nums text-foreground">
+            <p className="text-[27px] font-semibold leading-none tabular-nums text-foreground">
               {ready ? score : "—"}
             </p>
-            <p className="mt-0.5 text-[8.5px] uppercase tracking-[0.2em] text-muted-foreground">
+            <p className="mt-0.5 text-[9.5px] uppercase tracking-[0.2em] text-muted-foreground">
               {t("Expansion Index")}
             </p>
           </div>
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className="text-[15px] font-semibold" style={{ color: hue }}>
+          <p className="text-[16px] font-semibold" style={{ color: hue }}>
             {t(stageInfo.name)}
           </p>
-          <p className="mt-1 font-serif text-[13px] italic leading-relaxed text-muted-foreground">
+          <p className="mt-1 font-serif text-[14px] italic leading-relaxed text-muted-foreground">
             {t(stageInfo.whisper)}
           </p>
           {mirror && mirror.delta !== 0 && (
-            <p className="mt-2 flex items-center gap-1 text-[12px] font-medium" style={{ color: mirror.delta > 0 ? "#34d399" : "#f87171" }}>
+            <p className="mt-2 flex items-center gap-1 text-[13px] font-medium" style={{ color: mirror.delta > 0 ? "#34d399" : "#f87171" }}>
               <TrendingUp
                 className={cn("size-3.5", mirror.delta < 0 && "rotate-180")}
                 aria-hidden="true"
@@ -259,7 +259,7 @@ export function ExpansionMirrorPanel() {
               {mirror.delta} {t("since your last reading — the tree grew")}
             </p>
           )}
-          <p className="mt-2 text-[11.5px] leading-relaxed text-muted-foreground/80">
+          <p className="mt-2 text-[12.5px] leading-relaxed text-muted-foreground/80">
             {t(
               "Every branch you follow feeds this mirror — the algorithm studies your continuations and reflects your progression back to you."
             )}
@@ -274,7 +274,7 @@ export function ExpansionMirrorPanel() {
             <SignalBar key={k} label={t(SIGNAL_LABELS[k])} value={mirror.signals[k]} hue={hue} />
           ))
         ) : (
-          <p className="text-[12px] text-muted-foreground sm:col-span-2">
+          <p className="text-[13px] text-muted-foreground sm:col-span-2">
             {t(
               "The mirror waits for your first branches — pick a whisper from the living tree and the study begins."
             )}
@@ -283,7 +283,7 @@ export function ExpansionMirrorPanel() {
       </div>
 
       {mirror && (
-        <div className="mt-5 flex flex-wrap gap-x-5 gap-y-1.5 border-t pt-3.5 text-[11px] text-muted-foreground hairline" style={{ borderTopColor: `color-mix(in srgb, ${hue} 18%, transparent)` }}>
+        <div className="mt-5 flex flex-wrap gap-x-5 gap-y-1.5 border-t pt-3.5 text-[12px] text-muted-foreground hairline" style={{ borderTopColor: `color-mix(in srgb, ${hue} 18%, transparent)` }}>
           <span>
             {t("Branches followed")}:{" "}
             <span className="font-medium tabular-nums text-foreground">{mirror.totalPicks}</span>

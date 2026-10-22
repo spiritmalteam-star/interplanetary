@@ -108,7 +108,7 @@ export function AuthModal() {
   const fieldShell =
     "mt-1.5 flex h-11 w-full items-center gap-2.5 rounded-xl border hairline bg-[var(--glass-bg)] px-3 transition-colors duration-300 focus-within:border-[var(--hairline-active)]";
   const fieldInput =
-    "min-w-0 flex-1 bg-transparent text-[14px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none";
+    "min-w-0 flex-1 bg-transparent text-[15px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none";
 
   return (
     <ModalShell
@@ -142,7 +142,7 @@ export function AuthModal() {
             height={30}
             className="size-[30px] rounded-full opacity-90 dark:hidden"
           />
-          <span className="font-[family-name:Cinzel] text-[13px] tracking-[0.22em] text-foreground/85">
+          <span className="font-[family-name:Cinzel] text-[14px] tracking-[0.22em] text-foreground/85">
             reflectme.space
           </span>
         </div>
@@ -158,7 +158,7 @@ export function AuthModal() {
               onClick={() => setTab(k)}
               data-testid={`auth-tab-${k}`}
               className={cn(
-                "focus-glow h-9 flex-1 rounded-full text-[13px] font-medium transition-all duration-300",
+                "focus-glow h-9 flex-1 rounded-full text-[14px] font-medium transition-all duration-300",
                 tab === k
                   ? "bg-foreground text-background shadow-[0_2px_10px_-6px_rgba(0,0,0,0.6)]"
                   : "text-muted-foreground hover:text-foreground"
@@ -178,7 +178,7 @@ export function AuthModal() {
         >
           {tab === "register" && (
             <div>
-              <label htmlFor="passage-name" className="mono-label text-[9.5px] uppercase tracking-[0.22em] text-muted-foreground">
+              <label htmlFor="passage-name" className="mono-label text-[10.5px] uppercase tracking-[0.22em] text-muted-foreground">
                 {t("A name (or none)")}
               </label>
               <div className={fieldShell}>
@@ -194,7 +194,7 @@ export function AuthModal() {
             </div>
           )}
           <div>
-            <label htmlFor="passage-email" className="mono-label text-[9.5px] uppercase tracking-[0.22em] text-muted-foreground">
+            <label htmlFor="passage-email" className="mono-label text-[10.5px] uppercase tracking-[0.22em] text-muted-foreground">
               {t("Email")}
             </label>
             <div className={fieldShell}>
@@ -213,7 +213,7 @@ export function AuthModal() {
             </div>
           </div>
           <div>
-            <label htmlFor="passage-password" className="mono-label text-[9.5px] uppercase tracking-[0.22em] text-muted-foreground">
+            <label htmlFor="passage-password" className="mono-label text-[10.5px] uppercase tracking-[0.22em] text-muted-foreground">
               {t("Secret phrase")}
             </label>
             <div className={cn(fieldShell, "pr-1.5")}>
@@ -246,7 +246,7 @@ export function AuthModal() {
               </button>
             </div>
             {tab === "register" && (
-              <p className="mt-1.5 text-[12px] leading-relaxed text-muted-foreground">
+              <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">
                 {t("Eight characters or more. The laboratory never sees it — only its echo, hashed beyond reading.")}
               </p>
             )}
@@ -256,7 +256,7 @@ export function AuthModal() {
             type="submit"
             disabled={busy || !email.trim() || !password}
             data-testid="passage-submit"
-            className="focus-glow flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-foreground text-[13.5px] font-medium text-background transition-all duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0"
+            className="focus-glow flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-foreground text-[14.5px] font-medium text-background transition-all duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0"
           >
             {busy ? (
               <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
@@ -275,7 +275,7 @@ export function AuthModal() {
               "Your settings travel with your passage",
               "Everything you make stays yours",
             ].map((line) => (
-              <li key={line} className="flex items-start gap-2 text-[12px] leading-relaxed text-muted-foreground">
+              <li key={line} className="flex items-start gap-2 text-[13px] leading-relaxed text-muted-foreground">
                 <span aria-hidden="true" className="mt-[7px] size-1 shrink-0 rotate-45 bg-[#e8d9b0]" />
                 <span>{t(line)}</span>
               </li>
@@ -286,7 +286,7 @@ export function AuthModal() {
         {/* the Google passage */}
         <div className="mt-4 flex items-center gap-3">
           <span className="h-px flex-1 bg-[var(--hairline)]" aria-hidden="true" />
-          <span className="mono-label text-[9px] uppercase tracking-[0.22em] text-muted-foreground/70">
+          <span className="mono-label text-[10px] uppercase tracking-[0.22em] text-muted-foreground/70">
             {t("or")}
           </span>
           <span className="h-px flex-1 bg-[var(--hairline)]" aria-hidden="true" />
@@ -295,7 +295,7 @@ export function AuthModal() {
           type="button"
           onClick={google}
           data-testid="passage-google"
-          className="focus-glow mt-3 flex h-11 w-full items-center justify-center gap-2.5 rounded-xl border hairline text-[13.5px] font-medium text-foreground/85 transition-all duration-300 hover:border-[var(--hairline-hover)] hover:bg-[var(--glass-bg)]"
+          className="focus-glow mt-3 flex h-11 w-full items-center justify-center gap-2.5 rounded-xl border hairline text-[14.5px] font-medium text-foreground/85 transition-all duration-300 hover:border-[var(--hairline-hover)] hover:bg-[var(--glass-bg)]"
         >
           <svg viewBox="0 0 24 24" className="size-4" aria-hidden="true">
             <path fill="currentColor" d="M21.35 11.1h-9.17v2.73h6.51c-.33 3.81-3.5 5.44-6.5 5.44C8.36 19.27 5 16.25 5 12c0-4.1 3.2-7.27 7.2-7.27 3.09 0 4.9 1.97 4.9 1.97L19 4.72S16.56 2 12.1 2C6.42 2 2.03 6.8 2.03 12c0 5.05 4.13 10 10.22 10 5.35 0 9.25-3.67 9.25-9.09 0-1.15-.15-1.81-.15-1.81Z" />
@@ -304,7 +304,7 @@ export function AuthModal() {
         </button>
 
         {/* the secret hand's own whisper — one quiet line at the foot */}
-        <p className="mt-3 text-center text-[10.5px] italic leading-relaxed text-muted-foreground/70">
+        <p className="mt-3 text-center text-[11.5px] italic leading-relaxed text-muted-foreground/70">
           {t("In a hurry? Rest your finger here for four seconds — a wanderer's passage opens by itself.")}
         </p>
       </div>

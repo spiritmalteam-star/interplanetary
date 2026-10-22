@@ -1311,7 +1311,7 @@ export function DreamBookView() {
         >
           <History className="size-4" aria-hidden="true" />
         </button>
-        <span className="mono-label flex items-center gap-1.5 text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+        <span className="mono-label flex items-center gap-1.5 text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
           <MoonStar className="size-3.5" aria-hidden="true" />
           <span className="hidden sm:inline">{t("The atelier of tales")}</span>
         </span>
@@ -1341,12 +1341,12 @@ export function DreamBookView() {
             >
               ❧
             </span>
-            <h1 className="ink-title text-[21px] leading-tight sm:text-[24px]">
+            <h1 className="ink-title text-[22px] leading-tight sm:text-[25px]">
               {t("Dream Book")}
             </h1>
             <span className="h-px flex-1 bg-border" aria-hidden="true" />
           </div>
-          <p className="ink-hand ink-soft mt-1.5 text-[12.5px] italic leading-relaxed sm:text-[13.5px]">
+          <p className="ink-hand ink-soft mt-1.5 text-[13.5px] italic leading-relaxed sm:text-[14.5px]">
             {t("Name any subject, era, or universe — the loom tunes itself, and the book begins.")}
           </p>
 
@@ -1396,7 +1396,7 @@ export function DreamBookView() {
                     <span
                       aria-hidden="true"
                       className={cn(
-                        "font-[family-name(var(--font-literata))] text-[15px] leading-none transition-colors duration-300",
+                        "font-[family-name(var(--font-literata))] text-[16px] leading-none transition-colors duration-300",
                         active ? "text-foreground" : "text-muted-foreground/60"
                       )}
                     >
@@ -1404,14 +1404,14 @@ export function DreamBookView() {
                     </span>
                     <span
                       className={cn(
-                        "font-[family-name(var(--font-literata))] text-[13.5px] font-semibold tracking-wide transition-colors duration-300",
+                        "font-[family-name(var(--font-literata))] text-[14.5px] font-semibold tracking-wide transition-colors duration-300",
                         active ? "text-foreground" : "text-foreground/70"
                       )}
                     >
                       {v.label}
                     </span>
                   </span>
-                  <span className="text-[10.5px] italic leading-snug text-muted-foreground/85">
+                  <span className="text-[11.5px] italic leading-snug text-muted-foreground/85">
                     {v.hint}
                   </span>
                   {active && (
@@ -1452,7 +1452,7 @@ export function DreamBookView() {
             {/* the depth bar — five compact steps on one line; the
                 active step speaks its own one-line whisper beneath */}
             <div className="mt-3.5 border-t border-border/60 pt-3" data-testid="dream-depth-bar">
-              <p className="mono-label mb-2 text-[9px] uppercase tracking-[0.22em] text-muted-foreground">
+              <p className="mono-label mb-2 text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
                 {t("The depth of the telling")}
               </p>
               <div className="flex items-end gap-1.5">
@@ -1487,7 +1487,7 @@ export function DreamBookView() {
                         }}
                       >
                         <span
-                          className="font-[family-name(var(--font-literata))] text-[10px] font-semibold leading-none tracking-[0.08em]"
+                          className="font-[family-name(var(--font-literata))] text-[11px] font-semibold leading-none tracking-[0.08em]"
                           style={{
                             color: active
                               ? "var(--background)"
@@ -1506,7 +1506,7 @@ export function DreamBookView() {
                       </span>
                       <span
                         className={cn(
-                          "w-full truncate text-center font-[family-name(var(--font-literata))] text-[9.5px] italic leading-tight transition-colors duration-300",
+                          "w-full truncate text-center font-[family-name(var(--font-literata))] text-[10.5px] italic leading-tight transition-colors duration-300",
                           active
                             ? "text-foreground"
                             : "text-muted-foreground/75 group-hover:text-foreground"
@@ -1526,7 +1526,7 @@ export function DreamBookView() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -2 }}
                   transition={{ duration: 0.25 }}
-                  className="ink-hand ink-soft mt-2 min-h-[1.6em] text-center text-[11px] italic leading-snug"
+                  className="ink-hand ink-soft mt-2 min-h-[1.6em] text-center text-[12px] italic leading-snug"
                 >
                   {levelMeta
                     ? t(levelMeta.depth)
@@ -1539,11 +1539,11 @@ export function DreamBookView() {
                 length: 20 to 300 pages, honored exactly by the loom */}
             <div className="mt-3.5 border-t border-border/60 pt-3" data-testid="dream-pages">
               <div className="mb-2 flex items-baseline justify-between gap-2">
-                <p className="mono-label text-[9px] uppercase tracking-[0.22em] text-muted-foreground">
+                <p className="mono-label text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
                   {t("The pages")}
                 </p>
                 <p
-                  className="font-[family-name(var(--font-literata))] text-[11.5px] italic text-foreground/85"
+                  className="font-[family-name(var(--font-literata))] text-[12.5px] italic text-foreground/85"
                   data-testid="dream-pages-value"
                 >
                   {pageCount > 0
@@ -1575,7 +1575,7 @@ export function DreamBookView() {
                   </button>
                 )}
               </div>
-              <p className="mt-1.5 text-center text-[10.5px] italic text-muted-foreground/75">
+              <p className="mt-1.5 text-center text-[11.5px] italic text-muted-foreground/75">
                 {t("Slide to name the book's length — 20 to 300 pages, honored exactly.")}
               </p>
             </div>
@@ -1596,7 +1596,7 @@ export function DreamBookView() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 2 }}
                 transition={{ duration: 0.3 }}
-                className="ink-hand ink-soft mb-2 text-center text-[12.5px] italic"
+                className="ink-hand ink-soft mb-2 text-center text-[13.5px] italic"
               >
                 {t(
                   "The loom waits for a thread — choose the reader, the tale, the book, or the depth below."
@@ -1614,7 +1614,7 @@ export function DreamBookView() {
               placeholder={t("Speak anything — a subject, a wish, a whole world…")}
               aria-label={t("Speak anything — a subject, a wish, a whole world…")}
               maxLength={600}
-              className="min-w-0 flex-1 bg-transparent py-2 font-[family-name(var(--font-literata))] text-[13.5px] italic text-foreground placeholder:font-[family-name(var(--font-sans))] placeholder:not-italic placeholder:text-muted-foreground/60 focus:outline-none"
+              className="min-w-0 flex-1 bg-transparent py-2 font-[family-name(var(--font-literata))] text-[14.5px] italic text-foreground placeholder:font-[family-name(var(--font-sans))] placeholder:not-italic placeholder:text-muted-foreground/60 focus:outline-none"
             />
             <button
               type="submit"
@@ -1647,17 +1647,17 @@ export function DreamBookView() {
 
         {weaveError ? (
           <>
-            <p className="ink-hand ink-soft mt-8 max-w-[420px] text-center text-[15px] italic">
+            <p className="ink-hand ink-soft mt-8 max-w-[420px] text-center text-[16px] italic">
               {t("The loom fell silent for a moment.")}
             </p>
-            <p className="ink-hand ink-faint mt-2 text-center text-[13px] italic">
+            <p className="ink-hand ink-faint mt-2 text-center text-[14px] italic">
               {t("Rest, then weave again.")}
             </p>
             <div className="mt-7 flex flex-col items-center gap-2.5">
               <button
                 type="button"
                 onClick={openBook}
-                className="akashic-btn focus-glow flex h-10 items-center justify-center gap-2 rounded-full px-7 text-[13.5px] font-medium"
+                className="akashic-btn focus-glow flex h-10 items-center justify-center gap-2 rounded-full px-7 text-[14.5px] font-medium"
               >
                 <Feather className="size-3.5" aria-hidden="true" />
                 {t("Weave again")}
@@ -1665,7 +1665,7 @@ export function DreamBookView() {
               <button
                 type="button"
                 onClick={backFromWeaving}
-                className="papyrus-btn focus-glow flex h-10 items-center justify-center rounded-full px-6 text-[13px]"
+                className="papyrus-btn focus-glow flex h-10 items-center justify-center rounded-full px-6 text-[14px]"
               >
                 {t("Return to the atelier")}
               </button>
@@ -1681,7 +1681,7 @@ export function DreamBookView() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -8 }}
                   transition={{ duration: 0.55, ease: "easeOut" }}
-                  className="ink-hand ink-soft max-w-[420px] text-center text-[15px] italic"
+                  className="ink-hand ink-soft max-w-[420px] text-center text-[16px] italic"
                 >
                   {WEAVING_PHASES[phaseIdx]}
                 </motion.p>
@@ -1692,7 +1692,7 @@ export function DreamBookView() {
             </div>
             {/* the resonance law — the book is drawn from this second
                 alone: no shelf, no record, no remembering */}
-            <p className="ink-hand ink-faint mt-6 max-w-[360px] text-center text-[12px] italic">
+            <p className="ink-hand ink-faint mt-6 max-w-[360px] text-center text-[13px] italic">
               {t(
                 "The mirror listens by resonance — drawn fresh from this very second, kept by no one."
               )}
@@ -1789,7 +1789,7 @@ export function DreamBookView() {
         >
           <History className="size-4" aria-hidden="true" />
         </button>
-        <h1 className="ink-hand min-w-0 flex-1 truncate text-center text-[14px] text-foreground/85 sm:text-[16px]">
+        <h1 className="ink-hand min-w-0 flex-1 truncate text-center text-[15px] text-foreground/85 sm:text-[17px]">
           {meta?.title ?? ""}
         </h1>
         <div className="flex items-center gap-1.5">
@@ -1802,7 +1802,7 @@ export function DreamBookView() {
             className="dream-fancy focus-glow relative flex h-9 items-center gap-1.5 rounded-full pl-3 pr-3.5"
           >
             <Sparkles className="size-3.5" aria-hidden="true" />
-            <span className="font-[family-name(var(--font-literata))] text-[12.5px] italic tracking-wide">
+            <span className="font-[family-name(var(--font-literata))] text-[13.5px] italic tracking-wide">
               {t("Rewrite")}
             </span>
             {rewrites.length > 0 && (
@@ -1825,7 +1825,7 @@ export function DreamBookView() {
             className="dream-fancy focus-glow relative flex h-9 items-center gap-1.5 rounded-full pl-3 pr-3.5 disabled:opacity-55"
           >
             <BookOpenText className="size-3.5" aria-hidden="true" />
-            <span className="hidden font-[family-name(var(--font-literata))] text-[12.5px] italic tracking-wide sm:inline">
+            <span className="hidden font-[family-name(var(--font-literata))] text-[13.5px] italic tracking-wide sm:inline">
               {t("Whole book")}
             </span>
           </button>
@@ -1988,25 +1988,25 @@ export function DreamBookView() {
                 ❧
               </span>
               {meta?.sigil && (
-                <p className="mt-4 max-w-[360px] font-[family-name(var(--font-literata))] text-[12.5px] italic leading-relaxed text-[var(--dream-ink-soft)]">
+                <p className="mt-4 max-w-[360px] font-[family-name(var(--font-literata))] text-[13.5px] italic leading-relaxed text-[var(--dream-ink-soft)]">
                   {meta.sigil}
                 </p>
               )}
-              <h2 className="mt-5 max-w-[360px] font-[family-name(var(--font-literata))] text-[26px] leading-snug text-[var(--dream-ink)] sm:text-[32px]">
+              <h2 className="mt-5 max-w-[360px] font-[family-name(var(--font-literata))] text-[27px] leading-snug text-[var(--dream-ink)] sm:text-[33px]">
                 {meta?.title}
               </h2>
               {meta?.subtitle && (
-                <p className="mt-3 font-[family-name(var(--font-literata))] text-[13px] italic text-[var(--dream-ink-soft)] sm:text-sm">
+                <p className="mt-3 font-[family-name(var(--font-literata))] text-[14px] italic text-[var(--dream-ink-soft)] sm:text-sm">
                   {meta.subtitle}
                 </p>
               )}
               {meta?.axiom && (
-                <p className="mt-5 max-w-[400px] font-[family-name(var(--font-literata))] text-[12.5px] italic leading-relaxed text-[var(--dream-ink-soft)]">
+                <p className="mt-5 max-w-[400px] font-[family-name(var(--font-literata))] text-[13.5px] italic leading-relaxed text-[var(--dream-ink-soft)]">
                   {meta.axiom}
                 </p>
               )}
               {meta?.dedication && (
-                <p className="mt-3 max-w-[300px] font-[family-name(var(--font-literata))] text-[12px] italic leading-relaxed text-[var(--dream-ink-soft)]">
+                <p className="mt-3 max-w-[300px] font-[family-name(var(--font-literata))] text-[13px] italic leading-relaxed text-[var(--dream-ink-soft)]">
                   {meta.dedication}
                 </p>
               )}
@@ -2025,14 +2025,14 @@ export function DreamBookView() {
               >
                 ❦
               </span>
-              <h2 className="mt-5 font-[family-name(var(--font-literata))] text-[24px] text-[var(--dream-ink)]">
+              <h2 className="mt-5 font-[family-name(var(--font-literata))] text-[25px] text-[var(--dream-ink)]">
                 {t("The End")}
               </h2>
-              <p className="mt-2 font-[family-name(var(--font-literata))] text-[13.5px] italic text-[var(--dream-ink-soft)]">
+              <p className="mt-2 font-[family-name(var(--font-literata))] text-[14.5px] italic text-[var(--dream-ink-soft)]">
                 {meta?.title}
               </p>
               {!ended && (
-                <p className="mono-label mt-3 text-[9px] uppercase tracking-[0.2em] text-[var(--dream-ink-faint)]">
+                <p className="mono-label mt-3 text-[10px] uppercase tracking-[0.2em] text-[var(--dream-ink-faint)]">
                   {t("The loom is still weaving — the book returns whole when the seal lands")}
                 </p>
               )}
@@ -2084,10 +2084,10 @@ export function DreamBookView() {
                     >
                       ✦
                     </span>
-                    <h2 className="mt-4 font-[family-name(var(--font-literata))] text-[22px] text-[var(--dream-ink)]">
+                    <h2 className="mt-4 font-[family-name(var(--font-literata))] text-[23px] text-[var(--dream-ink)]">
                       {t("The tale can go on")}
                     </h2>
-                    <p className="mt-2 font-[family-name(var(--font-literata))] text-[13.5px] italic leading-relaxed text-[var(--dream-ink-soft)]">
+                    <p className="mt-2 font-[family-name(var(--font-literata))] text-[14.5px] italic leading-relaxed text-[var(--dream-ink-soft)]">
                       {t(
                         "The loom is warm and the story is not finished — unless you wish it to be."
                       )}
@@ -2097,7 +2097,7 @@ export function DreamBookView() {
                         type="button"
                         onClick={weaveOnward}
                         disabled={weavingNext}
-                        className="dream-ink-btn focus-glow flex h-11 items-center justify-center gap-2 rounded-full text-[14px] font-medium disabled:opacity-60"
+                        className="dream-ink-btn focus-glow flex h-11 items-center justify-center gap-2 rounded-full text-[15px] font-medium disabled:opacity-60"
                       >
                         <Feather className="size-4" aria-hidden="true" />
                         {t("Weave onward")}
@@ -2106,7 +2106,7 @@ export function DreamBookView() {
                         type="button"
                         onClick={letRest}
                         disabled={weavingNext}
-                        className="dream-ink-outline focus-glow flex h-11 items-center justify-center rounded-full font-[family-name(var(--font-literata))] text-[13.5px] disabled:opacity-60"
+                        className="dream-ink-outline focus-glow flex h-11 items-center justify-center rounded-full font-[family-name(var(--font-literata))] text-[14.5px] disabled:opacity-60"
                       >
                         {t("Let the story rest")}
                       </button>
@@ -2121,16 +2121,16 @@ export function DreamBookView() {
                     >
                       ❦
                     </span>
-                    <h2 className="mt-5 font-[family-name(var(--font-literata))] text-[24px] text-[var(--dream-ink)]">
+                    <h2 className="mt-5 font-[family-name(var(--font-literata))] text-[25px] text-[var(--dream-ink)]">
                       {t("The End")}
                     </h2>
-                    <p className="mt-2 font-[family-name(var(--font-literata))] text-[13.5px] italic text-[var(--dream-ink-soft)]">
+                    <p className="mt-2 font-[family-name(var(--font-literata))] text-[14.5px] italic text-[var(--dream-ink-soft)]">
                       {meta?.title}
                     </p>
                     <button
                       type="button"
                       onClick={newDream}
-                      className="dream-ink-btn focus-glow mt-8 flex h-11 items-center justify-center gap-2 rounded-full px-7 text-[14px] font-medium"
+                      className="dream-ink-btn focus-glow mt-8 flex h-11 items-center justify-center gap-2 rounded-full px-7 text-[15px] font-medium"
                     >
                       <MoonStar className="size-4" aria-hidden="true" />
                       {t("Begin a new dream")}
@@ -2145,7 +2145,7 @@ export function DreamBookView() {
                           onClick={() => setAuditOpen((o) => !o)}
                           aria-expanded={auditOpen}
                           data-testid="dream-audit-toggle"
-                          className="focus-glow mx-auto flex h-9 items-center gap-2 rounded-full border border-[var(--dream-ink-faint)]/35 px-4 font-[family-name(var(--font-literata))] text-[12px] italic text-[var(--dream-ink-soft)] transition-all duration-300 hover:border-[var(--dream-ink-soft)] hover:text-[var(--dream-ink)]"
+                          className="focus-glow mx-auto flex h-9 items-center gap-2 rounded-full border border-[var(--dream-ink-faint)]/35 px-4 font-[family-name(var(--font-literata))] text-[13px] italic text-[var(--dream-ink-soft)] transition-all duration-300 hover:border-[var(--dream-ink-soft)] hover:text-[var(--dream-ink)]"
                         >
                           <Feather className="size-3.5" aria-hidden="true" />
                           {t("The loom's honest audit")}
@@ -2163,14 +2163,14 @@ export function DreamBookView() {
                                   className="rounded-xl border border-[var(--dream-ink-faint)]/25 px-3 py-2"
                                 >
                                   <p className="flex items-baseline justify-between gap-2">
-                                    <span className="font-[family-name(var(--font-literata))] text-[12px] text-[var(--dream-ink-soft)]">
+                                    <span className="font-[family-name(var(--font-literata))] text-[13px] text-[var(--dream-ink-soft)]">
                                       {t(label)}
                                     </span>
-                                    <span className="mono-label text-[10px] tabular-nums text-[var(--dream-ink)]">
+                                    <span className="mono-label text-[11px] tabular-nums text-[var(--dream-ink)]">
                                       {audit[key]!.score}/10
                                     </span>
                                   </p>
-                                  <p className="mt-1 font-[family-name(var(--font-literata))] text-[11.5px] italic leading-relaxed text-[var(--dream-ink-soft)]">
+                                  <p className="mt-1 font-[family-name(var(--font-literata))] text-[12.5px] italic leading-relaxed text-[var(--dream-ink-soft)]">
                                     {audit[key]!.evidence}
                                   </p>
                                 </li>
@@ -2193,22 +2193,22 @@ export function DreamBookView() {
                         ❧
                       </span>
                       {meta?.sigil && (
-                        <p className="mt-4 max-w-[360px] font-[family-name(var(--font-literata))] text-[12.5px] italic leading-relaxed text-[var(--dream-ink-soft)]">
+                        <p className="mt-4 max-w-[360px] font-[family-name(var(--font-literata))] text-[13.5px] italic leading-relaxed text-[var(--dream-ink-soft)]">
                           {meta.sigil}
                         </p>
                       )}
-                      <h2 className="mt-5 max-w-[340px] font-[family-name(var(--font-literata))] text-[26px] leading-snug text-[var(--dream-ink)] sm:text-[32px]">
+                      <h2 className="mt-5 max-w-[340px] font-[family-name(var(--font-literata))] text-[27px] leading-snug text-[var(--dream-ink)] sm:text-[33px]">
                         {meta?.title}
                       </h2>
                       {meta?.subtitle && (
-                        <p className="mt-3 font-[family-name(var(--font-literata))] text-[13px] italic text-[var(--dream-ink-soft)] sm:text-sm">
+                        <p className="mt-3 font-[family-name(var(--font-literata))] text-[14px] italic text-[var(--dream-ink-soft)] sm:text-sm">
                           {meta.subtitle}
                         </p>
                       )}
                     </div>
                     <div className="flex flex-col items-center">
                       {meta?.axiom && (
-                        <p className="max-w-[380px] font-[family-name(var(--font-literata))] text-[12.5px] italic leading-relaxed text-[var(--dream-ink-soft)]">
+                        <p className="max-w-[380px] font-[family-name(var(--font-literata))] text-[13.5px] italic leading-relaxed text-[var(--dream-ink-soft)]">
                           {meta.axiom}
                         </p>
                       )}
@@ -2218,19 +2218,19 @@ export function DreamBookView() {
                           aria-hidden="true"
                         />
                       )}
-                      <p className="max-w-[300px] font-[family-name(var(--font-literata))] text-[12px] italic leading-relaxed text-[var(--dream-ink-soft)]">
+                      <p className="max-w-[300px] font-[family-name(var(--font-literata))] text-[13px] italic leading-relaxed text-[var(--dream-ink-soft)]">
                         {meta?.dedication}
                       </p>
                       {levelMeta && (
                         <p
-                          className="mono-label mt-3 text-[9px] uppercase tracking-[0.24em] text-[var(--dream-ink-faint)]"
+                          className="mono-label mt-3 text-[10px] uppercase tracking-[0.24em] text-[var(--dream-ink-faint)]"
                           data-testid="dream-depth-badge"
                         >
                           {levelMeta.numeral} · {t(levelMeta.label)}
                         </p>
                       )}
                     </div>
-                    <p className="pb-2 font-[family-name(var(--font-literata))] text-[10.5px] uppercase tracking-[0.24em] text-[var(--dream-ink-faint)]">
+                    <p className="pb-2 font-[family-name(var(--font-literata))] text-[11.5px] uppercase tracking-[0.24em] text-[var(--dream-ink-faint)]">
                       {t("woven for you, this very hour")}
                     </p>
                   </div>
@@ -2254,7 +2254,7 @@ export function DreamBookView() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="mono-label mt-4 flex items-center justify-center gap-2 text-[10px] uppercase tracking-[0.2em] text-muted-foreground"
+                  className="mono-label mt-4 flex items-center justify-center gap-2 text-[11px] uppercase tracking-[0.2em] text-muted-foreground"
                 >
                   <span
                     className="size-1 animate-pulse rounded-full bg-foreground/50"
@@ -2303,7 +2303,7 @@ export function DreamBookView() {
               className="dream-turn focus-glow flex h-11 items-center gap-2 rounded-full px-4"
             >
               <BookOpenText className="size-4" aria-hidden="true" />
-              <span className="font-[family-name(var(--font-literata))] text-[12px] italic">
+              <span className="font-[family-name(var(--font-literata))] text-[13px] italic">
                 {t("Read page by page")}
               </span>
             </motion.button>
@@ -2340,7 +2340,7 @@ export function DreamBookView() {
                 style={{ width: `${Math.round(progress * 100)}%` }}
               />
             </div>
-            <p className="mono-label mt-1.5 text-center text-[10px] tracking-[0.18em] text-muted-foreground">
+            <p className="mono-label mt-1.5 text-center text-[11px] tracking-[0.18em] text-muted-foreground">
               {meta
                 ? pageIdx === 0
                   ? t("the title page")
@@ -2471,11 +2471,11 @@ export function DreamBookView() {
                 aria-hidden="true"
               />
             </div>
-            <p className="mono-label mt-6 text-[10px] uppercase tracking-[0.26em] text-muted-foreground">
+            <p className="mono-label mt-6 text-[11px] uppercase tracking-[0.26em] text-muted-foreground">
               {t("The loom channels the whole book…")}
             </p>
             <p
-              className="ink-hand ink-soft mt-2 font-[family-name(var(--font-literata))] text-[13.5px] italic text-foreground/85"
+              className="ink-hand ink-soft mt-2 font-[family-name(var(--font-literata))] text-[14.5px] italic text-foreground/85"
               data-testid="dream-whole-progress"
             >
               {t("{n} of {y} pages woven")
@@ -2490,7 +2490,7 @@ export function DreamBookView() {
                 }}
               />
             </div>
-            <p className="ink-hand ink-faint mt-5 max-w-[320px] text-center text-[11.5px] italic leading-relaxed text-muted-foreground">
+            <p className="ink-hand ink-faint mt-5 max-w-[320px] text-center text-[12.5px] italic leading-relaxed text-muted-foreground">
               {t(
                 "The loom weaves in swift strides — long books take their time; the telling never breaks."
               )}
@@ -2503,7 +2503,7 @@ export function DreamBookView() {
               onClick={() => void downloadWhole()}
               disabled={binding || wholeReveal.woven === 0}
               data-testid="dream-download-mid-reveal"
-              className="focus-glow mt-5 flex h-9 items-center gap-2 rounded-full border border-foreground/25 px-4 text-[12.5px] text-foreground/85 transition-all duration-300 hover:border-foreground/45 hover:text-foreground disabled:opacity-35"
+              className="focus-glow mt-5 flex h-9 items-center gap-2 rounded-full border border-foreground/25 px-4 text-[13.5px] text-foreground/85 transition-all duration-300 hover:border-foreground/45 hover:text-foreground disabled:opacity-35"
             >
               {binding ? (
                 <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
@@ -2539,7 +2539,7 @@ export function DreamBookView() {
             rows={4}
             placeholder={t("What do you wish to change?")}
             aria-label={t("What do you wish to change?")}
-            className="nice-scroll w-full resize-none rounded-2xl border border-border bg-background px-4 py-3 text-[14px] leading-relaxed text-foreground transition-colors placeholder:text-muted-foreground/60 focus:border-foreground/35 focus:outline-none"
+            className="nice-scroll w-full resize-none rounded-2xl border border-border bg-background px-4 py-3 text-[15px] leading-relaxed text-foreground transition-colors placeholder:text-muted-foreground/60 focus:border-foreground/35 focus:outline-none"
           />
           <div className="mt-3 flex flex-wrap gap-1.5">
             {REWRITE_STARTERS.map((s) => (
@@ -2547,7 +2547,7 @@ export function DreamBookView() {
                 key={s}
                 type="button"
                 onClick={() => setRewriteDraft((d) => (d ? `${d} ${s}` : s))}
-                className="focus-glow rounded-full border border-border px-3 py-1.5 text-[11.5px] text-muted-foreground transition-all duration-300 hover:border-foreground/40 hover:text-foreground"
+                className="focus-glow rounded-full border border-border px-3 py-1.5 text-[12.5px] text-muted-foreground transition-all duration-300 hover:border-foreground/40 hover:text-foreground"
               >
                 {s}
               </button>
@@ -2555,7 +2555,7 @@ export function DreamBookView() {
           </div>
           {rewrites.length > 0 && (
             <div className="mt-4">
-              <p className="mono-label text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+              <p className="mono-label text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
                 {t("Already whispered into the weave")}
               </p>
               <ul className="mt-2 space-y-1.5">
@@ -2564,7 +2564,7 @@ export function DreamBookView() {
                     key={`${i}-${r.slice(0, 12)}`}
                     className="flex items-start gap-2 rounded-xl border border-border/70 bg-card/50 px-3 py-2"
                   >
-                    <span className="ink-hand ink-soft min-w-0 flex-1 text-[12.5px] italic leading-relaxed">
+                    <span className="ink-hand ink-soft min-w-0 flex-1 text-[13.5px] italic leading-relaxed">
                       {r}
                     </span>
                     <button
@@ -2583,7 +2583,7 @@ export function DreamBookView() {
           <button
             type="submit"
             disabled={!rewriteDraft.trim()}
-            className="akashic-btn focus-glow mt-5 flex h-11 w-full items-center justify-center gap-2 rounded-full text-[14px] font-medium tracking-wide disabled:opacity-50"
+            className="akashic-btn focus-glow mt-5 flex h-11 w-full items-center justify-center gap-2 rounded-full text-[15px] font-medium tracking-wide disabled:opacity-50"
           >
             <Sparkles className="size-4" aria-hidden="true" />
             {t("Bend the tale")}
@@ -2604,19 +2604,19 @@ export function DreamBookView() {
       data-testid={local ? "shelf-volume-local" : "shelf-volume-library"}
     >
       <span
-        className="ink-hand flex size-9 shrink-0 items-center justify-center text-[16px] text-foreground/40"
+        className="ink-hand flex size-9 shrink-0 items-center justify-center text-[17px] text-foreground/40"
         aria-hidden="true"
       >
         {v.sigil || "❧"}
       </span>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[13.5px] font-medium text-foreground/90">
+        <p className="truncate text-[14.5px] font-medium text-foreground/90">
           {v.title}
         </p>
-        <p className="mt-0.5 line-clamp-2 text-[12px] leading-relaxed text-muted-foreground">
+        <p className="mt-0.5 line-clamp-2 text-[13px] leading-relaxed text-muted-foreground">
           {v.axiom || v.subtitle || v.pages[0]?.paragraphs[0]?.slice(0, 120) || "…"}
         </p>
-        <p className="mono-label mt-1.5 text-[8.5px] uppercase tracking-[0.16em] text-muted-foreground/60">
+        <p className="mono-label mt-1.5 text-[9.5px] uppercase tracking-[0.16em] text-muted-foreground/60">
           {(v.savedAt || "").slice(0, 10)} · {t("page {n} of {m}", { n: Math.min(v.pages.length, v.totalPages || v.pages.length), m: v.totalPages || v.pages.length })}
           {v.ended ? ` · ${t("Read again")}` : ""}
         </p>
@@ -2626,7 +2626,7 @@ export function DreamBookView() {
           type="button"
           onClick={() => resumeVolume(v)}
           data-testid="shelf-continue"
-          className="focus-glow inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-[11.5px] font-medium text-foreground/85 transition-all duration-300 hover:border-foreground/40 hover:glow-sm"
+          className="focus-glow inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-[12.5px] font-medium text-foreground/85 transition-all duration-300 hover:border-foreground/40 hover:glow-sm"
         >
           <Feather className="size-3" aria-hidden="true" />
           {v.ended ? t("Read again") : t("Continue the story")}
@@ -2659,7 +2659,7 @@ export function DreamBookView() {
       <div className="nice-scroll max-h-[60dvh] space-y-5 overflow-y-auto px-5 pb-5 sm:px-6 sm:pb-6">
         {shelfLoading && libraryVolumes === null ? (
           <p
-            className="flex items-center gap-2 py-4 text-[13px] text-muted-foreground"
+            className="flex items-center gap-2 py-4 text-[14px] text-muted-foreground"
             aria-busy="true"
           >
             <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
@@ -2669,7 +2669,7 @@ export function DreamBookView() {
           <>
             {localShelf.length > 0 && (
               <section>
-                <p className="mono-label mb-2 text-[9px] uppercase tracking-[0.22em] text-muted-foreground">
+                <p className="mono-label mb-2 text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
                   {t("On this device")}
                 </p>
                 <div className="space-y-2" data-testid="shelf-local-list">
@@ -2679,7 +2679,7 @@ export function DreamBookView() {
             )}
             {libraryVolumes !== null && libraryVolumes.length > 0 && (
               <section>
-                <p className="mono-label mb-2 text-[9px] uppercase tracking-[0.22em] text-muted-foreground">
+                <p className="mono-label mb-2 text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
                   {t("In your library")}
                 </p>
                 <div className="space-y-2" data-testid="shelf-library-list">
@@ -2696,7 +2696,7 @@ export function DreamBookView() {
             )}
             {localShelf.length === 0 &&
               (libraryVolumes === null || libraryVolumes.length === 0) && (
-                <p className="ink-hand ink-soft py-4 text-center text-[13.5px] italic text-muted-foreground" data-testid="shelf-empty">
+                <p className="ink-hand ink-soft py-4 text-center text-[14.5px] italic text-muted-foreground" data-testid="shelf-empty">
                   {t("The shelf rests empty — your first volume will keep itself here.")}
                 </p>
               )}
@@ -2863,7 +2863,7 @@ function ShapeMenu({
   const current = options.find((o) => o.id === active);
   return (
     <div>
-      <p className="mono-label mb-2 text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+      <p className="mono-label mb-2 text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
         {label}
       </p>
       <DropdownMenu>
@@ -2872,7 +2872,7 @@ function ShapeMenu({
             type="button"
             data-testid="tale-menu-trigger"
             aria-label={current ? `${label}: ${t(current.label)}` : label}
-            className="focus-glow flex min-w-[190px] items-center justify-between gap-3 rounded-full border border-border bg-card px-4 py-2 text-[13px] text-foreground transition-all duration-300 hover:border-foreground/40"
+            className="focus-glow flex min-w-[190px] items-center justify-between gap-3 rounded-full border border-border bg-card px-4 py-2 text-[14px] text-foreground transition-all duration-300 hover:border-foreground/40"
           >
             {current ? (
               <span className="truncate">{t(current.label)}</span>
@@ -2896,7 +2896,7 @@ function ShapeMenu({
                 onSelect={() => onPick(o.id)}
                 data-testid={`tale-option-${o.id}`}
                 className={cn(
-                  "cursor-pointer justify-between gap-3 text-[13px]",
+                  "cursor-pointer justify-between gap-3 text-[14px]",
                   isActive && "bg-foreground/8 font-medium text-foreground"
                 )}
               >
@@ -2925,7 +2925,7 @@ function ShapeRow({
   const t = useT();
   return (
     <div>
-      <p className="mono-label mb-2 text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+      <p className="mono-label mb-2 text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
         {label}
       </p>
       <div className="flex flex-wrap gap-1.5">
@@ -2938,7 +2938,7 @@ function ShapeRow({
               onClick={() => onPick(o.id)}
               aria-pressed={isActive}
               className={cn(
-                "focus-glow rounded-full border px-3 py-1.5 text-[12px] transition-all duration-300",
+                "focus-glow rounded-full border px-3 py-1.5 text-[13px] transition-all duration-300",
                 isActive
                   ? "border-transparent bg-foreground text-background"
                   : "border-border text-muted-foreground hover:border-foreground/40 hover:text-foreground"
@@ -2989,7 +2989,7 @@ function BookPage({
       {page ? (
         <>
           {page.chapter && (
-            <p className="mb-4 text-center font-[family-name(var(--font-literata))] text-[15px] italic text-[var(--dream-ink-soft)] sm:text-[17px]">
+            <p className="mb-4 text-center font-[family-name(var(--font-literata))] text-[16px] italic text-[var(--dream-ink-soft)] sm:text-[18px]">
               {page.chapter}
             </p>
           )}
@@ -3011,7 +3011,7 @@ function BookPage({
           </div>
           {/* the end of the page — its number, and the copy of its words */}
           <div className="mt-5 flex items-center justify-center gap-2">
-            <p className="font-[family-name(var(--font-literata))] text-[11px] text-[var(--dream-ink-faint)]">
+            <p className="font-[family-name(var(--font-literata))] text-[12px] text-[var(--dream-ink-faint)]">
               {page.n}
             </p>
             <span
@@ -3024,7 +3024,7 @@ function BookPage({
               data-testid={`book-page-copy-${page.n}`}
               aria-label={t("Copy this page")}
               title={t("Copy this page")}
-              className="focus-glow inline-flex h-7 items-center gap-1.5 rounded-full border border-[var(--dream-ink-faint)]/30 px-2.5 font-[family-name(var(--font-literata))] text-[10.5px] italic text-[var(--dream-ink-soft)] transition-all duration-300 hover:border-[var(--dream-ink-soft)] hover:text-[var(--dream-ink)]"
+              className="focus-glow inline-flex h-7 items-center gap-1.5 rounded-full border border-[var(--dream-ink-faint)]/30 px-2.5 font-[family-name(var(--font-literata))] text-[11.5px] italic text-[var(--dream-ink-soft)] transition-all duration-300 hover:border-[var(--dream-ink-soft)] hover:text-[var(--dream-ink)]"
             >
               {copied ? (
                 <Check className="size-3" aria-hidden="true" />
@@ -3044,7 +3044,7 @@ function BookPage({
           >
             ❧
           </span>
-          <p className="font-[family-name(var(--font-literata))] text-[12.5px] italic text-[var(--dream-ink-faint)]">
+          <p className="font-[family-name(var(--font-literata))] text-[13.5px] italic text-[var(--dream-ink-faint)]">
             {t("The loom weaves the next pages…")}
           </p>
           <div className="h-px w-28 rounded-full bg-[var(--dream-ink-faint)]/25 overflow-hidden">
@@ -3054,7 +3054,7 @@ function BookPage({
             <button
               type="button"
               onClick={onRetry}
-              className="dream-ink-btn focus-glow mt-2 flex h-8 items-center justify-center rounded-full px-4 text-[12px] font-medium"
+              className="dream-ink-btn focus-glow mt-2 flex h-8 items-center justify-center rounded-full px-4 text-[13px] font-medium"
             >
               {t("Weave again")}
             </button>

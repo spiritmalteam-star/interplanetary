@@ -145,7 +145,7 @@ function ChargingOrb({ progress, stage }: { progress: number; stage: string }) {
 
       {stage === "charging" && (
         <span
-          className="mono-label absolute -bottom-2 left-1/2 -translate-x-1/2 text-[13px] font-semibold"
+          className="mono-label absolute -bottom-2 left-1/2 -translate-x-1/2 text-[14px] font-semibold"
           style={{ color: "var(--scope-a)" }}
         >
           {pct}%
@@ -189,10 +189,10 @@ function BlueprintCard() {
         <div className="flex items-center justify-center gap-2">
           <SigilForIntent text={blueprint.title} size={40} />
           <div className="text-center">
-            <p className="mono-label text-[10.5px] text-muted-foreground">
+            <p className="mono-label text-[11.5px] text-muted-foreground">
               {t("Manifestation blueprint")}
             </p>
-            <h3 className="scope-gradient-text text-[20px] font-semibold sm:text-[23px]">
+            <h3 className="scope-gradient-text text-[21px] font-semibold sm:text-[24px]">
               {blueprint.title}
             </h3>
           </div>
@@ -201,32 +201,32 @@ function BlueprintCard() {
 
         <div className="mx-auto mt-6 max-w-[640px] space-y-5">
           <section>
-            <h4 className="mono-label text-[10.5px] text-[var(--scope-a)]">
+            <h4 className="mono-label text-[11.5px] text-[var(--scope-a)]">
               {t("Anchor this field state first")}
             </h4>
-            <p className="mt-1.5 text-[15px] leading-[1.8] text-foreground/88">
+            <p className="mt-1.5 text-[16px] leading-[1.8] text-foreground/88">
               {blueprint.field_state}
             </p>
           </section>
 
           <section className="rounded-xl border hairline bg-[color-mix(in_srgb,var(--scope-a)_6%,transparent)] p-4">
-            <h4 className="mono-label text-[10.5px] text-[var(--scope-a)]">
+            <h4 className="mono-label text-[11.5px] text-[var(--scope-a)]">
               {t("Visualization · three breaths")}
             </h4>
-            <p className="mt-1.5 text-[15px] italic leading-[1.8] text-foreground/85">
+            <p className="mt-1.5 text-[16px] italic leading-[1.8] text-foreground/85">
               {blueprint.visualization}
             </p>
           </section>
 
           <section>
-            <h4 className="mono-label text-[10.5px] text-[var(--scope-a)]">
+            <h4 className="mono-label text-[11.5px] text-[var(--scope-a)]">
               {t("Give it hands · three small actions")}
             </h4>
             <ol className="mt-2 space-y-2.5">
               {blueprint.micro_actions.map((a, i) => (
                 <li key={i} className="flex items-start gap-3">
                   <span
-                    className="mono-label mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border text-[10.5px]"
+                    className="mono-label mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border text-[11.5px]"
                     style={{
                       borderColor: "color-mix(in srgb, var(--scope-a) 40%, transparent)",
                       color: "var(--scope-a)",
@@ -234,30 +234,30 @@ function BlueprintCard() {
                   >
                     {i + 1}
                   </span>
-                  <span className="text-[14.5px] leading-relaxed text-foreground/85">{a}</span>
+                  <span className="text-[15.5px] leading-relaxed text-foreground/85">{a}</span>
                 </li>
               ))}
             </ol>
           </section>
 
           <div className="rounded-xl border hairline py-5 text-center">
-            <h4 className="mono-label text-[10.5px] text-[var(--scope-a)]">{t("Seal it with")}</h4>
-            <p className="scope-gradient-text mx-auto mt-2 max-w-[480px] font-serif text-[17px] italic leading-relaxed sm:text-[19px]">
+            <h4 className="mono-label text-[11.5px] text-[var(--scope-a)]">{t("Seal it with")}</h4>
+            <p className="scope-gradient-text mx-auto mt-2 max-w-[480px] font-serif text-[18px] italic leading-relaxed sm:text-[20px]">
               “{blueprint.affirmation}”
             </p>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="rounded-xl border hairline p-3.5">
-              <h4 className="mono-label text-[10px] text-muted-foreground">{t("Aligned window")}</h4>
-              <p className="mt-1.5 text-[14px] leading-relaxed text-foreground/80">
+              <h4 className="mono-label text-[11px] text-muted-foreground">{t("Aligned window")}</h4>
+              <p className="mt-1.5 text-[15px] leading-relaxed text-foreground/80">
                 {blueprint.window}
               </p>
             </div>
           </div>
         </div>
 
-        <p className="mono-label mt-6 text-center text-[10px] text-muted-foreground/60">
+        <p className="mono-label mt-6 text-center text-[11px] text-muted-foreground/60">
           {t("Chamber intensity {n}/10 · Free will honored always", {
             n: labIntensity,
           })}
@@ -267,7 +267,7 @@ function BlueprintCard() {
           <button
             type="button"
             onClick={resetLabDraft}
-            className="focus-glow flex items-center gap-2 rounded-full border hairline px-4 py-2 text-[14px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+            className="focus-glow flex items-center gap-2 rounded-full border hairline px-4 py-2 text-[15px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
           >
             <RefreshCw className="size-3.5" aria-hidden="true" />
             {t("Charge a new intention")}
@@ -333,7 +333,7 @@ export function MirrorOSForge() {
           <div className="rounded-2xl glass p-5 sm:p-6">
             <label
               htmlFor="os-intention"
-              className="mono-label text-[10.5px] text-[var(--scope-a)]"
+              className="mono-label text-[11.5px] text-[var(--scope-a)]"
             >
               {t("Intention · what do you choose to create?")}
             </label>
@@ -344,7 +344,7 @@ export function MirrorOSForge() {
               placeholder={t("Speak it plainly — the chamber understands plain words best…")}
               rows={3}
               maxLength={400}
-              className="focus-glow mt-2 w-full resize-none rounded-xl border hairline bg-transparent px-3.5 py-3 text-[15px] leading-relaxed text-foreground placeholder:text-muted-foreground/60"
+              className="focus-glow mt-2 w-full resize-none rounded-xl border hairline bg-transparent px-3.5 py-3 text-[16px] leading-relaxed text-foreground placeholder:text-muted-foreground/60"
             />
             {/* what the intention carries — chips and the paperclip/camera */}
             <div className="mt-2 flex items-center gap-2">
@@ -362,11 +362,11 @@ export function MirrorOSForge() {
                 onAttachmentsChange={setAttachments}
               />
             </div>
-            <p className="mono-label mt-1.5 text-right text-[10px] text-muted-foreground/60">
+            <p className="mono-label mt-1.5 text-right text-[11px] text-muted-foreground/60">
               {labIntention.length}/400
             </p>
 
-            <h3 className="mono-label mt-4 text-[10.5px] text-[var(--scope-a)]">
+            <h3 className="mono-label mt-4 text-[11.5px] text-[var(--scope-a)]">
               {t("Emotional frequency · the carrier wave")}
             </h3>
             <div
@@ -385,7 +385,7 @@ export function MirrorOSForge() {
                     title={t(f.hint)}
                     onClick={() => setLabEmotion(f.id)}
                     className={cn(
-                      "focus-glow flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[14px] transition-all duration-300",
+                      "focus-glow flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[15px] transition-all duration-300",
                       active
                         ? "border-[var(--scope-a)] font-semibold text-foreground"
                         : "hairline text-muted-foreground hover:text-foreground"
@@ -409,11 +409,11 @@ export function MirrorOSForge() {
             </div>
 
             <div className="mt-5 flex items-center justify-between gap-4">
-              <h3 className="mono-label shrink-0 text-[10.5px] text-[var(--scope-a)]">
+              <h3 className="mono-label shrink-0 text-[11.5px] text-[var(--scope-a)]">
                 {t("Chamber intensity")}
               </h3>
               <span
-                className="mono-label shrink-0 rounded-full border px-2 py-0.5 text-[11px]"
+                className="mono-label shrink-0 rounded-full border px-2 py-0.5 text-[12px]"
                 style={{
                   borderColor: "color-mix(in srgb, var(--scope-a) 35%, transparent)",
                   color: "var(--scope-a)",
@@ -433,7 +433,7 @@ export function MirrorOSForge() {
             />
 
             {labError && (
-              <p className="mt-4 rounded-lg border border-[var(--destructive)]/30 bg-[color-mix(in_srgb,var(--destructive)_8%,transparent)] px-3 py-2 text-[14px] text-foreground/85">
+              <p className="mt-4 rounded-lg border border-[var(--destructive)]/30 bg-[color-mix(in_srgb,var(--destructive)_8%,transparent)] px-3 py-2 text-[15px] text-foreground/85">
                 {t(labError)}
               </p>
             )}
@@ -447,7 +447,7 @@ export function MirrorOSForge() {
                 void chargeIntention(carried);
               }}
               className={cn(
-                "focus-glow mt-5 flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-3 text-[14.5px] font-semibold transition-all duration-300",
+                "focus-glow mt-5 flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-3 text-[15.5px] font-semibold transition-all duration-300",
                 canCharge
                   ? "hover:glow-sm"
                   : "cursor-not-allowed opacity-45"
@@ -461,7 +461,7 @@ export function MirrorOSForge() {
               <Zap className="size-4" aria-hidden="true" />
               {t("Charge the Chamber")}
             </button>
-            <p className="mt-2 text-center text-[12.5px] leading-relaxed text-muted-foreground/70">
+            <p className="mt-2 text-center text-[13.5px] leading-relaxed text-muted-foreground/70">
               {t(
                 "Min. 8 characters · The chamber sharpens alignment · Free will honored always"
               )}
@@ -470,7 +470,7 @@ export function MirrorOSForge() {
 
           {/* chamber column */}
           <div className="rounded-2xl glass p-5 sm:p-6">
-            <h3 className="mono-label text-center text-[10.5px] text-[var(--scope-a)]">
+            <h3 className="mono-label text-center text-[11.5px] text-[var(--scope-a)]">
               {labStage === "charging" ? t("Charging…") : t("Chamber")}
             </h3>
             <div className="mt-4">
@@ -481,7 +481,7 @@ export function MirrorOSForge() {
             </div>
             {labStage === "charging" ? (
               <div className="mt-5 text-center" aria-live="polite">
-                <p className="mono-label text-[10.5px] text-muted-foreground">
+                <p className="mono-label text-[11.5px] text-muted-foreground">
                   {t(CHARGE_PHASES[phase])}
                 </p>
                 <div className="mx-auto mt-3 h-1 w-3/4 overflow-hidden rounded-full bg-[color-mix(in_srgb,var(--scope-a)_12%,transparent)]">
@@ -497,13 +497,13 @@ export function MirrorOSForge() {
               </div>
             ) : (
               <div className="mt-5 text-center">
-                <p className="mono-label text-[10px] text-muted-foreground/70">
+                <p className="mono-label text-[11px] text-muted-foreground/70">
                   {t("Sigil forge")}
                 </p>
                 <div className="mt-2 flex justify-center">
                   <SigilForIntent text={labIntention} size={104} />
                 </div>
-                <p className="mt-2 text-[12.5px] italic leading-relaxed text-muted-foreground/70">
+                <p className="mt-2 text-[13.5px] italic leading-relaxed text-muted-foreground/70">
                   {labIntention.trim()
                     ? t("Your sigil, awaiting charge.")
                     : t("Your sigil will take shape as you write.")}
@@ -521,14 +521,14 @@ export function MirrorOSForge() {
         <button
           type="button"
           onClick={handleGift}
-          className="focus-glow flex items-center gap-2 rounded-full border hairline px-4 py-2 text-[14px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+          className="focus-glow flex items-center gap-2 rounded-full border hairline px-4 py-2 text-[15px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
         >
           <span aria-hidden="true">◆</span>
           {t("A gift from the stars")}
         </button>
       </div>
 
-      <p className="mono-label mt-4 text-center text-[10px] text-muted-foreground/60">
+      <p className="mono-label mt-4 text-center text-[11px] text-muted-foreground/60">
         {t(
           "The Mirror reflects · the visitor creates · Free will honored always"
         )}
