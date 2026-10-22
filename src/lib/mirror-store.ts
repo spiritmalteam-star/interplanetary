@@ -2538,7 +2538,18 @@ export const useMirror = create<MirrorState>()((set, get) => ({
          conversations come home from the shelf (a guest keeps none:
          their chat is temporary by the house's own law). */
       const keeper = data?.user ?? null;
-      if (keeper && !keeper.email.startsWith("anon:")) get().hydrateChats();
+      if (keeper && !keeper.email.startsWith("anon:")) {
+        get().hydrateChats();
+        /* THE KEEPER'S MEMORY — one naming marks the browser: from this
+           breath on, EVERY enter hand of the portal opens freely — the
+           passage's door is never asked again (the browser's own
+           keeping; the wallet and the credits keep their own law). */
+        try {
+          window.localStorage.setItem("mirror.everSignedIn", "1");
+        } catch {
+          /* the private keeping stays closed — the session carries */
+        }
+      }
       /* the passage's own tuning comes home — language, voice, pace,
          the fields of expansion — on every device, every sign-in */
       if (data?.settings) get().applyRemoteSettings(data.settings);

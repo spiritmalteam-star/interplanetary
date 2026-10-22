@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------ */
-/*  THE GUIDES' REGISTRY — the seven illustrated guides of the house,  */
+/*  THE GUIDES' REGISTRY — the ten illustrated guides of the house,    */
 /*  each born from its own PDF: one image, one title, one door.        */
 /*  The showcase below the offerings reads this shelf; the guide       */
 /*  view opens whatever door the visitor's hand chooses.               */
@@ -13,6 +13,9 @@ import shiftingTimeExperience from "./shifting-time-experience";
 import chakrasBodyEnergyDna from "./chakras-body-energy-dna";
 import dnaAwakeningPotential from "./dna-awakening-potential";
 import innerEarthImaginedJourney from "./inner-earth-imagined-journey";
+import spiritGuidesRealmTransitions from "./spirit-guides-realm-transitions";
+import lyransAtlantisJourney from "./lyrans-atlantis-journey";
+import gaiaTerraLivingWorld from "./gaia-terra-living-world";
 
 export type { GuideBlock, GuideData } from "./types";
 
@@ -24,6 +27,9 @@ export const GUIDES: GuideData[] = [
   chakrasBodyEnergyDna,
   dnaAwakeningPotential,
   innerEarthImaginedJourney,
+  spiritGuidesRealmTransitions,
+  lyransAtlantisJourney,
+  gaiaTerraLivingWorld,
 ];
 
 export function guideBySlug(slug: string): GuideData | undefined {

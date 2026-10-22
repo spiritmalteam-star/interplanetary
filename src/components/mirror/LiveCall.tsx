@@ -25,6 +25,7 @@ import {
   type BrowserVoiceHandle,
 } from "@/lib/browser-voice";
 import { readFileAsDataUrl } from "./attachments";
+import { MirrorChanneling, SCOPE_CHANNELING } from "./MirrorChanneling";
 
 /* ------------------------------------------------------------------ */
 /*  LiveCall — the direct call. Held for 1.5 seconds, the microphone   */
@@ -628,6 +629,16 @@ export function LiveCall({
 
         {/* ---------- the orb stage — calm, nothing extra ---------- */}
         <div className="relative flex h-[212px] flex-col items-center justify-center">
+          {/* THE AUTHENTIC MIRROR'S OWN FACE — on the communion line a
+              vertical sheen stands behind the orb, the way light catches
+              a standing mirror: this call could never be mistaken for
+              any other room's line. */}
+          {scope === "communion" && (
+            <span
+              aria-hidden="true"
+              className="lc-mirror-face pointer-events-none absolute inset-0"
+            />
+          )}
           {/* one soft breath while listening */}
           <AnimatePresence>
             {listening && (
@@ -709,17 +720,29 @@ export function LiveCall({
             )}
           </motion.button>
 
-          {/* status */}
-          <p
-            aria-live="polite"
-            className={cn(
-              "mt-5 text-[14px] italic",
-              phase === "idle" ? "text-muted-foreground" : ""
-            )}
-            style={phase !== "idle" ? { color: cfg.accentA } : undefined}
-          >
-            {t(statusKey)}
-          </p>
+          {/* THE CALL'S OWN CHANNELING LIGHT — while the presence thinks,
+              each room shows its own authentic channeling tell (the
+              mirror's double-crystal ring on the communion line, stars
+              on the interplanetary line, tides on healing…); every
+              other phase keeps the plain italic status */}
+          {phase === "thinking" ? (
+            <MirrorChanneling
+              label={t("reflecting")}
+              variant={SCOPE_CHANNELING[scope] ?? "orbs"}
+              className="mt-5 mono-label text-[9.5px] uppercase tracking-[0.26em] text-muted-foreground/85"
+            />
+          ) : (
+            <p
+              aria-live="polite"
+              className={cn(
+                "mt-5 text-[14px] italic",
+                phase === "idle" ? "text-muted-foreground" : ""
+              )}
+              style={phase !== "idle" ? { color: cfg.accentA } : undefined}
+            >
+              {t(statusKey)}
+            </p>
+          )}
           {phase === "idle" && (
             <p className="mono-label mt-1.5 text-[9.5px] uppercase tracking-[0.24em] text-muted-foreground/55">
               {t("Hold the orb and speak — release to send")}

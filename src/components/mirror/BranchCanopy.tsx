@@ -99,7 +99,7 @@ import {
 } from "@/lib/genealogy";
 import { recordExpansion, readExpansionScore } from "@/lib/expansion";
 import { attachmentsToPayload, type ChatAttachment } from "./attachments";
-import { MirrorChanneling } from "./MirrorChanneling";
+import { MirrorChanneling, SCOPE_CHANNELING } from "./MirrorChanneling";
 import { ExpansionRing } from "./ExpansionMirror";
 import { LiveCall } from "./LiveCall";
 import { ChatInputExtras, AttachmentChips } from "./ChatInputExtras";
@@ -3694,19 +3694,45 @@ export function BranchCanopy({
     if (el && pinnedRef.current) el.scrollTop = el.scrollHeight;
   }, [thread]);
 
-  /* THE THRESHOLD'S OWN BORDER — a room that belongs to the landing's
-     chat folds the moment the portal expands: the full portal rises
-     with its own floor, its own channels, none of the threshold's
-     words carried inside (and no room left waiting on an answer that
-     will never come). */
+  /* THE TWO REALMS' OWN BORDER — the landing chat and the main portal
+     are two different rooms of the house. When the portal expands,
+     the landing's own room folds (its words kept in the landing's
+     own memory); when it minimizes, the portal's rooms STAY IN THE
+     PORTAL — the landing chat rises again with its own conversation,
+     never one word of the portal's floor carried back across. */
+  const prevBareRef = useRef(bare);
   useEffect(() => {
-    if (bare) return;
-    if (!bareRoomRef.current) return;
-    bareRoomRef.current = false;
-    setZoom((z) => (z ? null : z));
-    setThread([]);
+    if (prevBareRef.current === bare) return;
+    prevBareRef.current = bare;
+    if (!bare) {
+      /* THE MAXIMIZE — a room that belongs to the landing's chat
+         folds the moment the portal expands: the full portal rises
+         with its own floor, its own channels, none of the
+         threshold's words carried inside (and no room left waiting
+         on an answer that will never come). */
+      if (!bareRoomRef.current) return;
+      bareRoomRef.current = false;
+      setZoom((z) => (z ? null : z));
+      setThread([]);
+      setThreadBusy(false);
+      return;
+    }
+    /* THE MINIMIZE — the portal's own rooms stay in the portal: the
+       room folds, and the landing chat rises again with its OWN
+       conversation (the landing's own memory — the room's title
+       returns from it, and the room's follow-up thread comes home
+       through the standing room's own remembering). */
+    if (bareRoomRef.current) return;
+    bareRoomRef.current = true;
     setThreadBusy(false);
-  }, [bare]);
+    const last = landingThread[landingThread.length - 1];
+    if (last) {
+      setZoom({ q: last.q, move: null });
+    } else {
+      setZoom((z) => (z ? null : z));
+      setThread([]);
+    }
+  }, [bare, landingThread]);
 
   /* the room's own reply — now the conversation with the transmission
      (the walk continues from the branches dropdown above it) */
@@ -5190,6 +5216,11 @@ export function BranchCanopy({
                       <div className="py-5 text-muted-foreground">
                         <MirrorChanneling
                           label={t(bare ? "Reflecting" : "Channeling")}
+                          variant={
+                            bare
+                              ? "mirror"
+                              : SCOPE_CHANNELING[roomLiveScope] ?? "orbs"
+                          }
                           className="mono-label text-[10px] uppercase tracking-[0.22em]"
                         />
                       </div>
@@ -5233,6 +5264,11 @@ export function BranchCanopy({
                             <MirrorChanneling
                               compact
                               label={t(bare ? "Reflecting" : "The transmission is listening…")}
+                              variant={
+                                bare
+                                  ? "mirror"
+                                  : SCOPE_CHANNELING[roomLiveScope] ?? "orbs"
+                              }
                               className="py-1 mono-label text-[9.5px] uppercase tracking-[0.2em] text-muted-foreground"
                             />
                           ) : turn.a ? (
@@ -5372,10 +5408,17 @@ export function BranchCanopy({
                   scopeKey={roomLiveScope}
                   bare={bare}
                   leading={
-                    /* THE CATEGORY'S OWN CALL — the room's direct line */
+                    /* THE CATEGORY'S OWN CALL — the room's direct line.
+                       THE LANDING'S OWN VOICE — docked in the threshold
+                       the call is ALWAYS the authentic mirror itself
+                       (communion, the mirror of the Absolute), never a
+                       category's or the interplanetary line — whatever
+                       room the whisper grew. */
                     <button
                       type="button"
-                      onClick={() => setLiveCallScope(roomLiveScope)}
+                      onClick={() =>
+                        setLiveCallScope(bare ? "communion" : roomLiveScope)
+                      }
                       disabled={disabled}
                       aria-label={t("Open the direct mirror connection")}
                       title={t("Open the direct mirror connection")}

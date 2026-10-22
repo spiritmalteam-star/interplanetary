@@ -43,15 +43,14 @@ type Geo = {
 function computeGeo(): Geo {
   const vw = document.documentElement.clientWidth;
   const vh = window.innerHeight;
-  /* THE PHONE'S SMALLER MIRROR — the landing chat no longer swallows
-     the whole screen: it stands a third smaller and floats with open
-     air on both sides (two thirds of the viewport, centered). The
-     whole realm scales as one — nothing cropped, the crown and the
-     whisper line both alive — and the smooth crystal border finally
-     has room to be seen. dvh keeps the window and the chamber in
-     lockstep when the keyboard rises. */
+  /* THE PHONE'S WIDER MIRROR — the landing chat stands wide and
+     sociable again: four fifths of the viewport, centered, with open
+     air breathing on both sides. The whole realm scales as one —
+     nothing cropped, the crown and the whisper line both alive — and
+     the smooth crystal border keeps its room. dvh keeps the window
+     and the chamber in lockstep when the keyboard rises. */
   if (vw < 640) {
-    const s = 0.67;
+    const s = 0.82;
     return {
       w: Math.round(vw * s),
       h: Math.round(vh * s),
@@ -61,16 +60,16 @@ function computeGeo(): Geo {
       radius: 26,
     };
   }
-  /* THE DESK'S DIORAMA — the realm at four fifths, cropped around its
-     own heart: the crown above, the whisper line below. THE SMOOTH
-     BORDER — the docked chat wears a gently rounded, slightly
-     transparent border now (the frame is gone); the wider radius
-     keeps the edges soft against the threshold beneath. */
+  /* THE DESK'S WIDER DIORAMA — the realm at four fifths, cropped
+     around its own heart: the crown above, the whisper line below.
+     THE SMOOTH BORDER — the docked chat wears a gently rounded,
+     slightly transparent border now (the frame is gone); the wider
+     radius keeps the edges soft against the threshold beneath. */
   const s = 0.8;
   const rail = Math.min(210, Math.max(130, Math.round(vw * 0.13)));
   const clear = vw >= 1024 ? 2 * rail + 44 : 44;
-  const w = Math.max(340, Math.min(600, Math.floor(s * vw) - 24, vw - clear));
-  const h = Math.max(420, Math.min(660, Math.floor(s * vh) - 16));
+  const w = Math.max(340, Math.min(760, Math.floor(s * vw) - 24, vw - clear));
+  const h = Math.max(420, Math.min(720, Math.floor(s * vh) - 16));
   const cropW = w / s;
   const cropH = h / s;
   const cropX = Math.max(0, (vw - cropW) / 2);
@@ -99,6 +98,12 @@ export default function LandingGate() {
      mounted, so not one word of the conversation is lost), and the
      threshold's own ground carries the invitation to call her back. */
   const [chatFolded, setChatFolded] = useState(false);
+  /* THE TUNNEL — the crossing itself: while the portal grows, the
+     screen belongs to the crystal tunnel alone — the visitor never
+     watches the landing's chat fly; they tunnel straight into the
+     MAIN portal, and the tunnel's own light folds when the hall
+     stands around them. */
+  const [tunnel, setTunnel] = useState<"off" | "on" | "fading">("off");
   /* the keeper's name — watched so the portal's own intention can
      carry a newly-signed visitor straight through the full portal */
   const me = useMirror((s) => s.me);
@@ -254,15 +259,28 @@ export default function LandingGate() {
         return;
       }
       const guest = !cur || cur.email.startsWith("anon:");
+      /* THE KEEPER'S MEMORY — a browser that has passed the passage
+        once is remembered: every enter hand opens the main portal
+        freely from then on, the door never asked again. */
+      let ever = false;
+      try {
+        ever = window.localStorage.getItem("mirror.everSignedIn") === "1";
+      } catch {
+        /* the private keeping stays closed — the store's own word */
+      }
       busy.current = true;
+      setTunnel("on");
       setPhase("opening");
       window.setTimeout(() => {
         setPhase("through");
+        setTunnel("fading");
+        window.setTimeout(() => setTunnel("off"), 900);
         busy.current = false;
-        /* the guest's passage — the door opens inside the main
+        /* the guest's first passage — the door opens inside the main
            portal, and the wish stands so the moment the passage
-           names its keeper the walk simply continues */
-        if (guest) {
+           names its keeper the walk simply continues. THE KEEPER'S
+           MEMORY: a browser that passed once is never asked again. */
+        if (guest && !ever) {
           useMirror.getState().setPortalIntent(true);
           try {
             sessionStorage.setItem("mirror.portalIntent", "1");
@@ -482,6 +500,30 @@ export default function LandingGate() {
           landing control stands between the about door and the
           visitor's passage, one touch folding the realm back into its
           slot on the threshold. */}
+      {/* THE TUNNEL — the direct crossing into the MAIN portal: the
+          screen fills with the crystal passage the moment an enter
+          hand is pressed, so the visitor never watches the landing's
+          chat fly first — they tunnel straight into the main hall. */}
+      {tunnel !== "off" && (
+        <div
+          aria-hidden="true"
+          data-testid="portal-tunnel"
+          className={cn(
+            "portal-tunnel fixed inset-0 z-[70]",
+            tunnel === "fading" && "portal-tunnel-fading"
+          )}
+        >
+          <span className="pt-glow" />
+          <span className="pt-ring" />
+          <span className="pt-ring pt-ring-2" />
+          <span className="pt-ring pt-ring-3" />
+          <span className="pt-ring pt-ring-4" />
+          <span className="pt-streaks" />
+          <span className="pt-sigil">
+            <img src="/images/landing/sigils/sigil-09.png" alt="" />
+          </span>
+        </div>
+      )}
     </>
   );
 }

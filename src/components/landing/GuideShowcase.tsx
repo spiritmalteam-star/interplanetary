@@ -251,7 +251,7 @@ export default function GuideShowcase({
         ))}
       </div>
       <p className="mono-label mt-3 text-center text-[8.5px] uppercase tracking-[0.26em] text-[#66788a]">
-        {t("Seven illustrated guides — one image each")}
+        {t("Ten illustrated guides — one image each")}
       </p>
     </div>
   );

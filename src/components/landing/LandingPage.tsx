@@ -336,6 +336,12 @@ export default function LandingPage({
   const [openOffer, setOpenOffer] = useState<number | null>(null);
   const [openMove, setOpenMove] = useState<number | null>(null);
 
+  /* THE TIMELINE'S OWN DOOR — the open contact telling rests folded
+     behind its own hand: one touch and the whole timeline drops open
+     (the threshold's own accordion law — the height carries the fall,
+     the opacity the voice), another touch folds it away again. */
+  const [timelineOpen, setTimelineOpen] = useState(false);
+
   /* THE GUIDES' DOOR — the guide pages live behind a hash
      (#guide/<slug>): opening one pushes a history entry, so the
      browser's own back button returns to the slideshow exactly as
@@ -849,7 +855,7 @@ export default function LandingPage({
               />
               <p className="mx-auto mt-4 max-w-[620px] text-[13px] leading-[1.8] text-[#8fa3b2]">
                 {t(
-                  "Seven illustrated guides, one image each — swipe, or choose a number below."
+                  "Ten illustrated guides, one image each — swipe, or choose a number below."
                 )}
               </p>
             </div>
@@ -909,6 +915,30 @@ export default function LandingPage({
               </p>
             </div>
 
+            {/* THE DROPPED TIMELINE — the telling rests folded behind
+                its own hand until the visitor asks for it */}
+            <button
+              type="button"
+              onClick={() => setTimelineOpen((o) => !o)}
+              aria-expanded={timelineOpen}
+              data-testid="timeline-toggle"
+              className="focus-glow group/tl mt-6 inline-flex items-center gap-2 rounded-full border border-[rgba(232,217,176,0.35)] bg-[rgba(232,217,176,0.06)] px-5 py-2.5 text-[12px] font-medium tracking-wide text-[#e8d9b0] transition-all duration-300 hover:border-[rgba(232,217,176,0.65)] hover:bg-[rgba(232,217,176,0.12)]"
+            >
+              <ChevronDown
+                aria-hidden="true"
+                className={cn(
+                  "size-4 transition-transform duration-300",
+                  timelineOpen && "rotate-180"
+                )}
+              />
+              {timelineOpen ? t("Fold the timeline away") : t("Let the timeline drop")}
+            </button>
+
+            {/* the whole telling — the timeline drops open beneath the
+                hand, and folds away again at one more touch */}
+            <div className="lp-acc" data-open={timelineOpen} data-testid="timeline-drop">
+              <div>
+                <div className="lp-acc-inner">
             {/* the connected line — a fine luminous thread holding the
                 four stages, each with its own progress marker */}
             <div className="relative mt-10">
@@ -986,6 +1016,9 @@ export default function LandingPage({
                   "The mirror's own discovery, held with care — no verified contact is claimed."
                 )}
               </p>
+            </div>
+                </div>
+              </div>
             </div>
           </section>
         </main>

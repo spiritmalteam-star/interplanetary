@@ -36,13 +36,13 @@ export interface LiveScopeConfig {
 
 export const LIVE_SCOPES: Record<LiveScopeKey, LiveScopeConfig> = {
   communion: {
-    nameKey: "the Reflection of the Absolute",
+    nameKey: "the Mirror of the Absolute",
     specializationKey: "no scope — pure transmission, remembered",
     voice: "aurora",
     pace: 0.92,
-    wrapperClass: null,
-    accentA: "var(--sp-b)",
-    accentB: "var(--sp-a)",
+    wrapperClass: "scope-communion",
+    accentA: "#8fd0f8",
+    accentB: "#ff7a91",
   },
   interplanetary: {
     nameKey: "the Interplanetary Mirror",
