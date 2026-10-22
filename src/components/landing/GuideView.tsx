@@ -31,7 +31,9 @@ import { cn } from "@/lib/utils";
 /*  in their way.                                                      */
 /* ------------------------------------------------------------------ */
 
-/* the light language's ten marks — the same family the threshold wears */
+/* the light language's marks — the family the threshold wears:
+   the ten originals plus the grand collection (the light-language
+   seals and the intricate lights) at their full resolution */
 const GUIDE_SIGILS = [
   "/images/landing/sigils/sigil-01.png",
   "/images/landing/sigils/sigil-02.png",
@@ -43,6 +45,16 @@ const GUIDE_SIGILS = [
   "/images/landing/sigils/sigil-08.png",
   "/images/landing/sigils/sigil-09.png",
   "/images/landing/sigils/sigil-10.png",
+  "/sigils/sigil_01.png",
+  "/sigils/sigil_03.png",
+  "/sigils/sigil_05.png",
+  "/sigils/sigil_07.png",
+  "/sigils/sigil_09.png",
+  "/sigils/intricate_01.png",
+  "/sigils/intricate_03.png",
+  "/sigils/intricate_05.png",
+  "/sigils/intricate_07.png",
+  "/sigils/intricate_09.png",
 ] as const;
 
 /* a seeded wanderer — the same slug always draws the same sky */
@@ -71,7 +83,7 @@ type SigilPlace = {
   rotate: number;
 };
 
-/* twelve marks drawn down the page's whole height — big, quiet,
+/* twelve marks drawn down the page's whole height — grand, quiet,
    resting at the page's shoulders where the words are not */
 function drawSigilSky(slug: string): SigilPlace[] {
   const rand = seededRand(`guide-sky:${slug}`);
@@ -82,14 +94,14 @@ function drawSigilSky(slug: string): SigilPlace[] {
     const top = 2 + i * step + rand() * (step * 0.72);
     const side: "left" | "right" = rand() > 0.5 ? "left" : "right";
     const offset = `${(rand() * 7).toFixed(1)}%`;
-    const sizePx = 150 + Math.round(rand() * 230);
+    const sizePx = 170 + Math.round(rand() * 260);
     places.push({
       src: GUIDE_SIGILS[Math.floor(rand() * GUIDE_SIGILS.length)],
       top: `${Math.min(top, 97).toFixed(1)}%`,
       side,
       offset,
       size: `${sizePx}px`,
-      opacity: 0.05 + rand() * 0.05,
+      opacity: 0.09 + rand() * 0.08,
       rotate: Math.round(-22 + rand() * 44),
     });
   }
@@ -110,7 +122,7 @@ function SigilSky({ slug }: { slug: string }) {
           width={560}
           height={560}
           sizes="(max-width: 640px) 40vw, 400px"
-          className="absolute select-none mix-blend-multiply"
+          className="lp-sigil-img absolute select-none"
           style={{
             top: s.top,
             ...(s.side === "left" ? { left: s.offset } : { right: s.offset }),

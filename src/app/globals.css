@@ -2423,9 +2423,12 @@ html:not(.dark) .lp-ground::before {
 
 /* THE SIGILS ON PAPER — the light language's marks are drawn for the
    midnight, so on the vanilla paper they print like ink (multiply),
-   the way the guide's own pages have always worn them */
+   the way the guide's own pages have always worn them. The sepia pass
+   turns the pale strokes into a warm bronze ink so the grand marks
+   read clearly on the daylight paper without ever shouting. */
 html:not(.dark) .lp-sigil-img {
   mix-blend-mode: multiply;
+  filter: brightness(0.58) sepia(0.52) saturate(1.2);
 }
 .lp-ground::before {
   content: "";

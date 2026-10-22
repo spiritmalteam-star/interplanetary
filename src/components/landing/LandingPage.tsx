@@ -154,6 +154,16 @@ const SIGILS = {
   weave: "/images/landing/sigils/sigil-08.png",
   orbit: "/images/landing/sigils/sigil-09.png",
   drop: "/images/landing/sigils/sigil-10.png",
+  /* the grand collection — the house's own light-language seals,
+     restored at full stature: ten light-language marks and ten
+     intricate lights, living only in the page's empty shoulders */
+  grandLoop: "/sigils/sigil_09.png",
+  grandVeil: "/sigils/sigil_05.png",
+  grandStar: "/sigils/sigil_06.png",
+  grandBraid: "/sigils/intricate_08.png",
+  grandCrown: "/sigils/intricate_06.png",
+  grandPlume: "/sigils/intricate_10.png",
+  grandWave: "/sigils/intricate_02.png",
 } as const;
 
 function Sigil({
@@ -529,21 +539,9 @@ export default function LandingPage({
         <main className="mx-auto w-full max-w-[900px]">
           {/* ============================ HERO ============================ */}
           <header className="relative pb-5 pt-10 text-center sm:pb-4 sm:pt-16">
-            {/* the light language's quiet presence in the hero */}
-            <Sigil
-              src={SIGILS.moon}
-              size={44}
-              opacity={0.34}
-              rotate={10}
-              className="right-[5%] top-[16%] hidden sm:block"
-            />
-            <Sigil
-              src={SIGILS.leaf}
-              size={32}
-              opacity={0.26}
-              rotate={-12}
-              className="left-[4%] top-[52%]"
-            />
+            {/* the hero's sky stays untouched — no mark rests upon the
+                background image; the light language lives in the empty
+                shoulders further down the walk */}
             {/* one full-bleed crop on narrow screens — the rails rest.
                 THE PHONE'S GRANDER BANNER — taller, more present, so
                 the threshold arrives like a poster, not a strip.
@@ -699,6 +697,13 @@ export default function LandingPage({
               rotate={14}
               className="bottom-[4%] left-[1%]"
             />
+            <Sigil
+              src={SIGILS.grandLoop}
+              size="clamp(150px, 20vw, 270px)"
+              opacity={0.22}
+              rotate={-10}
+              className="left-[0%] top-[36%]"
+            />
             <div className="px-4 sm:px-8">
               <SectionHead
                 index="01"
@@ -736,6 +741,13 @@ export default function LandingPage({
               opacity={0.2}
               rotate={5}
               className="bottom-[3%] right-[6%]"
+            />
+            <Sigil
+              src={SIGILS.grandBraid}
+              size="clamp(150px, 20vw, 260px)"
+              opacity={0.22}
+              rotate={8}
+              className="bottom-[10%] left-[0%]"
             />
             <SectionHead
               index="02"
@@ -867,7 +879,8 @@ export default function LandingPage({
             aria-label={t("The house's guides")}
             data-testid="guide-showcase-section"
           >
-            {/* the light language in the guides' quiet edges */}
+            {/* the light language in the guides' quiet edges — the
+                open-guide doors wear two grand keepers at the shoulders */}
             <Sigil
               src={SIGILS.spiralLine}
               size="clamp(100px, 16vw, 150px)"
@@ -881,6 +894,20 @@ export default function LandingPage({
               opacity={0.18}
               rotate={-12}
               className="right-[2%] top-[52%]"
+            />
+            <Sigil
+              src={SIGILS.grandCrown}
+              size="clamp(180px, 24vw, 330px)"
+              opacity={0.3}
+              rotate={-6}
+              className="left-[0%] top-[0%]"
+            />
+            <Sigil
+              src={SIGILS.grandVeil}
+              size="clamp(170px, 22vw, 300px)"
+              opacity={0.28}
+              rotate={10}
+              className="bottom-[4%] right-[0%]"
             />
             <div className="px-0 sm:px-0">
               <SectionHead
@@ -929,6 +956,13 @@ export default function LandingPage({
               opacity={0.24}
               rotate={-6}
               className="bottom-[6%] right-[3%]"
+            />
+            <Sigil
+              src={SIGILS.grandPlume}
+              size="clamp(160px, 20vw, 280px)"
+              opacity={0.22}
+              rotate={-8}
+              className="bottom-[8%] left-[0%]"
             />
             <SectionHead
               index="04"
