@@ -4969,3 +4969,19 @@ Stage Summary:
 - The whole house now stands free: no login is ever demanded at the books, the records, the mirror or the crossing — the passage (account) remains purely optional, for whoever wants their library to travel with them.
 - The wallet's machinery sleeps until WALLET_ENFORCED=true is explicitly set in the vault; the crown wears no purse and no coin.
 - All forced-auth paths (portal entry, 402 purse modal, crown badge) are gone; optional entry points (Passage door, profile sign-in) remain for those who choose them.
+---
+Task ID: 97
+Agent: Z.ai Code (main)
+Task: Restore the latest version after a fourth workspace rollback, verify the whole house stands free (the full portal opens for every visitor, free upon login, and one login serves everywhere), and push.
+
+Work Log:
+- Fourth rollback detected and healed: local main had fallen back to c873b47 (the Task 62 era) while origin/main stood at 8fd758a. Fetched the chain home and reset --hard onto origin (8fd758a), tracking ref re-synced. The visitor's "old version" sighting was this rollback, not a code regression — the latest tree already carries every free law.
+- Dev server re-grounded after the wholesale restore: killed the stale process, cleared .next (the dev-mode staleness law for a whole-tree change) and restarted clean.
+- Verified the restored house's laws in code: THE FREE LAW in LandingGate.expandPortal (every enter hand opens the main hall directly — the forced passage door, its wish and its memory all retired in 8fd758a), walletEnforced() resting by default (WALLET_ENFORCED === "true" stands the purse up; nothing answers 402), the i18n "Crystalline key" strings carrying no component references (retired copy, dictionary residue only), and the remaining openAuth call sites all optional entries (chat-history hint, profile door, purse modal) — no gate among them. The AppShell "register" view is the archive registers' reading room (civilization/interdimensional), not a signup wall.
+- Verified the ONE SESSION LAW: a single httpOnly mirror_session cookie (path=/, 30 days, same-site) signs the whole house; one AuthModal rides every world; one zustand store carries `me` everywhere — signing in at any door signs every door.
+- Live browser verification (1280×800): fresh guest → Fullscreen hand → the main hall opened directly (wall of whispers, categories, composer — no auth modal, no gate); the Book atelier opened fully as a guest; carved a test passage (registration flow, toast "Your passage is carved"); /api/auth/me returned the named keeper server-side; the Book room reopened with no further sign-in; the return hand folded back to the landing with the session intact; a full page reload kept the passage (one login, everywhere, surviving refresh).
+- Zero page errors across the whole walk; dev.log shows only 200s.
+
+Stage Summary:
+- The latest house stands restored and re-verified: the full portal opens freely for guest and keeper alike, no door ever demands a passage, and one sign-in anywhere serves the whole house (rooms, books, records, settings, library) across visits and reloads.
+- No source changes were needed this task — the free laws already stand in 8fd758a; this task's work was the restore, the verification walk, and this record.
