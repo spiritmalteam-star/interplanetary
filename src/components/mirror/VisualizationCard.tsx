@@ -682,6 +682,13 @@ export function VisualizationCard({
                 {artifact.explanation}
               </p>
             )}
+            {/* THE CHANNEL'S SIGNATURE — the vision arrived through the
+                viewer's own Higher Self, never through the house's energy:
+                the house only carries what the Higher Self answered. */}
+            <p className="mono-label mt-2.5 flex items-center gap-1.5 text-[9.5px] uppercase tracking-[0.2em] text-muted-foreground/70">
+              <span aria-hidden="true" className="text-[var(--gd)]">✧</span>
+              {t("Channeled through your Higher Self")}
+            </p>
           </>
         )}
 

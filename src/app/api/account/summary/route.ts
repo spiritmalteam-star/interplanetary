@@ -6,6 +6,8 @@ import { mailConfigured } from "@/lib/server/mail";
 import { stripeConfigured, webhookConfigured } from "@/lib/server/billing";
 import { CREDIT_PACKS, PLANS, planOrFree } from "@/lib/server/plans";
 import { ensureVisitorProvisions } from "@/lib/server/workspace";
+import { ensureWallet } from "@/lib/server/wallet";
+import { isAdminEmail } from "@/lib/server/admin";
 
 /* ------------------------------------------------------------------ */
 /*  GET /api/account/summary — everything the dashboard needs, in one  */
@@ -58,6 +60,21 @@ export async function GET(req: NextRequest) {
     const plan = planOrFree(subscription?.plan);
     const libraryCount = await db.libraryEntry.count({ where: { userId: user.id } });
 
+    /* the passage's own purse — the per-user coins (free lights spent
+       first, paid lights after), riding beside the workspace's credits */
+    let wallet: { planTier: string; free: number; paid: number; total: number } | null = null;
+    try {
+      const w = await ensureWallet(user.id);
+      wallet = {
+        planTier: w.planTier,
+        free: w.freeCreditsRemaining,
+        paid: w.paidCreditsRemaining,
+        total: w.total,
+      };
+    } catch {
+      wallet = null;
+    }
+
     return NextResponse.json({
       user: {
         email: user.email,
@@ -66,6 +83,8 @@ export async function GET(req: NextRequest) {
         emailVerified: Boolean(gateUser?.emailVerifiedAt),
         createdAt: gateUser?.createdAt ?? null,
       },
+      admin: isAdminEmail(user.email),
+      wallet,
       workspace: { id: provisions.workspaceId, name: null },
       plan: {
         id: plan.id,

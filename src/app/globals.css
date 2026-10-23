@@ -3585,3 +3585,188 @@ html:not(.dark) .lp-sigil-img {
   transform: translateX(-50%);
 }
 
+
+/* ==================================================================
+   THE FUEL ENGINE'S OWN LIGHT — the incubator console animations.
+   ================================================================== */
+
+/* the sparks riding the pipeline line — three travelers, staggered */
+@keyframes fuel-flow {
+  0% {
+    left: 0%;
+    opacity: 0;
+    transform: translateY(0) scale(0.6);
+  }
+  12% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  88% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    left: 100%;
+    opacity: 0;
+    transform: translateY(0) scale(0.6);
+  }
+}
+.fuel-flow-spark {
+  left: 0%;
+  animation: fuel-flow 2.7s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+  box-shadow: 0 0 6px 1px rgba(232, 217, 176, 0.65);
+}
+
+/* the wired reserve's live pulse */
+@keyframes fuel-live {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.55;
+    transform: scale(0.82);
+  }
+}
+.fuel-live-dot {
+  animation: fuel-live 2.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fuel-flow-spark,
+  .fuel-live-dot {
+    animation: none;
+  }
+}
+
+/* ==================================================================
+   THE DNA HELIX'S OWN LIFE — the walk's ladder breathes.
+   ================================================================== */
+
+/* the strands draw themselves in once, oldest to newest */
+@keyframes dna-draw {
+  from {
+    stroke-dashoffset: 100;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.dna-strand {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: dna-draw 1.6s cubic-bezier(0.22, 1, 0.36, 1) 0.2s forwards;
+}
+.dna-strand-b {
+  animation-delay: 0.55s;
+}
+
+/* each rung wakes in its own rhythm, staggered along the ladder */
+@keyframes dna-rung-wake {
+  0% {
+    opacity: 0;
+    transform: translateY(3px) scaleY(0.4);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(0) scaleY(1.12);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scaleY(1);
+  }
+}
+.dna-rung {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: dna-rung-wake 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: calc(0.5s + var(--rung-i, 0) * 0.07s);
+}
+
+/* the sheen — one slow sweep of light, then a long rest */
+@keyframes dna-sheen-sweep {
+  0% {
+    transform: translateX(0);
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  55% {
+    opacity: 1;
+  }
+  70%,
+  100% {
+    transform: translateX(350%);
+    opacity: 0;
+  }
+}
+.dna-sheen {
+  animation: dna-sheen-sweep 7s ease-in-out 1.8s infinite;
+}
+
+/* the trajectory's lines draw; the area breathes in */
+@keyframes traj-draw {
+  from {
+    stroke-dashoffset: 100;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.traj-line {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: traj-draw 1.5s cubic-bezier(0.22, 1, 0.36, 1) 0.15s forwards;
+}
+.traj-line-breadth {
+  animation-delay: 0.5s;
+}
+@keyframes traj-area-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.traj-area {
+  opacity: 0;
+  animation: traj-area-in 1.2s ease-out 0.7s forwards;
+}
+@keyframes traj-node-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.5);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.traj-node {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: traj-node-pop 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: calc(0.4s + var(--node-i, 0) * 0.08s);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dna-strand,
+  .dna-rung,
+  .dna-sheen,
+  .traj-line,
+  .traj-area,
+  .traj-node {
+    animation: none;
+    opacity: 1;
+    stroke-dashoffset: 0;
+  }
+}

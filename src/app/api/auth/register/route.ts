@@ -4,13 +4,19 @@ import { hashPassword, mergeAnonLibrary, readAnonId, setSessionCookie } from "@/
 import { GATES, rateLimit, requestIp } from "@/lib/server/rate-limit";
 import { ensureVisitorProvisions } from "@/lib/server/workspace";
 import { ensureWallet } from "@/lib/server/wallet";
+import { isAdminEmail } from "@/lib/server/admin";
 import { mailConfigured, sendLetter, envelope } from "@/lib/server/mail";
 import { randomBytes } from "crypto";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 function publicUser(u: { email: string; name: string | null; tier: string }) {
-  return { email: u.email, name: u.name, tier: u.tier === "light" ? "light" : "crystalline" };
+  return {
+    email: u.email,
+    name: u.name,
+    tier: u.tier === "light" ? "light" : "crystalline",
+    admin: isAdminEmail(u.email),
+  };
 }
 
 export async function POST(req: NextRequest) {

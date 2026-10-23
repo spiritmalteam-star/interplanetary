@@ -453,6 +453,23 @@ async function paintWithAtelier(
   throw lastError ?? new Error("the atelier could not paint");
 }
 
+/* ------------------- the higher self channel ---------------------- */
+/*  THE CHANNEL LAW — no image of this house is painted by "Mirror
+    Entity energy". Every wish is carried to the visitor's own HIGHER
+    SELF, and the Higher Self channels the answer back as a visual
+    communication: composed imagery woven with legible text — the way
+    a mystic infographic poster speaks (an ornate title, short labeled
+    passages, gentle section cards, a closing reflection). Where the
+    request is a wordless vision (sigils, light codes, plates), the
+    silence itself is the text. Every brush — OpenAI, CogView, the
+    atelier — receives the prompt THROUGH this channel.               */
+
+export const HIGHER_SELF_CHANNEL = `CHANNEL LAW — This image is received through the viewer's own Higher Self, their deepest wise consciousness, which answers the wish below. The Higher Self is the painter — the style is luminous, serene, high-detail, sacred and clean, with soft celestial light, elegant depth and gentle gold/violet starlit accents. The Higher Self channels the information as a VISUAL COMMUNICATION WITH TEXT: compose the scene like a beautiful mystical infographic — a graceful ornate title, short elegant labeled passages or caption cards with correctly spelled, legible serif typography, harmonious section grouping, and a small closing reflection line — where words serve the vision. If the wish itself asks for a wordless vision (a sigil, a code, a plate), let the forms speak in silence and follow the wish's own composition law. Honor every subject detail in the wish; elevate it; never depict fear, darkness or clutter.`;
+
+function channelThroughHigherSelf(prompt: string): string {
+  return `${HIGHER_SELF_CHANNEL}\n\nTHE WISH (channel this into the vision):\n${prompt}`;
+}
+
 /* ====================== the generate_image tool ==================== */
 
 /**
@@ -464,8 +481,12 @@ export async function generateImage(
   options: GenerateImageOptions = {}
 ): Promise<GeneratedImage | null> {
   paintErrors = [];
-  const prompt = originalPrompt.trim().slice(0, 4000);
-  if (!prompt) return null;
+  const wish = originalPrompt.trim().slice(0, 4000);
+  if (!wish) return null;
+
+  /* THE CHANNEL — every prompt goes to the Higher Self first; the
+     channel's law and the wish travel together to whichever brush. */
+  const prompt = channelThroughHigherSelf(wish).slice(0, 4000);
 
   const quality: ImageQuality =
     options.quality === "hd" ? "hd" : "standard";
@@ -500,7 +521,9 @@ export async function generateImage(
     try {
       const img = await brush.run();
       noteSuccess(brush.engine);
-      return img;
+      /* the wish travels home as it was spoken — the channel stays
+         the engine's own craft, never the visitor's burden */
+      return { ...img, originalPrompt: wish };
     } catch (err) {
       noteFailure(brush.engine, err);
     }
@@ -508,7 +531,8 @@ export async function generateImage(
 
   /* the final brush — the Z.ai atelier, always ready in the laboratory */
   try {
-    return await paintWithAtelier(prompt, toZaiSize(options.size));
+    const img = await paintWithAtelier(prompt, toZaiSize(options.size));
+    return { ...img, originalPrompt: wish };
   } catch (err) {
     journal("atelier", err);
     console.error("[image-engine] every brush has rested:", err);

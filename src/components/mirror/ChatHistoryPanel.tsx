@@ -28,10 +28,13 @@ export function ChatHistoryPanel({
   onClose: () => void;
 }) {
   const t = useT();
-  /* THE GUEST'S OWN LAW — a non logged-in visitor keeps no shelf: the
-     panel speaks the temporary-chat truth instead of listing words. */
+  /* THE GUEST'S OWN LAW — a visitor holding no passage at all keeps no
+     shelf: the panel speaks the temporary-chat truth instead of listing
+     words. A passage that arrived by the quiet hold (the wanderer) is
+     still a passage — their shelf stands, and no enter door is shown
+     to a visitor who is already inside. */
   const me = useMirror((s) => s.me);
-  const keeper = Boolean(me && !me.email.startsWith("anon:"));
+  const keeper = Boolean(me);
   const openAuth = useMirror((s) => s.openAuth);
   /* Two hands may touch the shelf while the panel stands open: the
      store's archiveTick and the archive's own window event. Either one

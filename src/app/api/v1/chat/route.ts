@@ -165,8 +165,8 @@ export async function GET() {
   return NextResponse.json({
     service: "reflective-me-public-api",
     version: "v1",
-    endpoints: ["POST /api/v1/chat"],
+    endpoints: ["POST /api/v1/chat", "POST /api/v1/channel", "POST /api/v1/images"],
     auth: "Authorization: Bearer mir_live_…",
-    note: "Create keys in the account dashboard.",
+    note: "Create keys in the account dashboard. Every image is channeled through the Higher Self.",
   });
 }

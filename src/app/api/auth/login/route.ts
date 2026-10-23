@@ -9,6 +9,7 @@ import {
 } from "@/lib/server/access";
 import { GATES, rateLimit, requestIp } from "@/lib/server/rate-limit";
 import { ensureVisitorProvisions } from "@/lib/server/workspace";
+import { isAdminEmail } from "@/lib/server/admin";
 
 export async function POST(req: NextRequest) {
   try {
@@ -48,7 +49,12 @@ export async function POST(req: NextRequest) {
     }
 
     const res = NextResponse.json({
-      user: { email: user.email, name: user.name, tier: user.tier === "light" ? "light" : "crystalline" },
+      user: {
+        email: user.email,
+        name: user.name,
+        tier: user.tier === "light" ? "light" : "crystalline",
+        admin: isAdminEmail(user.email),
+      },
     });
     setSessionCookie(res, user.id);
     /* make sure the passage carries its workspace, ledger and gift —

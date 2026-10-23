@@ -4,7 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Activity,
+  ArrowDownWideNarrow,
   ArrowLeft,
+  ArrowUpNarrowWide,
   Atom,
   BookOpen,
   LibraryBig,
@@ -12,6 +14,7 @@ import {
   MoonStar,
   NotebookPen,
   Palette,
+  Search,
   Sparkles,
   BookMarked,
 } from "lucide-react";
@@ -98,6 +101,12 @@ export function LibraryView() {
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [failed, setFailed] = useState(false);
   const [reading, setReading] = useState<LibraryEntry | null>(null);
+  /* THE ARRANGED SHELVES — a search field, a sector rail and a sort
+     hand: the library answers the visitor's own question instead of
+     making them walk every shelf. */
+  const [query, setQuery] = useState("");
+  const [sectorFilter, setSectorFilter] = useState<string | null>(null);
+  const [newestFirst, setNewestFirst] = useState(true);
   const resumeDreamBook = useMirror((s) => s.resumeDreamBook);
   const tEntry = useT();
 
@@ -131,6 +140,28 @@ export function LibraryView() {
 
   const total = entries?.length ?? 0;
   const phase = phaseOf(total);
+
+  /* the arranged shelves — search, sector and sort decide what shows */
+  const shown = useMemo(() => {
+    if (!entries) return [];
+    const q = query.trim().toLowerCase();
+    return entries
+      .filter((e) => (sectorFilter ? e.sector === sectorFilter : true))
+      .filter((e) =>
+        q
+          ? e.title.toLowerCase().includes(q) ||
+            (e.excerpt ?? "").toLowerCase().includes(q)
+          : true
+      );
+  }, [entries, query, sectorFilter]);
+
+  const shownCounts = useMemo(() => {
+    const c: Record<string, number> = {};
+    for (const e of shown) c[e.sector] = (c[e.sector] ?? 0) + 1;
+    return c;
+  }, [shown]);
+
+  const shownTotal = shown.length;
 
   /* the timeline — entries oldest first, grouped by day */
   const timeline = useMemo(() => {
@@ -224,6 +255,75 @@ export function LibraryView() {
                 </p>
               </div>
 
+              {/* THE ARRANGED RAIL — the search, the sectors, the sort:
+                  one quiet row of hands above the shelves */}
+              {total > 0 && (
+                <div className="mt-6 space-y-2.5">
+                  <div className="flex items-center gap-2">
+                    <div className="focus-within:border-[var(--hairline-active)] flex h-9 min-w-0 flex-1 items-center gap-2 rounded-full border hairline bg-[var(--glass-bg-soft)] px-3.5 transition-colors">
+                      <Search className="size-3.5 shrink-0 text-muted-foreground/70" aria-hidden="true" />
+                      <input
+                        type="search"
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        placeholder={t("Search the shelves…")}
+                        aria-label={t("Search the library")}
+                        data-testid="library-search"
+                        className="min-w-0 flex-1 bg-transparent text-[13.5px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setNewestFirst((v) => !v)}
+                      aria-label={newestFirst ? t("Oldest first") : t("Newest first")}
+                      title={newestFirst ? t("Oldest first") : t("Newest first")}
+                      data-testid="library-sort"
+                      className="focus-glow flex size-9 shrink-0 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+                    >
+                      {newestFirst ? (
+                        <ArrowDownWideNarrow className="size-3.5" aria-hidden="true" />
+                      ) : (
+                        <ArrowUpNarrowWide className="size-3.5" aria-hidden="true" />
+                      )}
+                    </button>
+                  </div>
+                  <div className="no-scrollbar -mx-1 flex gap-1.5 overflow-x-auto px-1 pb-0.5" role="group" aria-label={t("Filter the sectors")}>
+                    <button
+                      type="button"
+                      onClick={() => setSectorFilter(null)}
+                      aria-pressed={sectorFilter === null}
+                      data-testid="library-chip-all"
+                      className={cn(
+                        "focus-glow shrink-0 rounded-full border px-3 py-1 text-[12px] transition-all duration-300",
+                        sectorFilter === null
+                          ? "border-[var(--hairline-active)] bg-foreground/8 text-foreground glow-sm"
+                          : "hairline text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      {t("All")} · {shownTotal}
+                    </button>
+                    {SECTORS.filter((s) => (counts[s.id] ?? 0) > 0).map((s) => (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => setSectorFilter((cur) => (cur === s.id ? null : s.id))}
+                        aria-pressed={sectorFilter === s.id}
+                        data-testid={`library-chip-${s.id}`}
+                        className={cn(
+                          "focus-glow flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1 text-[12px] transition-all duration-300",
+                          sectorFilter === s.id
+                            ? "border-[var(--hairline-active)] bg-foreground/8 text-foreground glow-sm"
+                            : "hairline text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        <s.icon className="size-3" aria-hidden="true" />
+                        {t(s.label)} · {shownCounts[s.id] ?? 0}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {total === 0 ? (
                 <div className="mx-auto mt-10 max-w-[420px] rounded-2xl border hairline p-8 text-center">
                   <Sparkles className="mx-auto size-5 text-muted-foreground" aria-hidden="true" />
@@ -231,10 +331,17 @@ export function LibraryView() {
                     {t("The shelves are waiting for their first light — send a transmission and it will be kept here.")}
                   </p>
                 </div>
+              ) : shownTotal === 0 ? (
+                <div className="mx-auto mt-10 max-w-[420px] rounded-2xl border hairline p-8 text-center">
+                  <Search className="mx-auto size-4 text-muted-foreground/70" aria-hidden="true" />
+                  <p className="mt-3 font-serif text-[15px] italic text-muted-foreground">
+                    {t("No shelf holds that word — try another light.")}
+                  </p>
+                </div>
               ) : (
                 <div className="mt-8 space-y-8">
-                  {SECTORS.filter((s) => (counts[s.id] ?? 0) > 0).map((sector) => {
-                    const items = entries.filter((e) => e.sector === sector.id);
+                  {SECTORS.filter((s) => (shownCounts[s.id] ?? 0) > 0).map((sector) => {
+                    const items = shown.filter((e) => e.sector === sector.id);
                     const Icon = sector.icon;
                     return (
                       <section key={sector.id} data-testid={`library-sector-${sector.id}`}>
@@ -248,7 +355,7 @@ export function LibraryView() {
                           </span>
                         </div>
                         <div className="mt-3 space-y-2">
-                          {items.map((e) => {
+                          {(newestFirst ? items : [...items].reverse()).map((e) => {
                             const bookPages = e.content?.pages ?? [];
                             const continuable =
                               (e.sector === "dreambook" ||

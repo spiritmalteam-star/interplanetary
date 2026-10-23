@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
+import { cn } from "@/lib/utils";
 import { ModalShell } from "./ModalShell";
 
 /* ------------------------------------------------------------------ */
@@ -28,6 +29,8 @@ import { ModalShell } from "./ModalShell";
 
 interface Summary {
   user: { email: string; name: string | null; emailVerified: boolean; createdAt: string | null };
+  admin?: boolean;
+  wallet?: { planTier: string; free: number; paid: number; total: number } | null;
   plan: {
     id: string;
     label: string;
@@ -359,6 +362,59 @@ export function AccountModal() {
                   : t("The ledger records everything — nothing is charged while the free law stands.")}
               </p>
             </section>
+
+            {/* -------- the coins — the passage's own purse -------- */}
+            {summary.wallet && (
+              <section aria-label={t("Your coins")} className="rounded-xl border hairline bg-[var(--glass-bg-soft)] p-4" data-testid="account-coins">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="mono-label text-[9.5px] uppercase tracking-[0.18em] text-muted-foreground">{t("Your coins")}</p>
+                    <p className="mt-1 text-[23px] font-semibold tracking-tight text-foreground/95" data-testid="account-coin-total">
+                      {fmtCredits(summary.wallet.total)}
+                      <span className="ml-1.5 text-[13px] font-normal text-muted-foreground">{t("coins")}</span>
+                    </p>
+                    <p className="mono-label mt-1 text-[9px] uppercase tracking-[0.14em] text-muted-foreground/70">
+                      {t("{free} free · {paid} paid — the free light is spent first", {
+                        free: fmtCredits(summary.wallet.free),
+                        paid: fmtCredits(summary.wallet.paid),
+                      })}
+                    </p>
+                  </div>
+                  <span
+                    className="mono-label shrink-0 rounded-full border px-2.5 py-1 text-[9px] uppercase tracking-[0.14em]"
+                    style={{
+                      borderColor: "color-mix(in srgb, var(--cy) 35%, transparent)",
+                      color: "var(--cy)",
+                    }}
+                  >
+                    {summary.wallet.planTier}
+                  </span>
+                </div>
+                {/* the plan ladder — the frontier's own structure */}
+                <div className="mt-3 grid gap-1.5 border-t hairline pt-3 sm:grid-cols-3">
+                  {summary.offers.plans.map((p) => (
+                    <div
+                      key={p.id}
+                      className={cn(
+                        "rounded-lg border px-2.5 py-2",
+                        p.available ? "hairline bg-[var(--glass-bg)]" : "border-dashed hairline opacity-60"
+                      )}
+                    >
+                      <p className="truncate text-[12.5px] font-medium text-foreground/90">{p.label}</p>
+                      <p className="mono-label mt-0.5 text-[9px] uppercase tracking-[0.1em] text-muted-foreground">
+                        {p.priceCents > 0 ? `$${(p.priceCents / 100).toFixed(0)}/${t("mo")}` : t("Free")}
+                        {" · "}{fmtCredits(p.monthlyCredits)} {t("credits")}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+                {summary.capabilities.stripe && (
+                  <p className="mt-2 text-[12px] text-muted-foreground/80">
+                    {t("When a plan is paid, the Fuel Engine fills the purse behind it — the coins land on their own.")}
+                  </p>
+                )}
+              </section>
+            )}
 
             {/* -------- the usage -------- */}
             <section aria-label={t("Usage this month")} className="rounded-xl border hairline bg-[var(--glass-bg-soft)] p-4">

@@ -188,6 +188,8 @@ export interface MeUser {
   email: string;
   name: string | null;
   tier: "crystalline" | "light";
+  /** The keeper's own light — true only for the ADMIN_EMAIL passage. */
+  admin?: boolean;
 }
 
 /* -------- the visitor's own light — the wallet at a glance ---------- */
@@ -2542,12 +2544,13 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       const res = await fetch("/api/auth/me");
       const data = (await res.json().catch(() => null)) as {
         user?: MeUser | null;
+        admin?: boolean;
         googleConfigured?: boolean;
         settings?: unknown;
         wallet?: WalletBalance | null;
       } | null;
       set({
-        me: data?.user ?? null,
+        me: data?.user ? { ...data.user, admin: Boolean(data.admin) } : null,
         googleConfigured: Boolean(data?.googleConfigured),
         wallet: data?.wallet ?? get().wallet,
       });

@@ -2,10 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getSessionUser } from "@/lib/server/access";
 import { ensureWallet } from "@/lib/server/wallet";
+import { isAdminEmail } from "@/lib/server/admin";
 
 /* GET /api/auth/me — the visitor's account. Everything in the
    laboratory is free; this only names the passage and counts the
-   library, so the profile can greet its owner gently. */
+   library, so the profile can greet its owner gently. The admin
+   light rides along so the profile knows to open the Fuel Engine. */
 export async function GET(req: NextRequest) {
   try {
     const googleConfigured = Boolean(
@@ -41,6 +43,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       user,
+      admin: isAdminEmail(user.email),
       googleConfigured,
       libraryCount: entries,
       settings,

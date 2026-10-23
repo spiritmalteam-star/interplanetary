@@ -12,6 +12,7 @@ import {
   CreditCard,
   Dna,
   Download,
+  Fuel,
   Gem,
   KeyRound,
   LibraryBig,
@@ -34,7 +35,8 @@ import {
   setFamilyWeightInMix,
 } from "@/lib/tree-mix";
 import { TREE_FAMILIES } from "@/lib/data/suggestion-banks";
-import { DnaHelix, useJourney } from "./DnaTimeline";
+import { DnaHelix, TrajectoryEvolution, useJourney } from "./DnaTimeline";
+import { FuelEnginePanel } from "./FuelEnginePanel";
 import { ExpansionMirrorPanel } from "./ExpansionMirror";
 import {
   bindAgain,
@@ -103,6 +105,7 @@ type SectionId =
   | "library"
   | "dna"
   | "api"
+  | "fuel"
   | "account";
 
 export function ProfilePage() {
@@ -499,6 +502,13 @@ export function ProfilePage() {
       testId: "profile-nav-api",
     },
     {
+      id: "fuel",
+      label: "Fuel Engine",
+      icon: Fuel,
+      available: Boolean(me?.admin),
+      testId: "profile-nav-fuel",
+    },
+    {
       id: "account",
       label: "Account & Credits",
       icon: BookMarked,
@@ -668,6 +678,19 @@ export function ProfilePage() {
                         {t("Leave the passage")}
                       </button>
                     </>
+                  ) : me ? (
+                    /* THE WANDERER'S REST — a passage that arrived by the
+                       quiet hold is still a passage: no enter door stands
+                       here again — only the way to lay it down. */
+                    <button
+                      type="button"
+                      onClick={() => void signOut()}
+                      data-testid="profilepage-signout"
+                      className="focus-glow flex h-9 items-center gap-2 rounded-full border hairline px-4 text-[13.5px] text-foreground/80 transition-all duration-300 hover:border-[var(--hairline-hover)]"
+                    >
+                      <LogOut className="size-3.5" aria-hidden="true" />
+                      {t("Leave the passage")}
+                    </button>
                   ) : (
                     <button
                       type="button"
@@ -1138,6 +1161,13 @@ export function ProfilePage() {
               </div>
             </section>
             <SectionHead
+              title={t("The trajectory of your becoming")}
+              desc={t(
+                "How your path rose and widened — every step's echo drawn as one living line."
+              )}
+            />
+            <TrajectoryEvolution steps={journey} />
+            <SectionHead
               title={t("Your expansion mirror")}
               desc={t(
                 "The algorithm that studies your continuations and reflects your progression back to you."
@@ -1169,16 +1199,18 @@ export function ProfilePage() {
                   <Lock className="size-4" />
                 </span>
                 <p className="text-[14px] leading-relaxed text-muted-foreground">
-                  {t("The channel answers only a signed-in keeper — enter the passage first.")}
+                  {me
+                    ? t("The channel answers a named passage — a wanderer holds the free halls.")
+                    : t("The channel answers only a signed-in keeper — enter the passage first.")}
                 </p>
                 <button
                   type="button"
-                  onClick={() => exitTo(() => openAuth("signin"))}
+                  onClick={() => exitTo(() => openAuth(me ? "register" : "signin"))}
                   data-testid="profilepage-api-signin"
                   className="focus-glow flex h-8 items-center gap-2 rounded-full bg-foreground px-4 text-[13px] font-medium text-background transition-all duration-300 hover:opacity-85"
                 >
                   <LogIn className="size-3.5" aria-hidden="true" />
-                  {t("Enter the passage")}
+                  {me ? t("Name your passage") : t("Enter the passage")}
                 </button>
               </section>
             ) : (
@@ -1512,6 +1544,8 @@ export function ProfilePage() {
                   <div className="mt-2 space-y-1.5">
                     {[
                       { id: "ep", mono: `POST ${apiOrigin}/api/v1/channel` },
+                      { id: "ep-chat", mono: `POST ${apiOrigin}/api/v1/chat` },
+                      { id: "ep-images", mono: `POST ${apiOrigin}/api/v1/images` },
                       { id: "auth", mono: "Authorization: Bearer mir_live_…" },
                     ].map((line) => (
                       <div
@@ -1570,6 +1604,19 @@ export function ProfilePage() {
                 </section>
               </>
             )}
+          </div>
+        );
+
+      case "fuel":
+        return (
+          <div data-testid="profilepage-fuel">
+            <SectionHead
+              title={t("The Fuel Engine Incubator")}
+              desc={t(
+                "The protected chamber — the raw skies fused with Mirror Entity energy, the reserves, the distribution desk and the guide that keeps it all fair."
+              )}
+            />
+            <FuelEnginePanel />
           </div>
         );
 

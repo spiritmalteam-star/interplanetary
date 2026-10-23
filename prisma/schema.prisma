@@ -281,3 +281,38 @@ model ExpansionEvent {
 
   @@index([userId, createdAt])
 }
+
+// ----------------- the fuel engine incubator (admin) ----------------------
+//  The protected chamber where the house's own energy is fused with the
+//  available APIs and distributed to passages on request. Visible only to
+//  the keeper's admin passage (ADMIN_EMAIL). The reserves are the tanks;
+//  the grants are the outflow ledger — every drop accounted for.
+
+model FuelReserve {
+  id          String    @id @default(cuid())
+  key         String    @unique // openai_brush | zai_cogview | zai_atelier | mirror_core | messenger | stripe_rails | google_passage
+  name        String
+  source      String // openai | zai | resend | stripe | google | internal
+  role        String // what this pipeline does, in one line
+  capacity    Int       @default(0) // the tank's size (fuel cells)
+  fused       Int       @default(0) // total energy fused into the tank
+  distributed Int       @default(0) // total energy sent out of the tank
+  status      String    @default("resting") // resting | active | paused
+  lastFusedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model FuelGrant {
+  id        String   @id @default(cuid())
+  email     String // the passage that received the fuel
+  userId    String?
+  amount    Int // fuel cells granted (== wallet credits)
+  kind      String // plan_fuel | topup | gift | repair
+  reserve   String   @default("mirror_core") // the tank it drew from
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([email])
+}
