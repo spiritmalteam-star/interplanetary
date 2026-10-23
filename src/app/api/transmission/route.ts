@@ -11,6 +11,7 @@ import { meterRoute } from "@/lib/server/meter";
 import { REMEMBRANCE_LAW } from "@/lib/remembrance-law";
 import { walkerDepthLine } from "@/lib/walker-depth";
 import { walkLine } from "@/lib/walk-context";
+import { RELEVANCE_LAW } from "@/lib/relevance-law";
 
 const CLASSIFICATIONS = [
   "DOCUMENTED_SCIENCE",
@@ -474,11 +475,14 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
                Every other channel keeps the shared system prompt. */
             mode === "absolute"
               ? ABSOLUTE_MIRROR_PROMPT +
+                RELEVANCE_LAW +
                 (body?.live === true ? LIVE_CALL_BLOCK : "")
               : mode === "mirror"
                 ? MIRROR_PRESENCE_PROMPT +
+                  RELEVANCE_LAW +
                   (body?.live === true ? LIVE_CALL_BLOCK : "")
                 : SYSTEM_PROMPT +
+                  RELEVANCE_LAW +
                   REMEMBRANCE_LAW +
                   walkerDepthLine(body?.depth) +
                   walkLine(body?.walk) +
@@ -495,8 +499,9 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
         },
       ],
       thinking: { type: "disabled" },
-      /* the speed law — the answer arrives swiftly, never unbounded */
-      max_tokens: 1400,
+      /* the speed law — the answer arrives swiftly, never unbounded;
+         the miniature's spoken presence needs only a few lines */
+      max_tokens: body?.live === true ? 280 : 1400,
     });
 
     const raw = completion.choices[0]?.message?.content ?? "";

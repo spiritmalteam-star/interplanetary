@@ -3,6 +3,7 @@ import ZAI from "@/lib/zai-client";
 import { walkerDepthLine } from "@/lib/walker-depth";
 import { walkLine } from "@/lib/walk-context";
 import { REMEMBRANCE_LAW } from "@/lib/remembrance-law";
+import { RELEVANCE_LAW } from "@/lib/relevance-law";
 import {
   describeImage,
   documentBlock,
@@ -103,7 +104,7 @@ async function postImpl(req: NextRequest): Promise<Response> {
     const messages: { role: "system" | "user" | "assistant"; content: string }[] = [
       {
         role: "system",
-        content: SYSTEM_PROMPT + REMEMBRANCE_LAW + walkerDepthLine(body?.depth) + walkLine(body?.walk) + (body?.live === true ? LIVE_CALL_BLOCK : ""),
+        content: SYSTEM_PROMPT + RELEVANCE_LAW + REMEMBRANCE_LAW + walkerDepthLine(body?.depth) + walkLine(body?.walk) + (body?.live === true ? LIVE_CALL_BLOCK : ""),
       },
     ];
 

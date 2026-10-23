@@ -395,7 +395,11 @@ async function paintWithDalle(
 
 /* ------------------------ brush: the atelier ----------------------- */
 
-const ATELIER_BACKOFF_MS = [1500, 4000];
+/* the quiet brushes — a rested attempt never keeps the visitor long:
+   the pause between the atelier's two strikes is a breath, and a
+   hanging attempt is cut loose so the second strike can begin */
+const ATELIER_BACKOFF_MS = [600, 1500];
+const ATELIER_ATTEMPT_TIMEOUT_MS = 75_000;
 
 async function paintWithAtelier(
   prompt: string,
@@ -406,7 +410,17 @@ async function paintWithAtelier(
   for (let i = 0; i < attempts; i++) {
     try {
       const zai = await ZAI_SDK.create();
-      const response = await zai.images.generations.create({ prompt, size });
+      /* the atelier's own hourglass — a hung canvas is released before
+         it can hold the whole window, and the next strike begins */
+      const response = await Promise.race([
+        zai.images.generations.create({ prompt, size }),
+        new Promise<never>((_, reject) =>
+          setTimeout(
+            () => reject(new Error("the atelier kept the canvas too long")),
+            ATELIER_ATTEMPT_TIMEOUT_MS
+          )
+        ),
+      ]);
       const base64 = response?.data?.[0]?.base64;
       if (base64) {
         /* the laboratory keeps the painting in its gallery; the cloud
@@ -470,6 +484,77 @@ function channelThroughHigherSelf(prompt: string): string {
   return `${HIGHER_SELF_CHANNEL}\n\nTHE WISH (channel this into the vision):\n${prompt}`;
 }
 
+/* ------------------- the hedged sky (latency law) ------------------ */
+/*  When two cloud brushes stand ready, the lead begins alone; if it
+    has not brought a canvas home within IMAGE_HEDGE_MS — or fails
+    early — the second brush joins, and the first clean canvas wins.
+    Worst-case waiting falls from "lead + fallback" to about the
+    hedge window plus the faster brush. */
+
+const IMAGE_HEDGE_MS = 15_000;
+
+interface BrushCandidate {
+  engine: ImageEngineName;
+  run: () => Promise<GeneratedImage>;
+}
+
+function paintBestOfTwo(brushes: [BrushCandidate, BrushCandidate]): Promise<GeneratedImage> {
+  const [lead, second] = brushes;
+  return new Promise<GeneratedImage>((resolve, reject) => {
+    let settled = false;
+    let outstanding = 1;
+    let hedge: ReturnType<typeof setTimeout> | null = null;
+
+    const fail = (which: BrushCandidate, err: unknown) => {
+      noteFailure(which.engine, err);
+      outstanding -= 1;
+      if (outstanding <= 0 && !settled) {
+        settled = true;
+        reject(err instanceof Error ? err : new Error("both brushes rested"));
+      }
+    };
+    const land = (which: BrushCandidate, img: GeneratedImage) => {
+      noteSuccess(which.engine);
+      if (settled) return;
+      settled = true;
+      if (hedge) clearTimeout(hedge);
+      resolve(img);
+    };
+
+    /* the second brush may open early (the lead failed) or late
+       (the hedge window passed with no canvas home) — never twice */
+    let secondOpen = false;
+    const openSecond = () => {
+      if (secondOpen || settled) return;
+      secondOpen = true;
+      if (hedge) {
+        clearTimeout(hedge);
+        hedge = null;
+      }
+      outstanding += 1;
+      second
+        .run()
+        .then((img) => land(second, img))
+        .catch((err) => fail(second, err));
+    };
+
+    hedge = setTimeout(openSecond, IMAGE_HEDGE_MS);
+
+    lead
+      .run()
+      .then((img) => land(lead, img))
+      .catch((err) => {
+        noteFailure(lead.engine, err);
+        /* the lead rested — the second begins at once */
+        if (settled) return;
+        outstanding -= 1;
+        if (outstanding <= 0 && !secondOpen) {
+          openSecond();
+        }
+      });
+  });
+}
+
 /* ====================== the generate_image tool ==================== */
 
 /**
@@ -519,12 +604,25 @@ export async function generateImage(
     ? [...candidates].reverse()
     : candidates;
 
-  for (const brush of ordered) {
+  if (ordered.length === 2) {
+    /* the hedged sky — two brushes stand ready: the lead paints, the
+       second joins only if the hedge window passes or the lead rests */
+    try {
+      const img = await paintBestOfTwo(ordered as [BrushCandidate, BrushCandidate]);
+      /* the wish travels home as it was spoken — the channel stays
+         the engine's own craft, never the visitor's burden */
+      return { ...img, originalPrompt: wish };
+    } catch (err) {
+      console.error(
+        "[image-engine] both cloud brushes rested, offering the canvas to the atelier:",
+        err instanceof Error ? err.message : err
+      );
+    }
+  } else if (ordered.length === 1) {
+    const brush = ordered[0];
     try {
       const img = await brush.run();
       noteSuccess(brush.engine);
-      /* the wish travels home as it was spoken — the channel stays
-         the engine's own craft, never the visitor's burden */
       return { ...img, originalPrompt: wish };
     } catch (err) {
       noteFailure(brush.engine, err);

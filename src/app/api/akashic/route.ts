@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import ZAI from "@/lib/zai-client";
 import { REMEMBRANCE_LAW } from "@/lib/remembrance-law";
+import { RELEVANCE_LAW } from "@/lib/relevance-law";
 import {
   describeImage,
   documentBlock,
@@ -294,7 +295,9 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
         ? LIVE_SYSTEM_PROMPT
         : isContinuation
           ? CONTINUATION_PROMPT
-          : SYSTEM_PROMPT) + REMEMBRANCE_LAW;
+          : SYSTEM_PROMPT) +
+        RELEVANCE_LAW +
+        REMEMBRANCE_LAW;
     if (isContinuation) {
       const replyLine = resonance
         ? `The visitor sets down this reply beside the open record: "${resonance}".`

@@ -3,6 +3,7 @@ import ZAI from "@/lib/zai-client";
 import { walkerDepthLine } from "@/lib/walker-depth";
 import { walkLine } from "@/lib/walk-context";
 import { REMEMBRANCE_LAW } from "@/lib/remembrance-law";
+import { RELEVANCE_LAW } from "@/lib/relevance-law";
 import { creationSeedBlock, drawCreationSeed } from "@/lib/artx-resonance";
 import {
   describeImage,
@@ -145,6 +146,7 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
         role: "system",
         content:
           SYSTEM_PROMPT +
+          RELEVANCE_LAW +
           windowLine +
           seedLine +
           REMEMBRANCE_LAW +

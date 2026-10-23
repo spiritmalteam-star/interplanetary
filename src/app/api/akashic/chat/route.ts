@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import ZAI from "@/lib/zai-client";
 import { REMEMBRANCE_LAW } from "@/lib/remembrance-law";
+import { RELEVANCE_LAW } from "@/lib/relevance-law";
 import {
   extractRecord,
   extractRecordLoose,
@@ -131,7 +132,7 @@ Open the seeker's own book now and inscribe the long, true record of their timel
     const zai = await ZAI.create();
     const completion = await zai.chat.completions.create({
       messages: [
-        { role: "system", content: SYSTEM_PROMPT + REMEMBRANCE_LAW },
+        { role: "system", content: SYSTEM_PROMPT + RELEVANCE_LAW + REMEMBRANCE_LAW },
         { role: "user", content: userContent + languageLine },
       ],
       thinking: { type: "disabled" },

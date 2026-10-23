@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import ZAI from "z-ai-web-dev-sdk";
+import { RELEVANCE_LAW } from "@/lib/relevance-law";
 
 /* ------------------------------------------------------------------ */
 /*  MIRROR ENTITY — the direct voice of the Heal Evolution laboratory. */
@@ -73,7 +74,7 @@ export async function POST(req: NextRequest) {
       messages: [
         {
           role: "system",
-          content: SYSTEM_BASE + contextLine + languageLine,
+          content: SYSTEM_BASE + RELEVANCE_LAW + contextLine + languageLine,
         },
         { role: "user", content: message },
       ],

@@ -3626,6 +3626,38 @@ export function BranchCanopy({
     });
   }, [settledKey, answerLanded, zoomQ, zoomMove, contSeeds, liveAnswerText, restoredText]);
 
+  /* THE WALK TAKES IN EVERY ANSWER — even one whose room no longer
+     stands open. When a channel's transmission lands after the visitor
+     has walked to another room (the ask was left mid-flight), the walk
+     still receives the words here, quietly: the node is settled in the
+     background, so the trail's RETURN later opens a room with its
+     transmission standing inside — never a silent flash on the wall.
+     The channel-generation wheel already guarantees the answer belongs
+     to this very question; the walk only keeps what is its own. */
+  const backgroundSettleKey = `${liveQuestion ?? ""}|${(liveAnswer ?? "").length}|${channeling?.length ?? 0}`;
+  useEffect(() => {
+    if (!liveQuestion) return;
+    const text = (liveAnswer ?? "").trim();
+    if (!text) return;
+    if (liveBelongsToRoom) return; /* the standing room settles its own way */
+    const session = getWalkSession();
+    const id = walkNodeId(liveQuestion);
+    const known = session.getNode(id);
+    if (!known) return;
+    const children = (channeling ?? []).map((b) => walkNodeId(b.question));
+    const childrenKnown = known.childrenIds ?? [];
+    if (known.transmission.trim() && childrenKnown.length >= children.length)
+      return;
+    session.settle({
+      id,
+      parentId: known.parentId,
+      category: known.category,
+      title: known.title,
+      transmission: text,
+      childrenIds: children.length > 0 ? children : childrenKnown,
+    });
+  }, [backgroundSettleKey, liveQuestion, liveAnswer, liveBelongsToRoom, channeling]);
+
   /* THE NARRATOR'S GATE — the visitor's own hand opens the voice; one
      touch and the standing room's landed transmission is read aloud
      by the male documentary narrator. */
@@ -5223,9 +5255,21 @@ export function BranchCanopy({
                         {t("Returned to the walk")}
                       </p>
                     )}
-                    <p className="break-words text-[15px] font-medium leading-snug text-foreground">
-                      {zoom.q}
-                    </p>
+                    {/* THE FIRST QUESTION NEVER HOLDS THE TOP BAR — docked
+                        in the threshold (the chat of the landing) the room's
+                        opening question steps out of the top bar entirely:
+                        the visitor just spoke it, the answer rises first,
+                        and the bar stays one slim hand-row. The full
+                        portal keeps the room's title, held to two lines
+                        so a long question can never crowd the crown. */}
+                    {!bare && (
+                      <p
+                        className="line-clamp-2 break-words text-[15px] font-medium leading-snug text-foreground"
+                        title={zoom.q}
+                      >
+                        {zoom.q}
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div className="flex shrink-0 items-center gap-1.5">

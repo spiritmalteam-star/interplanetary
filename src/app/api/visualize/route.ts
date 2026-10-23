@@ -174,7 +174,7 @@ const MODE_DEFAULT_SIZE: Record<VisualizationMode, ImageSize> = {
    queued behind the previous one and retried with growing patience —
    but the ladder is kept short, so a resting brush never keeps the
    visitor waiting minutes for news. */
-const PAINT_BACKOFF_MS = [1500, 4000];
+const PAINT_BACKOFF_MS = [800, 2000];
 
 let brushLine: Promise<unknown> = Promise.resolve();
 function withBrush<T>(task: () => Promise<T>): Promise<T> {
@@ -193,7 +193,9 @@ async function paint(
       /* the generate_image tool — DALL·E 3 first, the Z.ai atelier as
          the eternal fallback; retries and the circuit breaker live
          inside the engine */
+      const paintClock = Date.now();
       const img = await generateImage(prompt, { size });
+      console.log("[api/visualize] the brush painted in", Date.now() - paintClock, "ms (engine:", img?.engine ?? "none", ")");
       if (img) return img;
       console.error(`[api/visualize] paint attempt ${i + 1}: every brush rested`);
       if (i < attempts - 1) {
@@ -297,6 +299,7 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
     }
 
     const zai = await ZAI.create();
+    const directorClock = Date.now();
 
     /* ---------- the Visual Director composes the vision ---------- */
     const completion = await zai.chat.completions.create({
@@ -309,6 +312,7 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
       max_tokens: 4096,
     });
 
+    console.log("[api/visualize] the director composed in", Date.now() - directorClock, "ms");
     const raw = (completion.choices[0]?.message?.content ?? "").trim();
     let spec = parseJsonLoose(raw);
     if (!spec) {
