@@ -133,7 +133,10 @@ export default function LandingSlides() {
 
   return (
     <div className="mt-7 sm:mt-9">
-      {/* the stage — edge to edge on the phone, a grand plate on the desk */}
+      {/* the stage — edge to edge on the phone, a grand plate on the desk.
+          THE WHOLE PLATE — every artwork is a square 1152×1152 plate, so
+          the stage is a square too: nothing is cropped away, each image
+          fits perfectly and stands fully visible, edge to edge. */}
       <div
         ref={stageRef}
         role="region"
@@ -147,7 +150,7 @@ export default function LandingSlides() {
       >
         <div
           data-testid="landing-slides-stage"
-          className="relative aspect-[4/5] w-full overflow-hidden bg-[var(--lp-deep)] sm:aspect-[5/6] sm:rounded-[26px]"
+          className="relative aspect-square w-full overflow-hidden bg-[var(--lp-deep)] sm:rounded-[26px]"
         >
           {SLIDES.map((s, i) =>
             near.has(i) ? (

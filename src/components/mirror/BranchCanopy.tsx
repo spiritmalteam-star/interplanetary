@@ -3881,6 +3881,16 @@ export function BranchCanopy({
   /* THE FLOOR'S OWN DRAFT — the realm's whisper line keeps its words
      while the visitor thinks; one send and the room rises with them. */
   const [askDraft, setAskDraft] = useState("");
+  /* THE FLOOR'S OWN SEED — a door from the threshold may hand the floor
+     its first words (the image door's inviting stem): the seed is
+     taken once, the draft wears it, and the seed is spent. */
+  const floorSeed = useMirror((s) => s.floorSeed);
+  useEffect(() => {
+    if (floorSeed) {
+      setAskDraft(floorSeed);
+      useMirror.getState().takeFloorSeed();
+    }
+  }, [floorSeed]);
   /* THE FLOOR'S OWN CARGO — the paperclip and the camera's eye for the
      realm's own whisper line (one image, three documents) */
   const [askAtts, setAskAtts] = useState<ChatAttachment[]>([]);

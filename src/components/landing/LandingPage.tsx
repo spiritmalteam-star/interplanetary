@@ -54,20 +54,26 @@ type RailImage = {
   pos: string;
   h: string;
   title: string;
+  /* the stagger — one shoulder's zigzag rhythm, so the three bands
+     never stand in a straight column */
+  push?: string;
 };
 
-/* the slideshow's own images, three on each side, in parallax
-   THE TALLER SHARDS — each band grew by a third, so the artwork
-   reveals more of itself down both shoulders of the desk */
+/* the slideshow's own images, three on each side, in parallax.
+   THE CLEAN SHARDS — six walk artworks, each a crisp 864×1152
+   portrait plate drawn on its own deep sky, so every band shows
+   its whole subject sharp (no washed veil, no blur): the crystal
+   bloom, the woven communion, the rooted light, the seeing eye,
+   the garden's heart, the star compass. */
 const RAIL_LEFT: RailImage[] = [
-  { src: "/landing/img-city.jpg", pos: "50% 42%", h: "40vh", title: "The city of light" },
-  { src: "/landing/img-threshold.jpg", pos: "50% 40%", h: "31vh", title: "The ancient threshold" },
-  { src: "/landing/img-contact.jpg", pos: "42% 50%", h: "36vh", title: "The moment of contact" },
+  { src: "/images/walk/clearing-741.jpg", pos: "50% 42%", h: "38vh", title: "The crystal bloom" },
+  { src: "/images/walk/communion-639.jpg", pos: "50% 46%", h: "31vh", title: "The woven communion", push: "mt-10" },
+  { src: "/images/walk/root-396.jpg", pos: "50% 50%", h: "36vh", title: "The rooted light", push: "-mt-2" },
 ];
 const RAIL_RIGHT: RailImage[] = [
-  { src: "/landing/img-council.jpg", pos: "50% 42%", h: "35vh", title: "The council of worlds" },
-  { src: "/landing/img-garden.jpg", pos: "50% 55%", h: "42vh", title: "The living garden" },
-  { src: "/images/about/about-interplanetary.png", pos: "50% 50%", h: "32vh", title: "The orbiting worlds" },
+  { src: "/images/walk/insight-852.jpg", pos: "50% 42%", h: "34vh", title: "The seeing eye", push: "-mt-6" },
+  { src: "/images/walk/heart-528.jpg", pos: "50% 46%", h: "40vh", title: "The garden's heart", push: "mt-8" },
+  { src: "/images/walk/lyran-432.jpg", pos: "50% 50%", h: "30vh", title: "The star compass" },
 ];
 
 /* ------------------------- the parallax rails ------------------------- */
@@ -82,11 +88,12 @@ function Rail({
   progress: ReturnType<typeof useScroll>["scrollYProgress"];
 }) {
   const t = useT();
-  /* three bands, three speeds — the drift is transform-only */
+  /* three bands, three speeds — the drift is transform-only, each
+     shoulder's column breathing at its own depth */
   const bands = [
-    useTransform(progress, [0, 1], [40, -90]),
-    useTransform(progress, [0, 1], [-30, 110]),
-    useTransform(progress, [0, 1], [70, -150]),
+    useTransform(progress, [0, 1], [50, -110]),
+    useTransform(progress, [0, 1], [-40, 120]),
+    useTransform(progress, [0, 1], [80, -160]),
   ];
   return (
     <div
@@ -101,7 +108,7 @@ function Rail({
           <motion.figure
             key={`${side}-${img.src}-${i}`}
             style={{ y: bands[i % bands.length] }}
-            className="relative will-change-transform"
+            className={cn("relative will-change-transform", img.push)}
           >
             <div
               className="landing-shard relative overflow-hidden rounded-[22px]"
@@ -121,7 +128,7 @@ function Rail({
               />
               <span
                 aria-hidden="true"
-                className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[rgba(4,7,12,0.78)] to-transparent"
+                className="pointer-events-none absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-[rgba(4,7,12,0.62)] to-transparent"
               />
             </div>
             <figcaption className="mono-label mt-2.5 flex items-baseline gap-2 text-[9px] uppercase tracking-[0.24em] text-[var(--lp-faint)]">
@@ -420,23 +427,53 @@ export default function LandingPage({
     }
   }, []);
 
-  /* THE TUNNEL INTO THE MIRROR — the small arrow under every opened
-     row: one touch and the topic itself walks through the portal,
-     the mirror answering with the fuller information in its own
-     humble voice. The portal grows so the walk is seen. */
-  const tunnelInto = useCallback(
-    (topic: string) => {
-      void useMirror
-        .getState()
-        .askMirror(
-          t("Tunnel into the mirror — tell me more about {topic}.", {
-            topic: t(topic),
-          })
-        );
+  /* THE OFFER DOORS — every offering opens its own part of the portal:
+     one touch and the tunnel carries the walk straight into that room.
+     The image door leaves the floor open with one inviting stem, so
+     the visitor only completes what they wish to visualize — and the
+     making rises in the conversation room. */
+  const offerDoorInto = useCallback(
+    (door: OfferDoor) => {
+      const m = useMirror.getState();
+      switch (door) {
+        case "book":
+        case "dreams":
+          m.openDreamBook();
+          break;
+        case "music":
+          m.openLightCodes();
+          break;
+        case "records":
+          m.openAkashic();
+          break;
+        case "doors":
+          m.returnToObservatory();
+          break;
+        case "images":
+          /* THE IMAGE DOOR'S OWN STEM — the floor receives the first
+             words, the visitor completes what they wish to visualize,
+             and the making rises in the conversation room */
+          m.seedFloor(t("Show me a picture of "));
+          break;
+        default:
+          /* "chat" — the reflection room is the chat itself */
+          break;
+      }
       onExpand();
     },
     [t, onExpand]
   );
+
+  /* the doors every offering opens — the exact part of the portal
+     each one leads to */
+  type OfferDoor =
+    | "chat"
+    | "book"
+    | "images"
+    | "music"
+    | "dreams"
+    | "records"
+    | "doors";
 
   const offerRows = useMemo(
     () => [
@@ -444,6 +481,8 @@ export default function LandingPage({
         icon: HelpCircle,
         title: "Reflection & questions",
         line: "Ask anything — the mirror answers with you.",
+        door: "chat" as OfferDoor,
+        doorLabel: "Open the mirror",
         more: [
           "Bring anything — a doubt, a day, a decision, a feeling you cannot name yet. The mirror answers in your own voice, reflecting your words back until the question beneath the question comes into view.",
           "Every conversation keeps its own room, so a thought can be picked up tomorrow exactly where it was left. Nothing is judged, nothing is scored — the mirror listens the way still water listens.",
@@ -458,6 +497,8 @@ export default function LandingPage({
         icon: Feather,
         title: "Writing",
         line: "Shape stories, letters, and vows.",
+        door: "book" as OfferDoor,
+        doorLabel: "Open the book",
         more: [
           "Letters, vows, stories, pages of a book, a speech for a wedding, a note you never sent. Begin with a fragment or a feeling; the mirror keeps your tone and helps the piece grow without ever taking the pen from your hand.",
           "Work in drafts the way a gardener works in seasons: sketch, reread, prune, let it rest. A book can grow page by page into a living volume that remembers its own earlier chapters.",
@@ -472,6 +513,8 @@ export default function LandingPage({
         icon: ImageIcon,
         title: "Images",
         line: "Watch your words become paintings.",
+        door: "images" as OfferDoor,
+        doorLabel: "Visualize something",
         more: [
           "Describe what you see and watch it appear — scenes, sigils, dream-places, worlds that do not exist yet. Every image is made from your words and stays yours.",
           "The same sentence can be walked again in another light: change the hour, the season, the emotion, and watch the scene answer. Images gather into a gallery of your own becoming.",
@@ -486,6 +529,8 @@ export default function LandingPage({
         icon: Music,
         title: "Music",
         line: "Turn a feeling into sound.",
+        door: "music" as OfferDoor,
+        doorLabel: "Enter the chamber",
         more: [
           "Name the feeling and the mirror composes. Short themes for moments, soundbeds for stillness, melodies you can carry — no instruments, no theory required.",
           "A song can grow from a single hummed sentence into verses and a chorus. Music made here is meant for kitchens and walks, not stages — though stages are welcome too.",
@@ -500,6 +545,8 @@ export default function LandingPage({
         icon: Moon,
         title: "Dreams",
         line: "Weave living books, page by page.",
+        door: "dreams" as OfferDoor,
+        doorLabel: "Open the dream book",
         more: [
           "A living book grows page by page from your dreams and questions. Chapters form over days, characters return, and the story remembers where you have been.",
           "Dreams recorded on waking are woven into the book's fabric — a recurring symbol becomes a returning character, a feeling becomes a weather. The book becomes a map of your inner sky.",
@@ -514,6 +561,8 @@ export default function LandingPage({
         icon: GraduationCap,
         title: "Learning",
         line: "Walk the records of civilizations.",
+        door: "records" as OfferDoor,
+        doorLabel: "Walk the records",
         more: [
           "Walk the records of civilizations — histories, symbol systems, sciences — and return with what is useful. The mirror reads with you, not at you.",
           "Ask how a principle lands in your own life and the record answers in plain words. Learning here is a walk, not a lecture: you choose the door, the pace, and the depth.",
@@ -528,6 +577,8 @@ export default function LandingPage({
         icon: Compass,
         title: "Exploration",
         line: "Open doors to other worlds.",
+        door: "doors" as OfferDoor,
+        doorLabel: "Open the doors",
         more: [
           "Doors to other worlds: councils of star civilizations, living gardens, cities of light, ancient thresholds. Each one is a guided space for reflection and play.",
           "Some doors are quiet rooms for thinking; some are laboratories for making; some are simply beautiful places to stand in for a while. You choose how deep each walk goes.",
@@ -813,7 +864,8 @@ export default function LandingPage({
               {/* the numbered index — every offering, one quiet row
                   that opens to its fuller words */}
               <ol className="border-y border-[var(--lp-edge)]">
-                {offerRows.map(({ icon: Icon, title, line, more, points }, i) => (
+                {offerRows.map(
+                  ({ icon: Icon, title, line, more, points, door, doorLabel }, i) => (
                   <li key={title} className="border-b border-[var(--lp-edge)] last:border-b-0">
                     <button
                       type="button"
@@ -870,10 +922,13 @@ export default function LandingPage({
                               </li>
                             ))}
                           </ul>
-                          {/* THE TUNNEL — the topic walks into the mirror */}
+                          {/* THE OFFER'S OWN DOOR — one touch and the
+                              walk crosses straight into that part of
+                              the portal: the room itself, not words
+                              about the room */}
                           <button
                             type="button"
-                            onClick={() => tunnelInto(title)}
+                            onClick={() => offerDoorInto(door)}
                             data-testid={`tunnel-offering-${i + 1}`}
                             className="focus-glow group/tunnel mt-4 inline-flex items-center gap-2 rounded-full border border-[rgba(159,216,220,0.3)] bg-[rgba(159,216,220,0.06)] px-4 py-2 text-[13px] font-medium text-[var(--lp-feather)] transition-all duration-300 hover:border-[rgba(159,216,220,0.65)] hover:bg-[rgba(159,216,220,0.13)] hover:text-[var(--lp-feather-bright)]"
                           >
@@ -881,13 +936,14 @@ export default function LandingPage({
                               className="size-3.5 transition-transform duration-300 group-hover/tunnel:translate-x-0.5"
                               aria-hidden="true"
                             />
-                            {t("tunnel into mirror")}
+                            {t(doorLabel)}
                           </button>
                         </div>
                       </div>
                     </div>
                   </li>
-                ))}
+                )
+                )}
               </ol>
             </div>
           </section>

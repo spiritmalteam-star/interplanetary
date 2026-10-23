@@ -2467,6 +2467,93 @@ html:not(.dark) .lp-sigil-img {
   mix-blend-mode: multiply;
   filter: brightness(0.58) sepia(0.52) saturate(1.2);
 }
+
+/* THE DESKTOP DUSK — on the desk the daylight sky deepens: the same
+   vanilla vocabulary poured into a warm umber dusk, so the house's
+   works (the grand plates, the guides' exhibition, the drifting
+   shards) stand in true contrast against their ground. The phone
+   keeps its milky daylight; the crystal toggle keeps its own night.
+   Every landing surface reads the same --lp tokens, so one block
+   re-dresses the whole desk: ink, glass, hairlines, mesh, marks. */
+@media (min-width: 1024px) {
+  html:not(.dark) {
+    --lp-deep: #1e1811;
+    --lp-head: #f3ead6;
+    --lp-body: #cfc2a6;
+    --lp-body-soft: #bfb297;
+    --lp-mute: #a3967c;
+    --lp-faint: #7d7260;
+    --lp-gold: #e8d9b0;
+    --lp-gold-soft: #f0e7cd;
+    --lp-gold-ink: #f2e9cf;
+    --lp-feather: #9fd8dc;
+    --lp-feather-bright: #c9ecee;
+    --lp-violet: #b9a5d0;
+    --lp-violet-bright: #cbb9e0;
+    --lp-veil: rgba(26, 20, 12, 0.55);
+    --lp-veil-solid: #241d13;
+    --lp-edge: rgba(255, 244, 214, 0.14);
+    --lp-hero-veil: rgba(20, 14, 6, 0.34);
+    --lp-hero-halo: rgba(16, 10, 4, 0.68);
+    --lp-aura-a: rgba(94, 168, 158, 0.16);
+    --lp-aura-b: rgba(146, 116, 182, 0.16);
+  }
+  html:not(.dark) .lp-ground {
+    color-scheme: dark;
+    /* the dusk ground — warm umber with the two kind colors and the
+       gold breathing through it, the same six breaths as the daylight
+       sky, deepened */
+    background:
+      radial-gradient(
+        54% 36% at 4% 0%,
+        rgba(94, 168, 158, 0.1),
+        transparent 62%
+      ),
+      radial-gradient(
+        46% 32% at 98% 7%,
+        rgba(146, 116, 182, 0.1),
+        transparent 64%
+      ),
+      radial-gradient(
+        40% 28% at 90% 44%,
+        rgba(94, 168, 158, 0.05),
+        transparent 66%
+      ),
+      radial-gradient(
+        44% 30% at 2% 66%,
+        rgba(146, 116, 182, 0.07),
+        transparent 66%
+      ),
+      radial-gradient(
+        42% 30% at 98% 82%,
+        rgba(94, 168, 158, 0.05),
+        transparent 64%
+      ),
+      radial-gradient(
+        60% 42% at 50% 108%,
+        rgba(232, 217, 176, 0.07),
+        transparent 64%
+      ),
+      radial-gradient(
+        58% 40% at 50% -6%,
+        rgba(46, 36, 22, 0.9),
+        transparent 60%
+      ),
+      #1e1811;
+  }
+  html:not(.dark) .lp-ground::before {
+    background-image:
+      linear-gradient(rgba(232, 217, 176, 0.033) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(232, 217, 176, 0.033) 1px, transparent 1px);
+  }
+  /* the marks are drawn for the dark — at dusk they stand as
+     themselves, no sepia ink needed */
+  html:not(.dark) .lp-sigil-img {
+    mix-blend-mode: normal;
+    filter: none;
+  }
+}
+
 .lp-ground::before {
   content: "";
   position: fixed;
@@ -2509,18 +2596,20 @@ html:not(.dark) .lp-sigil-img {
     opacity: 1;
   }
 }
-/* the drifting shards — softly masked, low contrast, never blocking */
+/* the drifting shards — THE CLEAN SHARDS: full presence, no wash and
+   no dimming veil (the walk artworks carry their own deep skies), a
+   whisper of fade only at the drift's far edges so no band ever ends
+   in a hard cut */
 .landing-shard {
-  opacity: 0.5;
-  filter: saturate(0.92) brightness(0.88);
+  opacity: 0.95;
   box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.06),
-    0 24px 60px -30px rgba(0, 0, 0, 0.9);
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 30px 70px -34px rgba(0, 0, 0, 0.95);
   mask-image: linear-gradient(
     to bottom,
     transparent 0%,
-    black 14%,
-    black 86%,
+    black 5%,
+    black 95%,
     transparent 100%
   );
 }

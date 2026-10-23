@@ -411,6 +411,10 @@ interface MirrorState {
       back by the button beside the input. It fades by itself when an
       answer lands; this flag only holds the visitor's summon. */
   canopySummoned: boolean;
+  /** THE FLOOR'S OWN SEED — first words a threshold door hands the
+      realm's whisper line (the image door's inviting stem). Taken
+      once by the floor, then spent. */
+  floorSeed: string;
 
   /* THE SWIPE'S MEMORY — every view change is recorded, so a right
      swipe anywhere walks back through the journey and a left swipe
@@ -697,6 +701,8 @@ interface MirrorState {
       composer with a prepared question. */
   askAboutTechnology: (name: string) => void;
   setDraft: (value: string) => void;
+  seedFloor: (value: string) => void;
+  takeFloorSeed: () => string;
   focusComposer: () => void;
   returnToObservatory: () => void;
   clearChannel: (mode?: Mode | "forge") => void;
@@ -1019,6 +1025,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   view: "observatory",
   composerFocusNonce: 0,
   canopySummoned: false,
+  floorSeed: "",
   viewPast: [],
   viewFuture: [],
   archiveTick: 0,
@@ -1410,6 +1417,15 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         [s.activeMode]: { ...s.sessions[s.activeMode], draft: value },
       },
     })),
+
+  /* THE FLOOR'S OWN SEED — a threshold door's first words for the
+     realm's whisper line; the floor takes them once and spends them. */
+  seedFloor: (value) => set({ floorSeed: value }),
+  takeFloorSeed: () => {
+    const v = get().floorSeed;
+    if (v) set({ floorSeed: "" });
+    return v;
+  },
 
   focusComposer: () =>
     set((s) => ({ composerFocusNonce: s.composerFocusNonce + 1 })),
