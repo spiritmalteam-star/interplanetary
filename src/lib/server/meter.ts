@@ -119,11 +119,13 @@ export function meterRoute(operation: string, handler: MeteredHandler) {
       };
 
       /* ---------- the wallet's weigh — BEFORE the door serves ----------
-         The five gated doors (chat, akashic, art x, light codes, dream
-         book) draw their price from the visitor's own wallet first: an
-         empty purse is answered at once with 402 INSUFFICIENT_CREDITS
-         and the work is never begun on light that is not there. When
-         the door itself stumbles, the exact draw is refunded. */
+         The gated doors (chat, akashic, art x, light codes) draw their
+         price from the visitor's own wallet first: an empty purse is
+         answered at once with 402 INSUFFICIENT_CREDITS and the work is
+         never begun on light that is not there. When the door itself
+         stumbles, the exact draw is refunded. THE DREAM BOOK is not
+         among them — the loom is the house's open gift, free for every
+         visitor, no passage demanded. */
       const walletAction = WALLET_OPERATIONS[operation];
       const walletCost = walletAction ? WALLET_COSTS[walletAction] : undefined;
       if (walletAction && walletCost && walletEnforced() && !userId.startsWith("stateless:")) {

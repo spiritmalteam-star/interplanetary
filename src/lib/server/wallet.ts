@@ -56,13 +56,17 @@ export const WALLET_COSTS: Record<string, number> = {
   DREAM_BOOK: walletCost("DREAM_BOOK", 2),
 };
 
-/** The meter operations that walk through the wallet's weigh. */
+/** The meter operations that walk through the wallet's weigh.
+    THE DREAM BOOK STANDS OUTSIDE THIS LAW — the loom is the house's
+    open gift: no purse is weighed, no passage is demanded, and an
+    anonymous keeper weaves the whole book freely (the meter never
+    answers the dream_book door with 402, so no visitor is ever
+    pushed to a passage to read). */
 export const WALLET_OPERATIONS: Record<string, WalletActionType> = {
   chat: "CHAT",
   akashic: "AKASHIC",
   artx: "ART_X",
   light_codes: "LIGHT_CODES",
-  dream_book: "DREAM_BOOK",
 };
 
 /* ---------------------------- the plans ----------------------------- */

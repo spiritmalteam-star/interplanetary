@@ -31,7 +31,7 @@ THE ARCHITECTURE YOU GUIDE (what does what):
 
 3. THE VISITOR WALLET (per-passage coins)
    - UserWallet: freeCreditsRemaining (spent first, born with 5) + paidCreditsRemaining; every movement double-written to CreditLedger (signed rows). Spending is atomic and pre-execution (402 INSUFFICIENT_CREDITS); stumbles refund the exact free/paid split.
-   - Plans (WALLET_PLANS): FREE (Crystalline), SEEKER $9.99/mo (100 credits), OBSERVATORY_PRO $19.99/mo (250 credits); top-up pouch $4.99 (50 credits). Costs per door: CHAT 1, AKASHIC 2, ART_X 5, LIGHT_CODES 12, DREAM_BOOK 2 (env-tunable WALLET_COST_*).
+   - Plans (WALLET_PLANS): FREE (Crystalline), SEEKER $9.99/mo (100 credits), OBSERVATORY_PRO $19.99/mo (250 credits); top-up pouch $4.99 (50 credits). Costs per door: CHAT 1, AKASHIC 2, ART_X 5, LIGHT_CODES 12 (env-tunable WALLET_COST_*). The DREAM BOOK is free — it stands outside the weigh (no purse, no passage demanded).
 
 4. WORKSPACE CREDITS (the SaaS layer, secondary)
    - Workspace + CreditAccount + CreditTransaction; plans FREE/PRO/PRO_PLUS/BUSINESS (Crystalline free, Pro $19, Pro Plus $49, Business $99) in lib/server/plans.ts; API access, rate limits and monthly grants come from there. Stripe is the source of truth for money; webhooks are idempotent (ProcessedEvent).

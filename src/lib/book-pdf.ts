@@ -1,11 +1,19 @@
 /* ------------------------------------------------------------------ */
 /*  book-pdf.ts — the Dream Book's own binding press (client side).    */
 /*                                                                     */
-/*  Binds a woven volume — front matter and every page — into one      */
-/*  classic ink PDF (A4, serif, page numbers, chapter openings),       */
-/*  entirely in the browser. The DejaVu serif faces are embedded       */
-/*  through fontkit so every tongue the house speaks renders true      */
-/*  (Latin, Greek, Cyrillic — the whole press).                        */
+/*  Binds a woven volume — front matter, a printed CONTENTS leaf,      */
+/*  part leaves, and every page — into one classic ink PDF (A4,        */
+/*  serif, page numbers, chapter openings), entirely in the browser.   */
+/*  The DejaVu serif faces are embedded through fontkit so every       */
+/*  tongue the house speaks renders true (Latin, Greek, Cyrillic —     */
+/*  the whole press).                                                  */
+/*                                                                     */
+/*  THE UNSYMBOLIC PRESS — the fonts are embedded WHOLE (subset:       */
+/*  false). Slicing a full Unicode face into a subset froze the        */
+/*  main thread for whole minutes on long volumes — the binding        */
+/*  press "stuck". Embedding the full bytes is instant and the         */
+/*  bound book costs only its own honest weight. The fetched faces     */
+/*  rest in a cache so the second binding never re-fetches.            */
 /* ------------------------------------------------------------------ */
 
 export interface BookPdfMeta {
@@ -19,6 +27,7 @@ export interface BookPdfMeta {
 
 export interface BookPdfPage {
   n: number;
+  part?: string;
   chapter?: string;
   paragraphs: string[];
 }
@@ -26,10 +35,17 @@ export interface BookPdfPage {
 const SERIF_URL = "/fonts/DejaVuSerif.ttf";
 const SERIF_BOLD_URL = "/fonts/DejaVuSerif-Bold.ttf";
 
+/* the fetched faces rest — one fetch per session, never one per book */
+const fontCache = new Map<string, ArrayBuffer>();
+
 async function fetchFont(url: string): Promise<ArrayBuffer> {
+  const held = fontCache.get(url);
+  if (held) return held;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`font ${url} ${res.status}`);
-  return res.arrayBuffer();
+  const bytes = await res.arrayBuffer();
+  fontCache.set(url, bytes);
+  return bytes;
 }
 
 function slugify(title: string): string {
@@ -60,8 +76,9 @@ export async function downloadBookPdf(
 
   const doc = await PDFDocument.create();
   doc.registerFontkit(fontkit as Parameters<typeof doc.registerFontkit>[0]);
-  const serif = await doc.embedFont(serifBytes, { subset: true });
-  const serifBold = await doc.embedFont(boldBytes, { subset: true });
+  /* THE WHOLE FACES — no subsetting: the press never freezes again */
+  const serif = await doc.embedFont(serifBytes, { subset: false });
+  const serifBold = await doc.embedFont(boldBytes, { subset: false });
 
   const A4: [number, number] = [595.28, 841.89];
   const M = 68;
@@ -152,8 +169,93 @@ export async function downloadBookPdf(
     });
   }
 
+  /* ------------------- the contents leaf -------------------
+     the volume's own map, drawn the way a printed book draws it:
+     the parts as small capitals, the chapters beneath with their
+     first page numbers standing at the right hand. */
+  if (pages.some((p) => p.part || p.chapter)) {
+    newPage();
+    const cx = A4[0] / 2;
+    y = A4[1] * 0.8;
+    const head = "Contents";
+    page.drawText(head, {
+      x: cx - serifBold.widthOfTextAtSize(head, 19) / 2,
+      y,
+      size: 19,
+      font: serifBold,
+      color: ink,
+    });
+    y -= 34;
+    for (const p of pages) {
+      if (y < BOTTOM) break;
+      if (p.part) {
+        y -= 10;
+        const line = p.part.toUpperCase();
+        for (const l of wrap(line, serifBold, 10.5)) {
+          page.drawText(l, {
+            x: M,
+            y,
+            size: 10.5,
+            font: serifBold,
+            color: soft,
+          });
+          y -= 16;
+        }
+        y -= 2;
+      }
+      if (p.chapter) {
+        const num = String(p.n);
+        const lines = wrap(p.chapter, serif, 11);
+        for (let i = 0; i < lines.length; i++) {
+          if (y < BOTTOM) break;
+          page.drawText(lines[i], {
+            x: M + 12,
+            y,
+            size: 11,
+            font: serif,
+            color: ink,
+          });
+          if (i === lines.length - 1) {
+            page.drawText(num, {
+              x: A4[0] - M - serif.widthOfTextAtSize(num, 10),
+              y,
+              size: 10,
+              font: serif,
+              color: faint,
+            });
+          }
+          y -= 16.5;
+        }
+        y -= 3;
+      }
+    }
+  }
+
   /* ------------------- the story pages ------------------- */
   for (const p of pages) {
+    /* the part leaf — a new part is announced on its own quiet page,
+       the way a printed book raises a new movement */
+    if (p.part) {
+      newPage();
+      const cx = A4[0] / 2;
+      let ty = A4[1] * 0.55;
+      for (const l of wrap(p.part.toUpperCase(), serifBold, 17)) {
+        page.drawText(l, {
+          x: cx - serifBold.widthOfTextAtSize(l, 17) / 2,
+          y: ty,
+          size: 17,
+          font: serifBold,
+          color: ink,
+        });
+        ty -= 26;
+      }
+      page.drawLine({
+        start: { x: cx - 36, y: ty + 6 },
+        end: { x: cx + 36, y: ty + 6 },
+        thickness: 0.6,
+        color: faint,
+      });
+    }
     newPage();
     y = M;
     if (p.chapter) {

@@ -214,6 +214,7 @@ export interface WalletNotice {
 
 export interface DreamBookResumePage {
   n: number;
+  part?: string;
   chapter?: string;
   paragraphs: string[];
 }

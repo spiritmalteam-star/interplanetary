@@ -1345,6 +1345,7 @@ function PoemCard({ resonance }: { resonance: string }) {
 
 interface WeaverPage {
   n: number;
+  part?: string;
   chapter?: string;
   paragraphs: string[];
 }
@@ -2117,6 +2118,11 @@ function BookWeaver({
       >
         {spreadPages.map((p) => (
           <div key={p.n}>
+            {p.part && (
+              <p className="mb-1.5 text-center text-[11px] uppercase tracking-[0.28em] text-muted-foreground/70">
+                {p.part}
+              </p>
+            )}
             {p.chapter && (
               <p className="ink-hand mb-2.5 text-center text-[15px] italic text-muted-foreground">
                 {p.chapter}
@@ -2385,6 +2391,11 @@ function BookWeaver({
                 <div className="mt-8 space-y-7">
                   {displayPages.map((p) => (
                     <div key={p.n}>
+                      {p.part && (
+                        <p className="mb-1.5 text-center text-[11.5px] uppercase tracking-[0.28em] text-muted-foreground/70">
+                          {p.part}
+                        </p>
+                      )}
                       {p.chapter && (
                         <p className="ink-hand mb-2.5 text-center text-[16px] italic text-muted-foreground">
                           {p.chapter}

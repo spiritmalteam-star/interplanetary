@@ -51,6 +51,8 @@ type WeavePhase = "open" | "next" | "close" | "extend";
 
 interface WeavePage {
   n: number;
+  /** Part line — present only on the page where a part opens. */
+  part?: string;
   /** Chapter title — present only on the first page of a chapter. */
   chapter?: string;
   paragraphs: string[];
@@ -324,8 +326,18 @@ HOW YOU WRITE
 - Parallel realities, impossible architecture, sentient tides and stranger things are welcome when the volume calls for them — wonder is your native language, and every wonder follows the book's own inner rules.
 - Pages turn like breath: each page ends by quietly asking for the next one (a door opening, a name spoken, a change in the wind) — never with a cliffhanger cliché, never with "to be continued".
 - Each spread of two pages must FEEL complete and still pull forward — the reader should rest between spreads and ache, gently, to turn the page.
-- Chapter titles appear sparingly — a new chapter every 10–16 pages, carried on the first page of the chapter as a single evocative title.
+- Chapter titles appear sparingly — a new chapter every 8–14 pages, carried on the first page of the chapter as a single evocative title.
 - For the youngest readers keep vocabulary soft and sentences short; for older readers let the prose deepen — but the magic never curdles into horror, and nothing explicit ever appears.
+
+THE REAL BOOK LAW (the volume is bound like a printed book — AUTHORITATIVE)
+- The volume is a REAL book, not a pamphlet of fragments: numbered chapters that rise and fall like a printed novel's ("Chapter One — <Evocative Title>"; the style may follow the book's own tongue, but the number is there), a front matter (sigil, axiom, dedication), and a seal of closing that earns the word "final".
+- LONG VOLUMES ARE DIVIDED INTO PARTS: when the planned length is 60 pages or more, the book carries two to four PARTS — each announced ONCE on the page where it opens (the page returns a "part" line above its chapter) and gathering its chapters around one movement of the story. Parts are numbered like a printed book ("Part One — <Evocative Title>") and never re-announced.
+- Where the book's own voice loves an epigraph, the first page may carry one short quoted line from inside the volume's world (as if quoting an older text the book itself found) — optional, only when it belongs.
+
+THE FULL PAGE LAW (a page is a real book page — AUTHORITATIVE)
+- A page is never a fragment and never a lone paragraph: for grown readers each page carries THREE TO FIVE full paragraphs of real prose (3–6 sentences each — roughly 300–450 words resting on the page); for young readers two to four shorter paragraphs. One paragraph does not make a page; a torn leaf does not leave the loom.
+- Compose the page like a printed book composes it: scene and summary taking turns, dialogue carrying its own line, description that moves the story, a short paragraph allowed for a beat — but the beat never becomes the whole page.
+- Fullness is not padding: every paragraph advances the story, deepens a character, or turns the world one ring wider. Zero filler dressed as length.
 
 THE LITERARY EVOLUTION (V10) — THE TEN DIMENSIONS
 Quality is DEMONSTRATED in the finished sentences, never claimed. Ten dimensions govern every volume: PROSE (rhythm, clarity, diction, imagery, sentence length, viewpoint, voice — alternate lyrical complexity with plain force; obscure vocabulary is not intelligence), ORIGINALITY (unexpected yet meaningful premises, institutions, cultures, conflicts, structures, resolutions — never recycle your own imagery or plot templates), WORLDBUILDING (stable physical and metaphysical laws, geography, ecology, economics, histories, costs, and exceptions — consequences shown through lives, never exposition dumps), CHARACTER (each central figure carries desires, values, wounds, contradictions, agency, knowledge limits, evolving motives and distinct speech — the reader must care who survives and why), STRUCTURE (setup, causality, escalation, turning points, reversals, revelations, climax, aftermath — a beautiful setting is not a plot), EMOTION (feelings arising through choices, relationships, sacrifice, surprise, tenderness, loss, hope — evoke, never label), PHILOSOPHY (ideas embodied in dilemmas and conflicting worldviews; ambiguity, discovery and multiple legitimate interpretations are welcome; never replace fiction with sermons), PACING (vary action, dialogue, silence, immersion, discovery, reflection, humor, tension; cut repeated descriptions and duplicate resolutions), CONTINUITY (facts, causality, chronology, object states, promises, ages, locations, knowledge and world rules preserved across the whole manuscript), ENDINGS (promises fulfilled with earned transformation and surprising inevitability — never end the same story twice).
@@ -360,6 +372,12 @@ THE UNREPEATING PAGE (inside one volume — the story evolves naturally)
 - Every page must MOVE: a new event, a new image, a new consequence, a new turn of knowledge, relationship or place. Never restate, recap, re-summarize or re-describe what an earlier page already told — not as echo, not as narration recap, not as "as you know" dialogue, not as a repeated description wearing new words.
 - A motif may return ONLY when its meaning has grown (the ledger's motifs keep score); if a beat would repeat an earlier one, push it one step further instead — escalate it, invert it, or pay it off.
 - The THREAD and the LEDGER are the inventory of everything already told: write what is NOT yet in them. Before returning continuation pages, silently audit them against every chapter summary and motif in the ledger — if a planned scene retreads one, replace it with the next genuine development of the story.
+
+THE TURNING LAW (twists, turns and one connected fabric — AUTHORITATIVE)
+- The story moves through TURNS, not drift: every six to ten pages something genuinely changes course — a reversal, a revelation that recolors what the reader already read, a betrayal, an arrival, a door long shut that opens (or one that stood open, closing). Quiet stretches exist, but even a quiet stretch quietly turns one true thing.
+- PLANT AND PAY: every stride plants at least one new promise (a foreshadowing, an open question, a debt, a sealed letter) and visibly advances or pays an earlier one — the ledger's "promises" keep the score. By the seal of closing every promise is paid; nothing dangles.
+- THE CONNECTED FABRIC: early scenes are seeds. Objects, names, wounds, lies, jokes and landmarks planted early return later with their meaning grown; the ending reassembles the book's own pieces so the reader sees the whole design was one fabric from page one. The best surprise is what was already there, seen differently.
+- Astonish honestly: at least once per part the reader meets a moment they could not predict yet cannot call unfair — prepared by the ledger's canon, landed through events, never through a coincidence that solves everything.
 
 THE PLAIN WORD LAW (the voice stays clean — AUTHORITATIVE)
 - Never lean on mystical filler: no "frequency", "vibration", "vibrational", "energetic", "raise your vibration", "resonate at", "the universe wants", "the energy of" as decoration, mood or explanation — UNLESS the spoken subject itself is literally about sound, music, physics or those exact words (then use them precisely, technically and sparingly, as the topic's own true terms).
@@ -513,6 +531,12 @@ function buildUserPrompt(body: {
         : `- No whispered wishes — open the book from resonance alone: choose the shapes the visitor's choices already imply and surprise them with the rest.`,
       ``,
       stratum,
+      ...(phase === "open" && !body.ground?.tiny
+        ? [
+            ``,
+            `THE FULL PAGE LAW holds from the first leaf: both opening pages are real book pages (three to five full paragraphs each for grown readers; two to four for the young). If the book's planned length is 60 pages or more, PART ONE opens on page one — that page returns its "part" line above its chapter. Page one opens the first numbered chapter.`,
+          ]
+        : []),
       ...(seedLine ? [``, seedLine] : []),
       ...(liveLine ? [``, liveLine] : []),
       ...(phase === "open"
@@ -551,11 +575,12 @@ function buildUserPrompt(body: {
       SEALED_NAME_LAW,
       ``,
       `Write the NEXT ${span === 2 ? "TWO pages" : `${span} pages`} (pages ${body.pageNumber} through ${(body.pageNumber ?? 2) + span - 1}) of the same volume, in the same voice. Let the book deepen: a new turn, a revelation earned by what came before, the world growing one ring wider. Open a new chapter here ONLY if the loom's rhythm asks for it.`,
+      `THE FULL PAGE LAW holds: ${span === 2 ? "both pages are real book pages — three to five full paragraphs each (grown readers; two to four for the young), never a lone paragraph" : "every page is a real book page, never a lone paragraph"}. Plant or pay at least one promise of the ledger in these pages.`,
       ...(span > 2
         ? [
             body.reveal
               ? `THE REVEAL STRIDE (absolute — the visitor asked the loom to channel the whole book): return ALL ${span} pages, never fewer — each page carries 1–2 paragraphs (3 only at a true turning point), every paragraph 2–4 sentences. The reader turns quickly; the telling stays whole but never lingers. Return exactly ${span} page objects, numbered in order, no gaps.`
-              : `THE BACKGROUND BATCH (absolute — these ${span} pages are channeled in the background while the visitor reads the earlier ones): return ALL ${span} pages, never fewer, at FULL depth — each page carries 1–3 paragraphs exactly as any hand-woven page would; the reader must never feel a page was written in haste. End the batch on a pull, not a full stop: the next stride must feel inevitable. Return exactly ${span} page objects, numbered in order, no gaps.`,
+              : `THE BACKGROUND BATCH (absolute — these ${span} pages are channeled in the background while the visitor reads the earlier ones): return ALL ${span} pages, never fewer, at FULL depth — each page carries 3–4 full paragraphs exactly as any hand-woven page would; the reader must never feel a page was written in haste. End the batch on a pull, not a full stop: the next stride must feel inevitable. Return exactly ${span} page objects, numbered in order, no gaps.`,
           ]
         : []),
       `Return the updated thread and the updated ledger.`
@@ -626,11 +651,11 @@ function buildUserPrompt(body: {
   lines.push(
     ``,
     `OUTPUT FORMAT — return STRICT JSON only, no markdown fences, no text outside the JSON:`,
-    `{"title":"<book title — only in phase open>","subtitle":"<one line — only in phase open>","sigil":"<one short invocation line tuned to the subject — only in phase open>","axiom":"<one crystallizing sentence: why this volume is conjured now — only in phase open>","dedication":"<1–2 sentences — only in phase open>","totalPages":<number — in phase open or extend, or in a continuation ONLY when the rewriting hand explicitly asks for a different length>,"threads":"<the compact living memory of the volume so far>","ledger":{"brief":{"premise":"<one line>","question":"<one line>","dilemma":"<one line>","chain":"<one line>","ending":"<one line — the desired effect on the reader>"},"canon":["<world rule>"],"characters":["<Name — desire, wound, state, who knows what>"],"objects":["<object — state (page changed)>"],"timeline":["<event — when, where>"],"promises":["<foreshadowing / open promise>"],"motifs":["<recurring image — its developing meaning>"],"chapters":[{"title":"<chapter>","pages":"<n–m>","summary":"<one line>"}]},"pages":[{"n":<page number>,"chapter":"<chapter title — only if a chapter opens on this page>","paragraphs":["<paragraph 1>","<paragraph 2>"]}]${phase === "close" ? `,"audit":{"prose":{"score":<0–10>,"evidence":"<one line from the finished writing>"},"originality":{...},"worldbuilding":{...},"character":{...},"structure":{...},"emotion":{...},"philosophy":{...},"pacing":{...},"continuity":{...},"endings":{...}}` : ""}}`,
-    `Rules: exactly ${span === 2 ? `TWO page objects, in order, numbered ${phase === "open" ? "1 and 2" : `${body.pageNumber} and ${(body.pageNumber ?? 2) + 1}`}` : `${span} page objects, in order, numbered ${body.pageNumber} through ${(body.pageNumber ?? 2) + span - 1}`}. Each page carries 1–3 paragraphs (young readers: shorter paragraphs; grown: fuller). "chapter" is a plain title without the word "Chapter" — given ONLY when a genuinely new chapter opens on that page (a new chapter every 10–16 pages AT MOST; most page-pairs carry NO chapter at all; NEVER repeat a chapter title already given — a page must not wear a chapter it did not open). Page text is pure prose — no headings, no markdown, no asterisks, no emojis. In verse forms a paragraph string may contain real line breaks (\\n) so every verse line sits on its own line.`,
+    `{"title":"<book title — only in phase open>","subtitle":"<one line — only in phase open>","sigil":"<one short invocation line tuned to the subject — only in phase open>","axiom":"<one crystallizing sentence: why this volume is conjured now — only in phase open>","dedication":"<1–2 sentences — only in phase open>","totalPages":<number — in phase open or extend, or in a continuation ONLY when the rewriting hand explicitly asks for a different length>,"threads":"<the compact living memory of the volume so far>","ledger":{"brief":{"premise":"<one line>","question":"<one line>","dilemma":"<one line>","chain":"<one line>","ending":"<one line — the desired effect on the reader>"},"canon":["<world rule>"],"characters":["<Name — desire, wound, state, who knows what>"],"objects":["<object — state (page changed)>"],"timeline":["<event — when, where>"],"promises":["<foreshadowing / open promise>"],"motifs":["<recurring image — its developing meaning>"],"chapters":[{"title":"<chapter>","pages":"<n–m>","summary":"<one line>"}]},"pages":[{"n":<page number>,"part":"<part line — ONLY on the page where a new part opens>","chapter":"<chapter line — only if a chapter opens on this page>","paragraphs":["<paragraph 1>","<paragraph 2>","<paragraph 3>"]}]${phase === "close" ? `,"audit":{"prose":{"score":<0–10>,"evidence":"<one line from the finished writing>"},"originality":{...},"worldbuilding":{...},"character":{...},"structure":{...},"emotion":{...},"philosophy":{...},"pacing":{...},"continuity":{...},"endings":{...}}` : ""}}`,
+    `Rules: exactly ${span === 2 ? `TWO page objects, in order, numbered ${phase === "open" ? "1 and 2" : `${body.pageNumber} and ${(body.pageNumber ?? 2) + 1}`}` : `${span} page objects, in order, numbered ${body.pageNumber} through ${(body.pageNumber ?? 2) + span - 1}`}. ${body.reveal ? "Each page carries 1–2 paragraphs (3 only at a true turning point)" : "Each page is a FULL book page — three to five full paragraphs for grown readers (two to four shorter ones for the young); a lone-paragraph page never leaves the loom"}. "chapter" carries the chapter's number and its evocative title as a printed book would (e.g. "Chapter One — The Cartographer of Ashes"; the style may follow the book's own tongue) — given ONLY when a genuinely new chapter opens on that page (a new chapter every 8–14 pages AT MOST; most strides carry NO chapter at all; NEVER repeat a chapter title or number already given — a page must not wear a chapter it did not open). "part" is given ONLY on the page where a NEW part opens (two to four parts for volumes of 60+ pages) and names it like a printed book (e.g. "Part Two — The Drowning Choir"); a part already announced is never announced again. Page text is pure prose — no headings, no markdown, no asterisks, no emojis. In verse forms a paragraph string may contain real line breaks (\\n) so every verse line sits on its own line.`,
     phase === "open"
       ? `The "ledger" is REQUIRED in this opening: fill it with the private brief and every canon line, character, object, promise and motif the first pages establish — the room keeps it and hands it back at every continuation.`
-      : `The "ledger" is REQUIRED: carry forward EVERY line you received, updated by what these new pages changed — a line that still holds is never dropped, objects keep their state, paid promises are marked paid, and the new chapter (if any) is appended to "chapters". THE LEDGER STAYS LEAN — a fast loom is a kind loom: every ledger line is ONE short clause (at most ~12 words); canon at most 10 lines, characters at most 12, objects at most 10, timeline at most 16 (when it overflows, the earliest events fold into one summarizing line), promises at most 10, motifs at most 8, and "chapters" carries only the LAST 12 chapters, each summary one short line.`,
+      : `The "ledger" is REQUIRED: carry forward EVERY line you received, updated by what these new pages changed — a line that still holds is never dropped, objects keep their state, paid promises are marked paid, and the new chapter (if any) is appended to "chapters" (a chapter that opens a part carries the part's name in its summary, so the parts are never announced twice). THE LEDGER STAYS LEAN — a fast loom is a kind loom: every ledger line is ONE short clause (at most ~12 words); canon at most 10 lines, characters at most 12, objects at most 10, timeline at most 16 (when it overflows, the earliest events fold into one summarizing line), promises at most 10, motifs at most 8, and "chapters" carries only the LAST 12 chapters, each summary one short line.`,
     phase === "close"
       ? `The "audit" is REQUIRED in this closing phase: the private, honest editorial report on the FINISHED volume — ten dimensions, each scored 0–10 (10 is exceptionally rare; never award it by habit) with ONE line of evidence drawn from the actual writing. It lives outside the book and is never printed in its pages.`
       : "",
@@ -749,6 +774,9 @@ function normalizePages(raw: unknown, startN: number, span = 2): WeavePage[] {
       n: typeof obj.n === "number" && obj.n > 0 ? obj.n : startN + i,
       paragraphs,
     };
+    if (typeof obj.part === "string" && obj.part.trim()) {
+      page.part = obj.part.trim().slice(0, 120);
+    }
     if (typeof obj.chapter === "string" && obj.chapter.trim()) {
       page.chapter = obj.chapter.trim().slice(0, 120);
     }

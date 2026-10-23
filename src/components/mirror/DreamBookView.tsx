@@ -95,6 +95,7 @@ import { cn } from "@/lib/utils";
 
 interface WeavePage {
   n: number;
+  part?: string;
   chapter?: string;
   paragraphs: string[];
 }
@@ -418,6 +419,7 @@ export function DreamBookView() {
       threads: threadsRef.current,
       pages: pagesRef.current.map((p) => ({
         n: p.n,
+        ...(p.part ? { part: p.part } : {}),
         ...(p.chapter ? { chapter: p.chapter } : {}),
         paragraphs: [...p.paragraphs],
       })),
@@ -598,6 +600,7 @@ export function DreamBookView() {
               bookId: bookIdRef.current,
               bookPages: pagesRef.current.map((p) => ({
                 n: p.n,
+                ...(p.part ? { part: p.part } : {}),
                 ...(p.chapter ? { chapter: p.chapter } : {}),
                 paragraphs: p.paragraphs,
               })),
@@ -1032,6 +1035,7 @@ export function DreamBookView() {
     try {
       const bound = dedupeChapters(pagesRef.current).map((p) => ({
         n: p.n,
+        ...(p.part ? { part: p.part } : {}),
         ...(p.chapter ? { chapter: p.chapter } : {}),
         paragraphs: p.paragraphs,
       }));
@@ -3024,7 +3028,7 @@ function BookPage({
   const copyPage = async () => {
     if (!page) return;
     try {
-      const header = page.chapter ? `${page.chapter}\n\n` : "";
+      const header = `${page.part ? `${page.part}\n\n` : ""}${page.chapter ? `${page.chapter}\n\n` : ""}`;
       await navigator.clipboard.writeText(`${header}${pageText(page)}`);
       setCopied(true);
       toast.success(t("The page is copied."));
@@ -3041,6 +3045,11 @@ function BookPage({
     >
       {page ? (
         <>
+          {page.part && (
+            <p className="mb-1 text-center font-[family-name(var(--font-literata))] text-[12px] uppercase tracking-[0.3em] text-[var(--dream-ink-faint)]">
+              {page.part}
+            </p>
+          )}
           {page.chapter && (
             <p className="mb-4 text-center font-[family-name(var(--font-literata))] text-[16px] italic text-[var(--dream-ink-soft)] sm:text-[18px]">
               {page.chapter}

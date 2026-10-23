@@ -35,6 +35,7 @@ export interface DownloadEntry {
   };
   pageList: {
     n: number;
+    part?: string;
     chapter?: string;
     paragraphs: string[];
   }[];
@@ -86,6 +87,7 @@ export async function bindAgain(entry: DownloadEntry): Promise<void> {
     entry.meta,
     entry.pageList.map((p) => ({
       n: p.n,
+      ...(p.part ? { part: p.part } : {}),
       ...(p.chapter ? { chapter: p.chapter } : {}),
       paragraphs: p.paragraphs,
     }))
