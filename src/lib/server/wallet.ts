@@ -129,10 +129,12 @@ export function planTierFor(priceId: string | null | undefined): PlanTier | null
 
 /* ------------------------- enforcement ------------------------------ */
 
-/** The wallet's law stands by default (the frontier pipeline is live);
-    the keeper may rest it with WALLET_ENFORCED=false in the vault. */
+/** THE FREE LAW — the whole house stands free: no purse is weighed,
+    no door answers 402, no visitor is ever pushed to a passage. The
+    wallet's machinery sleeps until the keeper explicitly stands the
+    law up again with WALLET_ENFORCED=true in the vault. */
 export function walletEnforced(): boolean {
-  return process.env.WALLET_ENFORCED !== "false";
+  return process.env.WALLET_ENFORCED === "true";
 }
 
 /* --------------------------- the wallet ----------------------------- */

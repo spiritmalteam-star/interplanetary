@@ -1,14 +1,13 @@
 "use client";
 
 import { useEffect } from "react";
-import { Coins, Maximize2, Minimize2 } from "lucide-react";
+import { Maximize2, Minimize2 } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { setLearningIdentity } from "@/lib/learning-branches";
 import { useT } from "@/lib/i18n";
 import { CosmicBackdrop } from "./CosmicBackdrop";
 import { StarField } from "./StarField";
 import { WalletGuard } from "./WalletGuard";
-import { CreditBadge } from "./CreditBadge";
 import { BranchCanopy } from "./BranchCanopy";
 import { ReplyBranches } from "./ReplyBranches";
 import { MirrorOS } from "./MirrorOS";
@@ -403,37 +402,23 @@ function AppShellViews({
         liveAnswer={channelLoading ? null : lastChannelMsg?.text || null}
         liveError={channel.error}
         liveMessage={lastChannelMsg}
-        headerExtra={
-          /* THE CROWN'S OWN PURSE — the theme has moved to the crown's
-             centre: the house's seal (the logo) toggles the light. */
-          <CreditBadge />
-        }
         realmControls={
           /* THE PORTAL'S OWN HANDS — standing in the crown between the
              about door and the visitor's passage: the fullscreen hand
              while the portal is docked on the threshold, the landing
-             hand while it fills the whole screen. */
+             hand while it fills the whole screen. THE FREE LAW — the
+             crossing wears no coin: the whole realm stands open to
+             every visitor, no passage demanded, nothing acquired. */
           bare && onExpand ? (
             <button
               type="button"
               onClick={onExpand}
               aria-label={t("Fullscreen")}
-              title={t("Fullscreen — opens the paid realm's advanced reflections")}
+              title={t("Fullscreen")}
               data-testid="crown-expand"
               className="focus-glow relative flex size-7 items-center justify-center rounded-full border border-[rgba(232,217,176,0.42)] bg-[rgba(232,217,176,0.08)] text-[var(--lp-gold)] transition-all duration-300 hover:border-[rgba(232,217,176,0.8)] hover:text-[var(--lp-gold-soft)]"
             >
               <Maximize2 className="size-3" aria-hidden="true" />
-              {/* THE EXCHANGE'S OWN MARK — a small gold coin rides the
-                  crossing's corner: the full portal is the paid realm,
-                  opened by login (registration) once one of the offered
-                  realms is acquired (the landing's floor stays free). */}
-              <span
-                aria-hidden="true"
-                data-testid="crown-expand-paid-dot"
-                className="absolute -right-1 -top-1 flex size-3 items-center justify-center rounded-full border border-[rgba(232,217,176,0.6)] bg-[var(--lp-veil-solid)] text-[var(--lp-gold)] shadow-[0_0_6px_1px_rgba(232,217,176,0.45)]"
-              >
-                <Coins className="size-2" />
-              </span>
             </button>
           ) : !bare && onMinimize ? (
             <button

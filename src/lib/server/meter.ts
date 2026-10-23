@@ -29,8 +29,10 @@ import { ensureVisitorProvisions } from "@/lib/server/workspace";
 /*    - the legacy ledger (atomic deduction AFTER a successful answer, */
 /*      only while CREDITS_ENFORCED=true)                              */
 /*                                                                     */
-/*  The wallet's law stands by default (WALLET_ENFORCED=false rests    */
-/*  it); the legacy ledger only witnesses until CREDITS_ENFORCED=true. */
+/*  The wallet's law RESTS by default — THE FREE LAW: the whole house  */
+/*  stands free, and WALLET_ENFORCED=true in the vault stands the      */
+/*  purse up again; the legacy ledger only witnesses until             */
+/*  CREDITS_ENFORCED=true.                                             */
 /* ------------------------------------------------------------------ */
 
 export interface MeterContext {

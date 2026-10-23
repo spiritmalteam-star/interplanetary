@@ -4952,3 +4952,20 @@ Stage Summary:
 - The Dream Book is the house's open gift: no passage, no purse, no gate — any visitor weaves and reads freely.
 - The whole-book download no longer sticks: whole-face embedding, cached fonts, seconds not minutes.
 - The loom now binds real books: full-length pages, numbered chapters, parts with their own leaves, a printed contents, and a turning law that plants and pays its promises across one connected fabric.
+---
+Task ID: 96
+Agent: Z.ai Code (main)
+Task: Disable the need for login at the books — every door totally free for every visitor — and push to git.
+
+Work Log:
+- Verified the chain first: local main = origin/main = 1f0f3c3, tree clean; dev server alive. Walked the live site as a fresh guest (cookies cleared) and found the two remaining walls: (1) entering the portal forced the "Enter your passage" auth modal on every guest browser (LandingGate.expandPortal's guest+ever law), and (2) the wallet's weigh stood by default (walletEnforced() = WALLET_ENFORCED !== "false", .env empty) so chat/akashic/artx/light_codes answered 402 after the five birth lights and the purse modal pushed "Open the passage" (login/register). The Dream Book itself already wove freely (verified live end-to-end: "The Lantern Keeper's Almanac" woven as a guest, zero prompts).
+- THE FREE LAW (server): walletEnforced() now rests by default (WALLET_ENFORCED === "true" stands the purse up again) — no door ever weighs a purse, nothing answers 402, no visitor is ever pushed to a passage; meter.ts law comment updated to keep the story true; .env.example rewritten (free by default, opt-in enforcement).
+- THE PORTAL'S OWN DOOR (LandingGate.expandPortal): removed the guest/ever computation, the forced openAuth("signin"), and the whole portalIntent machinery (the intention effect, the spent-wish effect, the sessionStorage flag) — every enter hand now opens the main portal directly for guest and keeper alike; the passage rests beside the crown as an option, never a condition.
+- THE CROWN'S PURSE RETIRED (AppShell): CreditBadge removed from the crown (the purse badge that opened the paid-pass modal), the gold coin dot retired from the fullscreen hand, the "paid realm" title and Coins import dropped — the crossing wears no coin.
+- Dead keeping cleaned: mirror-store portalIntent fields + setPortalIntent removed, the everSignedIn localStorage write removed from refreshMe and hold-bypass.tsx (no reader remains anywhere).
+- QA: bun run lint clean. Live verification at 1536×864 and 390×844 as a fresh guest with cleared storage: portal entry opens straight into the main hall (no auth modal, both viewports), Akashic received "The Folded Page" unasked with zero friction, a whisper stone answered in full with branches, the Book atelier stands open, network log shows zero 402s (all /api/wallet calls 200 informational), round trip landing↔portal keeps the conversation and never asks again, crown shows no purse badge, dev.log shows only 200s.
+
+Stage Summary:
+- The whole house now stands free: no login is ever demanded at the books, the records, the mirror or the crossing — the passage (account) remains purely optional, for whoever wants their library to travel with them.
+- The wallet's machinery sleeps until WALLET_ENFORCED=true is explicitly set in the vault; the crown wears no purse and no coin.
+- All forced-auth paths (portal entry, 402 purse modal, crown badge) are gone; optional entry points (Passage door, profile sign-in) remain for those who choose them.

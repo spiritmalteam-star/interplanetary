@@ -41,12 +41,6 @@ export async function bypassIntoPro(): Promise<boolean> {
     const st = useMirror.getState();
     st.setMe(data.user);
     await Promise.allSettled([st.refreshMe(), st.refreshWallet()]);
-    /* the keeper's memory — a browser that passed once is never asked again */
-    try {
-      window.localStorage.setItem("mirror.everSignedIn", "1");
-    } catch {
-      /* the private keeping stays closed — the store's own word */
-    }
     toast.success("The secret hand held — the pro doors stand open.", {
       description: "A wanderer's passage was carved for you and the purse was filled.",
     });

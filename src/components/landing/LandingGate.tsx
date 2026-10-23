@@ -144,10 +144,7 @@ export default function LandingGate() {
      MAIN portal, and the tunnel's own light folds when the hall
      stands around them. */
   const [tunnel, setTunnel] = useState<"off" | "on" | "fading">("off");
-  /* the keeper's name — watched so the portal's own intention can
-     carry a newly-signed visitor straight through the full portal */
-  const me = useMirror((s) => s.me);
-  const authOpen = useMirror((s) => s.authOpen);
+  /* the keeper's name — watched by the realm's own keeping hands */
   const lensRef = useRef<HTMLDivElement | null>(null);
   const landingRootRef = useRef<HTMLDivElement | null>(null);
   const busy = useRef(false);
@@ -379,38 +376,20 @@ export default function LandingGate() {
   }, [phase, geo, Chamber]);
 
   /* THE FULL PORTAL'S DOOR — every enter hand (the hero's button, the
-     offer's link, the crown's fullscreen hand) now carries the visitor
-     into the MAIN portal itself: the realm grows to the whole screen,
-     and a guest meets the passage's door standing inside it — never a
-     bounce back into the landing's chat. The paid law still stands:
-     the realm's own offerings open by registration or login (the
-     wallet and the credits keep their watch); the door itself shows
-     the main hall. The landing's own floor stays free forever. */
+     offer's link, the crown's fullscreen hand) carries the visitor
+     into the MAIN portal itself: the realm grows to the whole screen.
+     THE FREE LAW — no passage is ever demanded: the door itself shows
+     the main hall to every visitor, guest and keeper alike; the
+     passage (the account) rests beside the crown for whoever wants
+     their library to travel, never a condition of entering. */
   const expandPortal = useCallback(() => {
     if (busy.current) return;
     if (phaseRef.current === "through") return;
     setChatFolded(false);
     void (async () => {
-      const st = useMirror.getState();
-      let cur = st.me;
-      if (!cur) {
-        await st.refreshMe();
-        cur = useMirror.getState().me;
-      }
-      if (busy.current) return;
       if (!Chamber) {
         setPending(true);
         return;
-      }
-      const guest = !cur || cur.email.startsWith("anon:");
-      /* THE KEEPER'S MEMORY — a browser that has passed the passage
-        once is remembered: every enter hand opens the main portal
-        freely from then on, the door never asked again. */
-      let ever = false;
-      try {
-        ever = window.localStorage.getItem("mirror.everSignedIn") === "1";
-      } catch {
-        /* the private keeping stays closed — the store's own word */
       }
       busy.current = true;
       setTunnel("on");
@@ -426,76 +405,17 @@ export default function LandingGate() {
         setTunnel("fading");
         window.setTimeout(() => setTunnel("off"), 900);
         busy.current = false;
-        /* the guest's first passage — the door opens inside the main
-           portal, and the wish stands so the moment the passage
-           names its keeper the walk simply continues. THE KEEPER'S
-           MEMORY: a browser that passed once is never asked again. */
-        if (guest && !ever) {
-          useMirror.getState().setPortalIntent(true);
-          try {
-            sessionStorage.setItem("mirror.portalIntent", "1");
-          } catch {
-            /* the session's memory stays closed — the store's flag carries */
-          }
-          useMirror.getState().openAuth("signin");
-        }
       }, PHONE_CROSSING() ? 1320 : 1000);
     })();
   }, [Chamber]);
 
-  /* THE INTENTION'S OWN HAND — the passage named its keeper while the
-     portal's wish was standing: through they go, at once. */
-  useEffect(() => {
-    if (phaseRef.current !== "landing") return;
-    if (!me || me.email.startsWith("anon:")) return;
-    const st = useMirror.getState();
-    let flagged = st.portalIntent;
-    try {
-      flagged = flagged || sessionStorage.getItem("mirror.portalIntent") === "1";
-    } catch {
-      /* the session's memory stays closed — the store's flag decides */
-    }
-    if (!flagged) return;
-    st.setPortalIntent(false);
-    try {
-      sessionStorage.removeItem("mirror.portalIntent");
-    } catch {
-      /* already forgotten */
-    }
-    expandPortal();
-  }, [me, expandPortal]);
-
-  /* THE SPENT WISH — if the passage's door closes with the visitor
-     still a guest (they turned away themselves), the portal's wish
-     is spent; a later sign-in from the profile must not yank them
-     through the portal uninvited. */
-  useEffect(() => {
-    if (authOpen) return;
-    const st = useMirror.getState();
-    const cur = st.me;
-    if (!cur || cur.email.startsWith("anon:")) {
-      if (st.portalIntent) st.setPortalIntent(false);
-      try {
-        sessionStorage.removeItem("mirror.portalIntent");
-      } catch {
-        /* already forgotten */
-      }
-    }
-  }, [authOpen]);
-
   /* THE GOOGLE PASSAGE'S RETURN — the journey comes home with a
      word when it failed (state, token, profile…): the visitor is
-     told gently, the wish is spent, and the word leaves the address. */
+     told gently, and the word leaves the address. */
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const g = params.get("google");
     if (!g) return;
-    useMirror.getState().setPortalIntent(false);
-    try {
-      sessionStorage.removeItem("mirror.portalIntent");
-    } catch {
-      /* already forgotten */
-    }
     const reasons: Record<string, string> = {
       state: "The Google passage lost its key on the way back — rest, then try again; the email passage serves.",
       token: "Google kept the key — the passage did not open. The email passage serves.",

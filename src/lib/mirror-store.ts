@@ -495,12 +495,6 @@ interface MirrorState {
   googleConfigured: boolean;
   authOpen: boolean;
   authMode: "signin" | "register";
-  /* THE PORTAL'S OWN INTENTION — an enter hand opened the passage for
-     a guest: once the passage names its keeper, the same hand carries
-     them through the full portal without a second touch (it survives
-     even the Google journey via the session's own memory). */
-  portalIntent: boolean;
-  setPortalIntent: (v: boolean) => void;
   profileOpen: boolean;
   accountOpen: boolean;
 
@@ -1103,7 +1097,6 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   accountOpen: false,
   authOpen: false,
   authMode: "signin" as const,
-  portalIntent: false,
   profileOpen: false,
   profilePageOpen: false,
   wallet: null,
@@ -2591,15 +2584,6 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       const keeper = data?.user ?? null;
       if (keeper && !keeper.email.startsWith("anon:")) {
         get().hydrateChats();
-        /* THE KEEPER'S MEMORY — one naming marks the browser: from this
-           breath on, EVERY enter hand of the portal opens freely — the
-           passage's door is never asked again (the browser's own
-           keeping; the wallet and the credits keep their own law). */
-        try {
-          window.localStorage.setItem("mirror.everSignedIn", "1");
-        } catch {
-          /* the private keeping stays closed — the session carries */
-        }
       }
       /* the passage's own tuning comes home — language, voice, pace,
          the fields of expansion — on every device, every sign-in */
@@ -2634,9 +2618,6 @@ export const useMirror = create<MirrorState>()((set, get) => ({
 
   openWalletModal: (notice) => set({ walletModalOpen: true, walletNotice: notice ?? null }),
   closeWalletModal: () => set({ walletModalOpen: false, walletNotice: null }),
-
-  /* THE PORTAL'S OWN INTENTION — one flag, nothing more */
-  setPortalIntent: (v) => set({ portalIntent: v }),
 
   openAuth: (mode = "signin") => set({ authOpen: true, authMode: mode }),
   closeAuth: () => set({ authOpen: false }),
