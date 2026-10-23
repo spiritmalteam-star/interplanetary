@@ -393,6 +393,20 @@ export default function LandingGate() {
       }
       busy.current = true;
       setTunnel("on");
+      if (PHONE_CROSSING()) {
+        /* THE INSTANT CROSSING — the phone skips the long passage: one
+           quick breath of crystal light rises, covers the swap, and
+           folds at once — no rings to watch, no blocks appearing, the
+           portal simply is. The full passage keeps the desktop. */
+        window.setTimeout(() => setPhase("opening"), 180);
+        window.setTimeout(() => {
+          setPhase("through");
+          setTunnel("fading");
+          busy.current = false;
+        }, 260);
+        window.setTimeout(() => setTunnel("off"), 720);
+        return;
+      }
       /* THE COVERED CROSSING — the tunnel's light is given the WHOLE of
          its rise (pt-in's own 0.32s, plus a settling breath) before the
          lens steps up to the whole screen: the swap happens beneath a
@@ -430,6 +444,42 @@ export default function LandingGate() {
     window.history.replaceState(null, "", window.location.pathname + (qs ? `?${qs}` : ""));
   }, []);
 
+  /* THE SEND'S OWN RETURN — after a whisper leaves the landing's chat
+     (or the chat is cleared), the threshold brings its chat back to
+     the eye: the keyboard's fold and the send's own pan never leave
+     the glass half-off the screen for the visitor's hand to chase. */
+  useEffect(() => {
+    const onReturn = () => {
+      if (phaseRef.current !== "landing") return;
+      const root = landingRootRef.current;
+      const lens = lensRef.current;
+      if (!root || !lens) return;
+      /* the hold's frame only serves while a field keeps the focus */
+      const ae = document.activeElement;
+      const holding =
+        ae instanceof HTMLElement &&
+        lens.contains(ae) &&
+        (ae.tagName === "TEXTAREA" ||
+          ae.tagName === "INPUT" ||
+          ae.isContentEditable);
+      if (!holding) {
+        root.style.top = "";
+        root.style.height = "";
+        root.style.scrollPaddingBottom = "";
+      }
+      window.setTimeout(() => {
+        if (phaseRef.current !== "landing") return;
+        try {
+          lens.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        } catch {
+          lens.scrollIntoView();
+        }
+      }, 90);
+    };
+    window.addEventListener("landing-chat:return", onReturn);
+    return () => window.removeEventListener("landing-chat:return", onReturn);
+  }, []);
+
   /* an early ask to enter — honored the moment the chamber arrives */
   useEffect(() => {
     if (pending && Chamber) {
@@ -461,6 +511,18 @@ export default function LandingGate() {
       if (st.accountOpen) st.closeAccount();
     }
     setTunnel("on");
+    if (PHONE_CROSSING()) {
+      /* THE INSTANT RETURN — the phone's fold is as swift as its
+         crossing: one quick breath of light, the lens standing in its
+         slot beneath it, the whole homecoming inside a breath. */
+      window.setTimeout(() => setPhase("landing"), 180);
+      window.setTimeout(() => {
+        setTunnel("fading");
+        busy.current = false;
+      }, 500);
+      window.setTimeout(() => setTunnel("off"), 960);
+      return;
+    }
     /* THE FULL COVER ON THE WAY HOME — the lens folds back into its
        slot only after the tunnel stands fully risen (0.32s + a
        settling breath), so the fullscreen-to-slot swap is never seen
@@ -618,7 +680,10 @@ export default function LandingGate() {
           data-testid="portal-tunnel"
           className={cn(
             "portal-tunnel fixed inset-0 z-[70]",
-            tunnel === "fading" && "portal-tunnel-fading"
+            tunnel === "fading" && "portal-tunnel-fading",
+            /* THE PHONE'S OWN LIGHT — the quick crossing wears the
+               minimal veil: no rings, no streaks, one breath of glow */
+            PHONE_CROSSING() && "portal-tunnel-quick"
           )}
         >
           <span className="pt-glow" />

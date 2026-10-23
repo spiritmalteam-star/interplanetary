@@ -4985,3 +4985,19 @@ Work Log:
 Stage Summary:
 - The latest house stands restored and re-verified: the full portal opens freely for guest and keeper alike, no door ever demands a passage, and one sign-in anywhere serves the whole house (rooms, books, records, settings, library) across visits and reloads.
 - No source changes were needed this task — the free laws already stand in 8fd758a; this task's work was the restore, the verification walk, and this record.
+---
+Task ID: 98
+Agent: Z.ai Code (main)
+Task: Bring the landing chat back to the eye after every send (the mobile keyboard's push), replace the mobile tunnel with an instant crossing, and trade the landing chat's tree mark for a device-local, visit-only history hand — then push.
+
+Work Log:
+- THE SEND'S OWN RETURN (LandingGate + BranchCanopy): every bare send (floor ask, room follow-up, restore) now dispatches a `landing-chat:return` event; the threshold answers by releasing the keyboard's hold-frame when no field keeps focus and smooth-scrolling the lens back into full view (scrollIntoView nearest) — the keyboard's fold and the send's pan never leave the glass half-off the screen for the visitor's hand to chase. Verified live at 390×844: chat scrolled off-screen (lens top −198px), whisper sent, lens home at 0/505px inside 1.5s (backInView: true).
+- THE INSTANT CROSSING (mobile only): the phone skips the long passage — no rings, no streaks, no sigil; a quick veil (portal-tunnel-quick: 0.16s rise, 0.42s fold, one soft glow) covers the swap; expand lands in ~0.7s (was 2.16s) and the return folds in ~0.9s (was 2.16s+). The desktop keeps the full crystal passage untouched. Frame pair captured mid-crossing shows a clean light breath — no blocks appearing, no half-lit swap.
+- THE DEVICE'S OWN HAND (the tree mark retired): the landing chat's room header no longer wears the TreeDeciduous "Back to the wall" button — a History hand stands in its place (full portal keeps the tree). The quiet floor's ask line carries the same hand, so the keep is reachable even after a clear. The panel keeps this visit's conversations in sessionStorage alone (`mirror-landing-history`, 10 sessions × 12 turns, titled by the first whisper, relative time, restore-whole with one touch, clear-the-history hand) — nothing travels to a server, the keep dies with the visit. Floor panel opens upward (left-anchored — first cut anchored right and fell off-screen; fixed).
+- History writes wired at every finish: floor answer, room follow-up (speakFromRoom's bare branch now keeps the device too), restore rotates back onto its own session page, clear starts a fresh one. Verified live: three sessions recorded (turns counted, "3m" aging), reload keeps them, restore re-opens the whole room with every word standing.
+- QA: bun run lint clean; tsc clean for both touched files. Live at 390×844: send→return-focus, instant tunnel both directions, history store/restore/clear, zero page errors. Desktop 1280×800: landing, docked chat (now wearing the floor's history hand), full portal with the tree back-button intact, full tunnel preserved, zero errors, dev.log 200s only.
+
+Stage Summary:
+- The landing chat always comes home after a send — the mobile keyboard can no longer bury it.
+- The phone crosses into the portal in a breath: instant, smooth, no debris; the desktop's full passage untouched.
+- The tree mark left the landing chat; a device-local, visit-only history hand keeps and restores this visit's conversations — private by law, gone when the visit ends.

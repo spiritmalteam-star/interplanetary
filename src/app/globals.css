@@ -2859,6 +2859,24 @@ html:not(.dark) .lp-sigil-img {
   animation: pt-out 0.55s ease both;
   pointer-events: none;
 }
+/* THE QUICK CROSSING — the phone's instant tunnel: no rings, no
+   streaks, no sigil — the deep crystal light alone rises in a breath,
+   covers the swap, and folds. The full passage keeps the desktop. */
+.portal-tunnel-quick {
+  animation-duration: 0.16s;
+}
+.portal-tunnel-quick .pt-ring,
+.portal-tunnel-quick .pt-streaks,
+.portal-tunnel-quick .pt-sigil {
+  display: none;
+}
+.portal-tunnel-quick .pt-glow {
+  animation: none;
+  opacity: 0.5;
+}
+.portal-tunnel-quick.portal-tunnel-fading {
+  animation: pt-out 0.42s ease both;
+}
 @keyframes pt-out {
   from {
     opacity: 1;

@@ -27,8 +27,10 @@ import {
   Compass,
   Copy,
   Dna,
+  Eraser,
   Hammer,
   Hand,
+  History,
   Hourglass,
   Layers,
   Link2,
@@ -36,6 +38,7 @@ import {
   LoaderCircle,
   Maximize2,
   Menu,
+  MessageSquareText,
   Moon,
   Music,
   NotebookPen,
@@ -330,6 +333,66 @@ interface RoomTurn {
   a: string;
   loading: boolean;
   failed?: boolean;
+}
+
+/* ------------- THE DEVICE'S OWN KEEPING (the landing's history) ------
+   The landing chat's past conversations rest ONLY on this device and
+   ONLY for this visit: sessionStorage holds a handful of titled
+   threads, nothing ever travels to a server, and the whole keep ends
+   the moment the visit does. */
+interface LandingHistoryEntry {
+  id: string;
+  at: number;
+  title: string;
+  turns: { q: string; a: string }[];
+}
+const LANDING_HISTORY_KEY = "mirror-landing-history";
+const LANDING_HISTORY_MAX = 10;
+const LANDING_HISTORY_TURNS = 12;
+
+function freshHistorySessionId(): string {
+  return `s${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function readLandingHistory(): LandingHistoryEntry[] {
+  try {
+    const raw = window.sessionStorage.getItem(LANDING_HISTORY_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as LandingHistoryEntry[];
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter((e) => e && typeof e.id === "string" && Array.isArray(e.turns))
+      .slice(0, LANDING_HISTORY_MAX);
+  } catch {
+    return [];
+  }
+}
+
+function writeLandingHistory(entries: LandingHistoryEntry[]): void {
+  try {
+    window.sessionStorage.setItem(
+      LANDING_HISTORY_KEY,
+      JSON.stringify(entries.slice(0, LANDING_HISTORY_MAX))
+    );
+  } catch {
+    /* the device's keeping stays closed — the visit carries its own */
+  }
+}
+
+function upsertLandingHistory(entry: LandingHistoryEntry): LandingHistoryEntry[] {
+  const rest = readLandingHistory().filter((e) => e.id !== entry.id);
+  const next = [entry, ...rest].slice(0, LANDING_HISTORY_MAX);
+  writeLandingHistory(next);
+  return next;
+}
+
+function historyAgo(at: number): string {
+  const mins = Math.max(0, Math.round((Date.now() - at) / 60000));
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m`;
+  const hours = Math.round(mins / 60);
+  if (hours < 24) return `${hours}h`;
+  return `${Math.round(hours / 24)}d`;
 }
 
 /* THE LANDING'S OWN SUGGESTIONS — a deep pool of first doors, matched
@@ -3267,6 +3330,33 @@ export function BranchCanopy({
   const [landingThread, setLandingThread] = useState<RoomTurn[]>([]);
   const landingTurnsRef = useRef<{ q: string; a: string }[]>([]);
   const [landingBusy, setLandingBusy] = useState(false);
+  /* THE DEVICE'S OWN HISTORY — one hand in the room keeps this visit's
+     conversations on this device alone (sessionStorage, never a
+     server); a touch restores any of them whole. A cleared room starts
+     a fresh page of the keep, and the cleared one stays reachable. */
+  const historySessionRef = useRef<string>(freshHistorySessionId());
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [historyEntries, setHistoryEntries] = useState<LandingHistoryEntry[]>([]);
+  const openHistory = useCallback(() => {
+    setHistoryEntries(readLandingHistory());
+    setHistoryOpen(true);
+  }, []);
+  const restoreFromHistory = useCallback((entry: LandingHistoryEntry) => {
+    const turns = entry.turns.slice(-LANDING_HISTORY_TURNS);
+    if (turns.length === 0) return;
+    setLandingThread(turns.map((t) => ({ q: t.q, a: t.a, loading: false })));
+    landingTurnsRef.current = turns;
+    bareRoomRef.current = true;
+    historySessionRef.current = entry.id;
+    const last = turns[turns.length - 1];
+    setZoom({ q: last.q, move: null });
+    setHistoryOpen(false);
+    window.dispatchEvent(new CustomEvent("landing-chat:return"));
+  }, []);
+  const clearLandingHistory = useCallback(() => {
+    writeLandingHistory([]);
+    setHistoryEntries([]);
+  }, []);
   /* THE LANDING'S OWN QUIET — the threshold's floor keeps its welcome
      by its own thread's silence: the store's channel (the full
      portal's conversations) has no word in the docked room, so an ask
@@ -3309,6 +3399,17 @@ export function BranchCanopy({
           ...landingTurnsRef.current,
           { q, a: reply },
         ].slice(-12);
+        /* THE DEVICE'S OWN KEEP — the finished exchange rests on this
+           device alone, for this visit only (never a server) */
+        const kept = landingTurnsRef.current;
+        setHistoryEntries(
+          upsertLandingHistory({
+            id: historySessionRef.current,
+            at: Date.now(),
+            title: kept[0]?.q ?? q,
+            turns: kept.slice(-LANDING_HISTORY_TURNS),
+          })
+        );
       } catch (err) {
         const message = err instanceof Error && err.message ? err.message : "";
         setLandingThread((t) =>
@@ -3342,6 +3443,11 @@ export function BranchCanopy({
         bareRoomRef.current = true;
         setZoom({ q: text, move: null });
         void speakFromLanding(text, attachments);
+        /* THE SEND'S OWN RETURN — the threshold brings its chat back
+           to the eye once the whisper has left: the keyboard's fold
+           never leaves the glass half-off the screen for the
+           visitor's own hand to chase. */
+        window.dispatchEvent(new CustomEvent("landing-chat:return"));
         return;
       }
       /* the visitor's own step — the tree may grow again */
@@ -3766,7 +3872,13 @@ export function BranchCanopy({
         return;
       }
       const roomQ = zoom.q;
-      if (bare) bareRoomRef.current = true;
+      if (bare) {
+        bareRoomRef.current = true;
+        /* THE SEND'S OWN RETURN — the threshold brings its chat back to
+           the eye once the room's whisper has left (the keyboard's fold
+           never leaves the glass half-off the screen) */
+        window.dispatchEvent(new CustomEvent("landing-chat:return"));
+      }
       /* THE FAMILY'S VOICE — the room speaks through the door of the
          family its own whisper was grown from (the manifest room as
          the manifest, the atelier room as the atelier); a whisper the
@@ -3816,6 +3928,17 @@ export function BranchCanopy({
             ...landingTurnsRef.current,
             { q, a: reply },
           ].slice(-12);
+          /* THE DEVICE'S OWN KEEP — the room's finished exchange rests
+             on this device alone, for this visit only */
+          const kept = landingTurnsRef.current;
+          setHistoryEntries(
+            upsertLandingHistory({
+              id: historySessionRef.current,
+              at: Date.now(),
+              title: kept[0]?.q ?? q,
+              turns: kept.slice(-LANDING_HISTORY_TURNS),
+            })
+          );
         }
       } catch {
         applyRoomTurn(roomQ, (t) =>
@@ -5088,6 +5211,94 @@ export function BranchCanopy({
               {/* THE INPUT'S OWN CALM — the reload and the star have
                   left the whisper line: the cargo, the call, the words,
                   the send. */}
+              {/* THE FLOOR'S OWN HISTORY — docked in the threshold the
+                  quiet floor keeps the device's own hand within reach
+                  even with no room standing: one touch opens this
+                  visit's kept conversations (this device alone —
+                  nothing travels to a server). */}
+              {bare && (
+                <div className="relative shrink-0">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      historyOpen ? setHistoryOpen(false) : openHistory()
+                    }
+                    aria-expanded={historyOpen}
+                    aria-label={t("Conversation history")}
+                    title={t("Conversation history — kept only on this device, for this visit")}
+                    data-testid={`${testIdPrefix}-ask-history`}
+                    className="focus-glow flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors duration-300 hover:text-foreground"
+                  >
+                    <History className="size-3.5" aria-hidden="true" />
+                  </button>
+                  {historyOpen && (
+                    <>
+                      <div
+                        aria-hidden="true"
+                        className="fixed inset-0 z-30"
+                        onClick={() => setHistoryOpen(false)}
+                      />
+                      <div
+                        data-testid={`${testIdPrefix}-ask-history-panel`}
+                        className="absolute bottom-11 left-0 z-40 w-[272px] rounded-2xl border bg-background p-3 shadow-[0_18px_48px_-20px_rgba(0,0,0,0.6)]"
+                        style={{
+                          borderColor:
+                            "color-mix(in srgb, var(--scope-a,var(--gd)) 30%, transparent)",
+                        }}
+                      >
+                        <p className="mono-label text-[9.5px] uppercase tracking-[0.2em] text-muted-foreground">
+                          {t("Conversation history")}
+                        </p>
+                        <p className="mt-1 text-[11.5px] leading-relaxed text-muted-foreground/80">
+                          {t("Kept only on this device — and only for this visit. Nothing travels to a server.")}
+                        </p>
+                        {historyEntries.length === 0 ? (
+                          <p className="px-1 py-4 text-center text-[12.5px] text-muted-foreground/70">
+                            {t("Nothing kept yet.")}
+                          </p>
+                        ) : (
+                          <div className="nice-scroll mt-2 max-h-[240px] overflow-y-auto">
+                            {historyEntries.map((entry) => (
+                              <button
+                                key={entry.id}
+                                type="button"
+                                onClick={() => restoreFromHistory(entry)}
+                                className="focus-glow flex w-full items-center gap-2 rounded-xl px-2 py-2 text-left transition-colors duration-300 hover:bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_7%,transparent)]"
+                              >
+                                <MessageSquareText
+                                  className="size-3.5 shrink-0 text-[var(--scope-a,var(--gd))]"
+                                  aria-hidden="true"
+                                />
+                                <span className="min-w-0 flex-1">
+                                  <span className="block truncate text-[13px] text-foreground/90">
+                                    {entry.title}
+                                  </span>
+                                  <span className="mono-label block text-[9px] uppercase tracking-[0.14em] text-muted-foreground/60">
+                                    {t("{n} whispers · {when}", {
+                                      n: entry.turns.length,
+                                      when: historyAgo(entry.at),
+                                    })}
+                                  </span>
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                        {historyEntries.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={clearLandingHistory}
+                            className="focus-glow mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl border hairline py-1.5 text-[12px] text-muted-foreground transition-colors duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+                          >
+                            <Eraser className="size-3" aria-hidden="true" />
+                            {t("Clear the history")}
+                          </button>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
               {/* THE FLOOR'S OWN PAPERCLIP AND CAMERA — one image and
                   up to three documents ride with the whisper. THE
                   LANDING'S QUIET LINE — docked in the threshold the
@@ -5294,6 +5505,10 @@ export function BranchCanopy({
                       if (bare) {
                         setLandingThread([]);
                         landingTurnsRef.current = [];
+                        /* a fresh page of the device's own keep — the
+                           cleared room stays in the history hand */
+                        historySessionRef.current = freshHistorySessionId();
+                        window.dispatchEvent(new CustomEvent("landing-chat:return"));
                       } else {
                         useMirror
                           .getState()
@@ -5335,16 +5550,109 @@ export function BranchCanopy({
                       <VolumeX className="size-3.5" aria-hidden="true" />
                     )}
                   </button>
-                  <button
-                    type="button"
-                    onClick={exitZoom}
-                    aria-label={t("Back to the wall")}
-                    title={t("Back to the wall")}
-                    data-testid={`${testIdPrefix}-zoom-back`}
-                    className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
-                  >
-                    <TreeDeciduous className="size-3.5" aria-hidden="true" />
-                  </button>
+                  {bare ? (
+                    /* THE DEVICE'S OWN HAND — the landing chat wears the
+                       history instead of the old tree mark: this visit's
+                       conversations, kept on this device alone (nothing
+                       travels to a server), restored with one touch. */
+                    <div className="relative shrink-0">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          historyOpen ? setHistoryOpen(false) : openHistory()
+                        }
+                        aria-expanded={historyOpen}
+                        aria-label={t("Conversation history")}
+                        title={t("Conversation history — kept only on this device, for this visit")}
+                        data-testid={`${testIdPrefix}-zoom-history`}
+                        className={cn(
+                          "focus-glow flex size-7 shrink-0 items-center justify-center rounded-full border transition-all duration-300",
+                          historyOpen
+                            ? "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_14%,transparent)] text-[var(--scope-a,var(--gd))]"
+                            : "hairline text-muted-foreground hover:border-[var(--hairline-hover)] hover:text-foreground"
+                        )}
+                      >
+                        <History className="size-3.5" aria-hidden="true" />
+                      </button>
+                      {historyOpen && (
+                        <>
+                          <div
+                            aria-hidden="true"
+                            className="fixed inset-0 z-30"
+                            onClick={() => setHistoryOpen(false)}
+                          />
+                          <div
+                            data-testid={`${testIdPrefix}-zoom-history-panel`}
+                            className="absolute right-0 top-9 z-40 w-[272px] rounded-2xl border bg-background p-3 shadow-[0_18px_48px_-20px_rgba(0,0,0,0.6)]"
+                            style={{
+                              borderColor:
+                                "color-mix(in srgb, var(--scope-a,var(--gd)) 30%, transparent)",
+                            }}
+                          >
+                            <p className="mono-label text-[9.5px] uppercase tracking-[0.2em] text-muted-foreground">
+                              {t("Conversation history")}
+                            </p>
+                            <p className="mt-1 text-[11.5px] leading-relaxed text-muted-foreground/80">
+                              {t("Kept only on this device — and only for this visit. Nothing travels to a server.")}
+                            </p>
+                            {historyEntries.length === 0 ? (
+                              <p className="px-1 py-4 text-center text-[12.5px] text-muted-foreground/70">
+                                {t("Nothing kept yet.")}
+                              </p>
+                            ) : (
+                              <div className="nice-scroll mt-2 max-h-[240px] overflow-y-auto">
+                                {historyEntries.map((entry) => (
+                                  <button
+                                    key={entry.id}
+                                    type="button"
+                                    onClick={() => restoreFromHistory(entry)}
+                                    className="focus-glow flex w-full items-center gap-2 rounded-xl px-2 py-2 text-left transition-colors duration-300 hover:bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_7%,transparent)]"
+                                  >
+                                    <MessageSquareText
+                                      className="size-3.5 shrink-0 text-[var(--scope-a,var(--gd))]"
+                                      aria-hidden="true"
+                                    />
+                                    <span className="min-w-0 flex-1">
+                                      <span className="block truncate text-[13px] text-foreground/90">
+                                        {entry.title}
+                                      </span>
+                                      <span className="mono-label block text-[9px] uppercase tracking-[0.14em] text-muted-foreground/60">
+                                        {t("{n} whispers · {when}", {
+                                          n: entry.turns.length,
+                                          when: historyAgo(entry.at),
+                                        })}
+                                      </span>
+                                    </span>
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                            {historyEntries.length > 0 && (
+                              <button
+                                type="button"
+                                onClick={clearLandingHistory}
+                                className="focus-glow mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl border hairline py-1.5 text-[12px] text-muted-foreground transition-colors duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+                              >
+                                <Eraser className="size-3" aria-hidden="true" />
+                                {t("Clear the history")}
+                              </button>
+                            )}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={exitZoom}
+                      aria-label={t("Back to the wall")}
+                      title={t("Back to the wall")}
+                      data-testid={`${testIdPrefix}-zoom-back`}
+                      className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+                    >
+                      <TreeDeciduous className="size-3.5" aria-hidden="true" />
+                    </button>
+                  )}
                 </div>
               </header>
 
