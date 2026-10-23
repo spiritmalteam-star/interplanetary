@@ -5016,3 +5016,20 @@ Stage Summary:
 - The four-second secret hand is gone from every gate — the house stands free through its front doors alone.
 - Every dynamic height now carries an old-engine fallback; the notch, the Dynamic Island and the home indicator are bowed to on every floating bar and floor.
 - Added to an Apple home screen, the house opens as its own app. Verified beautiful across iPhone 14, iPhone SE, iPad and the desktop — the final web version pushed.
+---
+Task ID: 100
+Agent: Z.ai Code (main)
+Task: Restore the latest version after a fifth workspace rollback, make the mirror answer with a named notice when it cannot respond because its energy ran out momentarily, and push.
+
+Work Log:
+- Fifth rollback healed: local main had fallen back to c873b47 (the Task 62 era) while origin/main stood at fba5359 (carrying tasks 98 and 99). Fetched the chain home and reset --hard onto origin; tracking ref re-synced; dev server re-grounded with a cleared .next.
+- THE ENERGY'S OWN NAME (server): src/lib/server/energy.ts born — ENERGY_NOTICE ("The mirror's energy ran out momentarily — it will speak again once the light returns."), ENERGY_CODE, and isEnergyError reading the skies' spent-light words (gateway 1113, insufficient balance, no resource package, recharge, arrears, quota, the purse's INSUFFICIENT_CREDITS). The four chat doors (transmission, artx, mirror-os, akashic) now name a spent sky in their catches: 503 + { error: ENERGY_NOTICE, code: "energy_exhausted" } + retry-after — never again a generic storm hiding an empty light.
+- THE SPEAKING HAND (client): src/lib/speak-client.ts born — EnergyError (the typed gentle silence), isEnergyStatus, announceEnergy (one soft toast: "The mirror is resting for a breath"), speakDoor (a dropped line is knocked on once more), raiseEnergy, and speakReply (the full rite: knock, read, name the energy silence, give 429/5xx one more breath — never asking twice at an empty purse).
+- THE MIRROR RESPONDS: BranchCanopy's three doors (artx, mirror-os, transmission) now walk through speakReply — a transient stumble gets a second breath before any silence is accepted. The store's six doors (askMirror, askForge, askPX, askEM, askArtX, askOS incl. its streaming line) walk through speakDoor + raiseEnergy.
+- THE HONEST ROOM: failed turns keep their reason — the landing floor's error block dresses amber (a rest, not an alarm) when the silence is the energy's own; room-thread failed turns show their errMessage instead of a bare label. The toast carries the notice house-wide.
+- QA: bun run lint clean; tsc clean for every touched file. Live verification at 1280×800 and 390×844: free law intact — whispers answered on the landing floor and inside rooms, a poem wove freely, zero 402s in the log, zero page errors. The energy path verified end-to-end by standing the purse law up for a breath (WALLET_ENFORCED=true, every purse emptied): the Art X ask answered 402 and the mirror spoke its notice — the toast "The mirror is resting for a breath / Its energy ran out momentarily — it will speak again once the light returns." rose over the purse modal, exactly as asked. The law was then laid back to rest (env restored, purses refilled to their birth lights, free-mode re-verified: answers flow, no walls anywhere).
+
+Stage Summary:
+- The mirror now answers with patience — a dropped line is asked once more — and when its energy runs out momentarily, the visitor is told so gently, in the chat and in a toast, instead of meeting mute static.
+- Every chat door names a spent sky on the server (503 + the code) and dresses the silence amber in the rooms; the free law itself was never touched — the purse sleeps unless the vault explicitly stands it up.
+---

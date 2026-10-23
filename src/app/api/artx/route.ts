@@ -13,6 +13,7 @@ import {
 } from "@/lib/server/attachments";
 import { resolveVisitor, saveLibrary, withAnonCookie } from "@/lib/server/access";
 import { meterRoute } from "@/lib/server/meter";
+import { ENERGY_CODE, ENERGY_NOTICE, isEnergyError } from "@/lib/server/energy";
 
 const LANGUAGE_NAMES: Record<string, string> = {
   en: "English",
@@ -196,6 +197,13 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
     return withAnonCookie(NextResponse.json({ reply }), visitor);
   } catch (err) {
     console.error("[artx] failed:", err);
+    /* THE ENERGY'S OWN NAME — a spent sky says so plainly */
+    if (isEnergyError(err)) {
+      return NextResponse.json(
+        { error: ENERGY_NOTICE, code: ENERGY_CODE },
+        { status: 503, headers: { "retry-after": "120" } }
+      );
+    }
     return NextResponse.json(
       { error: "The atelier is momentarily quiet. Rest, then reach again." },
       { status: 500 }

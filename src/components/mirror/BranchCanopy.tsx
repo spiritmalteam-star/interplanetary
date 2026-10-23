@@ -58,6 +58,11 @@ import {
   X,
 } from "lucide-react";
 import { canopyHour, familyAccent, growMixedCanopy, TREE_FAMILIES } from "@/lib/data/suggestion-banks";
+import {
+  ENERGY_NOTICE,
+  EnergyError,
+  speakReply,
+} from "@/lib/speak-client";
 import type { BranchId } from "@/lib/data/suggestion-tree";
 import {
   allFamilyKeys,
@@ -333,6 +338,11 @@ interface RoomTurn {
   a: string;
   loading: boolean;
   failed?: boolean;
+  /* THE HONEST WORD — a failed turn keeps the reason it can show
+     (the energy's own notice among them), styled gently when the
+     mirror's light — not the room — was the thing that rested. */
+  errMessage?: string;
+  energy?: boolean;
 }
 
 /* ------------- THE DEVICE'S OWN KEEPING (the landing's history) ------
@@ -506,10 +516,9 @@ async function speakWithTransmission(
       ? attachmentsToPayload(attachments)
       : {};
   if (category === "artx") {
-    const res = await fetch("/api/artx", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+    return speakReply(
+      "/api/artx",
+      {
         query,
         language,
         walk,
@@ -521,22 +530,15 @@ async function speakWithTransmission(
             { role: "ax", text: t.a },
           ]),
         ].slice(-10),
-      }),
-    });
-    const data = (await res.json().catch(() => null)) as {
-      reply?: unknown;
-      error?: string;
-    } | null;
-    const reply = typeof data?.reply === "string" ? data.reply.trim() : "";
-    if (!res.ok || !reply)
-      throw new Error(data?.error || "The field is quiet");
-    return reply;
+      },
+      "reply",
+      "The field is quiet"
+    );
   }
   if (category === "manifesting") {
-    const res = await fetch("/api/mirror-os", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+    return speakReply(
+      "/api/mirror-os",
+      {
         query,
         language,
         walk,
@@ -548,22 +550,15 @@ async function speakWithTransmission(
             { role: "assistant", text: t.a },
           ]),
         ].slice(-10),
-      }),
-    });
-    const data = (await res.json().catch(() => null)) as {
-      reply?: unknown;
-      error?: string;
-    } | null;
-    const reply = typeof data?.reply === "string" ? data.reply.trim() : "";
-    if (!res.ok || !reply)
-      throw new Error(data?.error || "The field is quiet");
-    return reply;
+      },
+      "reply",
+      "The field is quiet"
+    );
   }
   /* the transmission voice — the channel's own soul */
-  const res = await fetch("/api/transmission", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
+  return speakReply(
+    "/api/transmission",
+    {
       query,
       mode: category === "invent" ? "forge" : category,
       language,
@@ -572,16 +567,10 @@ async function speakWithTransmission(
       history: [{ q: branchQuestion, a: transmission }, ...thread]
         .slice(-6)
         .map((h) => ({ q: h.q, a: h.a })),
-    }),
-  });
-  const data = (await res.json().catch(() => null)) as {
-    transmission?: unknown;
-    error?: string;
-  } | null;
-  const reply =
-    typeof data?.transmission === "string" ? data.transmission.trim() : "";
-  if (!res.ok || !reply) throw new Error(data?.error || "The field is quiet");
-  return reply;
+    },
+    "transmission",
+    "The field is quiet"
+  );
 }
 
 /* ------------------- the copy hand — words kept ----------------------
@@ -3415,7 +3404,13 @@ export function BranchCanopy({
         setLandingThread((t) =>
           t.map((turn, i) =>
             i === t.length - 1
-              ? { ...turn, loading: false, failed: true, a: message }
+              ? {
+                  ...turn,
+                  loading: false,
+                  failed: true,
+                  a: message,
+                  energy: err instanceof EnergyError,
+                }
               : turn
           )
         );
@@ -3700,6 +3695,9 @@ export function BranchCanopy({
       ? lastLandingTurn.a || "The field is quiet"
       : null
     : roomError;
+  /* THE ENERGY'S OWN DRESS — a spent-light silence is styled gently
+     (amber, a rest), never as the rose alarm of a broken crossing. */
+  const energyNotice = displayError === ENERGY_NOTICE;
   const displayLanded = bare
     ? !roomLoading && roomAnswer.length > 0
     : answerLanded;
@@ -3940,11 +3938,18 @@ export function BranchCanopy({
             })
           );
         }
-      } catch {
+      } catch (err) {
         applyRoomTurn(roomQ, (t) =>
           t.map((turn, i) =>
             i === t.length - 1
-              ? { ...turn, loading: false, failed: true }
+              ? {
+                  ...turn,
+                  loading: false,
+                  failed: true,
+                  errMessage:
+                    err instanceof Error && err.message ? err.message : "",
+                  energy: err instanceof EnergyError,
+                }
               : turn
           )
         );
@@ -5715,11 +5720,19 @@ export function BranchCanopy({
                        the landing's floor the mirror speaks plainly —
                        no laboratory words on the free ground. */
                     <div
-                      className="my-2 rounded-2xl border border-[color-mix(in_srgb,#f43f5e_38%,transparent)] bg-[color-mix(in_srgb,#f43f5e_7%,var(--background))] px-4 py-3.5"
+                      className={`my-2 rounded-2xl border px-4 py-3.5 ${
+                        energyNotice
+                          ? "border-[color-mix(in_srgb,#f59e0b_38%,transparent)] bg-[color-mix(in_srgb,#f59e0b_7%,var(--background))]"
+                          : "border-[color-mix(in_srgb,#f43f5e_38%,transparent)] bg-[color-mix(in_srgb,#f43f5e_7%,var(--background))]"
+                      }`}
                       role="alert"
                       data-testid={`${testIdPrefix}-zoom-error`}
                     >
-                      <p className="mono-label text-[9.5px] uppercase tracking-[0.2em] text-[#f43f5e]">
+                      <p
+                        className={`mono-label text-[9.5px] uppercase tracking-[0.2em] ${
+                          energyNotice ? "text-[#b8860b] dark:text-[#f59e0b]" : "text-[#f43f5e]"
+                        }`}
+                      >
                         {t(bare ? "The field is quiet — speak once more" : "The transmission could not cross")}
                       </p>
                       <p className="mt-1.5 text-[14px] leading-relaxed text-foreground/85">
@@ -5827,9 +5840,24 @@ export function BranchCanopy({
                               />
                             </div>
                           ) : turn.failed ? (
-                            <p className="mono-label text-[10.5px] uppercase tracking-[0.2em] text-muted-foreground/60">
-                              {t("The field is quiet — speak once more")}
-                            </p>
+                            <div
+                              className={`rounded-xl border px-3 py-2 ${
+                                turn.energy
+                                  ? "border-[color-mix(in_srgb,#f59e0b_30%,transparent)] bg-[color-mix(in_srgb,#f59e0b_6%,var(--background))]"
+                                  : "border-transparent bg-transparent"
+                              }`}
+                            >
+                              <p
+                                className={`text-[13.5px] leading-relaxed ${
+                                  turn.energy
+                                    ? "text-[#b8860b] dark:text-[#f59e0b]"
+                                    : "mono-label text-[10.5px] uppercase tracking-[0.2em] text-muted-foreground/60"
+                                }`}
+                              >
+                                {turn.errMessage ||
+                                  t("The field is quiet — speak once more")}
+                              </p>
+                            </div>
                           ) : null}
                         </div>
                       ))}

@@ -1,6 +1,7 @@
 "use client";
 
 import { create } from "zustand";
+import { raiseEnergy, speakDoor } from "@/lib/speak-client";
 import type {
   Mode,
   SidebarTab,
@@ -1934,7 +1935,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         a: m.text,
       }));
       const payload = attachments ? attachmentsToPayload(attachments) : null;
-      const res = await fetch("/api/transmission", {
+      const res = await speakDoor("/api/transmission", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -1947,6 +1948,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         }),
       });
       const data = await res.json().catch(() => null);
+      raiseEnergy(res.status, data);
       if (!res.ok) {
         throw new Error(
           (data && data.error) ||
@@ -2312,7 +2314,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         a: m.text,
       }));
       const payload = attachments ? attachmentsToPayload(attachments) : null;
-      const res = await fetch("/api/transmission", {
+      const res = await speakDoor("/api/transmission", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -2328,6 +2330,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         }),
       });
       const data = await res.json().catch(() => null);
+      raiseEnergy(res.status, data);
 
       if (!res.ok) {
         throw new Error(
@@ -2736,7 +2739,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         .map((id) => pxScopes.find((s) => s.id === id)?.name)
         .filter((n): n is string => Boolean(n));
 
-      const res = await fetch("/api/particlex", {
+      const res = await speakDoor("/api/particlex", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -2757,6 +2760,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         code?: string;
         error?: string;
       } | null;
+      raiseEnergy(res.status, data);
       if (!res.ok) {
         throw new Error(
           (data && data.error) ||
@@ -2867,7 +2871,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         .map((id) => emVectors.find((s) => s.id === id)?.name)
         .filter((n): n is string => Boolean(n));
 
-      const res = await fetch("/api/evolve-med", {
+      const res = await speakDoor("/api/evolve-med", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -2888,6 +2892,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         code?: string;
         error?: string;
       } | null;
+      raiseEnergy(res.status, data);
       if (!res.ok) {
         throw new Error(
           (data && data.error) ||
@@ -3068,7 +3073,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         .map((m) => ({ role: m.role, text: m.text }));
 
       const payload = attachments ? attachmentsToPayload(attachments) : null;
-      const res = await fetch("/api/artx", {
+      const res = await speakDoor("/api/artx", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -3081,6 +3086,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         }),
       });
       const data = await res.json().catch(() => null);
+      raiseEnergy(res.status, data);
       if (!res.ok) {
         throw new Error(
           (data && data.error) ||
@@ -3272,7 +3278,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         .map((m) => ({ role: m.role, text: m.text }));
 
       const payload = attachments ? attachmentsToPayload(attachments) : null;
-      const res = await fetch("/api/mirror-os", {
+      const res = await speakDoor("/api/mirror-os", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -3288,6 +3294,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       /* a house without the streaming line — the whole reply at once */
       if (!res.ok || !res.body) {
         const data = await res.json().catch(() => null);
+        raiseEnergy(res.status, data);
         if (!res.ok) {
           throw new Error(
             (data && data.error) ||

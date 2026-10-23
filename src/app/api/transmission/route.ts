@@ -8,6 +8,7 @@ import {
 } from "@/lib/server/attachments";
 import { resolveVisitor, saveLibrary, withAnonCookie } from "@/lib/server/access";
 import { meterRoute } from "@/lib/server/meter";
+import { ENERGY_CODE, ENERGY_NOTICE, isEnergyError } from "@/lib/server/energy";
 import { REMEMBRANCE_LAW } from "@/lib/remembrance-law";
 import { walkerDepthLine } from "@/lib/walker-depth";
 import { walkLine } from "@/lib/walk-context";
@@ -570,6 +571,15 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
     );
   } catch (err) {
     console.error("[transmission] failed:", err);
+    /* THE ENERGY'S OWN NAME — a sky whose light is spent says so
+       plainly (503 + the code), never as mute static; every other
+       storm keeps its gentle generic word. */
+    if (isEnergyError(err)) {
+      return NextResponse.json(
+        { error: ENERGY_NOTICE, code: ENERGY_CODE },
+        { status: 503, headers: { "retry-after": "120" } }
+      );
+    }
     return NextResponse.json(
       { error: "The field is momentarily quiet. Rest, then try again." },
       { status: 500 }
