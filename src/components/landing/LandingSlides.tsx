@@ -142,7 +142,7 @@ export default function LandingSlides() {
         role="region"
         aria-roledescription="carousel"
         aria-label={t("The shifting Earth in ten slides")}
-        className="relative mx-auto w-full max-w-[660px] sm:px-0"
+        className="relative mx-auto w-full max-w-[660px] sm:px-0 lg:max-w-[720px]"
         onPointerDown={onPointerDown}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerCancel}
@@ -171,7 +171,7 @@ export default function LandingSlides() {
                   src={s.src}
                   alt={i === active ? t(s.title) : ""}
                   fill
-                  sizes="(min-width: 768px) 660px, 100vw"
+                  sizes="(min-width: 1024px) 720px, (min-width: 768px) 660px, 100vw"
                   loading={i === 0 ? "eager" : "lazy"}
                   draggable={false}
                   className="object-cover"
@@ -186,7 +186,7 @@ export default function LandingSlides() {
       {/* the plate's own words — the standing slide speaks its title */}
       <p
         data-testid="landing-slides-title"
-        className="mx-auto mt-4 max-w-[660px] px-4 text-center font-[family-name:var(--font-literata)] text-[15.5px] italic leading-relaxed text-[var(--lp-gold)]"
+        className="mx-auto mt-4 max-w-[660px] px-4 text-center font-[family-name:var(--font-literata)] text-[15.5px] italic leading-relaxed text-[var(--lp-gold)] lg:max-w-[720px]"
       >
         {t(SLIDES[active].title)}
       </p>
@@ -196,7 +196,7 @@ export default function LandingSlides() {
       <div
         role="tablist"
         aria-label={t("Choose a slide by its number")}
-        className="mx-auto mt-3.5 flex w-full max-w-[660px] flex-wrap items-center justify-center gap-1.5 px-4"
+        className="mx-auto mt-3.5 flex w-full max-w-[660px] flex-wrap items-center justify-center gap-1.5 px-4 lg:max-w-[720px]"
       >
         {SLIDES.map((s, i) => (
           <button

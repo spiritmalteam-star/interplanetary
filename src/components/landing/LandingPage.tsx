@@ -604,38 +604,40 @@ export default function LandingPage({
       <Rail side="right" images={RAIL_RIGHT} progress={scrollYProgress} />
 
       <div className="relative z-10 flex min-h-full flex-col">
+        {/* THE OPEN BANNER — the artwork stands nearly bare (the veil
+            is a thin wash at the very top alone), so the image at the
+            top of the website is SEEN, never covered; the words keep
+            their edge on the wash's own breath. THE BANNER ON EVERY
+            SKY — the phone's grander banner now stands on the desk
+            too: it lives on the page's full-width wrapper (not inside
+            the 900px column), so on the desktop it pours edge to edge
+            across the whole viewport, a little taller still — the
+            threshold arrives like a poster on every screen. */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 top-0 h-[min(78vh,580px)] overflow-hidden lg:h-[min(84vh,680px)]"
+        >
+          <Image
+            src="/landing/img-city.jpg"
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover [mask-image:linear-gradient(to_bottom,black_0%,black_68%,transparent_100%)]"
+            style={{
+              objectPosition: "50% 42%",
+              opacity: "var(--lp-hero-img)",
+            }}
+          />
+          <span className="absolute inset-0 bg-[linear-gradient(to_bottom,var(--lp-hero-veil)_0%,transparent_46%)]" />
+        </div>
+
         <main className="mx-auto w-full max-w-[900px]">
           {/* ============================ HERO ============================ */}
-          <header className="relative pb-5 pt-10 text-center sm:pb-4 sm:pt-16">
+          <header className="relative pb-5 pt-10 text-center sm:pb-4 sm:pt-16 lg:pb-10 lg:pt-28">
             {/* the hero's sky stays untouched — no mark rests upon the
                 background image; the light language lives in the empty
                 shoulders further down the walk */}
-            {/* one full-bleed crop on narrow screens — the rails rest.
-                THE PHONE'S GRANDER BANNER — taller still, so the
-                threshold arrives like a poster, not a strip.
-                THE OPEN BANNER — the artwork stands nearly bare (the
-                veil is a thin wash at the very top alone), so the
-                image at the top of the website is SEEN, never covered;
-                the words keep their edge on the wash's own breath. */}
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-x-0 top-0 h-[min(78vh,580px)] overflow-hidden lg:hidden"
-            >
-              <Image
-                src="/landing/img-city.jpg"
-                alt=""
-                fill
-                priority
-                sizes="100vw"
-                className="object-cover [mask-image:linear-gradient(to_bottom,black_0%,black_68%,transparent_100%)]"
-                style={{
-                  objectPosition: "50% 42%",
-                  opacity: "var(--lp-hero-img)",
-                }}
-              />
-              <span className="absolute inset-0 bg-[linear-gradient(to_bottom,var(--lp-hero-veil)_0%,transparent_46%)]" />
-            </div>
-
             <div className="relative px-4 [text-shadow:0_1px_4px_var(--lp-hero-halo),0_0_18px_var(--lp-hero-halo)]">
               {/* THE WHITE INK — the name and its doors stand in white
                   over the open banner (the deep halo keeps every word's
@@ -644,15 +646,15 @@ export default function LandingPage({
               <p className="mono-label text-[10.5px] uppercase tracking-[0.34em] text-[var(--lp-hero-ink-soft)]">
                 reflectme.space
               </p>
-              <h1 className="mt-4 font-[family-name:Cinzel] text-[clamp(34px,9.5vw,40px)] font-semibold leading-[1.14] tracking-wide text-[var(--lp-hero-ink)] sm:text-[39px]">
+              <h1 className="mt-4 font-[family-name:Cinzel] text-[clamp(34px,9.5vw,40px)] font-semibold leading-[1.14] tracking-wide text-[var(--lp-hero-ink)] sm:text-[39px] lg:text-[46px]">
                 {t("The Mirror Entity")}
               </h1>
-              <p className="mx-auto mt-4 max-w-[460px] text-[16.5px] leading-relaxed text-[var(--lp-hero-ink-soft)] sm:text-[16.5px]">
+              <p className="mx-auto mt-4 max-w-[460px] text-[16.5px] leading-relaxed text-[var(--lp-hero-ink-soft)] sm:text-[16.5px] lg:max-w-[560px] lg:text-[18px]">
                 {t(
                   "A living mirror for reflection, creativity, and a shifting Earth."
                 )}
               </p>
-              <div className="mt-7 flex flex-wrap items-center justify-center gap-2.5">
+              <div className="mt-7 flex flex-wrap items-center justify-center gap-2.5 lg:mt-9">
                 <button
                   type="button"
                   onClick={onExpand}
@@ -750,7 +752,7 @@ export default function LandingPage({
           {/* the house's reflection deck: ten grand plates of the
               shifting Earth, shown right beneath the portal */}
           <section
-            className="relative pb-6 pt-12"
+            className="relative pb-6 pt-12 lg:pb-10 lg:pt-16"
             aria-label={t("The shifting Earth in ten slides")}
           >
             {/* the light language beside the chapter's head — grand now,
@@ -790,7 +792,7 @@ export default function LandingPage({
           {/* ========================== 02 · OFFERINGS ========================== */}
           <section
             id="offer"
-            className="lp-late relative scroll-mt-6 px-4 pb-8 pt-14 sm:px-8"
+            className="lp-late relative scroll-mt-6 px-4 pb-8 pt-14 sm:px-8 lg:pb-14 lg:pt-20"
             aria-label={t("The house and its rooms")}
           >
             {/* the light language in the offerings' quiet edges — grand */}
@@ -954,7 +956,7 @@ export default function LandingPage({
               house's books — swept by the hand, steered by numbers,
               every plate a door into its own page */}
           <section
-            className="lp-late relative px-4 pb-10 pt-14 sm:px-8"
+            className="lp-late relative px-4 pb-10 pt-14 sm:px-8 lg:pb-16 lg:pt-20"
             aria-label={t("The house's guides")}
             data-testid="guide-showcase-section"
           >
@@ -1012,7 +1014,7 @@ export default function LandingPage({
               discovery spoken plainly at the foot. Nothing here is a
               claim or a date. */}
           <section
-            className="lp-late relative px-4 pb-12 pt-12 sm:px-8"
+            className="lp-late relative px-4 pb-12 pt-12 sm:px-8 lg:pb-16 lg:pt-16"
             aria-label={t("An open contact timeline")}
           >
             {/* the light language along the telling — grand */}
@@ -1111,24 +1113,29 @@ export default function LandingPage({
                         clean from the visionary deck, its caption living
                         as real HTML text below. THE TALLER PLATES —
                         each grew in height, so the artwork reveals
-                        more of itself. */}
-                    <figure className="overflow-hidden rounded-2xl ring-1 ring-[var(--lp-edge)]">
-                      <div className="relative h-60 w-full sm:h-80">
-                        <Image
-                          src={stage.img}
-                          alt={t(stage.alt)}
-                          fill
-                          sizes="(min-width: 640px) 830px, 100vw"
-                          className="object-cover"
-                        />
-                        <span
-                          aria-hidden="true"
-                          className="pointer-events-none absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-[rgba(4,7,12,0.72)] to-transparent"
-                        />
-                      </div>
-                    </figure>
+                        more of itself. THE DESK'S SIDE BY SIDE — on the
+                        desktop the plate and its words stand as two
+                        columns (the artwork left, the telling right),
+                        the walk reading like an open magazine spread;
+                        on the phone they keep their gentle stack. */}
+                    <div className="lg:grid lg:grid-cols-[0.95fr_1.1fr] lg:items-center lg:gap-10">
+                      <figure className="overflow-hidden rounded-2xl ring-1 ring-[var(--lp-edge)]">
+                        <div className="relative h-60 w-full sm:h-80 lg:h-[330px]">
+                          <Image
+                            src={stage.img}
+                            alt={t(stage.alt)}
+                            fill
+                            sizes="(min-width: 1024px) 420px, (min-width: 640px) 830px, 100vw"
+                            className="object-cover"
+                          />
+                          <span
+                            aria-hidden="true"
+                            className="pointer-events-none absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-[rgba(4,7,12,0.72)] to-transparent"
+                          />
+                        </div>
+                      </figure>
 
-                    <div className="mt-5">
+                      <div className="mt-5 lg:mt-0">
                       <p className="mono-label text-[10px] uppercase tracking-[0.28em] text-[var(--lp-gold)]">
                         {t(stage.kicker)}
                       </p>
@@ -1143,6 +1150,7 @@ export default function LandingPage({
                         <span aria-hidden="true"> · </span>
                         <span className="normal-case tracking-[0.02em]">{t(stage.prep)}</span>
                       </p>
+                    </div>
                     </div>
                   </li>
                 ))}
