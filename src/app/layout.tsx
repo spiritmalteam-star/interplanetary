@@ -44,6 +44,15 @@ export const metadata: Metadata = {
   ],
   /* the favicon itself is src/app/icon.png (App Router convention) —
      the white glyph on the near-black brand ground */
+  /* THE APPLE'S OWN SHELF — added to the home screen, the house stands
+     alone: no browser chrome, the status bar wearing the realm's own
+     color, and no telephone numbers invented out of the words. */
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Mirror Entity",
+  },
+  formatDetection: { telephone: false, address: false, email: false },
 };
 
 export const viewport: Viewport = {

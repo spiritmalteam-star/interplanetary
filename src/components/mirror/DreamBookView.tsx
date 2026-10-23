@@ -52,7 +52,6 @@ import {
   stopBrowserVoice,
 } from "@/lib/browser-voice";
 import { BOOK_DEPTHS, READERS, TALES, VOLUMES } from "@/lib/data/book-options";
-import { bypassIntoPro, useHoldBypass, HoldVeil } from "@/lib/hold-bypass";
 import { dedupeChapters } from "@/lib/book-text";
 import {
   forgetVolume,
@@ -1280,20 +1279,10 @@ export function DreamBookView() {
   /*  THE ATELIER                                                      */
   /* ================================================================ */
 
-  /* THE SECRET HAND — a four-second hold anywhere on the book maker
-     carves a wanderer passage and fills the purse: the pro doors open
-     by themselves. Only the guest's hand carries the key — a keeper
-     already inside has no gate to bypass. */
-  const isGuest = !me || me.email.startsWith("anon:");
-  const atelierHold = useHoldBypass(() => bypassIntoPro(), isGuest);
-  const readerHold = useHoldBypass(() => bypassIntoPro(), isGuest);
-
   const atelier = (
     <div
       className="relative flex h-full flex-col overflow-hidden bg-background text-foreground"
-      {...atelierHold.bind}
     >
-      <HoldVeil holding={atelierHold.holding} pct={atelierHold.pct} label="Hold four seconds — the passage opens with a full purse…" />
       {/* THE SHELF'S QUIET MARKS — the house's light language resting in
           the empty shoulders of the book selection: bronze ink on the
           daylight paper, silver glow in the crystal night. They never
@@ -1805,9 +1794,7 @@ export function DreamBookView() {
   const reader = (
     <div
       className="relative flex h-full flex-col overflow-hidden bg-background text-foreground"
-      {...readerHold.bind}
     >
-      <HoldVeil holding={readerHold.holding} pct={readerHold.pct} label="Hold four seconds — the passage opens with a full purse…" />
       <header
         className={cn(
           "relative z-20 shrink-0 overflow-hidden px-3 transition-all duration-500 sm:px-5",

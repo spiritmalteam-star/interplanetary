@@ -73,7 +73,7 @@ export default function AppShell({
   onFoldChat?: () => void;
 }) {
   return (
-    <div className="paper-grain relative h-[var(--app-h,100dvh)] overflow-hidden">
+    <div className="paper-grain relative h-[var(--app-h,var(--vh-safe))] overflow-hidden">
       {/* the purse keeper rides above every world — the 402 watch, the
           Stripe greeting, the unlock modal */}
       <WalletGuard />
@@ -255,7 +255,7 @@ function AppShellViews({
      the desk, one record at a time, in the same ink as the book. */
   if (view === "akashic") {
     return (
-      <div className={`relative h-[var(--app-h,100dvh)] overflow-hidden ${FRAME_LIFT}`}>
+      <div className={`relative h-[var(--app-h,var(--vh-safe))] overflow-hidden ${FRAME_LIFT}`}>
         <AkashicView />
       </div>
     );
@@ -265,7 +265,7 @@ function AppShellViews({
      visitor and read as they are being written. */
   if (view === "dreambook") {
     return (
-      <div className={`relative h-[var(--app-h,100dvh)] overflow-hidden ${FRAME_LIFT}`}>
+      <div className={`relative h-[var(--app-h,var(--vh-safe))] overflow-hidden ${FRAME_LIFT}`}>
         <DreamBookView />
       </div>
     );
@@ -276,7 +276,7 @@ function AppShellViews({
      hand in each returns to the living tree. */
   if (view === "mirroros") {
     return (
-      <div className={`relative h-[var(--app-h,100dvh)] overflow-hidden ${FRAME_LIFT}`}>
+      <div className={`relative h-[var(--app-h,var(--vh-safe))] overflow-hidden ${FRAME_LIFT}`}>
         <CosmicBackdrop />
         <StarField />
         <MirrorOS />
@@ -287,7 +287,7 @@ function AppShellViews({
 
   if (view === "particlex") {
     return (
-      <div className={`relative h-[var(--app-h,100dvh)] overflow-hidden ${FRAME_LIFT}`}>
+      <div className={`relative h-[var(--app-h,var(--vh-safe))] overflow-hidden ${FRAME_LIFT}`}>
         <CosmicBackdrop />
         <StarField />
         <ParticleX />
@@ -298,7 +298,7 @@ function AppShellViews({
 
   if (view === "evolvemed") {
     return (
-      <div className={`relative h-[var(--app-h,100dvh)] overflow-hidden ${FRAME_LIFT}`}>
+      <div className={`relative h-[var(--app-h,var(--vh-safe))] overflow-hidden ${FRAME_LIFT}`}>
         <CosmicBackdrop />
         <StarField />
         <EvolveMed />
@@ -309,7 +309,7 @@ function AppShellViews({
 
   if (view === "artx") {
     return (
-      <div className={`relative h-[var(--app-h,100dvh)] overflow-hidden ${FRAME_LIFT}`}>
+      <div className={`relative h-[var(--app-h,var(--vh-safe))] overflow-hidden ${FRAME_LIFT}`}>
         <CosmicBackdrop />
         <StarField />
         <ArtX />
@@ -320,7 +320,7 @@ function AppShellViews({
 
   if (view === "invent") {
     return (
-      <div className={`relative h-[var(--app-h,100dvh)] overflow-hidden ${FRAME_LIFT}`}>
+      <div className={`relative h-[var(--app-h,var(--vh-safe))] overflow-hidden ${FRAME_LIFT}`}>
         <CosmicBackdrop />
         <StarField />
         <InventView />
@@ -331,7 +331,7 @@ function AppShellViews({
 
   if (view === "lightcodes") {
     return (
-      <div className={`relative h-[var(--app-h,100dvh)] overflow-hidden ${FRAME_LIFT}`}>
+      <div className={`relative h-[var(--app-h,var(--vh-safe))] overflow-hidden ${FRAME_LIFT}`}>
         <CosmicBackdrop />
         <StarField />
         <LightCodesView />
@@ -342,7 +342,7 @@ function AppShellViews({
 
   if (view === "library") {
     return (
-      <div className={`relative h-[var(--app-h,100dvh)] overflow-hidden ${FRAME_LIFT}`}>
+      <div className={`relative h-[var(--app-h,var(--vh-safe))] overflow-hidden ${FRAME_LIFT}`}>
         <LibraryView />
         {passageModals}
       </div>
@@ -351,7 +351,7 @@ function AppShellViews({
 
   if (view === "register") {
     return (
-      <div className={`relative h-[var(--app-h,100dvh)] overflow-hidden ${FRAME_LIFT}`}>
+      <div className={`relative h-[var(--app-h,var(--vh-safe))] overflow-hidden ${FRAME_LIFT}`}>
         <ArchiveRegister />
       </div>
     );
@@ -365,7 +365,7 @@ function AppShellViews({
      room from the channel below; the walk continues from every
      reply's own grown branches. */
   return (
-    <div className={`relative h-[var(--app-h,100dvh)] overflow-hidden ${FRAME_LIFT}`}>
+    <div className={`relative h-[var(--app-h,var(--vh-safe))] overflow-hidden ${FRAME_LIFT}`}>
       <CosmicBackdrop />
       <StarField />
       <BranchCanopy

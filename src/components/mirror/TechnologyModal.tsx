@@ -70,7 +70,7 @@ function TechnologyRegister() {
   return (
     <div className="relative min-w-0" data-testid="technology-body">
       {/* ---------- the register ---------- */}
-      <div className="register-solid max-h-[calc(100dvh-8rem)] min-h-[420px] overflow-y-auto nice-scroll px-5 pb-6 pt-2 sm:px-7">
+      <div className="register-solid max-h-[calc(var(--vh-safe)-8rem)] min-h-[420px] overflow-y-auto nice-scroll px-5 pb-6 pt-2 sm:px-7">
         {/* sticky family rail — opaque ink, no bleed-through */}
         <div className="sticky top-0 z-10 -mx-5 bg-[color-mix(in_srgb,var(--register-ink)_94%,transparent)] px-5 pb-2 pt-3 sm:-mx-7 sm:px-7">
           <div className="nice-scroll flex items-center gap-1.5 overflow-x-auto pb-1">

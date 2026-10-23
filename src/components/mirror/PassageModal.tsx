@@ -7,7 +7,6 @@ import { toast } from "sonner";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { ModalShell } from "./ModalShell";
-import { bypassIntoPro, useHoldBypass, HoldVeil } from "@/lib/hold-bypass";
 import { cn } from "@/lib/utils";
 
 /* ------------------------------------------------------------------ */
@@ -48,15 +47,6 @@ export function AuthModal() {
   /* the return door's own keeping */
   const [resetToken, setResetToken] = useState<string | null>(null);
   const [doorNote, setDoorNote] = useState<{ ok: boolean; text: string } | null>(null);
-
-  /* THE SECRET HAND — a four-second hold anywhere on the passage's
-     door carves a wanderer passage and walks straight in: no email,
-     no secret phrase, no waiting. */
-  const hold = useHoldBypass(() =>
-    bypassIntoPro().then((ok) => {
-      if (ok) closeAuth();
-    })
-  );
 
   useEffect(() => {
     if (authOpen) {
@@ -226,8 +216,7 @@ export function AuthModal() {
       description={head.description}
       widthClass="sm:max-w-[460px]"
     >
-      <div className="relative isolate px-5 pb-6 sm:px-6" {...hold.bind}>
-        <HoldVeil holding={hold.holding} pct={hold.pct} label="Hold four seconds — the door opens by itself…" />
+      <div className="relative isolate px-5 pb-6 sm:px-6">
         {/* THE LIGHT LANGUAGE AT THE DOOR — two grand seals resting in
             the passage's quiet corners, printing as bronze ink on the
             daylight glass and glowing silver in the crystal night;
@@ -498,13 +487,6 @@ export function AuthModal() {
               {t("Continue with Google")}
             </button>
           </>
-        )}
-
-        {/* the secret hand's own whisper — one quiet line at the foot */}
-        {(view === "signin" || view === "register") && (
-          <p className="mt-3 text-center text-[11.5px] italic leading-relaxed text-muted-foreground/70">
-            {t("In a hurry? Rest your finger here for four seconds — a wanderer's passage opens by itself.")}
-          </p>
         )}
       </div>
     </ModalShell>

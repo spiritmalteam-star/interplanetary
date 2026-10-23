@@ -5001,3 +5001,18 @@ Stage Summary:
 - The landing chat always comes home after a send — the mobile keyboard can no longer bury it.
 - The phone crosses into the portal in a breath: instant, smooth, no debris; the desktop's full passage untouched.
 - The tree mark left the landing chat; a device-local, visit-only history hand keeps and restores this visit's conversations — private by law, gone when the visit ends.
+---
+Task ID: 99
+Agent: Z.ai Code (main)
+Task: Fit the house beautifully on every Apple device and beyond, delete the four-second hold bypass route entirely, and push the final web version.
+
+Work Log:
+- THE SECRET HAND RETIRED (root and branch): src/lib/hold-bypass.tsx deleted (the hold watcher, the wanderer-passage carver, the filling-glass veil); the server door /api/auth/bypass deleted (it minted wanderer accounts and filled purses to pro — a standing hole, now gone; live check answers 404). Every hand that wore it cleaned: WalletGuard's purse modal, the PassageModal's door and the DreamBookView's atelier + reader all lost their hold bindings, veils and the "Rest your finger here for four seconds" whispers. Verified live: zero "four seconds" copy anywhere in the rendered DOM, zero in src/, and a long hold opens nothing.
+- THE OLD-ENGINE LAW (globals.css): --vh-safe born (100vh, rising to 100dvh under @supports) — every dynamic height now leans on it. AppShell's twelve world frames, the LandingGate's fullscreen lens and its pre-hydration slot, and the TechnologyModal's register now carry a whole-viewport fallback on engines without dvh (iOS < 15.4): nothing ever collapses on aged Apples, and modern devices keep their exact dynamic height.
+- THE APPLE'S OWN SHELF (layout.tsx metadata): appleWebApp (capable, black-translucent status bar, home-screen title) and formatDetection (no invented telephone numbers) — added to the home screen, the house stands alone with no browser chrome. The existing laws already stood: viewport-fit=cover, safe-area insets on every floating bar and composer floor (the notch law), themeColor both schemes, maximumScale (no iOS input auto-zoom), interactiveWidget resizes-content.
+- QA across the orchard and beyond (agent-browser): iPhone 14 emulation (390×844 @3x) — landing and full portal render beautifully, lens height exactly the viewport, zero horizontal overflow, zero page errors; iPhone SE (375×667) — portal fits exactly (667/667); iPad (820×1184) — the three-column whisper wall and the threshold both flawless; desktop 1280×800 — regression clean, --vh-safe resolving to 100dvh. bun run lint clean; tsc clean for every touched file; dev.log 200s only.
+
+Stage Summary:
+- The four-second secret hand is gone from every gate — the house stands free through its front doors alone.
+- Every dynamic height now carries an old-engine fallback; the notch, the Dynamic Island and the home indicator are bowed to on every floating bar and floor.
+- Added to an Apple home screen, the house opens as its own app. Verified beautiful across iPhone 14, iPhone SE, iPad and the desktop — the final web version pushed.

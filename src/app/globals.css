@@ -16,6 +16,22 @@ body {
   overscroll-behavior: none;
 }
 
+/* ------------------------------------------------------------------ */
+/*  THE OLD-ENGINE LAW — the safe viewport height. Modern engines      */
+/*  (iOS 15.4+, all evergreen browsers) speak dvh; older Apples and    */
+/*  aged Androids do not. Every dynamic height in the house leans on   */
+/*  this variable: exact on the new, whole-viewport on the old —       */
+/*  nothing ever collapses.                                            */
+/* ------------------------------------------------------------------ */
+:root {
+  --vh-safe: 100vh;
+}
+@supports (height: 100dvh) {
+  :root {
+    --vh-safe: 100dvh;
+  }
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

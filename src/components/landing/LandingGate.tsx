@@ -568,7 +568,7 @@ export default function LandingGate() {
         )}
         style={{
           width: fullscreen ? "100vw" : geo.w,
-          height: fullscreen ? "100dvh" : geo.h,
+          height: fullscreen ? "var(--vh-safe)" : geo.h,
           visibility: docked && (chatFolded || guideOpen) ? "hidden" : "visible",
         }}
       >
@@ -597,7 +597,7 @@ export default function LandingGate() {
               className="absolute inset-0 m-auto"
               style={
                 fullscreen
-                  ? { width: "100vw", height: "100dvh" }
+                  ? { width: "100vw", height: "var(--vh-safe)" }
                   : ({
                       width: geo.w,
                       height: geo.h,
@@ -654,7 +654,7 @@ export default function LandingGate() {
                 chatFolded
                 ? { width: geo.w, height: 68 }
                 : { width: geo.w, height: geo.h }
-              : { height: "min(100dvh, 660px)" }
+              : { height: "min(var(--vh-safe), 660px)" }
           }
           onExpand={expandPortal}
           onScroll={handleLandingScroll}
