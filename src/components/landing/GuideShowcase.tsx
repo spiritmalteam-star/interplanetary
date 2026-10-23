@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import Image from "next/image";
 import { ArrowUpRight } from "lucide-react";
 import { useT } from "@/lib/i18n";
@@ -15,13 +15,9 @@ import { cn } from "@/lib/utils";
 /*  and one touch steps through into the guide's own page.             */
 /*                                                                     */
 /*  CALM LAWS: opacity-and-transform motion only, neighbours-only      */
-/*  mounting, autoplay rests when unseen / hidden / held / reduced.    */
+/*  mounting, the walk answers the visitor's hand alone — the plates   */
+/*  never turn by themselves (no clock drives the exhibition).         */
 /* ------------------------------------------------------------------ */
-
-/* how long each plate rests on the eye before the walk continues */
-const DWELL = 7600;
-/* after a held touch, the walk resumes after this much quiet */
-const RESUME = 9000;
 
 export default function GuideShowcase({
   onOpen,
@@ -30,11 +26,7 @@ export default function GuideShowcase({
 }) {
   const t = useT();
   const [active, setActive] = useState(0);
-  const [reduced, setReduced] = useState(false);
-  const [inView, setInView] = useState(false);
-  const [held, setHeld] = useState(false);
   const stageRef = useRef<HTMLDivElement | null>(null);
-  const holdTimer = useRef<number | undefined>(undefined);
   const swipe = useRef<{ x: number; y: number } | null>(null);
 
   const go = useCallback(
@@ -45,57 +37,10 @@ export default function GuideShowcase({
   const next = useCallback(() => go(active + 1), [active, go]);
   const prev = useCallback(() => go(active - 1), [active, go]);
 
-  /* stillness for those who choose it */
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const apply = () => setReduced(mq.matches);
-    apply();
-    mq.addEventListener("change", apply);
-    return () => mq.removeEventListener("change", apply);
-  }, []);
-
-  /* the walk rests while the eye is elsewhere */
-  useEffect(() => {
-    const stage = stageRef.current;
-    if (!stage || typeof IntersectionObserver === "undefined") {
-      const id = window.setTimeout(() => setInView(true), 0);
-      return () => window.clearTimeout(id);
-    }
-    const io = new IntersectionObserver(
-      (entries) => setInView(entries[entries.length - 1]?.isIntersecting ?? true),
-      { threshold: 0.25 }
-    );
-    io.observe(stage);
-    return () => io.disconnect();
-  }, []);
-
-  /* the walk rests while the page itself is hidden */
-  useEffect(() => {
-    const onVis = () =>
-      setHeld(document.visibilityState === "hidden" ? true : false);
-    document.addEventListener("visibilitychange", onVis);
-    return () => document.removeEventListener("visibilitychange", onVis);
-  }, []);
-
-  /* THE QUIET WALK */
-  useEffect(() => {
-    if (reduced || !inView || held) return;
-    const id = window.setTimeout(
-      () => setActive((a) => (a + 1) % GUIDES.length),
-      DWELL
-    );
-    return () => window.clearTimeout(id);
-  }, [active, reduced, inView, held]);
-
-  useEffect(() => () => window.clearTimeout(holdTimer.current), []);
-
-  /* holding the stage pauses the walk; a firm horizontal stroke
-     carries it — everything else stays still */
+  /* a firm horizontal stroke carries the walk — everything else stays
+     still; no clock ever turns the plates */
   const onPointerDown = (e: React.PointerEvent) => {
     swipe.current = { x: e.clientX, y: e.clientY };
-    setHeld(true);
-    window.clearTimeout(holdTimer.current);
-    holdTimer.current = window.setTimeout(() => setHeld(false), RESUME);
   };
   const onPointerUp = (e: React.PointerEvent) => {
     const s = swipe.current;
@@ -106,8 +51,6 @@ export default function GuideShowcase({
     if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.4) {
       if (dx < 0) next();
       else prev();
-      window.clearTimeout(holdTimer.current);
-      holdTimer.current = window.setTimeout(() => setHeld(false), RESUME);
     }
   };
   const onPointerCancel = () => {

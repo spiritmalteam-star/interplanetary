@@ -143,6 +143,11 @@ export interface WalletSnapshot {
   planTier: PlanTier;
   freeCreditsRemaining: number;
   paidCreditsRemaining: number;
+  /** The great deposit — reflection pulses converted from the skies'
+      own API accumulation. It rides beside the spendable lights and
+      never dries: it is the house's borrowed reservoir. */
+  depositCredits: number;
+  depositSource: string | null;
   total: number;
 }
 
@@ -179,17 +184,74 @@ type WalletRow = {
   planTier: string;
   freeCreditsRemaining: number;
   paidCreditsRemaining: number;
+  depositCredits: bigint;
+  depositSource: string | null;
 };
 
 function snapshotOf(row: WalletRow): WalletSnapshot {
+  const deposit = Number(row.depositCredits ?? 0n);
   return {
     planTier: (["FREE", "SEEKER", "OBSERVATORY_PRO"].includes(row.planTier)
       ? row.planTier
       : "FREE") as PlanTier,
     freeCreditsRemaining: row.freeCreditsRemaining,
     paidCreditsRemaining: row.paidCreditsRemaining,
-    total: row.freeCreditsRemaining + row.paidCreditsRemaining,
+    depositCredits: deposit,
+    depositSource: row.depositSource,
+    total:
+      row.freeCreditsRemaining +
+      row.paidCreditsRemaining +
+      deposit,
   };
+}
+
+/* --------------------- the great deposit ---------------------------- */
+
+/** THE GREAT DEPOSIT — reflection pulses borrowed from the skies' own
+    API accumulation and laid into a passage's wallet. The house acts
+    as the middle man: the skies' raw capacity is converted into the
+    house's own currency and kept on deposit, ready to be distributed
+    onward. The amount rides a BigInt column (ten billion and beyond
+    cannot live in an Int) and is written once into the ledger with
+    its source named. */
+export async function grantDeposit(
+  userId: string,
+  input: { amount: number; source: string; note?: string }
+): Promise<{ ok: boolean; depositCredits: number; error?: string }> {
+  const amount = Math.max(0, Math.floor(input.amount));
+  if (amount <= 0) return { ok: false, depositCredits: 0, error: "no deposit named" };
+  try {
+    await ensureWallet(userId);
+    const wallet = await db.userWallet.update({
+      where: { userId },
+      data: {
+        depositCredits: { increment: BigInt(amount) },
+        depositSource: input.source.slice(0, 120),
+      },
+    });
+    await db.creditLedger.create({
+      data: {
+        userId,
+        actionType: "DEPOSIT_ZAI",
+        creditsDeducted: 0, // an Int column cannot hold the great numbers — the ledger's metadata carries them
+        metadata: {
+          kind: "zai_deposit",
+          deposit: String(amount),
+          source: input.source.slice(0, 120),
+          description:
+            input.note?.slice(0, 300) ??
+            "Reflection pulses converted from the z.ai API accumulation — the house stands as the middle man",
+        },
+      },
+    });
+    return { ok: true, depositCredits: Number(wallet.depositCredits) };
+  } catch (err) {
+    return {
+      ok: false,
+      depositCredits: 0,
+      error: err instanceof Error ? err.message.slice(0, 200) : "the deposit did not land",
+    };
+  }
 }
 
 export interface SpendResult {

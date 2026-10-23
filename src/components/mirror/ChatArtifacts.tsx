@@ -46,6 +46,7 @@ import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { bookToText, dedupeChapters } from "@/lib/book-text";
+import { ShareButton } from "./ShareButton";
 import { toast } from "@/hooks/use-toast";
 import type { SideArtifactKind } from "@/lib/artifact-intent";
 import { forgeDirective, guessLightCodesMode } from "@/lib/artifact-intent";
@@ -1319,6 +1320,17 @@ function PoemCard({ resonance }: { resonance: string }) {
               )}
               {copied ? t("copied") : t("copy")}
             </button>
+            <ShareButton
+              cacheKey={`chat-poem-${poem.title.slice(0, 24)}`}
+              title={poem.title}
+              text={[
+                poem.title,
+                ...(poem.epigraph ? [poem.epigraph] : []),
+                ...poem.stanzas.map((st) => st.join("\n")),
+                ...(poem.seal ? [`— ${poem.seal}`] : []),
+              ].join("\n\n")}
+              variant="pill"
+            />
             <button
               type="button"
               onClick={() => void weave()}
@@ -2234,6 +2246,12 @@ function BookWeaver({
             )}
             {copied ? t("Book copied") : t("Copy the book")}
           </button>
+          <ShareButton
+            cacheKey="chat-book"
+            title={metaRef.current?.title ?? t("A woven book")}
+            text={bookToText(metaRef.current, pagesRef.current)}
+            variant="pill"
+          />
           <button
             type="button"
             onClick={saveBook}
@@ -2352,6 +2370,13 @@ function BookWeaver({
                       <Copy className="size-3.5" aria-hidden="true" />
                     )}
                   </button>
+                  <ShareButton
+                    cacheKey="book-fullscreen"
+                    title={meta?.title ?? t("A woven book")}
+                    text={bookToText(metaRef.current, pagesRef.current)}
+                    variant="bare"
+                    className="focus-glow flex size-8 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:text-foreground"
+                  />
                 </div>
                 <button
                   type="button"

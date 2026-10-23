@@ -62,13 +62,22 @@ export async function GET(req: NextRequest) {
 
     /* the passage's own purse — the per-user coins (free lights spent
        first, paid lights after), riding beside the workspace's credits */
-    let wallet: { planTier: string; free: number; paid: number; total: number } | null = null;
+    let wallet: {
+      planTier: string;
+      free: number;
+      paid: number;
+      deposit: number;
+      depositSource: string | null;
+      total: number;
+    } | null = null;
     try {
       const w = await ensureWallet(user.id);
       wallet = {
         planTier: w.planTier,
         free: w.freeCreditsRemaining,
         paid: w.paidCreditsRemaining,
+        deposit: w.depositCredits,
+        depositSource: w.depositSource,
         total: w.total,
       };
     } catch {

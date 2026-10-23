@@ -110,6 +110,23 @@ function audioExtension(mime?: string): string {
 
 const AUDIO_RETRY_DELAYS_MS = [800, 2000];
 
+/* THE VOICE'S OWN SKY — the open.bigmodel.cn gateway (Zhipu's public
+   platform) serves the SAME house voices (glm-tts: xiaochen / tongtong;
+   glm-asr-2512 for the ear) behind its own key. The international sky
+   (api.z.ai) has no TTS service at all, so in the cloud (Vercel) this
+   door is the ONLY one the house voice can travel through. Its
+   credential is carried in BIGMODEL_API_KEY — never in the code. */
+function bigModelAudioConfig(): { apiKey: string; baseUrl: string } | null {
+  const apiKey = process.env.BIGMODEL_API_KEY?.trim();
+  if (!apiKey) return null;
+  return {
+    apiKey,
+    baseUrl: (
+      process.env.BIGMODEL_BASE_URL ?? "https://open.bigmodel.cn/api/paas/v4"
+    ).replace(/\/$/, ""),
+  };
+}
+
 /* a door of the audio ladder — one full request shape: where it
    points, how it authenticates, what it carries. The ladder walks
    the doors in order and the first that sings wins. */
@@ -127,6 +144,12 @@ function zaiAudio(cfg: CloudConfig): AudioEngine {
      an explicit code. */
   const ttsModel = process.env.ZAI_TTS_MODEL?.trim() || null;
   const asrModel = process.env.ZAI_ASR_MODEL?.trim() || null;
+  /* the voice's own sky — its doors are walked right after the inner
+     ones, before every public door that cannot sing */
+  const bm = bigModelAudioConfig();
+  const bmHeaders: Record<string, string> | null = bm
+    ? { Authorization: `Bearer ${bm.apiKey}` }
+    : null;
 
   const baseHeaders: Record<string, string> = {
     Authorization: `Bearer ${cfg.apiKey}`,
@@ -284,6 +307,9 @@ function zaiAudio(cfg: CloudConfig): AudioEngine {
         /* THE LADDER — every door the house skies are known to serve:
            0. the INNER sky (the SDK's own gateway): /audio/tts, no
               model code — the house voice's true home door
+           0.5 the voice's own sky (open.bigmodel.cn): /audio/speech
+              naming glm-tts — the ONLY door that sings in the cloud
+              (Vercel), carrying the same xiaochen / tongtong voices
            1. the public sky: /audio/tts, no model code (the SDK
               contract; kept for skies that serve the default)
            2. /audio/tts naming the house code (cogtts)
@@ -301,6 +327,23 @@ function zaiAudio(cfg: CloudConfig): AudioEngine {
             url: `${innerBase}/audio/tts`,
             headers: innerHeaders(token),
             body: { ...base },
+          });
+        }
+        if (bm && bmHeaders) {
+          /* the voice's own sky — glm-tts carries the SAME house
+             voices (xiaochen / tongtong) and answers raw WAV bytes;
+             it demands an explicit model code, unlike the SDK doors */
+          candidates.push({
+            label: "bigmodel /audio/speech (glm-tts)",
+            url: `${bm.baseUrl}/audio/speech`,
+            headers: bmHeaders,
+            body: {
+              model: process.env.BIGMODEL_TTS_MODEL?.trim() || "glm-tts",
+              input,
+              voice,
+              speed,
+              response_format: "wav",
+            },
           });
         }
         candidates.push(
@@ -359,14 +402,14 @@ function zaiAudio(cfg: CloudConfig): AudioEngine {
           return { text: data?.text ?? "" };
         };
 
-        const multipart = (model: string) => () => {
+        const multipart = (model: string, base?: string, headers?: Record<string, string>) => () => {
           const form = new FormData();
           form.append("file", new Blob([bytes], { type: mime }), `audio.${ext}`);
           form.append("model", model);
           form.append("stream", "false");
-          return fetch(`${cfg.baseUrl}/audio/transcriptions`, {
+          return fetch(`${(base ?? cfg.baseUrl).replace(/\/$/, "")}/audio/transcriptions`, {
             method: "POST",
-            headers: baseHeaders, // the form carries its own boundary
+            headers: headers ?? baseHeaders, // the form carries its own boundary
             body: form,
             signal: AbortSignal.timeout(180_000),
           });
@@ -391,6 +434,19 @@ function zaiAudio(cfg: CloudConfig): AudioEngine {
             url: `${innerBase}/audio/asr`,
             headers: innerHeaders(token),
             body: { file_base64: params.file_base64 },
+          });
+        }
+        if (bm && bmHeaders) {
+          /* the ear's own sky — glm-asr-2512, the one code it serves */
+          candidates.push({
+            label: "bigmodel /audio/transcriptions (glm-asr-2512)",
+            url: `${bm.baseUrl}/audio/transcriptions`,
+            headers: bmHeaders,
+            form: multipart(
+              process.env.BIGMODEL_ASR_MODEL?.trim() || "glm-asr-2512",
+              bm.baseUrl,
+              bmHeaders
+            ),
           });
         }
         candidates.push({
@@ -656,14 +712,29 @@ class CloudBackend implements ZAIClient {
   };
 
   get audio(): AudioEngine {
-    /* the house voice is the ONLY reader — when the Z.ai sky is not
-       the one behind this brain, the voice politely declines rather
-       than letting a stranger's choir sing */
-    if (this.cfg.label !== "Z.ai")
-      throw new Error(
-        "Voice (tts/asr) speaks only through Z.ai — set ZAI_API_KEY (CogTTS, the house voice) in Vercel's Environment Variables."
+    /* the house voice is the ONLY reader — it sings through the Z.ai
+       skies and, in the cloud, through the voice's own sky
+       (open.bigmodel.cn — the same CogTTS voices). When neither stands
+       behind this brain, the voice politely declines rather than
+       letting a stranger's choir sing. */
+    const engines: AudioEngine[] = [];
+    if (this.cfg.label === "Z.ai") engines.push(zaiAudio(this.cfg));
+    const bm = bigModelAudioConfig();
+    if (bm)
+      engines.push(
+        zaiAudio({
+          apiKey: bm.apiKey,
+          baseUrl: bm.baseUrl,
+          model: this.cfg.model,
+          allowThinking: false,
+          label: "Z.ai",
+        })
       );
-    return chainAudio([zaiAudio(this.cfg)]);
+    if (engines.length === 0)
+      throw new Error(
+        "Voice (tts/asr) speaks only through Z.ai — set BIGMODEL_API_KEY (glm-tts, the house voice's own sky) or ZAI_API_KEY in Vercel's Environment Variables."
+      );
+    return chainAudio(engines);
   }
 }
 

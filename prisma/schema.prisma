@@ -231,6 +231,8 @@ model UserWallet {
   planTier              String    @default("FREE") // FREE | SEEKER | OBSERVATORY_PRO
   freeCreditsRemaining  Int       @default(5) // the birth gift — spent first
   paidCreditsRemaining  Int       @default(0) // every purchase lands here
+  depositCredits        BigInt    @default(0) // the great deposit — reflection pulses converted from the skies' own API accumulation (Int32 cannot hold it)
+  depositSource         String?   // where the great deposit was borrowed from (e.g. "zai_api_accumulation")
   stripeCustomerId      String?   @unique
   stripeSubscriptionId  String?   @unique
   createdAt             DateTime  @default(now())

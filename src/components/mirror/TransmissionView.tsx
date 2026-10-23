@@ -19,6 +19,7 @@ import type { Mode, Scope } from "@/lib/mirror-types";
 import { cn } from "@/lib/utils";
 import { findTerms } from "@/lib/data/lexicon";
 import { ListenButton } from "./ListenButton";
+import { ShareButton } from "./ShareButton";
 import { voiceProfile } from "@/lib/voice-profiles";
 import { AlienLoading } from "./AlienLoading";
 import { TermPopover } from "./TermPopover";
@@ -626,6 +627,13 @@ export function Exchange({
                   <Copy className="size-3.5" aria-hidden="true" />
                 )}
               </button>
+              <ShareButton
+                text={message.text}
+                title={t("A transmission of the mirror")}
+                cacheKey={message.id}
+                variant="bare"
+                className="focus-glow flex size-8 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+              />
             </div>
           )}
           {hasVisual ? (

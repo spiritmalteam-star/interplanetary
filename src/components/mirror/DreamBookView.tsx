@@ -66,6 +66,7 @@ import { AUDIT_DIMENSIONS } from "@/lib/book-ledger";
 import { downloadBookPdf } from "@/lib/book-pdf";
 import { recordDownload } from "@/lib/downloads-log";
 import { cn } from "@/lib/utils";
+import { ShareButton } from "./ShareButton";
 
 /* ------------------------------------------------------------------ */
 /*  DreamBookView — the Dream Book: a world of its own.                */
@@ -248,6 +249,9 @@ export function DreamBookView() {
      can never be dragged back by its own late voice (the glitch's
      root — a race between the wire and the reader's finger). */
   const narrSeqRef = useRef(0);
+  /* THE CHANNELING DOT'S OWN MEMORY — where the reader stood before
+     the dot's jump, so the same small hand carries them back */
+  const dotReturnRef = useRef(0);
 
   useEffect(() => {
     configRef.current = { age, tale, volume, level, topic, vein, pageCount };
@@ -941,20 +945,23 @@ export function DreamBookView() {
          the loom (it weaves the next pages the moment the book opens).
          The whole reveal never fights it and never dies silently: it
          waits for the current breath to land, then takes the loom and
-         channels everything that remains. */
-      for (let wait = 0; wait < 600 && weavingRef.current; wait++) {
+         channels everything that remains. The wait now covers a FULL
+         stride's own lifetime (the 300s ceiling), so a long, slow,
+         alive breath can never be abandoned mid-air. */
+      for (let wait = 0; wait < 1600 && weavingRef.current; wait++) {
         if (cancelRevealRef.current) return;
-        await new Promise((r) => setTimeout(r, 250));
+        await new Promise((r) => setTimeout(r, 200));
       }
       if (weavingRef.current || cancelRevealRef.current) return;
       started = true;
       /* the loom's own patience — before every stride, the reveal lets
          any breath already in the loom land (the reader's prefetch),
-         so a stride is never swallowed by a held door */
+         so a stride is never swallowed by a held door. The same full
+         stride lifetime is honored here. */
       const waitForLoom = async () => {
-        for (let wait = 0; wait < 600 && weavingRef.current; wait++) {
+        for (let wait = 0; wait < 1600 && weavingRef.current; wait++) {
           if (cancelRevealRef.current) return false;
-          await new Promise((r) => setTimeout(r, 250));
+          await new Promise((r) => setTimeout(r, 200));
         }
         return !weavingRef.current && !cancelRevealRef.current;
       };
@@ -1000,9 +1007,16 @@ export function DreamBookView() {
           continue;
         }
         silentStrides = 0;
-        /* the stall guard — a stride that returns no pages can never
-           hold the loop; the book simply opens with what is woven */
-        if (pagesRef.current.length === before) break;
+        /* the stall guard — a stride that returns no NEW pages (its
+           numbers were already held — a raced twin) is a stumble, not
+           the end: it counts as one silent stride and the telling
+           goes on. Only three silent strides in a row rest the loom;
+           the book is never abandoned for a single raced breath. */
+        if (pagesRef.current.length === before) {
+          silentStrides += 1;
+          if (silentStrides >= 3) break;
+          continue;
+        }
       }
     } finally {
       cancelRevealRef.current = false;
@@ -2053,6 +2067,7 @@ export function DreamBookView() {
                 key={`whole-${p.n}`}
                 page={p}
                 fontSize={ZOOM_STEPS[zoom]}
+                bookTitle={meta?.title}
               />
             ))}
             <div className="dream-page dream-page-single mt-7 flex flex-col items-center px-6 py-12 text-center">
@@ -2069,15 +2084,88 @@ export function DreamBookView() {
                 {meta?.title}
               </p>
               {!ended && (
-                <p className="mono-label mt-3 text-[10px] uppercase tracking-[0.2em] text-[var(--dream-ink-faint)]">
-                  {t("The loom is still weaving — the book returns whole when the seal lands")}
-                </p>
+                <>
+                  <p className="mono-label mt-3 text-[10px] uppercase tracking-[0.2em] text-[var(--dream-ink-faint)]">
+                    {t("The loom is still weaving — the book returns whole when the seal lands")}
+                  </p>
+                  {!wholeReveal && (
+                    <button
+                      type="button"
+                      onClick={() => void revealWholeBook()}
+                      disabled={weavingNext}
+                      data-testid="dream-whole-continue"
+                      className="dream-ink-btn focus-glow mt-4 inline-flex h-10 items-center justify-center gap-2 rounded-full px-6 text-[13.5px] font-medium disabled:opacity-60"
+                    >
+                      <Feather className="size-3.5" aria-hidden="true" />
+                      {t("Channel the rest of the book")}
+                    </button>
+                  )}
+                </>
               )}
             </div>
           </div>
         ) : (
           <div className="mx-auto flex h-full w-full max-w-[760px] items-stretch justify-center px-3 pb-7 pt-3 sm:px-8 sm:pb-9">
           <div className="relative flex min-h-full w-full max-w-[640px] flex-col">
+            {/* THE CHANNELING DOT — one small light at the top of the
+                first page. Amber and breathing while the loom channels
+                the coming seven pages; green when they stand ready.
+                One touch carries the reader to the last woven page —
+                exactly where the book was about to channel more story
+                — and a second touch brings them back. */}
+            {stage === "reading" && !wholeMode && !!meta && pages.length > 0 && (pageIdx <= 1 || pageIdx >= pages.length) && !ended && (
+              <button
+                type="button"
+                onClick={() => {
+                  stopNarration();
+                  const frontier = pages.length;
+                  if (pageIdx >= frontier) {
+                    const back = dotReturnRef.current < frontier ? dotReturnRef.current : 0;
+                    dotReturnRef.current = 0;
+                    setPageIdx(back);
+                    setSlideDir(-1);
+                  } else {
+                    dotReturnRef.current = pageIdx;
+                    setPageIdx(frontier);
+                    setSlideDir(1);
+                  }
+                }}
+                aria-label={
+                  weavingNext
+                    ? t("The loom is channeling the coming pages — jump to the last woven page")
+                    : pageIdx >= pages.length
+                      ? t("Return to where you left off")
+                      : t("The coming pages are ready — jump to the last woven page")
+                }
+                title={
+                  weavingNext
+                    ? t("The loom is channeling the coming pages — jump to the last woven page")
+                    : pageIdx >= pages.length
+                      ? t("Return to where you left off")
+                      : t("The coming pages are ready — jump to the last woven page")
+                }
+                data-testid="dream-channel-dot"
+                className="focus-glow absolute -top-1.5 left-1/2 z-30 flex size-4 -translate-x-1/2 items-center justify-center rounded-full border transition-colors duration-500"
+                style={{
+                  borderColor: weavingNext
+                    ? "rgba(245, 158, 11, 0.75)"
+                    : "rgba(34, 197, 94, 0.7)",
+                  backgroundColor: weavingNext
+                    ? "rgba(245, 158, 11, 0.9)"
+                    : "rgba(34, 197, 94, 0.85)",
+                  boxShadow: weavingNext
+                    ? "0 0 10px rgba(245, 158, 11, 0.55)"
+                    : "0 0 8px rgba(34, 197, 94, 0.4)",
+                }}
+              >
+                {weavingNext && (
+                  <span
+                    className="absolute inset-0 animate-ping rounded-full bg-[rgba(245,158,11,0.45)]"
+                    aria-hidden="true"
+                  />
+                )}
+              </button>
+            )}
             {/* the slide buttons — desktop (the previous one rests while
                 the reading is immersed — only the next page remains) */}
             {canPrev && !immersed && (
@@ -2275,6 +2363,7 @@ export function DreamBookView() {
                   <BookPage
                     page={currentPage}
                     fontSize={ZOOM_STEPS[zoom]}
+                    bookTitle={meta?.title}
                     stalled={weaveFailed && !weavingNext}
                     onRetry={() =>
                       void weave("next", pagesRef.current.length + 1)
@@ -3002,11 +3091,13 @@ function BookPage({
   fontSize,
   stalled,
   onRetry,
+  bookTitle,
 }: {
   page?: WeavePage;
   fontSize: number;
   stalled?: boolean;
   onRetry?: () => void;
+  bookTitle?: string;
 }) {
   const t = useT();
   /* THE PAGE'S OWN COPY — one quiet button at the end of every page:
@@ -3082,6 +3173,13 @@ function BookPage({
               )}
               {copied ? t("copied") : t("Copy page")}
             </button>
+            <ShareButton
+              cacheKey={`dream-page-${page.n}`}
+              title={bookTitle ?? t("A woven book")}
+              text={`${page.part ? `${page.part}\n\n` : ""}${page.chapter ? `${page.chapter}\n\n` : ""}${pageText(page)}`}
+              variant="bare"
+              className="focus-glow inline-flex h-7 items-center gap-1.5 rounded-full border border-[var(--dream-ink-faint)]/30 px-2.5 font-[family-name(var(--font-literata))] text-[11.5px] italic text-[var(--dream-ink-soft)] transition-all duration-300 hover:border-[var(--dream-ink-soft)] hover:text-[var(--dream-ink)]"
+            />
           </div>
         </>
       ) : (

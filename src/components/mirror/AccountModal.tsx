@@ -30,7 +30,7 @@ import { ModalShell } from "./ModalShell";
 interface Summary {
   user: { email: string; name: string | null; emailVerified: boolean; createdAt: string | null };
   admin?: boolean;
-  wallet?: { planTier: string; free: number; paid: number; total: number } | null;
+  wallet?: { planTier: string; free: number; paid: number; deposit?: number; depositSource?: string | null; total: number } | null;
   plan: {
     id: string;
     label: string;
@@ -379,6 +379,24 @@ export function AccountModal() {
                         paid: fmtCredits(summary.wallet.paid),
                       })}
                     </p>
+                    {(summary.wallet.deposit ?? 0) > 0 && (
+                      <p
+                        className="mono-label mt-1.5 text-[9px] uppercase tracking-[0.14em]"
+                        style={{ color: "var(--cy)" }}
+                        data-testid="account-deposit"
+                      >
+                        {t(
+                          "The great deposit — {n} reflection pulses on deposit ({source})",
+                          {
+                            n: fmtCredits(summary.wallet.deposit ?? 0),
+                            source:
+                              summary.wallet.depositSource === "zai_api_accumulation"
+                                ? t("borrowed from the z.ai accumulation")
+                                : (summary.wallet.depositSource ?? ""),
+                          }
+                        )}
+                      </p>
+                    )}
                   </div>
                   <span
                     className="mono-label shrink-0 rounded-full border px-2.5 py-1 text-[9px] uppercase tracking-[0.14em]"

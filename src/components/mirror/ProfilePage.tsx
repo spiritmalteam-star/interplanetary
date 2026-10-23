@@ -82,6 +82,7 @@ interface AccountSummaryLite {
   credits: { balance: number | null };
   usage: { events30d: number; credits30d: number };
   libraryCount: number;
+  wallet?: { deposit?: number; depositSource?: string | null } | null;
   offers?: {
     plans: { id: string; label: string; priceCents: number; available: boolean }[];
     packs: { id: string; label: string; credits: number; priceCents: number; available: boolean }[];
@@ -1687,6 +1688,25 @@ export function ProfilePage() {
                       </div>
                     );
                   })}
+
+                  {(summary.wallet?.deposit ?? 0) > 0 && (
+                    <p
+                      className="mono-label mt-3 border-t hairline pt-3 text-[9.5px] uppercase tracking-[0.14em]"
+                      style={{ color: "var(--cy)" }}
+                      data-testid="profile-deposit"
+                    >
+                      {t(
+                        "The great deposit — {n} reflection pulses on deposit ({source})",
+                        {
+                          n: (summary.wallet?.deposit ?? 0).toLocaleString("en-US"),
+                          source:
+                            summary.wallet?.depositSource === "zai_api_accumulation"
+                              ? t("borrowed from the z.ai accumulation")
+                              : (summary.wallet?.depositSource ?? ""),
+                        }
+                      )}
+                    </p>
+                  )}
                 </div>
               ) : (
                 <p className="py-3 text-[13.5px] italic text-muted-foreground">

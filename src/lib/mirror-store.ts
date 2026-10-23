@@ -200,6 +200,10 @@ export interface WalletBalance {
   planTier: "FREE" | "SEEKER" | "OBSERVATORY_PRO";
   freeCreditsRemaining: number;
   paidCreditsRemaining: number;
+  /** The great deposit — reflection pulses converted from the skies'
+      own API accumulation (present only where a deposit was laid). */
+  depositCredits?: number;
+  depositSource?: string | null;
   total: number;
 }
 

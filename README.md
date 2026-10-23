@@ -71,9 +71,15 @@ Notes:
   `paintErrors` and into the Vercel function logs. On Vercel (read-only
   filesystem) paintings are served from the painter's hosted url instead of
   the local gallery.
-- Voice (TTS/ASR) rides the OpenAI sky on Vercel — the same `OPENAI_API_KEY`
-  that paints also sings (`gpt-4o-mini-tts` → `tts-1` fallback, Whisper for
-  hearing). In the laboratory the z-ai atelier speaks. If the voice is
-  quiet, the response `detail` field and the Vercel logs say why.
+- Voice (TTS/ASR) is the Z.ai house voice alone — the same xiaochen /
+  tongtong the laboratory hears. In the laboratory the z-ai atelier speaks.
+  **In the cloud (Vercel) the international sky (api.z.ai) has no TTS
+  service, so the voice travels through its own sky**: set `BIGMODEL_API_KEY`
+  (open.bigmodel.cn — Zhipu's public platform, model `glm-tts` / ear
+  `glm-asr-2512`) in Vercel → Environment Variables and every Listen
+  button, live call, book page and akashic letter speaks with the real
+  Z.ai narrator. Without it the voice rests (the visitor's own browser
+  may stand in). If the voice is quiet, the response `detail` field and
+  the Vercel logs say why.
 - The cosmic library and accounts need a database (`DATABASE_URL`);
   point it at a hosted provider to use them in the cloud.

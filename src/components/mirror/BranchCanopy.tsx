@@ -26,6 +26,7 @@ import {
   ChevronUp,
   Compass,
   Copy,
+  Share2,
   Dna,
   Eraser,
   Hammer,
@@ -579,6 +580,53 @@ async function speakWithTransmission(
    own answer and every word of the room's conversation — carries one
    quiet hand: one touch and the words are the visitor's, on their
    own clipboard, ready to travel anywhere. */
+
+const RoomShareButton = memo(function RoomShareButton({
+  text,
+  testId,
+}: {
+  text: string;
+  testId: string;
+}) {
+  const t = useT();
+  const [shared, setShared] = useState(false);
+  const share = async () => {
+    const clean = text.trim();
+    if (!clean) return;
+    if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
+      try {
+        await navigator.share({ title: t("A word from the mirror"), text: clean });
+        return;
+      } catch {
+        /* the sheet was closed — a closed hand is not a failed one */
+        return;
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(clean);
+      setShared(true);
+      window.setTimeout(() => setShared(false), 1800);
+    } catch {
+      /* the words stay on the screen — nothing breaks */
+    }
+  };
+  return (
+    <button
+      type="button"
+      onClick={() => void share()}
+      aria-label={t("Share this transmission")}
+      title={t("Share this transmission")}
+      data-testid={testId}
+      className="focus-glow flex size-6 shrink-0 items-center justify-center rounded-full text-muted-foreground/60 transition-colors duration-300 hover:text-foreground"
+    >
+      {shared ? (
+        <Check className="size-3" aria-hidden="true" />
+      ) : (
+        <Share2 className="size-3" aria-hidden="true" />
+      )}
+    </button>
+  );
+});
 
 const RoomCopyButton = memo(function RoomCopyButton({
   text,
@@ -5710,6 +5758,10 @@ export function BranchCanopy({
                               text={roomAnswer}
                               testId={`${testIdPrefix}-zoom-copy`}
                             />
+                            <RoomShareButton
+                              text={roomAnswer}
+                              testId={`${testIdPrefix}-zoom-share`}
+                            />
                           </div>
                         )}
                       </div>
@@ -5837,6 +5889,10 @@ export function BranchCanopy({
                               <RoomCopyButton
                                 text={turn.a}
                                 testId={`${testIdPrefix}-room-copy-${i}`}
+                              />
+                              <RoomShareButton
+                                text={turn.a}
+                                testId={`${testIdPrefix}-room-share-${i}`}
                               />
                             </div>
                           ) : turn.failed ? (

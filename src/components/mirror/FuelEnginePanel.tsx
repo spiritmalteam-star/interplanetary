@@ -156,10 +156,20 @@ export function FuelEnginePanel() {
         body: JSON.stringify(body),
       });
       const data = (await res.json().catch(() => null)) as
-        | { ok?: boolean; status?: FuelStatus; grant?: { email: string; amount: number; walletTotal: number }; error?: string }
+        | { ok?: boolean; status?: FuelStatus; already?: boolean; depositCredits?: number; grant?: { email: string; amount: number; walletTotal: number }; error?: string }
         | null;
       if (res.ok && data?.ok) {
         if (data.status) setStatus(data.status);
+        if (body.action === "deposit" && typeof data.depositCredits === "number") {
+          setNotice({
+            ok: true,
+            text: data.already
+              ? t("The great deposit already stands — {n} reflection pulses rest on the passage.", { n: fmt(data.depositCredits) })
+              : t("The great deposit stands — {n} reflection pulses borrowed from the z.ai accumulation now rest on the passage.", { n: fmt(data.depositCredits) }),
+          });
+          onDone?.();
+          return;
+        }
         if (data.grant) {
           setNotice({
             ok: true,
@@ -311,6 +321,21 @@ export function FuelEnginePanel() {
               <Zap className="size-3.5" aria-hidden="true" />
             )}
             {t("Fuse the reserves")}
+          </button>
+          <button
+            type="button"
+            onClick={() => void act({ action: "deposit" }, "deposit")}
+            disabled={busy === "deposit"}
+            data-testid="fuel-deposit"
+            className="focus-glow flex h-9 items-center gap-2 rounded-full border px-4 text-[13.5px] font-medium text-[#e8d9b0] transition-all duration-300 hover:brightness-[1.08] disabled:opacity-50"
+            style={{ borderColor: "color-mix(in srgb, #e8d9b0 45%, transparent)" }}
+          >
+            {busy === "deposit" ? (
+              <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
+            ) : (
+              <Zap className="size-3.5" aria-hidden="true" />
+            )}
+            {t("Lay the great deposit (10B)")}
           </button>
           <button
             type="button"
