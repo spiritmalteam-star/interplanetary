@@ -71,7 +71,12 @@ function computeGeo(): Geo {
      a whole small portal on the threshold.
      THE TALLER GLASS — the visitor asked for a grander window: the
      docked chat stands fifteen percent taller at every width (0.598
-     of the phone's height, a 506px desk cap), still whole. */
+     of the phone's height, a 506px desk cap), still whole.
+     THE FIRST SCREEN'S OWN — at the desk the glass now keeps a
+     gentle 0.60 of the height (from 0.633), so the whole chamber —
+     crown, room and whisper line — stands fully visible in the
+     first screen with the hero above it: the chat is the landing's
+     main focus, never cut by the fold. */
   if (vw < 640) {
     return {
       w: Math.floor(vw * 0.94),
@@ -87,12 +92,19 @@ function computeGeo(): Geo {
      realm laid out inside it at true size.
      THE SMOOTH BORDER — the docked chat wears a gently rounded,
      slightly transparent edge (no frame), soft against the
-     threshold beneath. */
-  const rail = Math.min(210, Math.max(130, Math.round(vw * 0.13)));
+     threshold beneath.
+     THE SHOULDERS' AIR — the still gallery now hangs on both edges
+     from 1280 up, so the glass keeps its distance from the plates
+     (the same width law the rails wear: 18vw, a 340px crown, and
+     never into the 900px column). */
+  const rail =
+    vw >= 1280
+      ? Math.min(340, Math.round(vw * 0.18), Math.floor((vw - 920) / 2))
+      : 0;
   const clear = vw >= 1024 ? 2 * rail + 44 : 44;
   return {
     w: Math.max(420, Math.min(880, Math.floor(vw * 0.86) - 24, vw - clear)),
-    h: Math.max(414, Math.min(506, Math.round(vh * 0.633))),
+    h: Math.max(414, Math.min(506, Math.round(vh * 0.6))),
     radius: 26,
   };
 }

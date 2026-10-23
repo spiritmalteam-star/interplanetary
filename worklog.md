@@ -4884,3 +4884,23 @@ Stage Summary:
 - Every chat route of the house now carries the First Law of Relevance — answers belong to their questions; Lyrans verified returning Lyrans.
 - Latency: hedged dual-brush painting, atelier attempt timeout, shorter backoffs, live-call token cap; chat measured 2-4s.
 - The walk's trail now restores rooms whose answers landed after the visitor moved on; cross-room cleanliness re-verified.
+
+---
+Task ID: 93
+Agent: Z.ai Code (main session)
+Task: Restore the latest website (third workspace rollback), hang the six new porcelain artworks below the top banner on both shoulders at the desk (three per side, bigger, motionless), raise the landing chat to be the desk's first-screen focus and fully visible, and keep the house cool (no lag, no latency, no heating).
+
+Work Log:
+- Found the local tree rolled back again to the task-62 checkpoint (c873b47) while GitHub kept every commit; fetched origin/main and hard-reset the chain home to 9c74a12 (the First Law + slim crown release).
+- Copied the six uploaded artworks into public/landing/shoulders/ (star-craft, twin-guardians, star-child, living-earth, crystal-flower, floating-city).
+- LandingPage.tsx: RAIL_LEFT/RAIL_RIGHT now carry the six new plates; the Rail component rewritten still — fixed/parallax drift (framer-motion useScroll/useTransform bands, will-change layers) fully removed, the gallery is absolute in the page flow, xl+ only, hung just below the open banner (left +36px, right +112px stagger), square plates (object-contain on the artworks' own deep sky, so nothing is ever cropped), width min(18vw, 340px, (100vw-920px)/2) — half again the old shards on wide desks, never reaching into the 900px column; gold-numbered captions kept.
+- LandingGate.tsx computeGeo: desk glass height 0.633→0.60 of the viewport (506px cap kept), and the rail-air law synced — from 1280 up the glass keeps 2×rail+44 clearance with the same width formula the rails wear, so plates and glass never touch.
+- LandingPage hero compressed at lg only (pt-28→pt-16, pb-10→pb-4, buttons mt-9→mt-6) and the docked section pt-3, so the whole chamber stands in the first screen (slot top 296, bottom 776 at 1280x800).
+- Cooling: the scroll-linked parallax transform work and its permanent GPU layers are gone from the landing; plates are lazy, static, transform-free.
+- QA: bun run lint clean; agent-browser at 1280x800, 1536x864 and 390x844 — six plates verified below the banner (3+3, positions and air measured), two-frame static check (identical coordinates), chat glass fully visible on the desk first screen, whisper "Who are the Lyrans?" answered with Lyrans (no Arcturus drift), tunnel to the full portal and back with the conversation carried home whole, phone untouched, zero page errors, dev.log clean.
+
+Stage Summary:
+- Latest site restored from origin (third rollback healed; local main = 9c74a12 lineage).
+- The shoulders' gallery: six new still porcelain plates, three per side below the banner, bigger and motionless.
+- The landing chat is the desk's first-screen focus — raised, fully visible, rails-aware width.
+- The landing's motion budget shrank to near zero at rest (no parallax, no live layers) for a cool, lag-free house.

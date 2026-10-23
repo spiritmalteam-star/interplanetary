@@ -9,11 +9,6 @@ import {
 } from "react";
 import Image from "next/image";
 import {
-  motion,
-  useScroll,
-  useTransform,
-} from "framer-motion";
-import {
   ArrowUpRight,
   ChevronDown,
   Coins,
@@ -51,93 +46,73 @@ import AboutUsTab from "./AboutUsTab";
 
 type RailImage = {
   src: string;
-  pos: string;
-  h: string;
   title: string;
-  /* the stagger — one shoulder's zigzag rhythm, so the three bands
-     never stand in a straight column */
-  push?: string;
 };
 
-/* the slideshow's own images, three on each side, in parallax.
-   THE CLEAN SHARDS — six walk artworks, each a crisp 864×1152
-   portrait plate drawn on its own deep sky, so every band shows
-   its whole subject sharp (no washed veil, no blur): the crystal
-   bloom, the woven communion, the rooted light, the seeing eye,
-   the garden's heart, the star compass. */
+/* THE SHOULDERS' GALLERY — six porcelain duality-cut artworks, three
+   on each shoulder, hung just below the open banner: the star craft,
+   the twin guardians and the star child on the left; the living
+   earth, the crystal flower and the floating city on the right.
+   THE STILL LAW — the plates do not drift and do not track the
+   scroll: hung frames on the house's walls, motionless, so the page
+   burns nothing while it rests (no live layers, no heating). Each
+   plate is a square that shows its whole subject (object-contain on
+   the artwork's own deep sky — no crop ever touches these), grown
+   half again as wide as the old drifting shards on every wide desk. */
 const RAIL_LEFT: RailImage[] = [
-  { src: "/images/walk/clearing-741.jpg", pos: "50% 42%", h: "38vh", title: "The crystal bloom" },
-  { src: "/images/walk/communion-639.jpg", pos: "50% 46%", h: "31vh", title: "The woven communion", push: "mt-10" },
-  { src: "/images/walk/root-396.jpg", pos: "50% 50%", h: "36vh", title: "The rooted light", push: "-mt-2" },
+  { src: "/landing/shoulders/star-craft.png", title: "The star craft" },
+  { src: "/landing/shoulders/twin-guardians.png", title: "The twin guardians" },
+  { src: "/landing/shoulders/star-child.png", title: "The star child" },
 ];
 const RAIL_RIGHT: RailImage[] = [
-  { src: "/images/walk/insight-852.jpg", pos: "50% 42%", h: "34vh", title: "The seeing eye", push: "-mt-6" },
-  { src: "/images/walk/heart-528.jpg", pos: "50% 46%", h: "40vh", title: "The garden's heart", push: "mt-8" },
-  { src: "/images/walk/lyran-432.jpg", pos: "50% 50%", h: "30vh", title: "The star compass" },
+  { src: "/landing/shoulders/living-earth.png", title: "The living earth" },
+  { src: "/landing/shoulders/crystal-flower.png", title: "The crystal flower" },
+  { src: "/landing/shoulders/floating-city.png", title: "The floating city" },
 ];
 
-/* ------------------------- the parallax rails ------------------------- */
+/* -------------------- the shoulders' still gallery -------------------- */
 
-function Rail({
-  side,
-  images,
-  progress,
-}: {
-  side: "left" | "right";
-  images: RailImage[];
-  progress: ReturnType<typeof useScroll>["scrollYProgress"];
-}) {
+function Rail({ side, images }: { side: "left" | "right"; images: RailImage[] }) {
   const t = useT();
-  /* three bands, three speeds — the drift is transform-only, each
-     shoulder's column breathing at its own depth */
-  const bands = [
-    useTransform(progress, [0, 1], [50, -110]),
-    useTransform(progress, [0, 1], [-40, 120]),
-    useTransform(progress, [0, 1], [80, -160]),
-  ];
   return (
     <div
       aria-hidden="true"
       className={cn(
-        "pointer-events-none fixed inset-y-0 z-20 hidden w-[clamp(150px,15vw,232px)] select-none lg:block",
-        side === "left" ? "left-0" : "right-0"
+        "pointer-events-none absolute z-0 hidden select-none xl:block",
+        side === "left"
+          ? "left-5 top-[calc(min(84vh,680px)+36px)]"
+          : "right-5 top-[calc(min(84vh,680px)+112px)]"
       )}
+      style={{
+        /* half again the old shard's width on every wide desk, never
+           reaching into the 900px column (the cap keeps 20px of air) */
+        width: "min(18vw, 340px, calc((100vw - 920px) / 2))",
+      }}
     >
-      <div className="flex h-full flex-col justify-center gap-7 px-4">
+      <div className="flex flex-col gap-9">
         {images.map((img, i) => (
-          <motion.figure
-            key={`${side}-${img.src}-${i}`}
-            style={{ y: bands[i % bands.length] }}
-            className={cn("relative will-change-transform", img.push)}
-          >
-            <div
-              className="landing-shard relative overflow-hidden rounded-[22px]"
-              style={{ height: img.h }}
-            >
+          <figure key={`${side}-${img.src}-${i}`} className="relative">
+            <div className="landing-shard relative aspect-square overflow-hidden rounded-[26px] bg-[#04060b]">
               <Image
                 src={img.src}
                 alt=""
                 fill
-                sizes="(min-width: 1024px) 15vw, 0px"
-                className="object-cover"
-                style={{ objectPosition: img.pos }}
+                loading="lazy"
+                sizes="(min-width: 1280px) 18vw, 0px"
+                className="object-contain"
               />
               <span
                 aria-hidden="true"
-                className="pointer-events-none absolute inset-0 rounded-[22px] ring-1 ring-inset ring-[var(--lp-edge)]"
-              />
-              <span
-                aria-hidden="true"
-                className="pointer-events-none absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-[rgba(4,7,12,0.62)] to-transparent"
+                className="pointer-events-none absolute inset-0 rounded-[26px] ring-1 ring-inset ring-[var(--lp-edge)]"
               />
             </div>
-            <figcaption className="mono-label mt-2.5 flex items-baseline gap-2 text-[9px] uppercase tracking-[0.24em] text-[var(--lp-faint)]">
+            <figcaption className="mono-label mt-3 flex items-baseline gap-2 text-[10px] uppercase tracking-[0.26em] text-[var(--lp-faint)]">
               <span className="text-[var(--lp-gold)]">
                 {String(i + 1).padStart(2, "0")}
               </span>
               <span className="truncate">{t(img.title)}</span>
             </figcaption>
-          </motion.figure>
+          </figure>
         ))}
       </div>
     </div>
@@ -355,9 +330,6 @@ export default function LandingPage({
 }) {
   const t = useT();
   const scrollRef = useRef<HTMLDivElement | null>(null);
-  const { scrollYProgress } = useScroll({
-    container: scrollRef,
-  });
 
   /* return to the exact place the threshold was left — read once at
      the page's first breath, never snapping while the visitor walks */
@@ -597,11 +569,13 @@ export default function LandingPage({
     <div
       ref={scrollRef}
       onScroll={(e) => onScroll(e.currentTarget.scrollTop)}
-      className="lp-ground h-full overflow-y-auto overscroll-y-contain"
+      className="lp-ground relative h-full overflow-y-auto overscroll-y-contain"
     >
-      {/* the drifting artwork — three shards on each edge, in parallax */}
-      <Rail side="left" images={RAIL_LEFT} progress={scrollYProgress} />
-      <Rail side="right" images={RAIL_RIGHT} progress={scrollYProgress} />
+      {/* the shoulders' gallery — six still plates, three on each edge,
+          hung below the open banner (they scroll with the house and
+          never move on their own) */}
+      <Rail side="left" images={RAIL_LEFT} />
+      <Rail side="right" images={RAIL_RIGHT} />
 
       <div className="relative z-10 flex min-h-full flex-col">
         {/* THE OPEN BANNER — the artwork stands nearly bare (the veil
@@ -634,7 +608,7 @@ export default function LandingPage({
 
         <main className="mx-auto w-full max-w-[900px]">
           {/* ============================ HERO ============================ */}
-          <header className="relative pb-5 pt-10 text-center sm:pb-4 sm:pt-16 lg:pb-10 lg:pt-28">
+          <header className="relative pb-5 pt-10 text-center sm:pb-4 sm:pt-16 lg:pb-4 lg:pt-16">
             {/* the hero's sky stays untouched — no mark rests upon the
                 background image; the light language lives in the empty
                 shoulders further down the walk */}
@@ -654,7 +628,7 @@ export default function LandingPage({
                   "A living mirror for reflection, creativity, and a shifting Earth."
                 )}
               </p>
-              <div className="mt-7 flex flex-wrap items-center justify-center gap-2.5 lg:mt-9">
+              <div className="mt-7 flex flex-wrap items-center justify-center gap-2.5 lg:mt-6">
                 <button
                   type="button"
                   onClick={onExpand}
@@ -697,7 +671,7 @@ export default function LandingPage({
               INSIDE it (slotChildren) — the page's native scroll
               carries the glass; nothing floats, nothing lags */}
           <section
-            className="pb-2 pt-5 sm:pt-7"
+            className="pb-2 pt-5 sm:pt-7 lg:pt-3"
             aria-label={t("The Mirror Entity")}
           >
             <div
