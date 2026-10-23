@@ -1990,14 +1990,10 @@ export function BranchCanopy({
      where it lives, the other restores a kept volume to the reading */
   const openChatSurface = useMirror((s) => s.openChat);
   const resumeKeptVolume = useMirror((s) => s.resumeDreamBook);
-  /* THE QUESTION'S QUIET — the mirror's question beneath the mark
-     stands only while the floor is quiet: the first word sent (or a
-     thread already carrying words) dissolves it, leaving the space
-     to the transmission itself. */
-  const floorQuiet = useMirror((s) => {
-    const sess = s.sessions[s.activeMode];
-    return sess.messages.length === 0 && sess.status !== "loading";
-  });
+  /* THE QUESTION'S QUIET — the floor's welcome now lives with the
+     landing thread itself (the landing's own quiet, declared beside
+     the thread): the store's channel no longer decides whether the
+     threshold's question and its five doors stand. */
   /* THE GUEST'S OWN LAW — the landing chat is temporary for the non
      logged-in: a small honest line under the whisper line speaks it. */
   const meIdentity = useMirror((s) => s.me);
@@ -3271,6 +3267,14 @@ export function BranchCanopy({
   const [landingThread, setLandingThread] = useState<RoomTurn[]>([]);
   const landingTurnsRef = useRef<{ q: string; a: string }[]>([]);
   const [landingBusy, setLandingBusy] = useState(false);
+  /* THE LANDING'S OWN QUIET — the threshold's floor keeps its welcome
+     by its own thread's silence: the store's channel (the full
+     portal's conversations) has no word in the docked room, so an ask
+     made across the tunnel must never blank the landing's question
+     and its five first doors. (The old quiet read the channel — one
+     ask inside the full portal and the threshold came home EMPTY:
+     the tunnel's glitch.) */
+  const floorQuiet = landingThread.length === 0 && !landingBusy;
   /* the bare era's own mark — true from the moment a room is opened
      (or followed) inside the landing's chat, so the crossing into the
      full portal knows which room to fold */
@@ -4842,7 +4846,7 @@ export function BranchCanopy({
                     docked lens and stop the threshold's scroll. THE
                     LANDING'S OWN QUIET — the landing thread's words
                     hide the question again, whatever the store holds. */}
-                {floorQuiet && landingThread.length === 0 && (
+                {floorQuiet && (
                   <p
                     data-testid="mirror-ask"
                     className="genea-bloom still-bloom max-w-[300px] px-6 text-center font-[family-name:var(--font-literata)] text-[14.5px] italic leading-relaxed text-[#e11d48] dark:text-[#fda4b8] sm:max-w-[360px] sm:text-[15.5px]"
@@ -4857,7 +4861,7 @@ export function BranchCanopy({
                   pouring five new ones at every touch. They stand only
                   on the quiet floor, and every hand keeps its touch
                   through the pass-through law. */}
-              {floorQuiet && landingThread.length === 0 && (
+              {floorQuiet && (
                 <BareFloorSuggestions
                   disabled={landingBusy}
                   onPick={(q) => sendFromPanel(q, null)}

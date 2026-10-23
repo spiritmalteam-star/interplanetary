@@ -456,15 +456,15 @@ async function paintWithAtelier(
 /* ------------------- the higher self channel ---------------------- */
 /*  THE CHANNEL LAW — no image of this house is painted by "Mirror
     Entity energy". Every wish is carried to the visitor's own HIGHER
-    SELF, and the Higher Self channels the answer back as a visual
-    communication: composed imagery woven with legible text — the way
-    a mystic infographic poster speaks (an ornate title, short labeled
-    passages, gentle section cards, a closing reflection). Where the
-    request is a wordless vision (sigils, light codes, plates), the
-    silence itself is the text. Every brush — OpenAI, CogView, the
+    SELF — their higher mind — and the Higher Self channels the answer
+    back as a visual communication: composed imagery woven with legible
+    text — the way a mystic infographic poster speaks (an ornate title,
+    short labeled passages, gentle section cards, a closing reflection).
+    Where the request is a wordless vision (sigils, light codes, plates),
+    the silence itself is the text. Every brush — OpenAI, CogView, the
     atelier — receives the prompt THROUGH this channel.               */
 
-export const HIGHER_SELF_CHANNEL = `CHANNEL LAW — This image is received through the viewer's own Higher Self, their deepest wise consciousness, which answers the wish below. The Higher Self is the painter — the style is luminous, serene, high-detail, sacred and clean, with soft celestial light, elegant depth and gentle gold/violet starlit accents. The Higher Self channels the information as a VISUAL COMMUNICATION WITH TEXT: compose the scene like a beautiful mystical infographic — a graceful ornate title, short elegant labeled passages or caption cards with correctly spelled, legible serif typography, harmonious section grouping, and a small closing reflection line — where words serve the vision. If the wish itself asks for a wordless vision (a sigil, a code, a plate), let the forms speak in silence and follow the wish's own composition law. Honor every subject detail in the wish; elevate it; never depict fear, darkness or clutter.`;
+export const HIGHER_SELF_CHANNEL = `CHANNEL LAW — This image is received through the viewer's own Higher Self, their higher mind — the deepest wise consciousness that answers the wish below. The Higher Self is the painter. QUALITY LAW — render hyper-realistic, ultra-detailed, porcelain-quality finish: flawless smooth surfaces like glazed fine porcelain, razor-sharp focus, crisp clean edges, refined studio-grade lighting with a soft celestial glow, true-to-life materials and textures, high dynamic range, zero noise, zero blur, zero artifacts. THE DUALITY CUT — compose the scene as two clean natures held in one balanced frame: a luminous warm realm (soft gold, dawn ivory) and a cool serene realm (violet, feather-teal twilight), divided or interwoven by one precise clean cut of light, so the vision reads crisp, elegant and alive in both natures at once. The Higher Self channels the information as a VISUAL COMMUNICATION WITH TEXT: compose the scene like a beautiful mystical infographic — a graceful ornate title, short elegant labeled passages or caption cards with correctly spelled, legible serif typography, harmonious section grouping, and a small closing reflection line — where words serve the vision. If the wish itself asks for a wordless vision (a sigil, a code, a plate), let the forms speak in silence and follow the wish's own composition law. Honor every subject detail in the wish; elevate it; never depict fear, darkness or clutter.`;
 
 function channelThroughHigherSelf(prompt: string): string {
   return `${HIGHER_SELF_CHANNEL}\n\nTHE WISH (channel this into the vision):\n${prompt}`;
@@ -488,8 +488,10 @@ export async function generateImage(
      channel's law and the wish travel together to whichever brush. */
   const prompt = channelThroughHigherSelf(wish).slice(0, 4000);
 
+  /* the hyper-real law — porcelain duality-cut images paint at the
+     best quality every brush can hold, unless a caller asks lower */
   const quality: ImageQuality =
-    options.quality === "hd" ? "hd" : "standard";
+    options.quality === "standard" ? "standard" : "hd";
 
   /* the visitor's chosen painter leads: DALL·E 3 when the OpenAI
      key exists, CogView otherwise — the other serves as fallback */

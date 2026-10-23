@@ -1,11 +1,3 @@
-import { sq } from "./dicts/sq";
-import { it } from "./dicts/it";
-import { el } from "./dicts/el";
-import { de } from "./dicts/de";
-import { fr } from "./dicts/fr";
-import { es } from "./dicts/es";
-import { tr } from "./dicts/tr";
-
 /* ------------------------------------------------------------------ */
 /*  MIRROR ENTITY DIGITAL CHAMBER — universal translation layer             */
 /*  Keys are the English source strings themselves. A missing entry    */
@@ -64,9 +56,56 @@ export function formatArchiveNumber(n: number, language: LanguageCode): string {
   return n.toLocaleString(LOCALES[language] ?? "en-US");
 }
 
-const DICTS: Record<Exclude<LanguageCode, "en">, Record<string, string>> = {
-  sq, it, el, de, fr, es, tr,
-};
+/* THE LAZY VOICES — the seven dictionaries are no longer carried in
+   the first breath of the app: each tongue travels only when it is
+   spoken (one dynamic import per language, deduped), and until it
+   arrives every key falls back to its English source (the law the
+   translation layer was born with). The app's first paint sheds
+   megabytes of parsed words, and the whole house breathes lighter —
+   the lag was the luggage. */
+type Dict = Record<string, string>;
+
+const DICTS: Partial<Record<Exclude<LanguageCode, "en">, Dict>> = {};
+const DICTS_PENDING = new Set<Exclude<LanguageCode, "en">>();
+
+let dictVersion = 0;
+const dictListeners = new Set<() => void>();
+
+/** React's subscription — translators wake when a tongue arrives. */
+export function subscribeDicts(onChange: () => void): () => void {
+  dictListeners.add(onChange);
+  return () => dictListeners.delete(onChange);
+}
+
+/** Snapshot for useSyncExternalStore — the version alone. */
+export function getDictVersion(): number {
+  return dictVersion;
+}
+
+/** Load one tongue on demand (idempotent, safe to call anywhere). */
+export async function ensureDict(language: LanguageCode): Promise<void> {
+  if (language === "en") return;
+  const lang = language as Exclude<LanguageCode, "en">;
+  if (DICTS[lang] || DICTS_PENDING.has(lang)) return;
+  DICTS_PENDING.add(lang);
+  try {
+    const mod =
+      lang === "sq" ? await import("./dicts/sq")
+      : lang === "it" ? await import("./dicts/it")
+      : lang === "el" ? await import("./dicts/el")
+      : lang === "de" ? await import("./dicts/de")
+      : lang === "fr" ? await import("./dicts/fr")
+      : lang === "es" ? await import("./dicts/es")
+      : await import("./dicts/tr");
+    DICTS[lang] = (mod as unknown as { [k: string]: Dict })[lang];
+    dictVersion += 1;
+    for (const wake of dictListeners) wake();
+  } catch {
+    /* the tongue stayed home — the English source keeps speaking */
+  } finally {
+    DICTS_PENDING.delete(lang);
+  }
+}
 
 /** Pure translation — usable outside React (API helpers, tests). */
 export function translate(
@@ -75,7 +114,7 @@ export function translate(
   params?: Record<string, string | number>
 ): string {
   let out: string =
-    language !== "en" ? (DICTS[language]?.[key] ?? key) : key;
+    language !== "en" ? (DICTS[language as Exclude<LanguageCode, "en">]?.[key] ?? key) : key;
   if (params) {
     for (const [k, v] of Object.entries(params)) {
       out = out.replaceAll(`{${k}}`, String(v));

@@ -23,6 +23,7 @@ import {
   DEFAULT_VOICE,
   isLanguageCode,
   isVoiceId,
+  ensureDict,
   type LanguageCode,
   type VoiceId,
 } from "@/lib/i18n/core";
@@ -1012,6 +1013,16 @@ async function crystallizeVisual(
 /* The archive's hydration hand — true while conversations return to
    the live rooms, so the autosave never writes back mid-restore. */
 let hydrating = false;
+
+/* THE CHANNEL'S OWN GENERATION — every reset of a channel (a new chat,
+   a kept volume restored, a category's fresh page) turns this wheel
+   once, and every in-flight answer carries the number it was born
+   with. An answer that comes home to a channel that has moved on is
+   laid down gently — never written into a conversation it does not
+   belong to. THIS IS THE CARRY LAW: without it, an ask made in one
+   room could land in another room's fresh page when the visitor walks
+   on while the mirror still speaks. */
+let channelGeneration = 0;
 /* The swipe's own hand — true while a back/forward turn is in flight,
    so the view recorder never mistakes the return for a fresh journey
    and wipes the road ahead. */
@@ -1615,6 +1626,9 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   /* ------- the chat archive — the ChatGPT keeping, client-side only -- */
 
   hydrateChats: () => {
+    /* THE CARRY LAW — the shelf returning its volumes turns the wheel:
+       an answer still in flight belongs to the breath before this one. */
+    channelGeneration += 1;
     /* THE GUEST'S OWN LAW — the landing chat is temporary for the
        unnamed: nothing returns from the shelf, nothing rests on it.
        Only a signed keeper's words come home on a reload. */
@@ -1677,6 +1691,9 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   },
 
   newChat: (surface) => {
+    /* THE CARRY LAW — a fresh page turns the wheel: any answer still in
+       flight belongs to the page that just closed, never to this one. */
+    channelGeneration += 1;
     /* THE CHATGPT TURN — the present conversation already rests on the
        shelf (the autosave kept it current); a fresh page opens and the
        old one can always be reopened from the conversation panel.
@@ -1729,6 +1746,9 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   },
 
   openChat: (surface, id) => {
+    /* THE CARRY LAW — a restored volume turns the wheel: an answer in
+       flight from the old page never stains the volume being opened. */
+    channelGeneration += 1;
     /* the guest's law — a temporary chat has no shelf to reopen */
     const opener = get().me;
     if (!opener || opener.email.startsWith("anon:")) return;
@@ -2170,6 +2190,9 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         ? "mirror"
         : mode;
     const session = get().sessions[mode];
+    /* THE CARRY LAW — the number this ask was born with; the answer
+       may only land in a channel that has not turned its wheel. */
+    const gen = channelGeneration;
     if (!query || session.status === "loading") return;
 
     /* IMAGE CRYSTALLIZATION — the visitor asked for an image by name:
@@ -2321,6 +2344,12 @@ export const useMirror = create<MirrorState>()((set, get) => ({
 
       void get().refreshMe();
 
+      /* THE CARRY LAW — the visitor walked on while the mirror spoke
+         (a new chat, another category's fresh page, a kept volume
+         restored): the answer stays with the page it belongs to, the
+         words already resting on the archive's own shelf. */
+      if (gen !== channelGeneration) return;
+
       /* the reply's own id — a model-requested vision attaches to it */
       const replyId = nextMessageId();
 
@@ -2369,6 +2398,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       /* THE QUIET FIELD LAW — the visitor's words are never lost to a
          failed transmission: the question rests in the channel marked
          "not delivered", and one touch sends it again. No retyping. */
+      if (gen !== channelGeneration) return;
       set((s) => ({
         sessions: {
           ...s.sessions,
@@ -3468,6 +3498,8 @@ export const useMirror = create<MirrorState>()((set, get) => ({
 
   setLanguage: (code) => {
     set({ language: code });
+    /* THE LAZY VOICES — the chosen tongue travels at once */
+    void ensureDict(code);
     try {
       localStorage.setItem("mirror-entity-language", code);
     } catch {
@@ -3603,6 +3635,8 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         ...(seeds.length > 0 ? { expansionSeeds: seeds.slice(0, 6) } : {}),
         ...(savedMix ? { treeMix: savedMix } : {}),
       });
+      /* THE LAZY VOICES — the visitor's own tongue wakes with the house */
+      void ensureDict(isLanguageCode(lang) ? lang : "en");
     } catch {
       /* storage unavailable */
     }
