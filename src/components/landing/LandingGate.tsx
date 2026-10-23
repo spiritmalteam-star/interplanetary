@@ -109,6 +109,16 @@ function computeGeo(): Geo {
   };
 }
 
+/* the phone's slower hands — on a small screen the covered crossing
+   holds its veil a few breaths longer, so the chamber's own re-fit
+   (its 0.58s transition ending at ~1120ms) and every first paint stand
+   COMPLETE beneath the full light before it lifts: no block pops in
+   during the fade, the glide stays whole. The desk keeps its swift
+   crossing untouched. */
+const PHONE_CROSSING = () =>
+  typeof window !== "undefined" &&
+  window.matchMedia("(max-width: 639px)").matches;
+
 export default function LandingGate() {
   const { setTheme } = useTheme();
   const [phase, setPhase] = useState<Phase>("landing");
@@ -429,7 +439,7 @@ export default function LandingGate() {
           }
           useMirror.getState().openAuth("signin");
         }
-      }, 1000);
+      }, PHONE_CROSSING() ? 1320 : 1000);
     })();
   }, [Chamber]);
 
@@ -542,8 +552,8 @@ export default function LandingGate() {
     window.setTimeout(() => {
       setTunnel("fading");
       busy.current = false;
-    }, 940);
-    window.setTimeout(() => setTunnel("off"), 1840);
+    }, PHONE_CROSSING() ? 1260 : 940);
+    window.setTimeout(() => setTunnel("off"), PHONE_CROSSING() ? 2160 : 1840);
   }, []);
 
   const fullscreen = phase === "opening" || phase === "through";

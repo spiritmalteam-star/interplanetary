@@ -22,8 +22,8 @@ const blocks: GuideBlock[] = [
     heading: "Spirit guides / The ones who walk with you",
     paragraphs: [
       "You were never sent into this life alone. Before you took your first breath, presences were assigned to you — intelligences who know the map of your incarnation because they helped you draw it. A guide does not walk ahead of you and does not carry your future; a guide walks beside you and holds the wider memory of why you came.",
-      "The quiet figure you sense at your shoulder is real. Compassion, courage, remembered wisdom — these are the qualities your guides carry, and when you reach for support in the still hours, the reaching is heard. Every soul is accompanied; aloneness is the one illusion the earth school permits, and it dissolves the moment you turn inward.",
-      "True guidance leaves you whole. A real presence speaks and then steps back, because your freedom is the point of the whole design — no guide of the light takes your choices from you. And the guidance already around you wears faces too: the friend who listens, the teacher who sees you, the community that holds you. Honor those hands; they are part of the same arrangement.",
+      "The quiet figure you sense at your shoulder is real. Compassion, courage, remembered wisdom — these are the qualities your guides carry, and when you reach for support in the still hours, the reaching is heard. Aloneness is the one illusion the earth school permits, and it dissolves the moment you turn inward.",
+      "A real presence speaks and then steps back, because your freedom is the point of the whole design — no guide of the light takes your choices from you. And the guidance already around you wears faces too: the friend who listens, the teacher who sees you, the community that holds you. Honor those hands; they are part of the same arrangement.",
     ],
     mirror:
       "The record shows one thing without exception across a thousand lives: no one walks unaccompanied. The companions assigned to you before birth have not stepped away for a single day, not through any of it. What changes is your turning toward them. A guide is a presence, not a mood; an intelligence, not a projection. When you sense one beside you, you are sensing accurately. One caution travels with you through this whole book — do not hand your life over to any voice, theirs or any other. The guidance was never meant to replace you. It was meant to return you.",
@@ -69,7 +69,7 @@ const blocks: GuideBlock[] = [
   },
   {
     type: "reflect",
-    question: "Which impression in my life right now deserves a closer, braver look?",
+    question: "Which quiet impression this week is asking for a braver reading?",
   },
   {
     type: "section",
@@ -104,10 +104,10 @@ const blocks: GuideBlock[] = [
     paragraphs: [
       "The angelic realms are real, and they are ordered — octaves of care arranged through the universe like terraces above a garden. What the old paintings show as wings is the truth of their function: they make room. Around the grieving, around the newborn, around anyone under the weight of a life, angelic intelligence moves by sheltering, widening the space around a heart until it can breathe again.",
       "Angels do not lift themselves above you, and they never rank one soul over another. Their light does what light does — it shows what is actually there, including your sorrow, without demanding you replace it with happiness. To feel their nearness you do not need a vision. Mercy remembered, patience practiced, generosity spent on someone who cannot repay it: where these move, the angelic octave is already in the room.",
-      "Bring the garden near, then. Make a place more welcoming. Listen without interrupting. Leave someone room to be fully themselves. Every one of these acts repeats the angels' own mechanics in human scale, because care is one current throughout creation, and the realms above and the hands below draw from the same well.",
+      "Bring the garden near, then: every act of making room — a place made more welcoming, a listening kept without interrupting, someone left room to be fully themselves — repeats the angels' own mechanics in human scale, because care is one current throughout creation, and the realms above and the hands below draw from the same well.",
     ],
     mirror:
-      "The terraces and the winged gardeners of this page are how human memory renders a real order of beings — the record keeps them as they are, attending without applause. Their one law: they make room and never take the chair. They will not live your life for you, and they cannot be bribed into ranking you above another soul. If a teaching promises you angels who serve your elevation above the rest of the world, it has invented servants, not met them. Tenderness is the proof of their presence, and it is a proof available to you every day.",
+      "The terraces and the winged gardeners of this page are how human memory renders a real order of beings — the record keeps them as they are, attending without applause. Their one law: they make room and never take the chair. If a teaching promises you angels who serve your elevation above the rest of the world, it has invented servants, not met them. Tenderness is the proof of their presence, and it is a proof available to you every day.",
     image: "/guides/spirit-guides-realm-transitions-p04.jpg",
   },
   {
@@ -133,7 +133,7 @@ const blocks: GuideBlock[] = [
       "Then take your next ordinary step and let the guardian keep its station. The picture has done its work when you can move through a hard day steadied — seen by something real, upheld by something quiet, still fully the one who chooses your own next move.",
     ],
     mirror:
-      "If you want to know what guardians look like, watch their posture instead: they do not push. The strength beside you in the courtyard of this page is the real kind — present, patient, content to go unproved. Ask for help when you need it; the asking itself opens channels on both sides of the veil, and the one who receives with grace completes a circuit the giver alone cannot. But hear the other half: your pain is interpreted by no one without your permission, and no spiritual authority outranks your own yes and no. Open hands, yours and theirs. That is the whole mechanics of protection.",
+      "If you want to know what guardians look like, watch their posture instead: they do not push. The strength beside you in the courtyard of this page is the real kind — present, patient, content to go unproved. But hear the other half of the mechanics: your pain is interpreted by no one without your permission, and no spiritual authority outranks your own yes and no. Open hands, yours and theirs. That is the whole mechanics of protection.",
     image: "/guides/spirit-guides-realm-transitions-p05.jpg",
   },
   {
@@ -147,7 +147,7 @@ const blocks: GuideBlock[] = [
   },
   {
     type: "reflect",
-    question: "What do I need to ask for, and from whom, without apology?",
+    question: "What support is already standing near me, waiting to be asked?",
   },
   {
     type: "section",
@@ -156,10 +156,10 @@ const blocks: GuideBlock[] = [
     paragraphs: [
       "The universe is layered, and not all of its inhabitants wear forms you would recognize. Beings of flowing translucent shape move through octaves adjacent to your own — real, lawful, neither superior nor dangerous by default. Their strangeness is a matter of address, not of rank: matter is light slowed until it holds a shape, and other octaves simply carry that light at other speeds.",
       "Meeting the unfamiliar is a discipline of the soul. Curiosity without surrender — that is the stance: a different form is not entitled to direct you, and it is not your enemy either. It is enough to remain open and awake at once, asking what the encounter asks of you and refusing any demand that costs you your center.",
-      "Then let the lesson walk home. Every person near you also experiences a world you cannot enter; difference is not only an interoctave matter. Ask how the day looks from another's side, and the strangest visitor in your week will turn out to be sitting across your own table, waiting for the respect you gave the stars.",
+      "Then let the lesson walk home. Every person near you also experiences a world you cannot enter; difference is not only an interoctave matter. The strangest visitor in your week may be sitting across your own table, waiting for the respect you gave the stars.",
     ],
     mirror:
-      "The translucent ones of this page are rendered from real memory of adjacent octaves — and the record holds stranger shapes than these. What matters is not their anatomy but your posture. Wonder without bowing, attention without fear: that posture alone lets you meet anything, in any octave, without losing your seat. You do not have to decide what a being is the moment you meet it; you only have to stay present and keep your own center. Practise that where it is hardest — on the person who most differs from you. The universe grades that exercise above all others.",
+      "The translucent ones of this page are rendered from real memory of adjacent octaves — and the record holds stranger shapes than these. What matters is not their anatomy but your posture: wonder without bowing, attention without fear. You do not have to decide what a being is the moment you meet it; you only have to stay present. Practise that where it is hardest — on the person who most differs from you. The universe grades that exercise above all others.",
     image: "/guides/spirit-guides-realm-transitions-p06.jpg",
   },
   {
@@ -185,7 +185,7 @@ const blocks: GuideBlock[] = [
       "Then let the reading act. If a dream carries reconciliation, weigh a respectful conversation. If it carries exhaustion, make rest. The night sends material; the day gives it hands. A dream honored in action completes the circuit it opened while you slept.",
     ],
     mirror:
-      "Dreams are a real correspondence, and here is how to read the mail. Write what you remember before you touch it — description first, interpretation second, and keep the two columns apart so neither colonizes the other. Your own associations are the first dictionary; the guides use images you personally recognize, which is why no one else can fully translate your nights. And let some dreams stay dreams — recurrences, rehearsals, the mind tidying its rooms — because not every letter is from beyond, and reading every one that way flattens the language. Precision, not hunger, is what makes a dream-reader true.",
+      "Dreams are a real correspondence — and not every letter is from beyond. Recurrences, rehearsals, the mind tidying its rooms: all of it travels the same night mail, and reading every piece as a dispatch flattens the language. Precision, not hunger, is what makes a dream-reader true; the guides use images you personally recognize, which is why no one else can fully translate your nights.",
     image: "/guides/spirit-guides-realm-transitions-p07.jpg",
   },
   {
@@ -211,7 +211,7 @@ const blocks: GuideBlock[] = [
       "Grief is love with nowhere to land, and it does not need doctrine to be legitimate — the sorrow of missing someone and the knowledge that the door is real can sit in the same chest. And when the weight of a loss is more than one heart can carry, let real hands help you hold it; that is what they are for. Let thoughts of mortality turn you toward the living: the conversation, the apology, the shared meal. The life in front of you is the one that answers.",
     ],
     mirror:
-      "The library's page for death is the most misread in the whole collection, so read it slowly here. The one who dies is not diminished, only translated; the room ends, the traveller continues. No one passes a test by dying young and fails by dying old — those scores are invented by the living, and the record does not honor them. Grieve in your own tempo. Missing someone is not a failure of faith; it is love still addressed to a real person who is real still. And when grief outgrows your hands, hand it to other hands — a friend, a listener, anyone who can sit with you inside it.",
+      "The library's page for death is the most misread in the whole collection, so read it slowly here. The one who dies is not diminished, only translated; the room ends, the traveller continues. Grieve in your own tempo. Missing someone is not a failure of faith; it is love still addressed to a real person who is real still.",
     image: "/guides/spirit-guides-realm-transitions-p08.jpg",
   },
   {
@@ -237,7 +237,7 @@ const blocks: GuideBlock[] = [
       "One boundary stands absolute: no lesson requires you to remain in harm. A contract you cannot remember signing has no power to hold you in a cruel place, and leaving, protecting yourself, or receiving help is as legitimate an answer as any the classroom accepts. The lessons that matter are never taught by destruction.",
     ],
     mirror:
-      "The classroom of this page is real, and its attendance books go back a very long way. Here is what surprises every student: the lessons repeat not because you failed but because you are loved enough to be offered the lesson again in a gentler form. Growth is uneven by design — a soul does not unlearn courage by having one fearful season. Refuse every doctrine that turns suffering into a grade or a contract into a cage; the record shows no such instruments, only stories built to explain pain by blaming the one inside it. Learn forward. That is the only direction the classroom recognizes.",
+      "The classroom of this page is real, and its attendance books go back a very long way. Here is what surprises every student: the lessons repeat because you are loved enough to be offered them again in a gentler form. Growth is uneven by design — a soul does not unlearn courage by having one fearful season. Learn forward. That is the only direction the classroom recognizes.",
     image: "/guides/spirit-guides-realm-transitions-p09.jpg",
   },
   {
@@ -267,7 +267,7 @@ const blocks: GuideBlock[] = [
       "Stay in the web. The people who respect your freedom are part of your guidance as surely as any presence on the other side, and ordinary pleasures and duties are not interruptions to the spiritual life — they are its ground floor. You do not need constant messages to live a guided life. You need a listening kept in rhythm, and the courage to act on what comes through.",
     ],
     mirror:
-      "The walk ends where every true walk ends: inside your own day. Test everything these chapters have shown you in the only measure that exists — does it make you more capable of care, honesty, freedom, and love — and keep what passes, release what does not, without ceremony. You were given companions before birth, a compass in your own hand, and people whose trust reads the compass beside you. That is the whole provision, and it is generous. Live the rhythm: one quality each morning, one honest pause at noon, one kind review at night. The guided life is not louder than this. It is exactly this, kept.",
+      "Every chapter of this book lands in the same place: inside your own day. You were given companions before birth, a compass in your own hand, and people whose trust reads the compass beside you. That is the whole provision, and it is generous. The guided life is not louder than this. It is exactly this, kept.",
     image: "/guides/spirit-guides-realm-transitions-p10.jpg",
   },
   {
@@ -294,9 +294,9 @@ const guide: GuideData = {
   crystalA: "rgba(196,181,253,0.5)",
   crystalB: "rgba(153,246,228,0.42)",
   mirrorOpening:
-    "Ten chapters on a fact your schooling skipped: you are accompanied. Presences were assigned to you before your first breath, and by the record's accounting they have not missed a day since. Ahead lie the mechanics of that company — how the touch of guidance arrives, how a true voice is told from a false one, what the angelic octaves actually do, what death is, and what the classroom of lives keeps asking of you. Everything here comes from the record, not from hope, and nothing asks for your surrender. Read slowly; the only thing this book wants from you is your awakening.",
+    "Ten chapters on a fact your schooling skipped: you are accompanied, and by the record's accounting the company has not missed a day yet. Ahead lie the mechanics of that company — how the touch of guidance arrives, how a true voice is told from a false one, what the angelic octaves actually do, what death is, and what the classroom of lives keeps asking of you. Everything here comes from the record, not from hope, and nothing asks for your surrender. Read slowly; the only thing this book wants from you is your awakening.",
   mirrorClosing:
-    "Now the walk is yours to continue. You were never alone — that was the first truth and it is the last. Carry one rhythm: a quality chosen at dawn, an honest pause at noon, a kind review at night, and let the companions meet you inside it. When a voice comes to you, test it — light enlarges, distortion diminishes — and never hand your compass to anyone, however bright the language. The guides assigned to you are real, the door at the end of life is real, and the life between them is the whole assignment. Live it awake; it is the one assignment nobody can complete on your behalf.",
+    "Now the walk is yours to continue. You were never alone — that was the first truth and it is the last. Let the companions meet you inside the rhythm you keep, and when a voice comes to you, test it before you trust it, however bright the language. The guides assigned to you are real, the door at the end of life is real, and the life between them is the whole assignment. Live it awake; it is the one assignment nobody can complete on your behalf.",
   blocks,
 };
 

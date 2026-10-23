@@ -42,7 +42,6 @@ import { WindowSelect } from "./WindowSelect";
 import { WorldNewChat } from "./WorldNewChat";
 import { ChatHistoryPanel } from "./ChatHistoryPanel";
 import { cn } from "@/lib/utils";
-import { useFloatingBarAutoHide } from "./useFloatingBar";
 
 function visitorBefore(
   arr: { role: "visitor" | "ax"; text: string }[],
@@ -700,16 +699,8 @@ export function ArtX() {
   const [historyOpen, setHistoryOpen] = useState(false);
   const t = useT();
 
-  /* the reading bar law — the floating controls sink away with the
-     stillness or the downward flow, rise at the first upward breath */
   const worldRootRef = useRef<HTMLDivElement | null>(null);
-  const topBarRef = useRef<HTMLElement | null>(null);
   const [windowsOpen, setWindowsOpen] = useState(false);
-  const topBarHidden = useFloatingBarAutoHide({
-    rootRef: worldRootRef,
-    barRef: topBarRef,
-    hold: windowsOpen,
-  });
 
   const windowItems = useMemo(
     () => [
@@ -724,16 +715,12 @@ export function ArtX() {
       ref={worldRootRef}
       className="scope-artx relative flex h-full flex-col"
     >
-      {/* ---------- floating top controls over the chat — the chat now
-          extends to the very top and the controls rest upon it: back,
-          the six atelier windows behind one button, and the fresh hand ---------- */}
-      <header
-        ref={topBarRef}
-        className={cn(
-          "pointer-events-none absolute inset-x-0 top-0 z-30 bg-gradient-to-b from-[var(--background)]/85 via-[var(--background)]/30 to-transparent transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform",
-          topBarHidden ? "invisible -translate-y-4 opacity-0" : "translate-y-0 opacity-100"
-        )}
-      >
+      {/* ---------- the world's quiet hands — the old auto-appearing
+          top bar is gone (no strip, no gradient, nothing rising while
+          the visitor works): one small corner row in the crown's own
+          style — the exit hand, the chambers behind one chip, the
+          visitor's own hands ---------- */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-30">
         <div className="bar-safe flex items-center justify-between gap-2 px-3 sm:gap-3 sm:px-5">
           <button
             type="button"
@@ -775,7 +762,7 @@ export function ArtX() {
             <WorldNewChat world="artx" />
           </div>
         </div>
-      </header>
+      </div>
 
       {/* ---------- the atelier core — reaching the very top of the world ---------- */}
       <main className="nice-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain">

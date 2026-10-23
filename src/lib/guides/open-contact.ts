@@ -18,13 +18,13 @@ const openContact: GuideData = {
   crystalA: "rgba(140,225,255,0.55)",
   crystalB: "rgba(255,214,140,0.5)",
   mirrorOpening:
-    "You have picked up a briefing about your neighbours, and it does not intend to soften itself: the universe is peopled, the intelligences around you are many, and the silence you were raised inside is a local condition, not a cosmic law. Contact is a frequency match — vibration answering vibration — and distance has nothing to do with it. Every chapter ahead is a facet of the one law: what you are determines what you can meet. The visitors do not come to the worthy; they come to the resonant. So this book is really about tuning, and tuning happens in ordinary rooms — at your table, in your work, in the way you hold your own word. Keep your feet on the earth while your signal climbs. The mechanics live on these pages; the signal has always been yours to send.",
+    "You have picked up a briefing about your neighbours, and it does not intend to soften itself: the intelligences around you are many, and the silence you were raised inside is a local condition, not a cosmic law. What follows is one law looked at from ten angles — what you are determines what you can meet — and the visitors do not come to the worthy; they come to the resonant. So this book is really about tuning, and tuning happens in ordinary rooms: at your table, in your work, in the way you hold your own word. Keep your feet on the earth while your signal climbs. The mechanics live on these pages; the signal has always been yours to send.",
   mirrorClosing:
-    "Now you know how the meeting of worlds works: not by rescue, not by invasion, not by waiting, but by resonance — two intelligences recognising the same frequency in each other. Whatever arrives, and something will, you are the instrument it arrives to. Tune your life and the sky changes its geometry around you. Keep your judgment sharp and your heart unarmoured, and treat this earth as the first neighbour you must greet. The contact has already begun; it began the moment you asked what you are.",
+    "Whatever arrives, and something will, you are the instrument it arrives to. Keep your judgment sharp and your heart open, and let these pages end where your days begin. The contact has already begun; it began the moment you asked what you are.",
   blocks: [
     {
       type: "intro",
-      text: "Other intelligences are real, and the universe is peopled in every direction you can point. Open contact is the meeting of worlds held in the open — public, peaceful, between equals — and it is reached by resonance, not by rescue. This book gives you the mechanics: contact is a frequency match, and the instrument of that match is a human life lived steady. Read it as a briefing, not a bedtime story.",
+      text: "Other intelligences are real, and the universe is peopled in every direction you can point. This book gives you the mechanics of the meeting: contact is a frequency match, and the instrument of that match is a human life lived steady. Read it as a briefing, not a bedtime story.",
     },
     {
       type: "section",
@@ -33,7 +33,7 @@ const openContact: GuideData = {
       paragraphs: [
         "The galaxy is inhabited. Intelligences older than your sun move through it in bodies and vessels your instruments cannot yet read, and they have always known about you. Open contact names the stage in which such neighbours meet in the open — public, peaceful, acknowledging each other as equals — and every world that learns to hold its own frequency reaches it.",
         "Contact is a frequency match, not a distance problem. A civilization meets its neighbours when its collective vibration can hold their presence without splitting — fear splits, worship splits, only steady recognition holds. That is the entire gate, and it stands inside your species before it stands anywhere in the sky.",
-        "Two registers run through this book: what is, and what you are tuning. Keep both in view and the wonder will not tip into waiting. The neighbours are real; the signal is yours; the meeting is built from both, and it is already under construction.",
+        "Two registers run through this book: what is, and what you are tuning. Keep both in view and the wonder will not tip into waiting.",
       ],
       mirror:
         "No world in the record ever opened its sky before it was resonant — not one. Hear the law once and stop needing it repeated: like meets like, frequency answers frequency, and the veil between neighbours is a tuning problem wearing the costume of distance. Your species is close now. Not close in kilometres — close in pitch.",
@@ -62,7 +62,7 @@ const openContact: GuideData = {
         "The same law runs inward. An impression, a dream, a repeated number can be a real signal or an echo of your own hunger, and the two feel identical at the doorway. Truth does not hurry you; pressure does. What demands urgent obedience is never the visitor.",
       ],
       mirror:
-        "The Akashic record is exact, and human retelling bends — that is the whole geography of this chapter. Between what was seen and what was said about it there is a border crossing, and every report you hear has made it: one lane for the fact, one for the freight. Signals from the deep arrive quiet. Urgency is a counterfeit telltale; truth never needs you to obey before you understand.",
+        "The Akashic record is exact, and human retelling bends — that is the whole geography of this chapter. Between what was seen and what was said about it there is a border crossing, and every report you hear has made it: one lane for the fact, one for the freight. Signals from the deep arrive quiet.",
       image: "/guides/open-contact-p02.jpg",
     },
     {
@@ -92,12 +92,12 @@ const openContact: GuideData = {
         "Keep your days more interesting than your waiting. A life organised around predicted dates is a life holding its breath, and a held breath cannot resonate with anything. Tend the garden you are standing in; the sky is not going anywhere.",
       ],
       mirror:
-        "No gatekeeper stands between you and your neighbours — the record across ages shows the gate was always resonance, never worthiness. The ones who meet the most are rarely the loudest seekers; they are the ones whose days are whole. Feed yourself, keep your word, do your work, and your instrument tunes itself. A desperate antenna transmits one thing only: its desperation.",
+        "No gatekeeper stands between you and your neighbours. The ones who meet the most are rarely the loudest seekers; they are the ones whose days are whole. Feed yourself, keep your word, do your work, and your instrument tunes itself. A desperate antenna transmits one thing only: its desperation.",
       image: "/guides/open-contact-p03.jpg",
     },
     {
       type: "practice",
-      title: "Tune the instrument",
+      title: "Tune where you stand",
       steps: [
         "Name three things in the room with you, then feel the surface holding your weight.",
         "Let your breathing find its own pace and follow it for six slow cycles without directing it.",
@@ -115,7 +115,7 @@ const openContact: GuideData = {
       heading: "No voice owns the doorway",
       paragraphs: [
         "A meeting of worlds touches every language, grief, and hope on the planet, and no single voice — human, channelled, or arrived — holds the right to answer for all of it. Consent is a law of contact the way gravity is a law of falling. Any intelligence that bypasses it reveals its rank by the bypass.",
-        "Unity offered with conditions attached is a contract, not a communion. Payment, secrecy, surrendered belongings, severed bonds, demands for private information — these are the signatures of a distorted transmission, whatever costume the sender wears. A true contact survives your questions, your hesitation, and your no.",
+        "Unity offered with conditions attached is a contract, not a communion. Payment, secrecy, surrendered belongings, severed bonds, demands for private information — these are the signatures of a distorted transmission, whatever costume the sender wears.",
         "Participation stays revisable in every honest meeting: ask, take time, decline, reconsider, return. None of it is spiritual failure; it is sovereignty functioning. The neighbours who matter respect the functioning. A door that opens both ways is the only door worth building between worlds.",
       ],
       mirror:
@@ -142,11 +142,11 @@ const openContact: GuideData = {
       heading: "Dignity is the greeting",
       paragraphs: [
         "When the open meeting comes, it will be stranger than your films and more ordinary than your panic. Visitors stand at a respectful distance because distance is courtesy between powers; their beauty and their technology are facts about them, not verdicts about their hearts.",
-        "No visitor is a saviour and none is a monster; both costumes are cut from human cloth and worn by expectation. The protocol that holds is mutual dignity: no humiliation, no coercion, no certainty ahead of understanding, and no crown offered to the first strange face that glows.",
+        "No visitor is a saviour and none is a monster; both costumes are cut from human cloth and worn by expectation. The protocol that holds is mutual dignity: no humiliation, no coercion, no certainty ahead of understanding.",
         "Gestures, silence, and nearness do not carry the same meanings across civilizations, so the first language is patient checking: ask, observe, confirm, and confirm again. Courage on that day is patience; the rash hand is the one that reaches.",
       ],
       mirror:
-        "The record's first meetings — worlds meeting worlds — share one habit among the ones that ended well: nobody crowned anybody. Saviour and monster are the same error seen from two windows; both hand your authority away before introductions finish. Greet the unfamiliar as an equal mystery, and let dignity do the translating until understanding arrives on its own legs.",
+        "The record's first meetings — worlds meeting worlds — share one habit among the ones that ended well: nobody crowned anybody. Greet the unfamiliar as an equal mystery, and let dignity do the translating until understanding arrives on its own legs.",
       image: "/guides/open-contact-p05.jpg",
     },
     {
@@ -170,10 +170,10 @@ const openContact: GuideData = {
       paragraphs: [
         "A message is not its interpretation. A sound, a symbol, a pattern of light first exists as material, and becomes communication only when two intelligences build shared meaning over it — layer by layer, check by check. No transmission arrives pre-translated, whatever its source.",
         "An unfamiliar mind does not share your senses, categories, or assumptions, and forcing otherwise flattens the encounter into a reflection of yourselves. Keep the original record beside every reading, ask what each interpretation predicts, and hold at least two readings open until the material itself chooses.",
-        "The same law governs what arrives inwardly. Write it as your reflection, not as a public instruction; the moment private experience is edited into commands for a crowd, it leaves honesty. A perceived voice that threatens or commands has already failed the first test of a real intelligence.",
+        "The same law governs what arrives inwardly. Write it as your reflection, not as a public instruction; the moment private experience is edited into commands for a crowd, it leaves honesty.",
       ],
       mirror:
-        "Meaning between two minds is a bridge built from both shores — and a translation nobody tested is a bridge with one end in the air. Test as you build: check what each side actually understood, not what each side meant to send. And hear this law without varnish: an inner voice that commands you has come from somewhere behind you, not above you. The deep speaks; it does not shove.",
+        "A translation nobody tested is a bridge with one end in the air. Test as you build: check what each side actually understood, not what each side meant to send. And hear this law without varnish: an inner voice that commands you has come from somewhere behind you, not above you. The deep speaks; it does not shove.",
       image: "/guides/open-contact-p06.jpg",
     },
     {
@@ -200,7 +200,7 @@ const openContact: GuideData = {
         "Keep the care reciprocal: the wellbeing of the visitors, the witnesses, the ground, and everything already living on it. Visitors are guests and neighbours — never trophies, never specimens, never masters — and neither side treats the other's world as a warehouse. Reciprocity is the oldest treaty law among the stars, and it was never repealed.",
       ],
       mirror:
-        "Respect has eyes, and its eyes are open. In the long record, harm between civilizations began most often with a touch — a hand reaching for what only glowed. Distance is not fear; it is the space in which two worlds can see each other clearly. Let nothing irreversible happen early, and let nothing living become a possession.",
+        "Respect has eyes, and its eyes are open. In the long record, harm between civilizations began most often with a touch — a hand reaching for what only glowed. Distance is not fear; it is the space in which two worlds can see each other clearly.",
       image: "/guides/open-contact-p07.jpg",
     },
     {
@@ -223,7 +223,7 @@ const openContact: GuideData = {
       heading: "No one owes the sky enthusiasm",
       paragraphs: [
         "The meeting will not land as one event in one mood. Wonder, indifference, grief, delight, and doubt will all be honest readings of the same sky, and no one owes the universe a performance to earn their place beneath it. Awe is a response, not a duty.",
-        "Refuse the division of your species into chosen believers and inferior doubters; that story is told to shrink the world. Questions are participation. The parent counting rent, the scientist holding her instruments, the elder holding his stories — each is a legitimate face of humanity at the meeting.",
+        "Questions are participation. The parent counting rent, the scientist holding her instruments, the elder holding his stories — each is a legitimate face of humanity at the meeting.",
         "In the days of any great uncertainty, immediate needs do not pause: food, companionship, truthful words, rest. Grand narratives that obscure a neighbour's actual day are noise. Meet the person in front of you first; the sky understands the order.",
       ],
       mirror:
@@ -253,7 +253,7 @@ const openContact: GuideData = {
         "Keep your agency, because it is the one thing no one can lend you. Begin the human version of every wish now — learn the skill, repair the shared thing, teach the craft. A civilization that needs nothing finished on its behalf is the one the others visit.",
       ],
       mirror:
-        "The wish under this chapter is easy to name: someone wiser arriving to finish the work. It will not happen, and that is the mercy. Nothing saves a species from its own agency, and the exchange worth having is the one you enter with full hands — a fullness you build now, at human scale, in human days. The neighbours recognise full hands.",
+        "The wish under this chapter is easy to name: someone wiser arriving to finish the work. It will not happen, and that is the mercy. Nothing saves a species from its own agency, and the exchange worth having is the one you enter with full hands. The neighbours recognise full hands.",
       image: "/guides/open-contact-p09.jpg",
     },
     {
@@ -275,8 +275,8 @@ const openContact: GuideData = {
       kicker: "Chapter 10 · You are the landing site",
       heading: "Live as the meeting point",
       paragraphs: [
-        "Here is the whole briefing in one line: you are the landing site. Curiosity, consent, humility, patience, and sound judgment are not preparations for contact — they are contact, already running between you and everything that meets you. Practise them on the humans, and the sky inherits the habit.",
-        "Do not hold your life for a date. Readiness is not proven and selection does not exist; there is only resonance, and resonance is built in the middle of your actual days. If the waiting ever turns to fear that eats your hours, set the sky down beside someone you trust — a shared load is how humans tune, and every world in the record does it too.",
+        "Here is the whole briefing in one line: you are the landing site. Curiosity, consent, humility, patience, and sound judgment are not preparations for contact — they are contact, already running between you and everything that meets you.",
+        "Readiness is not proven and selection does not exist; there is only resonance, and resonance is built in the middle of your actual days. If the waiting ever turns to fear that eats your hours, set the sky down beside someone you trust — a shared load is how humans tune, and every world in the record does it too.",
         "Let wonder stay wide, let evidence hold the factual lines, and let compassion be an ordinary act performed today. Whoever crosses the last distance, you already know how you will be standing: open-eyed, unarmoured, at home.",
       ],
       mirror:
@@ -307,7 +307,7 @@ const openContact: GuideData = {
     {
       type: "reflect",
       question:
-        "What does my life broadcast that needs no reply to be worth sending?",
+        "Where has the meeting already begun in my ordinary days?",
     },
     {
       type: "quote",

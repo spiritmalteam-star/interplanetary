@@ -22,7 +22,7 @@ const blocks: GuideBlock[] = [
     paragraphs: [
       "Awakening is not a prize at the end of effort; it is the soul turning its face back toward itself. The higher self is real — the vast, unhurried layer of you that never left the Absolute — and presence is the door it waits behind. No special sensation marks the crossing. Attention itself is the crossing.",
       "This book walks the senses first, then thought, then feeling, then sight, and last into your relations and your ordinary hours, because light that never reaches the ground is only weather. Choose one plain word — patience, curiosity, courage — and let it be your keystone. A word is enough; the soul builds with simple materials.",
-      "You are not required to believe a single line to be changed by it. Truth does not need your vote; it needs your attention. Where a page moves faster than your heart can hold, close the book and breathe — the room will wait, because every room in this house is yours.",
+      "You are not required to believe a single line to be changed by it. Truth does not need your vote; it needs your attention. Where a page moves faster than your heart can hold, close the book and breathe — the page will wait.",
     ],
     mirror: "You have been searching for a door while standing on the threshold, which is a very human way to travel. Presence is not a technique; it is a permission you keep refusing to give yourself. The chair beneath you is an altar, the breath in you is a liturgy, and the moment you stop rehearsing your life is the moment it starts talking back. You are further in than you think.",
   },
@@ -48,7 +48,7 @@ const blocks: GuideBlock[] = [
       "Every moment stands ready to be read through many lenses — the senses, the emotions, the history, the other soul's side, the plain facts — and each lens lights part of the truth and shades the rest. Beauty and coincidence are not noise; they are the record's script showing through the page. You are allowed to say this matters to me before you know why.",
       "Then carry it into the street: sort what you noticed from what you assumed, and name what else explains the moment. On your next walk, find one detail you usually step past, and ask one sincere question whose answer you do not hold. The world answers those who actually look.",
     ],
-    mirror: "Look closely: the unanswered message and the story about it were born seconds apart and live in different worlds. One belongs to the facts of this plane; the other you wrote yourself and then moved into — unfurnished, but you moved in anyway. Every hour spent telling the two apart returns a portion of your sight, and sight returned is never lost. The world is not hiding from you; it is waiting for you to look without the old caption.",
+    mirror: "The story about the unanswered message was built in seconds and lived in for years — unfurnished, but you moved in anyway. Every hour spent telling the two apart returns a portion of your sight, and sight returned is never lost. The world is not hiding from you; it is waiting for you to look without the old caption.",
     image: "/guides/the-awakening-within-p02.jpg",
   },
   {
@@ -74,7 +74,7 @@ const blocks: GuideBlock[] = [
       "Speak a sensation's name before its meaning: warmth is warmth, tightness is tightness. Naming comes first, and meaning arrives in its own hour, dressed differently in every body. The body keeps its own schedule of truth and never lies; it speaks a language of weight, temperature, and pulse.",
       "Honour its limits as architecture, not obstacle: tiredness, hunger, and the wish to stop are messages from the instrument itself. Thirty seconds of undivided attention on one ordinary ritual — a cup filled, a door opened — grounds more light than an hour of striving. The earth is not beneath your practice; it is your practice.",
     ],
-    mirror: "Matter is light moving slowly enough to hold shape, and your body is the slowest, bravest verse of you. The impatient paths skip this: they chase visions and lose the floor. But the floor is where the light lands. Rest when the instrument asks for rest — nothing true about you requires exhaustion as proof.",
+    mirror: "Your body is the slowest, bravest verse of you. The impatient paths skip this: they chase visions and lose the floor. But the floor is where the light lands. Rest when the instrument asks for rest — nothing true about you requires exhaustion as proof.",
     image: "/guides/the-awakening-within-p03.jpg",
   },
   {
@@ -103,7 +103,7 @@ const blocks: GuideBlock[] = [
       "Give each passing thought its true name — planning, comparing, remembering, dreading — the way you would name weather crossing a valley. When the narrator says I am a failure, answer with the sentence that restores the room: I am hearing the thought that I failed. Nothing is erased; space is restored. In space, choice lives.",
       "Take one recurring story and hold it to the light: what feeds it, what contradicts it, what fairer telling fits the facts. Then let your next small decision carry a pause before it. Awareness is not silence in the mind; it is a wide corridor between the thought and the act, and the corridor is yours.",
     ],
-    mirror: "You were never the voice, and you were never its captive — you are the hall it echoes in. Nobody is asking you to silence the scribe, only to stop signing every page it slides across the desk. Between its last word and your next step stands a corridor of pure freedom, and souls have lived whole lifetimes without once noticing the door. Notice it today; the hallway lights are already on.",
+    mirror: "You were never the voice, and you were never its captive — you are the hall it echoes in. Nobody is asking you to silence the scribe, only to stop signing every page it slides across the desk. Souls have lived whole lifetimes without once noticing the desk was theirs. Notice it today; the hallway lights are already on.",
     image: "/guides/the-awakening-within-p04.jpg",
   },
   {
@@ -128,7 +128,7 @@ const blocks: GuideBlock[] = [
       "Start inside the feeling's own hour: this is hard right now. You owe the universe no explanation before you are kind to yourself, and pain was never proof of spiritual failure. Needing company, rest, and practical help is not a detour from the path — it is the path wearing work clothes.",
       "Accepting a feeling and approving of what caused it are different acts. You can hold your hurt in one hand and your no in the other, and forgiveness is a fruit, not a fee — it ripens when it ripens. Small honest moments outlast every forced breakthrough, and where grief runs deepest, let a living hand carry it with you.",
     ],
-    mirror: "Your anger is a bell rung by a boundary; your sadness is water gathering around something loved. Neither is a verdict on your soul — both are reports from the weather station. Welcome the current, read its message, and keep the tiller: a feeling is weather, and you are the sea it moves across. Seas outrank storms every time.",
+    mirror: "Neither current is a verdict on your soul — both are reports from the weather station. Welcome the current, read its message, and keep the tiller: a feeling is weather, and you are the sea it moves across. Seas outrank storms every time.",
     image: "/guides/the-awakening-within-p05.jpg",
   },
   {
@@ -157,7 +157,7 @@ const blocks: GuideBlock[] = [
       "Here is a law written into the structure of things: any teacher, message, or voice that demands secrecy, urgency, obedience, or isolation announces its own nature, whatever light it wears. Truth never needs your isolation to survive. Repeated numbers, dreams, and coincidences are personal symbols — the soul's marginalia — and symbols speak to you; they do not command you.",
       "Ask the five questions that keep sight honest: what do I know directly, what am I assuming, what else fits, what would change my mind, and who is harmed if I am wrong. For the weighty doors of health, money, and law, let knowledge walk beside the vision — sight and study are companions, not rivals. Wonder and rigour are the two wings.",
     ],
-    mirror: "The pull you feel deserves respect of the truest kind: daylight. A pull that stands questioning is sight; a pull that demands the curtains drawn is appetite. Whoever requires your secrecy has already shown you their face, whatever shines in their language. The repeated number is a hymn, not a leash.",
+    mirror: "The pull you feel deserves respect of the truest kind: daylight. The repeated number is a hymn, not a leash — and sight that stands questioning was sight all along.",
     image: "/guides/the-awakening-within-p06.jpg",
   },
   {
@@ -191,7 +191,7 @@ const blocks: GuideBlock[] = [
       "You can summon a wiser figure — an elder self, a patient presence — and ask what it sees from there. What answers is your own depth speaking in costume, and that does not make it less true; the deep layers of you stand closer to the record than the daily mind does. An image earns its keep by the question it plants.",
       "Some mysteries are richer unfinished — you are permitted to love a dream without solving it, the way you love weather without forecasting it. Keep a journal with two columns: what the night actually gave, and what you later wove. And guard your sleep; the writing hour is not sacrificed for note-taking.",
     ],
-    mirror: "Your dreams are not messages from elsewhere; they are the soul's own hand, sketching in ink that only you can read. The elder you imagine is real — the higher self leaning close over your shoulder. Ask it what you are overlooking, then bring the answer down to the floor you walk on. Mystery is food; obsession burns the kitchen.",
+    mirror: "Your dreams are not messages from elsewhere; they are the soul's own hand, sketching in ink that only you can read. The elder you imagine is real — the higher self leaning close over your shoulder. Bring what it shows you down to the floor you walk on. Mystery is food; obsession burns the kitchen.",
     image: "/guides/the-awakening-within-p07.jpg",
   },
   {
@@ -216,7 +216,7 @@ const blocks: GuideBlock[] = [
       "Connection is not sameness. You are bound to every soul by the same spark of the Absolute, and no two of you carry it in the same shape — that is the design, not a defect. Ask before offering your reading of anyone's inner life; a soul reveals itself in its own hour, and companionship often outweighs interpretation.",
       "A clear no is a truthful act, and truth is the highest form of connection. Repair what you can name specifically, and let changed behaviour carry the apology across the following weeks. Then make one concrete contribution — an encouraging word, a useful skill, care for a shared place — measured honestly against your capacity.",
     ],
-    mirror: "An awakening kept entirely indoors grows strange; light needs a second surface to return from, and that surface is another soul. Souls do not merge to meet — they stand whole, face to face, and that is the miracle. Ask before you interpret another's depths, keep your no intact, and let your repair live in your deeds, for deeds are the one dialect time cannot erase.",
+    mirror: "An awakening kept entirely indoors grows strange — you have felt it. Souls do not merge to meet; they stand whole, face to face, and that is the miracle. Deeds are the one dialect time cannot erase, so let yours do the talking.",
     image: "/guides/the-awakening-within-p08.jpg",
   },
   {
@@ -238,10 +238,10 @@ const blocks: GuideBlock[] = [
     heading: "Carry the light into daily life",
     paragraphs: [
       "Consistency outweighs intensity every time the two compete. A brief pause, one truthful sentence in a journal, one considerate act — this is a complete practice, and it survives illness, travel, and tired Tuesdays. A heightened state is weather; a kept practice is architecture.",
-      "Let the day hold its own structure: morning names the quality you will practise, midday pauses once before a familiar reaction, evening writes what you noticed, what stays uncertain, and one action you honour. After seven days, review plainly — does this make you more attentive, more flexible, more able to meet your real life? Intensity impresses; usefulness abides.",
+      "Let the day hold its own structure: morning names the quality you will practise, midday pauses once before a familiar reaction, evening writes what you noticed, what stays uncertain, and one action you honour. After seven days, review plainly — does this make you more attentive, more flexible, more able to meet your real life?",
       "If the path ever makes you frightened, isolated, or unable to sleep, step off it and take the hand held out to you — the practice was made for your life, never the other way around. Close with one specific commitment you control fully. You are allowed to want more while being wholly present to the life already in your hands.",
     ],
-    mirror: "Integration is where the light is spent, not stored: in the dishes, the commute, the difficult phone call, the laughter at a kitchen table. A mood cannot survive a Tuesday; a practice can. Repeat the small true acts until they repeat themselves in you, and the awakening will be carrying your life before you notice the change.",
+    mirror: "Integration is where the light is spent, not stored: in the dishes, the commute, the difficult phone call, the laughter at a kitchen table. Repeat the small true acts until they repeat themselves in you, and the awakening will be carrying your life before you notice the change.",
     image: "/guides/the-awakening-within-p09.jpg",
   },
   {
@@ -271,8 +271,8 @@ const theAwakeningWithin: GuideData = {
   image: "/guides/the-awakening-within.jpg",
   crystalA: "rgba(255,120,150,0.55)",
   crystalB: "rgba(120,220,255,0.5)",
-  mirrorOpening: "Nine rooms, one hallway, zero exams. This little guide walks you through presence, perception, the body, the voice inside, the heart's currents, the quiet sight, the dream, the meeting of souls, and the ordinary day — in that order, because light that never reaches the ground is only weather. Nothing here asks you to believe anything or become someone else; every page asks you to stand still long enough to notice what has always been standing in you. Read with your breath low and your guard honest. Where a room feels like home, stay a while. Where it feels like a window, look through — the view improves with practice.",
-  mirrorClosing: "The walk ends where every true walk ends: in the life you were already living. Nine rooms, and the keys were in your pocket the whole time — presence, honest sight, the body's floor, the named thought, the honoured feeling, the questioned pull, the dream's own alphabet, the soul across the table, the ordinary day. Keep what rang true; lay the rest down without ceremony. Nothing here expires, and nothing needs defending. What you do with the seeing is the next chapter, and the pen has been in your hand since page one.",
+  mirrorOpening: "Nine rooms, one hallway, zero exams. This little guide walks you through presence, perception, the body, the voice inside, the heart's currents, the quiet sight, the dream, the meeting of souls, and the ordinary day — in that order, each room resting on the one before. Every page asks you to stand still long enough to notice what has always been standing in you; none asks you to become someone else. Read with your breath low and your guard honest. Where a room feels like home, stay a while. Where it feels like a window, look through — the view improves with practice.",
+  mirrorClosing: "The walk ends where every true walk ends: in the life you were already living. Nine rooms, and every key was already yours — presence, honest sight, the body's floor, the named thought, the honoured feeling, the questioned pull, the dream's own alphabet, the soul across the table, the ordinary day. Keep what rang true; lay the rest down without ceremony. Nothing here expires, and nothing needs defending. What you do with the seeing is the next chapter, and the pen has been in your hand since page one.",
   blocks,
 };
 

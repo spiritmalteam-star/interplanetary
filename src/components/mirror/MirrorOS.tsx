@@ -37,7 +37,6 @@ import { WorldNewChat } from "./WorldNewChat";
 import { ChatHistoryPanel } from "./ChatHistoryPanel";
 import { MirrorOSChat } from "./MirrorOSChat";
 import { WindowSelect } from "./WindowSelect";
-import { useFloatingBarAutoHide } from "./useFloatingBar";
 
 type OsPlace = "chat" | "formulas" | "higher" | "tools" | "forge";
 
@@ -536,33 +535,20 @@ export function MirrorOS() {
   const [historyOpen, setHistoryOpen] = useState(false);
   const t = useT();
 
-  /* the reading bar law — the floating controls sink away with the
-     stillness or the downward flow, rise at the first upward breath */
   const worldRootRef = useRef<HTMLDivElement | null>(null);
-  const topBarRef = useRef<HTMLElement | null>(null);
   const [toolsOpen, setToolsOpen] = useState(false);
-  const topBarHidden = useFloatingBarAutoHide({
-    rootRef: worldRootRef,
-    barRef: topBarRef,
-    hold: toolsOpen,
-  });
 
   return (
     <div
       ref={worldRootRef}
       className="scope-manifesting relative flex h-full flex-col"
     >
-      {/* ---------- floating top controls over the chat — the chat now
-          extends to the very top and the controls rest upon it: back,
-          every chamber behind one tools button, and the fresh hand —
-          they sink away as the visitor reads and rise when reached for ---------- */}
-      <header
-        ref={topBarRef}
-        className={cn(
-          "pointer-events-none absolute inset-x-0 top-0 z-30 bg-gradient-to-b from-[var(--background)]/85 via-[var(--background)]/30 to-transparent transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform",
-          topBarHidden ? "invisible -translate-y-4 opacity-0" : "translate-y-0 opacity-100"
-        )}
-      >
+      {/* ---------- the world's quiet hands — the old auto-appearing
+          top bar is gone (no strip, no gradient, nothing rising while
+          the visitor works): one small corner row in the crown's own
+          style — the exit hand, the chambers behind one chip, the
+          visitor's own hands ---------- */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-30">
         <div className="bar-safe flex items-center justify-between gap-2 px-3 sm:gap-3 sm:px-5">
           <button
             type="button"
@@ -603,7 +589,7 @@ export function MirrorOS() {
             <WorldNewChat world="manifest" />
           </div>
         </div>
-      </header>
+      </div>
 
       {/* ---------- the OS core — reaching the very top of the world ---------- */}
       <main className="nice-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain">

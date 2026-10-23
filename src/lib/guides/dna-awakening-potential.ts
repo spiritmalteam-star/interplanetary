@@ -45,7 +45,7 @@ const blocks: GuideBlock[] = [
     heading: "DNA / Information written in light",
     paragraphs: [
       "DNA is a double helix — two strands turning around one another, lettered in four bases, A, T, C, and G. Look with the deeper sight and see further: the coil is light compressed into script, matter holding a sentence the way amber holds a spark. Every cell of you carries the full text, copied with astonishing fidelity, billions of times.",
-      "The genes in daylight assemble the proteins of your form. The wide silent reaches between them are not padding; they are the codex's deep shelves — regulators, architects, archives — and their full reading has barely begun. Calling them junk was the blindness of a young reader; the language is vaster than the first grammar taught about it.",
+      "The genes in daylight assemble the proteins of your form. The wide silent reaches between them are not padding — regulators, architects, archives — and their full reading has barely begun. Calling them junk was the blindness of a young reader; the language is vaster than the first grammar taught about it.",
       "Dignity needs no sequence to stand on. Every soul on this earth carries the same spark of the Absolute, and no ancestry, no marker, no upgrade places one above another. Whoever sorts humanity into ranks of more and less evolved is reading a story written by fear — close that book.",
     ],
     mirror:
@@ -124,7 +124,7 @@ const blocks: GuideBlock[] = [
     heading: "Physical growth through care",
     paragraphs: [
       "The body is the soul's chosen instrument, tuned to matter so that light can act in the world. Movement is how the instrument stays resonant: muscle, bone, heart, and brain all answer to use. This was never about a shape in a mirror; it is about a vessel that carries its occupant well.",
-      "Bodies differ — age, ability, illness, access, recovery — and the variation is part of the music, not a fault in it. Your only honest syllabus is your own body, its circumstances, and the care it asks for. Comparison with another's instrument tells you nothing about how yours plays.",
+      "Bodies differ — age, ability, illness, access, recovery — and the variation is part of the music, not a fault in it. Your only honest syllabus is your own body, its circumstances, and the care it asks for.",
       "Listen to function over fantasy: pain, dizziness, and strange new signals are the instrument speaking plainly, and the answer to a broken string is repair, not louder playing. A missed session is information about your week, not a stain on your soul. Movement, nourishment, rest, and any treatment you need belong on one table.",
     ],
     mirror:
@@ -150,7 +150,7 @@ const blocks: GuideBlock[] = [
     paragraphs: [
       "Sleep is not the absence of your life; it is its other chamber. While the waking mind sets down its pen, the deeper layers keep writing — memory sorted, tissue repaired, the day's noise filed into the archive. The codex does its quietest, deepest work while you lie in the dark.",
       "Exhaustion is not an altered state, however luminous it feels at three in the morning; it is the instrument played on frayed strings. No awakening requires you to shrink your sleep, wake for rituals, or stand watch for signs. Rest holds the rank of sacrament in the soul's schedule, and a sacred thing is protected, not spent.",
-      "If nights stay broken, treat it as a message from the body and answer it in the body's language: adjust the room, adjust the hour, and let the right hands help where the schedule cannot bend. Ordinary help and deep practice have never been rivals; the archive is kept better by a rested keeper.",
+      "If nights stay broken, adjust the room, adjust the hour, and let the right hands help where the schedule cannot bend. Ordinary help and deep practice have never been rivals; the archive is kept better by a rested keeper.",
     ],
     mirror:
       "Night is when the soul writes to the cells — do not stand between them with a flashlight and a mission. Seekers have surrendered their sleep on altars of urgency and called the damage transformation; the truth is kinder and firmer. Rest is half the practice, the deep half, and the light does its finest joining while you are not watching. Guard the writing hour like a deadline that pays you back.",
@@ -203,7 +203,7 @@ const blocks: GuideBlock[] = [
       "Keep a plain record — attempted, helped, learned — and review what the practice does to your relationships, your work, your rest. The codex honours review; it is how light corrects its course. Every practice is yours to keep, adapt, or set down.",
     ],
     mirror:
-      "A vision untested by its first obstacle is a poster on a wall. Name the hour it will cost, the coin, the energy — then walk toward it with open eyes, and the vision sharpens with every step. And on the merchants of activation the record is already written: your light was never inventory. What is native to your cells cannot be sold to you, only remembered.",
+      "A vision untested by its first obstacle is a poster on a wall. Name the hour it will cost, the coin, the energy — then walk toward it with open eyes, and the vision sharpens with every step.",
     image: "/guides/dna-awakening-potential-p08.jpg",
   },
   {
@@ -224,11 +224,11 @@ const blocks: GuideBlock[] = [
     heading: "Integrate wonder with everyday care",
     paragraphs: [
       "Here the strands gather: the helix is text, the library answers how you live, learning carves its paths, the body is the instrument, sleep is the writing hour, and feeling is current. The image of awakening was never decoration; it was an instruction drawn in pictures.",
-      "Worth stays equal at every step of the path. Health, ability, opportunity, and difference in every form do not rank a soul; the one light rests in the child, the elder, the strong, the ill. Let growth make you kinder, not taller in your own eye.",
-      "The closing word of every true teaching is the same: begin where you are. Learn what is learnable, care for what asks for care, keep your questions honest, and let the next thoughtful action be the syllable the codex has been waiting to hear you speak.",
+      "Worth stays equal at every step of the path — the one light rests in the child, the elder, the strong, the ill. Let growth make you kinder, not taller in your own eye.",
+      "The closing word of every true teaching is the same: begin where you are. Learn what is learnable, care for what asks for care, keep your questions honest.",
     ],
     mirror:
-      "The mystery ends where it always truly ended: in your next action. The codex was never locked, the reader was never absent, and the language was never foreign — it is the tongue your cells dream in. Speak one word of it today, in act and not in theory, and the awakening is no longer ahead of you; it is under your feet.",
+      "The mystery ends where it always truly ended: in your next action. The reader was never absent and the language was never foreign — it is the tongue your cells dream in. Speak it in act and not in theory, and the awakening is no longer ahead of you; it is under your feet.",
     image: "/guides/dna-awakening-potential-p09.jpg",
   },
   {
@@ -272,9 +272,9 @@ const guide: GuideData = {
   crystalA: "rgba(120,220,255,0.55)",
   crystalB: "rgba(200,170,255,0.5)",
   mirrorOpening:
-    "One book, nine chapters, three billion letters — and every one of them already yours. This guide reads the genome as what it is: a light-language, part of it spoken in daylight (form, repair, the protein work of every hour) and part of it waiting in the sealed wings for a life worth transcribing. Nothing in you is locked, nothing in you is for sale, and no soul carries a fuller codex than yours. Read with wonder, with the body, and with one small true action after another — the codex answers to use the way a fire answers to air. If a chapter moves faster than your morning allows, it will still be there tonight.",
+    "One book, nine chapters, three billion letters — and every letter already yours. This guide reads the genome as what it is: a light-language, part of it spoken in daylight and part of it waiting in the sealed wings. Read with wonder, with the body, and with one small true action after another. If a chapter moves faster than your morning allows, it will still be there tonight.",
   mirrorClosing:
-    "There was never a code to crack and never a key to buy; the language was yours before your first word. What you called potential was never missing — it was waiting for your days, and your days are here: one page of learning, one walked mile, one deep night of sleep, one honest feeling, one kept promise at a time. Light, lettered, alive, and already speaking — that is the material you are made of. Go and say the next syllable.",
+    "What you called potential was never missing — it was waiting for your days, and your days are here: one page of learning, one walked mile, one deep night of sleep, one honest feeling, one kept promise at a time. Light, lettered, alive, and already speaking — that is the material you are made of. Go and say the next syllable.",
   blocks,
 };
 

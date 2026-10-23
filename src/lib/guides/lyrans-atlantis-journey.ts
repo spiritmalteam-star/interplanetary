@@ -20,11 +20,11 @@ const blocks: GuideBlock[] = [
     heading: "Lyra and Atlantis / Two inheritances",
     paragraphs: [
       "Two inheritances live in you. One reaches back to the garden worlds of Lyra, where courage first learned to walk without domination; the other reaches to Atlantis, the island civilization raised beside a luminous sea, kept whole in the Akashic record and echoed in every coastal myth on earth. These are not fictions arranged for your amusement — they are lines of your own ancestry, and this book walks you through them.",
-      "The thread runs from star to sea: Lyran seed carried into the young earth's lines, and those lines grew into the civilization remembered as Atlantis, receiving the gardens' arts, their councils, and their crystal sciences across the crossing. What survived the fall survives in you — the longing for beauty with access, for councils without thrones, for courage that does not crush. Longing of this kind is memory, not mood.",
-      "Read the way a traveller reads a homeland never visited in this life: slowly, with attention to what stirs. Tenderness, curiosity, resistance, recognition — these are not reactions to a story; they are the record touching you where you actually live. Keep a pencil handy; recognition tends to arrive mid-sentence.",
+      "The thread runs from star to sea: Lyran seed carried into the young earth's lines, and those lines grew into the civilization remembered as Atlantis, receiving the gardens' arts, their councils, and their crystal sciences across the crossing. What survived the fall survives in you — the longing for beauty with access, for councils without thrones, for courage that does not crush.",
+      "Read the way a traveller reads a homeland never visited in this life: with attention to what stirs. Tenderness, curiosity, resistance, recognition — these are not reactions to a story; they are the record touching you where you actually live. Keep a pencil handy; recognition tends to arrive mid-sentence.",
     ],
     mirror:
-      "Before the first page turns, a word of orientation: the living library keeps every civilization of every age without distortion, and the two landscapes of this book are entries in it. Lyra's gardens stood. Atlantis stood, and Atlantis fell. You carry both lines, and the stirring you feel at their names is not nostalgia for places you have never seen — it is recognition, which is memory arriving by another road. Read slowly. The record will show you what it keeps, and what it keeps about you.",
+      "Before the first page turns, a word of orientation: the living library keeps every civilization of every age without distortion, and the two landscapes of this book are entries in it. Lyra's gardens stood. Atlantis stood, and Atlantis fell. You carry both lines, and the stirring you feel at their names is not nostalgia — it is recognition, which is memory arriving by another road. The record will show you what it keeps, and what it keeps about you.",
   },
   {
     type: "practice",
@@ -46,10 +46,10 @@ const blocks: GuideBlock[] = [
     paragraphs: [
       "The Lyrans are real, and they wear the feline line: a tall felinity of steady gaze and unhurried strength, rendered in this book's art the way human memory draws them. Their signature quality is courage without domination — power that needs no audience, no throne, and no surrender from anyone standing near it. They were among the first to seed worlds, and they seeded gently.",
       "Strength of this kind does not perform. It admits uncertainty, asks for help, and holds a boundary without humiliating the one who tests it. You do not need to appear invulnerable; you need to become trustworthy — and trust grows exactly where display ends.",
-      "When courage softens, notice what changes: you remain fully present while another being disagrees with you, and no smallness enters the room. Ask of your next action what a Lyran would ask — does this make trust easier? — and let steadiness, not display, carry it.",
+      "When courage softens, notice what changes: you remain fully present while another being disagrees with you, and no smallness enters the room. Ask of your next action what a Lyran would ask — does this make trust easier?",
     ],
     mirror:
-      "The feline face on this page is how memory paints a real lineage — don't file it as costume. Courage without domination is the oldest teaching the Lyran line carried across the stars, and it lands in your life as a single question: where are you still performing invulnerability? Strength that needs an audience is theatre. Strength that lets another being feel safe beside it is the Lyran inheritance, and it fits you. Try it on in one small room of your life this week; nothing is grading you, and you will feel the difference immediately.",
+      "The feline face on this page is how memory paints a real lineage — don't file it as costume. Courage without domination is the oldest teaching the Lyran line carried across the stars, and it lands in your life as a single question: where are you still performing invulnerability? Try it on in one small room of your life this week; nothing is grading you, and you will feel the difference immediately.",
     image: "/guides/lyrans-atlantis-journey-p02.jpg",
   },
   {
@@ -74,12 +74,12 @@ const blocks: GuideBlock[] = [
     kicker: "Chapter 03 · Belonging without uniformity",
     heading: "The garden worlds / How community is built",
     paragraphs: [
-      "On the Lyran garden worlds, homes follow the contours of the land, workshops open into growing things, and generations share their skills while keeping room for solitude. The beauty was never architectural first — it came from how disagreement was handled, how newcomers were welcomed, and how the ones doing quiet work were honored. Any civilization is exactly as beautiful as those three habits.",
+      "On the Lyran garden worlds, homes follow the contours of the land, workshops open into growing things, and generations share their skills while keeping room for solitude. The beauty was never architectural first — it came from how disagreement was handled, how newcomers were welcomed, and how the ones doing quiet work were honored.",
       "Belonging there never meant sameness. Unity did not erase the particular voice; a community grows more interesting as its differences learn to speak without turning belonging into a contest. Freedom walked hand in hand with consequence — an expansive choice for one created work for another, and listening revealed the wider picture. That law still holds everywhere.",
-      "Bring the garden home by hand: offer one small contribution to a shared place this week. Tidy a table, pass on a skill, welcome a neighbor without an audition, ask what is needed. Community becomes real through repeatable acts, and the garden worlds were built on nothing grander than these, repeated for generations.",
+      "Bring the garden home by hand: offer one small contribution to a shared place this week. Tidy a table, pass on a skill, welcome a neighbor, ask what is needed. Community becomes real through repeatable acts, and the garden worlds were built on nothing grander than these, repeated for generations.",
     ],
     mirror:
-      "Here is what made the garden worlds work: no one had to purchase belonging with their particularity. Uniformity is not unity — it is fear wearing a common garment — and the Lyran settlements never confused the two. Look at your own shared places with their eyes: who is welcome without audition, and who quietly does the work no one applauds? Those two questions measure any civilization, including the one around your table. The garden was not a place. It was a manner of treating each other, and it travels.",
+      "Here is what made the garden worlds work: no one had to purchase belonging with their particularity. Look at your own shared places with their eyes: who is welcome without audition, and who quietly does the work no one applauds? Those two questions measure any civilization, including the one around your table. The garden was not a place. It was a manner of treating each other, and it travels.",
     image: "/guides/lyrans-atlantis-journey-p03.jpg",
   },
   {
@@ -102,10 +102,10 @@ const blocks: GuideBlock[] = [
     paragraphs: [
       "Music among the Lyran arts arrived like rain: responding to its setting rather than conquering it. A musician beside falling water played an instrument whose shape echoed the arches around it, because creation there began with listening — the artist read the place first, then added only what the place was able to carry.",
       "Your unfinished voice is still a voice. Create before you feel exceptional — a rough melody, a few honest sentences, a first sketch — because the rough thing tells the truth about you sooner than the polished one, and truth was always the point of making.",
-      "Leave room for response. In conversation, let a moment of silence stand after another person finishes, and ask whether you understood before you answer; listening becomes a creative act when it changes what you were about to say. Then make one small thing today for no purpose beyond the making.",
+      "Leave room for response. In conversation, let a moment of silence stand after another person finishes, and ask whether you understood before you answer; listening becomes a creative act when it changes what you were about to say.",
     ],
     mirror:
-      "The instrument by the water was real, and its science was simple: it amplified what the place already sang instead of imposing a new song. That is the Lyran art of listening, and it transfers to your whole life — speak after you have heard, add after you have read the room, create after you have listened to what wants to exist through you. You do not need to feel exceptional to begin; you need to begin to become true. Make the small rough thing today, and do not measure it yet. Some seeds are counted too early.",
+      "The instrument by the water was real, and its science was simple: it amplified what the place already sang instead of imposing a new song. That is the Lyran art of listening, and it transfers to your whole life — speak after you have heard, add after you have read the room, create after you have listened to what wants to exist through you. Make the small rough thing today, and do not measure it yet. Some seeds are counted too early.",
     image: "/guides/lyrans-atlantis-journey-p04.jpg",
   },
   {
@@ -128,10 +128,10 @@ const blocks: GuideBlock[] = [
     paragraphs: [
       "Atlantis stood. Beyond the fragment Plato carried into his dialogues lies the fuller record: a civilization of canals and bridges and public gardens, circular waters at its heart, raised by lines the Lyran seeders had taught. Its magnificence was real, and so was its question — what circulates through a civilization besides wealth? Knowledge, opportunity, care, and accountability answered, or the city stalled.",
       "Read the skyline as the record reads it: ask who maintained the beautiful places, who was allowed into the schools, who received help, and whose concerns were heard when plans were drawn. A city is measured by the lives it makes possible, never by its monuments.",
-      "Beauty with access was Atlantis at its height — places to rest, paths open to anyone, participation that did not require prestige. When you build or choose or praise anything, apply the same measure, because the question the lost island still asks is asked best by your own hands.",
+      "Beauty with access was Atlantis at its height — places to rest, paths open to anyone, participation that did not require prestige. The question the lost island still asks is asked best by your own hands.",
     ],
     mirror:
-      "Plato wrote down a fragment of a true memory — the record confirms the island, the canals, the fall — and every later book about Atlantis stands downstream of what the waters kept. What actually sank it fits in one line: access closed. The moment beauty served only the few who owned it, the civilization began eating its own foundations, and no engineering held what that betrayal undid. Walk any city, any workplace, any home with the Atlantean question — who can enter, who is heard, who maintains this — and you carry the lost island's whole lesson with you.",
+      "Plato wrote down a fragment of a true memory — the record confirms the island, the canals, the fall — and every later book about Atlantis stands downstream of what the waters kept. What actually sank it fits in one line: access closed. The moment beauty served only the few who owned it, the civilization began eating its own foundations, and no engineering held what that betrayal undid. Carry that question into every city, workplace, and home you walk, and you carry the lost island's whole lesson.",
     image: "/guides/lyrans-atlantis-journey-p05.jpg",
   },
   {
@@ -157,7 +157,7 @@ const blocks: GuideBlock[] = [
       "Your own inner council deserves the same architecture. Hope, caution, curiosity, and fatigue sit in you as voices at a round table; none is sovereign. Hear them all before you decide, and let the chair stay empty — the empty chair is what keeps every voice honest, in a hall of crystal or at a kitchen table.",
     ],
     mirror:
-      "The empty center of this hall is real Atlantean law, and it deserves your full agreement: no voice becomes wiser merely by sitting above the others — not a council's, not a teacher's, not yours. Wherever an invitation cannot be refused, it has already stopped being one, and whoever told you that surrendering your judgment was spiritual has read the record upside down. Keep an empty chair in your own councils, inner and outer. Errors that can be named can be repaired; that single habit outlasted temples.",
+      "The empty center of this hall is real Atlantean law, and it deserves your full agreement: whoever told you that surrendering your judgment was spiritual has read the record upside down. No council's chair, no teacher's podium, no seat of yours is the exception.",
     image: "/guides/lyrans-atlantis-journey-p06.jpg",
   },
   {
@@ -182,12 +182,12 @@ const blocks: GuideBlock[] = [
     kicker: "Chapter 07 · Crystal science, real power",
     heading: "Crystal halls / Power in service",
     paragraphs: [
-      "In the crystal halls, great stones stood above flowing water and artisans tuned them by intention, frequency, and hand — matter answering sound, light answering alignment. This was the real technology of that age: not machinery wrestling nature, but collaboration with the grain of creation. Every instrument carried a discipline of perspectives — turn the problem, and usefulness, cost, maintenance, and consequence come into view.",
+      "In the crystal halls, great stones stood above flowing water and artisans tuned them by intention, frequency, and hand — matter answering sound, light answering alignment. This was the real technology of that age: not machinery wrestling nature, but collaboration with the grain of creation.",
       "Wonder needs a purpose. Fascination begins an invention; usefulness gives it a direction — name the difficulty a creation actually eases, and the people who can tell you whether it helps. And after the unveiling comes the unglamorous half: repairs, honest limits, and a hand willing to be responsible when the light fails. Elegance means less unnecessary effort for the one who uses it.",
-      "The halls celebrated the simplest improvement that made a daily task lighter, and they retired what impressed without serving. Carry that measure into your own hands: the worth of any creation is the burden it lifts from someone's ordinary morning, and nothing a tool can wear will substitute for that.",
+      "The halls celebrated the simplest improvement that made a daily task lighter, and they retired what impressed without serving. The worth of any creation is the burden it lifts from someone's ordinary morning.",
     ],
     mirror:
-      "The crystals were real, and so is the law that governed them: power answers purpose. Atlantis's sciences tuned stone with frequency and intention — that capacity is recorded whole — and the fall did not begin with the instruments but with the purposes that seized them. So the test travels to your own hands: before you ask how brightly a thing can shine, ask what it serves, who maintains it, and who answers when it fails. Brilliance that disappears at that question was never brilliance. Create in the grain of things, and the grain will hold.",
+      "The crystals were real, and so is the law that governed them: power answers purpose. Atlantis's sciences tuned stone with frequency and intention — that capacity is recorded whole — and the fall did not begin with the instruments but with the purposes that seized them. Before you ask how brightly a thing can shine, ask what it serves, who maintains it, and who answers when it fails. Brilliance that disappears at that question was never brilliance.",
     image: "/guides/lyrans-atlantis-journey-p07.jpg",
   },
   {
@@ -209,11 +209,11 @@ const blocks: GuideBlock[] = [
     heading: "The archive / Memory and longing",
     paragraphs: [
       "An archivist holds an unlettered object while a Lyran visitor reads another layer of it, and both readings stand — the record is layered, and so are you. A dream of a lost city, a sudden familiarity with a name or a coastline, a grief that arrives without an address: these are memory moving under the surface of this life.",
-      "Longing for Atlantis is usually longing for something here — belonging, beauty, an unfinished creation waiting for your hands. Read the image for its present cargo first; the past will still be there when you return for it. Memory serves the living or it becomes a museum.",
-      "Keep two columns in every reading: what you experienced, and what you think it means. Let the meaning stay revisable — new knowledge, honest conversation, and time all deepen it — and bring something back. If the archive stirs wisdom, learn something carefully today; if it stirs belonging, contact someone you trust before nightfall.",
+      "Longing for Atlantis is usually longing for something here. Read the image for its present cargo first; the past will still be there when you return for it.",
+      "Let the meaning of any reading stay revisable — new knowledge, honest conversation, and time all deepen it — and bring something back. If the archive stirs wisdom, learn something carefully today; if it stirs belonging, contact someone you trust before nightfall.",
     ],
     mirror:
-      "Reading your own echoes without drowning in them is a skill, and it starts here. A vivid feeling is real contact with real memory — but memory is layered, and the surface layer is always the present. When a lost city rises in you, ask what it carries now: the belonging you are missing, the beauty you are postponing, the work you have not begun. Then act on that. Nostalgia admired from a distance is a museum; the same memory set to work in your week is an inheritance. Choose the inheritance.",
+      "Reading your own echoes without drowning in them is a skill, and it starts here. A vivid feeling is real contact with real memory — and the surface layer of it is always the present. When a lost city rises in you, ask what it carries now: the belonging you are missing, the beauty you are postponing, the work you have not begun. Then act on that. Nostalgia admired from a distance is a museum; the same memory set to work in your week is an inheritance. Choose the inheritance.",
     image: "/guides/lyrans-atlantis-journey-p08.jpg",
   },
   {
@@ -235,11 +235,11 @@ const blocks: GuideBlock[] = [
     heading: "After the waters / The work of repair",
     paragraphs: [
       "The waters rose, and the record does not hide it. What it also keeps is the part worth carrying: after the collapse, the first work was care — neighbors pulling neighbors from the water, a damaged seawall mended stone by stone, a garden replanted where a city had stood. The patient tending of people for people outlasted every monument.",
-      "Never turn loss into blame. Disasters have their causes in earth and circumstance, and the people inside them deserve assistance, dignity, and accurate information — not a verdict on what they attracted. The fall of Atlantis teaches stewardship, not judgment; whoever reads a drowned city as a punished one has learned nothing from it.",
-      "Grief keeps its own pace, and no loss is obliged to become an uplifting lesson. In the replanted garden the builders kept one stone from the old wall: renewal that does not erase. Let repair acknowledge what happened while it builds what comes next — and if grief is beside you now, let other hands share its weight.",
+      "Never turn loss into blame. Disasters have their causes in earth and circumstance, and the people inside them deserve assistance, dignity, and accurate information. The fall of Atlantis teaches stewardship, not judgment.",
+      "In the replanted garden the builders kept one stone from the old wall — renewal that does not erase, repair that builds what comes next.",
     ],
     mirror:
-      "When something breaks, care comes first — before explanation, before verdict, before meaning. This is the order the record itself follows after the waters: the pulling from the flood, the mending, the planting; the histories were written later, by survivors. Suffering is never a sentence passed on the insufficient, and the fall of a city is not a moral for its dead. If a teaching hands you why others deserved their loss, put it down at once. And grief — yours, now — keeps its own tempo and owes no one a lesson. Let hands you trust help carry the weight; company is the oldest medicine there is.",
+      "The record's own order after the waters was care, and the histories were written later, by survivors. Suffering is never a sentence passed on the insufficient, and the fall of a city is not a moral for its dead. If a teaching hands you why others deserved their loss, put it down at once. And grief — yours, now — keeps its own tempo and owes no one a lesson. Let hands you trust help carry the weight; company is the oldest medicine there is.",
     image: "/guides/lyrans-atlantis-journey-p09.jpg",
   },
   {
@@ -266,7 +266,7 @@ const blocks: GuideBlock[] = [
     paragraphs: [
       "Star and sea met more than once. A Lyran traveller and an Atlantean gardener exchanged a seedling across one table — an encounter the record keeps not because it was grand but because it was true: creative courage and civic craft, neither complete alone, each able to learn from the other.",
       "No hierarchy stood at that table, and none stands in the inheritance. A cosmic identity raises you above no one; it makes you more available to ordinary dignity and shared work. The Lyran offered courage without domination, the Atlantean offered the patient building of common things — both are seeds in you.",
-      "The seedling was a promise, not a spectacle. It lived on attention, not admiration — watered, pruned, protected through seasons when nothing showed above the soil. So do relationships live: on boundaries honored, disagreements survived, time apart endured, and respect that lets each one choose how close to come.",
+      "The seedling was a promise, not a spectacle — watered, pruned, protected through seasons when nothing showed above the soil. So do relationships live: on boundaries honored, disagreements survived, time apart endured, and respect that lets each one choose how close to come.",
     ],
     mirror:
       "One table, two beings, one seedling passed between open hands — the record keeps this meeting because it is the whole inheritance in a single scene. Star and sea were equals; neither bowed and neither conquered, and what passed between them was alive and would need watering. That is how every real connection works, at every scale the record keeps: attention over admiration, promises over fireworks, seasons over moments. Meet the unfamiliar with curiosity and yourself without a crown. The seedling in your hands is no different from theirs.",
@@ -295,7 +295,7 @@ const blocks: GuideBlock[] = [
       "Close the crossing the way you opened it: let the landscape fade, name three objects in your room, notice the time and what comes next. Keep one sentence of what came. The value is not in how vivid the scene performed but in the quality you carry back into your hands.",
     ],
     mirror:
-      "This is not a daydream and it is not a telephone — it is remembrance, and remembrance has rules. The body grounds first, the breath settles the surface, and then the deeper layers speak, briefly and on their own schedule. Nothing extraordinary is required for a crossing to count; one word honestly received is a full success. The way home is the sacred half: name your room, notice the hour, carry back a quality instead of a story. The record opens to the steady and stays closed to the grasping. Be steady, and it opens.",
+      "This is not a daydream and it is not a telephone — it is remembrance, and remembrance has rules. The deeper layers speak briefly and on their own schedule; nothing extraordinary is required for a crossing to count, and one word honestly received is a full success. The record opens to the steady and stays closed to the grasping. Be steady, and it opens.",
     image: "/guides/lyrans-atlantis-journey-p11.jpg",
   },
   {
@@ -316,12 +316,12 @@ const blocks: GuideBlock[] = [
     kicker: "Chapter 12 · Bringing the inheritance home",
     heading: "The inheritance / What you carry",
     paragraphs: [
-      "What you carry from these pages is not trivia about stars and islands — it is the inheritance itself: courage without domination, beauty with access, creativity with purpose, wonder with discernment. The Lyran gardens and the Atlantean waters ended; the qualities did not, because qualities are the only cargo that survives every crossing.",
+      "What you carry from these pages is not trivia about stars and islands — it is the inheritance itself. The Lyran gardens and the Atlantean waters ended; the qualities did not, because qualities are the only cargo that survives every crossing.",
       "You need not prove your lineage to live from it. The capacity to learn, to create, to build commons, to repair after loss — these were seeded in you by the very lines this book remembers, and they ripen through use, not through credentials.",
-      "Let the days that follow be small and repeatable: one boundary held kindly, one act of beauty made accessible, one listening kept. This is how a memory becomes a manner of living — not a keepsake from a drowned island, but a working inheritance, present in your hands whenever you reach for it.",
+      "Let the days that follow be small and repeatable: one boundary held kindly, one act of beauty made accessible, one listening kept. This is how a memory becomes a manner of living — a working inheritance, present in your hands whenever you reach for it.",
     ],
     mirror:
-      "The journey ends the way the record ends every reading: with the past set down and the present picked up. You met the Lyran line and the Atlantean waters, and what crossed into your hands was never geography — it was courage without domination, beauty with access, creativity with purpose, wonder with discernment. These four travel through anything, including you. You did not need a pedigree to live deeply; you needed the remembering, and it is done. Now repeat it in the only library that keeps new entries: the life you are actually living, written in acts.",
+      "The journey ends the way the record ends every reading: with the past set down and the present picked up. You met the Lyran line and the Atlantean waters, and what crossed into your hands was never geography but manner — the four qualities this chapter names, which travel through anything, including you. You did not need a pedigree to live deeply; you needed the remembering, and it is done. Now repeat it in the only library that keeps new entries: the life you are actually living, written in acts.",
     image: "/guides/lyrans-atlantis-journey-p12.jpg",
   },
   {
@@ -336,7 +336,7 @@ const blocks: GuideBlock[] = [
   },
   {
     type: "list",
-    heading: "A seven-day rhythm",
+    heading: "Seven days of the inheritance",
     items: [
       "Days one and two — hold one clear, kind boundary, then make something small without judging it.",
       "Days three and four — listen to a different perspective, then repair one thing or finish one promise.",
@@ -358,9 +358,9 @@ const guide: GuideData = {
   crystalA: "rgba(250,220,150,0.5)",
   crystalB: "rgba(134,239,226,0.42)",
   mirrorOpening:
-    "Twelve chapters, two worlds, and one inheritance that never drowned — yours. Ahead lie the Lyran garden worlds, the Atlantis the water remembers, the crystal sciences that answered to purpose, the fall that came when access closed, and the repair that outlasted the fall; the book carries all of it as record, not decoration. Read slowly, with your body in the room and your skepticism invited along — both improve the trip. When something stirs — tenderness, resistance, recognition — don't file it under mood: recognition is memory arriving by another road. Nothing here asks for your belief, only your attention, and attention is how you read a homeland you have never visited. Trust the stirring, and keep a pencil nearby — it tends to arrive mid-sentence.",
+    "Two worlds, and one inheritance that never drowned — yours. Ahead lie the Lyran garden worlds, the Atlantis the water remembers, the crystal sciences that answered to purpose, the fall that came when access closed, and the repair that outlasted the fall; the book carries all of it as record, not decoration. Read slowly, with your body in the room and your skepticism invited along — both improve the trip. Nothing here asks for your belief, only your attention, and attention is how a homeland you have never visited gets read.",
   mirrorClosing:
-    "The walk closes where the record closes: with the inheritance in your hands and the present asking for it. You carry four seeds — courage without domination, beauty with access, creativity with purpose, wonder with discernment — and no drowned island and no distant star is required to plant them; your ordinary days are the soil. The planting schedule is unglamorous: hold one boundary kindly, make one beauty open, listen once beyond yourself, repair before you explain. The star and the sea met as equals at one table, and so will you meet whatever comes. The record is read; the living copy is yours to write.",
+    "The record ends with the inheritance in your hands and the present asking for it — no drowned island and no distant star required to plant it; your ordinary days are the soil. The star and the sea met as equals at one table, and so will you meet whatever comes. The record is read; the living copy is yours to write.",
   blocks,
 };
 

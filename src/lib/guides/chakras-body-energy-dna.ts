@@ -22,7 +22,7 @@ const blocks: GuideBlock[] = [
     heading: "Where soul meets cell",
     paragraphs: [
       "Your body is two architectures in one. The one you see is flesh; the one that moves it is a lattice of light — seven principal wheels, or chakras, turning along the spine from root to crown, each one receiving, transmuting, and radiating a distinct band of the soul's life into the cells.",
-      "From root to crown the seven run: grounding, feeling, will, care, truth, sight, and belonging. The colours in these pages are the wheels' own signatures, the way each bell owns its note. This book walks them in their natural order, and then follows the current into the cell they shine upon — DNA, the text the wheels were built to play.",
+      "From root to crown the seven run, named one by one in the list below; the colours in these pages are the wheels' own signatures, the way each bell owns its note. This book walks them in their natural order, and then follows the current into the cell they shine upon — DNA, the text the wheels were built to play.",
       "Nothing here requires initiation or permission, for the wheels turn in you already, as they turned before you knew their names. Their names only give you somewhere to place your attention, and attention is the tuner of the instrument — the oldest key the house keeps.",
     ],
     mirror:
@@ -45,8 +45,8 @@ const blocks: GuideBlock[] = [
     type: "practice",
     title: "First question",
     steps: [
-      "Ask which quality you want to build between you and your body — respect, curiosity, patience, or steadiness.",
-      "Name one ordinary action that expresses that quality today.",
+      "Decide how you want to stand in your own body this week — with respect, curiosity, patience, or steadiness.",
+      "Name one ordinary action that expresses that stance today.",
       "No dramatic sensation is required; the wheels answer attention, never force.",
     ],
   },
@@ -64,7 +64,7 @@ const blocks: GuideBlock[] = [
       "Draw the map with three headings — what supports me, what is uncertain, what help I will ask for — and turn it into one real request or task before the day ends. If you use words of power, keep them inside the believable: I notice the support here, and I take one practical step. Truth is the voltage; exaggeration grounds nothing.",
     ],
     mirror:
-      "The root is where the infinite learns to hold a floor. The body knows the law before the mind consents: light that cannot stand on earth cannot build anything. Look after the floor — the rent, the meal, the call to the steady friend — and the red wheel turns like a mill fed by a river.",
+      "The root is where the infinite learns to hold a floor. The body knows the law before the mind consents: light that cannot stand on earth cannot build anything. See to the floor, and the red wheel turns like a mill fed by a river.",
     image: "/guides/chakras-body-energy-dna-p02.jpg",
   },
   {
@@ -89,7 +89,7 @@ const blocks: GuideBlock[] = [
       "Name a feeling gently and in its own tense — right now, what I feel is — and let naming precede deciding. A feeling is a current with a message, not an order with a deadline. Then make one small, harmless variation in a familiar act this week, and watch how the wheel answers novelty with aliveness.",
     ],
     mirror:
-      "You were making things before anyone told you that you were allowed — the wellspring came installed. Guard its two waters: the freedom to create without a verdict hanging over it, and the freedom to say no without a cosmology hanging over that. A current received and named moves on; a current dammed floods the valley. Feel, name, choose — that is the sacral's whole liturgy.",
+      "You were making things before anyone told you that you were allowed — the wellspring came installed. Guard its two waters: creation free of a judge, and a no free of a cosmology hanging over it. A current received and named moves on; a current dammed floods the valley. Feel, name, choose — that is the sacral's whole liturgy.",
     image: "/guides/chakras-body-energy-dna-p03.jpg",
   },
   {
@@ -110,11 +110,11 @@ const blocks: GuideBlock[] = [
     heading: "Solar plexus / The seat of will",
     paragraphs: [
       "Gold as late afternoon, Manipura burns above the navel — the seat of will, the wheel that turns intention into act. Its heat is not domination; it is the quiet glow of a kept promise. Agency is real and bounded: you steer your own action, you influence some currents, and you determine neither fate nor other souls.",
-      "Confidence and uncertainty are not opposites; the solar flame burns steadier when it admits what is not yet known. Ask what you hold, what remains hidden, and what step is reversible. Quiet willingness to learn outplays any performance of power.",
-      "Draw the three circles honestly — what I can do, what I can influence, what I cannot decide alone — and place your concern in its true ring. Keep one commitment sized to your actual strength, and when something breaks, take neither everything nor nothing as yours. Will grows honest at the exact point where it accepts limits and keeps accounts.",
+      "Confidence and uncertainty are not opposites; the solar flame burns steadier when it admits what is not yet known. Quiet willingness to learn outplays any performance of power.",
+      "Draw the three circles honestly and place your concern in its true ring. Keep one commitment sized to your actual strength, and when something breaks, take neither everything nor nothing as yours. Will grows honest at the exact point where it accepts limits and keeps accounts.",
     ],
     mirror:
-      "The throne was never part of the design. What is actually yours is smaller and heavier: your own act, your kept word, your clean no. The gold wheel feeds on exactly those — never on applause. Do the thing you said you would do, and watch the flame find its draft.",
+      "The throne was never part of the design. What is actually yours is smaller and heavier: the act in front of you, and the word you gave. The gold wheel feeds on exactly those — never on applause. Do the thing you said you would do, and watch the flame find its draft.",
     image: "/guides/chakras-body-energy-dna-p04.jpg",
   },
   {
@@ -140,10 +140,10 @@ const blocks: GuideBlock[] = [
     paragraphs: [
       "At the centre of the chest stands Anahata, green and rose — the bridge, the wheel where the current from below and the current from above cross into care. It radiates the bond between souls: kinship felt, kindness given, grief carried. It is the true centre of the seven, the point the whole lattice balances on.",
       "Care includes the one who cares. You stand beside another's pain without dissolving into it, and your own needs are not a betrayal of the bridge. Exhaustion is not a closed heart; it is a heart that was handed no boundary. Sustainable care states its honest size and keeps it, and grief too heavy for one set of arms is set down on more than one.",
-      "Connection does not demand agreement — souls can differ and remain whole to each other. Forgiveness, reconciliation, and renewed trust are three different ripenings; none is owed on demand, and none is the receipt of an open wheel. Let care be real, bounded, and unhurried, and the bridge holds traffic for a lifetime.",
+      "Connection does not demand agreement — souls can differ and remain whole to each other. Forgiveness, reconciliation, and renewed trust each take the time they take; none is owed on demand, and none is the receipt of an open wheel. Let care be real, bounded, and unhurried, and the bridge holds traffic for a lifetime.",
     ],
     mirror:
-      "The heart-wheel is a crossing, not a collapse. Two currents meet there — the earth's and the sky's — and their meeting is what every age has called love. Keep the bridge maintained: rest is maintenance, no is maintenance, and the care that flows both directions is the only care that does not burn its own timbers.",
+      "The heart-wheel is a crossing, not a collapse — and what every age has called love is exactly that meeting. Keep the bridge maintained: rest is maintenance, no is maintenance, and the care that flows both directions is the only care that does not burn its own timbers.",
     image: "/guides/chakras-body-energy-dna-p05.jpg",
   },
   {
@@ -164,11 +164,11 @@ const blocks: GuideBlock[] = [
     heading: "Throat / The gate of truth",
     paragraphs: [
       "Vishuddha, blue as deep altitude, opens at the throat — the gate of truth, the wheel where the inner life becomes word. Every honest sentence tunes it; every swallowed truth loads it. Difficulty speaking is not a damaged wheel; it is a wheel carrying more than the room made safe for it.",
-      "Truth loves precision. Say what happened before what you concluded: I noticed we changed the plan opens a door that You never respect me slams. Silence is also speech — a chosen rest, not a blockage — and no soul owes every room its every secret.",
+      "Truth loves precision. Say what happened before what you concluded: I noticed we changed the plan opens a door that You never respect me slams. Silence is also speech, and no soul owes every room its every secret.",
       "Listening lives at the same gate: reflect back what you heard, allow correction, and know that advice is not the fee every conversation owes. Weigh timing, privacy, and willingness; where a room punishes honesty steadily, stepping out of it is the throat's truth in its purest form — a life arranged around what is real.",
     ],
     mirror:
-      "Say what happened; let the conclusions earn their own keep. Clarity is not coldness — it is how truth keeps its footing. Most quarrels under one roof begin with a sentence that reported a motive instead of a fact. The blue wheel asks two things only: that your word and your world match, and that your silence be chosen, never dictated.",
+      "Clarity is not coldness — it is how truth keeps its footing. The blue wheel asks two things only: that your word and your world match, and that your silence be chosen, never dictated.",
     image: "/guides/chakras-body-energy-dna-p06.jpg",
   },
   {
@@ -189,11 +189,11 @@ const blocks: GuideBlock[] = [
     heading: "Brow / The lamp of sight",
     paragraphs: [
       "Between the brows Ajna holds its indigo lamp — the wheel of sight, reading patterns, images, and the grain of things before language forms. Visions, sudden knowing, and vivid dreams pass through it; they arrive ahead of reasons because sight is faster than speech.",
-      "The lamp honours its own discipline. What you observed, what you take it to mean, and what stands checkable are three different steps, and sight stays clear exactly as long as the steps stay distinct. An image is a note passed in your own shorthand — it names your own depths first, and other souls' secrets and the world's future are not in its jurisdiction.",
-      "Imagination and sight share the lamp: picture a patient elder self and ask what it sees from there — the higher layers of you stand nearer the record than the daily mind does, and their counsel arrives as quiet, not thunder. No squeezing of eyes, no forcing of visions; light answers stillness, never strain.",
+      "The lamp honours its own discipline: observation, meaning, and the checkable are three different steps, and sight stays clear exactly as long as the steps stay distinct. An image is a note passed in your own shorthand — it names your own depths first, and other souls' secrets and the world's future are not in its jurisdiction.",
+      "Imagination and sight share the lamp: give your depth a calm elder face and ask what it notices from its height — the deeper layers of you stand nearer the record than the daily mind does, and their counsel arrives as quiet, not thunder. No squeezing of eyes, no forcing of visions; light answers stillness, never strain.",
     ],
     mirror:
-      "Vividness is how the current feels, and the current still asks to be read before it is trusted. Keep the lamp clean with three questions — what did I see, what do I make of it, what stands checkable — and let the quiet elder within answer in its own dialect, which is always calmer than fear.",
+      "Vividness is how the current feels, and the current still asks to be read before it is trusted. Keep the lamp clean, and let the quiet elder within answer in its own dialect, which is always calmer than fear.",
     image: "/guides/chakras-body-energy-dna-p07.jpg",
   },
   {
@@ -214,7 +214,7 @@ const blocks: GuideBlock[] = [
     heading: "Crown / Belonging to the Absolute",
     paragraphs: [
       "Sahasrara crowns the head in violet and pearl, and it is the remembering — the wheel through which the soul recognises its origin. Belonging to the Absolute is not a feeling you manufacture; it is the native condition of every soul, and the crown is where that condition is noticed again.",
-      "Wonder is universal property, not rank. No experience, however vast, makes one soul superior to another; the awake and the asleep are one people at different hours of the same morning. Any ladder that sorts souls into grades misreads the architecture — the Absolute holds no favourites.",
+      "Wonder is universal property, not rank. No experience, however vast, makes one soul superior to another; the awake and the asleep are one people at different hours of the same morning, and the Absolute holds no favourites.",
       "Humility and vastness grow on the same branch. The freest sentence available to a soul is I do not know, and it opens more crown than any claim. Let a held value shape one decision today; meaning becomes visible only in conduct, and the crown closes every walk by returning you to the ground.",
     ],
     mirror:
@@ -238,7 +238,7 @@ const blocks: GuideBlock[] = [
     kicker: "Chapter 09 · Language, current, and charge",
     heading: "The three currents of energy",
     paragraphs: [
-      "Energy is one substance spoken in three dialects. In the body it is vitality — the hum of the instrument. In the soul it is the subtle current the wheels carry, the light the whole lattice moves. In the laboratory it is charge and measure — the trace a heart writes on a screen. Matter is light slowed into form, and every dialect is the same origin heard at a different depth.",
+      "Energy is one substance spoken in three dialects. In the body it is vitality — the hum of the instrument. In the soul it is the subtle current the wheels carry, the light the whole lattice moves. In the laboratory it is charge and measure — the trace a heart writes on a screen. Every dialect is the same origin heard at a different depth.",
       "The dialects are distinct, and precision between them is a form of respect: the tracing is honest about exactly what it measures, and the lattice's currents are honest about exactly what they move. One does not cancel the other; the scales differ, that is all.",
       "The body speaks in symptoms, and symptoms are answered with care — rest first, then the healers of the earth where a sign persists. And if you enjoy visualisation, an imagined field of comfortable space around you is a true aid to the habit of boundaries — a reminder worn on the inside, not a shield, and never a diagnosis of another soul.",
     ],
@@ -268,7 +268,7 @@ const blocks: GuideBlock[] = [
       "And the wheels meet the script here: the chakras are the readers, the DNA is the score, and the energy body is the hall where the music plays. No ritual adds pages to a text the Absolute wrote whole. Worth was settled before the sequence was read — the same spark in every soul, and no ancestry above another.",
     ],
     mirror:
-      "The script asks no mythology to be astonishing; depth alone does that work. Its silence is patience, not absence — give it a slow read and see. And the record keeps one kind of human — the kind that carries light — so let the coil humble you into wonder, and wonder into care.",
+      "The script asks no mythology to be astonishing; depth alone does that work. Its silence is patience, not absence — give it a slow read and see. Let the coil humble you into wonder, and wonder into care.",
     image: "/guides/chakras-body-energy-dna-p10.jpg",
   },
   {
@@ -289,7 +289,7 @@ const blocks: GuideBlock[] = [
     heading: "Epigenetics / The margins that answer",
     paragraphs: [
       "Above the script rides a second system of keeping: chemical marks on the DNA and its proteins, turning each gene's volume up or down while the letters themselves stay untouched. The old name for this reading is epigenetics, and it is the body's memory of the life actually lived.",
-      "Development, season, nourishment, stress, and rest all reach the margins, and the body answers faithfully. A wish does not dictate the marks. Ask of any claim what was measured, in whom, and under what conditions — proportion is the reader's protection, and a headline that hides its instruments is selling a mood.",
+      "Development, season, nourishment, stress, and rest all reach the margins, and the body answers faithfully. A wish does not dictate the marks, and a headline that hides its instruments is selling a mood — proportion is the reader's protection.",
       "Release the inherited burden while you are here: your difficulties are not ancestral damage stamped into you, and you owe no one the erasure of your family's story. History shapes without shackling, and mercy — for the ones before you and for yourself — belongs in every honest reading of the cell.",
     ],
     mirror:
@@ -314,11 +314,11 @@ const blocks: GuideBlock[] = [
     heading: "A practice of the lattice",
     paragraphs: [
       "Breath is the metronome of the lattice: steady breath steadies every wheel below it, which is why every real practice begins there. Two quiet minutes — eyes soft or open, body supported, breathing at its own easy pace — tune the lattice more surely than an hour of striving.",
-      "If you wish, join a colour to a value — red for support, green for care, blue for clear speech, indigo for sight, violet for belonging — and let the colour be a reminder worn on the inside. If visualisation troubles you, skip it and keep the value; the wheels respond to attention, and attention is colourless at will.",
+      "If you wish, join a colour to a value — red for support, green for care, blue for clear speech, indigo for sight, violet for belonging — and let the colour carry the value through your day. If visualisation troubles you, skip it and keep the value; the wheels respond to attention, and attention is colourless at will.",
       "Practice stays optional and adaptable, and stopping is part of the discipline: where breathwork turns dizzy or distressed, return to the room and let the ground re-enter through your feet. No strain, no breath-holds, no forced rising — the lattice opens like dawn, never like a door kicked in.",
     ],
     mirror:
-      "The lattice measures depth, not volume: two honest minutes outrank an hour of performed bliss. If a practice unsettles you, stopping is judgment doing its work, not weakness doing its round. Anchor low, breathe easy, take a colour if it serves you, and finish by doing one small thing you value — the wheels settle on deeds.",
+      "The lattice measures depth, not volume. If a practice unsettles you, stopping is judgment doing its work, not weakness doing its round. Anchor low, breathe easy, take a colour if it serves you, and finish by doing one small thing you value — the wheels settle on deeds.",
     image: "/guides/chakras-body-energy-dna-p12.jpg",
   },
   {
@@ -326,7 +326,7 @@ const blocks: GuideBlock[] = [
     title: "Two minutes, low anchor",
     steps: [
       "Sit supported, eyes resting open or soft-closed, and let breathing continue at its natural rhythm for two minutes.",
-      "When attention wanders, return it to your anchor without verdict; no holds, no force, no strain — the return is the practice.",
+      "When attention wanders, return it to your anchor without verdict; the return is the practice.",
     ],
   },
   {
@@ -340,10 +340,10 @@ const blocks: GuideBlock[] = [
     paragraphs: [
       "Your body is sovereign ground. No reading, ritual, purchase, or revelation crosses its threshold without your yes — the body's sovereignty is granted by no teacher, and it is revoked by no teacher either. A practitioner explains what they propose; you decide; the decision is the exercise.",
       "Pressure announces itself: demands for secrecy, repeated payments, the abandonment of your care, the cutting of trusted hands — these are the signatures of harvest, not healing. A true practice leaves you more capable of choosing, never less. Take time; take an outside view; the truth is not damaged by either.",
-      "Keep care grounded: an energy reading determines no diagnosis, and a prescribed treatment does not bend to a symbol. Choose an integration partner who respects your independence — one who disagrees without shaming and who hands decisions back to you, since the purpose of every guide is to make your judgment stronger, not to replace it.",
+      "Keep care grounded: an energy reading determines no diagnosis, and a prescribed treatment does not bend to a symbol. Choose an integration partner who respects your independence — one who disagrees without shaming and who hands decisions back to you.",
     ],
     mirror:
-      "Your body was never common land, and your no requires no justification in any cosmology. The harvesters work in light-coloured robes, and the tell is always the same: fear, urgency, dependence. The real current strengthens the will it touches; anything that needs you small is not the light.",
+      "Your body was never common land, and your no requires no justification in any cosmology. The real current strengthens the will it touches; anything that needs you small is not the light.",
     image: "/guides/chakras-body-energy-dna-p13.jpg",
   },
   {
@@ -364,11 +364,11 @@ const blocks: GuideBlock[] = [
     heading: "Carry the wheels into life",
     paragraphs: [
       "After the pictures fade, seven questions remain standing: what supports me, what am I creating, what is mine to choose, how do I care, what must be said, what needs examining, and what makes it meaningful. The wheels were always these seven teachers wearing colour.",
-      "Keep the two architectures clear and let them work together: flesh and lattice, script and reader, cell and wheel. Neither your worth nor your belonging waits on a special energetic state — the wheels turn in you already, and the practices are ways of listening, not ways of earning.",
-      "The last word is the first law: the body deserves respect, the questions deserve curiosity, the limits deserve honesty, and wonder exists to deepen your attention to the life already in your hands. The image did its work the moment it changed how you treat a Tuesday.",
+      "Keep the two architectures clear and let them work together: flesh and lattice, script and reader, cell and wheel. The practices are ways of listening, not ways of earning.",
+      "The last word is the first law: the body deserves respect, the questions deserve curiosity, the limits deserve honesty, and wonder exists to deepen your attention to the ordinary day already open in front of you. The image did its work the moment it changed how you treat a Tuesday.",
     ],
     mirror:
-      "Fourteen chapters, and what remains fits in a cupped hand: seven teachers, one body, one script, and the ordinary hours where all of it is spent. Turn the wheels by living — stand, make, choose, care, speak, see, belong — and the map has done everything a map was ever for. The light was always yours; the reading just reminded you where you left it.",
+      "Turn the wheels by living, and the map has done everything a map was ever for. The light was always yours; the reading just reminded you where you left it.",
     image: "/guides/chakras-body-energy-dna-p14.jpg",
   },
   {
@@ -412,7 +412,7 @@ const guide: GuideData = {
   crystalA: "rgba(150,255,190,0.5)",
   crystalB: "rgba(255,150,190,0.5)",
   mirrorOpening:
-    "Your body has been running two architectures this whole time — the flesh you see and a lattice of light you mostly don't — and nobody sent a memo. This book is the memo. Fourteen chapters walk the seven wheels from root to crown, then follow the current into the cell itself: the script in every nucleus, the listening library of your genes, and back out into breath, consent, and ordinary Tuesdays. Nothing here is ornament, and nothing here is second-hand; the wheels turn in you this moment, as they turned before you knew their names. Read slowly, keep your body in the corner of every page, and let the map become a manner of living.",
+    "Your body has been running two architectures this whole time, and nobody sent a memo. This book is the memo. Fourteen chapters walk the seven wheels from root to crown, then follow the current into the cell itself: the script in every nucleus, the listening library of your genes, and back out into breath, consent, and ordinary Tuesdays. Nothing here is ornament, and nothing here is second-hand. Read slowly, keep your body in the corner of every page, and let the map become a manner of living.",
   mirrorClosing:
     "The wheels were never waiting for permission, and the script was never waiting for a reader it did not already have. Fourteen chapters later you carry what the house carries: seven teachers, one body, one score of light, and the ordinary hours where the music is actually played. Stand, make, choose, care, speak, see, belong — the liturgy is short because it was meant to be lived. You hold the life, and that was always the whole instrument. Go and spend it well.",
   blocks,

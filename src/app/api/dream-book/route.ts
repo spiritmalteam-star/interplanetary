@@ -659,6 +659,80 @@ function extractJson(raw: string): Record<string, unknown> | null {
   }
 }
 
+/* ---- the mending hand — a reply the sky cut short is not silence ----
+
+   When the page allowance runs out mid-JSON, the whole pages the loom
+   already wrote stand balanced inside the broken text. This hand walks
+   the braces, remembers the last safe cut (a comma, a closed object),
+   and closes whatever was left open — so one whole page saved is a
+   page the reader keeps, instead of a whole crossing thrown away. */
+
+function salvageJson(raw: string): Record<string, unknown> | null {
+  const clean = raw.replace(/```json|```/g, "").trim();
+  const start = clean.indexOf("{");
+  if (start === -1) return null;
+  const closerFor = (open: string) => (open === "{" ? "}" : "]");
+  let inString = false;
+  let esc = false;
+  const stack: string[] = [];
+  let lastCut = -1;
+  let lastCutStack: string[] = [];
+  for (let i = start; i < clean.length; i++) {
+    const ch = clean[i];
+    if (inString) {
+      if (esc) esc = false;
+      else if (ch === "\\") esc = true;
+      else if (ch === '"') inString = false;
+      continue;
+    }
+    if (ch === '"') {
+      inString = true;
+    } else if (ch === "{" || ch === "[") {
+      stack.push(ch);
+    } else if (ch === "}" || ch === "]") {
+      stack.pop();
+      if (stack.length === 0) {
+        /* the text is whole after all — a plain scan suffices */
+        try {
+          return JSON.parse(clean.slice(start, i + 1)) as Record<
+            string,
+            unknown
+          >;
+        } catch {
+          return null;
+        }
+      }
+      lastCut = i;
+      lastCutStack = [...stack];
+    } else if (ch === ",") {
+      lastCut = i;
+      lastCutStack = [...stack];
+    }
+  }
+  if (lastCut <= start + 8) return null;
+  /* cut before a trailing comma, after a closed brace */
+  const body =
+    clean[lastCut] === "," ? clean.slice(start, lastCut) : clean.slice(start, lastCut + 1);
+  const closers = [...lastCutStack].reverse().map(closerFor).join("");
+  try {
+    return JSON.parse(body + closers) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
+/* ---- the patient sky — a transient breath of the road never costs
+   the volume: a rate limit, a dropped crossing, a timed-out sky all
+   earn one gentle retry before the loom admits silence ---- */
+
+const TRANSIENT_WEAVE =
+  /\b429\b|too many requests|\b5\d\d\b|overloaded|temporarily unavailable|rate.?limit|ECONNRESET|ECONNABORTED|ETIMEDOUT|network|fetch failed|aborted|timeout/i;
+
+function isTransientWeaveError(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message : String(err ?? "");
+  return TRANSIENT_WEAVE.test(msg);
+}
+
 function normalizePages(raw: unknown, startN: number, span = 2): WeavePage[] {
   if (!Array.isArray(raw)) return [];
   const pages: WeavePage[] = [];
@@ -741,14 +815,16 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
     const threads = typeof body?.threads === "string" ? body.threads.slice(0, 2000) : undefined;
     /* THE LEDGER (V10) — the room hands the book's own memory back */
     const incomingLedger = parseLedger(body?.ledger);
-    /* THE SPAN — the seven-page first breath and the seven-page
-       background batches stride wide; every other call writes the
-       classic pair. The wider stride is the speed law: the reader
-       never waits on the loom. */
+    /* THE SPAN — the opening breath and the closing seal write the
+       classic pair; every continuation strides FOUR pages wide (the
+       speed law: the same crossing pays its road cost once and lays
+       twice the reading, so the reader rarely catches the loom up). */
     const spanRaw = Number(body?.span);
     const span = (phase === "open" || phase === "next") && Number.isFinite(spanRaw)
       ? Math.min(8, Math.max(2, Math.round(spanRaw)))
-      : 2;
+      : phase === "next"
+        ? 4
+        : 2;
     const rewrites: string[] = Array.isArray(body?.rewrites)
       ? body.rewrites
           .filter((s: unknown): s is string => typeof s === "string")
@@ -861,6 +937,11 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
           },
         ],
         thinking: { type: "disabled" },
+        /* the reply's page allowance is explicit now — a reply the sky
+           cuts short arrives as a broken JSON and once cost a whole
+           second crossing to mend; a generous ceiling keeps every
+           reply whole */
+        max_tokens: 8192,
         /* the opening asks for the widest creative divergence — the
            skeleton already forces the shape; the temperature frees the
            voice inside it. Continuations stay at the house default so
@@ -869,6 +950,45 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
       });
       return completion.choices[0]?.message?.content ?? "";
     };
+
+    /* the patient ask — one gentle retry on a transient breath of the
+       road, never on a true refusal */
+    const askLoomPatient = async (reminder: boolean): Promise<string> => {
+      try {
+        return await askLoom(reminder);
+      } catch (err) {
+        if (!isTransientWeaveError(err)) throw err;
+        await new Promise((r) => setTimeout(r, 1200));
+        return askLoom(reminder);
+      }
+    };
+
+    /* THE SECOND BRUSH — a sky that hangs must never hold the reader:
+       if the first brush is still weaving after 45s, a second brush
+       lifts from the same page; whichever canvas lands first is the
+       book's (the slower one is let go gently). */
+    const askWithHedge = (reminder: boolean): Promise<string> =>
+      new Promise<string>((resolve, reject) => {
+        let settled = false;
+        const run = () =>
+          askLoomPatient(reminder)
+            .then((text) => {
+              if (!settled) {
+                settled = true;
+                resolve(text);
+              }
+            })
+            .catch((err) => {
+              if (!settled) {
+                settled = true;
+                reject(err);
+              }
+            });
+        run();
+        setTimeout(() => {
+          if (!settled) run();
+        }, 45_000);
+      });
 
     /* the loom always asks twice before it falls silent — one unreadable
        reply must never cost the visitor their book. The sealed
@@ -879,16 +999,25 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
        could feel. The unreadable-reply reminder (below) stays a real
        second ask, because no local hand can mend a broken reply. */
     const channelReply = async (reminder: boolean): Promise<string> => {
-      const text = await askLoom(reminder);
+      const text = await askWithHedge(reminder);
       const sealed = findSealedNames(text);
       if (sealed.length === 0) return text;
       return reforgeSealedNames(text, seeds);
     };
 
-    let parsed = extractJson(await channelReply(false));
+    let raw = await channelReply(false);
+    let parsed = extractJson(raw);
     let pages = parsed ? normalizePages(parsed.pages, pageNumber, span) : [];
     if (pages.length === 0) {
-      parsed = extractJson(await channelReply(true));
+      raw = await channelReply(true);
+      parsed = extractJson(raw);
+      pages = parsed ? normalizePages(parsed.pages, pageNumber, span) : [];
+    }
+    if (pages.length === 0) {
+      /* THE MENDING HAND — a reply the sky cut short is not silence:
+         the balanced heart of the broken JSON is found, closed, and
+         read — the whole pages it already wrote are kept */
+      parsed = salvageJson(raw);
       pages = parsed ? normalizePages(parsed.pages, pageNumber, span) : [];
     }
     if (!parsed || pages.length === 0) {

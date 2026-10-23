@@ -55,10 +55,13 @@ type RailImage = {
    earth, the crystal flower and the floating city on the right.
    THE STILL LAW — the plates do not drift and do not track the
    scroll: hung frames on the house's walls, motionless, so the page
-   burns nothing while it rests (no live layers, no heating). Each
-   plate is a square that shows its whole subject (object-contain on
-   the artwork's own deep sky — no crop ever touches these), grown
-   half again as wide as the old drifting shards on every wide desk. */
+   burns nothing while it rests (no live layers, no heating).
+   THE SYMMETRY LAW — both shoulders start on the same line, one
+   gallery mirrored.
+   THE CLEAR GLASS LAW — the artworks stand WITHOUT their dark
+   background (each plate was lifted from its black brew, pixel by
+   pixel, alpha becoming its own brightness): pure porcelain floating
+   on the daylight sky, a soft shadow beneath, nothing else. */
 const RAIL_LEFT: RailImage[] = [
   { src: "/landing/shoulders/star-craft.png", title: "The star craft" },
   { src: "/landing/shoulders/twin-guardians.png", title: "The twin guardians" },
@@ -78,10 +81,8 @@ function Rail({ side, images }: { side: "left" | "right"; images: RailImage[] })
     <div
       aria-hidden="true"
       className={cn(
-        "pointer-events-none absolute z-0 hidden select-none xl:block",
-        side === "left"
-          ? "left-5 top-[calc(min(84vh,680px)+36px)]"
-          : "right-5 top-[calc(min(84vh,680px)+112px)]"
+        "pointer-events-none absolute top-[calc(min(84vh,680px)+36px)] z-0 hidden select-none xl:block",
+        side === "left" ? "left-5" : "right-5"
       )}
       style={{
         /* half again the old shard's width on every wide desk, never
@@ -92,18 +93,14 @@ function Rail({ side, images }: { side: "left" | "right"; images: RailImage[] })
       <div className="flex flex-col gap-9">
         {images.map((img, i) => (
           <figure key={`${side}-${img.src}-${i}`} className="relative">
-            <div className="landing-shard relative aspect-square overflow-hidden rounded-[26px] bg-[#04060b]">
+            <div className="relative aspect-square">
               <Image
                 src={img.src}
                 alt=""
                 fill
                 loading="lazy"
                 sizes="(min-width: 1280px) 18vw, 0px"
-                className="object-contain"
-              />
-              <span
-                aria-hidden="true"
-                className="pointer-events-none absolute inset-0 rounded-[26px] ring-1 ring-inset ring-[var(--lp-edge)]"
+                className="object-contain drop-shadow-[0_22px_38px_rgba(44,37,23,0.35)]"
               />
             </div>
             <figcaption className="mono-label mt-3 flex items-baseline gap-2 text-[10px] uppercase tracking-[0.26em] text-[var(--lp-faint)]">

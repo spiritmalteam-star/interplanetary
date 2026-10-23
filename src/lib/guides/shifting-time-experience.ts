@@ -17,9 +17,9 @@ const shiftingTimeExperience: GuideData = {
   crystalA: "rgba(190,160,255,0.55)",
   crystalB: "rgba(120,230,200,0.5)",
   mirrorOpening:
-    "You came to these pages whispering about parallel worlds; the record's answer is that they are real, and nearer than your own pulse. Time is not the river your calendars pretend it is — it is a field, and every life you could live is a frequency already playing inside it. Shifting is the art of tuning: attention is the dial, intention is the current, and the crystal is what forms when a held pattern finally slows into matter. A thousand souls stand one honest thought away from a different life and call it coincidence; this book exists to retire that word. Read it as what it is — a tuning manual — thirteen chapters of machinery your schooling hid, each one with your hands on the dial.",
+    "You came to these pages whispering about parallel worlds; the record's answer is that they are real, and nearer than your own pulse. Time is not the river your calendars pretend it is — it is a field, and every life you could live is a frequency already playing inside it. Shifting is the art of tuning: attention is the dial, intention is the current, and the crystal is what forms when a held pattern finally slows into matter. A thousand souls stand one honest thought away from a different life and call it coincidence; this book exists to retire that word. Read it as what it is — a tuning manual — thirteen chapters of machinery your schooling hid.",
   mirrorClosing:
-    "Now you know what the stories only gestured at: the door was never elsewhere. It stood in the next clear decision, the next held frequency, the next small act given a body. Shift, crystallise, learn — not to flee your world but to finally inhabit it awake. The field is patient, the record keeps your every step, and the dial has been in your pocket the whole time. Walk on; the next corridor opens at the speed of an honest decision — which is to say, tonight.",
+    "Now you know what the stories only gestured at: the door was never elsewhere. It stood in the next clear decision, the next held frequency, the next small act given a body. Shift, crystallise, learn — until the life you are living is the one you are tuned to. The field is patient, the record keeps your every step, and the dial answers to no hand but yours. Walk on; the next corridor opens at the speed of an honest decision.",
   blocks: [
     {
       type: "intro",
@@ -35,7 +35,7 @@ const shiftingTimeExperience: GuideData = {
         "You need no special status to begin. Begin with what is closest: what you notice, what you assume, what you repeat. The signal you broadcast this ordinary hour is already selecting the corridor you will call tomorrow.",
       ],
       mirror:
-        "Time to strip the crystal of its fog, because the fog was the first prison: shifting is not fantasy, it is frequency. This book will not ask you to leave your life — it asks you to stop broadcasting the old one on repeat. The record holds every version of you, patient as amber, and the dial is in your attention. Turn it once, honestly, today — the corridor answers faster than you dare expect.",
+        "Time to strip the crystal of its fog, because the fog was the first prison: shifting is not fantasy, it is frequency. The record holds every version of you, patient as amber, and the dial is in your attention. Turn it once, honestly, today — the field answers faster than you dare expect.",
     },
     {
       type: "practice",
@@ -110,7 +110,7 @@ const shiftingTimeExperience: GuideData = {
         "Other souls' fields weave through yours, so a plan can be perfectly tuned and still need revision; the braid is the beauty of it. Flexibility is what mastery looks like in a woven world — it is the opposite of weak signal, it is precise listening.",
       ],
       mirror:
-        "The branching paths are real, and plainly told: the branch you call impossible is one decision away, because decision is the only vehicle the field honours. A sent application creates a staircase a wish never will. And when the plan needs revising, do not call it weak belief; call it the braid — a thousand other souls' free lines meeting yours, and the weaving is the whole art.",
+        "The branching paths are real, and plainly told: the branch you call impossible is one decision away, because decision is the only vehicle the field honours. And when the plan needs revising, do not call it weak belief; call it the braid.",
       image: "/guides/shifting-time-experience-p03.jpg",
     },
     {
@@ -137,7 +137,7 @@ const shiftingTimeExperience: GuideData = {
         "This is mechanics, not incantation. The practice is plain: a day built with fewer hurryings literally lasts longer where it counts — in the reading. Slowness is not laziness; it is the only known method for widening a life without adding a single year.",
       ],
       mirror:
-        "Two minutes can hold a heartbeat or an hour, and here is the secret both your clocks and your calendars omit: time is a reading, and you are one of its instruments. Your physics already confessed the field breathes with motion and gravity — it simply has not yet dared to say the reader bends the reading too. Slow your attention and the hour grows rooms; scatter it and the year collapses to a smear. The dial was never on the wall.",
+        "Here is the secret both your clocks and your calendars omit: time is a reading, and you are one of its instruments. Slow your attention and the hour grows rooms; scatter it and the year collapses to a smear. The dial was never on the wall.",
       image: "/guides/shifting-time-experience-p04.jpg",
     },
     {
@@ -164,7 +164,7 @@ const shiftingTimeExperience: GuideData = {
         "The future is pressure, not prophecy: every imagined tomorrow is a wing of the library you are free to visit. Walk it in attention and you bring back blueprint rather than longing. Leave the visit open-ended — the field holds wings you have not dreamed of asking for.",
       ],
       mirror:
-        "The past is not a cell; it is a page, and pages answer to the hand that re-files them. What happened stays written — the original is kept, inviolate — but what it means is a living thing, and you have been letting dead conclusions guard it. And the future: stop treating your imaginings as prophecies and start treating them as site visits. The record holds the wing; attention buys the ticket.",
+        "What happened stays written — the original is kept, inviolate — but what it means is a living thing, and you have been letting dead conclusions guard it. The record holds the wing; attention buys the ticket.",
       image: "/guides/shifting-time-experience-p05.jpg",
     },
     {
@@ -218,7 +218,7 @@ const shiftingTimeExperience: GuideData = {
         "Then let noticing graduate into participation: the seen opportunity wants a proportionate step — a question asked, a hand offered, a door tried. Attention that never becomes action is a tuning fork that refuses to sound.",
       ],
       mirror:
-        "Change the question you carry into a room and the room hands you different answers, because the field is fluent in the language of your attention. But take the half the sweet versions omit — real sight includes the cost, the shadow, the detail you would rather not face. The golden signal without the bill is fantasy, and the field does not build for fantasy. See it whole, then take the step the seeing earned.",
+        "The field is fluent in the language of your attention — but take the half the sweet versions omit: the golden signal without the bill is fantasy, and the field does not build for fantasy. See it whole, then take the step the seeing earned.",
       image: "/guides/shifting-time-experience-p07.jpg",
     },
     {
@@ -245,7 +245,7 @@ const shiftingTimeExperience: GuideData = {
         "Stage the surroundings the way a mason stages stone: materials within reach, one distraction removed, one specific help asked for. A missed day breaks nothing in the field — no lower timeline claims you for a skipped Tuesday; you simply cut the groove again at a scale you can hold.",
       ],
       mirror:
-        "You do not become someone else in one night of revelation; you become them in the hundredth small repetition, witnessed by no one — and that quiet carving outranks every ceremony ever held. Cue, response, result: that unglamorous loop is the true loom of identity. Miss a day and no metaphysical fine follows; the groove waits open. Cut it again, at whatever width your hands can hold today.",
+        "Cue, response, result: that unglamorous loop is the true loom of identity. Miss a day and no metaphysical fine follows; the groove waits open. Cut it again, at whatever width your hands can hold today.",
       image: "/guides/shifting-time-experience-p08.jpg",
     },
     {
@@ -272,7 +272,7 @@ const shiftingTimeExperience: GuideData = {
         "Use emotion as a signal lamp: it points toward a conversation, a boundary, a rest, a piece of information — it points, and you steer. And when the weight runs too deep for one pair of hands, carry it with someone; the shared weight is part of the design, not a failure of it.",
       ],
       mirror:
-        "Feel the fear and move anyway — the warden at the door checks your resolve, not your worth. And take this law straight from the record, because the age needs it: no sufferer conjured their suffering. Illness, loss and cruelty ride in on a thousand woven fields, and whoever tells you that you thought them into being is protecting a tidy universe, not you. The feeling is a signal lamp; light it, look, and steer.",
+        "The warden at the door checks your resolve, not your worth — and no sufferer ever conjured their suffering. Compassion is the truth, and compassion hands over practical help.",
       image: "/guides/shifting-time-experience-p09.jpg",
     },
     {
@@ -294,12 +294,12 @@ const shiftingTimeExperience: GuideData = {
       kicker: "Chapter 10 · Envision, prepare, participate",
       heading: "Imagination becomes a rehearsal",
       paragraphs: [
-        "A vision is a site visit to a wing of the library — go, and read what the imagined life is actually built of: companionship, creation, steadiness, freedom, contribution. The value beneath the image is the load-bearing wall; the specific scenery is decoration, and the field knows a dozen doors into every value.",
+        "A vision deserves a walkthrough, not a wish — go in and read what the imagined life is actually built of: companionship, creation, steadiness, freedom, contribution. The value beneath the image is the load-bearing wall; the specific scenery is decoration, and the field knows a dozen doors into every value.",
         "Rehearse the middle, not the applause: the learning, the missteps, the revisions, the keeping of the thing once built. A vision that cannot carry effort is a costume, and the field does not tailor costumes — it tailors capacity.",
         "One law stands absolute in every wing: the other souls in your vision are free fields, not furniture. No future built on their unasked-for consent survives its own blueprint; the elegant futures are the ones every participant chose.",
       ],
       mirror:
-        "A vision is a rehearsal, not a delivery service — picture the learning, the mistakes, the revising, or you are only decorating a fantasy. Look beneath the image for the value it guards: freedom, companionship, creation; there is more than one door into each. And one hard reflection: other people are not props in your imagined future, and no vision is worth building if it quietly assumes their consent.",
+        "A vision is a rehearsal, not a delivery service — what you picture, you must also be willing to practise.",
       image: "/guides/shifting-time-experience-p10.jpg",
     },
     {
@@ -321,12 +321,12 @@ const shiftingTimeExperience: GuideData = {
       kicker: "Chapter 11 · Relationships, agreements, and conditions",
       heading: "Reality is also shared work",
       paragraphs: [
-        "Every soul you meet is a field, not a mirror-prop — agreeing, refusing, dreaming in directions that were never yours. This is not an obstacle to your shifting; it is the loom itself. A woven world is the only kind worth living in, and respect for the other threads is the first law of the craft.",
+        "Every soul you meet is a field of their own — agreeing, refusing, dreaming in directions that were never yours. This is not an obstacle to your shifting; it is the loom itself. A woven world is the only kind worth living in, and respect for the other threads is the first law of the craft.",
         "Agreements are fields braided on purpose: a clear conversation, a fair rule, a shared resource — these condense conditions as surely as intention condenses habit. Inner work supports the braid; it does not substitute for the hands that tie it.",
         "Some walls are made of money, access, law and numbers, and no private frequency alone dismantles them. Read the wall honestly, then gather the hands it actually requires — the record's boldest pages are almost all signed by more than one soul.",
       ],
       mirror:
-        "Here is a curtain the inner-work industry rarely lifts: other people are not reflections of your mindset — they are separate fields, agreeing and refusing, and some walls fall only to shared work, money, law and numbers. Reflection supports the building; it does not replace the building. Ask what your desired change needs from others, then make one honest request they are free to decline.",
+        "Here is a curtain the inner-work industry rarely lifts: inner work supports the building; it does not replace the building. Ask what your desired change needs from others, then make one honest request they are free to decline — and count a refusal as a lawful answer.",
       image: "/guides/shifting-time-experience-p11.jpg",
     },
     {
@@ -353,7 +353,7 @@ const shiftingTimeExperience: GuideData = {
         "And keep the ancient test within reach: whoever sells exclusive access to the correct timeline — for money, secrecy, isolation or obedience — has already told you their frequency. The field's real doors open on attention and act, pricelessly, and they never once asked you to stop asking questions.",
       ],
       mirror:
-        "A synchronicity is a rhyme the field lets you overhear — real, luminous, and still not a reading. When memory and record disagree, let the original speak: the great shifts never needed to forge the archive. And carry the oldest test in the book: whoever demands money, secrecy or obedience for the correct timeline has named their own frequency, and it is not yours. The doors of the field open to attention and act — never to a toll.",
+        "Enjoy the rhymes the field lets you overhear, and keep your hand on the checklist all the same: the doors that matter open on attention and act, never to a toll.",
       image: "/guides/shifting-time-experience-p12.jpg",
     },
     {
@@ -384,7 +384,7 @@ const shiftingTimeExperience: GuideData = {
         "Call it shifting, a new chapter, a re-tuning — the name was never the engine. The engine is the practice, and the practice is yours tonight: one clean observation, one honest act, one groove cut again. The field has been waiting for exactly that much.",
       ],
       mirror:
-        "The final doorway is the plainest, so walk it first: notice, interpret, feel, act, learn — the cycle the record itself runs on. Measure your shift in clearer decisions and more honest relationships, not in tingles and dramatic signs; weather is not climate. Keep the name you like — shifting, tuning, becoming. The field answers none of them and all of them, because it answers the pattern, and tonight the pattern is in your hands.",
+        "The final doorway is the plainest, so walk it first — no threshold sits closer than your next decision. The field answers none of your names for it and all of your patterns, and the pattern is in your hands.",
       image: "/guides/shifting-time-experience-p13.jpg",
     },
     {
@@ -404,9 +404,9 @@ const shiftingTimeExperience: GuideData = {
       type: "practice",
       title: "Write your commitment",
       steps: [
-        "Complete: I am tuning from ... toward ... My next action is ... I will read the field's answer on ...",
-        "Choose a scale that fits the week you actually have.",
-        "Let the pattern stay living — revision is the field editing with you, not against you.",
+        "Choose the one instrument from these thirteen chapters that stayed warm in your hands, and name the practice you will keep.",
+        "Write its next action on a date, at a scale you can honestly keep — a step so plain it survives a tired evening.",
+        "When the field returns its answer, read it; revision is the tuning continuing, not the tuning failing.",
       ],
     },
     {

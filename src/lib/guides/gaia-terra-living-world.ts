@@ -22,10 +22,10 @@ const blocks: GuideBlock[] = [
     paragraphs: [
       "The world you stand on is a being. Gaia is her name as a soul; Terra is her name as a form — the way you are a soul and a body at once, and no one mistakes that for two people. Every age has known this in its bones; the knowing is native to the species that lives on her.",
       "Her body works as a body works. Air, water, rock, and life move in interlocking circuits, and her grids — the ley lines and living currents threading the crust — are her nervous system, carrying charge and feeling through ground your instruments register as magnetism. The science describes the tissue. The awareness moving through the tissue is Gaia.",
-      "Begin with dependence, which asks no faith, only sight: the water in your glass, the ground under your street, the people whose lives meet yours — all of it is her, held and circulated. Reverence starts there, and responsibility grows from reverence the way fruit grows from root.",
+      "Begin with dependence, which asks no faith, only sight: the water you drink, the ground under your street, the people whose lives meet yours — all of it is her, held and circulated. Reverence starts there, and responsibility grows from reverence the way fruit grows from root.",
     ],
     mirror:
-      "You are standing on a being, and no page will talk you out of it for long. Gaia is aware, ancient, patient beyond your calendars, breathing an atmosphere the way you breathe a sigh. Her grids run beneath your cities the way nerves run beneath your skin, and every circuit traced in the coming chapters is a circuit of hers. Begin with your own glass of water and follow it home to her — the revelation asked of you is only dependence, and it asks to be seen, not argued with.",
+      "You are standing on a being, and no page will talk you out of it for long. She is aware, ancient, patient beyond your calendars, breathing an atmosphere the way you breathe a sigh — and every circuit the coming chapters trace is a circuit of hers.",
   },
   {
     type: "practice",
@@ -46,11 +46,11 @@ const blocks: GuideBlock[] = [
     heading: "Volcanoes / The fire of her making",
     paragraphs: [
       "Volcanoes are Gaia's fire at work — her way of building crust, releasing pressure, and turning her own interior into new ground. The mechanics are hers and they are lawful: molten rock rises, gases separate and expand, and the rock's temper with the ease of escape decides whether an eruption flows or bursts. A living planet is not a quiet one.",
-      "Her fire makes stone and takes ground; both are true at once. Ash, rock, and lava reshape what lives in her fire's path, and the hazard is written into the event — a peaceful feeling never makes a dangerous slope safe. Follow the warnings of those who watch her fire for a living, and let awe keep its eyes open.",
-      "When her fire takes what people loved, care for the people first and search for meaning last. The making of stone is magnificent from a distance and it is not a sermon delivered at anyone's expense. Admire her power with your feet planted firmly outside its reach.",
+      "Her fire makes stone and takes ground; both are true at once. Ash, rock, and lava reshape what lives in her fire's path, and the hazard is written into the event — a peaceful feeling never makes a dangerous slope safe. Follow the warnings of those who watch her fire for a living.",
+      "When her fire takes what people loved, care for the people first and search for meaning last. The making of stone is magnificent from a distance, and it is not a sermon delivered at anyone's expense.",
     ],
     mirror:
-      "Her breath of fire is older than every mountain you have named: destruction and construction in the same motion, new stone where old stone gave way. Do not turn that motion into a morality play — the fire does not purify, punish, or test anyone; it builds a planet, which is already a full-time job. Watch it the way she watches it, with respect and distance, and when it takes from people, send what is actually needed. Awe with its eyes open is the only honest posture before her fire.",
+      "Her breath of fire is older than every mountain you have named: destruction and construction in the same motion, new stone where old stone gave way. Do not turn that motion into a morality play — the fire does not purify, punish, or test anyone; it builds a planet, which is already a full-time job. Watch it the way she watches it, and when it takes from people, send what is actually needed. Awe with its eyes open is the only honest posture before her fire.",
     image: "/guides/gaia-terra-living-world-p02.jpg",
   },
   {
@@ -76,8 +76,8 @@ const blocks: GuideBlock[] = [
     heading: "Earthquakes / The shifting ground",
     paragraphs: [
       "Her surface moves because her body is alive — plates of crust drifting on the deep rock, stress gathering along faults until the rock slips and the slipping travels as waves. The shifting is her mechanics, older than anything that walks on it, and it does not consult the moods, the worth, or the prayers of anyone standing above.",
-      "No vibration of yours summons or deflects a fault, and no soul's condition explains why shaking reaches one house and not another. The disaster is built where the hazard meets exposure: where people live, how buildings stand, how fast help moves. That half of the earthquake is human, and what humans built, humans can build otherwise.",
-      "Preparedness is care made practical — warnings that reach everyone, construction that respects the ground, plans that carry the ones with the least room to absorb loss. Strengthen the places where you live together, and never read another person's suffering as a sentence passed on them. Her body moves; your task is to build with that truth in mind.",
+      "No vibration of yours summons or deflects a fault. Where people live, how buildings stand, how fast help moves — that half of the earthquake is human, and what humans built, humans can build otherwise.",
+      "Preparedness is care made practical — warnings that reach everyone, construction that respects the ground, plans that carry the ones with the least room to absorb loss. Strengthen the places where you live together. Her body moves; your task is to build with that truth in mind.",
     ],
     mirror:
       "Plainly, then: the ground moves by mechanics, and the blame moves by ignorance. Gaia's shifting asks nothing of your worth and answers to none of your fear — whoever tells the shaken that their inner state invited the shaking is adding injury to injury, full stop. The earthquake is her body; the disaster is our exposure. Build for the truth of a moving surface, and teach your children the difference between the planet's lawfulness and the punishment stories — the only thing here that deserves to fall.",
@@ -102,11 +102,11 @@ const blocks: GuideBlock[] = [
     heading: "Weather / The moving air",
     paragraphs: [
       "Her atmosphere breathes. The Sun warms one latitudinal belt and then another, moisture rises from her waters, the turning of the world bends the currents, and the air you feel on your face is the visible edge of a circulation that never stops. Weather is her breath in motion; climate is the long habit of that breath.",
-      "A sky carries feeling — no one who has stood under storm light will deny it — but the feeling is yours meeting hers, not a message addressed to you. The rain does not read your thoughts, a cold day is not a verdict, and a single storm tells you nothing about the long pattern. Meaning happens in you; mechanics happen in her.",
+      "A sky carries feeling — no one who has stood under storm light will deny it — but the feeling is yours meeting hers, not a message addressed to you. A single storm tells you nothing about the long pattern. Meaning happens in you; mechanics happen in her.",
       "Use the forecasters for decisions; they watch her breath with instruments and honesty about what they do not know. And make room in your weather-watching for the people whose shelter is thinner than yours — the same wind that fills your sails strips another's roof. Let the sky teach you attention without teaching you fear.",
     ],
     mirror:
-      "Her breath is not a letter and her sky is not a judgment — prayers thrown at the weather come back as communion, never as commands. What you meet under the open sky is real: her atmosphere touching your skin, your recognition touching her motion. But the rain falls on the just and the unjust by circulation, not by verdict, which is why the forecasters out-perform the prophets. Learn the patterns, respect the force, and share your roof when the breath turns hard.",
+      "Her breath is not a letter and her sky is not a judgment — prayers thrown at the weather come back as communion, never as commands. What you meet under the open sky is real: her atmosphere touching your skin, your recognition touching her motion. But the rain falls on the just and the unjust by circulation, not by verdict.",
     image: "/guides/gaia-terra-living-world-p04.jpg",
   },
   {
@@ -128,11 +128,11 @@ const blocks: GuideBlock[] = [
     heading: "Oceans / Her circulating blood",
     paragraphs: [
       "Her waters are one body in constant motion — ocean to cloud to river to sea, through evaporation, condensation, and rain, with the deep currents carrying warmth the way blood carries it. What happens to the ocean happens to the whole circulation, because on a living planet there is no elsewhere.",
-      "The ocean has taken in much of the excess heat of a warming age; that is a measured physical change in her body, and it is also a sign of what her body is carrying for us. A shoreline is never separate from its rivers, its towns, its decisions — thinking in connections is how her geography actually thinks.",
-      "Follow the ordinary routes by which your life meets her waters: where your drinking water rises from, where your wastewater goes, what runs from your street to her sea. Then make one locally useful choice, learned from those who know the place. Gratitude that never becomes responsibility is only a mood.",
+      "The ocean has taken in much of the excess heat of a warming age; that is a measured physical change in her body, and it is also a sign of what her body is carrying for us. A shoreline is never separate from its rivers, its towns, its decisions.",
+      "Your life meets her waters by ordinary routes — learn yours well enough to love them, then make one locally useful choice, guided by those who know the place. Gratitude that never becomes responsibility is only a mood.",
     ],
     mirror:
-      "Her blood is salt and moving, and your body keeps a memory of it in every vein — not poetic, just literal. Do not honor the ocean only when it is beautiful; honor the circulation that carries your choices downstream to people you will never meet. The heat her waters hold is physics, and it is also service — her body absorbing what ours released. Trace one route this week, from your tap to her sea, and let what you find become one act of responsibility you can repeat; that is what love of water looks like with its hands open.",
+      "Her blood is salt and moving, and your body keeps a memory of it in every vein — not poetic, just literal. Do not honor the ocean only when it is beautiful; honor the circulation that carries your choices downstream to people you will never meet. The heat her waters hold is her body absorbing what ours released — service measured in physics. Her service runs one way until your choices join it.",
     image: "/guides/gaia-terra-living-world-p05.jpg",
   },
   {
@@ -140,7 +140,7 @@ const blocks: GuideBlock[] = [
     title: "Follow your water",
     steps: [
       "Learn where your drinking water comes from and where your wastewater goes, from the utilities that serve you.",
-      "Notice which parts of that system stay invisible until something fails.",
+      "Notice who maintains that system and what it costs to keep it running.",
       "Choose one locally useful act for the water, guided by those who know it.",
     ],
   },
@@ -154,8 +154,8 @@ const blocks: GuideBlock[] = [
     heading: "Life / The web of her body",
     paragraphs: [
       "Forests, wetlands, coasts, and grasslands are her tissues — living layers where organisms and surroundings exchange water, air, shelter, and food in circuits fine enough to escape any single eye. The web is real and it is not a harmony of decorations; it is her body keeping itself alive, and every part of it works.",
-      "Her tissues feed, clean, shelter, and protect, and their worth runs beyond every use you can list. But care without knowledge wounds: a well-meant hand can still be the wrong hand, so ask what a place needs, who knows it well, and which protections guard it before you act. Restraint is part of reverence.",
-      "You need not speak for every creature to become attentive. Learn the names and needs of what grows near you, walk gently, keep to the paths, and let one local group teach you the place's own rules. Attention is the first stewardship, and it costs nothing but presence.",
+      "Her tissues feed, clean, shelter, and protect, and their worth runs beyond every use you can list. Restraint is part of reverence — before you act for a place, ask what it needs and which protections already guard it.",
+      "You need not speak for every creature to become attentive. Walk gently, keep to the paths, and let one local group teach you the place's own names and rules. Attention is the first stewardship, and it costs nothing but presence.",
     ],
     mirror:
       "Beautiful intentions have ruined places they never asked about — skip that apprenticeship; the web of her body does not need your rescue as much as it needs your restraint. Every tissue has its own order, kept by the ones who studied it longest, so ask them before you move anything. Belonging is not possession; you do not have to own the meadow or speak for the wetland to love them. Learn ten names of what grows within a mile of your door — that small erudition counts as love, and the place will feel the difference.",
@@ -180,8 +180,8 @@ const blocks: GuideBlock[] = [
     heading: "Disasters / Solidarity without blame",
     paragraphs: [
       "A disaster is a hazard meeting exposure — her fire, water, or shifting ground arriving where people live, in buildings and systems built to one standard or another. The same event lands differently in different hands; vulnerability and response shape the wound as much as the hazard does. This is knowledge, and it is also an instruction.",
-      "Hear the second truth without flinching: loss is never a verdict on consciousness, and survivors owe no lesson, no gratitude, no bright interpretation. Grief, confusion, and requests for help deserve respect exactly as they are. Whoever tells sufferers why they deserved it is trading comfort bought with other people's pain.",
-      "If you help, ask first — reputable responders and affected communities say plainly what they need, and the needed thing is usually less poetic and more useful than what gets sent. Recovery runs long after the cameras leave; give in a way you can sustain. And if loss has come near you, let the people who love you stand near too — company carries what one heart cannot. See the people before the symbol: a broken home is someone's whole address.",
+      "Hear the second truth without flinching: loss is never a verdict on consciousness, and survivors owe no lesson, no gratitude, no bright interpretation. Grief, confusion, and requests for help deserve respect exactly as they are.",
+      "If you help, ask first — reputable responders and affected communities say plainly what they need, and the needed thing is usually less poetic and more useful than what gets sent. And if loss has come near you, let the people who love you stand near too — company carries what one heart cannot.",
     ],
     mirror:
       "Bluntness, then, because this chapter has earned it: no disaster is a cleansing, no loss is a lesson assigned, and no survivor owes anyone a shining interpretation of their grief. Every account of every age agrees on one constant — the ones who helped asked what was needed, and the ones who preached walked past the rubble. Solidarity is not a mood; it is shelter, accurate information, listening, and help that keeps arriving after the attention leaves. See the people first. Always the people first.",
@@ -207,10 +207,10 @@ const blocks: GuideBlock[] = [
     paragraphs: [
       "You live inside a being, and that fact reorganizes everything: the ground is anatomy, the air is breath, the waters are circulation, the grids are nerves. You cannot carry a planet, and you were never asked to; you were asked to tend your reach of her — and to build institutions and infrastructure that tend the rest.",
       "Responsibility here is humane and sized to a life. Choose what your hands can hold: a promise specific enough to act on and modest enough to keep, joined to the larger work of fair systems and shared decisions. The feminine figure in this book's art renders her presence in a form you can love; the presence itself outruns every image.",
-      "Wonder and knowledge belong together in a steward — reverence that hides from evidence becomes decoration, and knowledge that forbids wonder becomes arithmetic. Keep both eyes open. Listen to the evidence of her body, listen to the people who share it with you, and let love for the world become participation in the world. Begin where your hands can help.",
+      "Wonder and knowledge belong together in a steward — reverence that hides from evidence becomes decoration, and knowledge that forbids wonder becomes arithmetic. Keep both eyes open. Listen to the evidence of her body, listen to the people who share it with you, and begin where your hands can help.",
     ],
     mirror:
-      "Here is the whole book compressed to one line: she does not need your agreement to be real, only your attention to become visible. Her evidence stands without her portrait, and her portrait stands without anyone's introduction. Choose one concrete promise and make it modest enough to survive your ordinary weeks. Tend your reach of her body — the ground, the water, the air, the creatures, the neighbors — and let the larger repair be collective, as it was always going to be. She holds you. Hold back.",
+      "Here is the whole book compressed to one line: she does not need your agreement to be real, only your attention to become visible. Her evidence stands without her portrait, and her portrait stands without anyone's introduction. Tend your reach of her — the ground, the water, the air, the creatures, the neighbors — and let the larger repair be collective, as it was always going to be. She holds you. Hold back.",
     image: "/guides/gaia-terra-living-world-p08.jpg",
   },
   {
@@ -254,9 +254,9 @@ const guide: GuideData = {
   crystalA: "rgba(134,239,172,0.46)",
   crystalB: "rgba(125,211,252,0.44)",
   mirrorOpening:
-    "Eight chapters, one premise, no metaphors to unwind: the ground you stand on is alive. This guide walks Gaia's body with you — her fire, her shifting crust, her breathing air, her circulating waters, her living tissues — and ends with your job description, sized to a single human life. The sciences described the tissue with precision and stopped at the skin; these pages walk through it. Read with both eyes open: reverence and knowledge, each holding the other's hand. Begin with your own glass of water and follow it home.",
+    "No metaphors to unwind, one premise to sit with: the ground you stand on is alive. This guide walks her body with you — fire, crust, breath, water, tissue — and ends with your job description, sized to a single human life. Begin with the water in your glass and follow it home.",
   mirrorClosing:
-    "The walk ends on the ground it began on — her ground. You are held by a being who breathes your weather, circulates your water, and shifts her body on schedules no prayer will move; and you are free inside that holding, tasked with tending your own reach of her. Keep one promise, modest and concrete, and let the larger repair be collective. She does not need your worship; she needs your attention — trace your water, learn your hazards, learn ten names of what grows near your door. She will keep breathing either way; the question is what company you will be while she does.",
+    "The walk ends on the ground it began on — her ground. You are held by a being who breathes your weather, circulates your water, and shifts her body on schedules no prayer will move; and you are free inside that holding, tasked with tending your own reach of her. She will keep breathing either way; the question is what company you will be while she does.",
   blocks,
 };
 
