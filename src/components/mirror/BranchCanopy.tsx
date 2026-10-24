@@ -107,6 +107,11 @@ import {
   type LaidTree,
 } from "@/lib/genealogy";
 import { recordExpansion, readExpansionScore } from "@/lib/expansion";
+import {
+  BranchNavigator,
+  type NavigatorApi,
+} from "./BranchNavigator";
+import type { SeedWhisper } from "@/lib/navigator-graph";
 import { attachmentsToPayload, type ChatAttachment } from "./attachments";
 import { MirrorChanneling, SCOPE_CHANNELING } from "./MirrorChanneling";
 import { ExpansionRing } from "./ExpansionMirror";
@@ -1395,76 +1400,13 @@ function LightToggle({ testIdPrefix }: { testIdPrefix: string }) {
   );
 }
 
-/* --------------- the glyph wall — the realm's floor ------------------
-   THE SUGGESTIONS BECOME STONE. The floor is a Maya stele wall: every
-   suggestion carved into its own block — a stepped crest rising at its
-   head, a Maya count (dots and bars) standing guard, a cartouche of
-   the family's ink running beneath the words. The wall fills the
-   screen; sliding down uncovers the deep rows (the second family);
-   the wall's own reload pours the stone anew. One bloom per stone
-   (opacity + transform only, compositor work), no drift, no JS
-   clocks — the phone stays cool. */
-
-const GLYPH_FIRST = 20; /* the resting family — twenty stones, no more */
-const GLYPH_BATCH = 20; /* the wall grows twenty by twenty — each pour
-                           carved in the background, after a breath, so
-                           the phone never heats and never lags */
-const GLYPH_MAX = 200; /* the wall's whole depth — ten pours, bounded */
-
-/* THE WALK'S OWN LEVEL — the stones the visitor meets follow their
-   evolution: a young walk opens gentle doors (reflect, deepen,
-   pause) and the deep walk meets the forge-facing movements
-   (contrast, apply, create) at its head. Laid as a stable order OVER
-   the hour's own seeded shuffle, so the level never breaks the deal. */
-const MOVEMENT_LEVEL: Record<
-  "first" | "steady" | "deep",
-  Record<BranchType, number>
-> = {
-  first: { reflect: 0, deepen: 1, pause: 1, connect: 2, apply: 3, create: 4, contrast: 4 },
-  steady: { deepen: 0, connect: 0, reflect: 1, apply: 1, contrast: 2, create: 2, pause: 3 },
-  deep: { contrast: 0, apply: 0, create: 0, deepen: 1, connect: 2, reflect: 2, pause: 3 },
-};
-
-interface GlyphWhisper {
-  text: string;
-  movement: BranchType;
-  accent: string;
-}
-
-/* THE FIRST STEPS — the newcomer's own stones. Plain, warm, everyday
-   whispers a first visitor reads at a glance; the deep grove waits
-   beneath, and the wall ADVANCES as the visitor walks (kept on the
-   device, never on a server): the third exchange opens the deep
-   grove below the plain resting family, the tenth hands the whole
-   wall to the deep grove. */
-const PLAIN_STONES: GlyphWhisper[] = [
-  { text: "Who am I, beneath everything I carry?", movement: "reflect", accent: "#a78bfa" },
-  { text: "What does my heart need tonight?", movement: "reflect", accent: "#2dd4bf" },
-  { text: "A message I need to hear right now", movement: "deepen", accent: "#f59e0b" },
-  { text: "What am I not seeing clearly?", movement: "reflect", accent: "#a78bfa" },
-  { text: "Where is my energy going lately?", movement: "deepen", accent: "#34d399" },
-  { text: "What should I let go of tonight?", movement: "pause", accent: "#2dd4bf" },
-  { text: "A gentle truth about my week ahead", movement: "deepen", accent: "#22d3ee" },
-  { text: "What makes me feel alive?", movement: "connect", accent: "#2dd4bf" },
-  { text: "Who thinks of me tonight?", movement: "connect", accent: "#22d3ee" },
-  { text: "What is my quiet gift to share?", movement: "apply", accent: "#f59e0b" },
-  { text: "Show me the next small step on my path", movement: "apply", accent: "#fb7185" },
-  { text: "What do my dreams tell me lately?", movement: "deepen", accent: "#2dd4bf" },
-  { text: "A word of courage for tomorrow", movement: "create", accent: "#f59e0b" },
-  { text: "What is waiting for me to notice it?", movement: "reflect", accent: "#a78bfa" },
-  { text: "How do I find calm tonight?", movement: "pause", accent: "#34d399" },
-  { text: "What is my body trying to tell me?", movement: "deepen", accent: "#34d399" },
-  { text: "The color of my spirit today", movement: "create", accent: "#e879f9" },
-  { text: "A picture of my guides watching over me", movement: "create", accent: "#e879f9" },
-  { text: "What is my greatest strength right now?", movement: "apply", accent: "#2dd4bf" },
-  { text: "What do I need to forgive myself for?", movement: "reflect", accent: "#2dd4bf" },
-  { text: "Where does my road lead this season?", movement: "deepen", accent: "#22d3ee" },
-  { text: "What would joy do tonight?", movement: "connect", accent: "#f59e0b" },
-  { text: "What am I ready to receive?", movement: "connect", accent: "#a78bfa" },
-  { text: "A small ritual for my evening", movement: "apply", accent: "#2dd4bf" },
-  { text: "What does my home need to feel peaceful?", movement: "apply", accent: "#fb7185" },
-  { text: "What is the universe whispering to me?", movement: "deepen", accent: "#22d3ee" },
-];
+/* --------------- the branching navigator — the realm's floor ---------
+   THE WALL BECAME A MAP. The floor is no longer a grid of stone
+   blocks: it is the branching navigator — one welcoming question at
+   the heart, simple doors around it, and every branch leading to
+   further branches, multidirectional, bounded, and stable. The whole
+   law lives in src/components/mirror/BranchNavigator.tsx and
+   src/lib/navigator-graph.ts. The walk's own steps remain here:      */
 
 /* THE WALK THAT ADVANCES — the visitor's own steps, kept on the
    device (never on a server): every exchange is one step. */
@@ -1489,508 +1431,6 @@ function stepWalkOnce(): number {
   }
   return next;
 }
-
-/* THE STONE'S OWN KIND — every stone says plainly what it opens: a
-   text answer by the mirror, an image crystallizing, a making
-   (creation, manifest), the book, the akashic record. */
-type GlyphKind =
-  | "mirror"
-  | "image"
-  | "creation"
-  | "manifest"
-  | "book"
-  | "akashic";
-
-const GLYPH_KIND_LABELS: Record<GlyphKind, string> = {
-  mirror: "mirror",
-  image: "image",
-  creation: "creation",
-  manifest: "manifest",
-  book: "book",
-  akashic: "akashic",
-};
-
-function glyphKindForText(text: string): GlyphKind {
-  const art = detectArtifactIntent(text);
-  if (art) {
-    if (art === "book") return "book";
-    if (art === "akashic") return "akashic";
-    if (art === "manifest") return "manifest";
-    return "creation";
-  }
-  if (isVisualIntent(text)) return "image";
-  return "mirror";
-}
-
-interface GlyphTileData {
-  text: string;
-  movement: BranchType;
-  accent: string;
-  kind: GlyphKind;
-  golden?: boolean;
-  creation?: CreationDoor;
-  topic?: string;
-}
-
-/* THE MAYA COUNT — every stone carries its own vigesimal count: one
-   dot is one, one bar is five, the shell stands for zero. Drawn from
-   the whisper's own hash — the same words always wear the same count.
-   Pure divs, painted once, never re-rendered. */
-function MayaCount({ n, accent }: { n: number; accent: string }) {
-  const v = ((n % 20) + 20) % 20;
-  if (v === 0) {
-    return (
-      <span
-        aria-hidden="true"
-        className="mt-px inline-block size-[7px] rounded-[50%] border"
-        style={{
-          borderColor: `color-mix(in srgb, ${accent} 55%, transparent)`,
-        }}
-      />
-    );
-  }
-  const dots = v % 5;
-  const bars = Math.floor(v / 5);
-  return (
-    <span aria-hidden="true" className="flex flex-col items-end gap-[2px]">
-      {dots > 0 && (
-        <span className="flex gap-[2.5px]">
-          {Array.from({ length: dots }, (_, i) => (
-            <i
-              key={i}
-              className="block size-[3.5px] rounded-full"
-              style={{ backgroundColor: accent }}
-            />
-          ))}
-        </span>
-      )}
-      {Array.from({ length: bars }, (_, i) => (
-        <i
-          key={i}
-          className="block h-[3px] w-[15px] rounded-[1.5px]"
-          style={{ backgroundColor: accent }}
-        />
-      ))}
-    </span>
-  );
-}
-
-const GlyphTile = memo(function GlyphTile({
-  tile,
-  disabled,
-  onPick,
-  onCreation,
-  testId,
-  bloomDelay,
-}: {
-  tile: GlyphTileData;
-  disabled?: boolean;
-  onPick: (text: string, move: BranchType) => void;
-  onCreation: (kind: CreationDoor, topic: string) => void;
-  testId: string;
-  bloomDelay: number;
-}) {
-  const t = useT();
-  const a = tile.accent;
-  const Icon = tile.creation
-    ? CREATION_ICON_BY_KIND[tile.creation]
-    : (MOVEMENT_ICONS[tile.movement] ?? Layers);
-  const label = tile.creation
-    ? `${t(CREATION_LABELS[tile.creation])} — ${tile.topic ?? ""}`
-    : tile.text;
-  return (
-    <button
-      type="button"
-      onClick={() =>
-        tile.creation
-          ? onCreation(tile.creation, tile.topic ?? tile.text)
-          : onPick(tile.text, tile.movement)
-      }
-      disabled={disabled}
-      title={label}
-      data-testid={
-        tile.golden
-          ? `${testId}-glyph-golden`
-          : tile.creation
-            ? `${testId}-glyph-creation`
-            : `${testId}-glyph-tile`
-      }
-      className="genea-bloom still-bloom focus-glow relative flex h-full flex-col overflow-hidden rounded-[5px] border p-2.5 text-left shadow-[0_4px_16px_-12px_rgba(0,0,0,0.55)] transition-colors duration-300 hover:border-[color-mix(in_srgb,var(--tile-a)_62%,transparent)] disabled:cursor-not-allowed disabled:opacity-50"
-      style={
-        {
-          "--tile-a": a,
-          animationDelay: `${bloomDelay}ms`,
-          borderColor: tile.golden
-            ? "color-mix(in srgb, #f59e0b 50%, transparent)"
-            : "color-mix(in srgb, var(--tile-a) 36%, transparent)",
-          background: tile.golden
-            ? "linear-gradient(168deg, color-mix(in srgb, #f59e0b 15%, var(--background) 85%) 0%, var(--background) 55%, color-mix(in srgb, #f59e0b 7%, var(--background) 93%) 100%)"
-            : "linear-gradient(168deg, color-mix(in srgb, var(--tile-a) 11%, var(--background) 89%) 0%, var(--background) 52%, color-mix(in srgb, var(--tile-a) 6%, var(--background) 94%) 100%)",
-          boxShadow: tile.golden
-            ? "0 0 20px -10px color-mix(in srgb, #f59e0b 55%, transparent)"
-            : "0 4px 16px -12px rgba(0,0,0,0.55)",
-        } as CSSProperties
-      }
-    >
-      {/* THE CODEX FRAME — one quiet inner ring, carved a step inside
-          the stone */}
-      <span
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-[4px] rounded-[3px] border"
-        style={{
-          borderColor: tile.golden
-            ? "color-mix(in srgb, #f59e0b 22%, transparent)"
-            : "color-mix(in srgb, var(--tile-a) 17%, transparent)",
-        }}
-      />
-      {/* THE STONE'S HEADER — the stepped crest rises at the left (the
-          pyramid's own silhouette), the Maya count stands at the right */}
-      <span
-        aria-hidden="true"
-        className="relative flex items-start justify-between gap-2"
-      >
-        <span className="flex flex-col gap-[2px] pt-px">
-          <i
-            className="block h-[2.5px] w-[22px] rounded-[1px]"
-            style={{ backgroundColor: a, opacity: 0.9 }}
-          />
-          <i
-            className="block h-[2.5px] w-[14px] rounded-[1px]"
-            style={{ backgroundColor: a, opacity: 0.55 }}
-          />
-          <i
-            className="block h-[2.5px] w-[7px] rounded-[1px]"
-            style={{ backgroundColor: a, opacity: 0.32 }}
-          />
-        </span>
-        <MayaCount n={hashWalk(tile.text)} accent={a} />
-      </span>
-      {/* THE CARVING — the whisper's own words */}
-      <span
-        className={cn(
-          "relative mt-1.5 line-clamp-4 break-words text-[12.5px] leading-[15.5px] sm:text-[13px] sm:leading-[16px]",
-          tile.golden
-            ? "font-serif italic text-foreground"
-            : "text-foreground/90"
-        )}
-      >
-        {label}
-      </span>
-      {/* THE CARTOUCHE — the movement's own glyph closes the stone, a
-          thin line of the family's ink running beneath */}
-      <span
-        aria-hidden="true"
-        className="relative mt-auto flex items-center gap-1.5 pt-2"
-      >
-        <Icon
-          className={cn(
-            "size-3 shrink-0",
-            tile.golden
-              ? "text-[#f59e0b]"
-              : "text-[var(--tile-a)] opacity-75"
-          )}
-        />
-        {/* THE KIND — every stone says what it opens, in its own ink */}
-        <span
-          className={cn(
-            "mono-label shrink-0 text-[8px] uppercase tracking-[0.14em]",
-            tile.golden
-              ? "text-[#f59e0b]"
-              : "text-[var(--tile-a)] opacity-70"
-          )}
-        >
-          {t(GLYPH_KIND_LABELS[tile.kind])}
-        </span>
-        <i
-          className="block h-[2px] flex-1 rounded-[1px]"
-          style={{
-            backgroundColor: tile.golden ? "#f59e0b" : a,
-            opacity: 0.35,
-          }}
-        />
-      </span>
-    </button>
-  );
-});
-
-const GlyphWall = memo(function GlyphWall({
-  whispers,
-  entry,
-  stage,
-  golden,
-  disabled,
-  hour,
-  salt,
-  focusKey,
-  onPick,
-  onCreation,
-  onReload,
-  testIdPrefix,
-}: {
-  whispers: GlyphWhisper[];
-  /** THE FIRST STEPS' ENTRY — the plain family the resting rows are
-      carved from while the wall still advances (undefined once the
-      deep grove owns the whole wall). */
-  entry?: GlyphWhisper[];
-  /** THE WALK'S OWN LEVEL — the visitor's evolution, reading which
-      movements rise to the wall's head. */
-  stage: "first" | "steady" | "deep";
-  golden: GenealogySeed[];
-  disabled?: boolean;
-  hour: number;
-  salt: number;
-  focusKey: string;
-  onPick: (text: string, move: BranchType) => void;
-  onCreation: (kind: CreationDoor, topic: string) => void;
-  onReload: () => void;
-  testIdPrefix: string;
-}) {
-  const t = useT();
-  /* THE WALL'S REVEAL — twenty stones stand first; every further
-     pour adds twenty more, carved in the background after a breath
-     (the pick's own pour and the sliding ear share one hand, so the
-     wall never grows twice at once and the phone stays cool) */
-  const [visible, setVisible] = useState(GLYPH_FIRST);
-  const deepRef = useRef<HTMLDivElement | null>(null);
-  const pendingRef = useRef<number | null>(null);
-  useEffect(
-    () => () => {
-      if (pendingRef.current != null) window.clearTimeout(pendingRef.current);
-    },
-    []
-  );
-
-  const tiles = useMemo(() => {
-    const out: GlyphTileData[] = [];
-    const seen = new Set<string>();
-    /* THE GOLDEN STONES — the exchange's own grown branches stand in
-       the wall's first rows, wearing the amber light */
-    for (const s of golden) {
-      const k = s.text.toLowerCase();
-      if (seen.has(k)) continue;
-      seen.add(k);
-      out.push({
-        text: s.text,
-        movement: s.movement,
-        accent: "#f59e0b",
-        kind: glyphKindForText(s.text),
-        golden: true,
-      });
-      if (out.length >= 4) break;
-    }
-    /* the family's own shuffle — the same hour, salt and focus always
-       carve the same wall (no hydration drift, no re-shuffle under
-       the visitor); a voice never stands twice until the grove has
-       spoken */
-    const shuffled = seededShuffle(
-      whispers,
-      hashWalk(`wall:${hour}:${salt}:${focusKey}`)
-    );
-    /* THE FIRST STEPS' ENTRY — when a plain entry family rides with
-       the wall, the resting rows are carved from it and the deep
-       rows rise from the whole grove: the wall advances gently. */
-    const entryShuffled = entry
-      ? seededShuffle(
-          entry,
-          hashWalk(`wall-entry:${hour}:${salt}:${focusKey}`)
-        )
-      : null;
-    /* THE WALK'S OWN LEVEL — the grove's stones level themselves to
-       the visitor's evolution before the wall carves them */
-    const level = MOVEMENT_LEVEL[stage];
-    const leveled =
-      stage === "steady"
-        ? shuffled
-        : [...shuffled].sort(
-            (a, b) => (level[a.movement] ?? 2) - (level[b.movement] ?? 2)
-          );
-    let resting = 0;
-    for (const w of entryShuffled ?? leveled) {
-      if (resting >= GLYPH_FIRST || out.length >= GLYPH_MAX) break;
-      const k = w.text.toLowerCase();
-      if (seen.has(k)) continue;
-      seen.add(k);
-      out.push({
-        text: w.text,
-        movement: w.movement,
-        accent: w.accent,
-        kind: glyphKindForText(w.text),
-      });
-      resting++;
-    }
-    for (const w of leveled) {
-      if (out.length >= GLYPH_MAX) break;
-      const k = w.text.toLowerCase();
-      if (seen.has(k)) continue;
-      seen.add(k);
-      out.push({
-        text: w.text,
-        movement: w.movement,
-        accent: w.accent,
-        kind: glyphKindForText(w.text),
-      });
-    }
-    /* THE CREATION DOOR — one making carved mid-wall, tied to the
-       stone it grows from (the branch's own words the making grows
-       from) */
-    if (out.length >= 5) {
-      const h = hashWalk(`door:${hour}:${salt}:${focusKey}`);
-      const door = CREATION_DOORS[h % CREATION_DOORS.length].kind;
-      const at = 2 + (h % Math.min(9, out.length - 3));
-      const topic = out[at].text;
-      out.splice(at + 1, 0, {
-        text: `${t(CREATION_LABELS[door])} — ${topic}`,
-        movement: "create",
-        accent: out[at].accent,
-        kind: door === "invent" ? "creation" : door,
-        creation: door,
-        topic,
-      });
-      if (out.length > GLYPH_MAX) out.pop();
-    }
-    return out;
-  }, [whispers, entry, stage, golden, hour, salt, focusKey, t]);
-
-  /* the wall's length rides a ref — the deferred pours read it
-     without re-knitting their own closures (kept current by an
-     effect; the pours fire seconds later, long after it runs) */
-  const tilesLenRef = useRef(0);
-  useEffect(() => {
-    tilesLenRef.current = tiles.length;
-  }, [tiles.length]);
-  const schedulePour = useCallback((delay: number) => {
-    if (pendingRef.current != null) return;
-    pendingRef.current = window.setTimeout(() => {
-      pendingRef.current = null;
-      setVisible((v) => Math.min(v + GLYPH_BATCH, tilesLenRef.current));
-    }, delay);
-  }, []);
-
-  /* THE PICK'S OWN POUR — the moment a stone is pressed, the next
-     twenty begin carving themselves in the background; a few seconds
-     later they stand ready. No work under the finger, no heat. */
-  const handlePick = useCallback(
-    (text: string, move: BranchType) => {
-      schedulePour(2400);
-      onPick(text, move);
-    },
-    [onPick, schedulePour]
-  );
-
-  /* THE DEEP EAR — one IntersectionObserver hears the visitor slide
-     toward the wall's foot and pours the next twenty in, after a
-     breath. The ear re-arms with every pour until the wall's whole
-     depth stands carved. */
-  const hasMore = tiles.length > visible;
-  useEffect(() => {
-    if (!hasMore) return;
-    const el = deepRef.current;
-    if (!el) return;
-    const io = new IntersectionObserver(
-      (es) => {
-        if (es.some((e) => e.isIntersecting)) {
-          io.disconnect();
-          schedulePour(1400);
-        }
-      },
-      { root: el.closest("[data-glyph-scroll]"), rootMargin: "220px 0px" }
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, [hasMore, visible, schedulePour]);
-
-  const shown = tiles.slice(0, visible);
-
-  /* the deep rows rest again whenever the wall is re-poured — the
-     wall is keyed by its own deal at the render site, so a fresh
-     pour is a fresh wall (no effect, no state sync) */
-
-  return (
-    <div
-      role="region"
-      aria-label={t("The wall of whispers")}
-      data-testid={`${testIdPrefix}-glyph-wall`}
-      data-glyph-scroll=""
-      className="no-scrollbar absolute inset-0 overflow-y-auto"
-      style={{
-        overscrollBehavior: "contain",
-        WebkitOverflowScrolling: "touch",
-      }}
-    >
-      {/* THE FLOOR'S OWN LIGHT — one soft glow behind the stone, the
-          focused category's color breathing under the wall */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 flex items-center justify-center"
-      >
-        <div
-          className="h-56 w-72 rounded-full"
-          style={{
-            background:
-              "radial-gradient(ellipse at center, color-mix(in srgb, var(--scope-a,var(--gd)) 15%, transparent), transparent 70%)",
-          }}
-        />
-      </div>
-
-      {/* THE WALL HAS NO NAMEPLATE — no caption, no side glyph, no
-          count: the stones speak for themselves. The pour hand lives
-          ONLY at the wall's foot — one pour, one place. */}
-
-      <div className="relative grid auto-rows-[124px] grid-cols-2 gap-2.5 px-3 pb-5 pt-3 sm:auto-rows-[138px] sm:grid-cols-3 sm:gap-3 lg:grid-cols-4">
-        {shown.map((tile, i) => (
-          <GlyphTile
-            key={`${i}:${tile.text}`}
-            tile={tile}
-            disabled={disabled}
-            onPick={handlePick}
-            onCreation={onCreation}
-            testId={testIdPrefix}
-            bloomDelay={Math.min(
-              i * 26 + (hashWalk(tile.text) % 40),
-              1100
-            )}
-          />
-        ))}
-        {/* THE DEEP EAR — the sentinel resting at the wall's foot,
-            heard only while deeper rows still wait beneath */}
-        {hasMore && (
-          <div ref={deepRef} aria-hidden="true" className="col-span-full h-px" />
-        )}
-      </div>
-
-      {/* THE WALL'S FOOT — the whole family has spoken; one touch pours
-          the stone anew. It stands ABOVE the whisper line: fully
-          visible at the end of the wall, never behind the input — the
-          breath of space below it belongs to the input bar. */}
-      {!hasMore && (
-        <div className="relative flex justify-center px-3 pb-44">
-          <button
-            type="button"
-            onClick={onReload}
-            disabled={disabled}
-            aria-label={t("Pour the wall again")}
-            data-testid={`${testIdPrefix}-glyph-reload-end`}
-            className="focus-glow flex items-center gap-2.5 rounded-full border px-5 py-2.5 text-foreground/90 shadow-[0_10px_30px_-18px_rgba(0,0,0,0.6)] transition-all duration-300 hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-40"
-            style={{
-              borderColor:
-                "color-mix(in srgb, var(--scope-a,var(--gd)) 46%, transparent)",
-              backgroundColor:
-                "color-mix(in srgb, var(--scope-a,var(--gd)) 13%, var(--background))",
-            }}
-          >
-            <RefreshCw
-              className="size-3.5 shrink-0 text-[var(--scope-a,var(--gd))]"
-              aria-hidden="true"
-            />
-            <span className="text-[13px] italic">
-              {t("The wall has spoken — pour it again")}
-            </span>
-          </button>
-        </div>
-      )}
-    </div>
-  );
-});
 
 /* --------------------------- the canopy ------------------------------ */
 
@@ -2418,10 +1858,10 @@ export function BranchCanopy({
     [familyKeyByText, focusKey]
   );
 
-  /* THE WALL'S OWN LIGHT — every whisper carries its family's accent:
+  /* THE MAP'S OWN LIGHT — every whisper carries its family's accent:
      the general walk wears every house's colors mixed, a focused
-     category wears its own light on every stone. */
-  const glyphWhispers = useMemo<GlyphWhisper[]>(
+     category wears its own light on every door of the navigator. */
+  const navWhispers = useMemo<SeedWhisper[]>(
     () =>
       grove.map((w) => ({
         text: w.text,
@@ -2431,21 +1871,16 @@ export function BranchCanopy({
     [grove]
   );
 
-  /* THE WALL THAT ADVANCES — the visitor's own steps, read after first
-     paint (the server always carves the newcomer's wall, no hydration
-     drift): every exchange (a stone pressed, a making begun) is one
-     step. The first steps wear the plain stones alone; from the third
-     exchange the deep grove joins beneath them; from the tenth the
-     whole wall belongs to the deep grove. */
-  const [walkSteps, setWalkSteps] = useState(0);
-  useEffect(() => {
-    setWalkSteps(readWalkSteps());
-  }, []);
+  /* THE WALK'S OWN STEP — every exchange (a door pressed, a making
+     begun) is one step, kept on the device; the navigator's own
+     progressive depth reads the DNA's journey instead. */
   const bumpWalkSteps = useCallback(() => {
-    setWalkSteps(stepWalkOnce());
+    stepWalkOnce();
   }, []);
-  const glyphStage: "first" | "steady" | "deep" =
-    walkSteps < 3 ? "first" : walkSteps < 10 ? "steady" : "deep";
+
+  /* THE NAVIGATOR'S OWN HANDLE — the composer's typed questions
+     become connected branches of the standing map through it. */
+  const navigatorApiRef = useRef<NavigatorApi | null>(null);
 
   /* THE WALL'S OWN PICK — the carved stone speaks: the walk records
      its step (the trail remembers) and the answer rises in the room.
@@ -2507,7 +1942,7 @@ export function BranchCanopy({
         grove,
         hashWalk(`realm:${hour}:${salt}:${focusKey}`)
       )
-        .slice(0, GLYPH_MAX)
+        .slice(0, 200)
         .map((w) => ({ ...w, score: 0 }));
     }
     if (grove.length === 0 || !field || !idf) return [];
@@ -2553,6 +1988,18 @@ export function BranchCanopy({
     }
     return out;
   }, [channeling]);
+
+  /* THE GOLDEN DOOR — the conversation's own branch rides the
+     navigator's first ring, wearing the amber light. */
+  const navGolden = useMemo<SeedWhisper[]>(
+    () =>
+      goldenSeeds.slice(0, 2).map((s) => ({
+        text: s.text,
+        movement: s.movement,
+        accent: "#f59e0b",
+      })),
+    [goldenSeeds]
+  );
 
   /* THE HARMONIC CONTINUATION — when a transmission's own branches
      arrive, the mirror records it: the context has proceeded. The
@@ -3528,6 +2975,10 @@ export function BranchCanopy({
       /* THE MAKING'S OWN ROOM — every ask opens its conversation room,
          makings included: the creation rises inline beneath the ask. */
       setZoom({ q: text, move });
+      /* THE TYPED QUESTION'S OWN BRANCH — a question the visitor
+         types becomes a connected exploration on the standing map,
+         grown from the branch the walk currently stands on. */
+      navigatorApiRef.current?.attachTypedQuestion(text);
       /* THE LANDING'S OWN LAW — docked in the threshold the ask is
          always the reflection mirror itself: no category, no scope —
          the mirror's humble voice answers from the open floor. The
@@ -4953,27 +4404,25 @@ export function BranchCanopy({
         {/* THE CENTRE IS CLEAR — the house's logo no longer stands at
             the heart of the realm: it lives nowhere now — the mark has
             left the crown too.
-        THE GLYPH WALL — the realm's floor is a Maya stele wall: every
-            suggestion carved into its own stone (stepped crest, Maya
-            count, cartouche), the wall filling the screen, sliding
-            down uncovering the deep rows, the reload pouring the stone
-            anew. One bloom per stone, compositor only: smooth, alive,
-            and cool. The theme pages keep the genealogy tree. */}
+        THE BRANCHING NAVIGATOR — the realm's floor is a living map:
+            one welcoming question at the heart, simple doors around
+            it, every branch leading to further branches. The visitor
+            walks in every direction; approaching a frontier grows one
+            small connected cluster; every node stands where it was
+            born. The theme pages keep the genealogy tree. */}
         {realm && !bare ? (
-          <GlyphWall
-            key={`${hour}:${salt}:${focusKey}`}
-            whispers={glyphStage === "first" ? PLAIN_STONES : glyphWhispers}
-            entry={glyphStage === "steady" ? PLAIN_STONES : undefined}
-            stage={glyphStage}
-            golden={goldenSeeds}
-            disabled={disabled}
-            hour={hour}
-            salt={salt}
+          <BranchNavigator
+            key={`nav:${focusKey}`}
+            whispers={navWhispers}
+            golden={navGolden}
             focusKey={focusKey}
+            category={category}
+            scopeHint={scopeHint}
+            disabled={disabled}
+            testIdPrefix={testIdPrefix}
             onPick={glyphPick}
             onCreation={openTool}
-            onReload={renew}
-            testIdPrefix={testIdPrefix}
+            apiRef={navigatorApiRef}
           />
         ) : realm && bare ? (
           /* THE BARE FLOOR — the miniature portal's quiet ground: the

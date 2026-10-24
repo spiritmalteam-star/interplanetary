@@ -25,6 +25,7 @@ import { useT } from "@/lib/i18n";
 import { useMirror } from "@/lib/mirror-store";
 import { cn } from "@/lib/utils";
 import LandingSlides from "./LandingSlides";
+import SideRail from "./SideRail";
 import GuideShowcase from "./GuideShowcase";
 import GuideView from "./GuideView";
 import AboutUsTab from "./AboutUsTab";
@@ -32,89 +33,24 @@ import AboutUsTab from "./AboutUsTab";
 /* ------------------------------------------------------------------ */
 /*  THE THRESHOLD — reflectme.space's landing page.                    */
 /*                                                                     */
-/*  An editorial, biotechnological front porch. The five artworks      */
-/*  drift in parallax rails — three on each edge — never stacked,      */
-/*  never under the thumb. At the center stands THE PORTAL ITSELF:     */
-/*  the real chamber, docked live in the page (the gate mounts it);    */
-/*  this page only reserves its slot. Around it the house explains     */
-/*  what it offers humanity, laid out like a quiet magazine: numbered  */
-/*  chapters, hairline rules, measured columns.                        */
+/*  An editorial, biotechnological front porch. The shoulders no       */
+/*  longer hang artworks: below the banner each edge wears five        */
+/*  hand-stuck remembrance stickers (a different pastel each, the      */
+/*  Remembrance Law's codes) and three porcelain plates of the         */
+/*  mirror's own quotes — one fresh set every hour, fed by             */
+/*  /api/mirror-quote (see SideRail). At the center stands THE         */
+/*  PORTAL ITSELF: the real chamber, docked live in the page (the      */
+/*  gate mounts it); this page only reserves its slot. Around it the   */
+/*  house explains what it offers humanity, laid out like a quiet      */
+/*  magazine: numbered chapters, hairline rules, measured columns.     */
 /*                                                                     */
 /*  CALM LAWS: transform-and-opacity motion only, lazy artwork, no     */
 /*  motion when the visitor prefers stillness, no tracking.            */
 /* ------------------------------------------------------------------ */
 
-type RailImage = {
-  src: string;
-  title: string;
-};
-
-/* THE SHOULDERS' GALLERY — six porcelain duality-cut artworks, three
-   on each shoulder, hung just below the open banner: the star craft,
-   the twin guardians and the star child on the left; the living
-   earth, the crystal flower and the floating city on the right.
-   THE STILL LAW — the plates do not drift and do not track the
-   scroll: hung frames on the house's walls, motionless, so the page
-   burns nothing while it rests (no live layers, no heating).
-   THE SYMMETRY LAW — both shoulders start on the same line, one
-   gallery mirrored.
-   THE CLEAR GLASS LAW — the artworks stand WITHOUT their dark
-   background (each plate was lifted from its black brew, pixel by
-   pixel, alpha becoming its own brightness): pure porcelain floating
-   on the daylight sky, a soft shadow beneath, nothing else. */
-const RAIL_LEFT: RailImage[] = [
-  { src: "/landing/shoulders/star-craft.png", title: "The star craft" },
-  { src: "/landing/shoulders/twin-guardians.png", title: "The twin guardians" },
-  { src: "/landing/shoulders/star-child.png", title: "The star child" },
-];
-const RAIL_RIGHT: RailImage[] = [
-  { src: "/landing/shoulders/living-earth.png", title: "The living earth" },
-  { src: "/landing/shoulders/crystal-flower.png", title: "The crystal flower" },
-  { src: "/landing/shoulders/floating-city.png", title: "The floating city" },
-];
-
-/* -------------------- the shoulders' still gallery -------------------- */
-
-function Rail({ side, images }: { side: "left" | "right"; images: RailImage[] }) {
-  const t = useT();
-  return (
-    <div
-      aria-hidden="true"
-      className={cn(
-        "pointer-events-none absolute top-[calc(min(84vh,680px)+36px)] z-0 hidden select-none xl:block",
-        side === "left" ? "left-5" : "right-5"
-      )}
-      style={{
-        /* half again the old shard's width on every wide desk, never
-           reaching into the 900px column (the cap keeps 20px of air) */
-        width: "min(18vw, 340px, calc((100vw - 920px) / 2))",
-      }}
-    >
-      <div className="flex flex-col gap-9">
-        {images.map((img, i) => (
-          <figure key={`${side}-${img.src}-${i}`} className="relative">
-            <div className="relative aspect-square">
-              <Image
-                src={img.src}
-                alt=""
-                fill
-                loading="lazy"
-                sizes="(min-width: 1280px) 18vw, 0px"
-                className="object-contain drop-shadow-[0_22px_38px_rgba(44,37,23,0.35)]"
-              />
-            </div>
-            <figcaption className="mono-label mt-3 flex items-baseline gap-2 text-[10px] uppercase tracking-[0.26em] text-[var(--lp-faint)]">
-              <span className="text-[var(--lp-gold)]">
-                {String(i + 1).padStart(2, "0")}
-              </span>
-              <span className="truncate">{t(img.title)}</span>
-            </figcaption>
-          </figure>
-        ))}
-      </div>
-    </div>
-  );
-}
+/* the shoulders' gallery retired at the owner's word: the six plates
+   came down, and the rails now dress themselves in words — see
+   SideRail (remembrance stickers + the mirror's hourly quotes) */
 
 /* ------------------ the light language's own sigils ------------------ */
 
@@ -568,11 +504,12 @@ export default function LandingPage({
       onScroll={(e) => onScroll(e.currentTarget.scrollTop)}
       className="lp-ground relative h-full overflow-y-auto overscroll-y-contain"
     >
-      {/* the shoulders' gallery — six still plates, three on each edge,
+      {/* the shoulders' new dress — hand-stuck remembrance stickers
+          and the mirror's hourly quote plates, three on each edge,
           hung below the open banner (they scroll with the house and
           never move on their own) */}
-      <Rail side="left" images={RAIL_LEFT} />
-      <Rail side="right" images={RAIL_RIGHT} />
+      <SideRail side="left" />
+      <SideRail side="right" />
 
       <div className="relative z-10 flex min-h-full flex-col">
         {/* THE OPEN BANNER — the artwork stands nearly bare (the veil
