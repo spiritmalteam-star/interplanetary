@@ -3790,3 +3790,103 @@ html:not(.dark) .lp-sigil-img {
     animation: none;
   }
 }
+
+/* ------------------------------------------------------------------ */
+/*  THE LIVING CONVERSATION — the branch's own room inside the map.    */
+/* ------------------------------------------------------------------ */
+
+.nav-conv-chip {
+  box-shadow: 0 6px 22px -16px rgba(0, 0, 0, 0.5);
+}
+
+/* the deep scene widens the room it lives in (the canvas re-fits) */
+.nav-conv-card:has(.nav-conv-viz-deep) {
+  width: min(720px, calc(100vw - 40px)) !important;
+}
+
+.nav-conv-viz {
+  height: 264px;
+}
+
+.nav-conv-viz-deep {
+  height: min(58vh, 520px);
+}
+
+@media (max-height: 700px) {
+  .nav-conv-viz {
+    height: 220px;
+  }
+  .nav-conv-viz-deep {
+    height: min(52vh, 440px);
+  }
+}
+
+/* the scenes' own quiet motion — each rests under reduce-motion */
+@keyframes viz-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes viz-flow {
+  0%,
+  100% {
+    transform: translateX(0);
+    opacity: 0.9;
+  }
+  50% {
+    transform: translateX(-14px);
+    opacity: 0.55;
+  }
+}
+
+@keyframes viz-pulse-soft {
+  0%,
+  100% {
+    opacity: 0.85;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(0.86);
+  }
+}
+
+@keyframes viz-breathe {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.75;
+  }
+}
+
+@keyframes conv-rise {
+  from {
+    opacity: 0;
+    transform: translateY(7px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.conv-rise {
+  animation: conv-rise 420ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+.nav-conv-failed-dot {
+  animation: viz-pulse-soft 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .conv-rise,
+  .nav-conv-failed-dot {
+    animation: none;
+  }
+  [style*="viz-"] {
+    animation: none !important;
+  }
+}

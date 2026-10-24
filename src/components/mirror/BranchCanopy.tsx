@@ -1575,6 +1575,12 @@ export function BranchCanopy({
   /* ------------------- THE ZOOM — the answer's room ------------------
      `restored` carries the transmission of a PREVIOUS branch — the
      trail's chips re-open their own rooms from the walk's memory. */
+  /* THE LIVING CONVERSATION'S LAW — when the branching navigator owns
+     the floor (the realm with its map), every ask becomes a living
+     conversation INSIDE the tree: the branch expands, the camera
+     glides, the answer rises in the card. The zoom room keeps its
+     own doors for the landing and every theme page. */
+  const convMode = !!realm && !bare;
   const [zoom, setZoom] = useState<{
     q: string;
     move: BranchType | null;
@@ -1620,7 +1626,7 @@ export function BranchCanopy({
   const [seenLiveKey, setSeenLiveKey] = useState<string | null>(null);
   const zoomOpenedAtRef = useRef(0);
   const liveKey =
-    mounted && liveLoading && liveQuestion ? liveQuestion : null;
+    mounted && liveLoading && liveQuestion && !convMode ? liveQuestion : null;
   if (liveKey && liveKey !== seenLiveKey) {
     setSeenLiveKey(liveKey);
     zoomOpenedAtRef.current = Date.now();
@@ -1901,6 +1907,14 @@ export function BranchCanopy({
       /* THE MAKING'S OWN ROOM — every ask opens its conversation room,
          makings included: the creation rises inline beneath the ask
          (the working room is gone — the chat is the workshop now). */
+      if (convMode) {
+        /* THE LIVING TREE — the branch itself becomes the room; the
+           answer rises inside the expanded node (a reopening of a
+           room that already carries its words never re-asks). */
+        const reopened = navigatorApiRef.current?.openConversation(text, move);
+        if (!reopened) onPick(text, askScopeFor(text));
+        return;
+      }
       setZoom({ q: text, move });
       onPick(text, askScopeFor(text));
     },
@@ -1911,6 +1925,7 @@ export function BranchCanopy({
       scopeHint,
       category,
       bumpWalkSteps,
+      convMode,
     ]
   );
 
@@ -2974,11 +2989,17 @@ export function BranchCanopy({
       zoomOpenedAtRef.current = Date.now();
       /* THE MAKING'S OWN ROOM — every ask opens its conversation room,
          makings included: the creation rises inline beneath the ask. */
-      setZoom({ q: text, move });
-      /* THE TYPED QUESTION'S OWN BRANCH — a question the visitor
-         types becomes a connected exploration on the standing map,
-         grown from the branch the walk currently stands on. */
-      navigatorApiRef.current?.attachTypedQuestion(text);
+      if (convMode) {
+        /* THE LIVING TREE — the ask becomes a conversation node in the
+           canvas (the branch IS the room; no floating window opens). */
+        navigatorApiRef.current?.openConversation(text, move);
+      } else {
+        setZoom({ q: text, move });
+        /* THE TYPED QUESTION'S OWN BRANCH — a question the visitor
+           types becomes a connected exploration on the standing map,
+           grown from the branch the walk currently stands on. */
+        navigatorApiRef.current?.attachTypedQuestion(text);
+      }
       /* THE LANDING'S OWN LAW — docked in the threshold the ask is
          always the reflection mirror itself: no category, no scope —
          the mirror's humble voice answers from the open floor. The
@@ -3017,6 +3038,17 @@ export function BranchCanopy({
     (step: { id: string | null; text: string }) => {
       const known = getWalkSession().getNode(walkNodeId(step.text));
       if (known && known.transmission.trim()) {
+        /* THE LIVING TREE — the walk returns to the branch's own room
+           inside the map: the card opens with its words standing. */
+        if (convMode) {
+          setLineage((ln) =>
+            [...ln.filter((l) => l.text !== step.text), { id: step.id, text: step.text }].slice(-10)
+          );
+          navigatorApiRef.current?.openConversation(step.text, null, {
+            restored: known.transmission.trim(),
+          });
+          return;
+        }
         if (step.id) panToNode(step.id);
         /* the walk stepped back — the trail follows: the returned room
            stands last, and YOU ARE HERE points at it */
@@ -3031,7 +3063,7 @@ export function BranchCanopy({
       setFlashId(step.id);
       window.setTimeout(() => setFlashId(null), 1500);
     },
-    [panToNode]
+    [panToNode, convMode]
   );
 
   /* the lineage chain — from the pressed whisper down to the trunk:
@@ -4423,6 +4455,13 @@ export function BranchCanopy({
             onPick={glyphPick}
             onCreation={openTool}
             apiRef={navigatorApiRef}
+            convMode
+            liveQuestion={liveQuestion}
+            liveAnswer={liveAnswer}
+            liveLoading={liveLoading}
+            liveError={liveError}
+            liveMessage={liveMessage}
+            channeling={channeling}
           />
         ) : realm && bare ? (
           /* THE BARE FLOOR — the miniature portal's quiet ground: the

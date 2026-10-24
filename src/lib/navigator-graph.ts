@@ -32,8 +32,9 @@ export type NavKind =
   | "book"
   | "akashic";
 
-/** The node's own role in the map. */
-export type NavRole = "home" | "question" | "typed" | "creation";
+/** The node's own role in the map. A "conversation" node is a branch
+ *  that became a living conversation (the branch's own room). */
+export type NavRole = "home" | "question" | "typed" | "creation" | "conversation";
 
 export interface NavNodeData extends Record<string, unknown> {
   text: string;
@@ -52,9 +53,11 @@ export interface NavNodeData extends Record<string, unknown> {
   inTrail?: boolean;
   golden?: boolean;
   revisits?: number;
+  /** The living conversation this node carries (role "conversation"). */
+  convId?: string;
 }
 
-export type NavNode = Node<NavNodeData, "nav-question">;
+export type NavNode = Node<NavNodeData>;
 
 export interface NavEdgeData extends Record<string, unknown> {
   accent: string;
@@ -613,9 +616,16 @@ export function pruneGraph(nodes: NavNode[], edges: NavEdge[], homeId: string): 
   pruned: number;
 } {
   if (nodes.length <= NAV_MAX_NODES) return { nodes, edges, pruned: 0 };
-  /* BFS depth from the home — the farthest leaves rest first */
+  /* BFS depth from the home — the farthest leaves rest first.
+     THE VISITOR'S ROOMS NEVER REST — a living conversation is the
+     walker's own kept exchange; it is never pruned away. */
   const sorted = [...nodes]
-    .filter((n) => n.id !== homeId && n.data.role !== "home")
+    .filter(
+      (n) =>
+        n.id !== homeId &&
+        n.data.role !== "home" &&
+        n.data.role !== "conversation"
+    )
     .sort((a, b) => b.data.depth - a.data.depth || b.data.childCount - a.data.childCount);
   const remove = new Set<string>();
   for (const n of sorted) {

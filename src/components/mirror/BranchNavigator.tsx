@@ -58,8 +58,18 @@ import {
   recordJourney,
   recordSeen,
   type BranchType,
+  type LearnedBranch,
 } from "@/lib/learning-branches";
 import { cn } from "@/lib/utils";
+import { ENERGY_NOTICE } from "@/lib/speak-client";
+import type { BranchId } from "@/lib/data/suggestion-tree";
+import type { ChatMessage } from "@/lib/mirror-store";
+import {
+  findConvByQuestion,
+  useConversations,
+} from "@/lib/branch-conversations";
+import { ConversationNode } from "./living/ConversationCard";
+import { NavDensity } from "./living/navContext";
 import {
   NAV_HYSTERESIS,
   NAV_MAX_AUTO,
@@ -158,6 +168,15 @@ const VOICE_BY_BRANCH: Record<string, string> = {
 
 export interface NavigatorApi {
   attachTypedQuestion: (text: string) => void;
+  /** A branch becomes its conversation: create/morph/reopen the living
+   *  node, fly the camera to it. Returns true when the conversation
+   *  already carried its answer (the visitor is READING, not asking —
+   *  the caller must not re-ask the mirror). */
+  openConversation: (
+    text: string,
+    move: BranchType | null,
+    opts?: { restored?: string; sourceId?: string | null }
+  ) => boolean;
 }
 
 /* --------------------------- the node's face ------------------------ */
@@ -381,7 +400,10 @@ const QuestionNode = memo(function QuestionNode({
   );
 });
 
-const nodeTypes = { "nav-question": QuestionNode };
+const nodeTypes = {
+  "nav-question": QuestionNode,
+  "living-conversation": ConversationNode,
+};
 
 /* -------------------------- the edge's face ------------------------- */
 
@@ -473,6 +495,15 @@ interface BranchNavigatorProps {
   onPick: (text: string, move: BranchType) => void;
   onCreation: (kind: "akashic" | "book" | "invent", topic: string) => void;
   apiRef?: { current: NavigatorApi | null };
+  /* THE LIVING CONVERSATION — the canopy's own channel, passed through:
+     the branch's answer rides the same store request it always has. */
+  convMode?: boolean;
+  liveQuestion?: string | null;
+  liveAnswer?: string | null;
+  liveLoading?: boolean;
+  liveError?: string | null;
+  liveMessage?: ChatMessage | null;
+  channeling?: LearnedBranch[] | null;
 }
 
 function NavInner({
@@ -485,6 +516,13 @@ function NavInner({
   onPick,
   onCreation,
   apiRef,
+  convMode = false,
+  liveQuestion,
+  liveAnswer,
+  liveLoading,
+  liveError,
+  liveMessage,
+  channeling,
 }: BranchNavigatorProps) {
   const t = useT();
   const rf = useReactFlow();
@@ -538,6 +576,10 @@ function NavInner({
   const [frontierDir, setFrontierDir] = useState<string | null>(null);
   const [hintSeen, setHintSeen] = useState(true);
   const [growCount, setGrowCount] = useState(0);
+  /* THE SEMANTIC ZOOM — at low magnification the tree breathes in
+     outlines: Level A of the walk. One boolean, changed only when the
+     threshold is crossed, never per frame. */
+  const [dense, setDense] = useState(false);
 
   const attemptedRef = useRef<Set<string>>(boot.attempted);
   const inflightRef = useRef<Set<string>>(new Set());
@@ -558,6 +600,13 @@ function NavInner({
   const persistTimerRef = useRef<number | null>(null);
   const persistOkRef = useRef(persistOk);
   const reducedMotionRef = useRef(false);
+  /* THE LIVING CONVERSATION'S OWN HANDS */
+  const lastSendRef = useRef<{ id: string; at: number } | null>(null);
+  const animRef = useRef<number | null>(null);
+  const denseRafRef = useRef(0);
+  const lastLiveMsgRef = useRef<string | null>(null);
+  const grownBranchesRef = useRef<Set<string>>(new Set());
+  const focusConvRef = useRef<(id: string) => void>(() => {});
 
   nodesRef.current = nodes;
   edgesRef.current = edges;
@@ -743,8 +792,20 @@ function NavInner({
         (c) => !existing.some((n) => overlapWords(n.data.text, c.seed.text) >= 0.62)
       );
       if (fresh.length === 0) return;
-      const parentCx = parent.position.x + NAV_NODE_W / 2;
-      const parentCy = parent.position.y + NAV_NODE_H / 2;
+      /* THE CONVERSATION'S OWN BREADTH — a living node is wider than a
+         question's stone: its real measured bounds lead the growth, so
+         follow-up branches are born clear of the card itself. */
+      const pInternal = rf.getInternalNode(parent.id);
+      const pw =
+        parent.data.role === "conversation"
+          ? pInternal?.measured?.width ?? 560
+          : NAV_NODE_W;
+      const ph =
+        parent.data.role === "conversation"
+          ? pInternal?.measured?.height ?? 520
+          : NAV_NODE_H;
+      const parentCx = parent.position.x + pw / 2;
+      const parentCy = parent.position.y + ph / 2;
       const home = existing.find((n) => n.id === homeId);
       const map = home
         ? { x: home.position.x + NAV_NODE_W / 2, y: home.position.y + NAV_NODE_H / 2 }
@@ -865,7 +926,7 @@ function NavInner({
         )
       );
     },
-    [pathIdsOf, setEdges, setNodes]
+    [pathIdsOf, setEdges, setNodes, rf]
   );
 
   const expandNode = useCallback(
@@ -946,6 +1007,13 @@ function NavInner({
     (id: string, opts?: { record?: boolean; center?: boolean }) => {
       const node = nodesRef.current.find((n) => n.id === id);
       if (!node || disabled) return;
+      /* a living conversation answers to its own hands — the walk
+         follows, the camera glides to the card, the tree makes room */
+      if (node.data.role === "conversation" && node.data.convId) {
+        useConversations.getState().setActive(node.data.convId);
+        focusConvRef.current(id);
+        return;
+      }
       if (selectedRef.current && selectedRef.current !== id) {
         prevFocusRef.current = [
           ...prevFocusRef.current.filter((p) => p !== selectedRef.current),
@@ -1000,6 +1068,7 @@ function NavInner({
       const node = nodesRef.current.find((n) => n.id === id);
       if (!node) return;
       if (act === "send") {
+        lastSendRef.current = { id, at: Date.now() };
         recordSeen([node.data.text]);
         setTrail((tr) => [...tr.filter((x) => x !== id), id].slice(-40));
         onPick(node.data.text, node.data.movement);
@@ -1124,11 +1193,491 @@ function NavInner({
     if (!apiRef) return;
     apiRef.current = {
       attachTypedQuestion: (text: string) => attachRef.current(text),
+      openConversation: (text, move, opts) => openConvRef.current(text, move, opts),
     };
     return () => {
       apiRef.current = null;
     };
   }, [apiRef]);
+
+  /* ------------- THE LIVING CONVERSATION -----------------------
+     A branch becomes the conversation itself: the selected node
+     expands into a spacious card anchored where the branch stood,
+     the camera glides to it, the neighbors step aside to give it
+     room, and the follow-up questions grow out of the card as
+     connected branches. Clicking never replaces the tree — it
+     brings that part of the tree closer. */
+
+  /** A node's true center from its measured bounds (the card is wide). */
+  const centerOf = useCallback(
+    (id: string): { x: number; y: number; w: number; h: number } | null => {
+      const n = nodesRef.current.find((x) => x.id === id);
+      if (!n) return null;
+      const internal = rf.getInternalNode(id);
+      const conv = n.data.role === "conversation";
+      const w = internal?.measured?.width ?? (conv ? 560 : NAV_NODE_W);
+      const h = internal?.measured?.height ?? (conv ? 520 : NAV_NODE_H);
+      return { x: n.position.x + w / 2, y: n.position.y + h / 2, w, h };
+    },
+    [rf]
+  );
+
+  /** THE CAMERA'S OWN TRAVEL — glide to a conversation, fitted. */
+  const flyToConv = useCallback(
+    (id: string) => {
+      const wrap = wrapperRef.current?.getBoundingClientRect();
+      const c = centerOf(id);
+      if (!c || !wrap) return;
+      const zoom = Math.max(
+        0.45,
+        Math.min(
+          0.95,
+          Math.min((wrap.width - 56) / c.w, (wrap.height - 250) / c.h)
+        )
+      );
+      rf.setCenter(c.x, c.y - 26 / zoom, {
+        zoom,
+        duration: reducedMotionRef.current ? 0 : 560,
+      });
+    },
+    [centerOf, rf]
+  );
+
+  /** THE TREE MAKES ROOM — neighbors step away from an expanded card,
+   *  one gentle settling motion, their mental map otherwise kept. */
+  const animatePositions = useCallback(
+    (targets: Map<string, { x: number; y: number }>) => {
+      if (animRef.current != null) cancelAnimationFrame(animRef.current);
+      animRef.current = null;
+      const start = new Map<string, { x: number; y: number }>();
+      for (const id of targets.keys()) {
+        const n = nodesRef.current.find((x) => x.id === id);
+        if (n) start.set(id, { x: n.position.x, y: n.position.y });
+      }
+      const settle = () => {
+        setNodes((nds) =>
+          nds.map((n) => {
+            const tgt = targets.get(n.id);
+            return tgt ? { ...n, position: tgt } : n;
+          })
+        );
+        schedulePersist();
+      };
+      if (reducedMotionRef.current) {
+        settle();
+        return;
+      }
+      const dur = 480;
+      const t0 = performance.now();
+      const ease = (u: number) => 1 - Math.pow(1 - u, 3);
+      const step = () => {
+        const u = Math.min(1, (performance.now() - t0) / dur);
+        const e = ease(u);
+        setNodes((nds) =>
+          nds.map((n) => {
+            const tgt = targets.get(n.id);
+            const s = start.get(n.id);
+            if (!tgt || !s) return n;
+            return {
+              ...n,
+              position: { x: s.x + (tgt.x - s.x) * e, y: s.y + (tgt.y - s.y) * e },
+            };
+          })
+        );
+        if (u < 1) animRef.current = requestAnimationFrame(step);
+        else {
+          animRef.current = null;
+          schedulePersist();
+        }
+      };
+      animRef.current = requestAnimationFrame(step);
+    },
+    [schedulePersist, setNodes]
+  );
+
+  const nudgeAround = useCallback(
+    (id: string) => {
+      const c = centerOf(id);
+      if (!c) return;
+      const margin = 60;
+      const rect = {
+        l: c.x - c.w / 2 - margin,
+        r: c.x + c.w / 2 + margin,
+        t: c.y - c.h / 2 - margin,
+        b: c.y + c.h / 2 + margin,
+      };
+      const targets = new Map<string, { x: number; y: number }>();
+      for (const n of nodesRef.current) {
+        if (n.id === id) continue;
+        const b = centerOf(n.id);
+        if (!b) continue;
+        const ox =
+          Math.min(rect.r, b.x + b.w / 2) - Math.max(rect.l, b.x - b.w / 2);
+        const oy =
+          Math.min(rect.b, b.y + b.h / 2) - Math.max(rect.t, b.y - b.h / 2);
+        if (ox <= 0 || oy <= 0) continue;
+        const dx = b.x - c.x;
+        const dy = b.y - c.y;
+        let px = 0;
+        let py = 0;
+        if (ox < oy) px = (dx >= 0 ? 1 : -1) * (ox + 6);
+        else py = (dy >= 0 ? 1 : -1) * (oy + 6);
+        targets.set(n.id, { x: n.position.x + px, y: n.position.y + py });
+      }
+      if (targets.size > 0) animatePositions(targets);
+    },
+    [animatePositions, centerOf]
+  );
+
+  /** Focus a living node: the walk follows, the camera glides, the
+      neighbors part — retried while the card is still measuring. */
+  const focusConv = useCallback(
+    (id: string) => {
+      setSelectedId(id);
+      selectedRef.current = id;
+      applyFocusVisuals(id);
+      setTrail((tr) => [...tr.filter((x) => x !== id), id].slice(-40));
+      flyToConv(id);
+      const retry = (ms: number) =>
+        window.setTimeout(() => {
+          if (selectedRef.current !== id) return;
+          nudgeAround(id);
+          flyToConv(id);
+        }, ms);
+      retry(90);
+      retry(260);
+      retry(500);
+      schedulePersist();
+    },
+    [applyFocusVisuals, flyToConv, nudgeAround, schedulePersist]
+  );
+  focusConvRef.current = focusConv;
+
+  /** The questions from the map's heart down to a node. */
+  const lineageTextsOf = useCallback((id: string): string[] => {
+    const chain: string[] = [];
+    let cur = nodesRef.current.find((n) => n.id === id);
+    let guard = 0;
+    while (cur && guard++ < 32) {
+      chain.push(cur.data.text);
+      cur = cur.data.parentId
+        ? nodesRef.current.find((n) => n.id === cur?.data.parentId)
+        : undefined;
+    }
+    return chain.reverse();
+  }, []);
+
+  /** A branch becomes its conversation. Returns true when the room
+      already stood with its answer inside (a REOPENING, not an ask). */
+  const openConversation = useCallback(
+    (
+      text: string,
+      move: BranchType | null,
+      opts?: { restored?: string; sourceId?: string | null }
+    ): boolean => {
+      const q = text.trim();
+      if (!q) return true;
+      const now = Date.now();
+
+      /* 1 — the conversation already lived here: bring it back exactly
+         as it was, every word in its place, the mirror never re-asked. */
+      const known = findConvByQuestion(q);
+      if (known) {
+        const landed = known.turns[0]?.status === "landed";
+        let node = nodesRef.current.find((n) => n.data.convId === known.id);
+        if (!node) {
+          /* its stone was carried away by the map's depth — rebuild it
+             at the heart, the thread untouched */
+          const home = nodesRef.current.find((n) => n.id === homeId);
+          const id = navId();
+          const rebuilt: NavNode = {
+            id,
+            type: "living-conversation",
+            position: home
+              ? { x: home.position.x + 280, y: home.position.y + 240 }
+              : { x: 0, y: 0 },
+            data: {
+              text: known.question,
+              movement: known.movement,
+              accent: known.accent,
+              kind: navKindForText(known.question),
+              role: "conversation",
+              status: "idle",
+              childCount: 0,
+              depth: (home?.data.depth ?? 0) + 1,
+              parentId: homeId,
+              convId: known.id,
+            },
+          };
+          setNodes((nds) => [...nds, rebuilt]);
+          if (home) {
+            setEdges((es) => [
+              ...es,
+              {
+                id: `e:${homeId}:${id}`,
+                source: homeId,
+                target: id,
+                type: "nav",
+                data: { accent: rebuilt.data.accent },
+                style: {
+                  stroke: rebuilt.data.accent,
+                  strokeOpacity: 0.55,
+                  strokeWidth: 1.4,
+                },
+              },
+            ]);
+          }
+          node = rebuilt;
+        }
+        useConversations.getState().setActive(known.id);
+        focusConv(node.id);
+        if (opts?.restored) {
+          /* the walk's own memory replaces the ledger's first answer —
+             the same words, restored from the walk session */
+          useConversations.getState().patchTurn(known.id, 0, {
+            a: opts.restored,
+            status: "landed",
+            restored: true,
+          });
+        }
+        return landed;
+      }
+
+      /* 2 — a new conversation grows out of the branch that was clicked */
+      let source: NavNode | undefined;
+      const srcId = opts?.sourceId ?? null;
+      if (srcId) source = nodesRef.current.find((n) => n.id === srcId);
+      if (
+        !source &&
+        lastSendRef.current &&
+        now - lastSendRef.current.at < 2500
+      ) {
+        source = nodesRef.current.find((n) => n.id === lastSendRef.current?.id);
+      }
+      if (!source) {
+        source = nodesRef.current.find(
+          (n) =>
+            (n.data.role === "question" || n.data.role === "typed") &&
+            n.data.text === q
+        );
+      }
+      const activeConvId = useConversations.getState().activeConvId;
+      const activeConvNode = activeConvId
+        ? nodesRef.current.find((n) => n.data.convId === activeConvId)
+        : undefined;
+
+      /* the branch that was clicked MORPHS into its conversation —
+         its id, its place, its children and its ties all stay */
+      if (source && (source.data.role === "question" || source.data.role === "typed")) {
+        const convId = useConversations.getState().open({
+          question: q,
+          movement: move ?? source.data.movement,
+          accent: source.data.accent,
+          category: branchVoice as BranchId,
+          lineage: lineageTextsOf(source.id),
+          restoredAnswer: opts?.restored,
+        });
+        setNodes((nds) =>
+          nds.map((n) =>
+            n.id === source!.id
+              ? {
+                  ...n,
+                  type: "living-conversation",
+                  data: { ...n.data, role: "conversation", convId, status: "idle" },
+                }
+              : n
+          )
+        );
+        useConversations.getState().setActive(convId);
+        focusConv(source.id);
+        return false;
+      }
+
+      /* no stone to morph — the conversation is born connected to the
+         place the walk stands (the active room, the focus, or home) */
+      const parent =
+        activeConvNode ??
+        nodesRef.current.find((n) => n.id === selectedRef.current) ??
+        nodesRef.current.find((n) => n.id === homeId);
+      const convId = useConversations.getState().open({
+        question: q,
+        movement: move ?? "reflect",
+        accent: "var(--scope-a, var(--gd))",
+        category: branchVoice as BranchId,
+        lineage: parent ? lineageTextsOf(parent.id) : [],
+        restoredAnswer: opts?.restored,
+      });
+      if (!parent) return false;
+      const id = navId();
+      const node: NavNode = {
+        id,
+        type: "living-conversation",
+        position: { x: 0, y: 0 },
+        data: {
+          text: q,
+          movement: move ?? "reflect",
+          accent: "var(--scope-a, var(--gd))",
+          kind: navKindForText(q),
+          role: "conversation",
+          status: "idle",
+          childCount: 0,
+          depth: parent.data.depth + 1,
+          parentId: parent.id,
+          convId,
+        },
+      };
+      setNodes((nds) => {
+        const settled = freePosition(node, nds);
+        return [...nds, { ...node, position: settled }];
+      });
+      setEdges((es) => [
+        ...es,
+        {
+          id: `e:${parent.id}:${id}`,
+          source: parent.id,
+          target: id,
+          type: "nav",
+          data: { accent: node.data.accent },
+          style: {
+            stroke: node.data.accent,
+            strokeOpacity: 0.55,
+            strokeWidth: 1.4,
+          },
+        },
+      ]);
+      useConversations.getState().setActive(convId);
+      focusConv(id);
+      return false;
+    },
+    [
+      applyFocusVisuals,
+      branchVoice,
+      focusConv,
+      lineageTextsOf,
+      setEdges,
+      setNodes,
+    ]
+  );
+
+  const openConvRef = useRef(openConversation);
+  openConvRef.current = openConversation;
+
+  /* the living nodes' own hands — open, rest, resized, or asking the
+     whole channel for a making (the same door every ask rides) */
+  useEffect(() => {
+    const onOpen = (e: Event) => {
+      const id = (e as CustomEvent<{ id: string }>).detail?.id;
+      const node = id ? nodesRef.current.find((n) => n.id === id) : undefined;
+      if (!node?.data.convId) return;
+      useConversations.getState().setActive(node.data.convId);
+      focusConv(node.id);
+    };
+    const onCollapse = (e: Event) => {
+      const id = (e as CustomEvent<{ id: string }>).detail?.id;
+      const node = id ? nodesRef.current.find((n) => n.id === id) : undefined;
+      if (!node?.data.convId) return;
+      useConversations.getState().setActive(null);
+      /* the camera steps back — the trail keeps its shape */
+      rf.fitView({
+        padding: 0.42,
+        duration: reducedMotionRef.current ? 0 : 480,
+        nodes: trailRef.current.length
+          ? trailRef.current.map((x) => ({ id: x }))
+          : undefined,
+      });
+      schedulePersist();
+    };
+    const onResize = (e: Event) => {
+      const id = (e as CustomEvent<{ id: string }>).detail?.id;
+      if (!id || !nodesRef.current.some((n) => n.id === id)) return;
+      nudgeAround(id);
+      flyToConv(id);
+    };
+    const onChannelAsk = (e: Event) => {
+      const text = (e as CustomEvent<{ id: string }>).detail?.id ?? "";
+      if (!text.trim()) return;
+      recordSeen([text]);
+      onPick(text, "create");
+    };
+    window.addEventListener("nav:conv-open", onOpen);
+    window.addEventListener("nav:conv-collapse", onCollapse);
+    window.addEventListener("nav:conv-resize", onResize);
+    window.addEventListener("nav:conv-channel-ask", onChannelAsk);
+    return () => {
+      window.removeEventListener("nav:conv-open", onOpen);
+      window.removeEventListener("nav:conv-collapse", onCollapse);
+      window.removeEventListener("nav:conv-resize", onResize);
+      window.removeEventListener("nav:conv-channel-ask", onChannelAsk);
+    };
+  }, [flyToConv, focusConv, nudgeAround, onPick, rf, schedulePersist]);
+
+  /* THE CHANNEL'S EAR — the branch's own answer, riding the same
+     store request it always has, settles into its living ledger.
+     The graph itself is never touched while the words arrive. */
+  useEffect(() => {
+    if (!convMode || !liveQuestion) return;
+    if (liveLoading) {
+      const known = findConvByQuestion(liveQuestion);
+      if (!known) {
+        /* a typed ask from the floor — the conversation is born now,
+           connected to the place the walk stands */
+        openConvRef.current(liveQuestion, null);
+      }
+      useConversations.getState().markLoading(liveQuestion);
+      lastLiveMsgRef.current = null;
+      return;
+    }
+    const answer = (liveAnswer ?? "").trim();
+    if (!answer && !liveError) return;
+    const msgKey = liveMessage?.id ?? `${liveQuestion}:${answer.length}`;
+    if (lastLiveMsgRef.current === msgKey) return;
+    lastLiveMsgRef.current = msgKey;
+    useConversations.getState().complete(liveQuestion, answer, {
+      error: liveError ?? undefined,
+      energy: liveError === ENERGY_NOTICE,
+      message: liveMessage ?? null,
+    });
+  }, [convMode, liveLoading, liveQuestion, liveAnswer, liveError, liveMessage]);
+
+  /* THE FOLLOW-UP'S OWN BRANCHES — the reply's grown questions become
+     connected nodes around the conversation, exactly where they belong. */
+  useEffect(() => {
+    if (!convMode || liveLoading || !channeling?.length || !liveMessage) return;
+    const conv = findConvByQuestion(liveMessage.query);
+    if (!conv) return;
+    const sig = liveMessage.id ?? conv.id;
+    if (grownBranchesRef.current.has(sig)) return;
+    grownBranchesRef.current.add(sig);
+    useConversations.getState().setBranches(conv.id, channeling.slice(0, 5));
+    const node = nodesRef.current.find((n) => n.data.convId === conv.id);
+    if (!node) return;
+    growChildren(node, channeling.slice(0, 5));
+    /* the card's true bounds may still be settling — one gentle pass */
+    const t1 = window.setTimeout(() => nudgeAround(node.id), 140);
+    const t2 = window.setTimeout(() => nudgeAround(node.id), 420);
+    return () => {
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+    };
+  }, [convMode, liveLoading, channeling, liveMessage, growChildren, nudgeAround]);
+
+  /* THE SEMANTIC ZOOM'S EAR — one boolean, changed only at the
+     threshold, never per frame (the tree never re-renders for a walk). */
+  const onMove = useCallback((_e: unknown, vp: { zoom: number }) => {
+    if (denseRafRef.current) return;
+    denseRafRef.current = requestAnimationFrame(() => {
+      denseRafRef.current = 0;
+      setDense(vp.zoom < 0.5);
+    });
+  }, []);
+
+  useEffect(
+    () => () => {
+      if (animRef.current != null) cancelAnimationFrame(animRef.current);
+      if (denseRafRef.current) cancelAnimationFrame(denseRafRef.current);
+    },
+    []
+  );
 
   /* --------------------- the quiet controls ----------------------- */
   useEffect(() => {
@@ -1191,6 +1740,10 @@ function NavInner({
     prevFocusRef.current = [];
     revisitsRef.current = new Map();
     lastAutoRef.current = null;
+    lastLiveMsgRef.current = null;
+    grownBranchesRef.current.clear();
+    /* the living rooms rest with the fresh map — the ledger forgets */
+    useConversations.getState().forgetAll();
     const seeded = seedGraph(
       [],
       golden,
@@ -1342,6 +1895,7 @@ function NavInner({
       data-testid={`${testIdPrefix}-navigator`}
       className="nav-flow absolute inset-0"
     >
+      <NavDensity.Provider value={dense}>
       <ReactFlow<NavNode, NavEdge>
         nodes={nodes}
         edges={edges}
@@ -1353,6 +1907,7 @@ function NavInner({
           if (n.id === homeId) comeHome();
           else focusNode(n.id);
         }}
+        onMove={onMove}
         onMoveEnd={onMoveEnd}
         onInit={onInit}
         onPaneClick={dismissHint}
@@ -1378,6 +1933,7 @@ function NavInner({
           color="color-mix(in srgb, var(--gd) 16%, transparent)"
         />
       </ReactFlow>
+      </NavDensity.Provider>
 
       {/* THE FLOOR'S OWN LIGHT — one soft glow behind the walk, the
           focused family's color breathing under the map */}
