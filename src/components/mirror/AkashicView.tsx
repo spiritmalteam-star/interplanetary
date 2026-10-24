@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useMirror } from "@/lib/mirror-store";
+import { useWorkspaceMemory } from "@/lib/workspace-memory";
 import { useT } from "@/lib/i18n";
 import {
   noteBrowserVoiceFallback,
@@ -190,6 +191,14 @@ export function AkashicView() {
           era: data.era ?? "inscribed in an age the shelves remember",
           record: data.record,
           seal: typeof data.seal === "string" ? data.seal : "",
+        });
+        /* ADAPTIVE READING — the Library's own return: the workspace
+           remembers the record the visitor stood at, so one hand
+           brings the Library back (the record itself lives only in
+           the visit — the shelf's law stays honest) */
+        useWorkspaceMemory.getState().setReading("akashic:last", {
+          title: data.title ?? "A Record Set Aside",
+          view: "akashic",
         });
       } catch {
         setError(true);

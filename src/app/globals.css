@@ -3910,3 +3910,51 @@ html:not(.dark) .lp-sigil-img {
     animation: none !important;
   }
 }
+
+/* ------------------------------------------------------------------ */
+/*  THE INTELLIGENT SIMPLICITY LAYER — clarity's dusk, the saved       */
+/*  spaces' own light, and the automatic performance room.             */
+/* ------------------------------------------------------------------ */
+
+/* THE CLARITY DUSK (protocol 6) — unrelated paths rest at a whisper;
+   every dimmed node and line stays exactly where it stands, as
+   reachable as ever (one touch restores the light). */
+.nav-node[data-dim="true"],
+.nav-conv-chip[data-dim="true"],
+.nav-conv-card[data-dim="true"] {
+  opacity: 0.13;
+}
+.nav-node[data-dim="true"]:hover,
+.nav-conv-chip[data-dim="true"]:hover,
+.nav-conv-card[data-dim="true"]:hover {
+  opacity: 0.55;
+}
+
+/* THE SAVED SPACES — a pinned ground keeps one quiet candle */
+.nav-node[data-pinned="true"],
+.nav-conv-chip[data-pinned="true"] {
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--na, var(--gd)) 34%, transparent),
+    0 8px 24px -18px rgba(0, 0, 0, 0.5);
+}
+
+/* AUTOMATIC PERFORMANCE MODE (protocol 8) — the eco room: decorative
+   motion rests, the words and every hand stay exactly as reachable.
+   Text readability is never reduced; only the expensive decoration
+   bends. */
+[data-perf="eco"] .nav-spin,
+[data-perf="eco"] .nav-conv-failed-dot {
+  animation: none;
+}
+[data-perf="eco"] .conv-rise {
+  animation-duration: 1ms;
+}
+[data-perf="eco"] [style*="viz-"] {
+  animation: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-node[data-dim="true"],
+  .nav-conv-chip[data-dim="true"],
+  .nav-conv-card[data-dim="true"] {
+    transition: none;
+  }
+}

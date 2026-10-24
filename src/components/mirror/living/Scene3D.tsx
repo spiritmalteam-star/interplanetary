@@ -27,6 +27,7 @@ import {
 import { useReducedMotion } from "framer-motion";
 import type { Group, Material, Mesh, Vector3 } from "three";
 import type { SceneId } from "@/lib/visual-scenes";
+import { perfEco } from "@/lib/perf-mode";
 
 type ThreeModule = typeof import("three");
 type ThreeNS = ThreeModule;
@@ -382,7 +383,9 @@ function buildEngine(
     alpha: true,
     powerPreference: "low-power",
   });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+  /* AUTOMATIC PERFORMANCE MODE — weaker devices receive the lighter
+     render honestly: one lower pixel ceiling, everything still smooth */
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, perfEco() ? 1 : 1.5));
 
   const builder = BUILDERS[scene] ?? FALLBACK_3D;
   const built = builder(T, accent, seed);

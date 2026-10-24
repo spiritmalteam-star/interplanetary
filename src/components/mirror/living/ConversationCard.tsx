@@ -28,6 +28,7 @@ import {
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 import {
   BookOpen,
+  Bookmark,
   Check,
   ChevronDown,
   Clapperboard,
@@ -39,11 +40,18 @@ import {
   ScrollText,
   Send,
   Share2,
+  X,
 } from "lucide-react";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { useConversations, askBranchRoom, type BranchTurn } from "@/lib/branch-conversations";
 import { useMirror } from "@/lib/mirror-store";
+import {
+  convPinId,
+  nodePinId,
+  useWorkspaceMemory,
+  type MemoryCreation,
+} from "@/lib/workspace-memory";
 import { ENERGY_NOTICE, EnergyError } from "@/lib/speak-client";
 import { isVisualIntent } from "@/lib/visual-intent";
 import { detectArtifactIntent } from "@/lib/artifact-intent";
@@ -165,12 +173,16 @@ function CompactChip({
   accent,
   turns,
   failed,
+  dimmed,
+  pinned,
 }: {
   nodeId: string;
   title: string;
   accent: string;
   turns: number;
   failed: boolean;
+  dimmed?: boolean;
+  pinned?: boolean;
 }) {
   const t = useT();
   return (
@@ -182,9 +194,10 @@ function CompactChip({
       }}
       data-testid="nav-conv-chip"
       data-status={failed ? "failed" : "resting"}
+      data-dim={dimmed || undefined}
       aria-label={t("Return to this conversation")}
       title={t("Return to this conversation")}
-      className="nav-conv-chip group relative flex max-w-[268px] flex-col rounded-[14px] border p-2.5 text-left transition-[box-shadow,border-color] duration-300 hover:shadow-[0_10px_30px_-18px_rgba(0,0,0,0.55)]"
+      className="nav-conv-chip group relative flex max-w-[268px] flex-col rounded-[14px] border p-2.5 text-left transition-[box-shadow,border-color,opacity] duration-300 hover:shadow-[0_10px_30px_-18px_rgba(0,0,0,0.55)]"
       style={
         {
           "--na": accent,
@@ -207,6 +220,13 @@ function CompactChip({
         >
           {t("room")}
         </span>
+        {pinned && (
+          <Bookmark
+            aria-hidden="true"
+            className="size-2.5 shrink-0"
+            style={{ color: accent, fill: "currentColor" }}
+          />
+        )}
         <span className="mono-label ml-auto shrink-0 text-[7.5px] uppercase tracking-[0.14em] text-muted-foreground">
           {turns > 1 ? `×${turns}` : ""}
         </span>
@@ -350,46 +370,155 @@ const MAKING_DOORS = [
 
 /** THE CONSTELLATION'S SEED — a making born of this conversation:
  *  the artifact node hangs connected to the branch in the map, its
- *  editing tools wait in their own workspace (directive 11/12). */
-function MakingDoors({ nodeId, accent }: { nodeId: string; accent: string }) {
+ *  editing tools wait in their own workspace (directive 11/12).
+ *  THE COMPACT FORM (protocol 3 / contextual creation): the door
+ *  opens the smallest form necessary — pre-filled from the active
+ *  conversation, editable, and never launching any heavy generation
+ *  by itself. A second touch brings an existing making back. */
+function MakingDoors({
+  nodeId,
+  accent,
+  convQuestion,
+}: {
+  nodeId: string;
+  accent: string;
+  convQuestion: string;
+}) {
   const t = useT();
+  const [openKind, setOpenKind] = useState<MemoryCreation | null>(null);
+  const [title, setTitle] = useState("");
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (openKind) {
+      const tm = window.setTimeout(() => inputRef.current?.focus(), 30);
+      return () => window.clearTimeout(tm);
+    }
+  }, [openKind]);
+
+  const openDoor = useCallback(
+    (kind: MemoryCreation) => {
+      setOpenKind(kind);
+      /* the conversation's own words pre-fill the form — editable,
+         never a lock */
+      setTitle(convQuestion.slice(0, 72));
+    },
+    [convQuestion]
+  );
+
+  const create = useCallback(() => {
+    if (!openKind) return;
+    window.dispatchEvent(
+      new CustomEvent<{ id: string; kind: string; title?: string }>("nav:conv-create", {
+        detail: { id: nodeId, kind: openKind, title: title.trim() || convQuestion },
+      })
+    );
+    setOpenKind(null);
+    setTitle("");
+  }, [convQuestion, nodeId, openKind, title]);
+
+  const activeDoor = openKind ? MAKING_DOORS.find((d) => d.kind === openKind) : null;
+
   return (
     <div
-      className="flex items-center gap-1 border-t px-3 pb-1.5 pt-1.5"
+      className="flex flex-col border-t"
       style={{ borderColor: accentMix(accent, 12, "var(--hairline)") }}
       data-testid="nav-conv-making-doors"
     >
-      <span className="mono-label shrink-0 text-[7.5px] uppercase tracking-[0.16em] text-muted-foreground/60">
-        {t("Grow a making")}
-      </span>
-      <span className="flex flex-1 items-center justify-end gap-0.5">
-        {MAKING_DOORS.map((d) => {
-          const doorAccent = CREATION_ACCENTS[d.kind];
-          return (
-            <button
-              key={d.kind}
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                window.dispatchEvent(
-                  new CustomEvent<{ id: string; kind: string }>("nav:conv-create", {
-                    detail: { id: nodeId, kind: d.kind },
-                  })
-                );
-              }}
-              aria-label={t(d.label)}
-              title={t(d.label)}
-              data-testid={`nav-conv-create-${d.kind}`}
-              className="focus-glow flex size-6 items-center justify-center rounded-full text-muted-foreground/70 transition-all duration-200 hover:text-foreground"
-              style={{
-                boxShadow: `inset 0 0 0 1px color-mix(in srgb, ${doorAccent} 26%, transparent)`,
-              }}
-            >
-              <d.icon className="size-3" aria-hidden="true" style={{ color: doorAccent, opacity: 0.85 }} />
-            </button>
-          );
-        })}
-      </span>
+      {/* the compact form — risen only when a door is held open */}
+      {activeDoor && (
+        <div
+          className="conv-rise flex items-center gap-1.5 px-3 pb-1 pt-2"
+          data-testid="nav-conv-create-form"
+        >
+          <activeDoor.icon
+            aria-hidden="true"
+            className="size-3 shrink-0"
+            style={{ color: CREATION_ACCENTS[activeDoor.kind], opacity: 0.9 }}
+          />
+          <input
+            ref={inputRef}
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            onKeyDown={(e) => {
+              e.stopPropagation();
+              if (e.key === "Enter") {
+                e.preventDefault();
+                create();
+              } else if (e.key === "Escape") {
+                e.preventDefault();
+                setOpenKind(null);
+              }
+            }}
+            placeholder={t("Name this making — the words are yours")}
+            aria-label={t("Name this making — the words are yours")}
+            data-testid="nav-conv-create-title"
+            className="nowheel nopan nodrag min-w-0 flex-1 rounded-lg border bg-transparent px-2.5 py-1.5 text-[12.5px] leading-snug text-foreground outline-none transition-colors duration-200 placeholder:text-muted-foreground/60 focus:border-foreground/25"
+            style={{ borderColor: accentMix(accent, 26, "var(--hairline)") }}
+          />
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              create();
+            }}
+            aria-label={t("Hang the making on this conversation")}
+            title={t("Hang the making on this conversation")}
+            data-testid="nav-conv-create-confirm"
+            className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full border text-foreground transition-colors duration-200 hover:bg-foreground/5"
+            style={{ borderColor: accentMix(accent, 40, "var(--hairline)") }}
+          >
+            <Check className="size-3.5" aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setOpenKind(null);
+            }}
+            aria-label={t("Close")}
+            className="flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors duration-200 hover:text-foreground"
+          >
+            <X className="size-3.5" aria-hidden="true" />
+          </button>
+        </div>
+      )}
+      <div className="flex items-center gap-1 px-3 pb-1.5 pt-1.5">
+        <span className="mono-label shrink-0 text-[7.5px] uppercase tracking-[0.16em] text-muted-foreground/60">
+          {t("Grow a making")}
+        </span>
+        <span className="flex flex-1 items-center justify-end gap-0.5">
+          {MAKING_DOORS.map((d) => {
+            const doorAccent = CREATION_ACCENTS[d.kind];
+            const held = openKind === d.kind;
+            return (
+              <button
+                key={d.kind}
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (held) setOpenKind(null);
+                  else openDoor(d.kind);
+                }}
+                aria-label={t(d.label)}
+                title={t(d.label)}
+                aria-pressed={held || undefined}
+                data-testid={`nav-conv-create-${d.kind}`}
+                className={cn(
+                  "focus-glow flex size-6 items-center justify-center rounded-full text-muted-foreground/70 transition-all duration-200 hover:text-foreground",
+                  held && "text-foreground"
+                )}
+                style={{
+                  boxShadow: `inset 0 0 0 1px color-mix(in srgb, ${doorAccent} ${held ? 70 : 26}%, transparent)`,
+                  backgroundColor: held ? `color-mix(in srgb, ${doorAccent} 12%, transparent)` : undefined,
+                }}
+              >
+                <d.icon className="size-3" aria-hidden="true" style={{ color: doorAccent, opacity: 0.85 }} />
+              </button>
+            );
+          })}
+        </span>
+      </div>
     </div>
   );
 }
@@ -401,11 +530,13 @@ function FocusedBody({
   convId,
   title,
   accent,
+  dimmed,
 }: {
   nodeId: string;
   convId: string;
   title: string;
   accent: string;
+  dimmed?: boolean;
 }) {
   const t = useT();
   const conv = useConversations((s) => s.convs[convId]);
@@ -414,6 +545,42 @@ function FocusedBody({
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const taRef = useRef<HTMLTextAreaElement | null>(null);
   const sigRef = useRef<string>("");
+  /* THE SAVED SPACE — the visitor's own mark on this room */
+  const pinned = useWorkspaceMemory((s) => s.pins.some((p) => p.id === convPinId(convId)));
+  const togglePin = useCallback(() => {
+    const c = useConversations.getState().convs[convId];
+    useWorkspaceMemory.getState().togglePin({
+      id: convPinId(convId),
+      kind: "conversation",
+      text: c?.question ?? title,
+      convId,
+    });
+  }, [convId, title]);
+
+  /* THE DRAFT'S OWN KEEP — a navigation away never eats a half-spoken
+     thought (protocol 7): the composer's words rest in the workspace
+     memory and return with the room */
+  const draftHydratedRef = useRef(false);
+  useEffect(() => {
+    if (draftHydratedRef.current) return;
+    draftHydratedRef.current = true;
+    const saved = useWorkspaceMemory.getState().drafts[convId];
+    if (saved) {
+      setDraft(saved);
+      const el = taRef.current;
+      if (el) {
+        el.style.height = "auto";
+        el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
+      }
+    }
+  }, [convId]);
+  useEffect(() => {
+    const tm = window.setTimeout(
+      () => useWorkspaceMemory.getState().setDraft(convId, draft),
+      450
+    );
+    return () => window.clearTimeout(tm);
+  }, [convId, draft]);
 
   /* the newest word pulls the eye — quiet, only when the thread grows.
      When a turn LANDS the card's own rectangle changes shape: the
@@ -518,6 +685,7 @@ function FocusedBody({
         } as CSSProperties
       }
       data-testid="nav-conv-card"
+      data-dim={dimmed || undefined}
       onPointerDown={(e) => e.stopPropagation()}
     >
       <Handle type="target" position={Position.Top} className="nav-handle" isConnectable={false} />
@@ -550,6 +718,27 @@ function FocusedBody({
             {t("a living conversation")}
           </p>
         </div>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            togglePin();
+          }}
+          aria-pressed={pinned}
+          aria-label={pinned ? t("Remove this saved space") : t("Save this space")}
+          title={pinned ? t("Remove this saved space") : t("Save this space")}
+          data-testid="nav-conv-pin"
+          className={cn(
+            "focus-glow mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors duration-200 hover:text-foreground",
+            pinned && "text-foreground"
+          )}
+        >
+          <Bookmark
+            className="size-3.5"
+            aria-hidden="true"
+            style={pinned ? { color: accent, fill: "currentColor" } : undefined}
+          />
+        </button>
         <button
           type="button"
           onClick={(e) => {
@@ -664,9 +853,14 @@ function FocusedBody({
         </div>
       </div>
       {/* THE MAKING'S OWN DOORS — books, records, music, inventions:
-          each hangs its artifact node connected to this conversation */}
+          the compact form rises from the door itself, pre-filled with
+          this conversation's own words */}
       {branchAnswer?.status === "landed" && (
-        <MakingDoors nodeId={nodeId} accent={accent} />
+        <MakingDoors
+          nodeId={nodeId}
+          accent={accent}
+          convQuestion={conv.question}
+        />
       )}
     </div>
   );
@@ -695,6 +889,13 @@ export const ConversationNode = memo(function ConversationNode({
     const c = s.convs[convId];
     return !!c && c.turns.some((x) => x.status === "failed");
   });
+  /* THE CLARITY DUSK and the visitor's own pin — read where they live */
+  const dimmed = !!data.dimmed;
+  const pinned = useWorkspaceMemory((s) =>
+    convId
+      ? s.pins.some((p) => p.id === convPinId(convId))
+      : s.pins.some((p) => p.id === nodePinId(String(data.text ?? ""), data.creation))
+  );
 
   if (!convId) {
     /* a stray node without its ledger — rest it as a quiet chip */
@@ -705,6 +906,8 @@ export const ConversationNode = memo(function ConversationNode({
         accent={String(data.accent ?? "var(--gd)")}
         turns={0}
         failed={false}
+        dimmed={dimmed}
+        pinned={pinned}
       />
     );
   }
@@ -717,6 +920,8 @@ export const ConversationNode = memo(function ConversationNode({
         accent={String(data.accent ?? "var(--gd)")}
         turns={turnsCount}
         failed={failed}
+        dimmed={dimmed}
+        pinned={pinned}
       />
     );
   }
@@ -727,6 +932,7 @@ export const ConversationNode = memo(function ConversationNode({
       convId={convId}
       title={String(data.text ?? "")}
       accent={String(data.accent ?? "var(--gd)")}
+      dimmed={dimmed}
     />
   );
 });

@@ -74,6 +74,9 @@ export interface NavNodeData extends Record<string, unknown> {
   reason?: string;
   focused?: boolean;
   inTrail?: boolean;
+  /** THE CLARITY DUSK — true when clarity mode rests this node away
+   *  from the standing focus (protocol 6: dim, never delete). */
+  dimmed?: boolean;
   golden?: boolean;
   revisits?: number;
   /** The living conversation this node carries (role "conversation"). */
@@ -91,6 +94,8 @@ export interface NavEdgeData extends Record<string, unknown> {
   cross?: boolean;
   reason?: string;
   trail?: boolean;
+  /** The clarity dusk's own rest — a line outside the standing focus. */
+  dimmed?: boolean;
 }
 
 export type NavEdge = Edge<NavEdgeData>;

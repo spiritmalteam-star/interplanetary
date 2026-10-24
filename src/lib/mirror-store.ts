@@ -247,6 +247,9 @@ export interface DreamBookResume {
   pages: DreamBookResumePage[];
   threads: string;
   ended: boolean;
+  /** Where the reading rested — the resume reopens at the same leaf
+   *  (Adaptive Reading). Optional: older shelves never carried one. */
+  pageIdx?: number;
 }
 
 /* ------- the chat's own paused volume — the weaving instrument ------

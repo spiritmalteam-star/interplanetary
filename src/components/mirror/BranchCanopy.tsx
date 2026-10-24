@@ -112,6 +112,7 @@ import {
   type NavigatorApi,
 } from "./BranchNavigator";
 import type { SeedWhisper } from "@/lib/navigator-graph";
+import { useWorkspaceMemory } from "@/lib/workspace-memory";
 import { ToolbarRail } from "./living/ToolbarRail";
 import { attachmentsToPayload, type ChatAttachment } from "./attachments";
 import { MirrorChanneling, SCOPE_CHANNELING } from "./MirrorChanneling";
@@ -2231,6 +2232,23 @@ export function BranchCanopy({
       recordJourney({ b: category, s: scopeHint ?? undefined });
       bumpWalkSteps();
       setBranchCreationSeed({ kind, topic });
+      /* REMEMBER MY PLACE — a making opened is a meaningful place;
+         one hand brings the workspace back (protocol 1/2) */
+      useWorkspaceMemory.getState().recordLast({
+        kind: "creation",
+        title: topic || kind,
+        creation: kind,
+        view:
+          kind === "book"
+            ? "dreambook"
+            : kind === "akashic"
+              ? "akashic"
+              : kind === "music"
+                ? "lightcodes"
+                : kind === "video"
+                  ? "video"
+                  : "invent",
+      });
       if (kind === "akashic") openAkashic();
       else if (kind === "book") openDreamBook();
       else if (kind === "music") openLightCodes({ intention: topic });

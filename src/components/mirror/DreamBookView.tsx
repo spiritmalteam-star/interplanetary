@@ -61,6 +61,7 @@ import {
   type ShelfVolume,
 } from "@/lib/book-shelf";
 import type { DreamBookResume } from "@/lib/mirror-store";
+import { bookReadingKey, useWorkspaceMemory } from "@/lib/workspace-memory";
 import type { VoiceId } from "@/lib/i18n/core";
 import type { BookAudit, BookLedger } from "@/lib/book-ledger";
 import { AUDIT_DIMENSIONS } from "@/lib/book-ledger";
@@ -178,6 +179,10 @@ export function DreamBookView() {
   const [pages, setPages] = useState<WeavePage[]>([]);
   const [ended, setEnded] = useState(false);
   const [pageIdx, setPageIdx] = useState(0);
+  /* ADAPTIVE READING — the page's own mirror, so the volume's snapshot
+     and the workspace memory can speak of the leaf without re-rendering */
+  const pageIdxRef = useRef(0);
+  pageIdxRef.current = pageIdx;
   const [slideDir, setSlideDir] = useState<1 | -1>(1);
   const [weavingNext, setWeavingNext] = useState(false);
   const [weaveError, setWeaveError] = useState(false);
@@ -351,7 +356,9 @@ export function DreamBookView() {
       setPages(pagesRef.current);
       setMeta(metaRef.current);
       setEnded(r.ended);
-      setPageIdx(0);
+      /* ADAPTIVE READING — the volume returns to the leaf it was left
+         on: the resume carries the page when it knows one */
+      setPageIdx(Math.max(0, Math.min(r.pageIdx ?? 0, Math.max(0, pagesRef.current.length - 1))));
       setSlideDir(1);
       setZoom(1);
       setStage("reading");
@@ -421,6 +428,7 @@ export function DreamBookView() {
       savedAt: new Date().toISOString(),
       config: { ...configRef.current },
       threads: threadsRef.current,
+      pageIdx: pageIdxRef.current,
       pages: pagesRef.current.map((p) => ({
         n: p.n,
         ...(p.part ? { part: p.part } : {}),
@@ -437,6 +445,27 @@ export function DreamBookView() {
     if (!snap) return;
     keepVolume(snap);
   }, [snapshotCurrent]);
+
+  /* ADAPTIVE READING — the workspace remembers where the reading
+     rested: one quiet write per settled page, so "continue where you
+     left off" and the universal search can reopen the exact leaf */
+  useEffect(() => {
+    if (stage !== "reading") return;
+    const bookId = bookIdRef.current;
+    if (!bookId) return;
+    const tm = window.setTimeout(() => {
+      const m = metaRef.current;
+      const title = m?.title ?? "";
+      if (!title) return;
+      useWorkspaceMemory.getState().setReading(bookReadingKey(bookId), {
+        title,
+        view: "dreambook",
+        pageIdx: pageIdxRef.current,
+        bookId,
+      });
+    }, 900);
+    return () => window.clearTimeout(tm);
+  }, [stage, pageIdx]);
 
   const openShelf = useCallback(() => {
     stopNarration();
@@ -520,6 +549,7 @@ export function DreamBookView() {
         pages: v.pages,
         threads: v.threads,
         ended: v.ended,
+        pageIdx: v.pageIdx,
       });
       setShelfOpen(false);
     },

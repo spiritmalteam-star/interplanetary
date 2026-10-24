@@ -33,6 +33,10 @@ export interface ShelfVolume {
   config: { age: string; tale: string; volume: string; level: string; topic: string };
   threads: string;
   pages: ShelfPage[];
+  /** Where the reading rested — the page the visitor last stood on
+   *  (Adaptive Reading: the canvas remembers its origin, the volume
+   *  remembers its page). */
+  pageIdx?: number;
 }
 
 const SHELF_KEY = "mirror-dream-shelf";

@@ -31,6 +31,7 @@ import "@xyflow/react/dist/style.css";
 import {
   ArrowLeftRight,
   BookOpen,
+  Bookmark,
   ChevronRight,
   Clapperboard,
   Hammer,
@@ -64,6 +65,14 @@ import {
   findConvByQuestion,
   useConversations,
 } from "@/lib/branch-conversations";
+import {
+  convPinId,
+  nodePinId,
+  useWorkspaceMemory,
+  type MemoryCreation,
+} from "@/lib/workspace-memory";
+import { applyPerfAttribute, usePerfMode } from "@/lib/perf-mode";
+import { setLatestCatalog } from "@/lib/universal-search";
 import { ConversationNode } from "./living/ConversationCard";
 import { NavDensity } from "./living/navContext";
 import {
@@ -202,6 +211,11 @@ const QuestionNode = memo(function QuestionNode({
     : (MOVEMENT_ICONS[d.movement] ?? Layers);
   const isHome = d.role === "home";
   const focused = !!d.focused;
+  /* THE SAVED SPACES — a pin the visitor set on purpose, kept across
+     visits; the marker stays quiet until the pin exists */
+  const pinned = useWorkspaceMemory((s) =>
+    s.pins.some((p) => p.id === nodePinId(d.text, d.creation))
+  );
 
   const select = useCallback(
     () => window.dispatchEvent(new CustomEvent<{ id: string }>("nav:select", { detail: { id } })),
@@ -214,6 +228,14 @@ const QuestionNode = memo(function QuestionNode({
       ),
     [id]
   );
+  const togglePin = useCallback(() => {
+    useWorkspaceMemory.getState().togglePin({
+      id: nodePinId(d.text, d.creation),
+      kind: d.creation ? "creation" : "branch",
+      text: d.text,
+      creation: d.creation as MemoryCreation | undefined,
+    });
+  }, [d.creation, d.text]);
 
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     if (e.key === "Enter" || e.key === " ") {
@@ -232,9 +254,11 @@ const QuestionNode = memo(function QuestionNode({
       data-testid={`nav-node-${isHome ? "home" : d.kind}`}
       data-status={d.status}
       data-focused={focused || undefined}
+      data-dim={d.dimmed || undefined}
+      data-pinned={pinned || undefined}
       onKeyDown={onKeyDown}
       className={cn(
-        "nav-node relative flex flex-col rounded-[14px] border p-2.5 text-left transition-[box-shadow,border-color] duration-300",
+        "nav-node relative flex flex-col rounded-[14px] border p-2.5 text-left transition-[box-shadow,border-color,opacity] duration-300",
         "w-[196px] sm:w-[232px]",
         "focus-visible:ring-1 focus-visible:ring-[color:var(--na)] focus-visible:outline-none",
         d.status === "loading" && "nav-node-loading",
@@ -296,6 +320,16 @@ const QuestionNode = memo(function QuestionNode({
         >
           {t(KIND_LABELS[d.kind])}
         </span>
+        {pinned && (
+          <Bookmark
+            aria-hidden="true"
+            className="size-2.5 shrink-0"
+            style={{
+              color: d.golden ? "#f59e0b" : d.accent,
+              fill: "currentColor",
+            }}
+          />
+        )}
         {d.status === "loading" && (
           <LoaderCircle
             aria-hidden="true"
@@ -391,6 +425,30 @@ const QuestionNode = memo(function QuestionNode({
                   )}
                 </button>
               )}
+              {/* THE SAVED SPACE — one quiet hand: this ground stays
+                  discoverable later, exactly where it stands (protocol 4) */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  togglePin();
+                }}
+                aria-pressed={pinned}
+                aria-label={pinned ? t("Remove this saved space") : t("Save this space")}
+                title={pinned ? t("Remove this saved space") : t("Save this space")}
+                data-testid="nav-act-pin"
+                className={cn(
+                  "flex size-[24px] items-center justify-center rounded-full border text-muted-foreground transition-colors duration-200 hover:text-foreground",
+                  pinned && "text-foreground"
+                )}
+                style={{ borderColor: accentMix(d.accent, 30, "var(--hairline)") }}
+              >
+                <Bookmark
+                  className="size-3"
+                  aria-hidden="true"
+                  style={pinned ? { color: d.accent, fill: "currentColor" } : undefined}
+                />
+              </button>
             </>
           )}
         </span>
@@ -534,6 +592,8 @@ function NavInner({
 }: BranchNavigatorProps) {
   const t = useT();
   const rf = useReactFlow();
+  /* AUTOMATIC PERFORMANCE MODE — one honest read of the device */
+  const perfTier = usePerfMode((s) => s.tier);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const homeId = "home";
   const branchVoice = VOICE_BY_BRANCH[category] ?? "interplanetary";
@@ -611,6 +671,14 @@ function NavInner({
      outlines: Level A of the walk. One boolean, changed only when the
      threshold is crossed, never per frame. */
   const [dense, setDense] = useState(false);
+  /* THE CLARITY MODE — unrelated paths rest in a gentle dusk while the
+     standing conversation keeps its full light (protocol 6). Session
+     state: the map itself is never modified, and one hand restores it. */
+  const [clarity, setClarity] = useState(false);
+  const clarityRef = useRef(false);
+  /* REMEMBER MY PLACE — the one-action return the house extends */
+  const [resume, setResume] = useState<{ nodeId: string; title: string } | null>(null);
+  const resumeShownRef = useRef(false);
 
   const attemptedRef = useRef<Set<string>>(boot.attempted);
   const inflightRef = useRef<Set<string>>(new Set());
@@ -619,7 +687,11 @@ function NavInner({
   const autoCountRef = useRef(boot.autoCount);
   const crossCountRef = useRef(boot.crossCount);
   const growCountRef = useRef(0);
-  const prevFocusRef = useRef<string[]>([]);
+  /* THE RETURN'S OWN MEMORY — where the walk stood before, camera and
+     all, so the step back lands exactly there (protocol 7) */
+  const prevFocusRef = useRef<
+    { id: string; camera: { x: number; y: number; zoom: number } | null }[]
+  >([]);
   const revisitsRef = useRef<Map<string, number>>(new Map());
   const nodesRef = useRef(nodes);
   const edgesRef = useRef(edges);
@@ -695,46 +767,70 @@ function NavInner({
   }, []);
 
   const applyFocusVisuals = useCallback(
-    (id: string | null) => {
+    (id: string | null, opts?: { soft?: boolean }) => {
       const path = pathIdsOf(id);
+      /* THE CLARITY SET — the standing focus, its ancestors and its
+         direct children; everything else rests in the dusk. The map
+         itself is never touched: a dimmed node stays right where it
+         stands, as reachable as ever (one touch restores it). */
+      const keep = new Set<string>();
+      if (clarityRef.current && id) {
+        for (const x of path) keep.add(x);
+        for (const n of nodesRef.current) {
+          if (n.data.parentId === id) keep.add(n.id);
+        }
+      }
       setNodes((nds) =>
         nds.map((n) => {
-          const focused = n.id === id;
-          const inTrail = n.id !== id && path.has(n.id);
+          const focused = opts?.soft ? false : n.id === id;
+          const inTrail = opts?.soft
+            ? path.has(n.id)
+            : n.id !== id && path.has(n.id);
+          const dimmed =
+            clarityRef.current && !!id && !keep.has(n.id);
           const revisits = revisitsRef.current.get(n.data.text);
           if (
             n.data.focused === focused &&
             n.data.inTrail === inTrail &&
+            n.data.dimmed === dimmed &&
             n.data.revisits === revisits
           )
             return n;
-          return { ...n, data: { ...n.data, focused, inTrail, revisits } };
+          return { ...n, data: { ...n.data, focused, inTrail, dimmed, revisits } };
         })
       );
       setEdges((es) =>
         es.map((e) => {
           const onTrail =
             path.has(e.source) && path.has(e.target) && e.source !== e.target;
-          if (!!e.data?.trail === onTrail) return e;
+          const dimmed =
+            clarityRef.current && !!id && !(keep.has(e.source) && keep.has(e.target));
+          if (!!e.data?.trail === onTrail && !!e.data?.dimmed === dimmed) return e;
           const accent = e.data?.accent ?? "var(--gd)";
-          const data: NavEdgeData = {
-            accent,
-            cross: e.data?.cross,
-            reason: e.data?.reason,
-            trail: onTrail,
-          };
-          return {
-            ...e,
-            data,
-            style: onTrail
+          const width = onTrail ? 2 : e.data?.cross ? 1 : 1.4;
+          const style = dimmed
+            ? {
+                stroke: accent,
+                strokeOpacity: 0.07,
+                strokeWidth: width,
+                strokeDasharray: e.data?.cross ? "3 5" : undefined,
+              }
+            : onTrail
               ? { stroke: accent, strokeOpacity: 0.95, strokeWidth: 2 }
               : {
                   stroke: accent,
                   strokeOpacity: e.data?.cross ? 0.6 : 0.55,
                   strokeWidth: e.data?.cross ? 1 : 1.4,
                   strokeDasharray: e.data?.cross ? "3 5" : undefined,
-                },
+                };
+          const data: NavEdgeData = {
+            accent,
+            cross: e.data?.cross,
+            reason: e.data?.reason,
+            trail: onTrail,
+            dimmed,
           };
+          return { ...e, data, style };
         })
       );
     },
@@ -1066,10 +1162,11 @@ function NavInner({
       }
       if (selectedRef.current && selectedRef.current !== id) {
         prevFocusRef.current = [
-          ...prevFocusRef.current.filter((p) => p !== selectedRef.current),
-          selectedRef.current,
+          ...prevFocusRef.current.filter((p) => p.id !== selectedRef.current),
+          { id: selectedRef.current, camera: cameraRef.current },
         ].slice(-24);
       }
+      setResume(null);
       const key = node.data.text;
       revisitsRef.current.set(key, (revisitsRef.current.get(key) ?? 0) + 1);
       setSelectedId(id);
@@ -1403,11 +1500,38 @@ function NavInner({
       neighbors part — retried while the card is still measuring. */
   const focusConv = useCallback(
     (id: string) => {
+      if (selectedRef.current && selectedRef.current !== id) {
+        prevFocusRef.current = [
+          ...prevFocusRef.current.filter((p) => p.id !== selectedRef.current),
+          { id: selectedRef.current, camera: cameraRef.current },
+        ].slice(-24);
+      }
       setSelectedId(id);
       selectedRef.current = id;
       applyFocusVisuals(id);
       setTrail((tr) => [...tr.filter((x) => x !== id), id].slice(-40));
+      setResume(null);
+      /* the room itself answers: a focused living node is the active
+         conversation (every path into focusConv lands standing) */
+      const node = nodesRef.current.find((n) => n.id === id);
+      const convId = node?.data.convId;
+      if (convId) {
+        useConversations.getState().setActive(convId);
+      }
       flyToConv(id);
+      /* REMEMBER MY PLACE — the conversation the visitor stood at is
+         the house's own one-hand return (protocol 1/2) */
+      if (convId) {
+        const conv = useConversations.getState().convs[convId];
+        if (conv) {
+          useWorkspaceMemory.getState().recordLast({
+            kind: "conversation",
+            title: conv.question,
+            convId,
+            question: conv.question,
+          });
+        }
+      }
       const retry = (ms: number) =>
         window.setTimeout(() => {
           if (selectedRef.current !== id) return;
@@ -1694,7 +1818,7 @@ function NavInner({
        the artifact node hangs connected to the branch, wearing its
        category's own light; its tools wait in their own workspace. */
     const onConvCreate = (e: Event) => {
-      const d = (e as CustomEvent<{ id: string; kind: string }>).detail;
+      const d = (e as CustomEvent<{ id: string; kind: string; title?: string }>).detail;
       if (!d?.id || !d.kind) return;
       const kind = d.kind as "akashic" | "book" | "invent" | "music" | "video";
       const parent = nodesRef.current.find((n) => n.id === d.id);
@@ -1709,8 +1833,11 @@ function NavInner({
         return;
       }
       const pd = dimsOf(parent);
+      /* the compact form's own name — the visitor's words when they
+         gave one, the conversation's own words when they did not */
       const label =
-        kind === "book"
+        d.title?.trim() ||
+        (kind === "book"
           ? "A book from this conversation"
           : kind === "akashic"
             ? "A record from this conversation"
@@ -1718,7 +1845,7 @@ function NavInner({
               ? "A song from this conversation"
               : kind === "video"
                 ? "A film from this conversation"
-                : "An invention from this conversation";
+                : "An invention from this conversation");
       const seat = placeFollowUps(
         { x: parent.position.x, y: parent.position.y, w: pd.w, h: pd.h },
         nodesRef.current,
@@ -1731,7 +1858,7 @@ function NavInner({
         type: "nav-question",
         position: seat,
         data: {
-          text: parent.data.text,
+          text: label,
           movement: "create",
           accent: CREATION_ACCENTS[kind],
           kind: navKindForCreation(kind),
@@ -1741,7 +1868,7 @@ function NavInner({
           depth: parent.data.depth + 1,
           parentId: parent.id,
           creation: kind,
-          topic: parent.data.text,
+          topic: label,
           reason: label,
         },
       };
@@ -1863,6 +1990,9 @@ function NavInner({
     } catch {
       /* quiet */
     }
+    /* AUTOMATIC PERFORMANCE MODE — the root wears the device's own
+       tier so the stylesheets can dress the room without a render */
+    applyPerfAttribute();
     /* the first visit's own hint — one gentle line, then it rests */
     let known = true;
     try {
@@ -1882,6 +2012,55 @@ function NavInner({
     return () => window.clearTimeout(timer);
   }, []);
 
+  /* REMEMBER MY PLACE — the workspace's own memory offers ONE gentle
+     return to the last conversation: the active path softly lit, the
+     words where they were left. Nothing opens by itself; the pill
+     rests after its moment or at the visitor's first step. */
+  useEffect(() => {
+    if (resumeShownRef.current) return;
+    const tm = window.setTimeout(() => {
+      resumeShownRef.current = true;
+      const last = useWorkspaceMemory.getState().last;
+      if (!last || last.kind !== "conversation" || !last.question) return;
+      const conv = findConvByQuestion(last.question);
+      if (!conv || !conv.turns.some((x) => x.status === "landed")) return;
+      const node = nodesRef.current.find((n) => n.data.convId === conv.id);
+      if (!node) return;
+      /* the visitor already stands inside the room — the pill rests */
+      if (useConversations.getState().activeConvId === conv.id) return;
+      setResume({ nodeId: node.id, title: conv.question });
+      /* the active path softly illuminated — the trail's own light,
+         never a forced focus, never a moved camera */
+      applyFocusVisuals(node.id, { soft: true });
+      window.setTimeout(() => setResume(null), 26000);
+    }, 1200);
+    return () => window.clearTimeout(tm);
+  }, [applyFocusVisuals]);
+
+  /* THE UNIVERSAL SEARCH'S SHELF — the map's own catalog, broadcast
+     quietly (bounded, debounced) so the one search field can find
+     every branch and every making on the living map */
+  useEffect(() => {
+    const tm = window.setTimeout(() => {
+      const catalog = nodesRef.current.map((n) => ({
+        id: n.id,
+        text: n.data.text,
+        role: n.data.role,
+        kind: n.data.kind,
+        creation: n.data.creation,
+        convId: n.data.convId,
+        depth: n.data.depth,
+      }));
+      setLatestCatalog(catalog);
+      window.dispatchEvent(
+        new CustomEvent("nav:catalog", {
+          detail: { nodes: catalog },
+        })
+      );
+    }, 700);
+    return () => window.clearTimeout(tm);
+  }, [nodes, edges]);
+
   const dismissHint = useCallback(() => {
     setHintSeen(true);
     try {
@@ -1898,12 +2077,25 @@ function NavInner({
 
   const backToPrevious = useCallback(() => {
     const prev = prevFocusRef.current.pop();
-    if (prev && nodesRef.current.some((n) => n.id === prev)) {
-      focusNode(prev, { record: false });
+    if (prev && nodesRef.current.some((n) => n.id === prev.id)) {
+      const n = nodesRef.current.find((x) => x.id === prev.id)!;
+      /* a living room answers to its own hands — the camera glides */
+      if (n.data.role === "conversation" && n.data.convId) {
+        focusConvRef.current(prev.id);
+        return;
+      }
+      /* a branch stone: the camera returns to exactly where it stood,
+         then the focus follows (never a half-remembered landing) */
+      if (prev.camera) {
+        rf.setViewport(prev.camera, {
+          duration: reducedMotionRef.current ? 0 : 420,
+        });
+      }
+      focusNode(prev.id, { record: false, center: false });
     } else {
       comeHome();
     }
-  }, [comeHome, focusNode]);
+  }, [comeHome, focusNode, rf]);
 
   /* THE L-SHAPED TOOLBAR'S OWN EAR — the vertical arm's hands ride the
      same DOM events every hand of the house rides; the arm reports the
@@ -1930,6 +2122,35 @@ function NavInner({
       const bias = (e as CustomEvent<{ bias?: number }>).detail?.bias;
       if (bias === -1 || bias === 0 || bias === 1) setDepthBias(bias);
     };
+    /* THE CLARITY HAND — the dusk on, the dusk off; the map itself
+       never changes either way */
+    const onClarity = () => {
+      clarityRef.current = !clarityRef.current;
+      setClarity(clarityRef.current);
+      applyFocusVisuals(selectedRef.current);
+    };
+    /* THE SEARCH'S OWN HANDS — one result, one arrival: a node by id
+       or by its own words, a conversation reopened where it stood */
+    const onGoto = (e: Event) => {
+      const d =
+        (e as CustomEvent<{ nodeId?: string; text?: string }>).detail ?? {};
+      const node = d.nodeId
+        ? nodesRef.current.find((n) => n.id === d.nodeId)
+        : d.text
+          ? nodesRef.current.find((n) => n.data.text === d.text)
+          : undefined;
+      if (!node) return;
+      if (node.data.role === "conversation" && node.data.convId) {
+        useConversations.getState().setActive(node.data.convId);
+        focusConvRef.current(node.id);
+      } else {
+        focusNode(node.id);
+      }
+    };
+    const onOpenConv = (e: Event) => {
+      const q = (e as CustomEvent<{ question?: string }>).detail?.question;
+      if (q?.trim()) openConvRef.current(q, null);
+    };
     window.addEventListener("nav:rail-zoom", onZoom);
     window.addEventListener("nav:rail-fit", onFit);
     window.addEventListener("nav:rail-home", comeHome);
@@ -1937,6 +2158,9 @@ function NavInner({
     window.addEventListener("nav:rail-journey", onJourney);
     window.addEventListener("nav:rail-list", onList);
     window.addEventListener("nav:rail-depth", onDepth);
+    window.addEventListener("nav:rail-clarity", onClarity);
+    window.addEventListener("nav:rail-goto", onGoto);
+    window.addEventListener("nav:rail-open-conv", onOpenConv);
     return () => {
       window.removeEventListener("nav:rail-zoom", onZoom);
       window.removeEventListener("nav:rail-fit", onFit);
@@ -1945,8 +2169,11 @@ function NavInner({
       window.removeEventListener("nav:rail-journey", onJourney);
       window.removeEventListener("nav:rail-list", onList);
       window.removeEventListener("nav:rail-depth", onDepth);
+      window.removeEventListener("nav:rail-clarity", onClarity);
+      window.removeEventListener("nav:rail-goto", onGoto);
+      window.removeEventListener("nav:rail-open-conv", onOpenConv);
     };
-  }, [backToPrevious, comeHome, rf]);
+  }, [applyFocusVisuals, backToPrevious, comeHome, focusNode, rf]);
 
   const startFreshJourney = useCallback(() => {
     dropSnapshot(focusKey);
@@ -2111,10 +2338,10 @@ function NavInner({
   useEffect(() => {
     window.dispatchEvent(
       new CustomEvent("nav:rail-state", {
-        detail: { depthBias, journeyOpen, listOpen, depth: focusedDepth },
+        detail: { depthBias, journeyOpen, listOpen, depth: focusedDepth, clarity },
       })
     );
-  }, [depthBias, journeyOpen, listOpen, focusedDepth]);
+  }, [clarity, depthBias, journeyOpen, listOpen, focusedDepth]);
 
   return (
     <div
@@ -2157,8 +2384,8 @@ function NavInner({
       >
         <Background
           variant={BackgroundVariant.Dots}
-          gap={30}
-          size={1.5}
+          gap={perfTier === "eco" ? 46 : 30}
+          size={perfTier === "eco" ? 1 : 1.5}
           color="color-mix(in srgb, var(--gd) 16%, transparent)"
         />
       </ReactFlow>
@@ -2192,6 +2419,48 @@ function NavInner({
         >
           {t("Touch a question to speak with the mirror — every answer grows its own branches.")}
         </button>
+      )}
+
+      {/* REMEMBER MY PLACE — the one-action return. The last
+          conversation, where it stood, softly lit; one touch and the
+          walk continues exactly there (protocol 1/3). */}
+      {resume && (
+        <div
+          className="absolute bottom-24 left-1/2 z-20 -translate-x-1/2"
+          data-testid={`${testIdPrefix}-resume-pill`}
+        >
+          <div className="flex max-w-[min(92vw,420px)] items-center gap-1 rounded-full border bg-background/95 py-1 pl-3 pr-1 shadow-[0_10px_30px_-16px_rgba(0,0,0,0.55)]">
+            <i
+              aria-hidden="true"
+              className="size-1.5 shrink-0 rounded-full"
+              style={{
+                backgroundColor: "var(--scope-a, var(--gd))",
+                boxShadow: "0 0 8px color-mix(in srgb, var(--scope-a, var(--gd)) 60%, transparent)",
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => {
+                focusConv(resume.nodeId);
+                setResume(null);
+              }}
+              data-testid={`${testIdPrefix}-resume-continue`}
+              className="focus-glow min-w-0 truncate rounded-full px-1 py-1 text-[12px] italic text-foreground/90 transition-colors hover:text-foreground"
+              title={resume.title}
+            >
+              {t("Continue where you left off")}
+              <span className="text-muted-foreground"> · {resume.title}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setResume(null)}
+              aria-label={t("Dismiss")}
+              className="flex size-6 shrink-0 items-center justify-center rounded-full text-muted-foreground/70 transition-colors hover:text-foreground"
+            >
+              <X className="size-3" aria-hidden="true" />
+            </button>
+          </div>
+        </div>
       )}
 
       {/* THE WALK'S OWN HANDS now live in the L-shaped toolbar's
