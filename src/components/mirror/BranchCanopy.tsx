@@ -114,6 +114,8 @@ import {
 import type { SeedWhisper } from "@/lib/navigator-graph";
 import { useWorkspaceMemory } from "@/lib/workspace-memory";
 import { ToolbarRail } from "./living/ToolbarRail";
+import { TopControl } from "./living/TopControl";
+import type { TopCatItem, TopLedger } from "./living/UniversalMenu";
 import { attachmentsToPayload, type ChatAttachment } from "./attachments";
 import { MirrorChanneling, SCOPE_CHANNELING } from "./MirrorChanneling";
 import { ExpansionRing } from "./ExpansionMirror";
@@ -1711,6 +1713,9 @@ export function BranchCanopy({
   /* the crown's two quiet dropdowns — the kategories of the walk and
      the worlds of the house */
   const [crownMenu, setCrownMenu] = useState<"cats" | "menu" | null>(null);
+  /* THE MINIMAL TOP CONTROL'S MENU — the realm's one universal menu
+     (the old crown dropdowns only serve the theme pages now) */
+  const [topMenuOpen, setTopMenuOpen] = useState(false);
   /* THE WALK'S LEDGER — the history saver the panel carries: the kept
      volumes of the shelf, the saved conversations of every surface,
      and the journey's own kept steps. Loaded fresh each time the
@@ -1727,7 +1732,7 @@ export function BranchCanopy({
     journey: JourneyStep[];
   } | null>(null);
   useEffect(() => {
-    if (crownMenu !== "menu") return;
+    if (crownMenu !== "menu" && !topMenuOpen) return;
     const labels: Record<ChatSurface, string> = {
       os: "Manifest OS",
       px: "Particle X",
@@ -1754,7 +1759,117 @@ export function BranchCanopy({
       chats,
       journey: loadJourney(),
     });
-  }, [crownMenu]);
+  }, [crownMenu, topMenuOpen]);
+
+  /* THE TOP CONTROL'S OWN HANDS — the walk's steering, gathered for
+     the one universal menu (the minimal top control's menu) */
+  const onTopRecalibrate = useCallback(() => {
+    setTopMenuOpen(false);
+    resetField();
+    import("sonner").then(({ toast }) =>
+      toast.success(t("Field recalibrated"), {
+        description: t(
+          "All scopes returned to origin. Free will honored always."
+        ),
+      })
+    );
+  }, [resetField, t]);
+
+  const onTopPickCategory = useCallback(
+    (key: string | "general") => {
+      setTopMenuOpen(false);
+      if (key === "general") {
+        /* already the whole house — the walk rests */
+        if (mixIsGeneral(mix)) return;
+        applyMix({ on: allFamilyKeys(), weights: evenWeights() });
+        return;
+      }
+      /* THE FOCUS LAW — one touch on a category focuses the whole walk
+         on that nature; the tree answers in one smooth breath. */
+      if (mix.on.length === 1 && mix.on.includes(key)) return;
+      applyMix({ on: [key], weights: { [key]: 1 } });
+    },
+    [mix, applyMix]
+  );
+
+  const onTopLedgerVolume = useCallback(
+    (key: string) => {
+      const v = walkLedger?.volumes.find((x) => x.bookId === key);
+      if (!v) return;
+      setTopMenuOpen(false);
+      resumeKeptVolume({
+        bookId: v.bookId,
+        config: v.config,
+        meta: {
+          title: v.title,
+          subtitle: v.subtitle,
+          sigil: v.sigil,
+          axiom: v.axiom,
+          dedication: v.dedication ?? "",
+          totalPages: v.totalPages || Math.max(8, v.pages.length + 8),
+        },
+        pages: v.pages,
+        threads: v.threads,
+        ended: v.ended,
+      });
+    },
+    [walkLedger, resumeKeptVolume]
+  );
+
+  const onTopLedgerChat = useCallback(
+    (key: string) => {
+      const c = walkLedger?.chats.find(
+        (x) => `${x.surface}:${x.id}` === key
+      );
+      if (!c) return;
+      setTopMenuOpen(false);
+      openChatSurface(c.surface, c.id);
+    },
+    [walkLedger, openChatSurface]
+  );
+
+  /* the categories and doors, prebuilt for the universal menu */
+  const topCats: TopCatItem[] = TREE_FAMILIES.map((f) => {
+    const share = familyShare(mix, f.key);
+    const focused =
+      mix.on.length === 1 && mix.on.includes(f.key) && share.on;
+    const spirit = FAMILY_SPIRITS[f.key];
+    const SpiritIcon = spirit?.icon ?? Layers;
+    return {
+      key: f.key,
+      label: t(familyLabelKeys[f.key] ?? f.key),
+      spirit: t(spirit?.spirit ?? f.key),
+      accent: f.accent,
+      pct: share.on && share.pct !== 100 ? share.pct : null,
+      focused,
+      icon: SpiritIcon,
+    };
+  });
+  const topDoors = [
+    { key: "akashic", label: "Akashic", icon: ScrollText, on: openAkashic },
+    { key: "book", label: "Book", icon: BookOpen, on: openDreamBook },
+    { key: "music", label: "Music", icon: Music, on: () => openLightCodes() },
+  ];
+  const topLedger: TopLedger | null =
+    topMenuOpen && walkLedger
+      ? {
+          volumes: walkLedger.volumes
+            .slice(0, 3)
+            .map((v) => ({
+              key: v.bookId,
+              title: v.title,
+              pages: v.pages.length,
+              total: v.totalPages || v.pages.length,
+            })),
+          chats: walkLedger.chats
+            .slice(0, 4)
+            .map((c) => ({
+              key: `${c.surface}:${c.id}`,
+              title: c.title,
+              label: c.label,
+            })),
+        }
+      : null;
   /* THE CROWN'S OWN BREATH — the top bar drops down when the visitor
      needs it and rises up when they don't, so the branches take almost
      the whole sky. One quiet hand at the top-right corner carries it. */
@@ -3764,6 +3879,7 @@ export function BranchCanopy({
           closes the room, never returns the branches — the screen stays
           exactly where the visitor stands. */}
       <div className="relative shrink-0">
+        {(!realm || bare) && (
         <div
           aria-hidden={realm && crownUp ? true : undefined}
           className={cn(
@@ -3785,13 +3901,14 @@ export function BranchCanopy({
             : undefined
         }
       >
+        {(!realm || bare) && (
         <div
           className="mx-auto flex w-full max-w-[760px] items-center gap-1.5"
         >
-          {/* THE CROWN'S OWN ROW — the walk's steering at the left, the
-              doors and the passage at the right. THE MARK HAS LEFT THE
-              TOP BAR — no logo stands in the crown; the light's own
-              hand (a quiet sun/moon) rides with the doors instead. */}
+          {/* THE CROWN'S OWN ROW — the theme pages' and the threshold's
+              quiet crown. THE REALM ITSELF no longer wears this row:
+              the minimal top control (◈ Mirror · Search · Menu) carries
+              the whole walk's steering, and the canvas keeps the sky. */}
           <div className="contents">
           {/* THE LANDING'S QUIET CROWN — docked in the threshold the
               crown keeps only its calm doors: the walk's menu and the
@@ -4402,6 +4519,7 @@ export function BranchCanopy({
           </div>
           </div>
         </div>
+        )}
 
         {/* THE SECOND ROW IS GONE — the doors of the house (akashic ·
             book · about · exit) ride the very top row now, and the
@@ -4409,13 +4527,37 @@ export function BranchCanopy({
             compass, no second rank beneath it. */}
       </div>
         </div>
+        )}
         {realm && !bare && (
-          /* THE L-SHAPED TOOLBAR'S VERTICAL ARM — the crown's own
-             continuation down the right edge (directive 06): one
-             shared surface, one corner, the junction button at their
-             meeting point. The walk's hands live in it now; the
-             canvas state, the camera and every conversation are
-             untouched by its folding. */
+          /* THE MINIMAL TOP CONTROL — the Universal Evolution Protocol's
+             one small universal top tab: ◈ Mirror · Search · Menu, one
+             quiet pill floating over the canvas, the one universal menu
+             behind it (closed by default), every function preserved. */
+          <TopControl
+            testIdPrefix={testIdPrefix}
+            open={topMenuOpen}
+            onOpenChange={setTopMenuOpen}
+            mixLabel={mixTitle(mix, t)}
+            lineage={lineage}
+            onTrailStep={walkBack}
+            onRecalibrate={onTopRecalibrate}
+            ledger={topLedger}
+            onLedgerVolume={onTopLedgerVolume}
+            onLedgerChat={onTopLedgerChat}
+            generalFocused={mixIsGeneral(mix)}
+            cats={topCats}
+            onPickCategory={onTopPickCategory}
+            doors={topDoors}
+            onPassage={openProfilePage}
+            realmControls={realmControls}
+            headerExtra={headerExtra}
+          />
+        )}
+        {realm && !bare && (
+          /* THE WALK'S HANDS — the vertical arm keeps only the walk's
+             own hands now (the top control carries the steering and the
+             universal menu); it starts folded, and one junction mark
+             waits in the corner for the hands to be wanted. */
           <ToolbarRail testIdPrefix={testIdPrefix} />
         )}
         {realm && bare && (

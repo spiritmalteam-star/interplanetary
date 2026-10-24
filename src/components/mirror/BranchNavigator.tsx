@@ -1497,9 +1497,13 @@ function NavInner({
   );
 
   /** Focus a living node: the walk follows, the camera glides, the
-      neighbors part — retried while the card is still measuring. */
+      neighbors part — retried while the card is still measuring.
+      `convIdHint` — when the room was rebuilt in the very same breath
+      (its stone carried away by the map's depth), the node may not
+      have reached the ref yet; the caller hands the conversation's id
+      directly so Remember-My-Place never misses the first reopening. */
   const focusConv = useCallback(
-    (id: string) => {
+    (id: string, convIdHint?: string) => {
       if (selectedRef.current && selectedRef.current !== id) {
         prevFocusRef.current = [
           ...prevFocusRef.current.filter((p) => p.id !== selectedRef.current),
@@ -1514,7 +1518,7 @@ function NavInner({
       /* the room itself answers: a focused living node is the active
          conversation (every path into focusConv lands standing) */
       const node = nodesRef.current.find((n) => n.id === id);
-      const convId = node?.data.convId;
+      const convId = convIdHint ?? node?.data.convId;
       if (convId) {
         useConversations.getState().setActive(convId);
       }
@@ -1624,7 +1628,7 @@ function NavInner({
           node = rebuilt;
         }
         useConversations.getState().setActive(known.id);
-        focusConv(node.id);
+        focusConv(node.id, known.id);
         if (opts?.restored) {
           /* the walk's own memory replaces the ledger's first answer —
              the same words, restored from the walk session */
