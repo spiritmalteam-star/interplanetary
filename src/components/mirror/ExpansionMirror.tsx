@@ -106,7 +106,7 @@ export function ExpansionRing() {
         <div
           role="dialog"
           aria-label={t("Your expansion mirror")}
-          className="absolute right-0 top-10 z-40 w-[272px] rounded-2xl border border-[color-mix(in_srgb,var(--hairline)_90%,transparent)] bg-[color-mix(in_srgb,var(--background)_96%,transparent)] p-4 shadow-[0_18px_50px_-18px_rgba(0,0,0,0.5)] backdrop-blur-md"
+          className="absolute right-0 top-10 z-40 w-[272px] max-w-[calc(100vw-2rem)] rounded-2xl border border-[color-mix(in_srgb,var(--hairline)_90%,transparent)] bg-[color-mix(in_srgb,var(--background)_96%,transparent)] p-4 shadow-[0_18px_50px_-18px_rgba(0,0,0,0.5)] backdrop-blur-md"
         >
           <div className="mb-2 flex items-start justify-between gap-2">
             <p className="text-[14px] font-semibold leading-tight" style={{ color: hue }}>

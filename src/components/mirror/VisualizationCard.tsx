@@ -385,9 +385,27 @@ function PresentationDeck({
   const slide = slides[index];
   if (!slide) return null;
 
+  /* the keyboard's own quiet steer — left and right walk the deck
+     when the stage holds the focus */
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "ArrowLeft") {
+      e.preventDefault();
+      go(-1);
+    } else if (e.key === "ArrowRight") {
+      e.preventDefault();
+      go(1);
+    }
+  };
+
   return (
-    <div data-testid={`${testIdPrefix}-deck`}>
-      <div className="relative overflow-hidden rounded-xl border border-[color-mix(in_srgb,var(--hairline)_60%,transparent)]">
+    <div data-testid={`${testIdPrefix}-deck`} onKeyDown={onKeyDown}>
+      <div
+        tabIndex={0}
+        role="region"
+        aria-roledescription="carousel"
+        aria-label={t("Slide {n} of {total}", { n: index + 1, total })}
+        className="relative overflow-hidden rounded-xl border border-[color-mix(in_srgb,var(--hairline)_60%,transparent)] outline-none focus-visible:ring-1 focus-visible:ring-[var(--hairline-active)]"
+      >
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={index}

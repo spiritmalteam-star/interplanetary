@@ -9,7 +9,7 @@ import { giftLines, labFrequencies } from "@/lib/data/metaphysics";
 import { sectionImage } from "@/lib/entity-utils";
 import { cn } from "@/lib/utils";
 import { Slider } from "@/components/ui/slider";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { AttachmentChips, ChatInputExtras } from "./ChatInputExtras";
 import type { ChatAttachment } from "./attachments";
 
@@ -317,8 +317,7 @@ export function MirrorOSForge() {
 
   const handleGift = () => {
     const line = giftLines[Math.floor(Math.random() * giftLines.length)];
-    toast({
-      title: t("A gift from the stars"),
+    toast(t("A gift from the stars"), {
       description: t(line),
       duration: 7000,
     });

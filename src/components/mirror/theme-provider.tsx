@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
+import { MotionConfig } from "framer-motion";
 
 export function ThemeProvider({
   children,
@@ -19,7 +20,11 @@ export function ThemeProvider({
       enableSystem={false}
       storageKey="mirror-entity-realm"
     >
-      {children}
+      {/* THE HOUSE-WIDE MOTION LAW — every framer animation in every
+          room bows to the visitor's own "reduce motion" setting: the
+          OS preference becomes the whole platform's preference, with
+          no component left to forget it. */}
+      <MotionConfig reducedMotion="user">{children}</MotionConfig>
     </NextThemesProvider>
   );
 }

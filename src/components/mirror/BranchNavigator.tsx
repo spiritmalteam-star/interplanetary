@@ -602,12 +602,14 @@ function NavInner({
   /* --------------------- the trail's emphasis --------------------- */
   const pathIdsOf = useCallback((id: string | null): Set<string> => {
     const out = new Set<string>();
+    /* one pass lays the index; the walk up the ancestors then reads
+       it directly instead of searching the whole branch at every step */
+    const byId = new Map(nodesRef.current.map((n) => [n.id, n]));
     let cur = id;
     let guard = 0;
     while (cur && guard++ < 64) {
       out.add(cur);
-      const n = nodesRef.current.find((x) => x.id === cur);
-      cur = (n?.data.parentId as string | null) ?? null;
+      cur = (byId.get(cur)?.data.parentId as string | null) ?? null;
     }
     return out;
   }, []);

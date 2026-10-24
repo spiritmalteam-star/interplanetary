@@ -693,7 +693,7 @@ export default function LandingGate() {
           <span className="pt-ring pt-ring-4" />
           <span className="pt-streaks" />
           <span className="pt-sigil">
-            <img src="/images/landing/sigils/sigil-09.png" alt="" />
+            <img src="/images/landing/sigils/sigil-09.png" alt="" width={256} height={256} decoding="async" />
           </span>
         </div>
       )}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2, Moon, ShoppingBag, Sparkles, Star } from "lucide-react";
+import { LoaderCircle, Moon, ShoppingBag, Sparkles, Star } from "lucide-react";
 import { useMirror, type WalletNotice } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { ModalShell } from "./ModalShell";
@@ -258,7 +258,7 @@ export function CreditsNeededModal({
                     className="focus-glow shrink-0 rounded-full border hairline px-3.5 py-1.5 text-[13px] text-foreground/90 transition-all hover:border-[var(--hairline-hover)] hover:glow-sm disabled:opacity-50"
                   >
                     {active ? (
-                      <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+                      <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
                     ) : (
                       t("Choose")
                     )}

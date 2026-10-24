@@ -10,7 +10,6 @@ import {
   Atom,
   BookOpen,
   LibraryBig,
-  LoaderCircle,
   MoonStar,
   NotebookPen,
   Palette,
@@ -21,6 +20,7 @@ import {
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ModalShell } from "./ModalShell";
 
 /* ------------------------------------------------------------------ */
@@ -233,9 +233,17 @@ export function LibraryView() {
       <main className="nice-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain">
         <div className="mx-auto w-full max-w-[860px] px-4 pb-16 pt-6 sm:px-6">
           {entries === null ? (
-            <div className="flex h-[50vh] flex-col items-center justify-center gap-3 text-muted-foreground" aria-live="polite" aria-busy="true">
-              <LoaderCircle className="size-5 animate-spin" aria-hidden="true" />
-              <p className="font-serif text-[15px] italic">{t("The library is gathering your stars…")}</p>
+            <div aria-live="polite" aria-busy="true">
+              {/* the shelf arriving — covers take shape before the stars
+                  themselves land, instead of a lone turning wheel */}
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                {Array.from({ length: 8 }, (_, i) => (
+                  <Skeleton key={i} className="aspect-[3/4] w-full rounded-xl" />
+                ))}
+              </div>
+              <p className="mt-6 text-center font-serif text-[15px] italic text-muted-foreground">
+                {t("The library is gathering your stars…")}
+              </p>
             </div>
           ) : failed ? (
             <div className="mx-auto max-w-[420px] rounded-2xl border hairline p-6 text-center">

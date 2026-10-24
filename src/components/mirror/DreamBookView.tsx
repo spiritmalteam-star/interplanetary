@@ -42,6 +42,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { ModalShell } from "./ModalShell";
 import { useMirror } from "@/lib/mirror-store";
@@ -2791,13 +2792,22 @@ export function DreamBookView() {
     >
       <div className="nice-scroll max-h-[60dvh] space-y-5 overflow-y-auto px-5 pb-5 sm:px-6 sm:pb-6">
         {shelfLoading && libraryVolumes === null ? (
-          <p
-            className="flex items-center gap-2 py-4 text-[14px] text-muted-foreground"
-            aria-busy="true"
-          >
-            <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
-            {t("The shelves are being read…")}
-          </p>
+          <div aria-busy="true" aria-live="polite">
+            {/* the shelves' shape arriving — quiet rows where the
+                volumes will stand, instead of a lone turning wheel */}
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="rounded-xl border border-border/80 bg-card/40 px-3.5 py-3">
+                <div className="flex items-start gap-3">
+                  <Skeleton className="size-9 shrink-0 rounded-lg" />
+                  <div className="min-w-0 flex-1">
+                    <Skeleton className="h-3.5 w-2/5" />
+                    <Skeleton className="mt-2 h-3 w-4/5" />
+                    <Skeleton className="mt-1.5 h-2.5 w-1/3" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         ) : (
           <>
             {localShelf.length > 0 && (

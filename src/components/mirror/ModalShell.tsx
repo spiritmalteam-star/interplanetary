@@ -33,7 +33,7 @@ export function ModalShell({
       <DialogContent
         showCloseButton
         className={cn(
-          "glass-strong top-[50%] gap-0 overflow-y-auto overscroll-contain rounded-2xl border hairline p-0 shadow-[0_24px_80px_-24px_rgba(0,0,0,0.65)] duration-300 nice-scroll",
+          "glass-strong top-[50%] gap-0 overflow-y-auto overscroll-contain rounded-2xl border hairline p-0 lift-modal duration-300 nice-scroll",
           "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95",
           // Mobile: full-screen sheet
           "max-md:inset-x-0 max-md:top-0 max-md:h-dvh max-md:w-full max-md:max-w-none max-md:translate-x-0 max-md:translate-y-0 max-md:rounded-none max-md:border-0",

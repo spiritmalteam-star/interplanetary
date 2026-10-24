@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { memo, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Check,
@@ -397,7 +397,11 @@ export function ExchangeVisual({ message }: { message: ChatMessage }) {
 
 /* ---------- one completed exchange ---------- */
 
-export function Exchange({
+/* MEMOIZED — the forming view's unhurried clocks tick inside the parent
+   (once a second at most); the memo keeps those breaths from reaching
+   into every settled exchange of the thread. Only a change of message,
+   position or channel state redraws a card. */
+export const Exchange = memo(function Exchange({
   message,
   index,
   animate,
@@ -667,7 +671,7 @@ export function Exchange({
       </div>
     </motion.article>
   );
-}
+});
 
 /* ---------- the healing apothecary — one quiet stand at the thread's
    end, offered only in the Healing channel once a transmission has

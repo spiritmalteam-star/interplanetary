@@ -47,7 +47,7 @@ import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { bookToText, dedupeChapters } from "@/lib/book-text";
 import { ShareButton } from "./ShareButton";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import type { SideArtifactKind } from "@/lib/artifact-intent";
 import { forgeDirective, guessLightCodesMode } from "@/lib/artifact-intent";
 import type { LightCodesMode } from "@/lib/data/light-codes";
@@ -740,7 +740,6 @@ function ManifestRitual({ resonance }: { resonance: string }) {
   const [emotion, setEmotion] = useState(labFrequencies[0].id);
   const [intensity, setIntensity] = useState(6);
   const [blueprint, setBlueprint] = useState<MiniBlueprint | null>(null);
-  const [progress, setProgress] = useState(0);
   const [error, setError] = useState(false);
   /* what the intention carries — one image, up to three documents */
   const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
@@ -751,10 +750,6 @@ function ManifestRitual({ resonance }: { resonance: string }) {
     setAttachments([]);
     setStage("charging");
     setError(false);
-    setProgress(0);
-    const tick = window.setInterval(() => {
-      setProgress((p) => Math.min(92, p + 3 + Math.random() * 5));
-    }, 90);
     try {
       const [res] = await Promise.all([
         fetch("/api/manifest", {
@@ -772,19 +767,15 @@ function ManifestRitual({ resonance }: { resonance: string }) {
       ]);
       const data = (await (res as Response).json()) as { blueprint?: MiniBlueprint; error?: string };
       if (!(res as Response).ok || !data.blueprint) throw new Error(data.error ?? "quiet");
-      window.clearInterval(tick);
-      setProgress(100);
       setBlueprint(data.blueprint);
       setStage("blueprint");
     } catch {
-      window.clearInterval(tick);
       setError(true);
       setStage("compose");
     }
   };
 
   const R = 30;
-  const CIRC = 2 * Math.PI * R;
 
   return (
     <div className="mx-auto max-w-[560px]" data-testid="chat-manifest">
@@ -879,23 +870,15 @@ function ManifestRitual({ resonance }: { resonance: string }) {
       )}
 
       {stage === "charging" && (
-        <div className="flex flex-col items-center py-2" aria-busy="true">
+        <div className="flex flex-col items-center py-2" aria-busy="true" role="status">
+          {/* an honest wait — a quietly turning light, never an invented
+              percentage: the field answers when it answers */}
           <div className="relative size-[88px]" aria-hidden="true">
             <svg className="absolute inset-0 -rotate-90" viewBox="0 0 88 88">
               <circle cx="44" cy="44" r={R} fill="none" stroke="color-mix(in srgb, var(--scope-a) 16%, transparent)" strokeWidth="2.5" />
-              <circle
-                cx="44" cy="44" r={R}
-                fill="none"
-                stroke="var(--scope-a)"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeDasharray={CIRC}
-                strokeDashoffset={CIRC * (1 - progress / 100)}
-                style={{ transition: "stroke-dashoffset 120ms linear" }}
-              />
             </svg>
-            <span className="mono-label absolute inset-0 flex items-center justify-center text-[14px] font-semibold" style={{ color: "var(--scope-a)" }}>
-              {Math.round(progress)}%
+            <span className="absolute inset-0 flex items-center justify-center">
+              <LoaderCircle className="size-7 animate-spin" style={{ color: "var(--scope-a)" }} />
             </span>
           </div>
           <p className="ink-faint mt-3 text-[14.5px] italic">{t("Charging the field…")}</p>
@@ -1245,7 +1228,7 @@ function PoemCard({ resonance }: { resonance: string }) {
     try {
       await navigator.clipboard.writeText(text);
       setCopied(true);
-      toast({ description: t("copied") });
+      toast.success(t("copied"));
     } catch {
       /* the clipboard may be sealed — the poem remains on the page */
     }
@@ -1823,8 +1806,7 @@ function BookWeaver({
       ended,
       savedAt: new Date().toISOString(),
     });
-    toast({
-      title: t("The volume rests at page {n}.", { n: String(spread * 2 + 1) }),
+    toast(t("The volume rests at page {n}.", { n: String(spread * 2 + 1) }), {
       description: t(
         "Ask the mirror to bring your book back, and it will open exactly here."
       ),

@@ -5,7 +5,6 @@ import "@fontsource/cinzel/600.css";
 import "@fontsource/cinzel/700.css";
 import "@fontsource/patrick-hand/400.css";
 import "./globals.css";
-import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/mirror/theme-provider";
 
@@ -84,8 +83,7 @@ export default function RootLayout({
       >
         <ThemeProvider>
           {children}
-          <Toaster />
-          {/* sonner — the voice of every toast in the Laboratory */}
+          {/* sonner — the one voice of every toast in the house */}
           <SonnerToaster position="top-center" />
         </ThemeProvider>
       </body>

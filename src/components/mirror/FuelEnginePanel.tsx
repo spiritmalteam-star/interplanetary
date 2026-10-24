@@ -71,7 +71,7 @@ interface GuideMessage {
 const fmt = (n: number) => n.toLocaleString("en-US");
 
 const SOURCE_COLORS: Record<string, string> = {
-  internal: "#e8d9b0",
+  internal: "var(--lp-gold, #e8d9b0)",
   zai: "#b9a5e0",
   openai: "#8fc9a8",
   resend: "#d98ca6",
@@ -249,12 +249,12 @@ export function FuelEnginePanel() {
             <span
               className="flex size-10 shrink-0 items-center justify-center rounded-xl border"
               style={{
-                borderColor: "color-mix(in srgb, #e8d9b0 40%, transparent)",
-                backgroundColor: "color-mix(in srgb, #e8d9b0 8%, var(--background))",
+                borderColor: "color-mix(in srgb, var(--lp-gold, #e8d9b0) 40%, transparent)",
+                backgroundColor: "color-mix(in srgb, var(--lp-gold, #e8d9b0) 8%, var(--background))",
               }}
               aria-hidden="true"
             >
-              <Fuel className="size-4.5 text-[#e8d9b0]" />
+              <Fuel className="size-4.5 text-[var(--lp-gold, #e8d9b0)]" />
             </span>
             <div>
               <p className="text-[16px] font-semibold text-foreground/95">{t("Fuel Engine Incubator")}</p>
@@ -263,8 +263,8 @@ export function FuelEnginePanel() {
               </p>
             </div>
           </div>
-          <span className="mono-label flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9px] uppercase tracking-[0.16em] text-[#8fc9a8]"
-            style={{ borderColor: "color-mix(in srgb, #8fc9a8 40%, transparent)" }}>
+          <span className="mono-label flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9px] uppercase tracking-[0.16em] text-[var(--ok)]"
+            style={{ borderColor: "color-mix(in srgb, var(--ok) 40%, transparent)" }}>
             <ShieldCheck className="size-3" aria-hidden="true" />
             {t("Keeper only")}
           </span>
@@ -313,7 +313,7 @@ export function FuelEnginePanel() {
             disabled={busy === "fuse"}
             data-testid="fuel-fuse"
             className="focus-glow flex h-9 items-center gap-2 rounded-full px-4 text-[13.5px] font-medium text-[var(--lp-veil-solid,#150f28)] transition-all duration-300 hover:brightness-[1.05] disabled:opacity-50"
-            style={{ background: "linear-gradient(180deg, #e8d9b0, #cbb877)" }}
+            style={{ background: "linear-gradient(180deg, var(--lp-gold, #e8d9b0), #cbb877)" }}
           >
             {busy === "fuse" ? (
               <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
@@ -327,8 +327,8 @@ export function FuelEnginePanel() {
             onClick={() => void act({ action: "deposit" }, "deposit")}
             disabled={busy === "deposit"}
             data-testid="fuel-deposit"
-            className="focus-glow flex h-9 items-center gap-2 rounded-full border px-4 text-[13.5px] font-medium text-[#e8d9b0] transition-all duration-300 hover:brightness-[1.08] disabled:opacity-50"
-            style={{ borderColor: "color-mix(in srgb, #e8d9b0 45%, transparent)" }}
+            className="focus-glow flex h-9 items-center gap-2 rounded-full border px-4 text-[13.5px] font-medium text-[var(--lp-gold, #e8d9b0)] transition-all duration-300 hover:brightness-[1.08] disabled:opacity-50"
+            style={{ borderColor: "color-mix(in srgb, var(--lp-gold, #e8d9b0) 45%, transparent)" }}
           >
             {busy === "deposit" ? (
               <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
@@ -354,7 +354,7 @@ export function FuelEnginePanel() {
           className={cn(
             "rounded-xl border px-4 py-3 text-[13.5px] leading-relaxed",
             notice.ok
-              ? "border-[color-mix(in_srgb,#8fc9a8_35%,transparent)] bg-[color-mix(in_srgb,#8fc9a8_7%,var(--background))] text-foreground/90"
+              ? "border-[color-mix(in_srgb,var(--ok)_35%,transparent)] bg-[color-mix(in_srgb,var(--ok)_7%,var(--background))] text-foreground/90"
               : "border-[color-mix(in_srgb,#f43f5e_32%,transparent)] bg-[color-mix(in_srgb,#f43f5e_6%,var(--background))] text-foreground/90"
           )}
         >
@@ -370,7 +370,7 @@ export function FuelEnginePanel() {
         <div className="grid gap-2.5 sm:grid-cols-2">
           {status.reserves.map((r) => {
             const pct = r.capacity > 0 ? Math.min(100, (r.remaining / r.capacity) * 100) : 0;
-            const color = SOURCE_COLORS[r.source] ?? "#e8d9b0";
+            const color = SOURCE_COLORS[r.source] ?? "var(--lp-gold, #e8d9b0)";
             return (
               <div key={r.key} className="rounded-xl border hairline bg-[var(--glass-bg-soft)] p-3.5" data-testid={`fuel-reserve-${r.key}`}>
                 <div className="flex items-start justify-between gap-2">
@@ -497,7 +497,7 @@ export function FuelEnginePanel() {
             <ul className="mt-2 max-h-44 space-y-1.5 overflow-y-auto nice-scroll pr-1">
               {status.recentGrants.map((g) => (
                 <li key={g.id} className="flex items-center gap-2.5 rounded-lg bg-[var(--glass-bg)] px-3 py-1.5 text-[12.5px]">
-                  <BadgeCheck className="size-3 shrink-0 text-[#8fc9a8]" aria-hidden="true" />
+                  <BadgeCheck className="size-3 shrink-0 text-[var(--ok)]" aria-hidden="true" />
                   <span className="min-w-0 flex-1 truncate text-foreground/85">
                     {g.email}
                     {g.note ? <span className="text-muted-foreground"> — {g.note}</span> : null}
@@ -505,7 +505,7 @@ export function FuelEnginePanel() {
                   <span className="mono-label shrink-0 text-[9px] uppercase tracking-[0.12em] text-muted-foreground">
                     {t(KIND_LABELS[g.kind] ?? g.kind)}
                   </span>
-                  <span className="shrink-0 tabular-nums text-[#e8d9b0]">+{fmt(g.amount)}</span>
+                  <span className="shrink-0 tabular-nums text-[var(--lp-gold, #e8d9b0)]">+{fmt(g.amount)}</span>
                 </li>
               ))}
             </ul>

@@ -3772,7 +3772,7 @@ export function BranchCanopy({
                 />
                 <div
                   data-testid={`${testIdPrefix}-menu-panel`}
-                  className="nice-scroll absolute left-0 top-9 z-40 max-h-[78vh] w-[286px] overflow-y-auto rounded-2xl border bg-background p-3 shadow-[0_18px_48px_-20px_rgba(0,0,0,0.6)]"
+                  className="nice-scroll absolute left-0 top-9 z-40 max-h-[78vh] w-[286px] max-w-[calc(100vw-2.5rem)] overflow-y-auto rounded-2xl border bg-background p-3 lift-lg"
                   style={{
                     borderColor:
                       "color-mix(in srgb, var(--scope-a,var(--gd)) 30%, transparent)",
@@ -4069,7 +4069,7 @@ export function BranchCanopy({
                 />
                 <div
                   data-testid={`${testIdPrefix}-cats-panel`}
-                  className="absolute left-0 top-9 z-40 w-[286px] rounded-2xl border bg-background p-3 shadow-[0_18px_48px_-20px_rgba(0,0,0,0.6)]"
+                  className="absolute left-0 top-9 z-40 w-[286px] max-w-[calc(100vw-2.5rem)] rounded-2xl border bg-background p-3 lift-lg"
                   style={{
                     borderColor:
                       "color-mix(in srgb, var(--scope-a,var(--gd)) 30%, transparent)",
@@ -4604,12 +4604,12 @@ export function BranchCanopy({
           {!realm && (introSub || introSubExtra || introExtra) && (
             <div className="pointer-events-none sticky bottom-2 z-10 flex flex-col items-center gap-2 px-4 text-center">
               {introSub && (
-                <p className="genea-bloom still-bloom max-w-[460px] rounded-2xl border border-[color-mix(in_srgb,var(--scope-a,var(--gd))_22%,transparent)] bg-background px-4 py-2.5 text-[14.5px] leading-relaxed text-muted-foreground shadow-[0_6px_24px_-14px_rgba(0,0,0,0.45)]">
+                <p className="genea-bloom still-bloom max-w-[460px] rounded-2xl border border-[color-mix(in_srgb,var(--scope-a,var(--gd))_22%,transparent)] bg-background px-4 py-2.5 text-[14.5px] leading-relaxed text-muted-foreground lift-sm">
                   {introSub}
                 </p>
               )}
               {introSubExtra && (
-                <p className="genea-bloom still-bloom max-w-[440px] rounded-2xl border border-[color-mix(in_srgb,var(--scope-a,var(--gd))_16%,transparent)] bg-background px-4 py-2 text-[14px] italic leading-relaxed text-muted-foreground/80 shadow-[0_6px_24px_-14px_rgba(0,0,0,0.45)]">
+                <p className="genea-bloom still-bloom max-w-[440px] rounded-2xl border border-[color-mix(in_srgb,var(--scope-a,var(--gd))_16%,transparent)] bg-background px-4 py-2 text-[14px] italic leading-relaxed text-muted-foreground/80 lift-sm">
                   {introSubExtra}
                 </p>
               )}
@@ -4657,7 +4657,7 @@ export function BranchCanopy({
             className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex flex-col items-center gap-2 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
           >
             {introSub && (
-              <p className="genea-bloom still-bloom max-w-[520px] rounded-2xl border border-[color-mix(in_srgb,var(--scope-a,var(--gd))_20%,transparent)] bg-background px-4 py-2 text-center text-[13.5px] leading-relaxed text-muted-foreground shadow-[0_6px_24px_-14px_rgba(0,0,0,0.45)]">
+              <p className="genea-bloom still-bloom max-w-[520px] rounded-2xl border border-[color-mix(in_srgb,var(--scope-a,var(--gd))_20%,transparent)] bg-background px-4 py-2 text-center text-[13.5px] leading-relaxed text-muted-foreground lift-sm">
                 {introSub}
               </p>
             )}
@@ -4742,7 +4742,7 @@ export function BranchCanopy({
                       />
                       <div
                         data-testid={`${testIdPrefix}-ask-history-panel`}
-                        className="absolute bottom-11 left-0 z-40 w-[272px] rounded-2xl border bg-background p-3 shadow-[0_18px_48px_-20px_rgba(0,0,0,0.6)]"
+                        className="absolute bottom-11 left-0 z-40 w-[272px] max-w-[calc(100vw-2.5rem)] rounded-2xl border bg-background p-3 lift-lg"
                         style={{
                           borderColor:
                             "color-mix(in srgb, var(--scope-a,var(--gd)) 30%, transparent)",
@@ -5085,7 +5085,7 @@ export function BranchCanopy({
                           />
                           <div
                             data-testid={`${testIdPrefix}-zoom-history-panel`}
-                            className="absolute right-0 top-9 z-40 w-[272px] rounded-2xl border bg-background p-3 shadow-[0_18px_48px_-20px_rgba(0,0,0,0.6)]"
+                            className="absolute right-0 top-9 z-40 w-[272px] max-w-[calc(100vw-2.5rem)] rounded-2xl border bg-background p-3 lift-lg"
                             style={{
                               borderColor:
                                 "color-mix(in srgb, var(--scope-a,var(--gd)) 30%, transparent)",

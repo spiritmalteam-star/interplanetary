@@ -10,7 +10,6 @@ import {
   Gem,
   KeyRound,
   Plus,
-  RefreshCw,
   ShieldCheck,
   Sparkles,
   Trash2,
@@ -18,6 +17,7 @@ import {
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ModalShell } from "./ModalShell";
 
 /* ------------------------------------------------------------------ */
@@ -262,9 +262,17 @@ export function AccountModal() {
       widthClass="sm:max-w-[560px]"
     >
       <div className="max-h-[70vh] overflow-y-auto scroll-smooth px-5 pb-5 sm:px-6 nice-scroll">
+        {/* the chamber's shape arriving — skeleton panels that mirror
+            the sections to come, instead of a lone turning wheel */}
         {loading && !summary ? (
-          <div className="py-10 text-center">
-            <RefreshCw className="mx-auto size-5 animate-spin text-muted-foreground" aria-hidden="true" />
+          <div className="space-y-4 py-1" aria-busy="true" aria-live="polite">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="rounded-xl border hairline bg-[var(--glass-bg-soft)] p-4">
+                <Skeleton className="h-2.5 w-20" />
+                <Skeleton className="mt-3 h-4 w-36" />
+                <Skeleton className="mt-2 h-3 w-52 max-w-full" />
+              </div>
+            ))}
           </div>
         ) : !summary ? (
           <div className="py-10 text-center text-[14px] text-muted-foreground">
@@ -649,9 +657,10 @@ export function AccountModal() {
                     <button
                       type="button"
                       onClick={() => setRevokeTarget(null)}
+                      aria-label={t("Close")}
                       className="focus-glow h-9 shrink-0 rounded-xl px-2 text-[13px] text-muted-foreground"
                     >
-                      ✕
+                      <span aria-hidden="true">✕</span>
                     </button>
                   </div>
                 </div>

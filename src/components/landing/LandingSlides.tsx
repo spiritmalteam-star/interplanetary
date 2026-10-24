@@ -2,6 +2,7 @@
 
 import { useCallback, useRef, useState } from "react";
 import Image from "next/image";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
@@ -13,6 +14,9 @@ import { cn } from "@/lib/utils";
 /*  CALM LAWS: opacity-and-transform motion only, neighbours-only      */
 /*  mounting, the walk answers the visitor's hand alone — the plates   */
 /*  never turn by themselves (no clock drives the exhibition).         */
+/*  Three ways to steer: the sweeping hand, quiet flanking arrows,     */
+/*  and the keyboard's own left and right — every way arrives at       */
+/*  the same gentle crossfade.                                         */
 /* ------------------------------------------------------------------ */
 
 type Slide = { src: string; title: string };
@@ -63,6 +67,24 @@ export default function LandingSlides() {
     swipe.current = null;
   };
 
+  /* the keyboard's own quiet steer — left and right walk the plates
+     when the stage holds the focus; Home and End jump to the ends */
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "ArrowLeft") {
+      e.preventDefault();
+      prev();
+    } else if (e.key === "ArrowRight") {
+      e.preventDefault();
+      next();
+    } else if (e.key === "Home") {
+      e.preventDefault();
+      go(0);
+    } else if (e.key === "End") {
+      e.preventDefault();
+      go(SLIDES.length - 1);
+    }
+  };
+
   /* only the neighbours stand mounted — the deep plates sleep */
   const near = new Set<number>([
     (active + SLIDES.length - 1) % SLIDES.length,
@@ -81,7 +103,9 @@ export default function LandingSlides() {
         role="region"
         aria-roledescription="carousel"
         aria-label={t("The shifting Earth in ten slides")}
-        className="relative mx-auto w-full max-w-[660px] sm:px-0 lg:max-w-[720px]"
+        tabIndex={0}
+        onKeyDown={onKeyDown}
+        className="relative mx-auto w-full max-w-[660px] rounded-[26px] outline-none focus-visible:ring-1 focus-visible:ring-[var(--hairline-active)] sm:px-0 lg:max-w-[720px]"
         onPointerDown={onPointerDown}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerCancel}
@@ -125,18 +149,29 @@ export default function LandingSlides() {
       {/* the plate's own words — the standing slide speaks its title */}
       <p
         data-testid="landing-slides-title"
+        aria-live="polite"
         className="mx-auto mt-4 max-w-[660px] px-4 text-center font-[family-name:var(--font-literata)] text-[15.5px] italic leading-relaxed text-[var(--lp-gold)] lg:max-w-[720px]"
       >
         {t(SLIDES[active].title)}
       </p>
 
-      {/* the reading rail — no arrows anywhere: the stage is swept by
-          the hand, and a quiet row of numbers steers it from below */}
+      {/* the reading rail — a quiet row of numbers flanked by two calm
+          arrows: the stage is swept by the hand, the keyboard, or a
+          neighbouring arrow; no clock ever turns the plates */}
       <div
         role="tablist"
         aria-label={t("Choose a slide by its number")}
         className="mx-auto mt-3.5 flex w-full max-w-[660px] flex-wrap items-center justify-center gap-1.5 px-4 lg:max-w-[720px]"
       >
+        <button
+          type="button"
+          onClick={prev}
+          aria-label={t("Previous slide")}
+          data-testid="landing-slides-prev"
+          className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full border border-[var(--lp-edge)] text-[var(--lp-mute)] transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-[var(--lp-body)] active:scale-95 motion-reduce:transition-none"
+        >
+          <ChevronLeft className="size-3.5" aria-hidden="true" />
+        </button>
         {SLIDES.map((s, i) => (
           <button
             key={s.src}
@@ -147,7 +182,7 @@ export default function LandingSlides() {
             aria-label={t(`Go to slide ${i + 1} — ${s.title}`)}
             data-testid="landing-slides-num"
             className={cn(
-              "focus-glow mono-label flex size-7 items-center justify-center rounded-full border text-[10px] tracking-normal transition-all duration-300",
+              "focus-glow mono-label flex size-7 items-center justify-center rounded-full border text-[10px] tracking-normal transition-all duration-300 motion-reduce:transition-none",
               i === active
                 ? "border-[rgba(232,217,176,0.85)] bg-[rgba(232,217,176,0.14)] text-[var(--lp-gold-ink)]"
                 : "border-[var(--lp-edge)] text-[var(--lp-mute)] hover:border-[var(--hairline-hover)] hover:text-[var(--lp-body)]"
@@ -156,6 +191,15 @@ export default function LandingSlides() {
             {i + 1}
           </button>
         ))}
+        <button
+          type="button"
+          onClick={next}
+          aria-label={t("Next slide")}
+          data-testid="landing-slides-next"
+          className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full border border-[var(--lp-edge)] text-[var(--lp-mute)] transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-[var(--lp-body)] active:scale-95 motion-reduce:transition-none"
+        >
+          <ChevronRight className="size-3.5" aria-hidden="true" />
+        </button>
       </div>
       <p className="mono-label mt-3 text-center text-[9.5px] uppercase tracking-[0.26em] text-[var(--lp-faint)]">
         {t("Awareness · Connection · Change")}

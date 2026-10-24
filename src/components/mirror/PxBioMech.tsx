@@ -1079,10 +1079,14 @@ export function PxBioMech() {
     return () => window.clearInterval(id);
   }, [playing]);
 
-  /* the moving dot on the clearance curve, paced by the dials */
+  /* the moving dot on the clearance curve, paced by the dials —
+     it rests while the tab is hidden, and stands still entirely
+     for the visitor whose OS asks for less motion */
   useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const dur = Math.min(7, Math.max(2.4, 6.5 - 26 * metrics.k));
     const id = window.setInterval(() => {
+      if (document.hidden) return;
       setProgress((v) => (v + 0.07 / dur) % 1);
     }, 70);
     return () => window.clearInterval(id);

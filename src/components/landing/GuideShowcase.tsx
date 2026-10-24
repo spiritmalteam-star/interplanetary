@@ -2,7 +2,7 @@
 
 import { useCallback, useRef, useState } from "react";
 import Image from "next/image";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { useT } from "@/lib/i18n";
 import { GUIDES } from "@/lib/guides";
 import { cn } from "@/lib/utils";
@@ -10,9 +10,10 @@ import { cn } from "@/lib/utils";
 /* ------------------------------------------------------------------ */
 /*  THE GUIDES' SHOWCASE — a massive exhibition beneath the offerings: */
 /*  seven plates, one for every illustrated guide of the house. The    */
-/*  hand sweeps the stage (no arrows anywhere); a quiet row of         */
-/*  numbers below steers the walk; every plate speaks its own title,   */
-/*  and one touch steps through into the guide's own page.             */
+/*  hand sweeps the stage, quiet flanking arrows and the keyboard's    */
+/*  own left and right steer the walk, and a row of numbers below      */
+/*  offers the direct door; every plate speaks its own title, and one  */
+/*  touch steps through into the guide's own page.                     */
 /*                                                                     */
 /*  CALM LAWS: opacity-and-transform motion only, neighbours-only      */
 /*  mounting, the walk answers the visitor's hand alone — the plates   */
@@ -57,6 +58,24 @@ export default function GuideShowcase({
     swipe.current = null;
   };
 
+  /* the keyboard's own quiet steer — left and right walk the plates
+     when the stage holds the focus; Home and End jump to the ends */
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "ArrowLeft") {
+      e.preventDefault();
+      prev();
+    } else if (e.key === "ArrowRight") {
+      e.preventDefault();
+      next();
+    } else if (e.key === "Home") {
+      e.preventDefault();
+      go(0);
+    } else if (e.key === "End") {
+      e.preventDefault();
+      go(GUIDES.length - 1);
+    }
+  };
+
   /* only the neighbours stand mounted — the deep plates sleep */
   const near = new Set<number>([
     (active + GUIDES.length - 1) % GUIDES.length,
@@ -74,7 +93,9 @@ export default function GuideShowcase({
         role="region"
         aria-roledescription="carousel"
         aria-label={t("The house's guides")}
-        className="relative mx-auto w-full max-w-[900px]"
+        tabIndex={0}
+        onKeyDown={onKeyDown}
+        className="relative mx-auto w-full max-w-[900px] rounded-[26px] outline-none focus-visible:ring-1 focus-visible:ring-[var(--hairline-active)]"
         onPointerDown={onPointerDown}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerCancel}
@@ -164,18 +185,28 @@ export default function GuideShowcase({
           the slide, always written where the eye rests */}
       <p
         data-testid="guide-showcase-title"
+        aria-live="polite"
         className="mx-auto mt-4 max-w-[900px] px-4 text-center font-[family-name:var(--font-literata)] text-[16px] italic leading-relaxed text-[var(--lp-gold)]"
       >
         {current.tagline}
       </p>
 
-      {/* the reading rail — no arrows: the hand sweeps the stage, and
-          the numbers below carry the walk */}
+      {/* the reading rail — the numbers below carry the walk, flanked
+          by two calm arrows for the hand that prefers a named door */}
       <div
         role="tablist"
         aria-label={t("Choose a slide by its number")}
         className="mx-auto mt-3.5 flex w-full max-w-[900px] flex-wrap items-center justify-center gap-1.5 px-4"
       >
+        <button
+          type="button"
+          onClick={prev}
+          aria-label={t("Previous guide plate")}
+          data-testid="guide-showcase-prev"
+          className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full border border-[var(--lp-edge)] text-[var(--lp-mute)] transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-[var(--lp-body)] active:scale-95 motion-reduce:transition-none"
+        >
+          <ChevronLeft className="size-3.5" aria-hidden="true" />
+        </button>
         {GUIDES.map((g, i) => (
           <button
             key={g.slug}
@@ -187,7 +218,7 @@ export default function GuideShowcase({
             title={g.title}
             data-testid={`guide-num-${i + 1}`}
             className={cn(
-              "focus-glow mono-label flex size-7 items-center justify-center rounded-full border text-[10px] tracking-normal transition-all duration-300",
+              "focus-glow mono-label flex size-7 items-center justify-center rounded-full border text-[10px] tracking-normal transition-all duration-300 motion-reduce:transition-none",
               i === active
                 ? "border-[rgba(232,217,176,0.85)] bg-[rgba(232,217,176,0.14)] text-[var(--lp-gold-ink)]"
                 : "border-[var(--lp-edge)] text-[var(--lp-mute)] hover:border-[var(--hairline-hover)] hover:text-[#c6d2db]"
@@ -196,6 +227,15 @@ export default function GuideShowcase({
             {i + 1}
           </button>
         ))}
+        <button
+          type="button"
+          onClick={next}
+          aria-label={t("Next guide plate")}
+          data-testid="guide-showcase-next"
+          className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full border border-[var(--lp-edge)] text-[var(--lp-mute)] transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-[var(--lp-body)] active:scale-95 motion-reduce:transition-none"
+        >
+          <ChevronRight className="size-3.5" aria-hidden="true" />
+        </button>
       </div>
       <p className="mono-label mt-3 text-center text-[9.5px] uppercase tracking-[0.26em] text-[var(--lp-faint)]">
         {t("Ten illustrated guides — one image each")}

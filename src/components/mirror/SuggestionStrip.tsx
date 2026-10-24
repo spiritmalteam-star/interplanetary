@@ -167,9 +167,11 @@ export function ContextSuggestionStrip({
     return () => window.clearTimeout(id);
   }, [hasContext, pool.length]);
 
-  /* The five-minute breath — the window advances by itself, forever. */
+  /* The five-minute breath — the window advances by itself, but a
+     hidden tab holds its breath too: no rotation while unseen. */
   useEffect(() => {
     const id = window.setInterval(() => {
+      if (document.hidden) return;
       setWindowIdx((w) => w + 1);
     }, ROTATE_MS);
     return () => window.clearInterval(id);
