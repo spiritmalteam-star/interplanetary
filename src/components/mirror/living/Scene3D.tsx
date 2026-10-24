@@ -512,11 +512,17 @@ export const Scene3D = memo(function Scene3D({
   accent,
   seedKey,
   testIdPrefix,
+  paused,
+  spec,
 }: {
   scene: SceneId;
   accent: string;
   seedKey: string;
   testIdPrefix?: string;
+  /** THE PAUSE HAND — the loop sleeps, the frame stands. */
+  paused?: boolean;
+  /** The validated specification — a quiet legend of named elements. */
+  spec?: { entities: string[]; relationships: string[] } | null;
 }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const engineRef = useRef<Engine | null>(null);
@@ -557,6 +563,11 @@ export const Scene3D = memo(function Scene3D({
   useEffect(() => {
     engineRef.current?.setReduced(!!reduced);
   }, [reduced]);
+
+  /* THE PAUSE HAND — the engine's own loop rests while the hand holds */
+  useEffect(() => {
+    engineRef.current?.setPaused(!!paused);
+  }, [paused, ready]);
 
   /* THE BOUNDARY LAW — gestures end at the scene's own glass */
   const dragRef = useRef<{ x: number; y: number; active: boolean }>({
@@ -653,6 +664,32 @@ export const Scene3D = memo(function Scene3D({
           <span className="mono-label text-[9px] uppercase tracking-[0.22em] text-muted-foreground">
             The scene gathers…
           </span>
+        </div>
+      )}
+      {/* THE LEGEND — the elements the transmission itself named, so the
+          scene is read as an explanation, never a decoration */}
+      {ready && spec && (spec.entities.length > 0 || spec.relationships.length > 0) && (
+        <div
+          className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-wrap items-center gap-x-2 gap-y-0.5 bg-gradient-to-t from-[color-mix(in_srgb,var(--background)_88%,transparent)] to-transparent px-3 pb-1.5 pt-4"
+          data-testid={testIdPrefix ? `${testIdPrefix}-scene-3d-legend` : undefined}
+        >
+          {spec.entities.slice(0, 4).map((e, i) => (
+            <span
+              key={`${e}:${i}`}
+              className="mono-label text-[8px] uppercase tracking-[0.14em] text-foreground/75"
+            >
+              {i > 0 && <span className="mr-2 text-muted-foreground/50">·</span>}
+              {e}
+            </span>
+          ))}
+          {spec.relationships.length > 0 && (
+            <span
+              className="w-full truncate text-[9.5px] italic leading-tight text-muted-foreground"
+              title={spec.relationships.join(" · ")}
+            >
+              {spec.relationships[0]}
+            </span>
+          )}
         </div>
       )}
     </div>

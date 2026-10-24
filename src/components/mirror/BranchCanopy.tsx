@@ -112,6 +112,7 @@ import {
   type NavigatorApi,
 } from "./BranchNavigator";
 import type { SeedWhisper } from "@/lib/navigator-graph";
+import { ToolbarRail } from "./living/ToolbarRail";
 import { attachmentsToPayload, type ChatAttachment } from "./attachments";
 import { MirrorChanneling, SCOPE_CHANNELING } from "./MirrorChanneling";
 import { ExpansionRing } from "./ExpansionMirror";
@@ -2219,16 +2220,18 @@ export function BranchCanopy({
 
   /* THE TOOL'S OWN HAND — one touch hangs the tied whisper's words on
      the tool and opens its original theme page: the record seeks, the
-     book's loom pre-speaks, the forge strikes — each making born of
-     that branch, in the moment, never the same making twice. */
+     book's loom pre-speaks, the forge strikes, the song finds its key
+     — each making born of that branch, in the moment, never the same
+     making twice. */
   const openTool = useCallback(
-    (kind: "akashic" | "book" | "invent", topic: string) => {
+    (kind: "akashic" | "book" | "invent" | "music", topic: string) => {
       if (disabled) return;
       recordJourney({ b: category, s: scopeHint ?? undefined });
       bumpWalkSteps();
       setBranchCreationSeed({ kind, topic });
       if (kind === "akashic") openAkashic();
       else if (kind === "book") openDreamBook();
+      else if (kind === "music") openLightCodes({ intention: topic });
       else openInvent();
     },
     [
@@ -4314,7 +4317,9 @@ export function BranchCanopy({
 
           <div className={cn(
             "flex min-w-0 flex-1 items-center justify-end gap-1.5",
-            realm && "pr-11 sm:pr-12"
+            /* the vertical arm owns the corner — the row yields its
+               width so no crown button ever slides beneath it */
+            realm && "pr-14 sm:pr-14"
           )}>
             {headerExtra && (
               <div className="hidden items-center gap-1.5 sm:flex">{headerExtra}</div>
@@ -4381,38 +4386,32 @@ export function BranchCanopy({
             compass, no second rank beneath it. */}
       </div>
         </div>
-        {realm && (
+        {realm && !bare && (
+          /* THE L-SHAPED TOOLBAR'S VERTICAL ARM — the crown's own
+             continuation down the right edge (directive 06): one
+             shared surface, one corner, the junction button at their
+             meeting point. The walk's hands live in it now; the
+             canvas state, the camera and every conversation are
+             untouched by its folding. */
+          <ToolbarRail testIdPrefix={testIdPrefix} />
+        )}
+        {realm && bare && (
+          /* THE LANDING'S OWN FOLD HAND — while the chat stands bare in
+             the threshold, the old arrow keeps its one work: folding
+             the whole chat section away. The full portal's corner now
+             belongs to the junction button above. */
           <button
             type="button"
             onClick={() => {
               setCrownMenu(null);
-              /* THE LANDING'S FOLD HAND — while the chat stands bare in
-                 the threshold, the dropdown hand folds the whole chat
-                 section away: the conversation keeps every word, and
-                 the threshold's own ground carries the invitation to
-                 call her back. Inside the full portal the same hand
-                 keeps its old work — showing and hiding the top bar. */
               if (bare && onFoldChat) {
                 onFoldChat();
                 return;
               }
               setCrownUp((u) => !u);
             }}
-            aria-expanded={bare && onFoldChat ? undefined : !crownUp}
-            aria-label={
-              bare && onFoldChat
-                ? t("Fold the chat away")
-                : crownUp
-                  ? t("Show the top bar")
-                  : t("Hide the top bar")
-            }
-            title={
-              bare && onFoldChat
-                ? t("Fold the chat away")
-                : crownUp
-                  ? t("Show the top bar")
-                  : t("Hide the top bar")
-            }
+            aria-label={t("Fold the chat away")}
+            title={t("Fold the chat away")}
             data-testid={`${testIdPrefix}-crown-toggle`}
             className="focus-glow absolute z-40 flex size-7 items-center justify-center rounded-full border bg-background text-muted-foreground shadow-[0_8px_22px_-12px_rgba(0,0,0,0.55)] transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
             style={{
@@ -4422,11 +4421,7 @@ export function BranchCanopy({
                 "color-mix(in srgb, var(--scope-a,var(--gd)) 30%, transparent)",
             }}
           >
-            {crownUp ? (
-              <ChevronDown className="size-3.5" aria-hidden="true" />
-            ) : (
-              <ChevronUp className="size-3.5" aria-hidden="true" />
-            )}
+            <ChevronUp className="size-3.5" aria-hidden="true" />
           </button>
         )}
       </div>

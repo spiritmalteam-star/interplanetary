@@ -27,11 +27,15 @@ import {
 } from "react";
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 import {
+  BookOpen,
   Check,
   ChevronDown,
   Copy,
+  Hammer,
   LoaderCircle,
   Minimize2,
+  Music2,
+  ScrollText,
   Send,
   Share2,
 } from "lucide-react";
@@ -42,6 +46,7 @@ import { useMirror } from "@/lib/mirror-store";
 import { ENERGY_NOTICE, EnergyError } from "@/lib/speak-client";
 import { isVisualIntent } from "@/lib/visual-intent";
 import { detectArtifactIntent } from "@/lib/artifact-intent";
+import { CREATION_ACCENTS } from "@/lib/navigator-graph";
 import { useSequentialReveal } from "@/components/mirror/ResonantCardViewer";
 import { MirrorChanneling, SCOPE_CHANNELING } from "@/components/mirror/MirrorChanneling";
 import { ListenButton } from "@/components/mirror/ListenButton";
@@ -332,6 +337,61 @@ function TurnAnswer({
   );
 }
 
+/* -------------------- the making's own doors ----------------------- */
+
+const MAKING_DOORS = [
+  { kind: "book", icon: BookOpen, label: "Create a book" },
+  { kind: "akashic", icon: ScrollText, label: "Open an Akashic record" },
+  { kind: "music", icon: Music2, label: "Create music" },
+  { kind: "invent", icon: Hammer, label: "Invent" },
+] as const;
+
+/** THE CONSTELLATION'S SEED — a making born of this conversation:
+ *  the artifact node hangs connected to the branch in the map, its
+ *  editing tools wait in their own workspace (directive 11/12). */
+function MakingDoors({ nodeId, accent }: { nodeId: string; accent: string }) {
+  const t = useT();
+  return (
+    <div
+      className="flex items-center gap-1 border-t px-3 pb-1.5 pt-1.5"
+      style={{ borderColor: accentMix(accent, 12, "var(--hairline)") }}
+      data-testid="nav-conv-making-doors"
+    >
+      <span className="mono-label shrink-0 text-[7.5px] uppercase tracking-[0.16em] text-muted-foreground/60">
+        {t("Grow a making")}
+      </span>
+      <span className="flex flex-1 items-center justify-end gap-0.5">
+        {MAKING_DOORS.map((d) => {
+          const doorAccent = CREATION_ACCENTS[d.kind];
+          return (
+            <button
+              key={d.kind}
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                window.dispatchEvent(
+                  new CustomEvent<{ id: string; kind: string }>("nav:conv-create", {
+                    detail: { id: nodeId, kind: d.kind },
+                  })
+                );
+              }}
+              aria-label={t(d.label)}
+              title={t(d.label)}
+              data-testid={`nav-conv-create-${d.kind}`}
+              className="focus-glow flex size-6 items-center justify-center rounded-full text-muted-foreground/70 transition-all duration-200 hover:text-foreground"
+              style={{
+                boxShadow: `inset 0 0 0 1px color-mix(in srgb, ${doorAccent} 26%, transparent)`,
+              }}
+            >
+              <d.icon className="size-3" aria-hidden="true" style={{ color: doorAccent, opacity: 0.85 }} />
+            </button>
+          );
+        })}
+      </span>
+    </div>
+  );
+}
+
 /* --------------------------- the focused card ----------------------- */
 
 function FocusedBody({
@@ -351,22 +411,40 @@ function FocusedBody({
   const [busy, setBusy] = useState(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const taRef = useRef<HTMLTextAreaElement | null>(null);
-  const lastLenRef = useRef(-1);
+  const sigRef = useRef<string>("");
 
-  /* the newest word pulls the eye — quiet, only when the thread grows */
+  /* the newest word pulls the eye — quiet, only when the thread grows.
+     When a turn LANDS the card's own rectangle changes shape: the
+     navigator hears of it (once, debounced) so the camera can reframe
+     and the neighbors can keep their honest distances. THE STREAM LAW —
+     only the landing of a turn fires the news, never the words arriving
+     (the graph never relayouts while the mirror is speaking). */
   useEffect(() => {
-    const len = conv?.turns.length ?? 0;
-    const lastA = conv?.turns[len - 1]?.a.length ?? 0;
-    if (lastLenRef.current === -1) {
-      lastLenRef.current = lastA + len * 10000;
-      return;
-    }
-    if (lastA + len * 10000 !== lastLenRef.current) {
-      lastLenRef.current = lastA + len * 10000;
-      const el = scrollRef.current;
-      if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
-    }
-  }, [conv]);
+    const turns = conv?.turns ?? [];
+    const len = turns.length;
+    const lastStatus = turns[len - 1]?.status ?? "";
+    const lastLen = turns[len - 1]?.a.length ?? 0;
+    const sig = `${len}:${lastStatus}:${lastLen}`;
+    const prev = sigRef.current;
+    if (prev === sig) return;
+    sigRef.current = sig;
+    if (!prev) return; // the first reading never wakes the canvas
+    /* the words themselves still pull the eye while they arrive */
+    const el = scrollRef.current;
+    if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+    /* but only a landed turn (or a new question) changes the card's
+       rectangle enough to deserve the canvas's ear */
+    const [pLen, pStatus] = prev.split(":");
+    const landed =
+      len > Number(pLen) ||
+      (lastStatus === "landed" && pStatus !== "landed");
+    if (!landed) return;
+    const timer = window.setTimeout(
+      () => dispatchNav("nav:conv-resize", { id: nodeId }),
+      220
+    );
+    return () => window.clearTimeout(timer);
+  }, [conv, nodeId]);
 
   const send = useCallback(
     async (raw?: string) => {
@@ -583,6 +661,11 @@ function FocusedBody({
           </button>
         </div>
       </div>
+      {/* THE MAKING'S OWN DOORS — books, records, music, inventions:
+          each hangs its artifact node connected to this conversation */}
+      {branchAnswer?.status === "landed" && (
+        <MakingDoors nodeId={nodeId} accent={accent} />
+      )}
     </div>
   );
 }

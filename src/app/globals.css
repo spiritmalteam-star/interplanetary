@@ -3804,6 +3804,26 @@ html:not(.dark) .lp-sigil-img {
   width: min(720px, calc(100vw - 40px)) !important;
 }
 
+/* THE SPACIOUS LAW ON SMALL SCREENS — the L-shaped toolbar's vertical
+   arm owns the right edge: the focused card yields its width so no
+   hand ever covers the words (directive 16: toolbars never cover
+   essential content). From sm up the arm sits beside open ground. */
+@media (max-width: 639px) {
+  .nav-conv-card {
+    width: min(560px, calc(100vw - 114px)) !important;
+  }
+  .nav-conv-card:has(.nav-conv-viz-deep) {
+    width: min(720px, calc(100vw - 114px)) !important;
+  }
+}
+
+/* THE PAUSE HAND — a held scene stands as one still frame (the 3D
+   scene rests through its own engine; the 2D scene through CSS). */
+.nav-conv-viz[data-paused="true"] svg,
+.nav-conv-viz[data-paused="true"] svg * {
+  animation-play-state: paused !important;
+}
+
 .nav-conv-viz {
   height: 264px;
 }

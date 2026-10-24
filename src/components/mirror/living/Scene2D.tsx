@@ -11,6 +11,7 @@
 import { memo, useMemo } from "react";
 import { useReducedMotion } from "framer-motion";
 import type { SceneId } from "@/lib/visual-scenes";
+import type { VisualSpec } from "@/lib/visual-spec";
 
 function mulberry32(seed: number) {
   let a = seed >>> 0;
@@ -36,6 +37,108 @@ const W = 400;
 const H = 260;
 const CX = W / 2;
 const CY = H / 2;
+
+/* THE LABELS' OWN SEATS — each template keeps a few honest places
+   where a word from the transmission may stand beside its element
+   (directive 09: the labels come from the words, the seats from the
+   template). A specification with no labels draws a quiet scene. */
+const LABEL_SEATS: Partial<Record<SceneId, { x: number; y: number }[]>> = {
+  spiral: [
+    { x: 316, y: 196 },
+    { x: 214, y: 106 },
+  ],
+  wavefield: [
+    { x: 96, y: 96 },
+    { x: 200, y: 150 },
+    { x: 312, y: 96 },
+  ],
+  helix: [
+    { x: 52, y: 74 },
+    { x: 52, y: 190 },
+    { x: 208, y: 130 },
+  ],
+  orbits: [
+    { x: 250, y: 130 },
+    { x: 118, y: 130 },
+    { x: 314, y: 130 },
+  ],
+  pyramids: [
+    { x: 185, y: 26 },
+    { x: 185, y: 156 },
+    { x: 322, y: 34 },
+  ],
+  neural: [
+    { x: 62, y: 44 },
+    { x: 330, y: 60 },
+    { x: 190, y: 236 },
+  ],
+  lattice: [
+    { x: 232, y: 130 },
+    { x: 96, y: 130 },
+    { x: 200, y: 22 },
+  ],
+  blueprint: [
+    { x: 155, y: 50 },
+    { x: 268, y: 72 },
+    { x: 200, y: 228 },
+  ],
+  curves: [
+    { x: 352, y: 112 },
+    { x: 92, y: 62 },
+    { x: 200, y: 236 },
+  ],
+};
+
+function SceneLabels({
+  scene,
+  spec,
+  accent,
+}: {
+  scene: SceneId;
+  spec: VisualSpec | null | undefined;
+  accent: string;
+}) {
+  if (!spec || spec.labels.length === 0) return null;
+  const seats = LABEL_SEATS[scene];
+  if (!seats) return null;
+  return (
+    <g aria-hidden="true">
+      {spec.labels.slice(0, seats.length).map((label, i) => {
+        const seat = seats[i];
+        const left = seat.x > W * 0.62;
+        const tx = left ? seat.x - 7 : seat.x + 7;
+        return (
+          <g key={`${label}:${i}`} opacity={0.88}>
+            <line
+              x1={seat.x}
+              y1={seat.y}
+              x2={left ? seat.x - 4 : seat.x + 4}
+              y2={seat.y}
+              stroke={accent}
+              strokeWidth={0.6}
+              opacity={0.5}
+            />
+            <circle cx={seat.x} cy={seat.y} r={1.6} fill={accent} opacity={0.8} />
+            <text
+              x={tx}
+              y={seat.y + 2.6}
+              fontSize={8.5}
+              letterSpacing="0.06em"
+              textAnchor={left ? "end" : "start"}
+              fill={accent}
+              stroke="var(--background)"
+              strokeWidth={2.4}
+              paintOrder="stroke"
+              style={{ textTransform: "uppercase", fontWeight: 500 }}
+            >
+              {label}
+            </text>
+          </g>
+        );
+      })}
+    </g>
+  );
+}
 
 /* --------------------------- the templates -------------------------- */
 
@@ -77,10 +180,12 @@ const Scene2DInner = memo(function Scene2DInner({
   scene,
   accent,
   seedKey,
+  spec,
 }: {
   scene: SceneId;
   accent: string;
   seedKey: string;
+  spec?: VisualSpec | null;
 }) {
   const reduced = useReducedMotion();
   const seed = useMemo(() => hashStr(`${scene}:${seedKey}`), [scene, seedKey]);
@@ -90,6 +195,10 @@ const Scene2DInner = memo(function Scene2DInner({
       : {
           animation: `${name} ${dur}s ${linear ? "linear" : "ease-in-out"} ${delay}s infinite`,
         };
+
+  /* the spec's own labels stand beside the template's elements —
+     grounded in the transmission, never decoration (directive 09) */
+  const labels = <SceneLabels scene={scene} spec={spec} accent={accent} />;
 
   if (scene === "spiral") {
     return (
@@ -104,6 +213,7 @@ const Scene2DInner = memo(function Scene2DInner({
         />
         <path d={spiralPath(3.4, 0.55)} fill="none" stroke={accent} strokeWidth={0.8} opacity={0.35} />
         <circle cx={CX} cy={CY} r={2.4} fill={accent} style={anim("viz-pulse-soft", 3)} />
+        {labels}
       </g>
     );
   }
@@ -123,6 +233,7 @@ const Scene2DInner = memo(function Scene2DInner({
           />
         ))}
         <circle cx={CX} cy={CY} r={3} fill={accent} style={anim("viz-pulse-soft", 2.6)} />
+        {labels}
       </g>
     );
   }
@@ -143,6 +254,7 @@ const Scene2DInner = memo(function Scene2DInner({
             style={anim("viz-breathe", 4, i * 0.18)}
           />
         ))}
+        {labels}
       </g>
     );
   }
@@ -179,6 +291,7 @@ const Scene2DInner = memo(function Scene2DInner({
           </g>
         ))}
         <circle cx={CX} cy={CY} r={7} fill={accent} opacity={0.85} style={anim("viz-pulse-soft", 3.4)} />
+        {labels}
       </g>
     );
   }
@@ -217,6 +330,7 @@ const Scene2DInner = memo(function Scene2DInner({
         ))}
         <path d={`M0,${140}Q${CX},${124} ${W},${140}T${W},${H}L0,${H}Z`} fill={accent} opacity={0.06} />
         <path d={`M0,${146}Q${CX},${132} ${W},${146}`} fill="none" stroke={accent} strokeWidth={0.8} opacity={0.3} />
+        {labels}
       </g>
     );
   }
@@ -264,6 +378,7 @@ const Scene2DInner = memo(function Scene2DInner({
             style={anim("viz-pulse-soft", n.d)}
           />
         ))}
+        {labels}
       </g>
     );
   }
@@ -293,6 +408,7 @@ const Scene2DInner = memo(function Scene2DInner({
           </g>
         ))}
         <circle cx={CX} cy={CY} r={3} fill={accent} stroke="none" style={anim("viz-pulse-soft", 3)} />
+        {labels}
       </g>
     );
   }
@@ -309,6 +425,7 @@ const Scene2DInner = memo(function Scene2DInner({
         <path d="M44,34h312M44,28v12M356,28v12" strokeWidth={0.7} opacity={0.5} />
         <circle cx={92} cy={196} r={2} fill={accent} stroke="none" style={anim("viz-pulse-soft", 2.8)} />
         <circle cx={330} cy={70} r={2} fill={accent} stroke="none" style={anim("viz-pulse-soft", 3.6)} />
+        {labels}
       </g>
     );
   }
@@ -330,6 +447,7 @@ const Scene2DInner = memo(function Scene2DInner({
       <path d={lissajous(5, 4, 110, 66, 0)} stroke={accent} strokeWidth={0.9} opacity={0.45} strokeDasharray="4 5" />
       <path d={`M40,${CY}H360M${CX},24V236`} strokeWidth={0.5} opacity={0.3} />
       <circle cx={CX + 150} cy={CY} r={2.4} fill={accent} stroke="none" style={anim("viz-pulse-soft", 3)} />
+      {labels}
     </g>
   );
 });
@@ -340,23 +458,25 @@ export const Scene2D = memo(function Scene2D({
   seedKey,
   className,
   testIdPrefix,
+  spec,
 }: {
   scene: SceneId;
   accent: string;
   seedKey: string;
   className?: string;
   testIdPrefix?: string;
+  spec?: VisualSpec | null;
 }) {
   return (
     <svg
       viewBox={`0 0 ${W} ${H}`}
       role="img"
-      aria-label="A quiet scene accompanying the words"
+      aria-label={spec?.subject ? `A scene of ${spec.subject}, standing beside the words` : "A quiet scene accompanying the words"}
       data-testid={testIdPrefix ? `${testIdPrefix}-scene-2d` : undefined}
       className={className}
       preserveAspectRatio="xMidYMid meet"
     >
-      <Scene2DInner scene={scene} accent={accent} seedKey={seedKey} />
+      <Scene2DInner scene={scene} accent={accent} seedKey={seedKey} spec={spec} />
     </svg>
   );
 });

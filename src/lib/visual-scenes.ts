@@ -1,5 +1,3 @@
-"use client";
-
 /* ------------------------------------------------------------------ */
 /*  THE VISUAL INTELLIGENCE SDK — the registry of living scenes.       */
 /*                                                                     */

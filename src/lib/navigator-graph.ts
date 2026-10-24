@@ -30,7 +30,28 @@ export type NavKind =
   | "creation"
   | "manifest"
   | "book"
-  | "akashic";
+  | "akashic"
+  | "music";
+
+/** A making's own kind as the map speaks it: inventions ride the
+    generic "creation" kind (their icon and accent still tell them
+    apart), the others wear their own names. */
+export function navKindForCreation(
+  c: "akashic" | "book" | "invent" | "music"
+): NavKind {
+  return c === "invent" ? "creation" : c;
+}
+
+/** THE CREATION CONSTELLATION — every making wears its own light.
+ *  Books warm gold, the records soft violet, music coral, inventions
+ *  a cool sky. The conversation's own accent keeps flowing through
+ *  the family lines; only the artifacts carry these. */
+export const CREATION_ACCENTS: Record<"akashic" | "book" | "invent" | "music", string> = {
+  akashic: "#a78bfa",
+  book: "#f59e0b",
+  music: "#fb7185",
+  invent: "#38bdf8",
+};
 
 /** The node's own role in the map. A "conversation" node is a branch
  *  that became a living conversation (the branch's own room). */
@@ -46,7 +67,7 @@ export interface NavNodeData extends Record<string, unknown> {
   childCount: number;
   depth: number;
   parentId: string | null;
-  creation?: "akashic" | "book" | "invent";
+  creation?: "akashic" | "book" | "invent" | "music";
   topic?: string;
   reason?: string;
   focused?: boolean;
@@ -55,6 +76,10 @@ export interface NavNodeData extends Record<string, unknown> {
   revisits?: number;
   /** The living conversation this node carries (role "conversation"). */
   convId?: string;
+  /** The node's own measured rectangle — the collision law reads the
+   *  REAL size a card occupies, never a fixed guess (a focused
+   *  conversation is many times larger than a question's stone). */
+  dims?: { w: number; h: number };
 }
 
 export type NavNode = Node<NavNodeData>;
@@ -73,7 +98,7 @@ export interface SeedWhisper {
   movement: BranchType;
   accent: string;
   golden?: boolean;
-  creation?: "akashic" | "book" | "invent";
+  creation?: "akashic" | "book" | "invent" | "music";
   topic?: string;
 }
 
@@ -103,6 +128,75 @@ export const NAV_NODE_W = 232;
 export const NAV_NODE_H = 104;
 /** The resting distance between neighboring hearts. */
 export const NAV_MIN_DIST = 228;
+
+/* THE SPACIOUS LAW — every kind of node reserves its own air:
+   a focused conversation breathes wider than a resting one, and a
+   resting one wider than a question's stone (directive 03). */
+export const NAV_PAD_QUESTION = 42;
+export const NAV_PAD_CONVERSATION = 78;
+export const NAV_PAD_FOCUSED_CONV = 118;
+
+export interface NavRect {
+  x: number; // left
+  y: number; // top
+  w: number;
+  h: number;
+}
+
+/** A node's real size: its measured rectangle when the DOM has spoken,
+ *  the honest default when it has not. */
+export function dimsOf(n: NavNode): { w: number; h: number } {
+  const d = n.data.dims;
+  if (d && d.w > 0 && d.h > 0) return d;
+  if (n.data.role === "conversation") return { w: 560, h: 520 };
+  return { w: NAV_NODE_W, h: NAV_NODE_H };
+}
+
+/** The air a node demands around itself before another may stand near. */
+export function padFor(n: NavNode): number {
+  if (n.data.role === "conversation") {
+    return n.data.focused ? NAV_PAD_FOCUSED_CONV : NAV_PAD_CONVERSATION;
+  }
+  return NAV_PAD_QUESTION;
+}
+
+/** Two rectangles (each grown by its own air) — do they overlap? */
+export function rectsOverlap(
+  a: NavRect,
+  aPad: number,
+  b: NavRect,
+  bPad: number
+): boolean {
+  return (
+    a.x - aPad < b.x + b.w + bPad &&
+    a.x + a.w + aPad > b.x - bPad &&
+    a.y - aPad < b.y + b.h + bPad &&
+    a.y + a.h + aPad > b.y - bPad
+  );
+}
+
+export function nodeRect(n: NavNode): NavRect {
+  const d = dimsOf(n);
+  return { x: n.position.x, y: n.position.y, w: d.w, h: d.h };
+}
+
+/** THE RECTANGLE'S OWN LAW — a candidate center stands free only when
+ *  its whole rectangle (with its air) clears every standing node's
+ *  rectangle (with theirs). This is the collision law directive 03
+ *  asks for: real regions, not points. */
+export function collides(x: number, y: number, nodes: NavNode[]): boolean {
+  const cand: NavRect = {
+    x: x - NAV_NODE_W / 2,
+    y: y - NAV_NODE_H / 2,
+    w: NAV_NODE_W,
+    h: NAV_NODE_H,
+  };
+  for (const n of nodes) {
+    if (rectsOverlap(cand, NAV_PAD_QUESTION, nodeRect(n), padFor(n)))
+      return true;
+  }
+  return false;
+}
 
 /* ------------------------- the simple seeds ------------------------- */
 
@@ -275,23 +369,14 @@ export function seedGraph(
   return { nodes, edges, homeId: "home" };
 }
 
-/* --------------------- the placement's own law ---------------------- */
-
-function collides(x: number, y: number, nodes: NavNode[]): boolean {
-  for (const n of nodes) {
-    const dx = n.position.x + NAV_NODE_W / 2 - x;
-    const dy = n.position.y + NAV_NODE_H / 2 - y;
-    if (dx * dx + dy * dy < NAV_MIN_DIST * NAV_MIN_DIST) return true;
-  }
-  return false;
-}
-
 /** THE INCREMENTAL LAY — children spread inside a cone around the
     direction they grew toward, never on top of what stands, never
-    beyond a bounded reach. Returns positions only; the caller owns
-    the map. */
+    beyond a bounded reach. A conversation parent lends its REAL
+    rectangle to the mathematics, so children are born clear of the
+    whole card, not just its stone-sized ghost. Returns positions
+    only; the caller owns the map. */
 export function placeAround(
-  parent: { x: number; y: number },
+  parent: { x: number; y: number; w?: number; h?: number },
   dirAngle: number,
   nodes: NavNode[],
   count: number,
@@ -300,6 +385,14 @@ export function placeAround(
   const rng = mulberry32(seed);
   const out: { x: number; y: number }[] = [];
   const spread = Math.PI * 0.62;
+  /* the first radius clears the parent's own rectangle and air */
+  const pw = parent.w ?? NAV_NODE_W;
+  const ph = parent.h ?? NAV_NODE_H;
+  const r0 = Math.max(
+    248,
+    pw / 2 + NAV_PAD_FOCUSED_CONV + 90,
+    (ph / 2 + NAV_PAD_FOCUSED_CONV + 60) / 0.8
+  );
   const free = (x: number, y: number) =>
     !collides(x, y, nodes) &&
     !out.some((p) => {
@@ -310,11 +403,11 @@ export function placeAround(
   for (let i = 0; i < count; i++) {
     let placed: { x: number; y: number } | null = null;
     let ang = dirAngle;
-    let r = 248;
+    let r = r0;
     for (let attempt = 0; attempt < 24 && !placed; attempt++) {
       const widen = attempt < 12 ? 1 : 1.9;
       ang = dirAngle + (rng() - 0.5) * 2 * spread * widen + attempt * 0.32;
-      r = 248 + rng() * 78 + (attempt >= 12 ? 130 : 0);
+      r = r0 + rng() * 78 + (attempt >= 12 ? 130 : 0);
       const x = parent.x + Math.cos(ang) * r;
       const y = parent.y + Math.sin(ang) * r * 0.8;
       if (free(x, y)) placed = { x: x - NAV_NODE_W / 2, y: y - NAV_NODE_H / 2 };
@@ -324,11 +417,11 @@ export function placeAround(
        bounded reach */
     if (!placed) {
       ang = dirAngle + 2.399963 + i * 0.7;
-      r = 320 + i * 70;
+      r = r0 + 80 + i * 70;
       for (let k = 0; k < 48 && !placed; k++) {
         ang += 0.41;
         r += 22;
-        if (r > 1500) break;
+        if (r > 1800) break;
         const x = parent.x + Math.cos(ang) * r;
         const y = parent.y + Math.sin(ang) * r * 0.8;
         if (free(x, y)) placed = { x: x - NAV_NODE_W / 2, y: y - NAV_NODE_H / 2 };
@@ -348,6 +441,116 @@ export function placeAround(
   return out;
 }
 
+export interface FollowUpPlacement {
+  positions: { x: number; y: number }[];
+}
+
+/** THE FOLLOW-UP'S OWN SEATS — directive 04's directional engine.
+ *  Every candidate seat around the conversation card is scored by the
+ *  free ground it keeps, the shortness of its tie, and the air between
+ *  its siblings; the lineage's own side (where the parent's parent
+ *  stands) is gently set aside. A seat that would overlap the card, a
+ *  sibling, a visualization or another conversation NEVER wins. */
+export function placeFollowUps(
+  parentRect: NavRect,
+  nodes: NavNode[],
+  count: number,
+  seed: number,
+  avoidAngle?: number
+): { x: number; y: number }[] {
+  const rng = mulberry32(seed);
+  const pcx = parentRect.x + parentRect.w / 2;
+  const pcy = parentRect.y + parentRect.h / 2;
+  const halfW = parentRect.w / 2;
+  const halfH = parentRect.h / 2;
+  /* the eight honest directions — a card's own compass */
+  const dirs = [0, 1, 2, 3, 4, 5, 6, 7].map((i) => (i / 8) * Math.PI * 2);
+  /* the first ring clears the card's rectangle and the focused air */
+  const rBase = Math.max(halfW + NAV_PAD_FOCUSED_CONV + 70, (halfH + NAV_PAD_FOCUSED_CONV + 46) / 0.8);
+  const taken: NavRect[] = [];
+  const seatFree = (cx: number, cy: number) => {
+    const cand: NavRect = {
+      x: cx - NAV_NODE_W / 2,
+      y: cy - NAV_NODE_H / 2,
+      w: NAV_NODE_W,
+      h: NAV_NODE_H,
+    };
+    if (rectsOverlap(cand, NAV_PAD_QUESTION, parentRect, NAV_PAD_FOCUSED_CONV)) return false;
+    for (const n of nodes) {
+      if (rectsOverlap(cand, NAV_PAD_QUESTION, nodeRect(n), padFor(n))) return false;
+    }
+    for (const t of taken) {
+      if (rectsOverlap(cand, NAV_PAD_QUESTION, t, NAV_PAD_QUESTION)) return false;
+    }
+    return true;
+  };
+  /* score a direction: free ground ahead, nearness, and the lineage's
+     own side gently set aside — never a random scatter */
+  const scoreDir = (ang: number): number => {
+    let s = 0;
+    for (let ring = 0; ring < 3; ring++) {
+      const r = rBase + ring * 96;
+      const x = pcx + Math.cos(ang) * r;
+      const y = pcy + Math.sin(ang) * r * 0.8;
+      if (seatFree(x, y)) s += 3 - ring;
+    }
+    if (avoidAngle !== undefined) {
+      let d = Math.abs(((ang - avoidAngle + Math.PI * 3) % (Math.PI * 2)) - Math.PI);
+      d = Math.PI - d; // 0 when aligned with the lineage, π when opposite
+      s += (d / Math.PI) * 2.2; // the far side of the card preferred
+    }
+    s += rng() * 0.5; // a breath of variety between equal grounds
+    return s;
+  };
+  const order = [...dirs].sort((a, b) => scoreDir(b) - scoreDir(a));
+  const out: { x: number; y: number }[] = [];
+  for (let i = 0; i < count; i++) {
+    let placed: { x: number; y: number } | null = null;
+    /* the best directions first, then the whole circle's patience */
+    const attemptOrder = i < order.length ? [order[i], ...order.filter((a) => a !== order[i])] : dirs;
+    for (const ang of attemptOrder) {
+      for (let ring = 0; ring < 4 && !placed; ring++) {
+        const r = rBase + ring * 96 + rng() * 26;
+        const x = pcx + Math.cos(ang) * r;
+        const y = pcy + Math.sin(ang) * r * 0.8;
+        if (seatFree(x, y)) {
+          placed = { x: x - NAV_NODE_W / 2, y: y - NAV_NODE_H / 2 };
+          taken.push({ x: placed.x, y: placed.y, w: NAV_NODE_W, h: NAV_NODE_H });
+        }
+      }
+      if (placed) break;
+    }
+    /* the golden spiral's last word — wider and wider, never overlapping */
+    if (!placed) {
+      let ang = (navHash(`seat:${seed}:${i}`) % 628) / 100;
+      let r = rBase + 140;
+      for (let k = 0; k < 64 && !placed; k++) {
+        ang += 0.41;
+        r += 24;
+        if (r > 1900) break;
+        const x = pcx + Math.cos(ang) * r;
+        const y = pcy + Math.sin(ang) * r * 0.8;
+        if (seatFree(x, y)) {
+          placed = { x: x - NAV_NODE_W / 2, y: y - NAV_NODE_H / 2 };
+          taken.push({ x: placed.x, y: placed.y, w: NAV_NODE_W, h: NAV_NODE_H });
+        }
+      }
+    }
+    /* the ground's very last word — place at the widest ring */
+    if (!placed) {
+      const ang = (navHash(`seat:${seed}:${i}`) % 628) / 100;
+      const r = rBase + 420;
+      placed = {
+        x: pcx + Math.cos(ang) * r - NAV_NODE_W / 2,
+        y: pcy + Math.sin(ang) * r * 0.8 - NAV_NODE_H / 2,
+      };
+      taken.push({ x: placed.x, y: placed.y, w: NAV_NODE_W, h: NAV_NODE_H });
+    }
+    out.push(placed);
+  }
+  return out;
+}
+
 /** THE SETTLING LAW — a node born where another now stands (two
     clusters grown at once) is nudged along a golden spiral until the
     ground is free. Runs inside the state updater, against the true
@@ -357,18 +560,20 @@ export function freePosition(
   grown: NavNode[]
 ): { x: number; y: number } {
   const others = grown.filter((n) => n.id !== node.id);
-  if (!collides(node.position.x + NAV_NODE_W / 2, node.position.y + NAV_NODE_H / 2, others))
-    return node.position;
-  const cx0 = node.position.x + NAV_NODE_W / 2;
-  const cy0 = node.position.y + NAV_NODE_H / 2;
-  const a0 = navHash(node.id) % 628 / 100;
-  for (let k = 1; k <= 56; k++) {
+  const self = nodeRect(node);
+  const hits = () =>
+    others.some((n) => rectsOverlap(self, padFor(node), nodeRect(n), padFor(n)));
+  if (!hits()) return node.position;
+  const cx0 = self.x + self.w / 2;
+  const cy0 = self.y + self.h / 2;
+  const a0 = (navHash(node.id) % 628) / 100;
+  for (let k = 1; k <= 72; k++) {
     const ang = a0 + k * 2.399963;
     const r = k * 30;
     const x = cx0 + Math.cos(ang) * r;
     const y = cy0 + Math.sin(ang) * r * 0.8;
     if (!collides(x, y, others)) {
-      return { x: x - NAV_NODE_W / 2, y: y - NAV_NODE_H / 2 };
+      return { x: x - self.w / 2, y: y - self.h / 2 };
     }
   }
   return node.position;

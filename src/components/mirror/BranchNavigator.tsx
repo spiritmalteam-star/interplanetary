@@ -24,6 +24,7 @@ import {
   useReactFlow,
   type EdgeProps,
   type InternalNode,
+  type NodeChange,
   type NodeProps,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
@@ -31,21 +32,15 @@ import {
   ArrowLeftRight,
   BookOpen,
   ChevronRight,
-  Compass,
   Hammer,
   Hand,
   Hourglass,
   Layers,
   Link2,
-  ListTree,
   LoaderCircle,
-  Maximize2,
-  Minus,
   Moon,
-  NotebookPen,
-  Plus,
+  Music2,
   RefreshCw,
-  RotateCcw,
   ScrollText,
   Send,
   Sparkles,
@@ -77,16 +72,21 @@ import {
   NAV_MAX_INFLIGHT,
   NAV_NODE_H,
   NAV_NODE_W,
+  NAV_PAD_FOCUSED_CONV,
+  CREATION_ACCENTS,
   angleToward,
+  dimsOf,
   dropSnapshot,
   freePosition,
   frontierPick,
   navHash,
   navId,
   navKindForText,
+  navKindForCreation,
   overlapWords,
   peekSnapshot,
   placeAround,
+  placeFollowUps,
   pruneGraph,
   saveSnapshot,
   seedGraph,
@@ -132,6 +132,7 @@ const CREATION_ICONS = {
   akashic: ScrollText,
   book: BookOpen,
   invent: Hammer,
+  music: Music2,
 } as const;
 
 const KIND_LABELS: Record<NavNodeData["kind"], string> = {
@@ -141,6 +142,7 @@ const KIND_LABELS: Record<NavNodeData["kind"], string> = {
   manifest: "manifest",
   book: "book",
   akashic: "akashic",
+  music: "music",
 };
 
 /** The gentle phrase each movement wears in the journey's reflection. */
@@ -493,7 +495,7 @@ interface BranchNavigatorProps {
   disabled?: boolean;
   testIdPrefix: string;
   onPick: (text: string, move: BranchType) => void;
-  onCreation: (kind: "akashic" | "book" | "invent", topic: string) => void;
+  onCreation: (kind: "akashic" | "book" | "invent" | "music", topic: string) => void;
   apiRef?: { current: NavigatorApi | null };
   /* THE LIVING CONVERSATION — the canopy's own channel, passed through:
      the branch's answer rides the same store request it always has. */
@@ -566,6 +568,30 @@ function NavInner({
   const [nodes, setNodes, onNodesChange] = useNodesState<NavNode>(boot.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState<NavEdge>(boot.edges);
 
+  /* THE MEASURED LAW — every node's real rectangle is written into its
+     data the moment React Flow measures it, so the collision engine
+     (navigator-graph) always reads the TRUE size a card occupies —
+     a focused conversation is many times a question's stone. */
+  const handleNodesChange = useCallback(
+    (changes: NodeChange<NavNode>[]) => {
+      const dims = changes.filter((c) => c.type === "dimensions");
+      onNodesChange(changes);
+      if (dims.length === 0) return;
+      setNodes((nds) =>
+        nds.map((n) => {
+          const ch = dims.find((c) => c.id === n.id);
+          if (!ch || ch.type !== "dimensions" || !ch.dimensions) return n;
+          const w = Math.round(ch.dimensions.width);
+          const h = Math.round(ch.dimensions.height);
+          const d = n.data.dims;
+          if (d && Math.abs(d.w - w) < 2 && Math.abs(d.h - h) < 2) return n;
+          return { ...n, data: { ...n.data, dims: { w, h } } };
+        })
+      );
+    },
+    [onNodesChange, setNodes]
+  );
+
   const [selectedId, setSelectedId] = useState<string | null>(boot.selectedId);
   const [trail, setTrail] = useState<string[]>(boot.trail);
   const [notes, setNotes] = useState<Record<string, string>>(boot.notes);
@@ -573,7 +599,6 @@ function NavInner({
   const [journeyOpen, setJourneyOpen] = useState(false);
   const [listOpen, setListOpen] = useState(false);
   const [persistOk, setPersistState] = useState(false);
-  const [frontierDir, setFrontierDir] = useState<string | null>(null);
   const [hintSeen, setHintSeen] = useState(true);
   const [growCount, setGrowCount] = useState(0);
   /* THE SEMANTIC ZOOM — at low magnification the tree breathes in
@@ -761,15 +786,15 @@ function NavInner({
       const weaveMaking = growCountRef.current % 3 === 0 && branches.length >= 3;
       branches.forEach((b, i) => {
         if (weaveMaking && i === 1) {
-          const kinds = ["akashic", "book", "invent"] as const;
-          const kind = kinds[navHash(parent.data.text) % 3];
+          const kinds = ["akashic", "book", "invent", "music"] as const;
+          const kind = kinds[navHash(parent.data.text) % kinds.length];
           candidates.push({
             seed: {
               text: b.question,
               movement: "create",
-              accent: parent.data.accent.startsWith("var(")
-                ? "#f59e0b"
-                : parent.data.accent,
+              /* the constellation's own light — each making wears its
+                 category's accent, not the family's (directive 12) */
+              accent: CREATION_ACCENTS[kind],
               creation: kind,
               topic: b.question,
             },
@@ -793,38 +818,61 @@ function NavInner({
       );
       if (fresh.length === 0) return;
       /* THE CONVERSATION'S OWN BREADTH — a living node is wider than a
-         question's stone: its real measured bounds lead the growth, so
-         follow-up branches are born clear of the card itself. */
+         question's stone: its REAL measured rectangle leads the growth,
+         and the follow-ups take their seats by directive 04's engine —
+         scored directions, real free ground, the lineage's own side
+         gently set aside. A question's stone still grows by cone. */
       const pInternal = rf.getInternalNode(parent.id);
-      const pw =
-        parent.data.role === "conversation"
-          ? pInternal?.measured?.width ?? 560
-          : NAV_NODE_W;
-      const ph =
-        parent.data.role === "conversation"
-          ? pInternal?.measured?.height ?? 520
-          : NAV_NODE_H;
+      const isConv = parent.data.role === "conversation";
+      const measured = pInternal?.measured;
+      const pw = isConv
+        ? parent.data.dims?.w ?? measured?.width ?? 560
+        : parent.data.dims?.w ?? NAV_NODE_W;
+      const ph = isConv
+        ? parent.data.dims?.h ?? measured?.height ?? 520
+        : parent.data.dims?.h ?? NAV_NODE_H;
       const parentCx = parent.position.x + pw / 2;
       const parentCy = parent.position.y + ph / 2;
       const home = existing.find((n) => n.id === homeId);
       const map = home
         ? { x: home.position.x + NAV_NODE_W / 2, y: home.position.y + NAV_NODE_H / 2 }
         : { x: 0, y: 0 };
+      const radial =
+        Math.atan2(parentCy - map.y, parentCx - map.x) ||
+        (navHash(parent.data.text) % 628) / 100;
       const angle = dir
         ? angleToward(
             { x: parentCx, y: parentCy },
             dir as "left" | "right" | "top" | "bottom",
             map
           )
-        : Math.atan2(parentCy - map.y, parentCx - map.x) ||
-          (navHash(parent.data.text) % 628) / 100;
-      const positions = placeAround(
-        { x: parentCx, y: parentCy },
-        angle,
-        existing,
-        fresh.length,
-        navHash(`${parent.id}:${fresh.length}:${growCountRef.current}`)
-      );
+        : radial;
+      /* the lineage's own side — follow-ups never pile onto the branch
+         the conversation itself came from */
+      const grand = parent.data.parentId
+        ? existing.find((n) => n.id === parent.data.parentId)
+        : undefined;
+      const avoidAngle = grand
+        ? Math.atan2(
+            grand.position.y + dimsOf(grand).h / 2 - parentCy,
+            grand.position.x + dimsOf(grand).w / 2 - parentCx
+          )
+        : undefined;
+      const positions = isConv
+        ? placeFollowUps(
+            { x: parent.position.x, y: parent.position.y, w: pw, h: ph },
+            existing,
+            fresh.length,
+            navHash(`${parent.id}:${fresh.length}:${growCountRef.current}`),
+            avoidAngle
+          )
+        : placeAround(
+            { x: parentCx, y: parentCy, w: pw, h: ph },
+            angle,
+            existing,
+            fresh.length,
+            navHash(`${parent.id}:${fresh.length}:${growCountRef.current}`)
+          );
       const ids = fresh.map(() => navId());
       const newNodes: NavNode[] = fresh.map((c, i) => ({
         id: ids[i],
@@ -835,11 +883,7 @@ function NavInner({
           movement: c.seed.movement,
           accent: c.seed.accent,
           kind: c.seed.creation
-            ? c.seed.creation === "book"
-              ? "book"
-              : c.seed.creation === "akashic"
-                ? "akashic"
-                : "creation"
+            ? navKindForCreation(c.seed.creation)
             : navKindForText(c.seed.text),
           role: c.seed.creation ? "creation" : "question",
           status: "idle",
@@ -1109,7 +1153,6 @@ function NavInner({
         { left: tl.x, top: tl.y, right: br.x, bottom: br.y },
         attemptedRef.current
       );
-      setFrontierDir(hit ? hit.dir : null);
       if (!hit) return;
       lastAutoRef.current = { x: vp.x, y: vp.y, zoom: vp.zoom };
       void expandNode(hit.nodeId, hit.dir, true);
@@ -1140,8 +1183,9 @@ function NavInner({
       const away = children.length
         ? Math.atan2(-fy, -fx)
         : (navHash(text) % 628) / 100;
+      const ad = dimsOf(anchor);
       const [pos] = placeAround(
-        { x: cx, y: cy },
+        { x: cx, y: cy, w: ad.w, h: ad.h },
         away,
         nodesRef.current,
         1,
@@ -1215,24 +1259,26 @@ function NavInner({
       if (!n) return null;
       const internal = rf.getInternalNode(id);
       const conv = n.data.role === "conversation";
-      const w = internal?.measured?.width ?? (conv ? 560 : NAV_NODE_W);
-      const h = internal?.measured?.height ?? (conv ? 520 : NAV_NODE_H);
+      const w = n.data.dims?.w ?? internal?.measured?.width ?? (conv ? 560 : NAV_NODE_W);
+      const h = n.data.dims?.h ?? internal?.measured?.height ?? (conv ? 520 : NAV_NODE_H);
       return { x: n.position.x + w / 2, y: n.position.y + h / 2, w, h };
     },
     [rf]
   );
 
-  /** THE CAMERA'S OWN TRAVEL — glide to a conversation, fitted. */
+  /** THE CAMERA'S OWN TRAVEL — glide to a conversation, fitted. The
+      framing keeps the words readable (zoom never shrinks them to
+      dust) and leaves the walk's hands their own air at the right. */
   const flyToConv = useCallback(
     (id: string) => {
       const wrap = wrapperRef.current?.getBoundingClientRect();
       const c = centerOf(id);
       if (!c || !wrap) return;
       const zoom = Math.max(
-        0.45,
+        0.58,
         Math.min(
           0.95,
-          Math.min((wrap.width - 56) / c.w, (wrap.height - 250) / c.h)
+          Math.min((wrap.width - 96) / c.w, (wrap.height - 250) / c.h)
         )
       );
       rf.setCenter(c.x, c.y - 26 / zoom, {
@@ -1299,7 +1345,16 @@ function NavInner({
     (id: string) => {
       const c = centerOf(id);
       if (!c) return;
-      const margin = 60;
+      const self = nodesRef.current.find((n) => n.id === id);
+      /* THE SPACIOUS LAW — a focused conversation breathes far wider
+         than a resting one, a resting one wider than a question
+         (directive 03: 90–160px around the focused card). */
+      const margin =
+        self?.data.role === "conversation"
+          ? self.data.focused
+            ? NAV_PAD_FOCUSED_CONV
+            : 78
+          : 48;
       const rect = {
         l: c.x - c.w / 2 - margin,
         r: c.x + c.w / 2 + margin,
@@ -1307,22 +1362,31 @@ function NavInner({
         b: c.y + c.h / 2 + margin,
       };
       const targets = new Map<string, { x: number; y: number }>();
-      for (const n of nodesRef.current) {
-        if (n.id === id) continue;
-        const b = centerOf(n.id);
-        if (!b) continue;
-        const ox =
-          Math.min(rect.r, b.x + b.w / 2) - Math.max(rect.l, b.x - b.w / 2);
-        const oy =
-          Math.min(rect.b, b.y + b.h / 2) - Math.max(rect.t, b.y - b.h / 2);
-        if (ox <= 0 || oy <= 0) continue;
-        const dx = b.x - c.x;
-        const dy = b.y - c.y;
-        let px = 0;
-        let py = 0;
-        if (ox < oy) px = (dx >= 0 ? 1 : -1) * (ox + 6);
-        else py = (dy >= 0 ? 1 : -1) * (oy + 6);
-        targets.set(n.id, { x: n.position.x + px, y: n.position.y + py });
+      /* two settling passes — no overlap is ever resolved by creating
+         another one (directive 03) */
+      for (let pass = 0; pass < 2; pass++) {
+        let moved = false;
+        for (const n of nodesRef.current) {
+          if (n.id === id) continue;
+          const pos = targets.get(n.id) ?? n.position;
+          const d = dimsOf(n);
+          const bx = pos.x + d.w / 2;
+          const by = pos.y + d.h / 2;
+          const ox =
+            Math.min(rect.r, bx + d.w / 2) - Math.max(rect.l, bx - d.w / 2);
+          const oy =
+            Math.min(rect.b, by + d.h / 2) - Math.max(rect.t, by - d.h / 2);
+          if (ox <= 0 || oy <= 0) continue;
+          const dx = bx - c.x;
+          const dy = by - c.y;
+          let px = 0;
+          let py = 0;
+          if (ox < oy) px = (dx >= 0 ? 1 : -1) * (ox + 8);
+          else py = (dy >= 0 ? 1 : -1) * (oy + 8);
+          targets.set(n.id, { x: pos.x + px, y: pos.y + py });
+          moved = true;
+        }
+        if (!moved) break;
       }
       if (targets.size > 0) animatePositions(targets);
     },
@@ -1509,10 +1573,31 @@ function NavInner({
       });
       if (!parent) return false;
       const id = navId();
+      /* a conversation born beside its parent takes its seat by the
+         follow-up engine when the parent is itself a living card —
+         it never rises on top of the room that inspired it */
+      const pd = dimsOf(parent);
+      const parentIsConv = parent.data.role === "conversation";
+      const pcx = parent.position.x + pd.w / 2;
+      const pcy = parent.position.y + pd.h / 2;
+      const seat = parentIsConv
+        ? placeFollowUps(
+            { x: parent.position.x, y: parent.position.y, w: pd.w, h: pd.h },
+            nodesRef.current,
+            1,
+            navHash(q)
+          )[0]
+        : placeAround(
+            { x: pcx, y: pcy, w: pd.w, h: pd.h },
+            Math.atan2(pcy, pcx) || (navHash(q) % 628) / 100,
+            nodesRef.current,
+            1,
+            navHash(q)
+          )[0];
       const node: NavNode = {
         id,
         type: "living-conversation",
-        position: { x: 0, y: 0 },
+        position: seat,
         data: {
           text: q,
           movement: move ?? "reflect",
@@ -1599,17 +1684,99 @@ function NavInner({
       recordSeen([text]);
       onPick(text, "create");
     };
+    /* THE CONSTELLATION'S OWN HAND — a making born of this conversation:
+       the artifact node hangs connected to the branch, wearing its
+       category's own light; its tools wait in their own workspace. */
+    const onConvCreate = (e: Event) => {
+      const d = (e as CustomEvent<{ id: string; kind: string }>).detail;
+      if (!d?.id || !d.kind) return;
+      const kind = d.kind as "akashic" | "book" | "invent" | "music";
+      const parent = nodesRef.current.find((n) => n.id === d.id);
+      if (!parent) return;
+      /* one making of each kind per conversation — a second touch
+         simply brings the existing artifact back into focus */
+      const known = nodesRef.current.find(
+        (n) => n.data.parentId === parent.id && n.data.creation === kind
+      );
+      if (known) {
+        focusNode(known.id);
+        return;
+      }
+      const pd = dimsOf(parent);
+      const label =
+        kind === "book"
+          ? "A book from this conversation"
+          : kind === "akashic"
+            ? "A record from this conversation"
+            : kind === "music"
+              ? "A song from this conversation"
+              : "An invention from this conversation";
+      const seat = placeFollowUps(
+        { x: parent.position.x, y: parent.position.y, w: pd.w, h: pd.h },
+        nodesRef.current,
+        1,
+        navHash(`${parent.id}:${kind}`)
+      )[0];
+      const id = navId();
+      const node: NavNode = {
+        id,
+        type: "nav-question",
+        position: seat,
+        data: {
+          text: parent.data.text,
+          movement: "create",
+          accent: CREATION_ACCENTS[kind],
+          kind: navKindForCreation(kind),
+          role: "creation",
+          status: "idle",
+          childCount: 0,
+          depth: parent.data.depth + 1,
+          parentId: parent.id,
+          creation: kind,
+          topic: parent.data.text,
+          reason: label,
+        },
+      };
+      const edge: NavEdge = {
+        id: `e:${parent.id}:${id}`,
+        source: parent.id,
+        target: id,
+        type: "nav",
+        data: { accent: node.data.accent },
+        style: {
+          stroke: node.data.accent,
+          strokeOpacity: 0.55,
+          strokeWidth: 1.4,
+        },
+      };
+      setNodes((nds) => {
+        const settled = freePosition(node, nds);
+        return [...nds, { ...node, position: settled }];
+      });
+      setEdges((es) => [...es, edge]);
+      setNodes((nds) =>
+        nds.map((n) =>
+          n.id === parent.id
+            ? { ...n, data: { ...n.data, childCount: n.data.childCount + 1 } }
+            : n
+        )
+      );
+      window.setTimeout(() => focusNode(id), 60);
+      schedulePersist();
+    };
     window.addEventListener("nav:conv-open", onOpen);
     window.addEventListener("nav:conv-collapse", onCollapse);
     window.addEventListener("nav:conv-resize", onResize);
     window.addEventListener("nav:conv-channel-ask", onChannelAsk);
+    window.addEventListener("nav:conv-create", onConvCreate);
     return () => {
       window.removeEventListener("nav:conv-open", onOpen);
       window.removeEventListener("nav:conv-collapse", onCollapse);
       window.removeEventListener("nav:conv-resize", onResize);
       window.removeEventListener("nav:conv-channel-ask", onChannelAsk);
+      window.removeEventListener("nav:conv-create", onConvCreate);
     };
-  }, [flyToConv, focusConv, nudgeAround, onPick, rf, schedulePersist]);
+  }, [flyToConv, focusConv, focusNode, nudgeAround, onPick, rf, schedulePersist, setEdges, setNodes]);
 
   /* THE CHANNEL'S EAR — the branch's own answer, riding the same
      store request it always has, settles into its living ledger.
@@ -1729,6 +1896,49 @@ function NavInner({
       comeHome();
     }
   }, [comeHome, focusNode]);
+
+  /* THE L-SHAPED TOOLBAR'S OWN EAR — the vertical arm's hands ride the
+     same DOM events every hand of the house rides; the arm reports the
+     walk's state back so its readouts stay honest. The canvas itself
+     never moves for the arm's own folding (directive 06). */
+  useEffect(() => {
+    const onZoom = (e: Event) => {
+      const dir = (e as CustomEvent<{ dir?: number }>).detail?.dir ?? 1;
+      if (dir > 0) rf.zoomIn({ duration: reducedMotionRef.current ? 0 : 240 });
+      else rf.zoomOut({ duration: reducedMotionRef.current ? 0 : 240 });
+    };
+    const onFit = () => {
+      rf.fitView({
+        padding: 0.34,
+        duration: reducedMotionRef.current ? 0 : 480,
+        nodes: trailRef.current.length
+          ? trailRef.current.map((id) => ({ id }))
+          : undefined,
+      });
+    };
+    const onJourney = () => setJourneyOpen((v) => !v);
+    const onList = () => setListOpen((v) => !v);
+    const onDepth = (e: Event) => {
+      const bias = (e as CustomEvent<{ bias?: number }>).detail?.bias;
+      if (bias === -1 || bias === 0 || bias === 1) setDepthBias(bias);
+    };
+    window.addEventListener("nav:rail-zoom", onZoom);
+    window.addEventListener("nav:rail-fit", onFit);
+    window.addEventListener("nav:rail-home", comeHome);
+    window.addEventListener("nav:rail-back", backToPrevious);
+    window.addEventListener("nav:rail-journey", onJourney);
+    window.addEventListener("nav:rail-list", onList);
+    window.addEventListener("nav:rail-depth", onDepth);
+    return () => {
+      window.removeEventListener("nav:rail-zoom", onZoom);
+      window.removeEventListener("nav:rail-fit", onFit);
+      window.removeEventListener("nav:rail-home", comeHome);
+      window.removeEventListener("nav:rail-back", backToPrevious);
+      window.removeEventListener("nav:rail-journey", onJourney);
+      window.removeEventListener("nav:rail-list", onList);
+      window.removeEventListener("nav:rail-depth", onDepth);
+    };
+  }, [backToPrevious, comeHome, rf]);
 
   const startFreshJourney = useCallback(() => {
     dropSnapshot(focusKey);
@@ -1886,6 +2096,17 @@ function NavInner({
   }, [boot.camera, rf, setEdges, setNodes]);
 
   const selectedNode = nodes.find((n) => n.id === selectedId) ?? null;
+  const focusedDepth = selectedNode?.data.depth ?? 0;
+
+  /* the vertical arm's honest readout — the walk's own state, reported
+     as it changes so the L-shaped toolbar never lies */
+  useEffect(() => {
+    window.dispatchEvent(
+      new CustomEvent("nav:rail-state", {
+        detail: { depthBias, journeyOpen, listOpen, depth: focusedDepth },
+      })
+    );
+  }, [depthBias, journeyOpen, listOpen, focusedDepth]);
 
   return (
     <div
@@ -1950,7 +2171,10 @@ function NavInner({
         />
       </div>
 
-      {/* THE FIRST VISIT'S HINT — one gentle line, then it rests */}
+      {/* THE FIRST VISIT'S HINT — one gentle line, then it rests.
+          It speaks the living conversation's own truth: answers grow
+          their branches themselves (directive 02 — no duplicate
+          discovery prompts). */}
       {!hintSeen && (
         <button
           type="button"
@@ -1958,146 +2182,13 @@ function NavInner({
           className="absolute left-1/2 top-2 z-20 -translate-x-1/2 rounded-full border bg-background/95 px-4 py-1.5 text-[12px] italic text-muted-foreground shadow-[0_8px_26px_-14px_rgba(0,0,0,0.5)]"
           data-testid={`${testIdPrefix}-nav-hint`}
         >
-          {t("Follow a question, or move around to discover new paths.")}
+          {t("Touch a question to speak with the mirror — every answer grows its own branches.")}
         </button>
       )}
 
-      {/* THE DEPTH'S OWN CONTROLS — simple words for a simple choice */}
-      <div
-        className="absolute left-2 z-20 flex items-center gap-1 rounded-full border bg-background/90 px-1 py-0.5 shadow-[0_8px_24px_-16px_rgba(0,0,0,0.5)]"
-        style={{ top: "max(0.5rem, env(safe-area-inset-top))" }}
-      >
-        <button
-          type="button"
-          onClick={() => setDepthBias((b) => (b === -1 ? 0 : -1))}
-          aria-pressed={depthBias === -1}
-          data-testid={`${testIdPrefix}-nav-simpler`}
-          className={cn(
-            "rounded-full px-2.5 py-1 text-[11px] transition-colors duration-200",
-            depthBias === -1
-              ? "bg-foreground/10 text-foreground"
-              : "text-muted-foreground hover:text-foreground"
-          )}
-        >
-          {t("Simpler")}
-        </button>
-        <button
-          type="button"
-          onClick={() => setDepthBias((b) => (b === 1 ? 0 : 1))}
-          aria-pressed={depthBias === 1}
-          data-testid={`${testIdPrefix}-nav-deeper`}
-          className={cn(
-            "rounded-full px-2.5 py-1 text-[11px] transition-colors duration-200",
-            depthBias === 1
-              ? "bg-foreground/10 text-foreground"
-              : "text-muted-foreground hover:text-foreground"
-          )}
-        >
-          {t("Explore deeper")}
-        </button>
-      </div>
-
-      {/* THE WALK'S OWN HANDS — zoom, fit, home, back, journey, list */}
-      <div
-        className="absolute right-2 z-20 flex flex-col gap-1 rounded-full border bg-background/90 p-1 shadow-[0_8px_24px_-16px_rgba(0,0,0,0.5)]"
-        style={{ top: "max(0.5rem, env(safe-area-inset-top))" }}
-      >
-        {(
-          [
-            {
-              key: "zoom-in",
-              icon: Plus,
-              label: "Zoom in",
-              on: () => rf.zoomIn({ duration: reducedMotionRef.current ? 0 : 240 }),
-            },
-            {
-              key: "zoom-out",
-              icon: Minus,
-              label: "Zoom out",
-              on: () => rf.zoomOut({ duration: reducedMotionRef.current ? 0 : 240 }),
-            },
-            {
-              key: "fit",
-              icon: Maximize2,
-              label: "Fit the journey into view",
-              on: () =>
-                rf.fitView({
-                  padding: 0.34,
-                  duration: reducedMotionRef.current ? 0 : 480,
-                  nodes: trail.length ? trail.map((id) => ({ id })) : undefined,
-                }),
-            },
-            {
-              key: "home",
-              icon: Compass,
-              label: "Return home",
-              on: comeHome,
-            },
-            {
-              key: "back",
-              icon: RotateCcw,
-              label: "Return to the previous focus",
-              on: backToPrevious,
-            },
-            {
-              key: "journey",
-              icon: NotebookPen,
-              label: "My journey",
-              on: () => setJourneyOpen((v) => !v),
-              active: journeyOpen,
-            },
-            {
-              key: "list",
-              icon: ListTree,
-              label: "The walk as a list",
-              on: () => setListOpen((v) => !v),
-              active: listOpen,
-            },
-          ] as {
-            key: string;
-            icon: typeof Plus;
-            label: string;
-            on: () => void;
-            active?: boolean;
-          }[]
-        ).map((c) => (
-          <button
-            key={c.key}
-            type="button"
-            onClick={c.on}
-            aria-label={t(c.label)}
-            aria-pressed={c.active}
-            title={t(c.label)}
-            data-testid={`${testIdPrefix}-nav-${c.key}`}
-            className={cn(
-              "focus-glow flex size-7 items-center justify-center rounded-full text-muted-foreground transition-colors duration-200 hover:text-foreground",
-              c.active && "bg-foreground/10 text-foreground"
-            )}
-          >
-            <c.icon className="size-3.5" aria-hidden="true" />
-          </button>
-        ))}
-      </div>
-
-      {/* THE FRONTIER'S OWN CUE — a quiet whisper that more paths wait */}
-      {frontierDir && !journeyOpen && !listOpen && (
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute z-10 rounded-full border bg-background/80 px-2.5 py-1 text-[10px] italic text-muted-foreground"
-          style={
-            frontierDir === "left"
-              ? { left: 8, top: "50%" }
-              : frontierDir === "right"
-                ? { right: 8, top: "50%" }
-                : frontierDir === "top"
-                  ? { left: "50%", top: 60 }
-                  : { left: "50%", bottom: 96 }
-          }
-        >
-          {t("more paths this way")}{" "}
-          <ChevronRight className="inline size-3" aria-hidden="true" />
-        </div>
-      )}
+      {/* THE WALK'S OWN HANDS now live in the L-shaped toolbar's
+          vertical arm (BranchCanopy's ToolbarRail) — the canvas keeps
+          only the journey and the list themselves. */}
 
       {/* MY JOURNEY — the walk's own quiet mirror */}
       {journeyOpen && (
@@ -2105,7 +2196,7 @@ function NavInner({
           role="dialog"
           aria-label={t("My journey")}
           data-testid={`${testIdPrefix}-nav-journey`}
-          className="absolute bottom-24 right-2 z-30 flex max-h-[52vh] w-[min(320px,calc(100vw-2rem))] flex-col rounded-2xl border bg-background/97 p-3 shadow-[0_18px_50px_-24px_rgba(0,0,0,0.6)]"
+          className="absolute bottom-24 right-[64px] z-30 flex max-h-[52vh] w-[min(320px,calc(100vw-2rem))] flex-col rounded-2xl border bg-background/97 p-3 shadow-[0_18px_50px_-24px_rgba(0,0,0,0.6)]"
         >
           <div className="flex items-center justify-between gap-2">
             <span className="mono-label text-[9px] uppercase tracking-[0.2em] text-muted-foreground">
@@ -2277,7 +2368,7 @@ function NavInner({
           role="dialog"
           aria-label={t("The walk as a list")}
           data-testid={`${testIdPrefix}-nav-list`}
-          className="absolute inset-x-2 top-12 z-30 flex max-h-[58vh] flex-col rounded-2xl border bg-background/97 p-3 shadow-[0_18px_50px_-24px_rgba(0,0,0,0.6)]"
+          className="absolute left-2 right-[64px] top-12 z-30 flex max-h-[58vh] flex-col rounded-2xl border bg-background/97 p-3 shadow-[0_18px_50px_-24px_rgba(0,0,0,0.6)]"
         >
           <div className="mb-1.5 flex items-center justify-between">
             <span className="mono-label text-[9px] uppercase tracking-[0.2em] text-muted-foreground">

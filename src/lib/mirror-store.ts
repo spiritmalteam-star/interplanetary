@@ -570,11 +570,11 @@ interface MirrorState {
      branch's own words here, and the theme page that opens forges
      its making from them (made in the moment, never the same twice). */
   branchCreationSeed: {
-    kind: "akashic" | "book" | "invent";
+    kind: "akashic" | "book" | "invent" | "music";
     topic: string;
   } | null;
   setBranchCreationSeed: (seed: {
-    kind: "akashic" | "book" | "invent";
+    kind: "akashic" | "book" | "invent" | "music";
     topic: string;
   } | null) => void;
   /* THE TOOL WALL — the Forge's bench tools, worked by the inteligjence */
