@@ -5235,3 +5235,21 @@ Stage Summary:
 - Every function of the old crown survives inside the universal menu; the walk's hands fold away by default and return at one junction or one menu touch; nothing was removed, everything was rehoused.
 - The capability-discovery process is now itself a capability: documented, gated, and ledgered in AGENTS.md, with the first verified skill installed at zero runtime cost.
 - Mirror Entity's voice, prompts, suggestions and behavior: untouched. All user data, creations, conversations and services: preserved.
+
+---
+Task ID: restore-eighth-strike
+Agent: Z.ai Code (main orchestrator)
+Task: Restore the latest version (not the old one) and publish to git — the eighth external restore dragged the workshop back to c873b47 (the yielding portal, an amended twin of work already on GitHub) while origin/main kept every commit; the user supplied a fresh token for the fetch and the push.
+
+Work Log:
+- READ THE GROUND: local main sat at c873b47 ("the yielding portal" — 1 local-only commit born of a `commit --amend` of 0506bc1), while origin/main stood 64 commits ahead at 462bc98 (the universal evolution protocol). The histories diverged at 65f5556 (worklog task 62). The pending "4d4fd09" worklog commit from the prior session does not exist in this tree — it was lost with the earlier sandbox; nothing of value remained unrecorded.
+- CONFIRMED SUPERSESSION: `git log FETCH_HEAD | rg yielding` shows the remote already carries 0506bc1 (the pre-amend yielding-portal work) plus 64 newer commits — the local tip was fully superseded; discarding it loses nothing.
+- THE CURE (the task-54 chain, eighth strike): checkpoint branch `restore-checkpoint/c873b47-yielding-portal` cut for safety → `git fetch` with the user's fresh inline token (used once, never stored) → `git reset --hard FETCH_HEAD` → local = origin/main = 462bc98, working tree clean.
+- REBUILT THE ENVIRONMENT: `bun install` (21 packages incl. @xyflow/react 12.12.0, three 0.186.1), `bun run db:push` (Prisma Client 6.19.2 regenerated); the dev server's hot reload picked the restored tree up and compiled clean (the transient module-not-found for @xyflow style.css belonged to the mid-reset window only).
+- VERIFIED WITH AGENT-BROWSER (desktop): the landing renders whole (hero art, docked threshold, slideshow, remembrance stickers); "Enter the portal" mounts the chamber (React Flow: 7 nodes, 10 edges, the frontier growing between snapshots — the collision law alive); the minimal top control stands (◈ root diamond · Search everything · Menu · Landing · the walk's hands); the universal menu opens closed-by-default and serves every section (Where the walk stands · General · Root · Fit · Back · Hands · the categories incl. Akashic/Book/Music · Recalibrate · Clarity mode · the light · the Passage); the search hand opens the same universal popover with the one field ("Find conversations, branches, books, makings…"); zero page errors; dev.log shows /api/suggestions/bud 200 (1.6s) and /api/wallet 200 with Prisma transactions committing. Honest note: headless screenshots of the chamber rasterize near-white (the known headless-Chrome compositing artifact over the fixed WebGL canvas at -z-10) — the DOM, the computed styles and every interaction prove the app whole; the landing screenshot rasterizes fine.
+- PUSHED: worklog committed and pushed with the fresh token inline (one use, not stored, working tree clean after).
+
+Stage Summary:
+- Local = origin/main = 462bc98 (the universal evolution protocol — the minimal top control, the one universal menu, the folded hands, the skills ledger in AGENTS.md).
+- The eighth external restore cost zero work: the checkpoint branch keeps the old tip reachable; the token was used inline only.
+- The workshop is ready for the next UI task (top-bar rework) on the true latest base.
