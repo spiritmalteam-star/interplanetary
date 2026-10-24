@@ -32,6 +32,7 @@ import {
   ArrowLeftRight,
   BookOpen,
   ChevronRight,
+  Clapperboard,
   Hammer,
   Hand,
   Hourglass,
@@ -133,6 +134,7 @@ const CREATION_ICONS = {
   book: BookOpen,
   invent: Hammer,
   music: Music2,
+  video: Clapperboard,
 } as const;
 
 const KIND_LABELS: Record<NavNodeData["kind"], string> = {
@@ -143,6 +145,7 @@ const KIND_LABELS: Record<NavNodeData["kind"], string> = {
   book: "book",
   akashic: "akashic",
   music: "music",
+  video: "video",
 };
 
 /** The gentle phrase each movement wears in the journey's reflection. */
@@ -495,7 +498,10 @@ interface BranchNavigatorProps {
   disabled?: boolean;
   testIdPrefix: string;
   onPick: (text: string, move: BranchType) => void;
-  onCreation: (kind: "akashic" | "book" | "invent" | "music", topic: string) => void;
+  onCreation: (
+    kind: "akashic" | "book" | "invent" | "music" | "video",
+    topic: string
+  ) => void;
   apiRef?: { current: NavigatorApi | null };
   /* THE LIVING CONVERSATION — the canopy's own channel, passed through:
      the branch's answer rides the same store request it always has. */
@@ -786,7 +792,7 @@ function NavInner({
       const weaveMaking = growCountRef.current % 3 === 0 && branches.length >= 3;
       branches.forEach((b, i) => {
         if (weaveMaking && i === 1) {
-          const kinds = ["akashic", "book", "invent", "music"] as const;
+          const kinds = ["akashic", "book", "invent", "music", "video"] as const;
           const kind = kinds[navHash(parent.data.text) % kinds.length];
           candidates.push({
             seed: {
@@ -1690,7 +1696,7 @@ function NavInner({
     const onConvCreate = (e: Event) => {
       const d = (e as CustomEvent<{ id: string; kind: string }>).detail;
       if (!d?.id || !d.kind) return;
-      const kind = d.kind as "akashic" | "book" | "invent" | "music";
+      const kind = d.kind as "akashic" | "book" | "invent" | "music" | "video";
       const parent = nodesRef.current.find((n) => n.id === d.id);
       if (!parent) return;
       /* one making of each kind per conversation — a second touch
@@ -1710,7 +1716,9 @@ function NavInner({
             ? "A record from this conversation"
             : kind === "music"
               ? "A song from this conversation"
-              : "An invention from this conversation";
+              : kind === "video"
+                ? "A film from this conversation"
+                : "An invention from this conversation";
       const seat = placeFollowUps(
         { x: parent.position.x, y: parent.position.y, w: pd.w, h: pd.h },
         nodesRef.current,

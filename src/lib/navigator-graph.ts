@@ -31,13 +31,14 @@ export type NavKind =
   | "manifest"
   | "book"
   | "akashic"
-  | "music";
+  | "music"
+  | "video";
 
 /** A making's own kind as the map speaks it: inventions ride the
     generic "creation" kind (their icon and accent still tell them
     apart), the others wear their own names. */
 export function navKindForCreation(
-  c: "akashic" | "book" | "invent" | "music"
+  c: "akashic" | "book" | "invent" | "music" | "video"
 ): NavKind {
   return c === "invent" ? "creation" : c;
 }
@@ -46,11 +47,12 @@ export function navKindForCreation(
  *  Books warm gold, the records soft violet, music coral, inventions
  *  a cool sky. The conversation's own accent keeps flowing through
  *  the family lines; only the artifacts carry these. */
-export const CREATION_ACCENTS: Record<"akashic" | "book" | "invent" | "music", string> = {
+export const CREATION_ACCENTS: Record<"akashic" | "book" | "invent" | "music" | "video", string> = {
   akashic: "#a78bfa",
   book: "#f59e0b",
   music: "#fb7185",
   invent: "#38bdf8",
+  video: "#22d3ee",
 };
 
 /** The node's own role in the map. A "conversation" node is a branch
@@ -67,7 +69,7 @@ export interface NavNodeData extends Record<string, unknown> {
   childCount: number;
   depth: number;
   parentId: string | null;
-  creation?: "akashic" | "book" | "invent" | "music";
+  creation?: "akashic" | "book" | "invent" | "music" | "video";
   topic?: string;
   reason?: string;
   focused?: boolean;
@@ -98,7 +100,7 @@ export interface SeedWhisper {
   movement: BranchType;
   accent: string;
   golden?: boolean;
-  creation?: "akashic" | "book" | "invent" | "music";
+  creation?: "akashic" | "book" | "invent" | "music" | "video";
   topic?: string;
 }
 

@@ -1526,6 +1526,7 @@ export function BranchCanopy({
      way out both live inside it). */
   const openAkashic = useMirror((s) => s.openAkashic);
   const openDreamBook = useMirror((s) => s.openDreamBook);
+  const openVideo = useMirror((s) => s.openVideo);
   const openProfilePage = useMirror((s) => s.openProfilePage);
   /* THE LEDGER'S OWN HANDS — one opens a saved conversation right
      where it lives, the other restores a kept volume to the reading */
@@ -2220,11 +2221,12 @@ export function BranchCanopy({
 
   /* THE TOOL'S OWN HAND — one touch hangs the tied whisper's words on
      the tool and opens its original theme page: the record seeks, the
-     book's loom pre-speaks, the forge strikes, the song finds its key
-     — each making born of that branch, in the moment, never the same
-     making twice. */
+     book's loom pre-speaks, the forge strikes, the song finds its key,
+     the film's storyboard is woven from the branch's own words — each
+     making born of that branch, in the moment, never the same making
+     twice. */
   const openTool = useCallback(
-    (kind: "akashic" | "book" | "invent" | "music", topic: string) => {
+    (kind: "akashic" | "book" | "invent" | "music" | "video", topic: string) => {
       if (disabled) return;
       recordJourney({ b: category, s: scopeHint ?? undefined });
       bumpWalkSteps();
@@ -2232,6 +2234,7 @@ export function BranchCanopy({
       if (kind === "akashic") openAkashic();
       else if (kind === "book") openDreamBook();
       else if (kind === "music") openLightCodes({ intention: topic });
+      else if (kind === "video") openVideo({ topic });
       else openInvent();
     },
     [
@@ -2242,6 +2245,8 @@ export function BranchCanopy({
       setBranchCreationSeed,
       openAkashic,
       openDreamBook,
+      openLightCodes,
+      openVideo,
       openInvent,
       bumpWalkSteps,
     ]

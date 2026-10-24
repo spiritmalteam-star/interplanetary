@@ -30,6 +30,7 @@ import {
   BookOpen,
   Check,
   ChevronDown,
+  Clapperboard,
   Copy,
   Hammer,
   LoaderCircle,
@@ -344,6 +345,7 @@ const MAKING_DOORS = [
   { kind: "akashic", icon: ScrollText, label: "Open an Akashic record" },
   { kind: "music", icon: Music2, label: "Create music" },
   { kind: "invent", icon: Hammer, label: "Invent" },
+  { kind: "video", icon: Clapperboard, label: "Create a video" },
 ] as const;
 
 /** THE CONSTELLATION'S SEED — a making born of this conversation:

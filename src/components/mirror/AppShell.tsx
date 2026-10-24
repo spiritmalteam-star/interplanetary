@@ -24,6 +24,7 @@ import { ProfilePage } from "./ProfilePage";
 import { AccountModal } from "./AccountModal";
 import { BranchHub } from "./BranchHub";
 import { DreamBookView } from "./DreamBookView";
+import { VideoStudioView } from "./VideoStudioView";
 import { AkashicView } from "./AkashicView";
 import { FederationModal } from "./FederationModal";
 import { AstralJobsModal } from "./AstralJobsModal";
@@ -267,6 +268,18 @@ function AppShellViews({
     return (
       <div className={`relative h-[var(--app-h,var(--vh-safe))] overflow-hidden ${FRAME_LIFT}`}>
         <DreamBookView />
+      </div>
+    );
+  }
+
+  /* THE VIDEO STUDIO — the universal engine's first complete workflow:
+     a wish understood, a storyboard planned, the house's voice speaking,
+     the film assembled on the visitor's own device, kept by its branch. */
+  if (view === "video") {
+    return (
+      <div className={`relative h-[var(--app-h,var(--vh-safe))] overflow-hidden ${FRAME_LIFT}`}>
+        <VideoStudioView />
+        {passageModals}
       </div>
     );
   }

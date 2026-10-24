@@ -181,7 +181,8 @@ export type MainView =
   | "evolvemed"
   | "artx"
   | "lightcodes"
-  | "library";
+  | "library"
+  | "video";
 export type RegisterKind = DossierKind;
 
 /* -------- the passage — the visitor's account and the free door -------- */
@@ -570,11 +571,11 @@ interface MirrorState {
      branch's own words here, and the theme page that opens forges
      its making from them (made in the moment, never the same twice). */
   branchCreationSeed: {
-    kind: "akashic" | "book" | "invent" | "music";
+    kind: "akashic" | "book" | "invent" | "music" | "video";
     topic: string;
   } | null;
   setBranchCreationSeed: (seed: {
-    kind: "akashic" | "book" | "invent" | "music";
+    kind: "akashic" | "book" | "invent" | "music" | "video";
     topic: string;
   } | null) => void;
   /* THE TOOL WALL — the Forge's bench tools, worked by the inteligjence */
@@ -679,6 +680,12 @@ interface MirrorState {
   lcHistory: LcTrack[];
   openLightCodes: (prefill?: LcPrefill) => void;
   exitLightCodes: () => void;
+  /* THE VIDEO STUDIO — the motion picture's own room: a seed (the
+     conversation's own words) in, a narrated film out. */
+  videoSeed: { topic: string; sourceConvId?: string } | null;
+  openVideo: (seed?: { topic: string; sourceConvId?: string }) => void;
+  exitVideo: () => void;
+  setVideoSeed: (seed: { topic: string; sourceConvId?: string } | null) => void;
   setLcMode: (mode: LightCodesMode) => void;
   setLcCivilization: (id: string | null) => void;
   setLcIntention: (v: string) => void;
@@ -1240,6 +1247,16 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     if (prefill?.autoGenerate) void get().generateLightCode({ context: prefill.context });
   },
   exitLightCodes: () => set({ view: "observatory" }),
+  videoSeed: null,
+  openVideo: (seed) =>
+    set({
+      view: "video",
+      mobileNavOpen: false,
+      modal: null,
+      videoSeed: seed ?? null,
+    }),
+  exitVideo: () => set({ view: "observatory" }),
+  setVideoSeed: (seed) => set({ videoSeed: seed }),
   setLcMode: (mode) =>
     set((s) => ({
       lcMode: mode,
