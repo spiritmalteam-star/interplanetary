@@ -1849,7 +1849,13 @@ export function BranchCanopy({
   const topDoors = [
     { key: "akashic", label: "Akashic", icon: ScrollText, on: openAkashic },
     { key: "book", label: "Book", icon: BookOpen, on: openDreamBook },
-    { key: "music", label: "Music", icon: Music, on: () => openLightCodes() },
+    {
+      key: "music",
+      label: "Music",
+      icon: Music,
+      on: () => openLightCodes(),
+    },
+    { key: "invent", label: "Invent", icon: Hammer, on: openInvent },
   ];
   const topLedger: TopLedger | null =
     topMenuOpen && walkLedger
@@ -3003,6 +3009,68 @@ export function BranchCanopy({
     writeLandingHistory([]);
     setHistoryEntries([]);
   }, []);
+  /* THE HISTORY PANEL — the device's own kept conversations. One body
+     shared by every hand that opens the history: the docked room's
+     quiet hands and the realm's top history hand alike. */
+  const renderHistoryPanel = () => (
+    <div
+      data-testid={`${testIdPrefix}-history-panel`}
+      className="w-[272px] max-w-[calc(100vw-2.5rem)] rounded-2xl border bg-background p-3 lift-lg"
+      style={{
+        borderColor:
+          "color-mix(in srgb, var(--scope-a,var(--gd)) 30%, transparent)",
+      }}
+    >
+      <p className="mono-label text-[9.5px] uppercase tracking-[0.2em] text-muted-foreground">
+        {t("Conversation history")}
+      </p>
+      <p className="mt-1 text-[11.5px] leading-relaxed text-muted-foreground/80">
+        {t("Kept only on this device — and only for this visit. Nothing travels to a server.")}
+      </p>
+      {historyEntries.length === 0 ? (
+        <p className="px-1 py-4 text-center text-[12.5px] text-muted-foreground/70">
+          {t("Nothing kept yet.")}
+        </p>
+      ) : (
+        <div className="nice-scroll mt-2 max-h-[240px] overflow-y-auto">
+          {historyEntries.map((entry) => (
+            <button
+              key={entry.id}
+              type="button"
+              onClick={() => restoreFromHistory(entry)}
+              className="focus-glow flex w-full items-center gap-2 rounded-xl px-2 py-2 text-left transition-colors duration-300 hover:bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_7%,transparent)]"
+            >
+              <MessageSquareText
+                className="size-3.5 shrink-0 text-[var(--scope-a,var(--gd))]"
+                aria-hidden="true"
+              />
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-[13px] text-foreground/90">
+                  {entry.title}
+                </span>
+                <span className="mono-label block text-[9px] uppercase tracking-[0.14em] text-muted-foreground/60">
+                  {t("{n} whispers · {when}", {
+                    n: entry.turns.length,
+                    when: historyAgo(entry.at),
+                  })}
+                </span>
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+      {historyEntries.length > 0 && (
+        <button
+          type="button"
+          onClick={clearLandingHistory}
+          className="focus-glow mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl border hairline py-1.5 text-[12px] text-muted-foreground transition-colors duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+        >
+          <Eraser className="size-3" aria-hidden="true" />
+          {t("Clear the history")}
+        </button>
+      )}
+    </div>
+  );
   /* THE LANDING'S OWN QUIET — the threshold's floor keeps its welcome
      by its own thread's silence: the store's channel (the full
      portal's conversations) has no word in the docked room, so an ask
@@ -4535,29 +4603,55 @@ export function BranchCanopy({
         </div>
         )}
         {realm && !bare && (
-          /* THE MINIMAL TOP CONTROL — the Universal Evolution Protocol's
-             one small universal top tab: ◈ Mirror · Search · Menu, one
-             quiet pill floating over the canvas, the one universal menu
-             behind it (closed by default), every function preserved. */
-          <TopControl
-            testIdPrefix={testIdPrefix}
-            open={topMenuOpen}
-            onOpenChange={setTopMenuOpen}
-            mixLabel={mixTitle(mix, t)}
-            lineage={lineage}
-            onTrailStep={walkBack}
-            onRecalibrate={onTopRecalibrate}
-            ledger={topLedger}
-            onLedgerVolume={onTopLedgerVolume}
-            onLedgerChat={onTopLedgerChat}
-            generalFocused={mixIsGeneral(mix)}
-            cats={topCats}
-            onPickCategory={onTopPickCategory}
-            doors={topDoors}
-            onPassage={openProfilePage}
-            realmControls={realmControls}
-            headerExtra={headerExtra}
-          />
+          <>
+            {/* THE MINIMAL TOP CONTROL — the Universal Evolution Protocol's
+               one small universal top tab: ◈ Mirror · Scopes · Tools ·
+               History · Profile · Menu, one quiet pill floating over the
+               canvas, the one universal menu behind it (closed by
+               default), every function preserved. */}
+            <TopControl
+              testIdPrefix={testIdPrefix}
+              open={topMenuOpen}
+              onOpenChange={setTopMenuOpen}
+              mixLabel={mixTitle(mix, t)}
+              lineage={lineage}
+              onTrailStep={walkBack}
+              onRecalibrate={onTopRecalibrate}
+              ledger={topLedger}
+              onLedgerVolume={onTopLedgerVolume}
+              onLedgerChat={onTopLedgerChat}
+              generalFocused={mixIsGeneral(mix)}
+              cats={topCats}
+              onPickCategory={onTopPickCategory}
+              doors={topDoors}
+              onHistory={openHistory}
+              onPassage={openProfilePage}
+              realmControls={realmControls}
+              headerExtra={headerExtra}
+            />
+            {/* THE REALM'S OWN HISTORY — the top hand opens the same kept
+                conversations below the pill (the docked room keeps its
+                own pair of hands; this one serves the full realm). */}
+            {historyOpen && (
+              <>
+                <div
+                  aria-hidden="true"
+                  className="fixed inset-0 z-30"
+                  onClick={() => setHistoryOpen(false)}
+                />
+                <div
+                  data-testid={`${testIdPrefix}-top-history-anchor`}
+                  className="absolute z-50"
+                  style={{
+                    top: "calc(max(0.5rem, env(safe-area-inset-top)) + 3.4rem)",
+                    left: "max(0.5rem, env(safe-area-inset-left))",
+                  }}
+                >
+                  {renderHistoryPanel()}
+                </div>
+              </>
+            )}
+          </>
         )}
         {realm && !bare && (
           /* THE WALK'S HANDS — the vertical arm keeps only the walk's

@@ -1,25 +1,35 @@
 "use client";
 
 /* ------------------------------------------------------------------ */
-/*  THE MINIMAL TOP CONTROL — the Universal Evolution Protocol's one   */
-/*  small universal top tab.                                           */
+/*  THE MINIMAL TOP CONTROL — the house's one small universal tab.     */
 /*                                                                     */
-/*      ◈ Mirror · Quantum World        Search        Menu             */
+/*   ◈ Mirror · Quantum World | Scopes ▾ | Tools ▾ | History | ◉ | ☰   */
 /*                                                                     */
 /*  One quiet pill floats over the canvas, anchored inside the safe    */
 /*  viewport: the Mirror hand returns to the root of the walk, the     */
-/*  Search hand opens the one universal menu with its field lit, the   */
-/*  Menu hand opens the same menu whole. Everything else — the walk's  */
-/*  ledger, the trail, the categories, the doors of the house, the     */
-/*  light, the passage — lives behind the menu, which stays closed by  */
-/*  default. On small screens the words rest and the marks remain.     */
+/*  Scopes hand carries the four fields of the house (General,         */
+/*  Interplanetary, Quantum, HealX — one touch walks the tree into     */
+/*  that field), the Tools hand opens the four making rooms (Akashic,  */
+/*  Book, Music, Invent), the History hand reopens the conversation's  */
+/*  own past, the Passage hand wears the visitor's profile, and the    */
+/*  Menu hand keeps the one universal menu whole. The old search       */
+/*  field rests — the menu's one search finds everything. On small     */
+/*  screens the words rest and the marks remain.                       */
 /*                                                                     */
 /*  No second toolbar was stacked; the vertical arm keeps only the     */
 /*  walk's hands and starts folded. The canvas keeps every pixel.      */
 /* ------------------------------------------------------------------ */
 
-import { memo, useCallback, useEffect, useState, type ReactNode } from "react";
-import { Diamond, Menu as MenuIcon, Search as SearchIcon } from "lucide-react";
+import { memo, useCallback, useEffect, useState, type ComponentType, type ReactNode } from "react";
+import {
+  ChevronDown,
+  Diamond,
+  History as HistoryIcon,
+  Hammer,
+  ListTree,
+  Menu as MenuIcon,
+  UserRound,
+} from "lucide-react";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import {
@@ -34,6 +44,29 @@ interface RailLiteState {
 }
 
 const RAIL_LITE_EMPTY: RailLiteState = { clarity: false };
+
+/* THE FOUR SCOPES — the fields of the house the visitor walks between.
+   Each rides one of the walk's own categories: picking one focuses the
+   whole tree on that field of branches (the canopy's focus law). */
+const SCOPES: {
+  key: string;
+  label: string;
+  spirit: string;
+  accent: string;
+}[] = [
+  { key: "general", label: "General", spirit: "The whole house, mixed", accent: "" },
+  { key: "interplanetary", label: "Interplanetary", spirit: "The star families and worlds", accent: "#22d3ee" },
+  { key: "quantum", label: "Quantum", spirit: "The deep nature of reality", accent: "#a78bfa" },
+  { key: "healing", label: "HealX", spirit: "The body's quiet evolution", accent: "#2dd4bf" },
+];
+
+/* the tools' own quiet subtitles, by door key */
+const DOOR_SPIRITS: Record<string, string> = {
+  akashic: "The records' hall",
+  book: "The dream loom",
+  music: "The songs of light",
+  invent: "The inventor's studio",
+};
 
 export const TopControl = memo(function TopControl({
   testIdPrefix,
@@ -50,6 +83,7 @@ export const TopControl = memo(function TopControl({
   cats,
   onPickCategory,
   doors,
+  onHistory,
   onPassage,
   realmControls,
   headerExtra,
@@ -69,6 +103,8 @@ export const TopControl = memo(function TopControl({
   cats: TopCatItem[];
   onPickCategory: (key: string | "general") => void;
   doors: TopDoor[];
+  /** the conversation's own past — the history hand */
+  onHistory: () => void;
   onPassage: () => void;
   /** the portal's own hands (the landing/landing-return button) */
   realmControls?: ReactNode;
@@ -78,6 +114,8 @@ export const TopControl = memo(function TopControl({
   /* the navigator's clarity, reported as it changes — the menu's foot
      wears its honest pressed state */
   const [railState, setRailState] = useState<RailLiteState>(RAIL_LITE_EMPTY);
+  /* the pill's own two dropdowns — scopes and tools, closed by default */
+  const [pill, setPill] = useState<"scopes" | "tools" | null>(null);
 
   useEffect(() => {
     const onState = (e: Event) => {
@@ -89,9 +127,43 @@ export const TopControl = memo(function TopControl({
     return () => window.removeEventListener("nav:rail-state", onState);
   }, []);
 
+  /* Escape lays the pill's own dropdowns down */
+  useEffect(() => {
+    if (!pill) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setPill(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [pill]);
+
   const send = useCallback((name: string) => {
     window.dispatchEvent(new CustomEvent(name));
   }, []);
+
+  const scopeFocused = useCallback(
+    (key: string) => {
+      if (key === "general") return generalFocused;
+      return cats.some((c) => c.key === key && c.focused);
+    },
+    [cats, generalFocused]
+  );
+
+  const pickScope = useCallback(
+    (key: string) => {
+      setPill(null);
+      onPickCategory(key);
+    },
+    [onPickCategory]
+  );
+
+  const pickTool = useCallback(
+    (door: TopDoor) => {
+      setPill(null);
+      door.on();
+    },
+    []
+  );
 
   return (
     <div
@@ -130,7 +202,7 @@ export const TopControl = memo(function TopControl({
             Mirror
           </span>
           <span
-            className="mono-label hidden max-w-[130px] truncate text-[9px] uppercase tracking-[0.16em] text-muted-foreground/80 md:inline"
+            className="mono-label hidden max-w-[110px] truncate text-[9px] uppercase tracking-[0.16em] text-muted-foreground/80 lg:inline"
             aria-hidden="true"
           >
             · {mixLabel}
@@ -143,20 +215,191 @@ export const TopControl = memo(function TopControl({
           style={{ backgroundColor: "var(--hairline)" }}
         />
 
-        {/* THE SEARCH HAND — one field finds everything */}
+        {/* THE SCOPES HAND — the four fields of the house: General,
+            Interplanetary, Quantum, HealX. One touch walks the tree
+            into that field of branches. */}
+        <div className="relative shrink-0">
+          <button
+            type="button"
+            onClick={() => setPill((p) => (p === "scopes" ? null : "scopes"))}
+            aria-haspopup="menu"
+            aria-expanded={pill === "scopes"}
+            aria-label={t("The scopes of the house")}
+            title={t("The scopes of the house")}
+            data-testid={`${testIdPrefix}-top-scopes`}
+            className={cn(
+              "focus-glow flex h-8 items-center gap-1 rounded-full px-2.5 text-muted-foreground transition-colors duration-200 hover:bg-foreground/5 hover:text-foreground",
+              pill === "scopes" && "bg-foreground/10 text-foreground"
+            )}
+          >
+            <ListTree className="size-3.5 shrink-0" aria-hidden="true" />
+            <span className="hidden text-[12px] sm:inline">
+              {t("Scopes")}
+            </span>
+            <ChevronDown
+              className={cn(
+                "size-2.5 shrink-0 transition-transform duration-300",
+                pill === "scopes" && "rotate-180"
+              )}
+              aria-hidden="true"
+            />
+          </button>
+          {pill === "scopes" && (
+            <div
+              data-testid={`${testIdPrefix}-top-scopes-panel`}
+              className="nice-scroll absolute left-0 top-[calc(100%+0.5rem)] z-50 w-[248px] max-w-[calc(100vw-2.5rem)] rounded-2xl border bg-background p-2 lift-lg"
+              style={{
+                borderColor:
+                  "color-mix(in srgb, var(--scope-a,var(--gd)) 30%, transparent)",
+              }}
+              role="menu"
+            >
+              {SCOPES.map((s) => {
+                const focused = scopeFocused(s.key);
+                return (
+                  <button
+                    key={s.key}
+                    type="button"
+                    role="menuitemradio"
+                    aria-checked={focused}
+                    onClick={() => pickScope(s.key)}
+                    title={t(s.spirit)}
+                    data-testid={`${testIdPrefix}-top-scope-${s.key}`}
+                    className={cn(
+                      "focus-glow flex w-full items-center gap-2.5 rounded-xl px-2 py-2 text-left transition-colors duration-300 hover:bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_7%,transparent)]",
+                      focused &&
+                        "bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_10%,transparent)]"
+                    )}
+                  >
+                    <span
+                      aria-hidden="true"
+                      className="size-2 shrink-0 rounded-full"
+                      style={{
+                        backgroundColor: s.accent || "var(--scope-a,var(--gd))",
+                        boxShadow: focused
+                          ? `0 0 0 3px color-mix(in srgb, ${
+                              s.accent || "var(--scope-a,var(--gd))"
+                            } 22%, transparent)`
+                          : undefined,
+                      }}
+                    />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[13.5px] font-medium text-foreground">
+                        {t(s.label)}
+                      </span>
+                      <span className="mono-label block truncate text-[9.5px] uppercase tracking-[0.14em] text-muted-foreground/70">
+                        {t(s.spirit)}
+                      </span>
+                    </span>
+                    {focused && (
+                      <span
+                        className="mono-label shrink-0 text-[9px] uppercase tracking-[0.14em] text-[var(--scope-a,var(--gd))]"
+                      >
+                        {t("Here")}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* THE TOOLS HAND — the four making rooms of the house:
+            Akashic, Book, Music, Invent. */}
+        <div className="relative shrink-0">
+          <button
+            type="button"
+            onClick={() => setPill((p) => (p === "tools" ? null : "tools"))}
+            aria-haspopup="menu"
+            aria-expanded={pill === "tools"}
+            aria-label={t("The tools of the house")}
+            title={t("The tools of the house")}
+            data-testid={`${testIdPrefix}-top-tools`}
+            className={cn(
+              "focus-glow flex h-8 items-center gap-1 rounded-full px-2.5 text-muted-foreground transition-colors duration-200 hover:bg-foreground/5 hover:text-foreground",
+              pill === "tools" && "bg-foreground/10 text-foreground"
+            )}
+          >
+            <Hammer className="size-3.5 shrink-0" aria-hidden="true" />
+            <span className="hidden text-[12px] sm:inline">
+              {t("Tools")}
+            </span>
+            <ChevronDown
+              className={cn(
+                "size-2.5 shrink-0 transition-transform duration-300",
+                pill === "tools" && "rotate-180"
+              )}
+              aria-hidden="true"
+            />
+          </button>
+          {pill === "tools" && (
+            <div
+              data-testid={`${testIdPrefix}-top-tools-panel`}
+              className="nice-scroll absolute left-0 top-[calc(100%+0.5rem)] z-50 w-[236px] max-w-[calc(100vw-2.5rem)] rounded-2xl border bg-background p-2 lift-lg"
+              style={{
+                borderColor:
+                  "color-mix(in srgb, var(--scope-a,var(--gd)) 30%, transparent)",
+              }}
+              role="menu"
+            >
+              {doors.map((d) => (
+                <button
+                  key={d.key}
+                  type="button"
+                  role="menuitem"
+                  onClick={() => pickTool(d)}
+                  title={t(DOOR_SPIRITS[d.key] ?? d.label)}
+                  data-testid={`${testIdPrefix}-top-tool-${d.key}`}
+                  className="focus-glow flex w-full items-center gap-2.5 rounded-xl px-2 py-2 text-left transition-colors duration-300 hover:bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_7%,transparent)]"
+                >
+                  <d.icon
+                    className="size-3.5 shrink-0 text-[var(--scope-a,var(--gd))]"
+                    aria-hidden="true"
+                  />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-[13.5px] font-medium text-foreground">
+                      {t(d.label)}
+                    </span>
+                    {DOOR_SPIRITS[d.key] && (
+                      <span className="mono-label block truncate text-[9.5px] uppercase tracking-[0.14em] text-muted-foreground/70">
+                        {t(DOOR_SPIRITS[d.key])}
+                      </span>
+                    )}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* THE HISTORY HAND — the conversation's own past returns */}
         <button
           type="button"
-          onClick={() => onOpenChange(true)}
-          aria-haspopup="dialog"
-          aria-expanded={open}
-          aria-label={t("Search everything")}
-          title={t("Search everything")}
-          data-testid={`${testIdPrefix}-top-search`}
+          onClick={onHistory}
+          aria-label={t("Conversation history")}
+          title={t("Conversation history")}
+          data-testid={`${testIdPrefix}-top-history`}
           className="focus-glow flex h-8 items-center gap-1.5 rounded-full px-2.5 text-muted-foreground transition-colors duration-200 hover:bg-foreground/5 hover:text-foreground"
         >
-          <SearchIcon className="size-3.5 shrink-0" aria-hidden="true" />
-          <span className="hidden text-[12px] sm:inline">
-            {t("Search")}
+          <HistoryIcon className="size-3.5 shrink-0" aria-hidden="true" />
+          <span className="hidden text-[12px] md:inline">
+            {t("History")}
+          </span>
+        </button>
+
+        {/* THE PASSAGE HAND — the visitor's own profile */}
+        <button
+          type="button"
+          onClick={onPassage}
+          aria-label={t("Open your profile")}
+          title={t("Open your profile")}
+          data-testid={`${testIdPrefix}-top-profile`}
+          className="focus-glow flex h-8 items-center gap-1.5 rounded-full px-2.5 text-muted-foreground transition-colors duration-200 hover:bg-foreground/5 hover:text-foreground"
+        >
+          <UserRound className="size-3.5 shrink-0" aria-hidden="true" />
+          <span className="hidden text-[12px] md:inline">
+            {t("Profile")}
           </span>
         </button>
 
@@ -190,6 +433,15 @@ export const TopControl = memo(function TopControl({
           </div>
         )}
       </div>
+
+      {/* the pill's own dropdowns close on any outside touch */}
+      {pill && (
+        <div
+          aria-hidden="true"
+          className="fixed inset-0 z-30"
+          onClick={() => setPill(null)}
+        />
+      )}
 
       {/* THE UNIVERSAL MENU — one popover below the pill, closed by
           default, closed again by every choice it serves */}
