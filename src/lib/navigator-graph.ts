@@ -20,6 +20,7 @@ import type { Edge, Node } from "@xyflow/react";
 import type { BranchType } from "@/lib/learning-branches";
 import { detectArtifactIntent } from "@/lib/artifact-intent";
 import { isVisualIntent } from "@/lib/visual-intent";
+import { perfEco } from "@/lib/perf-mode";
 
 /* ----------------------------- the shapes --------------------------- */
 
@@ -96,7 +97,38 @@ export interface NavEdgeData extends Record<string, unknown> {
   trail?: boolean;
   /** The clarity dusk's own rest — a line outside the standing focus. */
   dimmed?: boolean;
+  /** The walk's own distance on this line — the tier the emphasis
+      reads (one small value per edge, so a restyle only happens when
+      the tier itself turns). */
+  tier?: NavEdgeTier;
 }
+
+/** The walk's own distance on one line — the tier the emphasis reads
+    (one small value per edge, so a restyle only happens when the tier
+    itself turns). The dusk keeps its old law: 0.07, highest priority. */
+export type NavEdgeTier =
+  | "dimmed"
+  | "active"
+  | "recent"
+  | "earlier"
+  | "unexplored";
+
+/** Twelve minutes of warmth — a line both of whose ends were stood
+    upon inside this window still wears the recent light. */
+export const NAV_RECENT_MS = 720_000;
+
+/** The tiers' own weights — the dusk and the standing path keep their
+    long-standing law; the rest step down gently so explored paths
+    stand out from the faint connectors (plan b). Cross lines wear
+    ×0.8 of their tier's light at width 1 and keep the dashed
+    handshake — the dusk alone keeps its plain 0.07. */
+export const NAV_EDGE_TIER_STYLE = {
+  dimmed: { strokeOpacity: 0.07, strokeWidth: 1.4 },
+  active: { strokeOpacity: 0.95, strokeWidth: 2 },
+  recent: { strokeOpacity: 0.78, strokeWidth: 1.7 },
+  earlier: { strokeOpacity: 0.5, strokeWidth: 1.3 },
+  unexplored: { strokeOpacity: 0.38, strokeWidth: 1.1 },
+} as const;
 
 export type NavEdge = Edge<NavEdgeData>;
 
@@ -128,6 +160,16 @@ export const NAV_BAND = 0.24;
 export const NAV_HYSTERESIS = 110;
 /** How many categories keep their map on the session's shelf. */
 export const NAV_SHELF = 6;
+
+/** THE DEVICE'S OWN BUDGET (plan d) — a small screen or a weak
+    battery carries a smaller map: fewer doors at birth, a lower
+    ceiling at the prune. Full devices keep the legacy richness
+    (seedDoors 0 = the old 5 + the coin toss, untouched). */
+export function navBudgets(): { maxNodes: number; seedDoors: number } {
+  const mobile = typeof window !== "undefined" && window.innerWidth < 640;
+  if (perfEco() || mobile) return { maxNodes: 150, seedDoors: 4 };
+  return { maxNodes: NAV_MAX_NODES, seedDoors: 0 };
+}
 
 /** The node's own measure (the card is fixed-width; the height bends
     a little — the average is used for centering mathematics). */
@@ -320,10 +362,12 @@ export function seedGraph(
     },
   };
   /* the simple doors — a fresh draw from the first words every time
-     the map is born; the same hour draws the same map (no drift) */
+     the map is born; the same hour draws the same map (no drift).
+     A small or eco device is born with fewer doors (plan d). */
   const pool = [...NAV_SIMPLE_SEEDS];
   const picked: SeedWhisper[] = [];
-  const n = 5 + (rng() < 0.5 ? 1 : 0);
+  const budgetDoors = navBudgets().seedDoors;
+  const n = budgetDoors > 0 ? budgetDoors : 5 + (rng() < 0.5 ? 1 : 0);
   while (picked.length < n && pool.length > 0) {
     picked.push(pool.splice(Math.floor(rng() * pool.length), 1)[0]);
   }
@@ -332,10 +376,13 @@ export function seedGraph(
   const gold = golden[0];
   const nodes: NavNode[] = [home];
   const edges: NavEdge[] = [];
+  /* a newborn line is unexplored — it wears the faint connector's
+     own weight (the same table the focus pass reads) */
+  const unexplored = NAV_EDGE_TIER_STYLE.unexplored;
   const edgeStyle = (accent: string, cross = false) => ({
     stroke: accent,
-    strokeOpacity: cross ? 0.6 : 0.55,
-    strokeWidth: cross ? 1 : 1.4,
+    strokeOpacity: cross ? unexplored.strokeOpacity * 0.8 : unexplored.strokeOpacity,
+    strokeWidth: cross ? 1 : unexplored.strokeWidth,
     strokeDasharray: cross ? "3 5" : undefined,
   });
   const ring = picked.length;
@@ -719,6 +766,9 @@ export interface NavSnapshot {
   selectedId: string | null;
   /** The focus's own trail — the questions the walk stood on, in order. */
   trail: string[];
+  /** When each stone was last stood upon (epoch ms) — the line tiers'
+        warmth. Optional: older snapshots simply walk without it. */
+  visitedAt?: Record<string, number>;
   notes: Record<string, string>;
   depthBias: number;
   attempted: string[];
@@ -820,14 +870,100 @@ export function setPersistOk(ok: boolean): void {
   }
 }
 
+/* -------------------- the camera's own shelf ---------------------- */
+/*  THE CAMERA REMEMBERS ITS REST (plan c) — the last viewport per
+    focused category, so a return lands where the walk left off.
+    COORDINATES ONLY: x, y and zoom travel here — no question, no
+    answer, no conversation content — so this shelf stands outside
+    the journeys opt-in law (that law keeps words; this keeps only
+    where the eye was looking). Same try/catch courtesy as above:
+    a closed vault holds no grudge. */
+
+const CAM_KEY = "mirror:navigator-cam";
+const NAV_CAM_SHELF = 6;
+
+interface NavCamShelf {
+  version: number;
+  /** lastWrite ordering, oldest first — the sixth-newest view fades */
+  order: string[];
+  cams: Record<string, { x: number; y: number; zoom: number }>;
+}
+
+let camShelfCache: NavCamShelf | null = null;
+
+function camShelf(): NavCamShelf {
+  if (camShelfCache) return camShelfCache;
+  camShelfCache = { version: 1, order: [], cams: {} };
+  if (typeof window === "undefined") return camShelfCache;
+  try {
+    const raw = window.localStorage.getItem(CAM_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw) as Partial<NavCamShelf>;
+      if (parsed && typeof parsed === "object" && parsed.cams && typeof parsed.cams === "object") {
+        camShelfCache = {
+          version: 1,
+          order: Array.isArray(parsed.order)
+            ? parsed.order.filter((k) => typeof k === "string")
+            : Object.keys(parsed.cams),
+          cams: parsed.cams,
+        };
+      }
+    }
+  } catch {
+    /* quiet */
+  }
+  return camShelfCache;
+}
+
+export function navCamSave(
+  key: string,
+  cam: { x: number; y: number; zoom: number }
+): void {
+  const shelf = camShelf();
+  shelf.cams[key] = cam;
+  const i = shelf.order.indexOf(key);
+  if (i >= 0) shelf.order.splice(i, 1);
+  shelf.order.push(key);
+  while (shelf.order.length > NAV_CAM_SHELF) {
+    const oldest = shelf.order.shift();
+    if (oldest === undefined) break;
+    delete shelf.cams[oldest];
+  }
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(CAM_KEY, JSON.stringify(shelf));
+  } catch {
+    /* quiet */
+  }
+}
+
+export function navCamLoad(
+  key: string
+): { x: number; y: number; zoom: number } | null {
+  const cam = camShelf().cams[key];
+  return cam &&
+    typeof cam.x === "number" &&
+    typeof cam.y === "number" &&
+    typeof cam.zoom === "number"
+    ? cam
+    : null;
+}
+
 /** A distant cluster laid to rest — its compact data kept on the
-    shelf so the walk can return without asking the sky again. */
+    shelf so the walk can return without asking the sky again. The
+    map's own ceiling reads the device's budget (plan d): a small or
+    eco device rests sooner; full devices keep the legacy depth. */
 export function pruneGraph(nodes: NavNode[], edges: NavEdge[], homeId: string): {
   nodes: NavNode[];
   edges: NavEdge[];
   pruned: number;
 } {
-  if (nodes.length <= NAV_MAX_NODES) return { nodes, edges, pruned: 0 };
+  const maxNodes = navBudgets().maxNodes;
+  if (nodes.length <= maxNodes) return { nodes, edges, pruned: 0 };
+  /* the resting size keeps the high tier's own ratio — a smaller
+     ceiling rests proportionally lower, so the budget truly binds
+     (full devices: exactly the legacy NAV_PRUNE_TO) */
+  const pruneTo = Math.round((NAV_PRUNE_TO * maxNodes) / NAV_MAX_NODES);
   /* BFS depth from the home — the farthest leaves rest first.
      THE VISITOR'S ROOMS NEVER REST — a living conversation is the
      walker's own kept exchange; it is never pruned away. */
@@ -841,7 +977,7 @@ export function pruneGraph(nodes: NavNode[], edges: NavEdge[], homeId: string): 
     .sort((a, b) => b.data.depth - a.data.depth || b.data.childCount - a.data.childCount);
   const remove = new Set<string>();
   for (const n of sorted) {
-    if (nodes.length - remove.size <= NAV_PRUNE_TO) break;
+    if (nodes.length - remove.size <= pruneTo) break;
     remove.add(n.id);
   }
   const kept = nodes.filter((n) => !remove.has(n.id));

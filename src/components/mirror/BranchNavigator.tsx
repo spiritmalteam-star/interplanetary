@@ -76,6 +76,7 @@ import { setLatestCatalog } from "@/lib/universal-search";
 import { ConversationNode } from "./living/ConversationCard";
 import { NavDensity } from "./living/navContext";
 import {
+  NAV_EDGE_TIER_STYLE,
   NAV_HYSTERESIS,
   NAV_MAX_AUTO,
   NAV_MAX_CROSS,
@@ -83,12 +84,15 @@ import {
   NAV_NODE_H,
   NAV_NODE_W,
   NAV_PAD_FOCUSED_CONV,
+  NAV_RECENT_MS,
   CREATION_ACCENTS,
   angleToward,
   dimsOf,
   dropSnapshot,
   freePosition,
   frontierPick,
+  navCamLoad,
+  navCamSave,
   navHash,
   navId,
   navKindForText,
@@ -104,6 +108,7 @@ import {
   tierToScore,
   type NavEdge,
   type NavEdgeData,
+  type NavEdgeTier,
   type NavNode,
   type NavNodeData,
   type SeedWhisper,
@@ -606,9 +611,13 @@ function NavInner({
       return {
         nodes: saved.nodes,
         edges: saved.edges,
-        camera: saved.camera,
+        /* the camera falls back to its own coordinate-only shelf when
+           the (opt-in) map snapshot carries none — the view returns
+           even for a visitor who never asked for journeys kept */
+        camera: saved.camera ?? navCamLoad(focusKey),
         selectedId: saved.selectedId,
         trail: saved.trail,
+        visitedAt: saved.visitedAt ?? {},
         notes: saved.notes,
         depthBias: saved.depthBias,
         attempted: new Set(saved.attempted),
@@ -620,9 +629,10 @@ function NavInner({
     return {
       nodes: seeded.nodes,
       edges: seeded.edges,
-      camera: null,
+      camera: navCamLoad(focusKey),
       selectedId: null,
       trail: [] as string[],
+      visitedAt: {} as Record<string, number>,
       notes: {} as Record<string, string>,
       depthBias: 0,
       attempted: new Set<string>(),
@@ -693,6 +703,12 @@ function NavInner({
     { id: string; camera: { x: number; y: number; zoom: number } | null }[]
   >([]);
   const revisitsRef = useRef<Map<string, number>>(new Map());
+  /* THE WALK'S OWN DIARY — when each stone was last stood upon (epoch
+     ms): the line tiers read this warmth, and the snapshot carries it
+     across remounts so a returning walk keeps its recent light */
+  const visitedAtRef = useRef<Map<string, number>>(
+    new Map(Object.entries(boot.visitedAt ?? {}))
+  );
   const nodesRef = useRef(nodes);
   const edgesRef = useRef(edges);
   const trailRef = useRef(trail);
@@ -720,13 +736,21 @@ function NavInner({
   persistOkRef.current = persistOk;
 
   /* ------------------- the map's own keeping ---------------------- */
-  const buildSnapshot = useCallback(
-    () => ({
+  const buildSnapshot = useCallback(() => {
+    /* only the standing map's warmth travels — a pruned stone's
+       timestamp has no line left to warm */
+    const live = new Set(nodesRef.current.map((n) => n.id));
+    const visitedAt: Record<string, number> = {};
+    for (const [id, at] of visitedAtRef.current) {
+      if (live.has(id)) visitedAt[id] = at;
+    }
+    return {
       nodes: nodesRef.current,
       edges: edgesRef.current,
       camera: cameraRef.current,
       selectedId: selectedRef.current,
       trail: trailRef.current,
+      visitedAt,
       notes: notesRef.current,
       depthBias: biasRef.current,
       attempted: [...attemptedRef.current],
@@ -735,9 +759,8 @@ function NavInner({
       homeId,
       persistOk: persistOkRef.current,
       at: Date.now(),
-    }),
-    []
-  );
+    };
+  }, []);
 
   const persist = useCallback(() => {
     saveSnapshot(focusKey, buildSnapshot());
@@ -750,6 +773,19 @@ function NavInner({
       persist();
     }, 700);
   }, [persist]);
+
+  /* the diary's own hand — one stamp per stand, bounded like every
+     shelf in this house (the newest stands stay, the old fade) */
+  const touchVisited = useCallback((id: string) => {
+    const m = visitedAtRef.current;
+    m.delete(id);
+    m.set(id, Date.now());
+    while (m.size > 400) {
+      const oldest = m.keys().next().value;
+      if (oldest === undefined) break;
+      m.delete(oldest);
+    }
+  }, []);
 
   /* --------------------- the trail's emphasis --------------------- */
   const pathIdsOf = useCallback((id: string | null): Set<string> => {
@@ -805,30 +841,48 @@ function NavInner({
             path.has(e.source) && path.has(e.target) && e.source !== e.target;
           const dimmed =
             clarityRef.current && !!id && !(keep.has(e.source) && keep.has(e.target));
-          if (!!e.data?.trail === onTrail && !!e.data?.dimmed === dimmed) return e;
+          /* THE WALK'S FOUR LIGHTS — the standing path, the fresh walk
+             (both ends stood upon inside twelve minutes), the older
+             walk, and the faint untouched connector (plan b). One
+             small tier per line; the object is rebuilt only when the
+             tier itself turns — never per focus, never all at once. */
+          let tier: NavEdgeTier;
+          if (dimmed) tier = "dimmed";
+          else if (onTrail) tier = "active";
+          else {
+            const a = visitedAtRef.current.get(e.source);
+            const b = visitedAtRef.current.get(e.target);
+            tier =
+              a !== undefined && b !== undefined
+                ? Date.now() - Math.max(a, b) < NAV_RECENT_MS
+                  ? "recent"
+                  : "earlier"
+                : "unexplored";
+          }
+          if (e.data?.tier === tier) return e;
           const accent = e.data?.accent ?? "var(--gd)";
-          const width = onTrail ? 2 : e.data?.cross ? 1 : 1.4;
-          const style = dimmed
-            ? {
-                stroke: accent,
-                strokeOpacity: 0.07,
-                strokeWidth: width,
-                strokeDasharray: e.data?.cross ? "3 5" : undefined,
-              }
-            : onTrail
-              ? { stroke: accent, strokeOpacity: 0.95, strokeWidth: 2 }
-              : {
-                  stroke: accent,
-                  strokeOpacity: e.data?.cross ? 0.6 : 0.55,
-                  strokeWidth: e.data?.cross ? 1 : 1.4,
-                  strokeDasharray: e.data?.cross ? "3 5" : undefined,
-                };
+          const cross = e.data?.cross === true;
+          const w = NAV_EDGE_TIER_STYLE[tier];
+          const style = {
+            stroke: accent,
+            /* the dusk alone keeps its plain rest; every other tier
+               dims the cross handshake one step softer (×0.8, width 1) */
+            strokeOpacity:
+              tier === "dimmed"
+                ? w.strokeOpacity
+                : cross
+                  ? w.strokeOpacity * 0.8
+                  : w.strokeOpacity,
+            strokeWidth: cross ? 1 : w.strokeWidth,
+            strokeDasharray: cross ? "3 5" : undefined,
+          };
           const data: NavEdgeData = {
             accent,
             cross: e.data?.cross,
             reason: e.data?.reason,
             trail: onTrail,
             dimmed,
+            tier,
           };
           return { ...e, data, style };
         })
@@ -1003,10 +1057,11 @@ function NavInner({
         target: id,
         type: "nav",
         data: { accent: fresh[i].seed.accent },
+        /* a newborn line is unexplored — the faint connector's weight */
         style: {
           stroke: fresh[i].seed.accent,
-          strokeOpacity: 0.55,
-          strokeWidth: 1.4,
+          strokeOpacity: NAV_EDGE_TIER_STYLE.unexplored.strokeOpacity,
+          strokeWidth: NAV_EDGE_TIER_STYLE.unexplored.strokeWidth,
         },
       }));
 
@@ -1039,7 +1094,7 @@ function NavInner({
               },
               style: {
                 stroke: nn.data.accent,
-                strokeOpacity: 0.6,
+                strokeOpacity: NAV_EDGE_TIER_STYLE.unexplored.strokeOpacity * 0.8,
                 strokeWidth: 1,
                 strokeDasharray: "3 5",
               },
@@ -1172,6 +1227,7 @@ function NavInner({
       setSelectedId(id);
       selectedRef.current = id;
       applyFocusVisuals(id);
+      touchVisited(id);
       setTrail((tr) => [...tr.filter((x) => x !== id), id].slice(-40));
       setGrowCount((g) => g);
       if (opts?.record !== false) {
@@ -1198,7 +1254,7 @@ function NavInner({
       }
       schedulePersist();
     },
-    [applyFocusVisuals, category, disabled, expandNode, rf, schedulePersist]
+    [applyFocusVisuals, category, disabled, expandNode, rf, schedulePersist, touchVisited]
   );
 
   /* the node's own hands — events ride the DOM so the node component
@@ -1217,6 +1273,7 @@ function NavInner({
       if (act === "send") {
         lastSendRef.current = { id, at: Date.now() };
         recordSeen([node.data.text]);
+        touchVisited(id);
         setTrail((tr) => [...tr.filter((x) => x !== id), id].slice(-40));
         onPick(node.data.text, node.data.movement);
         schedulePersist();
@@ -1233,12 +1290,16 @@ function NavInner({
       window.removeEventListener("nav:select", onSelect);
       window.removeEventListener("nav:act", onAct);
     };
-  }, [expandNode, focusNode, onCreation, onPick, schedulePersist]);
+  }, [expandNode, focusNode, onCreation, onPick, schedulePersist, touchVisited]);
 
   /* ------------------- the camera's settled ear ------------------- */
   const onMoveEnd = useCallback(
     (_e: unknown, vp: { x: number; y: number; zoom: number }) => {
       cameraRef.current = vp;
+      /* THE CAMERA'S OWN SHELF — coordinates only (x/y/zoom, never a
+         word of the walk), so the view returns even without the
+         journeys opt-in; see navigator-graph's cam law */
+      navCamSave(focusKey, vp);
       schedulePersist();
       const last = lastAutoRef.current;
       if (
@@ -1260,7 +1321,7 @@ function NavInner({
       lastAutoRef.current = { x: vp.x, y: vp.y, zoom: vp.zoom };
       void expandNode(hit.nodeId, hit.dir, true);
     },
-    [expandNode, rf, schedulePersist]
+    [expandNode, focusKey, rf, schedulePersist]
   );
 
   /* ------------------ the visitor's typed question ---------------- */
@@ -1317,7 +1378,12 @@ function NavInner({
         target: id,
         type: "nav",
         data: { accent: "var(--scope-a, var(--gd))" },
-        style: { stroke: "var(--scope-a, var(--gd))", strokeOpacity: 0.55, strokeWidth: 1.4 },
+        /* a newborn line is unexplored — the faint connector's weight */
+        style: {
+          stroke: "var(--scope-a, var(--gd))",
+          strokeOpacity: NAV_EDGE_TIER_STYLE.unexplored.strokeOpacity,
+          strokeWidth: NAV_EDGE_TIER_STYLE.unexplored.strokeWidth,
+        },
       };
       setNodes((nds) => {
         const settled = freePosition(node, nds);
@@ -1327,11 +1393,12 @@ function NavInner({
       setSelectedId(id);
       selectedRef.current = id;
       applyFocusVisuals(id);
+      touchVisited(id);
       setTrail((tr) => [...tr.filter((x) => x !== id), id].slice(-40));
       void expandNode(id, undefined, false);
       schedulePersist();
     },
-    [applyFocusVisuals, disabled, expandNode, schedulePersist, setEdges, setNodes]
+    [applyFocusVisuals, disabled, expandNode, schedulePersist, setEdges, setNodes, touchVisited]
   );
 
   const attachRef = useRef(attachTypedQuestion);
@@ -1519,6 +1586,7 @@ function NavInner({
       setSelectedId(id);
       selectedRef.current = id;
       applyFocusVisuals(id);
+      touchVisited(id);
       setTrail((tr) => [...tr.filter((x) => x !== id), id].slice(-40));
       setResume(null);
       /* the room itself answers: a focused living node is the active
@@ -1553,7 +1621,7 @@ function NavInner({
       retry(500);
       schedulePersist();
     },
-    [applyFocusVisuals, flyToConv, nudgeAround, schedulePersist]
+    [applyFocusVisuals, flyToConv, nudgeAround, schedulePersist, touchVisited]
   );
   focusConvRef.current = focusConv;
 

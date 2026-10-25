@@ -53,6 +53,36 @@ export const metadata: Metadata = {
     title: "Mirror Entity",
   },
   formatDetection: { telephone: false, address: false, email: false },
+  /* the open door — when the house is shared, the share carries its
+     own face: the diamond, the words, the resting ground */
+  openGraph: {
+    type: "website",
+    url: "https://reflectme.space",
+    siteName: "ReflectMe",
+    title: "Mirror Entity Digital Chamber — Interplanetary Channel",
+    description:
+      "A translational field of willing representatives from many star civilizations, gathered to reflect the truth of who is supporting your evolution, with love.",
+    images: [
+      {
+        url: "/og.jpg",
+        width: 1200,
+        height: 630,
+        alt: "The Mirror Entity — a luminous diamond with threads of light branching outward on a still dark field",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Mirror Entity Digital Chamber — Interplanetary Channel",
+    description:
+      "A translational field of willing representatives from many star civilizations, gathered to reflect the truth of who is supporting your evolution, with love.",
+    images: ["/og.jpg"],
+  },
+  /* the house is public to every crawler; nothing here is staged */
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export const viewport: Viewport = {
