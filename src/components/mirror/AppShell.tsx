@@ -21,7 +21,6 @@ import { InventView } from "./InventView";
 import { LightCodesView } from "./LightCodesView";
 import { LibraryView } from "./LibraryView";
 import { AuthModal } from "./PassageModal";
-import { ProfileModal } from "./ProfileModal";
 import { ProfilePage } from "./ProfilePage";
 import { AccountModal } from "./AccountModal";
 import { BranchHub } from "./BranchHub";
@@ -255,13 +254,12 @@ function AppShellViews({
     return () => window.removeEventListener("focusin", onFocusIn);
   }, []);
 
-  /* The passage modals ride above every world — the profile (with the
-     cosmic library inside it), the passage, the account, and the
-     branches' hub (a branch's own link in any chat still summons the
-     tree over the room). */
+  /* The passage modals ride above every world — the profile (the
+     visitor's own room, framed like the chat), the passage, the
+     account, and the branches' hub (a branch's own link in any chat
+     still summons the tree over the room). */
   const passageModals = (
     <>
-      <ProfileModal />
       <ProfilePage />
       <AuthModal />
       <AccountModal />
@@ -433,20 +431,22 @@ function AppShellViews({
         liveError={channel.error}
         liveMessage={lastChannelMsg}
         realmControls={
-          /* THE PORTAL'S OWN HANDS — standing in the crown between the
-             about door and the visitor's passage: the fullscreen hand
-             while the portal is docked on the threshold, the landing
-             hand while it fills the whole screen. THE FREE LAW — the
-             crossing wears no coin: the whole realm stands open to
-             every visitor, no passage demanded, nothing acquired.
-             THE LANDING'S OWN NAV — docked (bare), the crown also
-             carries the threshold's two quiet hands: Create (the
-             making rooms open as mini tabs over the docked chat) and
-             Scopes (the floor's own field of light). The full portal
-             never wears them — its own pill serves the walk. */
-          bare && onExpand ? (
-            <>
-              <LandingChatNav />
+          /* THE ONE CHAT'S OWN CROWN — the LandingChatNav is the main
+             navigator of the one and only chat and stands in BOTH
+             gears (docked and fullscreen): Create (the making rooms
+             open as tabs at the chat's own size), Scopes (the floor's
+             own field of light) and the Profile hand (the visitor's
+             room, framed like the chat). The crown hands are worn
+             each gear with its own: docked carries the expand hand
+             (the chat fills the screen), fullscreen carries the
+             minimize hand (the chat folds back into its slot) — each
+             button only when its callback exists (the opening's
+             tunnel breath wears neither). THE FREE LAW — the crossing
+             wears no coin: the whole realm stands open to every
+             visitor, no passage demanded, nothing acquired. */
+          <>
+            <LandingChatNav />
+            {onExpand && (
               <button
                 type="button"
                 onClick={onExpand}
@@ -457,19 +457,20 @@ function AppShellViews({
               >
                 <Maximize2 className="size-3" aria-hidden="true" />
               </button>
-            </>
-          ) : !bare && onMinimize ? (
-            <button
-              type="button"
-              onClick={onMinimize}
-              aria-label={t("Landing")}
-              title={t("Landing")}
-              data-testid="crown-minimize"
-              className="focus-glow flex size-7 items-center justify-center rounded-full border border-[rgba(232,217,176,0.42)] bg-[rgba(232,217,176,0.08)] text-[var(--lp-gold)] transition-all duration-300 hover:border-[rgba(232,217,176,0.8)] hover:text-[var(--lp-gold-soft)]"
-            >
-              <Minimize2 className="size-3" aria-hidden="true" />
-            </button>
-          ) : undefined
+            )}
+            {onMinimize && (
+              <button
+                type="button"
+                onClick={onMinimize}
+                aria-label={t("Landing")}
+                title={t("Landing")}
+                data-testid="crown-minimize"
+                className="focus-glow flex size-7 items-center justify-center rounded-full border border-[rgba(232,217,176,0.42)] bg-[rgba(232,217,176,0.08)] text-[var(--lp-gold)] transition-all duration-300 hover:border-[rgba(232,217,176,0.8)] hover:text-[var(--lp-gold-soft)]"
+              >
+                <Minimize2 className="size-3" aria-hidden="true" />
+              </button>
+            )}
+          </>
         }
       />
 
@@ -488,13 +489,12 @@ function AppShellViews({
         />
       )}
 
-      {/* THE WORKSPACE — the tools' own floating room: every open tool
-          stands as a mini tab over the walk; the tree stays mounted
-          underneath, and the expand hand gives a room the old whole
-          screen (its back hand returns to this window). THE LANDING'S
-          OWN WINDOW — bare, the same window stands over the docked
-          chat at the chat's own exact size (openToolTab's bare law
-          keeps the threshold beneath the visitor's feet). */}
+      {/* THE WORKSPACE — the tools' own room: every open tool stands
+          as a tab over the chat at the chat's own exact size; the chat
+          stays mounted underneath, and the expand hand gives a room
+          its full-frame depth (its back hand returns to this window).
+          THE ONE WINDOW — the same law in both gears: bare now only
+          gears the docking physics, never the window's geometry. */}
       <ToolWorkspace bare={bare} />
 
       {/* the reading rooms' own modals — every door keeps its keys */}

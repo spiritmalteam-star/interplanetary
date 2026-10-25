@@ -224,7 +224,6 @@ const contactStages = [
 
 export default function LandingPage({
   slotStyle,
-  onExpand,
   onScroll,
   initialScroll,
   chatFolded,
@@ -233,7 +232,6 @@ export default function LandingPage({
   slotChildren,
 }: {
   slotStyle: { width?: number | string; height?: number | string };
-  onExpand: () => void;
   onScroll: (y: number) => void;
   initialScroll: number;
   chatFolded?: boolean;
@@ -317,11 +315,12 @@ export default function LandingPage({
     }
   }, []);
 
-  /* THE OFFER DOORS — every offering opens its own part of the portal:
-     one touch and the tunnel carries the walk straight into that room.
-     The image door leaves the floor open with one inviting stem, so
-     the visitor only completes what they wish to visualize — and the
-     making rises in the conversation room. */
+  /* THE OFFER DOORS — every offering opens its own part of the house
+     WITHIN the chat's own frame: one touch and the room opens as a
+     tab over the chat (never a crossing, never a view change — the
+     chat stays beneath the room). The image door leaves the floor
+     open with one inviting stem, so the visitor only completes what
+     they wish to visualize — and the making rises in the chat. */
   const offerDoorInto = useCallback(
     (door: OfferDoor) => {
       const m = useMirror.getState();
@@ -337,21 +336,24 @@ export default function LandingPage({
           m.openAkashic();
           break;
         case "doors":
-          m.returnToObservatory();
+          /* THE DOORS' ROOM — the creation room (Manifest) is the
+             closest room the house keeps to "doors to other worlds":
+             the making space where every world is shaped. It opens as
+             a tab over the chat, in the frame. */
+          m.openMirrorOS();
           break;
         case "images":
           /* THE IMAGE DOOR'S OWN STEM — the floor receives the first
              words, the visitor completes what they wish to visualize,
-             and the making rises in the conversation room */
+             and the making rises in the conversation */
           m.seedFloor(t("Show me a picture of "));
           break;
         default:
           /* "chat" — the reflection room is the chat itself */
           break;
       }
-      onExpand();
     },
-    [t, onExpand]
+    [t]
   );
 
   /* the doors every offering opens — the exact part of the portal
@@ -782,9 +784,8 @@ export default function LandingPage({
                             ))}
                           </ul>
                           {/* THE OFFER'S OWN DOOR — one touch and the
-                              walk crosses straight into that part of
-                              the portal: the room itself, not words
-                              about the room */}
+                              room itself opens over the chat, in the
+                              frame — not words about the room */}
                           <button
                             type="button"
                             onClick={() => offerDoorInto(door)}

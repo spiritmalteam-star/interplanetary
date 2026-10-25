@@ -571,7 +571,6 @@ export default function LandingGate() {
     {
       const st = useMirror.getState();
       if (st.authOpen) st.closeAuth();
-      if (st.profileOpen) st.closeProfile();
       if (st.profilePageOpen) st.closeProfilePage();
       if (st.accountOpen) st.closeAccount();
     }
@@ -681,10 +680,20 @@ export default function LandingGate() {
                     } as CSSProperties)
               }
             >
+              {/* THE TWO GEARS' OWN HANDS — each gear wears only its
+                  own hand: docked (the landing phase) the crown
+                  carries the expand hand (the chat fills the screen);
+                  through (the fullscreen gear) it carries the minimize
+                  hand (the chat folds back into its slot). During the
+                  opening's tunnel breath neither hand stands — the
+                  tunnel covers the crossing. The chat is the SAME chat
+                  in both gears — the hands only gear the window's
+                  size, and AppShell shows a crown hand only when its
+                  callback exists. */}
               <Chamber
                 bare={bare}
-                onExpand={expandPortal}
-                onMinimize={minimize}
+                {...(docked ? { onExpand: expandPortal } : {})}
+                {...(phase === "through" ? { onMinimize: minimize } : {})}
                 onFoldChat={() => setChatFolded(true)}
               />
             </div>
@@ -740,7 +749,6 @@ export default function LandingGate() {
                     "var(--portal-waking-h, min(var(--vh-safe), 660px))",
                 }
           }
-          onExpand={expandPortal}
           onScroll={handleLandingScroll}
           initialScroll={landingScroll.current}
           chatFolded={chatFolded}

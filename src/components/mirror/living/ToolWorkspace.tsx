@@ -1,15 +1,6 @@
 "use client";
 
-import {
-  memo,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type ComponentType,
-  type CSSProperties,
-  type PointerEvent as ReactPointerEvent,
-} from "react";
+import { memo, type ComponentType, type CSSProperties } from "react";
 import dynamic from "next/dynamic";
 import {
   BookOpen,
@@ -90,14 +81,14 @@ const TOOL_VIEWS: Record<ToolTabKey, ComponentType> = {
 };
 
 /* ------------------------------------------------------------------ */
-/*  THE WORKSPACE — the tools open as mini tabs over the living tree:  */
-/*  one floating window carries every open room, one tab active at a   */
-/*  time. The window stands BELOW the where-pill's hands and every     */
-/*  modal, and only over the walk — when a full-screen room owns the   */
-/*  screen (a tab was expanded), the window rests and the tab stays    */
-/*  parked until the room's own back hand returns. Desktop windows     */
-/*  drag by their header (mouse only, clamped to the frame); small     */
-/*  screens wear a sheet under the pill instead — no drag.             */
+/*  THE WORKSPACE — the tools open as tabs over the one chat: one      */
+/*  window carries every open room, one tab active at a time. The      */
+/*  window is ALWAYS the chat's own exact frame (absolute inset-0 of   */
+/*  the realm — the lens clips its corners), in both of the chat's     */
+/*  gears; it stands BELOW the crown's hands and every modal, and      */
+/*  only over the chat — when a full-screen room owns the frame (a     */
+/*  tab was expanded), the window rests and the tab stays parked       */
+/*  until the room's own back hand returns.                            */
 /* ------------------------------------------------------------------ */
 function ToolWorkspaceImpl({ bare = false }: { bare?: boolean }) {
   const view = useMirror((s) => s.view);
@@ -108,15 +99,14 @@ function ToolWorkspaceImpl({ bare = false }: { bare?: boolean }) {
   const expandActiveToolTab = useMirror((s) => s.expandActiveToolTab);
   const t = useT();
 
-  /* THE STANDING LAW — the window lives only over the walk: a parked
-     tab (or a full-screen room owning the screen) lays it down.
-     "transmission" IS the walk — the realm renders it as its own room
+  /* THE STANDING LAW — the window lives only over the chat: a parked
+     tab (or a full-screen room owning the frame) lays it down.
+     "transmission" IS the realm — the realm renders it as its own room
      (AppShell has no early-return for it; it is only the view the
      channel's asks carry), so the window keeps standing there.
-     THE LANDING'S OWN WINDOW — bare (the docked threshold portal),
-     the window stands too: with tabs open it covers the docked chat
-     at the chat's own exact size, and a full-screen room (an expanded
-     tab) still lays it down until the room's back hand returns. */
+     THE ONE WINDOW — the same law in both gears: the never-yank store
+     law keeps the view on the chat when a tab opens, so the window is
+     always the chat's own overlay. */
   const active =
     activeToolTab &&
     (view === "observatory" ||
@@ -125,118 +115,39 @@ function ToolWorkspaceImpl({ bare = false }: { bare?: boolean }) {
       ? activeToolTab
       : null;
 
-  /* the drag — desktop pointers only, the header is the handle */
-  const [desktop, setDesktop] = useState(false);
-  const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
-  const winRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    const mq = window.matchMedia("(min-width: 640px)");
-    const apply = () => {
-      setDesktop(mq.matches);
-      if (!mq.matches) setPos(null);
-    };
-    apply();
-    mq.addEventListener("change", apply);
-    return () => mq.removeEventListener("change", apply);
-  }, []);
-
-  const onHeaderPointerDown = useCallback(
-    (e: ReactPointerEvent<HTMLDivElement>) => {
-      /* the landing's own window never drags — it IS the chat's size */
-      if (bare || !desktop || e.button !== 0) return;
-      /* the tabs' and hands' own presses stay presses — never drags */
-      if ((e.target as HTMLElement).closest("button")) return;
-      const win = winRef.current;
-      if (!win) return;
-      const rect = win.getBoundingClientRect();
-      const start = { x: e.clientX, y: e.clientY };
-      const base = { x: rect.left, y: rect.top };
-      setPos(base);
-      const move = (ev: PointerEvent) => {
-        /* clamp inside the frame that holds the window — the walk's
-           realm, or the docked lens on the threshold */
-        const parent = win.offsetParent as HTMLElement | null;
-        const b = parent
-          ? parent.getBoundingClientRect()
-          : { left: 0, top: 0, width: window.innerWidth, height: window.innerHeight };
-        const x = Math.min(
-          Math.max(base.x + (ev.clientX - start.x), b.left - (rect.width - 132)),
-          b.left + b.width - 132
-        );
-        const y = Math.min(
-          Math.max(base.y + (ev.clientY - start.y), b.top),
-          b.top + b.height - 60
-        );
-        setPos({ x, y });
-      };
-      const up = () => {
-        window.removeEventListener("pointermove", move);
-        window.removeEventListener("pointerup", up);
-        window.removeEventListener("pointercancel", up);
-      };
-      window.addEventListener("pointermove", move);
-      window.addEventListener("pointerup", up);
-      window.addEventListener("pointercancel", up);
-    },
-    [bare, desktop]
-  );
-
   /* the guard itself — no tab standing (or a full-screen room owning
-     the screen): the window does not exist; hooks have all run above */
+     the frame): the window does not exist; hooks have all run above */
   if (!active) return null;
 
-  const winStyle: CSSProperties = bare
-    ? /* THE LANDING'S OWN SIZE — the window is the chat's exact
-         frame: full size of the docked portal, no cap, no drag —
-         it replaces the chat while it stands, and the last closed
-         tab reveals the chat again. The parent lens clips the
-         corners, so the window wears none of its own. */
-      {
-        left: 0,
-        top: 0,
-        right: 0,
-        bottom: 0,
-        borderRadius: 0,
-        borderColor:
-          "color-mix(in srgb, var(--scope-a,var(--gd)) 25%, var(--hairline))",
-      }
-    : {
-        borderColor:
-          "color-mix(in srgb, var(--scope-a,var(--gd)) 25%, var(--hairline))",
-        ...(desktop
-          ? pos
-            ? { left: pos.x, top: pos.y }
-            : {
-                right: "max(1rem, env(safe-area-inset-right))",
-                bottom: "max(4.5rem, calc(env(safe-area-inset-bottom) + 4.5rem))",
-                width: "min(880px, calc(100% - 2rem))",
-                height: "min(600px, calc(100% - 8rem))",
-              }
-          : {
-              top: "calc(env(safe-area-inset-top) + 3.25rem)",
-              bottom: "max(0.5rem, env(safe-area-inset-bottom))",
-            }),
-      };
+  /* THE CHAT'S OWN FRAME — the window is always the exact frame of
+     the chat (absolute inset-0 of the realm): full size, no cap, no
+     drag — it replaces the chat while it stands, and the last closed
+     tab reveals the chat again. The parent lens clips the corners,
+     so the window wears none of its own. The bare prop stays
+     accepted but no longer gears anything — the realm is one chat in
+     two gears, and the window is the chat's own in both. */
+  const winStyle: CSSProperties = {
+    left: 0,
+    top: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 0,
+    borderColor:
+      "color-mix(in srgb, var(--scope-a,var(--gd)) 25%, var(--hairline))",
+  };
 
   const ActiveView = active ? TOOL_VIEWS[active] : null;
 
   return (
     <div
-      ref={winRef}
       data-testid="tool-workspace"
-      className={cn(
-        "pointer-events-auto z-30 flex flex-col overflow-hidden rounded-2xl border bg-background shadow-[0_24px_70px_-30px_rgba(0,0,0,0.6)]",
-        bare || desktop ? "absolute" : "fixed inset-x-2",
-        bare && "rounded-none"
-      )}
+      className="pointer-events-auto absolute inset-0 z-30 flex flex-col overflow-hidden rounded-none border bg-background shadow-[0_24px_70px_-30px_rgba(0,0,0,0.6)]"
       style={winStyle}
     >
-      {/* THE HEADER — the drag handle and the row of open rooms */}
+      {/* THE HEADER — the row of open rooms */}
       <div
         className="flex h-10 shrink-0 items-center gap-1 overflow-x-auto border-b px-1.5"
         style={{ borderColor: "var(--hairline)" }}
-        onPointerDown={onHeaderPointerDown}
       >
         {toolTabs.map((key) => {
           const meta = TAB_META[key];
@@ -285,7 +196,10 @@ function ToolWorkspaceImpl({ bare = false }: { bare?: boolean }) {
 
         <span className="flex-1" aria-hidden="true" />
 
-        {/* THE EXPAND HAND — the active room's old full-screen self */}
+        {/* THE EXPAND HAND — the room's full-frame depth: the view
+            becomes the room itself (AppShell's early-return renders it
+            across the whole frame), and the room's own back hand
+            returns to this window */}
         <button
           type="button"
           onClick={expandActiveToolTab}

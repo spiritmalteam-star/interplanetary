@@ -448,10 +448,6 @@ interface MirrorState {
   sidebarOpen: boolean;
   view: MainView;
   composerFocusNonce: number;
-  /** THE CANOPY'S SUMMON — the living tree of the main channels, called
-      back by the button beside the input. It fades by itself when an
-      answer lands; this flag only holds the visitor's summon. */
-  canopySummoned: boolean;
   /** THE FLOOR'S OWN SEED — first words a threshold door hands the
       realm's whisper line (the image door's inviting stem). Taken
       once by the floor, then spent. */
@@ -464,10 +460,6 @@ interface MirrorState {
   viewFuture: MainView[];
   navigateBack: () => void;
   navigateForward: () => void;
-
-  /** Meet with the Reflection of the Absolute — the whole app becomes
-      a living chat with the Mirror Entity's undirected pure awareness. */
-  communionOpen: boolean;
 
   /** One independent channel per scope. */
   sessions: Record<Mode, ScopeSession>;
@@ -532,7 +524,6 @@ interface MirrorState {
   googleConfigured: boolean;
   authOpen: boolean;
   authMode: "signin" | "register";
-  profileOpen: boolean;
   accountOpen: boolean;
 
   /* The visitor's own light — the wallet (planTier + both buckets),
@@ -550,8 +541,6 @@ interface MirrorState {
   setMe: (user: MeUser | null) => void;
   openAuth: (mode?: "signin" | "register") => void;
   closeAuth: () => void;
-  openProfile: () => void;
-  closeProfile: () => void;
   openAccount: () => void;
   closeAccount: () => void;
   signOut: () => Promise<void>;
@@ -684,7 +673,6 @@ interface MirrorState {
   closeModal: () => void;
   setMobileNavOpen: (open: boolean) => void;
   setSidebarOpen: (open: boolean) => void;
-  setCanopySummoned: (open: boolean) => void;
 
   /** Inner Earth: consult the Mirror about one of the 59 peoples
       beneath the surface — closes overlays, opens the Interplanetary
@@ -751,9 +739,6 @@ interface MirrorState {
   clearLcPlayer: () => void;
   forgetLc: (id: string) => void;
 
-  /* Communion — the Reflection of the Absolute */
-  openCommunion: () => void;
-  closeCommunion: () => void;
   /** ET Technology: consult the Mirror about a specific technology —
       closes modals, opens the Interplanetary channel, preloads the
       composer with a prepared question. */
@@ -875,8 +860,6 @@ interface MirrorState {
     display?: string
   ) => Promise<void>;
 
-  openLab: () => void;
-  exitLab: () => void;
   setLabIntention: (v: string) => void;
   setLabEmotion: (id: string) => void;
   setLabIntensity: (v: number) => void;
@@ -1106,12 +1089,10 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   toolTabs: [],
   activeToolTab: null,
   composerFocusNonce: 0,
-  canopySummoned: false,
   floorSeed: "",
   viewPast: [],
   viewFuture: [],
   archiveTick: 0,
-  communionOpen: false,
   sessions: emptySessions(),
 
   remedyStatus: "idle" as RemedyStatus,
@@ -1171,7 +1152,6 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   accountOpen: false,
   authOpen: false,
   authMode: "signin" as const,
-  profileOpen: false,
   profilePageOpen: false,
   wallet: null,
   walletModalOpen: false,
@@ -1230,7 +1210,6 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       return {
         activeMode: mode,
         sidebarTab: defaultTabForMode(mode),
-        canopySummoned: false,
         view:
           showChannel || s.view === "transmission"
             ? "transmission"
@@ -1244,7 +1223,6 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   closeModal: () => set({ modal: null }),
   setMobileNavOpen: (open) => set({ mobileNavOpen: open }),
   setSidebarOpen: (open) => set({ sidebarOpen: open }),
-  setCanopySummoned: (open) => set({ canopySummoned: open }),
 
   askAboutInnerEarth: (name) =>
     set((s) => ({
@@ -1267,21 +1245,22 @@ export const useMirror = create<MirrorState>()((set, get) => ({
 
   /* ---------------- THE WORKSPACE ----------------
      The tools no longer swallow the whole screen: each one opens as a
-     mini tab over the living tree — one window, many rooms, one tab
-     active at a time. openToolTab returns the view to the observatory
-     (revealing the window from any full-screen room the walk stood
-     in) — unless opts.bare: a tab opened from the landing's docked
-     portal keeps the threshold exactly where it stands. */
+     mini tab over the one chat — one window, many rooms, one tab
+     active at a time. THE NEVER-YANK LAW — opening a tool tab NEVER
+     changes `view`: the realm IS the landing chat now, in both of its
+     gears (docked and fullscreen), so the window simply rises over
+     the chat wherever it stands. (The old yank — `view:
+     "observatory"` for non-bare callers — is gone with the walk; the
+     fullscreen depth of a room is reached only through
+     expandActiveToolTab, and its back hands return the view.) The
+     opts param stays accepted (callers pass {bare:true}); it no
+     longer gears anything. */
   openToolTab: (key, opts) => {
     /* THE MAKER'S TRAIL — every open leaves one stone on the visit's
        own path (sessionStorage, capped), so the history panel's trail
        room can hand any opened tool back with one touch. */
     recordMakerTrail(key);
     return set((s) => ({
-      /* THE BARE LAW — a tab opened from the landing's docked portal
-         never yanks the visitor off the threshold: the view stays
-         where it is (the window stands over the docked chat). */
-      ...(opts?.bare ? {} : { view: "observatory" as MainView }),
       mobileNavOpen: false,
       modal: null,
       toolTabs: s.toolTabs.includes(key) ? s.toolTabs : [...s.toolTabs, key],
@@ -1588,13 +1567,6 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       }
       return { lcHistory: history };
     }),
-
-  /* -------- Communion — the Reflection of the Absolute --------
-     Entering communion suspends every other surface: the whole
-     laboratory dissolves and only the living chat remains. */
-  openCommunion: () =>
-    set({ communionOpen: true, modal: null, mobileNavOpen: false }),
-  closeCommunion: () => set({ communionOpen: false }),
 
   askAboutTechnology: (name) =>
     set((s) => ({
@@ -2837,15 +2809,13 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   openAuth: (mode = "signin") => set({ authOpen: true, authMode: mode }),
   closeAuth: () => set({ authOpen: false }),
 
-  openProfile: () => set({ profileOpen: true, authOpen: false, mobileNavOpen: false }),
-  closeProfile: () => set({ profileOpen: false }),
-
-  /* the full-screen profile room */
+  /* the full-screen profile room — the visitor's own room within the
+     chat's frame (mounted inside AppShell's passageModals) */
   openProfilePage: () =>
-    set({ profilePageOpen: true, profileOpen: false, authOpen: false, mobileNavOpen: false }),
+    set({ profilePageOpen: true, authOpen: false, mobileNavOpen: false }),
   closeProfilePage: () => set({ profilePageOpen: false }),
 
-  openAccount: () => set({ accountOpen: true, profileOpen: false, mobileNavOpen: false }),
+  openAccount: () => set({ accountOpen: true, mobileNavOpen: false }),
   closeAccount: () => set({ accountOpen: false }),
 
   signOut: async () => {
@@ -2854,17 +2824,16 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     } catch {
       /* even if the line is quiet, the visitor leaves cleanly */
     }
-    set({ me: null, wallet: null, walletModalOpen: false, walletNotice: null, authOpen: false, profileOpen: false, view: "observatory", toolTabs: [], activeToolTab: null });
+    set({ me: null, wallet: null, walletModalOpen: false, walletNotice: null, authOpen: false, view: "observatory", toolTabs: [], activeToolTab: null });
   },
 
   /** The visitor's own cosmic library — free for everyone. */
   openLibrary: () => {
-    set({ profileOpen: false });
     get().openToolTab("library");
   },
 
   resumeDreamBook: (resume) => {
-    set({ dreamResume: resume, profileOpen: false });
+    set({ dreamResume: resume });
     get().openToolTab("dreambook");
   },
   clearDreamResume: () => set({ dreamResume: null }),
@@ -3245,9 +3214,6 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     }
   },
 
-  /** Kept for the Forge section inside the OS. */
-  openLab: () => useMirror.getState().openMirrorOS(),
-
   /* ---------------- Art X — the atelier's direct chat ---------------- */
 
   setAxDraft: (v) => set({ axDraft: v }),
@@ -3433,8 +3399,6 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       }));
     }
   },
-
-  exitLab: () => set({ view: "observatory" }),
 
   setLabIntention: (v) => set({ labIntention: v }),
   setLabEmotion: (id) => set({ labEmotion: id }),

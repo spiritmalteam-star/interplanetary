@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { BookOpen, Hammer, Layers, Music, ScrollText } from "lucide-react";
+import { BookOpen, Hammer, Layers, Music, ScrollText, Sparkles, UserRound } from "lucide-react";
 import {
   useMirror,
   type LandingScopeKey,
@@ -10,12 +10,13 @@ import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 /* ------------------------------------------------------------------ */
-/*  THE LANDING'S OWN NAV — the walk's two quiet hands, carried small  */
-/*  on the docked crown. Create opens the house's making rooms as      */
-/*  mini tabs over the docked chat (the tab window is the chat's own   */
-/*  exact size); Scopes walks the threshold's floor into one field's   */
-/*  light. They exist ONLY for the landing's bare crown — the full     */
-/*  portal keeps its own pill, doors and menus untouched.              */
+/*  THE ONE CHAT'S OWN NAV — the main navigator of the one and only    */
+/*  chat, standing in both of its gears (docked and fullscreen).       */
+/*  Create opens the house's making rooms as tabs at the chat's own    */
+/*  size (the window is the chat's own exact frame; the never-yank     */
+/*  store law keeps the realm beneath the visitor's feet); Scopes     */
+/*  tints the chat with one field's light; Profile opens the           */
+/*  visitor's own room WITHIN the frame.                               */
 /*                                                                     */
 /*  CALM LAWS: closed by default, one panel at a time; outside-click   */
 /*  and Escape lay them down; the only motion is a 0.2s opacity/       */
@@ -58,18 +59,20 @@ const NAV_SCOPES: {
   },
 ];
 
-/* THE MAKING ROOMS — the walk's own tool names, verbatim (the same
-   words the walk's tools panel wears), each opening its store opener
-   with the bare law: the tab rises over the docked chat, the
-   threshold never moves. */
+/* THE FIVE MAKING ROOMS — the house's own tool names, verbatim (the
+   canonical labels of the workspace's own tab bar, TAB_META), each
+   opening its store opener: the never-yank law keeps the realm where
+   it stands — the room rises as a tab at the chat's own size. */
 const NAV_TOOLS: {
-  key: "dreambook" | "lightcodes" | "akashic";
+  key: "dreambook" | "lightcodes" | "akashic" | "mirroros" | "invent";
   label: string;
   icon: typeof BookOpen;
 }[] = [
   { key: "dreambook", label: "Book", icon: BookOpen },
   { key: "lightcodes", label: "Music", icon: Music },
   { key: "akashic", label: "Akashic", icon: ScrollText },
+  { key: "mirroros", label: "Manifest", icon: Sparkles },
+  { key: "invent", label: "Invent", icon: Hammer },
 ];
 
 export function LandingChatNav() {
@@ -79,6 +82,9 @@ export function LandingChatNav() {
   const openDreamBook = useMirror((s) => s.openDreamBook);
   const openLightCodes = useMirror((s) => s.openLightCodes);
   const openAkashic = useMirror((s) => s.openAkashic);
+  const openMirrorOS = useMirror((s) => s.openMirrorOS);
+  const openInvent = useMirror((s) => s.openInvent);
+  const openProfilePage = useMirror((s) => s.openProfilePage);
 
   /* the two panels — closed by default, one at a time */
   const [open, setOpen] = useState<"create" | "scopes" | null>(null);
@@ -98,15 +104,25 @@ export function LandingChatNav() {
   }, []);
 
   const openTool = useCallback(
-    (key: "dreambook" | "lightcodes" | "akashic") => {
+    (key: "dreambook" | "lightcodes" | "akashic" | "mirroros" | "invent") => {
       setOpen(null);
       const bare = { bare: true };
       if (key === "dreambook") openDreamBook(bare);
       else if (key === "lightcodes") openLightCodes(undefined, bare);
-      else openAkashic(bare);
+      else if (key === "akashic") openAkashic(bare);
+      else if (key === "mirroros") openMirrorOS();
+      else openInvent();
     },
-    [openDreamBook, openLightCodes, openAkashic]
+    [openDreamBook, openLightCodes, openAkashic, openMirrorOS, openInvent]
   );
+
+  /* THE VISITOR'S OWN ROOM — the profile opens within the chat's own
+     frame (ProfilePage is mounted in AppShell's passageModals); any
+     standing nav panel is laid down first. */
+  const openProfileRoom = useCallback(() => {
+    setOpen(null);
+    openProfilePage();
+  }, [openProfilePage]);
 
   const pickScope = useCallback(
     (key: LandingScopeKey) => {
@@ -264,6 +280,24 @@ export function LandingChatNav() {
           })}
         </div>
       </div>
+
+      {/* ---------------------------- PROFILE ---------------------------- */}
+      {/* THE VISITOR'S OWN HAND — styled like the other hands: one
+          quiet pill that opens the profile room within the frame */}
+      <button
+        type="button"
+        onClick={openProfileRoom}
+        aria-haspopup="dialog"
+        aria-label={t("Profile")}
+        title={t("Profile")}
+        data-testid="landing-nav-profile"
+        className="focus-glow relative flex h-7 shrink-0 items-center gap-1.5 rounded-full border px-2.5 transition-all duration-300 after:absolute after:-inset-2 after:rounded-full after:content-[''] hairline text-muted-foreground hover:border-[var(--hairline-hover)] hover:text-foreground"
+      >
+        <UserRound className="size-3" aria-hidden="true" />
+        <span className="mono-label whitespace-nowrap text-[10px] uppercase tracking-[0.14em]">
+          {t("Profile")}
+        </span>
+      </button>
 
       {/* the outside-click veil — only while a panel stands open */}
       {open !== null && (

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -1776,9 +1775,17 @@ export function ProfilePage() {
     </>
   );
 
-  if (typeof document === "undefined") return null;
-
-  return createPortal(
+  /* WITHIN THE FRAME — the profile room no longer escapes to the body:
+     it renders exactly where AppShell mounts it (inside the realm's
+     own frame div), so it fills THE CHAT'S OWN frame — docked lens or
+     fullscreen alike — and the lens's rounded corners clip it. The
+     backdrop is the app's own glass: a translucent wash over the
+     chat, blurred, so the room reads as one of the house's own
+     surfaces and never a page of its own. The inner columns scroll
+     (the rail and the panel body each carry their own
+     overflow-y-auto), so nothing ever overflows the frame — even at
+     the chat's smallest size. */
+  return (
     <AnimatePresence>
       {open && (
         <motion.div
@@ -1786,14 +1793,16 @@ export function ProfilePage() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 12 }}
           transition={{ duration: 0.34, ease: [0.22, 1, 0.36, 1] }}
-          className="fixed inset-0 z-[85] flex flex-col bg-background"
+          className="absolute inset-0 z-[85] flex flex-col overflow-hidden bg-background/85 backdrop-blur-xl"
           data-testid="profile-page"
           role="dialog"
           aria-modal="true"
           aria-label={t("Your profile")}
         >
-        {/* the head — one way back to the Mirror, one name */}
-        <header className="shrink-0 border-b hairline bg-background">
+        {/* the head — one way back to the Mirror, one name, one close
+            hand at the room's top corner (always within sight, even
+            at the chat's smallest size) */}
+        <header className="shrink-0 border-b hairline bg-background/40">
           <div className="mx-auto flex w-full max-w-6xl items-center gap-3 px-4 py-2.5 sm:px-8">
             <button
               type="button"
@@ -1808,6 +1817,19 @@ export function ProfilePage() {
             <span className="mono-label ml-auto hidden text-[10px] uppercase tracking-[0.26em] text-muted-foreground/60 sm:block">
               {t("The Mirror Entity Digital Chamber")}
             </span>
+            {/* THE CLOSE HAND — the room's own X, at the frame's top
+                corner: one touch lays the profile down and the chat
+                stands again exactly where it was */}
+            <button
+              type="button"
+              onClick={close}
+              aria-label={t("Close")}
+              title={t("Close")}
+              data-testid="profile-close"
+              className="focus-glow ml-auto flex size-8 shrink-0 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground sm:ml-2"
+            >
+              <X className="size-4" aria-hidden="true" />
+            </button>
           </div>
         </header>
 
@@ -1872,7 +1894,6 @@ export function ProfilePage() {
         </div>
       </motion.div>
       )}
-    </AnimatePresence>,
-    document.body
+    </AnimatePresence>
   );
 }

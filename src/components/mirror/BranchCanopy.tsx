@@ -53,7 +53,6 @@ import {
   Sprout,
   Sun,
   TreeDeciduous,
-  UserRound,
   Volume2,
   VolumeX,
   X,
@@ -108,16 +107,8 @@ import {
 } from "@/lib/genealogy";
 import { recordExpansion, readExpansionScore } from "@/lib/expansion";
 import { perfEco } from "@/lib/perf-mode";
-import {
-  BranchNavigator,
-  type NavigatorApi,
-} from "./BranchNavigator";
-import type { SeedWhisper } from "@/lib/navigator-graph";
 import { useWorkspaceMemory } from "@/lib/workspace-memory";
-import { ToolbarRail } from "./living/ToolbarRail";
-import { TopControl } from "./living/TopControl";
 import { TAB_META } from "./living/ToolWorkspace";
-import type { TopCatItem, TopLedger } from "./living/UniversalMenu";
 import { attachmentsToPayload, type ChatAttachment } from "./attachments";
 import { MirrorChanneling, SCOPE_CHANNELING } from "./MirrorChanneling";
 import { ExpansionRing } from "./ExpansionMirror";
@@ -1565,16 +1556,9 @@ function LightToggle({ testIdPrefix }: { testIdPrefix: string }) {
   );
 }
 
-/* --------------- the branching navigator — the realm's floor ---------
-   THE WALL BECAME A MAP. The floor is no longer a grid of stone
-   blocks: it is the branching navigator — one welcoming question at
-   the heart, simple doors around it, and every branch leading to
-   further branches, multidirectional, bounded, and stable. The whole
-   law lives in src/components/mirror/BranchNavigator.tsx and
-   src/lib/navigator-graph.ts. The walk's own steps remain here:      */
-
 /* THE WALK THAT ADVANCES — the visitor's own steps, kept on the
-   device (never on a server): every exchange is one step. */
+   device (never on a server): every exchange is one step. The family
+   wall's tool orbs (the theme pages' suggestion wall) record them. */
 const WALK_STEPS_KEY = "mirror-walk-steps";
 
 function readWalkSteps(): number {
@@ -1691,7 +1675,6 @@ export function BranchCanopy({
   const openAkashic = useMirror((s) => s.openAkashic);
   const openDreamBook = useMirror((s) => s.openDreamBook);
   const openVideo = useMirror((s) => s.openVideo);
-  const openProfilePage = useMirror((s) => s.openProfilePage);
   /* THE LEDGER'S OWN HANDS — one opens a saved conversation right
      where it lives, the other restores a kept volume to the reading */
   const openChatSurface = useMirror((s) => s.openChat);
@@ -1710,7 +1693,6 @@ export function BranchCanopy({
   /* THE WHOLE HOUSE'S DOORS — every kategory of the old website's
      sidebar, standing within the branches themselves: the worlds the
      tree grows toward, the archives, and the quiet hands. */
-  const openMirrorOS = useMirror((s) => s.openMirrorOS);
   const openInvent = useMirror((s) => s.openInvent);
   const openLightCodes = useMirror((s) => s.openLightCodes);
   const openParticleX = useMirror((s) => s.openParticleX);
@@ -1743,13 +1725,8 @@ export function BranchCanopy({
 
   /* ------------------- THE ZOOM — the answer's room ------------------
      `restored` carries the transmission of a PREVIOUS branch — the
-     trail's chips re-open their own rooms from the walk's memory. */
-  /* THE LIVING CONVERSATION'S LAW — when the branching navigator owns
-     the floor (the realm with its map), every ask becomes a living
-     conversation INSIDE the tree: the branch expands, the camera
-     glides, the answer rises in the card. The zoom room keeps its
-     own doors for the landing and every theme page. */
-  const convMode = !!realm && !bare;
+     trail's chips re-open their own rooms from the walk's memory.
+     The zoom room serves the landing chat and every theme page. */
   const [zoom, setZoom] = useState<{
     q: string;
     move: BranchType | null;
@@ -1795,7 +1772,7 @@ export function BranchCanopy({
   const [seenLiveKey, setSeenLiveKey] = useState<string | null>(null);
   const zoomOpenedAtRef = useRef(0);
   const liveKey =
-    mounted && liveLoading && liveQuestion && !convMode ? liveQuestion : null;
+    mounted && liveLoading && liveQuestion ? liveQuestion : null;
   if (liveKey && liveKey !== seenLiveKey) {
     setSeenLiveKey(liveKey);
     zoomOpenedAtRef.current = Date.now();
@@ -1877,9 +1854,6 @@ export function BranchCanopy({
   /* the crown's two quiet dropdowns — the kategories of the walk and
      the worlds of the house */
   const [crownMenu, setCrownMenu] = useState<"cats" | "menu" | null>(null);
-  /* THE MINIMAL TOP CONTROL'S MENU — the realm's one universal menu
-     (the old crown dropdowns only serve the theme pages now) */
-  const [topMenuOpen, setTopMenuOpen] = useState(false);
   /* THE WALK'S LEDGER — the history saver the panel carries: the kept
      volumes of the shelf, the saved conversations of every surface,
      and the journey's own kept steps. Loaded fresh each time the
@@ -1896,7 +1870,7 @@ export function BranchCanopy({
     journey: JourneyStep[];
   } | null>(null);
   useEffect(() => {
-    if (crownMenu !== "menu" && !topMenuOpen) return;
+    if (crownMenu !== "menu") return;
     const labels = KEPT_SURFACE_LABELS;
     const surfaces = Object.keys(labels) as ChatSurface[];
     const chats = surfaces.flatMap((s) =>
@@ -1915,129 +1889,8 @@ export function BranchCanopy({
       chats,
       journey: loadJourney(),
     });
-  }, [crownMenu, topMenuOpen]);
+  }, [crownMenu]);
 
-  /* THE TOP CONTROL'S OWN HANDS — the walk's steering, gathered for
-     the one universal menu (the minimal top control's menu) */
-  const onTopRecalibrate = useCallback(() => {
-    setTopMenuOpen(false);
-    resetField();
-    import("sonner").then(({ toast }) =>
-      toast.success(t("Field recalibrated"), {
-        description: t(
-          "All scopes returned to origin. Free will honored always."
-        ),
-      })
-    );
-  }, [resetField, t]);
-
-  const onTopPickCategory = useCallback(
-    (key: string | "general") => {
-      setTopMenuOpen(false);
-      if (key === "general") {
-        /* already the whole house — the walk rests */
-        if (mixIsGeneral(mix)) return;
-        applyMix({ on: allFamilyKeys(), weights: evenWeights() });
-        return;
-      }
-      /* THE FOCUS LAW — one touch on a category focuses the whole walk
-         on that nature; the tree answers in one smooth breath. */
-      if (mix.on.length === 1 && mix.on.includes(key)) return;
-      applyMix({ on: [key], weights: { [key]: 1 } });
-    },
-    [mix, applyMix]
-  );
-
-  const onTopLedgerVolume = useCallback(
-    (key: string) => {
-      const v = walkLedger?.volumes.find((x) => x.bookId === key);
-      if (!v) return;
-      setTopMenuOpen(false);
-      resumeKeptVolume({
-        bookId: v.bookId,
-        config: v.config,
-        meta: {
-          title: v.title,
-          subtitle: v.subtitle,
-          sigil: v.sigil,
-          axiom: v.axiom,
-          dedication: v.dedication ?? "",
-          totalPages: v.totalPages || Math.max(8, v.pages.length + 8),
-        },
-        pages: v.pages,
-        threads: v.threads,
-        ended: v.ended,
-      });
-    },
-    [walkLedger, resumeKeptVolume]
-  );
-
-  const onTopLedgerChat = useCallback(
-    (key: string) => {
-      const c = walkLedger?.chats.find(
-        (x) => `${x.surface}:${x.id}` === key
-      );
-      if (!c) return;
-      setTopMenuOpen(false);
-      openChatSurface(c.surface, c.id);
-    },
-    [walkLedger, openChatSurface]
-  );
-
-  /* the categories and doors, prebuilt for the universal menu */
-  const topCats: TopCatItem[] = TREE_FAMILIES.map((f) => {
-    const share = familyShare(mix, f.key);
-    const focused =
-      mix.on.length === 1 && mix.on.includes(f.key) && share.on;
-    const spirit = FAMILY_SPIRITS[f.key];
-    const SpiritIcon = spirit?.icon ?? Layers;
-    return {
-      key: f.key,
-      label: t(familyLabelKeys[f.key] ?? f.key),
-      spirit: t(spirit?.spirit ?? f.key),
-      accent: f.accent,
-      pct: share.on && share.pct !== 100 ? share.pct : null,
-      focused,
-      icon: SpiritIcon,
-    };
-  });
-  const topDoors = [
-    {
-      key: "manifest",
-      label: "Manifest",
-      icon: Sparkles,
-      on: openMirrorOS,
-    },
-    { key: "akashic", label: "Akashic", icon: ScrollText, on: openAkashic },
-    { key: "book", label: "Book", icon: BookOpen, on: openDreamBook },
-    {
-      key: "music",
-      label: "Music",
-      icon: Music,
-      on: () => openLightCodes(),
-    },
-    { key: "invent", label: "Invent", icon: Hammer, on: openInvent },
-  ];
-  const topLedger: TopLedger | null =
-    topMenuOpen && walkLedger
-      ? {
-          volumes: walkLedger.volumes
-            .slice(0, 3)
-            .map((v) => ({
-              key: v.bookId,
-              title: v.title,
-              pages: v.pages.length,
-              total: v.totalPages || v.pages.length,
-            })),
-          chats: walkLedger.chats
-            .slice(0, 4)
-            .map((c) => ({
-              key: `${c.surface}:${c.id}`,
-              title: c.title,
-              label: c.label,
-            })),
-        }
-      : null;
   /* THE CROWN'S OWN BREATH — the top bar drops down when the visitor
      needs it and rises up when they don't, so the branches take almost
      the whole sky. One quiet hand at the top-right corner carries it. */
@@ -2150,70 +2003,12 @@ export function BranchCanopy({
     [familyKeyByText, focusKey]
   );
 
-  /* THE MAP'S OWN LIGHT — every whisper carries its family's accent:
-     the general walk wears every house's colors mixed, a focused
-     category wears its own light on every door of the navigator. */
-  const navWhispers = useMemo<SeedWhisper[]>(
-    () =>
-      grove.map((w) => ({
-        text: w.text,
-        movement: w.movement,
-        accent: familyAccent(w.family) ?? "var(--scope-a, var(--gd))",
-      })),
-    [grove]
-  );
-
   /* THE WALK'S OWN STEP — every exchange (a door pressed, a making
      begun) is one step, kept on the device; the navigator's own
      progressive depth reads the DNA's journey instead. */
   const bumpWalkSteps = useCallback(() => {
     stepWalkOnce();
   }, []);
-
-  /* THE NAVIGATOR'S OWN HANDLE — the composer's typed questions
-     become connected branches of the standing map through it. */
-  const navigatorApiRef = useRef<NavigatorApi | null>(null);
-
-  /* THE WALL'S OWN PICK — the carved stone speaks: the walk records
-     its step (the trail remembers) and the answer rises in the room.
-     No graft, no fold, no pan — the wall stands still; the walk lives
-     in the trail and in the rooms. */
-  const glyphPick = useCallback(
-    (text: string, move: BranchType) => {
-      if (disabled) return;
-      suppressRegrowRef.current = false;
-      bumpWalkSteps();
-      recordExpansion("pick", { scope: scopeHint ?? null, movement: move });
-      recordJourney({ b: category, s: scopeHint ?? undefined });
-      recordSeen([text]);
-      setLineage((ln) =>
-        [...ln.filter((l) => l.text !== text), { id: null, text }].slice(-10)
-      );
-      zoomOpenedAtRef.current = Date.now();
-      /* THE MAKING'S OWN ROOM — every ask opens its conversation room,
-         makings included: the creation rises inline beneath the ask
-         (the working room is gone — the chat is the workshop now). */
-      if (convMode) {
-        /* THE LIVING TREE — the branch itself becomes the room; the
-           answer rises inside the expanded node (a reopening of a
-           room that already carries its words never re-asks). */
-        const reopened = navigatorApiRef.current?.openConversation(text, move);
-        if (!reopened) onPick(text, askScopeFor(text));
-        return;
-      }
-      setZoom({ q: text, move });
-      onPick(text, askScopeFor(text));
-    },
-    [
-      disabled,
-      onPick,
-      askScopeFor,
-      scopeHint,
-      category,
-      bumpWalkSteps,
-      convMode,
-    ]
-  );
 
   const budsKey = channeling?.map((b) => b.question).join("\u0001") ?? "";
   const field = useMemo<ReturnType<typeof buildResonanceField> | null>(
@@ -2289,18 +2084,6 @@ export function BranchCanopy({
     }
     return out;
   }, [channeling]);
-
-  /* THE GOLDEN DOOR — the conversation's own branch rides the
-     navigator's first ring, wearing the amber light. */
-  const navGolden = useMemo<SeedWhisper[]>(
-    () =>
-      goldenSeeds.slice(0, 2).map((s) => ({
-        text: s.text,
-        movement: s.movement,
-        accent: "#f59e0b",
-      })),
-    [goldenSeeds]
-  );
 
   /* THE HARMONIC CONTINUATION — when a transmission's own branches
      arrive, the mirror records it: the context has proceeded. The
@@ -3436,7 +3219,7 @@ export function BranchCanopy({
          touches the store's channel: the room rises and the landing's
          own entity (the mirror of the Absolute) answers inside it, the
          whole landing conversation riding with every word. */
-      if (bare) {
+      if (realm) {
         zoomOpenedAtRef.current = Date.now();
         bareRoomRef.current = true;
         setZoom({ q: text, move: null });
@@ -3482,25 +3265,15 @@ export function BranchCanopy({
       zoomOpenedAtRef.current = Date.now();
       /* THE MAKING'S OWN ROOM — every ask opens its conversation room,
          makings included: the creation rises inline beneath the ask. */
-      if (convMode) {
-        /* THE LIVING TREE — the ask becomes a conversation node in the
-           canvas (the branch IS the room; no floating window opens). */
-        navigatorApiRef.current?.openConversation(text, move);
-      } else {
-        setZoom({ q: text, move });
-        /* THE TYPED QUESTION'S OWN BRANCH — a question the visitor
-           types becomes a connected exploration on the standing map,
-           grown from the branch the walk currently stands on. */
-        navigatorApiRef.current?.attachTypedQuestion(text);
-      }
+      setZoom({ q: text, move });
       /* THE LANDING'S OWN LAW — docked in the threshold the ask is
          always the reflection mirror itself: no category, no scope —
          the mirror's humble voice answers from the open floor. The
          full portal keeps every scope's own door. */
-      onPick(text, bare ? undefined : askScopeFor(text), attachments);
+      onPick(text, realm ? undefined : askScopeFor(text), attachments);
     },
     [
-      bare,
+      realm,
       landingBusy,
       speakFromLanding,
       category,
@@ -3531,17 +3304,6 @@ export function BranchCanopy({
     (step: { id: string | null; text: string }) => {
       const known = getWalkSession().getNode(walkNodeId(step.text));
       if (known && known.transmission.trim()) {
-        /* THE LIVING TREE — the walk returns to the branch's own room
-           inside the map: the card opens with its words standing. */
-        if (convMode) {
-          setLineage((ln) =>
-            [...ln.filter((l) => l.text !== step.text), { id: step.id, text: step.text }].slice(-10)
-          );
-          navigatorApiRef.current?.openConversation(step.text, null, {
-            restored: known.transmission.trim(),
-          });
-          return;
-        }
         if (step.id) panToNode(step.id);
         /* the walk stepped back — the trail follows: the returned room
            stands last, and YOU ARE HERE points at it */
@@ -3556,7 +3318,7 @@ export function BranchCanopy({
       setFlashId(step.id);
       window.setTimeout(() => setFlashId(null), 1500);
     },
-    [panToNode, convMode]
+    [panToNode]
   );
 
   /* the lineage chain — from the pressed whisper down to the trunk:
@@ -3688,7 +3450,7 @@ export function BranchCanopy({
      inline, exactly where the ask was spoken. The working room is
      gone — the conversation is where everything is made now (the
      landing's chat stays free: bare never reads the channel). */
-  const roomMessage = !bare && liveBelongsToRoom ? liveMessage ?? null : null;
+  const roomMessage = !realm && liveBelongsToRoom ? liveMessage ?? null : null;
   const roomMaking =
     !!roomMessage &&
     !!(roomMessage.sideArtifact || roomMessage.artifact || roomMessage.visual);
@@ -3705,16 +3467,16 @@ export function BranchCanopy({
      untouched); the full portal reads the channel as it always did. */
   const lastLandingTurn =
     landingThread.length > 0 ? landingThread[landingThread.length - 1] : null;
-  const floorBusy = bare
+  const floorBusy = realm
     ? landingBusy || !!lastLandingTurn?.loading
     : liveLoading;
-  const roomAnswer = bare
+  const roomAnswer = realm
     ? lastLandingTurn && !lastLandingTurn.loading
       ? lastLandingTurn.a
       : ""
     : answer;
-  const roomLoading = bare ? !!lastLandingTurn?.loading : liveLoading;
-  const displayError = bare
+  const roomLoading = realm ? !!lastLandingTurn?.loading : liveLoading;
+  const displayError = realm
     ? lastLandingTurn?.failed
       ? lastLandingTurn.a || "The field is quiet"
       : null
@@ -3722,7 +3484,7 @@ export function BranchCanopy({
   /* THE ENERGY'S OWN DRESS — a spent-light silence is styled gently
      (amber, a rest), never as the rose alarm of a broken crossing. */
   const energyNotice = displayError === ENERGY_NOTICE;
-  const displayLanded = bare
+  const displayLanded = realm
     ? !roomLoading && roomAnswer.length > 0
     : answerLanded;
   const settledKey = `${zoomQ ?? ""}|${answerLanded ? "1" : "0"}|${liveAnswerText.length}|${contSeeds.length}`;
@@ -3887,14 +3649,14 @@ export function BranchCanopy({
          inline beneath it — the chat is the workshop now, in every
          room, without ever walking to a working room. (The landing's
          chat keeps its own law: the free floor answers in words.) */
-      if (!bare && (detectArtifactIntent(q) !== null || isVisualIntent(q))) {
+      if (!realm && (detectArtifactIntent(q) !== null || isVisualIntent(q))) {
         zoomOpenedAtRef.current = Date.now();
         setZoom({ q, move: null });
         onPick(q, askScopeFor(q), attachments);
         return;
       }
       const roomQ = zoom.q;
-      if (bare) {
+      if (realm) {
         bareRoomRef.current = true;
         /* THE SEND'S OWN RETURN — the threshold brings its chat back to
            the eye once the room's whisper has left (the keyboard's fold
@@ -3915,7 +3677,7 @@ export function BranchCanopy({
          follow-ups carry the WHOLE landing conversation (every floor
          ask and every room answer, across rooms); the full portal's
          rooms keep their own thread only. */
-      const prior = bare
+      const prior = realm
         ? landingTurnsRef.current.slice(-8)
         : threadRef.current
             .filter((turn) => turn.a && !turn.failed)
@@ -3929,7 +3691,7 @@ export function BranchCanopy({
       setThreadBusy(true);
       try {
         const reply = await speakWithTransmission(
-          bare ? "absolute" : roomCategory,
+          realm ? "absolute" : roomCategory,
           q,
           roomQ,
           answer || "",
@@ -3945,7 +3707,7 @@ export function BranchCanopy({
         );
         /* THE LANDING'S OWN MEMORY — the room's answer joins the whole
            landing conversation, so the next room remembers it too */
-        if (bare) {
+        if (realm) {
           landingTurnsRef.current = [
             ...landingTurnsRef.current,
             { q, a: reply },
@@ -3985,7 +3747,7 @@ export function BranchCanopy({
       answer,
       applyRoomTurn,
       askScopeFor,
-      bare,
+      realm,
       category,
       disabled,
       familyKeyByText,
@@ -4231,7 +3993,6 @@ export function BranchCanopy({
           closes the room, never returns the branches — the screen stays
           exactly where the visitor stands. */}
       <div className="relative shrink-0">
-        {(!realm || bare) && (
         <div
           aria-hidden={realm && crownUp ? true : undefined}
           className={cn(
@@ -4253,7 +4014,6 @@ export function BranchCanopy({
             : undefined
         }
       >
-        {(!realm || bare) && (
         <div
           className="mx-auto flex w-full max-w-[760px] items-center gap-1.5"
         >
@@ -4268,7 +4028,7 @@ export function BranchCanopy({
               landing's floor), and the akashic and book doors wait for
               the full portal. The light, the about door, the crossing
               and the passage remain. */}
-          {!bare && (<>
+          {!realm && (<>
           {/* THE MENU — where the walk stands, behind one quiet button:
               the compass, the depth, every step of the trail (one
               touch returns the tree to that step) and the quiet
@@ -4757,7 +4517,7 @@ export function BranchCanopy({
             {/* the advanced doors wait for the full portal — the landing
                 keeps the calm crown (the about door too: the threshold
                 already tells the house's story) */}
-            {!bare && (
+            {!realm && (
             <button
               type="button"
               onClick={() => openAkashic()}
@@ -4769,7 +4529,7 @@ export function BranchCanopy({
               <ScrollText className="size-3" aria-hidden="true" />
             </button>
             )}
-            {!bare && (
+            {!realm && (
             <button
               type="button"
               onClick={() => openDreamBook()}
@@ -4781,7 +4541,7 @@ export function BranchCanopy({
               <BookOpen className="size-3" aria-hidden="true" />
             </button>
             )}
-            {!bare && (
+            {!realm && (
             <button
               type="button"
               onClick={() => openLightCodes()}
@@ -4817,33 +4577,7 @@ export function BranchCanopy({
               <div className="hidden items-center gap-1.5 sm:flex">{headerExtra}</div>
             )}
             {!realm && <ExpansionRing />}
-            {realm ? (
-              /* THE TOP ROW'S RIGHT HAND — at its very right stands the
-                 visitor's own passage (the profile room, where the score
-                 mirror and the settings live). THE LANDING'S CALM CROWN
-                 — docked in the threshold the passage waits for the
-                 full portal: the free floor keeps no profile, no doors —
-                 only the light and the way across. Guests find the way
-                 in INSIDE the full portal's passage. */
-              !bare && (
-              <button
-                type="button"
-                onClick={openProfilePage}
-                aria-label={t("Passage")}
-                title={t("Passage")}
-                data-testid={`${testIdPrefix}-door-passage`}
-                className="focus-glow flex size-7 items-center justify-center rounded-full border text-[var(--scope-a,var(--gd))] transition-all duration-300 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)]"
-                style={{
-                  borderColor:
-                    "color-mix(in srgb, var(--scope-a,var(--gd)) 34%, transparent)",
-                  backgroundColor:
-                    "color-mix(in srgb, var(--scope-a,var(--gd)) 8%, var(--background))",
-                }}
-              >
-                <UserRound className="size-3" aria-hidden="true" />
-              </button>
-              )
-            ) : (
+            {!realm && (
               <>
                 <button
                   type="button"
@@ -4871,7 +4605,6 @@ export function BranchCanopy({
           </div>
           </div>
         </div>
-        )}
 
         {/* THE SECOND ROW IS GONE — the doors of the house (akashic ·
             book · about · exit) ride the very top row now, and the
@@ -4879,75 +4612,15 @@ export function BranchCanopy({
             compass, no second rank beneath it. */}
       </div>
         </div>
-        )}
-        {realm && !bare && (
-          <>
-            {/* THE MINIMAL TOP CONTROL — the Universal Evolution Protocol's
-               one small universal top tab: ◈ Mirror · Scopes · Tools ·
-               History · Profile · Menu, one quiet pill floating over the
-               canvas, the one universal menu behind it (closed by
-               default), every function preserved. */}
-            <TopControl
-              testIdPrefix={testIdPrefix}
-              open={topMenuOpen}
-              onOpenChange={setTopMenuOpen}
-              mixLabel={mixTitle(mix, t)}
-              lineage={lineage}
-              onTrailStep={walkBack}
-              onRecalibrate={onTopRecalibrate}
-              ledger={topLedger}
-              onLedgerVolume={onTopLedgerVolume}
-              onLedgerChat={onTopLedgerChat}
-              generalFocused={mixIsGeneral(mix)}
-              cats={topCats}
-              onPickCategory={onTopPickCategory}
-              doors={topDoors}
-              onHistory={openHistory}
-              onPassage={openProfilePage}
-              realmControls={realmControls}
-              headerExtra={headerExtra}
-            />
-            {/* THE REALM'S OWN HISTORY — the top hand opens the same kept
-                conversations below the pill (the docked room keeps its
-                own pair of hands; this one serves the full realm). */}
-            {historyOpen && (
-              <>
-                <div
-                  aria-hidden="true"
-                  className="fixed inset-0 z-30"
-                  onClick={() => setHistoryOpen(false)}
-                />
-                <div
-                  data-testid={`${testIdPrefix}-top-history-anchor`}
-                  className="absolute z-50"
-                  style={{
-                    top: "calc(max(0.5rem, env(safe-area-inset-top)) + 3.4rem)",
-                    left: "max(0.5rem, env(safe-area-inset-left))",
-                  }}
-                >
-                  {renderHistoryPanel()}
-                </div>
-              </>
-            )}
-          </>
-        )}
-        {realm && !bare && (
-          /* THE WALK'S HANDS — the vertical arm keeps only the walk's
-             own hands now (the top control carries the steering and the
-             universal menu); it starts folded, and one junction mark
-             waits in the corner for the hands to be wanted. */
-          <ToolbarRail testIdPrefix={testIdPrefix} />
-        )}
-        {realm && bare && (
+        {realm && (
           /* THE LANDING'S OWN FOLD HAND — while the chat stands bare in
              the threshold, the old arrow keeps its one work: folding
-             the whole chat section away. The full portal's corner now
-             belongs to the junction button above. */
+             the whole chat section away. */
           <button
             type="button"
             onClick={() => {
               setCrownMenu(null);
-              if (bare && onFoldChat) {
+              if (onFoldChat) {
                 onFoldChat();
                 return;
               }
@@ -4973,39 +4646,8 @@ export function BranchCanopy({
       <div className="relative min-h-0 flex-1">
         {/* THE CENTRE IS CLEAR — the house's logo no longer stands at
             the heart of the realm: it lives nowhere now — the mark has
-            left the crown too.
-        THE BRANCHING NAVIGATOR — the realm's floor is a living map:
-            one welcoming question at the heart, simple doors around
-            it, every branch leading to further branches. The visitor
-            walks in every direction; approaching a frontier grows one
-            small connected cluster; every node stands where it was
-            born. The theme pages keep the genealogy tree. */}
-        {realm && !bare ? (
-          <BranchNavigator
-            key={`nav:${focusKey}`}
-            whispers={navWhispers}
-            golden={navGolden}
-            focusKey={focusKey}
-            /* THE SCOPE'S OWN VOICE — when the walk stands on ONE field,
-               the map's every grown branch speaks that field's bank (the
-               bud engine's own law), not the chat's standing mode; the
-               general walk keeps the whole house's percentage weave. */
-            category={focusKey === "general" ? category : focusKey}
-            scopeHint={focusKey === "general" ? scopeHint : focusKey}
-            disabled={disabled}
-            testIdPrefix={testIdPrefix}
-            onPick={glyphPick}
-            onCreation={openTool}
-            apiRef={navigatorApiRef}
-            convMode
-            liveQuestion={liveQuestion}
-            liveAnswer={liveAnswer}
-            liveLoading={liveLoading}
-            liveError={liveError}
-            liveMessage={liveMessage}
-            channeling={channeling}
-          />
-        ) : realm && bare ? (
+            left the crown too. The theme pages keep the genealogy tree. */}
+        {realm ? (
           /* THE BARE FLOOR — the miniature portal's quiet ground: the
              focused family's own light breathing behind the mark; the
              whisper line below does the speaking. */
@@ -5273,29 +4915,15 @@ export function BranchCanopy({
               }}
               className={cn(
                 "pointer-events-auto flex w-full max-w-[560px] items-center gap-2 rounded-full border py-1.5 pl-2.5 pr-1.5 transition-colors duration-300",
-                /* THE CRYSTAL FOCUS — docked in the threshold the
-                   line's own focus tint follows the blue crystal; the
-                   full portal keeps the scope's color. */
-                bare
-                  ? "focus-within:border-[rgba(148,190,224,0.5)]"
-                  : "focus-within:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)]",
+                /* THE CRYSTAL FOCUS — the line's own focus tint follows
+                   the blue crystal. */
+                "focus-within:border-[rgba(148,190,224,0.5)]",
                 /* THE COOL FLOOR — in both its dockings (the threshold
                    and the realm) the line wears an opaque coat and no
                    backdrop blur: a live blur over a scrolling page is
                    heat the phone must not pay for a lens. */
-                bare
-                  ? "bg-background floor-glow"
-                  : "bg-background floor-glow shadow-[0_10px_36px_-16px_rgba(0,0,0,0.55)]"
+                "bg-background floor-glow"
               )}
-              style={{
-                /* THE CRYSTAL BORDER — docked in the threshold the
-                   line's edge is the floor-glow's own (the crystal law
-                   in globals.css); the full portal keeps the scope's
-                   own color. */
-                borderColor: bare
-                  ? undefined
-                  : "color-mix(in srgb, var(--scope-a,var(--gd)) 26%, transparent)",
-              }}
             >
               {/* THE INPUT'S OWN CALM — the reload and the star have
                   left the whisper line: the cargo, the call, the words,
@@ -5305,8 +4933,7 @@ export function BranchCanopy({
                   even with no room standing: one touch opens this
                   visit's kept conversations (this device alone —
                   nothing travels to a server). */}
-              {bare && (
-                <div className="relative shrink-0">
+              <div className="relative shrink-0">
                   <button
                     type="button"
                     onClick={() =>
@@ -5338,7 +4965,6 @@ export function BranchCanopy({
                     </>
                   )}
                 </div>
-              )}
               {/* THE FLOOR'S OWN PAPERCLIP AND CAMERA — one image and
                   up to three documents ride with the whisper. THE
                   LANDING'S QUIET LINE — docked in the threshold the
@@ -5349,7 +4975,7 @@ export function BranchCanopy({
                 scope={floorLiveScope}
                 size="2xs"
                 withCall={false}
-                withAttachments={!bare}
+                withAttachments={false}
                 disabled={disabled || floorBusy}
                 accentVar="var(--scope-a,var(--gd))"
                 attachments={askAtts}
@@ -5363,7 +4989,7 @@ export function BranchCanopy({
               <button
                 type="button"
                 onClick={() =>
-                  setLiveCallScope(bare ? "communion" : floorLiveScope)
+                  setLiveCallScope("communion")
                 }
                 disabled={disabled}
                 aria-label={t("Open the direct mirror connection")}
@@ -5374,17 +5000,17 @@ export function BranchCanopy({
                 <Phone className="size-3.5" aria-hidden="true" />
               </button>
               <label htmlFor={`${testIdPrefix}-ask`} className="sr-only">
-                {bare ? t("Whisper to the mirror…") : t("Whisper to the tree…")}
+                {t("Whisper to the mirror…")}
               </label>
               <input
                 id={`${testIdPrefix}-ask`}
                 value={askDraft}
                 onChange={(e) => setAskDraft(e.target.value)}
                 placeholder={
-                  /* THE LANDING'S OWN WORD — docked in the threshold the
-                     line whispers to the mirror itself: no tree, no walk,
-                     no scope — pure presence. */
-                  bare ? t("Whisper to the mirror…") : t("Whisper to the tree…")
+                  /* THE LANDING'S OWN WORD — the line whispers to the
+                     mirror itself: no tree, no walk, no scope — pure
+                     presence. */
+                  t("Whisper to the mirror…")
                 }
                 disabled={disabled}
                 autoComplete="off"
@@ -5398,13 +5024,11 @@ export function BranchCanopy({
                 data-testid={`${testIdPrefix}-ask-send`}
                 className={cn(
                   "focus-glow flex size-8 shrink-0 items-center justify-center rounded-full transition-all duration-300 hover:scale-[1.04] disabled:cursor-not-allowed disabled:opacity-35 disabled:shadow-none",
-                  /* THE CRYSTAL SEND — docked in the threshold the
-                     send hand carries both crystals at once: the red
-                     and the blue, one gradient, no animation. A chosen
-                     scope lends its own light to the leading crystal. */
-                  bare
-                    ? "bg-gradient-to-br from-[var(--landing-scope-accent,#ff4d6d)] to-[#38bdf8] text-[#0b0f17] shadow-[0_0_14px_-6px_color-mix(in_srgb,var(--landing-scope-accent,#ff4d6d)_70%,transparent)]"
-                    : "bg-gradient-to-br from-[var(--scope-a,var(--gd))] to-[color-mix(in_srgb,var(--scope-b,var(--pk))_70%,var(--scope-a,var(--gd)))] text-[#101010] shadow-[0_0_14px_-6px_color-mix(in_srgb,var(--scope-a,var(--gd))_70%,transparent)]"
+                  /* THE CRYSTAL SEND — the send hand carries both
+                     crystals at once: the red and the blue, one gradient,
+                     no animation. A chosen scope lends its own light to
+                     the leading crystal. */
+                  "bg-gradient-to-br from-[var(--landing-scope-accent,#ff4d6d)] to-[#38bdf8] text-[#0b0f17] shadow-[0_0_14px_-6px_color-mix(in_srgb,var(--landing-scope-accent,#ff4d6d)_70%,transparent)]"
                 )}
               >
                 <Send className="size-3.5" aria-hidden="true" />
@@ -5413,7 +5037,7 @@ export function BranchCanopy({
             {/* THE TEMPORARY CHAT'S OWN LINE — the landing's floor is
                 free and holds nothing: a quiet honest word for the
                 non logged-in, the way in named for the ones who stay. */}
-            {bare && guest && (
+            {guest && (
               <p
                 data-testid="floor-temporary-note"
                 className="mono-label text-[9px] uppercase tracking-[0.26em] text-muted-foreground/55"
@@ -5490,7 +5114,7 @@ export function BranchCanopy({
                 }}
               >
                 <div className="flex min-w-0 items-start gap-2.5">
-                  {!bare && (
+                  {!realm && (
                     <span
                       className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--scope-a,var(--gd))_42%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_10%,transparent)]"
                       aria-hidden="true"
@@ -5499,7 +5123,7 @@ export function BranchCanopy({
                     </span>
                   )}
                   <div className="min-w-0">
-                    {!bare && zoom.move && (
+                    {!realm && zoom.move && (
                       <p className="mono-label text-[9px] uppercase tracking-[0.2em] text-muted-foreground/70">
                         {t(BRANCH_TYPE_LABELS[zoom.move])}
                       </p>
@@ -5516,7 +5140,7 @@ export function BranchCanopy({
                         and the bar stays one slim hand-row. The full
                         portal keeps the room's title, held to two lines
                         so a long question can never crowd the crown. */}
-                    {!bare && (
+                    {!realm && (
                       <p
                         className="line-clamp-2 break-words text-[15px] font-medium leading-snug text-foreground"
                         title={zoom.q}
@@ -5545,7 +5169,7 @@ export function BranchCanopy({
                          thread (the conversation truly clears, the floor
                          rises fresh with the mirror's question); the
                          full portal lays its channel to rest. */
-                      if (bare) {
+                      if (realm) {
                         setLandingThread([]);
                         landingTurnsRef.current = [];
                         /* a fresh page of the device's own keep — the
@@ -5593,7 +5217,7 @@ export function BranchCanopy({
                       <VolumeX className="size-3.5" aria-hidden="true" />
                     )}
                   </button>
-                  {bare ? (
+                  {realm ? (
                     /* THE DEVICE'S OWN HAND — the landing chat wears the
                        history instead of the old tree mark: this visit's
                        conversations, kept on this device alone (nothing
@@ -5674,7 +5298,7 @@ export function BranchCanopy({
                 }}
               >
                 <div key={zoom.q} className="room-swap mx-auto max-w-[720px]">
-                  {zoom && !bare && (
+                  {zoom && !realm && (
                     <ResonantStageBadge
                       category={categoryForMove(zoomMove)}
                       moveLabel={zoom.move ? t(BRANCH_TYPE_LABELS[zoom.move]) : null}
@@ -5727,7 +5351,7 @@ export function BranchCanopy({
                           energyNotice ? "text-[#b8860b] dark:text-[#f59e0b]" : "text-[#f43f5e]"
                         }`}
                       >
-                        {t(bare ? "The field is quiet — speak once more" : "The transmission could not cross")}
+                        {t(realm ? "The field is quiet — speak once more" : "The transmission could not cross")}
                       </p>
                       <p className="mt-1.5 text-[14px] leading-relaxed text-foreground/85">
                         {displayError}
@@ -5737,9 +5361,9 @@ export function BranchCanopy({
                     revealStage >= 2 && (
                       <div className="py-5 text-muted-foreground">
                         <MirrorChanneling
-                          label={t(bare ? "Reflecting" : "Channeling")}
+                          label={t(realm ? "Reflecting" : "Channeling")}
                           variant={
-                            bare
+                            realm
                               ? "mirror"
                               : SCOPE_CHANNELING[roomLiveScope] ?? "orbs"
                           }
@@ -5815,9 +5439,9 @@ export function BranchCanopy({
                           {turn.loading ? (
                             <MirrorChanneling
                               compact
-                              label={t(bare ? "Reflecting" : "The transmission is listening…")}
+                              label={t(realm ? "Reflecting" : "The transmission is listening…")}
                               variant={
-                                bare
+                                realm
                                   ? "mirror"
                                   : SCOPE_CHANNELING[roomLiveScope] ?? "orbs"
                               }
@@ -5883,7 +5507,7 @@ export function BranchCanopy({
                     THE LANDING'S PURE FLOOR — the walk's branches belong
                     to the full portal: the docked room keeps only the
                     mirror's own words and its own line. */}
-                {!bare && !liveLoading && answer && revealStage >= 4 && contSeeds.length > 0 && (
+                {!realm && !liveLoading && answer && revealStage >= 4 && contSeeds.length > 0 && (
                   <div className="flex flex-col gap-2.5">
                     <button
                       type="button"
@@ -5977,7 +5601,7 @@ export function BranchCanopy({
                   onSend={sendReplyFromPanel}
                   testIdPrefix={testIdPrefix}
                   scopeKey={roomLiveScope}
-                  bare={bare}
+                  bare={realm}
                   leading={
                     /* THE CATEGORY'S OWN CALL — the room's direct line.
                        THE LANDING'S OWN VOICE — docked in the threshold
@@ -5988,7 +5612,7 @@ export function BranchCanopy({
                     <button
                       type="button"
                       onClick={() =>
-                        setLiveCallScope(bare ? "communion" : roomLiveScope)
+                        setLiveCallScope(realm ? "communion" : roomLiveScope)
                       }
                       disabled={disabled}
                       aria-label={t("Open the direct mirror connection")}
