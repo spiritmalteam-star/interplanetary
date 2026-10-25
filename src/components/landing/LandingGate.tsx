@@ -43,7 +43,6 @@ type ChamberModule = {
     bare?: boolean;
     onExpand?: () => void;
     onMinimize?: () => void;
-    onFoldChat?: () => void;
   }>;
 };
 
@@ -177,15 +176,10 @@ export default function LandingGate() {
   const landingScope = useMirror((s) => s.landingScope);
   const [phase, setPhase] = useState<Phase>("landing");
   const [Chamber, setChamber] = useState<ComponentType<
-    { bare?: boolean; onExpand?: () => void; onMinimize?: () => void; onFoldChat?: () => void }
+    { bare?: boolean; onExpand?: () => void; onMinimize?: () => void }
   > | null>(null);
   const [geo, setGeo] = useState<Geo | null>(null);
   const [pending, setPending] = useState(false);
-  /* THE FOLDED CHAT — the landing chat's dropdown hand folds the
-     whole chat section away (the lens itself rests, invisible but
-     mounted, so not one word of the conversation is lost), and the
-     threshold's own ground carries the invitation to call her back. */
-  const [chatFolded, setChatFolded] = useState(false);
   /* THE GUIDE'S OWN PAGE — the threshold's full-screen guide pages
      tell the gate directly (LandingPage calls onGuideOpenChange, so
      even a close riding history.replaceState is heard): while a guide
@@ -253,7 +247,6 @@ export default function LandingGate() {
                 bare?: boolean;
                 onExpand?: () => void;
                 onMinimize?: () => void;
-                onFoldChat?: () => void;
               }>
           );
       });
@@ -445,7 +438,6 @@ export default function LandingGate() {
   const expandPortal = useCallback(() => {
     if (busy.current) return;
     if (phaseRef.current === "through") return;
-    setChatFolded(false);
     void (async () => {
       if (!Chamber) {
         setPending(true);
@@ -622,18 +614,16 @@ export default function LandingGate() {
           "left-0 top-0 z-[45] transition-opacity duration-500",
           fullscreen ? "fixed" : "absolute",
           docked && "lens-docked",
-          /* THE FOLDED CHAT — the whole chat section steps out of
-             the eye (still mounted, still remembering) while the
-             threshold beneath shows the way back. THE GUIDE'S PAGE —
-             a full-screen guide covers the anchored chat the same
-             way: the page is the guide's alone. The hidden word is
-             spoken inline so it also stills the tab and the touch. */
-          docked && (chatFolded || guideOpen) && "pointer-events-none opacity-0"
+          /* THE GUIDE'S PAGE — a full-screen guide covers the anchored
+             chat the same way: the page is the guide's alone. The
+             hidden word is spoken inline so it also stills the tab
+             and the touch. */
+          docked && guideOpen && "pointer-events-none opacity-0"
         )}
         style={{
           width: fullscreen ? "100vw" : geo.w,
           height: fullscreen ? "var(--vh-safe)" : geo.h,
-          visibility: docked && (chatFolded || guideOpen) ? "hidden" : "visible",
+          visibility: docked && guideOpen ? "hidden" : "visible",
         }}
       >
           <div
@@ -681,20 +671,21 @@ export default function LandingGate() {
               }
             >
               {/* THE TWO GEARS' OWN HANDS — each gear wears only its
-                  own hand: docked (the landing phase) the crown
-                  carries the expand hand (the chat fills the screen);
-                  through (the fullscreen gear) it carries the minimize
-                  hand (the chat folds back into its slot). During the
-                  opening's tunnel breath neither hand stands — the
-                  tunnel covers the crossing. The chat is the SAME chat
-                  in both gears — the hands only gear the window's
-                  size, and AppShell shows a crown hand only when its
-                  callback exists. */}
+                  own hand, and both live at the crown's own CORNER:
+                  docked (the landing phase) the corner carries the
+                  expand hand (the chat fills the screen); through (the
+                  fullscreen gear) the very same corner carries the
+                  minimize hand (the chat folds back into its slot).
+                  During the opening's tunnel breath neither hand
+                  stands — the tunnel covers the crossing. The chat is
+                  the SAME chat in both gears — the hands only gear the
+                  window's size, and the corner wears a hand only when
+                  its callback exists. There is NO hand that hides the
+                  chat: the conversation never folds away. */}
               <Chamber
                 bare={bare}
                 {...(docked ? { onExpand: expandPortal } : {})}
                 {...(phase === "through" ? { onMinimize: minimize } : {})}
-                onFoldChat={() => setChatFolded(true)}
               />
             </div>
 
@@ -705,10 +696,9 @@ export default function LandingGate() {
 
           {/* THE CROWN'S OWN HANDS — the whole chamber stands inside
               its window now, so the portal's own crown carries every
-              hand again: the crossing (crown-expand) and the fold
-              (the crown's own dropdown hand) live in the top row —
-              no second pair of hands rides the lens edge. The hero's
-              “Enter the portal” on the page carries the same growth. */}
+              hand again: the crossing (the corner's fullscreen hand)
+              lives at the crown's corner — no hand hides the chat, no
+              second pair of hands rides the lens edge. */}
         </div>
     ) : null;
 
@@ -731,13 +721,7 @@ export default function LandingGate() {
         <LandingPage
           slotStyle={
             geo
-              ? /* THE TRUE FOLD — when the chat is folded the slot
-                   itself collapses to a slim invitation bar, so the
-                   chat's space folds away with it; the words stay
-                   mounted in the lens (invisible, remembering). */
-                chatFolded
-                ? { width: geo.w, height: 68 }
-                : { width: geo.w, height: geo.h }
+              ? { width: geo.w, height: geo.h }
               : /* THE WAKING GROUND — before the true window is carved,
                    the slot wears the waking height: on the phone ~67%
                    of the screen (the taller glass it will become), so
@@ -751,17 +735,14 @@ export default function LandingGate() {
           }
           onScroll={handleLandingScroll}
           initialScroll={landingScroll.current}
-          chatFolded={chatFolded}
-          onUnfoldChat={() => setChatFolded(false)}
           onGuideOpenChange={setGuideOpen}
           slotChildren={lens}
         />
       </div>
 
       {/* THE RETURN HAND — the portal's own crown carries it now: the
-          landing control stands between the about door and the
-          visitor's passage, one touch folding the realm back into its
-          slot on the threshold. */}
+          landing control stands at the crown's corner, one touch
+          folding the realm back into its slot on the threshold. */}
       {/* THE TUNNEL — the direct crossing into the MAIN portal: the
           screen fills with the crystal passage the moment an enter
           hand is pressed, so the visitor never watches the landing's

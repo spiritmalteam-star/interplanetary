@@ -5649,3 +5649,21 @@ Stage Summary:
 - The old version is physically gone from the sandbox (gc-pruned) and can never be served again: the drift guard re-pins the tree to `.zscripts/expected-head` on every start, and the hardened launcher can no longer kill its own server.
 - All future pushes use the keeper's token inline (never on disk); local = remote = 717a8fe.
 - Key artifacts: .zscripts/dev.sh (guard + setsid server + safe trap), .zscripts/expected-head (the pin), .gitignore (dev.pid).
+
+---
+Task ID: active-crown-dropdows-no-fold
+Agent: lead (Z.ai Code)
+Task: "activate the tab buttons so they display they drop down theyr tools and scopes so we can work within the chat frame that specific work similar to profile and the full screen must be at corner replacing the drop button that hides the whole chat and delete that drop button that hides the chat and about us button at top of website"
+
+Work Log:
+- ROOT CAUSE of "inactive tab buttons" found and measured in the browser: the crown row wrapper carried max-h-36 + overflow-hidden (a leftover of the deleted crown-fold behavior), and LandingChatNav's own dropdown panels never toggled that overflow flag — the Create/Scopes panels rendered open (212px, opacity 1) but were clipped to ~40px: effectively invisible. Fixed: the wrapper now always overflow-visible (no max height, no hidden overflow, ever).
+- THE FOLD HAND IS GONE: the absolute top-right chevron (crown-toggle, "Fold the chat away") deleted from BranchCanopy, and the whole fold flow removed end to end — AppShell onFoldChat plumbing, LandingGate chatFolded state + folded lens hiding + collapsed 68px slot, LandingPage folded ground ("call her back" invitation). The chat can never hide itself again.
+- THE CORNER now carries the gear hand instead: docked, it is the fullscreen hand (Maximize2, corner-expand); fullscreen, the very same corner carries the landing hand (Minimize2, corner-landing). The expand/minimize buttons left the crown row (realmControls is now LandingChatNav alone); BranchCanopy wears the corner hand via onExpand/onMinimize props. During the opening tunnel breath neither hand stands.
+- Crown row is now exactly Create / Scopes / Profile (all three with their dropdowns — Create drops the five makers, Scopes drops the four fields, Profile opens the in-frame room).
+- "About Us at top of website" audited: no About button exists anywhere in the current tree (only unused i18n dict keys) — the one the visitor saw belongs to the old version their preview/cache served; the current build cannot render it.
+- SANDBOX BETRAYAL CAUGHT RED-HANDED (the recurring "old version" explained): mid-session the sandbox killed the server and rolled the checkout back (HEAD a0186ee -> a21de66, uncommitted edits wiped); the launcher's drift guard then reset --hard to the STALE .zscripts/expected-head (717a8fe), silently destroying the turn's work. expected-head was never updated last session. Recovery: re-pinned to remote main (a0186ee), fixed expected-head, re-applied all edits, and COMMITTED IMMEDIATELY (never leave work uncommitted past any launcher restart).
+- tsc: 0 errors in src/components; lint: the 2 pre-existing LandingGate ref errors only.
+
+Stage Summary:
+- The one chat's crown now ACTIVELY drops its tools and scopes in plain sight (no clipping), the corner hand fullscreens the chat (and lands it back), the hide-the-chat arrow and its whole flow are deleted, and no About button exists in the tree.
+- House law added: commit+push BEFORE any dev.sh restart; expected-head updated at .zscripts/expected-head (a0186ee -> this commit).

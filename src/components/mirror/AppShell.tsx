@@ -2,7 +2,6 @@
 
 import { useEffect } from "react";
 import dynamic from "next/dynamic";
-import { Maximize2, Minimize2 } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { setLearningIdentity } from "@/lib/learning-branches";
 import { useT } from "@/lib/i18n";
@@ -76,18 +75,16 @@ export default function AppShell({
   bare = false,
   onExpand,
   onMinimize,
-  onFoldChat,
 }: {
   bare?: boolean;
   /** THE DOCKED HAND — grows the one portal to the whole screen
-      (given by the threshold; the crown wears it while docked). */
+      (given by the threshold; the crown's corner wears it while
+      docked). */
   onExpand?: () => void;
   /** THE RETURN HAND — folds the portal back into its landing slot
-      (given by the threshold; the crown wears it at full size). */
+      (given by the threshold; the crown's corner wears it at full
+      size). */
   onMinimize?: () => void;
-  /** THE FOLD HAND — the landing chat's dropdown hand: folds the
-      whole chat section away without ending the conversation. */
-  onFoldChat?: () => void;
 }) {
   return (
     <div className="paper-grain relative h-[var(--app-h,var(--vh-safe))] overflow-hidden">
@@ -98,7 +95,6 @@ export default function AppShell({
         bare={bare}
         onExpand={onExpand}
         onMinimize={onMinimize}
-        onFoldChat={onFoldChat}
       />
     </div>
   );
@@ -108,12 +104,10 @@ function AppShellViews({
   bare,
   onExpand,
   onMinimize,
-  onFoldChat,
 }: {
   bare: boolean;
   onExpand?: () => void;
   onMinimize?: () => void;
-  onFoldChat?: () => void;
 }) {
   const view = useMirror((s) => s.view);
   const activeMode = useMirror((s) => s.activeMode);
@@ -399,7 +393,8 @@ function AppShellViews({
       <BranchCanopy
         realm
         bare={bare}
-        onFoldChat={onFoldChat}
+        onExpand={onExpand}
+        onMinimize={onMinimize}
         category={activeMode}
         open={true}
         onPick={(q, scope, attachments) => {
@@ -436,41 +431,14 @@ function AppShellViews({
              gears (docked and fullscreen): Create (the making rooms
              open as tabs at the chat's own size), Scopes (the floor's
              own field of light) and the Profile hand (the visitor's
-             room, framed like the chat). The crown hands are worn
-             each gear with its own: docked carries the expand hand
-             (the chat fills the screen), fullscreen carries the
-             minimize hand (the chat folds back into its slot) — each
-             button only when its callback exists (the opening's
-             tunnel breath wears neither). THE FREE LAW — the crossing
-             wears no coin: the whole realm stands open to every
-             visitor, no passage demanded, nothing acquired. */
-          <>
-            <LandingChatNav />
-            {onExpand && (
-              <button
-                type="button"
-                onClick={onExpand}
-                aria-label={t("Fullscreen")}
-                title={t("Fullscreen")}
-                data-testid="crown-expand"
-                className="focus-glow relative flex size-7 items-center justify-center rounded-full border border-[rgba(232,217,176,0.42)] bg-[rgba(232,217,176,0.08)] text-[var(--lp-gold)] transition-all duration-300 hover:border-[rgba(232,217,176,0.8)] hover:text-[var(--lp-gold-soft)]"
-              >
-                <Maximize2 className="size-3" aria-hidden="true" />
-              </button>
-            )}
-            {onMinimize && (
-              <button
-                type="button"
-                onClick={onMinimize}
-                aria-label={t("Landing")}
-                title={t("Landing")}
-                data-testid="crown-minimize"
-                className="focus-glow flex size-7 items-center justify-center rounded-full border border-[rgba(232,217,176,0.42)] bg-[rgba(232,217,176,0.08)] text-[var(--lp-gold)] transition-all duration-300 hover:border-[rgba(232,217,176,0.8)] hover:text-[var(--lp-gold-soft)]"
-              >
-                <Minimize2 className="size-3" aria-hidden="true" />
-              </button>
-            )}
-          </>
+             room, framed like the chat). The crossing's gear hand —
+             the fullscreen while docked, the landing while full — no
+             longer rides this row: it stands at the crown's own
+             CORNER (BranchCanopy wears it), where the old
+             hide-the-chat arrow used to live. THE FREE LAW — the
+             crossing wears no coin: the whole realm stands open to
+             every visitor, no passage demanded, nothing acquired. */
+          <LandingChatNav />
         }
       />
 

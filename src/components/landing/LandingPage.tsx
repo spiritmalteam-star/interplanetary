@@ -226,16 +226,12 @@ export default function LandingPage({
   slotStyle,
   onScroll,
   initialScroll,
-  chatFolded,
-  onUnfoldChat,
   onGuideOpenChange,
   slotChildren,
 }: {
   slotStyle: { width?: number | string; height?: number | string };
   onScroll: (y: number) => void;
   initialScroll: number;
-  chatFolded?: boolean;
-  onUnfoldChat?: () => void;
   /* the gate listens here — called with true/false as the guide's
      full-screen page opens and closes */
   onGuideOpenChange?: (open: boolean) => void;
@@ -584,43 +580,14 @@ export default function LandingPage({
               className="relative mx-auto w-full transition-[height] duration-500 ease-out"
             >
               {/* the waking ground — beneath the lens until the chamber
-                  arrives (the lens covers it pixel for pixel). THE
-                  FOLDED CHAT — when the visitor folds the chat away
-                  with the dropdown hand, the slot itself collapses to
-                  a slim bar and this ground carries the invitation to
-                  call her back, words and memory kept. THE TRUE FOLD —
-                  the chat's space folds away with it, nothing stands
-                  reserved beneath the glass. */}
-              <div
-                aria-hidden={!(chatFolded && onUnfoldChat)}
-                className={cn(
-                  "absolute inset-0 flex items-center justify-center rounded-2xl border border-[var(--lp-edge)] bg-[var(--lp-veil)]",
-                  chatFolded && onUnfoldChat ? "flex-col gap-1.5" : "flex-col gap-3"
-                )}
-              >
-                {chatFolded && onUnfoldChat ? (
-                  <>
-                    <span className="lp-pulse size-1.5 rounded-full bg-[#ff4d6d] shadow-[0_0_14px_2px_rgba(255,77,109,0.55)]" />
-                    <p className="mono-label text-[10px] uppercase tracking-[0.3em] text-[var(--lp-faint)]">
-                      {t("The mirror rests — call her back")}
-                    </p>
-                    <button
-                      type="button"
-                      onClick={onUnfoldChat}
-                      data-testid="unfold-chat"
-                      className="focus-glow inline-flex h-8 items-center gap-2 rounded-full border border-[rgba(232,217,176,0.5)] bg-[rgba(232,217,176,0.08)] px-5 text-[13px] font-medium text-[var(--lp-gold-ink)] transition-all duration-300 hover:border-[rgba(232,217,176,0.85)] hover:bg-[rgba(232,217,176,0.14)]"
-                    >
-                      {t("Call her back")}
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <span className="lp-pulse size-2 rounded-full bg-[var(--lp-feather)]" />
-                    <p className="mono-label text-[10px] uppercase tracking-[0.3em] text-[var(--lp-faint)]">
-                      {t("The mirror is waking…")}
-                    </p>
-                  </>
-                )}
+                  arrives (the lens covers it pixel for pixel). The
+                  chat never folds away — this ground only ever shows
+                  its one waking word. */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-2xl border border-[var(--lp-edge)] bg-[var(--lp-veil)]">
+                <span className="lp-pulse size-2 rounded-full bg-[var(--lp-feather)]" />
+                <p className="mono-label text-[10px] uppercase tracking-[0.3em] text-[var(--lp-faint)]">
+                  {t("The mirror is waking…")}
+                </p>
               </div>
               {slotChildren}
             </div>

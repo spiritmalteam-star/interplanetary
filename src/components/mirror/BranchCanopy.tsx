@@ -39,6 +39,7 @@ import {
   LoaderCircle,
   Maximize2,
   Menu,
+  Minimize2,
   MessageSquareText,
   Moon,
   Music,
@@ -1604,7 +1605,8 @@ export function BranchCanopy({
   onLatch,
   realm,
   bare,
-  onFoldChat,
+  onExpand,
+  onMinimize,
   headerExtra,
   realmControls,
 }: {
@@ -1653,11 +1655,16 @@ export function BranchCanopy({
       the whisper line stand exactly as ever; only the stones rest
       until the portal is given the whole screen). */
   bare?: boolean;
-  /** THE FOLD HAND — the landing chat's dropdown hand: while the
-      portal is docked bare in the threshold, the crown's chevron
-      folds the whole chat section away without ending the
-      conversation (the threshold's own ground carries the way back). */
-  onFoldChat?: () => void;
+  /** THE CORNER'S GEAR HAND — while the portal is docked bare in the
+      threshold, the corner hand grows the chat to the whole screen;
+      at full size the same corner carries the way back to the
+      landing slot. One corner, one hand, whichever way the portal
+      faces — the old hide-the-chat arrow is gone for good. */
+  onExpand?: () => void;
+  /** THE FULLSCREEN GEAR'S OWN HAND — folds the portal back into its
+      landing slot (worn by the same corner while the chat fills the
+      screen). */
+  onMinimize?: () => void;
   /** Extra quiet controls riding the realm's crown (the purse, the
       theme) — rendered between the where-pill and the doors. */
   headerExtra?: ReactNode;
@@ -1891,10 +1898,6 @@ export function BranchCanopy({
     });
   }, [crownMenu]);
 
-  /* THE CROWN'S OWN BREATH — the top bar drops down when the visitor
-     needs it and rises up when they don't, so the branches take almost
-     the whole sky. One quiet hand at the top-right corner carries it. */
-  const [crownUp, setCrownUp] = useState(false);
   /* THE FOCUSED FAMILY — when the walk stands on ONE category, the
      whole house wears that category's own light: the chat's frame, the
      composer, the doors and the seed glow all take its color. */
@@ -3982,27 +3985,19 @@ export function BranchCanopy({
           clean dropdown; a chosen category focuses the walk on that
           nature, and every room speaks with that world's voice. The
           mix of worlds rests in the settings, inside the profile. */}
-      {/* ------------------------- the crown's breath -----------------
-          THE TOP BAR DROPS DOWN WHEN NEEDED AND RISES UP WHEN NOT:
-          one quiet hand at the top-right corner folds the whole crown
-          away and the branches take almost the whole sky. The hand
-          itself never leaves — it is the way back down.
-          THE ONE JOB LAW — the hand hides and shows the top bar and
-          NOTHING else: it floats above every room (a folded crown in a
-          standing room never buries it), so bringing the bar back never
-          closes the room, never returns the branches — the screen stays
-          exactly where the visitor stands. */}
       <div className="relative shrink-0">
         <div
-          aria-hidden={realm && crownUp ? true : undefined}
           className={cn(
             "transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
-            realm && crownUp ? "max-h-0 opacity-0" : "max-h-36 opacity-100",
-            /* the crown's own dropdowns must never be clipped — the
-               fold only clips when the crown itself is folded away */
-            crownMenu ? "overflow-visible" : "overflow-hidden"
+            /* THE UNCROWNED DROPDOWNS — every dropdown the crown
+               carries (the realm's own hands and the pages' menus
+               alike) must breathe beyond the row: no max height, no
+               hidden overflow ever again — the fold that demanded the
+               clipping is gone, and the tools and scopes now drop
+               down whole, in plain sight. */
+            "overflow-visible"
           )}
-        >
+       >
       <div
         className={cn(
           "shrink-0 bg-background/85 px-3 pb-1 sm:px-5",
@@ -4612,23 +4607,25 @@ export function BranchCanopy({
             compass, no second rank beneath it. */}
       </div>
         </div>
-        {realm && (
-          /* THE LANDING'S OWN FOLD HAND — while the chat stands bare in
-             the threshold, the old arrow keeps its one work: folding
-             the whole chat section away. */
+        {realm && (onExpand || onMinimize) && (
+          /* THE CORNER'S OWN GEAR HAND — the hide-the-chat arrow is
+             gone for good; the corner now carries the way across
+             instead: docked, it grows the chat to the whole screen
+             (the fullscreen hand); fullscreen, the very same corner
+             carries the way back to the landing slot. One corner, one
+             hand, no folding of the conversation — during the
+             opening's tunnel breath neither hand stands (neither
+             callback is worn), the crossing covers everything. */
           <button
             type="button"
-            onClick={() => {
-              setCrownMenu(null);
-              if (onFoldChat) {
-                onFoldChat();
-                return;
-              }
-              setCrownUp((u) => !u);
-            }}
-            aria-label={t("Fold the chat away")}
-            title={t("Fold the chat away")}
-            data-testid={`${testIdPrefix}-crown-toggle`}
+            onClick={onExpand ?? onMinimize}
+            aria-label={t(onExpand ? "Fullscreen" : "Landing")}
+            title={t(onExpand ? "Fullscreen" : "Landing")}
+            data-testid={
+              onExpand
+                ? `${testIdPrefix}-corner-expand`
+                : `${testIdPrefix}-corner-landing`
+            }
             className="focus-glow absolute z-40 flex size-7 items-center justify-center rounded-full border bg-background text-muted-foreground shadow-[0_8px_22px_-12px_rgba(0,0,0,0.55)] transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
             style={{
               top: "max(0.5rem, env(safe-area-inset-top))",
@@ -4637,7 +4634,11 @@ export function BranchCanopy({
                 "color-mix(in srgb, var(--scope-a,var(--gd)) 30%, transparent)",
             }}
           >
-            <ChevronUp className="size-3.5" aria-hidden="true" />
+            {onExpand ? (
+              <Maximize2 className="size-3.5" aria-hidden="true" />
+            ) : (
+              <Minimize2 className="size-3.5" aria-hidden="true" />
+            )}
           </button>
         )}
       </div>
@@ -5104,13 +5105,6 @@ export function BranchCanopy({
                 style={{
                   borderColor:
                     "color-mix(in srgb, var(--hairline) 70%, transparent)",
-                  /* the crown's own corner — when the crown is folded the
-                     room rises to the very top of the screen: its buttons
-                     yield the corner to the floating top-bar hand (and
-                     clear the notch's safe band) */
-                  paddingTop: crownUp
-                    ? "max(0.5rem, env(safe-area-inset-top))"
-                    : undefined,
                 }}
               >
                 <div className="flex min-w-0 items-start gap-2.5">
