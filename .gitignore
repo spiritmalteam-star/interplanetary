@@ -65,3 +65,6 @@ tool-results/
 skills/
 upload/
 scripts/
+
+# runtime state
+.zscripts/dev.pid
