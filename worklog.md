@@ -5477,3 +5477,22 @@ Stage Summary:
 - The walk's scopes now speak their own tongues: Quantum grows quantum, ArtX grows art, HealX grows healing, Interplanetary grows the star families — and General weaves the whole house by the visitor's own percentages.
 - The Forge is new from scratch and wears the Manifest room's quiet finesse, with every gear of the old forge still turning beneath.
 - Mirror Entity's voice: untouched. No new dependencies.
+
+---
+Task ID: restore-latest-masterpiece
+Agent: Z.ai Code (main)
+Task: "Please stop restoring old version please return the latest masterpiece" — the sandbox tree had drifted to a stale Oct-20 diverged line (c873b47 "yielding portal") while the true latest masterpiece (d61c9ff, Oct-25, containing Stage 2 + the full six-item request: profile-first pill, Manifest returned as first tool, Forge rebuilt from scratch, mini tabs, scoped branches, General percentage weave) lived only on origin/main.
+
+Work Log:
+- Diagnosed: local HEAD c873b47 (Oct 20) NOT contained in remote; merge-base = 65f5556; remote main = d61c9ffd91a6f87c11e7160143bc7bfcda8a8fe0 (Oct 25 02:36) with 4 commits the tree lacked (71a00ce, 6c384c4, 433cd37, d61c9ff).
+- Killed the stale dev server (pid 1101/1324, port 3000 freed).
+- Preserved the orphan chain on branch backup/yielding-portal-oct20 (nothing destroyed).
+- git reset --hard d61c9ff — local = origin/main, the masterpiece home.
+- Restarted the house via .zscripts/dev.sh (bun install, db:push, health check passed, 0 mini-services in this tree).
+- Browser-verified (agent-browser, 1280x800): threshold renders; portal opens the walk; the pill's FIRST hand is "Open your profile"; Scopes popover lists all five fields (General mixed-here, Interplanetary, Quantum, ArtX, HealX); selecting Quantum grows quantum-tongued branches ("superposition experiment", "the Copenhagen cut", "bell test"); Tools popover = Manifest first, then Akashic, Book, Music, Invent; Manifest opens as a floating MINI TAB over the living tree (not fullscreen) with expand + close hands; Invent opens as a SECOND TAB in the same drifting window wearing the Manifest room's finesse ("Speak to the Forge — a want, a half-idea, a block…"); scope restored to General; zero page errors; dev.log clean (all 200s).
+- Screenshots: .zscripts/verify-masterpiece-manifest-tab.png, .zscripts/verify-masterpiece-forge-tab.png
+
+Stage Summary:
+- The sandbox once again serves the latest masterpiece d61c9ff; the six-item request is live in the browser, not just in git.
+- The Oct-20 "yielding portal / threshold reborn" landing line is preserved on backup/yielding-portal-oct20 — nothing lost, remote main untouched as the single source of truth.
+- No code changed in this task; the healing was git-state + server-state only.
