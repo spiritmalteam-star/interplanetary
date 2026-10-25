@@ -27,8 +27,15 @@ import { cn } from "@/lib/utils";
 import LandingSlides from "./LandingSlides";
 import SideRail from "./SideRail";
 import GuideShowcase from "./GuideShowcase";
-import GuideView from "./GuideView";
+import dynamic from "next/dynamic";
 import AboutUsTab from "./AboutUsTab";
+
+// the guide's own page rides its own chunk — the threshold never pays for
+// the ten guides' bodies until one of them is actually opened
+const GuideView = dynamic(() => import("./GuideView"), {
+  ssr: false,
+  loading: () => null,
+});
 
 /* ------------------------------------------------------------------ */
 /*  THE THRESHOLD — reflectme.space's landing page.                    */

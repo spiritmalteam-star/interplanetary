@@ -4,7 +4,9 @@ import { useCallback, useRef, useState } from "react";
 import Image from "next/image";
 import { ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { useT } from "@/lib/i18n";
-import { GUIDES } from "@/lib/guides";
+/* the light shelf — plates only (title, cover, crystals); the full
+   books stay behind the guide view's own door */
+import { GUIDE_METAS } from "@/lib/guides/meta";
 import { cn } from "@/lib/utils";
 
 /* ------------------------------------------------------------------ */
@@ -32,7 +34,7 @@ export default function GuideShowcase({
 
   const go = useCallback(
     (i: number) =>
-      setActive(((i % GUIDES.length) + GUIDES.length) % GUIDES.length),
+      setActive(((i % GUIDE_METAS.length) + GUIDE_METAS.length) % GUIDE_METAS.length),
     []
   );
   const next = useCallback(() => go(active + 1), [active, go]);
@@ -72,17 +74,17 @@ export default function GuideShowcase({
       go(0);
     } else if (e.key === "End") {
       e.preventDefault();
-      go(GUIDES.length - 1);
+      go(GUIDE_METAS.length - 1);
     }
   };
 
   /* only the neighbours stand mounted — the deep plates sleep */
   const near = new Set<number>([
-    (active + GUIDES.length - 1) % GUIDES.length,
+    (active + GUIDE_METAS.length - 1) % GUIDE_METAS.length,
     active,
-    (active + 1) % GUIDES.length,
+    (active + 1) % GUIDE_METAS.length,
   ]);
-  const current = GUIDES[active];
+  const current = GUIDE_METAS[active];
 
   return (
     <div className="mt-8">
@@ -105,7 +107,7 @@ export default function GuideShowcase({
           data-testid="guide-showcase-stage"
           className="guide-stage relative aspect-[4/5] w-full overflow-hidden bg-[var(--lp-deep)] ring-1 ring-[var(--lp-edge)] sm:aspect-[4/3] sm:rounded-[26px] lg:aspect-[3/2]"
         >
-          {GUIDES.map((g, i) =>
+          {GUIDE_METAS.map((g, i) =>
             near.has(i) ? (
               <button
                 key={g.slug}
@@ -207,7 +209,7 @@ export default function GuideShowcase({
         >
           <ChevronLeft className="size-3.5" aria-hidden="true" />
         </button>
-        {GUIDES.map((g, i) => (
+        {GUIDE_METAS.map((g, i) => (
           <button
             key={g.slug}
             type="button"

@@ -7,6 +7,7 @@
 /*  keeps her.                                                         */
 /* ------------------------------------------------------------------ */
 
+import { gaiaTerraLivingWorldMeta } from "./meta";
 import type { GuideBlock, GuideData } from "./types";
 
 const blocks: GuideBlock[] = [
@@ -246,13 +247,7 @@ const blocks: GuideBlock[] = [
 ];
 
 const guide: GuideData = {
-  slug: "gaia-terra-living-world",
-  title: "Gaia / Terra, Our Living World",
-  subtitle: "The truth of the sentient Earth",
-  tagline: "You live inside a being; she has been holding you all along.",
-  image: "/guides/gaia-terra-living-world-p01.jpg",
-  crystalA: "rgba(134,239,172,0.46)",
-  crystalB: "rgba(125,211,252,0.44)",
+  ...gaiaTerraLivingWorldMeta,
   mirrorOpening:
     "No metaphors to unwind, one premise to sit with: the ground you stand on is alive. This guide walks her body with you — fire, crust, breath, water, tissue — and ends with your job description, sized to a single human life. Begin with the water in your glass and follow it home.",
   mirrorClosing:

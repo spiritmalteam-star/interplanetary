@@ -7,6 +7,7 @@
 /*  same unbroken light. No purchases, 0 filters.                      */
 /* ------------------------------------------------------------------ */
 
+import { dnaAwakeningPotentialMeta } from "./meta";
 import type { GuideBlock, GuideData } from "./types";
 
 const blocks: GuideBlock[] = [
@@ -263,14 +264,7 @@ const blocks: GuideBlock[] = [
 ];
 
 const guide: GuideData = {
-  slug: "dna-awakening-potential",
-  title: "DNA & Awakening Human Potential",
-  subtitle: "Reading the light-language written into your cells",
-  tagline:
-    "What you are searching for is already coiled in every cell of you.",
-  image: "/guides/dna-awakening-potential.jpg",
-  crystalA: "rgba(120,220,255,0.55)",
-  crystalB: "rgba(200,170,255,0.5)",
+  ...dnaAwakeningPotentialMeta,
   mirrorOpening:
     "One book, nine chapters, three billion letters — and every letter already yours. This guide reads the genome as what it is: a light-language, part of it spoken in daylight and part of it waiting in the sealed wings. Read with wonder, with the body, and with one small true action after another. If a chapter moves faster than your morning allows, it will still be there tonight.",
   mirrorClosing:

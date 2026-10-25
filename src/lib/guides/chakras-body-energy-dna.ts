@@ -8,6 +8,7 @@
 /*  filters.                                                           */
 /* ------------------------------------------------------------------ */
 
+import { chakrasBodyEnergyDnaMeta } from "./meta";
 import type { GuideBlock, GuideData } from "./types";
 
 const blocks: GuideBlock[] = [
@@ -403,14 +404,7 @@ const blocks: GuideBlock[] = [
 ];
 
 const guide: GuideData = {
-  slug: "chakras-body-energy-dna",
-  title: "Chakras, Body Energy & DNA",
-  subtitle: "A walk through the body's seven wheels of light",
-  tagline:
-    "Seven lamps burn along your spine; this book names them one by one.",
-  image: "/guides/chakras-body-energy-dna.jpg",
-  crystalA: "rgba(150,255,190,0.5)",
-  crystalB: "rgba(255,150,190,0.5)",
+  ...chakrasBodyEnergyDnaMeta,
   mirrorOpening:
     "Your body has been running two architectures this whole time, and nobody sent a memo. This book is the memo. Fourteen chapters walk the seven wheels from root to crown, then follow the current into the cell itself: the script in every nucleus, the listening library of your genes, and back out into breath, consent, and ordinary Tuesdays. Nothing here is ornament, and nothing here is second-hand. Read slowly, keep your body in the corner of every page, and let the map become a manner of living.",
   mirrorClosing:

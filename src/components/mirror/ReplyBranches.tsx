@@ -196,6 +196,10 @@ export function ReplyBranches({
 
   /* the grown branches — one quiet call per landed reply */
   const growRef = useRef(false);
+  /* THE ONE HAND — an abort controller held by the ref: a newer call
+     lays the elder one down before it begins, and the sky's own
+     silence ends after 12s (no fetch outlives its welcome). */
+  const abortRef = useRef<AbortController | null>(null);
   useEffect(() => {
     if (!active || message.branches) return;
     if (!message.text.trim()) return;
@@ -203,10 +207,17 @@ export function ReplyBranches({
       if (growRef.current || inflight.has(message.id)) return;
       growRef.current = true;
       inflight.add(message.id);
+      abortRef.current?.abort();
+      const controller = new AbortController();
+      abortRef.current = controller;
       try {
         const res = await fetch("/api/suggestions/bud", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          signal: AbortSignal.any([
+            controller.signal,
+            AbortSignal.timeout(12_000),
+          ]),
           body: JSON.stringify({
             branch: branchFor(kind),
             /* the last breaths are THIS exchange — the freshest
@@ -234,9 +245,11 @@ export function ReplyBranches({
           recordSeen(grown.map((b) => b.question));
         }
       } catch {
-        /* the sky is silent — the stand-in whispers remain */
+        /* the sky is silent — the stand-in whispers remain (an aborted
+           call — superseded or past its 12s — is silence too) */
       } finally {
         inflight.delete(message.id);
+        if (abortRef.current === controller) abortRef.current = null;
       }
     }, 650);
     return () => window.clearTimeout(id);
@@ -343,7 +356,7 @@ export function ReplyBranches({
               aria-disabled={disabled}
               data-testid="reply-branch-chip"
               title={b.reason ? `${b.question} — ${b.reason}` : b.question}
-              className="focus-glow max-w-full rounded-full border border-[color-mix(in_srgb,var(--scope-a,var(--gd))_52%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_14%,var(--glass-bg))] px-3 py-1.5 text-left font-serif text-[13.5px] italic leading-snug text-foreground shadow-[0_1px_10px_-6px_color-mix(in_srgb,var(--scope-a,var(--gd))_50%,transparent)] backdrop-blur-md transition-all duration-300 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_70%,transparent)] hover:bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_22%,var(--glass-bg))] disabled:cursor-not-allowed disabled:opacity-50 sm:text-[14px]"
+              className="focus-glow max-w-full rounded-full border border-[color-mix(in_srgb,var(--scope-a,var(--gd))_52%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_14%,var(--card))] px-3 py-1.5 text-left font-serif text-[13.5px] italic leading-snug text-foreground shadow-[0_1px_10px_-6px_color-mix(in_srgb,var(--scope-a,var(--gd))_50%,transparent)] transition-all duration-300 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_70%,transparent)] hover:bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_22%,var(--card))] disabled:cursor-not-allowed disabled:opacity-50 sm:text-[14px]"
             >
               <span
                 className="mono-label mr-1.5 inline-block rounded-full px-1.5 align-middle text-[9px] uppercase tracking-[0.14em] not-italic leading-[1.6] text-[var(--scope-a,var(--gd))]"
@@ -369,7 +382,7 @@ export function ReplyBranches({
               aria-disabled={disabled}
               data-testid="reply-branch-chip"
               title={s}
-              className="focus-glow max-w-full rounded-full border border-[color-mix(in_srgb,var(--scope-a,var(--gd))_44%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_10%,var(--glass-bg))] px-3 py-1.5 text-left font-serif text-[13.5px] italic leading-snug text-foreground/90 backdrop-blur-md transition-all duration-300 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_62%,transparent)] hover:bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_16%,var(--glass-bg))] hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50 sm:text-[14px]"
+              className="focus-glow max-w-full rounded-full border border-[color-mix(in_srgb,var(--scope-a,var(--gd))_44%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_10%,var(--card))] px-3 py-1.5 text-left font-serif text-[13.5px] italic leading-snug text-foreground/90 transition-all duration-300 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_62%,transparent)] hover:bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_16%,var(--card))] hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50 sm:text-[14px]"
             >
               {t(s)}
             </button>

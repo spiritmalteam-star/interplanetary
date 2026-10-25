@@ -991,7 +991,7 @@ function ForgeStrike({ resonance }: { resonance: string }) {
             ...(useDirective ? { directive: useDirective } : {}),
           }),
         }),
-        new Promise((r) => window.setTimeout(r, 2000)), /* let the embers breathe */
+        new Promise((r) => window.setTimeout(r, 600)), /* let the embers breathe */
       ]);
       const data = (await (res as Response).json()) as {
         mystery?: MiniMystery;

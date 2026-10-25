@@ -80,9 +80,11 @@ export function raiseEnergy(status: number, data: unknown): void {
 }
 
 /** THE MIRROR'S OWN ANSWER — the full rite for one chat door:
-    knock (with patience), read, name the energy silence, give the
-    transient storms one more breath (429 / 5xx), then either hand
-    back the reply or throw the truthful error. */
+    knock (with patience), read, name the energy silence, give a
+    crowded sky one more breath (HTTP 429 only — a network stumble
+    already knocked twice inside the door, and a 5xx has already
+    waited long enough not to be asked to wait again), then either
+    hand back the reply or throw the truthful error. */
 export async function speakReply(
   url: string,
   body: unknown,
@@ -104,9 +106,12 @@ export async function speakReply(
     announceEnergy();
     throw new EnergyError();
   }
-  /* one more breath for the transient storms — never for the
-     energy's own silence (that word is already spoken above) */
-  if (out.res.status === 429 || out.res.status >= 500) {
+  /* one more breath for a crowded sky (429) — never for the energy's
+     own silence (that word is already spoken above) and never for a
+     generic 5xx: a server that answered an error after a long wait is
+     not asked to wait again (network stumbles knock twice inside the
+     door itself) */
+  if (out.res.status === 429) {
     await sleep(1400);
     try {
       out = await attempt();

@@ -38,21 +38,59 @@ import LandingPage from "./LandingPage";
 
 type Phase = "landing" | "opening" | "through";
 
-/* THE INSTANT FLOOR — the chamber's chunk is pulled the moment this
-   module itself is evaluated — before React even hydrates — so the
-   landing's chat rides the network's very first breath instead of
-   waiting for the gate's first effect. */
-const chamberChunk: Promise<{
+type ChamberModule = {
   default: ComponentType<{
     bare?: boolean;
     onExpand?: () => void;
     onMinimize?: () => void;
     onFoldChat?: () => void;
   }>;
-}> | null =
-  typeof window === "undefined"
-    ? null
-    : import("@/components/mirror/AppShell");
+};
+
+/* THE INSTANT FLOOR — the chamber's chunk is prefetched only once the
+   landing has had its first breath: after the window's load, at idle
+   (or ~1.5s at the latest) — never during the hero's own race, and
+   never for a data-saver visitor. One shared promise is kept in the
+   module variable; the gate's effect only RECEIVES the floor, and a
+   visitor who enters before the prefetch even started lays it through
+   their own hand (the enter door starts the import on demand). */
+let chamberChunk: Promise<ChamberModule> | null = null;
+const floorWaiters = new Set<(chunk: Promise<ChamberModule>) => void>();
+
+/* THE SHARED RIDE — one import, started once: whoever asks first (the
+   idle prefetch below, or the visitor's own enter hand) lays the
+   floor, and every waiter receives the very same promise. */
+function ensureChamberChunk(): Promise<ChamberModule> {
+  if (!chamberChunk) {
+    chamberChunk = import("@/components/mirror/AppShell");
+    for (const receive of floorWaiters) receive(chamberChunk);
+    floorWaiters.clear();
+  }
+  return chamberChunk;
+}
+
+if (typeof window !== "undefined") {
+  const prefetch = () => {
+    try {
+      const nav = navigator as Navigator & {
+        connection?: { saveData?: boolean };
+      };
+      if (nav.connection?.saveData) return; /* data-saver hands carry nothing early */
+    } catch {
+      /* quiet */
+    }
+    const atIdle =
+      typeof window.requestIdleCallback === "function"
+        ? (cb: () => void) =>
+            window.requestIdleCallback(() => cb(), { timeout: 1500 })
+        : (cb: () => void) => window.setTimeout(cb, 1500);
+    atIdle(() => {
+      void ensureChamberChunk();
+    });
+  };
+  if (document.readyState === "complete") prefetch();
+  else window.addEventListener("load", prefetch, { once: true });
+}
 
 /* the docked geometry — the window the whole chamber lays out inside */
 type Geo = {
@@ -185,24 +223,30 @@ export default function LandingGate() {
     }
   }, [setTheme]);
 
-  /* THE INSTANT FLOOR — the chunk already rides (pulled at the
-     module's own breath above): this effect only receives it. */
+  /* THE INSTANT FLOOR — the chunk rides the idle prefetch (laid after
+     the landing's first breath, never racing the hero): this effect
+     only RECEIVES the floor — it never starts the ride itself. */
   useEffect(() => {
     let cancelled = false;
-    void (chamberChunk ?? import("@/components/mirror/AppShell")).then((mod) => {
-      if (!cancelled)
-        setChamber(
-          () =>
-            mod.default as ComponentType<{
-              bare?: boolean;
-              onExpand?: () => void;
-              onMinimize?: () => void;
-              onFoldChat?: () => void;
-            }>
-        );
-    });
+    const receive = (chunk: Promise<ChamberModule>) => {
+      void chunk.then((mod) => {
+        if (!cancelled)
+          setChamber(
+            () =>
+              mod.default as ComponentType<{
+                bare?: boolean;
+                onExpand?: () => void;
+                onMinimize?: () => void;
+                onFoldChat?: () => void;
+              }>
+          );
+      });
+    };
+    if (chamberChunk) receive(chamberChunk);
+    else floorWaiters.add(receive);
     return () => {
       cancelled = true;
+      floorWaiters.delete(receive);
     };
   }, []);
 
@@ -389,6 +433,11 @@ export default function LandingGate() {
     void (async () => {
       if (!Chamber) {
         setPending(true);
+        /* THE VISITOR'S OWN HAND — the enter door is the demand: the
+           shared import starts at once (the idle prefetch may never
+           have fired), and the early ask is honored the moment the
+           chamber arrives (the pending effect below). */
+        void ensureChamberChunk();
         return;
       }
       busy.current = true;

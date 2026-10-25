@@ -609,7 +609,7 @@ export function MirrorOSChat() {
           tree (the zoom), the room's own reply line is the only input;
           the composer returns the moment the room is handed back. */}
       {!canopyLatch && (
-      <div className="relative z-30 shrink-0 border-t hairline bg-[var(--glass-bg)] px-3 py-2.5 backdrop-blur-md sm:px-4">
+      <div className="relative z-30 shrink-0 border-t hairline bg-background px-3 py-2.5 sm:px-4">
         <form
           onSubmit={(e) => {
             e.preventDefault();

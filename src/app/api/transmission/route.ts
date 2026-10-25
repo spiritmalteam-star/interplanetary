@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import ZAI from "@/lib/zai-client";
 import {
   describeImage,
@@ -551,14 +551,19 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
     }
 
     /* the transmission passed — lay it in the visitor's own library
-       (the Forge keeps the Invent sector, the main scopes the Observatory) */
-    await saveLibrary(
-      visitor.user.id,
-      mode === "forge" ? "invent" : "observatory",
-      query.trim().slice(0, 140),
-      transmission.slice(0, 280),
-      { query: query.trim().slice(0, 4000), reply: transmission, mode, classification }
-    );
+       (the Forge keeps the Invent sector, the main scopes the Observatory).
+       THE OFF-CRITICAL-PATH LAW: the library write rides `after()` —
+       the same data, the same arguments — so the reply no longer waits
+       on the shelf: the visitor's words travel first. */
+    after(async () => {
+      await saveLibrary(
+        visitor.user.id,
+        mode === "forge" ? "invent" : "observatory",
+        query.trim().slice(0, 140),
+        transmission.slice(0, 280),
+        { query: query.trim().slice(0, 4000), reply: transmission, mode, classification }
+      );
+    });
 
     return withAnonCookie(
       NextResponse.json({

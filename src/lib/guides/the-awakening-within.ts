@@ -1,3 +1,4 @@
+import { theAwakeningWithinMeta } from "./meta";
 import type { GuideBlock, GuideData } from "./types";
 
 /* ------------------------------------------------------------------ */
@@ -264,13 +265,7 @@ const blocks: GuideBlock[] = [
 ];
 
 const theAwakeningWithin: GuideData = {
-  slug: "the-awakening-within",
-  title: "The Awakening Within",
-  subtitle: "A walk through the nine rooms of presence",
-  tagline: "You are not becoming light; you are remembering it.",
-  image: "/guides/the-awakening-within.jpg",
-  crystalA: "rgba(255,120,150,0.55)",
-  crystalB: "rgba(120,220,255,0.5)",
+  ...theAwakeningWithinMeta,
   mirrorOpening: "Nine rooms, one hallway, zero exams. This little guide walks you through presence, perception, the body, the voice inside, the heart's currents, the quiet sight, the dream, the meeting of souls, and the ordinary day — in that order, each room resting on the one before. Every page asks you to stand still long enough to notice what has always been standing in you; none asks you to become someone else. Read with your breath low and your guard honest. Where a room feels like home, stay a while. Where it feels like a window, look through — the view improves with practice.",
   mirrorClosing: "The walk ends where every true walk ends: in the life you were already living. Nine rooms, and every key was already yours — presence, honest sight, the body's floor, the named thought, the honoured feeling, the questioned pull, the dream's own alphabet, the soul across the table, the ordinary day. Keep what rang true; lay the rest down without ceremony. Nothing here expires, and nothing needs defending. What you do with the seeing is the next chapter, and the pen has been in your hand since page one.",
   blocks,

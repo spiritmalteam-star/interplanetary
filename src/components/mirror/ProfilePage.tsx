@@ -1758,7 +1758,7 @@ export function ProfilePage() {
           aria-label={t("Your profile")}
         >
         {/* the head — one way back to the Mirror, one name */}
-        <header className="shrink-0 border-b hairline bg-[var(--glass-bg-soft)] backdrop-blur-md">
+        <header className="shrink-0 border-b hairline bg-background">
           <div className="mx-auto flex w-full max-w-6xl items-center gap-3 px-4 py-2.5 sm:px-8">
             <button
               type="button"

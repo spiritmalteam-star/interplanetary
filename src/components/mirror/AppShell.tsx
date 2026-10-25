@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import dynamic from "next/dynamic";
 import { Maximize2, Minimize2 } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { setLearningIdentity } from "@/lib/learning-branches";
@@ -17,21 +18,35 @@ import { EvolveMed } from "./EvolveMed";
 import { InventView } from "./InventView";
 import { LightCodesView } from "./LightCodesView";
 import { LibraryView } from "./LibraryView";
-import { ArchiveRegister } from "./ArchiveRegister";
 import { AuthModal } from "./PassageModal";
 import { ProfileModal } from "./ProfileModal";
 import { ProfilePage } from "./ProfilePage";
 import { AccountModal } from "./AccountModal";
 import { BranchHub } from "./BranchHub";
-import { DreamBookView } from "./DreamBookView";
 import { VideoStudioView } from "./VideoStudioView";
 import { AkashicView } from "./AkashicView";
 import { FederationModal } from "./FederationModal";
 import { AstralJobsModal } from "./AstralJobsModal";
 import { DossierModal } from "./DossierModal";
 import { SettingsModal } from "./SettingsModal";
-import { TechnologyModal } from "./TechnologyModal";
 import { SpeciesModal } from "./SpeciesModal";
+
+/* THE LAZY ROOMS — the register, the book and the technology table are
+   whole rooms/modals of their own: their code only rides along when
+   first shown, never in the frame's opening bundle (client-only, no
+   server weight, nothing on the first paint but a null). */
+const ArchiveRegister = dynamic(
+  () => import("./ArchiveRegister").then((m) => ({ default: m.ArchiveRegister })),
+  { ssr: false, loading: () => null }
+);
+const DreamBookView = dynamic(
+  () => import("./DreamBookView").then((m) => ({ default: m.DreamBookView })),
+  { ssr: false, loading: () => null }
+);
+const TechnologyModal = dynamic(
+  () => import("./TechnologyModal").then((m) => ({ default: m.TechnologyModal })),
+  { ssr: false, loading: () => null }
+);
 
 /* The frame-lift class: every top-level application frame lifts itself
    by the visual viewport's offset so the keyboard can never bury the

@@ -531,6 +531,16 @@ html:not(.dark) .text-hero {
 .animate-drift-a { animation: drift-a 46s ease-in-out 3; }
 .animate-drift-b { animation: drift-b 58s ease-in-out 3; }
 .animate-drift-c { animation: drift-c 64s ease-in-out 3; }
+/* THE SMALL SCREEN'S SKY — on phones the two widest nebula curtains
+   (120vw × 85vh and 85vw × 75vh) never paint: pure decoration, a real
+   paint/compositing cost on a small battery. The two smaller breaths
+   keep the atmosphere; only backdrop layers hide here, never content. */
+@media (max-width: 640px) {
+  .animate-drift-a,
+  .animate-drift-c {
+    display: none;
+  }
+}
 .animate-dot-pulse { animation: dot-pulse 2.6s ease-in-out infinite; }
 .animate-pill-breathe { animation: pill-breathe 3.4s ease-in-out infinite; }
 .animate-line-breathe { animation: line-breathe 3s ease-in-out infinite; }
@@ -2537,7 +2547,10 @@ html:not(.dark) .lp-sigil-img {
     radial-gradient(32% 26% at 103% 20%, var(--lp-aura-b), transparent 72%),
     radial-gradient(30% 24% at 103% 76%, var(--lp-aura-a), transparent 70%),
     radial-gradient(34% 26% at -3% 94%, var(--lp-aura-b), transparent 72%);
-  animation: lp-aura 9s ease-in-out infinite;
+  /* the fullscreen aura stands still now (the phone's own cooling law):
+     one opacity repaint at mount, then the compositor rests — the same
+     gradients, painted at a fixed mid-breath opacity */
+  opacity: 0.86;
 }
 @keyframes lp-aura {
   0%,
@@ -3950,6 +3963,51 @@ html:not(.dark) .lp-sigil-img {
 }
 [data-perf="eco"] [style*="viz-"] {
   animation: none !important;
+}
+/* 2-a — THE ECO ROOM WIDENS: every fullscreen/infinite decorative
+   animation rests under the eco tier (the words, the hands and the
+   content never do). Elements that are invisible mid-animation keep
+   a sensible static state (frozen mid-breath or faded out). */
+[data-perf="eco"] .animate-pill-breathe,
+[data-perf="eco"] .animate-dot-pulse,
+[data-perf="eco"] .animate-line-breathe,
+[data-perf="eco"] .animate-breathe,
+[data-perf="eco"] .animate-float-y,
+[data-perf="eco"] .animate-charge-pulse,
+[data-perf="eco"] .animate-drift-a,
+[data-perf="eco"] .animate-drift-b,
+[data-perf="eco"] .animate-drift-c,
+[data-perf="eco"] .shimmer-bar,
+[data-perf="eco"] .ink-shimmer,
+[data-perf="eco"] .lp-breathe,
+[data-perf="eco"] .lp-pulse,
+[data-perf="eco"] .mc-orb,
+[data-perf="eco"] .mc-sheen,
+[data-perf="eco"] .mc-mirror-ring,
+[data-perf="eco"] .mc-mirror-ring-inner,
+[data-perf="eco"] .mc-mirror-heart,
+[data-perf="eco"] .mc-star,
+[data-perf="eco"] .mc-tide,
+[data-perf="eco"] .mc-aperture-ring,
+[data-perf="eco"] .mc-aperture-pupil,
+[data-perf="eco"] .mc-orbit-core,
+[data-perf="eco"] .mc-orbit-dot,
+[data-perf="eco"] .mc-spark,
+[data-perf="eco"] .mc-ink,
+[data-perf="eco"] .mc-bloom,
+[data-perf="eco"] .mc-helix-bead {
+  animation: none;
+}
+/* the transient sparks and rising stars fade out instead of hanging
+   frozen mid-air (their keyframes end at opacity 0) */
+[data-perf="eco"] .mc-spark,
+[data-perf="eco"] .mc-star {
+  opacity: 0;
+}
+/* the fullscreen paper-grain overlay forces a blend pass over every
+   painted frame — the eco room skips the tooth, keeps the ink */
+[data-perf="eco"] .paper-grain::after {
+  display: none;
 }
 @media (prefers-reduced-motion: reduce) {
   .nav-node[data-dim="true"],

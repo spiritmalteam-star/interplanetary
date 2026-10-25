@@ -1,3 +1,4 @@
+import { integrationBeyondSeparationMeta } from "./meta";
 import type { GuideBlock, GuideData } from "./types";
 
 /* ------------------------------------------------------------------ */
@@ -338,13 +339,7 @@ const blocks: GuideBlock[] = [
 ];
 
 const integrationBeyondSeparation: GuideData = {
-  slug: "integration-beyond-separation",
-  title: "Integration Beyond Separation",
-  subtitle: "The one field · Remembered in conduct",
-  tagline: "Separation is the one true illusion — you were never cut from the field.",
-  image: "/guides/integration-beyond-separation.jpg",
-  crystalA: "rgba(160,255,214,0.5)",
-  crystalB: "rgba(255,214,140,0.5)",
+  ...integrationBeyondSeparationMeta,
   mirrorOpening: "You arrive carrying the oldest ache in the universe — the feeling of being cut off — and this book holds a simple, slightly stubborn claim: the cut was never made — what sustains the ache is attention, and attention can be spent otherwise. Twelve chapters, twelve kinds of remembering: distinct notes inside one chord, attention as the joining force, limits that keep each note true, repair that mends the web, cooperation that outlives inspiration, weather allowed its own sky. Nothing ahead asks you to dissolve; the field built your edges and it keeps them. Walk it one page, one choice at a time, and watch the ache lose its argument.",
   mirrorClosing: "The walk is done, and the mechanics are yours to keep: separation is a fog with no architect, integration a remembering with no end of practice. The wound closes by conduct, one honest act at a time, until belonging stops being an idea and becomes the way your hands move through a day. The field holds; you were never outside it. Go be the proof.",
   blocks,

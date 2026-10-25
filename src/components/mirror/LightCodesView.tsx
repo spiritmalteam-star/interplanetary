@@ -550,7 +550,7 @@ export function LightCodesView() {
           take a touch and never cover a control. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 z-0 overflow-hidden motion-safe:[animation:lp-aura_9s_ease-in-out_infinite]"
+        className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
       >
         <div
           className="absolute inset-0"
@@ -577,7 +577,7 @@ export function LightCodesView() {
       </div>
 
       {/* ---------- top bar ---------- */}
-      <header className="relative z-30 shrink-0 bg-[var(--glass-bg)] backdrop-blur-md">
+      <header className="relative z-30 shrink-0 bg-background">
         <div className="bar-safe flex items-center justify-between gap-2 px-3 sm:px-5">
           <button
             type="button"

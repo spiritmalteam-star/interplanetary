@@ -7,16 +7,11 @@
 /*  sends and receives.                                                */
 /* ------------------------------------------------------------------ */
 
+import { openContactMeta } from "./meta";
 import type { GuideBlock, GuideData } from "./types";
 
 const openContact: GuideData = {
-  slug: "open-contact",
-  title: "Open Contact — A Guide to Possibility",
-  subtitle: "The frequency law of meeting other intelligences",
-  tagline: "Contact is a frequency match — the sky answers a tuned life.",
-  image: "/guides/open-contact.jpg",
-  crystalA: "rgba(140,225,255,0.55)",
-  crystalB: "rgba(255,214,140,0.5)",
+  ...openContactMeta,
   mirrorOpening:
     "You have picked up a briefing about your neighbours, and it does not intend to soften itself: the intelligences around you are many, and the silence you were raised inside is a local condition, not a cosmic law. What follows is one law looked at from ten angles — what you are determines what you can meet — and the visitors do not come to the worthy; they come to the resonant. So this book is really about tuning, and tuning happens in ordinary rooms: at your table, in your work, in the way you hold your own word. Keep your feet on the earth while your signal climbs. The mechanics live on these pages; the signal has always been yours to send.",
   mirrorClosing:

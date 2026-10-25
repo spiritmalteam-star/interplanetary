@@ -411,6 +411,7 @@ function buildEngine(
   let paused = false;
   let reduced = reducedInitial;
   let raf = 0;
+  let disposed = false;
   let t0 = performance.now();
   const elapsed = () => (performance.now() - t0) / 1000;
 
@@ -426,21 +427,36 @@ function buildEngine(
   const ro = new ResizeObserver(resize);
   ro.observe(canvas);
 
+  /* one pivot, born once — the per-frame camera orbit reuses it
+     instead of raising a new Group at display refresh rate */
+  const pivot = new T.Group();
+
   const frame = () => {
-    raf = requestAnimationFrame(frame);
-    if (paused) return;
+    /* the sleeping scene schedules nothing: a paused or unmounted loop
+       never wakes a no-op callback at display refresh rate */
+    if (paused || disposed) {
+      raf = 0;
+      return;
+    }
     const t = elapsed();
     built.tick?.(t, reduced);
     vRotX += (rotX - vRotX) * 0.12;
     vRotY += (rotY - vRotY) * 0.12;
     vDist += (dist - vDist) * 0.12;
-    const pivot = new T.Group();
     pivot.rotation.x = vRotX;
     pivot.rotation.y = vRotY;
     pivot.updateMatrixWorld();
     camera.position.set(0, HOME.y, vDist).applyMatrix4(pivot.matrixWorld);
     camera.lookAt(0, 0, 0);
     renderer.render(sceneObj, camera);
+    raf = requestAnimationFrame(frame);
+  };
+
+  /* the loop's one door back in — every waking passes through here,
+     and a loop already running is never scheduled twice */
+  const wake = () => {
+    if (raf || paused || disposed || reduced) return;
+    raf = requestAnimationFrame(frame);
   };
 
   if (!reduced) {
@@ -454,11 +470,14 @@ function buildEngine(
 
   const io = new IntersectionObserver((entries) => {
     paused = !entries[0]?.isIntersecting;
+    /* back in view — the loop rises again */
+    if (!paused) wake();
   });
   io.observe(canvas);
 
   return {
     dispose() {
+      disposed = true;
       cancelAnimationFrame(raf);
       ro.disconnect();
       io.disconnect();
@@ -469,6 +488,7 @@ function buildEngine(
         if (Array.isArray(mat)) mat.forEach((m) => m.dispose());
         else if (mat) mat.dispose();
       });
+      pivot.clear();
       renderer.dispose();
       renderer.forceContextLoss?.();
     },
@@ -483,24 +503,22 @@ function buildEngine(
       /* a still scene wakes for the hand that touches it */
       if (reduced) {
         reduced = false;
-        if (!raf) {
-          t0 = performance.now();
-          raf = requestAnimationFrame(frame);
-        }
+        if (!raf) t0 = performance.now();
       }
+      wake();
     },
     zoomBy(factor) {
       dist = Math.max(HOME.dist * 0.42, Math.min(HOME.dist * 2.1, dist * factor));
       if (reduced) {
         reduced = false;
-        if (!raf) {
-          t0 = performance.now();
-          raf = requestAnimationFrame(frame);
-        }
+        if (!raf) t0 = performance.now();
       }
+      wake();
     },
     setPaused(p) {
       paused = p;
+      /* the pause hand lifts — the loop rises with it */
+      if (!p) wake();
     },
     setReduced(r) {
       reduced = r;

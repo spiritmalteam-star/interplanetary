@@ -649,7 +649,7 @@ function ParticleXChat() {
       {/* composer — THE ONE INPUT LAW: the room's reply line is the
           only input while the answer lives in the tree */}
       {!canopyLatch && (
-      <div className="relative z-30 shrink-0 border-t hairline bg-[var(--glass-bg)] px-3 py-2.5 backdrop-blur-md sm:px-4">
+      <div className="relative z-30 shrink-0 border-t hairline bg-background px-3 py-2.5 sm:px-4">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -741,7 +741,7 @@ export function ParticleX() {
           <button
             type="button"
             onClick={exitParticleX}
-            className="focus-glow pointer-events-auto group flex h-9 shrink-0 items-center gap-2 rounded-full border hairline bg-[var(--glass-bg)]/80 px-3 text-[15px] font-medium text-muted-foreground backdrop-blur-md transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground sm:px-3.5"
+            className="focus-glow pointer-events-auto group flex h-9 shrink-0 items-center gap-2 rounded-full border hairline bg-background/98 px-3 text-[15px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground sm:px-3.5"
           >
             <ArrowLeft
               className="size-3.5 transition-transform duration-300 group-hover:-translate-x-0.5"
@@ -759,7 +759,7 @@ export function ParticleX() {
               placeholder="Tools"
               onSelect={(id) => setPlace(id as PxPlace)}
               testIdPrefix="px-tools"
-              triggerClassName="bg-[var(--glass-bg)]/80 backdrop-blur-md"
+              triggerClassName="bg-background/98"
               onOpenChange={setToolsOpen}
             />
           </div>

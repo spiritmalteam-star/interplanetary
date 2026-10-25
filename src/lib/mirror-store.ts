@@ -1038,6 +1038,18 @@ let channelGeneration = 0;
    and wipes the road ahead. */
 let navLock = false;
 
+/* THE OS STREAM'S OWN BREATH — the Manifest OS chat gathers its
+   streaming deltas in one pending buffer that reaches the store at
+   most once per beat, so a flowing answer re-renders the room a
+   dozen times a second instead of once per token. The stream's own
+   end always flushes synchronously — the last words never wait. */
+const OS_FLUSH_MS = 80;
+const osStream = {
+  id: null as string | null,
+  text: null as string | null,
+  timer: null as number | null,
+};
+
 export const useMirror = create<MirrorState>()((set, get) => ({
   activeMode: "interplanetary",
   sidebarTab: "civilizations",
@@ -3287,13 +3299,46 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       ],
     }));
 
-    /* the streaming answer — text grows on the os line as it arrives */
-    const appendOs = (full: string) =>
+    /* the streaming answer — deltas gather in the stream's pending
+       buffer and the os line drinks at most once per beat (the words
+       still arrive whole; the room stops re-rendering per token);
+       `immediate` (stream end, one-shot replies) lands the words at
+       once and retires any beat still waiting, so no tail is lost */
+    const writeOs = (text: string) =>
       set((s) => ({
         osMessages: s.osMessages.map((m) =>
-          m.id === osId ? { ...m, text: full } : m
+          m.id === osId ? { ...m, text } : m
         ),
       }));
+    const appendOs = (full: string, immediate = false) => {
+      if (immediate) {
+        if (osStream.timer != null) {
+          window.clearTimeout(osStream.timer);
+          osStream.timer = null;
+        }
+        osStream.id = null;
+        osStream.text = null;
+        writeOs(full);
+        return;
+      }
+      osStream.id = osId;
+      osStream.text = full;
+      if (osStream.timer == null) {
+        osStream.timer = window.setTimeout(() => {
+          osStream.timer = null;
+          const beatId = osStream.id;
+          const text = osStream.text;
+          osStream.id = null;
+          osStream.text = null;
+          if (!beatId || text == null) return;
+          set((s) => ({
+            osMessages: s.osMessages.map((m) =>
+              m.id === beatId ? { ...m, text } : m
+            ),
+          }));
+        }, OS_FLUSH_MS);
+      }
+    };
 
     try {
       const history = get()
@@ -3325,7 +3370,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
               "The OS is momentarily quiet. Rest, then reach again."
           );
         }
-        appendOs(String(data.reply ?? ""));
+        appendOs(String(data.reply ?? ""), true);
         set({ osStatus: "ready" });
         void get().refreshMe();
         return;
@@ -3365,7 +3410,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
           } else if (evt.type === "done") {
             settled = true;
             full = evt.reply || full;
-            appendOs(full);
+            appendOs(full, true);
             set({ osStatus: "ready" });
             void get().refreshMe();
           } else if (evt.type === "error") {
@@ -3379,6 +3424,8 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       /* the line closed without a settled end — what arrived stays */
       if (!settled) {
         if (full.trim()) {
+          /* the tail lands now, synchronously */
+          appendOs(full, true);
           set({ osStatus: "ready" });
           void get().refreshMe();
         } else {
@@ -3388,6 +3435,19 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         }
       }
     } catch (err) {
+      /* the stream's last breath — this line's pending beat flushes
+         at once, so the error state never swallows words already
+         received; a line that never received a word still leaves */
+      if (osStream.id === osId) {
+        if (osStream.timer != null) {
+          window.clearTimeout(osStream.timer);
+          osStream.timer = null;
+        }
+        const last = osStream.text;
+        osStream.id = null;
+        osStream.text = null;
+        if (last != null && last.trim()) writeOs(last);
+      }
       /* the quiet law — the visitor's line stays in the thread, marked
          and retryable; the words are never asked twice by hand */
       set((s) => ({

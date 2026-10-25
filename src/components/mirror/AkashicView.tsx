@@ -852,7 +852,7 @@ export function AkashicView() {
                   transition: { duration: 0.45, delay: 0.35 },
                 }}
                 exit={{ opacity: 0, y: -8, transition: { duration: 0.28 } }}
-                className="pointer-events-auto mr-2 mt-2 flex size-9 items-center justify-center rounded-full border hairline bg-card/90 text-foreground/85 shadow-[0_10px_26px_-14px_rgba(0,0,0,0.35)] backdrop-blur-md transition-colors duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+                className="pointer-events-auto mr-2 mt-2 flex size-9 items-center justify-center rounded-full border hairline bg-card text-foreground/85 shadow-[0_10px_26px_-14px_rgba(0,0,0,0.35)] transition-colors duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
               >
                 <ArrowLeft className="size-4" aria-hidden="true" />
               </motion.button>
@@ -868,7 +868,7 @@ export function AkashicView() {
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-40 flex justify-center px-3 pb-[max(0.85rem,env(safe-area-inset-bottom))] sm:px-5">
         <form
           onSubmit={send}
-          className="pointer-events-auto relative w-full max-w-[640px] rounded-2xl border hairline bg-card/95 p-2.5 shadow-[0_24px_60px_-28px_rgba(0,0,0,0.42)] backdrop-blur-md"
+          className="pointer-events-auto relative w-full max-w-[640px] rounded-2xl border hairline bg-card p-2.5 shadow-[0_24px_60px_-28px_rgba(0,0,0,0.42)]"
           data-testid="akashic-ask-bar"
         >
           <AttachmentChips

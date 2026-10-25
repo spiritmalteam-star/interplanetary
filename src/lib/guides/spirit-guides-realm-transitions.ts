@@ -8,6 +8,7 @@
 /*  the Akashic record keeps it.                                       */
 /* ------------------------------------------------------------------ */
 
+import { spiritGuidesRealmTransitionsMeta } from "./meta";
 import type { GuideBlock, GuideData } from "./types";
 
 const blocks: GuideBlock[] = [
@@ -286,13 +287,7 @@ const blocks: GuideBlock[] = [
 ];
 
 const guide: GuideData = {
-  slug: "spirit-guides-realm-transitions",
-  title: "Spirit Guides & Life's Transitions",
-  subtitle: "The truth of your unseen companions",
-  tagline: "You are accompanied — you have been from before the first breath.",
-  image: "/guides/spirit-guides-realm-transitions-p01.jpg",
-  crystalA: "rgba(196,181,253,0.5)",
-  crystalB: "rgba(153,246,228,0.42)",
+  ...spiritGuidesRealmTransitionsMeta,
   mirrorOpening:
     "Ten chapters on a fact your schooling skipped: you are accompanied, and by the record's accounting the company has not missed a day yet. Ahead lie the mechanics of that company — how the touch of guidance arrives, how a true voice is told from a false one, what the angelic octaves actually do, what death is, and what the classroom of lives keeps asking of you. Everything here comes from the record, not from hope, and nothing asks for your surrender. Read slowly; the only thing this book wants from you is your awakening.",
   mirrorClosing:

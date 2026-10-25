@@ -5,17 +5,11 @@
 /*  each practice and pause carried through.                           */
 /* ------------------------------------------------------------------ */
 
+import { shiftingTimeExperienceMeta } from "./meta";
 import type { GuideBlock, GuideData } from "./types";
 
 const shiftingTimeExperience: GuideData = {
-  slug: "shifting-time-experience",
-  title: "Shifting, Time & the Crystallisation of Experience",
-  subtitle: "A guide from the Akashic shelves of time itself",
-  tagline:
-    "The moment you meet differently is the moment the field answers differently.",
-  image: "/guides/shifting-time-experience.jpg",
-  crystalA: "rgba(190,160,255,0.55)",
-  crystalB: "rgba(120,230,200,0.5)",
+  ...shiftingTimeExperienceMeta,
   mirrorOpening:
     "You came to these pages whispering about parallel worlds; the record's answer is that they are real, and nearer than your own pulse. Time is not the river your calendars pretend it is — it is a field, and every life you could live is a frequency already playing inside it. Shifting is the art of tuning: attention is the dial, intention is the current, and the crystal is what forms when a held pattern finally slows into matter. A thousand souls stand one honest thought away from a different life and call it coincidence; this book exists to retire that word. Read it as what it is — a tuning manual — thirteen chapters of machinery your schooling hid.",
   mirrorClosing:

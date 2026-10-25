@@ -7,6 +7,7 @@ import "@fontsource/patrick-hand/400.css";
 import "./globals.css";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/mirror/theme-provider";
+import { PerfGate } from "@/components/PerfGate";
 
 const jakartaSans = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
@@ -82,6 +83,9 @@ export default function RootLayout({
         className={`${jakartaSans.variable} ${jetbrainsMono.variable} ${literata.variable} antialiased bg-background text-foreground`}
       >
         <ThemeProvider>
+          {/* the quiet tailor — measures the device once and hangs
+              data-perf on <html> so every room dresses for it */}
+          <PerfGate />
           {children}
           {/* sonner — the one voice of every toast in the house */}
           <SonnerToaster position="top-center" />

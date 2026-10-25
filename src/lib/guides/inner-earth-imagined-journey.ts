@@ -6,6 +6,7 @@
 /*  stays. Five nations, five laws, one road down and back.            */
 /* ------------------------------------------------------------------ */
 
+import { innerEarthImaginedJourneyMeta } from "./meta";
 import type { GuideBlock, GuideData } from "./types";
 
 const blocks: GuideBlock[] = [
@@ -247,13 +248,7 @@ const blocks: GuideBlock[] = [
 ];
 
 const guide: GuideData = {
-  slug: "inner-earth-imagined-journey",
-  title: "Inner Earth — An Imagined Journey",
-  subtitle: "The elder nations beneath the crust, met in the vision body",
-  tagline: "The deep is real; the road down runs through attention, and it does not close behind you.",
-  image: "/guides/inner-earth-imagined-journey.jpg",
-  crystalA: "rgba(120,255,214,0.5)",
-  crystalB: "rgba(150,180,255,0.5)",
+  ...innerEarthImaginedJourneyMeta,
   mirrorOpening:
     "Five nations, five laws, one road down — and your body never has to leave the chair. This guide carries your awareness through the elder countries beneath the crust, nation by nation, law by law. Descend plainly, without needing to be amazed on schedule; the deep does not perform, it simply is, older than your oldest stone. It has been expecting you considerably longer than you have been expecting it.",
   mirrorClosing:

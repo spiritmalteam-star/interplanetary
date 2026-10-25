@@ -107,6 +107,7 @@ import {
   type LaidTree,
 } from "@/lib/genealogy";
 import { recordExpansion, readExpansionScore } from "@/lib/expansion";
+import { perfEco } from "@/lib/perf-mode";
 import {
   BranchNavigator,
   type NavigatorApi,
@@ -2511,7 +2512,12 @@ export function BranchCanopy({
   }, [grow]);
   useEffect(() => {
     if (!mounted || realm) return;
-    const beats = [650, 1500, 2350, 3200, 4050, 4900, 5750];
+    /* THE WEAK DEVICE'S CAP — on the eco tier only the first auto beat
+       blooms; the rest of the cascade rests, and the ear at the edge
+       still grows under the visitor's own scroll. */
+    const beats = perfEco()
+      ? [650]
+      : [650, 1500, 2350, 3200, 4050, 4900, 5750];
     const ids = beats.map((ms) =>
       window.setTimeout(() => growRef.current(), ms)
     );
@@ -4891,13 +4897,13 @@ export function BranchCanopy({
                 bare
                   ? "focus-within:border-[rgba(148,190,224,0.5)]"
                   : "focus-within:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)]",
-                /* THE COOL FLOOR — docked in the threshold (bare) the
-                   line wears an opaque coat and no backdrop blur: a
-                   live blur over a scrolling page is heat the phone
-                   must not pay for a lens. */
+                /* THE COOL FLOOR — in both its dockings (the threshold
+                   and the realm) the line wears an opaque coat and no
+                   backdrop blur: a live blur over a scrolling page is
+                   heat the phone must not pay for a lens. */
                 bare
                   ? "bg-background floor-glow"
-                  : "bg-background/95 backdrop-blur-md shadow-[0_10px_36px_-16px_rgba(0,0,0,0.55)]"
+                  : "bg-background floor-glow shadow-[0_10px_36px_-16px_rgba(0,0,0,0.55)]"
               )}
               style={{
                 /* THE CRYSTAL BORDER — docked in the threshold the

@@ -1407,7 +1407,10 @@ function NavInner({
         setNodes((nds) =>
           nds.map((n) => {
             const tgt = targets.get(n.id);
-            return tgt ? { ...n, position: tgt } : n;
+            if (!tgt) return n;
+            /* a stone already standing on its target keeps its object */
+            if (n.position.x === tgt.x && n.position.y === tgt.y) return n;
+            return { ...n, position: tgt };
           })
         );
         schedulePersist();
@@ -1423,14 +1426,17 @@ function NavInner({
         const u = Math.min(1, (performance.now() - t0) / dur);
         const e = ease(u);
         setNodes((nds) =>
+          /* THE QUIET FRAME — only the stones still in motion are
+             rebuilt; every resting node passes by reference untouched,
+             so each beat re-diffs the movers alone */
           nds.map((n) => {
             const tgt = targets.get(n.id);
             const s = start.get(n.id);
             if (!tgt || !s) return n;
-            return {
-              ...n,
-              position: { x: s.x + (tgt.x - s.x) * e, y: s.y + (tgt.y - s.y) * e },
-            };
+            const x = s.x + (tgt.x - s.x) * e;
+            const y = s.y + (tgt.y - s.y) * e;
+            if (n.position.x === x && n.position.y === y) return n;
+            return { ...n, position: { x, y } };
           })
         );
         if (u < 1) animRef.current = requestAnimationFrame(step);
@@ -2043,7 +2049,21 @@ function NavInner({
 
   /* THE UNIVERSAL SEARCH'S SHELF — the map's own catalog, broadcast
      quietly (bounded, debounced) so the one search field can find
-     every branch and every making on the living map */
+     every branch and every making on the living map. The timer rides
+     a cheap content signature, never the nodes array itself: a
+     settling motion, a focus walking the trail or a status flicker
+     re-renders the map without re-arming this — only a real change
+     of what the catalog carries (grow, remove, morph, focus) does. */
+  const catalogSig = useMemo(
+    () =>
+      `${nodes.length}:${edges.length}:${nodes
+        .map(
+          (n) =>
+            `${n.id}~${n.data.text}~${n.data.role}~${n.data.kind}~${n.data.creation ?? ""}~${n.data.convId ?? ""}~${n.data.depth ?? 0}`
+        )
+        .join("|")}`,
+    [nodes, edges]
+  );
   useEffect(() => {
     const tm = window.setTimeout(() => {
       const catalog = nodesRef.current.map((n) => ({
@@ -2063,7 +2083,7 @@ function NavInner({
       );
     }, 700);
     return () => window.clearTimeout(tm);
-  }, [nodes, edges]);
+  }, [catalogSig]);
 
   const dismissHint = useCallback(() => {
     setHintSeen(true);

@@ -6,6 +6,7 @@
 /*  0 filters, exactly as the Akashic record keeps it.                 */
 /* ------------------------------------------------------------------ */
 
+import { lyransAtlantisJourneyMeta } from "./meta";
 import type { GuideBlock, GuideData } from "./types";
 
 const blocks: GuideBlock[] = [
@@ -350,13 +351,7 @@ const blocks: GuideBlock[] = [
 ];
 
 const guide: GuideData = {
-  slug: "lyrans-atlantis-journey",
-  title: "Lyrans & Atlantis",
-  subtitle: "A journey through the true record",
-  tagline: "The star and the sea met once, and their meeting is your inheritance.",
-  image: "/guides/lyrans-atlantis-journey-p01.jpg",
-  crystalA: "rgba(250,220,150,0.5)",
-  crystalB: "rgba(134,239,226,0.42)",
+  ...lyransAtlantisJourneyMeta,
   mirrorOpening:
     "Two worlds, and one inheritance that never drowned — yours. Ahead lie the Lyran garden worlds, the Atlantis the water remembers, the crystal sciences that answered to purpose, the fall that came when access closed, and the repair that outlasted the fall; the book carries all of it as record, not decoration. Read slowly, with your body in the room and your skepticism invited along — both improve the trip. Nothing here asks for your belief, only your attention, and attention is how a homeland you have never visited gets read.",
   mirrorClosing:

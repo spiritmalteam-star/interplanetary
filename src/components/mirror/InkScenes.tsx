@@ -1,8 +1,9 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import type { ComponentType } from "react";
 import type { SceneKind } from "@/lib/data/scope-notes";
+import { perfEco } from "@/lib/perf-mode";
 
 /* ------------------------------------------------------------------ */
 /*  INK SCENES — the drawn 3D animations of the note stickers.         */
@@ -16,6 +17,15 @@ const EASE = [0.22, 1, 0.36, 1] as const;
 /** The window's ink at a given strength. */
 const mix = (pct: number) =>
   `color-mix(in srgb, var(--scope-a) ${pct}%, transparent)`;
+
+/** THE STILL HAND — reduced motion or the eco tier lets the ink stand:
+    every decorative loop below plays once to its resting pose instead
+    of breathing forever. Readability and use never bend — only motion. */
+function useStill(): boolean {
+  const reduced = useReducedMotion();
+  const eco = perfEco();
+  return !!reduced || eco;
+}
 
 /* ----------------------------- the stage --------------------------- */
 
@@ -59,6 +69,7 @@ function Center({ children }: { children: React.ReactNode }) {
 
 /** terms — floating glyph tiles around a humming line. */
 function TermsScene() {
+  const still = useStill();
   const tiles: { g: string; x: number; y: number; z: number }[] = [
     { g: "Σ", x: -64, y: -22, z: 18 },
     { g: "✦", x: 58, y: -26, z: -14 },
@@ -74,7 +85,7 @@ function TermsScene() {
             background: `linear-gradient(90deg, transparent, ${mix(70)}, transparent)`,
           }}
           animate={{ scaleX: [0.65, 1, 0.65], opacity: [0.45, 1, 0.45] }}
-          transition={{ duration: 3.6, repeat: Infinity, ease: "easeInOut" }}
+          transition={{ duration: 3.6, repeat: still ? 0 : Infinity, ease: "easeInOut" }}
         />
         {tiles.map((tile, i) => (
           <motion.span
@@ -90,7 +101,7 @@ function TermsScene() {
             animate={{ y: [0, -7, 0], rotateY: [-14, 14, -14] }}
             transition={{
               duration: 3.1 + i * 0.65,
-              repeat: Infinity,
+              repeat: still ? 0 : Infinity,
               ease: "easeInOut",
               delay: i * 0.5,
             }}
@@ -105,6 +116,7 @@ function TermsScene() {
 
 /** feed — a ring of nodes passing their pulse to the center. */
 function FeedScene() {
+  const still = useStill();
   const nodes: [number, number][] = [
     [0, -36],
     [36, 0],
@@ -141,7 +153,7 @@ function FeedScene() {
               }}
               transition={{
                 duration: 1.9,
-                repeat: Infinity,
+                repeat: still ? 0 : Infinity,
                 ease: "easeIn",
                 delay: i * 0.48,
               }}
@@ -160,7 +172,7 @@ function FeedScene() {
               animate={{ scale: [1, 1.3, 1] }}
               transition={{
                 duration: 2.2,
-                repeat: Infinity,
+                repeat: still ? 0 : Infinity,
                 ease: "easeInOut",
                 delay: i * 0.4,
               }}
@@ -174,7 +186,7 @@ function FeedScene() {
               y: "-50%",
             }}
             animate={{ scale: [1, 1.25, 1], opacity: [0.75, 1, 0.75] }}
-            transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+            transition={{ duration: 2.2, repeat: still ? 0 : Infinity, ease: "easeInOut" }}
           />
         </div>
       </Center>
@@ -184,6 +196,7 @@ function FeedScene() {
 
 /** field — ripples widening across a foreign perception ground. */
 function FieldScene() {
+  const still = useStill();
   return (
     <Stage tilt={16}>
       <Center>
@@ -195,7 +208,7 @@ function FieldScene() {
             animate={{ scale: [0.35, 2], opacity: [0.75, 0] }}
             transition={{
               duration: 3.2,
-              repeat: Infinity,
+              repeat: still ? 0 : Infinity,
               ease: "easeOut",
               delay: i * 1.05,
             }}
@@ -205,7 +218,7 @@ function FieldScene() {
           className="absolute size-2.5 rounded-full"
           style={{ background: mix(80) }}
           animate={{ scale: [1, 1.45, 1] }}
-          transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
+          transition={{ duration: 3.2, repeat: still ? 0 : Infinity, ease: "easeInOut" }}
         />
         <span
           className="absolute h-px w-36"
@@ -222,6 +235,7 @@ function FieldScene() {
 
 /** lenses — stacked discs grinding their own worlds. */
 function LensesScene() {
+  const still = useStill();
   return (
     <Stage>
       <Center>
@@ -240,7 +254,7 @@ function LensesScene() {
               animate={{ rotate: i % 2 ? -360 : 360 }}
               transition={{
                 duration: 7 + i * 3,
-                repeat: Infinity,
+                repeat: still ? 0 : Infinity,
                 ease: "linear",
               }}
             >
@@ -268,6 +282,7 @@ function LensesScene() {
 
 /** foundry — droplets poured into the breathing vessel. */
 function FoundryScene() {
+  const still = useStill();
   return (
     <Stage>
       <Center>
@@ -279,7 +294,7 @@ function FoundryScene() {
             animate={{ y: [0, 54], opacity: [0, 1, 0], scaleY: [1, 1.7] }}
             transition={{
               duration: 1.7,
-              repeat: Infinity,
+              repeat: still ? 0 : Infinity,
               ease: "easeIn",
               delay: i * 0.42,
             }}
@@ -289,13 +304,13 @@ function FoundryScene() {
           className="absolute bottom-3 h-9 w-20 rounded-b-full rounded-t-md border"
           style={{ borderColor: mix(45) }}
           animate={{ scaleY: [1, 1.08, 1] }}
-          transition={{ duration: 2.3, repeat: Infinity, ease: "easeInOut" }}
+          transition={{ duration: 2.3, repeat: still ? 0 : Infinity, ease: "easeInOut" }}
         />
         <motion.span
           className="absolute bottom-4 h-4 w-14 rounded-full"
           style={{ background: mix(20) }}
           animate={{ opacity: [0.35, 0.85, 0.35] }}
-          transition={{ duration: 2.3, repeat: Infinity, ease: "easeInOut" }}
+          transition={{ duration: 2.3, repeat: still ? 0 : Infinity, ease: "easeInOut" }}
         />
       </Center>
     </Stage>
@@ -304,6 +319,7 @@ function FoundryScene() {
 
 /** gears — the invisible engines, opened on the bench. */
 function GearsScene() {
+  const still = useStill();
   return (
     <Stage>
       <Center>
@@ -315,19 +331,19 @@ function GearsScene() {
             className="absolute inset-0 rounded-full border-2 border-dashed"
             style={{ borderColor: mix(50) }}
             animate={{ rotate: 360 }}
-            transition={{ duration: 11, repeat: Infinity, ease: "linear" }}
+            transition={{ duration: 11, repeat: still ? 0 : Infinity, ease: "linear" }}
           />
           <motion.span
             className="absolute inset-4 rounded-full border-2 border-dashed"
             style={{ borderColor: mix(38) }}
             animate={{ rotate: -360 }}
-            transition={{ duration: 7, repeat: Infinity, ease: "linear" }}
+            transition={{ duration: 7, repeat: still ? 0 : Infinity, ease: "linear" }}
           />
           <motion.span
             className="absolute right-0 top-1 size-9 rounded-full border-2 border-dashed"
             style={{ borderColor: mix(30) }}
             animate={{ rotate: 360 }}
-            transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
+            transition={{ duration: 5, repeat: still ? 0 : Infinity, ease: "linear" }}
           />
           <motion.span
             className="absolute left-1/2 top-1/2 size-3 rounded-full"
@@ -337,7 +353,7 @@ function GearsScene() {
               y: "-50%",
             }}
             animate={{ scale: [1, 1.3, 1] }}
-            transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
+            transition={{ duration: 2.6, repeat: still ? 0 : Infinity, ease: "easeInOut" }}
           />
         </div>
       </Center>
@@ -347,6 +363,7 @@ function GearsScene() {
 
 /** waves — an undulating plane of possibility. */
 function WavesScene() {
+  const still = useStill();
   const cols = 9;
   const rows = 4;
   return (
@@ -367,7 +384,7 @@ function WavesScene() {
                 animate={{ z: [0, 13, 0], opacity: [0.45, 1, 0.45] }}
                 transition={{
                   duration: 2.7,
-                  repeat: Infinity,
+                  repeat: still ? 0 : Infinity,
                   ease: "easeInOut",
                   delay: (col + row) * 0.28,
                 }}
@@ -382,6 +399,7 @@ function WavesScene() {
 
 /** planes — the same object resting on many parallel layers. */
 function PlanesScene() {
+  const still = useStill();
   return (
     <Stage>
       <Center>
@@ -401,7 +419,7 @@ function PlanesScene() {
               animate={{ x: [0, i % 2 ? 7 : -7, 0] }}
               transition={{
                 duration: 4.2 + i,
-                repeat: Infinity,
+                repeat: still ? 0 : Infinity,
                 ease: "easeInOut",
               }}
             >
@@ -436,6 +454,7 @@ const NET_EDGES: [number, number][] = [
   [0, 3],
 ];
 function NetworkScene() {
+  const still = useStill();
   return (
     <Stage>
       <Center>
@@ -473,7 +492,7 @@ function NetworkScene() {
                 animate={{ x: [ax, bx], y: [ay, by], opacity: [0, 1, 1, 0] }}
                 transition={{
                   duration: 2,
-                  repeat: Infinity,
+                  repeat: still ? 0 : Infinity,
                   ease: "easeInOut",
                   delay: k * 0.85,
                 }}
@@ -493,7 +512,7 @@ function NetworkScene() {
               animate={{ scale: [1, 1.3, 1] }}
               transition={{
                 duration: 2.5,
-                repeat: Infinity,
+                repeat: still ? 0 : Infinity,
                 ease: "easeInOut",
                 delay: i * 0.34,
               }}
@@ -507,6 +526,7 @@ function NetworkScene() {
 
 /** pyramid — the instrument of stone holding its note. */
 function PyramidScene() {
+  const still = useStill();
   return (
     <Stage tilt={12}>
       <Center>
@@ -514,7 +534,7 @@ function PyramidScene() {
           viewBox="0 0 64 56"
           className="h-[76px] w-[86px]"
           animate={{ rotateY: [0, 360] }}
-          transition={{ duration: 13, repeat: Infinity, ease: "linear" }}
+          transition={{ duration: 13, repeat: still ? 0 : Infinity, ease: "linear" }}
           style={{ transformStyle: "preserve-3d" }}
         >
           <path
@@ -547,7 +567,7 @@ function PyramidScene() {
             animate={{ scale: [0.5, 1.5], opacity: [0.6, 0] }}
             transition={{
               duration: 2.8,
-              repeat: Infinity,
+              repeat: still ? 0 : Infinity,
               ease: "easeOut",
               delay: i * 1.4,
             }}
@@ -560,6 +580,7 @@ function PyramidScene() {
 
 /** helix — the thread of life, computing in four letters. */
 function HelixScene() {
+  const still = useStill();
   const rows = 9;
   return (
     <Stage>
@@ -567,7 +588,7 @@ function HelixScene() {
         <motion.div
           className="relative h-[100px] w-[70px]"
           animate={{ rotateY: [0, 360] }}
-          transition={{ duration: 9, repeat: Infinity, ease: "linear" }}
+          transition={{ duration: 9, repeat: still ? 0 : Infinity, ease: "linear" }}
           style={{ transformStyle: "preserve-3d" }}
         >
           {Array.from({ length: rows }).map((_, i) => {
@@ -618,6 +639,7 @@ function HelixScene() {
 
 /** fold — the chain folding itself into a machine. */
 function FoldScene() {
+  const still = useStill();
   const seg = (
     depth: number,
     delay: number,
@@ -632,7 +654,7 @@ function FoldScene() {
       animate={{ rotateY: [0, fold, 0] }}
       transition={{
         duration: 6,
-        repeat: Infinity,
+        repeat: still ? 0 : Infinity,
         ease: "easeInOut",
         delay,
         times: [0, 0.42, 1],
@@ -660,7 +682,7 @@ function FoldScene() {
           animate={{ rotateY: [0, 62, 0] }}
           transition={{
             duration: 6,
-            repeat: Infinity,
+            repeat: still ? 0 : Infinity,
             ease: "easeInOut",
             times: [0, 0.42, 1],
           }}
@@ -678,6 +700,7 @@ function FoldScene() {
 
 /** fleet — couriers riding their orbits around the harbor. */
 function FleetScene() {
+  const still = useStill();
   return (
     <Stage>
       <Center>
@@ -702,7 +725,7 @@ function FleetScene() {
                 animate={{ rotate: ring.reverse ? -360 : 360 }}
                 transition={{
                   duration: ring.dur,
-                  repeat: Infinity,
+                  repeat: still ? 0 : Infinity,
                   ease: "linear",
                 }}
               >
@@ -725,7 +748,7 @@ function FleetScene() {
               y: "-50%",
             }}
             animate={{ scale: [1, 1.18, 1] }}
-            transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}
+            transition={{ duration: 2.8, repeat: still ? 0 : Infinity, ease: "easeInOut" }}
           />
         </div>
       </Center>
@@ -735,6 +758,7 @@ function FleetScene() {
 
 /** loop — the circuit where tissue answers code. */
 function LoopScene() {
+  const still = useStill();
   return (
     <Stage>
       <Center>
@@ -753,7 +777,7 @@ function LoopScene() {
               x: [-72, 72, 72, -72, -72],
               y: [-32, -32, 32, 32, -32],
             }}
-            transition={{ duration: 4.6, repeat: Infinity, ease: "linear" }}
+            transition={{ duration: 4.6, repeat: still ? 0 : Infinity, ease: "linear" }}
           />
           {[0, 1].map((i) => (
             <motion.span
@@ -768,7 +792,7 @@ function LoopScene() {
               animate={{ scale: [1, 1.25, 1] }}
               transition={{
                 duration: 2.3,
-                repeat: Infinity,
+                repeat: still ? 0 : Infinity,
                 ease: "easeInOut",
                 delay: i * 1.15,
               }}
@@ -782,6 +806,7 @@ function LoopScene() {
 
 /** vote — the ballots of the real, flipping in the dark. */
 function VoteScene() {
+  const still = useStill();
   const glyphs = ["✦", "◉", "Σ", "⚛", "✳", "◬"];
   return (
     <Stage>
@@ -802,7 +827,7 @@ function VoteScene() {
               animate={{ rotateY: [0, 180, 180, 0] }}
               transition={{
                 duration: 5.2,
-                repeat: Infinity,
+                repeat: still ? 0 : Infinity,
                 ease: "easeInOut",
                 delay: i * 0.85,
                 times: [0, 0.25, 0.75, 1],
@@ -831,6 +856,7 @@ function VoteScene() {
 
 /** orbit — the machinery beneath: one core, two crossings. */
 function OrbitScene() {
+  const still = useStill();
   return (
     <Stage>
       <Center>
@@ -838,7 +864,7 @@ function OrbitScene() {
           className="relative size-24"
           style={{ transformStyle: "preserve-3d" }}
           animate={{ rotateX: [60, 66, 60] }}
-          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+          transition={{ duration: 6, repeat: still ? 0 : Infinity, ease: "easeInOut" }}
         >
           <span
             className="absolute inset-0 rounded-full border"
@@ -847,7 +873,7 @@ function OrbitScene() {
           <motion.span
             className="absolute inset-0 [transform-style:preserve-3d]"
             animate={{ rotate: 360 }}
-            transition={{ duration: 6.5, repeat: Infinity, ease: "linear" }}
+            transition={{ duration: 6.5, repeat: still ? 0 : Infinity, ease: "linear" }}
           >
             <span
               className="absolute left-1/2 top-0 size-1.5 rounded-full"
@@ -864,7 +890,7 @@ function OrbitScene() {
           <motion.span
             className="absolute inset-3 [transform-style:preserve-3d]"
             animate={{ rotate: -360 }}
-            transition={{ duration: 9, repeat: Infinity, ease: "linear" }}
+            transition={{ duration: 9, repeat: still ? 0 : Infinity, ease: "linear" }}
           >
             <span
               className="absolute left-1/2 top-0 size-1 rounded-full"
@@ -882,7 +908,7 @@ function OrbitScene() {
               y: "-50%",
             }}
             animate={{ scale: [1, 1.3, 1], opacity: [0.8, 1, 0.8] }}
-            transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
+            transition={{ duration: 2.6, repeat: still ? 0 : Infinity, ease: "easeInOut" }}
           />
         </motion.div>
       </Center>
