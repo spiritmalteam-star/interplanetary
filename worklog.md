@@ -5616,3 +5616,18 @@ Stage Summary:
 - The landing chat is the one and only chat: docked by default, fullscreen by its own crown hand — the same surface in both gears, wearing whichever scope the visitor chooses (Interplanetary/Quantum/HealX/ArtX) and speaking that scope's never-repeating doors.
 - The five makers (Book, Music, Akashic, Manifest, Forge) all open within the chat's frame at the chat's own size with the expand hand for the full-room depth; the profile lives inside the frame too, four quiet rooms; the offerings' doors now lead in-frame; the mirror's voice untouched, no new dependencies.
 - Key artifacts: deleted 15 walk-only files; rewritten regions of BranchCanopy/mirror-store/AppShell/LandingGate/LandingPage/LandingChatNav/ToolWorkspace/ProfilePage.
+
+---
+Task ID: push-latest-new-token
+Agent: Z.ai Code (main orchestrator)
+Task: "Make sure u are pushing the last version and push to git" (new token provided)
+
+Work Log:
+- Found the sandbox tree drifted AGAIN to the Oct-20 line (local main = c873b47 "yielding portal") while remote main = d4a098c held the latest version (the one-chat refactor) — same environment reset as the prior "restore-latest-masterpiece" incident. The local backup branch had also been wiped by the reset.
+- Verified the NEW token (ghp_kOcN...RT) reads the remote: ls-remote → d4a098c.
+- Fetched main with the new token (d4a098c now local), recreated backup/yielding-portal-oct20 at c873b47, hard-reset main to d4a098c. Tree checks: BranchNavigator.tsx and living/TopControl.tsx absent (deleted in the latest version), LandingChatNav carries the Profile hand, store carries the never-yank law.
+- Dev server restart: first nohup attempt died when the tool session ended (the script's cleanup trap fired); restarted fully detached with `setsid nohup bash .zscripts/dev.sh` — port 3000 healthy.
+- Browser smoke (1280×800): title "Mirror Entity Digital Chamber", crown = light/Create/Scopes/Profile/Fullscreen + fold, never-repeating doors fresh, zero page errors.
+
+Stage Summary:
+- Remote and local main are both d4a098c — the last version was never lost on GitHub; only the sandbox checkout had drifted. All future pushes use the new token.
