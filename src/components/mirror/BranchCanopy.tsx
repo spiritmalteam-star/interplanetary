@@ -58,7 +58,7 @@ import {
   VolumeX,
   X,
 } from "lucide-react";
-import { canopyHour, familyAccent, growMixedCanopy, TREE_FAMILIES } from "@/lib/data/suggestion-banks";
+import { canopyHour, familyAccent, growCanopy, growMixedCanopy, TREE_FAMILIES } from "@/lib/data/suggestion-banks";
 import {
   ENERGY_NOTICE,
   EnergyError,
@@ -116,6 +116,7 @@ import type { SeedWhisper } from "@/lib/navigator-graph";
 import { useWorkspaceMemory } from "@/lib/workspace-memory";
 import { ToolbarRail } from "./living/ToolbarRail";
 import { TopControl } from "./living/TopControl";
+import { TAB_META } from "./living/ToolWorkspace";
 import type { TopCatItem, TopLedger } from "./living/UniversalMenu";
 import { attachmentsToPayload, type ChatAttachment } from "./attachments";
 import { MirrorChanneling, SCOPE_CHANNELING } from "./MirrorChanneling";
@@ -125,7 +126,7 @@ import { ChatInputExtras, AttachmentChips } from "./ChatInputExtras";
 import { CreationReveal } from "./CreationReveal";
 import { ExchangeVisual } from "./TransmissionView";
 import { SideArtifact } from "./ChatArtifacts";
-import type { ChatMessage } from "@/lib/mirror-store";
+import type { ChatMessage, ToolTabKey } from "@/lib/mirror-store";
 import type { LiveScopeKey } from "@/lib/live-scopes";
 import { useT } from "@/lib/i18n";
 import { useMirror } from "@/lib/mirror-store";
@@ -416,6 +417,49 @@ function historyAgo(at: number): string {
   return `${Math.round(hours / 24)}d`;
 }
 
+/* THE MAKER'S TRAIL — the stones the store's own openToolTab lays on
+   the visit's path (sessionStorage "mirror:maker-trail", newest first,
+   capped at 30): the history panel reads them so any room this visit
+   opened can be stepped back into with one touch. */
+const MAKER_TRAIL_KEY = "mirror:maker-trail";
+
+interface MakerTrailStone {
+  key: ToolTabKey;
+  at: number;
+}
+
+function readMakerTrail(): MakerTrailStone[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.sessionStorage.getItem(MAKER_TRAIL_KEY);
+    if (!raw) return [];
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(
+      (e): e is MakerTrailStone =>
+        Boolean(e) &&
+        typeof (e as { key?: unknown }).key === "string" &&
+        typeof (e as { at?: unknown }).at === "number" &&
+        (e as { key: string }).key in TAB_META
+    );
+  } catch {
+    return [];
+  }
+}
+
+/* THE KEPT CONVERSATIONS' OWN NAMES — the surface labels the ledger
+   already speaks, shared by the ledger and the history panel's kept
+   conversations room. */
+const KEPT_SURFACE_LABELS: Record<ChatSurface, string> = {
+  os: "Manifest OS",
+  px: "Particle X",
+  em: "Evolve Med",
+  ax: "Akashic",
+  forge: "Invent",
+  interplanetary: "Interplanetary",
+  healing: "Healing codes",
+};
+
 /* THE LANDING'S OWN SUGGESTIONS — a deep pool of first doors, matched
    to the landing's own entity (the mirror of the Absolute): the self
    beneath the masks, the curtain of reality, the truth avoided, the
@@ -453,10 +497,50 @@ const LANDING_SUGGESTION_POOL = [
   "What is the crystal grid of the earth?",
 ];
 
+/* THE SESSION'S OWN REMEMBERING — every drawn door is kept per scope
+   ("general" for the whole house), so the threshold never offers the
+   same door twice until its field has been walked dry. Capped deep,
+   quiet when the keeping is closed. */
+const LANDING_SEEN_CAP = 400;
+
+function readLandingSeen(): Record<string, string[]> {
+  try {
+    const raw = window.sessionStorage.getItem("mirror:landing-seen");
+    if (!raw) return {};
+    const v = JSON.parse(raw) as unknown;
+    if (!v || typeof v !== "object") return {};
+    const out: Record<string, string[]> = {};
+    for (const [k, arr] of Object.entries(v as Record<string, unknown>))
+      if (Array.isArray(arr))
+        out[k] = arr.filter((x): x is string => typeof x === "string");
+    return out;
+  } catch {
+    /* the keeping stays closed — the draw carries alone */
+    return {};
+  }
+}
+
+function writeLandingSeen(map: Record<string, string[]>) {
+  try {
+    window.sessionStorage.setItem("mirror:landing-seen", JSON.stringify(map));
+  } catch {
+    /* the keeping stays closed — the draw carries alone */
+  }
+}
+
 /* THE FIVE DOORS — the bare floor's own suggestions: five whispers
-   drawn from the pool at every mount (so every reload of the page
-   brings five fresh ones), and the small gold hand beneath pours five
-   new doors with one touch, never repeating the five just shown. */
+   drawn at every mount (so every reload of the page brings five fresh
+   ones), and the small gold hand beneath pours five new doors with
+   one touch. THE NEVER-TWICE LAW — no drawn door ever stands twice:
+   every draw excludes the session's remembering and the doors just
+   shown, and adds its own five to the keeping; when a field's unseen
+   doors run short, its remembering clears and the doors return.
+   THE SCOPE'S OWN FLOOR — a chosen field's doors come from that
+   family's own bank (the walk's own grower, this hour's seed);
+   General weaves the landing's first doors with the whole house's
+   percentage mix. The outer hand only watches the chosen field: a
+   new field remounts the doors (keyed below), and a remount always
+   draws its own fresh five — no effect, no cascading render. */
 function BareFloorSuggestions({
   onPick,
   disabled,
@@ -464,19 +548,95 @@ function BareFloorSuggestions({
   onPick: (q: string) => void;
   disabled: boolean;
 }) {
-  const t = useT();
-  const draw = useCallback((exclude: string[]) => {
-    const rest = LANDING_SUGGESTION_POOL.filter((s) => !exclude.includes(s));
-    for (let i = rest.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [rest[i], rest[j]] = [rest[j], rest[i]];
-    }
-    return rest.slice(0, 5);
-  }, []);
-  const [doors, setDoors] = useState<string[]>(() => draw([]));
+  const landingScope = useMirror((s) => s.landingScope);
   return (
-    <div className="pointer-events-none flex max-w-[440px] flex-col items-center gap-2.5">
-      <div className="flex flex-wrap items-center justify-center gap-2 px-5">
+    <BareFloorDoors
+      key={landingScope || "general"}
+      scope={landingScope}
+      onPick={onPick}
+      disabled={disabled}
+    />
+  );
+}
+
+function BareFloorDoors({
+  scope,
+  onPick,
+  disabled,
+}: {
+  scope: string;
+  onPick: (q: string) => void;
+  disabled: boolean;
+}) {
+  const t = useT();
+  const treeMix = useMirror((s) => s.treeMix);
+  const scopeKey = scope || "general";
+
+  /* the pool — pure and synchronous: one field's grove, or the
+     landing's first doors woven with the whole house's mix. The same
+     hour grows the same grove, so the draw never flickers. */
+  const pool = useMemo(() => {
+    if (scope) {
+      const family = TREE_FAMILIES.find((f) => f.key === scope);
+      if (family)
+        return growCanopy(family.category, null, canopyHour()).map(
+          (w) => w.text
+        );
+    }
+    const mixed = growMixedCanopy(
+      treeMix.on,
+      treeMix.weights,
+      null,
+      canopyHour()
+    ).map((w) => w.text);
+    return [...LANDING_SUGGESTION_POOL, ...mixed];
+  }, [scope, treeMix]);
+
+  const draw = useCallback(
+    (current: string[]) => {
+      const seenMap = readLandingSeen();
+      let seen = seenMap[scopeKey] ?? [];
+      let rest = pool.filter(
+        (s) => !seen.includes(s) && !current.includes(s)
+      );
+      if (rest.length < 5) {
+        /* the field has been walked dry — its remembering clears and
+           the doors return (the five just shown still stand aside) */
+        seen = [];
+        rest = pool.filter((s) => !current.includes(s));
+      }
+      for (let i = rest.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [rest[i], rest[j]] = [rest[j], rest[i]];
+      }
+      /* one of each — a visible set never shows the same door twice */
+      const picked: string[] = [];
+      for (const s of rest) {
+        if (picked.includes(s)) continue;
+        picked.push(s);
+        if (picked.length === 5) break;
+      }
+      seenMap[scopeKey] = [...seen, ...picked].slice(-LANDING_SEEN_CAP);
+      writeLandingSeen(seenMap);
+      return picked;
+    },
+    [pool, scopeKey]
+  );
+
+  const [doors, setDoors] = useState<string[]>(() => draw([]));
+
+  return (
+    <div className="pointer-events-none flex w-[min(600px,94%)] flex-col items-center gap-2">
+      <div
+        className="nice-scroll flex flex-wrap content-start items-center justify-center gap-2 overflow-y-auto px-5"
+        style={{
+          /* the doors' own sky — capped against the chamber's height
+             (--app-h) so the five doors and the little hand beneath
+             them always stand clear of the composer and its honest
+             note, at any height the room is given */
+          maxHeight: "calc(var(--app-h, 506px) - 296px)",
+        }}
+      >
         {doors.map((s) => (
           <button
             key={s}
@@ -1536,6 +1696,9 @@ export function BranchCanopy({
      where it lives, the other restores a kept volume to the reading */
   const openChatSurface = useMirror((s) => s.openChat);
   const resumeKeptVolume = useMirror((s) => s.resumeDreamBook);
+  /* THE TRAIL'S OWN HAND — one touch returns the visit to a room its
+     maker already opened (the history panel's trail rows speak it) */
+  const openToolTab = useMirror((s) => s.openToolTab);
   /* THE QUESTION'S QUIET — the floor's welcome now lives with the
      landing thread itself (the landing's own quiet, declared beside
      the thread): the store's channel no longer decides whether the
@@ -1734,15 +1897,7 @@ export function BranchCanopy({
   } | null>(null);
   useEffect(() => {
     if (crownMenu !== "menu" && !topMenuOpen) return;
-    const labels: Record<ChatSurface, string> = {
-      os: "Manifest OS",
-      px: "Particle X",
-      em: "Evolve Med",
-      ax: "Akashic",
-      forge: "Invent",
-      interplanetary: "Interplanetary",
-      healing: "Healing codes",
-    };
+    const labels = KEPT_SURFACE_LABELS;
     const surfaces = Object.keys(labels) as ChatSurface[];
     const chats = surfaces.flatMap((s) =>
       listChats(s)
@@ -3018,65 +3173,182 @@ export function BranchCanopy({
   /* THE HISTORY PANEL — the device's own kept conversations. One body
      shared by every hand that opens the history: the docked room's
      quiet hands and the realm's top history hand alike. */
-  const renderHistoryPanel = () => (
-    <div
-      data-testid={`${testIdPrefix}-history-panel`}
-      className="w-[272px] max-w-[calc(100vw-2.5rem)] rounded-2xl border bg-background p-3 lift-lg"
-      style={{
-        borderColor:
-          "color-mix(in srgb, var(--scope-a,var(--gd)) 30%, transparent)",
-      }}
-    >
-      <p className="mono-label text-[9.5px] uppercase tracking-[0.2em] text-muted-foreground">
-        {t("Conversation history")}
-      </p>
-      <p className="mt-1 text-[11.5px] leading-relaxed text-muted-foreground/80">
-        {t("Kept only on this device — and only for this visit. Nothing travels to a server.")}
-      </p>
-      {historyEntries.length === 0 ? (
-        <p className="px-1 py-4 text-center text-[12.5px] text-muted-foreground/70">
-          {t("Nothing kept yet.")}
+  const renderHistoryPanel = (opts?: { bare?: boolean }) => {
+    /* THE TRAIL AND THE KEPT — read fresh at every opening, the way
+       the ledger reads its keep: the panel always speaks the present. */
+    const trail = readMakerTrail();
+    const keptChats = guest
+      ? []
+      : (Object.keys(KEPT_SURFACE_LABELS) as ChatSurface[]).flatMap((s) =>
+          listChats(s)
+            .slice(0, 2)
+            .map((c) => ({
+              surface: s,
+              label: KEPT_SURFACE_LABELS[s],
+              id: c.id,
+              title: c.title,
+              count: c.messages.length,
+            }))
+        );
+    return (
+      <div
+        data-testid={`${testIdPrefix}-history-panel`}
+        className="w-[272px] max-w-[calc(100vw-2.5rem)] rounded-2xl border bg-background p-3 lift-lg"
+        style={{
+          borderColor:
+            "color-mix(in srgb, var(--scope-a,var(--gd)) 30%, transparent)",
+        }}
+      >
+        <p className="mono-label text-[9.5px] uppercase tracking-[0.2em] text-muted-foreground">
+          {t("Conversation history")}
         </p>
-      ) : (
-        <div className="nice-scroll mt-2 max-h-[240px] overflow-y-auto">
-          {historyEntries.map((entry) => (
-            <button
-              key={entry.id}
-              type="button"
-              onClick={() => restoreFromHistory(entry)}
-              className="focus-glow flex w-full items-center gap-2 rounded-xl px-2 py-2 text-left transition-colors duration-300 hover:bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_7%,transparent)]"
-            >
-              <MessageSquareText
-                className="size-3.5 shrink-0 text-[var(--scope-a,var(--gd))]"
-                aria-hidden="true"
-              />
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-[13px] text-foreground/90">
-                  {entry.title}
-                </span>
-                <span className="mono-label block text-[9px] uppercase tracking-[0.14em] text-muted-foreground/60">
-                  {t("{n} whispers · {when}", {
-                    n: entry.turns.length,
-                    when: historyAgo(entry.at),
-                  })}
-                </span>
-              </span>
-            </button>
-          ))}
+        <p className="mt-1 text-[11.5px] leading-relaxed text-muted-foreground/80">
+          {t("Kept only on this device — and only for this visit. Nothing travels to a server.")}
+        </p>
+        {/* THE THREE TIDY ROOMS — one quiet scroll carries them all:
+            this visit's whispers, the maker's trail, the keeper's kept
+            conversations (the last room stands only for a signed
+            passage). */}
+        <div className="nice-scroll mt-2 max-h-[280px] overflow-y-auto">
+          {/* I. WHISPERS OF THIS VISIT — the device's own threads */}
+          <div>
+            <p className="mono-label flex items-baseline gap-1.5 text-[9px] uppercase tracking-[0.18em] text-muted-foreground/80">
+              {t("Whispers of this visit")}
+              <span className="text-foreground/50">· {historyEntries.length}</span>
+            </p>
+            {historyEntries.length === 0 ? (
+              <p className="px-1 py-3 text-center text-[12.5px] text-muted-foreground/70">
+                {t("Nothing kept yet.")}
+              </p>
+            ) : (
+              <div className="mt-1 space-y-0.5">
+                {historyEntries.map((entry) => (
+                  <button
+                    key={entry.id}
+                    type="button"
+                    onClick={() => restoreFromHistory(entry)}
+                    className="focus-glow flex w-full items-center gap-2 rounded-xl px-2 py-2 text-left transition-colors duration-300 hover:bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_7%,transparent)]"
+                  >
+                    <MessageSquareText
+                      className="size-3.5 shrink-0 text-[var(--scope-a,var(--gd))]"
+                      aria-hidden="true"
+                    />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[13px] text-foreground/90">
+                        {entry.title}
+                      </span>
+                      <span className="mono-label block text-[9px] uppercase tracking-[0.14em] text-muted-foreground/60">
+                        {t("{n} whispers · {when}", {
+                          n: entry.turns.length,
+                          when: historyAgo(entry.at),
+                        })}
+                      </span>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+            {historyEntries.length > 0 && (
+              <button
+                type="button"
+                onClick={clearLandingHistory}
+                className="focus-glow mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl border hairline py-1.5 text-[12px] text-muted-foreground transition-colors duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+              >
+                <Eraser className="size-3" aria-hidden="true" />
+                {t("Clear the history")}
+              </button>
+            )}
+          </div>
+          {/* II. THE MAKER'S TRAIL — the rooms this visit opened, one
+              stone each; a touch returns to the room (from the landing
+              it opens as the bare mini tab, never yanking the walk) */}
+          {trail.length > 0 && (
+            <div className="mt-3 border-t hairline pt-2.5">
+              <p className="mono-label flex items-baseline gap-1.5 text-[9px] uppercase tracking-[0.18em] text-muted-foreground/80">
+                {t("The maker's trail")}
+                <span className="text-foreground/50">· {trail.length}</span>
+              </p>
+              <div className="mt-1 space-y-0.5">
+                {trail.map((stone, i) => {
+                  const meta = TAB_META[stone.key];
+                  const Icon = meta.icon;
+                  return (
+                    <button
+                      key={`${stone.key}:${stone.at}:${i}`}
+                      type="button"
+                      onClick={() => {
+                        setHistoryOpen(false);
+                        openToolTab(
+                          stone.key,
+                          opts?.bare ? { bare: true } : undefined
+                        );
+                      }}
+                      className="focus-glow flex w-full items-center gap-2 rounded-xl px-2 py-2 text-left transition-colors duration-300 hover:bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_7%,transparent)]"
+                    >
+                      <Icon
+                        className="size-3.5 shrink-0 text-[var(--scope-a,var(--gd))]"
+                        aria-hidden="true"
+                      />
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-[13px] text-foreground/90">
+                          {t(meta.label)}
+                        </span>
+                      </span>
+                      <span className="mono-label shrink-0 text-[9px] uppercase tracking-[0.14em] text-muted-foreground/60">
+                        {historyAgo(stone.at)}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          {/* III. KEPT CONVERSATIONS — a signed keeper's archive, the
+              same shelf the ledger reads; a guest holds no room here */}
+          {!guest && (
+            <div className="mt-3 border-t hairline pt-2.5">
+              <p className="mono-label flex items-baseline gap-1.5 text-[9px] uppercase tracking-[0.18em] text-muted-foreground/80">
+                {t("Kept conversations")}
+                <span className="text-foreground/50">· {keptChats.length}</span>
+              </p>
+              {keptChats.length === 0 ? (
+                <p className="px-1 py-3 text-center text-[12.5px] text-muted-foreground/70">
+                  {t("Nothing kept yet.")}
+                </p>
+              ) : (
+                <div className="mt-1 space-y-0.5">
+                  {keptChats.map((c) => (
+                    <button
+                      key={`${c.surface}:${c.id}`}
+                      type="button"
+                      onClick={() => {
+                        setHistoryOpen(false);
+                        openChatSurface(c.surface, c.id);
+                      }}
+                      className="focus-glow flex w-full items-center gap-2 rounded-xl px-2 py-2 text-left transition-colors duration-300 hover:bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_7%,transparent)]"
+                    >
+                      <MessageSquareText
+                        className="size-3.5 shrink-0 text-muted-foreground/70"
+                        aria-hidden="true"
+                      />
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-[13px] text-foreground/90">
+                          {c.title}
+                        </span>
+                        <span className="mono-label block text-[9px] uppercase tracking-[0.14em] text-muted-foreground/60">
+                          {t(c.label)} · {c.count}
+                        </span>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
-      )}
-      {historyEntries.length > 0 && (
-        <button
-          type="button"
-          onClick={clearLandingHistory}
-          className="focus-glow mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl border hairline py-1.5 text-[12px] text-muted-foreground transition-colors duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
-        >
-          <Eraser className="size-3" aria-hidden="true" />
-          {t("Clear the history")}
-        </button>
-      )}
-    </div>
-  );
+      </div>
+    );
+  };
   /* THE LANDING'S OWN QUIET — the threshold's floor keeps its welcome
      by its own thread's silence: the store's channel (the full
      portal's conversations) has no word in the docked room, so an ask
@@ -4488,7 +4760,7 @@ export function BranchCanopy({
             {!bare && (
             <button
               type="button"
-              onClick={openAkashic}
+              onClick={() => openAkashic()}
               aria-label={t("Akashic")}
               title={t("Akashic")}
               data-testid={`${testIdPrefix}-door-akashic`}
@@ -4500,7 +4772,7 @@ export function BranchCanopy({
             {!bare && (
             <button
               type="button"
-              onClick={openDreamBook}
+              onClick={() => openDreamBook()}
               aria-label={t("Book")}
               title={t("Book")}
               data-testid={`${testIdPrefix}-door-book`}
@@ -4749,9 +5021,11 @@ export function BranchCanopy({
                 className="lp-breathe h-64 w-72 rounded-full"
                 style={{
                   /* THE CRYSTAL'S OWN AURA — red and blue, the two
-                     crystals of the landing's chat, breathing as one */
+                     crystals of the landing's chat, breathing as one;
+                     a chosen scope lends its own light to the first
+                     crystal (the fallback keeps the red). */
                   background:
-                    "radial-gradient(ellipse at center, rgba(255,77,109,0.14), rgba(56,189,248,0.10) 45%, transparent 70%)",
+                    "radial-gradient(ellipse at center, color-mix(in srgb, var(--landing-scope-accent, #ff4d6d) 14%, transparent), rgba(56,189,248,0.10) 45%, transparent 70%)",
                 }}
               />
             </div>
@@ -4762,14 +5036,18 @@ export function BranchCanopy({
                 height. At the scroll's edges the breath chains to the
                 threshold beneath (the pass-through law holds). */}
             <div
-              className="nice-scroll absolute inset-0 overflow-y-auto"
+              className="nice-scroll absolute inset-x-0 top-0 flex flex-col overflow-y-auto"
               style={{
+                /* the floor's own sky ends above the composer and its
+                   honest little note — the doors may never stand on
+                   their words, at any height the room is given */
+                bottom: 92,
                 overscrollBehavior: "auto",
                 touchAction: "pan-y",
                 WebkitOverflowScrolling: "touch",
               }}
             >
-              <div className="pointer-events-none flex min-h-full flex-col items-center justify-center gap-3 px-6 pb-24 pt-3">
+              <div className="pointer-events-none m-auto flex max-h-full w-full flex-col items-center gap-2 px-6 pb-2 pt-1">
               {/* THE MARK — the house's own seal, wearing the theme's
                   face (the white emblem on the midnight, the dark one in
                   the daylight, so the light's hand can never take it
@@ -4802,7 +5080,7 @@ export function BranchCanopy({
               <div className="flex flex-col items-center gap-3">
                 <span
                   aria-hidden="true"
-                  className="h-px w-16 bg-[linear-gradient(90deg,transparent,rgba(255,77,109,0.55),rgba(56,189,248,0.55),transparent)]"
+                  className="h-px w-16 bg-[linear-gradient(90deg,transparent,color-mix(in_srgb,var(--landing-scope-accent,#ff4d6d)_55%,transparent),rgba(56,189,248,0.55),transparent)]"
                 />
                 {/* THE MIRROR'S QUESTION — below the mark, inside the
                     chat box itself: it stands only while the floor is
@@ -5051,60 +5329,11 @@ export function BranchCanopy({
                       />
                       <div
                         data-testid={`${testIdPrefix}-ask-history-panel`}
-                        className="absolute bottom-11 left-0 z-40 w-[272px] max-w-[calc(100vw-2.5rem)] rounded-2xl border bg-background p-3 lift-lg"
-                        style={{
-                          borderColor:
-                            "color-mix(in srgb, var(--scope-a,var(--gd)) 30%, transparent)",
-                        }}
+                        className="absolute bottom-11 left-0 z-40"
                       >
-                        <p className="mono-label text-[9.5px] uppercase tracking-[0.2em] text-muted-foreground">
-                          {t("Conversation history")}
-                        </p>
-                        <p className="mt-1 text-[11.5px] leading-relaxed text-muted-foreground/80">
-                          {t("Kept only on this device — and only for this visit. Nothing travels to a server.")}
-                        </p>
-                        {historyEntries.length === 0 ? (
-                          <p className="px-1 py-4 text-center text-[12.5px] text-muted-foreground/70">
-                            {t("Nothing kept yet.")}
-                          </p>
-                        ) : (
-                          <div className="nice-scroll mt-2 max-h-[240px] overflow-y-auto">
-                            {historyEntries.map((entry) => (
-                              <button
-                                key={entry.id}
-                                type="button"
-                                onClick={() => restoreFromHistory(entry)}
-                                className="focus-glow flex w-full items-center gap-2 rounded-xl px-2 py-2 text-left transition-colors duration-300 hover:bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_7%,transparent)]"
-                              >
-                                <MessageSquareText
-                                  className="size-3.5 shrink-0 text-[var(--scope-a,var(--gd))]"
-                                  aria-hidden="true"
-                                />
-                                <span className="min-w-0 flex-1">
-                                  <span className="block truncate text-[13px] text-foreground/90">
-                                    {entry.title}
-                                  </span>
-                                  <span className="mono-label block text-[9px] uppercase tracking-[0.14em] text-muted-foreground/60">
-                                    {t("{n} whispers · {when}", {
-                                      n: entry.turns.length,
-                                      when: historyAgo(entry.at),
-                                    })}
-                                  </span>
-                                </span>
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                        {historyEntries.length > 0 && (
-                          <button
-                            type="button"
-                            onClick={clearLandingHistory}
-                            className="focus-glow mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl border hairline py-1.5 text-[12px] text-muted-foreground transition-colors duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
-                          >
-                            <Eraser className="size-3" aria-hidden="true" />
-                            {t("Clear the history")}
-                          </button>
-                        )}
+                        {/* the one shared panel — the visit's whispers,
+                            the maker's trail, the keeper's kept rooms */}
+                        {renderHistoryPanel({ bare: true })}
                       </div>
                     </>
                   )}
@@ -5171,9 +5400,10 @@ export function BranchCanopy({
                   "focus-glow flex size-8 shrink-0 items-center justify-center rounded-full transition-all duration-300 hover:scale-[1.04] disabled:cursor-not-allowed disabled:opacity-35 disabled:shadow-none",
                   /* THE CRYSTAL SEND — docked in the threshold the
                      send hand carries both crystals at once: the red
-                     and the blue, one gradient, no animation. */
+                     and the blue, one gradient, no animation. A chosen
+                     scope lends its own light to the leading crystal. */
                   bare
-                    ? "bg-gradient-to-br from-[#ff4d6d] to-[#38bdf8] text-[#0b0f17] shadow-[0_0_14px_-6px_rgba(255,77,109,0.7)]"
+                    ? "bg-gradient-to-br from-[var(--landing-scope-accent,#ff4d6d)] to-[#38bdf8] text-[#0b0f17] shadow-[0_0_14px_-6px_color-mix(in_srgb,var(--landing-scope-accent,#ff4d6d)_70%,transparent)]"
                     : "bg-gradient-to-br from-[var(--scope-a,var(--gd))] to-[color-mix(in_srgb,var(--scope-b,var(--pk))_70%,var(--scope-a,var(--gd)))] text-[#101010] shadow-[0_0_14px_-6px_color-mix(in_srgb,var(--scope-a,var(--gd))_70%,transparent)]"
                 )}
               >
@@ -5233,9 +5463,11 @@ export function BranchCanopy({
               style={{
                 /* THE CRYSTAL ROOM — docked in the threshold the room's
                    own border carries the blue crystal's tint, slightly
-                   transparent; the full portal keeps the scope's color. */
+                   transparent; a chosen scope lends its own light (the
+                   fallback keeps the blue); the full portal keeps the
+                   scope's color. */
                 borderColor: bare
-                  ? "rgba(125, 211, 252, 0.18)"
+                  ? "color-mix(in srgb, var(--landing-scope-accent, #7dd3fc) 18%, transparent)"
                   : "color-mix(in srgb, var(--scope-a,var(--gd)) 30%, transparent)",
               }}
             >
@@ -5394,60 +5626,12 @@ export function BranchCanopy({
                           />
                           <div
                             data-testid={`${testIdPrefix}-zoom-history-panel`}
-                            className="absolute right-0 top-9 z-40 w-[272px] max-w-[calc(100vw-2.5rem)] rounded-2xl border bg-background p-3 lift-lg"
-                            style={{
-                              borderColor:
-                                "color-mix(in srgb, var(--scope-a,var(--gd)) 30%, transparent)",
-                            }}
+                            className="absolute right-0 top-9 z-40"
                           >
-                            <p className="mono-label text-[9.5px] uppercase tracking-[0.2em] text-muted-foreground">
-                              {t("Conversation history")}
-                            </p>
-                            <p className="mt-1 text-[11.5px] leading-relaxed text-muted-foreground/80">
-                              {t("Kept only on this device — and only for this visit. Nothing travels to a server.")}
-                            </p>
-                            {historyEntries.length === 0 ? (
-                              <p className="px-1 py-4 text-center text-[12.5px] text-muted-foreground/70">
-                                {t("Nothing kept yet.")}
-                              </p>
-                            ) : (
-                              <div className="nice-scroll mt-2 max-h-[240px] overflow-y-auto">
-                                {historyEntries.map((entry) => (
-                                  <button
-                                    key={entry.id}
-                                    type="button"
-                                    onClick={() => restoreFromHistory(entry)}
-                                    className="focus-glow flex w-full items-center gap-2 rounded-xl px-2 py-2 text-left transition-colors duration-300 hover:bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_7%,transparent)]"
-                                  >
-                                    <MessageSquareText
-                                      className="size-3.5 shrink-0 text-[var(--scope-a,var(--gd))]"
-                                      aria-hidden="true"
-                                    />
-                                    <span className="min-w-0 flex-1">
-                                      <span className="block truncate text-[13px] text-foreground/90">
-                                        {entry.title}
-                                      </span>
-                                      <span className="mono-label block text-[9px] uppercase tracking-[0.14em] text-muted-foreground/60">
-                                        {t("{n} whispers · {when}", {
-                                          n: entry.turns.length,
-                                          when: historyAgo(entry.at),
-                                        })}
-                                      </span>
-                                    </span>
-                                  </button>
-                                ))}
-                              </div>
-                            )}
-                            {historyEntries.length > 0 && (
-                              <button
-                                type="button"
-                                onClick={clearLandingHistory}
-                                className="focus-glow mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl border hairline py-1.5 text-[12px] text-muted-foreground transition-colors duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
-                              >
-                                <Eraser className="size-3" aria-hidden="true" />
-                                {t("Clear the history")}
-                              </button>
-                            )}
+                            {/* the one shared panel — the visit's
+                                whispers, the maker's trail, the keeper's
+                                kept rooms */}
+                            {renderHistoryPanel({ bare: true })}
                           </div>
                         </>
                       )}

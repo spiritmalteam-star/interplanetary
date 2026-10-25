@@ -9,9 +9,7 @@ import {
 } from "react";
 import Image from "next/image";
 import {
-  ArrowUpRight,
   ChevronDown,
-  Coins,
   Compass,
   Feather,
   GraduationCap,
@@ -28,7 +26,6 @@ import LandingSlides from "./LandingSlides";
 import SideRail from "./SideRail";
 import GuideShowcase from "./GuideShowcase";
 import dynamic from "next/dynamic";
-import AboutUsTab from "./AboutUsTab";
 
 // the guide's own page rides its own chunk — the threshold never pays for
 // the ten guides' bodies until one of them is actually opened
@@ -132,25 +129,6 @@ function Sigil({
    times its old stature, resting where the page is empty */
 
 /* ------------------------ editorial building blocks ------------------------ */
-
-/* THE EXCHANGE'S OWN TAG — the full portal is the paid realm: a small
-   gold coin riding the enter hands, its truth spoken in the title (the
-   way in is registration or login — the landing's own floor stays
-   free). No word is worn; the coin alone says it. */
-function PaidTag() {
-  const t = useT();
-  return (
-    <span
-      title={t(
-        "Paid realm — the offerings open by registration or login, after one of the realms offered is acquired"
-      )}
-      data-testid="paid-tag"
-      className="flex size-4 shrink-0 items-center justify-center rounded-full border border-[rgba(232,217,176,0.55)] bg-[rgba(232,217,176,0.12)] text-[var(--lp-gold)] shadow-[0_0_6px_1px_rgba(232,217,176,0.28)]"
-    >
-      <Coins className="size-2.5" aria-hidden="true" />
-    </span>
-  );
-}
 
 function SectionHead({
   index,
@@ -570,23 +548,6 @@ export default function LandingPage({
                 )}
               </p>
               <div className="mt-7 flex flex-wrap items-center justify-center gap-2.5 lg:mt-6">
-                <button
-                  type="button"
-                  onClick={onExpand}
-                  data-testid="landing-enter"
-                  title={t(
-                    "Paid realm — the offerings open by registration or login, after one of the realms offered is acquired"
-                  )}
-                  className="group focus-glow relative flex h-12 items-center gap-2.5 overflow-hidden rounded-full border border-[rgba(255,255,255,0.78)] bg-[linear-gradient(180deg,rgba(255,255,255,0.3),rgba(255,255,255,0.1)_55%,rgba(255,255,255,0.2))] px-7 text-[15px] font-medium tracking-[0.02em] text-white shadow-[0_12px_34px_-16px_rgba(20,30,52,0.55),inset_0_1px_0_rgba(255,255,255,0.55)] transition-all duration-300 hover:border-white hover:shadow-[0_16px_44px_-14px_rgba(20,30,52,0.6),inset_0_1px_0_rgba(255,255,255,0.65)]"
-                >
-                  {/* the sheen — one painted sweep on hover, transform only */}
-                  <span
-                    aria-hidden="true"
-                    className="absolute inset-0 -translate-x-[120%] bg-[linear-gradient(105deg,transparent_30%,rgba(255,255,255,0.35)_50%,transparent_70%)] transition-transform duration-700 ease-out group-hover:translate-x-[120%]"
-                  />
-                  {t("Enter the portal")}
-                  <PaidTag />
-                </button>
                 <a
                   href="#offer"
                   onClick={(e) => {
@@ -757,25 +718,6 @@ export default function LandingPage({
                     "Reflectme brings reflection and creativity into one living workspace. Ask a question, follow an idea, make an image, shape a story, explore a dream, or turn a feeling into a next step — a responsive surface for inquiry that helps you notice patterns, imagine possibilities, and give form to what matters to you."
                   )}
                 </p>
-                <button
-                  type="button"
-                  onClick={onExpand}
-                  title={t(
-                    "Paid realm — the offerings open by registration or login, after one of the realms offered is acquired"
-                  )}
-                  className="group focus-glow relative mt-5 inline-flex h-11 items-center gap-2 overflow-hidden rounded-full border border-[rgba(232,217,176,0.5)] bg-[linear-gradient(180deg,rgba(232,217,176,0.14),rgba(232,217,176,0.05)_55%,rgba(232,217,176,0.09))] px-6 text-[14.5px] font-medium tracking-[0.02em] text-[var(--lp-gold-ink)] shadow-[0_10px_30px_-16px_rgba(232,217,176,0.4),inset_0_1px_0_rgba(255,246,214,0.12)] transition-all duration-300 hover:border-[rgba(232,217,176,0.85)] hover:shadow-[0_14px_40px_-14px_rgba(232,217,176,0.52),inset_0_1px_0_rgba(255,246,214,0.18)]"
-                >
-                  <span
-                    aria-hidden="true"
-                    className="absolute inset-0 -translate-x-[120%] bg-[linear-gradient(105deg,transparent_30%,rgba(255,246,214,0.15)_50%,transparent_70%)] transition-transform duration-700 ease-out group-hover:translate-x-[120%]"
-                  />
-                  {t("Enter the portal")}
-                  <ArrowUpRight
-                    className="size-3.5 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-                    aria-hidden="true"
-                  />
-                  <PaidTag />
-                </button>
               </div>
 
               {/* the numbered index — every offering, one quiet row
@@ -1097,13 +1039,6 @@ export default function LandingPage({
             </div>
           </section>
 
-          {/* ============ 05 · ABOUT US — THE MINI TAB ============
-              The house's own story no longer stands as a section at
-              the page's foot: a quiet hand opens it as a mini tab —
-              a small warm card resting above the page — so the walk
-              itself keeps every pixel. (THE SECTION IS GONE; the
-              button lives at the page's corner, always in reach.) */}
-          <AboutUsTab />
         </main>
 
         {/* ============================ FOOTER ============================ */}

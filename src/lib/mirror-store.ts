@@ -197,6 +197,20 @@ export type ToolTabKey =
   | "mirroros"
   | "library";
 
+/* THE LANDING'S OWN SCOPE — the field the threshold's docked chat
+   walks in (the crown's Scopes hand chooses it). Empty is GENERAL:
+   the whole house's own voices. The four keys are family keys, so
+   the suggestions, the accent light and the banks all resolve
+   through the walk's own families. */
+export type LandingScopeKey = "interplanetary" | "quantum" | "healing" | "artx";
+
+export const LANDING_SCOPES: LandingScopeKey[] = [
+  "interplanetary",
+  "quantum",
+  "healing",
+  "artx",
+];
+
 export type RegisterKind = DossierKind;
 
 /* -------- the passage — the visitor's account and the free door -------- */
@@ -635,6 +649,12 @@ interface MirrorState {
   treeMix: TreeMix;
   setTreeMix: (mix: TreeMix) => void;
 
+  /* THE LANDING'S OWN SCOPE — the threshold's docked chat wears one
+     field's light and suggestions ("" = General, the whole house).
+     Kept for the session only: a new visit wakes in General. */
+  landingScope: LandingScopeKey | "";
+  setLandingScope: (scope: LandingScopeKey | "") => void;
+
   setLanguage: (code: LanguageCode) => void;
   setVoice: (id: VoiceId) => void;
   setPace: (value: number) => void;
@@ -678,19 +698,21 @@ interface MirrorState {
      window carries every open room, one tab active at a time. */
   toolTabs: ToolTabKey[];
   activeToolTab: ToolTabKey | null;
-  openToolTab: (key: ToolTabKey) => void;
+  /** opts.bare — open from the landing's docked portal: the tab is
+      pushed and activated, but the view never leaves the landing. */
+  openToolTab: (key: ToolTabKey, opts?: { bare?: boolean }) => void;
   closeToolTab: (key: ToolTabKey) => void;
   activateToolTab: (key: ToolTabKey) => void;
   expandActiveToolTab: () => void;
 
   /* The Akashic Library — the ancient one's papyrus records */
-  openAkashic: () => void;
+  openAkashic: (opts?: { bare?: boolean }) => void;
   exitAkashic: () => void;
 
   /* The Invent — the fourth book: the inventor's compact studio */
   openInvent: () => void;
   exitInvent: () => void;
-  openDreamBook: () => void;
+  openDreamBook: (opts?: { bare?: boolean }) => void;
   exitDreamBook: () => void;
 
   /* LIGHT CODES — the musical chamber of the Mirror Entity */
@@ -704,7 +726,7 @@ interface MirrorState {
   lcTrack: LcTrack | null; // the finished, playable transmission
   lcError: string | null;
   lcHistory: LcTrack[];
-  openLightCodes: (prefill?: LcPrefill) => void;
+  openLightCodes: (prefill?: LcPrefill, opts?: { bare?: boolean }) => void;
   exitLightCodes: () => void;
   /* THE VIDEO STUDIO — the motion picture's own room: a seed (the
      conversation's own words) in, a narrated film out. */
@@ -1184,6 +1206,21 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     saveTreeMix(mix);
   },
 
+  /* THE LANDING'S OWN SCOPE — General until the crown's Scopes hand
+     chooses; the choice rides the session's own keeping (the setter
+     writes it, bootPreferences wakes it). Only the four family keys
+     are ever kept — anything else falls back to General. */
+  landingScope: "",
+  setLandingScope: (scope) => {
+    const next = scope && LANDING_SCOPES.includes(scope) ? scope : "";
+    set({ landingScope: next });
+    try {
+      window.sessionStorage.setItem("mirror:landing-scope", next);
+    } catch {
+      /* the session's keeping stays closed — the store carries */
+    }
+  },
+
   setMode: (mode) =>
     set((s) => {
       const target = s.sessions[mode];
@@ -1231,17 +1268,26 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   /* ---------------- THE WORKSPACE ----------------
      The tools no longer swallow the whole screen: each one opens as a
      mini tab over the living tree — one window, many rooms, one tab
-     active at a time. openToolTab always returns the view to the
-     observatory, so the window is revealed from any full-screen room
-     the walk was standing in. */
-  openToolTab: (key) =>
-    set((s) => ({
-      view: "observatory",
+     active at a time. openToolTab returns the view to the observatory
+     (revealing the window from any full-screen room the walk stood
+     in) — unless opts.bare: a tab opened from the landing's docked
+     portal keeps the threshold exactly where it stands. */
+  openToolTab: (key, opts) => {
+    /* THE MAKER'S TRAIL — every open leaves one stone on the visit's
+       own path (sessionStorage, capped), so the history panel's trail
+       room can hand any opened tool back with one touch. */
+    recordMakerTrail(key);
+    return set((s) => ({
+      /* THE BARE LAW — a tab opened from the landing's docked portal
+         never yanks the visitor off the threshold: the view stays
+         where it is (the window stands over the docked chat). */
+      ...(opts?.bare ? {} : { view: "observatory" as MainView }),
       mobileNavOpen: false,
       modal: null,
       toolTabs: s.toolTabs.includes(key) ? s.toolTabs : [...s.toolTabs, key],
       activeToolTab: key,
-    })),
+    }));
+  },
   closeToolTab: (key) =>
     set((s) => {
       const tabs = s.toolTabs.filter((k) => k !== key);
@@ -1266,7 +1312,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   /* ---------------- The Akashic Library ----------------
      The Library is its own ancient world: opening it suspends every
      other surface — one papyrus room, one record at a time. */
-  openAkashic: () => get().openToolTab("akashic"),
+  openAkashic: (opts) => get().openToolTab("akashic", opts),
   /* the room's own back hand — from the full-screen room it returns to
      the walk with the mini window still waiting (the tab stays); from
      inside the mini window it lays the tab down (leaving the room) */
@@ -1302,7 +1348,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
      A world of its own: the magical atelier where tales are woven
      from resonance and read as they are being written.
      Free for every visitor. */
-  openDreamBook: () => get().openToolTab("dreambook"),
+  openDreamBook: (opts) => get().openToolTab("dreambook", opts),
   exitDreamBook: () =>
     set((s) =>
       s.view === "dreambook"
@@ -1318,7 +1364,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   /* -------- LIGHT CODES — the musical chamber --------
      Its own quiet world: intention in, transmission out. The Mirror
      interprets; the sound engine renders; the visitor listens. */
-  openLightCodes: (prefill) => {
+  openLightCodes: (prefill, opts) => {
     const hydrate: Partial<MirrorState> = {
       mobileNavOpen: false,
       modal: null,
@@ -1350,8 +1396,9 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     set(hydrate);
     /* the musical chamber rides as a mini tab — the tab call happens
        BEFORE the auto-generate, so the chamber is standing when the
-       first transmission is asked for */
-    get().openToolTab("lightcodes");
+       first transmission is asked for. opts.bare keeps the landing's
+       docked portal on the threshold (no view change). */
+    get().openToolTab("lightcodes", opts);
     if (prefill?.autoGenerate) void get().generateLightCode({ context: prefill.context });
   },
   exitLightCodes: () =>
@@ -3827,6 +3874,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       const pace = Number(localStorage.getItem("mirror-entity-pace"));
       const savedMix = loadTreeMix();
       const rawSeeds = localStorage.getItem("mirror-entity-seeds");
+      const landingScope = sessionStorage.getItem("mirror:landing-scope");
       const seeds = rawSeeds
         ? (JSON.parse(rawSeeds) as unknown[]).filter(
             (s): s is string => typeof s === "string" && s.trim().length >= 2
@@ -3840,6 +3888,11 @@ export const useMirror = create<MirrorState>()((set, get) => ({
           : {}),
         ...(seeds.length > 0 ? { expansionSeeds: seeds.slice(0, 6) } : {}),
         ...(savedMix ? { treeMix: savedMix } : {}),
+        /* THE LANDING'S OWN SCOPE — the session's choice wakes with
+           the threshold (only the four family keys are honored). */
+        ...(LANDING_SCOPES.includes(landingScope as LandingScopeKey)
+          ? { landingScope: landingScope as LandingScopeKey }
+          : {}),
       });
       /* THE LAZY VOICES — the visitor's own tongue wakes with the house */
       void ensureDict(isLanguageCode(lang) ? lang : "en");
@@ -3928,6 +3981,240 @@ export const archiveTotals = {
 };
 
 /* ------------------------------------------------------------------ */
+/*  THE MAKER'S TRAIL — every tool-tab open leaves one stone on the    */
+/*  visit's own path (sessionStorage, capped, newest first): the       */
+/*  history panel's trail room reads it, so the visitor can step back  */
+/*  into any room this visit has opened. Nothing travels anywhere.     */
+/* ------------------------------------------------------------------ */
+
+const MAKER_TRAIL_KEY = "mirror:maker-trail";
+const MAKER_TRAIL_MAX = 30;
+
+interface MakerTrailStone {
+  key: ToolTabKey;
+  at: number;
+}
+
+function recordMakerTrail(key: ToolTabKey): void {
+  if (typeof window === "undefined") return;
+  try {
+    const raw = window.sessionStorage.getItem(MAKER_TRAIL_KEY);
+    let trail: MakerTrailStone[] = [];
+    if (raw) {
+      const parsed: unknown = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        trail = parsed.filter(
+          (e): e is MakerTrailStone =>
+            Boolean(e) &&
+            typeof (e as { key?: unknown }).key === "string" &&
+            typeof (e as { at?: unknown }).at === "number"
+        );
+      }
+    }
+    const next: MakerTrailStone[] = [
+      { key, at: Date.now() },
+      ...trail,
+    ].slice(0, MAKER_TRAIL_MAX);
+    window.sessionStorage.setItem(MAKER_TRAIL_KEY, JSON.stringify(next));
+  } catch {
+    /* the visit's keeping stays closed — the tab still opens */
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  THE LIBRARY'S OWN AUTOSHELF — a signed keeper's conversations walk */
+/*  into the profile's Cosmic Library by themselves: after the         */
+/*  browser's shelf write, the active thread of every surface is       */
+/*  offered to /api/library (fire-and-forget — the words never wait).  */
+/*  A tiny pointer (mirror:library-autoptr) remembers what each        */
+/*  surface already laid on the shelf, so unchanged threads never      */
+/*  travel twice. The sectors are the honest ones the house's own      */
+/*  routes save to (mirror-os → manifest, the quantum world → quantum, */
+/*  the nexus → evolvemed, the atelier → artx, the forge → invent,     */
+/*  the main scopes → observatory).                                    */
+/* ------------------------------------------------------------------ */
+
+const LIBRARY_SECTOR_BY_SURFACE: Record<ChatSurface, string> = {
+  os: "manifest",
+  px: "quantum",
+  em: "evolvemed",
+  ax: "artx",
+  forge: "invent",
+  interplanetary: "observatory",
+  healing: "observatory",
+};
+
+const LIBRARY_AUTOPTR_KEY = "mirror:library-autoptr";
+/** one warn per visit — a shelf that refused never spams the console */
+let libraryAutosaveMuted = false;
+
+/** The conversation's own words, whatever shape the surface keeps. */
+function surfaceMessages(
+  surface: ChatSurface,
+  s: MirrorState
+): readonly unknown[] {
+  switch (surface) {
+    case "os":
+      return s.osMessages;
+    case "px":
+      return s.pxMessages;
+    case "em":
+      return s.emMessages;
+    case "ax":
+      return s.axMessages;
+    case "forge":
+      return s.forgeSession.messages;
+    case "interplanetary":
+    case "healing":
+      return s.sessions[surface].messages;
+  }
+}
+
+/** The visitor's own first words — the thread's title, the way the
+    archive names a chat (the scopes' pairs speak in `query`, the
+    direct lines in a visitor-role `text`). */
+function conversationFirstWhisper(messages: readonly unknown[]): string {
+  for (const m of messages) {
+    if (!m || typeof m !== "object") continue;
+    const rec = m as { query?: unknown; role?: unknown; text?: unknown };
+    const words =
+      typeof rec.query === "string" && rec.query.trim()
+        ? rec.query
+        : (rec.role === undefined || rec.role === "visitor") &&
+            typeof rec.text === "string" &&
+            rec.text.trim()
+          ? rec.text
+          : "";
+    if (words.trim()) return words.trim();
+  }
+  return "";
+}
+
+/** The mirror's last words — the excerpt the library's rows read. */
+function conversationLastReply(messages: readonly unknown[]): string {
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const m = messages[i];
+    if (!m || typeof m !== "object") continue;
+    const rec = m as { query?: unknown; role?: unknown; text?: unknown };
+    if (typeof rec.query === "string") {
+      /* the scopes' own pair — the text is the mirror's reply */
+      if (typeof rec.text === "string" && rec.text.trim())
+        return rec.text.trim();
+      continue;
+    }
+    const isVisitor = rec.role === undefined || rec.role === "visitor";
+    if (!isVisitor && typeof rec.text === "string" && rec.text.trim())
+      return rec.text.trim();
+  }
+  return "";
+}
+
+/** The thread in its smallest honest dress — the last pairs only,
+    each side trimmed, the travel kept light. */
+function conversationTurns(
+  messages: readonly unknown[]
+): { q?: string; a?: string }[] {
+  const turns: { q?: string; a?: string }[] = [];
+  for (const m of messages) {
+    if (!m || typeof m !== "object") continue;
+    const rec = m as { query?: unknown; role?: unknown; text?: unknown };
+    if (typeof rec.query === "string" && rec.query.trim()) {
+      turns.push({
+        q: rec.query.trim().slice(0, 2000),
+        ...(typeof rec.text === "string" && rec.text.trim()
+          ? { a: rec.text.trim().slice(0, 2000) }
+          : {}),
+      });
+      continue;
+    }
+    const words = typeof rec.text === "string" ? rec.text.trim() : "";
+    if (!words) continue;
+    if (rec.role === undefined || rec.role === "visitor") {
+      turns.push({ q: words.slice(0, 2000) });
+    } else if (turns.length > 0) {
+      turns[turns.length - 1].a = words.slice(0, 2000);
+    } else {
+      turns.push({ a: words.slice(0, 2000) });
+    }
+  }
+  return turns.slice(-30);
+}
+
+function hashWords(words: string): string {
+  let h = 5381;
+  for (let i = 0; i < words.length; i++)
+    h = ((h << 5) + h + words.charCodeAt(i)) | 0;
+  return (h >>> 0).toString(36);
+}
+
+function saveConversationToLibrary(surface: ChatSurface, s: MirrorState): void {
+  if (libraryAutosaveMuted || typeof window === "undefined") return;
+  try {
+    const messages = surfaceMessages(surface, s);
+    /* a thread needs two words before it may rest on the library's shelf */
+    if (messages.length < 2) return;
+    const exchanges = conversationTurns(messages);
+    if (exchanges.length === 0) return;
+    const hash = hashWords(JSON.stringify(exchanges));
+    let pointers: Record<string, { turns: number; hash: string }> = {};
+    try {
+      pointers = JSON.parse(
+        window.localStorage.getItem(LIBRARY_AUTOPTR_KEY) ?? "{}"
+      ) as typeof pointers;
+    } catch {
+      pointers = {};
+    }
+    const seen = pointers[surface];
+    if (seen && seen.turns === messages.length && seen.hash === hash) return;
+    const title = (conversationFirstWhisper(messages) || "A conversation").slice(
+      0,
+      60
+    );
+    const excerpt = conversationLastReply(messages).slice(0, 280);
+    void fetch("/api/library", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sector: LIBRARY_SECTOR_BY_SURFACE[surface],
+        surface,
+        title,
+        excerpt,
+        content: {
+          kind: "conversation",
+          surface,
+          turns: messages.length,
+          exchanges,
+        },
+      }),
+    })
+      .then((res) => {
+        if (res.ok) {
+          pointers[surface] = { turns: messages.length, hash };
+          try {
+            window.localStorage.setItem(
+              LIBRARY_AUTOPTR_KEY,
+              JSON.stringify(pointers)
+            );
+          } catch {
+            /* the pointer rests unwritten — the next pass saves again, harmlessly */
+          }
+          return;
+        }
+        libraryAutosaveMuted = true;
+        console.warn(
+          `[library] autosave rests — /api/library answered ${res.status}; the threads stay on the browser's own shelf`
+        );
+      })
+      .catch(() => {
+        libraryAutosaveMuted = true;
+        console.warn("[library] autosave could not reach the shelf");
+      });
+  } catch {
+    /* never let the autoshef disturb the words */
+  }
+}
+
+/* ------------------------------------------------------------------ */
 /*  THE ARCHIVE'S QUIET HANDS — client-side keeping, zero servers.     */
 /*  Every change to any conversation settles onto the browser's own    */
 /*  shelf (debounced); every view change is recorded so the whole-page */
@@ -3993,7 +4280,14 @@ if (typeof window !== "undefined") {
           "interplanetary",
           "healing",
         ];
-        for (const surface of surfaces) archiveSurface(surface, s);
+        for (const surface of surfaces) {
+          archiveSurface(surface, s);
+          /* THE LIBRARY'S OWN AUTOSHELF — the same thread walks into
+             the profile's Cosmic Library (keeper's pass only — the
+             gate above —, deduped by its own pointer, fire-and-forget:
+             the words never wait on the shelf). */
+          saveConversationToLibrary(surface, s);
+        }
       } catch {
         /* the shelf refused — the session copy still holds */
       } finally {

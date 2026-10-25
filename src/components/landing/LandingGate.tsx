@@ -108,8 +108,9 @@ function computeGeo(): Geo {
      line all stand complete inside the window. No crop, no slice —
      a whole small portal on the threshold.
      THE TALLER GLASS — the visitor asked for a grander window: the
-     docked chat stands fifteen percent taller at every width (0.598
-     of the phone's height, a 506px desk cap), still whole.
+     docked chat stands taller at every width (the phone's window is
+     now twelve percent taller again, 0.670 of its height; the desk
+     keeps its 506px cap), still whole.
      THE FIRST SCREEN'S OWN — at the desk the glass now keeps a
      gentle 0.60 of the height (from 0.633), so the whole chamber —
      crown, room and whisper line — stands fully visible in the
@@ -118,10 +119,11 @@ function computeGeo(): Geo {
   if (vw < 640) {
     return {
       w: Math.floor(vw * 0.94),
-      /* the phone's window — 0.52 grew to 0.598 (fifteen percent
-         taller): the whole chamber inside a taller glass, the crown
-         and the whisper line never slipping beneath the fold. */
-      h: Math.round(vh * 0.598),
+      /* the phone's window — 0.52 grew to 0.598, and at the
+         visitor's word to 0.670 (twelve percent taller): the whole
+         chamber inside a taller glass, the crown and the whisper
+         line never slipping beneath the fold. */
+      h: Math.round(vh * 0.670),
       radius: 26,
     };
   }
@@ -157,8 +159,22 @@ const PHONE_CROSSING = () =>
   typeof window !== "undefined" &&
   window.matchMedia("(max-width: 639px)").matches;
 
+/* THE LANDING'S OWN LIGHT — the four fields' accents (the walk's own
+   family lights). The chosen scope's hex rides the docked wrapper as
+   --landing-scope-accent, and the threshold's crystal tints (the
+   aura, the divider, the send hand, the room's edge) wear it; an
+   empty scope carries no var, and the two crystals keep their own
+   red and blue. */
+const LANDING_SCOPE_ACCENTS: Record<string, string> = {
+  interplanetary: "#22d3ee",
+  quantum: "#a78bfa",
+  healing: "#2dd4bf",
+  artx: "#e879f9",
+};
+
 export default function LandingGate() {
   const { setTheme } = useTheme();
+  const landingScope = useMirror((s) => s.landingScope);
   const [phase, setPhase] = useState<Phase>("landing");
   const [Chamber, setChamber] = useState<ComponentType<
     { bare?: boolean; onExpand?: () => void; onMinimize?: () => void; onFoldChat?: () => void }
@@ -652,6 +668,16 @@ export default function LandingGate() {
                       height: geo.h,
                       "--app-h": `${geo.h}px`,
                       "--app-shift": "0px",
+                      /* THE SCOPE'S OWN LIGHT — the threshold's chosen
+                         field tints the chat's crystals (see
+                         LANDING_SCOPE_ACCENTS); General carries no
+                         var, and the crystals keep their own. */
+                      ...(landingScope && LANDING_SCOPE_ACCENTS[landingScope]
+                        ? {
+                            "--landing-scope-accent":
+                              LANDING_SCOPE_ACCENTS[landingScope],
+                          }
+                        : {}),
                     } as CSSProperties)
               }
             >
@@ -703,7 +729,16 @@ export default function LandingGate() {
                 chatFolded
                 ? { width: geo.w, height: 68 }
                 : { width: geo.w, height: geo.h }
-              : { height: "min(var(--vh-safe), 660px)" }
+              : /* THE WAKING GROUND — before the true window is carved,
+                   the slot wears the waking height: on the phone ~67%
+                   of the screen (the taller glass it will become), so
+                   the carved window never arrives as a jump; the desk
+                   keeps its own waking height (globals.css holds the
+                   phone's value). */
+                {
+                  height:
+                    "var(--portal-waking-h, min(var(--vh-safe), 660px))",
+                }
           }
           onExpand={expandPortal}
           onScroll={handleLandingScroll}

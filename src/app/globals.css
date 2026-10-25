@@ -32,6 +32,19 @@ body {
   }
 }
 
+/* ------------------------------------------------------------------ */
+/*  THE WAKING SLOT'S OWN HEIGHT — before the gate carves the chat's   */
+/*  true window, the reserved slot wears this waking height. Phones    */
+/*  hold about 67% of their screen (the taller glass it becomes), so   */
+/*  the carved window arrives as the same ground, never a jump; the    */
+/*  desk keeps its own waking height (the var's fallback).             */
+/* ------------------------------------------------------------------ */
+@media (max-width: 639px) {
+  :root {
+    --portal-waking-h: min(67vh, var(--vh-safe));
+  }
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

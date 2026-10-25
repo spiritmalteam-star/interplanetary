@@ -9,6 +9,7 @@ import { useT } from "@/lib/i18n";
 import { CosmicBackdrop } from "./CosmicBackdrop";
 import { StarField } from "./StarField";
 import { ToolWorkspace } from "./living/ToolWorkspace";
+import { LandingChatNav } from "./landing/LandingChatNav";
 import { WalletGuard } from "./WalletGuard";
 import { BranchCanopy } from "./BranchCanopy";
 import { ReplyBranches } from "./ReplyBranches";
@@ -437,18 +438,26 @@ function AppShellViews({
              while the portal is docked on the threshold, the landing
              hand while it fills the whole screen. THE FREE LAW — the
              crossing wears no coin: the whole realm stands open to
-             every visitor, no passage demanded, nothing acquired. */
+             every visitor, no passage demanded, nothing acquired.
+             THE LANDING'S OWN NAV — docked (bare), the crown also
+             carries the threshold's two quiet hands: Create (the
+             making rooms open as mini tabs over the docked chat) and
+             Scopes (the floor's own field of light). The full portal
+             never wears them — its own pill serves the walk. */
           bare && onExpand ? (
-            <button
-              type="button"
-              onClick={onExpand}
-              aria-label={t("Fullscreen")}
-              title={t("Fullscreen")}
-              data-testid="crown-expand"
-              className="focus-glow relative flex size-7 items-center justify-center rounded-full border border-[rgba(232,217,176,0.42)] bg-[rgba(232,217,176,0.08)] text-[var(--lp-gold)] transition-all duration-300 hover:border-[rgba(232,217,176,0.8)] hover:text-[var(--lp-gold-soft)]"
-            >
-              <Maximize2 className="size-3" aria-hidden="true" />
-            </button>
+            <>
+              <LandingChatNav />
+              <button
+                type="button"
+                onClick={onExpand}
+                aria-label={t("Fullscreen")}
+                title={t("Fullscreen")}
+                data-testid="crown-expand"
+                className="focus-glow relative flex size-7 items-center justify-center rounded-full border border-[rgba(232,217,176,0.42)] bg-[rgba(232,217,176,0.08)] text-[var(--lp-gold)] transition-all duration-300 hover:border-[rgba(232,217,176,0.8)] hover:text-[var(--lp-gold-soft)]"
+              >
+                <Maximize2 className="size-3" aria-hidden="true" />
+              </button>
+            </>
           ) : !bare && onMinimize ? (
             <button
               type="button"
@@ -482,8 +491,11 @@ function AppShellViews({
       {/* THE WORKSPACE — the tools' own floating room: every open tool
           stands as a mini tab over the walk; the tree stays mounted
           underneath, and the expand hand gives a room the old whole
-          screen (its back hand returns to this window). */}
-      <ToolWorkspace />
+          screen (its back hand returns to this window). THE LANDING'S
+          OWN WINDOW — bare, the same window stands over the docked
+          chat at the chat's own exact size (openToolTab's bare law
+          keeps the threshold beneath the visitor's feet). */}
+      <ToolWorkspace bare={bare} />
 
       {/* the reading rooms' own modals — every door keeps its keys */}
       <FederationModal />

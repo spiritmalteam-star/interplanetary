@@ -65,8 +65,9 @@ const VideoStudioView = dynamic(
   { ssr: false, loading: () => null }
 );
 
-/* one row per tool — the small mark and the name the tab wears */
-const TAB_META: Record<ToolTabKey, { icon: LucideIcon; label: string }> = {
+/* one row per tool — the small mark and the name the tab wears
+   (exported so the history panel's maker trail wears the same marks) */
+export const TAB_META: Record<ToolTabKey, { icon: LucideIcon; label: string }> = {
   mirroros: { icon: Sparkles, label: "Manifest" },
   akashic: { icon: ScrollText, label: "Akashic" },
   dreambook: { icon: BookOpen, label: "Book" },
@@ -98,7 +99,7 @@ const TOOL_VIEWS: Record<ToolTabKey, ComponentType> = {
 /*  drag by their header (mouse only, clamped to the frame); small     */
 /*  screens wear a sheet under the pill instead — no drag.             */
 /* ------------------------------------------------------------------ */
-function ToolWorkspaceImpl() {
+function ToolWorkspaceImpl({ bare = false }: { bare?: boolean }) {
   const view = useMirror((s) => s.view);
   const toolTabs = useMirror((s) => s.toolTabs);
   const activeToolTab = useMirror((s) => s.activeToolTab);
@@ -111,9 +112,16 @@ function ToolWorkspaceImpl() {
      tab (or a full-screen room owning the screen) lays it down.
      "transmission" IS the walk — the realm renders it as its own room
      (AppShell has no early-return for it; it is only the view the
-     channel's asks carry), so the window keeps standing there. */
+     channel's asks carry), so the window keeps standing there.
+     THE LANDING'S OWN WINDOW — bare (the docked threshold portal),
+     the window stands too: with tabs open it covers the docked chat
+     at the chat's own exact size, and a full-screen room (an expanded
+     tab) still lays it down until the room's back hand returns. */
   const active =
-    activeToolTab && (view === "observatory" || view === "transmission")
+    activeToolTab &&
+    (view === "observatory" ||
+      view === "transmission" ||
+      (bare && toolTabs.length > 0))
       ? activeToolTab
       : null;
 
@@ -135,7 +143,8 @@ function ToolWorkspaceImpl() {
 
   const onHeaderPointerDown = useCallback(
     (e: ReactPointerEvent<HTMLDivElement>) => {
-      if (!desktop || e.button !== 0) return;
+      /* the landing's own window never drags — it IS the chat's size */
+      if (bare || !desktop || e.button !== 0) return;
       /* the tabs' and hands' own presses stay presses — never drags */
       if ((e.target as HTMLElement).closest("button")) return;
       const win = winRef.current;
@@ -170,29 +179,45 @@ function ToolWorkspaceImpl() {
       window.addEventListener("pointerup", up);
       window.addEventListener("pointercancel", up);
     },
-    [desktop]
+    [bare, desktop]
   );
 
   /* the guard itself — no tab standing (or a full-screen room owning
      the screen): the window does not exist; hooks have all run above */
   if (!active) return null;
 
-  const winStyle: CSSProperties = {
-    borderColor: "color-mix(in srgb, var(--scope-a,var(--gd)) 25%, var(--hairline))",
-    ...(desktop
-      ? pos
-        ? { left: pos.x, top: pos.y }
-        : {
-            right: "max(1rem, env(safe-area-inset-right))",
-            bottom: "max(4.5rem, calc(env(safe-area-inset-bottom) + 4.5rem))",
-            width: "min(880px, calc(100% - 2rem))",
-            height: "min(600px, calc(100% - 8rem))",
-          }
-      : {
-          top: "calc(env(safe-area-inset-top) + 3.25rem)",
-          bottom: "max(0.5rem, env(safe-area-inset-bottom))",
-        }),
-  };
+  const winStyle: CSSProperties = bare
+    ? /* THE LANDING'S OWN SIZE — the window is the chat's exact
+         frame: full size of the docked portal, no cap, no drag —
+         it replaces the chat while it stands, and the last closed
+         tab reveals the chat again. The parent lens clips the
+         corners, so the window wears none of its own. */
+      {
+        left: 0,
+        top: 0,
+        right: 0,
+        bottom: 0,
+        borderRadius: 0,
+        borderColor:
+          "color-mix(in srgb, var(--scope-a,var(--gd)) 25%, var(--hairline))",
+      }
+    : {
+        borderColor:
+          "color-mix(in srgb, var(--scope-a,var(--gd)) 25%, var(--hairline))",
+        ...(desktop
+          ? pos
+            ? { left: pos.x, top: pos.y }
+            : {
+                right: "max(1rem, env(safe-area-inset-right))",
+                bottom: "max(4.5rem, calc(env(safe-area-inset-bottom) + 4.5rem))",
+                width: "min(880px, calc(100% - 2rem))",
+                height: "min(600px, calc(100% - 8rem))",
+              }
+          : {
+              top: "calc(env(safe-area-inset-top) + 3.25rem)",
+              bottom: "max(0.5rem, env(safe-area-inset-bottom))",
+            }),
+      };
 
   const ActiveView = active ? TOOL_VIEWS[active] : null;
 
@@ -202,7 +227,8 @@ function ToolWorkspaceImpl() {
       data-testid="tool-workspace"
       className={cn(
         "pointer-events-auto z-30 flex flex-col overflow-hidden rounded-2xl border bg-background shadow-[0_24px_70px_-30px_rgba(0,0,0,0.6)]",
-        desktop ? "absolute" : "fixed inset-x-2"
+        bare || desktop ? "absolute" : "fixed inset-x-2",
+        bare && "rounded-none"
       )}
       style={winStyle}
     >

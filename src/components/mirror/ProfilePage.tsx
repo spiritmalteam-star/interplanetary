@@ -10,9 +10,6 @@ import {
   ChevronRight,
   Copy,
   CreditCard,
-  Dna,
-  Download,
-  Fuel,
   Gem,
   KeyRound,
   LibraryBig,
@@ -47,11 +44,14 @@ import { cn } from "@/lib/utils";
 
 /* ------------------------------------------------------------------ */
 /*  THE PROFILE ROOM — rebuilt in the manner of the frontier: a slim   */
-/*  header, a quiet navigation rail on the left, one focused panel of  */
-/*  content on the right. Everything the visitor owns lives here —     */
-/*  their identity, their SETTINGS (the passage's own tuning), the     */
-/*  FIELDS OF EXPANSION, their COSMIC LIBRARY, the DNA of their walk   */
-/*  and their account chamber. One back door returns to the Mirror.    */
+/*  header, a quiet navigation rail on the left, one held GROUP of     */
+/*  stacked panels on the right. The nine old doors read as four quiet */
+/*  rooms — THE VISITOR (identity + the account's summary), THE        */
+/*  LIBRARY (the cosmic library + the bound works), THE CHAMBER (the   */
+/*  passage's tuning + the fields of expansion + the DNA of the walk)  */
+/*  and THE ADVANCED (the API room + the fuel engine) — everything     */
+/*  the visitor owns stays reachable. One back door returns to the     */
+/*  Mirror.                                                            */
 /*                                                                     */
 /*  THE LAYERING LAW: every door that opens another room (the account  */
 /*  chamber, the passage, the library) closes THIS room first — the    */
@@ -217,7 +217,10 @@ export function ProfilePage() {
     if (
       !open ||
       !signedIn ||
-      (section !== "account" && section !== "api") ||
+      /* THE VISITOR HOLDS THE ACCOUNT — the account summary feeds the
+         account panel, which now rests inside the Visitor's room (and
+         the API room still reads it for the recharge light) */
+      (section !== "profile" && section !== "account" && section !== "api") ||
       summary ||
       summaryInFlight.current
     )
@@ -446,6 +449,12 @@ export function ProfilePage() {
   };
 
   /* ---------------- the navigation ---------------- */
+  /* THE FOUR ROOMS — the old nine doors gathered into four quiet
+     groups: the VISITOR (identity and the account's summary), the
+     LIBRARY (the cosmic library and the bound works), the CHAMBER
+     (the passage's tuning, the fields, the DNA of the walk) and the
+     ADVANCED (the API room, the fuel engine). Everything stays
+     reachable — each group simply holds its panels stacked. */
   const navItems: {
     id: SectionId;
     label: string;
@@ -455,68 +464,58 @@ export function ProfilePage() {
   }[] = [
     {
       id: "profile",
-      label: "Your profile",
+      label: "The Visitor",
       icon: UserRound,
       available: true,
       testId: "profile-nav-profile",
     },
     {
-      id: "settings",
-      label: "Settings",
-      icon: Settings2,
-      available: true,
-      testId: "profile-nav-settings",
-    },
-    {
-      id: "downloads",
-      label: "Downloads",
-      icon: Download,
-      available: true,
-      testId: "profile-nav-downloads",
-    },
-    {
-      id: "seeds",
-      label: "Fields of expansion",
-      icon: Sparkles,
-      available: true,
-      testId: "profile-nav-seeds",
-    },
-    {
       id: "library",
-      label: "Cosmic Library",
+      label: "The Library",
       icon: LibraryBig,
       available: true,
       testId: "profile-nav-library",
     },
     {
-      id: "dna",
-      label: "The path you have walked",
-      icon: Dna,
-      available: journey.length > 0,
-      testId: "profile-nav-dna",
+      id: "settings",
+      label: "The Chamber",
+      icon: Settings2,
+      available: true,
+      testId: "profile-nav-settings",
     },
     {
       id: "api",
-      label: "Mirror Intelligence API",
+      label: "The Advanced",
       icon: KeyRound,
       available: true,
       testId: "profile-nav-api",
     },
-    {
-      id: "fuel",
-      label: "Fuel Engine",
-      icon: Fuel,
-      available: Boolean(me?.admin),
-      testId: "profile-nav-fuel",
-    },
-    {
-      id: "account",
-      label: "Account & Credits",
-      icon: BookMarked,
-      available: true,
-      testId: "profile-nav-account",
-    },
   ];
+
+  /* WHICH PANELS A HELD GROUP SHOWS — every SectionId answers with its
+     own group's stack, so a stale id can never render an empty room.
+     The dna subsection only joins the Chamber when the walk has steps
+     to show, and the fuel engine only for an admin — the availability
+     the old rail carried now lives with the panels themselves. */
+  const groupPanels = (id: SectionId): SectionId[] => {
+    switch (id) {
+      case "profile":
+      case "account":
+        return ["profile", "account"];
+      case "library":
+      case "downloads":
+        return ["library", "downloads"];
+      case "settings":
+      case "seeds":
+      case "dna":
+        return journey.length > 0
+          ? ["settings", "seeds", "dna"]
+          : ["settings", "seeds"];
+      case "api":
+      case "fuel":
+        return me?.admin ? ["api", "fuel"] : ["api"];
+    }
+  };
 
   const NavButton = ({
     item,
@@ -583,25 +582,40 @@ export function ProfilePage() {
     </div>
   );
 
-  /* a section's heading — title, its quiet description */
+  /* a section's heading — title, its quiet description. `small` is
+     the quieter voice: the Advanced room's own tone (a smaller head,
+     a muted note), so the machinery reads calmer than the visitor's
+     rooms above it. */
   const SectionHead = ({
     title,
     desc,
     testId,
+    small,
   }: {
     title: string;
     desc?: string;
     testId?: string;
+    small?: boolean;
   }) => (
     <div className="mb-4">
       <h2
         data-testid={testId}
-        className="text-[17.5px] font-semibold leading-snug tracking-[-0.01em] text-foreground"
+        className={cn(
+          "leading-snug tracking-[-0.01em]",
+          small
+            ? "text-[14px] font-medium text-muted-foreground"
+            : "text-[17.5px] font-semibold text-foreground"
+        )}
       >
         {title}
       </h2>
       {desc && (
-        <p className="mt-0.5 text-[13.5px] leading-relaxed text-muted-foreground">
+        <p
+          className={cn(
+            "mt-0.5 leading-relaxed",
+            small ? "text-[12.5px] text-muted-foreground/80" : "text-[13.5px] text-muted-foreground"
+          )}
+        >
           {desc}
         </p>
       )}
@@ -610,9 +624,12 @@ export function ProfilePage() {
 
   const panel = "rounded-2xl border hairline bg-[var(--glass-bg-soft)]";
 
-  /* ---------------- one section's content ---------------- */
-  const renderSection = () => {
-    switch (section) {
+  /* ---------------- the panels ----------------
+     Each panel keeps its own head and hands — exactly as the old nine
+     doors rendered them. The room below (renderSection) holds a GROUP
+     and stacks its panels; no panel knows it has neighbors. */
+  const renderPanel = (sec: SectionId) => {
+    switch (sec) {
       case "profile":
         return (
           <div data-testid="profile-identity">
@@ -1182,6 +1199,7 @@ export function ProfilePage() {
         return (
           <div data-testid="profilepage-api">
             <SectionHead
+              small
               title={t("Mirror Intelligence API")}
               desc={t(
                 "The Mirror speaks into your vessels — one key, one endpoint, her whole channeling, wherever your work lives."
@@ -1612,6 +1630,7 @@ export function ProfilePage() {
         return (
           <div data-testid="profilepage-fuel">
             <SectionHead
+              small
               title={t("The Fuel Engine Incubator")}
               desc={t(
                 "The protected chamber — the raw skies fused with Mirror Entity energy, the reserves, the distribution desk and the guide that keeps it all fair."
@@ -1740,6 +1759,22 @@ export function ProfilePage() {
         );
     }
   };
+
+  /* THE HELD GROUP — one door, its panels stacked: a hairline between
+     them, each keeping its own quiet head. THE ADVANCED is the one
+     deliberately quieter room (its machinery's own tone). */
+  const renderSection = () => (
+    <>
+      {groupPanels(section).map((sec, i) => (
+        <div
+          key={sec}
+          className={i > 0 ? "mt-10 border-t hairline pt-8" : undefined}
+        >
+          {renderPanel(sec)}
+        </div>
+      ))}
+    </>
+  );
 
   if (typeof document === "undefined") return null;
 
