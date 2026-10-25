@@ -183,6 +183,20 @@ export type MainView =
   | "lightcodes"
   | "library"
   | "video";
+
+/* THE WORKSPACE — the tools of the house that ride as mini tabs over
+   the living tree (every key is also a MainView: expanding a tab hands
+   the screen to that view's own full-screen room). */
+export type ToolTabKey =
+  | "akashic"
+  | "invent"
+  | "dreambook"
+  | "lightcodes"
+  | "video"
+  | "register"
+  | "mirroros"
+  | "library";
+
 export type RegisterKind = DossierKind;
 
 /* -------- the passage — the visitor's account and the free door -------- */
@@ -660,6 +674,15 @@ interface MirrorState {
   /** Inner Earth: open one species' full encyclopedia page. */
   openSpecies: (id: string) => void;
 
+  /* THE WORKSPACE — the tools open as mini tabs over the walk; one
+     window carries every open room, one tab active at a time. */
+  toolTabs: ToolTabKey[];
+  activeToolTab: ToolTabKey | null;
+  openToolTab: (key: ToolTabKey) => void;
+  closeToolTab: (key: ToolTabKey) => void;
+  activateToolTab: (key: ToolTabKey) => void;
+  expandActiveToolTab: () => void;
+
   /* The Akashic Library — the ancient one's papyrus records */
   openAkashic: () => void;
   exitAkashic: () => void;
@@ -1058,6 +1081,8 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   mobileNavOpen: false,
   sidebarOpen: true,
   view: "observatory",
+  toolTabs: [],
+  activeToolTab: null,
   composerFocusNonce: 0,
   canopySummoned: false,
   floorSeed: "",
@@ -1203,34 +1228,98 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   openSpecies: (id) =>
     set({ modal: { type: "species", id }, mobileNavOpen: false }),
 
+  /* ---------------- THE WORKSPACE ----------------
+     The tools no longer swallow the whole screen: each one opens as a
+     mini tab over the living tree — one window, many rooms, one tab
+     active at a time. openToolTab always returns the view to the
+     observatory, so the window is revealed from any full-screen room
+     the walk was standing in. */
+  openToolTab: (key) =>
+    set((s) => ({
+      view: "observatory",
+      mobileNavOpen: false,
+      modal: null,
+      toolTabs: s.toolTabs.includes(key) ? s.toolTabs : [...s.toolTabs, key],
+      activeToolTab: key,
+    })),
+  closeToolTab: (key) =>
+    set((s) => {
+      const tabs = s.toolTabs.filter((k) => k !== key);
+      const active =
+        s.activeToolTab === key ? (tabs[tabs.length - 1] ?? null) : s.activeToolTab;
+      return { toolTabs: tabs, activeToolTab: active };
+    }),
+  activateToolTab: (key) => set({ activeToolTab: key }),
+  /* THE EXPAND HAND — the active tab's old full-screen room takes the
+     whole screen; the tab stays parked in the window underneath. */
+  expandActiveToolTab: () =>
+    set((s) =>
+      s.activeToolTab
+        ? {
+            view: s.activeToolTab as MainView,
+            mobileNavOpen: false,
+            modal: null,
+          }
+        : {}
+    ),
+
   /* ---------------- The Akashic Library ----------------
      The Library is its own ancient world: opening it suspends every
      other surface — one papyrus room, one record at a time. */
-  openAkashic: () =>
-    set({ view: "akashic", mobileNavOpen: false, modal: null }),
-  exitAkashic: () => set({ view: "observatory" }),
+  openAkashic: () => get().openToolTab("akashic"),
+  /* the room's own back hand — from the full-screen room it returns to
+     the walk with the mini window still waiting (the tab stays); from
+     inside the mini window it lays the tab down (leaving the room) */
+  exitAkashic: () =>
+    set((s) =>
+      s.view === "akashic"
+        ? { view: "observatory" }
+        : {
+            view: "observatory",
+            toolTabs: s.toolTabs.filter((k) => k !== "akashic"),
+            activeToolTab:
+              s.activeToolTab === "akashic" ? null : s.activeToolTab,
+          }
+    ),
 
   /* -------- The Invent — the fourth book --------
      The inventor's compact studio: opening it suspends every other
      surface, exactly like the Manifest and the Akashic Library. */
-  openInvent: () =>
-    set({ view: "invent", mobileNavOpen: false, modal: null }),
-  exitInvent: () => set({ view: "observatory" }),
+  openInvent: () => get().openToolTab("invent"),
+  exitInvent: () =>
+    set((s) =>
+      s.view === "invent"
+        ? { view: "observatory" }
+        : {
+            view: "observatory",
+            toolTabs: s.toolTabs.filter((k) => k !== "invent"),
+            activeToolTab:
+              s.activeToolTab === "invent" ? null : s.activeToolTab,
+          }
+    ),
 
   /* -------- The Dream Book --------
      A world of its own: the magical atelier where tales are woven
      from resonance and read as they are being written.
      Free for every visitor. */
-  openDreamBook: () =>
-    set({ view: "dreambook", mobileNavOpen: false, modal: null }),
-  exitDreamBook: () => set({ view: "observatory" }),
+  openDreamBook: () => get().openToolTab("dreambook"),
+  exitDreamBook: () =>
+    set((s) =>
+      s.view === "dreambook"
+        ? { view: "observatory" }
+        : {
+            view: "observatory",
+            toolTabs: s.toolTabs.filter((k) => k !== "dreambook"),
+            activeToolTab:
+              s.activeToolTab === "dreambook" ? null : s.activeToolTab,
+          }
+    ),
 
   /* -------- LIGHT CODES — the musical chamber --------
      Its own quiet world: intention in, transmission out. The Mirror
      interprets; the sound engine renders; the visitor listens. */
   openLightCodes: (prefill) => {
     const hydrate: Partial<MirrorState> = {
-      view: "lightcodes",
       mobileNavOpen: false,
       modal: null,
       lcError: null,
@@ -1259,18 +1348,39 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         : get().lcInterpretation;
     }
     set(hydrate);
+    /* the musical chamber rides as a mini tab — the tab call happens
+       BEFORE the auto-generate, so the chamber is standing when the
+       first transmission is asked for */
+    get().openToolTab("lightcodes");
     if (prefill?.autoGenerate) void get().generateLightCode({ context: prefill.context });
   },
-  exitLightCodes: () => set({ view: "observatory" }),
+  exitLightCodes: () =>
+    set((s) =>
+      s.view === "lightcodes"
+        ? { view: "observatory" }
+        : {
+            view: "observatory",
+            toolTabs: s.toolTabs.filter((k) => k !== "lightcodes"),
+            activeToolTab:
+              s.activeToolTab === "lightcodes" ? null : s.activeToolTab,
+          }
+    ),
   videoSeed: null,
-  openVideo: (seed) =>
-    set({
-      view: "video",
-      mobileNavOpen: false,
-      modal: null,
-      videoSeed: seed ?? null,
-    }),
-  exitVideo: () => set({ view: "observatory" }),
+  openVideo: (seed) => {
+    set({ videoSeed: seed ?? null });
+    get().openToolTab("video");
+  },
+  exitVideo: () =>
+    set((s) =>
+      s.view === "video"
+        ? { view: "observatory" }
+        : {
+            view: "observatory",
+            toolTabs: s.toolTabs.filter((k) => k !== "video"),
+            activeToolTab:
+              s.activeToolTab === "video" ? null : s.activeToolTab,
+          }
+    ),
   setVideoSeed: (seed) => set({ videoSeed: seed }),
   setLcMode: (mode) =>
     set((s) => ({
@@ -2582,23 +2692,42 @@ export const useMirror = create<MirrorState>()((set, get) => ({
 
   /* ---------------- Full-archive register ---------------- */
 
-  openRegister: (kind) =>
-    set({ registerKind: kind, view: "register", mobileNavOpen: false, modal: null }),
+  openRegister: (kind) => {
+    set({ registerKind: kind });
+    get().openToolTab("register");
+  },
 
-  exitRegister: () => set({ view: "observatory" }),
+  exitRegister: () =>
+    set((s) =>
+      s.view === "register"
+        ? { view: "observatory" }
+        : {
+            view: "observatory",
+            toolTabs: s.toolTabs.filter((k) => k !== "register"),
+            activeToolTab:
+              s.activeToolTab === "register" ? null : s.activeToolTab,
+          }
+    ),
 
   /* ---------------- Mirror OS — Reality Guidance ---------------- */
 
   /** The OS is its own world: opening it suspends every other surface. */
-  openMirrorOS: () =>
-    set((s) => ({
-      view: "mirroros",
-      mobileNavOpen: false,
-      modal: null,
-      labStage: s.labBlueprint ? "blueprint" : "compose",
-    })),
+  openMirrorOS: () => {
+    set((s) => ({ labStage: s.labBlueprint ? "blueprint" : "compose" }));
+    get().openToolTab("mirroros");
+  },
 
-  exitMirrorOS: () => set({ view: "observatory" }),
+  exitMirrorOS: () =>
+    set((s) =>
+      s.view === "mirroros"
+        ? { view: "observatory" }
+        : {
+            view: "observatory",
+            toolTabs: s.toolTabs.filter((k) => k !== "mirroros"),
+            activeToolTab:
+              s.activeToolTab === "mirroros" ? null : s.activeToolTab,
+          }
+    ),
 
   /* ------------- The passage — account, free door, profile ------------- */
 
@@ -2678,15 +2807,19 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     } catch {
       /* even if the line is quiet, the visitor leaves cleanly */
     }
-    set({ me: null, wallet: null, walletModalOpen: false, walletNotice: null, authOpen: false, profileOpen: false, view: "observatory" });
+    set({ me: null, wallet: null, walletModalOpen: false, walletNotice: null, authOpen: false, profileOpen: false, view: "observatory", toolTabs: [], activeToolTab: null });
   },
 
   /** The visitor's own cosmic library — free for everyone. */
-  openLibrary: () =>
-    set({ view: "library", profileOpen: false, mobileNavOpen: false, modal: null }),
+  openLibrary: () => {
+    set({ profileOpen: false });
+    get().openToolTab("library");
+  },
 
-  resumeDreamBook: (resume) =>
-    set({ dreamResume: resume, view: "dreambook", profileOpen: false, modal: null, mobileNavOpen: false }),
+  resumeDreamBook: (resume) => {
+    set({ dreamResume: resume, profileOpen: false });
+    get().openToolTab("dreambook");
+  },
   clearDreamResume: () => set({ dreamResume: null }),
   setLastBookResonance: (echo) => set({ lastBookResonance: echo }),
 

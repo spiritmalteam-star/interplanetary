@@ -578,6 +578,7 @@ interface BranchNavigatorProps {
 }
 
 function NavInner({
+  whispers,
   golden,
   focusKey,
   category,
@@ -625,7 +626,7 @@ function NavInner({
         crossCount: saved.crossCount,
       };
     }
-    const seeded = seedGraph([], golden, focusKey, homeText);
+    const seeded = seedGraph(whispers, golden, focusKey, homeText);
     return {
       nodes: seeded.nodes,
       edges: seeded.edges,
@@ -2282,7 +2283,7 @@ function NavInner({
     /* the living rooms rest with the fresh map — the ledger forgets */
     useConversations.getState().forgetAll();
     const seeded = seedGraph(
-      [],
+      whispers,
       golden,
       `${focusKey}:${Date.now()}`,
       homeText
@@ -2298,7 +2299,7 @@ function NavInner({
       60
     );
     schedulePersist();
-  }, [applyFocusVisuals, focusKey, golden, rf, schedulePersist, setEdges, setNodes]);
+  }, [applyFocusVisuals, focusKey, golden, rf, schedulePersist, setEdges, setNodes, whispers]);
 
   /* ------------------- the journey's own panel -------------------- */
   const journeyData = useMemo(() => {

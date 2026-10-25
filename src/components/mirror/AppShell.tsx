@@ -8,6 +8,7 @@ import { setLearningIdentity } from "@/lib/learning-branches";
 import { useT } from "@/lib/i18n";
 import { CosmicBackdrop } from "./CosmicBackdrop";
 import { StarField } from "./StarField";
+import { ToolWorkspace } from "./living/ToolWorkspace";
 import { WalletGuard } from "./WalletGuard";
 import { BranchCanopy } from "./BranchCanopy";
 import { ReplyBranches } from "./ReplyBranches";
@@ -477,6 +478,12 @@ function AppShellViews({
           onPick={() => {}}
         />
       )}
+
+      {/* THE WORKSPACE — the tools' own floating room: every open tool
+          stands as a mini tab over the walk; the tree stays mounted
+          underneath, and the expand hand gives a room the old whole
+          screen (its back hand returns to this window). */}
+      <ToolWorkspace />
 
       {/* the reading rooms' own modals — every door keeps its keys */}
       <FederationModal />

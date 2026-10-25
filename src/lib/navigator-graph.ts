@@ -337,9 +337,12 @@ function makeNode(
 
 /** THE WELCOMING MAP — one home at the heart, five simple doors and
     (when the conversation has grown its own) one golden branch around
-    it, laid on a gentle circle so every direction stands open. */
+    it, laid on a gentle circle so every direction stands open.
+    THE SCOPE'S OWN DOORS — when the canopy hands down its grove (the
+    focused field's own whispers, or the general percentage weave),
+    the first ring is drawn from THAT grove; the simple seeds rest. */
 export function seedGraph(
-  _whispers: SeedWhisper[],
+  whispers: SeedWhisper[],
   golden: SeedWhisper[],
   focusKey: string,
   homeText: string
@@ -363,8 +366,10 @@ export function seedGraph(
   };
   /* the simple doors — a fresh draw from the first words every time
      the map is born; the same hour draws the same map (no drift).
-     A small or eco device is born with fewer doors (plan d). */
-  const pool = [...NAV_SIMPLE_SEEDS];
+     A small or eco device is born with fewer doors (plan d).
+     The canopy's own grove speaks first when it arrives; the generic
+     pool only keeps the seat warm. */
+  const pool = [...(whispers.length > 0 ? whispers : NAV_SIMPLE_SEEDS)];
   const picked: SeedWhisper[] = [];
   const budgetDoors = navBudgets().seedDoors;
   const n = budgetDoors > 0 ? budgetDoors : 5 + (rng() < 0.5 ? 1 : 0);

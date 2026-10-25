@@ -1847,6 +1847,12 @@ export function BranchCanopy({
     };
   });
   const topDoors = [
+    {
+      key: "manifest",
+      label: "Manifest",
+      icon: Sparkles,
+      on: openMirrorOS,
+    },
     { key: "akashic", label: "Akashic", icon: ScrollText, on: openAkashic },
     { key: "book", label: "Book", icon: BookOpen, on: openDreamBook },
     {
@@ -4708,8 +4714,12 @@ export function BranchCanopy({
             whispers={navWhispers}
             golden={navGolden}
             focusKey={focusKey}
-            category={category}
-            scopeHint={scopeHint}
+            /* THE SCOPE'S OWN VOICE — when the walk stands on ONE field,
+               the map's every grown branch speaks that field's bank (the
+               bud engine's own law), not the chat's standing mode; the
+               general walk keeps the whole house's percentage weave. */
+            category={focusKey === "general" ? category : focusKey}
+            scopeHint={focusKey === "general" ? scopeHint : focusKey}
             disabled={disabled}
             testIdPrefix={testIdPrefix}
             onPick={glyphPick}

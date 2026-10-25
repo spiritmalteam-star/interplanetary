@@ -3,18 +3,18 @@
 /* ------------------------------------------------------------------ */
 /*  THE MINIMAL TOP CONTROL — the house's one small universal tab.     */
 /*                                                                     */
-/*   ◈ Mirror · Quantum World | Scopes ▾ | Tools ▾ | History | ◉ | ☰   */
+/*   ◉ Profile | Scopes ▾ | Tools ▾ | History | ☰                      */
 /*                                                                     */
 /*  One quiet pill floats over the canvas, anchored inside the safe    */
-/*  viewport: the Mirror hand returns to the root of the walk, the     */
-/*  Scopes hand carries the four fields of the house (General,         */
-/*  Interplanetary, Quantum, HealX — one touch walks the tree into     */
-/*  that field), the Tools hand opens the four making rooms (Akashic,  */
-/*  Book, Music, Invent), the History hand reopens the conversation's  */
-/*  own past, the Passage hand wears the visitor's profile, and the    */
-/*  Menu hand keeps the one universal menu whole. The old search       */
-/*  field rests — the menu's one search finds everything. On small     */
-/*  screens the words rest and the marks remain.                       */
+/*  viewport: the Passage hand (the visitor's own profile) stands at   */
+/*  the beginning of the pill, the Scopes hand carries the fields of   */
+/*  the house (General, Interplanetary, Quantum, ArtX, HealX — one     */
+/*  touch walks the tree into that field), the Tools hand opens the    */
+/*  making rooms (Manifest, Akashic, Book, Music, Invent) as mini      */
+/*  tabs, the History hand reopens the conversation's own past, and    */
+/*  the Menu hand keeps the one universal menu whole. The old root     */
+/*  diamond rests — the walk's own hands and the menu carry the        */
+/*  return home. On small screens the words rest and the marks remain. */
 /*                                                                     */
 /*  No second toolbar was stacked; the vertical arm keeps only the     */
 /*  walk's hands and starts folded. The canvas keeps every pixel.      */
@@ -23,7 +23,6 @@
 import { memo, useCallback, useEffect, useState, type ComponentType, type ReactNode } from "react";
 import {
   ChevronDown,
-  Diamond,
   History as HistoryIcon,
   Hammer,
   ListTree,
@@ -45,7 +44,7 @@ interface RailLiteState {
 
 const RAIL_LITE_EMPTY: RailLiteState = { clarity: false };
 
-/* THE FOUR SCOPES — the fields of the house the visitor walks between.
+/* THE FIVE SCOPES — the fields of the house the visitor walks between.
    Each rides one of the walk's own categories: picking one focuses the
    whole tree on that field of branches (the canopy's focus law). */
 const SCOPES: {
@@ -57,11 +56,13 @@ const SCOPES: {
   { key: "general", label: "General", spirit: "The whole house, mixed", accent: "" },
   { key: "interplanetary", label: "Interplanetary", spirit: "The star families and worlds", accent: "#22d3ee" },
   { key: "quantum", label: "Quantum", spirit: "The deep nature of reality", accent: "#a78bfa" },
+  { key: "artx", label: "ArtX", spirit: "The atelier of visions", accent: "#e879f9" },
   { key: "healing", label: "HealX", spirit: "The body's quiet evolution", accent: "#2dd4bf" },
 ];
 
 /* the tools' own quiet subtitles, by door key */
 const DOOR_SPIRITS: Record<string, string> = {
+  manifest: "The manifesting chamber",
   akashic: "The records' hall",
   book: "The dream loom",
   music: "The songs of light",
@@ -137,10 +138,6 @@ export const TopControl = memo(function TopControl({
     return () => window.removeEventListener("keydown", onKey);
   }, [pill]);
 
-  const send = useCallback((name: string) => {
-    window.dispatchEvent(new CustomEvent(name));
-  }, []);
-
   const scopeFocused = useCallback(
     (key: string) => {
       if (key === "general") return generalFocused;
@@ -183,29 +180,22 @@ export const TopControl = memo(function TopControl({
             "color-mix(in srgb, var(--scope-a,var(--gd)) 22%, var(--hairline))",
         }}
       >
-        {/* THE MIRROR HAND — the root's own mark: one touch returns the
-            walk to the welcoming heart of the tree. The context rides
-            beside it (the standing category), words resting on phones. */}
+        {/* THE PASSAGE HAND — the visitor's own profile, standing at
+            the beginning of the pill */}
         <button
           type="button"
-          onClick={() => send("nav:rail-home")}
-          aria-label={t("Return to the root of the walk")}
-          title={`${t("Return to the root of the walk")} — ${mixLabel}`}
-          data-testid={`${testIdPrefix}-top-home`}
+          onClick={onPassage}
+          aria-label={t("Open your profile")}
+          title={t("Open your profile")}
+          data-testid={`${testIdPrefix}-top-profile`}
           className="focus-glow flex h-8 items-center gap-1.5 rounded-full py-1 pl-2 pr-2.5 text-foreground/90 transition-colors duration-200 hover:bg-foreground/5"
         >
-          <Diamond
-            className="size-3 shrink-0 text-[var(--scope-a,var(--gd))]"
+          <UserRound
+            className="size-3.5 shrink-0 text-[var(--scope-a,var(--gd))]"
             aria-hidden="true"
           />
-          <span className="hidden text-[12.5px] font-medium tracking-wide sm:inline">
-            Mirror
-          </span>
-          <span
-            className="mono-label hidden max-w-[110px] truncate text-[9px] uppercase tracking-[0.16em] text-muted-foreground/80 lg:inline"
-            aria-hidden="true"
-          >
-            · {mixLabel}
+          <span className="hidden text-[12.5px] font-medium tracking-wide md:inline">
+            {t("Profile")}
           </span>
         </button>
 
@@ -215,9 +205,9 @@ export const TopControl = memo(function TopControl({
           style={{ backgroundColor: "var(--hairline)" }}
         />
 
-        {/* THE SCOPES HAND — the four fields of the house: General,
-            Interplanetary, Quantum, HealX. One touch walks the tree
-            into that field of branches. */}
+        {/* THE SCOPES HAND — the fields of the house: General,
+            Interplanetary, Quantum, ArtX, HealX. One touch walks the
+            tree into that field of branches. */}
         <div className="relative shrink-0">
           <button
             type="button"
@@ -305,8 +295,9 @@ export const TopControl = memo(function TopControl({
           )}
         </div>
 
-        {/* THE TOOLS HAND — the four making rooms of the house:
-            Akashic, Book, Music, Invent. */}
+        {/* THE TOOLS HAND — the making rooms of the house, each opening
+            as a mini tab over the walk: Manifest, Akashic, Book,
+            Music, Invent. */}
         <div className="relative shrink-0">
           <button
             type="button"
@@ -385,21 +376,6 @@ export const TopControl = memo(function TopControl({
           <HistoryIcon className="size-3.5 shrink-0" aria-hidden="true" />
           <span className="hidden text-[12px] md:inline">
             {t("History")}
-          </span>
-        </button>
-
-        {/* THE PASSAGE HAND — the visitor's own profile */}
-        <button
-          type="button"
-          onClick={onPassage}
-          aria-label={t("Open your profile")}
-          title={t("Open your profile")}
-          data-testid={`${testIdPrefix}-top-profile`}
-          className="focus-glow flex h-8 items-center gap-1.5 rounded-full px-2.5 text-muted-foreground transition-colors duration-200 hover:bg-foreground/5 hover:text-foreground"
-        >
-          <UserRound className="size-3.5 shrink-0" aria-hidden="true" />
-          <span className="hidden text-[12px] md:inline">
-            {t("Profile")}
           </span>
         </button>
 
