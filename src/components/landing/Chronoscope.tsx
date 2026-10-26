@@ -17,6 +17,7 @@ import {
   Sparkles,
   Telescope,
   X,
+  ZoomIn,
 } from "lucide-react";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -210,6 +211,7 @@ export default function Chronoscope() {
   const [savedOpen, setSavedOpen] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const detailsScroll = useRef(0);
+  const [zoomOpen, setZoomOpen] = useState(false);
 
   const chunkCache = useRef<Map<string, unknown[]>>(new Map());
   const rowMap = useRef<Map<string, ChronoRow>>(new Map());
@@ -266,9 +268,14 @@ export default function Chronoscope() {
 
   /* ------------------- record resolution (stale-safe) ------------------- */
   const isIdm = currentId.startsWith("IDM-");
+  /* the newest version of a slot wins — future re-illustrations simply
+     arrive as v002 and step past the v001 plates without any UI change */
   const readyMap = useMemo(() => {
     const m = new Map<string, string>();
-    for (const a of assets?.ready ?? []) m.set(`${a.entityId}/${a.role}`, a.file);
+    const sorted = [...(assets?.ready ?? [])].sort((a, b) =>
+      a.version > b.version ? 1 : -1
+    );
+    for (const a of sorted) m.set(`${a.entityId}/${a.role}`, a.file);
     return m;
   }, [assets]);
 
@@ -515,22 +522,34 @@ export default function Chronoscope() {
           </p>
         </div>
 
-        <div className="grid gap-4 p-4 sm:grid-cols-[220px_1fr] sm:items-center sm:p-5">
+        <div className="grid gap-4 p-4 sm:grid-cols-[300px_1fr] sm:items-center sm:p-5">
           {/* the card's face */}
           <div
-            className="relative mx-auto aspect-[3/2] w-full max-w-[260px] overflow-hidden rounded-xl border sm:mx-0"
+            className="relative mx-auto aspect-[3/2] w-full max-w-[340px] overflow-hidden rounded-xl border sm:mx-0"
             style={{ borderColor: `color-mix(in srgb, ${accent} 36%, transparent)` }}
           >
             {readyFile ? (
-              <Image
-                key={`${currentId}/${roleKey}`}
-                src={`/chronoscope/art/${readyFile}`}
-                alt={`${currentId} — ${displayName}`}
-                fill
-                unoptimized
-                sizes="260px"
-                className="object-cover"
-              />
+              <>
+                <Image
+                  key={`${currentId}/${roleKey}`}
+                  src={`/chronoscope/art/${readyFile}`}
+                  alt={`${currentId} — ${displayName}`}
+                  fill
+                  unoptimized
+                  sizes="340px"
+                  className="object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={() => setZoomOpen(true)}
+                  data-testid="chronoscope-zoom-small"
+                  aria-label={t("Enlarge the artwork")}
+                  className="focus-glow absolute bottom-2 right-2 flex size-11 items-center justify-center rounded-full border bg-[color-mix(in_srgb,var(--lp-veil-solid)_82%,transparent)]"
+                  style={{ borderColor: `color-mix(in srgb, ${accent} 44%, transparent)` }}
+                >
+                  <ZoomIn className="size-4" style={{ color: accent }} aria-hidden="true" />
+                </button>
+              </>
             ) : (
               <div className="absolute inset-0 flex items-center justify-center bg-[color-mix(in_srgb,var(--lp-violet)_5%,var(--lp-veil-solid))]">
                 <div className="size-[72%]">
@@ -862,11 +881,17 @@ export default function Chronoscope() {
               {/* THE CARD — one active profile, readable, centred */}
               <article
                 data-testid="chronoscope-card"
-                className="relative z-10 w-full max-w-[520px] overflow-hidden rounded-2xl border bg-[color-mix(in_srgb,var(--lp-veil-solid)_88%,transparent)] shadow-[0_24px_80px_-32px_rgba(20,12,40,0.5)]"
+                className="relative z-10 w-full max-w-[680px] overflow-hidden rounded-2xl border bg-[color-mix(in_srgb,var(--lp-veil-solid)_88%,transparent)] shadow-[0_24px_80px_-32px_rgba(20,12,40,0.5)]"
                 style={{ borderColor: `color-mix(in srgb, ${accent} 42%, var(--lp-edge))` }}
               >
                 {/* the card's face — one primary image decodes here */}
-                <div className="relative aspect-[3/2] w-full overflow-hidden">
+                <div
+                  className={cn(
+                    "relative aspect-[3/2] w-full overflow-hidden",
+                    readyFile && "cursor-zoom-in"
+                  )}
+                  onClick={readyFile ? () => setZoomOpen(true) : undefined}
+                >
                   {readyFile ? (
                     <Image
                       key={`${currentId}/${roleKey}`}
@@ -874,7 +899,7 @@ export default function Chronoscope() {
                       alt={`${currentId} · ${t("role")}: ${roleKey}`}
                       fill
                       unoptimized
-                      sizes="(max-width: 640px) 100vw, 520px"
+                      sizes="(max-width: 640px) 100vw, 680px"
                       className="object-cover"
                       priority={role === 0}
                     />
@@ -894,6 +919,25 @@ export default function Chronoscope() {
                     aria-hidden="true"
                     className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-[linear-gradient(to_top,color-mix(in_srgb,var(--lp-veil-solid)_88%,transparent),transparent)]"
                   />
+                  {readyFile && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setZoomOpen(true);
+                      }}
+                      data-testid="chronoscope-zoom"
+                      aria-label={t("Enlarge the artwork")}
+                      className="focus-glow absolute left-2.5 top-2.5 flex size-11 items-center justify-center rounded-full border bg-[color-mix(in_srgb,var(--lp-veil-solid)_82%,transparent)]"
+                      style={{ borderColor: `color-mix(in srgb, ${accent} 44%, transparent)` }}
+                    >
+                      <ZoomIn
+                        className="size-4.5"
+                        style={{ color: accent }}
+                        aria-hidden="true"
+                      />
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={toggleSave}
@@ -998,7 +1042,7 @@ export default function Chronoscope() {
                     </button>
                     {!isIdm && readyFile && (
                       <span className="mono-label text-[8.5px] tracking-[0.14em] text-[var(--lp-faint)]">
-                        {t("ready artwork · pilot review passed")}
+                        {t("ready artwork · unique-batch audited")}
                       </span>
                     )}
                   </div>
@@ -1073,7 +1117,171 @@ export default function Chronoscope() {
         </div>,
           document.body
         )}
+
+      {/* ------------- the zoom plate — the artwork at full size ------------- */}
+      <ZoomOverlay
+        t={t}
+        open={zoomOpen}
+        onClose={() => setZoomOpen(false)}
+        entityId={currentId}
+        displayName={displayName}
+        role={role}
+        setRole={setRole}
+        readyMap={readyMap}
+        hue={hue}
+        isIdm={isIdm}
+      />
     </div>
+  );
+}
+
+/* ------------------- the zoom plate ------------------- */
+
+/* the artwork at its full size — a fixed plate above everything,
+   closed by Esc, the hand, or the backdrop; the four faces stay
+   reachable inside so every image of the record can be studied */
+function ZoomOverlay({
+  t,
+  open,
+  onClose,
+  entityId,
+  displayName,
+  role,
+  setRole,
+  readyMap,
+  hue,
+  isIdm,
+}: {
+  t: (s: string) => string;
+  open: boolean;
+  onClose: () => void;
+  entityId: string;
+  displayName: string;
+  role: number;
+  setRole: (n: number) => void;
+  readyMap: Map<string, string>;
+  hue?: number | null;
+  isIdm: boolean;
+}) {
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onClose();
+      } else if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        setRole((role + 3) % 4);
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault();
+        setRole((role + 1) % 4);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [open, onClose, role, setRole]);
+
+  if (!open) return null;
+
+  const accent = hueAccent(hue);
+  const file = isIdm ? undefined : readyMap.get(`${entityId}/${ROLE_KEYS[role]}`);
+  const labels = isIdm
+    ? [t("Entity"), t("Geometry"), t("Locus"), t("Voices")]
+    : [t("Being"), t("World"), t("Technology"), t("Life")];
+
+  return createPortal(
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={t("The artwork enlarged")}
+      data-testid="chronoscope-zoom-overlay"
+      className="fixed inset-0 z-[95] flex items-center justify-center bg-[color-mix(in_srgb,var(--lp-deep)_97%,#080510)] p-4"
+      onClick={onClose}
+    >
+      <button
+        type="button"
+        onClick={onClose}
+        data-testid="chronoscope-zoom-close"
+        aria-label={t("Close the enlarged artwork")}
+        className="focus-glow absolute right-3 top-3 flex size-11 items-center justify-center rounded-full border border-[var(--lp-edge)] bg-[color-mix(in_srgb,var(--lp-veil-solid)_70%,transparent)] text-[var(--lp-mute)] sm:right-5 sm:top-5"
+      >
+        <X className="size-4" aria-hidden="true" />
+      </button>
+
+      <div
+        className="flex max-h-full flex-col items-center"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {file ? (
+          <div
+            data-testid="chronoscope-zoom-image"
+            className="relative h-[min(72dvh,512px)] w-[min(92vw,768px)] overflow-hidden rounded-xl border"
+            style={{ borderColor: `color-mix(in srgb, ${accent} 40%, var(--lp-edge))` }}
+          >
+            <Image
+              key={`${entityId}/${ROLE_KEYS[role]}`}
+              src={`/chronoscope/art/${file}`}
+              alt={`${entityId} · ${displayName} · ${labels[role]}`}
+              fill
+              unoptimized
+              sizes="768px"
+              className="object-contain"
+              priority
+            />
+          </div>
+        ) : (
+          <div
+            className="flex h-[min(52dvh,380px)] w-[min(92vw,560px)] items-center justify-center rounded-xl border border-[var(--lp-edge)]"
+            aria-hidden="true"
+          >
+            <div className="size-[46%]">
+              <PendingPlate id={entityId} hue={hue} />
+            </div>
+          </div>
+        )}
+
+        <p className="mono-label mt-3 text-center text-[9px] uppercase tracking-[0.24em] text-[var(--lp-faint)]">
+          {entityId} · {displayName} · {labels[role]}
+          {!file && ` · ${t("artwork pending — awaiting its own illustration")}`}
+        </p>
+
+        {/* the four faces, reachable inside the plate */}
+        <div className="mt-3 flex flex-wrap justify-center gap-1.5">
+          {labels.map((label, i) => {
+            const has = readyMap.has(`${entityId}/${ROLE_KEYS[i]}`);
+            return (
+              <button
+                key={label}
+                type="button"
+                disabled={!has}
+                onClick={() => setRole(i)}
+                aria-pressed={role === i}
+                className={cn(
+                  "focus-glow min-h-[44px] rounded-full border px-4 text-[12px] transition-colors disabled:cursor-not-allowed disabled:opacity-35",
+                  role === i ? "font-semibold" : "text-[var(--lp-mute)]"
+                )}
+                style={
+                  role === i
+                    ? {
+                        borderColor: `color-mix(in srgb, ${accent} 55%, transparent)`,
+                        background: `color-mix(in srgb, ${accent} 10%, transparent)`,
+                        color: "var(--lp-head)",
+                      }
+                    : { borderColor: "var(--lp-edge)" }
+                }
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>,
+    document.body
   );
 }
 

@@ -5924,3 +5924,25 @@ Work Log:
 Stage Summary:
 - The archive is an instrument now: 3,212 civilisations + 8 hyperspace records addressable, interface stays small, catalogue feed gone. 6 fully illustrated pilot profiles (24 role assets, hash-verified); every other record honestly "artwork pending" with its own ornament and ID — ready for the next artwork batches without any UI change (drop new role images + extend assets.json ready list via tools/codex/build_chronoscope.py).
 - Legacy duplicate library quarantined in git history (e6fed32); repo sheds ~112MB of recycled art and carries the canonical source JSON for future generation runs.
+
+---
+Task ID: task-i-unique-profiles
+Agent: Z.ai Code (main)
+Task: "Please update the codex we will add more profiles so please everytime check so they don't repeat make the images bigger and zoom button" — ingest the uploaded Unique_Profiles batches into the Chronoscope under an enforced no-repeat contract, enlarge the artwork, and add a zoom plate.
+
+Work Log:
+- State verified first: local = remote = 196c590 (the chronoscope release). upload/ held SEVEN Unique_Profiles_*.zip (0001_0010, 0011_0020, 0021_0030, 0031_0040, 0041_0050, 0061_0070, 0081_0090 — the user listed five; all seven were ingested).
+- Batch anatomy: 70 PDFs, each 4 pages; page one carries the four role plates in a 2×2 grid. Role mapping proven, not assumed: visual reading order (top-left/top-right/bottom-left/bottom-right = being/world/technology/life) matched the hash-reviewed pilot plates byte-for-byte (xref15 jpeg sha == pilot being sha, etc.).
+- Uniqueness audit before publishing: 280 images scanned → 280 distinct raw-sha AND 280 distinct pixel-sha; the only overlaps were the 24 plates already published for CIV-0001..0004/0009/0012 (byte-identical — the new batch continues the same image series).
+- Built tools/codex/ingest_unique_profiles.py (idempotent, re-runnable for every future batch): parses each PDF's four plates (exactly-4 law + page-text role law), fingerprints raw-sha + decoded-pixel-sha, enforces THE UNIQUENESS CONTRACT (in-batch repeats abort; same picture under a different record/role aborts; re-encoded repeats abort; already-present same-slot plates skip with the published plate kept), publishes WebP q85, extends assets.json (ready list + counts + a batches provenance ledger) and index.json (readyProfiles).
+- Ingest result: 256 new plates for 64 new profiles (CIV-0005..0090); 24 already present skipped; ready role assets 24 → 280; ready profiles 6 → 70. Idempotency proven by replay (0 new / 280 already-present); replay ledger entry trimmed.
+- Repo weight: public/chronoscope 32MB art (45MB total) — no legacy 112MB regression.
+- Chronoscope.tsx — bigger images: collapsed module face column 220 → 300px (image 298px measured), expanded card max-width 520 → 680px (image 678px measured, neighbour shells at xl still clear — card right 980 < shell left, overlap=false).
+- Chronoscope.tsx — zoom: new ZoomOverlay (portaled fixed z-[95] plate, 768×512 object-contain box, backdrop/X/Esc close, ←/→ walk the four faces, role chips disabled when a face has no art, body scroll lock, caption ID · name · face); zoom opens from the card face click (cursor-zoom-in) and from 44px ZoomIn buttons on both the expanded card and the collapsed module; pending records keep the honest ornament with NO zoom affordance; readyMap now sorts by version so future v002 re-illustrations step past v001 with no UI change; "pilot review passed" label → "unique-batch audited".
+- Verified with agent-browser: desktop 1280×800 + mobile 390×844 — collapsed module renders with "70 fully illustrated", expanded card 680px, zoom opens from button AND face click, Technology chip swaps the plate inside the overlay, Esc + backdrop both close, CIV-0005 (previously pending) shows its own new art with role preserved, CIV-0200 still honestly pending with no zoom, details sheet + tech panel unregressed, no horizontal scroll on mobile, zero page errors, zero console warnings.
+- bunx tsc: 0 errors in src/components|app. bun run lint: only the 2 pre-existing LandingGate baseline errors.
+
+Stage Summary:
+- The chronoscope now carries 70 fully illustrated profiles (280 unique role plates, every one fingerprinted) out of the 3,212-civilisation archive — the interface stayed small, the artwork got bigger.
+- The no-repeat law is now machinery, not hope: tools/codex/ingest_unique_profiles.py audits raw + pixel fingerprints against the batch AND the live archive before anything publishes; future batches are one command away (drop zips, run the script — duplicates abort, already-present plates skip, new plates open automatically in the UI).
+- The zoom plate gives every record's four faces a full 768×512 study view inside the section, keyboard-walkable and honest about pending artwork.
