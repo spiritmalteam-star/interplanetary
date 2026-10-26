@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useRef, useState, type ComponentType, type CSSProperties } from "react";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
-import { useMirror } from "@/lib/mirror-store";
+import { useMirror, LANDING_SCOPES } from "@/lib/mirror-store";
+import { SCOPE_META } from "@/lib/mirror/workspaces";
 import { cn } from "@/lib/utils";
 import LandingPage from "./LandingPage";
 
@@ -158,21 +159,18 @@ const PHONE_CROSSING = () =>
   typeof window !== "undefined" &&
   window.matchMedia("(max-width: 639px)").matches;
 
-/* THE LANDING'S OWN LIGHT — the five fields' accents. THE MIRROR
-   carries the house's own gold — the standing field (the old
-   "General"). The four family lights are the walk's own. The chosen
+/* THE LANDING'S OWN LIGHT — the five fields' accents, read from the
+   registry's one truth (SCOPE_META): the gate can never fall out of
+   tune with the crown, the canopy or the library again. THE MIRROR
+   carries the house's own gold — the standing field. The chosen
    scope's hex rides the chamber as --landing-scope-accent AND
    --scope-a in BOTH gears (docked and fullscreen), so the whole
    chat — the crown's hands, the panels, the composer, the doors,
    the send, the rooms' edges — wears that field's light; each
    field is its own world, tinted by its own color. */
-const LANDING_SCOPE_ACCENTS: Record<string, string> = {
-  mirror: "#d8b571",
-  interplanetary: "#22d3ee",
-  quantum: "#a78bfa",
-  healing: "#2dd4bf",
-  artx: "#e879f9",
-};
+const LANDING_SCOPE_ACCENTS: Record<string, string> = Object.fromEntries(
+  LANDING_SCOPES.map((key) => [key, SCOPE_META[key].accent])
+);
 
 export default function LandingGate() {
   const { setTheme } = useTheme();

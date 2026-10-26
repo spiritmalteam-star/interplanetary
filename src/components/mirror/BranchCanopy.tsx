@@ -120,8 +120,9 @@ import { ExchangeVisual } from "./TransmissionView";
 import { SideArtifact } from "./ChatArtifacts";
 import type { ChatMessage, LandingScopeKey, ToolTabKey } from "@/lib/mirror-store";
 import type { LiveScopeKey } from "@/lib/live-scopes";
+import { LANDING_SCOPE_CATEGORY, SCOPE_META } from "@/lib/mirror/workspaces";
 import { useT } from "@/lib/i18n";
-import { useMirror } from "@/lib/mirror-store";
+import { LANDING_SCOPES, useMirror } from "@/lib/mirror-store";
 import { cn } from "@/lib/utils";
 import { tuneSeedBatch } from "@/lib/question-voice";
 import {
@@ -457,41 +458,18 @@ function writeLandingThreadScope(scope: string, turns: { q: string; a: string }[
   }
 }
 
-/* THE FIELDS' OWN VOICES — every scope's chat speaks through its own
-   door: the Mirror (the standing field) answers as the mirror of the
-   Absolute; the four family fields answer through their own house
-   channels (the interplanetary channel, the quantum narrator, the
-   healing codes, the atelier). The scope's own language, its own
-   doors, its own light — its own voice. */
-const LANDING_SCOPE_CATEGORY: Record<string, BranchId | "absolute"> = {
-  mirror: "absolute",
-  interplanetary: "interplanetary",
-  quantum: "quantum",
-  healing: "healing",
-  artx: "artx",
-};
+/* THE FIELDS' OWN VOICES, SHELVES AND DOTS — one truth from the
+   registry (SCOPE_META / LANDING_SCOPE_CATEGORY in
+   @/lib/mirror/workspaces): the canopy's voices, library shelves and
+   history dots read the same shelf the crown and the gate read, so
+   the house's five worlds can never fall out of tune again. */
+const LANDING_LIBRARY_SECTOR: Record<string, string> = Object.fromEntries(
+  LANDING_SCOPES.map((key) => [key, SCOPE_META[key].librarySector])
+);
 
-/* THE FIELDS' OWN SHELVES — the sector of the profile's Cosmic Library
-   each field's conversation rests on (the honest sectors the house's
-   own routes save to); the surface inside the volume carries the
-   scope, so every field keeps ONE living volume of its own. */
-const LANDING_LIBRARY_SECTOR: Record<string, string> = {
-  mirror: "observatory",
-  interplanetary: "observatory",
-  quantum: "quantum",
-  healing: "evolvemed",
-  artx: "artx",
-};
-
-/* THE FIELDS' OWN DOTS — the small colored mark each kept page wears
-   in the history panel (the same lights the Scopes hand carries). */
-const LANDING_SCOPE_DOTS: Record<string, string> = {
-  mirror: "#d8b571",
-  interplanetary: "#22d3ee",
-  quantum: "#a78bfa",
-  healing: "#2dd4bf",
-  artx: "#e879f9",
-};
+const LANDING_SCOPE_DOTS: Record<string, string> = Object.fromEntries(
+  LANDING_SCOPES.map((key) => [key, SCOPE_META[key].dot])
+);
 
 /* THE LIBRARY'S QUIET AUTOSHELF — the landing conversation walks into
    the profile's Cosmic Library per scope (one living volume per
@@ -1595,6 +1573,28 @@ const ZoomReplyForm = memo(function ZoomReplyForm({
     if (draft !== "") setDraft("");
     if (atts.length > 0) setAtts([]);
   }
+  /* THE BRIDGE'S OWN CARRY — a workspace's compact assistant may hand
+     its advice to the floor: the newest carried draft wears the reply
+     line (the Mirror advises; the visitor's own hand sends it). The
+     carry is taken during render by comparing against the carried
+     stamp itself (the room's own adjustment law — no refs, no
+     state-set inside an effect); the store draft is consumed once
+     the floor has it, and the line answers with focus. */
+  const bridgeDraft = useMirror((s) => s.bridgeDraft);
+  const consumeBridgeDraft = useMirror((s) => s.consumeBridgeDraft);
+  const [carriedAt, setCarriedAt] = useState(0);
+  const replyRef = useRef<HTMLInputElement | null>(null);
+  if (bridgeDraft && bridgeDraft.at !== carriedAt) {
+    setDraft(bridgeDraft.text);
+    setCarriedAt(bridgeDraft.at);
+  }
+  useEffect(() => {
+    if (!carriedAt) return;
+    consumeBridgeDraft();
+    /* the floor's own line answers when the words arrive */
+    const id = window.setTimeout(() => replyRef.current?.focus(), 60);
+    return () => window.clearTimeout(id);
+  }, [carriedAt, consumeBridgeDraft]);
   const send = () => {
     const q = draft.trim();
     if (!q) return;
@@ -1644,6 +1644,7 @@ const ZoomReplyForm = memo(function ZoomReplyForm({
         </label>
         <input
           id={`${testIdPrefix}-zoom-reply`}
+          ref={replyRef}
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           placeholder={
@@ -1996,18 +1997,28 @@ export function BranchCanopy({
   }, [zoomed, onLatch]);
 
   /* THE HOURLY LAW — the grove is captured at summon; a rolled hour
-     regrows the whole family by itself. Reload every hour, as asked. */
+     regrows the whole family by itself. Reload every hour, as asked.
+     THE QUIET PAGE — a hidden tab does not roll: the check sleeps
+     while the visitor is elsewhere and wakes on their return. */
   const [hour, setHour] = useState(() => canopyHour());
   const [salt, setSalt] = useState(0);
   useEffect(() => {
     if (!mounted) return;
     const roll = () => {
+      if (document.hidden) return;
       const now = canopyHour();
       setHour((h) => (h === now ? h : now));
     };
     roll();
     const id = window.setInterval(roll, 60_000);
-    return () => window.clearInterval(id);
+    const wake = () => {
+      if (!document.hidden) roll();
+    };
+    document.addEventListener("visibilitychange", wake);
+    return () => {
+      window.clearInterval(id);
+      document.removeEventListener("visibilitychange", wake);
+    };
   }, [mounted]);
 
   /* THE HYDRATION LAW — the learning memory joins after first paint,

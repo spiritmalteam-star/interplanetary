@@ -19,6 +19,7 @@ import { EvolveMed } from "./EvolveMed";
 import { InventView } from "./InventView";
 import { LightCodesView } from "./LightCodesView";
 import { LibraryView } from "./LibraryView";
+import { QuantumLabView } from "./QuantumLabView";
 import { AuthModal } from "./PassageModal";
 import { ProfilePage } from "./ProfilePage";
 import { AccountModal } from "./AccountModal";
@@ -375,6 +376,21 @@ function AppShellViews({
     return (
       <div className={`relative h-[var(--app-h,var(--vh-safe))] overflow-hidden ${FRAME_LIFT}`}>
         <ArchiveRegister />
+      </div>
+    );
+  }
+
+  /* THE QUANTUM LABORATORY — the deep nature of reality's own bench,
+     full-frame when the tab is expanded: a genuine local simulator
+     (its gates run in pure arithmetic on the device), wearing the
+     field's own violet light. */
+  if (view === "qlab") {
+    return (
+      <div className={`relative h-[var(--app-h,var(--vh-safe))] overflow-hidden ${FRAME_LIFT}`}>
+        <CosmicBackdrop />
+        <StarField />
+        <QuantumLabView />
+        {passageModals}
       </div>
     );
   }

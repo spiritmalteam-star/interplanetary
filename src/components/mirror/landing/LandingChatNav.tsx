@@ -1,11 +1,21 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { BookOpen, Hammer, Layers, Music, ScrollText, Sparkles, UserRound } from "lucide-react";
+import {
+  Atom,
+  BookOpen,
+  Hammer,
+  Layers,
+  Music,
+  ScrollText,
+  Sparkles,
+  UserRound,
+} from "lucide-react";
 import {
   useMirror,
   type LandingScopeKey,
 } from "@/lib/mirror-store";
+import { SCOPE_META, SCOPE_ORDER } from "@/lib/mirror/workspaces";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
@@ -23,56 +33,38 @@ import { cn } from "@/lib/utils";
 /*  translate settle — no continuous animation, nothing runs forever.  */
 /* ------------------------------------------------------------------ */
 
-/* THE FIVE FIELDS — the house's own scopes, worn verbatim. THE MIRROR
-   stands first: the house's own reflection, the standing default (the
-   old "General") — the whole house's own voice answering from the
-   open floor. The four family keys resolve through the walk's own
-   families: their doors, their light, their memory. Each field wears
+/* THE FIVE FIELDS — the house's own scopes, read from the registry's
+   one truth (SCOPE_META): the crown can never fall out of tune with
+   the gate, the canopy or the library again. THE MIRROR stands first:
+   the house's own reflection, the standing default — the whole
+   house's own voice answering from the open floor. Each field wears
    its own representative light, and the whole chat tints by it. */
 const NAV_SCOPES: {
   key: LandingScopeKey;
   label: string;
   spirit: string;
   accent: string;
-}[] = [
-  {
-    key: "mirror",
-    label: "The Mirror",
-    spirit: "The house's own reflection",
-    accent: "#d8b571",
-  },
-  {
-    key: "interplanetary",
-    label: "Interplanetary",
-    spirit: "The star families and worlds",
-    accent: "#22d3ee",
-  },
-  {
-    key: "quantum",
-    label: "Quantum",
-    spirit: "The deep nature of reality",
-    accent: "#a78bfa",
-  },
-  {
-    key: "artx",
-    label: "ArtX",
-    spirit: "The atelier of visions",
-    accent: "#e879f9",
-  },
-  {
-    key: "healing",
-    label: "HealX",
-    spirit: "The body's quiet evolution",
-    accent: "#2dd4bf",
-  },
-];
+}[] = SCOPE_ORDER.map((key) => ({
+  key,
+  label: SCOPE_META[key].label,
+  spirit: SCOPE_META[key].spirit,
+  accent: SCOPE_META[key].accent,
+}));
 
-/* THE FIVE MAKING ROOMS — the house's own tool names, verbatim (the
-   canonical labels of the workspace's own tab bar, TAB_META), each
-   opening its store opener: the never-yank law keeps the realm where
-   it stands — the room rises as a tab at the chat's own size. */
+/* THE SIX MAKING ROOMS — the house's own tool names, verbatim (the
+   canonical labels of the workspace's own registry), each opening its
+   store opener: the never-yank law keeps the realm where it stands —
+   the room rises as a tab at the chat's own size. The Quantum
+   Laboratory rides here too: a genuine local bench (its gates run in
+   pure arithmetic on the device), not a chat with a new title. */
 const NAV_TOOLS: {
-  key: "dreambook" | "lightcodes" | "akashic" | "mirroros" | "invent";
+  key:
+    | "dreambook"
+    | "lightcodes"
+    | "akashic"
+    | "mirroros"
+    | "invent"
+    | "qlab";
   label: string;
   icon: typeof BookOpen;
 }[] = [
@@ -81,6 +73,7 @@ const NAV_TOOLS: {
   { key: "akashic", label: "Akashic", icon: ScrollText },
   { key: "mirroros", label: "Manifest", icon: Sparkles },
   { key: "invent", label: "Invent", icon: Hammer },
+  { key: "qlab", label: "Quantum Lab", icon: Atom },
 ];
 
 export function LandingChatNav() {
@@ -92,6 +85,7 @@ export function LandingChatNav() {
   const openAkashic = useMirror((s) => s.openAkashic);
   const openMirrorOS = useMirror((s) => s.openMirrorOS);
   const openInvent = useMirror((s) => s.openInvent);
+  const openQlab = useMirror((s) => s.openQlab);
   const openProfilePage = useMirror((s) => s.openProfilePage);
 
   /* the two panels — closed by default, one at a time */
@@ -112,16 +106,25 @@ export function LandingChatNav() {
   }, []);
 
   const openTool = useCallback(
-    (key: "dreambook" | "lightcodes" | "akashic" | "mirroros" | "invent") => {
+    (
+      key:
+        | "dreambook"
+        | "lightcodes"
+        | "akashic"
+        | "mirroros"
+        | "invent"
+        | "qlab"
+    ) => {
       setOpen(null);
       const bare = { bare: true };
       if (key === "dreambook") openDreamBook(bare);
       else if (key === "lightcodes") openLightCodes(undefined, bare);
       else if (key === "akashic") openAkashic(bare);
       else if (key === "mirroros") openMirrorOS();
+      else if (key === "qlab") openQlab(bare);
       else openInvent();
     },
-    [openDreamBook, openLightCodes, openAkashic, openMirrorOS, openInvent]
+    [openDreamBook, openLightCodes, openAkashic, openMirrorOS, openInvent, openQlab]
   );
 
   /* THE VISITOR'S OWN ROOM — the profile opens within the chat's own
@@ -308,6 +311,38 @@ export function LandingChatNav() {
                     {t(s.spirit)}
                   </span>
                 </span>
+                {/* THE FIELD'S OWN DEPTH — the Quantum field carries its
+                    laboratory on its own row: one small hand that opens
+                    the genuine local bench (a span, for a button may
+                    never nest inside a button). */}
+                {s.key === "quantum" && (
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setOpen(null);
+                      openQlab({ bare: true });
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.stopPropagation();
+                        setOpen(null);
+                        openQlab({ bare: true });
+                      }
+                    }}
+                    aria-label={t("Open the laboratory")}
+                    title={t("Open the laboratory")}
+                    data-testid="landing-nav-scope-qlab"
+                    className="focus-glow flex size-6 shrink-0 items-center justify-center rounded-full transition-colors duration-300 hover:bg-foreground/10"
+                    style={{
+                      color: s.accent,
+                      boxShadow: `inset 0 0 0 1px color-mix(in srgb, ${s.accent} 40%, transparent)`,
+                    }}
+                  >
+                    <Atom className="size-3.5" aria-hidden="true" />
+                  </span>
+                )}
                 {focused && (
                   <span
                     className="mono-label shrink-0 rounded-full border px-1.5 py-0.5 text-[8.5px] uppercase tracking-[0.14em]"

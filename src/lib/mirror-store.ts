@@ -182,7 +182,8 @@ export type MainView =
   | "artx"
   | "lightcodes"
   | "library"
-  | "video";
+  | "video"
+  | "qlab";
 
 /* THE WORKSPACE — the tools of the house that ride as mini tabs over
    the living tree (every key is also a MainView: expanding a tab hands
@@ -195,6 +196,7 @@ export type ToolTabKey =
   | "video"
   | "register"
   | "mirroros"
+  | "qlab"
   | "library";
 
 /* THE LANDING'S OWN SCOPE — the field the threshold's docked chat
@@ -706,6 +708,21 @@ interface MirrorState {
   activateToolTab: (key: ToolTabKey) => void;
   expandActiveToolTab: () => void;
 
+  /* THE MIRROR BRIDGE — a workspace's compact assistant may carry its
+     own context to the floor: the draft waits in the room's reply line
+     until the visitor's own hand sends it (the Mirror advises, never
+     speaks unbidden). */
+  bridgeDraft: { text: string; at: number } | null;
+  composeBridgePrompt: (text: string) => void;
+  consumeBridgeDraft: () => void;
+
+  /* THE CREATIONS' OWN DOOR — the profile's library rows hand their
+     sector to the creations room, so a saved work opens on its own
+     shelf (LibraryView clears it once it has taken the helm). */
+  libraryFocus: { sector: string; at: number } | null;
+  setLibraryFocus: (sector: string) => void;
+  clearLibraryFocus: () => void;
+
   /* The Akashic Library — the ancient one's papyrus records */
   openAkashic: (opts?: { bare?: boolean }) => void;
   exitAkashic: () => void;
@@ -809,6 +826,11 @@ interface MirrorState {
   /* Mirror OS — Reality Guidance (fully independent) */
   openMirrorOS: () => void;
   exitMirrorOS: () => void;
+
+  /* THE QUANTUM LABORATORY — the deep nature of reality's own bench:
+     a genuine local simulator (no laboratory server, no credits) —
+     gates run in pure arithmetic on the visitor's own device. */
+  openQlab: (opts?: { bare?: boolean }) => void;
   /** A fresh chat inside one world: the manifest core, the quantum
       core or the med nexus returns to its quiet origin. */
   clearWorldChat: (world: "manifest" | "quantum" | "evolvemed" | "artx") => void;
@@ -1101,6 +1123,8 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   view: "observatory",
   toolTabs: [],
   activeToolTab: null,
+  bridgeDraft: null,
+  libraryFocus: null,
   composerFocusNonce: 0,
   floorSeed: "",
   viewPast: [],
@@ -1289,6 +1313,18 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       return { toolTabs: tabs, activeToolTab: active };
     }),
   activateToolTab: (key) => set({ activeToolTab: key }),
+
+  /* THE MIRROR BRIDGE — the draft is stamped so the room's reply line
+     only lifts the newest carry (an older draft never re-fires). */
+  composeBridgePrompt: (text) =>
+    set({ bridgeDraft: { text, at: Date.now() } }),
+  consumeBridgeDraft: () => set({ bridgeDraft: null }),
+
+  /* THE CREATIONS' OWN DOOR */
+  setLibraryFocus: (sector) =>
+    set({ libraryFocus: { sector, at: Date.now() } }),
+  clearLibraryFocus: () => set({ libraryFocus: null }),
+
   /* THE EXPAND HAND — the active tab's old full-screen room takes the
      whole screen; the tab stays parked in the window underneath. */
   expandActiveToolTab: () =>
@@ -2761,6 +2797,12 @@ export const useMirror = create<MirrorState>()((set, get) => ({
               s.activeToolTab === "mirroros" ? null : s.activeToolTab,
           }
     ),
+
+  /* ---------------- The Quantum Laboratory ----------------
+     The lab is its own page of the book: opening it rides the
+     never-yank law like every other room (the tab rises over the
+     chat; expanding hands the screen to the full-frame bench). */
+  openQlab: (opts) => get().openToolTab("qlab", opts),
 
   /* ------------- The passage — account, free door, profile ------------- */
 

@@ -105,10 +105,23 @@ export function LibraryView() {
      hand: the library answers the visitor's own question instead of
      making them walk every shelf. */
   const [query, setQuery] = useState("");
-  const [sectorFilter, setSectorFilter] = useState<string | null>(null);
   const [newestFirst, setNewestFirst] = useState(true);
   const resumeDreamBook = useMirror((s) => s.resumeDreamBook);
+  /* THE CREATIONS' OWN DOOR — a focus handed by the profile's library
+     rows: the room wakes on that work's own shelf (taken at mount, so
+     no render loop ever turns), then the hand is consumed. */
+  const libraryFocus = useMirror((s) => s.libraryFocus);
+  const clearLibraryFocus = useMirror((s) => s.clearLibraryFocus);
+  const [sectorFilter, setSectorFilter] = useState<string | null>(() => {
+    const focus = useMirror.getState().libraryFocus;
+    return focus ? focus.sector : null;
+  });
   const tEntry = useT();
+
+  useEffect(() => {
+    if (!libraryFocus) return;
+    clearLibraryFocus();
+  }, [libraryFocus, clearLibraryFocus]);
 
   useEffect(() => {
     let alive = true;

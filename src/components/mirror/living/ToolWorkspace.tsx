@@ -1,87 +1,168 @@
 "use client";
 
-import { memo, type ComponentType, type CSSProperties } from "react";
-import dynamic from "next/dynamic";
 import {
-  BookOpen,
-  Clapperboard,
-  Hammer,
-  Library,
-  Maximize2,
-  Music,
-  NotebookPen,
-  ScrollText,
-  Sparkles,
-  X,
-  type LucideIcon,
-} from "lucide-react";
+  Component,
+  Fragment,
+  memo,
+  useEffect,
+  useRef,
+  type ComponentType,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
+import dynamic from "next/dynamic";
+import { Maximize2, RotateCcw, X } from "lucide-react";
 import { useMirror, type ToolTabKey } from "@/lib/mirror-store";
+import { WORKSPACES, WORKSPACE_ORDER } from "@/lib/mirror/workspaces";
+import { runWorkspaceCleanup } from "@/lib/mirror/workspace-lifecycle";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
-/* THE LAZY ROOMS — the eight tools ride their own chunks, exactly like
-   AppShell's own rooms: their code only arrives when first shown, never
-   in the frame's opening bundle (client-only, no server weight, nothing
-   on the first paint but a null). */
-const AkashicView = dynamic(
-  () => import("../AkashicView").then((m) => ({ default: m.AkashicView })),
-  { ssr: false, loading: () => null }
-);
-const DreamBookView = dynamic(
-  () => import("../DreamBookView").then((m) => ({ default: m.DreamBookView })),
-  { ssr: false, loading: () => null }
-);
-const LightCodesView = dynamic(
-  () => import("../LightCodesView").then((m) => ({ default: m.LightCodesView })),
-  { ssr: false, loading: () => null }
-);
-const InventView = dynamic(
-  () => import("../InventView").then((m) => ({ default: m.InventView })),
-  { ssr: false, loading: () => null }
-);
-const MirrorOS = dynamic(
-  () => import("../MirrorOS").then((m) => ({ default: m.MirrorOS })),
-  { ssr: false, loading: () => null }
-);
-const LibraryView = dynamic(
-  () => import("../LibraryView").then((m) => ({ default: m.LibraryView })),
-  { ssr: false, loading: () => null }
-);
-const ArchiveRegister = dynamic(
-  () => import("../ArchiveRegister").then((m) => ({ default: m.ArchiveRegister })),
-  { ssr: false, loading: () => null }
-);
-const VideoStudioView = dynamic(
-  () => import("../VideoStudioView").then((m) => ({ default: m.VideoStudioView })),
-  { ssr: false, loading: () => null }
-);
+/* ------------------------------------------------------------------ */
+/*  THE LAZY PAGES — every room rides its own chunk through the        */
+/*  registry's loader (their code only arrives when first shown, never */
+/*  in the frame's opening bundle). While a chunk travels, the page's  */
+/*  own quiet scaffold stands in the frame — no blank air, no jumps.   */
+/* ------------------------------------------------------------------ */
 
-/* one row per tool — the small mark and the name the tab wears
-   (exported so the history panel's maker trail wears the same marks) */
-export const TAB_META: Record<ToolTabKey, { icon: LucideIcon; label: string }> = {
-  mirroros: { icon: Sparkles, label: "Manifest" },
-  akashic: { icon: ScrollText, label: "Akashic" },
-  dreambook: { icon: BookOpen, label: "Book" },
-  lightcodes: { icon: Music, label: "Music" },
-  invent: { icon: Hammer, label: "Invent" },
-  video: { icon: Clapperboard, label: "Video" },
-  register: { icon: NotebookPen, label: "Register" },
-  library: { icon: Library, label: "Library" },
-};
+/* the loading scaffold — still, honest, scope-tinted: the shape of a
+   room about to stand (no spinner loop, no shimmer — the house's calm
+   laws hold even while a chunk travels) */
+function PageScaffold() {
+  return (
+    <div className="absolute inset-0 flex flex-col gap-3 p-4" aria-hidden="true">
+      <div className="flex items-center gap-2">
+        <div
+          className="size-8 rounded-full"
+          style={{
+            background:
+              "color-mix(in srgb, var(--scope-a,var(--gd)) 10%, transparent)",
+            boxShadow:
+              "inset 0 0 0 1px color-mix(in srgb, var(--scope-a,var(--gd)) 22%, transparent)",
+          }}
+        />
+        <div
+          className="h-3 w-28 rounded-full"
+          style={{
+            background:
+              "color-mix(in srgb, var(--scope-a,var(--gd)) 9%, transparent)",
+          }}
+        />
+      </div>
+      <div className="mt-1 flex flex-col gap-2.5">
+        <div
+          className="h-3 w-3/4 rounded-full"
+          style={{
+            background:
+              "color-mix(in srgb, var(--foreground) 6%, transparent)",
+          }}
+        />
+        <div
+          className="h-3 w-2/3 rounded-full"
+          style={{
+            background:
+              "color-mix(in srgb, var(--foreground) 5%, transparent)",
+          }}
+        />
+        <div
+          className="h-3 w-1/2 rounded-full"
+          style={{
+            background:
+              "color-mix(in srgb, var(--foreground) 4%, transparent)",
+          }}
+        />
+      </div>
+    </div>
+  );
+}
 
-const TOOL_VIEWS: Record<ToolTabKey, ComponentType> = {
-  akashic: AkashicView,
-  invent: InventView,
-  dreambook: DreamBookView,
-  lightcodes: LightCodesView,
-  video: VideoStudioView,
-  register: ArchiveRegister,
-  mirroros: MirrorOS,
-  library: LibraryView,
-};
+const PAGE_VIEWS = WORKSPACE_ORDER.reduce(
+  (acc, id) => {
+    acc[id] = dynamic(WORKSPACES[id].loader, {
+      ssr: false,
+      loading: () => <PageScaffold />,
+    });
+    return acc;
+  },
+  {} as Record<ToolTabKey, ComponentType>
+);
 
 /* ------------------------------------------------------------------ */
-/*  THE WORKSPACE — the tools open as tabs over the one chat: one      */
+/*  THE PAGE BOUNDARY — a room that stumbles lays itself down with     */
+/*  honor: an honest word, a retry hand, the frame never broken. A     */
+/*  provider failure is the page's own weather, never the book's       */
+/*  collapse (the chat beneath keeps standing).                        */
+/* ------------------------------------------------------------------ */
+
+class WorkspaceBoundary extends Component<
+  { children: ReactNode; label: string },
+  { failed: boolean; nonce: number }
+> {
+  state = { failed: false, nonce: 0 };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  /* THE RETRY HAND — the boundary lays its verdict down and remounts
+     the page fresh (a new nonce lifts a new attempt of the room). */
+  reset = () =>
+    this.setState((s) => ({ failed: false, nonce: s.nonce + 1 }));
+  render() {
+    if (this.state.failed)
+      return <BoundaryFallback label={this.props.label} onRetry={this.reset} />;
+    return <Fragment key={this.state.nonce}>{this.props.children}</Fragment>;
+  }
+}
+
+function BoundaryFallback({
+  label,
+  onRetry,
+}: {
+  label: string;
+  onRetry: () => void;
+}) {
+  const t = useT();
+  return (
+    <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-6 text-center">
+      <p className="text-[14px] font-medium text-foreground/85">
+        {t("This room stumbled — its own weather, not the book's.")}
+      </p>
+      <p className="text-[12px] text-muted-foreground/70">{label}</p>
+      <button
+        type="button"
+        onClick={onRetry}
+        data-testid="workspace-retry"
+        className="focus-glow flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[12.5px] text-foreground transition-colors duration-300 hover:bg-foreground/5"
+        style={{
+          borderColor:
+            "color-mix(in srgb, var(--scope-a,var(--gd)) 40%, transparent)",
+          color: "var(--scope-a,var(--gd))",
+        }}
+      >
+        <RotateCcw className="size-3.5" aria-hidden="true" />
+        {t("Try again")}
+      </button>
+    </div>
+  );
+}
+
+/* one row per page — read from the registry (the tab bar and the
+   history panel's maker trail wear the same marks from the same shelf) */
+export const TAB_META: Record<
+  ToolTabKey,
+  { icon: (typeof WORKSPACES)[ToolTabKey]["icon"]; label: string }
+> = WORKSPACE_ORDER.reduce(
+  (acc, id) => {
+    acc[id] = { icon: WORKSPACES[id].icon, label: WORKSPACES[id].title };
+    return acc;
+  },
+  {} as Record<
+    ToolTabKey,
+    { icon: (typeof WORKSPACES)[ToolTabKey]["icon"]; label: string }
+  >
+);
+
+/* ------------------------------------------------------------------ */
+/*  THE WORKSPACE — the pages open as tabs over the one chat: one      */
 /*  window carries every open room, one tab active at a time. The      */
 /*  window is ALWAYS the chat's own exact frame (absolute inset-0 of   */
 /*  the realm — the lens clips its corners), in both of the chat's     */
@@ -89,6 +170,11 @@ const TOOL_VIEWS: Record<ToolTabKey, ComponentType> = {
 /*  only over the chat — when a full-screen room owns the frame (a     */
 /*  tab was expanded), the window rests and the tab stays parked       */
 /*  until the room's own back hand returns.                            */
+/*                                                                     */
+/*  THE LIFECYCLE LAW — when the active page turns (or the window      */
+/*  closes), the leaving page's registered hands are run: audio        */
+/*  paused, timers cleared, synthesizers suspended. Only the open      */
+/*  page owns the device's breath.                                     */
 /* ------------------------------------------------------------------ */
 function ToolWorkspaceImpl({ bare = false }: { bare?: boolean }) {
   const view = useMirror((s) => s.view);
@@ -115,6 +201,19 @@ function ToolWorkspaceImpl({ bare = false }: { bare?: boolean }) {
       ? activeToolTab
       : null;
 
+  /* THE LIFECYCLE — the leaving page lays its hands down. A ref carries
+     the last standing page so the turn (and the window's own unmount)
+     both run its cleanups exactly once. */
+  const prevActiveRef = useRef<string | null>(null);
+  useEffect(() => {
+    const prev = prevActiveRef.current;
+    if (prev && prev !== active) runWorkspaceCleanup(prev);
+    prevActiveRef.current = active;
+    return () => {
+      if (prevActiveRef.current) runWorkspaceCleanup(prevActiveRef.current);
+    };
+  }, [active]);
+
   /* the guard itself — no tab standing (or a full-screen room owning
      the frame): the window does not exist; hooks have all run above */
   if (!active) return null;
@@ -136,12 +235,14 @@ function ToolWorkspaceImpl({ bare = false }: { bare?: boolean }) {
       "color-mix(in srgb, var(--scope-a,var(--gd)) 25%, var(--hairline))",
   };
 
-  const ActiveView = active ? TOOL_VIEWS[active] : null;
+  const ActiveView = PAGE_VIEWS[active];
+  const activeMeta = WORKSPACES[active];
 
   return (
     <div
       data-testid="tool-workspace"
       data-workplace="true"
+      data-resource-profile={activeMeta.resourceProfile}
       className="pointer-events-auto absolute inset-0 z-30 flex flex-col overflow-hidden rounded-none border bg-background shadow-[0_24px_70px_-30px_rgba(0,0,0,0.6)]"
       style={winStyle}
     >
@@ -251,14 +352,17 @@ function ToolWorkspaceImpl({ bare = false }: { bare?: boolean }) {
         }}
       />
 
-      {/* THE BODY — the active room fills the window; the keyed mount
-          gives every tab its own clean scroll. A whisper of the house's
-          light washes the workplace's ceiling (pointer-events-none, no
-          blur, no motion — every touch passes through to the room). */}
+      {/* THE BODY — the active page fills the window inside its own
+          boundary (a stumble lays the page down with honor, never the
+          book); the keyed mount gives every tab its own clean scroll.
+          A whisper of the house's light washes the workplace's ceiling
+          (pointer-events-none, no blur, no motion). */}
       <div className="relative min-h-0 flex-1">
         {ActiveView && active ? (
           <div key={active} className="absolute inset-0">
-            <ActiveView />
+            <WorkspaceBoundary label={t(activeMeta.title)}>
+              <ActiveView />
+            </WorkspaceBoundary>
           </div>
         ) : null}
         <div

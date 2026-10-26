@@ -117,6 +117,7 @@ export function ProfilePage() {
   const openAuth = useMirror((s) => s.openAuth);
   const openAccount = useMirror((s) => s.openAccount);
   const openLibrary = useMirror((s) => s.openLibrary);
+  const setLibraryFocus = useMirror((s) => s.setLibraryFocus);
   const signOut = useMirror((s) => s.signOut);
 
   /* the passage's own tuning */
@@ -1174,7 +1175,16 @@ export function ProfilePage() {
                     <button
                       key={e.id}
                       type="button"
-                      onClick={() => exitTo(openLibrary)}
+                      onClick={() => {
+                        /* THE CREATION'S OWN SHELF — the row hands its
+                           sector to the creations room, so the work
+                           opens on its own shelf (and the room scrolls
+                           it into view); the profile lays itself down
+                           first, as every passage does. */
+                        setLibraryFocus(e.sector);
+                        exitTo(openLibrary);
+                      }}
+                      data-testid="profilepage-library-row"
                       className="group flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-left transition-colors duration-300 hover:bg-[var(--glass-bg)]"
                     >
                       <span
