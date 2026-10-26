@@ -122,16 +122,27 @@ cd "$PROJECT_DIR"
 # an old Oct-20 line while the remote main already held the latest masterpiece.
 # Before starting anything, re-pin the tree to the SHA recorded in
 # .zscripts/expected-head (updated by the lead whenever a new version ships).
+#
+# THE RATCHET LESSON (the drift was self-inflicted): the old guard reset
+# whenever HEAD differed from the pin — but a pin commit's tree can only
+# hold its PARENT's sha, so every restart walked the tree one commit
+# FURTHER BACK (3b821ab → 082d625 → bdbf438 → …): the pin itself was the
+# "stale version" engine. The guard now resets only on TRUE drift — when
+# HEAD does not CONTAIN the pinned commit (an ancestor check). A checkout
+# that is simply AHEAD of the pin (the normal state after new work) is
+# left standing; a reverted checkout (missing the pin) is healed forward.
 EXPECTED_HEAD_FILE="$SCRIPT_DIR/expected-head"
 if [ -f "$EXPECTED_HEAD_FILE" ]; then
         EXPECTED_HEAD=$(tr -d '[:space:]' < "$EXPECTED_HEAD_FILE")
         CURRENT_HEAD=$(git rev-parse HEAD 2>/dev/null || echo "")
-        if [ -n "$EXPECTED_HEAD" ] && [ "$CURRENT_HEAD" != "$EXPECTED_HEAD" ] && git cat-file -e "$EXPECTED_HEAD" 2>/dev/null; then
-                echo "[GUARD] HEAD drifted (${CURRENT_HEAD:0:12}) — re-pinning the tree to the git version (${EXPECTED_HEAD:0:12})..."
-                if git reset --hard "$EXPECTED_HEAD" >/dev/null 2>&1; then
-                        echo "[GUARD] Tree re-pinned to ${EXPECTED_HEAD:0:12}"
-                else
-                        echo "[GUARD] WARNING: could not re-pin the tree to $EXPECTED_HEAD"
+        if [ -n "$EXPECTED_HEAD" ] && [ -n "$CURRENT_HEAD" ] && git cat-file -e "$EXPECTED_HEAD" 2>/dev/null; then
+                if ! git merge-base --is-ancestor "$EXPECTED_HEAD" "$CURRENT_HEAD" >/dev/null 2>&1; then
+                        echo "[GUARD] HEAD drifted (${CURRENT_HEAD:0:12}) — re-pinning the tree to the git version (${EXPECTED_HEAD:0:12})..."
+                        if git reset --hard "$EXPECTED_HEAD" >/dev/null 2>&1; then
+                                echo "[GUARD] Tree re-pinned to ${EXPECTED_HEAD:0:12}"
+                        else
+                                echo "[GUARD] WARNING: could not re-pin the tree to $EXPECTED_HEAD"
+                        fi
                 fi
         fi
 fi
