@@ -1,0 +1,260 @@
+{
+ "schema": "chronoscope-assets-v1",
+ "promptVersion": "chronoscope-v1",
+ "generated": "2026-10-26T20:24:52Z",
+ "counts": {
+  "records": 3220,
+  "civilian": 3212,
+  "idm": 8,
+  "readyRoleAssets": 24,
+  "pendingRoleAssets": 12856
+ },
+ "legacy": {
+  "quarantined": true,
+  "duplicateFlaggedFiles": 5432,
+  "distinctLegacyPictures": 19,
+  "note": "The legacy PDF-lifted library held recycled artwork across records. It is excluded from the live mapping and kept recoverable in git history (e6fed32). Missing artwork stays pending; it is never substituted, recoloured or reused."
+ },
+ "ready": [
+  {
+   "entityId": "CIV-0001",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0001-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "62dea4ca6b297f06477a0940176d5c5ce56303a64f8ffb422b86d813cb5f7c02",
+   "reviewStatus": "pilot visual review passed; distinct role and profile artwork"
+  },
+  {
+   "entityId": "CIV-0001",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0001-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "2e6bc410e6d9aa2892640d4711749600ce00e54aed8a5876035412a6ff1f2352",
+   "reviewStatus": "pilot visual review passed; distinct role and profile artwork"
+  },
+  {
+   "entityId": "CIV-0001",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0001-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "b7515e2f8d578b6a4777c4361a390ddef3932db21ef5da149b391ef96f99c07a",
+   "reviewStatus": "pilot visual review passed; distinct role and profile artwork"
+  },
+  {
+   "entityId": "CIV-0001",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0001-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "67a90ae8cbe4a67d789ce36338bbf4620ee78fa5041ac0ebe0a60f0602018d59",
+   "reviewStatus": "pilot visual review passed; distinct role and profile artwork"
+  },
+  {
+   "entityId": "CIV-0002",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0002-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "27d16d3262c5586f872096378f3b1f6caae0830297c701397c53220a8de61c31",
+   "reviewStatus": "pilot visual review passed; distinct role and profile artwork"
+  },
+  {
+   "entityId": "CIV-0002",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0002-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "2ffc7e3bded028a361f74602c2f905b2f243da5d614c35bdadad2180dba4dbde",
+   "reviewStatus": "pilot visual review passed; distinct role and profile artwork"
+  },
+  {
+   "entityId": "CIV-0002",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0002-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "c9d8ffd807fc2c50e1bc105fc914e58c15b06054f9cd9376e804f6c43ded98ea",
+   "reviewStatus": "pilot visual review passed; distinct role and profile artwork"
+  },
+  {
+   "entityId": "CIV-0002",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0002-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "cb6d959f3508eb2553c844be4c13fd76f6c776404e0caa6ee5423665fb07d30d",
+   "reviewStatus": "pilot visual review passed; distinct role and profile artwork"
+  },
+  {
+   "entityId": "CIV-0003",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0003-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "4138a64e1b194458b96a3ef33149118f5f1ff577c42147a5601201d476a39a9f",
+   "reviewStatus": "pilot visual review passed; distinct role and profile artwork"
+  },
+  {
+   "entityId": "CIV-0003",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0003-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "cc01c61a0054b5a8153a3af7a03d535d0e68ab1dce146ec6315962a6a8f421cf",
+   "reviewStatus": "pilot visual review passed; distinct role and profile artwork"
+  },
+  {
+   "entityId": "CIV-0003",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0003-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "61bf7b8557e8284f85ff275f681c31d8911c79f8b6197008d4d74de51803791b",
+   "reviewStatus": "pilot visual review passed; distinct role and profile artwork"
+  },
+  {
+   "entityId": "CIV-0003",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0003-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "2c643364c5895ae94f8d2935835bfa6be951f9865647009ee7531c471836c5f1",
+   "reviewStatus": "pilot visual review passed; distinct role and profile artwork"
+  },
+  {
+   "entityId": "CIV-0004",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0004-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "9471fea3701701c60f7840da77d77ca6f8c1e4f953d49cd4cdf35358f3e1ceaf",
+   "reviewStatus": "pilot visual review passed; distinct role and profile artwork"
+  },
+  {
+   "entityId": "CIV-0004",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0004-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "b56253fdae03da8c3e080d7590a707f7c15f0f98aec9e4edcc76ab3dd49cdf54",
+   "reviewStatus": "pilot visual review passed; distinct role and profile artwork"
+  },
+  {
+   "entityId": "CIV-0004",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0004-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "5fa000db739a3059fa416a35fa7cc3a8d6d668d1c02a60ec7e08620cc39cf11b",
+   "reviewStatus": "pilot visual review passed; distinct role and profile artwork"
+  },
+  {
+   "entityId": "CIV-0004",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0004-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "0d4d16f8bc8d877b7829ccd63064ea377dec57da3ef5006e19d3be260dec31a2",
+   "reviewStatus": "pilot visual review passed; distinct role and profile artwork"
+  },
+  {
+   "entityId": "CIV-0009",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0009-being-v001.webp",
+   "width": 701,
+   "height": 561,
+   "sha256": "d2edd1f2c38123660302f50931640624885030783ba06a2e69042ca2d615e7e8",
+   "reviewStatus": "pilot visual review passed; distinct role and profile artwork"
+  },
+  {
+   "entityId": "CIV-0009",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0009-world-v001.webp",
+   "width": 701,
+   "height": 561,
+   "sha256": "cdf1d859889d2a0cd54960f5b5c77f35c0dd83f9f890b09843df06cb888ce262",
+   "reviewStatus": "pilot visual review passed; distinct role and profile artwork"
+  },
+  {
+   "entityId": "CIV-0009",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0009-technology-v001.webp",
+   "width": 701,
+   "height": 561,
+   "sha256": "5c01dd0a46ff49e6173c1ae5e968415381cb10c9a735ee5109a37146eb1d680d",
+   "reviewStatus": "pilot visual review passed; distinct role and profile artwork"
+  },
+  {
+   "entityId": "CIV-0009",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0009-life-v001.webp",
+   "width": 701,
+   "height": 561,
+   "sha256": "8de7810d77dfd6ef04b986ed43b255547372a55198442ed02a094c92be705e8c",
+   "reviewStatus": "pilot visual review passed; distinct role and profile artwork"
+  },
+  {
+   "entityId": "CIV-0012",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0012-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "273056d35028a65c87674baa18cec9844adbec6951ea5d1ecb08a4d9a11e54a0",
+   "reviewStatus": "pilot visual review passed; distinct role and profile artwork"
+  },
+  {
+   "entityId": "CIV-0012",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0012-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "f113fef2063dc96a7051d9d1f3febb9a9a3611ec794bc0358321502f281b19bb",
+   "reviewStatus": "pilot visual review passed; distinct role and profile artwork"
+  },
+  {
+   "entityId": "CIV-0012",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0012-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "d70afffb1c17dc023107adbbf4a9d849bdddec907db69316345d107614d276ba",
+   "reviewStatus": "pilot visual review passed; distinct role and profile artwork"
+  },
+  {
+   "entityId": "CIV-0012",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0012-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "35d097f218e0b8e53ff2e63edec50fa63b8d46fd86ea752c6f62a9d94358d258",
+   "reviewStatus": "pilot visual review passed; distinct role and profile artwork"
+  }
+ ]
+}

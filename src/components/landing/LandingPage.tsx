@@ -28,13 +28,13 @@ const GuideView = dynamic(() => import("./GuideView"), {
 
 // the codex's plates ride their own chunk as well — three thousand
 // catalogued worlds are the archive's business, not the first screen's
-const CodexExobiologica = dynamic(() => import("./CodexExobiologica"), {
+const Chronoscope = dynamic(() => import("./Chronoscope"), {
   ssr: false,
   loading: () => (
     <div className="flex items-center justify-center gap-3 rounded-2xl border border-[var(--lp-edge)] bg-[var(--lp-veil)] p-10">
       <span className="size-2 rounded-full bg-[var(--lp-violet)]" />
       <p className="mono-label text-[10px] uppercase tracking-[0.3em] text-[var(--lp-faint)]">
-        The archive is unrolling…
+        The chronoscope is winding…
       </p>
     </div>
   ),
@@ -460,13 +460,14 @@ export default function LandingPage({
 
           {/* ================== 02 · CODEX EXOBIOLOGICA ================== */}
           {/* the offerings retired at the visitor's word — their chapter
-              is the museum wing now: 3,212 catalogued civilizations and
-              the hyperspace shelf, every plate explored within this
-              section, every plate zoomable to the full screen */}
+              is the chronoscope now: ONE active profile card floating
+              in a broken time dial, the archive's 3,212 civilisations
+              and eight hyperspace records addressed by the console and
+              the lens, never by an endless wall of cards */}
           <section
             id="codex"
             className="lp-late relative scroll-mt-6 px-4 pb-8 pt-14 sm:px-8 lg:pb-14 lg:pt-20"
-            aria-label={t("Codex Exobiologica — the archive of star-kind")}
+            aria-label={t("Codex Exobiologica — the chronoscope")}
             data-testid="codex-section"
           >
             {/* the light language in the archive's quiet edges — grand */}
@@ -501,11 +502,11 @@ export default function LandingPage({
             <SectionHead
               index="02"
               accent="violet"
-              kicker={t("The archive of star-kind")}
+              kicker={t("A time machine for discovery")}
               title={t("Codex Exobiologica")}
             />
             <div className="mt-8">
-              <CodexExobiologica />
+              <Chronoscope />
             </div>
           </section>
 
