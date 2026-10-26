@@ -4,16 +4,23 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   AudioLines,
+  Check,
   ChevronDown,
+  Copy,
+  Dices,
   Download,
   Eye,
+  Feather,
+  Gauge,
   Music4,
   Pause,
   Play,
   RefreshCw,
   Repeat,
+  Send,
   Sparkles,
   Trash2,
+  Undo2,
   Wand2,
   X,
 } from "lucide-react";
@@ -25,6 +32,8 @@ import { MirrorBridge } from "./living/MirrorBridge";
 import {
   LC_MODES,
   LC_SHAPE,
+  type LcBrief,
+  type LcLyricOp,
   type LcMode,
 } from "@/lib/data/light-codes";
 import { cn } from "@/lib/utils";
@@ -32,17 +41,17 @@ import { AttachmentChips, ChatInputExtras } from "./ChatInputExtras";
 import type { ChatAttachment } from "./attachments";
 
 /* ------------------------------------------------------------------ */
-/*  LIGHT CODES — the musical chamber. A compact room: the heading,    */
-/*  the intention, six modes, one generating breath — and the player.  */
-/*  Everything else reveals itself only when asked for.                */
+/*  LIGHT CODES — the musical chamber. A compact room: the intention,  */
+/*  the chambers, one generating breath — and THE MIRROR'S BRIEF, the  */
+/*  composition sheet the visitor reads and shapes before any sound    */
+/*  is woven. The round is four steps, honestly kept:                  */
+/*                                                                     */
+/*      DESCRIBE → MIRROR COMPOSES → GENERATE → LISTEN                 */
+/*                                                                     */
+/*  The engine's name stays behind the veil; the Mirror is the voice.  */
+/*  (Behind that veil: Google DeepMind's Lyria, through the official   */
+/*  Gemini API — the keeper's GEMINI_API_KEY opens its door.)          */
 /* ------------------------------------------------------------------ */
-
-const RENDERING_PHRASES = [
-  "The Mirror is translating intention into sound…",
-  "The chamber hums — the transmission is taking shape…",
-  "Frequencies are finding their places…",
-  "The sound is being woven — hold still…",
-];
 
 /* ------------------------- the house's dress ------------------------- */
 /*  The musical chamber keeps its own silver ink (--scope-a/--scope-b)
@@ -194,7 +203,7 @@ function Player() {
   const track = useMirror((s) => s.lcTrack)!;
   const clearLcPlayer = useMirror((s) => s.clearLcPlayer);
   const reshapeLc = useMirror((s) => s.reshapeLc);
-  const generateLightCode = useMirror((s) => s.generateLightCode);
+  const newVersionFromTrack = useMirror((s) => s.newVersionFromTrack);
   const modeName =
     LC_MODES.find((m) => m.id === track.mode)?.name ?? track.mode;
   const t = useT();
@@ -251,6 +260,7 @@ function Player() {
             data-testid="lc-player-mode"
           >
             {t(modeName)}
+            {track.length === "full" ? " · full song" : " · preview"}
           </p>
           <h3 className="mt-0.5 truncate font-serif text-[18px] font-semibold text-foreground">
             {track.title}
@@ -300,10 +310,10 @@ function Player() {
           )}
         </button>
         <PlayerChip
-          onClick={() => void generateLightCode()}
+          onClick={newVersionFromTrack}
           icon={RefreshCw}
-          label="Generate again"
-          testId="lc-again"
+          label="New version"
+          testId="lc-new-version"
         />
         <PlayerChip
           onClick={() => reshapeLc(track)}
@@ -502,6 +512,523 @@ function ShapeSelect({
   );
 }
 
+/* --------------------- the length toggle ----------------------------- */
+
+function LengthToggle() {
+  const lcLength = useMirror((s) => s.lcLength);
+  const setLcLength = useMirror((s) => s.setLcLength);
+  const t = useT();
+  return (
+    <div
+      role="group"
+      aria-label={t("The transmission's length")}
+      className="flex w-fit items-center gap-0.5 rounded-full border hairline p-0.5"
+      data-testid="lc-length"
+    >
+      <button
+        type="button"
+        onClick={() => setLcLength("preview")}
+        aria-pressed={lcLength === "preview"}
+        data-testid="lc-length-preview"
+        className={cn(
+          "focus-glow flex h-6 items-center rounded-full px-2.5 text-[11.5px] transition-colors duration-300",
+          lcLength === "preview"
+            ? "font-semibold"
+            : "text-muted-foreground hover:text-foreground"
+        )}
+        style={
+          lcLength === "preview"
+            ? {
+                backgroundColor:
+                  "color-mix(in srgb, var(--scope-a,var(--lp-gold)) 13%, transparent)",
+                color: "var(--scope-a,var(--lp-gold))",
+              }
+            : undefined
+        }
+      >
+        {t("Preview · 30s")}
+      </button>
+      <button
+        type="button"
+        onClick={() => setLcLength("full")}
+        aria-pressed={lcLength === "full"}
+        data-testid="lc-length-full"
+        className={cn(
+          "focus-glow flex h-6 items-center rounded-full px-2.5 text-[11.5px] transition-colors duration-300",
+          lcLength === "full"
+            ? "font-semibold"
+            : "text-muted-foreground hover:text-foreground"
+        )}
+        style={
+          lcLength === "full"
+            ? {
+                backgroundColor:
+                  "color-mix(in srgb, var(--scope-a,var(--lp-gold)) 13%, transparent)",
+                color: "var(--scope-a,var(--lp-gold))",
+              }
+            : undefined
+        }
+      >
+        {t("Full song")}
+      </button>
+    </div>
+  );
+}
+
+/* --------------------- THE MIRROR'S BRIEF ---------------------------- */
+/*  The composition sheet: what the Mirror wrote, laid open for the
+    visitor's own hand — the title, the words, the production direction,
+    the refinement line and the generate hand. Nothing is woven until
+    the visitor strikes generate.                                        */
+
+const LYRIC_HANDS: { op: LcLyricOp; label: string }[] = [
+  { op: "generate", label: "Write lyrics" },
+  { op: "rewrite", label: "Rewrite" },
+  { op: "rhyme", label: "Improve rhyme" },
+  { op: "language", label: "Into my language" },
+  { op: "tone", label: "Warmer tone" },
+  { op: "chorus", label: "Shape the chorus" },
+  { op: "simplify", label: "Simpler" },
+  { op: "poetic", label: "More poetic" },
+];
+
+function BriefCard() {
+  const brief = useMirror((s) => s.lcBrief)!;
+  const busyOp = useMirror((s) => s.lcBusyOp);
+  const labNote = useMirror((s) => s.lcLabNote);
+  const refineNote = useMirror((s) => s.lcRefineNote);
+  const drafts = useMirror((s) => s.lcLyricsDrafts);
+  const status = useMirror((s) => s.lcStatus);
+  const updateBriefDraft = useMirror((s) => s.updateBriefDraft);
+  const weaveBrief = useMirror((s) => s.weaveBrief);
+  const refineBrief = useMirror((s) => s.refineBrief);
+  const lyricsLabOp = useMirror((s) => s.lyricsLabOp);
+  const restoreLyricsDraft = useMirror((s) => s.restoreLyricsDraft);
+  const clearLcBrief = useMirror((s) => s.clearLcBrief);
+  /* the honesty line, read live from the store — has a sound already
+     been woven this session? */
+  const hasAudio = useMirror((s) => Boolean(s.lcTrack));
+  const t = useT();
+
+  const [styleOpen, setStyleOpen] = useState(false);
+  const [refine, setRefine] = useState("");
+  const [copied, setCopied] = useState(false);
+
+  const weaving = status === "polling";
+  const labBusy = busyOp !== null;
+
+  const copyLyrics = async () => {
+    if (!brief.lyrics) return;
+    try {
+      await navigator.clipboard.writeText(brief.lyrics);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1600);
+    } catch {
+      /* the clipboard rests — the sheet stays editable by hand */
+    }
+  };
+
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+      className="scope-frame-card relative rounded-2xl p-4 sm:p-5"
+      data-testid="lc-brief"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="mono-label text-[10.5px] uppercase tracking-[0.24em] text-muted-foreground">
+            {t("The Mirror's brief")}
+          </p>
+          <label htmlFor="lc-brief-title" className="sr-only">
+            {t("Composition title")}
+          </label>
+          <input
+            id="lc-brief-title"
+            type="text"
+            value={brief.title}
+            onChange={(e) => updateBriefDraft({ title: e.target.value })}
+            placeholder={t("Composition title")}
+            maxLength={90}
+            data-testid="lc-brief-title"
+            className="focus-glow mt-0.5 w-full truncate rounded-lg border border-transparent bg-transparent font-serif text-[18px] font-semibold text-foreground outline-none transition-colors duration-300 hover:border-[var(--hairline)] focus:border-[var(--hairline)]"
+          />
+        </div>
+        <button
+          type="button"
+          onClick={clearLcBrief}
+          aria-label={t("Lay the brief down")}
+          data-testid="lc-brief-dismiss"
+          className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <X className="size-4" aria-hidden="true" />
+        </button>
+      </div>
+
+      {brief.notes && (
+        <p className="mt-1.5 text-[14.5px] italic leading-relaxed text-foreground/80">
+          {brief.notes}
+        </p>
+      )}
+
+      {/* ---------- THE LYRICS LABORATORY ---------- */}
+      {brief.lyrics !== null && (
+        <div className="mt-4 rounded-xl border hairline bg-[color-mix(in_srgb,var(--scope-a)_5%,transparent)] p-3">
+          <div className="flex items-center justify-between gap-2">
+            <p className="mono-label flex items-center gap-1.5 text-[10.5px] uppercase tracking-[0.22em] text-muted-foreground">
+              <Feather className="size-3.5" aria-hidden="true" />
+              {t("The Lyrics Laboratory")}
+            </p>
+            <div className="flex items-center gap-1">
+              {brief.lyrics && (
+                <button
+                  type="button"
+                  onClick={() => void copyLyrics()}
+                  aria-label={t("Copy the lyrics")}
+                  data-testid="lc-lyrics-copy"
+                  className="focus-glow flex size-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  {copied ? (
+                    <Check className="size-3.5 text-[var(--scope-a)]" aria-hidden="true" />
+                  ) : (
+                    <Copy className="size-3.5" aria-hidden="true" />
+                  )}
+                </button>
+              )}
+            </div>
+          </div>
+          <label htmlFor="lc-brief-lyrics" className="sr-only">
+            {t("The lyric sheet")}
+          </label>
+          <textarea
+            id="lc-brief-lyrics"
+            rows={Math.min(10, Math.max(3, (brief.lyrics ?? "").split("\n").length + 1))}
+            value={brief.lyrics ?? ""}
+            onChange={(e) => updateBriefDraft({ lyrics: e.target.value })}
+            placeholder={t("The words the song will carry — write them here, or ask a craft hand below.")}
+            maxLength={1200}
+            data-testid="lc-brief-lyrics"
+            className="focus-glow nice-scroll mt-1.5 w-full resize-none rounded-lg border border-transparent bg-transparent px-1 font-serif text-[14px] italic leading-relaxed text-foreground outline-none transition-colors duration-300 placeholder:text-muted-foreground/50 hover:border-[var(--hairline)] focus:border-[var(--hairline)]"
+          />
+          {/* the craft hands — one at a time */}
+          <div className="mt-2 flex flex-wrap gap-1.5" data-testid="lc-lyric-hands">
+            {LYRIC_HANDS.map((hand) => (
+              <button
+                key={hand.op}
+                type="button"
+                disabled={labBusy || weaving}
+                onClick={() => void lyricsLabOp(hand.op)}
+                aria-label={`${t(hand.label)} — a craft hand of the Lyrics Laboratory`}
+                data-testid={`lc-lyric-${hand.op}`}
+                className={cn(
+                  "focus-glow flex h-7 items-center gap-1 rounded-full border px-2.5 text-[12px] transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-45",
+                  busyOp === `lyrics:${hand.op}`
+                    ? "border-[color-mix(in_srgb,var(--scope-a)_55%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_12%,transparent)] text-[var(--scope-a)]"
+                    : cn(GOLD_PILL, "text-muted-foreground hover:text-foreground")
+                )}
+              >
+                {busyOp === `lyrics:${hand.op}` && (
+                  <span
+                    className="inline-block size-1.5 animate-pulse rounded-full bg-[var(--scope-a)]"
+                    aria-hidden="true"
+                  />
+                )}
+                {t(hand.label)}
+              </button>
+            ))}
+          </div>
+          {/* the restore shelf — previous sheets of this session */}
+          {drafts.length > 0 && (
+            <div className="mt-2 flex flex-wrap items-center gap-1.5">
+              <Undo2 className="size-3 text-muted-foreground/70" aria-hidden="true" />
+              {drafts.map((_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => restoreLyricsDraft(i)}
+                  disabled={labBusy || weaving}
+                  data-testid={`lc-lyrics-restore-${i}`}
+                  className="focus-glow rounded-full border px-2 py-0.5 text-[11px] text-muted-foreground transition-colors duration-300 hover:text-foreground disabled:opacity-45"
+                >
+                  {t("Restore previous draft")}
+                  {i > 0 ? ` · ${i + 1}` : ""}
+                </button>
+              ))}
+            </div>
+          )}
+          {labNote && (
+            <p className="mt-2 text-[12.5px] italic leading-relaxed text-muted-foreground" data-testid="lc-lab-note">
+              {labNote}
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* ---------- THE PRODUCTION DIRECTION — revealed on request ---------- */}
+      {brief.style && (
+        <div className="mt-3">
+          <button
+            type="button"
+            onClick={() => setStyleOpen((v) => !v)}
+            aria-expanded={styleOpen}
+            data-testid="lc-brief-style-toggle"
+            className={cn(
+              "focus-glow mx-auto flex w-fit items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[12px] uppercase tracking-[0.18em] text-muted-foreground transition-all duration-300 hover:text-foreground",
+              GOLD_PILL
+            )}
+          >
+            {t("The production direction")}
+            <ChevronDown
+              className={cn("size-3.5 transition-transform duration-300", styleOpen && "rotate-180")}
+              aria-hidden="true"
+            />
+          </button>
+          <AnimatePresence>
+            {styleOpen && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.35, ease: "easeOut" }}
+                className="overflow-hidden"
+              >
+                <label htmlFor="lc-brief-style" className="sr-only">
+                  {t("The production direction")}
+                </label>
+                <textarea
+                  id="lc-brief-style"
+                  rows={5}
+                  value={brief.style}
+                  onChange={(e) => updateBriefDraft({ style: e.target.value })}
+                  maxLength={1400}
+                  data-testid="lc-brief-style"
+                  className="focus-glow nice-scroll mt-2 w-full resize-none rounded-lg border hairline bg-transparent px-3 py-2 font-mono text-[12px] leading-relaxed text-muted-foreground outline-none"
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
+
+      {/* ---------- THE REFINEMENT LINE — conversation shapes the brief ---------- */}
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          const word = refine;
+          setRefine("");
+          void refineBrief(word);
+        }}
+        className="mt-4"
+        data-testid="lc-refine-form"
+      >
+        <div className="flex items-center gap-2">
+          <input
+            type="text"
+            value={refine}
+            onChange={(e) => setRefine(e.target.value)}
+            placeholder={t("Tell the Mirror what to change — \u201cmake it more emotional\u201d\u2026")}
+            aria-label={t("Tell the Mirror what to change")}
+            maxLength={300}
+            disabled={labBusy || weaving}
+            data-testid="lc-refine-input"
+            className="focus-glow h-10 min-w-0 flex-1 rounded-full border hairline bg-background/60 px-4 text-[14.5px] text-foreground outline-none transition-all duration-300 placeholder:text-muted-foreground/55 disabled:opacity-50"
+          />
+          <button
+            type="submit"
+            disabled={labBusy || weaving || !refine.trim()}
+            aria-label={t("Reshape the brief")}
+            data-testid="lc-refine-send"
+            className="focus-glow flex size-10 shrink-0 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--scope-a)_40%,transparent)] text-[var(--scope-a)] transition-all duration-300 hover:bg-[color-mix(in_srgb,var(--scope-a)_10%,transparent)] disabled:cursor-not-allowed disabled:opacity-35"
+          >
+            <Send className="size-4" aria-hidden="true" />
+          </button>
+        </div>
+      </form>
+
+      {refineNote && (
+        <p
+          className="mt-2 rounded-lg border border-[color-mix(in_srgb,var(--lp-gold)_28%,transparent)] bg-[color-mix(in_srgb,var(--lp-gold)_6%,transparent)] px-3 py-2 text-[12.5px] leading-relaxed text-muted-foreground"
+          data-testid="lc-refine-note"
+        >
+          {refineNote}
+        </p>
+      )}
+
+      {/* ---------- THE GENERATE HAND — the visitor strikes the weave ---------- */}
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t hairline pt-3.5">
+        <LengthToggle />
+        <button
+          type="button"
+          onClick={() => void weaveBrief()}
+          disabled={labBusy || weaving}
+          data-testid="lc-weave"
+          className="focus-glow flex h-11 items-center gap-2 rounded-full bg-gradient-to-r from-[var(--scope-a)] to-[color-mix(in_srgb,var(--scope-b)_80%,var(--scope-a))] px-5 text-[14px] font-semibold text-[#f6f4ef] shadow-[0_6px_28px_-10px_color-mix(in_srgb,var(--scope-a)_75%,transparent)] ring-1 ring-inset ring-[color-mix(in_srgb,var(--lp-gold)_35%,transparent)] transition-all duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          <AudioLines className="size-4" aria-hidden="true" />
+          {hasAudio && status !== "polling"
+            ? t("Weave a new version")
+            : t("Generate the transmission")}
+        </button>
+      </div>
+      {hasAudio && (
+        <p className="mt-2 text-[11.5px] leading-relaxed text-muted-foreground/75">
+          {t(
+            "Generating weaves a fresh version — the engine does not edit a sound already woven."
+          )}
+        </p>
+      )}
+    </motion.section>
+  );
+}
+
+/* ------------------- THE KEEPER'S DIAGNOSTIC ------------------------ */
+/*  The chamber status, for the keeper's own eyes only: the server's
+    403 answer is silence — an ordinary visitor never sees this at all. */
+
+interface LcEngineStatus {
+  provider: string;
+  via: string;
+  keyConfigured: boolean;
+  models: {
+    preview: { id: string; purpose: string };
+    full: { id: string; purpose: string };
+  };
+  limits: { previewPerKeeperPerDay: number; fullPerKeeperPerDay: number; globalPerDay: number };
+  weavingNow: number;
+  generationsToday: number;
+  lastSuccess: { model: string; at: number } | null;
+  lastError: { code: string; message: string; at: number } | null;
+  instanceNote: string;
+}
+
+function StatusRow({ k, v, warn }: { k: string; v: string; warn?: boolean }) {
+  return (
+    <div className="flex items-baseline justify-between gap-3 py-0.5">
+      <span className="mono-label shrink-0 text-[9.5px] uppercase tracking-[0.16em] text-muted-foreground/70">
+        {k}
+      </span>
+      <span
+        className={cn(
+          "truncate text-right text-[11.5px]",
+          warn ? "text-[color-mix(in_srgb,var(--destructive)_75%,var(--foreground))]" : "text-foreground/80"
+        )}
+      >
+        {v}
+      </span>
+    </div>
+  );
+}
+
+function ChamberStatus() {
+  const t = useT();
+  const [status, setStatus] = useState<LcEngineStatus | null>(null);
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    fetch("/api/light-codes/status")
+      .then(async (r) => {
+        if (!alive || !r.ok) return;
+        const data = (await r.json().catch(() => null)) as LcEngineStatus | null;
+        if (alive && data) setStatus(data);
+      })
+      .catch(() => undefined);
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  /* not the keeper — the room keeps its silence */
+  if (!status) return null;
+
+  return (
+    <section className="mt-8" aria-label={t("Chamber status")} data-testid="lc-status">
+      <div className={cn("mb-3 h-px w-full", BRAID_RULE)} aria-hidden="true" />
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        data-testid="lc-status-toggle"
+        className="focus-glow flex w-fit items-center gap-1.5 text-[10.5px] uppercase tracking-[0.24em] text-muted-foreground transition-colors duration-300 hover:text-foreground"
+      >
+        <Gauge className="size-3.5" aria-hidden="true" />
+        {t("Chamber status")}
+        <ChevronDown
+          className={cn("size-3.5 transition-transform duration-300", open && "rotate-180")}
+          aria-hidden="true"
+        />
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.35, ease: "easeOut" }}
+            className="overflow-hidden"
+          >
+            <div
+              className="nice-scroll mt-2 max-h-72 overflow-y-auto rounded-xl border hairline bg-[color-mix(in_srgb,var(--lp-gold)_4%,var(--glass-bg-soft))] p-3.5"
+              data-testid="lc-status-panel"
+            >
+              <StatusRow k={t("Provider")} v={status.provider} />
+              <StatusRow k={t("Door")} v={status.via} />
+              <StatusRow
+                k={t("Engine key")}
+                v={status.keyConfigured ? t("placed") : t("not placed — add GEMINI_API_KEY")}
+                warn={!status.keyConfigured}
+              />
+              <StatusRow
+                k={t("Preview model")}
+                v={`${status.models.preview.id} · ${
+                  status.lastSuccess?.model === status.models.preview.id
+                    ? t("verified")
+                    : t("unverified")
+                }`}
+              />
+              <StatusRow
+                k={t("Full model")}
+                v={`${status.models.full.id} · ${
+                  status.lastSuccess?.model === status.models.full.id
+                    ? t("verified")
+                    : t("unverified")
+                }`}
+              />
+              <StatusRow
+                k={t("Last successful weave")}
+                v={
+                  status.lastSuccess
+                    ? new Date(status.lastSuccess.at).toLocaleString()
+                    : t("none yet")
+                }
+              />
+              {status.lastError && (
+                <StatusRow
+                  k={t("Engine's last word")}
+                  v={`${status.lastError.code} — ${status.lastError.message}`}
+                  warn
+                />
+              )}
+              <StatusRow
+                k={t("Daily allowance")}
+                v={`${status.limits.previewPerKeeperPerDay} ${t("previews")} · ${status.limits.fullPerKeeperPerDay} ${t("full")} · ${status.limits.globalPerDay} ${t("house total")}`}
+              />
+              <StatusRow
+                k={t("Today")}
+                v={`${status.generationsToday} ${t("woven")} · ${status.weavingNow} ${t("weaving now")}`}
+              />
+              <p className="mt-2 text-[10.5px] leading-relaxed text-muted-foreground/60">
+                {status.instanceNote}
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </section>
+  );
+}
+
 /* ----------------------------- the world ----------------------------- */
 
 export function LightCodesView() {
@@ -511,32 +1038,33 @@ export function LightCodesView() {
   const lcUserLyrics = useMirror((s) => s.lcUserLyrics);
   const lcShape = useMirror((s) => s.lcShape);
   const lcStatus = useMirror((s) => s.lcStatus);
+  const lcBrief = useMirror((s) => s.lcBrief);
   const lcTrack = useMirror((s) => s.lcTrack);
   const lcError = useMirror((s) => s.lcError);
   const lcHistory = useMirror((s) => s.lcHistory);
-  const interpretation = useMirror((s) => s.lcInterpretation);
+  const lcLength = useMirror((s) => s.lcLength);
   const setLcMode = useMirror((s) => s.setLcMode);
   const setLcCivilization = useMirror((s) => s.setLcCivilization);
   const setLcIntention = useMirror((s) => s.setLcIntention);
   const setLcUserLyrics = useMirror((s) => s.setLcUserLyrics);
   const setLcShape = useMirror((s) => s.setLcShape);
+  const composeBrief = useMirror((s) => s.composeBrief);
+  const weaveBrief = useMirror((s) => s.weaveBrief);
   const generateLightCode = useMirror((s) => s.generateLightCode);
+  const surpriseMe = useMirror((s) => s.surpriseMe);
   const reshapeLc = useMirror((s) => s.reshapeLc);
   const forgetLc = useMirror((s) => s.forgetLc);
   const t = useT();
 
   const [shapeOpen, setShapeOpen] = useState(false);
-  const [phraseIdx, setPhraseIdx] = useState(0);
   /* what the transmission carries — one image, up to three documents */
   const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
-  const lcLength = useMirror((s) => s.lcLength);
-  const setLcLength = useMirror((s) => s.setLcLength);
   const lcNotice = useMirror((s) => s.lcNotice);
   const playLc = useMirror((s) => s.playLc);
   /* THE TWO BENCHES — the chamber's own instruments: the standing
-     transmissions (the house's generated sounds) and the local
-     sequencer (a genuine instrument that plays on the visitor's own
-     device, no server, no credits). The transmissions stay the
+     transmissions (the Mirror's briefs woven by the engine) and the
+     local sequencer (a genuine instrument that plays on the visitor's
+     own device, no server, no credits). The transmissions stay the
      default; the sequencer mounts only when chosen, so its device
      breath is released the moment the bench is left. */
   const [bench, setBench] = useState<"transmissions" | "sequencer">(
@@ -545,15 +1073,6 @@ export function LightCodesView() {
 
   const mode = LC_MODES.find((m) => m.id === lcMode) ?? LC_MODES[0];
   const busy = lcStatus === "interpreting" || lcStatus === "polling";
-
-  useEffect(() => {
-    if (!busy) return;
-    const id = window.setInterval(
-      () => setPhraseIdx((i) => (i + 1) % RENDERING_PHRASES.length),
-      2600
-    );
-    return () => window.clearInterval(id);
-  }, [busy]);
 
   return (
     <div className="scope-lightcodes relative flex h-full flex-col">
@@ -590,11 +1109,6 @@ export function LightCodesView() {
         />
       </div>
 
-      {/* ---------- the top bar has rested ----------
-          THE ONE BACK (the workplace header's own hand, the same for
-          every room) returns to the chat; the room's own label line is
-          gone — the bench switch speaks for the room. */}
-
       {/* ---------- the chamber ---------- */}
       <div
         className="nice-scroll relative z-10 min-h-0 flex-1 overflow-y-auto overscroll-contain"
@@ -603,8 +1117,8 @@ export function LightCodesView() {
         <div className="mx-auto w-full max-w-[760px] px-4 pb-28 pt-3 sm:px-6">
           {/* the naming has rested — the bench switch opens the room */}
 
-          {/* THE TWO BENCHES — one quiet switch between the house's
-              transmissions and the visitor's own local instrument */}
+          {/* THE TWO BENCHES — one quiet switch between the Mirror's
+              studio and the visitor's own local instrument */}
           <div
             role="group"
             aria-label={t("Choose the bench")}
@@ -706,8 +1220,7 @@ export function LightCodesView() {
           ) : (
           <>
 
-          {/* six modes — one compact sheet, two to a row: the chambers
-              of sound plainly named, nothing to scroll past */}
+          {/* the chambers — one compact sheet, two to a row */}
           <div className="mt-4 grid grid-cols-2 gap-2 lg:grid-cols-3">
             {LC_MODES.map((m) => (
               <ModeCard
@@ -884,6 +1397,7 @@ export function LightCodesView() {
                   className="mt-4 flex flex-col items-center"
                   aria-live="polite"
                   aria-busy="true"
+                  data-testid="lc-busy"
                 >
                   <div className="flex h-8 items-end gap-[3px]" aria-hidden="true">
                     {[0, 1, 2, 3, 4, 5, 6].map((i) => (
@@ -899,7 +1413,7 @@ export function LightCodesView() {
                   </div>
                   <p className="mt-2 text-[14px] italic text-muted-foreground">
                     {lcStatus === "interpreting"
-                      ? t(RENDERING_PHRASES[0])
+                      ? t("The Mirror is translating intention into sound…")
                       : lcLength === "full"
                         ? t("The full song is being woven — verses finding their chorus…")
                         : t("The sound is being woven — hold still…")}
@@ -913,13 +1427,20 @@ export function LightCodesView() {
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   className="mt-4 rounded-xl border border-[color-mix(in_srgb,var(--destructive)_30%,transparent)] bg-[color-mix(in_srgb,var(--destructive)_6%,transparent)] px-4 py-3 text-center"
+                  data-testid="lc-error"
                 >
                   <p className="text-[14.5px] leading-relaxed text-foreground/85">
                     {lcError}
                   </p>
                   <button
                     type="button"
-                    onClick={() => void generateLightCode()}
+                    onClick={() => {
+                      /* a standing brief is woven again; no brief asks
+                         the Mirror for a fresh round */
+                      if (lcBrief) void weaveBrief();
+                      else void generateLightCode();
+                    }}
+                    data-testid="lc-ask-again"
                     className="focus-glow mt-2 text-[13.5px] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
                   >
                     {t("Ask again")}
@@ -941,29 +1462,11 @@ export function LightCodesView() {
             </motion.div>
           )}
 
-          {/* the Mirror's written interpretation — before the sound */}
-          {lcStatus !== "ready" && interpretation && (interpretation.notes || interpretation.title) && (
-            <motion.section
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-              className="scope-frame-card relative mt-6 rounded-2xl p-4 sm:p-5"
-              data-testid="lc-interpretation"
-            >
-              <p className="mono-label text-[10.5px] uppercase tracking-[0.22em] text-muted-foreground">
-                {t("The Mirror's interpretation")}
-              </p>
-              {interpretation.title && (
-                <h3 className="mt-0.5 font-serif text-[17.5px] font-semibold text-foreground">
-                  {interpretation.title}
-                </h3>
-              )}
-              {interpretation.notes && (
-                <p className="mt-1.5 text-[14.5px] italic leading-relaxed text-foreground/80">
-                  {interpretation.notes}
-                </p>
-              )}
-            </motion.section>
+          {/* THE MIRROR'S BRIEF — the composition sheet, before the sound */}
+          {lcBrief && lcStatus !== "ready" && (
+            <div className="mt-6" data-testid="lc-brief-wrap">
+              <BriefCard />
+            </div>
           )}
 
           {/* the player */}
@@ -1030,6 +1533,9 @@ export function LightCodesView() {
               </div>
             </section>
           )}
+
+          {/* THE KEEPER'S DIAGNOSTIC — silence for every ordinary visitor */}
+          <ChamberStatus />
           </>
           )}
         </div>
@@ -1038,9 +1544,9 @@ export function LightCodesView() {
       {/* ---------- the ask bar — the Akashic's own style of composer,
           tuned to the chamber of sound: one floating card at the foot
           of the room, the intention and the paperclip inside it, the
-          send hand striking the transmission. No saying beneath it —
-          the results breathe above, and the room never scrolls to
-          reach the words. ---------- */}
+          send hand asking the Mirror to compose the brief. No saying
+          beneath it — the results breathe above, and the room never
+          scrolls to reach the words. ---------- */}
       {bench === "transmissions" && (
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-30 flex justify-center px-3 pb-[max(0.85rem,env(safe-area-inset-bottom))] sm:px-5">
           <form
@@ -1048,7 +1554,7 @@ export function LightCodesView() {
               e.preventDefault();
               const carried = attachments;
               setAttachments([]);
-              void generateLightCode({ attachments: carried });
+              void composeBrief({ attachments: carried });
             }}
             className="pointer-events-auto relative w-full max-w-[640px] rounded-2xl border hairline bg-card p-2.5 shadow-[0_24px_60px_-28px_rgba(0,0,0,0.42)]"
             data-testid="lc-composer"
@@ -1061,61 +1567,6 @@ export function LightCodesView() {
               accentVar="var(--scope-a,var(--lp-gold))"
               testId="lc-attachments"
             />
-            {/* THE TWO LENGTHS — a 30-second preview to explore, the
-                full song when the transmission wants to stand whole */}
-            <div
-              role="group"
-              aria-label={t("The transmission's length")}
-              className="flex w-fit items-center gap-0.5 rounded-full border hairline p-0.5"
-              data-testid="lc-length"
-            >
-              <button
-                type="button"
-                onClick={() => setLcLength("preview")}
-                aria-pressed={lcLength === "preview"}
-                data-testid="lc-length-preview"
-                className={cn(
-                  "focus-glow flex h-6 items-center rounded-full px-2.5 text-[11.5px] transition-colors duration-300",
-                  lcLength === "preview"
-                    ? "font-semibold"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-                style={
-                  lcLength === "preview"
-                    ? {
-                        backgroundColor:
-                          "color-mix(in srgb, var(--scope-a,var(--lp-gold)) 13%, transparent)",
-                        color: "var(--scope-a,var(--lp-gold))",
-                      }
-                    : undefined
-                }
-              >
-                {t("Preview · 30s")}
-              </button>
-              <button
-                type="button"
-                onClick={() => setLcLength("full")}
-                aria-pressed={lcLength === "full"}
-                data-testid="lc-length-full"
-                className={cn(
-                  "focus-glow flex h-6 items-center rounded-full px-2.5 text-[11.5px] transition-colors duration-300",
-                  lcLength === "full"
-                    ? "font-semibold"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-                style={
-                  lcLength === "full"
-                    ? {
-                        backgroundColor:
-                          "color-mix(in srgb, var(--scope-a,var(--lp-gold)) 13%, transparent)",
-                        color: "var(--scope-a,var(--lp-gold))",
-                      }
-                    : undefined
-                }
-              >
-                {t("Full song")}
-              </button>
-            </div>
             <div className="flex items-center gap-2">
               <input
                 type="text"
@@ -1139,20 +1590,32 @@ export function LightCodesView() {
               />
               <button
                 type="submit"
-                disabled={busy || !lcIntention.trim()}
+                disabled={busy}
                 aria-label={
                   mode.id === "mirror-transmission"
-                    ? t("Generate from Mirror")
-                    : t("Generate the transmission")
+                    ? t("Compose with the Mirror")
+                    : t("Ask the Mirror to compose")
                 }
                 data-testid="lc-generate"
                 className="focus-glow flex size-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-[var(--scope-a)] to-[color-mix(in_srgb,var(--scope-b)_80%,var(--scope-a))] text-[#f6f4ef] shadow-[0_6px_28px_-10px_color-mix(in_srgb,var(--scope-a)_75%,transparent)] ring-1 ring-inset ring-[color-mix(in_srgb,var(--lp-gold)_35%,transparent)] transition-all duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-35"
               >
-                {mode.id === "mirror-transmission" ? (
-                  <Sparkles className="size-4" aria-hidden="true" />
-                ) : (
-                  <AudioLines className="size-4" aria-hidden="true" />
+                <Sparkles className="size-4" aria-hidden="true" />
+              </button>
+            </div>
+            {/* the Mirror's own choice — a fresh brief from an empty ask */}
+            <div className="mt-1.5 flex justify-center">
+              <button
+                type="button"
+                onClick={() => void surpriseMe()}
+                disabled={busy}
+                data-testid="lc-surprise"
+                className={cn(
+                  "focus-glow flex h-7 items-center gap-1.5 rounded-full border px-3 text-[12px] text-muted-foreground transition-all duration-300 hover:text-foreground disabled:opacity-45",
+                  GOLD_PILL
                 )}
+              >
+                <Dices className="size-3.5" aria-hidden="true" />
+                {t("Surprise me — let the Mirror choose")}
               </button>
             </div>
           </form>

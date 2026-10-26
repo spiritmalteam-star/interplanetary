@@ -20,7 +20,8 @@ export type LightCodesMode =
   | "other-stars"
   | "restorative"
   | "reprogramming"
-  | "mirror-transmission";
+  | "mirror-transmission"
+  | "soundtrack";
 
 export interface LcMode {
   id: LightCodesMode;
@@ -147,6 +148,23 @@ export const LC_MODES: LcMode[] = [
     vocabulary:
       "the Mirror composes the whole direction itself: intention, emotional arc, sonic language, tempo, voice character, harmonic character, texture, structure, lyrical density and ending state — held together as one coherent transmission.",
   },
+  {
+    id: "soundtrack",
+    n: "07",
+    name: "Soundtrack",
+    tagline: "Music for films, trailers, stories and moving pictures.",
+    placeholder: "Describe the scene — what does the picture ask to sound like?",
+    intents: [
+      "an opening theme",
+      "a scene of wonder",
+      "a slow farewell",
+      "a trailer's rise",
+      "an ending that floats",
+      "credits at dawn",
+    ],
+    vocabulary:
+      "score-writing for pictures: the arrangement is described as an arc over time — how the music opens under a first image, where it swells, where it thins to let a voice or a moment breathe, and how it lands or dissolves at the end. Cues follow the scene's emotional beats as prose (the engine takes no literal timestamps), leitmotif-friendly, silence as a deliberate instrument, endings that resolve or dissolve as the story asks.",
+  },
 ];
 
 /** The advanced controls — hidden by default under SHAPE THE TRANSMISSION. */
@@ -204,6 +222,34 @@ export const LC_DEFAULT_SHAPE: LcShape = {
   vocalLanguage: "Wordless",
   lyricsMode: "NO LYRICS",
 };
+
+/** The Mirror's composition brief — written once, shaped by many hands
+ *  (the Mirror's refinement, the Lyrics Laboratory, the visitor's own
+ *  edits) before the engine weaves it into sound. */
+export interface LcBrief {
+  title: string;
+  /** The production direction, written for the engine. */
+  style: string;
+  /** The lyric sheet (section-tagged), or null for an instrumental. */
+  lyrics: string | null;
+  /** The transmission notes — why it sounds the way it sounds. */
+  notes: string;
+  /** The visitor's own ask, kept with the brief. */
+  intention: string;
+  /** The chamber the brief belongs to. */
+  mode: LightCodesMode;
+}
+
+/** The Lyrics Laboratory's craft hands. */
+export type LcLyricOp =
+  | "generate"
+  | "rewrite"
+  | "rhyme"
+  | "language"
+  | "tone"
+  | "chorus"
+  | "simplify"
+  | "poetic";
 
 /** A finished transmission as the visitor keeps it. */
 export interface LcTrack {

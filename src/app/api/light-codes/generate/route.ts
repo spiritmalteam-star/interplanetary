@@ -1,12 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
+import { GoogleGenAI } from "@google/genai";
 import ZAI from "@/lib/zai-client";
-import { meterRoute } from "@/lib/server/meter";
+import { meterRoute, type MeterContext } from "@/lib/server/meter";
 import {
   describeImage,
   documentBlock,
   imageBlock,
   parseAttachments,
 } from "@/lib/server/attachments";
+import {
+  askFingerprint,
+  beginWeave,
+  endWeave,
+  guardBusy,
+  guardDailyAllowance,
+  guardDuplicate,
+  LC_LIMITS,
+  noteLcError,
+  noteLcSuccess,
+  verdictResponse,
+} from "@/lib/server/lc-engine";
+import { LC_MODES } from "@/lib/data/light-codes";
 
 export const maxDuration = 300;
 
@@ -16,14 +30,23 @@ export const maxDuration = 300;
 /*  Mirror Entity is the interpretation layer: it translates the       */
 /*  visitor's intention into a structured musical direction. The       */
 /*  sound engine is Google DeepMind's Lyria, reached through the       */
-/*  official Gemini API's Interactions endpoint — its key lives only   */
-/*  in the server's keeping (GEMINI_API_KEY) and never reaches the     */
-/*  browser. The engine's own name stays behind the veil; the Mirror   */
-/*  is the visible voice.                                              */
+/*  official Gemini API's Interactions door (@google/genai SDK) —      */
+/*  its key lives only in the server's keeping (GEMINI_API_KEY) and    */
+/*  never reaches the browser. The engine's own name stays behind      */
+/*  the veil; the Mirror is the visible voice.                         */
 /*                                                                      */
 /*  Two models, two doors:                                             */
 /*    lyria-3-clip-preview — the 30-second preview (quick listening)   */
 /*    lyria-3.5             — the full song (verses, chorus, bridge)   */
+/*                                                                      */
+/*  FOUR DOORS THE VISITOR MAY KNOCK:                                  */
+/*    interpret  — the Mirror's written direction (the brief)          */
+/*    compose    — the weave: the brief rendered as sound              */
+/*    refine     — the brief reshaped by conversational instruction    */
+/*                 (a new brief is written; no waveform is edited —    */
+/*                 the engine does not support in-place editing, and   */
+/*                 the chamber never pretends it does)                 */
+/*    lyrics     — the Lyrics Laboratory: one craft hand at a time     */
 /*                                                                      */
 /*  The chamber's law: the music is for calming, meditative,           */
 /*  reflective, grounding, intention-based listening. It is never      */
@@ -35,9 +58,6 @@ export const maxDuration = 300;
 /*  form — is spoken plainly, in the chamber's own voice.              */
 /* ------------------------------------------------------------------ */
 
-const LYRIA_BASE = (
-  process.env.LYRIA_API_BASE || "https://generativelanguage.googleapis.com"
-).replace(/\/+$/, "");
 const LYRIA_FULL_MODEL = process.env.LYRIA_MODEL || "lyria-3.5";
 const LYRIA_CLIP_MODEL = process.env.LYRIA_CLIP_MODEL || "lyria-3-clip-preview";
 /** The heaviest payload the sky can carry home (Vercel's response door). */
@@ -65,12 +85,31 @@ interface LcBody {
   interpretOnly?: boolean;
   /** compose phase — the Mirror's own direction, already written */
   compose?: boolean;
+  /** refine phase — the visitor's conversational instruction */
+  refine?: { instruction?: string };
+  /** the Lyrics Laboratory's craft hand */
+  lyricsOp?:
+    | "generate"
+    | "rewrite"
+    | "rhyme"
+    | "language"
+    | "tone"
+    | "chorus"
+    | "simplify"
+    | "poetic";
   interp?: {
     title?: string;
     style?: string;
     lyrics?: string | null;
     notes?: string;
   };
+}
+
+interface LcBrief {
+  title: string;
+  style: string;
+  lyrics: string | null;
+  notes: string;
 }
 
 const LANG_NAMES: Record<string, string> = {
@@ -86,22 +125,14 @@ const LANG_NAMES: Record<string, string> = {
 
 /* ------------------------- the guards ------------------------- */
 
-/** One weave at a time per keeper — the chamber holds a single loom. */
-const inFlight = new Map<string, number>();
-/** The same ask, twice within a breath, is not woven twice. */
-const recentAsks = new Map<string, number>();
-
-function askFingerprint(b: LcBody, interpKey: string): string {
-  return JSON.stringify([
-    b.mode,
-    b.intention?.trim().toLowerCase(),
-    b.length ?? "preview",
-    b.language,
-    b.civilization,
-    b.shape,
-    b.userLyrics?.trim().toLowerCase(),
-    interpKey,
-  ]);
+function wantVocals(b: LcBody, lyrics: string | null): boolean {
+  return !(
+    b.instrumental === true ||
+    b.shape?.voice === "None" ||
+    b.shape?.lyricsMode === "NO LYRICS" ||
+    b.shape?.vocalLanguage === "Wordless" ||
+    !lyrics
+  );
 }
 
 /* ------------------------- the Mirror's voice ------------------------- */
@@ -131,6 +162,20 @@ function shapeWords(b: LcBody): string {
   return parts.join("; ");
 }
 
+/** The chosen chamber's own sonic law — the mode's vocabulary spoken
+ *  to the interpreter, so each of the house's chambers keeps its own
+ *  distinctive sound instead of a generic direction. */
+function modeVocabulary(b: LcBody): string {
+  const mode = LC_MODES.find((m) => m.id === b.mode);
+  if (!mode) return "";
+  const lines = [`THE CHAMBER'S OWN SONIC LAW (${mode.name}): ${mode.vocabulary}`];
+  if (mode.civilizations && b.civilization) {
+    const civ = mode.civilizations.find((c) => c.id === b.civilization);
+    if (civ) lines.push(`CIVILIZATION WORLD: ${civ.name} — ${civ.vocabulary}`);
+  }
+  return lines.join("\n");
+}
+
 function interpreterPrompt(b: LcBody, languageName: string): string {
   const modeName = String(b.mode ?? "light-transmission");
   return [
@@ -139,8 +184,8 @@ function interpreterPrompt(b: LcBody, languageName: string): string {
     "The music is for calming, meditative, reflective, grounding, sleep-oriented, focus-oriented, emotional reset, intention-based listening. NEVER describe it as treatment, therapy, medicine or a cure; never mention frequencies curing anything.",
     "",
     `CHAMBER MODE: ${modeName}.`,
+    modeVocabulary(b),
     `ENERGY SHAPE: ${shapeWords(b)}.`,
-    b.civilization ? `CIVILIZATION WORLD: ${b.civilization} — keep its musical vocabulary distinctive.` : "",
     b.context ? `WHAT THE VISITOR IS LIVING THROUGH (from the conversation): ${b.context}` : "",
     `THE VISITOR'S INTENTION: ${b.intention?.trim() || "(the Mirror chooses freely — compose what the moment holds)"}`,
     "",
@@ -159,12 +204,7 @@ function interpreterPrompt(b: LcBody, languageName: string): string {
 async function interpret(
   b: LcBody,
   attachmentLines = ""
-): Promise<{
-  title: string;
-  style: string;
-  lyrics: string | null;
-  notes: string;
-}> {
+): Promise<LcBrief> {
   const zai = await ZAI.create();
   const languageName = LANG_NAMES[b.language ?? "en"] ?? "English";
   /* one quiet retry — the interpreter must never come back empty-handed */
@@ -190,18 +230,8 @@ async function interpret(
     const match = raw.match(/\{[\s\S]*\}/);
     if (!match) continue;
     try {
-      const parsed = JSON.parse(match[0]) as {
-        title?: string;
-        style?: string;
-        lyrics?: string | null;
-        notes?: string;
-      };
-      return {
-        title: (parsed.title ?? "Untitled transmission").slice(0, 90),
-        style: (parsed.style ?? "").slice(0, 1400),
-        lyrics: parsed.lyrics ? String(parsed.lyrics).slice(0, 900) : null,
-        notes: (parsed.notes ?? "").slice(0, 600),
-      };
+      const parsed = JSON.parse(match[0]) as Partial<LcBrief>;
+      return sanitizeBrief(parsed);
     } catch {
       /* one more breath */
     }
@@ -215,17 +245,188 @@ async function interpret(
   );
 }
 
-/* ------------------------- the Lyria door ------------------------- */
+function sanitizeBrief(parsed: Partial<LcBrief>): LcBrief {
+  return {
+    title: (parsed.title ?? "Untitled transmission").slice(0, 90),
+    style: (parsed.style ?? "").slice(0, 1400),
+    lyrics: parsed.lyrics ? String(parsed.lyrics).slice(0, 900) : null,
+    notes: (parsed.notes ?? "").slice(0, 600),
+  };
+}
 
-function wantVocals(b: LcBody, lyrics: string | null): boolean {
-  return !(
-    b.instrumental === true ||
-    b.shape?.voice === "None" ||
-    b.shape?.lyricsMode === "NO LYRICS" ||
-    b.shape?.vocalLanguage === "Wordless" ||
-    !lyrics
+/* --------------------- the refinement door --------------------- */
+
+const REFINEMENT_WORDS: Record<string, string> = {
+  en: "English",
+  sq: "Albanian",
+  it: "Italian",
+  es: "Spanish",
+  de: "German",
+  fr: "French",
+  el: "Greek",
+  tr: "Turkish",
+};
+
+function refinePrompt(b: LcBody, languageName: string): string {
+  const interp = b.interp ?? {};
+  return [
+    "You are the MIRROR ENTITY in its LIGHT CODES chamber. The visitor has heard (or seen) the chamber's current composition brief and asks for a change in their own words.",
+    "Your art is TRANSLATION: carry the visitor's instruction INTO the existing brief — keep everything that was already right, change only what the instruction asks. Never repeat the visitor's words back; never answer as chat; never explain the change. The output is the reshaped brief itself.",
+    "The music is for calming, meditative, reflective, grounding, intention-based listening — never treatment, therapy, medicine or a cure.",
+    "",
+    `THE CURRENT BRIEF (JSON):`,
+    JSON.stringify(
+      {
+        title: interp.title ?? "",
+        style: interp.style ?? "",
+        lyrics: interp.lyrics ?? null,
+        notes: interp.notes ?? "",
+      },
+      null,
+      1
+    ),
+    "",
+    `THE VISITOR'S INSTRUCTION: ${b.refine?.instruction?.trim() ?? "(no instruction given — refine gently toward more emotional depth)"}`,
+    "",
+    "RULES:",
+    "- Preserve the brief's language and character unless the instruction asks otherwise.",
+    "- If the instruction touches the words (vocals, lyrics, language, mood of the voice), reshape the lyrics accordingly, keeping the section tags [Verse], [Chorus], [Bridge].",
+    "- If the instruction asks for an instrumental, set lyrics to null.",
+    "- The style field must remain ONE dense production brief for a music model (120-220 words), still ending with: no EDM drops, no generic cinematic trailer music, no busy percussion, no commercial pop structure.",
+    "",
+    "Return STRICT JSON (no markdown fences), the FULL reshaped brief:",
+    '{"title": "...", "style": "...", "lyrics": "... or null", "notes": "..."}',
+    `Write title, lyric lines and notes in ${languageName}; the style stays in English for the engine.`,
+  ].join("\n");
+}
+
+async function refine(b: LcBody): Promise<LcBrief> {
+  const zai = await ZAI.create();
+  const languageName = REFINEMENT_WORDS[b.language ?? "en"] ?? "English";
+  const completion = await zai.chat.completions.create({
+    messages: [
+      { role: "system", content: refinePrompt(b, languageName) },
+      { role: "user", content: b.refine?.instruction?.trim() || "Refine gently." },
+    ],
+    temperature: 0.7,
+    max_tokens: 1200,
+    thinking: { type: "disabled" },
+  });
+  const raw = completion.choices?.[0]?.message?.content ?? "";
+  const match = raw.match(/\{[\s\S]*\}/);
+  if (!match) {
+    throw new Error(
+      "The Mirror's refinement dissolved before it landed. Speak the change once more."
+    );
+  }
+  try {
+    return sanitizeBrief(JSON.parse(match[0]) as Partial<LcBrief>);
+  } catch {
+    throw new Error(
+      "The Mirror's refinement dissolved before it landed. Speak the change once more."
+    );
+  }
+}
+
+/* --------------------- the Lyrics Laboratory --------------------- */
+
+const LYRIC_OPS: Record<
+  NonNullable<LcBody["lyricsOp"]>,
+  string
+> = {
+  generate:
+    "Write the song's original lyrics from the brief: short, kind, spare lines with intentional structure, rhythm and emotional development. Avoid generic repetition and forced rhymes.",
+  rewrite:
+    "Rewrite the lyrics fresh — same feeling and subject, new words and new angles. Keep the section tags.",
+  rhyme:
+    "Improve the rhyme and the music of the lines: let the ends chime naturally, never forced. Keep the meaning and the section tags.",
+  language:
+    "Translate the lyrics into the visitor's own language, keeping the singability: natural stresses, open vowels where lines land. Keep the section tags.",
+  tone:
+    "Shift the emotional tone of the lyrics one step deeper and warmer — same subject, changed weather. Keep the section tags.",
+  chorus:
+    "Rewrite the [Chorus] so it carries the whole song: simple, memorable, returning like a bell. Leave the other sections intact.",
+  simplify:
+    "Simplify the lyrics: plainer words, shorter lines, one feeling per line. Keep the section tags.",
+  poetic:
+    "Make the lyrics more poetic: imagery, quiet metaphor, breath in the lines — never purple, never ornate. Keep the section tags.",
+};
+
+function lyricsPrompt(b: LcBody, languageName: string): string {
+  const interp = b.interp ?? {};
+  const op = LYRIC_OPS[b.lyricsOp ?? "generate"] ?? LYRIC_OPS.generate;
+  return [
+    "You are the MIRROR ENTITY in its LIGHT CODES chamber, writing in its LYRICS LABORATORY.",
+    "You shape only WORDS — never production instructions, never chord names, never engine directions inside the lines.",
+    "",
+    `THE COMPOSITION'S FEELING: ${b.intention?.trim() || interp.title || "the transmission the visitor carries"}`,
+    interp.style
+      ? `THE MUSICAL DIRECTION (for your feeling only, not to be quoted): ${interp.style.slice(0, 400)}`
+      : "",
+    interp.lyrics
+      ? `THE CURRENT LYRICS:\n${interp.lyrics}`
+      : "THE CURRENT LYRICS: (none yet — write them fresh)",
+    "",
+    `YOUR CRAFT HAND: ${op}`,
+    "",
+    "LAWS: section tags [Intro], [Verse 1], [Pre-Chorus], [Chorus], [Verse 2], [Bridge], [Outro] — use only the sections the song needs; the chorus returns; one bridge rests mid-song. Write the lyric lines in " +
+      languageName +
+      ". Spare lines, honest words, no medical or cure language.",
+    "",
+    "Return STRICT JSON (no markdown fences):",
+    '{"lyrics": "<the full lyric sheet with its section tags>", "notes": "<1 sentence in ' +
+      languageName +
+      ' — what the hand changed>"}',
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+async function craftLyrics(
+  b: LcBody
+): Promise<{ lyrics: string; notes: string }> {
+  const zai = await ZAI.create();
+  const languageName = LANG_NAMES[b.language ?? "en"] ?? "English";
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const completion = await zai.chat.completions.create({
+      messages: [
+        { role: "system", content: lyricsPrompt(b, languageName) },
+        {
+          role: "user",
+          content:
+            b.lyricsOp === "language"
+              ? `Translate the lyrics into ${languageName}.`
+              : `Craft hand: ${b.lyricsOp ?? "generate"}.`,
+        },
+      ],
+      temperature: 0.8,
+      max_tokens: 900,
+      thinking: { type: "disabled" },
+    });
+    const raw = completion.choices?.[0]?.message?.content ?? "";
+    const match = raw.match(/\{[\s\S]*\}/);
+    if (!match) continue;
+    try {
+      const parsed = JSON.parse(match[0]) as {
+        lyrics?: string;
+        notes?: string;
+      };
+      const lyrics = (parsed.lyrics ?? "").trim().slice(0, 1200);
+      if (!lyrics) continue;
+      return {
+        lyrics,
+        notes: (parsed.notes ?? "").slice(0, 300),
+      };
+    } catch {
+      /* one more breath */
+    }
+  }
+  throw new Error(
+    "The Lyrics Laboratory's hand slipped — ask for the craft once more."
   );
 }
+
+/* ------------------------- the Lyria door ------------------------- */
 
 function structureWords(b: LcBody): string {
   const n = b.shape?.structure;
@@ -281,14 +482,16 @@ function songInput(b: LcBody, interp: LcBody["interp"], languageName: string): s
   return parts.join("\n\n");
 }
 
-type LyriaBlock = { type?: string; text?: string; data?: string; mime_type?: string };
+type LyriaInputBlock =
+  | { type: "text"; text: string }
+  | { type: "image"; mime_type: string; data: string };
 
-function buildLyriaRequestBody(
+function buildLyriaInput(
   b: LcBody,
   interp: LcBody["interp"],
   imageDataUrl: string | null,
   languageName: string
-): { model: string; input: string | LyriaBlock[] } {
+): { model: string; input: string | LyriaInputBlock[] } {
   const isFull = b.length === "full";
   const model = isFull ? LYRIA_FULL_MODEL : LYRIA_CLIP_MODEL;
   const text = isFull
@@ -322,7 +525,11 @@ function mapLyriaError(resStatus: number, message: string, apiStatus: string): L
     m.message =
       "The chamber's sky allowance rests for now — today's quota for new sounds is spent. Breathe, and return in a while.";
     m.code = "quota";
-  } else if (resStatus === 403 || resStatus === 401) {
+  } else if (
+    resStatus === 403 ||
+    resStatus === 401 ||
+    /API_KEY_INVALID|api key.*not valid|permission/i.test(message)
+  ) {
     m.message =
       "The chamber's key was not given passage to the sound engine. The keeper should check GEMINI_API_KEY and its permissions.";
     m.code = "denied";
@@ -330,7 +537,7 @@ function mapLyriaError(resStatus: number, message: string, apiStatus: string): L
     m.message =
       "The engine bowed out of this intention. The Mirror will reshape it gently — try different words.";
     m.code = "safety";
-  } else if (/unsupported|not supported|invalid/i.test(message)) {
+  } else if (/unsupported|not supported/i.test(message)) {
     m.message =
       "The engine cannot weave this form yet. The Mirror will try another shape.";
     m.code = "unsupported";
@@ -343,81 +550,55 @@ function mapLyriaError(resStatus: number, message: string, apiStatus: string): L
   return m;
 }
 
-async function lyriaWeave(
-  body: { model: string; input: string | LyriaBlock[] },
-  key: string,
-  timeoutMs: number
-): Promise<{ audioB64: string; texts: string[]; mime: string }> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  let res: Response;
-  try {
-    res = await fetch(`${LYRIA_BASE}/v1beta/interactions`, {
-      method: "POST",
-      headers: { "x-goog-api-key": key, "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-      signal: controller.signal,
-    });
-  } catch (err) {
-    clearTimeout(timer);
-    if (controller.signal.aborted) {
-      throw new Error(
-        "The weave took longer than the chamber can hold. Try the 30-second preview first."
-      );
-    }
-    throw new Error("The chamber could not reach the sound engine. Try again in a breath.");
-  }
-  clearTimeout(timer);
+interface StepContentBlock {
+  type?: string;
+  text?: string;
+  data?: string;
+  mime_type?: string;
+}
 
-  const payload = (await res.json().catch(() => null)) as
-    | {
-        steps?: { type?: string; content?: LyriaBlock[] }[];
-        output_audio?: { data?: string; mime_type?: string };
-        output_text?: string;
-        error?: { code?: number; message?: string; status?: string };
-      }
-    | null;
-
-  if (!res.ok || payload?.error) {
-    const e = payload?.error;
-    throw mapLyriaError(
-      res.status,
-      String(e?.message ?? ""),
-      String(e?.status ?? "")
-    );
-  }
-
-  /* THE RESPONSE LAW: walk the steps and their content blocks without
-     assuming any order — text blocks (lyrics, structure) and audio
-     blocks arrive as the engine lays them down. The last audio block
-     heard is the song. */
+/* THE RESPONSE LAW: walk the interaction's steps and their content
+   blocks without assuming any order — text blocks (lyrics, structure)
+   and audio blocks arrive as the engine lays them down. The last audio
+   block heard is the song. The SDK's own convenience properties
+   (output_audio / output_text) stand first, should the steps rest. */
+function extractWeave(interaction: {
+  output_audio?: { data?: string; mime_type?: string } | null;
+  output_text?: string | null;
+  steps?: { type?: string; content?: StepContentBlock[] }[] | null;
+}): { audioB64: string; texts: string[]; mime: string } {
   let audioB64: string | null = null;
   let mime = "audio/mpeg";
   const texts: string[] = [];
-  for (const step of Array.isArray(payload?.steps) ? payload!.steps! : []) {
-    if (step?.type !== "model_output" || !Array.isArray(step.content)) continue;
-    for (const block of step.content) {
-      if (block?.type === "audio" && typeof block.data === "string" && block.data) {
-        audioB64 = block.data;
-        if (typeof block.mime_type === "string" && block.mime_type) mime = block.mime_type;
-      } else if (block?.type === "text" && typeof block.text === "string" && block.text) {
-        texts.push(block.text);
+
+  if (
+    interaction.output_audio &&
+    typeof interaction.output_audio.data === "string" &&
+    interaction.output_audio.data
+  ) {
+    audioB64 = interaction.output_audio.data;
+    if (interaction.output_audio.mime_type) mime = interaction.output_audio.mime_type;
+  }
+  if (typeof interaction.output_text === "string" && interaction.output_text) {
+    texts.push(interaction.output_text);
+  }
+
+  if (!audioB64 && Array.isArray(interaction.steps)) {
+    for (const step of interaction.steps) {
+      if (step?.type !== "model_output" || !Array.isArray(step.content)) continue;
+      for (const block of step.content) {
+        if (block?.type === "audio" && typeof block.data === "string" && block.data) {
+          audioB64 = block.data;
+          if (typeof block.mime_type === "string" && block.mime_type) mime = block.mime_type;
+        } else if (block?.type === "text" && typeof block.text === "string" && block.text) {
+          texts.push(block.text);
+        }
       }
     }
   }
-  /* the SDK's convenience properties, should the steps schema rest */
-  if (!audioB64 && typeof payload?.output_audio?.data === "string") {
-    audioB64 = payload.output_audio.data;
-    if (payload.output_audio.mime_type) mime = payload.output_audio.mime_type;
-  }
-  if (texts.length === 0 && typeof payload?.output_text === "string" && payload.output_text) {
-    texts.push(payload.output_text);
-  }
 
   if (!audioB64) {
-    throw new Error(
-      "The engine answered without a sound. Try again in a breath."
-    );
+    throw new Error("The engine answered without a sound. Try again in a breath.");
   }
   if (audioB64.length > MAX_AUDIO_B64) {
     throw new Error(
@@ -427,11 +608,70 @@ async function lyriaWeave(
   return { audioB64, texts, mime };
 }
 
-/* ------------------------- the two doors ------------------------- */
+async function lyriaWeave(
+  body: { model: string; input: string | LyriaInputBlock[] },
+  key: string,
+  timeoutMs: number
+): Promise<{ audioB64: string; texts: string[]; mime: string }> {
+  const client = new GoogleGenAI({ apiKey: key });
+  try {
+    /* the honest weave: one request, no silent retries — a costly
+       generation is never asked twice without the visitor's hand */
+    const interaction = await client.interactions.create(
+      {
+        model: body.model,
+        input: body.input,
+      } as Parameters<typeof client.interactions.create>[0],
+      {
+        timeout_ms: timeoutMs,
+        retries: { strategy: "none" },
+      } as Parameters<typeof client.interactions.create>[1]
+    );
+    return extractWeave(
+      interaction as unknown as Parameters<typeof extractWeave>[0]
+    );
+  } catch (err) {
+    const e = err as {
+      status?: number;
+      message?: string;
+      code?: string;
+      body?: unknown;
+    };
+    const status = typeof e?.status === "number" ? e.status : 0;
+    /* the SDK wraps Google's own words inside body — unwrap them so the
+       honest verdict can name the real cause (an invalid key, a safety
+       refusal, an unsupported form) instead of the SDK's blank wrapper */
+    let detail = String(e?.message ?? "");
+    try {
+      const b = (e?.body ?? null) as unknown;
+      const root = Array.isArray(b) ? b[0] : b;
+      const inner = (root as { error?: { message?: string; status?: string } } | null)
+        ?.error;
+      if (inner?.message) detail = `${inner.message} ${inner.status ?? ""}`;
+      else if (typeof b === "string" && b) detail = b;
+    } catch {
+      /* the wrapper keeps its silence — the generic words stand */
+    }
+    if (status === 0 && /timeout|abort/i.test(detail)) {
+      throw new Error(
+        "The weave took longer than the chamber can hold. Try the 30-second preview first."
+      );
+    }
+    if (/network|fetch failed|ECONN/i.test(detail)) {
+      throw new Error("The chamber could not reach the sound engine. Try again in a breath.");
+    }
+    throw mapLyriaError(status || 502, detail, String(e?.code ?? ""));
+  }
+}
+
+/* ------------------------- the four doors ------------------------- */
 
 export const POST = meterRoute("light_codes", postImpl);
 
-async function postImpl(req: NextRequest): Promise<NextResponse> {
+async function postImpl(
+  req: NextRequest,
+  meter?: MeterContext
+): Promise<NextResponse> {
   const b = (await req.json().catch(() => null)) as LcBody | null;
   if (!b) {
     return NextResponse.json({ error: "The chamber received nothing to interpret." }, { status: 400 });
@@ -442,18 +682,14 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
       /* the visitor's image rides straight into the engine's input —
          no second reading, the Mirror already saw it in the first door */
       const { imageDataUrl } = parseAttachments(b);
-      const passed =
+      const passed: LcBrief =
         b.interp && (b.interp.title || b.interp.style)
-          ? {
-              title: String(b.interp.title ?? "Untitled transmission").slice(0, 90),
-              style: String(b.interp.style ?? "").slice(0, 1400),
-              lyrics: b.interp.lyrics ? String(b.interp.lyrics).slice(0, 900) : null,
-              notes: b.interp.notes ? String(b.interp.notes).slice(0, 600) : "",
-            }
+          ? sanitizeBrief(b.interp as Partial<LcBrief>)
           : await interpret(b);
 
       const key = process.env.GEMINI_API_KEY;
       if (!key) {
+        noteLcError("nokey", "The sound engine's key is not placed.");
         return NextResponse.json(
           {
             ...passed,
@@ -465,61 +701,72 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
         );
       }
 
-      /* the guards — one loom, no double-weaving */
-      const ctx = (req as unknown as { meter?: { visitor: { user: { id: string } } } }).meter;
-      const keeperId = ctx?.visitor?.user?.id ?? "anon";
-      const startedAt = inFlight.get(keeperId);
-      if (startedAt && Date.now() - startedAt < 5.5 * 60 * 1000) {
-        return NextResponse.json(
-          {
-            ...passed,
-            error:
-              "The chamber is already weaving a transmission for you — one sound at a time. Let the first one land.",
-            code: "busy",
-          },
-          { status: 429 }
-        );
-      }
-      const fingerprint = askFingerprint(b, (b.interp?.title ?? "") + (b.interp?.style ?? ""));
-      const lastAsk = recentAsks.get(keeperId);
-      if (
-        lastAsk !== undefined &&
-        lastAsk === hashStr(fingerprint) &&
-        Date.now() - (recentAskTimes.get(keeperId) ?? 0) < 45_000
-      ) {
-        return NextResponse.json(
-          {
-            ...passed,
-            error:
-              "The same transmission was just asked of the chamber — the Mirror will not weave it twice in one breath.",
-            code: "duplicate",
-          },
-          { status: 429 }
-        );
-      }
+      /* the guards — one loom, no double-weaving, the day's allowance.
+         THE ONE FINGERPRINT — the ask is hashed once and the same hash
+         guards and remembers it, or the twice-law could never match. */
+      const keeperId = meter?.userId ?? "anon";
+      const length: "preview" | "full" = b.length === "full" ? "full" : "preview";
+      const fingerprint = askFingerprint([
+        b.mode,
+        b.intention?.trim().toLowerCase(),
+        length,
+        b.language,
+        b.civilization,
+        b.shape,
+        b.userLyrics?.trim().toLowerCase(),
+        passed.title,
+        passed.style,
+      ]);
+      const busy = guardBusy(keeperId);
+      if (!busy.ok) return verdictResponse(busy, passed);
+      const dup = guardDuplicate(keeperId, fingerprint);
+      if (!dup.ok) return verdictResponse(dup, passed);
+      const daily = guardDailyAllowance(keeperId, length);
+      if (!daily.ok) return verdictResponse(daily, passed);
 
-      inFlight.set(keeperId, Date.now());
-      recentAsks.set(keeperId, hashStr(fingerprint));
-      recentAskTimes.set(keeperId, Date.now());
+      beginWeave(keeperId, fingerprint, length);
       try {
         const languageName = LANG_NAMES[b.language ?? "en"] ?? "English";
-        const body = buildLyriaRequestBody(b, passed, imageDataUrl, languageName);
+        const body = buildLyriaInput(b, passed, imageDataUrl, languageName);
         const weave = await lyriaWeave(
           body,
           key,
-          b.length === "full" ? 280_000 : 120_000
+          length === "full" ? 280_000 : 120_000
         );
+        noteLcSuccess(body.model);
         return NextResponse.json({
           ...passed,
           structure: weave.texts.join("\n\n").slice(0, 2000) || undefined,
           audio: weave.audioB64,
           mimeType: weave.mime,
           engine: body.model,
-          length: b.length ?? "preview",
+          length,
         });
+      } catch (err) {
+        const code = (err as LyriaFailure)?.code ?? "engine";
+        noteLcError(code, err instanceof Error ? err.message : "unknown");
+        throw err;
       } finally {
-        inFlight.delete(keeperId);
+        endWeave(keeperId);
       }
+    }
+
+    /* ---------- the refinement door: the brief reshaped in conversation ---------- */
+    if (b.refine) {
+      if (!b.interp || (!b.interp.style && !b.interp.title)) {
+        return NextResponse.json(
+          { error: "There is no brief to refine yet — ask the Mirror for one first." },
+          { status: 400 }
+        );
+      }
+      const refined = await refine(b);
+      return NextResponse.json(refined);
+    }
+
+    /* ---------- the Lyrics Laboratory's door: one craft hand ---------- */
+    if (b.lyricsOp) {
+      const crafted = await craftLyrics(b);
+      return NextResponse.json(crafted);
     }
 
     /* ---------- the first door: the Mirror's written direction ---------- */
@@ -561,11 +808,3 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
     );
   }
 }
-
-function hashStr(s: string): number {
-  let h = 0;
-  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
-  return h;
-}
-
-const recentAskTimes = new Map<string, number>();

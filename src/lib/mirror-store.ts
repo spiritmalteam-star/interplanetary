@@ -64,6 +64,8 @@ import { emVectors } from "@/lib/data/evolvemed";
 import type {
   LcTrack,
   LcShape,
+  LcBrief,
+  LcLyricOp,
   LightCodesMode,
 } from "@/lib/data/light-codes";
 import { LC_DEFAULT_SHAPE } from "@/lib/data/light-codes";
@@ -357,6 +359,9 @@ function storeChatBook(book: ChatBookPause | null) {
 }
 
 /* ------- LIGHT CODES — what the Mirror may hand to the chamber -------- */
+
+/* re-exported so the chamber's own surface reads one truth */
+export type { LcBrief, LcLyricOp } from "@/lib/data/light-codes";
 
 export interface LcPrefill {
   mode?: LightCodesMode;
@@ -755,7 +760,23 @@ interface MirrorState {
   /** The weave's length: the 30-second preview or the full song. */
   lcLength: "preview" | "full";
   lcStatus: "idle" | "interpreting" | "polling" | "ready" | "error";
-  lcInterpretation: LcTrack | null; // the Mirror's written direction
+  /** THE MIRROR'S BRIEF — the chamber's composition draft: the direction
+      the Mirror wrote (or one carried in from the chat), editable by
+      the visitor's own hand before any sound is woven. */
+  lcBrief: LcBrief | null;
+  /** the laboratory hand at work ("refine" | "lyrics:<op>") — the brief
+      stays readable while a craft runs */
+  lcBusyOp: string | null;
+  /** the lab's own word — what a craft hand changed, or where it slipped */
+  lcLabNote: string | null;
+  /** an honest word: refining after a weave means a NEW version, never
+      an edit of the sound already woven */
+  lcRefineNote: string | null;
+  /** the session's previous lyric sheets — the restore shelf */
+  lcLyricsDrafts: string[];
+  /** the visitor's image carried into the chamber (memory only, never
+      written to any shelf) */
+  lcCarriedImage: string | null;
   lcTrack: LcTrack | null; // the finished, playable transmission
   lcError: string | null;
   /** A gentle word for the shelf — a sound the device no longer holds. */
@@ -775,16 +796,40 @@ interface MirrorState {
   setLcUserLyrics: (v: string) => void;
   setLcShape: (shape: Partial<LcShape>) => void;
   setLcLength: (length: "preview" | "full") => void;
-  /** Mirror translation → the weave → the player. Two doors: the
-      interpretation lands first (visible while the sound is woven),
-      then the engine renders the sound. When called with interpretOnly,
-      only the Mirror's interpretation is asked. */
+  /** Mirror translation → the weave → the player. The chamber's full
+      round: the Mirror composes the brief, then the engine renders it.
+      Kept for one-ask paths (chips, prefills, error retries). */
   generateLightCode: (opts?: {
     interpretOnly?: boolean;
     context?: string;
     intention?: string;
     attachments?: ChatAttachment[];
   }) => Promise<void>;
+  /** THE FIRST DOOR ONLY — the Mirror composes the brief; nothing is
+      woven until the visitor's own hand strikes the generate. */
+  composeBrief: (opts?: {
+    intention?: string;
+    context?: string;
+    attachments?: ChatAttachment[];
+  }) => Promise<boolean>;
+  /** THE SECOND DOOR — the standing brief is woven into sound. */
+  weaveBrief: () => Promise<void>;
+  /** The visitor's own hand on the brief — direct edits, no Mirror. */
+  updateBriefDraft: (patch: Partial<LcBrief>) => void;
+  /** Conversational refinement: the instruction reshapes the standing
+      brief. No audio is regenerated here — a new version is woven only
+      when the visitor strikes generate. */
+  refineBrief: (instruction: string) => Promise<void>;
+  /** THE LYRICS LABORATORY — one craft hand at a time on the brief's
+      lyric sheet. */
+  lyricsLabOp: (op: LcLyricOp) => Promise<void>;
+  /** Restore a previous lyric sheet from the session shelf. */
+  restoreLyricsDraft: (index: number) => void;
+  /** The Mirror chooses everything — a fresh brief from an empty ask. */
+  surpriseMe: () => Promise<void>;
+  /** Back to the brief from the player — a new version may be woven. */
+  newVersionFromTrack: () => void;
+  clearLcBrief: () => void;
   /** Play a kept transmission — recalls the sound from the visitor's
       own device; when the device no longer holds it, a gentle notice
       stands in its place. */
@@ -1200,7 +1245,12 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   lcShape: { ...LC_DEFAULT_SHAPE },
   lcLength: "preview" as "preview" | "full",
   lcStatus: "idle" as "idle" | "interpreting" | "polling" | "ready" | "error",
-  lcInterpretation: null,
+  lcBrief: null,
+  lcBusyOp: null,
+  lcLabNote: null,
+  lcRefineNote: null,
+  lcLyricsDrafts: [],
+  lcCarriedImage: null,
   lcTrack: null,
   lcError: null,
   lcNotice: null,
@@ -1426,18 +1476,18 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       if (prefill.mode) hydrate.lcMode = prefill.mode;
       if (prefill.intention !== undefined) hydrate.lcIntention = prefill.intention;
       if (prefill.shape) hydrate.lcShape = { ...get().lcShape, ...prefill.shape };
-      hydrate.lcInterpretation = prefill.title || prefill.notes || prefill.style
-        ? {
-            id: "interpretation",
-            title: prefill.title ?? "",
-            mode: prefill.mode ?? get().lcMode,
-            intention: prefill.intention ?? "",
-            audioUrl: "",
-            notes: prefill.notes,
-            style: prefill.style,
-            createdAt: Date.now(),
-          }
-        : get().lcInterpretation;
+      const prefillBrief: LcBrief | null =
+        prefill.title || prefill.notes || prefill.style
+          ? {
+              title: prefill.title ?? "Untitled transmission",
+              style: prefill.style ?? "",
+              lyrics: null,
+              notes: prefill.notes ?? "",
+              intention: prefill.intention ?? "",
+              mode: prefill.mode ?? get().lcMode,
+            }
+          : null;
+      hydrate.lcBrief = prefillBrief ?? get().lcBrief;
     }
     set(hydrate);
     /* the musical chamber rides as a mini tab — the tab call happens
@@ -1445,7 +1495,12 @@ export const useMirror = create<MirrorState>()((set, get) => ({
        first transmission is asked for. opts.bare keeps the landing's
        docked portal on the threshold (no view change). */
     get().openToolTab("lightcodes", opts);
-    if (prefill?.autoGenerate) void get().generateLightCode({ context: prefill.context });
+    if (prefill?.autoGenerate) {
+      /* a brief carried in from the chat is woven as it stands — no
+         second interpretation is asked of the Mirror */
+      if (get().lcBrief) void get().weaveBrief();
+      else void get().generateLightCode({ context: prefill.context });
+    }
   },
   exitLightCodes: () =>
     set((s) =>
@@ -1485,16 +1540,32 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   setLcUserLyrics: (v) => set({ lcUserLyrics: v }),
   setLcShape: (shape) => set((s) => ({ lcShape: { ...s.lcShape, ...shape } })),
   setLcLength: (length) => set({ lcLength: length }),
-  generateLightCode: async (opts) => {
+  /* THE CHAMBER'S ROUND — the Mirror composes the brief; the visitor
+     reads it, shapes it, and strikes the generate with their own hand;
+     the engine weaves the standing brief. Never both doors at once
+     unless a caller asks for the full round. */
+  composeBrief: async (opts) => {
     const s = get();
-    if (s.lcStatus === "interpreting" || s.lcStatus === "polling") return;
+    if (
+      s.lcStatus === "interpreting" ||
+      s.lcStatus === "polling" ||
+      s.lcBusyOp
+    )
+      return false;
     const intention = (opts?.intention ?? s.lcIntention).trim();
-    /* the visitor's image rides both doors: read by the Mirror first,
-       handed to the engine's own input in the weave */
+    /* the visitor's image rides both doors: seen by the Mirror first,
+       handed to the engine's own input in the weave (memory only) */
     const carriedImage =
       opts?.attachments?.find((a) => a.kind === "image" && a.dataUrl)?.dataUrl ??
       null;
-    set({ lcStatus: "interpreting", lcError: null, lcNotice: null });
+    set({
+      lcStatus: "interpreting",
+      lcError: null,
+      lcNotice: null,
+      lcLabNote: null,
+      lcRefineNote: null,
+      lcCarriedImage: carriedImage,
+    });
     try {
       /* THE FIRST DOOR — the Mirror's written direction */
       const res = await fetch("/api/light-codes/generate", {
@@ -1516,56 +1587,72 @@ export const useMirror = create<MirrorState>()((set, get) => ({
           ...(opts?.attachments ? attachmentsToPayload(opts.attachments) : {}),
         }),
       });
-      const data = await res.json().catch(() => null);
-      if (!res.ok) {
+      const data = (await res.json().catch(() => null)) as
+        | (Partial<LcBrief> & { error?: string })
+        | null;
+      if (!res.ok || !data) {
         throw new Error(
           (data && data.error) ||
             "The chamber rests a moment. Breathe, then ask for the transmission again."
         );
       }
-      const interpretation: LcTrack = {
-        id: "interpretation",
+      /* the brief — one sheet the visitor may shape before any sound
+         is asked for. The visitor's own lyrics are the sheet. */
+      const brief: LcBrief = {
         title: String(data.title ?? "Untitled transmission"),
-        mode: s.lcMode,
+        style: String(data.style ?? ""),
+        lyrics:
+          s.lcShape.lyricsMode === "USER WRITES" && s.lcUserLyrics.trim()
+            ? s.lcUserLyrics.trim()
+            : data.lyrics
+              ? String(data.lyrics)
+              : null,
+        notes: String(data.notes ?? ""),
         intention,
-        audioUrl: "",
-        style: data.style ?? undefined,
-        lyrics: data.lyrics ?? null,
-        notes: data.notes ?? undefined,
-        createdAt: Date.now(),
+        mode: s.lcMode,
       };
-      set({ lcInterpretation: interpretation });
-      if (opts?.interpretOnly) {
-        set({ lcStatus: "idle" });
-        return;
-      }
+      set({ lcBrief: brief, lcStatus: "idle", lcLyricsDrafts: [] });
+      return true;
+    } catch (err) {
+      set({
+        lcStatus: "error",
+        lcError:
+          err instanceof Error
+            ? err.message
+            : "The chamber rests a moment. Breathe, then ask again.",
+      });
+      return false;
+    }
+  },
 
-      /* THE SECOND DOOR — the weave. The engine renders the Mirror's
-         brief as sound; nothing is claimed until playable audio lands. */
-      set({ lcStatus: "polling" });
+  weaveBrief: async () => {
+    const s = get();
+    const brief = s.lcBrief;
+    if (!brief || s.lcStatus === "polling" || s.lcStatus === "interpreting")
+      return;
+    /* THE SECOND DOOR — the standing brief is woven. Nothing is claimed
+       until playable audio actually lands. */
+    set({ lcStatus: "polling", lcError: null, lcNotice: null, lcRefineNote: null });
+    try {
       const weave = await fetch("/api/light-codes/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          mode: s.lcMode,
-          intention,
-          civilization: s.lcCivilization ?? undefined,
+          mode: brief.mode,
+          intention: brief.intention,
+          civilization: brief.mode === "other-stars" ? (s.lcCivilization ?? undefined) : undefined,
           shape: s.lcShape,
-          userLyrics:
-            s.lcShape.lyricsMode === "USER WRITES" && s.lcUserLyrics.trim()
-              ? s.lcUserLyrics.trim()
-              : undefined,
-          instrumental: s.lcShape.voice === "None",
+          instrumental: s.lcShape.voice === "None" || !brief.lyrics,
           language: s.language,
           compose: true,
           length: s.lcLength,
           interp: {
-            title: interpretation.title,
-            style: interpretation.style,
-            lyrics: interpretation.lyrics,
-            notes: interpretation.notes,
+            title: brief.title,
+            style: brief.style,
+            lyrics: brief.lyrics,
+            notes: brief.notes,
           },
-          ...(carriedImage ? { imageDataUrl: carriedImage } : {}),
+          ...(s.lcCarriedImage ? { image: s.lcCarriedImage } : {}),
         }),
       });
       const wdata = (await weave.json().catch(() => null)) as
@@ -1594,13 +1681,20 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       const bytes = base64ToBytes(b64);
       const mime = String(wdata?.mimeType ?? "audio/mpeg");
       const id = `lc-${Date.now()}`;
-      const audioUrl = URL.createObjectURL(new Blob([bytes], { type: mime }));
+      const audioUrl = URL.createObjectURL(
+        new Blob([bytes.buffer as ArrayBuffer], { type: mime })
+      );
       /* the sound rests on the visitor's own device (the keeping law) */
       void lcAudioSave(id, bytes, mime);
       const track: LcTrack = {
-        ...interpretation,
         id,
+        title: brief.title,
+        mode: brief.mode,
+        intention: brief.intention,
         audioUrl,
+        style: brief.style || undefined,
+        lyrics: brief.lyrics,
+        notes: brief.notes || undefined,
         length: s.lcLength === "full" ? "full" : "preview",
         structure:
           typeof wdata?.structure === "string" && wdata.structure
@@ -1620,7 +1714,12 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       } catch {
         /* storage unavailable */
       }
-      set({ lcTrack: track, lcStatus: "ready", lcHistory: history });
+      set({
+        lcTrack: track,
+        lcStatus: "ready",
+        lcHistory: history,
+        lcCarriedImage: null,
+      });
     } catch (err) {
       set({
         lcStatus: "error",
@@ -1630,6 +1729,187 @@ export const useMirror = create<MirrorState>()((set, get) => ({
             : "The chamber rests a moment. Breathe, then ask again.",
       });
     }
+  },
+
+  updateBriefDraft: (patch) =>
+    set((s) => ({ lcBrief: s.lcBrief ? { ...s.lcBrief, ...patch } : s.lcBrief })),
+
+  refineBrief: async (instruction) => {
+    const s = get();
+    const brief = s.lcBrief;
+    if (!brief || s.lcBusyOp || s.lcStatus === "polling") return;
+    const word = instruction.trim();
+    if (!word) return;
+    set({
+      lcBusyOp: "refine",
+      lcLabNote: null,
+      lcError: null,
+      /* keep the sheet the visitor had, in case the refinement slips */
+      lcLyricsDrafts: brief.lyrics
+        ? [brief.lyrics, ...s.lcLyricsDrafts].slice(0, 8)
+        : s.lcLyricsDrafts,
+    });
+    try {
+      const res = await fetch("/api/light-codes/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mode: brief.mode,
+          intention: brief.intention,
+          language: s.language,
+          refine: { instruction: word },
+          interp: {
+            title: brief.title,
+            style: brief.style,
+            lyrics: brief.lyrics,
+            notes: brief.notes,
+          },
+        }),
+      });
+      const data = (await res.json().catch(() => null)) as Partial<LcBrief> & {
+        error?: string;
+      } | null;
+      if (!res.ok || !data) {
+        throw new Error(
+          (data && data.error) ||
+            "The Mirror's refinement dissolved before it landed. Speak the change once more."
+        );
+      }
+      set({
+        lcBrief: {
+          ...brief,
+          title: String(data.title ?? brief.title),
+          style: String(data.style ?? brief.style),
+          lyrics:
+            data.lyrics === undefined ? brief.lyrics : data.lyrics,
+          notes: String(data.notes ?? brief.notes),
+        },
+        lcBusyOp: null,
+        /* THE HONESTY LAW: if a sound was already woven from the older
+           brief, refining means a NEW version will be woven — the
+           existing waveform is never edited in place. */
+        lcRefineNote: s.lcTrack
+          ? "The brief has been reshaped — strike generate and a new version will be woven. The sound already woven is never edited in place."
+          : null,
+        lcStatus: s.lcStatus === "ready" ? "idle" : s.lcStatus,
+      });
+    } catch (err) {
+      set({
+        lcBusyOp: null,
+        lcError:
+          err instanceof Error
+            ? err.message
+            : "The Mirror's refinement dissolved before it landed.",
+      });
+    }
+  },
+
+  lyricsLabOp: async (op) => {
+    const s = get();
+    const brief = s.lcBrief;
+    if (!brief || s.lcBusyOp || s.lcStatus === "polling") return;
+    set({
+      lcBusyOp: `lyrics:${op}`,
+      lcLabNote: null,
+      lcError: null,
+      lcLyricsDrafts: brief.lyrics
+        ? [brief.lyrics, ...s.lcLyricsDrafts].slice(0, 8)
+        : s.lcLyricsDrafts,
+    });
+    try {
+      const res = await fetch("/api/light-codes/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mode: brief.mode,
+          intention: brief.intention,
+          language: s.language,
+          lyricsOp: op,
+          interp: {
+            title: brief.title,
+            style: brief.style,
+            lyrics: brief.lyrics,
+            notes: brief.notes,
+          },
+        }),
+      });
+      const data = (await res.json().catch(() => null)) as {
+        lyrics?: string;
+        notes?: string;
+        error?: string;
+      } | null;
+      if (!res.ok || !data) {
+        throw new Error(
+          (data && data.error) ||
+            "The Lyrics Laboratory's hand slipped — ask for the craft once more."
+        );
+      }
+      const sheet = (data.lyrics ?? "").trim();
+      if (!sheet) {
+        throw new Error(
+          "The Lyrics Laboratory's hand slipped — ask for the craft once more."
+        );
+      }
+      set({
+        lcBrief: { ...brief, lyrics: sheet },
+        lcBusyOp: null,
+        lcLabNote: data.notes || null,
+        lcRefineNote: s.lcTrack
+          ? "The words have been reshaped — strike generate and a new version will be woven."
+          : null,
+        lcStatus: s.lcStatus === "ready" ? "idle" : s.lcStatus,
+      });
+    } catch (err) {
+      set({
+        lcBusyOp: null,
+        lcError:
+          err instanceof Error
+            ? err.message
+            : "The Lyrics Laboratory's hand slipped — ask for the craft once more.",
+      });
+    }
+  },
+
+  restoreLyricsDraft: (index) =>
+    set((s) => {
+      const sheet = s.lcLyricsDrafts[index];
+      if (!sheet || !s.lcBrief) return {};
+      return {
+        lcBrief: { ...s.lcBrief, lyrics: sheet },
+        lcLyricsDrafts: s.lcLyricsDrafts.filter((_, i) => i !== index),
+        lcLabNote: null,
+      };
+    }),
+
+  surpriseMe: async () => {
+    set({ lcIntention: "" });
+    await get().composeBrief({});
+  },
+
+  newVersionFromTrack: () =>
+    set({
+      lcStatus: "idle",
+      lcError: null,
+      lcNotice: null,
+      lcRefineNote: null,
+      lcLabNote: null,
+    }),
+
+  clearLcBrief: () =>
+    set({
+      lcBrief: null,
+      lcBusyOp: null,
+      lcLabNote: null,
+      lcRefineNote: null,
+      lcCarriedImage: null,
+      lcLyricsDrafts: [],
+    }),
+
+  /* the chamber's full round in one ask — kept for chips, prefills and
+     the error card's retry hand */
+  generateLightCode: async (opts) => {
+    const ok = await get().composeBrief(opts);
+    if (ok) await get().weaveBrief();
   },
   playLc: async (track) => {
     const stored = await lcAudioGet(track.id);
@@ -1657,7 +1937,12 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       lcMode: track.mode,
       lcIntention: track.intention,
       lcTrack: null,
-      lcInterpretation: null,
+      lcBrief: null,
+      lcBusyOp: null,
+      lcLabNote: null,
+      lcRefineNote: null,
+      lcCarriedImage: null,
+      lcLyricsDrafts: [],
       lcStatus: "idle",
       lcError: null,
     }),
