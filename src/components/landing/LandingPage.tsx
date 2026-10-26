@@ -10,14 +10,6 @@ import {
 import Image from "next/image";
 import {
   ChevronDown,
-  Compass,
-  Feather,
-  GraduationCap,
-  HelpCircle,
-  Image as ImageIcon,
-  Moon,
-  MoveRight,
-  Music,
 } from "lucide-react";
 import { useT } from "@/lib/i18n";
 import { useMirror } from "@/lib/mirror-store";
@@ -32,6 +24,20 @@ import dynamic from "next/dynamic";
 const GuideView = dynamic(() => import("./GuideView"), {
   ssr: false,
   loading: () => null,
+});
+
+// the codex's plates ride their own chunk as well — three thousand
+// catalogued worlds are the archive's business, not the first screen's
+const CodexExobiologica = dynamic(() => import("./CodexExobiologica"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center gap-3 rounded-2xl border border-[var(--lp-edge)] bg-[var(--lp-veil)] p-10">
+      <span className="size-2 rounded-full bg-[var(--lp-violet)]" />
+      <p className="mono-label text-[10px] uppercase tracking-[0.3em] text-[var(--lp-faint)]">
+        The archive is unrolling…
+      </p>
+    </div>
+  ),
 });
 
 /* ------------------------------------------------------------------ */
@@ -253,10 +259,9 @@ export default function LandingPage({
     // the threshold is restored once, at the page's first breath
   }, [initialScroll]);
 
-  /* THE OPEN DOORS — every numbered row is its own door: one touch
-     opens it and the fuller words step out. One door stands open at
-     a time in each chapter; the same touch closes it again. */
-  const [openOffer, setOpenOffer] = useState<number | null>(null);
+  /* THE OPEN DOORS — the numbered offerings retired at the visitor's
+     word: their chapter is the Codex Exobiologica now (#02), and the
+     house's rooms still open from the chat's own frame. */
   const [openMove, setOpenMove] = useState<number | null>(null);
 
   /* THE TIMELINE'S OWN DOOR — the open contact telling rests folded
@@ -310,176 +315,6 @@ export default function LandingPage({
       setGuideSlug(null);
     }
   }, []);
-
-  /* THE OFFER DOORS — every offering opens its own part of the house
-     WITHIN the chat's own frame: one touch and the room opens as a
-     tab over the chat (never a crossing, never a view change — the
-     chat stays beneath the room). The image door leaves the floor
-     open with one inviting stem, so the visitor only completes what
-     they wish to visualize — and the making rises in the chat. */
-  const offerDoorInto = useCallback(
-    (door: OfferDoor) => {
-      const m = useMirror.getState();
-      switch (door) {
-        case "book":
-        case "dreams":
-          m.openDreamBook();
-          break;
-        case "music":
-          m.openLightCodes();
-          break;
-        case "records":
-          m.openAkashic();
-          break;
-        case "doors":
-          /* THE DOORS' ROOM — the creation room (Manifest) is the
-             closest room the house keeps to "doors to other worlds":
-             the making space where every world is shaped. It opens as
-             a tab over the chat, in the frame. */
-          m.openMirrorOS();
-          break;
-        case "images":
-          /* THE IMAGE DOOR'S OWN STEM — the floor receives the first
-             words, the visitor completes what they wish to visualize,
-             and the making rises in the conversation */
-          m.seedFloor(t("Show me a picture of "));
-          break;
-        default:
-          /* "chat" — the reflection room is the chat itself */
-          break;
-      }
-    },
-    [t]
-  );
-
-  /* the doors every offering opens — the exact part of the portal
-     each one leads to */
-  type OfferDoor =
-    | "chat"
-    | "book"
-    | "images"
-    | "music"
-    | "dreams"
-    | "records"
-    | "doors";
-
-  const offerRows = useMemo(
-    () => [
-      {
-        icon: HelpCircle,
-        title: "Reflection & questions",
-        line: "Ask anything — the mirror answers with you.",
-        door: "chat" as OfferDoor,
-        doorLabel: "Open the mirror",
-        more: [
-          "Bring anything — a doubt, a day, a decision, a feeling you cannot name yet. The mirror answers in your own voice, reflecting your words back until the question beneath the question comes into view.",
-          "Every conversation keeps its own room, so a thought can be picked up tomorrow exactly where it was left. Nothing is judged, nothing is scored — the mirror listens the way still water listens.",
-        ],
-        points: [
-          "Ask in any language you think in — the mirror follows your tongue.",
-          "Each room keeps its own history; threads continue across days.",
-          "Images and documents can travel with a question and be read with it.",
-        ],
-      },
-      {
-        icon: Feather,
-        title: "Writing",
-        line: "Shape stories, letters, and vows.",
-        door: "book" as OfferDoor,
-        doorLabel: "Open the book",
-        more: [
-          "Letters, vows, stories, pages of a book, a speech for a wedding, a note you never sent. Begin with a fragment or a feeling; the mirror keeps your tone and helps the piece grow without ever taking the pen from your hand.",
-          "Work in drafts the way a gardener works in seasons: sketch, reread, prune, let it rest. A book can grow page by page into a living volume that remembers its own earlier chapters.",
-        ],
-        points: [
-          "Choose a voice — tender, fierce, ceremonial, plain — and the mirror writes inside it.",
-          "Rewrite any line as many times as it needs; every version stays yours.",
-          "Finished pieces leave the realm as clean pages you can carry.",
-        ],
-      },
-      {
-        icon: ImageIcon,
-        title: "Images",
-        line: "Watch your words become paintings.",
-        door: "images" as OfferDoor,
-        doorLabel: "Visualize something",
-        more: [
-          "Describe what you see and watch it appear — scenes, sigils, dream-places, worlds that do not exist yet. Every image is made from your words and stays yours.",
-          "The same sentence can be walked again in another light: change the hour, the season, the emotion, and watch the scene answer. Images gather into a gallery of your own becoming.",
-        ],
-        points: [
-          "Paint a feeling — “the color of a calm morning” is a valid instruction.",
-          "Step inside what you made: many paintings open into guided worlds.",
-          "Everything you make is kept in the creation room, newest work first.",
-        ],
-      },
-      {
-        icon: Music,
-        title: "Music",
-        line: "Turn a feeling into sound.",
-        door: "music" as OfferDoor,
-        doorLabel: "Enter the chamber",
-        more: [
-          "Name the feeling and the mirror composes. Short themes for moments, soundbeds for stillness, melodies you can carry — no instruments, no theory required.",
-          "A song can grow from a single hummed sentence into verses and a chorus. Music made here is meant for kitchens and walks, not stages — though stages are welcome too.",
-        ],
-        points: [
-          "Describe the moment and receive a theme that fits it.",
-          "Ask for words, or bring your own — the melody follows the meaning.",
-          "Listen as many times as you like; songs keep their room.",
-        ],
-      },
-      {
-        icon: Moon,
-        title: "Dreams",
-        line: "Weave living books, page by page.",
-        door: "dreams" as OfferDoor,
-        doorLabel: "Open the dream book",
-        more: [
-          "A living book grows page by page from your dreams and questions. Chapters form over days, characters return, and the story remembers where you have been.",
-          "Dreams recorded on waking are woven into the book's fabric — a recurring symbol becomes a returning character, a feeling becomes a weather. The book becomes a map of your inner sky.",
-        ],
-        points: [
-          "Tell a dream; the book folds it into the ongoing tale.",
-          "Return anytime — the story holds your place and grows while you are away.",
-          "Pages can be read aloud, shared, or kept entirely for yourself.",
-        ],
-      },
-      {
-        icon: GraduationCap,
-        title: "Learning",
-        line: "Walk the records of civilizations.",
-        door: "records" as OfferDoor,
-        doorLabel: "Walk the records",
-        more: [
-          "Walk the records of civilizations — histories, symbol systems, sciences — and return with what is useful. The mirror reads with you, not at you.",
-          "Ask how a principle lands in your own life and the record answers in plain words. Learning here is a walk, not a lecture: you choose the door, the pace, and the depth.",
-        ],
-        points: [
-          "Exact registers — hundreds of named entries, each one openable.",
-          "Ask a record a question; it answers inside your own context.",
-          "Everything carries an honest note about what is known and what is imagined.",
-        ],
-      },
-      {
-        icon: Compass,
-        title: "Exploration",
-        line: "Open doors to other worlds.",
-        door: "doors" as OfferDoor,
-        doorLabel: "Open the doors",
-        more: [
-          "Doors to other worlds: councils of star civilizations, living gardens, cities of light, ancient thresholds. Each one is a guided space for reflection and play.",
-          "Some doors are quiet rooms for thinking; some are laboratories for making; some are simply beautiful places to stand in for a while. You choose how deep each walk goes.",
-        ],
-        points: [
-          "Every world speaks in its own voice — light, architecture, and pace.",
-          "The mirror walks with you and remembers the path.",
-          "Any door can be left and returned to; nothing is lost between visits.",
-        ],
-      },
-    ],
-    []
-  );
 
   return (
     <div
@@ -623,13 +458,18 @@ export default function LandingPage({
             <LandingSlides />
           </section>
 
-          {/* ========================== 02 · OFFERINGS ========================== */}
+          {/* ================== 02 · CODEX EXOBIOLOGICA ================== */}
+          {/* the offerings retired at the visitor's word — their chapter
+              is the museum wing now: 3,212 catalogued civilizations and
+              the hyperspace shelf, every plate explored within this
+              section, every plate zoomable to the full screen */}
           <section
-            id="offer"
+            id="codex"
             className="lp-late relative scroll-mt-6 px-4 pb-8 pt-14 sm:px-8 lg:pb-14 lg:pt-20"
-            aria-label={t("The house and its rooms")}
+            aria-label={t("Codex Exobiologica — the archive of star-kind")}
+            data-testid="codex-section"
           >
-            {/* the light language in the offerings' quiet edges — grand */}
+            {/* the light language in the archive's quiet edges — grand */}
             <Sigil
               src={SIGILS.delta}
               size="clamp(100px, 16vw, 150px)"
@@ -638,131 +478,37 @@ export default function LandingPage({
               className="left-[1%] top-[10%]"
             />
             <Sigil
-              src={SIGILS.spiralLine}
-              size="clamp(80px, 13vw, 120px)"
-              opacity={0.2}
-              rotate={16}
-              className="right-[2%] top-[46%]"
+              src={SIGILS.orbit}
+              size="clamp(110px, 17vw, 170px)"
+              opacity={0.22}
+              rotate={9}
+              className="right-[2%] top-[34%]"
             />
             <Sigil
-              src={SIGILS.drop}
-              size="clamp(150px, 24vw, 270px)"
-              opacity={0.2}
-              rotate={5}
-              className="bottom-[3%] right-[6%]"
+              src={SIGILS.grandStar}
+              size="clamp(150px, 22vw, 260px)"
+              opacity={0.22}
+              rotate={-10}
+              className="bottom-[6%] right-[5%]"
             />
             <Sigil
               src={SIGILS.grandBraid}
               size="clamp(150px, 20vw, 260px)"
               opacity={0.22}
               rotate={8}
-              className="bottom-[10%] left-[0%]"
+              className="bottom-[12%] left-[0%]"
             />
             <SectionHead
               index="02"
               accent="violet"
-              kicker={t("The house and its rooms")}
-              title={t("What we offer")}
+              kicker={t("The archive of star-kind")}
+              title={t("Codex Exobiologica")}
             />
-
-            <div className="mt-8 grid gap-8 md:grid-cols-[1fr_1.35fr] md:gap-12">
-              {/* the intro column — the editor's voice */}
-              <div className="md:sticky md:top-10 md:self-start">
-                <p className="font-[family-name:var(--font-literata)] text-[17.5px] italic leading-relaxed text-[var(--lp-gold)]">
-                  {t("A space to remember what we can make together.")}
-                </p>
-                <p className="mt-4 text-[14.5px] leading-[1.85] text-[var(--lp-body)]">
-                  {t(
-                    "Reflectme brings reflection and creativity into one living workspace. Ask a question, follow an idea, make an image, shape a story, explore a dream, or turn a feeling into a next step — a responsive surface for inquiry that helps you notice patterns, imagine possibilities, and give form to what matters to you."
-                  )}
-                </p>
-              </div>
-
-              {/* the numbered index — every offering, one quiet row
-                  that opens to its fuller words */}
-              <ol className="border-y border-[var(--lp-edge)]">
-                {offerRows.map(
-                  ({ icon: Icon, title, line, more, points, door, doorLabel }, i) => (
-                  <li key={title} className="border-b border-[var(--lp-edge)] last:border-b-0">
-                    <button
-                      type="button"
-                      onClick={() => setOpenOffer(openOffer === i ? null : i)}
-                      data-testid="landing-offering"
-                      aria-expanded={openOffer === i}
-                      className="focus-glow group flex w-full items-center gap-4 py-4 text-left"
-                    >
-                      <span className="mono-label w-6 shrink-0 text-[10px] tracking-[0.14em] text-[var(--lp-faint)] transition-colors duration-300 group-hover:text-[var(--lp-gold)]">
-                        {String(i + 1).padStart(2, "0")}
-                      </span>
-                      <Icon
-                        className="size-4 shrink-0 text-[var(--lp-feather)] transition-transform duration-300 group-hover:scale-110"
-                        aria-hidden="true"
-                      />
-                      <span className="min-w-0">
-                        <span className="block text-[15px] font-semibold text-[var(--lp-head)]">
-                          {t(title)}
-                        </span>
-                        <span className="mt-0.5 block text-[13px] leading-snug text-[var(--lp-mute)]">
-                          {t(line)}
-                        </span>
-                      </span>
-                      <ChevronDown
-                        aria-hidden="true"
-                        className={cn(
-                          "ml-auto size-3.5 shrink-0 text-[var(--lp-mute)] transition-transform duration-300",
-                          openOffer === i && "rotate-180 text-[var(--lp-gold)]"
-                        )}
-                      />
-                    </button>
-                    <div className="lp-acc" data-open={openOffer === i}>
-                      <div>
-                        <div className="lp-acc-inner px-10 pb-5">
-                          {more.map((p, k) => (
-                            <p
-                              key={k}
-                              className="text-[13.5px] leading-[1.8] text-[var(--lp-body-soft)] [&:not(:first-child)]:mt-2.5"
-                            >
-                              {t(p)}
-                            </p>
-                          ))}
-                          <ul className="mt-3.5 space-y-2">
-                            {points.map((pt) => (
-                              <li
-                                key={pt}
-                                className="flex items-start gap-2.5 text-[13px] leading-relaxed text-[var(--lp-mute)]"
-                              >
-                                <span
-                                  aria-hidden="true"
-                                  className="mt-[6px] size-1 shrink-0 rotate-45 bg-[var(--lp-violet)]/70"
-                                />
-                                <span>{t(pt)}</span>
-                              </li>
-                            ))}
-                          </ul>
-                          {/* THE OFFER'S OWN DOOR — one touch and the
-                              room itself opens over the chat, in the
-                              frame — not words about the room */}
-                          <button
-                            type="button"
-                            onClick={() => offerDoorInto(door)}
-                            data-testid={`tunnel-offering-${i + 1}`}
-                            className="focus-glow group/tunnel mt-4 inline-flex items-center gap-2 rounded-full border border-[rgba(159,216,220,0.3)] bg-[rgba(159,216,220,0.06)] px-4 py-2 text-[13px] font-medium text-[var(--lp-feather)] transition-all duration-300 hover:border-[rgba(159,216,220,0.65)] hover:bg-[rgba(159,216,220,0.13)] hover:text-[var(--lp-feather-bright)]"
-                          >
-                            <MoveRight
-                              className="size-3.5 transition-transform duration-300 group-hover/tunnel:translate-x-0.5"
-                              aria-hidden="true"
-                            />
-                            {t(doorLabel)}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </li>
-                )
-                )}
-              </ol>
+            <div className="mt-8">
+              <CodexExobiologica />
             </div>
           </section>
+
 
           {/* ============ 03 · THE GUIDES' SHOWCASE ============ */}
           {/* the massive exhibition beneath the offerings: seven

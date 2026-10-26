@@ -5882,3 +5882,25 @@ Stage Summary:
 - The Quantum Lab rests; the Quantum field still speaks.
 - The stickers stand twice as tall on the shoulders and never touch the chat.
 - The visitor raises their own level, and the house answers deeper; the visitor's words are read literally, the conversation is carried, and every question asked back is plain.
+
+---
+Task ID: task-g-codex-exobiologica
+Agent: Z.ai Code (main)
+Task: Restore latest git version (5th drift), then replace the "What we offer" section with the CODEX EXOBIOLOGICA archival engine — a big, in-section explorable/zoomable encyclopedia built from the uploaded civilization PDFs, themed to the house with an alien vibe.
+
+Work Log:
+- Drift diagnosed: local c873b47 diverged from remote f9fcd1b. Backed up orphan chain to branch backup/task-g-restore, hard-reset to remote main f9fcd1b (which itself completed Task F's 12 items: one back hand, twice-sized stickers, quantum lab laid down, akashic composer at the foot, level by own hand, advanced door rested, profile icon first). Fingerprint verified: BranchNavigator.tsx absent, HTTP 200.
+- Explored uploads: 10 Civilisations_*.zip → 1,812 PDFs (CIV-0001..1800, 3201..3212) + INDEX.csv (3,212 rows). Each PDF = 3 plates (civilisation vista / technology / native lifeform, 332x224) + structured record (fields, overview, society, chronicle, tech, metrics, anatomy, biota, vista, quotation).
+- Built tools/codex/build_codex.py (committed, re-runnable for future PDF batches): PyMuPDF text parser (label/section/title state machine) + art extractor (one unique plate per page → WebP q80).
+- Generated public/codex: index.json (3,212 rows, 1,812 enriched with distance/kardashev/kinship/biochemistry/chunk pointers), details/chunk-000..045.json (40 records each, ~170KB), art/ (5,436 webp, 112MB), idw.json (hand-authored hyperspace wing: 6 entities per the IDM schema with quotes).
+- Built src/components/landing/CodexExobiologica.tsx: two wings (Civilisations 3,212 / Hyperspace 6), search over id/name/star/homeworld/epithet, Kardashev chips (I–IV, Ω), biochemistry chips (top 7), "opened plates only" toggle, sort by catalogue number / distance / kinship, 24-card pagination capped at 240 rendered (calm-law windowing), lazy unoptimized webp plates.
+- Card design: alien-vibe museum plates — art under a violet hairline veil, CIV-ID + distance + Type badges, Cinzel names, gold-italic epithets, kinship/biochemistry chips; sealed plates (no PDF yet) show a deterministic light-language seal + "Sealed plate · awaiting its archive".
+- Zoomed plate (fixed overlay, role=dialog): 3 art tabs (Civilisation/Technology/Life), full field grid, Overview/Society/Chronicle prose, technology panel with 6 static metric bars, anatomy & integration, native biota, homeworld vista, archive quotation; prev/next steps within the current filtered order; Esc/arrow keys; body scroll locked while open.
+- LandingPage: section 02 rebuilt — offerRows/offerDoorInto/OfferDoor/openOffer removed, dynamic(ssr:false) CodexExobiologica mounted under SectionHead("02", violet, "The archive of star-kind" / "Codex Exobiologica"), id="codex", grand sigils kept; unused lucide imports cleaned.
+- Verified via agent-browser at 1280x800 + 390x844, light + dark: grid render, card→plate zoom, tab switching, prev/next, close, hyperspace wing, search ("Pleiadian"→1), Type III filter (353), distance sort (CIV-0014 18.3 LY first among Type III), guides section 03 unharmed, no console/page errors. Fixed IDM-vs-CIV plate state bug (entry not cleared when opening an IDM plate; civ block now hidden when idw present).
+- bunx tsc --noEmit: 0 errors in src/components|app. bun run lint: only the 3 pre-existing LandingGate baseline errors.
+
+Stage Summary:
+- Remote main f9fcd1b restored (Task F confirmed already shipped there); drift backup branch backup/task-g-restore.
+- "What we offer" chapter is now CODEX EXOBIOLOGICA: 3,212 catalogued civilizations (1,812 opened plates, 5,436 artworks) + a 6-entity hyperspace wing, all explored within the section, every plate zoomable full-screen without leaving the page.
+- Regeneration path for future PDF batches: drop new zips/PDFs, run `python3 tools/codex/build_codex.py --zips 'upload/Civilisations_*.zip' --out public/codex` (or --src with a folder); sealed plates open automatically as entries appear.
