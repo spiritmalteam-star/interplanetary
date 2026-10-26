@@ -5730,3 +5730,61 @@ Stage Summary:
 - Every field is a world: its own language, its own doors, its own light, its own conversation and memory (per-scope, restored on return AND on reload), its own history pages, its own living volume in the profile's Cosmic Library.
 - The profile fits the chat frame compactly and wears the field's light; the tools read as compact workplaces of the one chat.
 - Key artifacts: mirror-store (mirror scope), LandingChatNav (centered field panel), LandingGate (both-gear accents), BranchCanopy (per-scope routing/memory/history/library), ProfilePage, ToolWorkspace.
+
+---
+Task ID: living-book-core (redo after drift)
+Agent: Z.ai Code (main orchestrator)
+Task: RECOVERY + Living Book Engine core. The sandbox drift struck again mid-session (main healed backward 803c4b6 → 781be61, wiping all uncommitted tracked-file edits; ROOT CAUSE FOUND: commit 803c4b6 wrote a CORRUPTED .zscripts/expected-head — two concatenated 40-char SHAs on one line — so the healer could not parse it and fell back to the first sha, resetting to 781be61, which erased the pin commit itself: a self-destroying pin loop).
+
+Work Log:
+- SALVAGE: the five NEW files survived as untracked (workspaces.ts, workspace-lifecycle.ts, QuantumLabView.tsx, MirrorBridge.tsx, MusicSequencer.tsx) — copied to /tmp/living-book-salvage before any further git operation.
+- HEAL: git reset --hard checkpoint/pre-living-book (803c4b6 — the checkpoint branch survived the drift); .zscripts/expected-head rewritten as ONE clean sha (803c4b6a2567892c99f1061e00351649b5d128eb).
+- REDO of all lost tracked-file edits, byte-faithful to the originals (all documented in session): mirror-store (qlab in ToolTabKey+MainView, openQlab, bridgeDraft+composeBridgePrompt/consumeBridgeDraft, libraryFocus+setLibraryFocus/clearLibraryFocus, initial state), ToolWorkspace full rewrite (registry-driven PAGE_VIEWS, PageScaffold loading state, WorkspaceBoundary error boundary with nonce-remount retry, lifecycle effect on page turn + unmount, data-resource-profile), LandingChatNav (SCOPE_META/SCOPE_ORDER-driven NAV_SCOPES, NAV_TOOLS + qlab row, quantum field row's laboratory span-hand landing-nav-scope-qlab), LandingGate (accents from SCOPE_META), BranchCanopy (voices/shelves/dots from registry, hourly roll sleeps when document.hidden, ZoomReplyForm bridge carry — carriedAt state-comparison pattern, NO refs during render, NO setState in effect; replyRef on the zoom-reply input), AppShell (qlab early-return with CosmicBackdrop+StarField+passageModals), ProfilePage (setLibraryFocus hook + profilepage-library-row hands sector then opens the library), LibraryView (sectorFilter initializer reads the focus at mount; store hand consumed in effect — no effect setState).
+- CHECKPOINT DISCIPLINE: committed immediately after the core redo (4c90536) and pinned expected-head cleanly — no more end-of-session-only commits; every stage lands as a commit now.
+- LINT LAWS honored the hard way: react-hooks/refs forbids refs during render (the carriedRef approach was rejected) → final bridge carry uses the carriedAt state stamp comparison; react-hooks/set-state-in-effect forbids effect setState → LibraryView uses a mount initializer.
+
+Stage Summary:
+- The Living Book spine stands again, now heal-proof: one typed registry (nine pages), lazy renderer with loading/error/retry, lifecycle manager, Mirror Bridge, Quantum Laboratory (pure-TS statevector sim: H/X/Z/S/T/CNOT, 2-3 qubits × 8 steps, live probabilities, 200-shot sampling, honest collapse, localStorage persistence, quantum-shelf saves), scope metadata in ONE truth, creations' own door from the profile's library rows.
+- Key lesson recorded: expected-head MUST always be exactly one clean 40-char sha; commit at every stage.
+
+---
+Task ID: 4-a (redo, lead)
+Agent: Z.ai Code (main orchestrator; original subagent file survived the drift)
+Task: Music Studio native sequencer wiring.
+
+Work Log:
+- MusicSequencer.tsx (686 lines, subagent-authored, SURVIVED the drift untracked): 16 steps × 4 tracks (Kick sine-drop 150→45Hz, Hush noise→lowpass 1800Hz, Breath noise→highpass 7000Hz, Tone triangle on a pentatonic ladder above A3), look-ahead scheduler (25ms interval, ~0.1s ahead, ONLY while playing), single AudioContext created+resumed on first Play, master gain + volume slider, tempo 60-180 live, per-track mutes, Clear/Surprise/Save-to-Library (POST /api/library sector invent, kind music-pattern), pattern persisted to mirror:music-pattern, lifecycle: registerWorkspaceCleanup("lightcodes", stopAll) + visibilitychange pause + unmount dispose.
+- LightCodesView wiring REDONE: bench switch under the heading (lc-bench-transmissions default | lc-bench-sequencer, aria-pressed pills, Music4/AudioLines icons), MusicSequencer mounts ONLY when the sequencer bench is chosen, MirrorBridge (workspaceKey lightcodes) rides the sequencer bench with buildContext reading mirror:music-pattern at ask-time (tempo + sounding steps per track + mutes, null when empty). All existing transmissions flows/testids byte-intact.
+- tsc/lint clean for both files (verified after re-wiring).
+
+Stage Summary: Music is now a genuine two-bench studio: the house's transmissions AND a real local instrument that releases its device breath the moment it is left.
+
+---
+Task ID: 4-c (redo, lead)
+Agent: Z.ai Code (main orchestrator)
+Task: Writing Studio upgrades (DreamBookView, 3253→~3390 lines, all additive).
+
+Work Log:
+- EXPORT (dream-export): exportMarkdown — clean .md (title, subtitle, front-matter blockquotes, --- sections with part/chapter marks), Blob download + revoke, toasts.
+- WORD COUNT (dream-wordcount): bookWords memo over dedupeChapters + pageText, mono-label `N words · N pages` (formatArchiveNumber, md+).
+- FOCUS READING (dream-focus): focusRead state widens the columns (whole 700→920px; page outer 760→1100px, inner 640→880px), scope-tinted active state.
+- MIRROR BRIDGE: mounted in the reading stage only (hidden in whole/immersed modes), buildContext = bookToText(meta, pages).slice(0,600).
+- LIFECYCLE: registerWorkspaceCleanup("dreambook", pause narration) + visibilitychange pause; effect placed AFTER narrRef declaration (decl-order lesson).
+- Fixed two self-inflicted wounds immediately: use-before-declaration of narrRef (effect relocated) and a broken nesting on the page-by-page wrapper (self-closed div restored to wrapping).
+- tsc/lint clean for the file.
+
+Stage Summary: The Book now exports, counts, focuses and advises — a genuine writing instrument; every existing flow untouched.
+
+---
+Task ID: 4-d (redo, lead)
+Agent: Z.ai Code (main orchestrator)
+Task: Performance pass + dead dependency removal (redo).
+
+Work Log:
+- StarField: the twinkle rAF now rides ONLY tier "high" (usePerfMode); balanced/eco/reduced draw the still sky once (drawStatic reuse), resize redraws static, visibility laws kept; deps [resolvedTheme, tier].
+- CosmicBackdrop: drift classes ride tier "high"; still branch carries the drift-a rest transform inline for the nebula, hides the drift-a/drift-c curtains on ≤640px (matching the stylesheet's own phone law — verified in globals.css: it hides animate-drift-a/c, NOT b), [animation:none] on the two drift-b blobs; zero layout shift.
+- BranchCanopy hourly roll: sleeps when document.hidden, wakes on visibilitychange (in core commit).
+- DEPENDENCIES: 26 packages removed (three, @types/three, @xyflow/react, @tanstack/react-query, @tanstack/react-table, @mdxeditor/editor, react-markdown, react-syntax-highlighter, next-intl, next-auth, date-fns, @reactuses/core, @dnd-kit/core, @dnd-kit/sortable, @dnd-kit/utilities, uuid, pdf-parse, embla-carousel-react, cmdk, input-otp, react-resizable-panels, vaul, react-day-picker, recharts, tailwindcss-animate, zod — each verified 0-import with import-shaped rg patterns; `three`'s only hit is prose in a skills markdown). 7 dead shims deleted (ui/calendar, carousel, chart, command, input-otp, resizable, drawer — each rg-verified 0 importers). Radix packages all KEPT (each still imported by kept shims/files). KEEP list untouched: stripe, sharp, prisma, pdf-lib/fontkit/unpdf/mammoth/xlsx (dynamic), sonner, framer-motion, zustand, lucide-react, next-themes.
+- VERIFICATION: tsc 24 pre-existing (0 in src/components|app|lib/mirror), lint 2 pre-existing (LandingGate), runtime deps 78 → 52, dev server restarted post-swap and serving 200.
+
+Stage Summary: The book rides lighter by 26 packages and 7 dead shims; the sky and the atmosphere breathe only on devices that asked for high; hidden tabs roll nothing.

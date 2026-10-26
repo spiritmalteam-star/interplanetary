@@ -8,6 +8,7 @@ import {
   ChevronDown,
   Download,
   Eye,
+  Music4,
   Pause,
   Play,
   RefreshCw,
@@ -20,6 +21,8 @@ import {
 import Image from "next/image";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
+import { MusicSequencer } from "./living/MusicSequencer";
+import { MirrorBridge } from "./living/MirrorBridge";
 import {
   LC_MODES,
   LC_SHAPE,
@@ -528,6 +531,15 @@ export function LightCodesView() {
   const [phraseIdx, setPhraseIdx] = useState(0);
   /* what the transmission carries — one image, up to three documents */
   const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
+  /* THE TWO BENCHES — the chamber's own instruments: the standing
+     transmissions (the house's generated sounds) and the local
+     sequencer (a genuine instrument that plays on the visitor's own
+     device, no server, no credits). The transmissions stay the
+     default; the sequencer mounts only when chosen, so its device
+     breath is released the moment the bench is left. */
+  const [bench, setBench] = useState<"transmissions" | "sequencer">(
+    "transmissions"
+  );
 
   const mode = LC_MODES.find((m) => m.id === lcMode) ?? LC_MODES[0];
   const busy = lcStatus === "interpreting" || lcStatus === "polling";
@@ -632,6 +644,109 @@ export function LightCodesView() {
               <span className={cn("h-px w-16 sm:w-24", BRAID_RULE)} />
             </div>
           </div>
+
+          {/* THE TWO BENCHES — one quiet switch between the house's
+              transmissions and the visitor's own local instrument */}
+          <div
+            role="group"
+            aria-label={t("Choose the bench")}
+            className="mt-4 flex justify-center"
+          >
+            <div className="flex items-center gap-1 rounded-full border p-1">
+              <button
+                type="button"
+                onClick={() => setBench("transmissions")}
+                aria-pressed={bench === "transmissions"}
+                data-testid="lc-bench-transmissions"
+                className={cn(
+                  "focus-glow flex h-7 items-center gap-1.5 rounded-full px-3 text-[12px] transition-colors duration-300",
+                  bench === "transmissions"
+                    ? "font-semibold"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+                style={
+                  bench === "transmissions"
+                    ? {
+                        backgroundColor:
+                          "color-mix(in srgb, var(--scope-a,var(--lp-gold)) 12%, transparent)",
+                        color: "var(--scope-a,var(--lp-gold))",
+                        boxShadow:
+                          "inset 0 0 0 1px color-mix(in srgb, var(--scope-a,var(--lp-gold)) 35%, transparent)",
+                      }
+                    : undefined
+                }
+              >
+                <AudioLines className="size-3.5" aria-hidden="true" />
+                {t("Transmissions")}
+              </button>
+              <button
+                type="button"
+                onClick={() => setBench("sequencer")}
+                aria-pressed={bench === "sequencer"}
+                data-testid="lc-bench-sequencer"
+                className={cn(
+                  "focus-glow flex h-7 items-center gap-1.5 rounded-full px-3 text-[12px] transition-colors duration-300",
+                  bench === "sequencer"
+                    ? "font-semibold"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+                style={
+                  bench === "sequencer"
+                    ? {
+                        backgroundColor:
+                          "color-mix(in srgb, var(--scope-a,var(--lp-gold)) 12%, transparent)",
+                        color: "var(--scope-a,var(--lp-gold))",
+                        boxShadow:
+                          "inset 0 0 0 1px color-mix(in srgb, var(--scope-a,var(--lp-gold)) 35%, transparent)",
+                      }
+                    : undefined
+                }
+              >
+                <Music4 className="size-3.5" aria-hidden="true" />
+                {t("Sequencer")}
+              </button>
+            </div>
+          </div>
+
+          {bench === "sequencer" ? (
+            /* THE LOCAL INSTRUMENT — mounts only while chosen; the
+               bridge rides at the room's own corner with the pattern
+               read at ask-time from the visitor's saved pattern */
+            <div className="relative mt-5">
+              <MusicSequencer />
+              <MirrorBridge
+                workspaceKey="lightcodes"
+                buildContext={() => {
+                  try {
+                    const raw = window.localStorage.getItem("mirror:music-pattern");
+                    if (!raw) return null;
+                    const p = JSON.parse(raw) as {
+                      tempo?: number;
+                      pattern?: boolean[][];
+                      mutes?: boolean[];
+                    };
+                    if (!p?.pattern) return null;
+                    const names = ["Kick", "Hush", "Breath", "Tone"];
+                    const lines = p.pattern
+                      .map((row, i) => {
+                        if (p.mutes?.[i]) return `${names[i]}: muted`;
+                        const on = row
+                          .map((v, s) => (v ? s + 1 : 0))
+                          .filter(Boolean)
+                          .join(",");
+                        return on ? `${names[i]}: steps ${on}` : null;
+                      })
+                      .filter(Boolean);
+                    if (lines.length === 0) return null;
+                    return `${t("Tempo")}: ${p.tempo ?? "?"} bpm\n${lines.join("\n")}`;
+                  } catch {
+                    return null;
+                  }
+                }}
+              />
+            </div>
+          ) : (
+          <>
 
           {/* intention */}
           <div className="mt-5">
@@ -994,6 +1109,8 @@ export function LightCodesView() {
                 ))}
               </div>
             </section>
+          )}
+          </>
           )}
         </div>
       </div>

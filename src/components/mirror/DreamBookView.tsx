@@ -16,12 +16,14 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowLeft,
   AudioLines,
+  BookDown,
   BookOpenText,
   Check,
   ChevronsUpDown,
   Copy,
   Download,
   Feather,
+  Focus,
   History,
   LoaderCircle,
   MoonStar,
@@ -54,6 +56,10 @@ import {
 } from "@/lib/browser-voice";
 import { BOOK_DEPTHS, READERS, TALES, VOLUMES } from "@/lib/data/book-options";
 import { dedupeChapters } from "@/lib/book-text";
+import { bookToText } from "@/lib/book-text";
+import { formatArchiveNumber } from "@/lib/i18n/core";
+import { registerWorkspaceCleanup } from "@/lib/mirror/workspace-lifecycle";
+import { MirrorBridge } from "./living/MirrorBridge";
 import {
   forgetVolume,
   keepVolume,
@@ -227,6 +233,9 @@ export function DreamBookView() {
   const cancelRevealRef = useRef(false);
   /* the whole-book reading — every woven page in one continuous scroll */
   const [wholeMode, setWholeMode] = useState(false);
+  /* THE FOCUS READING — the column widens and the frame quiets: the
+     visitor's own toggle, a layout simplification, never an overlay */
+  const [focusRead, setFocusRead] = useState(false);
   /* the loom's private honest audit — carried from the close and kept
      OUT of the book unless the reader asks to see it */
   const [audit, setAudit] = useState<BookAudit | null>(null);
@@ -255,6 +264,22 @@ export function DreamBookView() {
      can never be dragged back by its own late voice (the glitch's
      root — a race between the wire and the reader's finger). */
   const narrSeqRef = useRef(0);
+  /* THE LIFECYCLE HAND — when the visitor turns this page away (or the
+     tab hides), the narrator's voice is laid down; the work itself is
+     never touched, only the device's breath is released. */
+  useEffect(() => {
+    const un = registerWorkspaceCleanup("dreambook", () => {
+      narrRef.current.audio?.pause();
+    });
+    const onHide = () => {
+      if (document.hidden) narrRef.current.audio?.pause();
+    };
+    document.addEventListener("visibilitychange", onHide);
+    return () => {
+      un();
+      document.removeEventListener("visibilitychange", onHide);
+    };
+  }, []);
   /* THE CHANNELING DOT'S OWN MEMORY — where the reader stood before
      the dot's jump, so the same small hand carries them back */
   const dotReturnRef = useRef(0);
@@ -1119,6 +1144,74 @@ export function DreamBookView() {
     }
   }, [binding, meta, t]);
 
+  /* THE QUIET COUNT — the book's own weight in words, said honestly */
+  const bookWords = useMemo(() => {
+    if (pages.length === 0) return 0;
+    return dedupeChapters(pages).reduce(
+      (acc, p) => acc + pageText(p).split(/\s+/).filter(Boolean).length,
+      0
+    );
+  }, [pages]);
+
+  /* THE LOOSE-LEAF PRESS — the whole book as clean Markdown: title,
+     front matter, every page its own section — the visitor's file,
+     theirs to keep and open anywhere */
+  const exportMarkdown = useCallback(() => {
+    if (!meta || pages.length === 0) return;
+    try {
+      const bound = dedupeChapters(pages);
+      const lines: string[] = [];
+      lines.push(`# ${meta.title}`);
+      if (meta.subtitle) lines.push(`*${meta.subtitle}*`);
+      const front = [meta.sigil, meta.axiom, meta.dedication]
+        .filter((s): s is string => !!s && !!s.trim());
+      for (const f of front) lines.push("> " + f.replace(/\n/g, "\n> "));
+      for (const p of bound) {
+        lines.push("");
+        lines.push("---");
+        lines.push("");
+        if (p.part) lines.push(`## ${p.part}`);
+        if (p.chapter) lines.push(`### ${p.chapter}`);
+        lines.push(p.paragraphs.join("\n\n"));
+      }
+      const slug =
+        meta.title
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-+|-+$/g, "") || "book";
+      const blob = new Blob([lines.join("\n")], {
+        type: "text/markdown;charset=utf-8",
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${slug}.md`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 400);
+      toast.success(t("The book is yours — the Markdown file is yours"));
+    } catch {
+      toast.error(t("The loose-leaf press needs a breath — try again"));
+    }
+  }, [meta, pages, t]);
+
+  /* THE MIRROR BRIDGE — the work at hand: the book's own opening, so
+     the advice lands on THIS volume (only what is needed travels) */
+  const buildBridgeContext = useCallback(() => {
+    if (!meta || pages.length === 0) return null;
+    const text = bookToText(
+      meta,
+      pages.map((p) => ({
+        n: p.n,
+        ...(p.part ? { part: p.part } : {}),
+        ...(p.chapter ? { chapter: p.chapter } : {}),
+        paragraphs: p.paragraphs,
+      }))
+    );
+    return text.slice(0, 600);
+  }, [meta, pages]);
+
   /* ---------------- the narrator ---------------- */
 
   const narrate = useCallback(async (auto = false) => {
@@ -1942,6 +2035,44 @@ export function DreamBookView() {
               <Download className="size-4" aria-hidden="true" />
             )}
           </button>
+          {/* THE LOOSE-LEAF PRESS — the whole book as one Markdown file */}
+          <button
+            type="button"
+            onClick={exportMarkdown}
+            disabled={pages.length === 0}
+            aria-label={t("Export the book as Markdown")}
+            title={t("Export the book as Markdown")}
+            data-testid="dream-export"
+            className={cn(inkIconBtn, "shrink-0 disabled:opacity-35")}
+          >
+            <BookDown className="size-4" aria-hidden="true" />
+          </button>
+          {/* THE FOCUS READING — the column widens, the frame quiets */}
+          <button
+            type="button"
+            onClick={() => setFocusRead((v) => !v)}
+            aria-pressed={focusRead}
+            aria-label={t("Focus reading")}
+            title={t("Focus reading")}
+            data-testid="dream-focus"
+            className={cn(
+              inkIconBtn,
+              "shrink-0",
+              focusRead &&
+                "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_50%,transparent)] text-[color:var(--scope-a,var(--gd))]"
+            )}
+          >
+            <Focus className="size-4" aria-hidden="true" />
+          </button>
+          {/* THE QUIET COUNT — the volume's own weight, honestly said */}
+          {pages.length > 0 && (
+            <span
+              className="mono-label hidden shrink-0 whitespace-nowrap text-[9.5px] uppercase tracking-[0.14em] text-muted-foreground/70 md:inline"
+              data-testid="dream-wordcount"
+            >
+              {formatArchiveNumber(bookWords, language)} {t("words")} · {formatArchiveNumber(pages.length, language)} {t("pages")}
+            </span>
+          )}
           <button
             type="button"
             onClick={() => void narrate()}
@@ -2058,7 +2189,7 @@ export function DreamBookView() {
         {wholeMode ? (
           /* THE WHOLE BOOK — the title leaf, every woven page and the
              seal of closing in one quiet column */
-          <div className="mx-auto w-full max-w-[700px] px-3 pb-24 pt-3 sm:px-8">
+          <div className={cn("mx-auto w-full px-3 pb-24 pt-3 sm:px-8", focusRead ? "max-w-[920px]" : "max-w-[700px]")}>
             <div
               className="dream-page dream-page-single mb-7 flex flex-col items-center px-6 py-12 text-center sm:px-12"
               data-testid="dream-whole-title"
@@ -2136,8 +2267,8 @@ export function DreamBookView() {
             </div>
           </div>
         ) : (
-          <div className="mx-auto flex h-full w-full max-w-[760px] items-stretch justify-center px-3 pb-7 pt-3 sm:px-8 sm:pb-9">
-          <div className="relative flex min-h-full w-full max-w-[640px] flex-col">
+          <div className={cn("mx-auto flex h-full w-full items-stretch justify-center px-3 pb-7 pt-3 sm:px-8 sm:pb-9", focusRead ? "max-w-[1100px]" : "max-w-[760px]")}>
+          <div className={cn("relative flex min-h-full w-full flex-col", focusRead ? "max-w-[880px]" : "max-w-[640px]")}>
             {/* THE CHANNELING DOT — one small light at the top of the
                 first page. Amber and breathing while the loom channels
                 the coming seven pages; green when they stand ready.
@@ -2467,6 +2598,21 @@ export function DreamBookView() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* THE MIRROR BRIDGE — the reading stage's own advisor: it sees
+          the volume at hand and advises; only the reader's own hand
+          carries anything onward. It rests while the frame is already
+          full (whole-book mode, immersed reading, small screens). */}
+      {stage === "reading" &&
+        !wholeMode &&
+        !immersed &&
+        !!meta &&
+        pages.length > 0 && (
+          <MirrorBridge
+            workspaceKey="dreambook"
+            buildContext={buildBridgeContext}
+          />
+        )}
 
       {/* the progress thread + the slide buttons (they rest while the
           reading is immersed — the page alone fills the screen) */}

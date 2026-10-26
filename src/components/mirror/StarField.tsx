@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useTheme } from "next-themes";
+import { usePerfMode } from "@/lib/perf-mode";
 
 interface Star {
   x: number;
@@ -27,6 +28,11 @@ interface Star {
 export function StarField() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { resolvedTheme } = useTheme();
+  /* THE ADAPTIVE SKY — the twinkle rides only on the house's high
+     visual tier: balanced and eco devices (and reduced-motion guests)
+     get the same still sky drawn once — no loop at all, no warm
+     breath from the heavens. */
+  const tier = usePerfMode((s) => s.tier);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -35,6 +41,7 @@ export function StarField() {
     if (!ctx) return;
 
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const animated = !reduced && tier === "high";
     const FRAME_REST = 130; /* ~8fps — the twinkle never needs more */
     let stars: Star[] = [];
     let raf = 0;
@@ -118,7 +125,7 @@ export function StarField() {
         !raf &&
         running &&
         !document.hidden &&
-        !reduced &&
+        animated &&
         resolvedTheme === "dark"
       ) {
         raf = requestAnimationFrame(loop);
@@ -128,10 +135,10 @@ export function StarField() {
     build();
 
     if (resolvedTheme === "dark") {
-      if (reduced) {
-        drawStatic();
-      } else {
+      if (animated) {
         start();
+      } else {
+        drawStatic();
       }
     } else {
       ctx.clearRect(0, 0, w, h);
@@ -143,7 +150,7 @@ export function StarField() {
     };
     const onResize = () => {
       build();
-      if (resolvedTheme === "dark" && reduced) drawStatic();
+      if (resolvedTheme === "dark" && !animated) drawStatic();
     };
     window.addEventListener("resize", onResize);
     document.addEventListener("visibilitychange", onVisibility);
@@ -154,7 +161,7 @@ export function StarField() {
       window.removeEventListener("resize", onResize);
       document.removeEventListener("visibilitychange", onVisibility);
     };
-  }, [resolvedTheme]);
+  }, [resolvedTheme, tier]);
 
   return (
     <canvas
