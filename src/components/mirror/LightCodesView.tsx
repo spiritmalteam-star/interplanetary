@@ -529,6 +529,10 @@ export function LightCodesView() {
   const [phraseIdx, setPhraseIdx] = useState(0);
   /* what the transmission carries — one image, up to three documents */
   const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
+  const lcLength = useMirror((s) => s.lcLength);
+  const setLcLength = useMirror((s) => s.setLcLength);
+  const lcNotice = useMirror((s) => s.lcNotice);
+  const playLc = useMirror((s) => s.playLc);
   /* THE TWO BENCHES — the chamber's own instruments: the standing
      transmissions (the house's generated sounds) and the local
      sequencer (a genuine instrument that plays on the visitor's own
@@ -896,7 +900,9 @@ export function LightCodesView() {
                   <p className="mt-2 text-[14px] italic text-muted-foreground">
                     {lcStatus === "interpreting"
                       ? t(RENDERING_PHRASES[0])
-                      : t("The sound is being woven — hold still…")}
+                      : lcLength === "full"
+                        ? t("The full song is being woven — verses finding their chorus…")
+                        : t("The sound is being woven — hold still…")}
                   </p>
                 </motion.div>
               )}
@@ -922,6 +928,18 @@ export function LightCodesView() {
               )}
             </AnimatePresence>
           </div>
+
+          {/* a gentle word for the shelf — a sound the device no longer holds */}
+          {lcNotice && lcStatus !== "error" && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="mt-4 rounded-xl border hairline bg-[color-mix(in_srgb,var(--lp-gold)_5%,var(--glass-bg-soft))] px-4 py-3 text-center"
+              data-testid="lc-notice"
+            >
+              <p className="text-[13.5px] leading-relaxed text-muted-foreground">{lcNotice}</p>
+            </motion.div>
+          )}
 
           {/* the Mirror's written interpretation — before the sound */}
           {lcStatus !== "ready" && interpretation && (interpretation.notes || interpretation.title) && (
@@ -971,10 +989,9 @@ export function LightCodesView() {
                   >
                     <button
                       type="button"
-                      onClick={() =>
-                        useMirror.setState({ lcTrack: track, lcStatus: "ready" })
-                      }
+                      onClick={() => void playLc(track)}
                       aria-label={`${t("Play")} ${track.title}`}
+                      data-testid={`lc-history-play-${track.id}`}
                       className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
                     >
                       <Play className="size-3 translate-x-[1px]" aria-hidden="true" />
@@ -1044,6 +1061,61 @@ export function LightCodesView() {
               accentVar="var(--scope-a,var(--lp-gold))"
               testId="lc-attachments"
             />
+            {/* THE TWO LENGTHS — a 30-second preview to explore, the
+                full song when the transmission wants to stand whole */}
+            <div
+              role="group"
+              aria-label={t("The transmission's length")}
+              className="flex w-fit items-center gap-0.5 rounded-full border hairline p-0.5"
+              data-testid="lc-length"
+            >
+              <button
+                type="button"
+                onClick={() => setLcLength("preview")}
+                aria-pressed={lcLength === "preview"}
+                data-testid="lc-length-preview"
+                className={cn(
+                  "focus-glow flex h-6 items-center rounded-full px-2.5 text-[11.5px] transition-colors duration-300",
+                  lcLength === "preview"
+                    ? "font-semibold"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+                style={
+                  lcLength === "preview"
+                    ? {
+                        backgroundColor:
+                          "color-mix(in srgb, var(--scope-a,var(--lp-gold)) 13%, transparent)",
+                        color: "var(--scope-a,var(--lp-gold))",
+                      }
+                    : undefined
+                }
+              >
+                {t("Preview · 30s")}
+              </button>
+              <button
+                type="button"
+                onClick={() => setLcLength("full")}
+                aria-pressed={lcLength === "full"}
+                data-testid="lc-length-full"
+                className={cn(
+                  "focus-glow flex h-6 items-center rounded-full px-2.5 text-[11.5px] transition-colors duration-300",
+                  lcLength === "full"
+                    ? "font-semibold"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+                style={
+                  lcLength === "full"
+                    ? {
+                        backgroundColor:
+                          "color-mix(in srgb, var(--scope-a,var(--lp-gold)) 13%, transparent)",
+                        color: "var(--scope-a,var(--lp-gold))",
+                      }
+                    : undefined
+                }
+              >
+                {t("Full song")}
+              </button>
+            </div>
             <div className="flex items-center gap-2">
               <input
                 type="text"

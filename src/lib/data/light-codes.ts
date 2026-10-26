@@ -3,8 +3,10 @@
 /*                                                                      */
 /*  The Mirror Entity is the interpretation layer: it translates        */
 /*  intention, mood and symbolism into a musical direction. The         */
-/*  generation engine (Suno) renders that direction as sound — its      */
-/*  name stays behind the veil; the Mirror is the visible voice.        */
+/*  generation engine renders that direction as sound — its name        */
+/*  stays behind the veil; the Mirror is the visible voice. (Behind     */
+/*  that veil today: Google DeepMind's Lyria, through the official      */
+/*  Gemini API — the keeper's GEMINI_API_KEY opens its door.)           */
 /*                                                                      */
 /*  The language of the chamber: calming, meditative, reflective,       */
 /*  grounding, sleep-oriented, focus-oriented, emotional reset,         */
@@ -218,5 +220,9 @@ export interface LcTrack {
   lyrics?: string | null;
   /** The Mirror's interpretation — why it sounds the way it sounds. */
   notes?: string;
+  /** The song's length: a 30-second preview or the full composition. */
+  length?: "preview" | "full";
+  /** The engine's own words about the song's structure (revealed on request). */
+  structure?: string;
   createdAt: number;
 }

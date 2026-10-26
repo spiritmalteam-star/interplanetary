@@ -67,6 +67,12 @@ import type {
   LightCodesMode,
 } from "@/lib/data/light-codes";
 import { LC_DEFAULT_SHAPE } from "@/lib/data/light-codes";
+import {
+  base64ToBytes,
+  lcAudioDelete,
+  lcAudioGet,
+  lcAudioSave,
+} from "@/lib/client/lc-audio";
 import { journeyDepth } from "@/lib/learning-branches";
 
 export type ModalState =
@@ -746,10 +752,14 @@ interface MirrorState {
   lcIntention: string;
   lcUserLyrics: string;
   lcShape: LcShape;
+  /** The weave's length: the 30-second preview or the full song. */
+  lcLength: "preview" | "full";
   lcStatus: "idle" | "interpreting" | "polling" | "ready" | "error";
   lcInterpretation: LcTrack | null; // the Mirror's written direction
   lcTrack: LcTrack | null; // the finished, playable transmission
   lcError: string | null;
+  /** A gentle word for the shelf — a sound the device no longer holds. */
+  lcNotice: string | null;
   lcHistory: LcTrack[];
   openLightCodes: (prefill?: LcPrefill, opts?: { bare?: boolean }) => void;
   exitLightCodes: () => void;
@@ -764,14 +774,21 @@ interface MirrorState {
   setLcIntention: (v: string) => void;
   setLcUserLyrics: (v: string) => void;
   setLcShape: (shape: Partial<LcShape>) => void;
-  /** Mirror translation → generation → poll → player. When called
-      with interpretOnly, only the Mirror's interpretation is asked. */
+  setLcLength: (length: "preview" | "full") => void;
+  /** Mirror translation → the weave → the player. Two doors: the
+      interpretation lands first (visible while the sound is woven),
+      then the engine renders the sound. When called with interpretOnly,
+      only the Mirror's interpretation is asked. */
   generateLightCode: (opts?: {
     interpretOnly?: boolean;
     context?: string;
     intention?: string;
     attachments?: ChatAttachment[];
   }) => Promise<void>;
+  /** Play a kept transmission — recalls the sound from the visitor's
+      own device; when the device no longer holds it, a gentle notice
+      stands in its place. */
+  playLc: (track: LcTrack) => Promise<void>;
   reshapeLc: (track: LcTrack) => void;
   clearLcPlayer: () => void;
   forgetLc: (id: string) => void;
@@ -1181,10 +1198,12 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   lcIntention: "",
   lcUserLyrics: "",
   lcShape: { ...LC_DEFAULT_SHAPE },
+  lcLength: "preview" as "preview" | "full",
   lcStatus: "idle" as "idle" | "interpreting" | "polling" | "ready" | "error",
   lcInterpretation: null,
   lcTrack: null,
   lcError: null,
+  lcNotice: null,
   lcHistory: [],
 
   me: null,
@@ -1465,12 +1484,19 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   setLcIntention: (v) => set({ lcIntention: v }),
   setLcUserLyrics: (v) => set({ lcUserLyrics: v }),
   setLcShape: (shape) => set((s) => ({ lcShape: { ...s.lcShape, ...shape } })),
+  setLcLength: (length) => set({ lcLength: length }),
   generateLightCode: async (opts) => {
     const s = get();
     if (s.lcStatus === "interpreting" || s.lcStatus === "polling") return;
     const intention = (opts?.intention ?? s.lcIntention).trim();
-    set({ lcStatus: "interpreting", lcError: null });
+    /* the visitor's image rides both doors: read by the Mirror first,
+       handed to the engine's own input in the weave */
+    const carriedImage =
+      opts?.attachments?.find((a) => a.kind === "image" && a.dataUrl)?.dataUrl ??
+      null;
+    set({ lcStatus: "interpreting", lcError: null, lcNotice: null });
     try {
+      /* THE FIRST DOOR — the Mirror's written direction */
       const res = await fetch("/api/light-codes/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1486,29 +1512,12 @@ export const useMirror = create<MirrorState>()((set, get) => ({
           instrumental: s.lcShape.voice === "None",
           language: s.language,
           context: opts?.context,
-          interpretOnly: opts?.interpretOnly === true,
+          interpretOnly: true,
           ...(opts?.attachments ? attachmentsToPayload(opts.attachments) : {}),
         }),
       });
       const data = await res.json().catch(() => null);
       if (!res.ok) {
-        /* even when the sound engine's key is missing, the Mirror's
-           interpretation has already landed — keep it visible */
-        if (data && (data.title || data.notes || data.style)) {
-          set({
-            lcInterpretation: {
-              id: "interpretation",
-              title: String(data.title ?? ""),
-              mode: s.lcMode,
-              intention,
-              audioUrl: "",
-              style: data.style ?? undefined,
-              lyrics: data.lyrics ?? null,
-              notes: data.notes ?? undefined,
-              createdAt: Date.now(),
-            },
-          });
-        }
         throw new Error(
           (data && data.error) ||
             "The chamber rests a moment. Breathe, then ask for the transmission again."
@@ -1530,61 +1539,88 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         set({ lcStatus: "idle" });
         return;
       }
-      if (data.audioUrl) {
-        /* an instant rendering — straight to the player */
-        const track: LcTrack = {
-          ...interpretation,
-          id: String(data.id ?? `lc-${Date.now()}`),
-          audioUrl: String(data.audioUrl),
-          duration: typeof data.duration === "number" ? data.duration : undefined,
-          engineId: data.engineId ? String(data.engineId) : undefined,
-          createdAt: Date.now(),
-        };
-        const history = [track, ...get().lcHistory.filter((t) => t.id !== track.id)].slice(0, 40);
-        try {
-          localStorage.setItem("mirror-lc-history", JSON.stringify(history));
-        } catch {
-          /* storage unavailable */
-        }
-        set({ lcTrack: track, lcStatus: "ready", lcHistory: history });
-        return;
-      }
-      const taskId = data.taskId ? String(data.taskId) : null;
-      if (!taskId) throw new Error((data && data.error) || "The chamber answered without a sound. Try again.");
+
+      /* THE SECOND DOOR — the weave. The engine renders the Mirror's
+         brief as sound; nothing is claimed until playable audio lands. */
       set({ lcStatus: "polling" });
-      /* the transmission renders — the chamber listens for its arrival */
-      const started = Date.now();
-      for (;;) {
-        await new Promise((r) => setTimeout(r, 5000));
-        if (get().lcStatus !== "polling") return; // the visitor left or reset
-        if (Date.now() - started > 5 * 60 * 1000) {
-          throw new Error("The transmission is taking longer than the chamber can wait. Try again in a breath.");
-        }
-        const poll = await fetch(`/api/light-codes/status?taskId=${encodeURIComponent(taskId)}`);
-        const pdata = await poll.json().catch(() => null);
-        if (!poll.ok || !pdata) continue;
-        if (pdata.status === "ready" && pdata.audioUrl) {
-          const track: LcTrack = {
-            ...interpretation,
-            id: String(pdata.id ?? `lc-${Date.now()}`),
-            audioUrl: String(pdata.audioUrl),
-            duration: typeof pdata.duration === "number" ? pdata.duration : undefined,
-            engineId: taskId,
-            createdAt: Date.now(),
-          };
-          const history = [track, ...get().lcHistory.filter((t) => t.id !== track.id)].slice(0, 40);
-          try {
-            localStorage.setItem("mirror-lc-history", JSON.stringify(history));
-          } catch {
-            /* storage unavailable */
+      const weave = await fetch("/api/light-codes/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mode: s.lcMode,
+          intention,
+          civilization: s.lcCivilization ?? undefined,
+          shape: s.lcShape,
+          userLyrics:
+            s.lcShape.lyricsMode === "USER WRITES" && s.lcUserLyrics.trim()
+              ? s.lcUserLyrics.trim()
+              : undefined,
+          instrumental: s.lcShape.voice === "None",
+          language: s.language,
+          compose: true,
+          length: s.lcLength,
+          interp: {
+            title: interpretation.title,
+            style: interpretation.style,
+            lyrics: interpretation.lyrics,
+            notes: interpretation.notes,
+          },
+          ...(carriedImage ? { imageDataUrl: carriedImage } : {}),
+        }),
+      });
+      const wdata = (await weave.json().catch(() => null)) as
+        | {
+            audio?: string;
+            mimeType?: string;
+            structure?: string;
+            engine?: string;
+            error?: string;
+            code?: string;
           }
-          set({ lcTrack: track, lcStatus: "ready", lcHistory: history });
-          return;
-        }
-        if (pdata.status === "error") {
-          throw new Error(pdata.error || "The sound engine fell silent mid-render. Try again.");
-        }
+        | null;
+      if (!weave.ok) {
+        throw new Error(
+          (wdata && wdata.error) ||
+            "The chamber rests a moment. Breathe, then ask for the transmission again."
+        );
       }
+      const b64 = typeof wdata?.audio === "string" ? wdata.audio : "";
+      if (!b64) {
+        throw new Error(
+          (wdata && wdata.error) ||
+            "The chamber answered without a sound. Try again."
+        );
+      }
+      const bytes = base64ToBytes(b64);
+      const mime = String(wdata?.mimeType ?? "audio/mpeg");
+      const id = `lc-${Date.now()}`;
+      const audioUrl = URL.createObjectURL(new Blob([bytes], { type: mime }));
+      /* the sound rests on the visitor's own device (the keeping law) */
+      void lcAudioSave(id, bytes, mime);
+      const track: LcTrack = {
+        ...interpretation,
+        id,
+        audioUrl,
+        length: s.lcLength === "full" ? "full" : "preview",
+        structure:
+          typeof wdata?.structure === "string" && wdata.structure
+            ? wdata.structure
+            : undefined,
+        engineId: wdata?.engine ? String(wdata.engine) : undefined,
+        createdAt: Date.now(),
+      };
+      /* the shelf remembers the shape, never the blob — the sound lives
+         in the visitor's own IndexedDB and is recalled on demand */
+      const history = [
+        { ...track, audioUrl: "" },
+        ...get().lcHistory.filter((t) => t.id !== track.id),
+      ].slice(0, 40);
+      try {
+        localStorage.setItem("mirror-lc-history", JSON.stringify(history));
+      } catch {
+        /* storage unavailable */
+      }
+      set({ lcTrack: track, lcStatus: "ready", lcHistory: history });
     } catch (err) {
       set({
         lcStatus: "error",
@@ -1592,6 +1628,27 @@ export const useMirror = create<MirrorState>()((set, get) => ({
           err instanceof Error
             ? err.message
             : "The chamber rests a moment. Breathe, then ask again.",
+      });
+    }
+  },
+  playLc: async (track) => {
+    const stored = await lcAudioGet(track.id);
+    if (stored) {
+      const audioUrl = URL.createObjectURL(
+        new Blob([stored.bytes], { type: stored.mime })
+      );
+      set({
+        lcTrack: { ...track, audioUrl },
+        lcStatus: "ready",
+        lcError: null,
+        lcNotice: null,
+      });
+    } else {
+      set({
+        lcTrack: null,
+        lcStatus: "idle",
+        lcNotice:
+          "This transmission's sound rests with the visit that wove it — ask the Mirror to weave it again.",
       });
     }
   },
@@ -1607,6 +1664,8 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   clearLcPlayer: () => set({ lcTrack: null, lcStatus: "idle" }),
   forgetLc: (id) =>
     set((s) => {
+      /* the visitor's own hand forgets — the sound leaves the device too */
+      void lcAudioDelete(id);
       const history = s.lcHistory.filter((t) => t.id !== id);
       try {
         localStorage.setItem("mirror-lc-history", JSON.stringify(history));
