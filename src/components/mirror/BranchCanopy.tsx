@@ -4204,6 +4204,18 @@ export function BranchCanopy({
       useMirror.getState().takeFloorSeed();
     }
   }, [floorSeed]);
+  /* THE BRIDGE'S OWN CARRY — a workspace's advisor may hand its advice
+     to the floor: the newest carried draft wears the whisper line and
+     the stamp is spent at once (the same law as the seed: taken once,
+     the draft wears it, the carry is spent). The Mirror advises; the
+     visitor's own hand sends it. */
+  const bridgeCarry = useMirror((s) => s.bridgeDraft);
+  useEffect(() => {
+    if (bridgeCarry) {
+      setAskDraft(bridgeCarry.text);
+      useMirror.getState().consumeBridgeDraft();
+    }
+  }, [bridgeCarry]);
   /* THE FLOOR'S OWN CARGO — the paperclip and the camera's eye for the
      realm's own whisper line (one image, three documents) */
   const [askAtts, setAskAtts] = useState<ChatAttachment[]>([]);

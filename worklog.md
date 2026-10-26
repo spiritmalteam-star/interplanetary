@@ -5788,3 +5788,24 @@ Work Log:
 - VERIFICATION: tsc 24 pre-existing (0 in src/components|app|lib/mirror), lint 2 pre-existing (LandingGate), runtime deps 78 → 52, dev server restarted post-swap and serving 200.
 
 Stage Summary: The book rides lighter by 26 packages and 7 dead shims; the sky and the atmosphere breathe only on devices that asked for high; hidden tabs roll nothing.
+
+---
+Task ID: living-book-verify (final)
+Agent: Z.ai Code (main orchestrator)
+Task: Browser-verified end-to-end acceptance of the Living Book Engine + sq translations + ship.
+
+Work Log:
+- BROWSER (agent-browser, desktop 1280×800 + mobile 390×844, zero page errors, zero console warnings):
+  - Crown: Create/Scopes/Profile + corner fullscreen; no fold chevron; no About Us anywhere.
+  - Scopes panel: The Mirror first (HERE), five fields, Quantum row's laboratory hand present; picking Quantum paints --scope-a #a78bfa across the chamber; standing scope + its conversation restore across reload.
+  - QUANTUM LAB (genuine physics verified): H⊗H → exactly 25%×4 states; 200 shots → 52/56/48/44; H+ CNOT (placed on separated ticks — the harness race was mine, not the engine's) → PERFECT Bell state |00⟩ 50% / |11⟩ 50%; Measure-once collapse; bench restored from localStorage across a full reload; fits mobile (364×526, no horizontal overflow).
+  - MIRROR BRIDGE: opened on the lab, ask carried the circuit context, the quantum-voiced answer named the actual Hadamard/CNOT work; Carry-to-the-floor laid the advice into the floor's whisper line (realm-ask-input — the first carry attempt exposed that the pickup lived only in ZoomReplyForm; added the floor-composer pickup mirroring the floorSeed law: taken once, worn, spent).
+  - MUSIC: bench switch verified; sequencer 64 cells; pattern set; play→Stop state with tempo 92; Save to Library (sector invent, "Pattern — 92 bpm"); close + reopen → 10/10 cells restored from mirror:music-pattern.
+  - CREATIONS' DOOR: profile library rows now carry profilepage-library-row and open the Library room on the work's own shelf (invent chip active after clicking the pattern row); the quantum experiment and the pattern appear shelved.
+  - Screenshots: .zscripts/verify-livingbook-{final-desktop,qlab-desktop,sequencer-desktop,mobile,mobile-qlab}.png
+- i18n: ~50 new sq translations for the Living Book's new hands (Quantum Lab, bridge, sequencer, focus/export); five duplicate-key collisions with existing sq entries found by tsc (TS1117) and removed (the standing entries win); final count back to the 24 baseline.
+- INFRA LESSONS baked in: (1) expected-head must be exactly ONE clean sha — commit 803c4b6's concatenated double-sha caused the heal loop that wiped the first implementation pass; (2) checkpoint commits at every stage (4c90536 core → 8fbcb62 instruments → this ship commit); (3) the dev.sh launcher can be SIGTERM'd by the sandbox right after boot — always re-probe :3000 and relaunch if dead.
+- FINAL STATE: tsc 24 pre-existing (0 in src/components|app|lib/mirror) · lint 2 pre-existing (LandingGate) · runtime deps 52 (78→52, 26 removed, 7 dead shims deleted) · server 200 · working tree committed and pushed.
+
+Stage Summary:
+- The Living Book Engine ships: one persistent chat frame (the cover), nine lazy pages (the rooms) named honestly by a typed registry with capabilities/resource profiles, a lifecycle manager that lays each page's device hands down on turn, a Universal Mirror Bridge advising inside the lab and the studio with typed context and carry-to-the-floor, a genuinely native Quantum Laboratory (true unitary laws, verified Bell states), a real four-voice sequencer in Music, export/focus/word-count in the Book, one source of truth for the five fields' colors/voices/shelves, and 26 dead packages gone.
