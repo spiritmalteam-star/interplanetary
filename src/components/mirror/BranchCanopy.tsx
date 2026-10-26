@@ -54,6 +54,7 @@ import {
   Sprout,
   Sun,
   TreeDeciduous,
+  UserRound,
   Volume2,
   VolumeX,
   X,
@@ -1691,6 +1692,36 @@ function seededShuffle<T>(items: T[], seed: number): T[] {
     out[j] = tmp;
   }
   return out;
+}
+
+/* ------------- the visitor's own mark — the crown's icon -------------
+   The profile icon stands at the crown's very beginning, BEFORE the
+   light's toggle — an icon (never a pill), the same quiet circle as
+   the toggle itself, in both of the chat's gears (desktop and mobile
+   alike). One touch opens the visitor's own room within the frame. */
+
+function CrownProfileIcon({ testIdPrefix }: { testIdPrefix: string }) {
+  const t = useT();
+  const openProfilePage = useMirror((s) => s.openProfilePage);
+  return (
+    <button
+      type="button"
+      onClick={openProfilePage}
+      aria-haspopup="dialog"
+      aria-label={t("Profile")}
+      title={t("Profile")}
+      data-testid={`${testIdPrefix}-profile-icon`}
+      className="focus-glow flex size-7 items-center justify-center rounded-full border text-muted-foreground transition-all duration-300 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)] hover:text-foreground"
+      style={{
+        borderColor:
+          "color-mix(in srgb, var(--scope-a,var(--gd)) 34%, transparent)",
+        backgroundColor:
+          "color-mix(in srgb, var(--scope-a,var(--gd)) 8%, var(--background))",
+      }}
+    >
+      <UserRound className="size-3.5" aria-hidden="true" />
+    </button>
+  );
 }
 
 /* ------------- the crown's own light — a quiet hand ------------------
@@ -4836,6 +4867,12 @@ export function BranchCanopy({
           </div>
           </>) }
           </div>
+
+          {/* THE VISITOR'S OWN MARK — the profile icon stands at the
+              crown's very BEGINNING, before the light's toggle: an icon
+              (never a pill), the same in both gears, opening the
+              visitor's own room within the frame. */}
+          {realm && <CrownProfileIcon testIdPrefix={testIdPrefix} />}
 
           {/* THE LIGHT'S OWN HAND — the crown's quiet sun/moon: the
               mark left the top bar, the toggle stayed */}

@@ -3,13 +3,11 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  ArrowLeft,
   BookOpen,
   Check,
   Copy,
   Feather,
   LoaderCircle,
-  Orbit,
   RotateCcw,
   Share2,
   Square,
@@ -53,16 +51,15 @@ interface AkashicResponse extends AkashicRecord {
 
 /**
  * AkashicView — the reading room of records, reduced to the letter
- * itself. No top bar, no input bar: one sheet of paper on the desk.
- * A small inkwell floats at the foot of the room — press it to tell
- * the Librarian what you wish to read about (or leave it empty and
- * receive unasked). The way back lives in the letter's own top-right
- * corner and vanishes the moment you scroll down to read. No two
- * records ever open the same way — the openings the visitor has
- * already read are remembered across visits and never repeated.
+ * itself. No top bar: one sheet of paper on the desk. The ask bar
+ * floats at the foot of the room — write what you wish to read about
+ * and press send; press send with nothing set down and the Library
+ * chooses unasked. THE ONE BACK (the workplace header's own hand)
+ * returns to the chat, the same for every room. No two records ever
+ * open the same way — the openings the visitor has already read are
+ * remembered across visits and never repeated.
  */
 export function AkashicView() {
-  const exitAkashic = useMirror((s) => s.exitAkashic);
   const language = useMirror((s) => s.language);
   const t = useT();
 
@@ -456,11 +453,18 @@ export function AkashicView() {
 
   const send = (e: FormEvent) => {
     e.preventDefault();
+    /* the empty send is the unasked door now — the saying beneath the
+       input has rested, but the Library still receives unasked when
+       the visitor presses send with nothing set down */
+    if (!draft.trim() && attachments.length === 0) {
+      if (!hasPendingAttachments(attachments)) unasked();
+      return;
+    }
     sendText(draft);
   };
 
   /* receive unasked — the Library chooses, no words set down */
-  const receiveUnasked = () => {
+  const unasked = () => {
     if (seekingRef.current) return;
     setDraft("");
     setAttachments([]);
@@ -832,39 +836,16 @@ export function AkashicView() {
         </div>
       </div>
 
-      {/* ---------- the way back — the letter's own right corner,
-                     fading the moment you scroll down to read ---------- */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-30">
-        <div className="mx-auto flex w-full max-w-[780px] justify-end px-3 pt-[calc(1.25rem+env(safe-area-inset-top))] sm:px-6 sm:pt-7">
-          <AnimatePresence>
-            {!scrolledDown && (
-              <motion.button
-                key="akashic-back"
-                type="button"
-                onClick={exitAkashic}
-                data-testid="akashic-return"
-                aria-label={t("Return from the Library")}
-                title={t("Return from the Library")}
-                initial={{ opacity: 0, y: -6 }}
-                animate={{
-                  opacity: 1,
-                  y: 0,
-                  transition: { duration: 0.45, delay: 0.35 },
-                }}
-                exit={{ opacity: 0, y: -8, transition: { duration: 0.28 } }}
-                className="pointer-events-auto mr-2 mt-2 flex size-9 items-center justify-center rounded-full border hairline bg-card text-foreground/85 shadow-[0_10px_26px_-14px_rgba(0,0,0,0.35)] transition-colors duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
-              >
-                <ArrowLeft className="size-4" aria-hidden="true" />
-              </motion.button>
-            )}
-          </AnimatePresence>
-        </div>
-      </div>
+      {/* ---------- the way back has rested — THE ONE BACK stands in
+              the workplace's own header (the same place for every tool
+              and every room), so the letter's corner door is gone and
+              the paper owns the whole width ---------- */}
 
       {/* ---------- the ask bar — the visitor's own line to the Librarian,
           always waiting at the foot of the room: write a request and the
-          next transmission is a asked-for one, pressed send with nothing
-          set down and the Library chooses unasked ---------- */}
+          next transmission is a asked-for one; pressed send with nothing
+          set down, the Library chooses unasked (no saying beneath — the
+          whole width of the room belongs to the words) ---------- */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-40 flex justify-center px-3 pb-[max(0.85rem,env(safe-area-inset-bottom))] sm:px-5">
         <form
           onSubmit={send}
@@ -910,11 +891,7 @@ export function AkashicView() {
             />
             <button
               type="submit"
-              disabled={
-                seeking ||
-                (!draft.trim() && attachments.length === 0) ||
-                hasPendingAttachments(attachments)
-              }
+              disabled={seeking}
               aria-label={replying ? t("Send the reply") : t("Receive by resonance")}
               data-testid="akashic-wish-send"
               className="akashic-btn focus-glow flex size-11 shrink-0 items-center justify-center rounded-full transition-all duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-35"
@@ -922,17 +899,6 @@ export function AkashicView() {
               <Feather className="size-4" aria-hidden="true" />
             </button>
           </div>
-          <button
-            type="button"
-            onClick={receiveUnasked}
-            disabled={seeking}
-            title={t("Receive unasked")}
-            data-testid="akashic-unasked"
-            className="mono-label mx-auto mt-1.5 flex h-6 items-center justify-center gap-1.5 text-[10.5px] uppercase tracking-[0.22em] text-muted-foreground/70 transition-colors duration-300 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            <Orbit className="size-3" aria-hidden="true" />
-            {t("or leave it empty — receive unasked")}
-          </button>
         </form>
       </div>
     </div>

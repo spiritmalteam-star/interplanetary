@@ -41,7 +41,6 @@ export function VideoStudioView() {
   const t = useT();
   const videoSeed = useMirror((s) => s.videoSeed);
   const setVideoSeed = useMirror((s) => s.setVideoSeed);
-  const exitVideo = useMirror((s) => s.exitVideo);
 
   const [topic, setTopic] = useState("");
   const [sceneCount, setSceneCount] = useState(5);
@@ -197,14 +196,8 @@ export function VideoStudioView() {
               </p>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={exitVideo}
-            className="focus-glow rounded-full border px-3 py-1.5 text-[11px] text-muted-foreground transition-colors hover:text-foreground"
-            data-testid="video-exit"
-          >
-            {t("Return to the walk")}
-          </button>
+          {/* the per-room return has rested — THE ONE BACK (the
+              workplace header's own hand) returns to the chat */}
         </div>
 
         {/* the wish */}

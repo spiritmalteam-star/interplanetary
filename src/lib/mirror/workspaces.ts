@@ -21,7 +21,6 @@
 
 import type { ComponentType } from "react";
 import {
-  Atom,
   BookOpen,
   Clapperboard,
   Hammer,
@@ -73,11 +72,9 @@ export type WorkspaceDefinition = {
 };
 
 /* ------------------------------------------------------------------ */
-/*  THE NINE PAGES — the house's own instruments. The Quantum          */
-/*  Laboratory joins the eight standing rooms: a genuine local         */
-/*  simulator (its gates run in pure arithmetic on the device, no      */
-/*  laboratory server needed), opened from Create or from the          */
-/*  Quantum field's own hand.                                          */
+/*  THE EIGHT PAGES — the house's own instruments (the Quantum         */
+/*  Laboratory has been laid down at the visitor's word; the Quantum   */
+/*  FIELD itself still speaks its own voice in the chat).              */
 /* ------------------------------------------------------------------ */
 
 export const WORKSPACE_ORDER: ToolTabKey[] = [
@@ -86,7 +83,6 @@ export const WORKSPACE_ORDER: ToolTabKey[] = [
   "akashic",
   "mirroros",
   "invent",
-  "qlab",
   "video",
   "register",
   "library",
@@ -167,21 +163,6 @@ export const WORKSPACES: Record<ToolTabKey, WorkspaceDefinition> = {
     preserveState: true,
     resourceProfile: "low",
     bridgeMode: "forge",
-  },
-  qlab: {
-    id: "qlab",
-    title: "Quantum Lab",
-    category: "laboratory",
-    icon: Atom,
-    theme: { accent: "var(--scope-a, var(--gd))" },
-    loader: () =>
-      import("@/components/mirror/QuantumLabView").then((m) => ({
-        default: m.QuantumLabView as ComponentType,
-      })),
-    capabilities: ["circuit-builder", "state-simulation", "measurement", "experiment-save"],
-    preserveState: true,
-    resourceProfile: "low",
-    bridgeMode: "quantum",
   },
   video: {
     id: "video",

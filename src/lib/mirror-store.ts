@@ -182,8 +182,7 @@ export type MainView =
   | "artx"
   | "lightcodes"
   | "library"
-  | "video"
-  | "qlab";
+  | "video";
 
 /* THE WORKSPACE — the tools of the house that ride as mini tabs over
    the living tree (every key is also a MainView: expanding a tab hands
@@ -196,7 +195,6 @@ export type ToolTabKey =
   | "video"
   | "register"
   | "mirroros"
-  | "qlab"
   | "library";
 
 /* THE LANDING'S OWN SCOPE — the field the threshold's docked chat
@@ -646,6 +644,13 @@ interface MirrorState {
   voice: VoiceId;
   pace: number;
 
+  /* THE VISITOR'S OWN LEVEL — how deep the house answers, held in the
+     visitor's own hand: -1 lets the walk's own DNA decide (the standing
+     law), 0–4 names the tier the visitor says their experience has
+     reached (the profile's settings room raises it). */
+  expLevel: number;
+  setExpLevel: (level: number) => void;
+
   /* THE MIX OF WORLDS — how much of each family the living tree
      carries, held in the store so the tree, the Laboratory's settings
      and the profile's own settings room all speak the same proportions. */
@@ -662,6 +667,9 @@ interface MirrorState {
   setLanguage: (code: LanguageCode) => void;
   setVoice: (id: VoiceId) => void;
   setPace: (value: number) => void;
+  /** The depth every channeling sends — the walk's own tier unless the
+      visitor raised their own level in the profile's settings. */
+  sendDepth: () => { steps: number; tier: number };
   /** Restore persisted preferences (called once after mount). */
   bootPreferences: () => void;
 
@@ -826,10 +834,6 @@ interface MirrorState {
   openMirrorOS: () => void;
   exitMirrorOS: () => void;
 
-  /* THE QUANTUM LABORATORY — the deep nature of reality's own bench:
-     a genuine local simulator (no laboratory server, no credits) —
-     gates run in pure arithmetic on the visitor's own device. */
-  openQlab: (opts?: { bare?: boolean }) => void;
   /** A fresh chat inside one world: the manifest core, the quantum
       core or the med nexus returns to its quiet origin. */
   clearWorldChat: (world: "manifest" | "quantum" | "evolvemed" | "artx") => void;
@@ -1213,6 +1217,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   language: "en" as LanguageCode,
   voice: DEFAULT_VOICE,
   pace: 0.95,
+  expLevel: -1,
 
   /* the whole house, mixed — the GENERAL walk stands until the
      visitor's own proportions join from their device */
@@ -2151,7 +2156,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
           mode: "forge",
           language: get().language,
           history,
-          depth: journeyDepth(),
+          depth: get().sendDepth(),
           ...(payload ?? {}),
         }),
       });
@@ -2530,7 +2535,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
           mode: apiMode,
           language: get().language,
           history,
-          depth: journeyDepth(),
+          depth: get().sendDepth(),
           ...(payload ?? {}),
           /* the miniature's own law — a small ask is met by a small,
              warm presence (the route's live-call voice) */
@@ -2791,12 +2796,6 @@ export const useMirror = create<MirrorState>()((set, get) => ({
           }
     ),
 
-  /* ---------------- The Quantum Laboratory ----------------
-     The lab is its own page of the book: opening it rides the
-     never-yank law like every other room (the tab rises over the
-     chat; expanding hands the screen to the full-frame bench). */
-  openQlab: (opts) => get().openToolTab("qlab", opts),
-
   /* ------------- The passage — account, free door, profile ------------- */
 
   refreshMe: async () => {
@@ -2982,7 +2981,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
           language: get().language,
           scope: scopeName,
           fusion: fusionNames.length === 2 ? fusionNames : [],
-          depth: journeyDepth(),
+          depth: get().sendDepth(),
           ...(attachments ? attachmentsToPayload(attachments) : {}),
         }),
       });
@@ -3114,7 +3113,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
           language: get().language,
           scope: vectorName,
           fusion: fusionNames.length === 2 ? fusionNames : [],
-          depth: journeyDepth(),
+          depth: get().sendDepth(),
           ...(attachments ? attachmentsToPayload(attachments) : {}),
         }),
       });
@@ -3311,7 +3310,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
           query,
           history,
           language: get().language,
-          depth: journeyDepth(),
+          depth: get().sendDepth(),
           window: get().axScope ?? undefined,
           ...(payload ?? {}),
         }),
@@ -3547,7 +3546,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
           query,
           history,
           language: get().language,
-          depth: journeyDepth(),
+          depth: get().sendDepth(),
           stream: true,
           ...(payload ?? {}),
         }),
@@ -3795,6 +3794,29 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     void get().pushSettings();
   },
 
+  /* THE VISITOR'S OWN LEVEL — raised by the visitor's own hand in the
+     profile's settings room; -1 lays the decision back in the walk's
+     own DNA (the standing law). Kept on the device like the voice. */
+  setExpLevel: (level) => {
+    const sane = Number.isFinite(level)
+      ? Math.min(4, Math.max(-1, Math.floor(level)))
+      : -1;
+    set({ expLevel: sane });
+    try {
+      localStorage.setItem("mirror-entity-exp-level", String(sane));
+    } catch {
+      /* storage unavailable */
+    }
+  },
+
+  sendDepth: () => {
+    const walk = journeyDepth();
+    const own = get().expLevel;
+    /* the visitor's own tier stands above the walk's automatic one —
+       but the walk still carries its honest step count */
+    return own >= 0 ? { steps: walk.steps, tier: own } : walk;
+  },
+
   setExpansionSeeds: (seeds) => {
     const clean = Array.from(
       new Set(
@@ -3885,6 +3907,10 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       const lang = localStorage.getItem("mirror-entity-language");
       const voice = localStorage.getItem("mirror-entity-voice");
       const pace = Number(localStorage.getItem("mirror-entity-pace"));
+      /* the visitor's own level — only an actually-kept value speaks
+         (Number(null) is 0, and 0 is "first light", never a default) */
+      const rawExpLevel = localStorage.getItem("mirror-entity-exp-level");
+      const expLevel = rawExpLevel === null ? NaN : Number(rawExpLevel);
       const savedMix = loadTreeMix();
       const rawSeeds = localStorage.getItem("mirror-entity-seeds");
       const landingScope = sessionStorage.getItem("mirror:landing-scope");
@@ -3898,6 +3924,9 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         ...(isVoiceId(voice) ? { voice } : {}),
         ...(Number.isFinite(pace) && pace >= 0.5 && pace <= 2
           ? { pace }
+          : {}),
+        ...(Number.isFinite(expLevel) && expLevel >= -1 && expLevel <= 4
+          ? { expLevel: Math.floor(expLevel) }
           : {}),
         ...(seeds.length > 0 ? { expansionSeeds: seeds.slice(0, 6) } : {}),
         ...(savedMix ? { treeMix: savedMix } : {}),

@@ -5647,4 +5647,13 @@ export const sq: TranslationDict = {
   "The plate": "Plaka",
   "Breathing in": "Marr frymë",
   "Breathing out": "Lëshoj frymë",
+
+  /* --- THE VISITOR'S OWN LEVEL --- */
+  "Your level of experience": "Niveli yt i përvojës",
+  "Let the walk decide": "Le të vendosë ecja",
+  "First light — I am new": "Drita e parë — jam i ri",
+  "The deepening — I have walked some": "Thellimi — kam ecë pak",
+  "The braided walk — experienced": "Eca ethurur — me përvojë",
+  "The canopy — very experienced": "Mbulesa — shumë me përvojë",
+  "The deep roots — the furthest": "Rrënjët e thella — më larg se të gjithë",
 };

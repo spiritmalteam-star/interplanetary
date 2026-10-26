@@ -2,14 +2,12 @@
 
 import { useCallback, useEffect, useState } from "react";
 import {
-  Atom,
   BookOpen,
   Hammer,
   Layers,
   Music,
   ScrollText,
   Sparkles,
-  UserRound,
 } from "lucide-react";
 import {
   useMirror,
@@ -51,20 +49,19 @@ const NAV_SCOPES: {
   accent: SCOPE_META[key].accent,
 }));
 
-/* THE SIX MAKING ROOMS — the house's own tool names, verbatim (the
+/* THE FIVE MAKING ROOMS — the house's own tool names, verbatim (the
    canonical labels of the workspace's own registry), each opening its
    store opener: the never-yank law keeps the realm where it stands —
-   the room rises as a tab at the chat's own size. The Quantum
-   Laboratory rides here too: a genuine local bench (its gates run in
-   pure arithmetic on the device), not a chat with a new title. */
+   the room rises as a tab at the chat's own size. (The Quantum
+   Laboratory has been laid down at the visitor's word; the Quantum
+   FIELD itself still answers in the chat with its own voice.) */
 const NAV_TOOLS: {
   key:
     | "dreambook"
     | "lightcodes"
     | "akashic"
     | "mirroros"
-    | "invent"
-    | "qlab";
+    | "invent";
   label: string;
   icon: typeof BookOpen;
 }[] = [
@@ -73,7 +70,6 @@ const NAV_TOOLS: {
   { key: "akashic", label: "Akashic", icon: ScrollText },
   { key: "mirroros", label: "Manifest", icon: Sparkles },
   { key: "invent", label: "Invent", icon: Hammer },
-  { key: "qlab", label: "Quantum Lab", icon: Atom },
 ];
 
 export function LandingChatNav() {
@@ -85,8 +81,6 @@ export function LandingChatNav() {
   const openAkashic = useMirror((s) => s.openAkashic);
   const openMirrorOS = useMirror((s) => s.openMirrorOS);
   const openInvent = useMirror((s) => s.openInvent);
-  const openQlab = useMirror((s) => s.openQlab);
-  const openProfilePage = useMirror((s) => s.openProfilePage);
 
   /* the two panels — closed by default, one at a time */
   const [open, setOpen] = useState<"create" | "scopes" | null>(null);
@@ -113,7 +107,6 @@ export function LandingChatNav() {
         | "akashic"
         | "mirroros"
         | "invent"
-        | "qlab"
     ) => {
       setOpen(null);
       const bare = { bare: true };
@@ -121,19 +114,10 @@ export function LandingChatNav() {
       else if (key === "lightcodes") openLightCodes(undefined, bare);
       else if (key === "akashic") openAkashic(bare);
       else if (key === "mirroros") openMirrorOS();
-      else if (key === "qlab") openQlab(bare);
       else openInvent();
     },
-    [openDreamBook, openLightCodes, openAkashic, openMirrorOS, openInvent, openQlab]
+    [openDreamBook, openLightCodes, openAkashic, openMirrorOS, openInvent]
   );
-
-  /* THE VISITOR'S OWN ROOM — the profile opens within the chat's own
-     frame (ProfilePage is mounted in AppShell's passageModals); any
-     standing nav panel is laid down first. */
-  const openProfileRoom = useCallback(() => {
-    setOpen(null);
-    openProfilePage();
-  }, [openProfilePage]);
 
   const pickScope = useCallback(
     (key: LandingScopeKey) => {
@@ -320,38 +304,9 @@ export function LandingChatNav() {
                     {t(s.spirit)}
                   </span>
                 </span>
-                {/* THE FIELD'S OWN DEPTH — the Quantum field carries its
-                    laboratory on its own row: one small hand that opens
-                    the genuine local bench (a span, for a button may
-                    never nest inside a button). */}
-                {s.key === "quantum" && (
-                  <span
-                    role="button"
-                    tabIndex={0}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setOpen(null);
-                      openQlab({ bare: true });
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.stopPropagation();
-                        setOpen(null);
-                        openQlab({ bare: true });
-                      }
-                    }}
-                    aria-label={t("Open the laboratory")}
-                    title={t("Open the laboratory")}
-                    data-testid="landing-nav-scope-qlab"
-                    className="focus-glow flex size-6 shrink-0 items-center justify-center rounded-full transition-colors duration-300 hover:bg-foreground/10"
-                    style={{
-                      color: s.accent,
-                      boxShadow: `inset 0 0 0 1px color-mix(in srgb, ${s.accent} 40%, transparent)`,
-                    }}
-                  >
-                    <Atom className="size-3.5" aria-hidden="true" />
-                  </span>
-                )}
+                {/* THE FIELD'S OWN DEPTH HAS RESTED — the Quantum field
+                    speaks for itself in the chat; the laboratory hand
+                    has been laid down at the visitor's word. */}
                 {focused && (
                   <span
                     className="mono-label shrink-0 rounded-full border px-1.5 py-0.5 text-[8.5px] uppercase tracking-[0.14em]"
@@ -370,23 +325,10 @@ export function LandingChatNav() {
         </div>
       </div>
 
-      {/* ---------------------------- PROFILE ---------------------------- */}
-      {/* THE VISITOR'S OWN HAND — styled like the other hands: one
-          quiet pill that opens the profile room within the frame */}
-      <button
-        type="button"
-        onClick={openProfileRoom}
-        aria-haspopup="dialog"
-        aria-label={t("Profile")}
-        title={t("Profile")}
-        data-testid="landing-nav-profile"
-        className="focus-glow relative flex h-7 shrink-0 items-center gap-1.5 rounded-full border px-2.5 transition-all duration-300 after:absolute after:-inset-2 after:rounded-full after:content-[''] hairline text-muted-foreground hover:border-[var(--hairline-hover)] hover:text-foreground"
-      >
-        <UserRound className="size-3" aria-hidden="true" />
-        <span className="mono-label whitespace-nowrap text-[10px] uppercase tracking-[0.14em]">
-          {t("Profile")}
-        </span>
-      </button>
+      {/* THE VISITOR'S OWN HAND HAS MOVED HOME — the profile icon now
+          stands at the crown's very beginning, before the light's
+          toggle (BranchCanopy wears it): an icon, not a pill, in both
+          of the chat's gears. */}
 
       {/* the outside-click veil — only while a panel stands open */}
       {open !== null && (

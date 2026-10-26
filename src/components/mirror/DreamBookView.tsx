@@ -862,11 +862,13 @@ export function DreamBookView() {
     (e?: FormEvent) => {
       e?.preventDefault();
       const text = topicDraft.trim().slice(0, 600);
-      /* the final gate — at least one thread must be held before the
-         loom may begin; nothing beyond that is ever forced */
-      if (!text || weavingRef.current || !(age || tale || volume || level)) return;
+      /* the one gate — the words themselves. When no thread is held,
+         the loom chooses its own (the telling's middle depth stands
+         in): nothing more is ever forced, nothing blocks the ask. */
+      if (!text || weavingRef.current) return;
       setTopicDraft("");
       setTopic(text);
+      if (!(age || tale || volume || level)) setLevel("d3");
       configRef.current = { ...configRef.current, topic: text };
       void openBook();
     },
@@ -1356,15 +1358,10 @@ export function DreamBookView() {
 
   /* ---------------- shared ---------------- */
 
-  const backFromAtelier = () => {
-    stopNarration();
-    keepCurrent(); /* the volume rests on the shelf before the exit */
-    exitDreamBook();
-  };
-
   /* THE QUIET X — one clear close in every room of the book: it rests
      the voice, keeps the volume on the shelf, and returns the visitor
-     to the tree in a single touch */
+     to the tree in a single touch (THE ONE BACK in the workplace's
+     own header wears the same law for the atelier) */
   const exitTheBook = () => {
     stopNarration();
     keepCurrent();
@@ -1448,15 +1445,11 @@ export function DreamBookView() {
         className="lp-sigil-img pointer-events-none absolute left-[-34px] top-[36%] z-0 hidden size-[clamp(150px,16vw,230px)] select-none opacity-[0.1] [transform:rotate(-8deg)] lg:block"
       />
       <header className="relative z-10 flex shrink-0 items-center gap-2 px-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-5">
-        <button
-          type="button"
-          onClick={backFromAtelier}
-          aria-label={t("Back to the laboratory")}
-          title={t("Back to the laboratory")}
-          className={inkIconBtn}
-        >
-          <ArrowLeft className="size-4" aria-hidden="true" />
-        </button>
+        {/* THE TOP BAR HAS RESTED — the category line, the per-room back
+            and the X are gone from the house (THE ONE BACK stands in
+            the workplace's own header, the same for every tool). Only
+            the shelf keeps its place, at the row's right. */}
+        <span className="min-w-2 flex-1" aria-hidden="true" />
         {/* THE KEPT VOLUMES — the books' own history: every volume woven
             rests here, on this device and in the keeper's library. */}
         <button
@@ -1469,26 +1462,10 @@ export function DreamBookView() {
         >
           <History className="size-4" aria-hidden="true" />
         </button>
-        <span className="mono-label flex items-center gap-1.5 text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
-          <MoonStar className="size-3.5" aria-hidden="true" />
-          <span className="hidden sm:inline">{t("The atelier of tales")}</span>
-        </span>
-        <span className="min-w-2 flex-1" aria-hidden="true" />
-        {/* THE QUIET X — one touch returns to the branches */}
-        <button
-          type="button"
-          onClick={exitTheBook}
-          aria-label={t("Close the book")}
-          title={t("Close the book")}
-          data-testid="dream-atelier-close"
-          className={inkIconBtn}
-        >
-          <X className="size-4" aria-hidden="true" />
-        </button>
       </header>
 
       <div className="nice-scroll relative z-10 min-h-0 flex-1 overflow-y-auto">
-        <div className="mx-auto flex w-full max-w-[620px] flex-col px-4 pb-4 pt-2 sm:px-6">
+        <div className="mx-auto flex w-full max-w-[620px] flex-col px-4 pb-24 pt-2 sm:px-6">
           {/* the compact face of the atelier — one line, one panel, the
               book plainly indicated: everything the visitor needs held
               in a single quiet sheet, nothing to scroll past */}
@@ -1509,9 +1486,6 @@ export function DreamBookView() {
               aria-hidden="true"
             />
           </div>
-          <p className="ink-hand ink-soft mt-1.5 text-[13.5px] italic leading-relaxed sm:text-[14.5px]">
-            {t("Name any subject, era, or universe — the loom tunes itself, and the book begins.")}
-          </p>
 
           {/* THE TWO VEINS — the loom's big categorisation: a normal,
               grounded book, or The Eternal Dreamer — the one that
@@ -1686,21 +1660,6 @@ export function DreamBookView() {
                   </span>
                 )}
               </div>
-              {/* the active depth's own whisper — one line, only when held */}
-              <AnimatePresence initial={false} mode="wait">
-                <motion.p
-                  key={levelMeta?.id ?? "none"}
-                  initial={{ opacity: 0, y: 3 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -2 }}
-                  transition={{ duration: 0.25 }}
-                  className="ink-hand ink-soft mt-2 min-h-[1.6em] text-center text-[12px] italic leading-snug"
-                >
-                  {levelMeta
-                    ? t(levelMeta.depth)
-                    : t("Choose how deep the telling goes.")}
-                </motion.p>
-              </AnimatePresence>
             </div>
 
             {/* THE PAGES IN THE PLAN — the visitor may name the book's
@@ -1743,64 +1702,44 @@ export function DreamBookView() {
                   </button>
                 )}
               </div>
-              <p className="mt-1.5 text-center text-[11.5px] italic text-muted-foreground/75">
-                {t("Slide to name the book's length — 20 to 300 pages, honored exactly.")}
-              </p>
             </div>
           </div>
           <div aria-hidden="true" className="h-2" />
         </div>
       </div>
 
-      {/* the one input — speak, send, and the channeling begins */}
-      <div className="relative z-10 shrink-0 bg-background px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2.5 sm:px-6">
-        {/* the composer's gold seam — the house's gold drawn out thin
-            across the top of the input, quieter than any border */}
-        <span
-          aria-hidden="true"
-          className="absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,color-mix(in_srgb,var(--lp-gold)_36%,transparent)_20%,color-mix(in_srgb,var(--lp-gold)_36%,transparent)_80%,transparent)]"
-        />
-        <div className="mx-auto w-full max-w-[680px]">
-          {/* the one gentle gate — the loom only asks for a single
-              thread before it may begin; nothing more is ever forced */}
-          <AnimatePresence>
-            {topicDraft.trim() && !(age || tale || volume) && (
-              <motion.p
-                initial={{ opacity: 0, y: 4 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 2 }}
-                transition={{ duration: 0.3 }}
-                className="ink-hand ink-soft mb-2 text-center text-[13.5px] italic"
-              >
-                {t(
-                  "The loom waits for a thread — choose the reader, the tale, the book, or the depth below."
-                )}
-              </motion.p>
-            )}
-          </AnimatePresence>
-          <form
-            onSubmit={channelBook}
-            className="flex items-center gap-2 rounded-full border border-border bg-card py-1 pl-4 pr-1 transition-all duration-300 focus-within:border-foreground/35"
-          >
+      {/* THE ONE COMPOSER — the Akashic's own style of ask, dressed in
+          the book's ink: a floating card at the foot of the room, the
+          speak-line and the channel hand inside it. No saying beneath,
+          no gate saying above — the loom chooses its own threads when
+          none are held, and the whole sheet stays one screen tall. */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex justify-center px-3 pb-[max(0.85rem,env(safe-area-inset-bottom))] sm:px-5">
+        <form
+          onSubmit={channelBook}
+          className="pointer-events-auto relative w-full max-w-[640px] rounded-2xl border border-border bg-card p-2.5 shadow-[0_24px_60px_-28px_rgba(0,0,0,0.42)]"
+          data-testid="dream-composer"
+        >
+          <div className="flex items-center gap-2">
             <input
               value={topicDraft}
               onChange={(e) => setTopicDraft(e.target.value)}
               placeholder={t("Speak anything — a subject, a wish, a whole world…")}
               aria-label={t("Speak anything — a subject, a wish, a whole world…")}
               maxLength={600}
-              className="min-w-0 flex-1 bg-transparent py-2 font-[family-name(var(--font-literata))] text-[14.5px] italic text-foreground placeholder:font-[family-name(var(--font-sans))] placeholder:not-italic placeholder:text-muted-foreground/60 focus:outline-none"
+              className="focus-glow h-11 min-w-0 flex-1 rounded-full border hairline bg-background/70 px-4 font-[family-name(var(--font-literata))] text-[15px] italic text-foreground placeholder:font-[family-name(var(--font-sans))] placeholder:not-italic placeholder:text-muted-foreground/60 transition-all duration-300"
             />
             <button
               type="submit"
-              disabled={!topicDraft.trim() || !(age || tale || volume || level)}
+              disabled={!topicDraft.trim()}
               aria-label={t("Channel the book")}
               title={t("Channel the book")}
-              className="akashic-btn focus-glow flex size-8 shrink-0 items-center justify-center rounded-full disabled:opacity-40"
+              data-testid="dream-channel-send"
+              className="akashic-btn focus-glow flex size-11 shrink-0 items-center justify-center rounded-full transition-all duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-35"
             >
-              <Waves className="size-3.5" aria-hidden="true" />
+              <Waves className="size-4" aria-hidden="true" />
             </button>
-          </form>
-        </div>
+          </div>
+        </form>
       </div>
     </div>
   );

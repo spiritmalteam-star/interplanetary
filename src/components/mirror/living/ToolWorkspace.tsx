@@ -11,7 +11,7 @@ import {
   type ReactNode,
 } from "react";
 import dynamic from "next/dynamic";
-import { RotateCcw, X } from "lucide-react";
+import { ArrowLeft, RotateCcw, X } from "lucide-react";
 import { useMirror, type ToolTabKey } from "@/lib/mirror-store";
 import { WORKSPACES, WORKSPACE_ORDER } from "@/lib/mirror/workspaces";
 import { runWorkspaceCleanup } from "@/lib/mirror/workspace-lifecycle";
@@ -248,12 +248,27 @@ function ToolWorkspaceImpl({ bare = false }: { bare?: boolean }) {
       className="pointer-events-auto absolute inset-0 z-30 flex flex-col overflow-hidden rounded-none border bg-background shadow-[0_24px_70px_-30px_rgba(0,0,0,0.6)]"
       style={winStyle}
     >
-      {/* THE WORKPLACE HEADER — the row of open rooms, worn as compact
-          pills so many workplaces fit the chat's own frame. The active
+      {/* THE WORKPLACE HEADER — THE ONE BACK at the row's very left
+          (the same place for every room, the same in both gears): one
+          touch lays the standing room down and the chat stands again —
+          the per-room back hands and top bars are gone from the house.
+          Beside it, the row of open rooms as compact pills. The active
           room wears the house's light: var(--scope-a) is the scope the
           visitor chose (LandingGate sets it on the whole chamber), so
           every workplace tints itself with its own house. */}
       <div className="flex h-9 shrink-0 items-center gap-1 overflow-x-auto px-1">
+        {/* THE ONE BACK HAND — the single return every tool and every
+            room shares: leftmost, always the same place */}
+        <button
+          type="button"
+          onClick={() => active && closeToolTab(active)}
+          aria-label={t("Back to the chat")}
+          title={t("Back to the chat")}
+          data-testid="tool-workspace-back"
+          className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors duration-300 hover:bg-foreground/10 hover:text-foreground"
+        >
+          <ArrowLeft className="size-3.5" aria-hidden="true" />
+        </button>
         {toolTabs.map((key) => {
           const meta = TAB_META[key];
           const Icon = meta.icon;
@@ -316,19 +331,9 @@ function ToolWorkspaceImpl({ bare = false }: { bare?: boolean }) {
             depth) is gone: every room plays within the chat's own
             frame, exactly like the profile does. The chat's corner
             hand gears the SIZE of the whole frame — the room rides
-            inside it, bigger or smaller, never elsewhere. */}
-
-        {/* THE CLOSE HAND — lays the whole window down */}
-        <button
-          type="button"
-          onClick={() => active && closeToolTab(active)}
-          aria-label={t("Close")}
-          title={t("Close")}
-          data-testid="tool-workspace-close"
-          className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors duration-300 hover:bg-foreground/10 hover:text-foreground"
-        >
-          <X className="size-3.5" aria-hidden="true" />
-        </button>
+            inside it, bigger or smaller, never elsewhere. The old
+            right-corner close hand has rested too: THE ONE BACK at the
+            row's left is the single return of the whole house. */}
       </div>
 
       {/* THE WORKPLACE IDENTITY STRIP — one slim line of the house's

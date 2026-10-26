@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 import {
   Activity,
   ArrowDownWideNarrow,
-  ArrowLeft,
   ArrowUpNarrowWide,
   Atom,
   BookOpen,
@@ -94,7 +93,6 @@ const DAYFmt = new Intl.DateTimeFormat(undefined, { month: "short", day: "numeri
 const TIMEFmt = new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit" });
 
 export function LibraryView() {
-  const exitLibrary = useMirror((s) => s.returnToObservatory);
   const t = useT();
   const [tab, setTab] = useState<"library" | "shift">("library");
   const [entries, setEntries] = useState<LibraryEntry[] | null>(null);
@@ -195,19 +193,9 @@ export function LibraryView() {
       {/* ---------- top bar ---------- */}
       <header className="relative z-30 shrink-0 border-b hairline bg-background">
         <div className="bar-safe flex items-center justify-between gap-2 px-3 sm:px-5">
-          <button
-            type="button"
-            onClick={exitLibrary}
-            className="focus-glow group flex h-9 items-center gap-2 rounded-full border hairline px-3 text-[15px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground sm:px-3.5"
-          >
-            <ArrowLeft
-              className="size-3.5 transition-transform duration-300 group-hover:-translate-x-0.5"
-              aria-hidden="true"
-            />
-            <span className="hidden sm:inline">{t("Back to the wall")}</span>
-            <span className="sm:hidden">{t("Back")}</span>
-          </button>
-
+          {/* the per-room back has rested — THE ONE BACK (the workplace
+              header's own hand) returns to the chat; the room's own
+              tabs lead the row now */}
           <nav role="tablist" aria-label={t("Your cosmos")} className="flex items-center gap-1 sm:gap-1.5">
             {(
               [

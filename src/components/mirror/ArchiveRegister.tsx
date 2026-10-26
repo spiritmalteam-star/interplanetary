@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import {
-  ArrowLeft,
   BadgeCheck,
   Layers,
   Search,
@@ -113,7 +112,6 @@ function RegisterRow({
 export function ArchiveRegister() {
   const registerKind = useMirror((s) => s.registerKind);
   const openRegister = useMirror((s) => s.openRegister);
-  const exitRegister = useMirror((s) => s.exitRegister);
   const t = useT();
 
   const [query, setQuery] = useState("");
@@ -347,19 +345,9 @@ export function ArchiveRegister() {
         </div>
       )}
 
-      {/* switch archive + back */}
+      {/* switch archive — the per-room back has rested: THE ONE BACK
+          (the workplace header's own hand) returns to the chat */}
       <div className="mt-8 flex flex-wrap items-center justify-center gap-2.5 border-t hairline pt-6">
-        <button
-          type="button"
-          onClick={exitRegister}
-          className="focus-glow group flex items-center gap-2 rounded-full border hairline px-4 py-2 text-[15px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
-        >
-          <ArrowLeft
-            className="size-3.5 transition-transform duration-300 group-hover:-translate-x-0.5"
-            aria-hidden="true"
-          />
-          {t("Back to the wall")}
-        </button>
         <button
           type="button"
           onClick={() =>

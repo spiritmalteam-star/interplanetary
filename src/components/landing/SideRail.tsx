@@ -66,11 +66,16 @@ const CORNERS = [
 ] as const;
 
 /* deterministic hand-sticking: FNV-1a seed → mulberry32 stream, all
-   from the UTC hour so server and client cut the same tape */
+   from the UTC hour so server and client cut the same tape.
+   THE TWICE-SIZED HAND — the visitor asked for stickers twice as big
+   (192–220px), never overlapping the chat: the rail's own width
+   formula keeps the whole shoulder clear of the 900px column, and
+   every sticker clamps to the rail (minus a quiet 16px so the
+   rotation's widest breath and the offset never reach the gutter). */
 type StickerPose = {
-  rot: number; // -9..9 deg
-  x: number; // -10..10 px
-  size: number; // 96..110 px square
+  rot: number; // -7..7 deg
+  x: number; // -12..12 px
+  size: number; // 192..220 px square (twice the old 96..110)
   pull: number; // negative top margin — the loose overlap
   corner: string; // the one slightly-lifted corner
   tape: number; // tape strip tilt, -4..4 deg
@@ -92,10 +97,10 @@ function stickerPose(seed: string): StickerPose {
   };
   const round1 = (n: number) => Math.round(n * 10) / 10;
   return {
-    rot: round1(rnd() * 18 - 9),
-    x: round1(rnd() * 20 - 10),
-    size: Math.round(96 + rnd() * 14),
-    pull: round1(-(10 + rnd() * 14)),
+    rot: round1(rnd() * 14 - 7),
+    x: round1(rnd() * 24 - 12),
+    size: Math.round(192 + rnd() * 28),
+    pull: round1(-(20 + rnd() * 28)),
     corner: CORNERS[Math.floor(rnd() * 4)],
     tape: round1(rnd() * 8 - 4),
   };
@@ -245,9 +250,10 @@ export default function SideRail({ side }: { side: RailSide }) {
         side === "left" ? "left-5" : "right-5"
       )}
       style={{
-        /* the old gallery's exact footing: half again the old shard's
-           width, never reaching into the 900px column */
-        width: "min(18vw, 340px, calc((100vw - 920px) / 2))",
+        /* the old gallery's exact footing, widened for the twice-sized
+           stickers: never reaching into the 900px column (a 20px
+           gutter stays clear at every viewport the rail rides) */
+        width: "min(23vw, 360px, calc((100vw - 980px) / 2))",
       }}
     >
       <div
@@ -266,12 +272,17 @@ export default function SideRail({ side }: { side: RailSide }) {
             >
               <div
                 className={cn(
-                  "relative flex flex-col justify-between rounded-[3px] p-2",
+                  "relative flex flex-col justify-between rounded-[3px] p-3",
                   sticker.pose.corner
                 )}
                 style={{
-                  width: sticker.pose.size,
-                  height: sticker.pose.size,
+                  /* THE TWICE-SIZED PAPER — clamped to the rail itself
+                     (minus the offset's own breath), so no rotation,
+                     no offset, no viewport can ever press it against
+                     the chat column */
+                  width: `min(${sticker.pose.size}px, calc(100% - 16px))`,
+                  aspectRatio: "1 / 1",
+                  height: "auto",
                   backgroundColor: sticker.color,
                   transform: `translate(${sticker.pose.x}px, 0) rotate(${sticker.pose.rot}deg)`,
                   boxShadow:
@@ -282,22 +293,22 @@ export default function SideRail({ side }: { side: RailSide }) {
                 <span
                   aria-hidden="true"
                   className={cn(
-                    "pointer-events-none absolute inset-[3px] rounded-[2px] border border-[rgba(63,58,46,0.22)]",
+                    "pointer-events-none absolute inset-[6px] rounded-[2px] border border-[rgba(63,58,46,0.22)]",
                     sticker.pose.corner
                   )}
                 />
-                {/* the tape strip */}
+                {/* the tape strip — twice the hand, twice the tape */}
                 <span
                   aria-hidden="true"
-                  className="absolute -top-[7px] left-1/2 h-[14px] w-[44px] rounded-[1px] bg-[rgba(255,253,246,0.55)] shadow-[0_1px_2px_rgba(44,37,23,0.12)]"
+                  className="absolute -top-[13px] left-1/2 h-[26px] w-[82px] rounded-[1px] bg-[rgba(255,253,246,0.55)] shadow-[0_1px_2px_rgba(44,37,23,0.12)]"
                   style={{
                     transform: `translateX(-50%) rotate(${sticker.pose.tape}deg)`,
                   }}
                 />
-                <span className="mono-label text-[8px] uppercase tracking-[0.22em] text-[rgba(63,58,46,0.66)]">
+                <span className="mono-label text-[12px] uppercase tracking-[0.22em] text-[rgba(63,58,46,0.66)]">
                   {sticker.code}
                 </span>
-                <p className="font-[family-name:var(--font-literata)] text-[10px] leading-[1.32] text-[#3f3a2e]">
+                <p className="font-[family-name:var(--font-literata)] text-[15px] leading-[1.35] text-[#3f3a2e]">
                   {sticker.text}
                 </p>
               </div>
