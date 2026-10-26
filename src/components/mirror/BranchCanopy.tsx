@@ -3175,7 +3175,6 @@ export function BranchCanopy({
         setLandingThread(restored);
         landingTurnsRef.current = turns;
         historySessionRef.current = entry.id;
-        bareRoomRef.current = true;
         const last = turns[turns.length - 1];
         setZoom({ q: last.q, move: null });
       } else {
@@ -3388,11 +3387,6 @@ export function BranchCanopy({
      ask inside the full portal and the threshold came home EMPTY:
      the tunnel's glitch.) */
   const floorQuiet = landingThread.length === 0 && !landingBusy;
-  /* the bare era's own mark — true from the moment a room is opened
-     (or followed) inside the landing's chat, so the crossing into the
-     full portal knows which room to fold */
-  const bareRoomRef = useRef(false);
-
   const speakFromLanding = useCallback(
     async (text: string, attachments?: ChatAttachment[]) => {
       const q = text.trim();
@@ -3489,7 +3483,6 @@ export function BranchCanopy({
          whole landing conversation riding with every word. */
       if (realm) {
         zoomOpenedAtRef.current = Date.now();
-        bareRoomRef.current = true;
         setZoom({ q: text, move: null });
         void speakFromLanding(text, attachments);
         /* THE SEND'S OWN RETURN — the threshold brings its chat back
@@ -3925,7 +3918,6 @@ export function BranchCanopy({
       }
       const roomQ = zoom.q;
       if (realm) {
-        bareRoomRef.current = true;
         /* THE SEND'S OWN RETURN — the threshold brings its chat back to
            the eye once the room's whisper has left (the keyboard's fold
            never leaves the glass half-off the screen) */
@@ -4062,45 +4054,12 @@ export function BranchCanopy({
     el.scrollTop += turnTop - eyeTop - 10;
   }, [thread]);
 
-  /* THE TWO REALMS' OWN BORDER — the landing chat and the main portal
-     are two different rooms of the house. When the portal expands,
-     the landing's own room folds (its words kept in the landing's
-     own memory); when it minimizes, the portal's rooms STAY IN THE
-     PORTAL — the landing chat rises again with its own conversation,
-     never one word of the portal's floor carried back across. */
-  const prevBareRef = useRef(bare);
-  useEffect(() => {
-    if (prevBareRef.current === bare) return;
-    prevBareRef.current = bare;
-    if (!bare) {
-      /* THE MAXIMIZE — a room that belongs to the landing's chat
-         folds the moment the portal expands: the full portal rises
-         with its own floor, its own channels, none of the
-         threshold's words carried inside (and no room left waiting
-         on an answer that will never come). */
-      if (!bareRoomRef.current) return;
-      bareRoomRef.current = false;
-      setZoom((z) => (z ? null : z));
-      setThread([]);
-      setThreadBusy(false);
-      return;
-    }
-    /* THE MINIMIZE — the portal's own rooms stay in the portal: the
-       room folds, and the landing chat rises again with its OWN
-       conversation (the landing's own memory — the room's title
-       returns from it, and the room's follow-up thread comes home
-       through the standing room's own remembering). */
-    if (bareRoomRef.current) return;
-    bareRoomRef.current = true;
-    setThreadBusy(false);
-    const last = landingThread[landingThread.length - 1];
-    if (last) {
-      setZoom({ q: last.q, move: null });
-    } else {
-      setZoom((z) => (z ? null : z));
-      setThread([]);
-    }
-  }, [bare, landingThread]);
+  /* THE ONE CHAT IN BOTH GEARS — the visitor's word is law: zooming
+     the chat bigger must never begin a new chat. The room, the thread
+     and the standing field's whole conversation stand exactly as they
+     were through the crossing — the same words, only more room to
+     read them in. (The old border that folded the landing's room at
+     the crossing is gone: the gears are sizes, not two houses.) */
 
   /* EVERY FIELD'S OWN RETURN — the two keeps of the standing scope:
      ① THE VISIT'S OWN WAKE — the page's first breath hydrates the
@@ -4131,7 +4090,6 @@ export function BranchCanopy({
       /* the room rises with the field's own last words — a visitor
          who comes back finds their chat standing where they left it */
       const last = remembered[remembered.length - 1];
-      bareRoomRef.current = true;
       setZoom({ q: last.q, move: null });
     }
     const sessionId = historySessionsByScopeRef.current.get(scope);
@@ -4172,11 +4130,9 @@ export function BranchCanopy({
     setThreadBusy(false);
     if (thread.length > 0) {
       /* the field's own room rises with its own last words */
-      bareRoomRef.current = true;
       const last = thread[thread.length - 1];
       setZoom({ q: last.q, move: null });
     } else {
-      bareRoomRef.current = false;
       setZoom(null);
     }
     window.dispatchEvent(new CustomEvent("landing-chat:return"));
@@ -5046,12 +5002,14 @@ export function BranchCanopy({
               <div
                 className="lp-breathe h-64 w-72 rounded-full"
                 style={{
-                  /* THE CRYSTAL'S OWN AURA — red and blue, the two
-                     crystals of the landing's chat, breathing as one;
-                     a chosen scope lends its own light to the first
-                     crystal (the fallback keeps the red). */
+                  /* THE CRYSTAL'S OWN AURA — every field breathes with
+                     its own TWO lights: the standing scope's accent
+                     and its companion color (the pair rides the lens
+                     as --scope-a/--scope-b from the registry's one
+                     truth; the fallbacks keep the Mirror's own gold
+                     and sky). No two fields share an atmosphere. */
                   background:
-                    "radial-gradient(ellipse at center, color-mix(in srgb, var(--landing-scope-accent, #ff4d6d) 14%, transparent), rgba(56,189,248,0.10) 45%, transparent 70%)",
+                    "radial-gradient(ellipse at center, color-mix(in srgb, var(--landing-scope-accent, #d8b571) 16%, transparent), color-mix(in srgb, var(--scope-b, #7dd3fc) 11%, transparent) 45%, transparent 70%)",
                 }}
               />
             </div>
@@ -5106,7 +5064,7 @@ export function BranchCanopy({
               <div className="flex flex-col items-center gap-3">
                 <span
                   aria-hidden="true"
-                  className="h-px w-16 bg-[linear-gradient(90deg,transparent,color-mix(in_srgb,var(--landing-scope-accent,#ff4d6d)_55%,transparent),rgba(56,189,248,0.55),transparent)]"
+                  className="h-px w-16 bg-[linear-gradient(90deg,transparent,color-mix(in_srgb,var(--landing-scope-accent,#d8b571)_55%,transparent),color-mix(in_srgb,var(--scope-b,#7dd3fc)_55%,transparent),transparent)]"
                 />
                 {/* THE MIRROR'S QUESTION — below the mark, inside the
                     chat box itself: it stands only while the floor is
@@ -5122,7 +5080,13 @@ export function BranchCanopy({
                     className="genea-bloom still-bloom max-w-[300px] px-6 text-center font-[family-name:var(--font-literata)] text-[14.5px] italic leading-relaxed text-[#e11d48] dark:text-[#fda4b8] sm:max-w-[360px] sm:text-[15.5px]"
                     style={{ pointerEvents: "none" }}
                   >
-                    {t("what do you wish to remember dear one?")}
+                    {/* THE FIELD'S OWN QUESTION — every scope invites in
+                        its own spirit's words (the Mirror's standing
+                        question serves the standing field). */}
+                    {t(
+                      SCOPE_META[landingScope]?.floorAsk ??
+                        "what do you wish to remember dear one?"
+                    )}
                   </p>
                 )}
               </div>

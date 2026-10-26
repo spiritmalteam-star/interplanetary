@@ -145,10 +145,10 @@ export const WORKSPACES: Record<ToolTabKey, WorkspaceDefinition> = {
     icon: Sparkles,
     theme: { accent: "var(--scope-a, var(--gd))" },
     loader: () =>
-      import("@/components/mirror/MirrorOS").then((m) => ({
-        default: m.MirrorOS as ComponentType,
+      import("@/components/mirror/SimpleMirrorRoom").then((m) => ({
+        default: m.ManifestRoom as ComponentType,
       })),
-    capabilities: ["reality-refinement", "formulas", "intentions"],
+    capabilities: ["mirror-conversation", "intention-shaping", "thread-memory"],
     preserveState: true,
     resourceProfile: "low",
     bridgeMode: "manifesting",
@@ -160,12 +160,12 @@ export const WORKSPACES: Record<ToolTabKey, WorkspaceDefinition> = {
     icon: Hammer,
     theme: { accent: "var(--scope-a, var(--gd))" },
     loader: () =>
-      import("@/components/mirror/InventView").then((m) => ({
-        default: m.InventView as ComponentType,
+      import("@/components/mirror/SimpleMirrorRoom").then((m) => ({
+        default: m.InventRoom as ComponentType,
       })),
-    capabilities: ["mystery-forging", "tool-benches", "crystallization"],
+    capabilities: ["mirror-conversation", "invention-forging", "thread-memory"],
     preserveState: true,
-    resourceProfile: "medium",
+    resourceProfile: "low",
     bridgeMode: "forge",
   },
   qlab: {
@@ -252,6 +252,15 @@ export type ScopeMeta = {
   spirit: string;
   accent: string;
   dot: string;
+  /** THE SECOND CRYSTAL — every field's floor breathes with TWO
+      lights: its own accent and its companion color (the aura of the
+      quiet ground is the field's own pair, never the house's default
+      red/blue again). */
+  second: string;
+  /** THE FIELD'S OWN QUESTION — the floor's invitation speaks the
+      field's own spirit (an i18n key; the Mirror's own standing
+      question serves the standing field). */
+  floorAsk: string;
   voice: ScopeVoiceCategory;
   /** the profile library's shelf this field keeps its volume on */
   librarySector: string;
@@ -263,6 +272,8 @@ export const SCOPE_META: Record<LandingScopeKey, ScopeMeta> = {
     spirit: "The house's own reflection",
     accent: "#d8b571",
     dot: "#d8b571",
+    second: "#7dd3fc",
+    floorAsk: "what do you wish to remember dear one?",
     voice: "absolute",
     librarySector: "observatory",
   },
@@ -271,6 +282,8 @@ export const SCOPE_META: Record<LandingScopeKey, ScopeMeta> = {
     spirit: "The star families and worlds",
     accent: "#22d3ee",
     dot: "#22d3ee",
+    second: "#60a5fa",
+    floorAsk: "which star shall we walk beneath tonight?",
     voice: "interplanetary",
     librarySector: "observatory",
   },
@@ -279,6 +292,8 @@ export const SCOPE_META: Record<LandingScopeKey, ScopeMeta> = {
     spirit: "The deep nature of reality",
     accent: "#a78bfa",
     dot: "#a78bfa",
+    second: "#f0abfc",
+    floorAsk: "what shall we unfold, quanta by quanta?",
     voice: "quantum",
     librarySector: "quantum",
   },
@@ -287,6 +302,8 @@ export const SCOPE_META: Record<LandingScopeKey, ScopeMeta> = {
     spirit: "The atelier of visions",
     accent: "#e879f9",
     dot: "#e879f9",
+    second: "#fbbf24",
+    floorAsk: "what vision waits to be painted?",
     voice: "artx",
     librarySector: "artx",
   },
@@ -295,6 +312,8 @@ export const SCOPE_META: Record<LandingScopeKey, ScopeMeta> = {
     spirit: "The body's quiet evolution",
     accent: "#2dd4bf",
     dot: "#2dd4bf",
+    second: "#86efac",
+    floorAsk: "where does your body ask for quiet today?",
     voice: "healing",
     librarySector: "evolvemed",
   },

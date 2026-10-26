@@ -11,7 +11,7 @@ import {
   type ReactNode,
 } from "react";
 import dynamic from "next/dynamic";
-import { Maximize2, RotateCcw, X } from "lucide-react";
+import { RotateCcw, X } from "lucide-react";
 import { useMirror, type ToolTabKey } from "@/lib/mirror-store";
 import { WORKSPACES, WORKSPACE_ORDER } from "@/lib/mirror/workspaces";
 import { runWorkspaceCleanup } from "@/lib/mirror/workspace-lifecycle";
@@ -182,11 +182,13 @@ function ToolWorkspaceImpl({ bare = false }: { bare?: boolean }) {
   const activeToolTab = useMirror((s) => s.activeToolTab);
   const activateToolTab = useMirror((s) => s.activateToolTab);
   const closeToolTab = useMirror((s) => s.closeToolTab);
-  const expandActiveToolTab = useMirror((s) => s.expandActiveToolTab);
   const t = useT();
 
-  /* THE STANDING LAW — the window lives only over the chat: a parked
-     tab (or a full-screen room owning the frame) lays it down.
+  /* THE STANDING LAW — the window lives only over the chat: the realm
+     IS the landing chat now, in both of its gears (docked and
+     fullscreen), so the window simply rises over the chat wherever it
+     stands — every room plays WITHIN the chat's own frame, exactly
+     like the profile does; no hand may yank the view to a page.
      "transmission" IS the realm — the realm renders it as its own room
      (AppShell has no early-return for it; it is only the view the
      channel's asks carry), so the window keeps standing there.
@@ -310,20 +312,11 @@ function ToolWorkspaceImpl({ bare = false }: { bare?: boolean }) {
 
         <span className="flex-1" aria-hidden="true" />
 
-        {/* THE EXPAND HAND — the room's full-frame depth: the view
-            becomes the room itself (AppShell's early-return renders it
-            across the whole frame), and the room's own back hand
-            returns to this window */}
-        <button
-          type="button"
-          onClick={expandActiveToolTab}
-          aria-label={t("Fullscreen")}
-          title={t("Fullscreen")}
-          data-testid="tool-workspace-expand"
-          className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors duration-300 hover:bg-foreground/10 hover:text-foreground"
-        >
-          <Maximize2 className="size-3.5" aria-hidden="true" />
-        </button>
+        {/* THE ONE FRAME — the old expand hand (the room's full-page
+            depth) is gone: every room plays within the chat's own
+            frame, exactly like the profile does. The chat's corner
+            hand gears the SIZE of the whole frame — the room rides
+            inside it, bigger or smaller, never elsewhere. */}
 
         {/* THE CLOSE HAND — lays the whole window down */}
         <button

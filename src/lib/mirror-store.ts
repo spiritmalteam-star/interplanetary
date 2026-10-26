@@ -706,7 +706,6 @@ interface MirrorState {
   openToolTab: (key: ToolTabKey, opts?: { bare?: boolean }) => void;
   closeToolTab: (key: ToolTabKey) => void;
   activateToolTab: (key: ToolTabKey) => void;
-  expandActiveToolTab: () => void;
 
   /* THE MIRROR BRIDGE — a workspace's compact assistant may carry its
      own context to the floor: the draft waits in the room's reply line
@@ -1289,10 +1288,10 @@ export const useMirror = create<MirrorState>()((set, get) => ({
      gears (docked and fullscreen), so the window simply rises over
      the chat wherever it stands. (The old yank — `view:
      "observatory"` for non-bare callers — is gone with the walk; the
-     fullscreen depth of a room is reached only through
-     expandActiveToolTab, and its back hands return the view.) The
-     opts param stays accepted (callers pass {bare:true}); it no
-     longer gears anything. */
+     old expand hand that pulled a room out into a full-screen page
+     is gone with it — every room plays within the chat frame, the
+     visitor's word.) The opts param stays accepted (callers pass
+     {bare:true}); it no longer gears anything. */
   openToolTab: (key, opts) => {
     /* THE MAKER'S TRAIL — every open leaves one stone on the visit's
        own path (sessionStorage, capped), so the history panel's trail
@@ -1325,18 +1324,12 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     set({ libraryFocus: { sector, at: Date.now() } }),
   clearLibraryFocus: () => set({ libraryFocus: null }),
 
-  /* THE EXPAND HAND — the active tab's old full-screen room takes the
-     whole screen; the tab stays parked in the window underneath. */
-  expandActiveToolTab: () =>
-    set((s) =>
-      s.activeToolTab
-        ? {
-            view: s.activeToolTab as MainView,
-            mobileNavOpen: false,
-            modal: null,
-          }
-        : {}
-    ),
+  /* THE ONE FRAME — every room lives at the chat's own size, in both
+     of the chat's gears: there is no expansion beyond the frame any
+     more (the old expand hand that yanked the view into a full-screen
+     page is gone — the visitor's word: everything plays within the
+     chat frame, never a new page; the chat's own corner hand gears
+     the SIZE of the whole frame, and every room rides inside it). */
 
   /* ---------------- The Akashic Library ----------------
      The Library is its own ancient world: opening it suspends every

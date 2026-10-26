@@ -167,10 +167,24 @@ const PHONE_CROSSING = () =>
    --scope-a in BOTH gears (docked and fullscreen), so the whole
    chat — the crown's hands, the panels, the composer, the doors,
    the send, the rooms' edges — wears that field's light; each
-   field is its own world, tinted by its own color. */
+   field is its own world, tinted by its own color. THE SECOND
+   CRYSTAL — each field also carries its companion color
+   (--scope-b), so the floor's aura breathes with the field's own
+   pair of lights, never the house's default red/blue again. */
 const LANDING_SCOPE_ACCENTS: Record<string, string> = Object.fromEntries(
   LANDING_SCOPES.map((key) => [key, SCOPE_META[key].accent])
 );
+
+/* the field's whole dress — both crystals and the floor's own name
+   for its light, as one vars object the lens wears (the frame's
+   edge, the wash and every hand inside read the same truth) */
+function scopeDress(key: string): CSSProperties {
+  return {
+    "--scope-a": LANDING_SCOPE_ACCENTS[key] ?? "#d8b571",
+    "--scope-b": SCOPE_META[key]?.second ?? "#7dd3fc",
+    "--landing-scope-accent": LANDING_SCOPE_ACCENTS[key] ?? "#d8b571",
+  } as CSSProperties;
+}
 
 export default function LandingGate() {
   const { setTheme } = useTheme();
@@ -625,6 +639,10 @@ export default function LandingGate() {
           width: fullscreen ? "100vw" : geo.w,
           height: fullscreen ? "var(--vh-safe)" : geo.h,
           visibility: docked && guideOpen ? "hidden" : "visible",
+          /* THE FIELD'S WHOLE DRESS — the chosen field's own light
+             rides the lens itself, so the frame's edge, the wash and
+             everything inside wear one truth (both gears). */
+          ...scopeDress(landingScope),
         }}
       >
           <div
@@ -635,13 +653,33 @@ export default function LandingGate() {
                  threshold its edge is a soft, slightly transparent line
                  with a faint crystal breath of shadow (no filter, no
                  animation — the phone pays nothing); the full portal
-                 keeps its own solid edge. */
+                 keeps its own solid edge. THE FIELD'S OWN EDGE — the
+                 border mixes the standing field's light into the
+                 threshold's line, so every scope's window wears its
+                 own color on the rim. */
               docked
-                ? "border-[var(--lp-edge)] shadow-[0_40px_120px_-40px_rgba(0,0,0,0.95),0_0_44px_-20px_rgba(92,122,82,0.4),0_0_30px_-16px_rgba(124,95,143,0.35)]"
-                : "border-white/10 shadow-[0_40px_120px_-40px_rgba(0,0,0,0.95)]"
+                ? "shadow-[0_40px_120px_-40px_rgba(0,0,0,0.95),0_0_44px_-20px_rgba(92,122,82,0.4),0_0_30px_-16px_rgba(124,95,143,0.35)]"
+                : "shadow-[0_40px_120px_-40px_rgba(0,0,0,0.95)]"
             )}
-            style={{ borderRadius: fullscreen ? 0 : geo.radius }}
+            style={{
+              borderRadius: fullscreen ? 0 : geo.radius,
+              borderColor: docked
+                ? "color-mix(in srgb, var(--scope-a,var(--gd)) 26%, var(--lp-edge))"
+                : "color-mix(in srgb, var(--scope-a,var(--gd)) 22%, rgba(255,255,255,0.10))",
+            }}
           >
+            {/* THE FIELD'S OWN AIR — one still wash of the standing
+                field's light over the chamber's ceiling: every scope's
+                window breathes its own color from the top down (a
+                static gradient — no blur, no motion, no cost). */}
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-x-0 top-0 z-[1] h-[110px]"
+              style={{
+                background:
+                  "linear-gradient(180deg, color-mix(in srgb, var(--scope-a,var(--gd)) 8%, transparent), transparent 100%)",
+              }}
+            />
             {/* THE WHOLE CHAMBER IN ITS WINDOW — docked, the chamber
                 lays out at the window's own size through a scoped
                 --app-h (its crown, floor and whisper line all stand
@@ -655,27 +693,12 @@ export default function LandingGate() {
                   ? ({
                       width: "100vw",
                       height: "var(--vh-safe)",
-                      /* THE SCOPE'S OWN LIGHT — the field rides the
-                         fullscreen gear too: the whole chat wears it. */
-                      "--scope-a":
-                        LANDING_SCOPE_ACCENTS[landingScope] ?? "#d8b571",
-                      "--landing-scope-accent":
-                        LANDING_SCOPE_ACCENTS[landingScope] ?? "#d8b571",
                     } as CSSProperties)
                   : ({
                       width: geo.w,
                       height: geo.h,
                       "--app-h": `${geo.h}px`,
                       "--app-shift": "0px",
-                      /* THE SCOPE'S OWN LIGHT — the threshold's chosen
-                         field tints the WHOLE chat (the crown, the
-                         panels, the composer, the doors, the send —
-                         see LANDING_SCOPE_ACCENTS): every field is
-                         its own world, wearing its own color. */
-                      "--scope-a":
-                        LANDING_SCOPE_ACCENTS[landingScope] ?? "#d8b571",
-                      "--landing-scope-accent":
-                        LANDING_SCOPE_ACCENTS[landingScope] ?? "#d8b571",
                     } as CSSProperties)
               }
             >

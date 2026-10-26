@@ -12,38 +12,19 @@ import { LandingChatNav } from "./landing/LandingChatNav";
 import { WalletGuard } from "./WalletGuard";
 import { BranchCanopy } from "./BranchCanopy";
 import { ReplyBranches } from "./ReplyBranches";
-import { MirrorOS } from "./MirrorOS";
-import { ParticleX } from "./ParticleX";
-import { ArtX } from "./ArtX";
-import { EvolveMed } from "./EvolveMed";
-import { InventView } from "./InventView";
-import { LightCodesView } from "./LightCodesView";
-import { LibraryView } from "./LibraryView";
-import { QuantumLabView } from "./QuantumLabView";
 import { AuthModal } from "./PassageModal";
 import { ProfilePage } from "./ProfilePage";
 import { AccountModal } from "./AccountModal";
 import { BranchHub } from "./BranchHub";
-import { VideoStudioView } from "./VideoStudioView";
-import { AkashicView } from "./AkashicView";
 import { FederationModal } from "./FederationModal";
 import { AstralJobsModal } from "./AstralJobsModal";
 import { DossierModal } from "./DossierModal";
 import { SettingsModal } from "./SettingsModal";
 import { SpeciesModal } from "./SpeciesModal";
 
-/* THE LAZY ROOMS — the register, the book and the technology table are
-   whole rooms/modals of their own: their code only rides along when
-   first shown, never in the frame's opening bundle (client-only, no
-   server weight, nothing on the first paint but a null). */
-const ArchiveRegister = dynamic(
-  () => import("./ArchiveRegister").then((m) => ({ default: m.ArchiveRegister })),
-  { ssr: false, loading: () => null }
-);
-const DreamBookView = dynamic(
-  () => import("./DreamBookView").then((m) => ({ default: m.DreamBookView })),
-  { ssr: false, loading: () => null }
-);
+/* THE LAZY ROOM — the technology table is a modal of its own: its
+   code only rides along when first shown, never in the frame's
+   opening bundle (client-only, no server weight). */
 const TechnologyModal = dynamic(
   () => import("./TechnologyModal").then((m) => ({ default: m.TechnologyModal })),
   { ssr: false, loading: () => null }
@@ -110,7 +91,6 @@ function AppShellViews({
   onExpand?: () => void;
   onMinimize?: () => void;
 }) {
-  const view = useMirror((s) => s.view);
   const activeMode = useMirror((s) => s.activeMode);
   const refreshMe = useMirror((s) => s.refreshMe);
   const meEmail = useMirror((s) => s.me?.email ?? null);
@@ -262,146 +242,18 @@ function AppShellViews({
     </>
   );
 
-  /* The Akashic Library — the reading room of records: one sheet on
-     the desk, one record at a time, in the same ink as the book. */
-  if (view === "akashic") {
-    return (
-      <div className={`relative h-[var(--app-h,var(--vh-safe))] overflow-hidden ${FRAME_LIFT}`}>
-        <AkashicView />
-      </div>
-    );
-  }
-
-  /* The Book — the dream book's atelier: tales woven with the
-     visitor and read as they are being written. */
-  if (view === "dreambook") {
-    return (
-      <div className={`relative h-[var(--app-h,var(--vh-safe))] overflow-hidden ${FRAME_LIFT}`}>
-        <DreamBookView />
-      </div>
-    );
-  }
-
-  /* THE VIDEO STUDIO — the universal engine's first complete workflow:
-     a wish understood, a storyboard planned, the house's voice speaking,
-     the film assembled on the visitor's own device, kept by its branch. */
-  if (view === "video") {
-    return (
-      <div className={`relative h-[var(--app-h,var(--vh-safe))] overflow-hidden ${FRAME_LIFT}`}>
-        <VideoStudioView />
-        {passageModals}
-      </div>
-    );
-  }
-
-  /* THE WORLDS — every kategory of the old website remains its own
-     full-screen chapter, reached from the realm's doors; one back
-     hand in each returns to the living tree. */
-  if (view === "mirroros") {
-    return (
-      <div className={`relative h-[var(--app-h,var(--vh-safe))] overflow-hidden ${FRAME_LIFT}`}>
-        <CosmicBackdrop />
-        <StarField />
-        <MirrorOS />
-        {passageModals}
-      </div>
-    );
-  }
-
-  if (view === "particlex") {
-    return (
-      <div className={`relative h-[var(--app-h,var(--vh-safe))] overflow-hidden ${FRAME_LIFT}`}>
-        <CosmicBackdrop />
-        <StarField />
-        <ParticleX />
-        {passageModals}
-      </div>
-    );
-  }
-
-  if (view === "evolvemed") {
-    return (
-      <div className={`relative h-[var(--app-h,var(--vh-safe))] overflow-hidden ${FRAME_LIFT}`}>
-        <CosmicBackdrop />
-        <StarField />
-        <EvolveMed />
-        {passageModals}
-      </div>
-    );
-  }
-
-  if (view === "artx") {
-    return (
-      <div className={`relative h-[var(--app-h,var(--vh-safe))] overflow-hidden ${FRAME_LIFT}`}>
-        <CosmicBackdrop />
-        <StarField />
-        <ArtX />
-        {passageModals}
-      </div>
-    );
-  }
-
-  if (view === "invent") {
-    return (
-      <div className={`relative h-[var(--app-h,var(--vh-safe))] overflow-hidden ${FRAME_LIFT}`}>
-        <CosmicBackdrop />
-        <StarField />
-        <InventView />
-        <BranchHub />
-      </div>
-    );
-  }
-
-  if (view === "lightcodes") {
-    return (
-      <div className={`relative h-[var(--app-h,var(--vh-safe))] overflow-hidden ${FRAME_LIFT}`}>
-        <CosmicBackdrop />
-        <StarField />
-        <LightCodesView />
-        {passageModals}
-      </div>
-    );
-  }
-
-  if (view === "library") {
-    return (
-      <div className={`relative h-[var(--app-h,var(--vh-safe))] overflow-hidden ${FRAME_LIFT}`}>
-        <LibraryView />
-        {passageModals}
-      </div>
-    );
-  }
-
-  if (view === "register") {
-    return (
-      <div className={`relative h-[var(--app-h,var(--vh-safe))] overflow-hidden ${FRAME_LIFT}`}>
-        <ArchiveRegister />
-      </div>
-    );
-  }
-
-  /* THE QUANTUM LABORATORY — the deep nature of reality's own bench,
-     full-frame when the tab is expanded: a genuine local simulator
-     (its gates run in pure arithmetic on the device), wearing the
-     field's own violet light. */
-  if (view === "qlab") {
-    return (
-      <div className={`relative h-[var(--app-h,var(--vh-safe))] overflow-hidden ${FRAME_LIFT}`}>
-        <CosmicBackdrop />
-        <StarField />
-        <QuantumLabView />
-        {passageModals}
-      </div>
-    );
-  }
-
   /* ----------------------- THE BRANCH REALM -------------------------
-     No other surface exists: the tree owns every pixel. The canopy
-     never folds (open stands true), the seed sits at the centre, the
-     categories crown the very top, and the four doors of the house
-     ride beside the where-pill. The transmission streams into the
-     room from the channel below; the walk continues from every
-     reply's own grown branches. */
+     ONE SURFACE, ONE FRAME: the whole application is the one chat
+     now. Every room — tool, workplace, the visitor's profile —
+     plays WITHIN the chat's own frame (the window rises over the
+     chat at its exact size, the way the profile always played); no
+     view ever leaves for a separate page any more (the old
+     full-screen early-returns are gone with the expand hand). The
+     canopy never folds (open stands true), the seed sits at the
+     centre, the categories crown the very top, and the crown's own
+     navigator rides beside the where-pill. The transmission streams
+     into the room from the channel below; the walk continues from
+     every reply's own grown branches. */
   return (
     <div className={`relative h-[var(--app-h,var(--vh-safe))] overflow-hidden ${FRAME_LIFT}`}>
       <CosmicBackdrop />
@@ -475,10 +327,11 @@ function AppShellViews({
 
       {/* THE WORKSPACE — the tools' own room: every open tool stands
           as a tab over the chat at the chat's own exact size; the chat
-          stays mounted underneath, and the expand hand gives a room
-          its full-frame depth (its back hand returns to this window).
-          THE ONE WINDOW — the same law in both gears: bare now only
-          gears the docking physics, never the window's geometry. */}
+          stays mounted underneath. THE ONE FRAME — there is no
+          expansion beyond the frame any more: the same window is the
+          room's whole world in both gears, the way the profile plays
+          (bare now only gears the docking physics, never the
+          window's geometry). */}
       <ToolWorkspace bare={bare} />
 
       {/* the reading rooms' own modals — every door keeps its keys */}

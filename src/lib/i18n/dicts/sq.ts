@@ -5602,4 +5602,33 @@ export const sq: TranslationDict = {
   "Back to the slideshow": "Kthehu te rrëshqitjet",
   "Choose another guide": "Zgjidh një udhërrëfyes tjetër",
   "Pause & reflect": "Pushim & reflektim",
+  /* --- THE SIMPLE ROOMS — Manifest and Invent, rebuilt from scratch --- */
+  "Speak the world you wish to make — the Mirror shapes it with you.":
+    "Fol botën që dëshiron të krijosh — Pasqyra e formon me ty.",
+  "Bring a spark — the Mirror forges it into form with you.":
+    "Sill një shkëndijë — Pasqyra e farkëton në formë me ty.",
+  "Speak your intention…": "Fol qëllimin tënd…",
+  "Spark the forge…": "Ndiz farkëtën…",
+  "Help me shape a clear intention for this week":
+    "Më ndihmo të formoj një qëllim të qartë për këtë javë",
+  "What should I release to move forward?":
+    "Çfarë duhet të lë të shkojë për të vazhduar përpara?",
+  "Turn my worry into a small first step":
+    "Kthe shqetësimin tim në një hap të parë të vogël",
+  "Help me sketch an invention for a small daily annoyance":
+    "Më ndihmo të skicoj një shpikje për një bezdi të vogël të përditshme",
+  "Give my idea a name and a simple mechanism":
+    "Jep idejës time një emër dhe një mekanizëm të thjeshtë",
+  "How would I test whether my idea truly works?":
+    "Si ta provoj nëse ideja ime punon vërtet?",
+  "Begin this room anew": "Fillo këtë dhomë nga e para",
+  /* --- THE FIELDS' OWN QUESTIONS — the floor asks in its own spirit --- */
+  "which star shall we walk beneath tonight?":
+    "nën cilin yll do të ecim sot mbrëma?",
+  "what shall we unfold, quanta by quanta?":
+    "çfarë të zgjerojmë, kuant pas kuanti?",
+  "what vision waits to be painted?":
+    "çfarë vizioni pret të pikturohet?",
+  "where does your body ask for quiet today?":
+    "ku kërkon trupi yt qetësi sot?",
 };
