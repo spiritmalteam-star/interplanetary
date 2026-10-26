@@ -141,14 +141,16 @@ function ToolWorkspaceImpl({ bare = false }: { bare?: boolean }) {
   return (
     <div
       data-testid="tool-workspace"
+      data-workplace="true"
       className="pointer-events-auto absolute inset-0 z-30 flex flex-col overflow-hidden rounded-none border bg-background shadow-[0_24px_70px_-30px_rgba(0,0,0,0.6)]"
       style={winStyle}
     >
-      {/* THE HEADER — the row of open rooms */}
-      <div
-        className="flex h-10 shrink-0 items-center gap-1 overflow-x-auto border-b px-1.5"
-        style={{ borderColor: "var(--hairline)" }}
-      >
+      {/* THE WORKPLACE HEADER — the row of open rooms, worn as compact
+          pills so many workplaces fit the chat's own frame. The active
+          room wears the house's light: var(--scope-a) is the scope the
+          visitor chose (LandingGate sets it on the whole chamber), so
+          every workplace tints itself with its own house. */}
+      <div className="flex h-9 shrink-0 items-center gap-1 overflow-x-auto px-1">
         {toolTabs.map((key) => {
           const meta = TAB_META[key];
           const Icon = meta.icon;
@@ -162,11 +164,22 @@ function ToolWorkspaceImpl({ bare = false }: { bare?: boolean }) {
               title={t(meta.label)}
               data-testid={`tool-tab-${key}`}
               className={cn(
-                "flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] transition-colors duration-300",
+                "flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-[11.5px] transition-colors duration-300",
                 isActive
-                  ? "bg-foreground/10 font-medium text-foreground"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "font-medium"
+                  : "border-transparent text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
               )}
+              style={
+                isActive
+                  ? {
+                      backgroundColor:
+                        "color-mix(in srgb, var(--scope-a,var(--gd)) 12%, transparent)",
+                      color: "var(--scope-a,var(--gd))",
+                      borderColor:
+                        "color-mix(in srgb, var(--scope-a,var(--gd)) 35%, transparent)",
+                    }
+                  : undefined
+              }
             >
               <Icon className="size-3.5" aria-hidden="true" />
               {t(meta.label)}
@@ -224,14 +237,38 @@ function ToolWorkspaceImpl({ bare = false }: { bare?: boolean }) {
         </button>
       </div>
 
+      {/* THE WORKPLACE IDENTITY STRIP — one slim line of the house's
+          light under the rooms (the plain hairline it replaces never
+          carried the scope): the tint flows from the doors and fades
+          across the frame, so the window reads as a workplace of this
+          scope, not a floating sheet. */}
+      <div
+        aria-hidden="true"
+        className="h-px shrink-0"
+        style={{
+          background:
+            "linear-gradient(90deg, color-mix(in srgb, var(--scope-a,var(--gd)) 45%, transparent), color-mix(in srgb, var(--scope-a,var(--gd)) 18%, transparent) 42%, transparent 100%)",
+        }}
+      />
+
       {/* THE BODY — the active room fills the window; the keyed mount
-          gives every tab its own clean scroll */}
+          gives every tab its own clean scroll. A whisper of the house's
+          light washes the workplace's ceiling (pointer-events-none, no
+          blur, no motion — every touch passes through to the room). */}
       <div className="relative min-h-0 flex-1">
         {ActiveView && active ? (
           <div key={active} className="absolute inset-0">
             <ActiveView />
           </div>
         ) : null}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 top-0 z-10 h-[90px]"
+          style={{
+            background:
+              "linear-gradient(180deg, color-mix(in srgb, var(--scope-a,var(--gd)) 5%, transparent), transparent)",
+          }}
+        />
       </div>
     </div>
   );

@@ -477,7 +477,7 @@ export function ProfilePage() {
     },
     {
       id: "settings",
-      label: "The Chamber",
+      label: "Settings",
       icon: Settings2,
       available: true,
       testId: "profile-nav-settings",
@@ -533,19 +533,25 @@ export function ProfilePage() {
         data-testid={item.testId}
         aria-current={active ? "page" : undefined}
         className={cn(
-          "focus-glow flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-[14px] transition-all duration-300",
+          "focus-glow flex w-full items-center gap-2 rounded-xl border px-2.5 py-1.5 text-left text-[13.5px] transition-all duration-300",
           active
-            ? "bg-[var(--glass-bg)] font-medium text-foreground shadow-[0_1px_0_0_var(--hairline)]"
-            : "text-muted-foreground hover:bg-[color-mix(in_srgb,var(--foreground)_4%,transparent)] hover:text-foreground"
+            ? "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_40%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_12%,var(--glass-bg))] font-medium text-foreground shadow-[0_6px_18px_-12px_color-mix(in_srgb,var(--scope-a,var(--gd))_50%,transparent)]"
+            : "border-transparent text-muted-foreground hover:bg-[color-mix(in_srgb,var(--foreground)_4%,transparent)] hover:text-foreground"
         )}
       >
         <Icon
-          className={cn("size-4 shrink-0", active ? "text-[var(--scope-a)]" : "")}
+          className={cn(
+            "size-4 shrink-0",
+            active ? "text-[var(--scope-a,var(--gd))]" : ""
+          )}
           aria-hidden="true"
         />
         <span className="min-w-0 flex-1 truncate">{t(item.label)}</span>
         <ChevronRight
-          className={cn("size-3.5 shrink-0 transition-opacity", active ? "opacity-60" : "opacity-0")}
+          className={cn(
+            "size-3.5 shrink-0 transition-opacity",
+            active ? "text-[var(--scope-a,var(--gd))] opacity-70" : "opacity-0"
+          )}
           aria-hidden="true"
         />
       </button>
@@ -562,19 +568,26 @@ export function ProfilePage() {
   const IdentityCard = () => (
     <div
       data-testid="profile-identity-card"
-      className="mb-3 flex items-center gap-2.5 rounded-2xl border hairline bg-[var(--glass-bg-soft)] px-3 py-2.5"
+      className="lift-sm mb-2.5 flex items-center gap-2.5 rounded-2xl border hairline bg-[var(--glass-bg-soft)] px-3 py-2"
     >
       <span
-        className="mono-label flex size-9 shrink-0 items-center justify-center rounded-full border hairline bg-[var(--glass-bg)] text-[15px] text-foreground/85"
+        className="mono-label flex size-10 shrink-0 items-center justify-center rounded-full text-[16px] text-foreground/90"
+        style={{
+          border: "1px solid color-mix(in srgb, var(--scope-a, var(--gd)) 42%, transparent)",
+          backgroundColor:
+            "color-mix(in srgb, var(--scope-a, var(--gd)) 10%, var(--glass-bg))",
+          boxShadow:
+            "0 0 20px -8px color-mix(in srgb, var(--scope-a, var(--gd)) 55%, transparent)",
+        }}
         aria-hidden="true"
       >
         {identityInitial}
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-[14px] font-medium leading-tight text-foreground/95">
+        <span className="block truncate text-[13.5px] font-medium leading-tight text-foreground/95">
           {displayName}
         </span>
-        <span className="mono-label block truncate text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+        <span className="mono-label block truncate text-[9.5px] uppercase tracking-[0.12em] text-muted-foreground">
           {identityMail}
         </span>
       </span>
@@ -596,28 +609,44 @@ export function ProfilePage() {
     testId?: string;
     small?: boolean;
   }) => (
-    <div className="mb-4">
-      <h2
-        data-testid={testId}
+    <div className="mb-3 flex items-start gap-2.5">
+      {/* THE SCOPE'S ACCENT — one small tinted bar before every head:
+          the chosen scope's color holding still (a mark, never a motion) */}
+      <span
+        aria-hidden="true"
         className={cn(
-          "leading-snug tracking-[-0.01em]",
-          small
-            ? "text-[14px] font-medium text-muted-foreground"
-            : "text-[17.5px] font-semibold text-foreground"
+          "mt-[3px] w-[3px] shrink-0 rounded-full",
+          small ? "h-[13px]" : "h-[16px]"
         )}
-      >
-        {title}
-      </h2>
-      {desc && (
-        <p
+        style={{
+          background: small
+            ? "color-mix(in srgb, var(--scope-a, var(--gd)) 45%, transparent)"
+            : "linear-gradient(180deg, var(--scope-a, var(--gd)), color-mix(in srgb, var(--scope-a, var(--gd)) 30%, transparent))",
+        }}
+      />
+      <div className="min-w-0 flex-1">
+        <h2
+          data-testid={testId}
           className={cn(
-            "mt-0.5 leading-relaxed",
-            small ? "text-[12.5px] text-muted-foreground/80" : "text-[13.5px] text-muted-foreground"
+            "leading-snug tracking-[-0.01em]",
+            small
+              ? "text-[13.5px] font-medium text-muted-foreground"
+              : "text-[16.5px] font-semibold text-foreground"
           )}
         >
-          {desc}
-        </p>
-      )}
+          {title}
+        </h2>
+        {desc && (
+          <p
+            className={cn(
+              "mt-0.5 leading-relaxed",
+              small ? "text-[12.5px] text-muted-foreground/80" : "text-[13.5px] text-muted-foreground"
+            )}
+          >
+            {desc}
+          </p>
+        )}
+      </div>
     </div>
   );
 
@@ -642,10 +671,18 @@ export function ProfilePage() {
                   : t("A quiet guest")
               }
             />
-            <section aria-label={t("Identity")} className={cn(panel, "p-4 sm:p-5")}>
+            <section aria-label={t("Identity")} className={cn(panel, "p-3.5 sm:p-4")}>
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                 <span
-                  className="mono-label flex size-12 shrink-0 items-center justify-center rounded-2xl border hairline bg-[var(--glass-bg)] text-[21px] text-foreground/85 shadow-[0_10px_30px_-18px_rgba(0,0,0,0.5)]"
+                  className="mono-label flex size-12 shrink-0 items-center justify-center rounded-2xl text-[21px] text-foreground/90"
+                  style={{
+                    border:
+                      "1px solid color-mix(in srgb, var(--scope-a, var(--gd)) 40%, transparent)",
+                    backgroundColor:
+                      "color-mix(in srgb, var(--scope-a, var(--gd)) 9%, var(--glass-bg))",
+                    boxShadow:
+                      "0 10px 30px -18px rgba(0,0,0,0.5), 0 0 26px -10px color-mix(in srgb, var(--scope-a, var(--gd)) 50%, transparent)",
+                  }}
                   aria-hidden="true"
                 >
                   {me ? (me.name || me.email).slice(0, 1).toUpperCase() : "✦"}
@@ -724,8 +761,8 @@ export function ProfilePage() {
             </section>
 
             {/* the sectors — the library at a glance */}
-            <div className="mt-6">
-              <p className="mono-label mb-2.5 text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+            <div className="mt-5">
+              <p className="mono-label mb-2 text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
                 {t("Cosmic Library")}
               </p>
               <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
@@ -734,10 +771,10 @@ export function ProfilePage() {
                     key={key}
                     type="button"
                     onClick={() => setSection("library")}
-                    className="focus-glow group flex items-center gap-3 rounded-xl border hairline bg-[var(--glass-bg-soft)] px-3.5 py-3 text-left transition-all duration-300 hover:border-[var(--hairline-hover)]"
+                    className="focus-glow group flex items-center gap-2.5 rounded-xl border hairline bg-[var(--glass-bg-soft)] px-3 py-2.5 text-left transition-all duration-300 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_38%,transparent)]"
                   >
                     <span
-                      className="mono-label flex size-8 shrink-0 items-center justify-center rounded-lg border hairline text-[14px] text-muted-foreground"
+                      className="mono-label flex size-7 shrink-0 items-center justify-center rounded-lg border hairline text-[13px] text-muted-foreground"
                       aria-hidden="true"
                     >
                       {meta.icon}
@@ -772,10 +809,10 @@ export function ProfilePage() {
             />
             <section aria-label={t("Settings")} className={cn(panel, "divide-y hairline")}>
               {/* language */}
-              <div className="flex flex-col gap-2 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+              <div className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
                 <label
                   htmlFor="profile-language"
-                  className="text-[14.5px] font-medium text-foreground/90"
+                  className="text-[14px] font-medium text-foreground/90"
                 >
                   {t("Language")}
                 </label>
@@ -797,10 +834,10 @@ export function ProfilePage() {
                 </select>
               </div>
               {/* voice */}
-              <div className="flex flex-col gap-2 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+              <div className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
                 <label
                   htmlFor="profile-voice"
-                  className="text-[14.5px] font-medium text-foreground/90"
+                  className="text-[14px] font-medium text-foreground/90"
                 >
                   {t("The voice that reads")}
                 </label>
@@ -819,10 +856,10 @@ export function ProfilePage() {
                 </select>
               </div>
               {/* pace */}
-              <div className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+              <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
                 <label
                   htmlFor="profile-pace"
-                  className="text-[14.5px] font-medium text-foreground/90"
+                  className="text-[14px] font-medium text-foreground/90"
                 >
                   {t("Narration pace")}
                 </label>
@@ -845,11 +882,11 @@ export function ProfilePage() {
               </div>
               {/* THE MIX OF WORLDS — the living tree's own proportions */}
               <div
-                className="flex flex-col gap-3 p-4 sm:p-5"
+                className="flex flex-col gap-3 p-3.5 sm:p-4"
                 data-testid="profilepage-mix"
               >
                 <div>
-                  <p className="text-[14.5px] font-medium text-foreground/90">
+                  <p className="text-[14px] font-medium text-foreground/90">
                     {t("The mix of worlds")}
                   </p>
                   <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground/80">
@@ -944,7 +981,7 @@ export function ProfilePage() {
                 "Every work you bound into a PDF rests here — bind any of them again with one touch."
               )}
             />
-            <section className={cn(panel, "p-4 sm:p-5")}>
+            <section className={cn(panel, "p-3.5 sm:p-4")}>
               {bound === null ? (
                 <p
                   className="flex items-center gap-2 py-3 text-[13.5px] text-muted-foreground"
@@ -1013,7 +1050,7 @@ export function ProfilePage() {
                 "Name what you wish to be more informed and expansive in. A coherent, relevant phrase becomes a seed — new branches will grow from it in every field of the tree."
               )}
             />
-            <section className={cn(panel, "p-4 sm:p-5")}>
+            <section className={cn(panel, "p-3.5 sm:p-4")}>
               <div className="flex items-center gap-2">
                 <input
                   value={seedDraft}
@@ -1092,7 +1129,7 @@ export function ProfilePage() {
                 "Nothing rests here yet — every transmission you make is kept in your own sectors."
               )}
             />
-            <section className={cn(panel, "p-4 sm:p-5")}>
+            <section className={cn(panel, "p-3.5 sm:p-4")}>
               <div className="flex items-center justify-between gap-2">
                 <div className="flex flex-wrap gap-1.5">
                   {Object.entries(SECTOR_META).map(([key, meta]) => (
@@ -1117,7 +1154,7 @@ export function ProfilePage() {
                 </button>
               </div>
 
-              <div className="mt-4 space-y-1.5 border-t hairline pt-4">
+              <div className="mt-3 space-y-1.5 border-t hairline pt-3">
                 {entries === null ? (
                   <p
                     className="flex items-center gap-2 py-3 text-[13.5px] text-muted-foreground"
@@ -1172,7 +1209,7 @@ export function ProfilePage() {
               title={t("The path you have walked")}
               desc={t("The DNA of your curiosity — one colored rung per branch chased.")}
             />
-            <section className={cn(panel, "p-4 sm:p-5")}>
+            <section className={cn(panel, "p-3.5 sm:p-4")}>
               <div className="no-scrollbar overflow-x-auto">
                 <DnaHelix steps={journey} />
               </div>
@@ -1207,7 +1244,7 @@ export function ProfilePage() {
             {!signedIn ? (
               /* THE PASSAGE GATE — the API answers only a signed-in keeper */
               <section
-                className={cn(panel, "flex flex-col items-start gap-3 p-4 sm:p-5")}
+                className={cn(panel, "flex flex-col items-start gap-3 p-3.5 sm:p-4")}
                 data-testid="profilepage-api-gate"
               >
                 <span
@@ -1234,7 +1271,7 @@ export function ProfilePage() {
             ) : (
               <>
                 {/* HER OWN WORDS — what her channeling offers, asked live */}
-                <section className={cn(panel, "p-4 sm:p-5")}>
+                <section className={cn(panel, "p-3.5 sm:p-4")}>
                   <button
                     type="button"
                     onClick={() => void askMirrorOfferings()}
@@ -1296,7 +1333,7 @@ export function ProfilePage() {
 
                 {/* THE LIGHT THE VESSEL READS BY — usage & recharge, in the
                     house's own ink: a stone card, a gauge, the same coins */}
-                <section className={cn(panel, "mt-4 p-4 sm:p-5")}>
+                <section className={cn(panel, "mt-3 p-3.5 sm:p-4")}>
                   <p className="mono-label text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
                     {t("Recharge the light")}
                   </p>
@@ -1316,9 +1353,9 @@ export function ProfilePage() {
                   ) : summary ? (
                     <>
                       <div className="mt-3 grid grid-cols-2 gap-2">
-                        <div className="rounded-xl border hairline bg-[var(--glass-bg)] px-3 py-2.5">
+                        <div className="rounded-xl border hairline bg-[var(--glass-bg)] px-3 py-2.5 transition-colors duration-300 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_38%,transparent)]">
                           <Gem className="size-3.5 text-[var(--cy)]" aria-hidden="true" />
-                          <p className="mt-1.5 truncate text-[17px] font-semibold leading-none text-foreground/95">
+                          <p className="mt-1.5 truncate text-[16px] font-semibold leading-none text-foreground/95">
                             {summary.credits.balance != null
                               ? summary.credits.balance.toLocaleString("en-US")
                               : "—"}
@@ -1327,9 +1364,9 @@ export function ProfilePage() {
                             {t("Credits")} · {summary.plan.label}
                           </p>
                         </div>
-                        <div className="rounded-xl border hairline bg-[var(--glass-bg)] px-3 py-2.5">
+                        <div className="rounded-xl border hairline bg-[var(--glass-bg)] px-3 py-2.5 transition-colors duration-300 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_38%,transparent)]">
                           <CreditCard className="size-3.5 text-[var(--cy)]" aria-hidden="true" />
-                          <p className="mt-1.5 truncate text-[17px] font-semibold leading-none text-foreground/95">
+                          <p className="mt-1.5 truncate text-[16px] font-semibold leading-none text-foreground/95">
                             {summary.usage.events30d}
                           </p>
                           <p className="mono-label mt-1 truncate text-[9px] uppercase tracking-[0.16em] text-muted-foreground">
@@ -1394,7 +1431,7 @@ export function ProfilePage() {
                 </section>
 
                 {/* THE VESSEL KEYS — carved here, shown once, revoked at will */}
-                <section className={cn(panel, "mt-4 p-4 sm:p-5")}>
+                <section className={cn(panel, "mt-3 p-3.5 sm:p-4")}>
                   <p className="mono-label text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
                     {t("Your vessel key")}
                   </p>
@@ -1555,7 +1592,7 @@ export function ProfilePage() {
                 </section>
 
                 {/* THE ENDPOINT — one door, one header, her whole voice */}
-                <section className={cn(panel, "mt-4 p-4 sm:p-5")}>
+                <section className={cn(panel, "mt-3 p-3.5 sm:p-4")}>
                   <p className="mono-label text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
                     {t("Endpoint")}
                   </p>
@@ -1648,7 +1685,7 @@ export function ProfilePage() {
                 "Your chamber — plan, credits, usage, keys and security, all in one place."
               )}
             />
-            <section className={cn(panel, "p-4 sm:p-5")}>
+            <section className={cn(panel, "p-3.5 sm:p-4")}>
               {summaryLoading ? (
                 <p
                   className="flex items-center gap-2 py-3 text-[13.5px] text-muted-foreground"
@@ -1691,16 +1728,16 @@ export function ProfilePage() {
                     return (
                       <div
                         key={i}
-                        className="rounded-xl border hairline bg-[var(--glass-bg)] px-3.5 py-3"
+                        className="rounded-xl border hairline bg-[var(--glass-bg)] px-3 py-2.5 transition-colors duration-300 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_38%,transparent)]"
                       >
                         <Icon
                           className="size-3.5 text-[var(--cy)]"
                           aria-hidden="true"
                         />
-                        <p className="mt-2 truncate text-[18px] font-semibold leading-none text-foreground/95">
+                        <p className="mt-1.5 truncate text-[16px] font-semibold leading-none text-foreground/95">
                           {tile.value}
                         </p>
-                        <p className="mt-1.5 truncate text-[12.5px] text-muted-foreground">
+                        <p className="mt-1 truncate text-[12px] text-muted-foreground">
                           {tile.label}
                         </p>
                       </div>
@@ -1733,7 +1770,7 @@ export function ProfilePage() {
                   )}
                 </p>
               )}
-              <div className="mt-4 flex flex-wrap items-center gap-2 border-t hairline pt-4">
+              <div className="mt-3 flex flex-wrap items-center gap-2 border-t hairline pt-3">
                 <button
                   type="button"
                   onClick={() => exitTo(openAccount)}
@@ -1767,7 +1804,7 @@ export function ProfilePage() {
       {groupPanels(section).map((sec, i) => (
         <div
           key={sec}
-          className={i > 0 ? "mt-10 border-t hairline pt-8" : undefined}
+          className={i > 0 ? "mt-5 border-t hairline pt-4" : undefined}
         >
           {renderPanel(sec)}
         </div>
@@ -1802,13 +1839,13 @@ export function ProfilePage() {
         {/* the head — one way back to the Mirror, one name, one close
             hand at the room's top corner (always within sight, even
             at the chat's smallest size) */}
-        <header className="shrink-0 border-b hairline bg-background/40">
-          <div className="mx-auto flex w-full max-w-6xl items-center gap-3 px-4 py-2.5 sm:px-8">
+        <header className="relative shrink-0 border-b hairline bg-background/40">
+          <div className="mx-auto flex w-full max-w-6xl items-center gap-3 px-4 py-2 sm:px-8">
             <button
               type="button"
               onClick={close}
               data-testid="profile-back"
-              className="focus-glow flex h-9 items-center gap-2 rounded-full border hairline px-3.5 text-[13.5px] font-medium text-foreground/85 transition-all duration-300 hover:border-[var(--hairline-hover)] hover:bg-[var(--glass-bg)]"
+              className="focus-glow flex h-8 items-center gap-2 rounded-full border hairline px-3 text-[13px] font-medium text-foreground/85 transition-all duration-300 hover:border-[var(--hairline-hover)] hover:bg-[var(--glass-bg)]"
             >
               <ArrowLeft className="size-4" aria-hidden="true" />
               <span className="hidden sm:inline">{t("Back to the Mirror")}</span>
@@ -1831,6 +1868,16 @@ export function ProfilePage() {
               <X className="size-4" aria-hidden="true" />
             </button>
           </div>
+          {/* THE SCOPE'S OWN LIGHT — a quiet tinted hairline beneath the
+              head: the chosen scope's color resting still, no motion */}
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-0 -bottom-px h-px"
+            style={{
+              background:
+                "linear-gradient(90deg, transparent, color-mix(in srgb, var(--scope-a, var(--gd)) 30%, transparent) 22%, color-mix(in srgb, var(--scope-a, var(--gd)) 30%, transparent) 78%, transparent)",
+            }}
+          />
         </header>
 
         {/* the room — a rail of doors on the left, one held panel on the right */}
@@ -1838,7 +1885,7 @@ export function ProfilePage() {
           {/* the rail — desktop: the keeper's face above the doors */}
           <nav
             aria-label={t("Your profile")}
-            className="hidden w-60 shrink-0 flex-col gap-1 overflow-y-auto border-r hairline py-6 pr-4 md:flex nice-scroll"
+            className="nice-scroll hidden w-52 shrink-0 flex-col gap-0.5 overflow-y-auto border-r hairline py-4 pr-3 md:flex"
           >
             <IdentityCard />
             {navItems
@@ -1855,34 +1902,54 @@ export function ProfilePage() {
 
           {/* the panel */}
           <div ref={scrollRef} className="nice-scroll min-w-0 flex-1 overflow-y-auto">
-            {/* the rail — mobile: THE VERTICAL WAY. No sliding strip of
-                doors: the same quiet list the desktop keeps — the
-                keeper's face above the doors, one door per row, the way
-                a passage should read. */}
+            {/* the rail — mobile: THE COMPACT STRIP. The keeper's face
+                above one quiet row of doors — every room (the Library,
+                the Settings, the Advanced) one thumb away, and the whole
+                block never taller than the card itself. */}
             <nav
               aria-label={t("Your profile")}
-              className="border-b hairline px-4 py-3 md:hidden"
+              className="border-b hairline px-4 py-2.5 md:hidden"
             >
               <IdentityCard />
-              <div className="flex flex-col gap-0.5">
+              <div className="no-scrollbar -mx-1 flex gap-1.5 overflow-x-auto px-1 pb-0.5">
                 {navItems
                   .filter((n) => n.available)
-                  .map((item) => (
-                    <NavButton
-                      key={item.id}
-                      item={item}
-                      active={section === item.id}
-                      onClick={() => setSection(item.id)}
-                    />
-                  ))}
+                  .map((item) => {
+                    const ChipIcon = item.icon;
+                    const chipActive = section === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => setSection(item.id)}
+                        data-testid={item.testId}
+                        aria-current={chipActive ? "page" : undefined}
+                        className={cn(
+                          "focus-glow flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12.5px] transition-all duration-300",
+                          chipActive
+                            ? "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_40%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_12%,var(--glass-bg))] font-medium text-foreground"
+                            : "border-transparent bg-[var(--glass-bg-soft)] text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        <ChipIcon
+                          className={cn(
+                            "size-3.5 shrink-0",
+                            chipActive ? "text-[var(--scope-a,var(--gd))]" : ""
+                          )}
+                          aria-hidden="true"
+                        />
+                        <span className="whitespace-nowrap">{t(item.label)}</span>
+                      </button>
+                    );
+                  })}
               </div>
             </nav>
 
-            <div className="mx-auto w-full max-w-2xl px-4 pb-20 pt-6 sm:px-6 sm:pt-8">
+            <div className="mx-auto w-full max-w-2xl px-4 pb-6 pt-4 sm:px-6 sm:pt-5">
               {ready ? (
                 renderSection()
               ) : (
-                <div className="flex justify-center py-20" aria-busy="true">
+                <div className="flex justify-center py-14" aria-busy="true">
                   <LoaderCircle
                     className="size-5 animate-spin text-muted-foreground/60"
                     aria-hidden="true"

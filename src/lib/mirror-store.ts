@@ -198,18 +198,30 @@ export type ToolTabKey =
   | "library";
 
 /* THE LANDING'S OWN SCOPE — the field the threshold's docked chat
-   walks in (the crown's Scopes hand chooses it). Empty is GENERAL:
-   the whole house's own voices. The four keys are family keys, so
-   the suggestions, the accent light and the banks all resolve
-   through the walk's own families. */
-export type LandingScopeKey = "interplanetary" | "quantum" | "healing" | "artx";
+   walks in (the crown's Scopes hand chooses it). THE MIRROR is the
+   house's own reflection — the standing default (the old "General"):
+   the whole house's own voice answering from the open floor. The
+   other four keys are family keys, so the suggestions, the accent
+   light and the banks all resolve through the walk's own families.
+   Every scope is its own world: its own doors, its own light, its
+   own conversation and its own memory. */
+export type LandingScopeKey =
+  | "mirror"
+  | "interplanetary"
+  | "quantum"
+  | "healing"
+  | "artx";
 
 export const LANDING_SCOPES: LandingScopeKey[] = [
+  "mirror",
   "interplanetary",
   "quantum",
   "healing",
   "artx",
 ];
+
+/** The standing field of the threshold — THE MIRROR, always. */
+export const LANDING_DEFAULT_SCOPE: LandingScopeKey = "mirror";
 
 export type RegisterKind = DossierKind;
 
@@ -639,10 +651,11 @@ interface MirrorState {
   setTreeMix: (mix: TreeMix) => void;
 
   /* THE LANDING'S OWN SCOPE — the threshold's docked chat wears one
-     field's light and suggestions ("" = General, the whole house).
-     Kept for the session only: a new visit wakes in General. */
-  landingScope: LandingScopeKey | "";
-  setLandingScope: (scope: LandingScopeKey | "") => void;
+     field's light and suggestions; THE MIRROR is the standing default
+     (the house's own reflection, the old "General"). Kept for the
+     session only: a new visit wakes in the Mirror again. */
+  landingScope: LandingScopeKey;
+  setLandingScope: (scope: LandingScopeKey) => void;
 
   setLanguage: (code: LanguageCode) => void;
   setVoice: (id: VoiceId) => void;
@@ -1186,13 +1199,14 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     saveTreeMix(mix);
   },
 
-  /* THE LANDING'S OWN SCOPE — General until the crown's Scopes hand
-     chooses; the choice rides the session's own keeping (the setter
-     writes it, bootPreferences wakes it). Only the four family keys
-     are ever kept — anything else falls back to General. */
-  landingScope: "",
+  /* THE LANDING'S OWN SCOPE — THE MIRROR stands until the crown's
+     Scopes hand chooses another field; the choice rides the session's
+     own keeping (the setter writes it, bootPreferences wakes it).
+     Only the house's own keys are ever kept — anything else falls
+     back to the Mirror. */
+  landingScope: LANDING_DEFAULT_SCOPE,
   setLandingScope: (scope) => {
-    const next = scope && LANDING_SCOPES.includes(scope) ? scope : "";
+    const next = LANDING_SCOPES.includes(scope) ? scope : LANDING_DEFAULT_SCOPE;
     set({ landingScope: next });
     try {
       window.sessionStorage.setItem("mirror:landing-scope", next);
@@ -3853,8 +3867,9 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         ...(seeds.length > 0 ? { expansionSeeds: seeds.slice(0, 6) } : {}),
         ...(savedMix ? { treeMix: savedMix } : {}),
         /* THE LANDING'S OWN SCOPE — the session's choice wakes with
-           the threshold (only the four family keys are honored). */
-        ...(LANDING_SCOPES.includes(landingScope as LandingScopeKey)
+           the threshold (only the house's own keys are honored; an
+           empty or stranger key falls back to the Mirror). */
+        ...(landingScope && LANDING_SCOPES.includes(landingScope as LandingScopeKey)
           ? { landingScope: landingScope as LandingScopeKey }
           : {}),
       });

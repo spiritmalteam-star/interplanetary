@@ -23,16 +23,24 @@ import { cn } from "@/lib/utils";
 /*  translate settle — no continuous animation, nothing runs forever.  */
 /* ------------------------------------------------------------------ */
 
-/* THE FOUR FIELDS — the same scopes the walk's own Scopes hand
-   speaks (TopControl's panel), worn here verbatim: same names, same
-   spirits, same lights. No "General" item stands — choosing a lit
-   scope again lays it back down, and the whole house returns. */
+/* THE FIVE FIELDS — the house's own scopes, worn verbatim. THE MIRROR
+   stands first: the house's own reflection, the standing default (the
+   old "General") — the whole house's own voice answering from the
+   open floor. The four family keys resolve through the walk's own
+   families: their doors, their light, their memory. Each field wears
+   its own representative light, and the whole chat tints by it. */
 const NAV_SCOPES: {
   key: LandingScopeKey;
   label: string;
   spirit: string;
   accent: string;
 }[] = [
+  {
+    key: "mirror",
+    label: "The Mirror",
+    spirit: "The house's own reflection",
+    accent: "#d8b571",
+  },
   {
     key: "interplanetary",
     label: "Interplanetary",
@@ -127,10 +135,13 @@ export function LandingChatNav() {
   const pickScope = useCallback(
     (key: LandingScopeKey) => {
       setOpen(null);
-      /* lit again — the field is laid back down and General returns */
-      setLandingScope(landingScope === key ? "" : key);
+      /* every field is its own world — the choice is final: the chat
+         wears the field's light, speaks its language and wakes its
+         own conversation and memory. The Mirror is always there to
+         come home to. */
+      setLandingScope(key);
     },
-    [landingScope, setLandingScope]
+    [setLandingScope]
   );
 
   return (
@@ -225,7 +236,10 @@ export function LandingChatNav() {
           role="menu"
           aria-hidden={open !== "scopes"}
           className={cn(
-            "absolute right-0 top-[calc(100%+0.5rem)] z-40 w-[248px] max-w-[calc(100vw-2.5rem)] rounded-2xl border bg-background p-2 lift-lg transition-all duration-200",
+            /* THE MIDDLE OF THE HOUSE — the fields' own panel stands
+               CENTERED on the Scopes hand, so the row of fields opens
+               exactly where the eye already rests. */
+            "absolute left-1/2 top-[calc(100%+0.5rem)] z-40 w-[292px] max-w-[calc(100vw-2.5rem)] -translate-x-1/2 rounded-2xl border bg-background p-2 lift-lg transition-all duration-200",
             open === "scopes"
               ? "translate-y-0 opacity-100"
               : "pointer-events-none -translate-y-1 opacity-0"
@@ -235,6 +249,13 @@ export function LandingChatNav() {
               "color-mix(in srgb, var(--scope-a,var(--gd)) 30%, transparent)",
           }}
         >
+          {/* the panel's own quiet head — the choice it offers */}
+          <p
+            className="mono-label px-2 pb-1.5 pt-1 text-[9px] uppercase tracking-[0.2em] text-muted-foreground/70"
+            aria-hidden="true"
+          >
+            {t("The field the chat wears")}
+          </p>
           {NAV_SCOPES.map((s) => {
             const focused = landingScope === s.key;
             return (
@@ -247,21 +268,38 @@ export function LandingChatNav() {
                 title={t(s.spirit)}
                 data-testid={`landing-nav-scope-${s.key}`}
                 className={cn(
-                  "focus-glow flex w-full items-center gap-2.5 rounded-xl px-2 py-2 text-left transition-colors duration-300 hover:bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_7%,transparent)]",
-                  focused &&
-                    "bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_10%,transparent)]"
+                  "focus-glow group relative flex w-full items-center gap-3 rounded-xl border px-2.5 py-2 text-left transition-all duration-300",
+                  focused
+                    ? "border-transparent"
+                    : "border-transparent hover:border-[var(--hairline)]"
                 )}
+                style={
+                  focused
+                    ? {
+                        background: `color-mix(in srgb, ${s.accent} 10%, transparent)`,
+                        boxShadow: `inset 0 0 0 1px color-mix(in srgb, ${s.accent} 38%, transparent)`,
+                      }
+                    : undefined
+                }
               >
+                {/* the field's own light — a small orb that carries
+                    the color the whole chat will wear */}
                 <span
                   aria-hidden="true"
-                  className="size-2 shrink-0 rounded-full"
+                  className="flex size-6 shrink-0 items-center justify-center rounded-full"
                   style={{
-                    backgroundColor: s.accent,
-                    boxShadow: focused
-                      ? `0 0 0 3px color-mix(in srgb, ${s.accent} 22%, transparent)`
-                      : undefined,
+                    background: `color-mix(in srgb, ${s.accent} 16%, transparent)`,
+                    boxShadow: `inset 0 0 0 1px color-mix(in srgb, ${s.accent} 45%, transparent)`,
                   }}
-                />
+                >
+                  <span
+                    className="size-1.5 rounded-full"
+                    style={{
+                      backgroundColor: s.accent,
+                      boxShadow: `0 0 6px 0 color-mix(in srgb, ${s.accent} 75%, transparent)`,
+                    }}
+                  />
+                </span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[13.5px] font-medium text-foreground">
                     {t(s.label)}
@@ -271,7 +309,14 @@ export function LandingChatNav() {
                   </span>
                 </span>
                 {focused && (
-                  <span className="mono-label shrink-0 text-[9px] uppercase tracking-[0.14em] text-[var(--scope-a,var(--gd))]">
+                  <span
+                    className="mono-label shrink-0 rounded-full border px-1.5 py-0.5 text-[8.5px] uppercase tracking-[0.14em]"
+                    style={{
+                      color: s.accent,
+                      borderColor: `color-mix(in srgb, ${s.accent} 40%, transparent)`,
+                      background: `color-mix(in srgb, ${s.accent} 9%, transparent)`,
+                    }}
+                  >
                     {t("Here")}
                   </span>
                 )}

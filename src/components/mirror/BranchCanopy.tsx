@@ -118,7 +118,7 @@ import { ChatInputExtras, AttachmentChips } from "./ChatInputExtras";
 import { CreationReveal } from "./CreationReveal";
 import { ExchangeVisual } from "./TransmissionView";
 import { SideArtifact } from "./ChatArtifacts";
-import type { ChatMessage, ToolTabKey } from "@/lib/mirror-store";
+import type { ChatMessage, LandingScopeKey, ToolTabKey } from "@/lib/mirror-store";
 import type { LiveScopeKey } from "@/lib/live-scopes";
 import { useT } from "@/lib/i18n";
 import { useMirror } from "@/lib/mirror-store";
@@ -359,6 +359,10 @@ interface LandingHistoryEntry {
   at: number;
   title: string;
   turns: { q: string; a: string }[];
+  /* THE FIELD'S OWN MARK — the scope the conversation was spoken in
+     (the Mirror, Interplanetary, Quantum, HealX, ArtX): every field
+     keeps its own history, its own room and its own memory. */
+  scope?: string;
 }
 const LANDING_HISTORY_KEY = "mirror-landing-history";
 const LANDING_HISTORY_MAX = 10;
@@ -407,6 +411,158 @@ function historyAgo(at: number): string {
   const hours = Math.round(mins / 60);
   if (hours < 24) return `${hours}h`;
   return `${Math.round(hours / 24)}d`;
+}
+
+/* EVERY FIELD KEEPS ITS OWN WORDS — the landing conversation is
+   per-scope: each field's thread and its carried memory rest under
+   its own key (sessionStorage, this visit only), so leaving a field
+   and coming back finds the chat exactly as it was left — and a
+   fresh visit wakes the chosen field's own words again. */
+const LANDING_THREADS_KEY = "mirror:landing-threads";
+const LANDING_TURNS_CAP = 12;
+
+function readLandingThreadScope(scope: string): { q: string; a: string }[] {
+  try {
+    const raw = window.sessionStorage.getItem(LANDING_THREADS_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    const arr = parsed?.[scope];
+    if (!Array.isArray(arr)) return [];
+    return arr
+      .filter(
+        (t): t is { q: string; a: string } =>
+          Boolean(t) &&
+          typeof (t as { q?: unknown }).q === "string" &&
+          typeof (t as { a?: unknown }).a === "string"
+      )
+      .slice(-LANDING_TURNS_CAP);
+  } catch {
+    /* the keeping stays closed — the visit carries its own */
+    return [];
+  }
+}
+
+function writeLandingThreadScope(scope: string, turns: { q: string; a: string }[]): void {
+  try {
+    const raw = window.sessionStorage.getItem(LANDING_THREADS_KEY);
+    let all: Record<string, unknown> = {};
+    if (raw) {
+      const parsed = JSON.parse(raw) as unknown;
+      if (parsed && typeof parsed === "object") all = parsed as Record<string, unknown>;
+    }
+    all[scope] = turns.slice(-LANDING_TURNS_CAP);
+    window.sessionStorage.setItem(LANDING_THREADS_KEY, JSON.stringify(all));
+  } catch {
+    /* the keeping stays closed — the visit carries its own */
+  }
+}
+
+/* THE FIELDS' OWN VOICES — every scope's chat speaks through its own
+   door: the Mirror (the standing field) answers as the mirror of the
+   Absolute; the four family fields answer through their own house
+   channels (the interplanetary channel, the quantum narrator, the
+   healing codes, the atelier). The scope's own language, its own
+   doors, its own light — its own voice. */
+const LANDING_SCOPE_CATEGORY: Record<string, BranchId | "absolute"> = {
+  mirror: "absolute",
+  interplanetary: "interplanetary",
+  quantum: "quantum",
+  healing: "healing",
+  artx: "artx",
+};
+
+/* THE FIELDS' OWN SHELVES — the sector of the profile's Cosmic Library
+   each field's conversation rests on (the honest sectors the house's
+   own routes save to); the surface inside the volume carries the
+   scope, so every field keeps ONE living volume of its own. */
+const LANDING_LIBRARY_SECTOR: Record<string, string> = {
+  mirror: "observatory",
+  interplanetary: "observatory",
+  quantum: "quantum",
+  healing: "evolvemed",
+  artx: "artx",
+};
+
+/* THE FIELDS' OWN DOTS — the small colored mark each kept page wears
+   in the history panel (the same lights the Scopes hand carries). */
+const LANDING_SCOPE_DOTS: Record<string, string> = {
+  mirror: "#d8b571",
+  interplanetary: "#22d3ee",
+  quantum: "#a78bfa",
+  healing: "#2dd4bf",
+  artx: "#e879f9",
+};
+
+/* THE LIBRARY'S QUIET AUTOSHELF — the landing conversation walks into
+   the profile's Cosmic Library per scope (one living volume per
+   field, deduped by its own pointer, fire-and-forget: the words never
+   wait on the shelf). One warn per visit — a shelf that refused never
+   spams the console. */
+const LANDING_LIBRARY_PTR_KEY = "mirror:landing-library-ptr";
+let landingLibraryMuted = false;
+
+function saveLandingToLibrary(
+  scope: string,
+  turns: { q: string; a: string }[]
+): void {
+  if (landingLibraryMuted || turns.length < 1) return;
+  try {
+    const exchanges = turns
+      .filter((t) => t.a && t.a.trim())
+      .map((t) => ({ q: t.q, a: t.a }));
+    if (exchanges.length === 0) return;
+    const fingerprint = String(hashWalk(JSON.stringify(exchanges)));
+    let pointers: Record<string, { turns: number; hash: string }> = {};
+    try {
+      pointers = JSON.parse(
+        window.localStorage.getItem(LANDING_LIBRARY_PTR_KEY) ?? "{}"
+      ) as typeof pointers;
+    } catch {
+      pointers = {};
+    }
+    const seen = pointers[scope];
+    if (seen && seen.turns === exchanges.length && seen.hash === fingerprint)
+      return;
+    const sector = LANDING_LIBRARY_SECTOR[scope] ?? "observatory";
+    const title = (exchanges[0]?.q || "A conversation").slice(0, 60);
+    const excerpt = (exchanges[exchanges.length - 1]?.a ?? "").slice(0, 280);
+    void fetch("/api/library", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sector,
+        title,
+        excerpt,
+        content: {
+          kind: "conversation",
+          surface: `landing:${scope}`,
+          scope,
+          turns: exchanges.length,
+          exchanges,
+        },
+      }),
+    })
+      .then((res) => {
+        if (res.ok) {
+          pointers[scope] = { turns: exchanges.length, hash: fingerprint };
+          try {
+            window.localStorage.setItem(
+              LANDING_LIBRARY_PTR_KEY,
+              JSON.stringify(pointers)
+            );
+          } catch {
+            /* the pointer rests unwritten — the next pass saves again */
+          }
+          return;
+        }
+        landingLibraryMuted = true;
+      })
+      .catch(() => {
+        landingLibraryMuted = true;
+      });
+  } catch {
+    /* never let the autoshef disturb the words */
+  }
 }
 
 /* THE MAKER'S TRAIL — the stones the store's own openToolTab lays on
@@ -564,16 +720,21 @@ function BareFloorDoors({
   const treeMix = useMirror((s) => s.treeMix);
   const scopeKey = scope || "general";
 
-  /* the pool — pure and synchronous: one field's grove, or the
-     landing's first doors woven with the whole house's mix. The same
-     hour grows the same grove, so the draw never flickers. */
+  /* the pool — pure and synchronous: THE MIRROR's own first doors,
+     one field's grove, or the landing's first doors woven with the
+     whole house's mix. The same hour grows the same grove, so the
+     draw never flickers. Every field speaks its own language: the
+     Mirror the house's own reflection doors, the families their own
+     groves. */
   const pool = useMemo(() => {
+    if (scope === "mirror") return LANDING_SUGGESTION_POOL;
     if (scope) {
       const family = TREE_FAMILIES.find((f) => f.key === scope);
       if (family)
         return growCanopy(family.category, null, canopyHour()).map(
           (w) => w.text
         );
+      return LANDING_SUGGESTION_POOL;
     }
     const mixed = growMixedCanopy(
       treeMix.on,
@@ -636,7 +797,29 @@ function BareFloorDoors({
             data-testid="landing-suggestion"
             disabled={disabled}
             onClick={() => onPick(t(s))}
-            className="focus-glow pointer-events-auto rounded-full border border-[rgba(125,211,252,0.24)] bg-[color-mix(in_srgb,var(--background)_72%,transparent)] px-3.5 py-1.5 text-[12.5px] leading-tight text-[#4d7ea3] shadow-[0_2px_14px_-9px_rgba(56,189,248,0.5)] transition-colors duration-300 hover:border-[rgba(125,211,252,0.55)] hover:text-[#2c5c80] disabled:cursor-not-allowed disabled:opacity-45 dark:border-[rgba(125,211,252,0.26)] dark:text-[#b7d9ef] dark:hover:border-[rgba(125,211,252,0.6)] dark:hover:text-[#ddf1fd]"
+            className="focus-glow pointer-events-auto rounded-full border bg-[color-mix(in_srgb,var(--background)_72%,transparent)] px-3.5 py-1.5 text-[12.5px] leading-tight shadow-[0_2px_14px_-9px_color-mix(in_srgb,var(--landing-scope-accent,#7dd3fc)_50%,transparent)] transition-colors duration-300 disabled:cursor-not-allowed disabled:opacity-45"
+            style={{
+              /* THE FIELD'S OWN DOORS — each chip wears the chosen
+                 field's light (the scope the chat stands in): its
+                 border, its words, its hover, all tinted by the
+                 field's own color. */
+              borderColor:
+                "color-mix(in srgb, var(--landing-scope-accent,#7dd3fc) 30%, transparent)",
+              color:
+                "color-mix(in srgb, var(--landing-scope-accent,#7dd3fc) 45%, var(--foreground))",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor =
+                "color-mix(in srgb, var(--landing-scope-accent,#7dd3fc) 62%, transparent)";
+              e.currentTarget.style.color =
+                "color-mix(in srgb, var(--landing-scope-accent,#7dd3fc) 68%, var(--foreground))";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor =
+                "color-mix(in srgb, var(--landing-scope-accent,#7dd3fc) 30%, transparent)";
+              e.currentTarget.style.color =
+                "color-mix(in srgb, var(--landing-scope-accent,#7dd3fc) 45%, var(--foreground))";
+            }}
           >
             {t(s)}
           </button>
@@ -2922,17 +3105,37 @@ export function BranchCanopy({
   /* ------- THE LANDING'S OWN ENTITY — the chat of the threshold ------
      Docked in the threshold the chat is INDEPENDENT of the full
      portal: it keeps its own thread (never the store's channel
-     sessions), speaks only with its own mirror — the mirror of the
-     Absolute — and carries the whole landing conversation with every
-     ask, so the mirror remembers across rooms. The full portal never
-     sees these words, and the landing never sees the portal's. */
+     sessions), and speaks through the standing scope's own door —
+     the Mirror (the standing field) answers as the mirror of the
+     Absolute, the four family fields through their own channels —
+     carrying that scope's own conversation with every ask, so each
+     field remembers across rooms. EVERY FIELD IS ITS OWN WORLD: its
+     own thread, its own memory, its own room, its own history —
+     leaving a field and coming back finds the chat exactly as it
+     was left. The full portal never sees these words, and the
+     landing never sees the portal's. */
   const [landingThread, setLandingThread] = useState<RoomTurn[]>([]);
   const landingTurnsRef = useRef<{ q: string; a: string }[]>([]);
   const [landingBusy, setLandingBusy] = useState(false);
+  /* THE STANDING FIELD — the scope the chat wears; every ask, every
+     room follow-up and every kept page is the field's own. */
+  const landingScope = useMirror((s) => s.landingScope);
+  const setLandingScope = useMirror((s) => s.setLandingScope);
+  /* the thread's own mirror — the scope-switch keeps read it */
+  const landingThreadRef = useRef<RoomTurn[]>([]);
+  landingThreadRef.current = landingThread;
+  /* EVERY FIELD'S OWN KEEP — the thread, the carried memory and the
+     history page of the field the visitor just left, shelved until
+     they come back (in memory; the words also rest per scope in
+     sessionStorage, so even a fresh page wakes the field's own chat). */
+  const landingThreadsByScopeRef = useRef<Map<string, RoomTurn[]>>(new Map());
+  const landingTurnsByScopeRef = useRef<Map<string, { q: string; a: string }[]>>(new Map());
+  const historySessionsByScopeRef = useRef<Map<string, string>>(new Map());
   /* THE DEVICE'S OWN HISTORY — one hand in the room keeps this visit's
      conversations on this device alone (sessionStorage, never a
      server); a touch restores any of them whole. A cleared room starts
-     a fresh page of the keep, and the cleared one stays reachable. */
+     a fresh page of the keep, and the cleared one stays reachable.
+     Each field keeps its own pages. */
   const historySessionRef = useRef<string>(freshHistorySessionId());
   const [historyOpen, setHistoryOpen] = useState(false);
   const [historyEntries, setHistoryEntries] = useState<LandingHistoryEntry[]>([]);
@@ -2940,18 +3143,40 @@ export function BranchCanopy({
     setHistoryEntries(readLandingHistory());
     setHistoryOpen(true);
   }, []);
-  const restoreFromHistory = useCallback((entry: LandingHistoryEntry) => {
-    const turns = entry.turns.slice(-LANDING_HISTORY_TURNS);
-    if (turns.length === 0) return;
-    setLandingThread(turns.map((t) => ({ q: t.q, a: t.a, loading: false })));
-    landingTurnsRef.current = turns;
-    bareRoomRef.current = true;
-    historySessionRef.current = entry.id;
-    const last = turns[turns.length - 1];
-    setZoom({ q: last.q, move: null });
-    setHistoryOpen(false);
-    window.dispatchEvent(new CustomEvent("landing-chat:return"));
-  }, []);
+  const restoreFromHistory = useCallback(
+    (entry: LandingHistoryEntry) => {
+      const turns = entry.turns.slice(-LANDING_HISTORY_TURNS);
+      if (turns.length === 0) return;
+      const scope: LandingScopeKey =
+        (entry.scope &&
+        (["mirror", "interplanetary", "quantum", "healing", "artx"] as string[]).includes(
+          entry.scope
+        )
+          ? (entry.scope as LandingScopeKey)
+          : landingScope);
+      const restored = turns.map((t) => ({ q: t.q, a: t.a, loading: false }));
+      /* the page shelves into its own field first, so the field's
+         cache and the page agree — then the field itself wakes */
+      landingThreadsByScopeRef.current.set(scope, restored);
+      landingTurnsByScopeRef.current.set(scope, turns);
+      historySessionsByScopeRef.current.set(scope, entry.id);
+      if (landingScope === scope) {
+        setLandingThread(restored);
+        landingTurnsRef.current = turns;
+        historySessionRef.current = entry.id;
+        bareRoomRef.current = true;
+        const last = turns[turns.length - 1];
+        setZoom({ q: last.q, move: null });
+      } else {
+        /* the field wakes with its own room — the scope-switch below
+           hydrates the cache we just laid and raises the room */
+        setLandingScope(scope);
+      }
+      setHistoryOpen(false);
+      window.dispatchEvent(new CustomEvent("landing-chat:return"));
+    },
+    [landingScope, setLandingScope]
+  );
   const clearLandingHistory = useCallback(() => {
     writeLandingHistory([]);
     setHistoryEntries([]);
@@ -3015,10 +3240,19 @@ export function BranchCanopy({
                     onClick={() => restoreFromHistory(entry)}
                     className="focus-glow flex w-full items-center gap-2 rounded-xl px-2 py-2 text-left transition-colors duration-300 hover:bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_7%,transparent)]"
                   >
-                    <MessageSquareText
-                      className="size-3.5 shrink-0 text-[var(--scope-a,var(--gd))]"
-                      aria-hidden="true"
-                    />
+                    {entry.scope && LANDING_SCOPE_DOTS[entry.scope] ? (
+                      <span
+                        aria-hidden="true"
+                        className="size-1.5 shrink-0 rounded-full"
+                        title={entry.scope}
+                        style={{ backgroundColor: LANDING_SCOPE_DOTS[entry.scope] }}
+                      />
+                    ) : (
+                      <MessageSquareText
+                        className="size-3.5 shrink-0 text-[var(--scope-a,var(--gd))]"
+                        aria-hidden="true"
+                      />
+                    )}
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-[13px] text-foreground/90">
                         {entry.title}
@@ -3155,11 +3389,17 @@ export function BranchCanopy({
       setLandingThread((t) => [...t, { q, a: "", loading: true }]);
       setLandingBusy(true);
       try {
-        /* THE CARRIED CONVERSATION — every earlier landing exchange
-           (floor asks and room follow-ups alike) rides with this ask */
+        /* THE CARRIED CONVERSATION — every earlier exchange of THIS
+           field (floor asks and room follow-ups alike) rides with this
+           ask: each scope's memory is its own. */
         const prior = landingTurnsRef.current.slice(-8);
+        /* THE FIELD'S OWN VOICE — the standing scope answers through
+           its own door (the Mirror as the mirror of the Absolute, the
+           family fields through their own channels). */
+        const scopeCategory =
+          LANDING_SCOPE_CATEGORY[landingScope] ?? ("absolute" as const);
         const reply = await speakWithTransmission(
-          "absolute",
+          scopeCategory,
           q,
           q,
           "",
@@ -3177,15 +3417,29 @@ export function BranchCanopy({
           ...landingTurnsRef.current,
           { q, a: reply },
         ].slice(-12);
-        /* THE DEVICE'S OWN KEEP — the finished exchange rests on this
-           device alone, for this visit only (never a server) */
+        /* THE FIELD'S OWN KEEP — the finished exchange rests in the
+           field's own cache and its own sessionStorage page, for this
+           visit (never a server); a return to the field finds it. */
         const kept = landingTurnsRef.current;
+        landingThreadsByScopeRef.current.set(
+          landingScope,
+          landingThreadRef.current.map((turn, i) =>
+            i === landingThreadRef.current.length - 1
+              ? { ...turn, a: reply, loading: false }
+              : turn
+          )
+        );
+        writeLandingThreadScope(landingScope, kept);
+        /* THE LIBRARY'S QUIET AUTOSHELF — the field's conversation
+           walks into the profile's Cosmic Library, its own volume */
+        void saveLandingToLibrary(landingScope, kept);
         setHistoryEntries(
           upsertLandingHistory({
             id: historySessionRef.current,
             at: Date.now(),
             title: kept[0]?.q ?? q,
             turns: kept.slice(-LANDING_HISTORY_TURNS),
+            scope: landingScope,
           })
         );
       } catch (err) {
@@ -3207,7 +3461,7 @@ export function BranchCanopy({
         setLandingBusy(false);
       }
     },
-    [language]
+    [language, landingScope]
   );
 
   /* THE WALK CONTINUES FROM THE ANSWER — a branch grown on the reply,
@@ -3670,16 +3924,18 @@ export function BranchCanopy({
          family its own whisper was grown from (the manifest room as
          the manifest, the atelier room as the atelier); a whisper the
          grove doesn't know keeps the channel's own door. THE LANDING'S
-         OWN LAW — docked in the threshold the room's conversation
-         stays the landing's own entity: the mirror of the Absolute,
-         fully open, no censor — whatever whisper grew the room. */
+         OWN LAW — in the landing's chat the room's conversation stays
+         the standing field's own voice: the Mirror as the mirror of
+         the Absolute, the family fields through their own channels —
+         each field's own language, its own censor or openness. */
       const famKey = familyKeyByText.get(roomQ.toLowerCase());
       const roomCategory: BranchId =
         TREE_FAMILIES.find((f) => f.key === famKey)?.category ?? category;
-      /* THE LANDING'S OWN MEMORY — docked in the threshold the room's
-         follow-ups carry the WHOLE landing conversation (every floor
-         ask and every room answer, across rooms); the full portal's
-         rooms keep their own thread only. */
+      /* THE FIELD'S OWN MEMORY — in the landing's chat the room's
+         follow-ups carry the WHOLE conversation of THIS field (every
+         floor ask and every room answer, across rooms); each scope's
+         memory is its own; the full portal's rooms keep their own
+         thread only. */
       const prior = realm
         ? landingTurnsRef.current.slice(-8)
         : threadRef.current
@@ -3694,7 +3950,10 @@ export function BranchCanopy({
       setThreadBusy(true);
       try {
         const reply = await speakWithTransmission(
-          realm ? "absolute" : roomCategory,
+          realm
+            ? (LANDING_SCOPE_CATEGORY[landingScope] ??
+                ("absolute" as const))
+            : roomCategory,
           q,
           roomQ,
           answer || "",
@@ -3708,22 +3967,31 @@ export function BranchCanopy({
             i === t.length - 1 ? { ...turn, a: reply, loading: false } : turn
           )
         );
-        /* THE LANDING'S OWN MEMORY — the room's answer joins the whole
-           landing conversation, so the next room remembers it too */
+        /* THE FIELD'S OWN MEMORY — the room's answer joins this
+           field's own conversation, so the next room remembers it too;
+           the cache and the sessionStorage page and the library's
+           shelf all carry the field's own mark */
         if (realm) {
           landingTurnsRef.current = [
             ...landingTurnsRef.current,
             { q, a: reply },
           ].slice(-12);
-          /* THE DEVICE'S OWN KEEP — the room's finished exchange rests
-             on this device alone, for this visit only */
+          /* THE FIELD'S OWN KEEP — the finished exchange rests in the
+             field's own cache and page, for this visit only */
           const kept = landingTurnsRef.current;
+          landingThreadsByScopeRef.current.set(
+            landingScope,
+            landingThreadRef.current
+          );
+          writeLandingThreadScope(landingScope, kept);
+          void saveLandingToLibrary(landingScope, kept);
           setHistoryEntries(
             upsertLandingHistory({
               id: historySessionRef.current,
               at: Date.now(),
               title: kept[0]?.q ?? q,
               turns: kept.slice(-LANDING_HISTORY_TURNS),
+              scope: landingScope,
             })
           );
         }
@@ -3756,6 +4024,7 @@ export function BranchCanopy({
       familyKeyByText,
       language,
       lineage,
+      landingScope,
       onPick,
       threadBusy,
       zoom,
@@ -3822,6 +4091,86 @@ export function BranchCanopy({
     }
   }, [bare, landingThread]);
 
+  /* EVERY FIELD'S OWN RETURN — the two keeps of the standing scope:
+     ① THE VISIT'S OWN WAKE — the page's first breath hydrates the
+     standing field's own conversation from its sessionStorage page,
+     so a visitor who comes back finds their chat standing (and the
+     room rises with the words, exactly where the field was left);
+     ② THE SWITCH — leaving a field shelves its thread, its carried
+     memory, its follow-ups and its history page under its own key;
+     waking the chosen field lifts exactly that field's own keep, its
+     room rising with its own last words. No field ever sees another
+     field's words. */
+  const prevLandingScopeRef = useRef(landingScope);
+  useEffect(() => {
+    /* ① — once, at the visit's first breath: the standing field's
+       own words wake from their page (the room rises with them) */
+    const scope = prevLandingScopeRef.current;
+    const remembered = readLandingThreadScope(scope);
+    if (remembered.length > 0) {
+      landingTurnsRef.current = remembered;
+      landingTurnsByScopeRef.current.set(scope, remembered);
+      const restored = remembered.map((t) => ({
+        q: t.q,
+        a: t.a,
+        loading: false,
+      }));
+      landingThreadsByScopeRef.current.set(scope, restored);
+      setLandingThread(restored);
+      /* the room rises with the field's own last words — a visitor
+         who comes back finds their chat standing where they left it */
+      const last = remembered[remembered.length - 1];
+      bareRoomRef.current = true;
+      setZoom({ q: last.q, move: null });
+    }
+    const sessionId = historySessionsByScopeRef.current.get(scope);
+    if (!sessionId) {
+      historySessionsByScopeRef.current.set(scope, freshHistorySessionId());
+    }
+  }, []);
+  useEffect(() => {
+    if (prevLandingScopeRef.current === landingScope) return;
+    const prev = prevLandingScopeRef.current;
+    prevLandingScopeRef.current = landingScope;
+    /* the field the visitor leaves — its whole keep shelved whole */
+    landingThreadsByScopeRef.current.set(prev, landingThreadRef.current);
+    landingTurnsByScopeRef.current.set(prev, landingTurnsRef.current);
+    historySessionsByScopeRef.current.set(prev, historySessionRef.current);
+    /* the chosen field's own keep — lifted exactly as it stood (and
+       when the visit's page is fresh, the field's sessionStorage page
+       rebuilds the visible thread from its own remembered turns) */
+    const turns =
+      landingTurnsByScopeRef.current.get(landingScope) ??
+      readLandingThreadScope(landingScope);
+    const cachedThread = landingThreadsByScopeRef.current.get(landingScope);
+    const thread =
+      cachedThread && cachedThread.length > 0
+        ? cachedThread
+        : turns.map((t) => ({ q: t.q, a: t.a, loading: false }));
+    landingTurnsRef.current = turns;
+    landingThreadsByScopeRef.current.set(landingScope, thread);
+    historySessionRef.current =
+      historySessionsByScopeRef.current.get(landingScope) ??
+      freshHistorySessionId();
+    historySessionsByScopeRef.current.set(
+      landingScope,
+      historySessionRef.current
+    );
+    setLandingThread(thread);
+    setThread([]);
+    setThreadBusy(false);
+    if (thread.length > 0) {
+      /* the field's own room rises with its own last words */
+      bareRoomRef.current = true;
+      const last = thread[thread.length - 1];
+      setZoom({ q: last.q, move: null });
+    } else {
+      bareRoomRef.current = false;
+      setZoom(null);
+    }
+    window.dispatchEvent(new CustomEvent("landing-chat:return"));
+  }, [landingScope]);
+
   /* the room's own reply — now the conversation with the transmission
      (the walk continues from the branches dropdown above it) */
   const sendReplyFromPanel = useCallback(
@@ -3866,7 +4215,18 @@ export function BranchCanopy({
       : undefined) ??
     LIVE_SCOPE_BY_CATEGORY[category] ??
     "interplanetary";
+  /* THE STANDING FIELD'S OWN PRESENCE — in the landing's chat the
+     floor's own line and its small attendants wear the standing
+     scope's channel (the Mirror keeps the house's standing one); the
+     full portal keeps its focused category's presence. */
+  const landingFamilyLive: LiveScopeKey | undefined =
+    landingScope !== "mirror"
+      ? LIVE_SCOPE_BY_CATEGORY[
+          LANDING_SCOPE_CATEGORY[landingScope] ?? ""
+        ]
+      : undefined;
   const floorLiveScope: LiveScopeKey =
+    landingFamilyLive ??
     (focusKey !== "general"
       ? LIVE_SCOPE_BY_CATEGORY[
           TREE_FAMILIES.find((f) => f.key === focusKey)?.category ?? ""
@@ -5166,9 +5526,26 @@ export function BranchCanopy({
                       if (realm) {
                         setLandingThread([]);
                         landingTurnsRef.current = [];
+                        /* THE FIELD'S OWN CLEARING — the standing
+                           field's cache and its sessionStorage page
+                           empty too: the conversation truly clears, the
+                           other fields' keeps untouched */
+                        landingThreadsByScopeRef.current.set(
+                          landingScope,
+                          []
+                        );
+                        landingTurnsByScopeRef.current.set(
+                          landingScope,
+                          []
+                        );
+                        writeLandingThreadScope(landingScope, []);
                         /* a fresh page of the device's own keep — the
                            cleared room stays in the history hand */
                         historySessionRef.current = freshHistorySessionId();
+                        historySessionsByScopeRef.current.set(
+                          landingScope,
+                          historySessionRef.current
+                        );
                         window.dispatchEvent(new CustomEvent("landing-chat:return"));
                       } else {
                         useMirror

@@ -158,13 +158,16 @@ const PHONE_CROSSING = () =>
   typeof window !== "undefined" &&
   window.matchMedia("(max-width: 639px)").matches;
 
-/* THE LANDING'S OWN LIGHT — the four fields' accents (the walk's own
-   family lights). The chosen scope's hex rides the docked wrapper as
-   --landing-scope-accent, and the threshold's crystal tints (the
-   aura, the divider, the send hand, the room's edge) wear it; an
-   empty scope carries no var, and the two crystals keep their own
-   red and blue. */
+/* THE LANDING'S OWN LIGHT — the five fields' accents. THE MIRROR
+   carries the house's own gold — the standing field (the old
+   "General"). The four family lights are the walk's own. The chosen
+   scope's hex rides the chamber as --landing-scope-accent AND
+   --scope-a in BOTH gears (docked and fullscreen), so the whole
+   chat — the crown's hands, the panels, the composer, the doors,
+   the send, the rooms' edges — wears that field's light; each
+   field is its own world, tinted by its own color. */
 const LANDING_SCOPE_ACCENTS: Record<string, string> = {
+  mirror: "#d8b571",
   interplanetary: "#22d3ee",
   quantum: "#a78bfa",
   healing: "#2dd4bf",
@@ -651,22 +654,30 @@ export default function LandingGate() {
               className="absolute inset-0 m-auto"
               style={
                 fullscreen
-                  ? { width: "100vw", height: "var(--vh-safe)" }
+                  ? ({
+                      width: "100vw",
+                      height: "var(--vh-safe)",
+                      /* THE SCOPE'S OWN LIGHT — the field rides the
+                         fullscreen gear too: the whole chat wears it. */
+                      "--scope-a":
+                        LANDING_SCOPE_ACCENTS[landingScope] ?? "#d8b571",
+                      "--landing-scope-accent":
+                        LANDING_SCOPE_ACCENTS[landingScope] ?? "#d8b571",
+                    } as CSSProperties)
                   : ({
                       width: geo.w,
                       height: geo.h,
                       "--app-h": `${geo.h}px`,
                       "--app-shift": "0px",
                       /* THE SCOPE'S OWN LIGHT — the threshold's chosen
-                         field tints the chat's crystals (see
-                         LANDING_SCOPE_ACCENTS); General carries no
-                         var, and the crystals keep their own. */
-                      ...(landingScope && LANDING_SCOPE_ACCENTS[landingScope]
-                        ? {
-                            "--landing-scope-accent":
-                              LANDING_SCOPE_ACCENTS[landingScope],
-                          }
-                        : {}),
+                         field tints the WHOLE chat (the crown, the
+                         panels, the composer, the doors, the send —
+                         see LANDING_SCOPE_ACCENTS): every field is
+                         its own world, wearing its own color. */
+                      "--scope-a":
+                        LANDING_SCOPE_ACCENTS[landingScope] ?? "#d8b571",
+                      "--landing-scope-accent":
+                        LANDING_SCOPE_ACCENTS[landingScope] ?? "#d8b571",
                     } as CSSProperties)
               }
             >
