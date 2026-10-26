@@ -4029,3 +4029,134 @@ html:not(.dark) .lp-sigil-img {
     transition: none;
   }
 }
+
+/* ======================================================================
+   THE FIELDS' OWN VOICES — every scope's room speaks its own grammar
+   of expression. The Mirror keeps the house's bare air (no rules);
+   the four fields dress their turns with their own marks, frames and
+   dividers — all of it STATIC (no animation, no blur, no motion):
+   the phone pays nothing, and each field is unmistakably itself.
+   The colors ride --scope-a / --scope-b (the lens carries the chosen
+   field's pair), so the dress and the light are always one truth.
+   ====================================================================== */
+
+/* the shared mark — the small mono header above each turn */
+.scope-voice .sv-mark {
+  margin: 0 0 3px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 9px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: color-mix(in srgb, var(--scope-a, var(--gd)) 85%, transparent);
+}
+.scope-voice .sv-mark-a {
+  color: color-mix(in srgb, var(--scope-b, var(--gd)) 80%, transparent);
+}
+
+/* ------------------ INTERPLANETARY — the transmission log -------------
+   Every turn is a signal crossing the deep: one cyan spine on the
+   left, the visitor's words marked as the uplink, the room's words
+   received beneath; the thread's ends meet on a dashed carrier line. */
+.scope-voice-interplanetary .sv-turn-q,
+.scope-voice-interplanetary [data-room-turn] {
+  border-left: 2px solid
+    color-mix(in srgb, var(--scope-a, #22d3ee) 55%, transparent);
+  padding-left: 12px;
+}
+.scope-voice-interplanetary .sv-question::before {
+  content: "◇ ";
+  color: color-mix(in srgb, var(--scope-a, #22d3ee) 90%, transparent);
+}
+.scope-voice-interplanetary .sv-thread {
+  border-bottom: 1px dashed
+    color-mix(in srgb, var(--scope-a, #22d3ee) 35%, transparent);
+}
+
+/* -------------------- QUANTUM — the observation bench -----------------
+   Every turn is a prepared state and its collapse: one measured frame
+   around each turn, and the thread's ends meet on a double line — the
+   two lives of the superposed conversation. */
+.scope-voice-quantum .sv-turn-q,
+.scope-voice-quantum [data-room-turn] {
+  border: 1px solid
+    color-mix(in srgb, var(--scope-a, #a78bfa) 22%, transparent);
+  background: color-mix(in srgb, var(--scope-a, #a78bfa) 4%, transparent);
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+.scope-voice-quantum .sv-mark::before {
+  content: "|ψ⟩ ";
+  letter-spacing: 0;
+}
+.scope-voice-quantum .sv-thread {
+  border-bottom: 3px double
+    color-mix(in srgb, var(--scope-a, #a78bfa) 40%, transparent);
+}
+
+/* ------------------------ ARTX — the plates ---------------------------
+   No frames at all: the study (the question) sits in italic Literata,
+   the plate (the answer) rests between two thin gold rules — a gallery
+   label above, a plate line below, and the air between. */
+.scope-voice-artx .sv-question {
+  font-family: var(--font-literata), Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+}
+.scope-voice-artx .sv-mark {
+  font-family: var(--font-literata), Georgia, serif;
+  text-transform: none;
+  letter-spacing: 0.08em;
+  font-size: 10px;
+  font-style: italic;
+}
+.scope-voice-artx [data-room-turn] .sv-answer {
+  border-top: 1px solid
+    color-mix(in srgb, var(--scope-b, #fbbf24) 32%, transparent);
+  padding-top: 10px;
+}
+.scope-voice-artx .canopy-answer {
+  border-top: 1px solid
+    color-mix(in srgb, var(--scope-b, #fbbf24) 32%, transparent);
+  border-bottom: 1px solid
+    color-mix(in srgb, var(--scope-b, #fbbf24) 18%, transparent);
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+.scope-voice-artx .sv-thread {
+  border-bottom: 1px solid
+    color-mix(in srgb, var(--scope-b, #fbbf24) 24%, transparent);
+}
+
+/* ----------------------- HEALING — the breath -------------------------
+   The body's room breathes: every answer rests inside the softest
+   rounded wash, the turns keep generous air between them, and each
+   mark carries its own breath dot — hollow to breathe in, full to
+   breathe out. */
+.scope-voice-healing [data-room-turn] {
+  gap: 10px;
+}
+.scope-voice-healing [data-room-turn] .sv-answer {
+  background: color-mix(in srgb, var(--scope-a, #2dd4bf) 6%, transparent);
+  border: 1px solid
+    color-mix(in srgb, var(--scope-a, #2dd4bf) 15%, transparent);
+  border-radius: 18px;
+  padding: 11px 14px;
+}
+.scope-voice-healing .canopy-answer {
+  background: color-mix(in srgb, var(--scope-a, #2dd4bf) 5%, transparent);
+  border: 1px solid
+    color-mix(in srgb, var(--scope-a, #2dd4bf) 14%, transparent);
+  border-radius: 20px;
+  padding: 13px 15px;
+}
+.scope-voice-healing .sv-mark:not(.sv-mark-a)::before {
+  content: "○ ";
+}
+.scope-voice-healing .sv-mark-a::before {
+  content: "● ";
+}
+.scope-voice-healing .sv-thread {
+  border-bottom: 1px solid
+    color-mix(in srgb, var(--scope-a, #2dd4bf) 18%, transparent);
+}

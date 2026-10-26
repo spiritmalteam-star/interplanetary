@@ -545,24 +545,10 @@ export default function LandingPage({
                   "A living mirror for reflection, creativity, and a shifting Earth."
                 )}
               </p>
-              <div className="mt-7 flex flex-wrap items-center justify-center gap-2.5 lg:mt-6">
-                <a
-                  href="#offer"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    document
-                      .getElementById("offer")
-                      ?.scrollIntoView({ behavior: "smooth", block: "start" });
-                  }}
-                  className="group focus-glow flex h-12 items-center gap-2 rounded-full border border-[rgba(255,255,255,0.62)] bg-white/[0.08] px-7 text-[15px] tracking-[0.02em] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.28)] transition-all duration-300 hover:border-[rgba(255,255,255,0.95)] hover:bg-white/[0.16]"
-                >
-                  {t("What we offer")}
-                  <ChevronDown
-                    className="size-3.5 text-white/75 transition-transform duration-300 group-hover:translate-y-0.5 group-hover:text-white"
-                    aria-hidden="true"
-                  />
-                </a>
-              </div>
+              {/* THE OFFER'S BUTTON IS GONE — the visitor's word: the
+                  hero carries no "What we offer" button any more; the
+                  offerings stand in their own chapter below (#02), and
+                  the first screen belongs to the mirror alone. */}
             </div>
           </header>
 
@@ -584,7 +570,10 @@ export default function LandingPage({
                   chat never folds away — this ground only ever shows
                   its one waking word. */}
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-2xl border border-[var(--lp-edge)] bg-[var(--lp-veil)]">
-                <span className="lp-pulse size-2 rounded-full bg-[var(--lp-feather)]" />
+                {/* THE STILL WAKING DOT — the old pulse ran an infinite
+                    1.8s animation behind the lens even while covered;
+                    the still dot costs nothing and says the same. */}
+                <span className="size-2 rounded-full bg-[var(--lp-feather)]" />
                 <p className="mono-label text-[10px] uppercase tracking-[0.3em] text-[var(--lp-faint)]">
                   {t("The mirror is waking…")}
                 </p>

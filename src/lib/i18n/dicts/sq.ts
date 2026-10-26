@@ -5631,4 +5631,20 @@ export const sq: TranslationDict = {
     "çfarë vizioni pret të pikturohet?",
   "where does your body ask for quiet today?":
     "ku kërkon trupi yt qetësi sot?",
+  "Send a signal into the deep…":
+    "Dërgo një sinjal në thellësi…",
+  "Prepare a state to observe…":
+    "Përgatit një gjendje për vëzhgim…",
+  "What shall we paint today?":
+    "Çfarë do të pikturojmë sot?",
+  "Speak gently, at your own pace…":
+    "Flisni butësisht, me ritmin tënd…",
+  "Uplink": "Transmetim lart",
+  "Transmission received": "Transmetim i marrë",
+  "State prepared": "Gjendja u përgatit",
+  "Observation": "Vëzhgim",
+  "The study": "Studimi",
+  "The plate": "Plaka",
+  "Breathing in": "Marr frymë",
+  "Breathing out": "Lëshoj frymë",
 };

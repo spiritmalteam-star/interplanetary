@@ -4297,7 +4297,7 @@ export function BranchCanopy({
       data-testid={testIdPrefix}
       aria-hidden={!shown}
       className={cn(
-        "realm-crystal absolute inset-0 z-20 flex min-h-0 flex-col transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]",
+        "realm-crystal absolute inset-0 z-20 flex min-h-0 flex-col transition-[opacity,transform] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]",
         shown
           ? cn(
               "translate-y-0 opacity-100",
@@ -4327,13 +4327,15 @@ export function BranchCanopy({
       <div className="relative shrink-0">
         <div
           className={cn(
-            "transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
             /* THE UNCROWNED DROPDOWNS — every dropdown the crown
                carries (the realm's own hands and the pages' menus
                alike) must breathe beyond the row: no max height, no
                hidden overflow ever again — the fold that demanded the
                clipping is gone, and the tools and scopes now drop
-               down whole, in plain sight. */
+               down whole, in plain sight. THE QUIET CROWN — the old
+               transition-all (a vestige of the gone fold) watched
+               every property on the crown's own row; nothing animates
+               here any more, so the watcher is gone too. */
             "overflow-visible"
           )}
        >
@@ -5000,14 +5002,18 @@ export function BranchCanopy({
               className="pointer-events-none absolute inset-0 flex items-center justify-center"
             >
               <div
-                className="lp-breathe h-64 w-72 rounded-full"
+                className="h-64 w-72 rounded-full"
                 style={{
                   /* THE CRYSTAL'S OWN AURA — every field breathes with
                      its own TWO lights: the standing scope's accent
                      and its companion color (the pair rides the lens
                      as --scope-a/--scope-b from the registry's one
                      truth; the fallbacks keep the Mirror's own gold
-                     and sky). No two fields share an atmosphere. */
+                     and sky). No two fields share an atmosphere.
+                     THE STILL AURA — the breath animation is gone:
+                     a 288px glow scaling forever behind the chat was
+                     a constant paint tax on every device (the lag
+                     the visitor felt); the still light costs nothing. */
                   background:
                     "radial-gradient(ellipse at center, color-mix(in srgb, var(--landing-scope-accent, #d8b571) 16%, transparent), color-mix(in srgb, var(--scope-b, #7dd3fc) 11%, transparent) 45%, transparent 70%)",
                 }}
@@ -5051,14 +5057,14 @@ export function BranchCanopy({
                   alt=""
                   width={64}
                   height={64}
-                  className="lp-breathe hidden size-16 rounded-full opacity-90 dark:block"
+                  className="hidden size-16 rounded-full opacity-90 dark:block"
                 />
                 <Image
                   src="/images/ai/mark-light.png"
                   alt=""
                   width={64}
                   height={64}
-                  className="lp-breathe size-16 rounded-full opacity-90 dark:hidden"
+                  className="size-16 rounded-full opacity-90 dark:hidden"
                 />
               </button>
               <div className="flex flex-col items-center gap-3">
@@ -5355,10 +5361,15 @@ export function BranchCanopy({
                 value={askDraft}
                 onChange={(e) => setAskDraft(e.target.value)}
                 placeholder={
-                  /* THE LANDING'S OWN WORD — the line whispers to the
-                     mirror itself: no tree, no walk, no scope — pure
-                     presence. */
-                  t("Whisper to the mirror…")
+                  /* THE FIELD'S OWN WORD — the line whispers in the
+                     standing field's own way of inviting: the deep
+                     receives a signal, the laboratory prepares a state,
+                     the atelier asks for a vision, the body's room
+                     speaks gently. The Mirror keeps its own whisper. */
+                  t(
+                    SCOPE_META[landingScope]?.whisper ??
+                      "Whisper to the mirror…"
+                  )
                 }
                 disabled={disabled}
                 autoComplete="off"
@@ -5430,7 +5441,14 @@ export function BranchCanopy({
               data-chat-yield={bare ? "" : undefined}
               className={cn(
                 "canopy-panel flex min-h-0 w-full max-w-[860px] flex-col overflow-hidden rounded-3xl border bg-background shadow-[0_28px_80px_-32px_rgba(0,0,0,0.65)]",
-                bare ? "pointer-events-none" : "pointer-events-auto"
+                bare ? "pointer-events-none" : "pointer-events-auto",
+                /* THE FIELD'S OWN VOICE — the standing scope's own way
+                    of expressing: the room wears the field's voice class,
+                    and every turn inside speaks the field's own grammar
+                    (the marks, the frames, the dividers — each field
+                    unmistakably itself, all of it still, all of it
+                    honest). The Mirror keeps the house's own voice. */
+                realm && `scope-voice scope-voice-${landingScope}`
               )}
               style={{
                 /* THE CRYSTAL ROOM — docked in the threshold the room's
@@ -5656,6 +5674,69 @@ export function BranchCanopy({
                 }}
               >
                 <div key={zoom.q} className="room-swap mx-auto max-w-[720px]">
+                  {/* THE FIELD'S OWN TURN — the realm room now speaks the
+                      visitor's own question too (the old realm room hid
+                      it entirely — only the answer stood): the question
+                      rises above its answer wearing the field's own
+                      mark and grammar. The Mirror keeps its bare air. */}
+                  {realm && (
+                    <div className="sv-turn sv-turn-q mb-3" data-sv-turn="q">
+                      {SCOPE_META[landingScope]?.qMark && (
+                        <p className="sv-mark">{t(SCOPE_META[landingScope].qMark!)}</p>
+                      )}
+                      <p
+                        className="sv-question break-words text-[14.5px] font-medium leading-relaxed text-foreground"
+                        title={zoom.q}
+                      >
+                        {zoom.q}
+                      </p>
+                    </div>
+                  )}
+                  {/* THE FIELD'S OWN THREAD — every earlier exchange of
+                      the standing conversation stands above the room's
+                      follow-ups (all but the last, which is the room's
+                      own words): the field's chat is one continuous
+                      thread, not one exchange at a time. */}
+                  {realm && landingThread.length > 1 && (
+                    <div
+                      data-testid={`${testIdPrefix}-landing-thread`}
+                      className="sv-thread mb-4 flex flex-col gap-3 border-b pb-3"
+                      style={{
+                        borderColor:
+                          "color-mix(in srgb, var(--hairline) 70%, transparent)",
+                      }}
+                    >
+                      {landingThread.slice(0, -1).map((turn, i) => (
+                        <div
+                          key={i}
+                          data-room-turn=""
+                          className="flex flex-col gap-1.5"
+                        >
+                          {SCOPE_META[landingScope]?.qMark && (
+                            <p className="sv-mark">{t(SCOPE_META[landingScope].qMark!)}</p>
+                          )}
+                          <p className="sv-question ml-auto max-w-[88%] break-words text-[14px] font-medium leading-relaxed text-foreground/95">
+                            {turn.q}
+                          </p>
+                          {turn.a && (
+                            <div className="flex items-start gap-1">
+                              <p className="sv-answer min-w-0 flex-1 break-words text-[14.5px] leading-[1.7] text-foreground/85">
+                                {turn.a}
+                              </p>
+                              <RoomCopyButton
+                                text={turn.a}
+                                testId={`${testIdPrefix}-landing-copy-${i}`}
+                              />
+                              <RoomShareButton
+                                text={turn.a}
+                                testId={`${testIdPrefix}-landing-share-${i}`}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   {zoom && !realm && (
                     <ResonantStageBadge
                       category={categoryForMove(zoomMove)}
@@ -5791,6 +5872,12 @@ export function BranchCanopy({
                           data-room-turn=""
                           className="flex flex-col gap-2"
                         >
+                          {/* THE FIELD'S OWN MARKS — the turn's own small
+                              header speaks the field's language of
+                              expression (the Mirror keeps none). */}
+                          {realm && SCOPE_META[landingScope]?.qMark && (
+                            <p className="sv-mark">{t(SCOPE_META[landingScope].qMark!)}</p>
+                          )}
                           <p className="ml-auto max-w-[88%] whitespace-pre-wrap break-words text-[14px] font-medium leading-relaxed text-foreground">
                             {turn.q}
                           </p>
@@ -5807,7 +5894,10 @@ export function BranchCanopy({
                             />
                           ) : turn.a ? (
                             <div className="flex items-start gap-1">
-                              <p className="min-w-0 flex-1 whitespace-pre-wrap break-words text-[15.5px] leading-[1.7] text-foreground/90">
+                              {realm && SCOPE_META[landingScope]?.aMark && (
+                                <p className="sv-mark sv-mark-a">{t(SCOPE_META[landingScope].aMark!)}</p>
+                              )}
+                              <p className="sv-answer min-w-0 flex-1 whitespace-pre-wrap break-words text-[15.5px] leading-[1.7] text-foreground/90">
                                 {turn.a}
                               </p>
                               <RoomCopyButton

@@ -172,7 +172,13 @@ export function LandingChatNav() {
           </span>
         </button>
         {/* the panel — always mounted so the settle stays a quiet
-            0.2s breath; closed it is only air (no pointer, no eye) */}
+            0.2s breath; closed it is INVISIBLE AIR: visibility hides
+            the whole subtree from the eye AND from every touch — the
+            docked lens re-arms every button and word inside it (the
+            pass-through law), so a merely transparent panel would
+            still steal the clicks meant for whatever stands beneath
+            (the two panels overlap; the old invisible steal is why
+            the Create rows could never be pressed). */}
         <div
           data-testid="landing-nav-create-panel"
           role="menu"
@@ -180,8 +186,8 @@ export function LandingChatNav() {
           className={cn(
             "absolute left-0 top-[calc(100%+0.5rem)] z-40 w-[220px] max-w-[calc(100vw-2.5rem)] rounded-2xl border bg-background p-2 lift-lg transition-all duration-200",
             open === "create"
-              ? "translate-y-0 opacity-100"
-              : "pointer-events-none -translate-y-1 opacity-0"
+              ? "visible translate-y-0 opacity-100"
+              : "invisible pointer-events-none -translate-y-1 opacity-0"
           )}
           style={{
             borderColor:
@@ -241,11 +247,14 @@ export function LandingChatNav() {
           className={cn(
             /* THE MIDDLE OF THE HOUSE — the fields' own panel stands
                CENTERED on the Scopes hand, so the row of fields opens
-               exactly where the eye already rests. */
+               exactly where the eye already rests. THE SAME INVISIBILITY
+               LAW as the Create panel: closed, the whole subtree is
+               hidden from the touch too (its re-armed rows would
+               otherwise stand over the Create panel's own rows). */
             "absolute left-1/2 top-[calc(100%+0.5rem)] z-40 w-[292px] max-w-[calc(100vw-2.5rem)] -translate-x-1/2 rounded-2xl border bg-background p-2 lift-lg transition-all duration-200",
             open === "scopes"
-              ? "translate-y-0 opacity-100"
-              : "pointer-events-none -translate-y-1 opacity-0"
+              ? "visible translate-y-0 opacity-100"
+              : "invisible pointer-events-none -translate-y-1 opacity-0"
           )}
           style={{
             borderColor:

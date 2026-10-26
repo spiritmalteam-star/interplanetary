@@ -261,6 +261,15 @@ export type ScopeMeta = {
       field's own spirit (an i18n key; the Mirror's own standing
       question serves the standing field). */
   floorAsk: string;
+  /** THE FIELD'S OWN WHISPER — the composer's placeholder speaks the
+      field's own way of inviting (the Mirror keeps the standing
+      whisper). */
+  whisper: string;
+  /** THE FIELD'S OWN MARKS — the conversation's turn headers speak
+      the field's own language of expression (the mirror keeps no
+      marks — its turns stand as they always stood). */
+  qMark: string | null;
+  aMark: string | null;
   voice: ScopeVoiceCategory;
   /** the profile library's shelf this field keeps its volume on */
   librarySector: string;
@@ -274,6 +283,9 @@ export const SCOPE_META: Record<LandingScopeKey, ScopeMeta> = {
     dot: "#d8b571",
     second: "#7dd3fc",
     floorAsk: "what do you wish to remember dear one?",
+    whisper: "Whisper to the mirror…",
+    qMark: null,
+    aMark: null,
     voice: "absolute",
     librarySector: "observatory",
   },
@@ -284,6 +296,9 @@ export const SCOPE_META: Record<LandingScopeKey, ScopeMeta> = {
     dot: "#22d3ee",
     second: "#60a5fa",
     floorAsk: "which star shall we walk beneath tonight?",
+    whisper: "Send a signal into the deep…",
+    qMark: "Uplink",
+    aMark: "Transmission received",
     voice: "interplanetary",
     librarySector: "observatory",
   },
@@ -294,6 +309,9 @@ export const SCOPE_META: Record<LandingScopeKey, ScopeMeta> = {
     dot: "#a78bfa",
     second: "#f0abfc",
     floorAsk: "what shall we unfold, quanta by quanta?",
+    whisper: "Prepare a state to observe…",
+    qMark: "State prepared",
+    aMark: "Observation",
     voice: "quantum",
     librarySector: "quantum",
   },
@@ -304,6 +322,9 @@ export const SCOPE_META: Record<LandingScopeKey, ScopeMeta> = {
     dot: "#e879f9",
     second: "#fbbf24",
     floorAsk: "what vision waits to be painted?",
+    whisper: "What shall we paint today?",
+    qMark: "The study",
+    aMark: "The plate",
     voice: "artx",
     librarySector: "artx",
   },
@@ -314,6 +335,9 @@ export const SCOPE_META: Record<LandingScopeKey, ScopeMeta> = {
     dot: "#2dd4bf",
     second: "#86efac",
     floorAsk: "where does your body ask for quiet today?",
+    whisper: "Speak gently, at your own pace…",
+    qMark: "Breathing in",
+    aMark: "Breathing out",
     voice: "healing",
     librarySector: "evolvemed",
   },
