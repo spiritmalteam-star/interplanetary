@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;900&display=swap" rel="stylesheet">
+<style>
+  @page { size: 794px 1123px; margin: 0; }
+  html, body { margin: 0; padding: 0; background: #ffffff; }
+  .cover-page {
+    position: relative;
+    width: 794px; height: 1123px;
+    font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+    background: #ffffff;
+    border: none; outline: none; box-shadow: none;
+  }
+  /* Layer 1 - background grid, clipped */
+  .cover-layer-1 { position: absolute; inset: 0; overflow: hidden; z-index: 1; }
+  .grid-bg {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(64, 95, 111, 0.05) 0.5px, transparent 0.5px),
+      linear-gradient(90deg, rgba(64, 95, 111, 0.05) 0.5px, transparent 0.5px);
+    background-size: 50px 50px;
+  }
+  /* Layer 2 - structure */
+  .cover-layer-2 { position: absolute; inset: 0; z-index: 2; }
+  .anchor-line {
+    position: absolute;
+    left: 95px; top: 112px;
+    width: 6px; height: 899px;
+    background: #49616d;
+  }
+  /* Layer 3 - content */
+  .cover-layer-3 { position: absolute; inset: 0; z-index: 3; }
+  .kicker {
+    position: absolute; left: 175px; top: 168px;
+    font-size: 16px; font-weight: 400; letter-spacing: 3px;
+    text-transform: uppercase; color: #227fad; opacity: 0.62;
+    max-width: 540px; line-height: 1.7;
+  }
+  .hero {
+    position: absolute; left: 175px; top: 337px;
+    font-size: 74px; font-weight: 900; line-height: 1.12;
+    color: #1b1c1d; letter-spacing: -1px;
+    max-width: 560px;
+  }
+  .summary {
+    position: absolute; left: 175px; top: 575px;
+    font-size: 17px; font-weight: 400; line-height: 1.6;
+    color: #1b1c1d; opacity: 0.85;
+    max-width: 476px;
+  }
+  .meta {
+    position: absolute; left: 175px; top: 852px;
+    font-size: 17px; font-weight: 300; line-height: 1.75;
+    color: #1b1c1d; opacity: 0.85;
+  }
+  .meta b { font-weight: 600; }
+  .footer {
+    position: absolute; left: 175px; top: 1012px;
+    font-size: 15px; font-weight: 400; letter-spacing: 2px;
+    text-transform: uppercase; color: #405f6f; opacity: 0.6;
+  }
+</style>
+</head>
+<body>
+<div class="cover-page">
+  <div class="cover-layer-1"><div class="grid-bg"></div></div>
+  <div class="cover-layer-2"><div class="anchor-line"></div></div>
+  <div class="cover-layer-3">
+    <div class="kicker">Full Replication Prompt<br>Master Production Directive</div>
+    <div class="hero">MIRROR<br>ENTITY</div>
+    <div class="summary">
+      The complete replication directive for the reflectme.space digital chamber:
+      the one chat, the five makers, the five scopes, the one purse, and the
+      pipelines that keep them honest. Everything a new builder needs to rebuild
+      the house exactly as it stands - vision, architecture, economy, runbook,
+      the Google passage repair, and the gallery of the road already walked.
+    </div>
+    <div class="meta">
+      <b>Repository</b> &nbsp;spiritmalteam-star/interplanetary &middot; main<br>
+      <b>The keeper</b> &nbsp;gentikoltraka28@gmail.com<br>
+      <b>Written</b> &nbsp;October 2025
+    </div>
+    <div class="footer">reflectme.space &middot; the one truth at main</div>
+  </div>
+</div>
+</body>
+</html>
