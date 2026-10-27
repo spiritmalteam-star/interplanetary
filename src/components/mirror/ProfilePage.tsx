@@ -9,6 +9,7 @@ import {
   ChevronRight,
   Copy,
   CreditCard,
+  Flame,
   Gem,
   KeyRound,
   LibraryBig,
@@ -461,9 +462,10 @@ export function ProfilePage() {
   /* THE THREE ROOMS — the old nine doors gathered into three quiet
      groups: the VISITOR (identity and the account's summary), the
      LIBRARY (the cosmic library and the bound works) and the CHAMBER
-     (the passage's tuning, the fields, the DNA of the walk). THE
-     ADVANCED ROOM HAS RESTED at the visitor's word — the API machinery
-     no longer wears a door of its own. */
+     (the passage's tuning, the fields, the DNA of the walk). The
+     ADVANCED room — the vessel keys and the fuel engine — is the
+     keeper's own pair of doors: they ride the rail only for the
+     admin, so the incubator can never be lost again. */
   const navItems: {
     id: SectionId;
     label: string;
@@ -498,6 +500,23 @@ export function ProfilePage() {
       icon: Settings2,
       available: true,
       testId: "profile-nav-settings",
+    },
+    /* THE KEEPER'S OWN DOORS — the advanced machinery returns to the
+       rail, admin-gated: the vessel keys room and the fuel engine
+       incubator (the engine was left with no door and could not open). */
+    {
+      id: "api",
+      label: "Vessel Keys",
+      icon: KeyRound,
+      available: Boolean(me?.admin),
+      testId: "profile-nav-api",
+    },
+    {
+      id: "fuel",
+      label: "Fuel Engine",
+      icon: Flame,
+      available: Boolean(me?.admin),
+      testId: "profile-nav-fuel",
     },
   ];
 

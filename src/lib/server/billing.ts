@@ -18,6 +18,7 @@ import { packFor, planFor } from "@/lib/server/plans";
 import {
   WALLET_PLANS,
   grantWalletCredits,
+  recordDepositIn,
   type PlanTier,
 } from "@/lib/server/wallet";
 
@@ -105,6 +106,91 @@ export async function upsertSubscriptionFromStripe(input: {
 /* --------------------------- webhook events -------------------------- */
 
 /**
+ * THE DEPOSIT LAW — money entered the house. Every wallet purchase
+ * fills the keeper's well (a DepositLedger "in" row) BEFORE the mint
+ * pours the buyer's light into their purse, so the well can always
+ * pay for the light it just sold. Idempotent per reference: a replay
+ * can never fill the well twice, even beside the ProcessedEvent guard.
+ */
+async function recordPurchaseDeposit(input: {
+  userId: string;
+  credits: number;
+  reference: string;
+  note: string;
+}): Promise<void> {
+  if (input.credits <= 0) return;
+  try {
+    const user = await db.user.findUnique({
+      where: { id: input.userId },
+      select: { email: true },
+    });
+    await recordDepositIn({
+      amount: input.credits,
+      sourceName: "stripe",
+      reference: input.reference,
+      actorEmail: user?.email ?? null,
+      userId: input.userId,
+      note: input.note,
+    });
+  } catch (err) {
+    console.error(
+      "[billing] deposit-in failed:",
+      err instanceof Error ? err.message : err
+    );
+  }
+}
+
+/** The mint beside a purchase — the deposit IN is already recorded, so
+    a dry refusal here can only be a racing distribution drinking the
+    fresh light; one honest retry, then a loud debt the keeper's console
+    can see (the Payment row exists, the wallet grant does not). */
+async function mintWithDepositRetry(input: {
+  userId: string;
+  credits: number;
+  actionType: "SUBSCRIPTION_GRANT" | "TOPUP_PURCHASE";
+  referenceId: string;
+  description: string;
+  planTier?: PlanTier | null;
+  stripeCustomerId?: string | null;
+  stripeSubscriptionId?: string | null;
+  purchaseReference: string;
+  purchaseNote: string;
+}): Promise<void> {
+  await recordPurchaseDeposit({
+    userId: input.userId,
+    credits: input.credits,
+    reference: input.purchaseReference,
+    note: input.purchaseNote,
+  });
+  let result = await grantWalletCredits(input.userId, {
+    credits: input.credits,
+    actionType: input.actionType,
+    referenceId: input.referenceId,
+    description: input.description,
+    planTier: input.planTier ?? null,
+    stripeCustomerId: input.stripeCustomerId ?? null,
+    stripeSubscriptionId: input.stripeSubscriptionId ?? null,
+  });
+  if (!result.ok && result.depositDry) {
+    result = await grantWalletCredits(input.userId, {
+      credits: input.credits,
+      actionType: input.actionType,
+      referenceId: input.referenceId,
+      description: input.description,
+      planTier: input.planTier ?? null,
+      stripeCustomerId: input.stripeCustomerId ?? null,
+      stripeSubscriptionId: input.stripeSubscriptionId ?? null,
+    });
+  }
+  if (!result.ok && !result.duplicate) {
+    console.error(
+      `[billing] PURCHASE OWED — the wallet grant failed after the deposit IN (${input.purchaseReference}); the keeper owes this light:`,
+      input.description
+    );
+  }
+}
+
+/**
  * Handles one verified Stripe event exactly once. Returns true when
  * the event changed something (for logging only — the answer to
  * Stripe is always 200 so it never storms a retrying sky).
@@ -141,7 +227,8 @@ export async function handleStripeEvent(event: Stripe.Event): Promise<void> {
             let subId: string | null = null;
             if (typeof session.subscription === "string") subId = session.subscription;
             if (creditsToGrant > 0 || subId) {
-              await grantWalletCredits(walletUserId, {
+              await mintWithDepositRetry({
+                userId: walletUserId,
                 credits: creditsToGrant,
                 actionType: "SUBSCRIPTION_GRANT",
                 referenceId: `sub-active:${session.id}`,
@@ -149,6 +236,8 @@ export async function handleStripeEvent(event: Stripe.Event): Promise<void> {
                 planTier: tier,
                 stripeCustomerId: customerId,
                 stripeSubscriptionId: subId,
+                purchaseReference: `stripe:${session.id}`,
+                purchaseNote: `Stripe purchase — the ${tier} pass, first moon`,
               });
             }
             await db.payment.create({
@@ -164,12 +253,15 @@ export async function handleStripeEvent(event: Stripe.Event): Promise<void> {
             });
           } else if (session.mode === "payment") {
             if (creditsToGrant > 0) {
-              await grantWalletCredits(walletUserId, {
+              await mintWithDepositRetry({
+                userId: walletUserId,
                 credits: creditsToGrant,
                 actionType: "TOPUP_PURCHASE",
                 referenceId: `topup:${session.id}`,
                 description: `A pouch of light — ${creditsToGrant.toLocaleString()} credits`,
                 stripeCustomerId: customerId,
+                purchaseReference: `stripe:${session.id}`,
+                purchaseNote: "Stripe purchase — a pouch of light",
               });
             }
             await db.payment.create({
@@ -344,11 +436,14 @@ export async function handleStripeEvent(event: Stripe.Event): Promise<void> {
         const wallet = await db.userWallet.findUnique({ where: { stripeCustomerId: customerId } });
         if (wallet && wallet.stripeSubscriptionId) {
           const tier = (wallet.planTier in WALLET_PLANS ? wallet.planTier : "SEEKER") as PlanTier;
-          await grantWalletCredits(wallet.userId, {
+          await mintWithDepositRetry({
+            userId: wallet.userId,
             credits: WALLET_PLANS[tier].monthlyCredits,
             actionType: "SUBSCRIPTION_GRANT",
             referenceId: `invoice:${invoice.id}`,
             description: `The ${tier} pass renewed — ${WALLET_PLANS[tier].monthlyCredits.toLocaleString()} credits of light`,
+            purchaseReference: `stripe:${invoice.id}`,
+            purchaseNote: `Stripe renewal — the ${tier} pass, a new moon`,
           });
           break;
         }

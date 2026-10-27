@@ -4,6 +4,7 @@ import { isAdminEmail, isAdminRequest } from "@/lib/server/admin";
 import { getSessionUser } from "@/lib/server/access";
 import {
   WALLET_PACKS,
+  depositBalance,
   grantWalletCredits,
   servicePrices,
   walletEnforced,
@@ -18,8 +19,9 @@ import { LC_LIMITS, getLcEngineStatus } from "@/lib/server/lc-engine";
 /*  not the lock, the lock is here.                                    */
 /*                                                                     */
 /*  GET            → the whole ledger's glance: users, liability,      */
-/*                   purchases, spends, refunds, the engines' own      */
-/*                   honesty, the standing prices and packs, plus      */
+/*                   purchases, spends, refunds, the DEPOSIT well's    */
+/*                   balance, the payment sources' count, the engines' */
+/*                   own honesty, the standing prices and packs, plus  */
 /*                   `analytics` — the ledger's last thirty days as    */
 /*                   chartable series (daily tide + credits by door).  */
 /*  POST grant     → lay credits into a passage's wallet (audited).    */
@@ -103,7 +105,7 @@ export async function GET(req: NextRequest) {
     since.setUTCHours(0, 0, 0, 0);
     since.setUTCDate(since.getUTCDate() - 29);
 
-    const [userCount, wallets, ledger, usage, prices, lcEngine, flowRows] = await Promise.all([
+    const [userCount, wallets, ledger, usage, prices, lcEngine, flowRows, well, sourcesTotal, sourcesActive] = await Promise.all([
       db.user.count(),
       db.userWallet.findMany({ select: { freeCreditsRemaining: true, paidCreditsRemaining: true, depositCredits: true, planTier: true } }),
       db.creditLedger.findMany({ orderBy: { createdAt: "desc" }, take: 400, select: { actionType: true, creditsDeducted: true, metadata: true, createdAt: true, userId: true } }),
@@ -115,6 +117,9 @@ export async function GET(req: NextRequest) {
         select: { actionType: true, creditsDeducted: true, createdAt: true },
         orderBy: { createdAt: "asc" },
       }),
+      depositBalance(),
+      db.paymentSource.count(),
+      db.paymentSource.count({ where: { active: true } }),
     ]);
 
     /* the continuous calendar: thirty UTC days, gaps filled with zero so
@@ -205,6 +210,9 @@ export async function GET(req: NextRequest) {
         spent,
         refunded,
         enforcement: walletEnforced() ? "active" : "resting",
+        /* THE DEPOSIT — the keeper's well every mint pours from */
+        depositBalance: well,
+        paymentSources: { total: sourcesTotal, active: sourcesActive },
       },
       usage: usage
         .map((u) => ({ operation: u.operation, count: u._count._all }))
@@ -252,8 +260,18 @@ export async function POST(req: NextRequest) {
           actionType: "SUBSCRIPTION_GRANT",
           referenceId: `admin-grant-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
           description: `The keeper's own grant — ${reason || "no reason written"}`,
+          actorEmail: adminEmail,
         });
-        if (!res.ok) return NextResponse.json({ error: "The grant did not land." }, { status: 500 });
+        if (!res.ok) {
+          return NextResponse.json(
+            {
+              error: res.depositDry
+                ? "The well is dry — the deposit holds less light than this grant. Charge the deposit at the fuel desk first."
+                : "The grant did not land.",
+            },
+            { status: res.depositDry ? 400 : 500 }
+          );
+        }
         return NextResponse.json({ ok: true, total: res.total });
       }
       /* the draw — never below zero, always audited */

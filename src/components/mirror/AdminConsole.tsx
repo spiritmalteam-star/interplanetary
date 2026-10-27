@@ -25,6 +25,9 @@ interface EconomyOverview {
   spent: number;
   refunded: number;
   enforcement: string;
+  /** THE DEPOSIT — the keeper's well every mint pours from */
+  depositBalance?: number;
+  paymentSources?: { total: number; active: number };
 }
 
 interface EconomyUser {
@@ -248,7 +251,35 @@ export function AdminConsole() {
           <StatCell k={t("Purchased")} v={data.overview.purchased} />
           <StatCell k={t("Spent")} v={data.overview.spent} />
           <StatCell k={t("Refunded")} v={data.overview.refunded} />
+          <StatCell
+            k={t("DEPOSIT well")}
+            v={data.overview.depositBalance ?? 0}
+            warn={data.overview.enforcement === "active" && (data.overview.depositBalance ?? 0) <= 0}
+          />
           <StatCell k={t("Weaving now")} v={data.lcEngine.weavingNow} />
+        </div>
+        <p className="mt-1.5 text-[11px] leading-relaxed text-muted-foreground/60">
+          {t(
+            "The deposit is the house's well: purchases fill it, every mint pours from it — a dry well refuses new light when enforcement stands."
+          )}
+        </p>
+      </section>
+
+      {/* ---------- payment sources — the sealed cupboard's glance ---------- */}
+      <section>
+        <p className="mono-label mb-2 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+          {t("Payment sources")}
+        </p>
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border hairline bg-[var(--glass-bg-soft)] px-3 py-2">
+          <p className="text-[12.5px] text-muted-foreground">
+            <span className="font-mono text-foreground/85">
+              {data.overview.paymentSources?.active ?? 0}/{data.overview.paymentSources?.total ?? 0}
+            </span>{" "}
+            {t("active · sealed with AES-256-GCM · hints only, never the secrets")}
+          </p>
+          <span className="mono-label text-[8.5px] uppercase tracking-[0.14em] text-muted-foreground/60">
+            {t("managed at the fuel desk")}
+          </span>
         </div>
       </section>
 

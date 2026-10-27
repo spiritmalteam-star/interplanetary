@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   AudioLines,
@@ -22,6 +22,7 @@ import {
   Sparkles,
   Square,
   Trash2,
+  Type,
   Undo2,
   Volume2,
   VolumeX,
@@ -46,12 +47,18 @@ import { AttachmentChips, ChatInputExtras } from "./ChatInputExtras";
 import type { ChatAttachment } from "./attachments";
 
 /* ------------------------------------------------------------------ */
-/*  LIGHT CODES — the musical chamber. A compact room: the intention,  */
-/*  the chambers, one generating breath — and THE MIRROR'S BRIEF, the  */
-/*  composition sheet the visitor reads and shapes before any sound    */
-/*  is woven. The round is four steps, honestly kept:                  */
+/*  LIGHT CODES — the musical chamber, poured in thick purple liquid.  */
+/*  A compact two-zone room: on the left the channeling flows (one     */
+/*  describe line → the Mirror composes → the brief), on the right     */
+/*  everything there is to HEAR (the player, the kept transmissions).  */
+/*  The round is four steps, honestly kept:                            */
 /*                                                                     */
 /*      DESCRIBE → MIRROR COMPOSES → GENERATE → LISTEN                 */
+/*                                                                     */
+/*  THE FIRST LAW, LITERAL: the style row carries a chip — "No style   */
+/*  — just my words". While it stands, every selector dims and locks   */
+/*  (inert) and the brief is composed from the visitor's free text     */
+/*  ALONE — no chamber, no shape, no voice rides with the ask.         */
 /*                                                                     */
 /*  The engine's name stays behind the veil; the Mirror is the voice.  */
 /*  (Behind that veil: Google DeepMind's Lyria, through the official   */
@@ -59,20 +66,26 @@ import type { ChatAttachment } from "./attachments";
 /* ------------------------------------------------------------------ */
 
 /* ------------------------- the house's dress ------------------------- */
-/*  The musical chamber keeps its own silver ink (--scope-a/--scope-b)
-    for everything that IS the sound — modes, waveform, the generate
-    breath — while the room's quiet chrome wears the house palette:
-    gold glass pills, the braided seam (plum violet → feather green →
-    gold) and three rarely-sung light-language seals in the corners.  */
+/*  The musical chamber wears its own accent (--scope-a, the purple of
+    the room's liquid) for everything that IS the sound — chips, wave,
+    the weave breath — over the slow liquid backdrop (.lc-wash and the
+    drifting .lc-blob drops, styled in globals.css). The braided seam
+    and three rarely-sung light-language seals stay the house's own.   */
 
 /** The braided seam — a section rule woven of the two kind colors and
  *  the gold, fading at both ends so it never cuts the page. */
 const BRAID_RULE =
   "bg-[linear-gradient(90deg,transparent_0%,color-mix(in_srgb,var(--lp-violet)_55%,transparent)_22%,color-mix(in_srgb,var(--lp-feather)_52%,transparent)_50%,color-mix(in_srgb,var(--lp-gold)_72%,transparent)_78%,transparent_100%)]";
 
-/** Gold glass — the pill chrome of the chamber's quiet controls. */
-const GOLD_PILL =
-  "border-[color-mix(in_srgb,var(--lp-gold)_32%,var(--hairline))] bg-[color-mix(in_srgb,var(--lp-gold)_7%,var(--glass-bg-soft))] hover:border-[color-mix(in_srgb,var(--lp-gold)_58%,transparent)]";
+/** Scope glass — the quiet chrome of the chamber's controls, tinted
+ *  by the room's own accent instead of the old gold. */
+const LC_PILL =
+  "border-[color-mix(in_srgb,var(--scope-a)_28%,var(--hairline))] bg-[color-mix(in_srgb,var(--scope-a)_6%,var(--glass-bg-soft))] hover:border-[color-mix(in_srgb,var(--scope-a)_50%,transparent)]";
+
+/** The touch veil — small hands stay honest to 44px fingers: the hit
+    area breathes out invisibly past the chip's visible edge. */
+const TOUCH_VEIL =
+  "relative after:absolute after:-inset-2 after:rounded-full after:content-['']";
 
 /** A rarely-used light-language seal resting in an empty corner —
  *  printed as warm bronze ink on the vanilla daylight paper through
@@ -115,9 +128,11 @@ function fmtTimeLong(s: number): string {
   return `${m}:${r.toString().padStart(2, "0")}`;
 }
 
-/* ------------------------- mode card -------------------------------- */
+/* ------------------------- the style row ----------------------------- */
 
-function ModeCard({
+/** A chamber chip — the modes no longer carry cards; one small glass
+    chip each, the chamber's number whispered before its name. */
+function ModeChip({
   mode,
   active,
   onClick,
@@ -133,32 +148,14 @@ function ModeCard({
       onClick={onClick}
       aria-pressed={active}
       data-testid={`lc-mode-${mode.id}`}
-      className={cn(
-        "focus-glow group relative flex flex-col gap-0.5 rounded-xl border px-3 py-2.5 text-left transition-all duration-300",
-        active
-          ? "border-[color-mix(in_srgb,var(--scope-a)_55%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_10%,transparent)] glow-sm"
-          : cn(
-              GOLD_PILL,
-              "bg-[color-mix(in_srgb,var(--lp-gold)_5%,var(--glass-bg-soft))] hover:bg-[color-mix(in_srgb,var(--lp-gold)_9%,var(--glass-bg-soft))]"
-            )
-      )}
+      title={t(mode.tagline)}
+      aria-label={`${mode.n} — ${t(mode.name)}. ${t(mode.tagline)}`}
+      className={cn("btn-chip", active && "btn-chip-active")}
     >
-      <span className="flex items-center gap-1.5">
-        <span className="mono-label text-[10px] text-[color-mix(in_srgb,var(--lp-gold)_60%,var(--muted-foreground))]">
-          {mode.n}
-        </span>
-        <span
-          className={cn(
-            "text-[13.5px] font-semibold leading-tight tracking-wide",
-            active ? "text-[var(--scope-a)]" : "text-foreground/85"
-          )}
-        >
-          {t(mode.name)}
-        </span>
+      <span className="mono-label text-[9px] opacity-60" aria-hidden="true">
+        {mode.n}
       </span>
-      <span className="text-[12px] leading-snug text-muted-foreground">
-        {t(mode.tagline)}
-      </span>
+      <span className="max-w-[150px] truncate">{t(mode.name)}</span>
     </button>
   );
 }
@@ -226,7 +223,7 @@ function WaveSurferWave({
     let instance: import("wavesurfer.js").default | null = null;
     if (!audioEl || !containerRef.current) return;
     const styles = getComputedStyle(document.documentElement);
-    const scopeA = styles.getPropertyValue("--scope-a").trim() || "#9d8fd4";
+    const scopeA = styles.getPropertyValue("--scope-a").trim() || "#a855f7";
     const scopeB = styles.getPropertyValue("--scope-b").trim() || "#d8c9a8";
     import("wavesurfer.js")
       .then(({ default: WS }) => {
@@ -281,12 +278,10 @@ function VoiceRecordButton({
   onTranscript,
   disabled,
   testId,
-  compact,
 }: {
   onTranscript: (text: string) => void;
   disabled?: boolean;
   testId: string;
-  compact?: boolean;
 }) {
   const t = useT();
   const rec = useVoiceRecorder();
@@ -326,7 +321,6 @@ function VoiceRecordButton({
     }
   };
 
-  const size = compact ? "size-10" : "size-11";
   return (
     <span className="relative inline-flex shrink-0">
       <button
@@ -350,14 +344,11 @@ function VoiceRecordButton({
         data-testid={testId}
         aria-pressed={rec.recording}
         className={cn(
-          "focus-glow flex items-center justify-center rounded-full border transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-35",
-          size,
+          "focus-glow flex size-9 items-center justify-center rounded-full border transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-35",
+          TOUCH_VEIL,
           rec.recording
             ? "border-[color-mix(in_srgb,var(--destructive)_55%,transparent)] bg-[color-mix(in_srgb,var(--destructive)_12%,transparent)] text-[var(--destructive)]"
-            : cn(
-                GOLD_PILL,
-                "text-muted-foreground hover:text-foreground"
-              )
+            : cn(LC_PILL, "text-muted-foreground hover:text-foreground")
         )}
       >
         {busyAsr ? (
@@ -368,16 +359,13 @@ function VoiceRecordButton({
         ) : rec.recording ? (
           <Square className="size-3.5" aria-hidden="true" />
         ) : (
-          <Mic className={compact ? "size-3.5" : "size-4"} aria-hidden="true" />
+          <Mic className="size-3.5" aria-hidden="true" />
         )}
       </button>
       {rec.recording && (
         <span
           role="status"
-          className={cn(
-            "absolute -top-8 right-0 flex items-center gap-1.5 whitespace-nowrap rounded-full border hairline bg-card px-2.5 py-1 text-[11px] text-foreground/85 shadow-sm",
-            compact ? "-top-9" : ""
-          )}
+          className="absolute -top-9 right-0 z-10 flex items-center gap-1.5 whitespace-nowrap rounded-full border hairline bg-card px-2.5 py-1 text-[11px] text-foreground/85 shadow-sm"
           data-testid={`${testId}-listening`}
         >
           <span className="size-1.5 animate-pulse rounded-full bg-[var(--destructive)]" aria-hidden="true" />
@@ -387,7 +375,7 @@ function VoiceRecordButton({
       {note && (
         <span
           role="status"
-          className="absolute -top-8 right-0 whitespace-nowrap rounded-full border hairline bg-card px-2.5 py-1 text-[11px] text-muted-foreground shadow-sm"
+          className="absolute -top-9 right-0 z-10 whitespace-nowrap rounded-full border hairline bg-card px-2.5 py-1 text-[11px] text-muted-foreground shadow-sm"
         >
           {note}
         </span>
@@ -450,7 +438,7 @@ function Player() {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-      className="scope-frame-card relative rounded-2xl p-4 sm:p-5"
+      className="scope-frame-card relative rounded-2xl p-3.5 sm:p-4"
       data-testid="lc-player"
     >
       <audio
@@ -476,7 +464,7 @@ function Player() {
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p
-            className="mono-label text-[10.5px] uppercase tracking-[0.22em] text-muted-foreground"
+            className="mono-label text-[10px] uppercase tracking-[0.22em] text-muted-foreground"
             data-testid="lc-player-mode"
           >
             {t(modeName)}
@@ -486,7 +474,7 @@ function Player() {
                 ? " · endless journey"
                 : " · preview"}
           </p>
-          <h3 className="mt-0.5 truncate font-serif text-[18px] font-semibold text-foreground">
+          <h3 className="mt-0.5 truncate font-serif text-[16px] font-semibold text-foreground">
             {track.title}
           </h3>
         </div>
@@ -494,7 +482,10 @@ function Player() {
           type="button"
           onClick={clearLcPlayer}
           aria-label={t("Close the player")}
-          className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground"
+          className={cn(
+            "focus-glow flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground",
+            TOUCH_VEIL
+          )}
         >
           <X className="size-4" aria-hidden="true" />
         </button>
@@ -517,19 +508,27 @@ function Player() {
           )}
         </p>
       )}
-      <div className="mt-1.5 flex items-center justify-between font-mono text-[11.5px] text-muted-foreground">
+      <div className="mt-1 flex items-center justify-between font-mono text-[11px] text-muted-foreground">
         <span>{fmtTimeLong(time)}</span>
         <span>{fmtTimeLong(dur)}</span>
       </div>
 
-      {/* transport */}
-      <div className="mt-3 flex flex-wrap items-center gap-1.5">
+      {/* THE TRANSPORT — one compact glass bar: play, new version,
+          reshape, download, loop, the volume dial and the engine-facing
+          words. Every hand a chip; the play hand the only large one. */}
+      <div
+        className="mt-2.5 flex flex-wrap items-center gap-1 rounded-full border hairline bg-[var(--glass-bg-soft)] p-1"
+        data-testid="lc-transport"
+      >
         <button
           type="button"
           onClick={toggle}
           data-testid="lc-play"
           aria-label={playing ? t("Pause") : t("Play")}
-          className="focus-glow flex size-10 items-center justify-center rounded-full bg-gradient-to-r from-[var(--lp-gold)] to-[color-mix(in_srgb,var(--lp-gold)_58%,var(--lp-violet))] text-[#f8f3e6] shadow-[0_4px_20px_-8px_color-mix(in_srgb,var(--lp-gold)_85%,transparent)] transition-all duration-300 hover:-translate-y-px dark:to-[color-mix(in_srgb,var(--lp-gold)_78%,white)] dark:text-[#2a2313]"
+          className={cn(
+            "focus-glow mx-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-[var(--scope-a)] to-[color-mix(in_srgb,var(--scope-b)_80%,var(--scope-a))] text-[#f6f4ef] shadow-[0_4px_20px_-8px_color-mix(in_srgb,var(--scope-a)_85%,transparent)] transition-all duration-300 hover:-translate-y-px",
+            TOUCH_VEIL
+          )}
         >
           {playing ? (
             <Pause className="size-4" aria-hidden="true" />
@@ -555,10 +554,7 @@ function Player() {
           target="_blank"
           rel="noreferrer"
           data-testid="lc-download"
-          className={cn(
-            "focus-glow flex h-8 items-center gap-1.5 rounded-full border px-2.5 text-[12.5px] text-muted-foreground transition-all duration-300 hover:text-foreground",
-            GOLD_PILL
-          )}
+          className="btn-chip"
         >
           <Download className="size-3" aria-hidden="true" />
           {t("Download")}
@@ -566,22 +562,19 @@ function Player() {
         <PlayerChip
           onClick={() => setLoop((l) => !l)}
           icon={Repeat}
-          label={loop ? "Looping" : "Turn into loop"}
+          label={loop ? "Looping" : "Loop"}
           active={loop}
           testId="lc-loop"
         />
         {/* the volume hand — the visitor's own quiet dial */}
-        <span className="flex items-center gap-1">
+        <span className="ml-auto flex items-center gap-1 pl-0.5">
           <button
             type="button"
             onClick={() => applyVolume(volume, !muted)}
             aria-label={muted ? t("Unmute") : t("Mute")}
             aria-pressed={muted}
             data-testid="lc-mute"
-            className={cn(
-              "focus-glow flex h-8 w-8 items-center justify-center rounded-full border text-muted-foreground transition-all duration-300 hover:text-foreground",
-              GOLD_PILL
-            )}
+            className={cn("btn-chip w-8 px-0", TOUCH_VEIL)}
           >
             {muted || volume === 0 ? (
               <VolumeX className="size-3.5" aria-hidden="true" />
@@ -598,14 +591,14 @@ function Player() {
             onChange={(e) => applyVolume(Number(e.target.value), false)}
             aria-label={t("Volume")}
             data-testid="lc-volume"
-            className="h-1 w-14 cursor-pointer accent-[var(--scope-a)] sm:w-20"
+            className="h-1 w-12 cursor-pointer accent-[var(--scope-a)] sm:w-16"
           />
         </span>
         {(track.style || track.lyrics) && (
           <PlayerChip
             onClick={() => setShowTranslation((v) => !v)}
             icon={Eye}
-            label="View translation"
+            label="Translation"
             active={showTranslation}
             testId="lc-translation"
           />
@@ -614,11 +607,11 @@ function Player() {
 
       {/* TRANSMISSION NOTES */}
       {track.notes && (
-        <div className="mt-3.5 border-t hairline pt-3">
-          <p className="mono-label text-[10.5px] uppercase tracking-[0.22em] text-muted-foreground">
+        <div className="mt-3 border-t hairline pt-2.5">
+          <p className="mono-label text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
             {t("Transmission notes")}
           </p>
-          <p className="mt-1 text-[14.5px] italic leading-relaxed text-foreground/80">
+          <p className="mt-1 text-[13.5px] italic leading-relaxed text-foreground/80">
             {track.notes}
           </p>
         </div>
@@ -676,15 +669,7 @@ function PlayerChip({
       onClick={onClick}
       data-testid={testId}
       aria-pressed={active}
-      className={cn(
-        "focus-glow flex h-8 items-center gap-1.5 rounded-full border px-2.5 text-[12.5px] transition-all duration-300",
-        active
-          ? "border-[color-mix(in_srgb,var(--scope-a)_55%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_12%,transparent)] text-[var(--scope-a)]"
-          : cn(
-              GOLD_PILL,
-              "text-muted-foreground hover:text-foreground"
-            )
-      )}
+      className={cn("btn-chip", active && "btn-chip-active")}
     >
       <Icon className="size-3" aria-hidden="true" />
       <span className="whitespace-nowrap">{t(label)}</span>
@@ -811,8 +796,8 @@ function LengthToggle() {
             lcLength === o.id
               ? {
                   backgroundColor:
-                    "color-mix(in srgb, var(--scope-a,var(--lp-gold)) 13%, transparent)",
-                  color: "var(--scope-a,var(--lp-gold))",
+                    "color-mix(in srgb, var(--scope-a) 13%, transparent)",
+                  color: "var(--scope-a)",
                 }
               : undefined
           }
@@ -828,10 +813,11 @@ function LengthToggle() {
 }
 
 /* --------------------- THE MIRROR'S BRIEF ---------------------------- */
-/*  The composition sheet: what the Mirror wrote, laid open for the
+/*  The channeling itself: what the Mirror wrote, laid open for the
     visitor's own hand — the title, the words, the production direction,
     the refinement line and the generate hand. Nothing is woven until
-    the visitor strikes generate.                                        */
+    the visitor strikes generate. After every describe-send the room
+    scrolls here and hands this sheet the focus.                        */
 
 const LYRIC_HANDS: { op: LcLyricOp; label: string }[] = [
   { op: "generate", label: "Write lyrics" },
@@ -885,12 +871,12 @@ function BriefCard() {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-      className="scope-frame-card relative rounded-2xl p-4 sm:p-5"
+      className="scope-frame-card relative rounded-2xl p-3.5 sm:p-4"
       data-testid="lc-brief"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="mono-label text-[10.5px] uppercase tracking-[0.24em] text-muted-foreground">
+          <p className="mono-label text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
             {t("The Mirror's brief")}
           </p>
           <label htmlFor="lc-brief-title" className="sr-only">
@@ -904,7 +890,7 @@ function BriefCard() {
             placeholder={t("Composition title")}
             maxLength={90}
             data-testid="lc-brief-title"
-            className="focus-glow mt-0.5 w-full truncate rounded-lg border border-transparent bg-transparent font-serif text-[18px] font-semibold text-foreground outline-none transition-colors duration-300 hover:border-[var(--hairline)] focus:border-[var(--hairline)]"
+            className="focus-glow mt-0.5 w-full truncate rounded-lg border border-transparent bg-transparent font-serif text-[17px] font-semibold text-foreground outline-none transition-colors duration-300 hover:border-[var(--hairline)] focus:border-[var(--hairline)]"
           />
         </div>
         <button
@@ -912,23 +898,26 @@ function BriefCard() {
           onClick={clearLcBrief}
           aria-label={t("Lay the brief down")}
           data-testid="lc-brief-dismiss"
-          className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground"
+          className={cn(
+            "focus-glow flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground",
+            TOUCH_VEIL
+          )}
         >
           <X className="size-4" aria-hidden="true" />
         </button>
       </div>
 
       {brief.notes && (
-        <p className="mt-1.5 text-[14.5px] italic leading-relaxed text-foreground/80">
+        <p className="mt-1 text-[14px] italic leading-relaxed text-foreground/80">
           {brief.notes}
         </p>
       )}
 
       {/* ---------- THE LYRICS LABORATORY ---------- */}
       {brief.lyrics !== null && (
-        <div className="mt-4 rounded-xl border hairline bg-[color-mix(in_srgb,var(--scope-a)_5%,transparent)] p-3">
+        <div className="mt-3 rounded-xl border hairline bg-[color-mix(in_srgb,var(--scope-a)_5%,transparent)] p-3">
           <div className="flex items-center justify-between gap-2">
-            <p className="mono-label flex items-center gap-1.5 text-[10.5px] uppercase tracking-[0.22em] text-muted-foreground">
+            <p className="mono-label flex items-center gap-1.5 text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
               <Feather className="size-3.5" aria-hidden="true" />
               {t("The Lyrics Laboratory")}
             </p>
@@ -939,7 +928,10 @@ function BriefCard() {
                   onClick={() => void copyLyrics()}
                   aria-label={t("Copy the lyrics")}
                   data-testid="lc-lyrics-copy"
-                  className="focus-glow flex size-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground"
+                  className={cn(
+                    "focus-glow flex size-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground",
+                    TOUCH_VEIL
+                  )}
                 >
                   {copied ? (
                     <Check className="size-3.5 text-[var(--scope-a)]" aria-hidden="true" />
@@ -974,10 +966,8 @@ function BriefCard() {
                 aria-label={`${t(hand.label)} — a craft hand of the Lyrics Laboratory`}
                 data-testid={`lc-lyric-${hand.op}`}
                 className={cn(
-                  "focus-glow flex h-7 items-center gap-1 rounded-full border px-2.5 text-[12px] transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-45",
-                  busyOp === `lyrics:${hand.op}`
-                    ? "border-[color-mix(in_srgb,var(--scope-a)_55%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_12%,transparent)] text-[var(--scope-a)]"
-                    : cn(GOLD_PILL, "text-muted-foreground hover:text-foreground")
+                  "btn-chip h-7 px-2.5 text-[12px]",
+                  busyOp === `lyrics:${hand.op}` && "btn-chip-active"
                 )}
               >
                 {busyOp === `lyrics:${hand.op}` && (
@@ -1019,15 +1009,15 @@ function BriefCard() {
 
       {/* ---------- THE PRODUCTION DIRECTION — revealed on request ---------- */}
       {brief.style && (
-        <div className="mt-3">
+        <div className="mt-2.5">
           <button
             type="button"
             onClick={() => setStyleOpen((v) => !v)}
             aria-expanded={styleOpen}
             data-testid="lc-brief-style-toggle"
             className={cn(
-              "focus-glow mx-auto flex w-fit items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[12px] uppercase tracking-[0.18em] text-muted-foreground transition-all duration-300 hover:text-foreground",
-              GOLD_PILL
+              "focus-glow mx-auto flex w-fit items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[11.5px] uppercase tracking-[0.18em] text-muted-foreground transition-all duration-300 hover:text-foreground",
+              LC_PILL
             )}
           >
             {t("The production direction")}
@@ -1071,10 +1061,10 @@ function BriefCard() {
           setRefine("");
           void refineBrief(word);
         }}
-        className="mt-4"
+        className="mt-3.5"
         data-testid="lc-refine-form"
       >
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <input
             type="text"
             value={refine}
@@ -1084,10 +1074,9 @@ function BriefCard() {
             maxLength={300}
             disabled={labBusy || weaving}
             data-testid="lc-refine-input"
-            className="focus-glow h-10 min-w-0 flex-1 rounded-full border hairline bg-background/60 px-4 text-[14.5px] text-foreground outline-none transition-all duration-300 placeholder:text-muted-foreground/55 disabled:opacity-50"
+            className="focus-glow h-9 min-w-0 flex-1 rounded-full border hairline bg-background/60 px-3.5 text-[13.5px] text-foreground outline-none transition-all duration-300 placeholder:text-muted-foreground/55 disabled:opacity-50"
           />
           <VoiceRecordButton
-            compact
             testId="lc-refine-voice"
             disabled={labBusy || weaving}
             onTranscript={(text) => {
@@ -1100,16 +1089,19 @@ function BriefCard() {
             disabled={labBusy || weaving || !refine.trim()}
             aria-label={t("Reshape the brief")}
             data-testid="lc-refine-send"
-            className="focus-glow flex size-10 shrink-0 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--scope-a)_40%,transparent)] text-[var(--scope-a)] transition-all duration-300 hover:bg-[color-mix(in_srgb,var(--scope-a)_10%,transparent)] disabled:cursor-not-allowed disabled:opacity-35"
+            className={cn(
+              "focus-glow flex size-9 shrink-0 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--scope-a)_40%,transparent)] text-[var(--scope-a)] transition-all duration-300 hover:bg-[color-mix(in_srgb,var(--scope-a)_10%,transparent)] disabled:cursor-not-allowed disabled:opacity-35",
+              TOUCH_VEIL
+            )}
           >
-            <Send className="size-4" aria-hidden="true" />
+            <Send className="size-3.5" aria-hidden="true" />
           </button>
         </div>
       </form>
 
       {refineNote && (
         <p
-          className="mt-2 rounded-lg border border-[color-mix(in_srgb,var(--lp-gold)_28%,transparent)] bg-[color-mix(in_srgb,var(--lp-gold)_6%,transparent)] px-3 py-2 text-[12.5px] leading-relaxed text-muted-foreground"
+          className="mt-2 rounded-lg border border-[color-mix(in_srgb,var(--scope-a)_28%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_6%,transparent)] px-3 py-2 text-[12.5px] leading-relaxed text-muted-foreground"
           data-testid="lc-refine-note"
         >
           {refineNote}
@@ -1117,24 +1109,30 @@ function BriefCard() {
       )}
 
       {/* ---------- THE GENERATE HAND — the visitor strikes the weave ---------- */}
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t hairline pt-3.5">
+      <div className="mt-3.5 flex flex-wrap items-center justify-between gap-2 border-t hairline pt-3">
         <LengthToggle />
         <button
           type="button"
           onClick={() => void weaveBrief()}
           disabled={labBusy || weaving}
           data-testid="lc-weave"
-          className="focus-glow flex h-11 items-center gap-2 rounded-full bg-gradient-to-r from-[var(--scope-a)] to-[color-mix(in_srgb,var(--scope-b)_80%,var(--scope-a))] px-5 text-[14px] font-semibold text-[#f6f4ef] shadow-[0_6px_28px_-10px_color-mix(in_srgb,var(--scope-a)_75%,transparent)] ring-1 ring-inset ring-[color-mix(in_srgb,var(--lp-gold)_35%,transparent)] transition-all duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40"
+          aria-label={
+            hasAudio && status !== "polling"
+              ? t("Weave a new version")
+              : t("Generate the transmission")
+          }
+          className={cn(
+            "focus-glow flex h-10 items-center gap-1.5 rounded-full bg-gradient-to-r from-[var(--scope-a)] to-[color-mix(in_srgb,var(--scope-b)_80%,var(--scope-a))] px-4 text-[13.5px] font-semibold text-[#f6f4ef] shadow-[0_6px_28px_-10px_color-mix(in_srgb,var(--scope-a)_75%,transparent)] transition-all duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40",
+            TOUCH_VEIL
+          )}
         >
           <AudioLines className="size-4" aria-hidden="true" />
-          {hasAudio && status !== "polling"
-            ? t("Weave a new version")
-            : t("Generate the transmission")}
+          {hasAudio && status !== "polling" ? t("Weave again") : t("Weave")}
         </button>
       </div>
       <PriceLine />
       {hasAudio && (
-        <p className="mt-2 text-[11.5px] leading-relaxed text-muted-foreground/75">
+        <p className="mt-1.5 text-[11px] leading-relaxed text-muted-foreground/75">
           {t(
             "Generating weaves a fresh version — the engine does not edit a sound already woven."
           )}
@@ -1236,7 +1234,7 @@ function ChamberStatus() {
   if (!status) return null;
 
   return (
-    <section className="mt-8" aria-label={t("Chamber status")} data-testid="lc-status">
+    <section className="mt-6" aria-label={t("Chamber status")} data-testid="lc-status">
       <div className={cn("mb-3 h-px w-full", BRAID_RULE)} aria-hidden="true" />
       <button
         type="button"
@@ -1262,7 +1260,7 @@ function ChamberStatus() {
             className="overflow-hidden"
           >
             <div
-              className="nice-scroll mt-2 max-h-72 overflow-y-auto rounded-xl border hairline bg-[color-mix(in_srgb,var(--lp-gold)_4%,var(--glass-bg-soft))] p-3.5"
+              className="nice-scroll mt-2 max-h-72 overflow-y-auto rounded-xl border hairline bg-[color-mix(in_srgb,var(--scope-a)_4%,var(--glass-bg-soft))] p-3.5"
               data-testid="lc-status-panel"
             >
               <StatusRow k={t("Provider")} v={status.provider} />
@@ -1336,11 +1334,13 @@ export function LightCodesView() {
   const lcError = useMirror((s) => s.lcError);
   const lcHistory = useMirror((s) => s.lcHistory);
   const lcLength = useMirror((s) => s.lcLength);
+  const lcRaw = useMirror((s) => s.lcRaw);
   const setLcMode = useMirror((s) => s.setLcMode);
   const setLcCivilization = useMirror((s) => s.setLcCivilization);
   const setLcIntention = useMirror((s) => s.setLcIntention);
   const setLcUserLyrics = useMirror((s) => s.setLcUserLyrics);
   const setLcShape = useMirror((s) => s.setLcShape);
+  const setLcRaw = useMirror((s) => s.setLcRaw);
   const composeBrief = useMirror((s) => s.composeBrief);
   const weaveBrief = useMirror((s) => s.weaveBrief);
   const generateLightCode = useMirror((s) => s.generateLightCode);
@@ -1367,38 +1367,70 @@ export function LightCodesView() {
   const mode = LC_MODES.find((m) => m.id === lcMode) ?? LC_MODES[0];
   const busy = lcStatus === "interpreting" || lcStatus === "polling";
 
+  /* FOCUS THE CHANNELING — after the visitor sends their describe
+     input, the room glides to the Mirror's brief and hands it the
+     focus (scrollIntoView nearest, smooth unless reduced motion is
+     asked; the focus is real, so screen readers land on the sheet).
+     An aria-live line above announces the composing and its arrival. */
+  const briefFocusRef = useRef<HTMLDivElement | null>(null);
+  const focusChanneling = useCallback(() => {
+    const el = briefFocusRef.current;
+    if (!el) return;
+    const reduce =
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    el.scrollIntoView({
+      block: "nearest",
+      behavior: reduce ? "auto" : "smooth",
+    });
+    window.setTimeout(
+      () => el.focus({ preventScroll: true }),
+      reduce ? 0 : 280
+    );
+  }, []);
+
+  /* the one describe-send — the words go up; when the brief comes
+     back, the channeling takes the stage */
+  const sendDescribe = useCallback(
+    (opts?: { intention?: string; attachments?: ChatAttachment[] }) => {
+      void composeBrief(opts).then((ok) => {
+        if (ok) window.setTimeout(focusChanneling, 120);
+      });
+    },
+    [composeBrief, focusChanneling]
+  );
+
   return (
     <div className="scope-lightcodes relative flex h-full flex-col">
-      {/* THE HOUSE'S MARKS — two kind-colored breaths and three rarely-sung
-          light-language seals resting in the chamber's empty corners:
-          bronze ink on the vanilla daylight paper, a soft glow in the
-          crystal night. They breathe on one slow opacity cycle, never
-          take a touch and never cover a control. */}
+      {/* THE THICK LIQUID — the room's signature atmosphere: one layered
+          wash of radial and conic purple light over the glass, three
+          enormous blurred drops drifting through it on 36–58 second
+          loops (CSS-only transforms; they rest under the eco tier and
+          for reduced-motion visitors), and three rarely-sung
+          light-language seals in the empty corners. Decoration never
+          takes a touch and never covers a control. */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
       >
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage:
-              "radial-gradient(42% 30% at 0% 10%, color-mix(in srgb, var(--lp-feather) 11%, transparent), transparent 70%), radial-gradient(40% 30% at 100% 92%, color-mix(in srgb, var(--lp-violet) 13%, transparent), transparent 72%)",
-          }}
-        />
+        <div className="lc-wash absolute inset-0" />
+        <div className="lc-blob lc-blob-a" />
+        <div className="lc-blob lc-blob-b" />
+        <div className="lc-blob lc-blob-c" />
         {/* intricate_04 — unsung anywhere else in the realm */}
         <SigilMark
           src="/sigils/intricate_04.png"
-          className="-right-8 -top-9 size-[clamp(140px,26vw,250px)] [transform:rotate(12deg)] opacity-[0.12] sm:-right-4 dark:opacity-[0.16] dark:[filter:drop-shadow(0_0_18px_color-mix(in_srgb,var(--lp-gold)_55%,transparent))]"
+          className="-right-8 -top-9 size-[clamp(140px,26vw,250px)] [transform:rotate(12deg)] opacity-[0.12] sm:-right-4 dark:opacity-[0.16] dark:[filter:drop-shadow(0_0_18px_color-mix(in_srgb,var(--scope-a)_55%,transparent))]"
         />
         {/* sigil_02 — a light-language mark no other room has worn */}
         <SigilMark
           src="/sigils/sigil_02.png"
-          className="-left-12 top-[38%] size-[clamp(150px,24vw,270px)] [transform:rotate(-8deg)] opacity-[0.12] sm:-left-8 dark:opacity-[0.15] dark:[filter:drop-shadow(0_0_18px_color-mix(in_srgb,var(--lp-violet)_55%,transparent))]"
+          className="-left-12 top-[38%] size-[clamp(150px,24vw,270px)] [transform:rotate(-8deg)] opacity-[0.12] sm:-left-8 dark:opacity-[0.15] dark:[filter:drop-shadow(0_0_18px_color-mix(in_srgb,var(--scope-a)_55%,transparent))]"
         />
         {/* intricate_09 — sung once, long ago, in the guide's pages */}
         <SigilMark
           src="/sigils/intricate_09.png"
-          className="-bottom-10 -right-8 size-[clamp(140px,24vw,260px)] [transform:rotate(9deg)] opacity-[0.13] sm:-right-5 dark:opacity-[0.16] dark:[filter:drop-shadow(0_0_18px_color-mix(in_srgb,var(--lp-feather)_60%,transparent))]"
+          className="-bottom-10 -right-8 size-[clamp(140px,24vw,260px)] [transform:rotate(9deg)] opacity-[0.13] sm:-right-5 dark:opacity-[0.16] dark:[filter:drop-shadow(0_0_18px_color-mix(in_srgb,var(--scope-b)_60%,transparent))]"
         />
       </div>
 
@@ -1407,36 +1439,29 @@ export function LightCodesView() {
         className="nice-scroll relative z-10 min-h-0 flex-1 overflow-y-auto overscroll-contain"
         data-testid="light-codes"
       >
-        <div className="mx-auto w-full max-w-[760px] px-4 pb-28 pt-3 sm:px-6">
-          {/* the naming has rested — the bench switch opens the room */}
-
+        <div className="mx-auto w-full max-w-[1020px] px-4 pb-10 pt-3 sm:px-6">
           {/* THE TWO BENCHES — one quiet switch between the Mirror's
               studio and the visitor's own local instrument */}
           <div
             role="group"
             aria-label={t("Choose the bench")}
-            className="mt-4 flex justify-center"
+            className="flex justify-center"
           >
-            <div className="flex items-center gap-1 rounded-full border p-1">
+            <div className="flex items-center gap-1 rounded-full border hairline p-1">
               <button
                 type="button"
                 onClick={() => setBench("transmissions")}
                 aria-pressed={bench === "transmissions"}
                 data-testid="lc-bench-transmissions"
-                className={cn(
-                  "focus-glow flex h-7 items-center gap-1.5 rounded-full px-3 text-[12px] transition-colors duration-300",
-                  bench === "transmissions"
-                    ? "font-semibold"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
+                className="btn-chip h-7 px-3 text-[12px]"
                 style={
                   bench === "transmissions"
                     ? {
                         backgroundColor:
-                          "color-mix(in srgb, var(--scope-a,var(--lp-gold)) 12%, transparent)",
-                        color: "var(--scope-a,var(--lp-gold))",
+                          "color-mix(in srgb, var(--scope-a) 12%, transparent)",
+                        color: "var(--scope-a)",
                         boxShadow:
-                          "inset 0 0 0 1px color-mix(in srgb, var(--scope-a,var(--lp-gold)) 35%, transparent)",
+                          "inset 0 0 0 1px color-mix(in srgb, var(--scope-a) 35%, transparent)",
                       }
                     : undefined
                 }
@@ -1449,20 +1474,15 @@ export function LightCodesView() {
                 onClick={() => setBench("sequencer")}
                 aria-pressed={bench === "sequencer"}
                 data-testid="lc-bench-sequencer"
-                className={cn(
-                  "focus-glow flex h-7 items-center gap-1.5 rounded-full px-3 text-[12px] transition-colors duration-300",
-                  bench === "sequencer"
-                    ? "font-semibold"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
+                className="btn-chip h-7 px-3 text-[12px]"
                 style={
                   bench === "sequencer"
                     ? {
                         backgroundColor:
-                          "color-mix(in srgb, var(--scope-a,var(--lp-gold)) 12%, transparent)",
-                        color: "var(--scope-a,var(--lp-gold))",
+                          "color-mix(in srgb, var(--scope-a) 12%, transparent)",
+                        color: "var(--scope-a)",
                         boxShadow:
-                          "inset 0 0 0 1px color-mix(in srgb, var(--scope-a,var(--lp-gold)) 35%, transparent)",
+                          "inset 0 0 0 1px color-mix(in srgb, var(--scope-a) 35%, transparent)",
                       }
                     : undefined
                 }
@@ -1477,7 +1497,7 @@ export function LightCodesView() {
             /* THE LOCAL INSTRUMENT — mounts only while chosen; the
                bridge rides at the room's own corner with the pattern
                read at ask-time from the visitor's saved pattern */
-            <div className="relative mt-4">
+            <div className="relative mx-auto mt-4 max-w-[720px]">
               <MusicSequencer />
               <MirrorBridge
                 workspaceKey="lightcodes"
@@ -1511,420 +1531,511 @@ export function LightCodesView() {
               />
             </div>
           ) : (
-          <>
+            <>
+            {/* the round's own voice, for those who listen otherwise */}
+            <p aria-live="polite" className="sr-only" data-testid="lc-round-live">
+              {lcStatus === "interpreting"
+                ? t("The Mirror is composing the brief from your words…")
+                : lcBrief && lcStatus !== "ready"
+                  ? t("The Mirror's brief is ready — shape it, or weave it into sound.")
+                  : ""}
+            </p>
 
-          {/* the chambers — one compact sheet, two to a row */}
-          <div className="mt-4 grid grid-cols-2 gap-2 lg:grid-cols-3">
-            {LC_MODES.map((m) => (
-              <ModeCard
-                key={m.id}
-                mode={m}
-                active={m.id === lcMode}
-                onClick={() => setLcMode(m.id)}
-              />
-            ))}
-          </div>
-
-          {/* one-tap intents of the chosen chamber */}
-          {mode.intents && (
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              {mode.intents.map((intent) => (
-                <button
-                  key={intent}
-                  type="button"
-                  onClick={() => setLcIntention(intent)}
-                  className={cn(
-                    "focus-glow rounded-full border px-2.5 py-1 text-[12.5px] text-muted-foreground transition-all duration-300 hover:text-foreground",
-                    GOLD_PILL
-                  )}
+            {/* THE TWO ZONES — the channeling flows on the left, the
+                listening rests on the right; one column on small hands */}
+            <div className="mt-3 grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,380px)]">
+              {/* ================= LEFT — describe & channeling ================= */}
+              <div className="flex min-w-0 flex-col">
+                {/* THE DESCRIBE LINE — the ask, spoken or typed, with the
+                    paperclip and the voice; sending it begins the
+                    channeling and the room turns to the brief below. */}
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const carried = attachments;
+                    setAttachments([]);
+                    sendDescribe({ attachments: carried });
+                  }}
+                  className="relative rounded-2xl border hairline bg-card/85 p-2 shadow-[0_18px_48px_-30px_rgba(0,0,0,0.55)] backdrop-blur-md"
+                  data-testid="lc-composer"
                 >
-                  {t(intent)}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* civilizations */}
-          {mode.civilizations && (
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              {mode.civilizations.map((c) => (
-                <button
-                  key={c.id}
-                  type="button"
-                  onClick={() =>
-                    setLcCivilization(lcCivilization === c.id ? null : c.id)
-                  }
-                  aria-pressed={lcCivilization === c.id}
-                  className={cn(
-                    "focus-glow rounded-full border px-2.5 py-1 text-[12.5px] transition-all duration-300",
-                    lcCivilization === c.id
-                      ? "border-[color-mix(in_srgb,var(--scope-a)_55%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_12%,transparent)] text-[var(--scope-a)]"
-                      : cn(
-                          GOLD_PILL,
-                          "text-muted-foreground hover:text-foreground"
-                        )
-                  )}
-                >
-                  {t(c.name)}
-                </button>
-              ))}
-            </div>
-          )}
-          {/* the visitor's own lyrics */}
-          {lcShape.lyricsMode === "USER WRITES" && (
-            <div className="mt-2">
-              <label htmlFor="lc-lyrics" className="sr-only">
-                {t("Your words")}
-              </label>
-              <textarea
-                id="lc-lyrics"
-                rows={2}
-                value={lcUserLyrics}
-                onChange={(e) => setLcUserLyrics(e.target.value)}
-                placeholder={t("Your words — the Mirror will set them to sound.")}
-                maxLength={600}
-                className="focus-glow w-full resize-none rounded-xl border hairline bg-transparent px-3 py-2 font-serif text-[14.5px] italic leading-relaxed text-foreground placeholder:text-muted-foreground/60"
-              />
-            </div>
-          )}
-
-          {/* SHAPE THE TRANSMISSION — hidden until asked */}
-          <div className="mt-4">
-            <button
-              type="button"
-              onClick={() => setShapeOpen((v) => !v)}
-              aria-expanded={shapeOpen}
-              data-testid="lc-shape-toggle"
-              className={cn(
-                "focus-glow mx-auto flex w-fit items-center gap-1.5 rounded-full border px-4 py-1.5 text-[12.5px] uppercase tracking-[0.2em] text-muted-foreground transition-all duration-300 hover:text-foreground",
-                GOLD_PILL
-              )}
-            >
-              {t("Shape the transmission")}
-              <ChevronDown
-                className={cn(
-                  "size-3.5 transition-transform duration-300",
-                  shapeOpen && "rotate-180"
-                )}
-                aria-hidden="true"
-              />
-            </button>
-            <AnimatePresence>
-              {shapeOpen && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.35, ease: "easeOut" }}
-                  className="overflow-hidden"
-                >
-                  <div className="mt-3 space-y-3 rounded-xl border hairline bg-[color-mix(in_srgb,var(--lp-gold)_4%,var(--glass-bg-soft))] p-3.5">
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                      <ShapeDial
-                        label="Energy"
-                        ends={LC_SHAPE.energy}
-                        value={lcShape.energy}
-                        onChange={(v) => setLcShape({ energy: v })}
-                      />
-                      <ShapeDial
-                        label="Light / Dark"
-                        ends={LC_SHAPE.light}
-                        value={lcShape.light}
-                        onChange={(v) => setLcShape({ light: v })}
-                      />
-                      <ShapeDial
-                        label="Familiarity"
-                        ends={LC_SHAPE.familiarity}
-                        value={lcShape.familiarity}
-                        onChange={(v) => setLcShape({ familiarity: v })}
-                      />
-                      <ShapeDial
-                        label="Structure"
-                        ends={LC_SHAPE.structure}
-                        value={lcShape.structure}
-                        onChange={(v) => setLcShape({ structure: v })}
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-                      <ShapeSelect
-                        label="Time feel"
-                        options={LC_SHAPE.timeFeel}
-                        value={lcShape.timeFeel}
-                        onChange={(v) => setLcShape({ timeFeel: v })}
-                      />
-                      <ShapeSelect
-                        label="Voice"
-                        options={LC_SHAPE.voice}
-                        value={lcShape.voice}
-                        onChange={(v) => setLcShape({ voice: v })}
-                      />
-                      <ShapeSelect
-                        label="Vocal language"
-                        options={LC_SHAPE.vocalLanguage}
-                        value={lcShape.vocalLanguage}
-                        onChange={(v) => setLcShape({ vocalLanguage: v })}
-                      />
-                      <ShapeSelect
-                        label="Lyrics mode"
-                        options={LC_SHAPE.lyricsMode}
-                        value={lcShape.lyricsMode}
-                        onChange={(v) => setLcShape({ lyricsMode: v })}
-                      />
-                    </div>
+                  <AttachmentChips
+                    attachments={attachments}
+                    onRemove={(id) =>
+                      setAttachments((prev) => prev.filter((a) => a.id !== id))
+                    }
+                    accentVar="var(--scope-a)"
+                    testId="lc-attachments"
+                  />
+                  <div className="flex items-center gap-1.5">
+                    <VoiceRecordButton
+                      testId="lc-voice"
+                      disabled={busy}
+                      onTranscript={(text) => {
+                        /* THE SIMPLEST ROUND — they speak, the Mirror proceeds */
+                        setLcIntention(text);
+                        const carried = attachments;
+                        setAttachments([]);
+                        sendDescribe({ intention: text, attachments: carried });
+                      }}
+                    />
+                    <input
+                      type="text"
+                      value={lcIntention}
+                      onChange={(e) => setLcIntention(e.target.value)}
+                      placeholder={
+                        lcRaw
+                          ? t("Just your words — the Mirror adds no style of its own.")
+                          : t(mode.placeholder)
+                      }
+                      aria-label={
+                        lcRaw
+                          ? t("Your words — the only style")
+                          : t(mode.placeholder)
+                      }
+                      maxLength={600}
+                      data-testid="lc-intention"
+                      className="focus-glow h-10 min-w-0 flex-1 rounded-full border hairline bg-background/70 px-4 text-[15px] text-foreground placeholder:text-muted-foreground/60 transition-all duration-300"
+                    />
+                    <ChatInputExtras
+                      scope="healing"
+                      size="2xs"
+                      withCall={false}
+                      mobileLarger
+                      accentVar="var(--scope-a)"
+                      disabled={busy}
+                      attachments={attachments}
+                      onAttachmentsChange={setAttachments}
+                    />
+                    <button
+                      type="submit"
+                      disabled={busy}
+                      aria-label={
+                        mode.id === "mirror-transmission"
+                          ? t("Compose with the Mirror")
+                          : t("Ask the Mirror to compose")
+                      }
+                      data-testid="lc-generate"
+                      className={cn(
+                        "focus-glow flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-full bg-gradient-to-r from-[var(--scope-a)] to-[color-mix(in_srgb,var(--scope-b)_80%,var(--scope-a))] px-4 text-[13px] font-semibold text-[#f6f4ef] shadow-[0_6px_28px_-10px_color-mix(in_srgb,var(--scope-a)_75%,transparent)] transition-all duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-35",
+                        TOUCH_VEIL
+                      )}
+                    >
+                      <Sparkles className="size-3.5" aria-hidden="true" />
+                      {t("Compose")}
+                    </button>
                   </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          {/* the chamber at work — the results breathe here, above the
-              composer (the only place the room may scroll) */}
-          <div className="mt-5 flex flex-col items-center">
-            <AnimatePresence mode="wait">
-              {busy && (
-                <motion.div
-                  key="busy"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="mt-4 flex flex-col items-center"
-                  aria-live="polite"
-                  aria-busy="true"
-                  data-testid="lc-busy"
-                >
-                  <div className="flex h-8 items-end gap-[3px]" aria-hidden="true">
-                    {[0, 1, 2, 3, 4, 5, 6].map((i) => (
-                      <span
-                        key={i}
-                        className="w-[3px] rounded-full bg-[var(--scope-a)]"
-                        style={{
-                          height: `${30 + (i % 3) * 26}%`,
-                          animation: `lc-wave 1.2s ease-in-out ${i * 0.12}s infinite`,
-                        }}
-                      />
-                    ))}
+                  <div className="mt-1.5 flex justify-center">
+                    <button
+                      type="button"
+                      onClick={() => void surpriseMe()}
+                      disabled={busy}
+                      data-testid="lc-surprise"
+                      aria-label={t("Surprise me — let the Mirror choose")}
+                      className="btn-chip h-7 px-3 text-[11.5px] disabled:opacity-45"
+                    >
+                      <Dices className="size-3" aria-hidden="true" />
+                      {t("Surprise me")}
+                    </button>
                   </div>
-                  <p className="mt-2 text-[14px] italic text-muted-foreground">
-                    {lcStatus === "interpreting"
-                      ? t("The Mirror is translating intention into sound…")
-                      : lcLength === "full"
-                        ? t("The full song is being woven — verses finding their chorus…")
-                        : t("The sound is being woven — hold still…")}
-                  </p>
-                </motion.div>
-              )}
-              {lcStatus === "error" && lcError && (
-                <motion.div
-                  key="error"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="mt-4 rounded-xl border border-[color-mix(in_srgb,var(--destructive)_30%,transparent)] bg-[color-mix(in_srgb,var(--destructive)_6%,transparent)] px-4 py-3 text-center"
-                  data-testid="lc-error"
+                </form>
+
+                {/* THE STYLE ROW — the First Law, literal: the no-style
+                    chip stands first. While it is held, every selector
+                    below dims and locks (inert) — the brief is composed
+                    from the visitor's words ALONE. */}
+                <div
+                  role="group"
+                  aria-label={t("The style of the transmission")}
+                  className="mt-3 flex flex-col gap-2"
                 >
-                  <p className="text-[14.5px] leading-relaxed text-foreground/85">
-                    {lcError}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      /* a standing brief is woven again; no brief asks
-                         the Mirror for a fresh round */
-                      if (lcBrief) void weaveBrief();
-                      else void generateLightCode();
-                    }}
-                    data-testid="lc-ask-again"
-                    className="focus-glow mt-2 text-[13.5px] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-                  >
-                    {t("Ask again")}
-                  </button>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setLcRaw(!lcRaw)}
+                      aria-pressed={lcRaw}
+                      data-testid="lc-raw"
+                      title={t(
+                        "No style — just my words: the brief is composed from this input alone"
+                      )}
+                      aria-label={t(
+                        "No style — just my words: the brief is composed from your input alone, every selector set aside"
+                      )}
+                      className={cn(
+                        "btn-chip",
+                        lcRaw && "btn-chip-active border-dashed"
+                      )}
+                    >
+                      <Type className="size-3.5" aria-hidden="true" />
+                      {t("No style — just my words")}
+                    </button>
+                  </div>
 
-          {/* a gentle word for the shelf — a sound the device no longer holds */}
-          {lcNotice && lcStatus !== "error" && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="mt-4 rounded-xl border hairline bg-[color-mix(in_srgb,var(--lp-gold)_5%,var(--glass-bg-soft))] px-4 py-3 text-center"
-              data-testid="lc-notice"
-            >
-              <p className="text-[13.5px] leading-relaxed text-muted-foreground">{lcNotice}</p>
-            </motion.div>
-          )}
-
-          {/* THE MIRROR'S BRIEF — the composition sheet, before the sound */}
-          {lcBrief && lcStatus !== "ready" && (
-            <div className="mt-6" data-testid="lc-brief-wrap">
-              <BriefCard />
-            </div>
-          )}
-
-          {/* the player */}
-          {lcStatus === "ready" && lcTrack && (
-            <div className="mt-6">
-              <Player />
-            </div>
-          )}
-
-          {/* MY TRANSMISSIONS */}
-          {lcHistory.length > 0 && (
-            <section className="mt-8" aria-label={t("My transmissions")}>
-              {/* the braided seam before the shelf of kept sounds */}
-              <div className={cn("mb-3 h-px w-full", BRAID_RULE)} aria-hidden="true" />
-              <p className="mono-label mb-2 text-[10.5px] uppercase tracking-[0.24em] text-muted-foreground">
-                {t("My transmissions")}
-              </p>
-              <div className="nice-scroll max-h-64 space-y-1.5 overflow-y-auto pr-1">
-                {lcHistory.map((track) => (
+                  {/* everything a selector — locked while the words stand alone */}
                   <div
-                    key={track.id}
-                    className="group flex items-center gap-2.5 rounded-xl border border-[color-mix(in_srgb,var(--lp-gold)_24%,var(--hairline))] bg-[var(--glass-bg-soft)] px-3 py-2"
+                    inert={lcRaw ? true : undefined}
+                    data-testid="lc-style-selectors"
+                    className={cn(
+                      "flex flex-col gap-2.5 transition-opacity duration-300",
+                      lcRaw && "pointer-events-none opacity-40"
+                    )}
                   >
-                    <button
-                      type="button"
-                      onClick={() => void playLc(track)}
-                      aria-label={`${t("Play")} ${track.title}`}
-                      data-testid={`lc-history-play-${track.id}`}
-                      className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
-                    >
-                      <Play className="size-3 translate-x-[1px]" aria-hidden="true" />
-                    </button>
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-[14px] font-medium text-foreground/85">
-                        {track.title}
-                      </span>
-                      <span className="mono-label block text-[9.5px] uppercase tracking-[0.16em] text-muted-foreground/70">
-                        {t(
-                          LC_MODES.find((m) => m.id === track.mode)?.name ??
-                            track.mode
-                        )}
-                        {" · "}
-                        {new Date(track.createdAt).toLocaleDateString()}
-                      </span>
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => reshapeLc(track)}
-                      aria-label={`${t("Reshape")} ${track.title}`}
-                      className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground opacity-0 transition-all duration-300 hover:text-foreground group-hover:opacity-100"
-                    >
-                      <Wand2 className="size-3.5" aria-hidden="true" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => forgetLc(track.id)}
-                      aria-label={`${t("Forget")} ${track.title}`}
-                      className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground opacity-0 transition-all duration-300 hover:text-foreground group-hover:opacity-100"
-                    >
-                      <Trash2 className="size-3.5" aria-hidden="true" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
+                    {/* the chambers — one row of small glass chips */}
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {LC_MODES.map((m) => (
+                        <ModeChip
+                          key={m.id}
+                          mode={m}
+                          active={m.id === lcMode}
+                          onClick={() => setLcMode(m.id)}
+                        />
+                      ))}
+                    </div>
 
-          {/* THE KEEPER'S DIAGNOSTIC — silence for every ordinary visitor */}
-          <ChamberStatus />
-          </>
+                    {/* one-tap intents of the chosen chamber */}
+                    {mode.intents && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {mode.intents.map((intent) => (
+                          <button
+                            key={intent}
+                            type="button"
+                            onClick={() => setLcIntention(intent)}
+                            className={cn("btn-chip h-7 text-[12px]", LC_PILL)}
+                          >
+                            {t(intent)}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* civilizations */}
+                    {mode.civilizations && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {mode.civilizations.map((c) => (
+                          <button
+                            key={c.id}
+                            type="button"
+                            onClick={() =>
+                              setLcCivilization(lcCivilization === c.id ? null : c.id)
+                            }
+                            aria-pressed={lcCivilization === c.id}
+                            className={cn(
+                              "btn-chip h-7 text-[12px]",
+                              lcCivilization === c.id && "btn-chip-active"
+                            )}
+                          >
+                            {t(c.name)}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* the visitor's own lyrics */}
+                    {lcShape.lyricsMode === "USER WRITES" && (
+                      <div>
+                        <label htmlFor="lc-lyrics" className="sr-only">
+                          {t("Your words")}
+                        </label>
+                        <textarea
+                          id="lc-lyrics"
+                          rows={2}
+                          value={lcUserLyrics}
+                          onChange={(e) => setLcUserLyrics(e.target.value)}
+                          placeholder={t("Your words — the Mirror will set them to sound.")}
+                          maxLength={600}
+                          className="focus-glow w-full resize-none rounded-xl border hairline bg-transparent px-3 py-2 font-serif text-[14px] italic leading-relaxed text-foreground placeholder:text-muted-foreground/60"
+                        />
+                      </div>
+                    )}
+
+                    {/* SHAPE THE TRANSMISSION — hidden until asked */}
+                    <div>
+                      <button
+                        type="button"
+                        onClick={() => setShapeOpen((v) => !v)}
+                        aria-expanded={shapeOpen}
+                        data-testid="lc-shape-toggle"
+                        className={cn(
+                          "focus-glow mx-auto flex w-fit items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[11.5px] uppercase tracking-[0.2em] text-muted-foreground transition-all duration-300 hover:text-foreground",
+                          LC_PILL
+                        )}
+                      >
+                        {t("Shape the transmission")}
+                        <ChevronDown
+                          className={cn(
+                            "size-3.5 transition-transform duration-300",
+                            shapeOpen && "rotate-180"
+                          )}
+                          aria-hidden="true"
+                        />
+                      </button>
+                      <AnimatePresence>
+                        {shapeOpen && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: 0.35, ease: "easeOut" }}
+                            className="overflow-hidden"
+                          >
+                            <div className="mt-2.5 space-y-3 rounded-xl border hairline bg-[color-mix(in_srgb,var(--scope-a)_4%,var(--glass-bg-soft))] p-3.5">
+                              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                <ShapeDial
+                                  label="Energy"
+                                  ends={LC_SHAPE.energy}
+                                  value={lcShape.energy}
+                                  onChange={(v) => setLcShape({ energy: v })}
+                                />
+                                <ShapeDial
+                                  label="Light / Dark"
+                                  ends={LC_SHAPE.light}
+                                  value={lcShape.light}
+                                  onChange={(v) => setLcShape({ light: v })}
+                                />
+                                <ShapeDial
+                                  label="Familiarity"
+                                  ends={LC_SHAPE.familiarity}
+                                  value={lcShape.familiarity}
+                                  onChange={(v) => setLcShape({ familiarity: v })}
+                                />
+                                <ShapeDial
+                                  label="Structure"
+                                  ends={LC_SHAPE.structure}
+                                  value={lcShape.structure}
+                                  onChange={(v) => setLcShape({ structure: v })}
+                                />
+                              </div>
+                              <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+                                <ShapeSelect
+                                  label="Time feel"
+                                  options={LC_SHAPE.timeFeel}
+                                  value={lcShape.timeFeel}
+                                  onChange={(v) => setLcShape({ timeFeel: v })}
+                                />
+                                <ShapeSelect
+                                  label="Voice"
+                                  options={LC_SHAPE.voice}
+                                  value={lcShape.voice}
+                                  onChange={(v) => setLcShape({ voice: v })}
+                                />
+                                <ShapeSelect
+                                  label="Vocal language"
+                                  options={LC_SHAPE.vocalLanguage}
+                                  value={lcShape.vocalLanguage}
+                                  onChange={(v) => setLcShape({ vocalLanguage: v })}
+                                />
+                                <ShapeSelect
+                                  label="Lyrics mode"
+                                  options={LC_SHAPE.lyricsMode}
+                                  value={lcShape.lyricsMode}
+                                  onChange={(v) => setLcShape({ lyricsMode: v })}
+                                />
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  </div>
+
+                  {/* the raw whisper — the law, spoken once */}
+                  {lcRaw && (
+                    <p
+                      className="text-[11.5px] italic leading-relaxed text-muted-foreground/80"
+                      data-testid="lc-raw-whisper"
+                    >
+                      {t(
+                        "Your words alone — no chamber, shape or voice rides with the ask."
+                      )}
+                    </p>
+                  )}
+                </div>
+
+                {/* the chamber at work — the results breathe here, in the
+                    channeling's own column (the only place the room scrolls) */}
+                <div className="mt-4 flex flex-col items-center">
+                  <AnimatePresence mode="wait">
+                    {busy && (
+                      <motion.div
+                        key="busy"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="mt-1 flex flex-col items-center"
+                        aria-live="polite"
+                        aria-busy="true"
+                        data-testid="lc-busy"
+                      >
+                        <div className="flex h-8 items-end gap-[3px]" aria-hidden="true">
+                          {[0, 1, 2, 3, 4, 5, 6].map((i) => (
+                            <span
+                              key={i}
+                              className="w-[3px] rounded-full bg-[var(--scope-a)]"
+                              style={{
+                                height: `${30 + (i % 3) * 26}%`,
+                                animation: `lc-wave 1.2s ease-in-out ${i * 0.12}s infinite`,
+                              }}
+                            />
+                          ))}
+                        </div>
+                        <p className="mt-2 text-[13.5px] italic text-muted-foreground">
+                          {lcStatus === "interpreting"
+                            ? t("The Mirror is translating intention into sound…")
+                            : lcLength === "full"
+                              ? t("The full song is being woven — verses finding their chorus…")
+                              : t("The sound is being woven — hold still…")}
+                        </p>
+                      </motion.div>
+                    )}
+                    {lcStatus === "error" && lcError && (
+                      <motion.div
+                        key="error"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="mt-1 rounded-xl border border-[color-mix(in_srgb,var(--destructive)_30%,transparent)] bg-[color-mix(in_srgb,var(--destructive)_6%,transparent)] px-4 py-3 text-center"
+                        data-testid="lc-error"
+                      >
+                        <p className="text-[14px] leading-relaxed text-foreground/85">
+                          {lcError}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            /* a standing brief is woven again; no brief asks
+                               the Mirror for a fresh round */
+                            if (lcBrief) void weaveBrief();
+                            else void generateLightCode();
+                          }}
+                          data-testid="lc-ask-again"
+                          className="focus-glow mt-2 text-[13px] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+                        >
+                          {t("Ask again")}
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* a gentle word for the shelf — a sound the device no longer holds */}
+                {lcNotice && lcStatus !== "error" && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="mt-3 rounded-xl border hairline bg-[color-mix(in_srgb,var(--scope-a)_5%,var(--glass-bg-soft))] px-4 py-3 text-center"
+                    data-testid="lc-notice"
+                  >
+                    <p className="text-[13.5px] leading-relaxed text-muted-foreground">{lcNotice}</p>
+                  </motion.div>
+                )}
+
+                {/* THE MIRROR'S BRIEF — the channeling, before the sound.
+                    This sheet takes the focus after every describe-send. */}
+                {lcBrief && lcStatus !== "ready" && (
+                  <div
+                    ref={briefFocusRef}
+                    tabIndex={-1}
+                    data-testid="lc-brief-wrap"
+                    className="mt-4 scroll-mt-4 outline-none"
+                  >
+                    <BriefCard />
+                  </div>
+                )}
+              </div>
+
+              {/* ================= RIGHT — the listen zone ================= */}
+              <div className="flex min-w-0 flex-col lg:sticky lg:top-2">
+                {/* the player */}
+                {lcStatus === "ready" && lcTrack && <Player />}
+
+                {/* MY TRANSMISSIONS — the shelf of kept sounds */}
+                {lcHistory.length > 0 && (
+                  <section className="mt-4 lg:mt-0" aria-label={t("My transmissions")}>
+                    <p className="mono-label mb-2 text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+                      {t("My transmissions")}
+                    </p>
+                    <div className="nice-scroll max-h-56 space-y-1.5 overflow-y-auto pr-1">
+                      {lcHistory.map((track) => (
+                        <div
+                          key={track.id}
+                          className="group flex items-center gap-2.5 rounded-xl border border-[color-mix(in_srgb,var(--scope-a)_24%,var(--hairline))] bg-[var(--glass-bg-soft)] px-2.5 py-2"
+                        >
+                          <button
+                            type="button"
+                            onClick={() => void playLc(track)}
+                            aria-label={`${t("Play")} ${track.title}`}
+                            data-testid={`lc-history-play-${track.id}`}
+                            className={cn(
+                              "focus-glow flex size-7 shrink-0 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground",
+                              TOUCH_VEIL
+                            )}
+                          >
+                            <Play className="size-3 translate-x-[1px]" aria-hidden="true" />
+                          </button>
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-[13.5px] font-medium text-foreground/85">
+                              {track.title}
+                            </span>
+                            <span className="mono-label block text-[9.5px] uppercase tracking-[0.16em] text-muted-foreground/70">
+                              {t(
+                                LC_MODES.find((m) => m.id === track.mode)?.name ??
+                                  track.mode
+                              )}
+                              {" · "}
+                              {new Date(track.createdAt).toLocaleDateString()}
+                            </span>
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => reshapeLc(track)}
+                            aria-label={`${t("Reshape")} ${track.title}`}
+                            className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground opacity-0 transition-all duration-300 hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100"
+                          >
+                            <Wand2 className="size-3.5" aria-hidden="true" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => forgetLc(track.id)}
+                            aria-label={`${t("Forget")} ${track.title}`}
+                            className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground opacity-0 transition-all duration-300 hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100"
+                          >
+                            <Trash2 className="size-3.5" aria-hidden="true" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+                {/* the listen zone's empty breath — honest, before the
+                    first weave has ever landed here */}
+                {!busy &&
+                  !(lcStatus === "ready" && lcTrack) &&
+                  lcHistory.length === 0 && (
+                    <div
+                      className="scope-frame-card flex flex-col items-center justify-center gap-2 rounded-2xl px-4 py-8 text-center"
+                      data-testid="lc-listen-empty"
+                    >
+                      <AudioLines
+                        className="size-5 text-[var(--scope-a)] opacity-70"
+                        aria-hidden="true"
+                      />
+                      <p className="text-[12.5px] leading-relaxed text-muted-foreground">
+                        {t(
+                          "Nothing woven yet — the sounds you weave will rest here, ready to listen."
+                        )}
+                      </p>
+                    </div>
+                  )}
+              </div>
+            </div>
+
+            {/* THE KEEPER'S DIAGNOSTIC — silence for every ordinary visitor */}
+            <ChamberStatus />
+            </>
           )}
         </div>
       </div>
-
-      {/* ---------- the ask bar — the Akashic's own style of composer,
-          tuned to the chamber of sound: one floating card at the foot
-          of the room, the intention and the paperclip inside it, the
-          send hand asking the Mirror to compose the brief. No saying
-          beneath it — the results breathe above, and the room never
-          scrolls to reach the words. ---------- */}
-      {bench === "transmissions" && (
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-30 flex justify-center px-3 pb-[max(0.85rem,env(safe-area-inset-bottom))] sm:px-5">
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              const carried = attachments;
-              setAttachments([]);
-              void composeBrief({ attachments: carried });
-            }}
-            className="pointer-events-auto relative w-full max-w-[640px] rounded-2xl border hairline bg-card p-2.5 shadow-[0_24px_60px_-28px_rgba(0,0,0,0.42)]"
-            data-testid="lc-composer"
-          >
-            <AttachmentChips
-              attachments={attachments}
-              onRemove={(id) =>
-                setAttachments((prev) => prev.filter((a) => a.id !== id))
-              }
-              accentVar="var(--scope-a,var(--lp-gold))"
-              testId="lc-attachments"
-            />
-            <div className="flex items-center gap-2">
-              <VoiceRecordButton
-                testId="lc-voice"
-                disabled={busy}
-                onTranscript={(text) => {
-                  /* THE SIMPLEST ROUND — they speak, the Mirror proceeds */
-                  setLcIntention(text);
-                  const carried = attachments;
-                  setAttachments([]);
-                  void composeBrief({ intention: text, attachments: carried });
-                }}
-              />
-              <input
-                type="text"
-                value={lcIntention}
-                onChange={(e) => setLcIntention(e.target.value)}
-                placeholder={t(mode.placeholder)}
-                aria-label={t(mode.placeholder)}
-                maxLength={600}
-                data-testid="lc-intention"
-                className="focus-glow h-11 min-w-0 flex-1 rounded-full border hairline bg-background/70 px-4 text-[16px] text-foreground placeholder:text-muted-foreground/60 transition-all duration-300"
-              />
-              <ChatInputExtras
-                scope="healing"
-                size="2xs"
-                withCall={false}
-                mobileLarger
-                accentVar="var(--scope-a,var(--lp-gold))"
-                disabled={busy}
-                attachments={attachments}
-                onAttachmentsChange={setAttachments}
-              />
-              <button
-                type="submit"
-                disabled={busy}
-                aria-label={
-                  mode.id === "mirror-transmission"
-                    ? t("Compose with the Mirror")
-                    : t("Ask the Mirror to compose")
-                }
-                data-testid="lc-generate"
-                className="focus-glow flex size-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-[var(--scope-a)] to-[color-mix(in_srgb,var(--scope-b)_80%,var(--scope-a))] text-[#f6f4ef] shadow-[0_6px_28px_-10px_color-mix(in_srgb,var(--scope-a)_75%,transparent)] ring-1 ring-inset ring-[color-mix(in_srgb,var(--lp-gold)_35%,transparent)] transition-all duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-35"
-              >
-                <Sparkles className="size-4" aria-hidden="true" />
-              </button>
-            </div>
-            {/* the Mirror's own choice — a fresh brief from an empty ask */}
-            <div className="mt-1.5 flex justify-center">
-              <button
-                type="button"
-                onClick={() => void surpriseMe()}
-                disabled={busy}
-                data-testid="lc-surprise"
-                className={cn(
-                  "focus-glow flex h-7 items-center gap-1.5 rounded-full border px-3 text-[12px] text-muted-foreground transition-all duration-300 hover:text-foreground disabled:opacity-45",
-                  GOLD_PILL
-                )}
-              >
-                <Dices className="size-3.5" aria-hidden="true" />
-                {t("Surprise me — let the Mirror choose")}
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
     </div>
   );
 }

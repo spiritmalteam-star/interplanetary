@@ -805,6 +805,12 @@ interface MirrorState {
   /** A gentle word for the shelf — a sound the device no longer holds. */
   lcNotice: string | null;
   lcHistory: LcTrack[];
+  /** THE FIRST LAW, LITERAL — "no style, just my words": when the
+      visitor holds this, the brief is composed from their free text
+      ALONE — no chamber, no shape, no voice selector rides with the
+      ask, in the compose or in the weave. */
+  lcRaw: boolean;
+  setLcRaw: (v: boolean) => void;
   openLightCodes: (prefill?: LcPrefill, opts?: { bare?: boolean }) => void;
   exitLightCodes: () => void;
   /* THE VIDEO STUDIO — the motion picture's own room: a seed (the
@@ -1220,6 +1226,7 @@ async function runEndlessJourney(
   set: (partial: Partial<MirrorState>) => void
 ): Promise<void> {
   const brief = get().lcBrief!;
+  const raw = get().lcRaw;
   let lastStructure: string | undefined;
   let lastNote: string | undefined;
   for (let k = journeyPartsDone + 1; k <= LOOP_PARTS; k++) {
@@ -1236,9 +1243,12 @@ async function runEndlessJourney(
       body: JSON.stringify({
         mode: brief.mode,
         intention: brief.intention,
-        civilization: brief.mode === "other-stars" ? (get().lcCivilization ?? undefined) : undefined,
-        shape: get().lcShape,
-        instrumental: get().lcShape.voice === "None" || !brief.lyrics,
+        civilization:
+          !raw && brief.mode === "other-stars"
+            ? (get().lcCivilization ?? undefined)
+            : undefined,
+        shape: raw ? undefined : get().lcShape,
+        instrumental: raw ? !brief.lyrics : get().lcShape.voice === "None" || !brief.lyrics,
         language: get().language,
         compose: true,
         length: "loop",
@@ -1411,6 +1421,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   lcError: null,
   lcNotice: null,
   lcHistory: [],
+  lcRaw: false,
 
   me: null,
   googleConfigured: false,
@@ -1698,6 +1709,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   setLcUserLyrics: (v) => set({ lcUserLyrics: v }),
   setLcShape: (shape) => set((s) => ({ lcShape: { ...s.lcShape, ...shape } })),
   setLcLength: (length) => set({ lcLength: length }),
+  setLcRaw: (v) => set({ lcRaw: v }),
   /* THE CHAMBER'S ROUND — the Mirror composes the brief; the visitor
      reads it, shapes it, and strikes the generate with their own hand;
      the engine weaves the standing brief. Never both doors at once
@@ -1725,20 +1737,27 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       lcCarriedImage: carriedImage,
     });
     try {
-      /* THE FIRST DOOR — the Mirror's written direction */
+      /* THE FIRST DOOR — the Mirror's written direction.
+         THE FIRST LAW, LITERAL: when lcRaw stands ("no style, just my
+         words"), the ask carries the visitor's free text ALONE — no
+         chamber, no shape, no voice selector rides with it. */
       const res = await fetch("/api/light-codes/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          mode: s.lcMode,
+          ...(s.lcRaw
+            ? {}
+            : {
+                mode: s.lcMode,
+                civilization: s.lcCivilization ?? undefined,
+                shape: s.lcShape,
+                userLyrics:
+                  s.lcShape.lyricsMode === "USER WRITES" && s.lcUserLyrics.trim()
+                    ? s.lcUserLyrics.trim()
+                    : undefined,
+                instrumental: s.lcShape.voice === "None",
+              }),
           intention,
-          civilization: s.lcCivilization ?? undefined,
-          shape: s.lcShape,
-          userLyrics:
-            s.lcShape.lyricsMode === "USER WRITES" && s.lcUserLyrics.trim()
-              ? s.lcUserLyrics.trim()
-              : undefined,
-          instrumental: s.lcShape.voice === "None",
           language: s.language,
           context: opts?.context,
           interpretOnly: true,
@@ -1755,12 +1774,15 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         );
       }
       /* the brief — one sheet the visitor may shape before any sound
-         is asked for. The visitor's own lyrics are the sheet. */
+         is asked for. The visitor's own lyrics are the sheet (never
+         in the raw round — there the words alone are the sheet). */
       const brief: LcBrief = {
         title: String(data.title ?? "Untitled transmission"),
         style: String(data.style ?? ""),
         lyrics:
-          s.lcShape.lyricsMode === "USER WRITES" && s.lcUserLyrics.trim()
+          !s.lcRaw &&
+          s.lcShape.lyricsMode === "USER WRITES" &&
+          s.lcUserLyrics.trim()
             ? s.lcUserLyrics.trim()
             : data.lyrics
               ? String(data.lyrics)
@@ -1789,7 +1811,9 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     if (!brief || s.lcStatus === "polling" || s.lcStatus === "interpreting")
       return;
     /* THE SECOND DOOR — the standing brief is woven. Nothing is claimed
-       until playable audio actually lands. */
+       until playable audio actually lands. The raw law rides the whole
+       round: when lcRaw stands, no selector rides the weave either. */
+    const raw = s.lcRaw;
     set({ lcStatus: "polling", lcError: null, lcNotice: null, lcRefineNote: null });
     try {
       if (s.lcLength === "loop") {
@@ -1802,9 +1826,9 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         body: JSON.stringify({
           mode: brief.mode,
           intention: brief.intention,
-          civilization: brief.mode === "other-stars" ? (s.lcCivilization ?? undefined) : undefined,
-          shape: s.lcShape,
-          instrumental: s.lcShape.voice === "None" || !brief.lyrics,
+          civilization: !raw && brief.mode === "other-stars" ? (s.lcCivilization ?? undefined) : undefined,
+          shape: raw ? undefined : s.lcShape,
+          instrumental: raw ? !brief.lyrics : s.lcShape.voice === "None" || !brief.lyrics,
           language: s.language,
           compose: true,
           length: s.lcLength,

@@ -55,10 +55,10 @@ export type WorkspaceDefinition = {
   title: string;
   category: WorkspaceCategory;
   icon: LucideIcon;
-  /** the page wears the house's standing scope light through the
-      --scope-a variable; the registry names it so pages never invent
-      a second truth about the frame's color */
-  theme: { accent: string };
+  /** the page's own standing light, worn through the --scope-a
+      variable on the workspace frame (and on each dock panel); a
+      workspace without one inherits the chamber's chosen scope */
+  theme: { accent?: string };
   /** the lazy loader — the page's code only travels on first open */
   loader: () => Promise<{ default: ComponentType }>;
   /** what the page can actually do (honest capability names) */
@@ -94,7 +94,7 @@ export const WORKSPACES: Record<ToolTabKey, WorkspaceDefinition> = {
     title: "Book",
     category: "journal",
     icon: BookOpen,
-    theme: { accent: "var(--scope-a, var(--gd))" },
+    theme: { accent: "#eab308" },
     loader: () =>
       import("@/components/mirror/DreamBookView").then((m) => ({
         default: m.DreamBookView as ComponentType,
@@ -109,7 +109,7 @@ export const WORKSPACES: Record<ToolTabKey, WorkspaceDefinition> = {
     title: "Music",
     category: "studio",
     icon: Music,
-    theme: { accent: "var(--scope-a, var(--gd))" },
+    theme: { accent: "#a855f7" },
     loader: () =>
       import("@/components/mirror/LightCodesView").then((m) => ({
         default: m.LightCodesView as ComponentType,
@@ -139,7 +139,7 @@ export const WORKSPACES: Record<ToolTabKey, WorkspaceDefinition> = {
     title: "Manifest",
     category: "conversation",
     icon: Sparkles,
-    theme: { accent: "var(--scope-a, var(--gd))" },
+    theme: { accent: "#be185d" },
     loader: () =>
       import("@/components/mirror/SimpleMirrorRoom").then((m) => ({
         default: m.ManifestRoom as ComponentType,
@@ -154,7 +154,7 @@ export const WORKSPACES: Record<ToolTabKey, WorkspaceDefinition> = {
     title: "Invent",
     category: "studio",
     icon: Hammer,
-    theme: { accent: "var(--scope-a, var(--gd))" },
+    theme: { accent: "#1d4ed8" },
     loader: () =>
       import("@/components/mirror/SimpleMirrorRoom").then((m) => ({
         default: m.InventRoom as ComponentType,

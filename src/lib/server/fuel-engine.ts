@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
-import { grantWalletCredits } from "@/lib/server/wallet";
+import { ADMIN_EMAIL } from "@/lib/server/admin";
+import { depositStatus, grantWalletCredits, type DepositStatus } from "@/lib/server/wallet";
 
 /* ------------------------------------------------------------------ */
 /*  THE FUEL ENGINE INCUBATOR — the protected pipeline.                */
@@ -13,6 +14,11 @@ import { grantWalletCredits } from "@/lib/server/wallet";
 /*                                                                     */
 /*  Pipeline:  APIs → FUSION (incubator) → RESERVES → DISTRIBUTION →   */
 /*             the visitor's wallet → the doors weigh and serve.       */
+/*                                                                     */
+/*  THE DEPOSIT LAW: distribution does not create light — it POURS     */
+/*  from the keeper's well (the central deposit). The draw itself      */
+/*  lives inside grantWalletCredits (a DepositLedger "out" row in the  */
+/*  grant's own transaction); a dry well refuses the pour honestly.    */
 /*                                                                     */
 /*  Only the keeper's admin passage (see admin.ts) may read or move    */
 /*  this machinery.                                                    */
@@ -136,6 +142,8 @@ export interface FuelStatus {
     note: string | null;
     createdAt: string;
   }[];
+  /** THE DEPOSIT — the keeper's well the distribution pours from. */
+  deposit: DepositStatus;
   adminEmail: string;
 }
 
@@ -233,14 +241,24 @@ export async function distributeFuel(input: {
     },
   });
 
+  /* THE DEPOSIT LAW — the grant mints, so it draws OUT of the keeper's
+     well inside its own transaction; a dry well refuses the pour. */
   const wallet = await grantWalletCredits(user.id, {
     credits: amount,
     actionType: "TOPUP_PURCHASE",
     referenceId: input.referenceId ?? `fuel:${grant.id}`,
     description: `Fuel Engine · ${input.kind === "repair" ? "a repair" : input.kind === "plan_fuel" ? "the plan's fuel" : input.kind === "topup" ? "a fuel top-up" : "a gift of the house"}`,
+    actorEmail: ADMIN_EMAIL,
   });
   if (!wallet.ok) {
     await db.fuelGrant.delete({ where: { id: grant.id } }).catch(() => undefined);
+    if (wallet.depositDry) {
+      return {
+        ok: false,
+        error:
+          "The well is dry — the deposit holds less light than this pour. The keeper charges the deposit first (the fuel desk's own hand).",
+      };
+    }
     return { ok: false, error: "The wallet would not receive the fuel — rest, then try again." };
   }
 
@@ -266,6 +284,7 @@ export async function fuelStatus(adminEmail: string): Promise<FuelStatus> {
   ]);
 
   const granted = grants.reduce((sum, g) => sum + g.amount, 0);
+  const deposit = await depositStatus(30);
 
   return {
     reserves: reserves.map((r) => ({
@@ -299,6 +318,7 @@ export async function fuelStatus(adminEmail: string): Promise<FuelStatus> {
       note: g.note,
       createdAt: g.createdAt.toISOString(),
     })),
+    deposit,
     adminEmail,
   };
 }

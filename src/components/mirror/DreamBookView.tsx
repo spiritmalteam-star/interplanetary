@@ -40,12 +40,6 @@ import {
   ZoomIn,
   ZoomOut,
 } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { ModalShell } from "./ModalShell";
@@ -146,6 +140,31 @@ interface BookMeta {
 const BOOK_VOICE: VoiceId = "reader";
 
 const ZOOM_STEPS = [15.5, 17.5, 19.5, 21.5, 24];
+
+/* THE ATELIER'S CHIP FACES — the weaving-selection wears small glass
+   chips now (the music selector's own law): each option keeps its full
+   name for the aria-label and the title, while the chip wears the
+   short face, so the whole sheet stays one screen tall. The accent is
+   the room's own yellow — var(--scope-a) — so the chips, the depth
+   bar and the pages dial all light with one ink. */
+const DB_CHIP_FACES: Record<string, string> = {
+  "The Eternal Dreamer": "Eternal Dreamer",
+  "Little dreamers (4–8)": "Ages 4–8",
+  "Young readers (9–12)": "Ages 9–12",
+  "Teens (13–17)": "Teens",
+  "Grown dreamers": "Grown",
+  "Gentle mystery": "Mystery",
+  "Cosmic journey": "Cosmic",
+  "Creature friends": "Creatures",
+  "Fantasy quest": "Fantasy",
+  "Dreamlike calm": "Dreamlike",
+  "Everyday wonder": "Wonder",
+  "Short book": "Short",
+  "Bedtime treasure": "Bedtime",
+  "Classic tale": "Classic",
+  "Grand saga": "Saga",
+};
+const chipFace = (label: string) => DB_CHIP_FACES[label] ?? label;
 
 const pageText = (p: WeavePage) => p.paragraphs.join(" ");
 
@@ -1569,6 +1588,17 @@ export function DreamBookView() {
           take a touch, never cover a word and never move (the stillness
           law); the top-right mark lives above the cards, the wide mark
           only visits the desktop's empty left margin. */}
+      {/* the scope's own quiet wash — a still yellow breath in the
+          shoulders of the atelier (the stillness law: it never moves) */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0">
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage:
+              "radial-gradient(46% 34% at 100% 0%, color-mix(in srgb, var(--scope-a) 10%, transparent), transparent 70%), radial-gradient(40% 30% at 0% 100%, color-mix(in srgb, var(--scope-a) 7%, transparent), transparent 72%)",
+          }}
+        />
+      </div>
       <Image
         src="/sigils/sigil_08.png"
         alt=""
@@ -1627,17 +1657,18 @@ export function DreamBookView() {
             {/* the title's own gold hairline — the house's gold drawn
                 out thin, fading into the paper's quiet */}
             <span
-              className="h-px flex-1 bg-[linear-gradient(90deg,color-mix(in_srgb,var(--lp-gold)_52%,transparent),color-mix(in_srgb,var(--lp-gold)_16%,transparent)_72%,transparent)]"
+              className="h-px flex-1 bg-[linear-gradient(90deg,color-mix(in_srgb,var(--scope-a)_55%,transparent),color-mix(in_srgb,var(--scope-a)_18%,transparent)_72%,transparent)]"
               aria-hidden="true"
             />
           </div>
 
-          {/* THE TWO VEINS — the loom's big categorisation: a normal,
-              grounded book, or The Eternal Dreamer — the one that
-              breathes the metaphysical and the mystique. Two cards,
-              plainly lit — the first choice the atelier asks. */}
+          {/* THE TWO VEINS — the loom's big categorisation, two small
+              glass chips now: a normal, grounded book, or The Eternal
+              Dreamer — the one that breathes the metaphysical and the
+              mystique. The full character of each vein rides the hint
+              (title + aria); the chip stays one line tall. */}
           <div
-            className="mt-4 grid grid-cols-2 gap-2.5"
+            className="mt-3 flex flex-wrap items-center gap-1.5"
             role="radiogroup"
             aria-label={t("The vein of the book")}
             data-testid="dream-vein"
@@ -1667,67 +1698,49 @@ export function DreamBookView() {
                   aria-checked={active}
                   onClick={() => setVein(v.id)}
                   data-testid={`dream-vein-${v.id}`}
+                  title={v.hint}
+                  aria-label={`${v.label} — ${v.hint}`}
                   className={cn(
-                    "focus-glow relative flex flex-col items-start gap-1 rounded-xl border px-3.5 py-3 text-left transition-all duration-300",
-                    active
-                      ? "glow-sm border-foreground/45 bg-foreground/[0.06]"
-                      : "border-border bg-card/30 hover:border-foreground/25"
+                    "btn-chip h-8 text-[12.5px]",
+                    active && "btn-chip-active"
                   )}
                 >
-                  <span className="flex items-center gap-2">
-                    <span
-                      aria-hidden="true"
-                      className={cn(
-                        "font-[family-name(var(--font-literata))] text-[16px] leading-none transition-colors duration-300",
-                        active ? "text-foreground" : "text-muted-foreground/60"
-                      )}
-                    >
-                      {v.glyph}
-                    </span>
-                    <span
-                      className={cn(
-                        "min-w-0 leading-snug font-[family-name(var(--font-literata))] text-[14.5px] font-semibold tracking-wide transition-colors duration-300",
-                        active ? "text-foreground" : "text-foreground/70"
-                      )}
-                    >
-                      {v.label}
-                    </span>
+                  <span
+                    aria-hidden="true"
+                    className="font-[family-name(var(--font-literata))] text-[13px] leading-none"
+                  >
+                    {v.glyph}
                   </span>
-                  <span className="text-[11.5px] italic leading-snug text-muted-foreground/85">
-                    {v.hint}
-                  </span>
-                  {active && (
-                    <motion.span
-                      layoutId="dream-vein-marker"
-                      className="absolute inset-x-3 bottom-0 h-[2px] rounded-full bg-foreground/70"
-                      transition={{ type: "spring", stiffness: 380, damping: 32 }}
-                    />
-                  )}
+                  {chipFace(v.label)}
                 </button>
               );
             })}
           </div>
 
-          {/* the shapes — reader / tale / book, one compact sheet */}
-          <div className="mt-4 rounded-2xl border border-border bg-card/40 p-3.5 sm:p-4">
+          {/* the shapes — reader / tale / book, one tight sheet of
+              small glass chips, the held one lit in the room's own ink */}
+          <div className="mt-3 rounded-2xl border border-border bg-card/40 p-3">
             <div className="space-y-3">
               <ShapeRow
                 label={t("The reader")}
                 options={READERS}
                 active={age}
                 onPick={(id) => choose("reader", id)}
+                testIdPrefix="dream-reader"
               />
-              <ShapeMenu
+              <ShapeRow
                 label={t("The tale")}
                 options={TALES}
                 active={tale}
                 onPick={(id) => choose("tale", id)}
+                testIdPrefix="tale-option"
               />
               <ShapeRow
                 label={t("The book")}
                 options={VOLUMES}
                 active={volume}
                 onPick={(id) => choose("volume", id)}
+                testIdPrefix="dream-volume"
               />
             </div>
 
@@ -1761,11 +1774,14 @@ export function DreamBookView() {
                         style={{
                           height: `${heights[i]}px`,
                           borderColor: active
-                            ? "var(--foreground)"
+                            ? "color-mix(in srgb, var(--scope-a) 70%, transparent)"
                             : "var(--border)",
                           background: active
-                            ? "var(--foreground)"
+                            ? "var(--scope-a)"
                             : `color-mix(in srgb, var(--foreground) ${fills[i]}%, transparent)`,
+                          boxShadow: active
+                            ? "0 0 14px -6px color-mix(in srgb, var(--scope-a) 55%, transparent)"
+                            : undefined,
                         }}
                       >
                         {/* the numeral keeps a breath above the marker —
@@ -1774,7 +1790,7 @@ export function DreamBookView() {
                           className="pb-[3px] font-[family-name(var(--font-literata))] text-[11px] font-semibold leading-none tracking-[0.08em]"
                           style={{
                             color: active
-                              ? "var(--background)"
+                              ? "#221a04"
                               : "var(--muted-foreground)",
                           }}
                         >
@@ -1783,7 +1799,7 @@ export function DreamBookView() {
                         {active && (
                           <motion.span
                             layoutId="dream-depth-marker"
-                            className="absolute inset-x-0 bottom-0 h-[2.5px] bg-foreground"
+                            className="absolute inset-x-0 bottom-0 h-[2.5px] bg-[var(--scope-a)]"
                             transition={{ type: "spring", stiffness: 380, damping: 32 }}
                           />
                         )}
@@ -1833,7 +1849,7 @@ export function DreamBookView() {
                   onChange={(e) => setPageCount(Number(e.target.value))}
                   aria-label={t("The pages")}
                   data-testid="dream-pages-range"
-                  className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-foreground/15 accent-[var(--foreground)]"
+                  className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-foreground/15 accent-[var(--scope-a)]"
                 />
                 {pageCount > 0 && (
                   <button
@@ -3319,84 +3335,23 @@ function DreamEmblem() {
 /*  Small pieces                                                       */
 /* ------------------------------------------------------------------ */
 
-function ShapeMenu({
-  label,
-  options,
-  active,
-  onPick,
-}: {
-  label: string;
-  options: { id: string; label: string }[];
-  active: string;
-  onPick: (id: string) => void;
-}) {
-  const t = useT();
-  const current = options.find((o) => o.id === active);
-  return (
-    <div>
-      <p className="mono-label mb-2 text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
-        {label}
-      </p>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button
-            type="button"
-            data-testid="tale-menu-trigger"
-            aria-label={current ? `${label}: ${t(current.label)}` : label}
-            className="focus-glow flex min-w-[190px] items-center justify-between gap-3 rounded-full border border-border bg-card px-4 py-2 text-[14px] text-foreground transition-all duration-300 hover:border-foreground/40"
-          >
-            {current ? (
-              <span className="truncate">{t(current.label)}</span>
-            ) : (
-              <span className="truncate font-[family-name(var(--font-literata))] italic text-muted-foreground/70">
-                {t("Choose the tale")}
-              </span>
-            )}
-            <ChevronsUpDown className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent
-          align="start"
-          className="max-h-[290px] w-[220px] overflow-y-auto nice-scroll"
-        >
-          {options.map((o) => {
-            const isActive = o.id === active;
-            return (
-              <DropdownMenuItem
-                key={o.id}
-                onSelect={() => onPick(o.id)}
-                data-testid={`tale-option-${o.id}`}
-                className={cn(
-                  "cursor-pointer justify-between gap-3 text-[14px]",
-                  isActive && "bg-foreground/8 font-medium text-foreground"
-                )}
-              >
-                <span className="truncate">{t(o.label)}</span>
-                {isActive && <Check className="size-3.5 shrink-0" aria-hidden="true" />}
-              </DropdownMenuItem>
-            );
-          })}
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
-  );
-}
-
 function ShapeRow({
   label,
   options,
   active,
   onPick,
+  testIdPrefix,
 }: {
   label: string;
   options: { id: string; label: string }[];
   active: string;
   onPick: (id: string) => void;
+  testIdPrefix: string;
 }) {
   const t = useT();
   return (
-    <div>
-      <p className="mono-label mb-2 text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
+    <div role="group" aria-label={label}>
+      <p className="mono-label mb-1.5 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
         {label}
       </p>
       <div className="flex flex-wrap gap-1.5">
@@ -3408,14 +3363,15 @@ function ShapeRow({
               type="button"
               onClick={() => onPick(o.id)}
               aria-pressed={isActive}
+              aria-label={t(o.label)}
+              title={t(o.label)}
+              data-testid={`${testIdPrefix}-${o.id}`}
               className={cn(
-                "focus-glow rounded-full border px-3 py-1.5 text-[13px] transition-all duration-300",
-                isActive
-                  ? "border-transparent bg-foreground text-background"
-                  : "border-border text-muted-foreground hover:border-foreground/40 hover:text-foreground"
+                "btn-chip h-7 text-[12px]",
+                isActive && "btn-chip-active"
               )}
             >
-              {t(o.label)}
+              {t(chipFace(o.label))}
             </button>
           );
         })}

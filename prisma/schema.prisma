@@ -319,6 +319,47 @@ model FuelGrant {
   @@index([email])
 }
 
+// ------------------ the deposit economy (the keeper's well) ---------------
+//  THE DEPOSIT LAW: the admin is the central deposit — the well every user
+//  credit is poured from. Payment sources (Stripe / PayPal / manual /
+//  custom) are stored ENCRYPTED at rest (AES-256-GCM via secret-box.ts) and
+//  never leave the server: every response carries only the masked hint.
+//  DepositLedger.direction carries the sign — amount is always positive.
+//  balance = sum(in) - sum(out). A mint that finds the well dry (when
+//  WALLET_ENFORCED) is refused honestly — the keeper charges the well first.
+
+model PaymentSource {
+  id             String    @id @default(cuid())
+  name           String
+  provider       String // stripe | paypal | manual | custom
+  credentialsEnc String // AES-256-GCM JSON {iv,tag,data} (secret-box.ts) — decrypted server-side only, never in any response or log
+  hint           String    @default("••••") // masked shape ("••••1234") computed once from the first credential value
+  active         Boolean   @default(true)
+  lastUsedAt     DateTime?
+  lastTestedAt   DateTime?
+  lastTestOk     Boolean?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([active])
+}
+
+model DepositLedger {
+  id         String   @id @default(cuid())
+  direction  String // "in" | "out" — the sign lives here; amount is positive
+  amount     Int // credits, always positive
+  sourceId   String?  // the PaymentSource the well was charged from
+  sourceName String?  // denormalized for the movements list (survives source deletion)
+  reference  String?  // stripe session/invoice id, or the keeper's own reference
+  actorEmail String?  // who moved it — buyer's email for purchases, the keeper for charges
+  userId     String?  // the passage that received credits (out rows)
+  note       String?
+  createdAt  DateTime @default(now())
+
+  @@index([direction, createdAt])
+  @@index([reference])
+}
+
 // ---------------------------------------------------------------------------
 // THE UNIVERSAL CAPABILITY ENGINE — the creation ledger (Stage 1).
 // A CreationJob is one workflow the Mirror walks with a visitor: its plan,

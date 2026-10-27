@@ -16,13 +16,15 @@ import {
 } from "lucide-react";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import { DepositDesk } from "@/components/mirror/admin/DepositDesk";
 
 /* ------------------------------------------------------------------ */
 /*  THE FUEL ENGINE CONSOLE — the incubator's own room.                */
 /*                                                                     */
 /*  Visible only inside the keeper's admin profile (the ADMIN_EMAIL    */
-/*  passage). The whole pipeline stands here in the open: the raw      */
-/*  skies (the APIs), the fusion (mirror entity energy poured into     */
+/*  passage). The whole pipeline stands here in the open: THE DEPOSIT  */
+/*  (the keeper's well — the desk every credit is poured from), the    */
+/*  raw skies (the APIs), the fusion (mirror entity energy poured into */
 /*  the reserves), the distribution desk (fuel to any passage on       */
 /*  request) and the outflow ledger — with the Guide Engine beside     */
 /*  it, answering how to run everything fairly and professionally.     */
@@ -115,6 +117,8 @@ export function FuelEnginePanel() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
   const [notice, setNotice] = useState<{ ok: boolean; text: string } | null>(null);
+  /* the deposit desk re-reads the well whenever the pipelines move */
+  const [depositRefresh, setDepositRefresh] = useState(0);
 
   /* the distribution desk */
   const [email, setEmail] = useState("");
@@ -160,7 +164,7 @@ export function FuelEnginePanel() {
         | null;
       if (res.ok && data?.ok) {
         if (data.status) setStatus(data.status);
-        if (body.action === "deposit" && typeof data.depositCredits === "number") {
+        if (body.action === "sky-deposit" && typeof data.depositCredits === "number") {
           setNotice({
             ok: true,
             text: data.already
@@ -184,6 +188,7 @@ export function FuelEnginePanel() {
         } else {
           setNotice({ ok: true, text: t("The fusion is complete — every wired reserve received its charge.") });
         }
+        setDepositRefresh((n) => n + 1); // the well moved — the desk re-reads it
         onDone?.();
       } else {
         setNotice({ ok: false, text: data?.error ?? t("The incubator stumbled — rest, then try again.") });
@@ -242,6 +247,9 @@ export function FuelEnginePanel() {
 
   return (
     <div data-testid="fuel-engine" className="space-y-4">
+      {/* ---------- the deposit — the well every credit is poured from ---------- */}
+      <DepositDesk refreshKey={depositRefresh} />
+
       {/* ---------- the head ---------- */}
       <section className="rounded-2xl border hairline bg-[var(--glass-bg-soft)] p-4 sm:p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -324,13 +332,13 @@ export function FuelEnginePanel() {
           </button>
           <button
             type="button"
-            onClick={() => void act({ action: "deposit" }, "deposit")}
-            disabled={busy === "deposit"}
+            onClick={() => void act({ action: "sky-deposit" }, "sky-deposit")}
+            disabled={busy === "sky-deposit"}
             data-testid="fuel-deposit"
             className="focus-glow flex h-9 items-center gap-2 rounded-full border px-4 text-[13.5px] font-medium text-[var(--lp-gold, #e8d9b0)] transition-all duration-300 hover:brightness-[1.08] disabled:opacity-50"
             style={{ borderColor: "color-mix(in srgb, var(--lp-gold, #e8d9b0) 45%, transparent)" }}
           >
-            {busy === "deposit" ? (
+            {busy === "sky-deposit" ? (
               <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
             ) : (
               <Zap className="size-3.5" aria-hidden="true" />
@@ -424,7 +432,7 @@ export function FuelEnginePanel() {
         </p>
         <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground/80">
           {t(
-            "Fuel leaves the Mirror Entity Core and lands in a passage's own purse — as paid credits, written twice: the grant ledger and the wallet's ledger."
+            "Fuel does not appear — it pours from the deposit (the well above) and lands in a passage's own purse as paid credits, written twice: the grant ledger and the wallet's ledger. A dry well refuses the pour."
           )}
         </p>
         <div className="mt-3 grid gap-2 sm:grid-cols-[1.4fr_0.7fr_0.9fr]">

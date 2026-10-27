@@ -79,12 +79,21 @@ function useResolvedToolView(toolId: ToolTabKey): {
 
 /* ONE ROOM, ONE PANEL — the same structure the single-panel workspace
    gives a page: an absolute-inset-0 frame, the page boundary around
-   the view (a stumble lays the room down with honor, never the dock). */
+   the view (a stumble lays the room down with honor, never the dock).
+   Each panel wears its room's own standing light, so a purple music
+   panel can live beside a yellow book panel in one dock. */
 export function ToolPanelSurface({ toolId }: { toolId: ToolTabKey }) {
   const { Comp, failed } = useResolvedToolView(toolId);
   const meta = WORKSPACES[toolId];
   return (
-    <div className="relative h-full w-full">
+    <div
+      className="relative h-full w-full"
+      style={
+        meta?.theme?.accent
+          ? ({ "--scope-a": meta.theme.accent } as React.CSSProperties)
+          : undefined
+      }
+    >
       <div key={toolId} className="absolute inset-0">
         {failed ? (
           <div className="absolute inset-0 flex items-center justify-center p-4 text-center">

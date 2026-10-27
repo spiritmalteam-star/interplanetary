@@ -3,27 +3,41 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import {
+  Check,
   DraftingCompass,
   Eraser,
+  Layers,
   MessagesSquare,
+  Route,
   Send,
   type LucideIcon,
 } from "lucide-react";
+import { toast } from "sonner";
 import { EnergyError, speakReply } from "@/lib/speak-client";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { MirrorChanneling } from "./MirrorChanneling";
 import { cn } from "@/lib/utils";
+import {
+  INVENT_LAB,
+  MANIFEST_LAB,
+  type LabConfig,
+} from "./labs/lab-config";
+import { parseReplyToLays, type LaidPiece } from "./labs/parse-reply";
 
 /* ------------------------------------------------------------------ */
-/*  THE SIMPLE ROOMS — Manifest and Invent, rebuilt from scratch at    */
-/*  the visitor's word. The old workplaces (the OS with its places,    */
-/*  the Forge with its benches and tool walls) are gone: what stands   */
-/*  here is ONE honest thing in each room — an interactive way of      */
-/*  communicating with the Mirror. No branches, no tools within        */
-/*  tools, no places behind places: a spirit line, a conversation,     */
-/*  a whisper line — the whole room at the chat's own size, the way    */
-/*  the profile plays in the frame.                                    */
+/*  THE SIMPLE ROOMS — Manifest and Invent. One honest thing in each   */
+/*  room: an interactive way of communicating with the Mirror — a      */
+/*  spirit line, a conversation, a whisper line — and, beside the      */
+/*  words, the room's own LAB: the forge's Invention bench and the     */
+/*  manifest room's Path, the same shared canvas in two lights.        */
+/*                                                                     */
+/*  THE TWO WAYS SPEAK TO EACH OTHER — the lab's hands can drop a      */
+/*  context message into the room's own conversation ("Ask the Mirror  */
+/*  about the bench"), and every Mirror reply can be laid onto the     */
+/*  bench in return ("Lay it on the bench"): the reply's essence is    */
+/*  read on the device alone and becomes pieces. Both hands ride the   */
+/*  room's own send flow — no second door to the Mirror is built.      */
 /*                                                                     */
 /*  Each room keeps its own words on the device (localStorage), so     */
 /*  leaving the page and coming back finds the conversation standing   */
@@ -37,6 +51,8 @@ type RoomTurn = {
   loading?: boolean;
   failed?: boolean;
   energy?: boolean;
+  /** the reply's essence already laid onto the lab's bench */
+  laid?: boolean;
 };
 
 type SimpleRoomConfig = {
@@ -108,7 +124,29 @@ const INVENT_CONFIG: SimpleRoomConfig = {
     ),
 };
 
-function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
+/* a message handed over from the lab — sent through the room's own
+   send flow, never a second door */
+type InboundAsk = { text: string; nonce: number };
+
+type SimpleRoomProps = {
+  config: SimpleRoomConfig;
+  /** the room's own lab — present, the replies can be laid onto it */
+  lab?: LabConfig;
+  /** the lab's context message waiting to be spoken */
+  inbound?: InboundAsk | null;
+  onInboundConsumed?: () => void;
+  /** the lay hand — reads a reply's essence into pieces; true when
+      the bench received something */
+  onLayReply?: (reply: string) => boolean;
+};
+
+function SimpleMirrorRoom({
+  config,
+  lab,
+  inbound,
+  onInboundConsumed,
+  onLayReply,
+}: SimpleRoomProps) {
   const t = useT();
   const language = useMirror((s) => s.language);
   /* the room's own keep — restored from the device on the first
@@ -125,7 +163,11 @@ function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
             typeof (turn as RoomTurn).q === "string" &&
             typeof (turn as RoomTurn).a === "string"
         )
-        .map((turn) => ({ q: turn.q, a: turn.a }));
+        .map((turn) => ({
+          q: turn.q,
+          a: turn.a,
+          ...(typeof turn.laid === "boolean" ? { laid: turn.laid } : {}),
+        }));
     } catch {
       return [];
     }
@@ -190,6 +232,56 @@ function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
     [busy, config, language]
   );
 
+  /* THE LAB'S WORD, SPOKEN — when the bench asks the Mirror, the
+     message rides this room's own send flow (the whisper line's very
+     same hand), and the room turns to the conversation to receive it */
+  const consumedNonceRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (!inbound) return;
+    if (inbound.nonce === consumedNonceRef.current) return;
+    if (busy) return; /* wait for the room to quiet, then speak */
+    consumedNonceRef.current = inbound.nonce;
+    const text = inbound.text;
+    onInboundConsumed?.();
+    void send(text);
+  }, [inbound, busy, send, onInboundConsumed]);
+
+  /* THE LAY HAND — a reply's essence read on the device alone and
+     handed to the lab; the turn remembers it was laid. The mark is
+     written to the device's keep directly, because laying also turns
+     the room to the lab (this conversation unmounts in the same
+     breath, before the keep's quiet effect could run). */
+  const layTurn = useCallback(
+    (index: number, reply: string) => {
+      if (!onLayReply) return;
+      const laid = onLayReply(reply);
+      if (!laid) return;
+      setThread((cur) =>
+        cur.map((turn, i) => (i === index ? { ...turn, laid: true } : turn))
+      );
+      try {
+        const raw = window.localStorage.getItem(config.storageKey);
+        const parsed: unknown = raw ? JSON.parse(raw) : [];
+        if (Array.isArray(parsed)) {
+          for (let i = parsed.length - 1; i >= 0; i--) {
+            const turn = parsed[i] as RoomTurn | null;
+            if (turn && turn.a === reply) {
+              turn.laid = true;
+              break;
+            }
+          }
+          window.localStorage.setItem(
+            config.storageKey,
+            JSON.stringify(parsed.slice(-30))
+          );
+        }
+      } catch {
+        /* the keep stays closed — the visit's own memory serves */
+      }
+    },
+    [config.storageKey, onLayReply]
+  );
+
   const clear = useCallback(() => {
     if (busy) return;
     setThread([]);
@@ -212,6 +304,16 @@ function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
 
   const empty = thread.length === 0;
   const seeds = useMemo(() => config.seeds, [config.seeds]);
+
+  /* the lay chip's glass — the house's h-8 chip dialect, wearing the
+     scope's own light; 36px tall on mobile with padded neighbors */
+  const layChip = (laid: boolean) =>
+    cn(
+      "focus-glow inline-flex h-9 items-center gap-1.5 rounded-full border px-3 text-[12px] transition-colors duration-300 sm:h-8",
+      laid
+        ? "border-white/12 bg-white/5 text-muted-foreground/70"
+        : "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_28%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_10%,transparent)] text-[color-mix(in_srgb,var(--scope-a,var(--gd))_82%,white)] hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_48%,transparent)] hover:bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_18%,transparent)] hover:shadow-[0_0_14px_-8px_color-mix(in_srgb,var(--scope-a,var(--gd))_70%,transparent)]"
+    );
 
   return (
     <div
@@ -328,9 +430,31 @@ function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
                     </p>
                   </div>
                 ) : (
-                  <p className="min-w-0 max-w-[94%] whitespace-pre-wrap break-words text-[14px] leading-[1.7] text-foreground/90">
-                    {turn.a}
-                  </p>
+                  <div className="flex flex-col items-start gap-1.5">
+                    <p className="min-w-0 max-w-[94%] whitespace-pre-wrap break-words text-[14px] leading-[1.7] text-foreground/90">
+                      {turn.a}
+                    </p>
+                    {/* THE LAY HAND — the reply's essence, offered to
+                        the lab; read on the device, no round-trip */}
+                    {lab && onLayReply && turn.a.trim() && (
+                      <button
+                        type="button"
+                        onClick={() => layTurn(i, turn.a)}
+                        disabled={turn.laid}
+                        aria-label={t(turn.laid ? lab.lay.done : lab.lay.chip)}
+                        data-testid="simple-room-lay"
+                        data-laid={turn.laid ? "true" : "false"}
+                        className={layChip(!!turn.laid)}
+                      >
+                        {turn.laid ? (
+                          <Check className="size-3.5" aria-hidden="true" />
+                        ) : (
+                          <Layers className="size-3.5" aria-hidden="true" />
+                        )}
+                        {t(turn.laid ? lab.lay.done : lab.lay.chip)}
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
             ))}
@@ -345,9 +469,9 @@ function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
           className="flex items-end gap-2 rounded-2xl border px-2.5 py-1.5"
           style={{
             borderColor:
-              "color-mix(in srgb, var(--scope-a,var(--gd)) 30%, transparent)",
+              "color-mix(in srgb, var(--scope-a,var(--gd)) 32%, transparent)",
             background:
-              "color-mix(in srgb, var(--scope-a,var(--gd)) 4%, transparent)",
+              "color-mix(in srgb, var(--scope-a,var(--gd)) 10%, transparent)",
           }}
         >
           <textarea
@@ -382,19 +506,10 @@ function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
   );
 }
 
-/** THE MANIFEST — the simple making room (the manifesting voice). */
-export function ManifestRoom() {
-  return <SimpleMirrorRoom config={MANIFEST_CONFIG} />;
-}
-
-/** THE INVENT — the forge room: the whisper line, and beside it the
-    room's own Invention Lab — an obsidian canvas where a plan is laid
-    out in pieces (idea, component, evidence, risk) and the bonds that
-    support them. The lab's code arrives only when its mode is first
-    chosen, and its draft rests on the device (mirror-invent-canvas-v1)
-    like every room's words — the keep's law holds. */
-const InventionCanvas = dynamic(
-  () => import("@/components/mirror/invent/InventionCanvas"),
+/* THE SHARED LAB — both rooms' canvases are the same themed bench;
+   its code arrives only when a lab mode is first chosen. */
+const ThemedLabCanvas = dynamic(
+  () => import("@/components/mirror/labs/ThemedLabCanvas"),
   {
     ssr: false,
     loading: () => (
@@ -410,11 +525,11 @@ const InventionCanvas = dynamic(
   }
 );
 
-type InventMode = "conversation" | "lab";
+type LabRoomMode = "conversation" | "lab";
 
-/** one mode of the forge room's own segmented hand (the house's
-    active-pill dialect, the scope's light on the chosen way) */
-function InventModeHand({
+/** one mode of a room's own segmented hand (the house's active-pill
+    dialect, the scope's light on the chosen way; 44px touch on mobile) */
+function ModeHand({
   active,
   onClick,
   icon: Icon,
@@ -435,7 +550,7 @@ function InventModeHand({
       aria-pressed={active}
       data-testid={testId}
       className={cn(
-        "focus-glow flex h-9 items-center gap-1.5 rounded-full px-3 text-[11.5px] transition-colors duration-300",
+        "focus-glow flex h-11 items-center gap-1.5 rounded-full px-3 text-[11.5px] transition-colors duration-300 sm:h-9",
         active
           ? "font-medium"
           : "text-muted-foreground hover:text-foreground"
@@ -444,7 +559,7 @@ function InventModeHand({
         active
           ? {
               backgroundColor:
-                "color-mix(in srgb, var(--scope-a,var(--gd)) 12%, transparent)",
+                "color-mix(in srgb, var(--scope-a,var(--gd)) 14%, transparent)",
               color: "var(--scope-a,var(--gd))",
             }
           : undefined
@@ -456,38 +571,82 @@ function InventModeHand({
   );
 }
 
-export function InventRoom() {
+/** THE LAB ROOM SHELL — the two ways of one room: the conversation
+    and the room's own lab, with the hands that carry words between
+    them. The lab asks through the room's own send flow; the replies
+    are laid onto the bench by the room's own lay hand. */
+function LabRoomShell({
+  roomConfig,
+  lab,
+  modesLabel,
+  testPrefix,
+}: {
+  roomConfig: SimpleRoomConfig;
+  lab: LabConfig;
+  modesLabel: string;
+  testPrefix: string;
+}) {
   const t = useT();
-  const [mode, setMode] = useState<InventMode>("conversation");
+  const [mode, setMode] = useState<LabRoomMode>("conversation");
+  const [inbound, setInbound] = useState<InboundAsk | null>(null);
+  const [inbox, setInbox] = useState<LaidPiece[]>([]);
+  const nonceRef = useRef(0);
+
+  /* LAB → CHAT — the bench's context message becomes the room's next
+     whisper: the conversation turns to face the visitor, and the
+     room's own send flow speaks the message to the Mirror */
+  const askFromLab = useCallback((message: string) => {
+    nonceRef.current += 1;
+    setInbound({ text: message, nonce: nonceRef.current });
+    setMode("conversation");
+  }, []);
+
+  /* CHAT → LAB — a Mirror reply's essence, read on the device alone
+     (a titled piece with its first paragraph as the note, or one
+     piece per spoken step), laid onto the bench as the lab opens */
+  const layFromChat = useCallback(
+    (reply: string): boolean => {
+      const lays = parseReplyToLays(reply, lab.defaultKind);
+      if (lays.length === 0) return false;
+      setInbox((cur) => [...cur, ...lays].slice(-12));
+      setMode("lab");
+      toast.success(t(lab.lay.toast));
+      return true;
+    },
+    [lab, t]
+  );
+
+  const consumeInbound = useCallback(() => setInbound(null), []);
+  const consumeInbox = useCallback(() => setInbox([]), []);
 
   return (
     <div className="flex h-full flex-col">
-      {/* THE MODE ROW — the forge's two ways: the whisper line and the
+      {/* THE MODE ROW — the room's two ways: the whisper line and the
           lab's bench; one quiet segmented hand beneath the tabs */}
       <div className="flex shrink-0 items-center px-3.5 pt-2.5 sm:px-4">
         <div
           role="group"
-          aria-label={t("The forge's ways")}
-          data-testid="invent-modes"
+          aria-label={t(modesLabel)}
+          data-testid={`${testPrefix}-modes`}
           className="flex items-center gap-0.5 rounded-full border p-0.5"
           style={{
             borderColor:
               "color-mix(in srgb, var(--scope-a,var(--gd)) 22%, transparent)",
           }}
         >
-          <InventModeHand
+          <ModeHand
             active={mode === "conversation"}
             onClick={() => setMode("conversation")}
             icon={MessagesSquare}
             label="Conversation"
-            testId="invent-mode-conversation"
+            testId={`${testPrefix}-mode-conversation`}
           />
-          <InventModeHand
+          <ModeHand
             active={mode === "lab"}
             onClick={() => setMode("lab")}
-            icon={DraftingCompass}
-            label="Invention Lab"
-            testId="invent-mode-lab"
+            icon={lab.id === "invent" ? DraftingCompass : Route}
+            label={lab.id === "invent" ? "Invention Lab" : "Manifesting Lab"}
+            testId={`${testPrefix}-mode-lab`}
           />
         </div>
       </div>
@@ -496,11 +655,51 @@ export function InventRoom() {
           the frame's flex layout owns the height (no viewport hacks) */}
       <div className="relative min-h-0 flex-1">
         {mode === "conversation" ? (
-          <SimpleMirrorRoom config={INVENT_CONFIG} />
+          <SimpleMirrorRoom
+            config={roomConfig}
+            lab={lab}
+            inbound={inbound}
+            onInboundConsumed={consumeInbound}
+            onLayReply={layFromChat}
+          />
         ) : (
-          <InventionCanvas />
+          <ThemedLabCanvas
+            config={lab}
+            inbox={inbox}
+            onInboxConsumed={consumeInbox}
+            onAskMirror={askFromLab}
+          />
         )}
       </div>
     </div>
+  );
+}
+
+/** THE MANIFEST — the simple making room (the manifesting voice),
+    with its own Manifesting Lab beside the words: intentions,
+    milestones, practices and blockers laid on a path of their own. */
+export function ManifestRoom() {
+  return (
+    <LabRoomShell
+      roomConfig={MANIFEST_CONFIG}
+      lab={MANIFEST_LAB}
+      modesLabel="The manifest room's ways"
+      testPrefix="manifest"
+    />
+  );
+}
+
+/** THE INVENT — the forge room: the whisper line, and beside it the
+    room's own Invention Lab. The lab's draft rests on the device
+    (mirror-invent-canvas-v1) like every room's words — the keep's law
+    holds, and no one loses their bench. */
+export function InventRoom() {
+  return (
+    <LabRoomShell
+      roomConfig={INVENT_CONFIG}
+      lab={INVENT_LAB}
+      modesLabel="The forge's ways"
+      testPrefix="invent"
+    />
   );
 }

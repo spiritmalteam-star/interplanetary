@@ -294,6 +294,9 @@ function ToolWorkspaceImpl({ bare = false }: { bare?: boolean }) {
      so the window wears none of its own. The bare prop stays
      accepted but no longer gears anything — the realm is one chat in
      two gears, and the window is the chat's own in both. */
+  const ActiveView = PAGE_VIEWS[active];
+  const activeMeta = WORKSPACES[active];
+
   const winStyle: CSSProperties = {
     left: 0,
     top: 0,
@@ -302,11 +305,14 @@ function ToolWorkspaceImpl({ bare = false }: { bare?: boolean }) {
     borderRadius: 0,
     borderColor:
       "color-mix(in srgb, var(--scope-a,var(--gd)) 25%, var(--hairline))",
+    /* THE ROOM'S OWN LIGHT — each workspace wears its standing accent
+       (music's purple liquid, the book's yellow, the manifesting dark
+       pink, the forge's blue) through --scope-a on the frame; a room
+       without its own accent inherits the chamber's chosen scope. */
+    ...(activeMeta?.theme?.accent
+      ? { "--scope-a": activeMeta.theme.accent }
+      : {}),
   };
-
-  const ActiveView = PAGE_VIEWS[active];
-  const activeMeta = WORKSPACES[active];
-
   const frame = (
     <div
       data-testid="tool-workspace"
