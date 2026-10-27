@@ -52,7 +52,6 @@ import {
   Send,
   Sparkles,
   Sprout,
-  Sun,
   TreeDeciduous,
   UserRound,
   Volume2,
@@ -1725,52 +1724,9 @@ function CrownProfileIcon({ testIdPrefix }: { testIdPrefix: string }) {
 }
 
 /* ------------- the crown's own light — a quiet hand ------------------
-   THE MARK HAS LEFT THE TOP BAR: the house's logo no longer stands in
-   the crown. The light's toggle stays — one touch turns the realm,
-   deep space ⟷ daylight, the contrast breathing under the finger. */
-
-function LightToggle({ testIdPrefix }: { testIdPrefix: string }) {
-  const t = useT();
-  const { setTheme } = useTheme();
-  return (
-    <button
-      type="button"
-      onClick={() => {
-        const root = document.documentElement;
-        const dark = root.classList.contains("dark");
-        root.classList.add("theme-anim");
-        const next = dark ? "light" : "dark";
-        setTheme(next);
-        /* THE SESSION'S OWN WORD — the choice rides the visit: the
-           website's default stays the vanilla daylight at every fresh
-           arrival, and the blue crystal waits through this visit only. */
-        try {
-          window.sessionStorage.setItem("mirror-entity-realm-session", next);
-        } catch {
-          /* the session's keeping stays closed — the realm's state carries */
-        }
-        window.setTimeout(() => root.classList.remove("theme-anim"), 560);
-      }}
-      aria-label={t("Toggle the light")}
-      title={t("Toggle the light")}
-      data-testid={`${testIdPrefix}-light-toggle`}
-      className="focus-glow flex size-7 items-center justify-center rounded-full border text-[var(--scope-a,var(--gd))] transition-all duration-300 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)]"
-      style={{
-        borderColor:
-          "color-mix(in srgb, var(--scope-a,var(--gd)) 34%, transparent)",
-        backgroundColor:
-          "color-mix(in srgb, var(--scope-a,var(--gd)) 8%, var(--background))",
-      }}
-    >
-      {/* THE TWO FACES OF THE HAND — the icons are drawn by the theme's
-          own class, never by the client's memory of it: server and
-          client carve the same face, and the water never breaks (no
-          hydration drift). */}
-      <Sun className="hidden size-3 dark:block" aria-hidden="true" />
-      <Moon className="block size-3 dark:hidden" aria-hidden="true" />
-    </button>
-  );
-}
+   THE HAND HAS MOVED INDOORS: the toggle no longer stands in the
+   crown (the visitor's own room wears it now, beside the purse).
+   The component stays below — the profile room renders it. */
 
 /* THE WALK THAT ADVANCES — the visitor's own steps, kept on the
    device (never on a server): every exchange is one step. The family
@@ -4874,9 +4830,11 @@ export function BranchCanopy({
               visitor's own room within the frame. */}
           {realm && <CrownProfileIcon testIdPrefix={testIdPrefix} />}
 
-          {/* THE LIGHT'S OWN HAND — the crown's quiet sun/moon: the
-              mark left the top bar, the toggle stayed */}
-          {realm && <LightToggle testIdPrefix={testIdPrefix} />}
+          {/* THE LIGHT'S OWN HAND HAS MOVED INDOORS — at the visitor's
+              word the crown carries only the profile, the making rooms
+              and the scopes; the sun/moon now lives inside the
+              visitor's own room (the profile — the purse's panel), one
+              touch from anywhere. */}
 
           <div className="contents">
           {/* THE DOORS OF THE HOUSE — akashic · book · about, standing

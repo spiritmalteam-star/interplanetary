@@ -83,3 +83,20 @@ Work Log:
 
 Stage Summary:
 - local = remote = one clean HEAD; repo carries zero QA debris; crash root cause (unguarded heap) fixed at the script level; every future session starts from this snapshot and cannot confuse itself with 6,300 lines of history.
+
+---
+Task ID: 11
+Agent: Z.ai Code (main orchestrator)
+Task: Remove the replication PDF and every trace; add the new civilisations (Unique_Profiles batches); strip the chat crown to profile + tools + scopes + zoom; fix the mobile Scopes dropdown; grant 500 free lights to every email and bind the purse into the profile room
+
+Work Log:
+- PDF erased: public/reflectme-full-replication-prompt.pdf, .pdfbuild/ (the press) and REPLICATION_PROMPT.md all lifted from the tree; zero references remain in served code (git history retains them; live site serves nothing).
+- Codex Exobiologica press run (scripts/import-unique-profiles.mjs): extracted the 3 missing batches (0051-0060, 0071-0080, 0091-0100) from upload/, verified every plate against its manifest (raw sha256 + decoded-pixel sha256), audited uniqueness across the whole archive (800 distinct pixel plates), published 120 webp plates at 768x512 and 30 original SVG ornaments. 870 canonical fields verified; 30 detail records + 2 index rows healed against source-records; assets.json contract now readyRoleAssets 800 / pendingRoleAssets 12080; index.json manifest.readyProfiles = 200. ALL of CIV-0001 to CIV-0200 is now fully illustrated — zero pending in the first two hundred.
+- Crown stripped at the visitor's word: CreditBadge (the number) removed from AppShell's realmControls; LightToggle removed from the crown and re-homed as RealmLightToggle (its own module) inside the profile room's purse panel. The crown now carries profile · CREATE · SCOPES · zoom, both gears.
+- The purse's own room: ProfilePage wears a live purse panel (balance, free/gathered/deposited breakdown, fresh refreshWallet on mount, RealmLightToggle in the corner, and the working link — Open the account chamber — into AccountModal). Verified: 500 lights for the quiet guest, account chamber opens.
+- The great birth gift: BIRTH_GIFT 5 -> 500 in wallet.ts (new passages born holding 500), and a one-time boot migration in instrumentation.ts guarded by PlatformConfig key wallet_birth_gift_500_applied — lifted 25 existing purses to 500 with PROMOTIONAL_GRANT ledger entries. .env.example comment updated. Vercel's production DB receives the same lift on next deploy boot.
+- Scopes dropdown on mobile: with the crown shortened the centered panel now sits fully inside the viewport at 390px (verified: comfortable margins both sides); CREATE panel verified too.
+- Browser-verified at 1280px and 390px: crown composition, purse panel, account chamber link, chronoscope CIV-0051 artwork ("ready artwork · unique-batch audited"), header "200 fully illustrated".
+
+Stage Summary:
+- The replication prompt no longer exists on the site in any form; the chronoscope's first two hundred records all wear their own unique artwork; the crown is quiet (profile, tools, scopes, zoom); every email now holds 500 free lights and the profile room speaks the purse's truth with a working door to the account chamber.

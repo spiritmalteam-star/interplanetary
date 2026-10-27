@@ -30,6 +30,60 @@ export async function register(): Promise<void> {
     const { ensureAdminBinding } = await import("@/lib/server/access");
     await ensureAdminBinding();
 
+    /* THE GREAT BIRTH GIFT — one carve, one time: the passage's
+       birthright rose from five lights to five hundred, and every
+       wallet still holding less is lifted to the new floor at boot.
+       Guarded by its own vault key so it runs exactly once per
+       database — in this vessel and in every cold sleep after it.
+       Best-effort: a closed vault delays the gift, never the boot. */
+    try {
+      const { db: bootDb } = await import("@/lib/db");
+      const GIFT_KEY = "wallet_birth_gift_500_applied";
+      const GIFT_FLOOR = 500;
+      const giftDone = await bootDb.platformConfig.findUnique({
+        where: { key: GIFT_KEY },
+      });
+      if (!giftDone) {
+        const poor = await bootDb.userWallet.findMany({
+          where: { freeCreditsRemaining: { lt: GIFT_FLOOR } },
+          select: { userId: true, freeCreditsRemaining: true },
+        });
+        for (const w of poor) {
+          await bootDb.userWallet.update({
+            where: { userId: w.userId },
+            data: { freeCreditsRemaining: GIFT_FLOOR },
+          });
+          await bootDb.creditLedger.create({
+            data: {
+              userId: w.userId,
+              actionType: "PROMOTIONAL_GRANT",
+              creditsDeducted: GIFT_FLOOR - w.freeCreditsRemaining,
+              metadata: {
+                source: "birth-gift-500",
+                description:
+                  "The great birth gift — the purse lifted to its five hundred",
+              },
+            },
+          });
+        }
+        await bootDb.platformConfig.create({
+          data: {
+            key: GIFT_KEY,
+            value: { lifted: poor.length, floor: GIFT_FLOOR },
+            updatedBy: "instrumentation:boot",
+          },
+        });
+        console.info(
+          `[instrumentation] the great birth gift: ${poor.length} purse(s) lifted to ${GIFT_FLOOR} lights.`
+        );
+      }
+    } catch (giftError) {
+      console.warn(
+        "[instrumentation] the birth gift waited — the vault was not reachable:",
+        giftError instanceof Error ? giftError.message : giftError
+      );
+    }
+
     const existing =
       process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || "";
     if (existing.length >= 16) return; // the vault already speaks — bow out

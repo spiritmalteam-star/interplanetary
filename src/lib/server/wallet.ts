@@ -302,7 +302,7 @@ export interface WalletSnapshot {
   total: number;
 }
 
-const BIRTH_GIFT = intEnvGift("WALLET_BIRTH_GIFT", 5); // the free lights every passage is born holding
+const BIRTH_GIFT = intEnvGift("WALLET_BIRTH_GIFT", 500); // the free lights every passage is born holding
 
 function intEnvGift(name: string, fallback: number): number {
   const raw = Number(process.env[name]);
@@ -324,7 +324,7 @@ export async function ensureWallet(userId: string): Promise<WalletSnapshot> {
         userId,
         actionType: "SUBSCRIPTION_GRANT",
         creditsDeducted: BIRTH_GIFT,
-        metadata: { source: "birth", description: "The passage's first five lights" },
+        metadata: { source: "birth", description: "The passage's first five hundred lights" },
       },
     });
     return snapshotOf(fresh);

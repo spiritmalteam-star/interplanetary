@@ -44,6 +44,7 @@ import {
 } from "@/lib/downloads-log";
 import { cn } from "@/lib/utils";
 import { TransactionsPanel } from "./wallet/TransactionsPanel";
+import { RealmLightToggle } from "./RealmLightToggle";
 
 /* ------------------------------------------------------------------ */
 /*  THE PROFILE ROOM — rebuilt in the manner of the frontier: a slim   */
@@ -121,6 +122,12 @@ export function ProfilePage() {
 
   const me = useMirror((s) => s.me);
   const wallet = useMirror((s) => s.wallet);
+  /* THE PURSE'S OWN GLANCE — the balance is read fresh whenever the
+     visitor's own room mounts: the number in this room is the purse's
+     own truth, never a memory of it. */
+  useEffect(() => {
+    void useMirror.getState().refreshWallet();
+  }, []);
   const openAuth = useMirror((s) => s.openAuth);
   const openAccount = useMirror((s) => s.openAccount);
   const openLibrary = useMirror((s) => s.openLibrary);
@@ -792,6 +799,51 @@ export function ProfilePage() {
                   )}
                 </div>
               </div>
+            </section>
+
+            {/* THE PURSE'S OWN ROOM — the live balance standing in the
+                visitor's own room: the crown no longer carries the
+                number, so the purse itself speaks here — every light
+                counted, one touch opening the account chamber, and the
+                realm's own light hand resting in the corner. */}
+            <section
+              aria-label={t("Your purse")}
+              data-testid="profile-purse"
+              className={cn(panel, "mt-3.5 p-3.5 sm:p-4")}
+            >
+              <div className="flex items-center justify-between gap-2">
+                <p className="mono-label text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+                  {t("Your lights")}
+                </p>
+                <RealmLightToggle />
+              </div>
+              <div className="mt-2.5 flex flex-wrap items-end justify-between gap-3">
+                <p
+                  className="text-[28px] font-semibold leading-none tracking-[-0.01em] tabular-nums text-foreground"
+                  data-testid="profile-purse-balance"
+                >
+                  {wallet ? wallet.total.toLocaleString("en-US") : "—"}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => exitTo(openAccount)}
+                  data-testid="profile-purse-account"
+                  className="focus-glow flex h-8 items-center gap-1.5 rounded-full border hairline px-3 text-[12.5px] text-foreground/85 transition-all duration-300 hover:border-[var(--hairline-hover)]"
+                >
+                  <CreditCard className="size-3.5" aria-hidden="true" />
+                  {t("Open the account chamber")}
+                </button>
+              </div>
+              {wallet && (
+                <p className="mono-label mt-2.5 text-[9.5px] uppercase tracking-[0.14em] text-muted-foreground/80">
+                  {wallet.freeCreditsRemaining} {t("free")} ·{" "}
+                  {wallet.paidCreditsRemaining} {t("gathered")}
+                  {typeof wallet.depositCredits === "number" &&
+                  wallet.depositCredits > 0
+                    ? ` · ${wallet.depositCredits} ${t("deposited")}`
+                    : ""}
+                </p>
+              )}
             </section>
 
             {/* the sectors — the library at a glance */}

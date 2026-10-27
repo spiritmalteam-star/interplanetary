@@ -9,7 +9,6 @@ import { CosmicBackdrop } from "./CosmicBackdrop";
 import { StarField } from "./StarField";
 import { ToolWorkspace } from "./living/ToolWorkspace";
 import { LandingChatNav } from "./landing/LandingChatNav";
-import { CreditBadge } from "./CreditBadge";
 import { WalletGuard } from "./WalletGuard";
 import { BranchCanopy } from "./BranchCanopy";
 import { ReplyBranches } from "./ReplyBranches";
@@ -295,15 +294,15 @@ function AppShellViews({
         liveError={channel.error}
         liveMessage={lastChannelMsg}
         realmControls={
-          /* THE CROWN'S OWN PURSE — the wallet pill rides beside the
-             navigator, one row with it (the profile icon and the light's
-             toggle stand just before): the purse always in sight, one
-             touch opening the visitor's own room where the Transactions
-             book and the account chamber live. THE FREE LAW — the
-             crossing wears no coin: the whole realm stands open to
-             every visitor, no passage demanded, nothing acquired. */
+          /* THE CROWN'S QUIET — the number has left the top bar at the
+             visitor's word: the purse now lives in the visitor's own
+             room (the profile — where the live balance and the account
+             chamber stand together), and the crown carries only the
+             profile icon, the making rooms and the scopes. THE FREE
+             LAW — the crossing wears no coin: the whole realm stands
+             open to every visitor, no passage demanded, nothing
+             acquired. */
           <div className="flex items-center gap-1.5">
-            <CreditBadge />
             <LandingChatNav />
           </div>
         }
