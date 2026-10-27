@@ -1,7 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Eraser, Send } from "lucide-react";
+import dynamic from "next/dynamic";
+import {
+  DraftingCompass,
+  Eraser,
+  MessagesSquare,
+  Send,
+  type LucideIcon,
+} from "lucide-react";
 import { EnergyError, speakReply } from "@/lib/speak-client";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
@@ -380,7 +387,120 @@ export function ManifestRoom() {
   return <SimpleMirrorRoom config={MANIFEST_CONFIG} />;
 }
 
-/** THE INVENT — the simple forge room (the forge voice). */
+/** THE INVENT — the forge room: the whisper line, and beside it the
+    room's own Invention Lab — an obsidian canvas where a plan is laid
+    out in pieces (idea, component, evidence, risk) and the bonds that
+    support them. The lab's code arrives only when its mode is first
+    chosen, and its draft rests on the device (mirror-invent-canvas-v1)
+    like every room's words — the keep's law holds. */
+const InventionCanvas = dynamic(
+  () => import("@/components/mirror/invent/InventionCanvas"),
+  {
+    ssr: false,
+    loading: () => (
+      <div
+        className="absolute inset-0 flex items-center justify-center"
+        aria-hidden="true"
+      >
+        <span className="mono-label text-[9.5px] uppercase tracking-[0.2em] text-muted-foreground/60">
+          The lab lights its coals…
+        </span>
+      </div>
+    ),
+  }
+);
+
+type InventMode = "conversation" | "lab";
+
+/** one mode of the forge room's own segmented hand (the house's
+    active-pill dialect, the scope's light on the chosen way) */
+function InventModeHand({
+  active,
+  onClick,
+  icon: Icon,
+  label,
+  testId,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: LucideIcon;
+  label: string;
+  testId: string;
+}) {
+  const t = useT();
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      data-testid={testId}
+      className={cn(
+        "focus-glow flex h-9 items-center gap-1.5 rounded-full px-3 text-[11.5px] transition-colors duration-300",
+        active
+          ? "font-medium"
+          : "text-muted-foreground hover:text-foreground"
+      )}
+      style={
+        active
+          ? {
+              backgroundColor:
+                "color-mix(in srgb, var(--scope-a,var(--gd)) 12%, transparent)",
+              color: "var(--scope-a,var(--gd))",
+            }
+          : undefined
+      }
+    >
+      <Icon className="size-3.5" aria-hidden="true" />
+      {t(label)}
+    </button>
+  );
+}
+
 export function InventRoom() {
-  return <SimpleMirrorRoom config={INVENT_CONFIG} />;
+  const t = useT();
+  const [mode, setMode] = useState<InventMode>("conversation");
+
+  return (
+    <div className="flex h-full flex-col">
+      {/* THE MODE ROW — the forge's two ways: the whisper line and the
+          lab's bench; one quiet segmented hand beneath the tabs */}
+      <div className="flex shrink-0 items-center px-3.5 pt-2.5 sm:px-4">
+        <div
+          role="group"
+          aria-label={t("The forge's ways")}
+          data-testid="invent-modes"
+          className="flex items-center gap-0.5 rounded-full border p-0.5"
+          style={{
+            borderColor:
+              "color-mix(in srgb, var(--scope-a,var(--gd)) 22%, transparent)",
+          }}
+        >
+          <InventModeHand
+            active={mode === "conversation"}
+            onClick={() => setMode("conversation")}
+            icon={MessagesSquare}
+            label="Conversation"
+            testId="invent-mode-conversation"
+          />
+          <InventModeHand
+            active={mode === "lab"}
+            onClick={() => setMode("lab")}
+            icon={DraftingCompass}
+            label="Invention Lab"
+            testId="invent-mode-lab"
+          />
+        </div>
+      </div>
+
+      {/* THE ROOM'S BODY — the chosen way fills the rest of the room;
+          the frame's flex layout owns the height (no viewport hacks) */}
+      <div className="relative min-h-0 flex-1">
+        {mode === "conversation" ? (
+          <SimpleMirrorRoom config={INVENT_CONFIG} />
+        ) : (
+          <InventionCanvas />
+        )}
+      </div>
+    </div>
+  );
 }

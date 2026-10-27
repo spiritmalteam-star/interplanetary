@@ -18,6 +18,7 @@ import {
   LogOut,
   Plus,
   RotateCcw,
+  ScrollText,
   Settings2,
   Sparkles,
   UserRound,
@@ -41,6 +42,7 @@ import {
   type DownloadEntry,
 } from "@/lib/downloads-log";
 import { cn } from "@/lib/utils";
+import { TransactionsPanel } from "./wallet/TransactionsPanel";
 
 /* ------------------------------------------------------------------ */
 /*  THE PROFILE ROOM — rebuilt in the manner of the frontier: a slim   */
@@ -108,7 +110,8 @@ type SectionId =
   | "api"
   | "fuel"
   | "admin"
-  | "account";
+  | "account"
+  | "transactions";
 
 export function ProfilePage() {
   const t = useT();
@@ -476,6 +479,13 @@ export function ProfilePage() {
       testId: "profile-nav-profile",
     },
     {
+      id: "transactions",
+      label: "Transactions",
+      icon: ScrollText,
+      available: true,
+      testId: "profile-nav-transactions",
+    },
+    {
       id: "library",
       label: "The Library",
       icon: LibraryBig,
@@ -501,6 +511,8 @@ export function ProfilePage() {
       case "profile":
       case "account":
         return me?.admin ? ["profile", "admin", "account"] : ["profile", "account"];
+      case "transactions":
+        return ["transactions"];
       case "library":
       case "downloads":
         return ["library", "downloads"];
@@ -1418,7 +1430,7 @@ export function ProfilePage() {
                               <button
                                 key={p.id}
                                 type="button"
-                                onClick={() => void recharge({ packId: p.id }, p.id)}
+                                onClick={() => void recharge({ pack: p.id }, p.id)}
                                 disabled={rechargeBusy === p.id}
                                 data-testid={`profilepage-api-pack-${p.id}`}
                                 className="focus-glow flex h-8 items-center gap-1.5 rounded-full border px-3.5 text-[13px] text-foreground/85 transition-all duration-300 hover:border-[color-mix(in_srgb,var(--gd)_55%,transparent)] disabled:opacity-40"
@@ -1842,6 +1854,21 @@ export function ProfilePage() {
                   </button>
                 )}
               </div>
+            </section>
+          </div>
+        );
+
+      case "transactions":
+        return (
+          <div data-testid="profilepage-transactions">
+            <SectionHead
+              title={t("Transactions")}
+              desc={t(
+                "The purse's own book — every light weighed, purchased and given back, newest first."
+              )}
+            />
+            <section className={cn(panel, "p-3.5 sm:p-4")}>
+              <TransactionsPanel />
             </section>
           </div>
         );

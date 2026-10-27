@@ -12,6 +12,7 @@ import {
   type WheelEvent as ReactWheelEvent,
 } from "react";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -28,6 +29,7 @@ import {
   LoaderCircle,
   MoonStar,
   Pause,
+  PenLine,
   Play,
   Sparkles,
   Square,
@@ -75,6 +77,23 @@ import { downloadBookPdf } from "@/lib/book-pdf";
 import { recordDownload } from "@/lib/downloads-log";
 import { cn } from "@/lib/utils";
 import { ShareButton } from "./ShareButton";
+import { paragraphsFromEditorText, plainTextToManuscriptHtml } from "./dreambook/manuscript-text";
+import "./dreambook/manuscript-editor.css";
+
+/* THE INK DESK'S PEN — the manuscript editor rides its own chunk
+   (Tiptap is a quiet passenger until a leaf is opened for the hand) */
+const MirrorManuscriptEditor = dynamic(
+  () => import("@/components/mirror/dreambook/ManuscriptEditor"),
+  {
+    ssr: false,
+    loading: () => (
+      <div
+        className="manuscript-editor-frame min-h-[320px] w-full animate-pulse rounded-[14px]"
+        aria-hidden="true"
+      />
+    ),
+  }
+);
 
 /* ------------------------------------------------------------------ */
 /*  DreamBookView — the Dream Book: a world of its own.                */
@@ -106,6 +125,11 @@ interface WeavePage {
   part?: string;
   chapter?: string;
   paragraphs: string[];
+  /* THE PEN'S OWN FORM — the page's rich manuscript (the ink desk's
+     HTML) once a hand has touched it; pages the loom wove alone keep
+     only their clean paragraphs. Every consumer outside the desk
+     (voice, presses, shelf) reads the paragraphs beside it. */
+  html?: string;
 }
 
 interface BookMeta {
@@ -233,6 +257,11 @@ export function DreamBookView() {
   const cancelRevealRef = useRef(false);
   /* the whole-book reading — every woven page in one continuous scroll */
   const [wholeMode, setWholeMode] = useState(false);
+  /* THE INK DESK — the leaf in hand, opened for the visitor's own pen.
+     The desk writes the page's rich manuscript (html) and derives the
+     page's plain paragraphs beside it, so every other hand in the house
+     — the voice, the presses, the shelf — reads the very same words. */
+  const [inkDeskOpen, setInkDeskOpen] = useState(false);
   /* THE FOCUS READING — the column widens and the frame quiets: the
      visitor's own toggle, a layout simplification, never an overlay */
   const [focusRead, setFocusRead] = useState(false);
@@ -283,6 +312,79 @@ export function DreamBookView() {
   /* THE CHANNELING DOT'S OWN MEMORY — where the reader stood before
      the dot's jump, so the same small hand carries them back */
   const dotReturnRef = useRef(0);
+
+  /* ---------------- THE INK DESK'S WRITE-THROUGH ----------------
+     The pen streams its changes into a pending hand first (a quiet
+     320ms stride — the reading room never re-renders per keystroke)
+     and every consumer that reads the book (the presses, the voice,
+     the shelf, the loom, a page turn) calls flushInkEdit() first, so
+     nothing ever reads a stale leaf. The pending edit rides refs
+     alone: a flush is pure ref-work plus one setPages. */
+  const inkPendingRef = useRef<{ n: number; html: string; text: string } | null>(
+    null
+  );
+  const inkTimerRef = useRef<number | null>(null);
+  /* the leaf the pen is currently writing (its page number), and the
+     desk's own open mark for the keyboard's page-turn guard */
+  const inkNRef = useRef<number | null>(null);
+  const inkOpenRef = useRef(false);
+
+  const flushInkEdit = useCallback(() => {
+    if (inkTimerRef.current !== null) {
+      window.clearTimeout(inkTimerRef.current);
+      inkTimerRef.current = null;
+    }
+    const pend = inkPendingRef.current;
+    if (!pend) return;
+    inkPendingRef.current = null;
+    const paragraphs = paragraphsFromEditorText(pend.text);
+    pagesRef.current = pagesRef.current.map((p) =>
+      p.n === pend.n
+        ? {
+            ...p,
+            paragraphs,
+            /* an emptied leaf lays its richness down too — the pen has
+               spoken; only a page the pen never touched keeps none */
+            ...(pend.html ? { html: pend.html } : {}),
+          }
+        : p
+    );
+    setPages(pagesRef.current);
+  }, []);
+
+  const handleInkUpdate = useCallback(
+    (html: string, text: string) => {
+      const n = inkNRef.current;
+      if (!n) return;
+      inkPendingRef.current = { n, html, text };
+      if (inkTimerRef.current !== null) window.clearTimeout(inkTimerRef.current);
+      inkTimerRef.current = window.setTimeout(() => {
+        inkTimerRef.current = null;
+        flushInkEdit();
+      }, 320);
+    },
+    [flushInkEdit]
+  );
+
+  /* the pen's own page — the leaf in hand (pages keep n === their
+     position + 1, so the woven leaf under pageIdx is the desk's leaf);
+     a page turn or a desk close carries the pending ink home at once */
+  const inkPageN =
+    pageIdx >= 1 && pageIdx <= pages.length ? pageIdx : null;
+  useEffect(() => {
+    inkOpenRef.current = inkDeskOpen;
+    inkNRef.current = inkDeskOpen ? inkPageN : null;
+    if (inkDeskOpen) return;
+    flushInkEdit();
+  }, [inkDeskOpen, inkPageN, flushInkEdit]);
+
+  /* the desk laid down with the room — no timer outlives it */
+  useEffect(
+    () => () => {
+      if (inkTimerRef.current !== null) window.clearTimeout(inkTimerRef.current);
+    },
+    []
+  );
 
   useEffect(() => {
     configRef.current = { age, tale, volume, level, topic, vein, pageCount };
@@ -353,10 +455,18 @@ export function DreamBookView() {
   const applyResume = useCallback(
     (r: DreamBookResume) => {
       stopNarration();
+      setInkDeskOpen(false);
       bookIdRef.current = r.bookId;
       pagesRef.current = r.pages.map((p) => ({
         ...p,
         paragraphs: [...p.paragraphs],
+        /* the pen's own form rides the shelf and the library when a
+           volume was written by hand — carried back so the desk reopens
+           the leaf exactly as it was left */
+        ...(typeof (p as { html?: unknown }).html === "string" &&
+        (p as { html?: string }).html
+          ? { html: (p as { html?: string }).html }
+          : {}),
       }));
       threadsRef.current = r.threads;
       metaRef.current = { ...r.meta };
@@ -439,6 +549,8 @@ export function DreamBookView() {
   const [shelfLoading, setShelfLoading] = useState(false);
 
   const snapshotCurrent = useCallback((): ShelfVolume | null => {
+    /* the pen's pending ink lands before the volume is measured */
+    flushInkEdit();
     const m = metaRef.current;
     if (!m || pagesRef.current.length === 0) return null;
     return {
@@ -459,9 +571,12 @@ export function DreamBookView() {
         ...(p.part ? { part: p.part } : {}),
         ...(p.chapter ? { chapter: p.chapter } : {}),
         paragraphs: [...p.paragraphs],
+        /* the shelf keeps the pen's form too, so a volume reopened
+           from its shelf reopens exactly as it was written */
+        ...(p.html ? { html: p.html } : {}),
       })),
     };
-  }, []);
+  }, [flushInkEdit]);
 
   /* the volume in hand never vanishes — it keeps itself before any
      turn away (a new dream, a walk back to the atelier, an exit) */
@@ -643,6 +758,8 @@ export function DreamBookView() {
       timeoutMs = 150000,
       flavor: "batch" | "reveal" = "batch"
     ): Promise<boolean> => {
+      /* the pen's pending ink lands before the loom reads the volume */
+      flushInkEdit();
       if (weavingRef.current) return false;
       weavingRef.current = true;
       setWeavingNext(true);
@@ -820,7 +937,7 @@ export function DreamBookView() {
         setWeavingNext(false);
       }
     },
-    [language, t]
+    [language, t, flushInkEdit]
   );
 
   /* ---------------- the atelier ---------------- */
@@ -917,6 +1034,8 @@ export function DreamBookView() {
 
   const goPage = useCallback(
     (dir: 1 | -1) => {
+      /* the pen's pending ink lands before the leaf is turned */
+      flushInkEdit();
       stopNarration();
       setSlideDir(dir);
       setPageIdx((s) => {
@@ -926,13 +1045,16 @@ export function DreamBookView() {
         return next;
       });
     },
-    [limitIdx, stopNarration]
+    [limitIdx, stopNarration, flushInkEdit]
   );
 
-  /* keyboard page turns (the whole-book reading scrolls freely) */
+  /* keyboard page turns (the whole-book reading scrolls freely) —
+     and while the ink desk holds the pen, the arrows belong to the
+     caret, not to the pages */
   useEffect(() => {
     if (stage !== "reading" || wholeMode) return;
     const onKey = (e: KeyboardEvent) => {
+      if (inkOpenRef.current) return;
       if (e.key === "ArrowRight") goPage(1);
       if (e.key === "ArrowLeft") goPage(-1);
     };
@@ -942,6 +1064,7 @@ export function DreamBookView() {
 
   const newDream = useCallback(() => {
     stopNarration();
+    setInkDeskOpen(false);
     keepCurrent(); /* the volume in hand rests on the shelf first */
     clearDreamResume(); /* a stale hand-off can never seed this volume */
     pagesRef.current = [];
@@ -991,6 +1114,10 @@ export function DreamBookView() {
      When the last page lands, the whole book stands open at once. */
   const revealWholeBook = useCallback(async () => {
     if (wholeReveal || !metaRef.current) return;
+    /* the pen's pending ink lands before the long channeling begins,
+       and the whole-book reading is no desk — the pen rests */
+    flushInkEdit();
+    setInkDeskOpen(false);
     stopNarration();
     setWholeMode(false);
     cancelRevealRef.current = false;
@@ -1087,7 +1214,7 @@ export function DreamBookView() {
         if (navigator.vibrate) navigator.vibrate(18);
       }
     }
-  }, [weave, wholeReveal, stopNarration]);
+  }, [weave, wholeReveal, stopNarration, flushInkEdit]);
 
   /* the visitor lets the loom rest — the channeling stops between
      strides and the book opens whole with everything already woven */
@@ -1095,6 +1222,8 @@ export function DreamBookView() {
     cancelRevealRef.current = true;
     setWholeReveal(null);
     setWholeMode(true);
+    /* the whole-book reading is no desk — the pen rests with the loom */
+    setInkDeskOpen(false);
     if (navigator.vibrate) navigator.vibrate(12);
   }, []);
 
@@ -1104,6 +1233,8 @@ export function DreamBookView() {
     if (binding || !meta || pagesRef.current.length === 0) return;
     setBinding(true);
     try {
+      /* the pen's pending ink lands before the volume is bound */
+      flushInkEdit();
       const bound = dedupeChapters(pagesRef.current).map((p) => ({
         n: p.n,
         ...(p.part ? { part: p.part } : {}),
@@ -1144,7 +1275,7 @@ export function DreamBookView() {
     } finally {
       setBinding(false);
     }
-  }, [binding, meta, t]);
+  }, [binding, meta, t, flushInkEdit]);
 
   /* THE QUIET COUNT — the book's own weight in words, said honestly */
   const bookWords = useMemo(() => {
@@ -1159,8 +1290,12 @@ export function DreamBookView() {
      front matter, every page its own section — the visitor's file,
      theirs to keep and open anywhere */
   const exportMarkdown = useCallback(() => {
-    if (!meta || pages.length === 0) return;
+    if (!meta) return;
     try {
+      /* the pen's pending ink lands before the loose leaves are cut */
+      flushInkEdit();
+      const pages = pagesRef.current;
+      if (pages.length === 0) return;
       const bound = dedupeChapters(pages);
       const lines: string[] = [];
       lines.push(`# ${meta.title}`);
@@ -1196,12 +1331,16 @@ export function DreamBookView() {
     } catch {
       toast.error(t("The loose-leaf press needs a breath — try again"));
     }
-  }, [meta, pages, t]);
+  }, [meta, t, flushInkEdit]);
 
   /* THE MIRROR BRIDGE — the work at hand: the book's own opening, so
      the advice lands on THIS volume (only what is needed travels) */
   const buildBridgeContext = useCallback(() => {
-    if (!meta || pages.length === 0) return null;
+    if (!meta) return null;
+    /* the pen's pending ink lands before the Mirror reads the volume */
+    flushInkEdit();
+    const pages = pagesRef.current;
+    if (pages.length === 0) return null;
     const text = bookToText(
       meta,
       pages.map((p) => ({
@@ -1212,7 +1351,7 @@ export function DreamBookView() {
       }))
     );
     return text.slice(0, 600);
-  }, [meta, pages]);
+  }, [meta, flushInkEdit]);
 
   /* ---------------- the narrator ---------------- */
 
@@ -1254,7 +1393,11 @@ export function DreamBookView() {
     const opening = pageIdx === 0 && meta
       ? `${meta.title}. ${meta.subtitle} ${meta.sigil} ${meta.axiom} ${meta.dedication}`
       : "";
-    const body = currentPage ? pageText(currentPage) : "";
+    /* the pen's pending ink lands before the voice reads the leaf —
+       the spoken words are the freshest the page holds */
+    flushInkEdit();
+    const spokenPage = pagesRef.current.find((p) => p.n === pageIdxRef.current);
+    const body = spokenPage ? pageText(spokenPage) : "";
     const text = (opening || body).trim();
     try {
       if (!text) return;
@@ -1351,7 +1494,7 @@ export function DreamBookView() {
     } finally {
       setNarrLoading(false);
     }
-  }, [narrating, narrLoading, narrPaused, currentPage, pageIdx, meta, stopNarration, resumeNarration, t]);
+  }, [narrating, narrLoading, narrPaused, pageIdx, meta, stopNarration, resumeNarration, t, flushInkEdit]);
 
   /* the auto-voice effect reads the freshest narrate without re-firing */
   narrateRef.current = narrate;
@@ -1363,6 +1506,8 @@ export function DreamBookView() {
      to the tree in a single touch (THE ONE BACK in the workplace's
      own header wears the same law for the atelier) */
   const exitTheBook = () => {
+    /* the pen's pending ink lands before the volume is kept */
+    flushInkEdit();
     stopNarration();
     keepCurrent();
     exitDreamBook();
@@ -1823,6 +1968,11 @@ export function DreamBookView() {
   const canNext = pageIdx < limitIdx && !showChoice && !showEnd;
   const canPrev = pageIdx > 0;
 
+  /* THE PEN'S REST — while the voice reads the leaf in hand (or the
+     loom channels the whole volume in one breath), the desk stands in
+     its readOnly silence: the words stay, the writing waits */
+  const inkLocked = narrating || narrLoading || !!wholeReveal;
+
   /* ================================================================ */
   /*  the immersive scroll — down: only the page; up: the top returns */
   /* ================================================================ */
@@ -2003,6 +2153,29 @@ export function DreamBookView() {
           >
             <Focus className="size-4" aria-hidden="true" />
           </button>
+          {/* THE INK DESK — the leaf in hand, opened for the visitor's
+              own pen: a real writing surface on the page itself. The
+              whole-book column is no desk, and neither is the title
+              leaf nor the tale's crossroads. */}
+          {!wholeMode && (
+            <button
+              type="button"
+              onClick={() => setInkDeskOpen((v) => !v)}
+              disabled={!currentPage}
+              aria-pressed={inkDeskOpen}
+              aria-label={t("The ink desk")}
+              title={t("The ink desk")}
+              data-testid="dream-ink-desk"
+              className={cn(
+                inkIconBtn,
+                "shrink-0 disabled:opacity-35",
+                inkDeskOpen &&
+                  "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_50%,transparent)] text-[color:var(--scope-a,var(--gd))]"
+              )}
+            >
+              <PenLine className="size-4" aria-hidden="true" />
+            </button>
+          )}
           {/* THE QUIET COUNT — the volume's own weight, honestly said */}
           {pages.length > 0 && (
             <span
@@ -2458,6 +2631,46 @@ export function DreamBookView() {
                     </div>
                     <p className="pb-2 font-[family-name(var(--font-literata))] text-[11.5px] uppercase tracking-[0.24em] text-[var(--dream-ink-faint)]">
                       {t("woven for you, this very hour")}
+                    </p>
+                  </div>
+                ) : inkDeskOpen && currentPage ? (
+                  /* THE INK DESK — the leaf in hand, opened for the
+                     visitor's own pen. The page's own header stays; the
+                     body becomes a real writing surface that hands every
+                     word back to the same state the whole book saves. */
+                  <div
+                    className="dream-page dream-page-single nice-scroll flex min-h-0 w-full flex-1 flex-col px-3 py-5 sm:px-7"
+                    data-testid="dream-ink-desk-panel"
+                  >
+                    {currentPage.part && (
+                      <p className="mb-1 text-center font-[family-name(var(--font-literata))] text-[12px] uppercase tracking-[0.3em] text-[var(--dream-ink-faint)]">
+                        {currentPage.part}
+                      </p>
+                    )}
+                    {currentPage.chapter && (
+                      <p className="mb-3 text-center font-[family-name(var(--font-literata))] text-[16px] italic text-[var(--dream-ink-soft)] sm:text-[18px]">
+                        {currentPage.chapter}
+                      </p>
+                    )}
+                    <MirrorManuscriptEditor
+                      key={`ink-${currentPage.n}`}
+                      content={
+                        currentPage.html && currentPage.html.trim()
+                          ? currentPage.html
+                          : plainTextToManuscriptHtml(
+                              currentPage.paragraphs.join("\n\n")
+                            )
+                      }
+                      onUpdate={handleInkUpdate}
+                      placeholder={t("The page waits for your hand…")}
+                      readOnly={inkLocked}
+                      formatNumber={(n) => formatArchiveNumber(n, language)}
+                      className="mt-1"
+                    />
+                    <p className="mt-2.5 text-center font-[family-name(var(--font-literata))] text-[11.5px] italic leading-relaxed text-[var(--dream-ink-faint)]">
+                      {inkLocked
+                        ? t("The voice holds the page — the pen waits for it to finish.")
+                        : t("The ink flows onto this leaf — the voice, the press and the shelf read the very same words.")}
                     </p>
                   </div>
                 ) : (
@@ -3262,17 +3475,30 @@ function BookPage({
             className="dream-body flex-1"
             style={{ fontSize, lineHeight: 1.78 }}
           >
-            {page.paragraphs.map((p, i) => (
-              <p
-                key={i}
+            {page.html ? (
+              /* A PAGE THE PEN HAS TOUCHED — its rich manuscript is
+                 rendered as the room itself wrote it (same ink, same
+                 voice, headings and lists dressed like the desk). */
+              <div
                 className={cn(
-                  "mb-4 whitespace-pre-wrap text-[var(--dream-ink)] last:mb-0",
-                  page.chapter && i === 0 && "dream-drop"
+                  "manuscript-prose",
+                  page.chapter && "manuscript-drop"
                 )}
-              >
-                {p}
-              </p>
-            ))}
+                dangerouslySetInnerHTML={{ __html: page.html }}
+              />
+            ) : (
+              page.paragraphs.map((p, i) => (
+                <p
+                  key={i}
+                  className={cn(
+                    "mb-4 whitespace-pre-wrap text-[var(--dream-ink)] last:mb-0",
+                    page.chapter && i === 0 && "dream-drop"
+                  )}
+                >
+                  {p}
+                </p>
+              ))
+            )}
           </div>
           {/* the end of the page — its number, and the copy of its words */}
           <div className="mt-5 flex items-center justify-center gap-2">

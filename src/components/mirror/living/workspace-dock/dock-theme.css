@@ -1,0 +1,325 @@
+/* ------------------------------------------------------------------ */
+/*  THE DOCK'S OWN SKIN — dockview restyled to the house. Everything   */
+/*  is scoped under .mirror-dock (the dock host wrapper): no stock     */
+/*  blue theme class is applied, the dv-* custom properties are fed    */
+/*  the house's own tokens (scope light, hairline, foreground), and    */
+/*  the few structural rules dockview ships are quietly re-voiced.     */
+/*                                                                     */
+/*  THE Z-INDEX LAW — the wrapper isolates the whole dockview tree in  */
+/*  its own stacking context (isolation + z-index 0): the dock's       */
+/*  internal z-indices — floating groups, drag ghosts, resize          */
+/*  handles, the dv overlay container — can never rise above the       */
+/*  workspace header (z-10) or the room-zoom overlay (the zoomed       */
+/*  frame portals to body at z-[95] and CONTAINS this wrapper).        */
+/* ------------------------------------------------------------------ */
+
+.mirror-dock {
+  /* the containment guarantee */
+  position: relative;
+  z-index: 0;
+  isolation: isolate;
+
+  /* ---------------------------------------------------------------- */
+  /*  THE dv TOKENS — the house's palette, spoken dockview's dialect.  */
+  /* ---------------------------------------------------------------- */
+  --dv-group-view-background-color: transparent;
+  --dv-background-color: transparent;
+  --dv-tabs-and-actions-container-background-color: transparent;
+  --dv-tabs-and-actions-container-height: 34px;
+  --dv-tabs-and-actions-container-font-size: 11.5px;
+  /* the hairline does the separating, everywhere */
+  --dv-tab-divider-color: var(--hairline, rgba(128, 128, 128, 0.22));
+  --dv-separator-border: var(--hairline, rgba(128, 128, 128, 0.22));
+  --dv-border-radius: 0px;
+  --dv-tab-border-radius: 8px;
+  --dv-tab-margin-inline: 2px;
+  --dv-tab-margin-block: 4px;
+  --dv-spacing-padding: 4px;
+  --dv-tab-close-icon-size: 13px;
+  --dv-icon-hover-background-color: color-mix(
+    in srgb,
+    var(--foreground) 8%,
+    transparent
+  );
+  /* tabs: the active room wears the scope light; the rest stay quiet */
+  --dv-activegroup-visiblepanel-tab-color: var(--scope-a, var(--gd, #9a781e));
+  --dv-activegroup-visiblepanel-tab-background-color: transparent;
+  --dv-activegroup-hiddenpanel-tab-color: color-mix(
+    in srgb,
+    var(--foreground) 72%,
+    transparent
+  );
+  --dv-activegroup-hiddenpanel-tab-background-color: transparent;
+  --dv-inactivegroup-visiblepanel-tab-color: color-mix(
+    in srgb,
+    var(--foreground) 82%,
+    transparent
+  );
+  --dv-inactivegroup-visiblepanel-tab-background-color: transparent;
+  --dv-inactivegroup-hiddenpanel-tab-color: color-mix(
+    in srgb,
+    var(--foreground) 62%,
+    transparent
+  );
+  --dv-inactivegroup-hiddenpanel-tab-background-color: transparent;
+
+  /* drag & drop: the scope's light, never the stock blue */
+  --dv-drag-over-border: 1px solid
+    color-mix(in srgb, var(--scope-a, var(--gd, #9a781e)) 55%, transparent);
+  --dv-drag-over-border-color: color-mix(
+    in srgb,
+    var(--scope-a, var(--gd, #9a781e)) 55%,
+    transparent
+  );
+  --dv-drag-over-background-color: color-mix(
+    in srgb,
+    var(--scope-a, var(--gd, #9a781e)) 7%,
+    transparent
+  );
+  --dv-dnd-compass-color: color-mix(
+    in srgb,
+    var(--scope-a, var(--gd, #9a781e)) 60%,
+    transparent
+  );
+  --dv-dnd-compass-cell-color: color-mix(
+    in srgb,
+    var(--scope-a, var(--gd, #9a781e)) 12%,
+    transparent
+  );
+  --dv-dnd-compass-cell-active-color: color-mix(
+    in srgb,
+    var(--scope-a, var(--gd, #9a781e)) 24%,
+    transparent
+  );
+  --dv-dnd-compass-edge-cell-color: color-mix(
+    in srgb,
+    var(--scope-a, var(--gd, #9a781e)) 10%,
+    transparent
+  );
+  --dv-dnd-compass-active-cell-color: color-mix(
+    in srgb,
+    var(--scope-a, var(--gd, #9a781e)) 22%,
+    transparent
+  );
+
+  /* floating rooms: glass with a hairline seam, the house's shadow */
+  --dv-floating-border: 1px solid
+    color-mix(
+      in srgb,
+      var(--scope-a, var(--gd, #9a781e)) 22%,
+      var(--hairline, rgba(128, 128, 128, 0.22))
+    );
+  --dv-floating-group-border: var(--dv-floating-border);
+  --dv-floating-box-shadow: 0 18px 44px -18px rgba(0, 0, 0, 0.55);
+  --dv-floating-group-dragging-opacity: 0.92;
+  /* the internal overlay layer sits far below the workspace header
+     (z-10) even without the wrapper's isolation — defense in depth */
+  --dv-overlay-z-index: 60;
+
+  --dv-transition-duration: 90ms;
+}
+
+/* ------------------------------------------------------------------ */
+/*  THE ROOMS' FRAME — a group is a glass pane with a hairline seam.   */
+/* ------------------------------------------------------------------ */
+
+.mirror-dock .dv-groupview {
+  background-color: var(--glass-bg-soft, transparent);
+  border: 1px solid
+    color-mix(
+      in srgb,
+      var(--scope-a, var(--gd, #9a781e)) 12%,
+      var(--hairline, rgba(128, 128, 128, 0.22))
+    );
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.mirror-dock .dv-groupview.dv-active-group {
+  border-color: color-mix(
+    in srgb,
+    var(--scope-a, var(--gd, #9a781e)) 22%,
+    var(--hairline, rgba(128, 128, 128, 0.22))
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  THE TABS — glass pills; the active room wears the scope's accent   */
+/*  underline (var(--scope-a)) with the house's small glow.            */
+/* ------------------------------------------------------------------ */
+
+/* the strip itself breathes the house's glass */
+.mirror-dock .dv-tabs-and-actions-container {
+  background: var(--glass-bg, transparent);
+}
+
+.mirror-dock .dv-tab {
+  border-radius: 8px;
+  transition:
+    color 200ms ease,
+    background-color 200ms ease;
+}
+
+.mirror-dock .dv-tab .dv-default-tab {
+  padding: 0 8px;
+}
+
+.mirror-dock .dv-tab .dv-default-tab .dv-default-tab-content {
+  font-size: 11.5px;
+  letter-spacing: 0.01em;
+  color: color-mix(in srgb, var(--foreground) 78%, transparent);
+  transition: color 200ms ease;
+}
+
+.mirror-dock
+  .dv-groupview.dv-active-group
+  > .dv-tabs-and-actions-container
+  .dv-tabs-container
+  > .dv-tab.dv-active-tab {
+  background: var(--glass-bg-strong, transparent);
+  box-shadow: inset 0 0 0 1px
+    color-mix(
+      in srgb,
+      var(--scope-a, var(--gd, #9a781e)) 25%,
+      var(--hairline, rgba(128, 128, 128, 0.22))
+    );
+}
+
+.mirror-dock
+  .dv-tab.dv-active-tab
+  .dv-default-tab
+  .dv-default-tab-content {
+  color: var(--scope-a, var(--gd, #9a781e));
+  font-weight: 500;
+}
+
+.mirror-dock .dv-tab:hover .dv-default-tab .dv-default-tab-content {
+  color: var(--foreground);
+}
+
+/* THE ACCENT UNDERLINE — the active room's own light */
+.mirror-dock .dv-tab.dv-active-tab .dv-default-tab::after {
+  content: "";
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 1px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--scope-a, var(--gd, #9a781e));
+  box-shadow:
+    0 0 8px -2px
+      color-mix(in srgb, var(--scope-a, var(--gd, #9a781e)) 70%, transparent);
+  pointer-events: none;
+}
+
+/* THE CLOSE HANDS — ghost, quiet, then honest on hover */
+.mirror-dock .dv-tab .dv-default-tab .dv-default-tab-action {
+  opacity: 0.55;
+  border-radius: 6px;
+}
+
+.mirror-dock .dv-tab .dv-default-tab .dv-default-tab-action:hover {
+  opacity: 1;
+  background-color: color-mix(in srgb, var(--foreground) 8%, transparent);
+}
+
+/* THE DIVIDERS — hairline, nothing louder */
+.mirror-dock
+  .dv-tabs-container.dv-horizontal
+  .dv-tab:not(:first-child)::before {
+  background-color: var(--hairline, rgba(128, 128, 128, 0.22));
+}
+
+/* ------------------------------------------------------------------ */
+/*  THE SASHES — the resize hands between split rooms, lit only on     */
+/*  approach.                                                          */
+/* ------------------------------------------------------------------ */
+
+.mirror-dock .dv-split-view-container .dv-sash-container .dv-sash.dv-enabled {
+  transition: background-color 200ms ease;
+}
+
+.mirror-dock
+  .dv-split-view-container
+  .dv-sash-container
+  .dv-sash.dv-enabled:hover {
+  background-color: color-mix(
+    in srgb,
+    var(--scope-a, var(--gd, #9a781e)) 35%,
+    transparent
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  THE PART — every tool panel fills its dock content cell exactly.   */
+/* ------------------------------------------------------------------ */
+
+.mirror-dock .dv-content-container > .mirror-dock-tool-part,
+.mirror-dock .dv-content-container > .mirror-dock-tool-part > * {
+  min-height: 0;
+  min-width: 0;
+}
+
+/* ------------------------------------------------------------------ */
+/*  THE WATERMARK — the empty dock's honest line.                      */
+/* ------------------------------------------------------------------ */
+
+.mirror-dock .mirror-dock-watermark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  pointer-events: none;
+}
+
+.mirror-dock .mirror-dock-watermark-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 18px;
+  border-radius: 12px;
+  background: var(--glass-bg-soft, transparent);
+  border: 1px solid var(--hairline, rgba(128, 128, 128, 0.22));
+}
+
+.mirror-dock .mirror-dock-watermark-title {
+  font-size: 12px;
+  color: color-mix(in srgb, var(--foreground) 70%, transparent);
+}
+
+.mirror-dock .mirror-dock-watermark-hint {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: color-mix(in srgb, var(--foreground) 45%, transparent);
+}
+
+/* ------------------------------------------------------------------ */
+/*  THE QUIET HAND — reduced motion lays every dock animation down.    */
+/*  (dockview's api exposes no global motion switch; the house guard   */
+/*  is the CSS variable every transition reads.)                       */
+/* ------------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+  .mirror-dock {
+    --dv-transition-duration: 0ms;
+  }
+
+  .mirror-dock .dv-tab,
+  .mirror-dock .dv-tab .dv-default-tab .dv-default-tab-content,
+  .mirror-dock
+    .dv-split-view-container
+    .dv-sash-container
+    .dv-sash.dv-enabled {
+    transition: none;
+  }
+
+  .mirror-dock .dv-resize-container {
+    will-change: auto;
+    transform: none;
+    backface-visibility: visible;
+  }
+}

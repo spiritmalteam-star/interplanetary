@@ -13,7 +13,7 @@ import {
 } from "react";
 import dynamic from "next/dynamic";
 import { createPortal } from "react-dom";
-import { ArrowLeft, Maximize2, Minimize2, RotateCcw, X } from "lucide-react";
+import { ArrowLeft, Columns, Maximize2, Minimize2, RotateCcw, X } from "lucide-react";
 import { useMirror, type ToolTabKey } from "@/lib/mirror-store";
 import { WORKSPACES, WORKSPACE_ORDER } from "@/lib/mirror/workspaces";
 import { runWorkspaceCleanup } from "@/lib/mirror/workspace-lifecycle";
@@ -29,8 +29,9 @@ import { cn } from "@/lib/utils";
 
 /* the loading scaffold — still, honest, scope-tinted: the shape of a
    room about to stand (no spinner loop, no shimmer — the house's calm
-   laws hold even while a chunk travels) */
-function PageScaffold() {
+   laws hold even while a chunk travels). Exported so the advanced
+   desktop's dock panels wear the same quiet scaffold. */
+export function PageScaffold() {
   return (
     <div className="absolute inset-0 flex flex-col gap-3 p-4" aria-hidden="true">
       <div className="flex items-center gap-2">
@@ -89,14 +90,35 @@ const PAGE_VIEWS = WORKSPACE_ORDER.reduce(
   {} as Record<ToolTabKey, ComponentType>
 );
 
+/* THE ADVANCED DESKTOP — the dock is its own lazy chunk: while the
+   dock is off, zero dockview code rides in the tree (the chunk only
+   travels when the visitor first turns the dock on). */
+const WorkspaceDock = dynamic(
+  () => import("./workspace-dock/WorkspaceDock"),
+  {
+    ssr: false,
+    loading: () => (
+      <div
+        className="absolute inset-0 flex items-center justify-center"
+        aria-hidden="true"
+      >
+        <span className="mono-label text-[10px] text-muted-foreground/50">
+          The dock wakes…
+        </span>
+      </div>
+    ),
+  }
+);
+
 /* ------------------------------------------------------------------ */
 /*  THE PAGE BOUNDARY — a room that stumbles lays itself down with     */
 /*  honor: an honest word, a retry hand, the frame never broken. A     */
 /*  provider failure is the page's own weather, never the book's       */
-/*  collapse (the chat beneath keeps standing).                        */
+/*  collapse (the chat beneath keeps standing). Exported so the        */
+/*  advanced desktop's dock panels live under the same honor.          */
 /* ------------------------------------------------------------------ */
 
-class WorkspaceBoundary extends Component<
+export class WorkspaceBoundary extends Component<
   { children: ReactNode; label: string },
   { failed: boolean; nonce: number }
 > {
@@ -189,6 +211,21 @@ function ToolWorkspaceImpl({ bare = false }: { bare?: boolean }) {
      the same work, only bigger. Nothing moves elsewhere; the portal
      simply lifts the frame above every transform. */
   const [zoomed, setZoomed] = useState(false);
+  /* THE ADVANCED DESKTOP — an opt-in docking mode for wide frames
+     (≥1024px): the same rooms, several at once, dragged into place.     
+     A viewport that narrows below the law lays the dock down gently —
+     the single-panel view returns with the last active room. */
+  const [dockOn, setDockOn] = useState(false);
+  useEffect(() => {
+    if (!dockOn) return;
+    const mql = window.matchMedia("(min-width: 1024px)");
+    const onChange = () => {
+      if (!mql.matches) setDockOn(false);
+    };
+    mql.addEventListener("change", onChange);
+    return () => mql.removeEventListener("change", onChange);
+  }, [dockOn]);
+
   /* a tab turn lays the zoom down — adjusted during render (the React
      way to reset state when a watched value changes), never in an
      effect, so the room that opens always opens at its own size */
@@ -275,7 +312,10 @@ function ToolWorkspaceImpl({ bare = false }: { bare?: boolean }) {
       data-testid="tool-workspace"
       data-workplace="true"
       data-zoomed={zoomed || undefined}
-      data-resource-profile={activeMeta.resourceProfile}
+      data-dock={dockOn ? "on" : undefined}
+      data-resource-profile={
+        dockOn ? "multi" : (activeMeta?.resourceProfile ?? undefined)
+      }
       className={cn(
         "pointer-events-auto flex flex-col overflow-hidden border bg-background shadow-[0_24px_70px_-30px_rgba(0,0,0,0.6)]",
         zoomed
@@ -292,7 +332,7 @@ function ToolWorkspaceImpl({ bare = false }: { bare?: boolean }) {
           room wears the house's light: var(--scope-a) is the scope the
           visitor chose (LandingGate sets it on the whole chamber), so
           every workplace tints itself with its own house. */}
-      <div className="flex h-9 shrink-0 items-center gap-1 overflow-x-auto px-1">
+      <div className="relative z-10 flex h-9 shrink-0 items-center gap-1 overflow-x-auto px-1">
         {/* THE ONE BACK HAND — the single return every tool and every
             room shares: leftmost, always the same place */}
         <button
@@ -363,6 +403,31 @@ function ToolWorkspaceImpl({ bare = false }: { bare?: boolean }) {
 
         <span className="flex-1" aria-hidden="true" />
 
+        {/* THE ADVANCED DESKTOP HAND — an opt-in for wide frames only
+            (hidden below 1024px): one glass icon toggles the docking
+            mode. The after-pseudo widens the touch target to the
+            house's 44px law without swelling the header row. */}
+        <button
+          type="button"
+          onClick={() => setDockOn((d) => !d)}
+          aria-pressed={dockOn}
+          aria-label={t("Advanced desktop")}
+          title={t("Advanced desktop")}
+          data-testid="tool-workspace-dock-toggle"
+          className="focus-glow relative mr-1 hidden size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors duration-300 after:absolute after:-inset-2 after:rounded-full after:content-[''] hover:bg-foreground/10 hover:text-foreground lg:inline-flex"
+          style={
+            dockOn
+              ? {
+                  backgroundColor:
+                    "color-mix(in srgb, var(--scope-a,var(--gd)) 12%, transparent)",
+                  color: "var(--scope-a,var(--gd))",
+                }
+              : undefined
+          }
+        >
+          <Columns className="size-3.5" aria-hidden="true" />
+        </button>
+
         {/* THE ROOM'S OWN ZOOM — the same room, the same state, the
             same work: only bigger. One hand serves every tool; the
             room never moves elsewhere, it simply fills the sky. */}
@@ -405,13 +470,21 @@ function ToolWorkspaceImpl({ bare = false }: { bare?: boolean }) {
         }}
       />
 
-      {/* THE BODY — the active page fills the window inside its own
+      {/* THE BODY — two laws, one frame. The DEFAULT stays as the house
+          built it: the active page fills the window inside its own
           boundary (a stumble lays the page down with honor, never the
           book); the keyed mount gives every tab its own clean scroll.
-          A whisper of the house's light washes the workplace's ceiling
-          (pointer-events-none, no blur, no motion). */}
+          When the ADVANCED DESKTOP is on (desktop widths only), the
+          dock fills the same body instead — the same rooms, several at
+          once — and the dock's own toolbar stands above it. Turning
+          the dock off unmounts it fully; the single view returns with
+          the room whose panel was last active. */}
       <div className="relative min-h-0 flex-1">
-        {ActiveView && active ? (
+        {dockOn ? (
+          <div key="dock" className="absolute inset-0">
+            <WorkspaceDock />
+          </div>
+        ) : ActiveView && active ? (
           <div key={active} className="absolute inset-0">
             <WorkspaceBoundary label={t(activeMeta.title)}>
               <ActiveView />

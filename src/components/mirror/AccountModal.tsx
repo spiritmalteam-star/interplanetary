@@ -9,14 +9,17 @@ import {
   Gauge,
   Gem,
   KeyRound,
+  LoaderCircle,
+  Moon,
   Plus,
   ShieldCheck,
+  ShoppingBag,
   Sparkles,
+  Star,
   Trash2,
 } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
-import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ModalShell } from "./ModalShell";
 
@@ -70,6 +73,44 @@ const fmtCredits = (n: number) => n.toLocaleString("en-US");
 const fmtDate = (iso: string | null) =>
   iso ? new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—";
 
+/* THE MOON PASSES — the subscription doors beside the credit packs.
+   THE SAME SHAPES THE PURSE KEEPER WEARS (WalletGuard's own ladder,
+   copied word for word): two monthly passes and the once-only pouch,
+   each riding /api/billing/checkout with the key its branch reads —
+   { plan } for the passes, { pack: "topup" } for the pouch. */
+const PASSES = [
+  {
+    id: "SEEKER",
+    plan: "SEEKER",
+    name: "Seeker",
+    price: "$9.99",
+    cadence: "/ month",
+    credits: "100 credits every moon",
+    note: "The daily reflections, the readings, the small ateliers.",
+    icon: Moon,
+  },
+  {
+    id: "OBSERVATORY_PRO",
+    plan: "OBSERVATORY_PRO",
+    name: "Mirror Pro",
+    price: "$19.99",
+    cadence: "/ month",
+    credits: "250 credits every moon",
+    note: "Every door wide open — the deep works included.",
+    icon: Star,
+  },
+  {
+    id: "topup",
+    plan: null,
+    name: "A pouch of light",
+    price: "$4.99",
+    cadence: "once",
+    credits: "50 credits, held until spent",
+    note: "A single fullness — no moon attached.",
+    icon: ShoppingBag,
+  },
+] as const;
+
 export function AccountModal() {
   const t = useT();
   const accountOpen = useMirror((s) => s.accountOpen);
@@ -80,6 +121,8 @@ export function AccountModal() {
   const [loading, setLoading] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  /* the packs are the server's own law — read from the wallet glance */
+  const packs = useMirror((s) => s.walletPacks) ?? [];
 
   /* security form */
   const [currentPw, setCurrentPw] = useState("");
@@ -125,6 +168,8 @@ export function AccountModal() {
     setFreshSecret(null);
     void load();
     void loadKeys();
+    /* the purse read fresh — the packs and the coins answer truly */
+    void useMirror.getState().refreshWallet();
   }, [accountOpen, load, loadKeys]);
 
   if (!accountOpen) return null;
@@ -303,24 +348,14 @@ export function AccountModal() {
                 </div>
                 <div className="flex shrink-0 items-center gap-1.5">
                   {summary.capabilities.stripe ? (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => void billingCall({ plan: "PRO" }, "upgrade")}
-                        disabled={busy === "upgrade"}
-                        className="focus-glow rounded-full border hairline px-3.5 py-1.5 text-[13px] text-foreground/90 transition-all hover:border-[var(--hairline-hover)] hover:glow-sm disabled:opacity-50"
-                      >
-                        {t("Upgrade")}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => void portalCall()}
-                        disabled={busy === "portal"}
-                        className="focus-glow rounded-full border hairline px-3.5 py-1.5 text-[13px] text-foreground/90 transition-all hover:border-[var(--hairline-hover)] hover:glow-sm disabled:opacity-50"
-                      >
-                        {t("Manage billing")}
-                      </button>
-                    </>
+                    <button
+                      type="button"
+                      onClick={() => void portalCall()}
+                      disabled={busy === "portal"}
+                      className="focus-glow rounded-full border hairline px-3.5 py-1.5 text-[13px] text-foreground/90 transition-all hover:border-[var(--hairline-hover)] hover:glow-sm disabled:opacity-50"
+                    >
+                      {t("Manage billing")}
+                    </button>
                   ) : (
                     <span className="mono-label flex items-center gap-1.5 rounded-full border hairline px-3 py-1.5 text-[9.5px] uppercase tracking-[0.14em] text-muted-foreground">
                       <Gem className="size-3" aria-hidden="true" />
@@ -346,16 +381,6 @@ export function AccountModal() {
                     <span className="ml-1.5 text-[13px] font-normal text-muted-foreground">/ {fmtCredits(grant)}</span>
                   </p>
                 </div>
-                {summary.capabilities.stripe && (
-                  <button
-                    type="button"
-                    onClick={() => void billingCall({ pack: "pack_10k" }, "pack")}
-                    disabled={busy === "pack"}
-                    className="focus-glow rounded-full border hairline px-3.5 py-1.5 text-[13px] text-foreground/90 transition-all hover:border-[var(--hairline-hover)] hover:glow-sm disabled:opacity-50"
-                  >
-                    {t("Buy credits")}
-                  </button>
-                )}
               </div>
               <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[var(--glass-bg)]" role="progressbar" aria-valuenow={Math.round(usedPct)} aria-valuemin={0} aria-valuemax={100}>
                 <div
@@ -416,29 +441,112 @@ export function AccountModal() {
                     {summary.wallet.planTier}
                   </span>
                 </div>
-                {/* the plan ladder — the frontier's own structure */}
-                <div className="mt-3 grid gap-1.5 border-t hairline pt-3 sm:grid-cols-3">
-                  {summary.offers.plans.map((p) => (
+                {/* THE CREDIT PACKS — the creator economy's own filling:
+                    the server's own law (100 · 250 · 700 lights, one purse
+                    across music, books and the akashic readings), read
+                    fresh from the wallet glance. The checkout rides the
+                    pack's own key — { pack: id } — and the signed webhook
+                    stays the only hand that fills the purse. */}
+                <div className="mt-3 space-y-1.5 border-t hairline pt-3">
+                  <p className="mono-label px-1 text-[9px] uppercase tracking-[0.18em] text-muted-foreground/70">
+                    {t("Fill the purse — light held until spent")}
+                  </p>
+                  {packs.map((p) => (
                     <div
                       key={p.id}
-                      className={cn(
-                        "rounded-lg border px-2.5 py-2",
-                        p.available ? "hairline bg-[var(--glass-bg)]" : "border-dashed hairline opacity-60"
-                      )}
+                      data-testid={`account-pack-${p.id}`}
+                      className="flex items-center gap-3 rounded-xl border hairline bg-[var(--glass-bg)] p-3 transition-colors hover:border-[var(--hairline-hover)]"
                     >
-                      <p className="truncate text-[12.5px] font-medium text-foreground/90">{p.label}</p>
-                      <p className="mono-label mt-0.5 text-[9px] uppercase tracking-[0.1em] text-muted-foreground">
-                        {p.priceCents > 0 ? `$${(p.priceCents / 100).toFixed(0)}/${t("mo")}` : t("Free")}
-                        {" · "}{fmtCredits(p.monthlyCredits)} {t("credits")}
-                      </p>
+                      <div className="flex size-9 shrink-0 items-center justify-center rounded-full border hairline bg-[var(--glass-bg-soft)]">
+                        <ShoppingBag className="size-4 text-muted-foreground" aria-hidden="true" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[14px] font-medium text-foreground/90">
+                          {p.credits} {t("lights")}
+                          <span className="ml-2 text-[13px] font-normal text-muted-foreground">
+                            €{(p.priceCents / 100).toFixed(0)}
+                          </span>
+                        </p>
+                        <p className="truncate text-[12.5px] text-muted-foreground">{t(p.note)}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => void billingCall({ pack: p.id }, p.id)}
+                        disabled={busy !== null}
+                        className="focus-glow shrink-0 rounded-full border hairline px-3.5 py-1.5 text-[13px] text-foreground/90 transition-all hover:border-[var(--hairline-hover)] hover:glow-sm disabled:opacity-50"
+                      >
+                        {busy === p.id ? (
+                          <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
+                        ) : (
+                          t("Choose")
+                        )}
+                      </button>
                     </div>
                   ))}
+                  {packs.length === 0 && (
+                    <p className="px-1 text-[13px] text-muted-foreground">
+                      {t("The packs are being laid out — a moment.")}
+                    </p>
+                  )}
                 </div>
-                {summary.capabilities.stripe && (
-                  <p className="mt-2 text-[12px] text-muted-foreground/80">
-                    {t("When a plan is paid, the Fuel Engine fills the purse behind it — the coins land on their own.")}
+
+                {/* THE MOON PASSES — the subscriptions beside the packs,
+                    the same shapes and prices the purse keeper wears:
+                    { plan: "SEEKER" | "OBSERVATORY_PRO" } for the passes,
+                    { pack: "topup" } for the once-only pouch. */}
+                <div className="mt-3 space-y-1.5">
+                  <p className="mono-label px-1 text-[9px] uppercase tracking-[0.18em] text-muted-foreground/70">
+                    {t("Moon passes — light that arrives every month")}
                   </p>
-                )}
+                  {PASSES.map((p) => {
+                    const Icon = p.icon;
+                    return (
+                      <div
+                        key={p.id}
+                        data-testid={`account-pass-${p.id}`}
+                        className="flex items-center gap-3 rounded-xl border hairline bg-[var(--glass-bg)] p-3 transition-colors hover:border-[var(--hairline-hover)]"
+                      >
+                        <div className="flex size-9 shrink-0 items-center justify-center rounded-full border hairline bg-[var(--glass-bg-soft)]">
+                          <Icon className="size-4 text-muted-foreground" aria-hidden="true" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[14px] font-medium text-foreground/90">
+                            {p.name}
+                            <span className="ml-2 text-[13px] font-normal text-muted-foreground">
+                              {p.price} {t(p.cadence)}
+                            </span>
+                          </p>
+                          <p className="truncate text-[12.5px] text-muted-foreground">
+                            {t(p.credits)} · {t(p.note)}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            void billingCall(
+                              p.plan ? { plan: p.plan } : { pack: p.id },
+                              p.id
+                            )
+                          }
+                          disabled={busy !== null}
+                          className="focus-glow shrink-0 rounded-full border hairline px-3.5 py-1.5 text-[13px] text-foreground/90 transition-all hover:border-[var(--hairline-hover)] hover:glow-sm disabled:opacity-50"
+                        >
+                          {busy === p.id ? (
+                            <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
+                          ) : (
+                            t("Choose")
+                          )}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+                <p className="mt-2 flex items-start gap-1.5 px-1 text-[12px] leading-relaxed text-muted-foreground/80">
+                  <Sparkles className="mt-0.5 size-3 shrink-0" aria-hidden="true" />
+                  {t(
+                    "One purse for every creation — a music preview 2 · a full song 5 · the endless journey 15 · an akashic reading 5 · a short book 15 · an extended book 40."
+                  )}
+                </p>
               </section>
             )}
 
@@ -470,22 +578,11 @@ export function AccountModal() {
               )}
             </section>
 
-            {/* -------- the ledger -------- */}
-            {summary.transactions.length > 0 && (
-              <section aria-label={t("Recent ledger")} className="rounded-xl border hairline bg-[var(--glass-bg-soft)] p-4">
-                <p className="mono-label text-[9.5px] uppercase tracking-[0.18em] text-muted-foreground">{t("Recent ledger")}</p>
-                <ul className="mt-2.5 max-h-36 space-y-1.5 overflow-y-auto nice-scroll">
-                  {summary.transactions.map((tx) => (
-                    <li key={tx.id} className="flex items-center justify-between gap-3 text-[13px]">
-                      <span className="min-w-0 flex-1 truncate text-muted-foreground">{tx.description}</span>
-                      <span className={`shrink-0 tabular-nums ${tx.amount >= 0 ? "text-[var(--cy)]" : "text-foreground/70"}`}>
-                        {tx.amount >= 0 ? "+" : "−"}{fmtCredits(Math.abs(tx.amount))}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            )}
+            {/* THE LEDGER'S TRUTH HAS MOVED HOME — the legacy
+                CreditTransaction rows are gone with the old economy; the
+                purse's own book of movements (CreditLedger, the server's
+                law) now lives in the profile's Transactions room, read
+                from /api/wallet/ledger. */}
 
             {/* -------- security -------- */}
             <section aria-label={t("Security")} className="rounded-xl border hairline bg-[var(--glass-bg-soft)] p-4">

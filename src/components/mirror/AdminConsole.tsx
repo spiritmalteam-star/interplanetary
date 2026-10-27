@@ -5,6 +5,7 @@ import { LoaderCircle, Search, ShieldCheck } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import { EconomyCharts } from "@/components/mirror/admin/EconomyCharts";
 
 /* ------------------------------------------------------------------ */
 /*  THE KEEPER'S CONSOLE — the platform administration panel. Only     */
@@ -52,6 +53,13 @@ interface AuditRow {
   at: string;
 }
 
+/** the chartable series the glance carries beside its older fields */
+interface EconomyAnalytics {
+  since: string;
+  daily: { date: string; spent: number; granted: number }[];
+  byAction: { actionType: string; count: number; totalCredits: number }[];
+}
+
 interface EconomyData {
   overview: EconomyOverview;
   usage: { operation: string; count: number }[];
@@ -73,6 +81,7 @@ interface EconomyData {
     limits: Record<string, number>;
   };
   audit: AuditRow[];
+  analytics?: EconomyAnalytics;
 }
 
 function StatCell({ k, v, warn }: { k: string; v: string | number; warn?: boolean }) {
@@ -405,6 +414,14 @@ export function AdminConsole() {
           {t("The packs ride their launch shape:")}{" "}
           {data.packs.map((p) => `${p.credits}✦ €${(p.priceCents / 100).toFixed(0)}`).join(" · ")}
         </p>
+      </section>
+
+      {/* ---------- the ledger's thirty days ---------- */}
+      <section>
+        <p className="mono-label mb-2 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+          {t("The ledger's thirty days")}
+        </p>
+        <EconomyCharts />
       </section>
 
       {/* ---------- the ledger's newest movements ---------- */}

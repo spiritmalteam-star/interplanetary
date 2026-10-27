@@ -9,6 +9,7 @@ import { CosmicBackdrop } from "./CosmicBackdrop";
 import { StarField } from "./StarField";
 import { ToolWorkspace } from "./living/ToolWorkspace";
 import { LandingChatNav } from "./landing/LandingChatNav";
+import { CreditBadge } from "./CreditBadge";
 import { WalletGuard } from "./WalletGuard";
 import { BranchCanopy } from "./BranchCanopy";
 import { ReplyBranches } from "./ReplyBranches";
@@ -294,19 +295,17 @@ function AppShellViews({
         liveError={channel.error}
         liveMessage={lastChannelMsg}
         realmControls={
-          /* THE ONE CHAT'S OWN CROWN — the LandingChatNav is the main
-             navigator of the one and only chat and stands in BOTH
-             gears (docked and fullscreen): Create (the making rooms
-             open as tabs at the chat's own size), Scopes (the floor's
-             own field of light) and the Profile hand (the visitor's
-             room, framed like the chat). The crossing's gear hand —
-             the fullscreen while docked, the landing while full — no
-             longer rides this row: it stands at the crown's own
-             CORNER (BranchCanopy wears it), where the old
-             hide-the-chat arrow used to live. THE FREE LAW — the
+          /* THE CROWN'S OWN PURSE — the wallet pill rides beside the
+             navigator, one row with it (the profile icon and the light's
+             toggle stand just before): the purse always in sight, one
+             touch opening the visitor's own room where the Transactions
+             book and the account chamber live. THE FREE LAW — the
              crossing wears no coin: the whole realm stands open to
              every visitor, no passage demanded, nothing acquired. */
-          <LandingChatNav />
+          <div className="flex items-center gap-1.5">
+            <CreditBadge />
+            <LandingChatNav />
+          </div>
         }
       />
 

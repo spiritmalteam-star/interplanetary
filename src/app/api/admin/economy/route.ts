@@ -19,7 +19,9 @@ import { LC_LIMITS, getLcEngineStatus } from "@/lib/server/lc-engine";
 /*                                                                     */
 /*  GET            → the whole ledger's glance: users, liability,      */
 /*                   purchases, spends, refunds, the engines' own      */
-/*                   honesty, the standing prices and packs.           */
+/*                   honesty, the standing prices and packs, plus      */
+/*                   `analytics` — the ledger's last thirty days as    */
+/*                   chartable series (daily tide + credits by door).  */
 /*  POST grant     → lay credits into a passage's wallet (audited).    */
 /*  POST deduct    → draw credits out, never below zero (audited).     */
 /*  POST setPrices → move the standing prices of the paid creations.   */
@@ -90,14 +92,69 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ users: withSpent });
     }
 
-    const [userCount, wallets, ledger, usage, prices, lcEngine] = await Promise.all([
+    /* ---------- the ledger's thirty days — the economy's own tide ----- */
+    /* Every wallet ActionType (src/lib/server/wallet.ts): CHAT, AKASHIC, */
+    /* ART_X, LIGHT_CODES, DREAM_BOOK, SUBSCRIPTION_GRANT, TOPUP_PURCHASE. */
+    /* Signed law (prisma/schema.prisma): creditsDeducted < 0 = a spend,   */
+    /* > 0 = credits laid into a purse (grant, topup or refund). The       */
+    /* zero-cost CHAT rows (creditsDeducted = 0) weigh nothing on either   */
+    /* side of the tide.                                                   */
+    const since = new Date();
+    since.setUTCHours(0, 0, 0, 0);
+    since.setUTCDate(since.getUTCDate() - 29);
+
+    const [userCount, wallets, ledger, usage, prices, lcEngine, flowRows] = await Promise.all([
       db.user.count(),
       db.userWallet.findMany({ select: { freeCreditsRemaining: true, paidCreditsRemaining: true, depositCredits: true, planTier: true } }),
       db.creditLedger.findMany({ orderBy: { createdAt: "desc" }, take: 400, select: { actionType: true, creditsDeducted: true, metadata: true, createdAt: true, userId: true } }),
       db.usageEvent.groupBy({ by: ["operation"], _count: { _all: true }, where: { success: true } }),
       servicePrices(),
       Promise.resolve(getLcEngineStatus()),
+      db.creditLedger.findMany({
+        where: { createdAt: { gte: since } },
+        select: { actionType: true, creditsDeducted: true, createdAt: true },
+        orderBy: { createdAt: "asc" },
+      }),
     ]);
+
+    /* the continuous calendar: thirty UTC days, gaps filled with zero so
+       the chart never lies by omission */
+    const dayKey = (d: Date) => d.toISOString().slice(0, 10);
+    const DAY_MS = 86_400_000;
+    const byDay = new Map<string, { spent: number; granted: number }>();
+    const daily: { date: string; spent: number; granted: number }[] = [];
+    for (let i = 0; i < 30; i++) {
+      const key = dayKey(new Date(since.getTime() + i * DAY_MS));
+      const bucket = { spent: 0, granted: 0 };
+      byDay.set(key, bucket);
+      daily.push({ date: key, ...bucket });
+    }
+    const byActionMap = new Map<string, { count: number; totalCredits: number }>();
+    for (const row of flowRows) {
+      /* Number() first — the ledger's past BigInt crash is never reintroduced */
+      const delta = Number(row.creditsDeducted ?? 0);
+      const bucket = byDay.get(dayKey(row.createdAt));
+      if (bucket) {
+        if (delta < 0) bucket.spent += -delta;
+        else if (delta > 0) bucket.granted += delta;
+      }
+      const action = byActionMap.get(row.actionType) ?? { count: 0, totalCredits: 0 };
+      action.count += 1;
+      action.totalCredits += delta;
+      byActionMap.set(row.actionType, action);
+    }
+    for (const point of daily) {
+      const bucket = byDay.get(point.date);
+      if (bucket) {
+        point.spent = bucket.spent;
+        point.granted = bucket.granted;
+      }
+    }
+    const byAction = Array.from(byActionMap.entries())
+      .map(([actionType, v]) => ({ actionType, count: v.count, totalCredits: v.totalCredits }))
+      .sort((a, b) => Math.abs(b.totalCredits) - Math.abs(a.totalCredits) || b.count - a.count);
+
+    const analytics = { since: dayKey(since), daily, byAction };
 
     const creditLiability = wallets.reduce(
       (sum, w) => sum + w.freeCreditsRemaining + w.paidCreditsRemaining + Number(w.depositCredits ?? BigInt(0)),
@@ -158,6 +215,7 @@ export async function GET(req: NextRequest) {
       limits: LC_LIMITS,
       lcEngine,
       audit,
+      analytics,
     });
   } catch (err) {
     console.error("[admin/economy] the glance failed:", err instanceof Error ? err.message : err);
