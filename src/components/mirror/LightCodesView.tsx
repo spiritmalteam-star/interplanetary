@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   AudioLines,
@@ -12,6 +12,7 @@ import {
   Eye,
   Feather,
   Gauge,
+  Mic,
   Music4,
   Pause,
   Play,
@@ -19,14 +20,18 @@ import {
   Repeat,
   Send,
   Sparkles,
+  Square,
   Trash2,
   Undo2,
+  Volume2,
+  VolumeX,
   Wand2,
   X,
 } from "lucide-react";
 import Image from "next/image";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
+import { useVoiceRecorder } from "@/hooks/use-voice-recorder";
 import { MusicSequencer } from "./living/MusicSequencer";
 import { MirrorBridge } from "./living/MirrorBridge";
 import {
@@ -91,24 +96,22 @@ function SigilMark({ src, className }: { src: string; className: string }) {
   );
 }
 
-/** A tiny deterministic pseudo-wave, so every track has its own face. */
-function waveHeights(seed: string, bars = 34): number[] {
-  let h = 0;
-  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
-  const heights: number[] = [];
-  for (let i = 0; i < bars; i++) {
-    h = (h * 1103515245 + 12345) >>> 0;
-    const base = 0.18 + ((h >>> 8) % 1000) / 1000 * 0.82;
-    const swell = 0.55 + 0.45 * Math.sin((i / bars) * Math.PI * 2.2);
-    heights.push(Math.max(0.14, Math.min(1, base * swell)));
-  }
-  return heights;
-}
-
 function fmtTime(s: number): string {
   if (!Number.isFinite(s) || s < 0) return "0:00";
   const m = Math.floor(s / 60);
   const r = Math.floor(s % 60);
+  return `${m}:${r.toString().padStart(2, "0")}`;
+}
+
+/** The long clock — a journey of half an hour and beyond reads its
+    hours honestly instead of folding into an endless minute count. */
+function fmtTimeLong(s: number): string {
+  if (!Number.isFinite(s) || s < 0) return "0:00";
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const r = Math.floor(s % 60);
+  if (h > 0)
+    return `${h}:${m.toString().padStart(2, "0")}:${r.toString().padStart(2, "0")}`;
   return `${m}:${r.toString().padStart(2, "0")}`;
 }
 
@@ -162,40 +165,234 @@ function ModeCard({
 
 /* --------------------------- the player ------------------------------ */
 
-function Waveform({
-  seed,
+/* THE WAVEFORM'S HONESTY LAW: the wave on the page is either the
+   sound's own peaks (WaveSurfer, reading the real audio) or a plain
+   progress line — never a decorative imitation of a waveform that
+   was never measured. The endless journeys ride the plain line: a
+   half-hour piece is never decoded into memory just to be looked at. */
+
+function HonestTimeline({
   progress,
-  playing,
+  onSeek,
 }: {
-  seed: string;
   progress: number;
-  playing: boolean;
+  onSeek: (ratio: number) => void;
 }) {
-  const bars = useMemo(() => waveHeights(seed), [seed]);
   return (
-    <div className="flex h-12 items-center gap-[2.5px]" aria-hidden="true">
-      {bars.map((h, i) => {
-        const lit = i / bars.length <= progress;
-        return (
-          <span
-            key={i}
-            className={cn(
-              "w-[3px] flex-1 rounded-full transition-[background-color] duration-200",
-              lit
-                ? "bg-[var(--scope-a)]"
-                : "bg-[color-mix(in_srgb,var(--scope-a)_22%,transparent)]"
-            )}
-            style={{
-              height: `${Math.round(h * 100 * (playing && lit ? 1.08 : 1))}%`,
-              animation:
-                playing && lit
-                  ? `lc-wave 1.4s ease-in-out ${i * 0.045}s infinite`
-                  : undefined,
-            }}
-          />
-        );
-      })}
+    <div
+      className="flex h-12 items-center"
+      role="slider"
+      aria-label="Seek within the transmission"
+      aria-valuenow={Math.round(progress * 100)}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      tabIndex={0}
+      data-testid="lc-timeline"
+      onClick={(e) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        onSeek(Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width)));
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "ArrowRight") onSeek(Math.min(1, progress + 0.02));
+        if (e.key === "ArrowLeft") onSeek(Math.max(0, progress - 0.02));
+      }}
+    >
+      <div className="relative h-[3px] w-full rounded-full bg-[color-mix(in_srgb,var(--scope-a)_20%,transparent)]">
+        <div
+          className="absolute inset-y-0 left-0 rounded-full bg-[var(--scope-a)]"
+          style={{ width: `${Math.round(progress * 100)}%` }}
+        />
+        <div
+          className="absolute top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--scope-a)] shadow-[0_0_10px_-2px_var(--scope-a)]"
+          style={{ left: `${Math.round(progress * 100)}%` }}
+        />
+      </div>
     </div>
+  );
+}
+
+/** The real wave — the sound's own peaks, drawn by WaveSurfer against
+    the very element that plays. Never decoded for the long journeys. */
+function WaveSurferWave({
+  audioEl,
+  onFallback,
+}: {
+  audioEl: HTMLAudioElement | null;
+  onFallback: () => void;
+}) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    let instance: import("wavesurfer.js").default | null = null;
+    if (!audioEl || !containerRef.current) return;
+    const styles = getComputedStyle(document.documentElement);
+    const scopeA = styles.getPropertyValue("--scope-a").trim() || "#9d8fd4";
+    const scopeB = styles.getPropertyValue("--scope-b").trim() || "#d8c9a8";
+    import("wavesurfer.js")
+      .then(({ default: WS }) => {
+        if (cancelled || !containerRef.current) return;
+        const created = WS.create({
+          container: containerRef.current,
+          media: audioEl,
+          height: 48,
+          barWidth: 2,
+          barGap: 1,
+          barRadius: 2,
+          normalize: true,
+          cursorWidth: 1,
+          waveColor: scopeA,
+          progressColor: scopeB,
+          cursorColor: scopeB,
+        });
+        instance = created;
+        created.on("error", () => onFallback());
+      })
+      .catch(() => {
+        if (!cancelled) onFallback();
+      });
+    return () => {
+      cancelled = true;
+      try {
+        instance?.destroy();
+      } catch {
+        /* already gone */
+      }
+    };
+  }, [audioEl]);
+  return <div ref={containerRef} data-testid="lc-wave-real" className="h-12" />;
+}
+
+/* --------------------- the voice's own door -------------------------- */
+/*  THE SIMPLEST ASK — the visitor speaks the music they want to hear;
+    the house transcribes their voice and the Mirror proceeds. The
+    spoken words are the visitor's own intention, and the First Law
+    gives them authority over every selector. */
+
+function blobToDataUrl(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(new Error("the recording could not be read"));
+    reader.readAsDataURL(blob);
+  });
+}
+
+function VoiceRecordButton({
+  onTranscript,
+  disabled,
+  testId,
+  compact,
+}: {
+  onTranscript: (text: string) => void;
+  disabled?: boolean;
+  testId: string;
+  compact?: boolean;
+}) {
+  const t = useT();
+  const rec = useVoiceRecorder();
+  const [busyAsr, setBusyAsr] = useState(false);
+  const [note, setNote] = useState<string | null>(null);
+
+  const stopAndSend = async () => {
+    const result = await rec.stop();
+    if (!result) return;
+    if (result.durationMs < 600) {
+      setNote(t("A breath too short — speak once more."));
+      return;
+    }
+    setBusyAsr(true);
+    setNote(null);
+    try {
+      const audio = await blobToDataUrl(result.wav);
+      const res = await fetch("/api/asr", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ audio }),
+      });
+      const data = (await res.json().catch(() => null)) as {
+        text?: string;
+        error?: string;
+      } | null;
+      const text = data?.text?.trim();
+      if (!res.ok || !text) {
+        setNote(t("The words didn't land — speak once more, a little closer."));
+        return;
+      }
+      onTranscript(text.slice(0, 600));
+    } catch {
+      setNote(t("The words didn't land — speak once more."));
+    } finally {
+      setBusyAsr(false);
+    }
+  };
+
+  const size = compact ? "size-10" : "size-11";
+  return (
+    <span className="relative inline-flex shrink-0">
+      <button
+        type="button"
+        onClick={() => {
+          setNote(null);
+          if (rec.recording) void stopAndSend();
+          else void rec.start();
+        }}
+        disabled={disabled || busyAsr || rec.error === "unavailable"}
+        aria-label={
+          rec.recording
+            ? t("Stop speaking")
+            : t("Speak the music you want to hear")
+        }
+        title={
+          rec.error === "denied"
+            ? t("The microphone was not given passage — allow it in the browser")
+            : undefined
+        }
+        data-testid={testId}
+        aria-pressed={rec.recording}
+        className={cn(
+          "focus-glow flex items-center justify-center rounded-full border transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-35",
+          size,
+          rec.recording
+            ? "border-[color-mix(in_srgb,var(--destructive)_55%,transparent)] bg-[color-mix(in_srgb,var(--destructive)_12%,transparent)] text-[var(--destructive)]"
+            : cn(
+                GOLD_PILL,
+                "text-muted-foreground hover:text-foreground"
+              )
+        )}
+      >
+        {busyAsr ? (
+          <span
+            className="size-3.5 animate-spin rounded-full border border-current border-t-transparent"
+            aria-hidden="true"
+          />
+        ) : rec.recording ? (
+          <Square className="size-3.5" aria-hidden="true" />
+        ) : (
+          <Mic className={compact ? "size-3.5" : "size-4"} aria-hidden="true" />
+        )}
+      </button>
+      {rec.recording && (
+        <span
+          role="status"
+          className={cn(
+            "absolute -top-8 right-0 flex items-center gap-1.5 whitespace-nowrap rounded-full border hairline bg-card px-2.5 py-1 text-[11px] text-foreground/85 shadow-sm",
+            compact ? "-top-9" : ""
+          )}
+          data-testid={`${testId}-listening`}
+        >
+          <span className="size-1.5 animate-pulse rounded-full bg-[var(--destructive)]" aria-hidden="true" />
+          {t("Listening — speak the music you want to hear")}
+        </span>
+      )}
+      {note && (
+        <span
+          role="status"
+          className="absolute -top-8 right-0 whitespace-nowrap rounded-full border hairline bg-card px-2.5 py-1 text-[11px] text-muted-foreground shadow-sm"
+        >
+          {note}
+        </span>
+      )}
+    </span>
   );
 }
 
@@ -208,11 +405,20 @@ function Player() {
     LC_MODES.find((m) => m.id === track.mode)?.name ?? track.mode;
   const t = useT();
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [audioEl, setAudioEl] = useState<HTMLAudioElement | null>(null);
   const [playing, setPlaying] = useState(false);
   const [time, setTime] = useState(0);
   const [dur, setDur] = useState(track.duration ?? 0);
-  const [loop, setLoop] = useState(false);
+  /* the endless journeys are born to turn — their loop stands on from birth */
+  const [loop, setLoop] = useState(track.length === "loop");
   const [showTranslation, setShowTranslation] = useState(false);
+  const [volume, setVolume] = useState(1);
+  const [muted, setMuted] = useState(false);
+  /* the honest wave: real peaks when the piece is small enough to
+     read them from; a plain line for the long journeys and when the
+     wave cannot be read at all */
+  const [waveFailed, setWaveFailed] = useState(false);
+  const realWaveAllowed = track.length !== "loop" && !waveFailed;
 
   const progress = dur > 0 ? Math.min(1, time / dur) : 0;
 
@@ -223,12 +429,20 @@ function Player() {
     else el.pause();
   };
 
-  const seek = (e: React.MouseEvent<HTMLDivElement>) => {
+  const seekTo = (ratio: number) => {
     const el = audioRef.current;
     if (!el || !dur) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const ratio = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
     el.currentTime = ratio * dur;
+  };
+
+  const applyVolume = (v: number, mute?: boolean) => {
+    const el = audioRef.current;
+    setVolume(v);
+    if (typeof mute === "boolean") setMuted(mute);
+    if (el) {
+      el.volume = v;
+      el.muted = typeof mute === "boolean" ? mute : muted;
+    }
   };
 
   return (
@@ -240,7 +454,10 @@ function Player() {
       data-testid="lc-player"
     >
       <audio
-        ref={audioRef}
+        ref={(el) => {
+          audioRef.current = el;
+          setAudioEl(el);
+        }}
         src={track.audioUrl}
         loop={loop}
         onPlay={() => setPlaying(true)}
@@ -248,8 +465,11 @@ function Player() {
         onEnded={() => setPlaying(false)}
         onTimeUpdate={(e) => setTime(e.currentTarget.currentTime)}
         onLoadedMetadata={(e) => {
-          if (Number.isFinite(e.currentTarget.duration)) {
-            setDur(e.currentTarget.duration);
+          const el = e.currentTarget;
+          if (Number.isFinite(el.duration)) {
+            setDur(el.duration);
+            el.volume = volume;
+            el.muted = muted;
           }
         }}
       />
@@ -260,7 +480,11 @@ function Player() {
             data-testid="lc-player-mode"
           >
             {t(modeName)}
-            {track.length === "full" ? " · full song" : " · preview"}
+            {track.length === "full"
+              ? " · full song"
+              : track.length === "loop"
+                ? " · endless journey"
+                : " · preview"}
           </p>
           <h3 className="mt-0.5 truncate font-serif text-[18px] font-semibold text-foreground">
             {track.title}
@@ -276,22 +500,26 @@ function Player() {
         </button>
       </div>
 
-      {/* waveform */}
-      <div
-        className="mt-3 cursor-pointer"
-        onClick={seek}
-        role="slider"
-        aria-label={t("Seek within the transmission")}
-        aria-valuenow={Math.round(progress * 100)}
-        aria-valuemin={0}
-        aria-valuemax={100}
-        tabIndex={0}
-      >
-        <Waveform seed={track.id + track.title} progress={progress} playing={playing} />
-      </div>
+      {/* the wave — the sound's own peaks, or the honest line */}
+      {realWaveAllowed ? (
+        <WaveSurferWave
+          key={track.id}
+          audioEl={audioEl}
+          onFallback={() => setWaveFailed(true)}
+        />
+      ) : (
+        <HonestTimeline progress={progress} onSeek={seekTo} />
+      )}
+      {track.length === "loop" && (
+        <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground/70">
+          {t(
+            "The journey turns on itself — when it ends it begins again, for as long as you listen."
+          )}
+        </p>
+      )}
       <div className="mt-1.5 flex items-center justify-between font-mono text-[11.5px] text-muted-foreground">
-        <span>{fmtTime(time)}</span>
-        <span>{fmtTime(dur)}</span>
+        <span>{fmtTimeLong(time)}</span>
+        <span>{fmtTimeLong(dur)}</span>
       </div>
 
       {/* transport */}
@@ -342,6 +570,37 @@ function Player() {
           active={loop}
           testId="lc-loop"
         />
+        {/* the volume hand — the visitor's own quiet dial */}
+        <span className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => applyVolume(volume, !muted)}
+            aria-label={muted ? t("Unmute") : t("Mute")}
+            aria-pressed={muted}
+            data-testid="lc-mute"
+            className={cn(
+              "focus-glow flex h-8 w-8 items-center justify-center rounded-full border text-muted-foreground transition-all duration-300 hover:text-foreground",
+              GOLD_PILL
+            )}
+          >
+            {muted || volume === 0 ? (
+              <VolumeX className="size-3.5" aria-hidden="true" />
+            ) : (
+              <Volume2 className="size-3.5" aria-hidden="true" />
+            )}
+          </button>
+          <input
+            type="range"
+            min={0}
+            max={1}
+            step={0.05}
+            value={muted ? 0 : volume}
+            onChange={(e) => applyVolume(Number(e.target.value), false)}
+            aria-label={t("Volume")}
+            data-testid="lc-volume"
+            className="h-1 w-14 cursor-pointer accent-[var(--scope-a)] sm:w-20"
+          />
+        </span>
         {(track.style || track.lyrics) && (
           <PlayerChip
             onClick={() => setShowTranslation((v) => !v)}
@@ -517,7 +776,16 @@ function ShapeSelect({
 function LengthToggle() {
   const lcLength = useMirror((s) => s.lcLength);
   const setLcLength = useMirror((s) => s.setLcLength);
+  const prices = useMirror((s) => s.walletPrices);
   const t = useT();
+  const previewPrice = prices?.musicPreview ?? 2;
+  const fullPrice = prices?.musicFull ?? 5;
+  const loopPrice = prices?.musicLoop ?? 15;
+  const options = [
+    { id: "preview" as const, label: t("Preview · 30s"), price: previewPrice, testId: "lc-length-preview", title: t("A thirty-second listening — 2 lights") },
+    { id: "full" as const, label: t("Full song · 3+ min"), price: fullPrice, testId: "lc-length-full", title: t("The whole composition — at least three minutes") },
+    { id: "loop" as const, label: t("Endless · ~30 min"), price: loopPrice, testId: "lc-length-loop", title: t("One long seamless journey, woven in six movements, looping for hours") },
+  ];
   return (
     <div
       role="group"
@@ -525,52 +793,36 @@ function LengthToggle() {
       className="flex w-fit items-center gap-0.5 rounded-full border hairline p-0.5"
       data-testid="lc-length"
     >
-      <button
-        type="button"
-        onClick={() => setLcLength("preview")}
-        aria-pressed={lcLength === "preview"}
-        data-testid="lc-length-preview"
-        className={cn(
-          "focus-glow flex h-6 items-center rounded-full px-2.5 text-[11.5px] transition-colors duration-300",
-          lcLength === "preview"
-            ? "font-semibold"
-            : "text-muted-foreground hover:text-foreground"
-        )}
-        style={
-          lcLength === "preview"
-            ? {
-                backgroundColor:
-                  "color-mix(in srgb, var(--scope-a,var(--lp-gold)) 13%, transparent)",
-                color: "var(--scope-a,var(--lp-gold))",
-              }
-            : undefined
-        }
-      >
-        {t("Preview · 30s")}
-      </button>
-      <button
-        type="button"
-        onClick={() => setLcLength("full")}
-        aria-pressed={lcLength === "full"}
-        data-testid="lc-length-full"
-        className={cn(
-          "focus-glow flex h-6 items-center rounded-full px-2.5 text-[11.5px] transition-colors duration-300",
-          lcLength === "full"
-            ? "font-semibold"
-            : "text-muted-foreground hover:text-foreground"
-        )}
-        style={
-          lcLength === "full"
-            ? {
-                backgroundColor:
-                  "color-mix(in srgb, var(--scope-a,var(--lp-gold)) 13%, transparent)",
-                color: "var(--scope-a,var(--lp-gold))",
-              }
-            : undefined
-        }
-      >
-        {t("Full song")}
-      </button>
+      {options.map((o) => (
+        <button
+          key={o.id}
+          type="button"
+          onClick={() => setLcLength(o.id)}
+          aria-pressed={lcLength === o.id}
+          data-testid={o.testId}
+          title={o.title}
+          className={cn(
+            "focus-glow flex h-6 items-center rounded-full px-2.5 text-[11.5px] transition-colors duration-300",
+            lcLength === o.id
+              ? "font-semibold"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+          style={
+            lcLength === o.id
+              ? {
+                  backgroundColor:
+                    "color-mix(in srgb, var(--scope-a,var(--lp-gold)) 13%, transparent)",
+                  color: "var(--scope-a,var(--lp-gold))",
+                }
+              : undefined
+          }
+        >
+          {o.label}
+          <span className="ml-1.5 opacity-75" aria-label={t("lights")}>
+            ✦{o.price}
+          </span>
+        </button>
+      ))}
     </div>
   );
 }
@@ -834,6 +1086,15 @@ function BriefCard() {
             data-testid="lc-refine-input"
             className="focus-glow h-10 min-w-0 flex-1 rounded-full border hairline bg-background/60 px-4 text-[14.5px] text-foreground outline-none transition-all duration-300 placeholder:text-muted-foreground/55 disabled:opacity-50"
           />
+          <VoiceRecordButton
+            compact
+            testId="lc-refine-voice"
+            disabled={labBusy || weaving}
+            onTranscript={(text) => {
+              setRefine("");
+              void refineBrief(text);
+            }}
+          />
           <button
             type="submit"
             disabled={labBusy || weaving || !refine.trim()}
@@ -871,6 +1132,7 @@ function BriefCard() {
             : t("Generate the transmission")}
         </button>
       </div>
+      <PriceLine />
       {hasAudio && (
         <p className="mt-2 text-[11.5px] leading-relaxed text-muted-foreground/75">
           {t(
@@ -879,6 +1141,43 @@ function BriefCard() {
         </p>
       )}
     </motion.section>
+  );
+}
+
+/* ------------------------- the price line ---------------------------- */
+/*  The honest weigh, spoken before the hand strikes: what this weave
+    costs, what the purse holds — and the keeper's own freedom.        */
+
+function PriceLine() {
+  const lcLength = useMirror((s) => s.lcLength);
+  const wallet = useMirror((s) => s.wallet);
+  const prices = useMirror((s) => s.walletPrices);
+  const me = useMirror((s) => s.me);
+  const t = useT();
+  const price =
+    lcLength === "loop"
+      ? prices?.musicLoop ?? 15
+      : lcLength === "full"
+        ? prices?.musicFull ?? 5
+        : prices?.musicPreview ?? 2;
+  if (me?.admin) {
+    return (
+      <p className="mt-2 text-[11.5px] leading-relaxed text-muted-foreground/75" data-testid="lc-price-line">
+        {t("The keeper's own light — no purse is drawn for your creations.")}
+      </p>
+    );
+  }
+  if (!wallet) return null;
+  return (
+    <p className="mt-2 text-[11.5px] leading-relaxed text-muted-foreground/75" data-testid="lc-price-line">
+      {t("This weave weighs {price} light — the purse holds {total}.", {
+        price,
+        total: wallet.total,
+      })}
+      {wallet.total < price
+        ? " " + t("Bring more light and the loom turns for you.")
+        : ""}
+    </p>
   );
 }
 
@@ -1568,6 +1867,17 @@ export function LightCodesView() {
               testId="lc-attachments"
             />
             <div className="flex items-center gap-2">
+              <VoiceRecordButton
+                testId="lc-voice"
+                disabled={busy}
+                onTranscript={(text) => {
+                  /* THE SIMPLEST ROUND — they speak, the Mirror proceeds */
+                  setLcIntention(text);
+                  const carried = attachments;
+                  setAttachments([]);
+                  void composeBrief({ intention: text, attachments: carried });
+                }}
+              />
               <input
                 type="text"
                 value={lcIntention}

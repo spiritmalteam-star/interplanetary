@@ -6,12 +6,14 @@ import {
   memo,
   useEffect,
   useRef,
+  useState,
   type ComponentType,
   type CSSProperties,
   type ReactNode,
 } from "react";
 import dynamic from "next/dynamic";
-import { ArrowLeft, RotateCcw, X } from "lucide-react";
+import { createPortal } from "react-dom";
+import { ArrowLeft, Maximize2, Minimize2, RotateCcw, X } from "lucide-react";
 import { useMirror, type ToolTabKey } from "@/lib/mirror-store";
 import { WORKSPACES, WORKSPACE_ORDER } from "@/lib/mirror/workspaces";
 import { runWorkspaceCleanup } from "@/lib/mirror/workspace-lifecycle";
@@ -182,7 +184,35 @@ function ToolWorkspaceImpl({ bare = false }: { bare?: boolean }) {
   const activeToolTab = useMirror((s) => s.activeToolTab);
   const activateToolTab = useMirror((s) => s.activateToolTab);
   const closeToolTab = useMirror((s) => s.closeToolTab);
+  /* THE ROOM'S OWN ZOOM — every room may grow to fill the whole sky
+     while staying exactly where it is: the same room, the same state,
+     the same work, only bigger. Nothing moves elsewhere; the portal
+     simply lifts the frame above every transform. */
+  const [zoomed, setZoomed] = useState(false);
+  /* a tab turn lays the zoom down — adjusted during render (the React
+     way to reset state when a watched value changes), never in an
+     effect, so the room that opens always opens at its own size */
+  const [prevTab, setPrevTab] = useState<string | null>(activeToolTab);
+  if (prevTab !== activeToolTab) {
+    setPrevTab(activeToolTab);
+    if (zoomed) setZoomed(false);
+  }
   const t = useT();
+
+  /* Esc lays the zoom down; the page's own scroll rests while it stands */
+  useEffect(() => {
+    if (!zoomed) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setZoomed(false);
+    };
+    document.addEventListener("keydown", onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [zoomed]);
 
   /* THE STANDING LAW — the window lives only over the chat: the realm
      IS the landing chat now, in both of its gears (docked and
@@ -240,12 +270,18 @@ function ToolWorkspaceImpl({ bare = false }: { bare?: boolean }) {
   const ActiveView = PAGE_VIEWS[active];
   const activeMeta = WORKSPACES[active];
 
-  return (
+  const frame = (
     <div
       data-testid="tool-workspace"
       data-workplace="true"
+      data-zoomed={zoomed || undefined}
       data-resource-profile={activeMeta.resourceProfile}
-      className="pointer-events-auto absolute inset-0 z-30 flex flex-col overflow-hidden rounded-none border bg-background shadow-[0_24px_70px_-30px_rgba(0,0,0,0.6)]"
+      className={cn(
+        "pointer-events-auto flex flex-col overflow-hidden border bg-background shadow-[0_24px_70px_-30px_rgba(0,0,0,0.6)]",
+        zoomed
+          ? "fixed inset-0 z-[95] rounded-none"
+          : "absolute inset-0 z-30 rounded-none"
+      )}
       style={winStyle}
     >
       {/* THE WORKPLACE HEADER — THE ONE BACK at the row's very left
@@ -327,6 +363,25 @@ function ToolWorkspaceImpl({ bare = false }: { bare?: boolean }) {
 
         <span className="flex-1" aria-hidden="true" />
 
+        {/* THE ROOM'S OWN ZOOM — the same room, the same state, the
+            same work: only bigger. One hand serves every tool; the
+            room never moves elsewhere, it simply fills the sky. */}
+        <button
+          type="button"
+          onClick={() => setZoomed((z) => !z)}
+          aria-label={zoomed ? t("Return the room to its place") : t("Enlarge the room")}
+          aria-pressed={zoomed}
+          title={zoomed ? t("Return the room to its place") : t("Enlarge the room")}
+          data-testid="tool-workspace-zoom"
+          className="focus-glow mr-1 flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors duration-300 hover:bg-foreground/10 hover:text-foreground"
+        >
+          {zoomed ? (
+            <Minimize2 className="size-3.5" aria-hidden="true" />
+          ) : (
+            <Maximize2 className="size-3.5" aria-hidden="true" />
+          )}
+        </button>
+
         {/* THE ONE FRAME — the old expand hand (the room's full-page
             depth) is gone: every room plays within the chat's own
             frame, exactly like the profile does. The chat's corner
@@ -374,6 +429,13 @@ function ToolWorkspaceImpl({ bare = false }: { bare?: boolean }) {
       </div>
     </div>
   );
+
+  /* when the room is zoomed, the frame is lifted to the sky itself —
+     above every transform of the page, still the very same room */
+  if (zoomed && typeof document !== "undefined") {
+    return createPortal(frame, document.body);
+  }
+  return frame;
 }
 
 export const ToolWorkspace = memo(ToolWorkspaceImpl);

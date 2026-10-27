@@ -7,7 +7,14 @@ import {
   stripeConfigured,
 } from "@/lib/server/billing";
 import { CREDIT_PACKS, PLANS } from "@/lib/server/plans";
-import { WALLET_PLANS, WALLET_TOPUP, ensureWallet, type PlanTier } from "@/lib/server/wallet";
+import {
+  WALLET_PACKS,
+  WALLET_PLANS,
+  WALLET_TOPUP,
+  ensureWallet,
+  packById,
+  type PlanTier,
+} from "@/lib/server/wallet";
 import { ensureVisitorProvisions } from "@/lib/server/workspace";
 import { GATES, rateLimit, requestIp } from "@/lib/server/rate-limit";
 
@@ -155,6 +162,46 @@ export async function POST(req: NextRequest) {
           userId: user.id,
           wallet: "1",
           creditsToGrant: String(WALLET_TOPUP.credits),
+        },
+      });
+      return NextResponse.json({ url: session.url });
+    }
+
+    /* ---------- the credit packs — the one wallet's filling ----------
+       THE CREATOR ECONOMY'S OWN PACKS: 100 · 250 · 700 lights, one
+       wallet across music, books and the akashic readings. The price
+       rides inline (no Stripe dashboard configuration needed), and the
+       signed webhook is still the only hand that fills the purse. */
+    const walletPack = packById(packId);
+    if (walletPack) {
+      await ensureWallet(user.id);
+      const customerId = await walletCustomerId(user.id, user.email, user.name);
+      if (!customerId) {
+        return NextResponse.json({ error: "The customer could not be created." }, { status: 500 });
+      }
+      const session = await stripe.checkout.sessions.create({
+        mode: "payment",
+        customer: customerId,
+        client_reference_id: user.id,
+        line_items: [
+          {
+            quantity: 1,
+            price_data: {
+              currency: walletPack.currency,
+              unit_amount: walletPack.priceCents,
+              product_data: {
+                name: `ReflectMe — ${walletPack.label} (${walletPack.credits} credits)`,
+              },
+            },
+          },
+        ],
+        success_url: `${req.nextUrl.origin}/?billing=success`,
+        cancel_url: `${req.nextUrl.origin}/?billing=cancelled`,
+        metadata: {
+          userId: user.id,
+          wallet: "1",
+          packId: walletPack.id,
+          creditsToGrant: String(walletPack.credits),
         },
       });
       return NextResponse.json({ url: session.url });

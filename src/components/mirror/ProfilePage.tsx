@@ -33,6 +33,7 @@ import {
 import { TREE_FAMILIES } from "@/lib/data/suggestion-banks";
 import { DnaHelix, TrajectoryEvolution, useJourney } from "./DnaTimeline";
 import { FuelEnginePanel } from "./FuelEnginePanel";
+import { AdminConsole } from "./AdminConsole";
 import { ExpansionMirrorPanel } from "./ExpansionMirror";
 import {
   bindAgain,
@@ -106,6 +107,7 @@ type SectionId =
   | "dna"
   | "api"
   | "fuel"
+  | "admin"
   | "account";
 
 export function ProfilePage() {
@@ -498,7 +500,7 @@ export function ProfilePage() {
     switch (id) {
       case "profile":
       case "account":
-        return ["profile", "account"];
+        return me?.admin ? ["profile", "admin", "account"] : ["profile", "account"];
       case "library":
       case "downloads":
         return ["library", "downloads"];
@@ -511,6 +513,8 @@ export function ProfilePage() {
       case "api":
       case "fuel":
         return me?.admin ? ["api", "fuel"] : ["api"];
+      case "admin":
+        return me?.admin ? ["admin"] : [];
     }
   };
 
@@ -1705,6 +1709,22 @@ export function ProfilePage() {
               )}
             />
             <FuelEnginePanel />
+          </div>
+        );
+
+      case "admin":
+        return (
+          <div data-testid="profilepage-admin">
+            <SectionHead
+              small
+              title={t("Platform Administration")}
+              desc={t(
+                "The keeper's own console — the whole economy at a glance, the users' shelf, the standing prices and the music engine's honesty. The server answers only to you."
+              )}
+            />
+            <section className={cn(panel, "p-3.5 sm:p-4")}>
+              <AdminConsole />
+            </section>
           </div>
         );
 

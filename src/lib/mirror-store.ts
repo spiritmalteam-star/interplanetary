@@ -264,6 +264,27 @@ export interface WalletNotice {
   actionType?: string;
 }
 
+/** The paid creations' standing prices — the server's own law, read
+    from the wallet's glance and shown beside the hands that spend. */
+export interface WalletPrices {
+  musicPreview: number;
+  musicFull: number;
+  musicLoop: number;
+  akashicReading: number;
+  bookShort: number;
+  bookExtended: number;
+}
+
+/** A credit pack as the wallet's glance lays it out. */
+export interface WalletPack {
+  id: string;
+  label: string;
+  credits: number;
+  priceCents: number;
+  currency: string;
+  note: string;
+}
+
 /* -------- the dream book's keeping — a volume brought back -------- */
 
 export interface DreamBookResumePage {
@@ -553,6 +574,8 @@ interface MirrorState {
      the unlock modal and its cause. The modal opens by itself when any
      door answers 402 INSUFFICIENT_CREDITS, and from the badge on tap. */
   wallet: WalletBalance | null;
+  walletPrices: WalletPrices | null;
+  walletPacks: WalletPack[] | null;
   walletModalOpen: boolean;
   walletNotice: WalletNotice | null;
   setWallet: (wallet: WalletBalance | null) => void;
@@ -758,7 +781,7 @@ interface MirrorState {
   lcUserLyrics: string;
   lcShape: LcShape;
   /** The weave's length: the 30-second preview or the full song. */
-  lcLength: "preview" | "full";
+  lcLength: "preview" | "full" | "loop";
   lcStatus: "idle" | "interpreting" | "polling" | "ready" | "error";
   /** THE MIRROR'S BRIEF — the chamber's composition draft: the direction
       the Mirror wrote (or one carried in from the chat), editable by
@@ -795,7 +818,7 @@ interface MirrorState {
   setLcIntention: (v: string) => void;
   setLcUserLyrics: (v: string) => void;
   setLcShape: (shape: Partial<LcShape>) => void;
-  setLcLength: (length: "preview" | "full") => void;
+  setLcLength: (length: "preview" | "full" | "loop") => void;
   /** Mirror translation → the weave → the player. The chamber's full
       round: the Mirror composes the brief, then the engine renders it.
       Kept for one-ask paths (chips, prefills, error retries). */
@@ -1178,6 +1201,139 @@ const osStream = {
   timer: null as number | null,
 };
 
+/* ------------------------------------------------------------------ */
+/*  THE ENDLESS JOURNEY — the client's own thread of the six-part      */
+/*  weave. Each part is a real engine movement; the honest part count  */
+/*  rides in the notice ("weaving movement k of six" — never an        */
+/*  invented percentage). The journey's token rests between requests,  */
+/*  so a stumbled part resumes where it stood instead of weaving the   */
+/*  whole journey again. When the final movement lands, the joined     */
+/*  piece is fetched once from the journey's own door and kept on the  */
+/*  visitor's device.                                                  */
+/* ------------------------------------------------------------------ */
+const LOOP_PARTS = 6;
+let journeyToken: string | null = null;
+let journeyPartsDone = 0;
+
+async function runEndlessJourney(
+  get: () => MirrorState,
+  set: (partial: Partial<MirrorState>) => void
+): Promise<void> {
+  const brief = get().lcBrief!;
+  let lastStructure: string | undefined;
+  let lastNote: string | undefined;
+  for (let k = journeyPartsDone + 1; k <= LOOP_PARTS; k++) {
+    set({
+      lcNotice:
+        k === 1
+          ? "Weaving the journey's first movement — one of six. A long piece takes several breaths."
+          : `Weaving movement ${k} of six — the journey continues.`,
+    });
+    const resume = k > 1 && journeyToken;
+    const res = await fetch("/api/light-codes/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        mode: brief.mode,
+        intention: brief.intention,
+        civilization: brief.mode === "other-stars" ? (get().lcCivilization ?? undefined) : undefined,
+        shape: get().lcShape,
+        instrumental: get().lcShape.voice === "None" || !brief.lyrics,
+        language: get().language,
+        compose: true,
+        length: "loop",
+        ...(resume
+          ? { loopToken: journeyToken, loopPart: { index: k, total: LOOP_PARTS, nonce: Math.random().toString(36).slice(2, 10) } }
+          : { loopPart: { index: 1, total: LOOP_PARTS } }),
+        interp: {
+          title: brief.title,
+          style: brief.style,
+          lyrics: brief.lyrics,
+          notes: brief.notes,
+        },
+        ...(k === 1 && get().lcCarriedImage ? { image: get().lcCarriedImage } : {}),
+      }),
+    });
+    const data = (await res.json().catch(() => null)) as
+      | {
+          loopToken?: string;
+          loopProgress?: string;
+          loopFinalized?: boolean;
+          audioUrl?: string;
+          loopDurationSec?: number;
+          loopNote?: string;
+          structure?: string;
+          error?: string;
+        }
+      | null;
+    if (!res.ok || !data) {
+      throw new Error(
+        (data && data.error) ||
+          "The journey's weaving rested a moment. Ask again — it continues where it stood."
+      );
+    }
+    lastStructure =
+      typeof data.structure === "string" && data.structure ? data.structure : lastStructure;
+    lastNote = typeof data.loopNote === "string" ? data.loopNote : lastNote;
+    if (!data.loopFinalized) {
+      journeyToken = data.loopToken ?? journeyToken;
+      journeyPartsDone = k;
+      continue;
+    }
+    /* the journey is joined — fetch it once from its own door */
+    set({ lcNotice: "Crossing the movements into one long journey…" });
+    const audioRes = await fetch(data.audioUrl ?? "");
+    if (!audioRes.ok) {
+      const errData = (await audioRes.json().catch(() => null)) as { error?: string } | null;
+      throw new Error(
+        (errData && errData.error) ||
+          "The journey's sound rested before it reached you. Ask again — the brief still stands."
+      );
+    }
+    const bytes = new Uint8Array(await audioRes.arrayBuffer());
+    const id = `lc-${Date.now()}`;
+    const audioUrl = URL.createObjectURL(new Blob([bytes.buffer as ArrayBuffer], { type: "audio/mpeg" }));
+    void lcAudioSave(id, bytes, "audio/mpeg");
+    const track: LcTrack = {
+      id,
+      title: brief.title,
+      mode: brief.mode,
+      intention: brief.intention,
+      audioUrl,
+      style: brief.style || undefined,
+      lyrics: brief.lyrics,
+      notes: brief.notes || undefined,
+      length: "loop",
+      duration: data.loopDurationSec || undefined,
+      structure: [lastNote, lastStructure].filter(Boolean).join("\n\n") || undefined,
+      createdAt: Date.now(),
+    };
+    const history = [
+      { ...track, audioUrl: "" },
+      ...get().lcHistory.filter((t) => t.id !== track.id),
+    ].slice(0, 40);
+    try {
+      localStorage.setItem("mirror-lc-history", JSON.stringify(history));
+    } catch {
+      /* storage unavailable */
+    }
+    journeyToken = null;
+    journeyPartsDone = 0;
+    set({
+      lcTrack: track,
+      lcStatus: "ready",
+      lcNotice: null,
+      lcHistory: history,
+      lcCarriedImage: null,
+    });
+    return;
+  }
+  /* every part landed but none declared itself final — the thread rested */
+  throw new Error(
+    "The journey's thread rested before its ending. Ask once more — the weaving continues where it stood."
+  );
+}
+
 export const useMirror = create<MirrorState>()((set, get) => ({
   activeMode: "interplanetary",
   sidebarTab: "civilizations",
@@ -1243,7 +1399,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   lcIntention: "",
   lcUserLyrics: "",
   lcShape: { ...LC_DEFAULT_SHAPE },
-  lcLength: "preview" as "preview" | "full",
+  lcLength: "preview" as "preview" | "full" | "loop",
   lcStatus: "idle" as "idle" | "interpreting" | "polling" | "ready" | "error",
   lcBrief: null,
   lcBusyOp: null,
@@ -1263,6 +1419,8 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   authMode: "signin" as const,
   profilePageOpen: false,
   wallet: null,
+  walletPrices: null,
+  walletPacks: null,
   walletModalOpen: false,
   walletNotice: null,
   expansionSeeds: [],
@@ -1634,6 +1792,10 @@ export const useMirror = create<MirrorState>()((set, get) => ({
        until playable audio actually lands. */
     set({ lcStatus: "polling", lcError: null, lcNotice: null, lcRefineNote: null });
     try {
+      if (s.lcLength === "loop") {
+        await runEndlessJourney(get, set);
+        return;
+      }
       const weave = await fetch("/api/light-codes/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -3188,8 +3350,15 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       const res = await fetch("/api/wallet");
       const data = (await res.json().catch(() => null)) as {
         wallet?: WalletBalance | null;
+        prices?: WalletPrices;
+        packs?: WalletPack[];
       } | null;
-      if (data && "wallet" in data) set({ wallet: data.wallet ?? null });
+      if (data && "wallet" in data)
+        set({
+          wallet: data.wallet ?? null,
+          walletPrices: data.prices ?? get().walletPrices,
+          walletPacks: data.packs ?? get().walletPacks,
+        });
     } catch {
       /* the glance keeps its silence — the purse stays as it was */
     }

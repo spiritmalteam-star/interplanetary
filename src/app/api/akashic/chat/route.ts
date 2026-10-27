@@ -62,7 +62,7 @@ interface PriorTurn {
   t: string;
 }
 
-export const POST = meterRoute("akashic", postImpl);
+export const POST = meterRoute("akashic_chat", postImpl);
 
 async function postImpl(req: NextRequest): Promise<NextResponse> {
   try {

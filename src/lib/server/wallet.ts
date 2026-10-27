@@ -27,6 +27,16 @@ import { db } from "@/lib/db";
 /*                     DREAM_BOOK | SUBSCRIPTION_GRANT |               */
 /*                     TOPUP_PURCHASE                                  */
 /*  (SQLite keeps no enums — these written values are the law.)        */
+/*                                                                     */
+/*  THE ECONOMY'S SHAPE (the creator-economy law):                     */
+/*   - The Mirror's conversation is FREE forever — no purse is ever    */
+/*     weighed at the chat's door.                                     */
+/*   - The paid creations are MUSIC (preview 2 · full 5 · endless      */
+/*     loop 15), the AKASHIC creative reading (5) and the BOOKS        */
+/*     (short 15 · extended 40) — one wallet across them all.          */
+/*   - The verified keeper (ADMIN_EMAIL) creates without their own     */
+/*     purse ever being drawn — their real usage is recorded, not      */
+/*     charged.                                                        */
 /* ------------------------------------------------------------------ */
 
 export type PlanTier = "FREE" | "SEEKER" | "OBSERVATORY_PRO";
@@ -49,25 +59,112 @@ function walletCost(name: string, fallback: number): number {
 }
 
 export const WALLET_COSTS: Record<string, number> = {
-  CHAT: walletCost("CHAT", 1),
-  AKASHIC: walletCost("AKASHIC", 2),
+  CHAT: 0, // THE CHAT IS FREE FOREVER — the weigh never looks at it
+  AKASHIC: walletCost("AKASHIC", 5),
   ART_X: walletCost("ART_X", 5),
-  LIGHT_CODES: walletCost("LIGHT_CODES", 12),
-  DREAM_BOOK: walletCost("DREAM_BOOK", 2),
+  LIGHT_CODES: walletCost("LIGHT_CODES", 5),
+  DREAM_BOOK: walletCost("DREAM_BOOK", 15),
 };
 
-/** The meter operations that walk through the wallet's weigh.
-    THE DREAM BOOK STANDS OUTSIDE THIS LAW — the loom is the house's
-    open gift: no purse is weighed, no passage is demanded, and an
-    anonymous keeper weaves the whole book freely (the meter never
-    answers the dream_book door with 402, so no visitor is ever
-    pushed to a passage to read). */
+/** The meter operations that walk through the wallet's weigh (flat
+    price doors). The conversation (chat) is NOT among them — free
+    forever. The music chamber and the book loom are weighed with
+    their own per-ask prices in the meter's dynamic weigh (preview
+    2 · full 5 · endless 15 · short book 15 · extended book 40). */
 export const WALLET_OPERATIONS: Record<string, WalletActionType> = {
-  chat: "CHAT",
   akashic: "AKASHIC",
   artx: "ART_X",
-  light_codes: "LIGHT_CODES",
 };
+
+/* ------------------- the priced services' law ----------------------- */
+
+/** The paid creations' launch prices (credits) — the server decides,
+    env-tunable, and overridable live through the PlatformConfig row
+    "service_prices" (the keeper's own console writes it). */
+export interface ServicePrices {
+  musicPreview: number;
+  musicFull: number;
+  musicLoop: number;
+  akashicReading: number;
+  bookShort: number;
+  bookExtended: number;
+}
+
+const PRICE_FALLBACK: ServicePrices = {
+  musicPreview: walletCost("LC_PREVIEW", 2),
+  musicFull: walletCost("LC_FULL", 5),
+  musicLoop: walletCost("LC_LOOP", 15),
+  akashicReading: walletCost("AKASHIC", 5),
+  bookShort: walletCost("BOOK_SHORT", 15),
+  bookExtended: walletCost("BOOK_LONG", 40),
+};
+
+export async function servicePrices(): Promise<ServicePrices> {
+  try {
+    const row = await db.platformConfig.findUnique({ where: { key: "service_prices" } });
+    if (!row) return { ...PRICE_FALLBACK };
+    const v = (row.value ?? {}) as Partial<ServicePrices>;
+    const clean = (n: unknown, fb: number) => {
+      const x = typeof n === "number" ? n : NaN;
+      return Number.isFinite(x) && x >= 0 ? Math.floor(x) : fb;
+    };
+    return {
+      musicPreview: clean(v.musicPreview, PRICE_FALLBACK.musicPreview),
+      musicFull: clean(v.musicFull, PRICE_FALLBACK.musicFull),
+      musicLoop: clean(v.musicLoop, PRICE_FALLBACK.musicLoop),
+      akashicReading: clean(v.akashicReading, PRICE_FALLBACK.akashicReading),
+      bookShort: clean(v.bookShort, PRICE_FALLBACK.bookShort),
+      bookExtended: clean(v.bookExtended, PRICE_FALLBACK.bookExtended),
+    };
+  } catch {
+    return { ...PRICE_FALLBACK };
+  }
+}
+
+/* --------------------- the credit packs ----------------------------- */
+
+/** The one wallet's filling — the launch packs. Purchases ride one
+    wallet across music, books and the akashic readings. */
+export interface WalletPackDef {
+  id: string;
+  label: string;
+  credits: number;
+  priceCents: number;
+  currency: string;
+  note: string;
+}
+
+export const WALLET_PACKS: WalletPackDef[] = [
+  {
+    id: "pack_100",
+    label: "One hundred lights",
+    credits: walletCost("PACK_100_CREDITS", 100),
+    priceCents: envCents("WALLET_PACK_100_CENTS", 1000),
+    currency: "eur",
+    note: "A first fullness — plenty of previews and readings.",
+  },
+  {
+    id: "pack_250",
+    label: "Two hundred fifty lights",
+    credits: walletCost("PACK_250_CREDITS", 250),
+    priceCents: envCents("WALLET_PACK_250_CENTS", 2000),
+    currency: "eur",
+    note: "The maker's pouch — songs, books and readings.",
+  },
+  {
+    id: "pack_700",
+    label: "Seven hundred lights",
+    credits: walletCost("PACK_700_CREDITS", 700),
+    priceCents: envCents("WALLET_PACK_700_CENTS", 5000),
+    currency: "eur",
+    note: "The great reserve — for the long creator's road.",
+  },
+];
+
+export function packById(id: string | null | undefined): WalletPackDef | null {
+  if (!id) return null;
+  return WALLET_PACKS.find((p) => p.id === id) ?? null;
+}
 
 /* ---------------------------- the plans ----------------------------- */
 
@@ -129,12 +226,42 @@ export function planTierFor(priceId: string | null | undefined): PlanTier | null
 
 /* ------------------------- enforcement ------------------------------ */
 
-/** THE FREE LAW — the whole house stands free: no purse is weighed,
-    no door answers 402, no visitor is ever pushed to a passage. The
-    wallet's machinery sleeps until the keeper explicitly stands the
-    law up again with WALLET_ENFORCED=true in the vault. */
+/** THE ECONOMY LAW — the creator economy stands: the conversation is
+    free forever, and the paid creations (music, books, akashic
+    readings) are weighed at their own doors. WALLET_ENFORCED=false
+    in the vault lays the weigh down again and the whole house
+    returns to free creations. */
 export function walletEnforced(): boolean {
-  return process.env.WALLET_ENFORCED === "true";
+  return process.env.WALLET_ENFORCED !== "false";
+}
+
+/** THE KEEPER'S OWN LIGHT — an admin creation is never drawn from
+    their purse, but its real weight is still written down: one
+    ledger row, zero credits moved, the cost remembered. The keeper's
+    generosity is recorded, never charged. */
+export async function recordAdminUsage(
+  userId: string,
+  actionType: WalletActionType,
+  wouldCost: number,
+  description: string
+): Promise<void> {
+  try {
+    await ensureWallet(userId);
+    await db.creditLedger.create({
+      data: {
+        userId,
+        actionType,
+        creditsDeducted: 0,
+        metadata: {
+          admin: true,
+          wouldCost,
+          description: `The keeper's own creation (not charged) — ${description}`,
+        },
+      },
+    });
+  } catch {
+    /* the recording rests when the vault rests */
+  }
 }
 
 /* --------------------------- the wallet ----------------------------- */
@@ -151,7 +278,12 @@ export interface WalletSnapshot {
   total: number;
 }
 
-const BIRTH_GIFT = 5; // the free lights every passage is born holding
+const BIRTH_GIFT = intEnvGift("WALLET_BIRTH_GIFT", 5); // the free lights every passage is born holding
+
+function intEnvGift(name: string, fallback: number): number {
+  const raw = Number(process.env[name]);
+  return Number.isFinite(raw) && raw >= 0 ? Math.floor(raw) : fallback;
+}
 
 /** The passage's wallet, laid down idempotently. Safe to call at every
     door — an existing wallet simply passes through untouched. */

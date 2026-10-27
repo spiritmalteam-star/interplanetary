@@ -363,3 +363,16 @@ model CreationArtifact {
   @@index([type, createdAt])
   @@index([sourceConvId])
 }
+
+// ---------------------------------------------------------------------------
+// THE KEEPER'S OWN CONSOLE — live platform configuration. Prices, packs and
+// service switches the administrator may tune without a redeploy; every row
+// remembers who last moved it. The code's defaults stand whenever a row
+// rests — the console overrides, never replaces, the house's own laws.
+// ---------------------------------------------------------------------------
+model PlatformConfig {
+  key       String   @id // "service_prices" | "packs" | ...
+  value     Json
+  updatedBy String? // the admin email that last moved this row
+  updatedAt DateTime @updatedAt
+}

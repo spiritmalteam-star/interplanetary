@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isAdminEmail } from "@/lib/server/admin";
 import { ANON_COOKIE, resolveVisitor, withAnonCookie, type Visitor } from "@/lib/server/access";
 import { costOf } from "@/lib/server/costs";
 import { creditsEnforced, spendCredits } from "@/lib/server/credits";
@@ -8,9 +9,12 @@ import {
   WALLET_COSTS,
   WALLET_OPERATIONS,
   ensureWallet,
+  recordAdminUsage,
   refundWalletCredits,
+  servicePrices,
   spendWalletCredits,
   walletEnforced,
+  type WalletActionType,
 } from "@/lib/server/wallet";
 import { ensureVisitorProvisions } from "@/lib/server/workspace";
 
@@ -50,6 +54,56 @@ export type MeteredHandler = (
   req: NextRequest,
   ctx: MeterContext
 ) => Promise<Response>;
+
+/* ----------------- the dynamic weigh (per-ask prices) ----------------
+   Two doors carry their own per-ask price instead of a flat one:
+   - the MUSIC CHAMBER: only the weave (compose) is weighed — preview
+     2 · full song 5 · the endless loop 15. The brief, its refinement
+     and the Lyrics Laboratory are free — the conversation of making.
+     The loop's continuation parts (2..n) ride free: the journey was
+     weighed once when its first part began.
+   - the BOOK LOOM: only a book's birth (phase "open") is weighed —
+     short 15 · extended 40. The turning of pages and every closing
+     ride free: the volume was weighed when it was conjured. */
+interface BodyWeigh {
+  actionType: WalletActionType;
+  cost: number;
+  description: string;
+}
+
+async function bodyWeighFor(operation: string, req: NextRequest): Promise<BodyWeigh | null> {
+  if (operation === "light_codes") {
+    const b = (await req.clone().json().catch(() => null)) as {
+      compose?: boolean;
+      length?: string;
+      loopPart?: { index?: number } | null;
+    } | null;
+    if (!b?.compose) return null;
+    if (b.length === "loop" && b.loopPart && Number(b.loopPart.index) > 1) return null;
+    const prices = await servicePrices();
+    const kind =
+      b.length === "loop" ? "endless loop" : b.length === "full" ? "full song" : "preview";
+    const cost =
+      b.length === "loop" ? prices.musicLoop : b.length === "full" ? prices.musicFull : prices.musicPreview;
+    return { actionType: "LIGHT_CODES", cost, description: `the music weave — ${kind}` };
+  }
+  if (operation === "dream_book") {
+    const b = (await req.clone().json().catch(() => null)) as {
+      phase?: string;
+      tale?: string;
+    } | null;
+    if (!b || b.phase !== "open") return null;
+    const prices = await servicePrices();
+    const tale = String(b.tale ?? "short");
+    const extended = !(tale === "poem" || tale === "short");
+    return {
+      actionType: "DREAM_BOOK",
+      cost: extended ? prices.bookExtended : prices.bookShort,
+      description: `the book loom — ${tale} volume`,
+    };
+  }
+  return null;
+}
 
 export function meterRoute(operation: string, handler: MeteredHandler) {
   return async (req: NextRequest): Promise<NextResponse> => {
@@ -121,71 +175,110 @@ export function meterRoute(operation: string, handler: MeteredHandler) {
       };
 
       /* ---------- the wallet's weigh — BEFORE the door serves ----------
-         The gated doors (chat, akashic, art x, light codes) draw their
-         price from the visitor's own wallet first: an empty purse is
-         answered at once with 402 INSUFFICIENT_CREDITS and the work is
-         never begun on light that is not there. When the door itself
-         stumbles, the exact draw is refunded. THE DREAM BOOK is not
-         among them — the loom is the house's open gift, free for every
-         visitor, no passage demanded. */
-      const walletAction = WALLET_OPERATIONS[operation];
-      const walletCost = walletAction ? WALLET_COSTS[walletAction] : undefined;
-      if (walletAction && walletCost && walletEnforced() && !userId.startsWith("stateless:")) {
-        try {
-          const snapshot = await ensureWallet(userId);
-          if (snapshot.total < walletCost) {
-            await recordUsage({
-              userId,
-              workspaceId,
-              operation,
-              provider: "none",
-              success: false,
-              error: "insufficient_credits",
-              latencyMs: Date.now() - started,
-            });
-            return withAnonCookie(
-              NextResponse.json(
-                {
-                  error: "INSUFFICIENT_CREDITS",
-                  required: walletCost,
-                  current: snapshot.total,
-                  planTier: snapshot.planTier,
-                  actionType: walletAction,
-                },
-                { status: 402 }
-              ),
-              visitor
-            );
+         THE ECONOMY'S LAW: the conversation is free forever. The paid
+         creations draw their price from the visitor's own wallet
+         first — an empty purse is answered at once with 402
+         INSUFFICIENT_CREDITS, and an unsigned visitor is answered 401
+         SIGN_IN_REQUIRED (no billable generation begins without a
+         passage). The verified keeper creates without their purse
+         being drawn — the weight is recorded, never charged. When a
+         door stumbles, the exact draw is refunded. */
+      const flatAction = WALLET_OPERATIONS[operation];
+      const dynamicWeigh = await bodyWeighFor(operation, req);
+      const weigh = flatAction
+        ? {
+            actionType: flatAction,
+            cost: WALLET_COSTS[flatAction] ?? 0,
+            description: `the ${operation} door — weighed before serving`,
           }
-          const draw = await spendWalletCredits(userId, walletAction, {
-            cost: walletCost,
-            description: `The ${operation} door — weighed before serving`,
+        : dynamicWeigh;
+      if (
+        weigh &&
+        weigh.cost > 0 &&
+        walletEnforced() &&
+        !userId.startsWith("stateless:")
+      ) {
+        if (isAdminEmail(visitor.user.email)) {
+          /* the keeper's own creation — recorded, never charged */
+          void recordAdminUsage(userId, weigh.actionType, weigh.cost, weigh.description);
+        } else if (visitor.user.email.startsWith("anon:")) {
+          await recordUsage({
+            userId,
+            workspaceId,
+            operation,
+            provider: "none",
+            success: false,
+            error: "sign_in_required",
+            latencyMs: Date.now() - started,
           });
-          if (!draw.ok) {
-            return withAnonCookie(
-              NextResponse.json(
-                {
-                  error: "INSUFFICIENT_CREDITS",
-                  required: walletCost,
-                  current: draw.total,
-                  planTier: snapshot.planTier,
-                  actionType: walletAction,
-                },
-                { status: 402 }
-              ),
-              visitor
+          return withAnonCookie(
+            NextResponse.json(
+              {
+                error: "SIGN_IN_REQUIRED",
+                required: weigh.cost,
+                actionType: weigh.actionType,
+              },
+              { status: 401 }
+            ),
+            visitor
+          );
+        } else {
+          try {
+            const snapshot = await ensureWallet(userId);
+            if (snapshot.total < weigh.cost) {
+              await recordUsage({
+                userId,
+                workspaceId,
+                operation,
+                provider: "none",
+                success: false,
+                error: "insufficient_credits",
+                latencyMs: Date.now() - started,
+              });
+              return withAnonCookie(
+                NextResponse.json(
+                  {
+                    error: "INSUFFICIENT_CREDITS",
+                    required: weigh.cost,
+                    current: snapshot.total,
+                    planTier: snapshot.planTier,
+                    actionType: weigh.actionType,
+                  },
+                  { status: 402 }
+                ),
+                visitor
+              );
+            }
+            const draw = await spendWalletCredits(userId, weigh.actionType, {
+              cost: weigh.cost,
+              description: weigh.description,
+            });
+            if (!draw.ok) {
+              return withAnonCookie(
+                NextResponse.json(
+                  {
+                    error: "INSUFFICIENT_CREDITS",
+                    required: weigh.cost,
+                    current: draw.total,
+                    planTier: snapshot.planTier,
+                    actionType: weigh.actionType,
+                  },
+                  { status: 402 }
+                ),
+                visitor
+              );
+            }
+            walletLedgerId = draw.ledgerId ?? null;
+            ctx.walletLedgerId = walletLedgerId;
+            walletSpent = weigh.cost;
+          } catch (err) {
+            /* the wallet rests (database unreachable) — the door stays
+               open rather than locking a visitor out of a resting vault */
+            console.error(
+              `[meter:${operation}] wallet weigh rested:`,
+              err instanceof Error ? err.message : err
             );
           }
-          walletLedgerId = draw.ledgerId ?? null;
-          ctx.walletLedgerId = walletLedgerId;
-          walletSpent = walletCost;
-        } catch (err) {
-          /* the wallet rests (database unreachable) — the door stays
-             open rather than locking a visitor out of a resting vault */
-          console.error(
-            `[meter:${operation}] wallet weigh rested:`,
-            err instanceof Error ? err.message : err
-          );
         }
       }
 

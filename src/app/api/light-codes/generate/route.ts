@@ -11,16 +11,30 @@ import {
 import {
   askFingerprint,
   beginWeave,
+  dropLoopSession,
+  LOOP_PARTS,
   endWeave,
+  getLoopSession,
   guardBusy,
   guardDailyAllowance,
   guardDuplicate,
   LC_LIMITS,
+  loopSessionOwned,
+  addLoopPart,
+  createLoopSession,
   noteLcError,
   noteLcSuccess,
+  prepareLoopShelf,
+  putLoopFinal,
   verdictResponse,
+  type LcLength,
+  type LoopSession,
 } from "@/lib/server/lc-engine";
+import { assembleLoop } from "@/lib/server/loop-assembly";
 import { LC_MODES } from "@/lib/data/light-codes";
+import { rename } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 export const maxDuration = 300;
 
@@ -67,7 +81,11 @@ interface LcBody {
   mode?: string;
   intention?: string;
   civilization?: string;
-  length?: "preview" | "full";
+  length?: LcLength;
+  /** the endless journey: which part is being woven, and the token
+      that carries the journey's thread between requests */
+  loopToken?: string;
+  loopPart?: { index?: number; total?: number; nonce?: string } | null;
   shape?: {
     energy?: number;
     light?: number;
@@ -183,9 +201,12 @@ function interpreterPrompt(b: LcBody, languageName: string): string {
     "Your art is TRANSLATION: you never repeat the visitor's words back; you convert intention, mood and symbolism into a precise musical direction that a music-generation model (Google DeepMind Lyria, through the Gemini API) can render.",
     "The music is for calming, meditative, reflective, grounding, sleep-oriented, focus-oriented, emotional reset, intention-based listening. NEVER describe it as treatment, therapy, medicine or a cure; never mention frequencies curing anything.",
     "",
+    "THE FIRST LAW — THE VISITOR'S OWN WORDS OUTRANK EVERY SELECTOR:",
+    "The visitor's intention is their true voice, spoken in their own words. The energy shape and every chip or dial are only gentle defaults laid by hand. Where the visitor's words CONTRADICT the selectors, THE WORDS WIN — read them literally and let the music follow the words, never the buttons. Understand what the visitor actually means — their images, memories, longings — and translate THAT; never pick a random mood from a list when their words already carry the direction.",
+    "",
     `CHAMBER MODE: ${modeName}.`,
     modeVocabulary(b),
-    `ENERGY SHAPE: ${shapeWords(b)}.`,
+    `THE VISITOR'S OWN ENERGY SHAPE (defaults only — the words above outrank these): ${shapeWords(b)}.`,
     b.context ? `WHAT THE VISITOR IS LIVING THROUGH (from the conversation): ${b.context}` : "",
     `THE VISITOR'S INTENTION: ${b.intention?.trim() || "(the Mirror chooses freely — compose what the moment holds)"}`,
     "",
@@ -288,6 +309,7 @@ function refinePrompt(b: LcBody, languageName: string): string {
     "",
     `THE VISITOR'S INSTRUCTION: ${b.refine?.instruction?.trim() ?? "(no instruction given — refine gently toward more emotional depth)"}`,
     "",
+    "THE FIRST LAW — the instruction is the visitor's own voice: it outranks the current brief's selectors and defaults. Read it literally; where it contradicts what the brief says, the instruction wins.",
     "RULES:",
     "- Preserve the brief's language and character unless the instruction asks otherwise.",
     "- If the instruction touches the words (vocals, lyrics, language, mood of the voice), reshape the lyrics accordingly, keeping the section tags [Verse], [Chorus], [Bridge].",
@@ -460,7 +482,9 @@ function clipInput(b: LcBody, interp: LcBody["interp"], languageName: string): s
   return `A 30-second instrumental piece — no vocals: ${condensed}`;
 }
 
-/** The full song's input — the Mirror's complete production brief. */
+/** The full song's input — the Mirror's complete production brief.
+    THE LENGTH LAW: a full song asks for at least three minutes — the
+    composition must breathe its whole arc. */
 function songInput(b: LcBody, interp: LcBody["interp"], languageName: string): string {
   const style = (interp?.style ?? "").trim();
   const lyrics = b.userLyrics?.trim() || interp?.lyrics || null;
@@ -478,7 +502,58 @@ function songInput(b: LcBody, interp: LcBody["interp"], languageName: string): s
   } else {
     parts.push("Instrumental — no vocals, no lyrics.");
   }
-  parts.push("Length: about two minutes.");
+  parts.push("Length: at least three minutes — let the composition breathe its full arc.");
+  return parts.join("\n\n");
+}
+
+/** The endless journey's per-part input — one long piece woven in
+    parts: part one opens the world, the middle parts carry it, the
+    final part closes gently. Every part keeps the SAME instruments,
+    key, mood and texture, so the joined whole sounds like one breath. */
+function loopSegmentInput(
+  b: LcBody,
+  interp: LcBody["interp"],
+  languageName: string,
+  index: number,
+  total: number
+): string {
+  const style = (interp?.style ?? "").trim();
+  const lyrics = b.userLyrics?.trim() || interp?.lyrics || null;
+  const sings = wantVocals(b, lyrics) && (index === 1 || index === total);
+  const parts: string[] = [];
+  const title = interp?.title ?? "a transmission";
+  if (index === 1) {
+    parts.push(`Long-form ambient journey — "${title}" — PART 1 of ${total}.`);
+  } else if (index === total) {
+    parts.push(`Long-form ambient journey — "${title}" — FINAL PART (${index} of ${total}).`);
+  } else {
+    parts.push(`Long-form ambient journey — "${title}" — CONTINUATION, part ${index} of ${total}.`);
+  }
+  if (style) parts.push(style);
+  if (index === 1) {
+    parts.push(
+      `This is the OPENING part of one long, continuously flowing piece. Begin calmly, from near-silence, and swell gently. Establish the whole world: the instruments, the key, the pace. Do NOT conclude — sustain the atmosphere so the next part can continue seamlessly. No hard intro hit, no drum entrance that starts abruptly.`
+    );
+  } else if (index === total) {
+    parts.push(
+      `This is the CLOSING part of the same long piece. Continue the exact same world — same instruments, same key, same pace, no restart, no re-introduction. Let the music gradually settle: the energy recedes, the texture thins, and the piece ends sustained and calm, fading like a tide going out. No abrupt ending.`
+    );
+  } else {
+    parts.push(
+      `This is a CONTINUATION of the same long piece. Begin exactly where the previous part's atmosphere stood — no restart, no re-introduction, no new opening theme. Keep the same instruments, key, pace and mood; let small variations bloom inside the world (a new counter-melody, a texture that shifts like light on water). Do NOT conclude — the piece continues after this part.`
+    );
+  }
+  if (sings) {
+    const voice = b.shape?.voice && b.shape.voice !== "None" ? b.shape.voice.toLowerCase() : "gentle";
+    const lang = b.shape?.vocalLanguage === "My language" ? `sung in ${languageName}` : "";
+    parts.push(`Vocals: ${voice}${lang ? `, ${lang}` : ""}.`);
+    if (lyrics) parts.push(`LYRICS (set them to the music):\n${lyrics}`);
+  } else if (index !== 1 && index !== total) {
+    parts.push("This part is instrumental — the theme carried by instruments alone.");
+  } else {
+    parts.push("Instrumental — no vocals, no lyrics.");
+  }
+  parts.push(`Length: about four to five minutes of continuous music.`);
   return parts.join("\n\n");
 }
 
@@ -490,13 +565,17 @@ function buildLyriaInput(
   b: LcBody,
   interp: LcBody["interp"],
   imageDataUrl: string | null,
-  languageName: string
+  languageName: string,
+  loopPart?: { index: number; total: number }
 ): { model: string; input: string | LyriaInputBlock[] } {
   const isFull = b.length === "full";
-  const model = isFull ? LYRIA_FULL_MODEL : LYRIA_CLIP_MODEL;
-  const text = isFull
-    ? songInput(b, interp, languageName)
-    : clipInput(b, interp, languageName);
+  const isLoop = b.length === "loop";
+  const model = isFull || isLoop ? LYRIA_FULL_MODEL : LYRIA_CLIP_MODEL;
+  const text = isLoop && loopPart
+    ? loopSegmentInput(b, interp, languageName, loopPart.index, loopPart.total)
+    : isFull
+      ? songInput(b, interp, languageName)
+      : clipInput(b, interp, languageName);
 
   if (imageDataUrl) {
     const m = imageDataUrl.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/);
@@ -562,11 +641,14 @@ interface StepContentBlock {
    and audio blocks arrive as the engine lays them down. The last audio
    block heard is the song. The SDK's own convenience properties
    (output_audio / output_text) stand first, should the steps rest. */
-function extractWeave(interaction: {
-  output_audio?: { data?: string; mime_type?: string } | null;
-  output_text?: string | null;
-  steps?: { type?: string; content?: StepContentBlock[] }[] | null;
-}): { audioB64: string; texts: string[]; mime: string } {
+function extractWeave(
+  interaction: {
+    output_audio?: { data?: string; mime_type?: string } | null;
+    output_text?: string | null;
+    steps?: { type?: string; content?: StepContentBlock[] }[] | null;
+  },
+  maxB64 = MAX_AUDIO_B64
+): { audioB64: string; texts: string[]; mime: string } {
   let audioB64: string | null = null;
   let mime = "audio/mpeg";
   const texts: string[] = [];
@@ -600,7 +682,7 @@ function extractWeave(interaction: {
   if (!audioB64) {
     throw new Error("The engine answered without a sound. Try again in a breath.");
   }
-  if (audioB64.length > MAX_AUDIO_B64) {
+  if (audioB64.length > maxB64) {
     throw new Error(
       "The song was woven, but it is too heavy for the sky to carry home. Ask the Mirror for a shorter piece."
     );
@@ -611,7 +693,8 @@ function extractWeave(interaction: {
 async function lyriaWeave(
   body: { model: string; input: string | LyriaInputBlock[] },
   key: string,
-  timeoutMs: number
+  timeoutMs: number,
+  maxB64 = MAX_AUDIO_B64
 ): Promise<{ audioB64: string; texts: string[]; mime: string }> {
   const client = new GoogleGenAI({ apiKey: key });
   try {
@@ -628,7 +711,8 @@ async function lyriaWeave(
       } as Parameters<typeof client.interactions.create>[1]
     );
     return extractWeave(
-      interaction as unknown as Parameters<typeof extractWeave>[0]
+      interaction as unknown as Parameters<typeof extractWeave>[0],
+      maxB64
     );
   } catch (err) {
     const e = err as {
@@ -677,7 +761,14 @@ async function postImpl(
     return NextResponse.json({ error: "The chamber received nothing to interpret." }, { status: 400 });
   }
   try {
-    /* ---------- the second door: the weave (the brief is already written) ---------- */
+    /* ---------- the second door: the weave (the brief is already written) ----------
+       THE ENDLESS JOURNEY (length "loop") rides its own thread: the
+       first request opens a session and is weighed ONCE by the meter;
+       every following part carries the journey's token, rides free,
+       and lands on the instance's own shelf. When the final part
+       lands, the parts are joined with soft crossings into one
+       seamless piece whose end flows back into its beginning, and the
+       visitor's player fetches it once from the journey's own door. */
     if (b.compose) {
       /* the visitor's image rides straight into the engine's input —
          no second reading, the Mirror already saw it in the first door */
@@ -701,15 +792,61 @@ async function postImpl(
         );
       }
 
+      const keeperId = meter?.userId ?? "anon";
+      const length: LcLength =
+        b.length === "full" ? "full" : b.length === "loop" ? "loop" : "preview";
+      const isLoop = length === "loop";
+      const total = isLoop ? LOOP_PARTS : 0;
+      const rawIndex = isLoop ? Number(b.loopPart?.index ?? 1) : 0;
+      const partIndex = isLoop ? Math.min(Math.max(1, Math.floor(rawIndex) || 1), total) : 0;
+
+      /* the journey's thread — parts after the first must find their session */
+      let session: LoopSession | null = null;
+      if (isLoop && partIndex > 1) {
+        session = b.loopToken ? getLoopSession(b.loopToken) : null;
+        if (!session) {
+          return NextResponse.json(
+            {
+              ...passed,
+              error:
+                "The journey's thread rested before its weaving ended (the chamber keeps it about forty-five minutes). Ask again — the Mirror begins the journey anew, and the brief still stands.",
+              code: "journey_thread_rest",
+            },
+            { status: 410 }
+          );
+        }
+        if (!loopSessionOwned(session, keeperId)) {
+          return NextResponse.json(
+            { ...passed, error: "This journey belongs to another keeper.", code: "journey_foreign" },
+            { status: 403 }
+          );
+        }
+        if (session.parts.length !== partIndex - 1) {
+          return NextResponse.json(
+            {
+              ...passed,
+              error: `The journey's parts arrived out of step — the loom waits for part ${session.parts.length + 1} of ${session.total}.`,
+              code: "journey_out_of_step",
+              loopToken: session.token,
+              loopProgress: `${session.parts.length}/${session.total}`,
+            },
+            { status: 409 }
+          );
+        }
+      }
+
       /* the guards — one loom, no double-weaving, the day's allowance.
          THE ONE FINGERPRINT — the ask is hashed once and the same hash
-         guards and remembers it, or the twice-law could never match. */
-      const keeperId = meter?.userId ?? "anon";
-      const length: "preview" | "full" = b.length === "full" ? "full" : "preview";
+         guards and remembers it, or the twice-law could never match.
+         The journey's continuation parts carry a per-attempt nonce so
+         an honest retry of a stumbled part is never mistaken for a
+         double-weave (the journey was weighed once, at its first part). */
       const fingerprint = askFingerprint([
         b.mode,
         b.intention?.trim().toLowerCase(),
         length,
+        partIndex,
+        isLoop && partIndex > 1 ? b.loopPart?.nonce ?? Date.now().toString(36) : null,
         b.language,
         b.civilization,
         b.shape,
@@ -721,26 +858,85 @@ async function postImpl(
       if (!busy.ok) return verdictResponse(busy, passed);
       const dup = guardDuplicate(keeperId, fingerprint);
       if (!dup.ok) return verdictResponse(dup, passed);
-      const daily = guardDailyAllowance(keeperId, length);
-      if (!daily.ok) return verdictResponse(daily, passed);
+      if (partIndex <= 1) {
+        const daily = guardDailyAllowance(keeperId, length);
+        if (!daily.ok) return verdictResponse(daily, passed);
+      }
 
-      beginWeave(keeperId, fingerprint, length);
+      beginWeave(keeperId, fingerprint, length, partIndex <= 1);
       try {
         const languageName = LANG_NAMES[b.language ?? "en"] ?? "English";
-        const body = buildLyriaInput(b, passed, imageDataUrl, languageName);
+        const body = buildLyriaInput(
+          b,
+          passed,
+          imageDataUrl,
+          languageName,
+          isLoop ? { index: partIndex, total } : undefined
+        );
         const weave = await lyriaWeave(
           body,
           key,
-          length === "full" ? 280_000 : 120_000
+          length === "full" ? 280_000 : isLoop ? 200_000 : 120_000,
+          isLoop ? 12_000_000 : MAX_AUDIO_B64
         );
         noteLcSuccess(body.model);
+
+        if (!isLoop) {
+          return NextResponse.json({
+            ...passed,
+            structure: weave.texts.join("\n\n").slice(0, 2000) || undefined,
+            audio: weave.audioB64,
+            mimeType: weave.mime,
+            engine: body.model,
+            length,
+          });
+        }
+
+        /* --- the endless journey: land this part, then join or continue --- */
+        const segBytes = Buffer.from(weave.audioB64, "base64");
+        if (!session) {
+          session = createLoopSession(keeperId, total, weave.mime);
+          await prepareLoopShelf(session);
+        }
+        await addLoopPart(session, segBytes);
+
+        if (session.parts.length < session.total) {
+          return NextResponse.json({
+            ...passed,
+            length: "loop",
+            loopToken: session.token,
+            loopProgress: `${session.parts.length}/${session.total}`,
+            loopFinalized: false,
+          });
+        }
+
+        /* the final part — join the whole journey with soft crossings */
+        const joined = await assembleLoop(session.parts, session.dir);
+        const finalToken = session.token;
+        const finalPath = join(tmpdir(), `lc-journey-${finalToken}.mp3`);
+        let finalFile = joined.file;
+        try {
+          await rename(joined.file, finalPath);
+          finalFile = finalPath;
+          dropLoopSession(finalToken); // the parts' shelf is swept — the journey flew to its own
+        } catch {
+          /* the rename could not move the file — the final rests where
+             it was joined (inside the session's shelf, which outlives
+             the final's own TTL; nothing is dropped here) */
+        }
+        putLoopFinal(finalToken, keeperId, finalFile, joined.durationSec, joined.seamless);
         return NextResponse.json({
           ...passed,
+          length: "loop",
+          loopToken: finalToken,
+          loopProgress: `${total}/${total}`,
+          loopFinalized: true,
+          audioUrl: `/api/light-codes/audio?token=${finalToken}`,
+          loopDurationSec: Math.round(joined.durationSec),
+          loopSeamless: joined.seamless,
+          loopNote: joined.note,
           structure: weave.texts.join("\n\n").slice(0, 2000) || undefined,
-          audio: weave.audioB64,
-          mimeType: weave.mime,
           engine: body.model,
-          length,
         });
       } catch (err) {
         const code = (err as LyriaFailure)?.code ?? "engine";

@@ -266,8 +266,9 @@ export interface LcTrack {
   lyrics?: string | null;
   /** The Mirror's interpretation — why it sounds the way it sounds. */
   notes?: string;
-  /** The song's length: a 30-second preview or the full composition. */
-  length?: "preview" | "full";
+  /** The song's length: a 30-second preview, the full composition,
+      or the endless journey (a ~30-minute seamless loop). */
+  length?: "preview" | "full" | "loop";
   /** The engine's own words about the song's structure (revealed on request). */
   structure?: string;
   createdAt: number;

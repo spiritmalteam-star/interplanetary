@@ -1,4 +1,8 @@
 import { NextResponse } from "next/server";
+import { mkdtemp, rm, readFile, writeFile } from "node:fs/promises";
+import { existsSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 /* ------------------------------------------------------------------ */
 /*  THE CHAMBER'S LOOM HOUSE — the one place the sound engine's        */
@@ -31,11 +35,14 @@ let globalDayKey = todayKey();
 let lastSuccess: { model: string; at: number } | null = null;
 let lastError: { code: string; message: string; at: number } | null = null;
 
+export type LcLength = "preview" | "full" | "loop";
+
 /* ------------------------- the limits ------------------------- */
 
 export const LC_LIMITS = {
   previewPerKeeperPerDay: intEnv("LC_DAILY_PREVIEW", 15),
   fullPerKeeperPerDay: intEnv("LC_DAILY_FULL", 4),
+  loopPerKeeperPerDay: intEnv("LC_DAILY_LOOP", 2),
   globalPerDay: intEnv("LC_DAILY_GLOBAL", 400),
 };
 
@@ -106,10 +113,11 @@ export function guardDuplicate(
   return { ok: true };
 }
 
-/** The day's allowance — previews and full songs spend different doors. */
+/** The day's allowance — previews, full songs and the endless loops
+    spend different doors. */
 export function guardDailyAllowance(
   keeperId: string,
-  length: "preview" | "full"
+  length: LcLength
 ): LcWeaveVerdict {
   rollDay();
   if (globalDailyCount >= LC_LIMITS.globalPerDay) {
@@ -121,11 +129,13 @@ export function guardDailyAllowance(
         "The chamber's sky allowance rests for now — today's quota for new sounds is spent. Breathe, and return tomorrow.",
     };
   }
-  const door = length === "full" ? "full" : "preview";
+  const door = length === "full" ? "full" : length === "loop" ? "loop" : "preview";
   const allowance =
     door === "full"
       ? LC_LIMITS.fullPerKeeperPerDay
-      : LC_LIMITS.previewPerKeeperPerDay;
+      : door === "loop"
+        ? LC_LIMITS.loopPerKeeperPerDay
+        : LC_LIMITS.previewPerKeeperPerDay;
   const spent = dailyUsage.get(keeperId)?.get(door) ?? 0;
   if (spent >= allowance) {
     return {
@@ -135,7 +145,9 @@ export function guardDailyAllowance(
       error:
         door === "full"
           ? "Today's full songs are spent — the chamber wove its allowance for you. The previews still sound; the full loom turns again tomorrow."
-          : "Today's previews are spent — the chamber holds its allowance kind and firm. Return tomorrow, or ask for a full song.",
+          : door === "loop"
+            ? "Today's endless journeys are spent — a long weaving asks much of the engine, so the chamber holds its allowance kind and firm. Return tomorrow."
+            : "Today's previews are spent — the chamber holds its allowance kind and firm. Return tomorrow, or ask for a full song.",
     };
   }
   return { ok: true };
@@ -144,14 +156,16 @@ export function guardDailyAllowance(
 export function beginWeave(
   keeperId: string,
   fingerprint: string,
-  length: "preview" | "full"
+  length: LcLength,
+  countUsage = true
 ): void {
   rollDay();
   inFlight.set(keeperId, Date.now());
   recentAsks.set(keeperId, hashStr(fingerprint));
   recentAskTimes.set(keeperId, Date.now());
+  if (!countUsage) return; // a continuation part rides the journey's own count
   globalDailyCount += 1;
-  const door = length === "full" ? "full" : "preview";
+  const door = length === "full" ? "full" : length === "loop" ? "loop" : "preview";
   const mine = dailyUsage.get(keeperId) ?? new Map<string, number>();
   mine.set(door, (mine.get(door) ?? 0) + 1);
   dailyUsage.set(keeperId, mine);
@@ -176,7 +190,152 @@ export function verdictResponse(
   );
 }
 
-/* --------------------- the keeper's diagnostic --------------------- */
+/* --------------------- the endless journey -----------------------
+   THE LOOP SESSION — one long piece woven in parts. Each part is a
+   real engine weave, laid to the instance's own temporary shelf as
+   its own file; when the final part lands, the parts are joined with
+   soft crossings (ffmpeg) into one seamless journey whose end flows
+   back into its beginning. The visitor's own parts ride free after
+   the first — the journey was weighed once when it began.
+   THE HONESTY LAW: every part is real progress, never a percentage
+   invented; the session rests after 45 quiet minutes and its shelf
+   is swept. */
+
+export const LOOP_PARTS = 6; // six weavings ≈ thirty minutes of sound
+
+export interface LoopSession {
+  token: string;
+  keeperId: string;
+  total: number;
+  mimeType: string;
+  dir: string;
+  parts: string[]; // file paths, one per landed part
+  createdAt: number;
+}
+
+const loopSessions = new Map<string, LoopSession>();
+const LOOP_SESSION_TTL = 45 * 60 * 1000;
+const LOOP_SESSION_MAX = 24;
+
+export interface LoopFinal {
+  token: string;
+  keeperId: string;
+  file: string;
+  durationSec: number;
+  seamless: boolean;
+  createdAt: number;
+}
+
+const loopFinals = new Map<string, LoopFinal>();
+const LOOP_FINAL_TTL = 25 * 60 * 1000;
+const LOOP_FINAL_MAX = 2;
+
+function sweepLoops(): void {
+  const now = Date.now();
+  for (const [token, s] of loopSessions) {
+    if (now - s.createdAt > LOOP_SESSION_TTL) {
+      void rm(s.dir, { recursive: true, force: true }).catch(() => undefined);
+      loopSessions.delete(token);
+    }
+  }
+  for (const [token, f] of loopFinals) {
+    if (now - f.createdAt > LOOP_FINAL_TTL) {
+      void rm(f.file, { force: true }).catch(() => undefined);
+      loopFinals.delete(token);
+    }
+  }
+}
+
+export function createLoopSession(
+  keeperId: string,
+  total: number,
+  mimeType: string
+): LoopSession {
+  sweepLoops();
+  /* the oldest journey rests when the house holds too many */
+  while (loopSessions.size >= LOOP_SESSION_MAX) {
+    const oldest = loopSessions.keys().next().value as string | undefined;
+    if (!oldest) break;
+    const s = loopSessions.get(oldest);
+    if (s) void rm(s.dir, { recursive: true, force: true }).catch(() => undefined);
+    loopSessions.delete(oldest);
+  }
+  const token = `lp${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`;
+  const session: LoopSession = {
+    token,
+    keeperId,
+    total,
+    mimeType,
+    dir: "",
+    parts: [],
+    createdAt: Date.now(),
+  };
+  loopSessions.set(token, session);
+  /* the shelf is prepared lazily by the caller (async mkdir) */
+  return session;
+}
+
+export async function prepareLoopShelf(session: LoopSession): Promise<void> {
+  if (session.dir) return;
+  session.dir = await mkdtemp(join(tmpdir(), "lc-loop-"));
+}
+
+export function getLoopSession(token: string): LoopSession | null {
+  sweepLoops();
+  const s = loopSessions.get(token);
+  if (!s) return null;
+  return s;
+}
+
+export function loopSessionOwned(session: LoopSession, keeperId: string): boolean {
+  return session.keeperId === keeperId;
+}
+
+export async function addLoopPart(session: LoopSession, bytes: Buffer): Promise<string> {
+  const file = join(session.dir, `part-${String(session.parts.length + 1).padStart(2, "0")}.mp3`);
+  await writeFile(file, bytes);
+  session.parts.push(file);
+  return file;
+}
+
+export function dropLoopSession(token: string): void {
+  const s = loopSessions.get(token);
+  if (s?.dir) void rm(s.dir, { recursive: true, force: true }).catch(() => undefined);
+  loopSessions.delete(token);
+}
+
+export function putLoopFinal(
+  token: string,
+  keeperId: string,
+  file: string,
+  durationSec: number,
+  seamless: boolean
+): void {
+  sweepLoops();
+  while (loopFinals.size >= LOOP_FINAL_MAX) {
+    const oldest = loopFinals.keys().next().value as string | undefined;
+    if (!oldest) break;
+    const f = loopFinals.get(oldest);
+    if (f) void rm(f.file, { force: true }).catch(() => undefined);
+    loopFinals.delete(oldest);
+  }
+  loopFinals.set(token, { token, keeperId, file, durationSec, seamless, createdAt: Date.now() });
+}
+
+export function getLoopFinal(token: string, keeperId: string): LoopFinal | null {
+  sweepLoops();
+  const f = loopFinals.get(token);
+  if (!f || f.keeperId !== keeperId) return null;
+  if (!existsSync(f.file)) {
+    loopFinals.delete(token);
+    return null;
+  }
+  return f;
+}
+
+export function readLoopFinalFile(f: LoopFinal): Promise<Buffer> {
+  return readFile(f.file);
+}
 
 export function noteLcSuccess(model: string): void {
   lastSuccess = { model, at: Date.now() };
