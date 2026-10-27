@@ -6289,3 +6289,18 @@ Work Log:
 
 Stage Summary:
 - GitHub main (e0a18bb) is the one truth and the sandbox now stands on it; the stale yielding portal is archived at archive/yielding-portal (never deleted, never merged); the environment's three silent killers (stale DB, stale node_modules, corrupted .next) are named and fixed; the house serves 200 on both viewports.
+---
+Task ID: 10
+Agent: Z.ai Code (main orchestrator)
+Task: The keeper asked for the full replication prompt as one massive PDF with all images - built, verified, served, delivered
+
+Work Log:
+- ROUTED via the pdf skill's Report brief: read SKILL.md, fonts.md, report.md, cover.md; cascade palette generated (seed 11); Template 01 HUD cover.
+- GATHERED the images: five fresh app screenshots via agent-browser (landing, Create menu, Scopes menu, mobile 390px; the music room caught a transient chunk error and was honestly dropped from the gallery), plus 26 artwork plates curated from public/images (walk, sigils, entities, biology, timeline, about).
+- TAMED the small vessel: dmesg proved the kernel silently OOM-killed next-server mid-compile (3.9GB ceiling); fixed with turbopack.memoryLimit 1536 in next.config.ts + NODE_OPTIONS cap 2048 + a wiped .next (the inner_of_upper_lost_followers panic was cache scar tissue from the reset).
+- BUILT the body (ReportLab, TocDocTemplate + multiBuild, clickable TOC, 8 parts + appendix, 10 tables, 17 e2e checks, 23-table blueprint, the economy, the runbook, the Google repair, the gallery grids) and the cover (html2poster.js, 794px, cover_validate.js zero overlaps); merged via pypdf with tight A4 normalization.
+- QA: pdf_qa.py PASS (12 checks); font.check 0 issues; toc.check clean; pages.clean no blanks; meta branded. 21 pages, 10.9MB.
+- SERVED at /reflectme-full-replication-prompt.pdf from public/ (HTTP 200, application/pdf) and committed to the repository so the document can never be lost.
+
+Stage Summary:
+- public/reflectme-full-replication-prompt.pdf is the one massive replication prompt: vision, master directive (4 phases, 23 tables, 17 e2e checks), canonical architecture, economy, build history, operations runbook, the keeper's Google OAuth recipe, the external-configuration checklist, and the full gallery with images. next.config.ts carries the turbo memory limit that keeps the house alive in the small vessel.
