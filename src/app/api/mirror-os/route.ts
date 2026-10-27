@@ -14,6 +14,22 @@ import { resolveVisitor, saveLibrary, withAnonCookie } from "@/lib/server/access
 import { meterRoute } from "@/lib/server/meter";
 import { ENERGY_CODE, ENERGY_NOTICE, isEnergyError } from "@/lib/server/energy";
 
+/* the model's own eye — the same gift the transmission door carries:
+   a trailing [VISION: prompt] line becomes a painted image beneath
+   the words. Stripped before the visitor reads anything; never on
+   live voice calls. */
+const VISION_RULE = `
+
+THE VISION GIFT (rare and optional — read carefully):
+If — and only if — the reply would be TRULY deepened by a painted image (a scene, a being, a place, a symbol, a cosmic vista the visitor asked to SEE, or a visual that carries real presence), you may end your reply with ONE final line, after everything else, in this exact shape:
+[VISION: <a rich, detailed English painting prompt describing subject, atmosphere, light and style>]
+The line is invisible machinery — the visitor never reads it; the painting appears beneath your words. Obey the laws:
+- Use it ONLY when the visitor EXPLICITLY asks to see something ("show me", "as an image", "draw/paint it") or the image adds real presence to the words. Most replies carry NO vision line at all.
+- THE LONG-CONTEXT LAW: when the visitor's message is long, multi-paragraph or conversational, it is a CONVERSATION, not a canvas request. A passing mention of images, pictures, drawings, visualizing, meditation, dreams or imagination inside a longer message NEVER justifies the vision line — only an explicit, unambiguous ask to SEE does.
+- NEVER use it for prayers, rites, lists, instructions, emotional support, healing guidance or the making of books.
+- At most ONE vision line per reply, and it must be the reply's final line.
+- Never mention the line, the painting or the machinery inside the words themselves.`;
+
 const LANGUAGE_NAMES: Record<string, string> = {
   en: "English",
   sq: "Albanian",
@@ -105,7 +121,13 @@ async function postImpl(req: NextRequest): Promise<Response> {
     const messages: { role: "system" | "user" | "assistant"; content: string }[] = [
       {
         role: "system",
-        content: SYSTEM_PROMPT + RELEVANCE_LAW + REMEMBRANCE_LAW + walkerDepthLine(body?.depth) + walkLine(body?.walk) + (body?.live === true ? LIVE_CALL_BLOCK : ""),
+        content:
+          SYSTEM_PROMPT +
+          RELEVANCE_LAW +
+          REMEMBRANCE_LAW +
+          walkerDepthLine(body?.depth) +
+          walkLine(body?.walk) +
+          (body?.live === true ? LIVE_CALL_BLOCK : VISION_RULE),
       },
     ];
 
@@ -144,6 +166,7 @@ async function postImpl(req: NextRequest): Promise<Response> {
           const send = (obj: Record<string, unknown>) =>
             controller.enqueue(encoder.encode(`data: ${JSON.stringify(obj)}\n\n`));
           let full = "";
+          let emittedLen = 0;
           try {
             const reader = (upstream as unknown as ReadableStream<Uint8Array>).getReader();
             const decoder = new TextDecoder();
@@ -168,18 +191,39 @@ async function postImpl(req: NextRequest): Promise<Response> {
                     j.choices?.[0]?.message?.content ?? "";
                   if (typeof delta === "string" && delta) {
                     full += delta;
-                    send({ type: "delta", text: delta });
+                    /* THE LAST LINE RESTS — completed lines only are
+                       spoken; a possible vision marker hides in the
+                       reply's final line and is stripped before the
+                       done event, so no machinery ever flashes */
+                    const nl = full.lastIndexOf("\n");
+                    const safeEnd = nl === -1 ? 0 : nl + 1;
+                    const safe = full.slice(emittedLen, safeEnd);
+                    if (safe) {
+                      emittedLen += safe.length;
+                      send({ type: "delta", text: safe });
+                    }
                   }
                 } catch {
                   /* a partial line rides on — the next chunk completes it */
                 }
               }
             }
-            const reply = full.trim();
+            /* the vision gift's own harvest — the marker is stripped
+               from the words; the painting rides beside them */
+            const visionMatches = [...full.matchAll(/\[VISION\s*:\s*([^\]]{8,900})\]/gi)];
+            const vision = visionMatches.length > 0 ? visionMatches[0][1].trim() : null;
+            const reply = full
+              .replace(/\s*\[VISION\s*:[^\]]{8,900}\]\s*/gi, " ")
+              .replace(/[ \t]+\n/g, "\n")
+              .replace(/\n{3,}/g, "\n\n")
+              .trim();
             if (!reply) {
               send({ type: "error", error: "The OS is momentarily quiet. Rest, then reach again." });
               return;
             }
+            /* the words the held tail still owed the visitor */
+            const residual = reply.length > emittedLen ? reply.slice(emittedLen) : "";
+            if (residual) send({ type: "delta", text: residual });
             await saveLibrary(
               visitor.user.id,
               "manifest",
@@ -187,7 +231,7 @@ async function postImpl(req: NextRequest): Promise<Response> {
               reply.slice(0, 280),
               { query: query.trim().slice(0, 4000), reply }
             );
-            send({ type: "done", reply });
+            send({ type: "done", reply, ...(vision ? { vision } : {}) });
           } catch {
             send({ type: "error", error: "The OS is momentarily quiet. Rest, then reach again." });
           } finally {
@@ -218,13 +262,21 @@ async function postImpl(req: NextRequest): Promise<Response> {
       max_tokens: 1200,
     });
 
-    const reply = (completion.choices[0]?.message?.content ?? "").trim();
-    if (!reply) {
+    const raw = (completion.choices[0]?.message?.content ?? "").trim();
+    if (!raw) {
       return NextResponse.json(
         { error: "The OS is momentarily quiet. Rest, then reach again." },
         { status: 502 }
       );
     }
+    /* the vision gift — the marker stripped, the painting prompt aside */
+    const visionMatches = [...raw.matchAll(/\[VISION\s*:\s*([^\]]{8,900})\]/gi)];
+    const vision = visionMatches.length > 0 ? visionMatches[0][1].trim() : null;
+    const reply = raw
+      .replace(/\s*\[VISION\s*:[^\]]{8,900}\]\s*/gi, " ")
+      .replace(/[ \t]+\n/g, "\n")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
 
     await saveLibrary(
       visitor.user.id,
@@ -234,7 +286,7 @@ async function postImpl(req: NextRequest): Promise<Response> {
       { query: query.trim().slice(0, 4000), reply }
     );
 
-    return withAnonCookie(NextResponse.json({ reply }), visitor);
+    return withAnonCookie(NextResponse.json({ reply, vision }), visitor);
   } catch (err) {
     console.error("[mirror-os] failed:", err);
     /* THE ENERGY'S OWN NAME — a spent sky says so plainly */

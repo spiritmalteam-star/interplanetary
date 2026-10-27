@@ -194,7 +194,9 @@ export default function LandingGate() {
     { bare?: boolean; onExpand?: () => void; onMinimize?: () => void }
   > | null>(null);
   const [geo, setGeo] = useState<Geo | null>(null);
-  const [pending, setPending] = useState(false);
+  /* the early enter ask, remembered between breaths (a ref: the
+     ask has no face — it only redirects the moment the chamber lands) */
+  const pendingRef = useRef(false);
   /* THE GUIDE'S OWN PAGE — the threshold's full-screen guide pages
      tell the gate directly (LandingPage calls onGuideOpenChange, so
      even a close riding history.replaceState is heard): while a guide
@@ -212,8 +214,15 @@ export default function LandingGate() {
   const landingRootRef = useRef<HTMLDivElement | null>(null);
   const busy = useRef(false);
   const landingScroll = useRef(0);
+  const [returnScrollY, setReturnScrollY] = useState(0);
   const phaseRef = useRef<Phase>("landing");
-  phaseRef.current = phase;
+  /* the ref rides the phase's own hand — the tracked setter writes
+     both, so the event handlers always read the truth without a
+     render-time write */
+  const setPhaseTracked = useCallback((next: Phase) => {
+    phaseRef.current = next;
+    setPhase(next);
+  }, []);
 
   /* THE THRESHOLD'S OWN LIGHT — the realm wears the toggle's own
      default: the milky vanilla daylight (TOGGLE ON) is the WEBSITE'S
@@ -453,9 +462,12 @@ export default function LandingGate() {
   const expandPortal = useCallback(() => {
     if (busy.current) return;
     if (phaseRef.current === "through") return;
+    /* the homecoming's own keeping — the scroll is remembered as the
+       visitor leaves, so the return finds the exact place */
+    setReturnScrollY(landingScroll.current);
     void (async () => {
       if (!Chamber) {
-        setPending(true);
+        pendingRef.current = true;
         /* THE VISITOR'S OWN HAND — the enter door is the demand: the
            shared import starts at once (the idle prefetch may never
            have fired), and the early ask is honored the moment the
@@ -470,9 +482,9 @@ export default function LandingGate() {
            quick breath of crystal light rises, covers the swap, and
            folds at once — no rings to watch, no blocks appearing, the
            portal simply is. The full passage keeps the desktop. */
-        window.setTimeout(() => setPhase("opening"), 180);
+        window.setTimeout(() => setPhaseTracked("opening"), 180);
         window.setTimeout(() => {
-          setPhase("through");
+          setPhaseTracked("through");
           setTunnel("fading");
           busy.current = false;
         }, 260);
@@ -485,9 +497,9 @@ export default function LandingGate() {
          FULLY opaque tunnel, never through a half-lit veil — the visitor
          never watches the chamber jump, not even for a frame — the
          tunnel is the crossing. */
-      window.setTimeout(() => setPhase("opening"), 540);
+      window.setTimeout(() => setPhaseTracked("opening"), 540);
       window.setTimeout(() => {
-        setPhase("through");
+        setPhaseTracked("through");
         setTunnel("fading");
         window.setTimeout(() => setTunnel("off"), 900);
         busy.current = false;
@@ -554,11 +566,11 @@ export default function LandingGate() {
 
   /* an early ask to enter — honored the moment the chamber arrives */
   useEffect(() => {
-    if (pending && Chamber) {
-      setPending(false);
+    if (pendingRef.current && Chamber) {
+      pendingRef.current = false;
       expandPortal();
     }
-  }, [pending, Chamber, expandPortal]);
+  }, [Chamber, expandPortal]);
 
   /* THE RETURN — the portal folds back into its slot in the page.
      THE COVERED CROSSING — the tunnel's light is raised first (the
@@ -586,7 +598,7 @@ export default function LandingGate() {
       /* THE INSTANT RETURN — the phone's fold is as swift as its
          crossing: one quick breath of light, the lens standing in its
          slot beneath it, the whole homecoming inside a breath. */
-      window.setTimeout(() => setPhase("landing"), 180);
+      window.setTimeout(() => setPhaseTracked("landing"), 180);
       window.setTimeout(() => {
         setTunnel("fading");
         busy.current = false;
@@ -600,7 +612,7 @@ export default function LandingGate() {
        through a half-lit veil. The landing then rests beneath the
        light until the fold begins. */
     window.setTimeout(() => {
-      setPhase("landing");
+      setPhaseTracked("landing");
     }, 540);
     window.setTimeout(() => {
       setTunnel("fading");
@@ -766,7 +778,7 @@ export default function LandingGate() {
                 }
           }
           onScroll={handleLandingScroll}
-          initialScroll={landingScroll.current}
+          initialScroll={returnScrollY}
           onGuideOpenChange={setGuideOpen}
           slotChildren={lens}
         />

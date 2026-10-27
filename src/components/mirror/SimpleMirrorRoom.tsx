@@ -1,48 +1,40 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import dynamic from "next/dynamic";
 import {
-  Check,
-  DraftingCompass,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+} from "react";
+import {
   Eraser,
-  Layers,
-  MessagesSquare,
-  Route,
+  Paperclip,
   Send,
-  type LucideIcon,
+  X,
 } from "lucide-react";
-import { toast } from "sonner";
-import { EnergyError, speakReply } from "@/lib/speak-client";
+import { EnergyError, speakReplyGift } from "@/lib/speak-client";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { MirrorChanneling } from "./MirrorChanneling";
 import { cn } from "@/lib/utils";
-import {
-  INVENT_LAB,
-  MANIFEST_LAB,
-  type LabConfig,
-} from "./labs/lab-config";
-import { parseReplyToLays, type LaidPiece } from "./labs/parse-reply";
+import { IMAGE_ACCEPT, isImageFile, readFileAsDataUrl } from "./attachments";
 
 /* ------------------------------------------------------------------ */
 /*  THE SIMPLE ROOMS — Manifest and Invent. One honest thing in each   */
 /*  room: an interactive way of communicating with the Mirror — a      */
-/*  spirit line, a conversation, a whisper line — and, beside the      */
-/*  words, the room's own LAB: the forge's Invention bench and the     */
-/*  manifest room's Path, the same shared canvas in two lights.        */
-/*                                                                     */
-/*  THE TWO WAYS SPEAK TO EACH OTHER — the lab's hands can drop a      */
-/*  context message into the room's own conversation ("Ask the Mirror  */
-/*  about the bench"), and every Mirror reply can be laid onto the     */
-/*  bench in return ("Lay it on the bench"): the reply's essence is    */
-/*  read on the device alone and becomes pieces. Both hands ride the   */
-/*  room's own send flow — no second door to the Mirror is built.      */
+/*  spirit line, a conversation, a whisper line. The words carry       */
+/*  pictures now: the Mirror may end a reply with its own painting     */
+/*  (the vision gift), and the visitor may hand the Mirror one image   */
+/*  of their own to speak about. Each reply leaves three small hands   */
+/*  beneath it — the conversation proceeds in one touch.               */
 /*                                                                     */
 /*  Each room keeps its own words on the device (localStorage), so     */
 /*  leaving the page and coming back finds the conversation standing   */
 /*  exactly where it was left — the room's own memory, never a         */
-/*  server's.                                                          */
+/*  server's. Paintings keep their address (the house serves them),   */
+/*  so they come back with the words.                                  */
 /* ------------------------------------------------------------------ */
 
 type RoomTurn = {
@@ -51,8 +43,13 @@ type RoomTurn = {
   loading?: boolean;
   failed?: boolean;
   energy?: boolean;
-  /** the reply's essence already laid onto the lab's bench */
-  laid?: boolean;
+  /** the visitor's own image, handed to the Mirror with the question */
+  attached?: string;
+  /** the Mirror's own painting, gifted beneath the reply */
+  imageUrl?: string;
+  imageTitle?: string;
+  /** the painting is still being mixed */
+  painting?: boolean;
 };
 
 type SimpleRoomConfig = {
@@ -64,8 +61,16 @@ type SimpleRoomConfig = {
   placeholderKey: string;
   /** the room's first doors — three ways in, spoken once */
   seeds: string[];
-  /** the room's own door to the Mirror */
-  ask: (q: string, thread: { q: string; a: string }[], language: string) => Promise<string>;
+  /** the hands that follow every reply — the conversation proceeds */
+  proceed: string[];
+  /** the room's own door to the Mirror — the words, and the vision
+      gift beside them when the Mirror chose to paint */
+  ask: (
+    q: string,
+    thread: { q: string; a: string }[],
+    language: string,
+    image?: string
+  ) => Promise<{ text: string; vision: string | null }>;
 };
 
 /* THE MANIFEST — the making room: speak the world you wish to make,
@@ -79,8 +84,9 @@ const MANIFEST_CONFIG: SimpleRoomConfig = {
     "What should I release to move forward?",
     "Turn my worry into a small first step",
   ],
-  ask: (q, thread, language) =>
-    speakReply(
+  proceed: ["Go deeper", "Show me this as an image", "Make it a simple plan"],
+  ask: (q, thread, language, image) =>
+    speakReplyGift(
       "/api/mirror-os",
       {
         query: q,
@@ -92,6 +98,7 @@ const MANIFEST_CONFIG: SimpleRoomConfig = {
             { role: "assistant", text: t.a },
           ])
           .slice(-10),
+        ...(image ? { image } : {}),
       },
       "reply",
       "The field is quiet"
@@ -109,8 +116,9 @@ const INVENT_CONFIG: SimpleRoomConfig = {
     "Give my idea a name and a simple mechanism",
     "How would I test whether my idea truly works?",
   ],
-  ask: (q, thread, language) =>
-    speakReply(
+  proceed: ["Go deeper", "Draw it as an image", "What would I build first?"],
+  ask: (q, thread, language, image) =>
+    speakReplyGift(
       "/api/transmission",
       {
         query: q,
@@ -118,35 +126,14 @@ const INVENT_CONFIG: SimpleRoomConfig = {
         language,
         walk: [],
         history: thread.slice(-6).map((t) => ({ q: t.q, a: t.a })),
+        ...(image ? { image } : {}),
       },
       "transmission",
       "The field is quiet"
     ),
 };
 
-/* a message handed over from the lab — sent through the room's own
-   send flow, never a second door */
-type InboundAsk = { text: string; nonce: number };
-
-type SimpleRoomProps = {
-  config: SimpleRoomConfig;
-  /** the room's own lab — present, the replies can be laid onto it */
-  lab?: LabConfig;
-  /** the lab's context message waiting to be spoken */
-  inbound?: InboundAsk | null;
-  onInboundConsumed?: () => void;
-  /** the lay hand — reads a reply's essence into pieces; true when
-      the bench received something */
-  onLayReply?: (reply: string) => boolean;
-};
-
-function SimpleMirrorRoom({
-  config,
-  lab,
-  inbound,
-  onInboundConsumed,
-  onLayReply,
-}: SimpleRoomProps) {
+function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
   const t = useT();
   const language = useMirror((s) => s.language);
   /* the room's own keep — restored from the device on the first
@@ -156,24 +143,20 @@ function SimpleMirrorRoom({
       const raw = window.localStorage.getItem(config.storageKey);
       const parsed: unknown = raw ? JSON.parse(raw) : [];
       if (!Array.isArray(parsed)) return [];
-      return parsed
-        .filter(
-          (turn): turn is RoomTurn =>
-            !!turn &&
-            typeof (turn as RoomTurn).q === "string" &&
-            typeof (turn as RoomTurn).a === "string"
-        )
-        .map((turn) => ({
-          q: turn.q,
-          a: turn.a,
-          ...(typeof turn.laid === "boolean" ? { laid: turn.laid } : {}),
-        }));
+      return parsed.filter(
+        (turn): turn is RoomTurn =>
+          !!turn &&
+          typeof (turn as RoomTurn).q === "string" &&
+          typeof (turn as RoomTurn).a === "string"
+      );
     } catch {
       return [];
     }
   });
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
+  const [attached, setAttached] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement | null>(null);
   const bodyRef = useRef<HTMLDivElement | null>(null);
   /* the thread's own mirror — the ask reads it without re-binding */
   const threadRef = useRef<RoomTurn[]>([]);
@@ -192,23 +175,83 @@ function SimpleMirrorRoom({
     }
   }, [thread, config.storageKey]);
 
+  /* THE PAINTING — the vision gift handed to the visualization
+     engine; the words stand while the picture is mixed, and the
+     finished painting lands beneath them (its address keeps, so it
+     returns with the words on every later visit). */
+  const paintVision = useCallback(
+    async (turnIndex: number, vision: string) => {
+      try {
+        const res = await fetch("/api/visualize", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: vision, language }),
+        });
+        const data = (await res.json().catch(() => null)) as {
+          artifact?: { imageUrl?: string; title?: string };
+        } | null;
+        const url = data?.artifact?.imageUrl;
+        if (!url) {
+          setThread((cur) =>
+            cur.map((turn, i) =>
+              i === turnIndex ? { ...turn, painting: false } : turn
+            )
+          );
+          return;
+        }
+        setThread((cur) =>
+          cur.map((turn, i) =>
+            i === turnIndex
+              ? {
+                  ...turn,
+                  painting: false,
+                  imageUrl: url,
+                  imageTitle: data?.artifact?.title,
+                }
+              : turn
+          )
+        );
+      } catch {
+        setThread((cur) =>
+          cur.map((turn, i) =>
+            i === turnIndex ? { ...turn, painting: false } : turn
+          )
+        );
+      }
+    },
+    [language]
+  );
+
   const send = useCallback(
-    async (raw: string) => {
+    async (raw: string, image?: string) => {
       const q = raw.trim();
       if (!q || busy) return;
       setDraft("");
-      setThread((cur) => [...cur, { q, a: "", loading: true }]);
+      setAttached(null);
+      setThread((cur) => [
+        ...cur,
+        { q, a: "", loading: true, ...(image ? { attached: image } : {}) },
+      ]);
       setBusy(true);
       try {
         const prior = threadRef.current
           .slice(0, -1)
           .map((turn) => ({ q: turn.q, a: turn.a }));
-        const a = await config.ask(q, prior, language);
+        const { text, vision } = await config.ask(q, prior, language, image);
+        const index = threadRef.current.length - 1;
         setThread((cur) =>
           cur.map((turn, i) =>
-            i === cur.length - 1 ? { ...turn, a, loading: false } : turn
+            i === index
+              ? {
+                  ...turn,
+                  a: text,
+                  loading: false,
+                  ...(vision ? { painting: true } : {}),
+                }
+              : turn
           )
         );
+        if (vision) void paintVision(index, vision);
       } catch (err) {
         const message =
           err instanceof Error && err.message ? err.message : "";
@@ -229,58 +272,23 @@ function SimpleMirrorRoom({
         setBusy(false);
       }
     },
-    [busy, config, language]
+    [busy, config, language, paintVision]
   );
 
-  /* THE LAB'S WORD, SPOKEN — when the bench asks the Mirror, the
-     message rides this room's own send flow (the whisper line's very
-     same hand), and the room turns to the conversation to receive it */
-  const consumedNonceRef = useRef<number | null>(null);
-  useEffect(() => {
-    if (!inbound) return;
-    if (inbound.nonce === consumedNonceRef.current) return;
-    if (busy) return; /* wait for the room to quiet, then speak */
-    consumedNonceRef.current = inbound.nonce;
-    const text = inbound.text;
-    onInboundConsumed?.();
-    void send(text);
-  }, [inbound, busy, send, onInboundConsumed]);
+  const pickImage = useCallback(async (file: File | undefined | null) => {
+    if (!file || !isImageFile(file)) return;
+    try {
+      const dataUrl = await readFileAsDataUrl(file);
+      setAttached(dataUrl);
+    } catch {
+      /* the image stays unhanded — the words still travel */
+    }
+  }, []);
 
-  /* THE LAY HAND — a reply's essence read on the device alone and
-     handed to the lab; the turn remembers it was laid. The mark is
-     written to the device's keep directly, because laying also turns
-     the room to the lab (this conversation unmounts in the same
-     breath, before the keep's quiet effect could run). */
-  const layTurn = useCallback(
-    (index: number, reply: string) => {
-      if (!onLayReply) return;
-      const laid = onLayReply(reply);
-      if (!laid) return;
-      setThread((cur) =>
-        cur.map((turn, i) => (i === index ? { ...turn, laid: true } : turn))
-      );
-      try {
-        const raw = window.localStorage.getItem(config.storageKey);
-        const parsed: unknown = raw ? JSON.parse(raw) : [];
-        if (Array.isArray(parsed)) {
-          for (let i = parsed.length - 1; i >= 0; i--) {
-            const turn = parsed[i] as RoomTurn | null;
-            if (turn && turn.a === reply) {
-              turn.laid = true;
-              break;
-            }
-          }
-          window.localStorage.setItem(
-            config.storageKey,
-            JSON.stringify(parsed.slice(-30))
-          );
-        }
-      } catch {
-        /* the keep stays closed — the visit's own memory serves */
-      }
-    },
-    [config.storageKey, onLayReply]
-  );
+  const onFilePicked = (e: ChangeEvent<HTMLInputElement>) => {
+    void pickImage(e.target.files?.[0]);
+    e.target.value = "";
+  };
 
   const clear = useCallback(() => {
     if (busy) return;
@@ -297,23 +305,13 @@ function SimpleMirrorRoom({
   useEffect(() => {
     const el = bodyRef.current;
     if (!el) return;
-    const near =
-      el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+    const near = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
     if (near) el.scrollTop = el.scrollHeight;
   }, [thread]);
 
   const empty = thread.length === 0;
   const seeds = useMemo(() => config.seeds, [config.seeds]);
-
-  /* the lay chip's glass — the house's h-8 chip dialect, wearing the
-     scope's own light; 36px tall on mobile with padded neighbors */
-  const layChip = (laid: boolean) =>
-    cn(
-      "focus-glow inline-flex h-9 items-center gap-1.5 rounded-full border px-3 text-[12px] transition-colors duration-300 sm:h-8",
-      laid
-        ? "border-white/12 bg-white/5 text-muted-foreground/70"
-        : "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_28%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_10%,transparent)] text-[color-mix(in_srgb,var(--scope-a,var(--gd))_82%,white)] hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_48%,transparent)] hover:bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_18%,transparent)] hover:shadow-[0_0_14px_-8px_color-mix(in_srgb,var(--scope-a,var(--gd))_70%,transparent)]"
-    );
+  const proceed = useMemo(() => config.proceed, [config.proceed]);
 
   return (
     <div
@@ -351,8 +349,8 @@ function SimpleMirrorRoom({
       </div>
 
       {/* THE CONVERSATION — the room's whole world: the visitor's words
-          on the right, the Mirror's answers on the left, scrolling its
-          own body (the frame's laws hold: within the chat, no page) */}
+          on the right, the Mirror's answers on the left, paintings
+          beneath them, three small hands under the last reply */}
       <div
         ref={bodyRef}
         data-testid="simple-room-thread"
@@ -396,75 +394,159 @@ function SimpleMirrorRoom({
           </div>
         ) : (
           <div className="mx-auto flex max-w-[640px] flex-col gap-3.5">
-            {thread.map((turn, i) => (
-              <div key={`${i}-${turn.q.slice(0, 24)}`} className="flex flex-col gap-1.5">
-                <p className="ml-auto max-w-[88%] whitespace-pre-wrap break-words text-[13.5px] font-medium leading-relaxed text-foreground">
-                  {turn.q}
-                </p>
-                {turn.loading ? (
-                  <MirrorChanneling
-                    compact
-                    label={t("Reflecting")}
-                    variant="mirror"
-                    className="mono-label py-0.5 text-[10px] uppercase tracking-[0.2em] text-muted-foreground"
-                  />
-                ) : turn.failed ? (
-                  <div
-                    className={cn(
-                      "rounded-xl border px-3 py-2",
-                      turn.energy
-                        ? "border-[color-mix(in_srgb,#f59e0b_30%,transparent)] bg-[color-mix(in_srgb,#f59e0b_6%,var(--background))]"
-                        : "border-transparent bg-transparent"
+            {thread.map((turn, i) => {
+              const isLast = i === thread.length - 1;
+              return (
+                <div key={`${i}-${turn.q.slice(0, 24)}`} className="flex flex-col gap-1.5">
+                  <div className="flex flex-col items-end gap-1">
+                    {turn.attached && (
+                      <img
+                        src={turn.attached}
+                        alt=""
+                        loading="lazy"
+                        className="max-h-40 w-auto max-w-[70%] rounded-xl border object-cover"
+                        style={{
+                          borderColor:
+                            "color-mix(in srgb, var(--scope-a,var(--gd)) 30%, transparent)",
+                        }}
+                      />
                     )}
-                    role="alert"
-                  >
-                    <p
+                    <p className="ml-auto max-w-[88%] whitespace-pre-wrap break-words text-[13.5px] font-medium leading-relaxed text-foreground">
+                      {turn.q}
+                    </p>
+                  </div>
+                  {turn.loading ? (
+                    <MirrorChanneling
+                      compact
+                      label={t("Reflecting")}
+                      variant="mirror"
+                      className="mono-label py-0.5 text-[10px] uppercase tracking-[0.2em] text-muted-foreground"
+                    />
+                  ) : turn.failed ? (
+                    <div
                       className={cn(
-                        "text-[13px] leading-relaxed",
+                        "rounded-xl border px-3 py-2",
                         turn.energy
-                          ? "text-[#b8860b] dark:text-[#f59e0b]"
-                          : "text-muted-foreground"
+                          ? "border-[color-mix(in_srgb,#f59e0b_30%,transparent)] bg-[color-mix(in_srgb,#f59e0b_6%,var(--background))]"
+                          : "border-transparent bg-transparent"
                       )}
+                      role="alert"
                     >
-                      {turn.a}
-                    </p>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-start gap-1.5">
-                    <p className="min-w-0 max-w-[94%] whitespace-pre-wrap break-words text-[14px] leading-[1.7] text-foreground/90">
-                      {turn.a}
-                    </p>
-                    {/* THE LAY HAND — the reply's essence, offered to
-                        the lab; read on the device, no round-trip */}
-                    {lab && onLayReply && turn.a.trim() && (
-                      <button
-                        type="button"
-                        onClick={() => layTurn(i, turn.a)}
-                        disabled={turn.laid}
-                        aria-label={t(turn.laid ? lab.lay.done : lab.lay.chip)}
-                        data-testid="simple-room-lay"
-                        data-laid={turn.laid ? "true" : "false"}
-                        className={layChip(!!turn.laid)}
-                      >
-                        {turn.laid ? (
-                          <Check className="size-3.5" aria-hidden="true" />
-                        ) : (
-                          <Layers className="size-3.5" aria-hidden="true" />
+                      <p
+                        className={cn(
+                          "text-[13px] leading-relaxed",
+                          turn.energy
+                            ? "text-[#b8860b] dark:text-[#f59e0b]"
+                            : "text-muted-foreground"
                         )}
-                        {t(turn.laid ? lab.lay.done : lab.lay.chip)}
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
-            ))}
+                      >
+                        {turn.a}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-start gap-1.5">
+                      <p className="min-w-0 max-w-[94%] whitespace-pre-wrap break-words text-[14px] leading-[1.7] text-foreground/90">
+                        {turn.a}
+                      </p>
+                      {/* THE MIRROR'S OWN PAINTING — the vision gift,
+                          mixed quietly while the words stood */}
+                      {turn.painting && (
+                        <MirrorChanneling
+                          compact
+                          label={t("Painting the vision")}
+                          variant="mirror"
+                          className="mono-label py-0.5 text-[10px] uppercase tracking-[0.2em] text-muted-foreground"
+                        />
+                      )}
+                      {turn.imageUrl && (
+                        <figure
+                          className="w-full max-w-[340px] overflow-hidden rounded-xl border"
+                          style={{
+                            borderColor:
+                              "color-mix(in srgb, var(--scope-a,var(--gd)) 30%, transparent)",
+                          }}
+                          data-testid="simple-room-painting"
+                        >
+                          <a
+                            href={turn.imageUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            aria-label={turn.imageTitle ?? t("The Mirror's painting")}
+                            className="block"
+                          >
+                            <img
+                              src={turn.imageUrl}
+                              alt={turn.imageTitle ?? ""}
+                              loading="lazy"
+                              className="aspect-[7/4] w-full bg-background/40 object-cover"
+                            />
+                          </a>
+                          {turn.imageTitle && (
+                            <figcaption className="mono-label truncate px-2.5 py-1.5 text-[9.5px] uppercase tracking-[0.16em] text-muted-foreground/80">
+                              {turn.imageTitle}
+                            </figcaption>
+                          )}
+                        </figure>
+                      )}
+                      {/* THE PROCEEDING HANDS — the last reply leaves
+                          three small ways the conversation continues */}
+                      {isLast && !busy && turn.a.trim() && (
+                        <div
+                          className="mt-0.5 flex flex-wrap items-center gap-1.5"
+                          data-testid="simple-room-proceed"
+                        >
+                          {proceed.map((chip) => (
+                            <button
+                              key={chip}
+                              type="button"
+                              onClick={() => void send(chip)}
+                              data-testid="simple-room-proceed-chip"
+                              className="focus-glow rounded-full border px-2.5 py-1 text-[11.5px] text-muted-foreground transition-colors duration-300 hover:text-foreground"
+                              style={{
+                                borderColor:
+                                  "color-mix(in srgb, var(--scope-a,var(--gd)) 26%, transparent)",
+                                background:
+                                  "color-mix(in srgb, var(--scope-a,var(--gd)) 7%, transparent)",
+                              }}
+                            >
+                              {t(chip)}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
 
       {/* THE WHISPER LINE — the room's own composer: one quiet field,
-          one send hand, the house's light on the edge */}
+          one image hand, one send hand, the house's light on the edge */}
       <div className="shrink-0 px-3 pb-3 pt-1 sm:px-4">
+        {attached && (
+          <div className="mb-1.5 flex items-center gap-2">
+            <img
+              src={attached}
+              alt=""
+              className="size-9 rounded-lg border object-cover"
+              style={{
+                borderColor:
+                  "color-mix(in srgb, var(--scope-a,var(--gd)) 30%, transparent)",
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => setAttached(null)}
+              aria-label={t("Remove the image")}
+              className="focus-glow flex size-6 items-center justify-center rounded-full text-muted-foreground/70 transition-colors hover:text-foreground"
+            >
+              <X className="size-3.5" aria-hidden="true" />
+            </button>
+          </div>
+        )}
         <div
           className="flex items-end gap-2 rounded-2xl border px-2.5 py-1.5"
           style={{
@@ -474,13 +556,33 @@ function SimpleMirrorRoom({
               "color-mix(in srgb, var(--scope-a,var(--gd)) 10%, transparent)",
           }}
         >
+          <input
+            ref={fileRef}
+            type="file"
+            accept={IMAGE_ACCEPT}
+            onChange={onFilePicked}
+            className="hidden"
+            aria-hidden="true"
+            tabIndex={-1}
+          />
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            disabled={busy}
+            aria-label={t("Attach an image")}
+            title={t("Attach an image")}
+            data-testid="simple-room-attach"
+            className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground/80 transition-colors duration-300 hover:bg-foreground/5 hover:text-foreground disabled:opacity-35"
+          >
+            <Paperclip className="size-3.5" aria-hidden="true" />
+          </button>
           <textarea
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
                 e.preventDefault();
-                void send(draft);
+                void send(draft, attached ?? undefined);
               }
             }}
             rows={1}
@@ -491,7 +593,7 @@ function SimpleMirrorRoom({
           />
           <button
             type="button"
-            onClick={() => void send(draft)}
+            onClick={() => void send(draft, attached ?? undefined)}
             disabled={busy || !draft.trim()}
             aria-label={t("Send")}
             title={t("Send")}
@@ -506,200 +608,14 @@ function SimpleMirrorRoom({
   );
 }
 
-/* THE SHARED LAB — both rooms' canvases are the same themed bench;
-   its code arrives only when a lab mode is first chosen. */
-const ThemedLabCanvas = dynamic(
-  () => import("@/components/mirror/labs/ThemedLabCanvas"),
-  {
-    ssr: false,
-    loading: () => (
-      <div
-        className="absolute inset-0 flex items-center justify-center"
-        aria-hidden="true"
-      >
-        <span className="mono-label text-[9.5px] uppercase tracking-[0.2em] text-muted-foreground/60">
-          The lab lights its coals…
-        </span>
-      </div>
-    ),
-  }
-);
-
-type LabRoomMode = "conversation" | "lab";
-
-/** one mode of a room's own segmented hand (the house's active-pill
-    dialect, the scope's light on the chosen way; 44px touch on mobile) */
-function ModeHand({
-  active,
-  onClick,
-  icon: Icon,
-  label,
-  testId,
-}: {
-  active: boolean;
-  onClick: () => void;
-  icon: LucideIcon;
-  label: string;
-  testId: string;
-}) {
-  const t = useT();
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      data-testid={testId}
-      className={cn(
-        "focus-glow flex h-11 items-center gap-1.5 rounded-full px-3 text-[11.5px] transition-colors duration-300 sm:h-9",
-        active
-          ? "font-medium"
-          : "text-muted-foreground hover:text-foreground"
-      )}
-      style={
-        active
-          ? {
-              backgroundColor:
-                "color-mix(in srgb, var(--scope-a,var(--gd)) 14%, transparent)",
-              color: "var(--scope-a,var(--gd))",
-            }
-          : undefined
-      }
-    >
-      <Icon className="size-3.5" aria-hidden="true" />
-      {t(label)}
-    </button>
-  );
-}
-
-/** THE LAB ROOM SHELL — the two ways of one room: the conversation
-    and the room's own lab, with the hands that carry words between
-    them. The lab asks through the room's own send flow; the replies
-    are laid onto the bench by the room's own lay hand. */
-function LabRoomShell({
-  roomConfig,
-  lab,
-  modesLabel,
-  testPrefix,
-}: {
-  roomConfig: SimpleRoomConfig;
-  lab: LabConfig;
-  modesLabel: string;
-  testPrefix: string;
-}) {
-  const t = useT();
-  const [mode, setMode] = useState<LabRoomMode>("conversation");
-  const [inbound, setInbound] = useState<InboundAsk | null>(null);
-  const [inbox, setInbox] = useState<LaidPiece[]>([]);
-  const nonceRef = useRef(0);
-
-  /* LAB → CHAT — the bench's context message becomes the room's next
-     whisper: the conversation turns to face the visitor, and the
-     room's own send flow speaks the message to the Mirror */
-  const askFromLab = useCallback((message: string) => {
-    nonceRef.current += 1;
-    setInbound({ text: message, nonce: nonceRef.current });
-    setMode("conversation");
-  }, []);
-
-  /* CHAT → LAB — a Mirror reply's essence, read on the device alone
-     (a titled piece with its first paragraph as the note, or one
-     piece per spoken step), laid onto the bench as the lab opens */
-  const layFromChat = useCallback(
-    (reply: string): boolean => {
-      const lays = parseReplyToLays(reply, lab.defaultKind);
-      if (lays.length === 0) return false;
-      setInbox((cur) => [...cur, ...lays].slice(-12));
-      setMode("lab");
-      toast.success(t(lab.lay.toast));
-      return true;
-    },
-    [lab, t]
-  );
-
-  const consumeInbound = useCallback(() => setInbound(null), []);
-  const consumeInbox = useCallback(() => setInbox([]), []);
-
-  return (
-    <div className="flex h-full flex-col">
-      {/* THE MODE ROW — the room's two ways: the whisper line and the
-          lab's bench; one quiet segmented hand beneath the tabs */}
-      <div className="flex shrink-0 items-center px-3.5 pt-2.5 sm:px-4">
-        <div
-          role="group"
-          aria-label={t(modesLabel)}
-          data-testid={`${testPrefix}-modes`}
-          className="flex items-center gap-0.5 rounded-full border p-0.5"
-          style={{
-            borderColor:
-              "color-mix(in srgb, var(--scope-a,var(--gd)) 22%, transparent)",
-          }}
-        >
-          <ModeHand
-            active={mode === "conversation"}
-            onClick={() => setMode("conversation")}
-            icon={MessagesSquare}
-            label="Conversation"
-            testId={`${testPrefix}-mode-conversation`}
-          />
-          <ModeHand
-            active={mode === "lab"}
-            onClick={() => setMode("lab")}
-            icon={lab.id === "invent" ? DraftingCompass : Route}
-            label={lab.id === "invent" ? "Invention Lab" : "Manifesting Lab"}
-            testId={`${testPrefix}-mode-lab`}
-          />
-        </div>
-      </div>
-
-      {/* THE ROOM'S BODY — the chosen way fills the rest of the room;
-          the frame's flex layout owns the height (no viewport hacks) */}
-      <div className="relative min-h-0 flex-1">
-        {mode === "conversation" ? (
-          <SimpleMirrorRoom
-            config={roomConfig}
-            lab={lab}
-            inbound={inbound}
-            onInboundConsumed={consumeInbound}
-            onLayReply={layFromChat}
-          />
-        ) : (
-          <ThemedLabCanvas
-            config={lab}
-            inbox={inbox}
-            onInboxConsumed={consumeInbox}
-            onAskMirror={askFromLab}
-          />
-        )}
-      </div>
-    </div>
-  );
-}
-
-/** THE MANIFEST — the simple making room (the manifesting voice),
-    with its own Manifesting Lab beside the words: intentions,
-    milestones, practices and blockers laid on a path of their own. */
+/** THE MANIFEST — the simple making room (the manifesting voice):
+    words, paintings and three small hands under every reply. */
 export function ManifestRoom() {
-  return (
-    <LabRoomShell
-      roomConfig={MANIFEST_CONFIG}
-      lab={MANIFEST_LAB}
-      modesLabel="The manifest room's ways"
-      testPrefix="manifest"
-    />
-  );
+  return <SimpleMirrorRoom config={MANIFEST_CONFIG} />;
 }
 
-/** THE INVENT — the forge room: the whisper line, and beside it the
-    room's own Invention Lab. The lab's draft rests on the device
-    (mirror-invent-canvas-v1) like every room's words — the keep's law
-    holds, and no one loses their bench. */
+/** THE INVENT — the forge room (the forge voice): bring a spark, hand
+    the Mirror a picture, and the conversation proceeds in one touch. */
 export function InventRoom() {
-  return (
-    <LabRoomShell
-      roomConfig={INVENT_CONFIG}
-      lab={INVENT_LAB}
-      modesLabel="The forge's ways"
-      testPrefix="invent"
-    />
-  );
+  return <SimpleMirrorRoom config={INVENT_CONFIG} />;
 }

@@ -134,3 +134,59 @@ export async function speakReply(
   }
   return reply;
 }
+
+/** THE GIFT-BEARING ANSWER — the same rite as speakReply, carrying
+    whatever else the door handed over beside the words (today: the
+    vision gift — a painting prompt the visualization engine paints). */
+export async function speakReplyGift(
+  url: string,
+  body: unknown,
+  field: "reply" | "transmission",
+  fallback: string
+): Promise<{ text: string; vision: string | null }> {
+  const attempt = async (): Promise<{ res: Response; data: unknown }> => {
+    const res = await speakDoor(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const data: unknown = await res.json().catch(() => null);
+    return { res, data };
+  };
+
+  let out = await attempt();
+  if (isEnergyStatus(out.res.status, out.data)) {
+    announceEnergy();
+    throw new EnergyError();
+  }
+  if (out.res.status === 429) {
+    await sleep(1400);
+    try {
+      out = await attempt();
+    } catch {
+      /* the first verdict stands */
+    }
+    if (isEnergyStatus(out.res.status, out.data)) {
+      announceEnergy();
+      throw new EnergyError();
+    }
+  }
+
+  const d = out.data as {
+    reply?: unknown;
+    transmission?: unknown;
+    vision?: unknown;
+    error?: unknown;
+  } | null;
+  const raw = field === "reply" ? d?.reply : d?.transmission;
+  const reply = typeof raw === "string" ? raw.trim() : "";
+  if (!out.res.ok || !reply) {
+    throw new Error(
+      typeof d?.error === "string" && d.error ? d.error : fallback
+    );
+  }
+  return {
+    text: reply,
+    vision: typeof d?.vision === "string" && d.vision.trim() ? d.vision.trim() : null,
+  };
+}
