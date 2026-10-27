@@ -6274,3 +6274,18 @@ Work Log:
 
 Stage Summary:
 - One purse, one truth: the house shows and spends a single economy; the keeper walks free with their usage speaking; passages survive proxies and resting vaults; Stripe's truths replay instead of dying; and the music a visitor weaves is theirs forever — filed in the vault, resumed after a refresh, refunded when the sky refuses.
+---
+Task ID: 9
+Agent: Z.ai Code (main orchestrator)
+Task: The keeper asked how to pull main at e0a18bb — the sandbox reconciled with GitHub, the stale portal work archived, the house brought back to life
+
+Work Log:
+- FOUND the fork: local main sat at c873b47 ("yielding portal") built on 65f5556, while GitHub main had moved 112 commits ahead to e0a18bb (tasks 64-66, the purse standing, the durable music vault). A rebase attempt raised 12 conflicts in landing/globals/i18n files.
+- ARCHAEOLOGY before surgery: c873b47's portal work was built on a landing that no longer exists — remote's d4a098c deleted the branches portal outright and b414ed2 rebuilt the threshold; the walk images c873b47 carried were already on GitHub; only ChannelingOrb.tsx (six alien signals chapter) was unique to the stale line.
+- NOTHING LOST: created branch archive/yielding-portal at c873b47 and pushed it to GitHub — the yielding portal, its ChannelingOrb and its i18n keys live on a retrievable branch forever.
+- THE PULL: main hard-reset to e0a18bb (GitHub main = local main = e0a18bb, clean tree, no unpushed work on main).
+- HOUSE REPAIRS the pull demanded: prisma generate + db:push (the DB lacked PlatformConfig, GenerationJob, MusicTrack — the steady-secret hook now carves AUTH_SECRET successfully at boot); bun install (101 packages — tiptap character-count/placeholder, recharts, wavesurfer were missing locally); rm -rf .next (Turbopack cache corrupted by the reset — the inner_of_upper_lost_followers panic); diagnosed and survived the 3.9GB sandbox OOM that silently killed next-server mid-compile.
+- VERIFIED: HTTP 200 on / ; agent-browser desktop 1280px + mobile 390px screenshots — one purse reading "5" with no star, crown rail intact, temporary-chat notice standing, no console errors, no horizontal overflow.
+
+Stage Summary:
+- GitHub main (e0a18bb) is the one truth and the sandbox now stands on it; the stale yielding portal is archived at archive/yielding-portal (never deleted, never merged); the environment's three silent killers (stale DB, stale node_modules, corrupted .next) are named and fixed; the house serves 200 on both viewports.
