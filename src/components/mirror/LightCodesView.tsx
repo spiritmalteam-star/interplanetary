@@ -12,13 +12,17 @@ import {
   Eye,
   Feather,
   Gauge,
+  ListMusic,
   Mic,
   Music4,
   Pause,
   Play,
   RefreshCw,
   Repeat,
+  Repeat1,
   Send,
+  SkipBack,
+  SkipForward,
   Sparkles,
   Square,
   Trash2,
@@ -384,31 +388,73 @@ function VoiceRecordButton({
   );
 }
 
-function Player() {
-  const track = useMirror((s) => s.lcTrack)!;
+/* THE STAGE AT THE DOOR — the room's own media player, pinned above
+   everything: the transmission now playing, the hands that move it
+   (back, play, forward, the repeat dial, the volume), and the shelf
+   of every sound this device still holds. When a new weave lands,
+   the stage answers with a light — the camera is already here. */
+
+function PlayerBar() {
+  const track = useMirror((s) => s.lcTrack);
+  const status = useMirror((s) => s.lcStatus);
+  const history = useMirror((s) => s.lcHistory);
+  const repeat = useMirror((s) => s.lcRepeat);
+  const setLcRepeat = useMirror((s) => s.setLcRepeat);
+  const lcAdvance = useMirror((s) => s.lcAdvance);
+  const playLc = useMirror((s) => s.playLc);
   const clearLcPlayer = useMirror((s) => s.clearLcPlayer);
   const reshapeLc = useMirror((s) => s.reshapeLc);
   const newVersionFromTrack = useMirror((s) => s.newVersionFromTrack);
-  const modeName =
-    LC_MODES.find((m) => m.id === track.mode)?.name ?? track.mode;
+  const forgetLc = useMirror((s) => s.forgetLc);
   const t = useT();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [audioEl, setAudioEl] = useState<HTMLAudioElement | null>(null);
   const [playing, setPlaying] = useState(false);
   const [time, setTime] = useState(0);
-  const [dur, setDur] = useState(track.duration ?? 0);
-  /* the endless journeys are born to turn — their loop stands on from birth */
-  const [loop, setLoop] = useState(track.length === "loop");
+  const [dur, setDur] = useState(0);
   const [showTranslation, setShowTranslation] = useState(false);
   const [volume, setVolume] = useState(1);
   const [muted, setMuted] = useState(false);
-  /* the honest wave: real peaks when the piece is small enough to
-     read them from; a plain line for the long journeys and when the
-     wave cannot be read at all */
+  const [shelfOpen, setShelfOpen] = useState(false);
   const [waveFailed, setWaveFailed] = useState(false);
-  const realWaveAllowed = track.length !== "loop" && !waveFailed;
+  /* the stage answers a fresh weave with one slow breath of light */
+  const [glow, setGlow] = useState(false);
+  const stageRef = useRef<HTMLDivElement | null>(null);
+  const seenTrack = useRef<string | null>(null);
+  const live = status === "ready" && track !== null;
+  const active = track;
+  const realWaveAllowed = !!active && active.length !== "loop" && !waveFailed;
+  const progress = active && dur > 0 ? Math.min(1, time / dur) : 0;
 
-  const progress = dur > 0 ? Math.min(1, time / dur) : 0;
+  /* THE CAMERA'S LAW — the moment a woven (or chosen) transmission
+     takes the stage, the stage breathes once and holds the focus. */
+  useEffect(() => {
+    if (!active) {
+      seenTrack.current = null;
+      return;
+    }
+    if (seenTrack.current === active.id) return;
+    seenTrack.current = active.id;
+    const reduce =
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const el = stageRef.current;
+    el?.scrollIntoView({ block: "nearest", behavior: reduce ? "auto" : "smooth" });
+    const focusTimer = window.setTimeout(
+      () => el?.focus({ preventScroll: true }),
+      reduce ? 0 : 320
+    );
+    const glowOn = window.setTimeout(() => setGlow(true), 0);
+    const glowOff = window.setTimeout(
+      () => setGlow(false),
+      reduce ? 600 : 2400
+    );
+    return () => {
+      window.clearTimeout(focusTimer);
+      window.clearTimeout(glowOn);
+      window.clearTimeout(glowOff);
+    };
+  }, [active?.id]);
 
   const toggle = () => {
     const el = audioRef.current;
@@ -433,219 +479,456 @@ function Player() {
     }
   };
 
+  /* the repeat dial's own cycle: off → all → one → off */
+  const cycleRepeat = () =>
+    setLcRepeat(repeat === "off" ? "all" : repeat === "all" ? "one" : "off");
+
+  const repeatLabel =
+    repeat === "one" ? "Repeat one" : repeat === "all" ? "Repeat all" : "Repeat";
+
+  const modeName = active
+    ? LC_MODES.find((m) => m.id === active.mode)?.name ?? active.mode
+    : "";
+
   return (
-    <motion.section
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-      className="scope-frame-card relative rounded-2xl p-3.5 sm:p-4"
-      data-testid="lc-player"
+    <section
+      className="relative z-10 mx-auto w-full max-w-[1020px] shrink-0 px-4 pt-3 sm:px-6"
+      data-testid="lc-player-bar"
     >
-      <audio
-        ref={(el) => {
-          audioRef.current = el;
-          setAudioEl(el);
-        }}
-        src={track.audioUrl}
-        loop={loop}
-        onPlay={() => setPlaying(true)}
-        onPause={() => setPlaying(false)}
-        onEnded={() => setPlaying(false)}
-        onTimeUpdate={(e) => setTime(e.currentTarget.currentTime)}
-        onLoadedMetadata={(e) => {
-          const el = e.currentTarget;
-          if (Number.isFinite(el.duration)) {
-            setDur(el.duration);
-            el.volume = volume;
-            el.muted = muted;
-          }
-        }}
-      />
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p
-            className="mono-label text-[10px] uppercase tracking-[0.22em] text-muted-foreground"
-            data-testid="lc-player-mode"
-          >
-            {t(modeName)}
-            {track.length === "full"
-              ? " · full song"
-              : track.length === "loop"
-                ? " · endless journey"
-                : " · preview"}
-          </p>
-          <h3 className="mt-0.5 truncate font-serif text-[16px] font-semibold text-foreground">
-            {track.title}
-          </h3>
-        </div>
-        <button
-          type="button"
-          onClick={clearLcPlayer}
-          aria-label={t("Close the player")}
-          className={cn(
-            "focus-glow flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground",
-            TOUCH_VEIL
-          )}
-        >
-          <X className="size-4" aria-hidden="true" />
-        </button>
-      </div>
-
-      {/* the wave — the sound's own peaks, or the honest line */}
-      {realWaveAllowed ? (
-        <WaveSurferWave
-          key={track.id}
-          audioEl={audioEl}
-          onFallback={() => setWaveFailed(true)}
-        />
-      ) : (
-        <HonestTimeline progress={progress} onSeek={seekTo} />
-      )}
-      {track.length === "loop" && (
-        <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground/70">
-          {t(
-            "The journey turns on itself — when it ends it begins again, for as long as you listen."
-          )}
-        </p>
-      )}
-      <div className="mt-1 flex items-center justify-between font-mono text-[11px] text-muted-foreground">
-        <span>{fmtTimeLong(time)}</span>
-        <span>{fmtTimeLong(dur)}</span>
-      </div>
-
-      {/* THE TRANSPORT — one compact glass bar: play, new version,
-          reshape, download, loop, the volume dial and the engine-facing
-          words. Every hand a chip; the play hand the only large one. */}
       <div
-        className="mt-2.5 flex flex-wrap items-center gap-1 rounded-full border hairline bg-[var(--glass-bg-soft)] p-1"
-        data-testid="lc-transport"
-      >
-        <button
-          type="button"
-          onClick={toggle}
-          data-testid="lc-play"
-          aria-label={playing ? t("Pause") : t("Play")}
-          className={cn(
-            "focus-glow mx-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-[var(--scope-a)] to-[color-mix(in_srgb,var(--scope-b)_80%,var(--scope-a))] text-[#f6f4ef] shadow-[0_4px_20px_-8px_color-mix(in_srgb,var(--scope-a)_85%,transparent)] transition-all duration-300 hover:-translate-y-px",
-            TOUCH_VEIL
-          )}
-        >
-          {playing ? (
-            <Pause className="size-4" aria-hidden="true" />
-          ) : (
-            <Play className="size-4 translate-x-[1px]" aria-hidden="true" />
-          )}
-        </button>
-        <PlayerChip
-          onClick={newVersionFromTrack}
-          icon={RefreshCw}
-          label="New version"
-          testId="lc-new-version"
-        />
-        <PlayerChip
-          onClick={() => reshapeLc(track)}
-          icon={Wand2}
-          label="Reshape"
-          testId="lc-reshape"
-        />
-        <a
-          href={track.audioUrl}
-          download={`${track.title}.mp3`}
-          target="_blank"
-          rel="noreferrer"
-          data-testid="lc-download"
-          className="btn-chip"
-        >
-          <Download className="size-3" aria-hidden="true" />
-          {t("Download")}
-        </a>
-        <PlayerChip
-          onClick={() => setLoop((l) => !l)}
-          icon={Repeat}
-          label={loop ? "Looping" : "Loop"}
-          active={loop}
-          testId="lc-loop"
-        />
-        {/* the volume hand — the visitor's own quiet dial */}
-        <span className="ml-auto flex items-center gap-1 pl-0.5">
-          <button
-            type="button"
-            onClick={() => applyVolume(volume, !muted)}
-            aria-label={muted ? t("Unmute") : t("Mute")}
-            aria-pressed={muted}
-            data-testid="lc-mute"
-            className={cn("btn-chip w-8 px-0", TOUCH_VEIL)}
-          >
-            {muted || volume === 0 ? (
-              <VolumeX className="size-3.5" aria-hidden="true" />
-            ) : (
-              <Volume2 className="size-3.5" aria-hidden="true" />
-            )}
-          </button>
-          <input
-            type="range"
-            min={0}
-            max={1}
-            step={0.05}
-            value={muted ? 0 : volume}
-            onChange={(e) => applyVolume(Number(e.target.value), false)}
-            aria-label={t("Volume")}
-            data-testid="lc-volume"
-            className="h-1 w-12 cursor-pointer accent-[var(--scope-a)] sm:w-16"
-          />
-        </span>
-        {(track.style || track.lyrics) && (
-          <PlayerChip
-            onClick={() => setShowTranslation((v) => !v)}
-            icon={Eye}
-            label="Translation"
-            active={showTranslation}
-            testId="lc-translation"
-          />
+        ref={stageRef}
+        tabIndex={-1}
+        aria-label={t("The music player")}
+        className={cn(
+          "scope-frame-card relative rounded-2xl p-3.5 outline-none transition-shadow duration-700 sm:p-4",
+          glow &&
+            "shadow-[0_0_0_1px_var(--scope-a),0_14px_52px_-16px_color-mix(in_srgb,var(--scope-a)_80%,transparent)]"
         )}
-      </div>
-
-      {/* TRANSMISSION NOTES */}
-      {track.notes && (
-        <div className="mt-3 border-t hairline pt-2.5">
-          <p className="mono-label text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
-            {t("Transmission notes")}
-          </p>
-          <p className="mt-1 text-[13.5px] italic leading-relaxed text-foreground/80">
-            {track.notes}
-          </p>
-        </div>
-      )}
-
-      {/* VIEW TRANSLATION — the engine-facing direction, revealed on request */}
-      <AnimatePresence>
-        {showTranslation && (track.style || track.lyrics) && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.35, ease: "easeOut" }}
-            className="overflow-hidden"
-          >
-            <div className="mt-3 space-y-2 rounded-xl border hairline bg-[color-mix(in_srgb,var(--scope-a)_5%,transparent)] p-3">
-              {track.style && (
-                <p className="text-[13px] leading-relaxed text-muted-foreground">
-                  <span className="mono-label mr-1.5 text-[10px] uppercase tracking-[0.18em]">
-                    {t("Sonic language")}
+        data-testid="lc-player"
+      >
+        {live && active ? (
+          <>
+            <audio
+              ref={(el) => {
+                audioRef.current = el;
+                setAudioEl(el);
+              }}
+              src={active.audioUrl}
+              loop={active.length === "loop"}
+              onPlay={() => setPlaying(true)}
+              onPause={() => setPlaying(false)}
+              onEnded={() => {
+                setPlaying(false);
+                const el = audioRef.current;
+                if (useMirror.getState().lcRepeat === "one" && el) {
+                  el.currentTime = 0;
+                  void el.play().catch(() => undefined);
+                  return;
+                }
+                void useMirror.getState().lcAdvance(1);
+              }}
+              onTimeUpdate={(e) => setTime(e.currentTarget.currentTime)}
+              onLoadedMetadata={(e) => {
+                const el = e.currentTarget;
+                if (Number.isFinite(el.duration)) {
+                  setDur(el.duration);
+                  el.volume = volume;
+                  el.muted = muted;
+                }
+              }}
+            />
+            <div className="flex items-center gap-3">
+              {/* THE PLATE — the transmission's own disc, breathing while
+                  the sound moves */}
+              <div
+                aria-hidden="true"
+                className="relative flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-[var(--scope-a)] to-[color-mix(in_srgb,var(--scope-b)_75%,var(--scope-a))] shadow-[0_6px_22px_-10px_color-mix(in_srgb,var(--scope-a)_90%,transparent)]"
+              >
+                <Music4
+                  className={cn(
+                    "size-5 text-[#f6f4ef] transition-transform duration-700",
+                    playing && "scale-110"
+                  )}
+                />
+                {playing && (
+                  <span className="absolute inset-x-1.5 bottom-1.5 flex items-end justify-center gap-[3px]">
+                    {[0, 1, 2].map((i) => (
+                      <span
+                        key={i}
+                        className="w-[3px] rounded-full bg-[#f6f4ef]/90"
+                        style={{
+                          height: `${5 + ((i * 5) % 8)}px`,
+                          animation: `lc-wave 1.${4 + i * 3}s ease-in-out ${i * 0.18}s infinite`,
+                        }}
+                      />
+                    ))}
                   </span>
-                  {track.style}
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p
+                  className="mono-label truncate text-[10px] uppercase tracking-[0.22em] text-muted-foreground"
+                  data-testid="lc-player-mode"
+                >
+                  {t(modeName)}
+                  {active.length === "full"
+                    ? " · full song"
+                    : active.length === "loop"
+                      ? " · endless journey"
+                      : " · preview"}
                 </p>
-              )}
-              {track.lyrics && (
-                <p className="whitespace-pre-line font-serif text-[14px] italic leading-relaxed text-foreground/85">
-                  {track.lyrics}
-                </p>
+                <h3 className="mt-0.5 truncate font-serif text-[15.5px] font-semibold text-foreground">
+                  {active.title}
+                </h3>
+                {active.intention && (
+                  <p className="truncate text-[11.5px] italic leading-snug text-muted-foreground/80">
+                    {active.intention}
+                  </p>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => setShelfOpen((v) => !v)}
+                aria-expanded={shelfOpen}
+                aria-label={`${t("My transmissions")} (${history.length})`}
+                data-testid="lc-shelf-hand"
+                className={cn(
+                  "btn-chip shrink-0",
+                  shelfOpen && "btn-chip-active",
+                  history.length === 0 && "pointer-events-none opacity-40"
+                )}
+              >
+                <ListMusic className="size-3" aria-hidden="true" />
+                <span className="whitespace-nowrap tabular-nums">
+                  {history.length}
+                </span>
+                <ChevronDown
+                  className={cn(
+                    "size-3 transition-transform duration-300",
+                    shelfOpen && "rotate-180"
+                  )}
+                  aria-hidden="true"
+                />
+              </button>
+              <button
+                type="button"
+                onClick={clearLcPlayer}
+                aria-label={t("Close the player")}
+                className={cn(
+                  "focus-glow flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground",
+                  TOUCH_VEIL
+                )}
+              >
+                <X className="size-4" aria-hidden="true" />
+              </button>
+            </div>
+
+            {/* the wave — the sound's own peaks, or the honest line */}
+            <div className="mt-1">
+              {realWaveAllowed ? (
+                <WaveSurferWave
+                  key={active.id}
+                  audioEl={audioEl}
+                  onFallback={() => setWaveFailed(true)}
+                />
+              ) : (
+                <HonestTimeline progress={progress} onSeek={seekTo} />
               )}
             </div>
-          </motion.div>
+            <div className="flex items-center justify-between font-mono text-[10.5px] text-muted-foreground">
+              <span>{fmtTimeLong(time)}</span>
+              <span>{fmtTimeLong(dur)}</span>
+            </div>
+
+            {/* THE TRANSPORT — one compact glass bar: back, play, forward,
+                the repeat dial, the craft hands, the volume. */}
+            <div
+              className="mt-2 flex flex-wrap items-center gap-1 rounded-full border hairline bg-[var(--glass-bg-soft)] p-1"
+              data-testid="lc-transport"
+            >
+              <button
+                type="button"
+                onClick={() => void lcAdvance(-1)}
+                aria-label={t("Previous transmission")}
+                data-testid="lc-prev"
+                className={cn(
+                  "focus-glow flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-all duration-300 hover:text-foreground",
+                  TOUCH_VEIL
+                )}
+              >
+                <SkipBack className="size-4" aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                onClick={toggle}
+                data-testid="lc-play"
+                aria-label={playing ? t("Pause") : t("Play")}
+                className={cn(
+                  "focus-glow mx-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-[var(--scope-a)] to-[color-mix(in_srgb,var(--scope-b)_80%,var(--scope-a))] text-[#f6f4ef] shadow-[0_4px_20px_-8px_color-mix(in_srgb,var(--scope-a)_85%,transparent)] transition-all duration-300 hover:-translate-y-px",
+                  TOUCH_VEIL
+                )}
+              >
+                {playing ? (
+                  <Pause className="size-4" aria-hidden="true" />
+                ) : (
+                  <Play className="size-4 translate-x-[1px]" aria-hidden="true" />
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => void lcAdvance(1)}
+                aria-label={t("Next transmission")}
+                data-testid="lc-next"
+                className={cn(
+                  "focus-glow flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-all duration-300 hover:text-foreground",
+                  TOUCH_VEIL
+                )}
+              >
+                <SkipForward className="size-4" aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                onClick={cycleRepeat}
+                aria-label={t(repeatLabel)}
+                aria-pressed={repeat !== "off"}
+                data-testid="lc-loop"
+                className={cn("btn-chip uppercase", repeat !== "off" && "btn-chip-active")}
+              >
+                {repeat === "one" ? (
+                  <Repeat1 className="size-3" aria-hidden="true" />
+                ) : (
+                  <Repeat className="size-3" aria-hidden="true" />
+                )}
+                <span className="whitespace-nowrap">
+                  {repeat === "one" ? "1" : repeat === "all" ? "All" : t("Loop")}
+                </span>
+              </button>
+              <PlayerChip
+                onClick={newVersionFromTrack}
+                icon={RefreshCw}
+                label="New version"
+                testId="lc-new-version"
+              />
+              <PlayerChip
+                onClick={() => reshapeLc(active)}
+                icon={Wand2}
+                label="Reshape"
+                testId="lc-reshape"
+              />
+              <a
+                href={active.audioUrl}
+                download={`${active.title}.mp3`}
+                target="_blank"
+                rel="noreferrer"
+                data-testid="lc-download"
+                className="btn-chip"
+              >
+                <Download className="size-3" aria-hidden="true" />
+                {t("Download")}
+              </a>
+              {(active.style || active.lyrics) && (
+                <PlayerChip
+                  onClick={() => setShowTranslation((v) => !v)}
+                  icon={Eye}
+                  label="Translation"
+                  active={showTranslation}
+                  testId="lc-translation"
+                />
+              )}
+              {/* the volume hand — the visitor's own quiet dial */}
+              <span className="ml-auto flex items-center gap-1 pl-0.5">
+                <button
+                  type="button"
+                  onClick={() => applyVolume(volume, !muted)}
+                  aria-label={muted ? t("Unmute") : t("Mute")}
+                  aria-pressed={muted}
+                  data-testid="lc-mute"
+                  className={cn("btn-chip w-8 px-0", TOUCH_VEIL)}
+                >
+                  {muted || volume === 0 ? (
+                    <VolumeX className="size-3.5" aria-hidden="true" />
+                  ) : (
+                    <Volume2 className="size-3.5" aria-hidden="true" />
+                  )}
+                </button>
+                <input
+                  type="range"
+                  min={0}
+                  max={1}
+                  step={0.05}
+                  value={muted ? 0 : volume}
+                  onChange={(e) => applyVolume(Number(e.target.value), false)}
+                  aria-label={t("Volume")}
+                  data-testid="lc-volume"
+                  className="h-1 w-12 cursor-pointer accent-[var(--scope-a)] sm:w-16"
+                />
+              </span>
+            </div>
+
+            {/* TRANSMISSION NOTES */}
+            {active.notes && (
+              <div className="mt-3 border-t hairline pt-2.5">
+                <p className="mono-label text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+                  {t("Transmission notes")}
+                </p>
+                <p className="mt-1 line-clamp-2 text-[13px] italic leading-relaxed text-foreground/80">
+                  {active.notes}
+                </p>
+              </div>
+            )}
+
+            {/* VIEW TRANSLATION — the engine-facing direction, revealed on request */}
+            <AnimatePresence>
+              {showTranslation && (active.style || active.lyrics) && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.35, ease: "easeOut" }}
+                  className="overflow-hidden"
+                >
+                  <div className="mt-3 space-y-2 rounded-xl border hairline bg-[color-mix(in_srgb,var(--scope-a)_5%,transparent)] p-3">
+                    {active.style && (
+                      <p className="text-[13px] leading-relaxed text-muted-foreground">
+                        <span className="mono-label mr-1.5 text-[10px] uppercase tracking-[0.18em]">
+                          {t("Sonic language")}
+                        </span>
+                        {active.style}
+                      </p>
+                    )}
+                    {active.lyrics && (
+                      <p className="whitespace-pre-line font-serif text-[13.5px] italic leading-relaxed text-foreground/85">
+                        {active.lyrics}
+                      </p>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </>
+        ) : (
+          /* THE STAGE AT REST — honest, before any sound holds the room */
+          <div
+            className="flex items-center gap-3 py-1"
+            data-testid="lc-listen-empty"
+          >
+            <div
+              aria-hidden="true"
+              className="flex size-11 shrink-0 items-center justify-center rounded-xl border hairline bg-[var(--glass-bg-soft)]"
+            >
+              <AudioLines
+                className="size-5 text-[var(--scope-a)] opacity-70"
+              />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="mono-label text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+                {t("The music player")}
+              </p>
+              <p className="mt-0.5 text-[12.5px] leading-relaxed text-muted-foreground">
+                {t(
+                  "Nothing woven yet — the sounds you weave will rest here, ready to listen."
+                )}
+              </p>
+            </div>
+          </div>
         )}
-      </AnimatePresence>
-    </motion.section>
+
+        {/* THE SHELF — every sound this device still holds, one touch
+            from the stage; the playing row wears the room's own light */}
+        <AnimatePresence>
+          {shelfOpen && history.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.35, ease: "easeOut" }}
+              className="overflow-hidden"
+            >
+              <div className="mt-3 border-t hairline pt-2.5">
+                <p className="mono-label mb-1.5 text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+                  {t("My transmissions")}
+                </p>
+                <div
+                  className="nice-scroll max-h-56 space-y-1 overflow-y-auto pr-1"
+                  data-testid="lc-shelf"
+                >
+                  {history.map((shelfTrack) => {
+                    const isLive = shelfTrack.id === active?.id;
+                    return (
+                      <div
+                        key={shelfTrack.id}
+                        className={cn(
+                          "group flex h-11 items-center gap-2.5 rounded-xl border px-2.5 transition-colors duration-300",
+                          isLive
+                            ? "border-[color-mix(in_srgb,var(--scope-a)_55%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_10%,transparent)]"
+                            : "border-[color-mix(in_srgb,var(--scope-a)_18%,var(--hairline))] bg-[var(--glass-bg-soft)]"
+                        )}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => void playLc(shelfTrack)}
+                          aria-label={`${t("Play")} ${shelfTrack.title}`}
+                          data-testid={`lc-history-play-${shelfTrack.id}`}
+                          className={cn(
+                            "focus-glow flex size-7 shrink-0 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground",
+                            TOUCH_VEIL
+                          )}
+                        >
+                          {isLive && playing ? (
+                            <Pause className="size-3" aria-hidden="true" />
+                          ) : (
+                            <Play
+                              className="size-3 translate-x-[1px]"
+                              aria-hidden="true"
+                            />
+                          )}
+                        </button>
+                        <span className="min-w-0 flex-1">
+                          <span
+                            className={cn(
+                              "block truncate text-[13px] font-medium",
+                              isLive
+                                ? "text-foreground"
+                                : "text-foreground/80"
+                            )}
+                          >
+                            {shelfTrack.title}
+                          </span>
+                          <span className="mono-label block truncate text-[9.5px] uppercase tracking-[0.16em] text-muted-foreground/70">
+                            {t(
+                              LC_MODES.find((m) => m.id === shelfTrack.mode)
+                                ?.name ?? shelfTrack.mode
+                            )}
+                            {" · "}
+                            {new Date(shelfTrack.createdAt).toLocaleDateString()}
+                          </span>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => reshapeLc(shelfTrack)}
+                          aria-label={`${t("Reshape")} ${shelfTrack.title}`}
+                          className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground opacity-0 transition-all duration-300 hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100"
+                        >
+                          <Wand2 className="size-3.5" aria-hidden="true" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => forgetLc(shelfTrack.id)}
+                          aria-label={`${t("Forget")} ${shelfTrack.title}`}
+                          className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground opacity-0 transition-all duration-300 hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100"
+                        >
+                          <Trash2 className="size-3.5" aria-hidden="true" />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </section>
   );
 }
 
@@ -1434,6 +1717,10 @@ export function LightCodesView() {
         />
       </div>
 
+      {/* THE STAGE — the room's media player rests above every
+          bench, so the newest weave is always one glance away */}
+      <PlayerBar />
+
       {/* ---------- the chamber ---------- */}
       <div
         className="nice-scroll relative z-10 min-h-0 flex-1 overflow-y-auto overscroll-contain"
@@ -1543,7 +1830,7 @@ export function LightCodesView() {
 
             {/* THE TWO ZONES — the channeling flows on the left, the
                 listening rests on the right; one column on small hands */}
-            <div className="mt-3 grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,380px)]">
+            <div className="mt-3 grid items-start gap-4">
               {/* ================= LEFT — describe & channeling ================= */}
               <div className="flex min-w-0 flex-col">
                 {/* THE DESCRIBE LINE — the ask, spoken or typed, with the
@@ -1943,94 +2230,9 @@ export function LightCodesView() {
                 )}
               </div>
 
-              {/* ================= RIGHT — the listen zone ================= */}
-              <div className="flex min-w-0 flex-col lg:sticky lg:top-2">
-                {/* the player */}
-                {lcStatus === "ready" && lcTrack && <Player />}
-
-                {/* MY TRANSMISSIONS — the shelf of kept sounds */}
-                {lcHistory.length > 0 && (
-                  <section className="mt-4 lg:mt-0" aria-label={t("My transmissions")}>
-                    <p className="mono-label mb-2 text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
-                      {t("My transmissions")}
-                    </p>
-                    <div className="nice-scroll max-h-56 space-y-1.5 overflow-y-auto pr-1">
-                      {lcHistory.map((track) => (
-                        <div
-                          key={track.id}
-                          className="group flex items-center gap-2.5 rounded-xl border border-[color-mix(in_srgb,var(--scope-a)_24%,var(--hairline))] bg-[var(--glass-bg-soft)] px-2.5 py-2"
-                        >
-                          <button
-                            type="button"
-                            onClick={() => void playLc(track)}
-                            aria-label={`${t("Play")} ${track.title}`}
-                            data-testid={`lc-history-play-${track.id}`}
-                            className={cn(
-                              "focus-glow flex size-7 shrink-0 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground",
-                              TOUCH_VEIL
-                            )}
-                          >
-                            <Play className="size-3 translate-x-[1px]" aria-hidden="true" />
-                          </button>
-                          <span className="min-w-0 flex-1">
-                            <span className="block truncate text-[13.5px] font-medium text-foreground/85">
-                              {track.title}
-                            </span>
-                            <span className="mono-label block text-[9.5px] uppercase tracking-[0.16em] text-muted-foreground/70">
-                              {t(
-                                LC_MODES.find((m) => m.id === track.mode)?.name ??
-                                  track.mode
-                              )}
-                              {" · "}
-                              {new Date(track.createdAt).toLocaleDateString()}
-                            </span>
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => reshapeLc(track)}
-                            aria-label={`${t("Reshape")} ${track.title}`}
-                            className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground opacity-0 transition-all duration-300 hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100"
-                          >
-                            <Wand2 className="size-3.5" aria-hidden="true" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => forgetLc(track.id)}
-                            aria-label={`${t("Forget")} ${track.title}`}
-                            className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground opacity-0 transition-all duration-300 hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100"
-                          >
-                            <Trash2 className="size-3.5" aria-hidden="true" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </section>
-                )}
-
-                {/* the listen zone's empty breath — honest, before the
-                    first weave has ever landed here */}
-                {!busy &&
-                  !(lcStatus === "ready" && lcTrack) &&
-                  lcHistory.length === 0 && (
-                    <div
-                      className="scope-frame-card flex flex-col items-center justify-center gap-2 rounded-2xl px-4 py-8 text-center"
-                      data-testid="lc-listen-empty"
-                    >
-                      <AudioLines
-                        className="size-5 text-[var(--scope-a)] opacity-70"
-                        aria-hidden="true"
-                      />
-                      <p className="text-[12.5px] leading-relaxed text-muted-foreground">
-                        {t(
-                          "Nothing woven yet — the sounds you weave will rest here, ready to listen."
-                        )}
-                      </p>
-                    </div>
-                  )}
-              </div>
             </div>
 
-            {/* THE KEEPER'S DIAGNOSTIC — silence for every ordinary visitor */}
+                        {/* THE KEEPER'S DIAGNOSTIC — silence for every ordinary visitor */}
             <ChamberStatus />
             </>
           )}

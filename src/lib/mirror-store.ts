@@ -865,6 +865,14 @@ interface MirrorState {
   playLc: (track: LcTrack) => Promise<void>;
   reshapeLc: (track: LcTrack) => void;
   clearLcPlayer: () => void;
+  /** THE STAGE'S OWN DIAL — how the playlist turns when a transmission
+      ends: off (stop at the shelf's end), all (turn around), one
+      (the same piece again). */
+  lcRepeat: "off" | "one" | "all";
+  setLcRepeat: (mode: "off" | "one" | "all") => void;
+  /** THE QUEUE'S OWN HAND — step through the shelf of kept sounds:
+      1 = the next older transmission, -1 = the one before it. */
+  lcAdvance: (dir: 1 | -1) => Promise<void>;
   forgetLc: (id: string) => void;
 
   /** ET Technology: consult the Mirror about a specific technology —
@@ -1421,6 +1429,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   lcError: null,
   lcNotice: null,
   lcHistory: [],
+  lcRepeat: "off" as "off" | "one" | "all",
   lcRaw: false,
 
   me: null,
@@ -2133,6 +2142,24 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       lcError: null,
     }),
   clearLcPlayer: () => set({ lcTrack: null, lcStatus: "idle" }),
+  setLcRepeat: (mode) => set({ lcRepeat: mode }),
+  lcAdvance: async (dir) => {
+    const s = get();
+    const shelf = s.lcHistory;
+    if (shelf.length === 0) return;
+    const at = shelf.findIndex((t) => t.id === s.lcTrack?.id);
+    /* the shelf runs newest-first: 1 walks down it (older), -1 walks up */
+    let next = at + dir;
+    if (next >= shelf.length) {
+      if (s.lcRepeat !== "all") return; // the shelf's end — the stage rests
+      next = 0;
+    }
+    if (next < 0) {
+      if (s.lcRepeat !== "all") return;
+      next = shelf.length - 1;
+    }
+    await get().playLc(shelf[next]);
+  },
   forgetLc: (id) =>
     set((s) => {
       /* the visitor's own hand forgets — the sound leaves the device too */
