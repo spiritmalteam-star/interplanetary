@@ -5075,35 +5075,10 @@ export function BranchCanopy({
               }}
             >
               <div className="pointer-events-none m-auto flex max-h-full w-full flex-col items-center gap-2 px-6 pb-2 pt-1">
-              {/* THE MARK — the house's own seal, wearing the theme's
-                  face (the white emblem on the midnight, the dark one in
-                  the daylight, so the light's hand can never take it
-                  away), and one touch begins the chat anew. */}
-              <button
-                type="button"
-                onClick={() =>
-                  useMirror.getState().newChat(useMirror.getState().activeMode)
-                }
-                aria-label={t("New chat")}
-                title={t("New chat")}
-                data-testid={`${testIdPrefix}-mark-new-chat`}
-                className="focus-glow pointer-events-auto block rounded-full transition-transform duration-300 hover:scale-105"
-              >
-                <Image
-                  src="/images/ai/mark-dark.png"
-                  alt=""
-                  width={64}
-                  height={64}
-                  className="hidden size-16 rounded-full opacity-90 dark:block"
-                />
-                <Image
-                  src="/images/ai/mark-light.png"
-                  alt=""
-                  width={64}
-                  height={64}
-                  className="size-16 rounded-full opacity-90 dark:hidden"
-                />
-              </button>
+              {/* THE STAR RESTS — the seal that stood above the floor's
+                  question was laid down at the visitor's word; the chat
+                  begins with the question alone. New chat keeps its
+                  hands in the history panel and the walk. */}
               <div className="flex flex-col items-center gap-3">
                 <span
                   aria-hidden="true"

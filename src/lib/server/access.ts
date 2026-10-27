@@ -108,7 +108,13 @@ function readSessionToken(token: string | undefined): string | null {
   if (!token) return null;
   const [payload, sig] = token.split(".");
   if (!payload || !sig) return null;
-  if (sign(payload) !== sig) return null;
+  /* timing-safe compare — a forged signature learns nothing from how long
+     the door takes to say no */
+  const expected = Buffer.from(sign(payload));
+  const received = Buffer.from(sig);
+  if (expected.length !== received.length || !timingSafeEqual(expected, received)) {
+    return null;
+  }
   try {
     const json = JSON.parse(
       Buffer.from(payload.replace(/-/g, "+").replace(/_/g, "/"), "base64").toString("utf8")

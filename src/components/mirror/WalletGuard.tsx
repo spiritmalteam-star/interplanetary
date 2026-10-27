@@ -77,7 +77,15 @@ export function WalletGuard() {
             actionType?: string;
           } | null;
           if (data?.error === "SIGN_IN_REQUIRED") {
-            /* a paid door asked for a passage — the modal offers one */
+            /* a paid door asked for a passage — but first, reconcile the
+               belief: if the house still thinks we wear a passage while
+               the server says otherwise, re-read the truth so the modal
+               offers a sign-in (not credit packs that would 401 again) */
+            const state = useMirror.getState();
+            if (state.me && !state.me.email.startsWith("anon:")) {
+              void state.refreshMe();
+            }
+            /* the modal offers one */
             useMirror.getState().openWalletModal({
               required: data.required ?? 1,
               current: 0,
