@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomBytes } from "crypto";
+import { requestIsSecure } from "@/lib/server/access";
 import { publicOrigin } from "./callback/route";
 
 /* ------------------------------------------------------------------ */
@@ -41,7 +42,7 @@ export async function GET(req: NextRequest) {
   res.cookies.set("mirror_g_state", state, {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: requestIsSecure(req),
     path: "/",
     maxAge: 600,
   });

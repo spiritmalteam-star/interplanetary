@@ -3358,6 +3358,12 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   refreshMe: async () => {
     try {
       const res = await fetch("/api/auth/me");
+      if (!res.ok) {
+        /* a degraded greeting (the vault resting — 503) keeps the last
+           known face: a stale name beats an erased passage. Only an
+           honest "signed out" body may clear the me. */
+        return;
+      }
       const data = (await res.json().catch(() => null)) as {
         user?: MeUser | null;
         admin?: boolean;

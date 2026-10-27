@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
         admin: isAdminEmail(user.email),
       },
     });
-    setSessionCookie(res, user.id);
+    setSessionCookie(res, user.id, req);
     /* make sure the passage carries its workspace, ledger and gift —
        also for accounts carved before the provisions existed */
     await ensureVisitorProvisions(user.id);

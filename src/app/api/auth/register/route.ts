@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
     await ensureWallet(user.id);
 
     const res = NextResponse.json({ user: publicUser(user) }, { status: 201 });
-    setSessionCookie(res, user.id);
+    setSessionCookie(res, user.id, req);
     /* everything the anonymous cookie kept comes with the new passage */
     await mergeAnonLibrary(readAnonId(req), user.id);
 

@@ -23,6 +23,13 @@ export async function register(): Promise<void> {
   try {
     if (process.env.NEXT_RUNTIME !== "nodejs") return;
 
+    /* the keeper's binding: the ADMIN_EMAIL env carves the ADMIN role
+       onto its user row, once, so the platform's hands are bound in the
+       database — never to a request's own claim. Runs on every boot,
+       before the secret's own early bow-out. */
+    const { ensureAdminBinding } = await import("@/lib/server/access");
+    await ensureAdminBinding();
+
     const existing =
       process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || "";
     if (existing.length >= 16) return; // the vault already speaks — bow out

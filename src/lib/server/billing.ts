@@ -480,6 +480,12 @@ export async function handleStripeEvent(event: Stripe.Event): Promise<void> {
         break;
     }
   } catch (err) {
+    /* the register row is lifted so Stripe's honest replay can try
+       again — a paid grant is never swallowed by one resting moment */
     console.error("[billing] event handling failed:", err instanceof Error ? err.message : err);
+    await db.processedEvent
+      .deleteMany({ where: { id: event.id } })
+      .catch(() => undefined);
+    throw err;
   }
 }

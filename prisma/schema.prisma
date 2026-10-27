@@ -31,6 +31,7 @@ model User {
   passwordHash    String? // null → the visitor arrived through Google, or anonymously
   provider        String   @default("email") // email | google | anon
   tier            String   @default("crystalline") // kept for gentle history; every world is free
+  role            String   @default("user") // user | ADMIN — bound in the database, never by a request's own claim
   settings        Json? // the visitor's own tuning: language, voice, pace, theme, fields of expansion
   emailVerifiedAt DateTime?
   createdAt       DateTime @default(now())
@@ -40,6 +41,8 @@ model User {
   ownedWorkspaces Workspace[] @relation("OwnedWorkspaces")
   wallet          UserWallet?
   ledger          CreditLedger[]
+  generationJobs  GenerationJob[] @relation("GenerationJobs")
+  musicTracks     MusicTrack[]    @relation("MusicTracks")
   expansion       ExpansionProfile?
   expansionEvents ExpansionEvent[]
 }
@@ -250,6 +253,41 @@ model CreditLedger {
   createdAt       DateTime @default(now())
 
   @@index([userId])
+  @@index([userId, createdAt])
+}
+
+model GenerationJob {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation("GenerationJobs", fields: [userId], references: [id], onDelete: Cascade)
+  tool           String // light_codes | …future durable makers
+  providerTaskId String? // the maker's own handle (e.g. the Suno taskId)
+  status         String   @default("pending") // pending | processing | succeeded | failed
+  request        Json? // the ask, enough to resume or re-render
+  result         Json? // the maker's final answer (tracks metadata)
+  creditsDrawn   Int      @default(0) // the light the weigh drew for this job
+  refunded       Boolean  @default(false) // a confirmed failure gives the light back, once
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([userId, createdAt])
+  @@index([providerTaskId])
+}
+
+model MusicTrack {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation("MusicTracks", fields: [userId], references: [id], onDelete: Cascade)
+  jobId       String? // the GenerationJob that wove it
+  title       String
+  audioUrl    String // the serve key (/api/music-audio/<file>) — never a browser guess
+  localFile   String? // the mirrored file's name under the house's audio vault
+  remoteUrl   String? // the maker's own CDN address (kept for re-mirror attempts)
+  durationSec Float?
+  status      String   @default("ready") // ready | mirrored | remote_only | failed
+  favorite    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
   @@index([userId, createdAt])
 }
 

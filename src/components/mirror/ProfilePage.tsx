@@ -120,6 +120,7 @@ export function ProfilePage() {
   const close = useMirror((s) => s.closeProfilePage);
 
   const me = useMirror((s) => s.me);
+  const wallet = useMirror((s) => s.wallet);
   const openAuth = useMirror((s) => s.openAuth);
   const openAccount = useMirror((s) => s.openAccount);
   const openLibrary = useMirror((s) => s.openLibrary);
@@ -1423,71 +1424,97 @@ export function ProfilePage() {
                         <div className="rounded-xl border hairline bg-[var(--glass-bg)] px-3 py-2.5 transition-colors duration-300 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_38%,transparent)]">
                           <Gem className="size-3.5 text-[var(--cy)]" aria-hidden="true" />
                           <p className="mt-1.5 truncate text-[16px] font-semibold leading-none text-foreground/95">
-                            {summary.credits.balance != null
-                              ? summary.credits.balance.toLocaleString("en-US")
-                              : "—"}
+                            {wallet ? wallet.total.toLocaleString("en-US") : "—"}
                           </p>
                           <p className="mono-label mt-1 truncate text-[9px] uppercase tracking-[0.16em] text-muted-foreground">
-                            {t("Credits")} · {summary.plan.label}
+                            {t("Lights in the purse")}
+                            {wallet && wallet.planTier !== "FREE"
+                              ? ` · ${wallet.planTier === "SEEKER" ? t("Seeker") : t("Observatory Pro")}`
+                              : ""}
                           </p>
                         </div>
                         <div className="rounded-xl border hairline bg-[var(--glass-bg)] px-3 py-2.5 transition-colors duration-300 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_38%,transparent)]">
                           <CreditCard className="size-3.5 text-[var(--cy)]" aria-hidden="true" />
                           <p className="mt-1.5 truncate text-[16px] font-semibold leading-none text-foreground/95">
-                            {summary.usage.events30d}
+                            {summary?.usage.events30d ?? "—"}
                           </p>
                           <p className="mono-label mt-1 truncate text-[9px] uppercase tracking-[0.16em] text-muted-foreground">
                             {t("Usage this month")} · {t("operations")}
                           </p>
                         </div>
                       </div>
-                      {(summary.offers?.packs?.length ?? 0) > 0 && (
-                        <div className="mt-3 flex flex-wrap items-center gap-2">
-                          {summary.offers?.packs
-                            .filter((p) => p.available)
-                            .map((p) => (
-                              <button
-                                key={p.id}
-                                type="button"
-                                onClick={() => void recharge({ pack: p.id }, p.id)}
-                                disabled={rechargeBusy === p.id}
-                                data-testid={`profilepage-api-pack-${p.id}`}
-                                className="focus-glow flex h-8 items-center gap-1.5 rounded-full border px-3.5 text-[13px] text-foreground/85 transition-all duration-300 hover:border-[color-mix(in_srgb,var(--gd)_55%,transparent)] disabled:opacity-40"
-                                style={{
-                                  borderColor:
-                                    "color-mix(in srgb, var(--gd) 34%, transparent)",
-                                  backgroundColor:
-                                    "color-mix(in srgb, var(--gd) 6%, var(--background))",
-                                }}
-                              >
-                                {rechargeBusy === p.id ? (
-                                  <LoaderCircle className="size-3 animate-spin" aria-hidden="true" />
-                                ) : (
-                                  <Gem className="size-3 text-[var(--gd)]" aria-hidden="true" />
-                                )}
-                                {p.label}
-                                <span className="mono-label text-[10px] text-muted-foreground">
-                                  €{Math.round(p.priceCents / 100)}
-                                </span>
-                              </button>
-                            ))}
-                          <button
-                            type="button"
-                            onClick={() => exitTo(openAccount)}
-                            className="focus-glow flex h-8 items-center gap-1.5 rounded-full border hairline px-3.5 text-[13px] text-foreground/80 transition-all duration-300 hover:border-[var(--hairline-hover)]"
-                          >
-                            {t("Open the account chamber")}
-                            <ChevronRight className="size-3.5" aria-hidden="true" />
-                          </button>
-                        </div>
-                      )}
-                      {!summary.plan.apiAccess && (
-                        <p className="mt-3 text-[12.5px] italic text-muted-foreground">
-                          {t(
-                            "The plan must carry API access — bring the vessel to a plan that does."
+                      {/* THE PURSE'S OWN PROVISIONS — the wallet economy's
+                          one-time pouch and the two passes, the same
+                          checkout the account chamber serves. The legacy
+                          workspace packs (a currency nothing spends) are
+                          never sold here again. */}
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => void recharge({ pack: "topup" }, "topup")}
+                          disabled={rechargeBusy === "topup"}
+                          data-testid="profilepage-wallet-topup"
+                          className="focus-glow flex h-8 items-center gap-1.5 rounded-full border px-3.5 text-[13px] text-foreground/85 transition-all duration-300 hover:border-[color-mix(in_srgb,var(--gd)_55%,transparent)] disabled:opacity-40"
+                          style={{
+                            borderColor: "color-mix(in srgb, var(--gd) 34%, transparent)",
+                            backgroundColor: "color-mix(in srgb, var(--gd) 6%, var(--background))",
+                          }}
+                        >
+                          {rechargeBusy === "topup" ? (
+                            <LoaderCircle className="size-3 animate-spin" aria-hidden="true" />
+                          ) : (
+                            <Gem className="size-3 text-[var(--gd)]" aria-hidden="true" />
                           )}
-                        </p>
-                      )}
+                          {t("Pouch of light")}
+                          <span className="mono-label text-[10px] text-muted-foreground">$4.99</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => void recharge({ plan: "SEEKER" }, "SEEKER")}
+                          disabled={rechargeBusy === "SEEKER"}
+                          data-testid="profilepage-wallet-seeker"
+                          className="focus-glow flex h-8 items-center gap-1.5 rounded-full border px-3.5 text-[13px] text-foreground/85 transition-all duration-300 hover:border-[color-mix(in_srgb,var(--gd)_55%,transparent)] disabled:opacity-40"
+                          style={{
+                            borderColor: "color-mix(in srgb, var(--gd) 34%, transparent)",
+                            backgroundColor: "color-mix(in srgb, var(--gd) 6%, var(--background))",
+                          }}
+                        >
+                          {rechargeBusy === "SEEKER" ? (
+                            <LoaderCircle className="size-3 animate-spin" aria-hidden="true" />
+                          ) : (
+                            <Gem className="size-3 text-[var(--gd)]" aria-hidden="true" />
+                          )}
+                          {t("Seeker pass")}
+                          <span className="mono-label text-[10px] text-muted-foreground">$9.99/mo</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => void recharge({ plan: "OBSERVATORY_PRO" }, "OBSERVATORY_PRO")}
+                          disabled={rechargeBusy === "OBSERVATORY_PRO"}
+                          data-testid="profilepage-wallet-pro"
+                          className="focus-glow flex h-8 items-center gap-1.5 rounded-full border px-3.5 text-[13px] text-foreground/85 transition-all duration-300 hover:border-[color-mix(in_srgb,var(--gd)_55%,transparent)] disabled:opacity-40"
+                          style={{
+                            borderColor: "color-mix(in srgb, var(--gd) 34%, transparent)",
+                            backgroundColor: "color-mix(in srgb, var(--gd) 6%, var(--background))",
+                          }}
+                        >
+                          {rechargeBusy === "OBSERVATORY_PRO" ? (
+                            <LoaderCircle className="size-3 animate-spin" aria-hidden="true" />
+                          ) : (
+                            <Gem className="size-3 text-[var(--gd)]" aria-hidden="true" />
+                          )}
+                          {t("Observatory Pro")}
+                          <span className="mono-label text-[10px] text-muted-foreground">$19.99/mo</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => exitTo(openAccount)}
+                          className="focus-glow flex h-8 items-center gap-1.5 rounded-full border hairline px-3.5 text-[13px] text-foreground/80 transition-all duration-300 hover:border-[var(--hairline-hover)]"
+                        >
+                          {t("Open the account chamber")}
+                          <ChevronRight className="size-3.5" aria-hidden="true" />
+                        </button>
+                      </div>
                     </>
                   ) : null}
                   {rechargeNote && (
@@ -1782,11 +1809,16 @@ export function ProfilePage() {
                   {[
                     {
                       icon: Gem,
-                      value: summary.credits.balance != null
-                        ? summary.credits.balance.toLocaleString("en-US")
+                      value: wallet
+                        ? wallet.total.toLocaleString("en-US")
                         : "—",
-                      label: t("Credits"),
-                      hint: summary.plan.label,
+                      label: t("Lights in the purse"),
+                      hint:
+                        wallet && wallet.planTier !== "FREE"
+                          ? wallet.planTier === "SEEKER"
+                            ? t("Seeker")
+                            : t("Observatory Pro")
+                          : t("the one purse"),
                     },
                     {
                       icon: CreditCard,

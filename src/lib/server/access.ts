@@ -34,6 +34,9 @@ export interface SessionUser {
   email: string;
   name: string | null;
   tier: Tier;
+  /** The database-bound role: "user" — or "ADMIN", the verified keeper.
+   *  Never trusted from a request's own claim; only from the user row. */
+  role?: string;
   /** True when this identity is the anonymous cookie's quiet keeper. */
   anon?: boolean;
 }
@@ -126,11 +129,64 @@ function readSessionToken(token: string | undefined): string | null {
   }
 }
 
-export function setSessionCookie(res: NextResponse, userId: string): void {
+/* --------------------------- the keeper ---------------------------- */
+
+/** The platform's one verified keeper — the deposit, the console's own
+ *  hands, and a purse no paid door ever draws. The identity is bound in
+ *  the DATABASE (User.role === "ADMIN"), never granted because a request
+ *  merely carries the email. The env var only seeds the binding at boot. */
+export function isKeeperFree(user: {
+  email: string;
+  role?: string | null;
+}): boolean {
+  if (user.email.startsWith("anon:")) return false;
+  if (user.role === "ADMIN") return true;
+  const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+  return Boolean(adminEmail) && user.email.toLowerCase() === adminEmail;
+}
+
+/** Boot-time binding: the ADMIN_EMAIL env var carves the role onto the
+ *  matching user row, once, in the database. After that the row alone
+ *  speaks — changing the env later neither grants nor revokes silently. */
+export async function ensureAdminBinding(): Promise<void> {
+  const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+  if (!adminEmail) return;
+  try {
+    const user = await db.user.findUnique({ where: { email: adminEmail } });
+    if (user && user.role !== "ADMIN") {
+      await db.user.update({ where: { id: user.id }, data: { role: "ADMIN" } });
+      console.info("[access] the keeper's role was bound in the database.");
+    }
+  } catch {
+    /* the binding rests until the database wakes — the env fallback in
+       isKeeperFree keeps the keeper served in the meantime */
+  }
+}
+
+/* --------------------------- cookies ------------------------------- */
+
+/** Whether cookies may wear the Secure flag: only when the request
+ *  actually arrived over HTTPS (x-forwarded-proto), or the pinned APP_URL
+ *  says the house stands behind TLS. A production build behind a plain
+ *  HTTP proxy keeps working instead of silently dropping every session. */
+export function requestIsSecure(req?: {
+  headers: { get(name: string): string | null };
+}): boolean {
+  const proto = req?.headers.get("x-forwarded-proto");
+  if (proto) return proto.split(",")[0].trim() === "https";
+  if (process.env.APP_URL?.startsWith("https://")) return true;
+  return process.env.NODE_ENV === "production";
+}
+
+export function setSessionCookie(
+  res: NextResponse,
+  userId: string,
+  req?: NextRequest
+): void {
   res.cookies.set(SESSION_COOKIE, createSessionToken(userId), {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: requestIsSecure(req),
     path: "/",
     maxAge: SESSION_DAYS * 24 * 60 * 60,
   });
@@ -141,12 +197,18 @@ export function clearSessionCookie(res: NextResponse): void {
 }
 
 export async function getSessionUser(req: NextRequest): Promise<SessionUser | null> {
-  const uid = readSessionToken(req.cookies.get(SESSION_COOKIE)?.value);
+  const uid = readSessionUid(req);
   if (!uid) return null;
   try {
     const user = await db.user.findUnique({ where: { id: uid } });
     if (!user) return null;
-    return { id: user.id, email: user.email, name: user.name, tier: user.tier === "light" ? "light" : "crystalline" };
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      tier: user.tier === "light" ? "light" : "crystalline",
+      role: user.role,
+    };
   } catch (err) {
     /* the cloud without a database — a signed-in cookie is received
        but cannot be looked up; the visitor passes as anonymous */
@@ -156,6 +218,13 @@ export async function getSessionUser(req: NextRequest): Promise<SessionUser | nu
     );
     return null;
   }
+}
+
+/** Signature-and-expiry check only — no database. Lets a route tell
+ *  "this browser holds a signed passage" apart from "signed out", so a
+ *  resting vault never masquerades as a logged-out visitor. */
+export function readSessionUid(req: NextRequest): string | null {
+  return readSessionToken(req.cookies.get(SESSION_COOKIE)?.value);
 }
 
 /* --------------------------- anonymous id -------------------------- */
@@ -180,6 +249,8 @@ export interface Visitor {
   /** True when the anon cookie was minted on THIS request and must be
       attached to the response (see withAnonCookie). */
   freshAnon: boolean;
+  /** Whether cookies may wear Secure on this request's own arrival. */
+  secure: boolean;
 }
 
 /** Ids minted when the database rests (cloud without DATABASE_URL).
@@ -197,10 +268,11 @@ export const STATELESS_PREFIX = "stateless:";
  * answers; the library simply rests until a database arrives.
  */
 export async function resolveVisitor(req: NextRequest): Promise<Visitor> {
+  const secure = requestIsSecure(req);
   const signedIn = await getSessionUser(req);
   if (signedIn) {
     const anonId = readAnonId(req) ?? "";
-    return { user: signedIn, anonId, freshAnon: false };
+    return { user: signedIn, anonId, freshAnon: false, secure };
   }
 
   const existing = readAnonId(req);
@@ -212,9 +284,17 @@ export async function resolveVisitor(req: NextRequest): Promise<Visitor> {
       update: {},
     });
     return {
-      user: { id: user.id, email: user.email, name: user.name, tier: "crystalline", anon: true },
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        tier: "crystalline",
+        role: user.role,
+        anon: true,
+      },
       anonId,
       freshAnon: !existing,
+      secure,
     };
   } catch (err) {
     console.error(
@@ -231,6 +311,7 @@ export async function resolveVisitor(req: NextRequest): Promise<Visitor> {
       },
       anonId,
       freshAnon: !existing,
+      secure,
     };
   }
 }
@@ -241,7 +322,7 @@ export function withAnonCookie<T extends Response>(res: T, visitor: Visitor): T 
     (res as unknown as NextResponse).cookies.set(ANON_COOKIE, visitor.anonId, {
       httpOnly: true,
       sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
+      secure: visitor.secure,
       path: "/",
       maxAge: 365 * 24 * 60 * 60,
     });

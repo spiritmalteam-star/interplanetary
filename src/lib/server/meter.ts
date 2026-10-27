@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ANON_COOKIE, resolveVisitor, withAnonCookie, type Visitor } from "@/lib/server/access";
+import { ANON_COOKIE, isKeeperFree, resolveVisitor, withAnonCookie, type Visitor } from "@/lib/server/access";
 import { costOf } from "@/lib/server/costs";
 import { creditsEnforced, spendCredits } from "@/lib/server/credits";
 import { GATES, rateLimit } from "@/lib/server/rate-limit";
@@ -178,12 +178,11 @@ export function meterRoute(operation: string, handler: MeteredHandler) {
          first — an empty purse is answered at once with 402
          INSUFFICIENT_CREDITS, and an unsigned visitor is answered 401
          SIGN_IN_REQUIRED (no billable generation begins without a
-         passage). THE ONE PURSE — the keeper's own passage holds no
-         free ride either: every room, console and diagnostic stands
-         wide open to them, but a creation draws its light like every
-         keeper's (the console can grant the purse back, and the ledger
-         still witnesses). When a door stumbles, the exact draw is
-         refunded. */
+         passage). THE ONE EXCEPTION — the verified keeper (the ADMIN
+         role bound in the database, seeded by ADMIN_EMAIL at boot)
+         walks through every paid door without their purse being drawn:
+         their real usage is still recorded below, never billed. When a
+         door stumbles, the exact draw is refunded. */
       const flatAction = WALLET_OPERATIONS[operation];
       const dynamicWeigh = await bodyWeighFor(operation, req);
       const weigh = flatAction
@@ -193,11 +192,13 @@ export function meterRoute(operation: string, handler: MeteredHandler) {
             description: `the ${operation} door — weighed before serving`,
           }
         : dynamicWeigh;
+      const keeperFree = isKeeperFree(visitor.user);
       if (
         weigh &&
         weigh.cost > 0 &&
         walletEnforced() &&
-        !userId.startsWith("stateless:")
+        !userId.startsWith("stateless:") &&
+        !keeperFree
       ) {
         if (visitor.user.email.startsWith("anon:")) {
           await recordUsage({

@@ -82,7 +82,7 @@ export async function GET(req: NextRequest) {
     });
 
     const res = NextResponse.redirect(origin);
-    setSessionCookie(res, user.id);
+    setSessionCookie(res, user.id, req);
     /* the passage carries its workspace, ledger and gift */
     await ensureVisitorProvisions(user.id);
     /* and its own wallet — five free lights on first arrival */

@@ -18,12 +18,18 @@ export function isAdminEmail(email: string | null | undefined): boolean {
   return Boolean(email && !email.startsWith("anon:") && email.toLowerCase() === ADMIN_EMAIL);
 }
 
-/** The admin truth of a signed session — used by every admin route. */
+/** The admin truth of a signed session — used by every admin route.
+ *  Two keys open the same door: the env key (ADMIN_EMAIL matched against
+ *  the signed session's database identity) and the role carved into the
+ *  user row at boot — so the keeper stays the keeper even if the env
+ *  var is later renamed. The browser is never trusted. */
 export async function isAdminRequest(req: Request): Promise<boolean> {
   try {
     const { getSessionUser } = await import("@/lib/server/access");
     const user = await getSessionUser(req as Parameters<typeof getSessionUser>[0]);
-    return isAdminEmail(user?.email);
+    if (!user) return false;
+    if (user.role === "ADMIN") return true;
+    return isAdminEmail(user.email);
   } catch {
     return false;
   }
