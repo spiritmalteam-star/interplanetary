@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isAdminEmail } from "@/lib/server/admin";
 import { ANON_COOKIE, resolveVisitor, withAnonCookie, type Visitor } from "@/lib/server/access";
 import { costOf } from "@/lib/server/costs";
 import { creditsEnforced, spendCredits } from "@/lib/server/credits";
@@ -9,7 +8,6 @@ import {
   WALLET_COSTS,
   WALLET_OPERATIONS,
   ensureWallet,
-  recordAdminUsage,
   refundWalletCredits,
   servicePrices,
   spendWalletCredits,
@@ -180,9 +178,12 @@ export function meterRoute(operation: string, handler: MeteredHandler) {
          first — an empty purse is answered at once with 402
          INSUFFICIENT_CREDITS, and an unsigned visitor is answered 401
          SIGN_IN_REQUIRED (no billable generation begins without a
-         passage). The verified keeper creates without their purse
-         being drawn — the weight is recorded, never charged. When a
-         door stumbles, the exact draw is refunded. */
+         passage). THE ONE PURSE — the keeper's own passage holds no
+         free ride either: every room, console and diagnostic stands
+         wide open to them, but a creation draws its light like every
+         keeper's (the console can grant the purse back, and the ledger
+         still witnesses). When a door stumbles, the exact draw is
+         refunded. */
       const flatAction = WALLET_OPERATIONS[operation];
       const dynamicWeigh = await bodyWeighFor(operation, req);
       const weigh = flatAction
@@ -198,10 +199,7 @@ export function meterRoute(operation: string, handler: MeteredHandler) {
         walletEnforced() &&
         !userId.startsWith("stateless:")
       ) {
-        if (isAdminEmail(visitor.user.email)) {
-          /* the keeper's own creation — recorded, never charged */
-          void recordAdminUsage(userId, weigh.actionType, weigh.cost, weigh.description);
-        } else if (visitor.user.email.startsWith("anon:")) {
+        if (visitor.user.email.startsWith("anon:")) {
           await recordUsage({
             userId,
             workspaceId,

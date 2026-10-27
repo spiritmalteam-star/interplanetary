@@ -1152,7 +1152,6 @@ function PriceLine() {
   const lcLength = useMirror((s) => s.lcLength);
   const wallet = useMirror((s) => s.wallet);
   const prices = useMirror((s) => s.walletPrices);
-  const me = useMirror((s) => s.me);
   const t = useT();
   const price =
     lcLength === "loop"
@@ -1160,13 +1159,8 @@ function PriceLine() {
       : lcLength === "full"
         ? prices?.musicFull ?? 5
         : prices?.musicPreview ?? 2;
-  if (me?.admin) {
-    return (
-      <p className="mt-2 text-[11.5px] leading-relaxed text-muted-foreground/75" data-testid="lc-price-line">
-        {t("The keeper's own light — no purse is drawn for your creations.")}
-      </p>
-    );
-  }
+  /* THE ONE PURSE — no free ride for any hand, the keeper's included:
+     the honest weigh is spoken the same way to every visitor. */
   if (!wallet) return null;
   return (
     <p className="mt-2 text-[11.5px] leading-relaxed text-muted-foreground/75" data-testid="lc-price-line">

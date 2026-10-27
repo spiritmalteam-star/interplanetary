@@ -454,6 +454,236 @@ body {
     0 0 16px -6px color-mix(in srgb, var(--cy) 28%, transparent);
 }
 
+/* ------------------------------------------------------------------ */
+/*  THE CONTROL DIALECT — one premium vocabulary for every hand in    */
+/*  the house. Tokens first, then four surfaces: the solid primary,   */
+/*  the scope-aware crystal CTA, the icon pill-hand and the nav pill. */
+/*  Motion is quick and calm, never busy; the sheen sweeps once per   */
+/*  hover and rests; press feedback is a breath, not a bounce.        */
+/* ------------------------------------------------------------------ */
+
+:root {
+  --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --dur-quick: 200ms;
+  --dur-calm: 340ms;
+  /* light theme: scope accents are deep graphite → pale ink on top */
+  --ctrl-primary-ink: #f9f6ea;
+  --ctrl-press-scale: 0.97;
+  --ctrl-shadow-rest:
+    0 1px 2px rgba(0, 0, 0, 0.1),
+    0 4px 14px -8px rgba(0, 0, 0, 0.3);
+  --ctrl-shadow-hover:
+    0 2px 4px rgba(0, 0, 0, 0.1),
+    0 10px 26px -12px rgba(0, 0, 0, 0.4);
+  --ctrl-inner-hi: inset 0 1px 0 color-mix(in srgb, white 26%, transparent);
+}
+
+.dark {
+  /* dark theme: scope accents are pale silver → deep ink on top */
+  --ctrl-primary-ink: #0c111c;
+  --ctrl-shadow-rest:
+    0 1px 2px rgba(0, 0, 0, 0.5),
+    0 6px 18px -10px rgba(0, 0, 0, 0.62);
+  --ctrl-shadow-hover:
+    0 2px 5px rgba(0, 0, 0, 0.5),
+    0 12px 30px -12px rgba(0, 0, 0, 0.7);
+  --ctrl-inner-hi: inset 0 1px 0 color-mix(in srgb, white 36%, transparent);
+}
+
+/* THE SOLID PRIMARY — the house's main hand (the old flat
+   `bg-foreground hover:opacity-85` retires): a quiet vertical sheen,
+   control-grade elevation, a spring press, and the once-per-hover
+   light sweep. */
+.btn-solid {
+  position: relative;
+  overflow: hidden;
+  background-image: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--foreground) 94%, white 6%),
+    var(--foreground)
+  );
+  color: var(--background);
+  box-shadow: var(--ctrl-inner-hi), var(--ctrl-shadow-rest);
+  transition:
+    transform var(--dur-quick) var(--ease-spring),
+    box-shadow var(--dur-calm) var(--ease-soft),
+    filter var(--dur-quick) var(--ease-soft);
+}
+.btn-solid:hover {
+  filter: brightness(1.07);
+  box-shadow: var(--ctrl-inner-hi), var(--ctrl-shadow-hover);
+}
+.btn-solid:active {
+  transform: scale(var(--ctrl-press-scale));
+}
+.btn-solid:disabled {
+  transform: none;
+  filter: none;
+  box-shadow: none;
+}
+
+/* THE CRYSTAL CTA — the scope-aware gradient hand (the send crystals,
+   the wallet's invitations): tinted by the room's own light, inked by
+   the theme's own law, glowing at rest, deepening on hover. */
+.btn-primary {
+  position: relative;
+  overflow: hidden;
+  background-image: linear-gradient(
+    135deg,
+    var(--scope-a, var(--gd)),
+    color-mix(in srgb, var(--scope-b, var(--pk)) 72%, var(--scope-a, var(--gd)))
+  );
+  color: var(--ctrl-primary-ink);
+  box-shadow:
+    var(--ctrl-inner-hi),
+    0 0 18px -8px color-mix(in srgb, var(--scope-a, var(--gd)) 60%, transparent),
+    var(--ctrl-shadow-rest);
+  transition:
+    transform var(--dur-quick) var(--ease-spring),
+    box-shadow var(--dur-calm) var(--ease-soft),
+    filter var(--dur-quick) var(--ease-soft);
+}
+.btn-primary:hover {
+  filter: saturate(1.12) brightness(1.05);
+  box-shadow:
+    var(--ctrl-inner-hi),
+    0 0 24px -8px color-mix(in srgb, var(--scope-a, var(--gd)) 70%, transparent),
+    var(--ctrl-shadow-hover);
+}
+.btn-primary:active {
+  transform: scale(0.96);
+}
+.btn-primary:disabled {
+  transform: none;
+  filter: none;
+  box-shadow: none;
+}
+
+/* THE ONCE SHEEN — one light sweep per hover, then rest (the house's
+   calm law: nothing runs forever). */
+.btn-solid::after,
+.btn-primary::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-130%) skewX(-18deg);
+  background: linear-gradient(
+    105deg,
+    transparent 30%,
+    color-mix(in srgb, white 34%, transparent) 50%,
+    transparent 70%
+  );
+  opacity: 0;
+  pointer-events: none;
+}
+@media (hover: hover) {
+  .btn-solid:hover::after,
+  .btn-primary:hover::after {
+    animation: sheen-sweep 700ms var(--ease-soft) forwards;
+  }
+}
+@keyframes sheen-sweep {
+  0% {
+    transform: translateX(-130%) skewX(-18deg);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translateX(130%) skewX(-18deg);
+    opacity: 0;
+  }
+}
+
+/* THE PILL HAND — the house's icon hand (back, zoom, close, the
+   crown's quiet doors): glass at rest, a breath of light on hover,
+   a spring press. One class retires a hundred hand-rolled copies. */
+.pill-hand {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  border: 1px solid var(--hairline);
+  background: var(--glass-bg);
+  color: var(--muted-foreground);
+  transition:
+    color var(--dur-quick) var(--ease-soft),
+    border-color var(--dur-quick) var(--ease-soft),
+    background-color var(--dur-quick) var(--ease-soft),
+    transform var(--dur-quick) var(--ease-spring),
+    box-shadow var(--dur-calm) var(--ease-soft);
+}
+.pill-hand:hover {
+  border-color: var(--hairline-hover);
+  color: var(--foreground);
+  background: color-mix(in srgb, var(--foreground) 5%, var(--glass-bg));
+  box-shadow: 0 0 14px -6px color-mix(in srgb, var(--cy) 24%, transparent);
+}
+.pill-hand:active {
+  transform: scale(0.94);
+}
+
+/* THE NAV PILL — the navigator's word-pills (Create, Scopes, the
+   profile rail, the workplace tabs): quiet at rest, the room's own
+   light when active (data-active="true"). */
+.nav-pill {
+  border: 1px solid var(--hairline);
+  color: var(--muted-foreground);
+  background: transparent;
+  transition:
+    color var(--dur-quick) var(--ease-soft),
+    border-color var(--dur-quick) var(--ease-soft),
+    background-color var(--dur-quick) var(--ease-soft),
+    transform var(--dur-quick) var(--ease-spring),
+    box-shadow var(--dur-calm) var(--ease-soft);
+}
+.nav-pill:hover {
+  border-color: var(--hairline-hover);
+  color: var(--foreground);
+  background: color-mix(in srgb, var(--foreground) 4%, transparent);
+}
+.nav-pill[data-active="true"] {
+  border-color: color-mix(in srgb, var(--scope-a, var(--gd)) 50%, transparent);
+  background: color-mix(in srgb, var(--scope-a, var(--gd)) 13%, transparent);
+  color: var(--scope-a, var(--gd));
+  box-shadow:
+    0 0 16px -8px color-mix(in srgb, var(--scope-a, var(--gd)) 55%, transparent),
+    inset 0 1px 0 color-mix(in srgb, white 10%, transparent);
+}
+.nav-pill:active {
+  transform: scale(0.97);
+}
+
+/* THE CONTROL ELEVATION — the cards' lift-* stay for surfaces; these
+   are the tighter, control-grade depths for raised hands and chips. */
+.ctrl-elev {
+  box-shadow: var(--ctrl-shadow-rest);
+  transition: box-shadow var(--dur-calm) var(--ease-soft);
+}
+.ctrl-elev:hover {
+  box-shadow: var(--ctrl-shadow-hover);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-solid::after,
+  .btn-primary::after {
+    display: none !important;
+  }
+  .btn-solid,
+  .btn-primary,
+  .pill-hand,
+  .nav-pill {
+    transition-duration: 1ms !important;
+  }
+}
+
+[data-perf="eco"] .btn-solid::after,
+[data-perf="eco"] .btn-primary::after {
+  display: none !important;
+}
+
 /* THE LIFTING SHADOWS — the house's two elevation tokens: every
    floating card borrows one of these instead of re-inventing its
    own depth, so all raised surfaces share one calm vocabulary. */

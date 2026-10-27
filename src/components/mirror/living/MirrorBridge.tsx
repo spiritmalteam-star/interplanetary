@@ -259,11 +259,7 @@ function MirrorBridgeImpl({
             disabled={busy || !draft.trim()}
             aria-label={t("Send")}
             data-testid="mirror-bridge-send"
-            className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full text-[#101010] transition-all duration-300 hover:scale-[1.04] disabled:cursor-not-allowed disabled:opacity-35"
-            style={{
-              background:
-                "linear-gradient(135deg, var(--scope-a,var(--gd)), color-mix(in srgb, var(--scope-a,var(--gd)) 60%, #ffffff22))",
-            }}
+            className="btn-primary focus-glow flex size-7 shrink-0 items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-35"
           >
             <Send className="size-3" aria-hidden="true" />
           </button>

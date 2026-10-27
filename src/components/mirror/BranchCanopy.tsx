@@ -1660,7 +1660,7 @@ const ZoomReplyForm = memo(function ZoomReplyForm({
           type="submit"
           disabled={disabled || !draft.trim()}
           aria-label={t("Send")}
-          className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--scope-a,var(--gd))] to-[color-mix(in_srgb,var(--scope-b,var(--pk))_70%,var(--scope-a,var(--gd)))] text-[#101010] shadow-[0_0_14px_-6px_color-mix(in_srgb,var(--scope-a,var(--gd))_70%,transparent)] transition-all duration-300 hover:scale-[1.04] disabled:cursor-not-allowed disabled:opacity-35 disabled:shadow-none"
+          className="btn-primary focus-glow flex size-7 shrink-0 items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-35"
         >
           <Send className="size-3" aria-hidden="true" />
         </button>
@@ -5418,13 +5418,14 @@ export function BranchCanopy({
                 disabled={disabled || floorBusy || !askDraft.trim()}
                 aria-label={t("Send")}
                 data-testid={`${testIdPrefix}-ask-send`}
+                /* THE CRYSTAL SEND — the house's scope-aware crystal CTA:
+                   the room's own light leads the gradient, the theme's
+                   own law inks it, one quiet glow at rest, one light
+                   sweep per hover, a spring press. The old hardcoded
+                   red→blue gradient is retired with the control
+                   dialect. */
                 className={cn(
-                  "focus-glow flex size-8 shrink-0 items-center justify-center rounded-full transition-all duration-300 hover:scale-[1.04] disabled:cursor-not-allowed disabled:opacity-35 disabled:shadow-none",
-                  /* THE CRYSTAL SEND — the send hand carries both
-                     crystals at once: the red and the blue, one gradient,
-                     no animation. A chosen scope lends its own light to
-                     the leading crystal. */
-                  "bg-gradient-to-br from-[var(--landing-scope-accent,#ff4d6d)] to-[#38bdf8] text-[#0b0f17] shadow-[0_0_14px_-6px_color-mix(in_srgb,var(--landing-scope-accent,#ff4d6d)_70%,transparent)]"
+                  "btn-primary focus-glow flex size-8 shrink-0 items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-35"
                 )}
               >
                 <Send className="size-3.5" aria-hidden="true" />
