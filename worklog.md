@@ -6225,3 +6225,15 @@ Work Log:
 
 Stage Summary:
 - The house's newest four movements now stand on the remote — the sessions that survive cold sleeps, the music stage at the door, the rooms that speak in pictures, the one hundred civilizations, and the fifteen keys — and local equals remote at 047f816.
+---
+Task ID: 6
+Agent: Z.ai Code (main orchestrator)
+Task: The star at the top of the landing chat — found and lifted
+
+Work Log:
+- The user saw the star still at the top of the landing chat: it was the purse pill's Sparkles mark in the crown (CreditBadge.tsx), not the ornament already lifted in b93af74.
+- The mark was removed outright; the figure now stands alone in the pill on every width (mobile included — no empty shell where the icon used to fold), aria-label and title unchanged ("Your purse: N lights"), testid and click target untouched.
+- Verified live at 1280px and 390px: the crown reads profile · light · 5 · create · scopes · enlarge — no star anywhere at the top of the chat; tsc/lint gates clean (only the pre-existing baseline).
+
+Stage Summary:
+- The last star the eye could catch at the top of the landing chat is gone; the purse pill wears its number alone.

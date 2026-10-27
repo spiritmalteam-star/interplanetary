@@ -1,6 +1,5 @@
 "use client";
 
-import { Sparkles } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 
@@ -16,9 +15,9 @@ import { useT } from "@/lib/i18n";
 /*  new modal of its own.                                              */
 /*                                                                     */
 /*  Before the wallet's first glance answers, the pill wears a dash —  */
-/*  nothing pretended. On the smallest screens it folds to its icon    */
-/*  alone so the crown never crowds, and the touch target stays at     */
-/*  least 44px (the after-veil the crown's own hands wear).            */
+/*  nothing pretended. On the smallest screens the figure stands       */
+/*  alone (no mark, no star — the crown stays quiet), and the touch    */
+/*  target stays at least 44px (the after-veil the crown's hands wear).*/
 /* ------------------------------------------------------------------ */
 
 const TIER_MARK: Record<string, string | null> = {
@@ -55,9 +54,8 @@ export function CreditBadge() {
           : "bg-[var(--glass-bg)] text-muted-foreground hover:text-foreground"
       }`}
     >
-      <Sparkles className="size-3.5 shrink-0" aria-hidden="true" />
       <span
-        className="mono-label hidden text-[11px] tabular-nums tracking-[0.06em] sm:inline"
+        className="mono-label text-[11px] tabular-nums tracking-[0.06em]"
         aria-hidden={loaded ? undefined : true}
       >
         {balance}
