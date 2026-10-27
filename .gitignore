@@ -68,3 +68,13 @@ scripts/
 
 # runtime state
 .zscripts/dev.pid
+.zscripts/mini-service-*.log
+.zscripts/*.png
+
+# one-off QA screenshots and session artifacts — never ride with the repo
+/verify-*.png
+/.verify-*.png
+/download/*.png
+/dev.log.*
+/server.log.*
+agent-ctx/
