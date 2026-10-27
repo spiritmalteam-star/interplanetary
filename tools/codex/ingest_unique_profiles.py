@@ -70,8 +70,25 @@ def pixel_sha(data: bytes) -> str:
     return hashlib.sha256(im.tobytes()).hexdigest()
 
 
-def parse_pdf(pdf_path: Path) -> tuple[str, str, list[dict]]:
-    """Pull the four role plates out of one profile PDF → (civ, version, plates)."""
+def parse_pdf(
+    pdf_path: Path,
+    binding: dict[tuple[str, str], dict] | None = None,
+) -> tuple[str, str, list[dict]]:
+    """Pull the four role plates out of one profile PDF → (civ, version, plates).
+
+    Two binding laws, the stronger first:
+      - THE MANIFEST LAW (batch 002 onward): the zip's own
+        asset-manifest.json names every plate by entityId AND role and
+        ships both fingerprints (raw sha256 + decoded-pixel sha256).
+        Each embedded plate is bound to its role by matching the raw
+        sha (pixel sha as the re-encode fallback); every embed must
+        match exactly one manifest entry, every manifest entry exactly
+        one embed — a bijection, or nothing publishes.
+      - THE POSITION LAW (batch 001): page one lays the four plates two
+        by two and the page text names the role files; visual reading
+        order (top-left, top-right, bottom-left, bottom-right) gives
+        being, world, technology, life.
+    """
     doc = fitz.open(pdf_path)
     try:
         page = doc[0]
@@ -88,15 +105,70 @@ def parse_pdf(pdf_path: Path) -> tuple[str, str, list[dict]]:
 
         text = page.get_text()
         found_roles = [r for r in ROLES if f"{civ_id}-{r}-v" in text]
-        if found_roles != ROLES:
+        manifest_bound = binding is not None and all(
+            (civ_id, r) in binding for r in ROLES
+        )
+        if found_roles != ROLES and not manifest_bound:
             raise SystemExit(
                 f"{pdf_path.name}: page text does not name all four roles "
-                f"({found_roles})"
+                f"({found_roles}) and no manifest binding was offered"
             )
 
         vm = re.search(rf"{civ_id}-being-v(\d+)\.jpg", text)
-        version = f"v{vm.group(1)}" if vm else "v001"
+        version = f"v{vm.group(1)}" if vm else None
+        if version is None and manifest_bound:
+            mv = re.search(
+                rf"{civ_id}-being-v(\d+)\.jpg",
+                binding[(civ_id, "being")].get("path", ""),
+            )
+            version = f"v{mv.group(1)}" if mv else "v001"
+        if version is None:
+            version = "v001"
 
+        if manifest_bound:
+            # THE MANIFEST LAW — bind by fingerprint, never by position
+            by_sha: dict[str, str] = {}
+            by_pix: dict[str, str] = {}
+            for role in ROLES:
+                entry = binding[(civ_id, role)]
+                by_sha[entry["sha256"]] = role
+                if entry.get("pixelSha256"):
+                    by_pix[entry["pixelSha256"]] = role
+            plates = []
+            bound_roles: list[str] = []
+            for inf in info:
+                raw = doc.extract_image(inf["xref"])["image"]
+                sha = hashlib.sha256(raw).hexdigest()
+                role = by_sha.get(sha)
+                if role is None:
+                    role = by_pix.get(pixel_sha(raw))
+                if role is None or role in bound_roles:
+                    raise SystemExit(
+                        f"{pdf_path.name}: an embedded plate matches no "
+                        f"single manifest entry for {civ_id} (role read: "
+                        f"{role}) — nothing publishes"
+                    )
+                bound_roles.append(role)
+                plates.append(
+                    {
+                        "civ": civ_id,
+                        "role": role,
+                        "version": version,
+                        "raw": raw,
+                        "sha256": sha,
+                        "pix": pixel_sha(raw),
+                        "width": inf["width"],
+                        "height": inf["height"],
+                    }
+                )
+            if sorted(bound_roles) != sorted(ROLES):
+                raise SystemExit(
+                    f"{pdf_path.name}: manifest binding incomplete "
+                    f"({bound_roles}) — nothing publishes"
+                )
+            return civ_id, version, plates
+
+        # THE POSITION LAW — verified byte-for-byte against the pilot plates
         # visual reading order: top-left, top-right, bottom-left, bottom-right
         info.sort(key=lambda i: (round(i["bbox"][1]), i["bbox"][0]))
         plates = []
@@ -149,8 +221,27 @@ def main() -> None:
         if not zips:
             raise SystemExit(f"no zips match {args.zips}")
         tmp = Path(tempfile.mkdtemp(prefix="chronoscope-ingest-"))
+        binding: dict[tuple[str, str], dict] = {}
         for z in zips:
             with zipfile.ZipFile(z) as zf:
+                # each zip's own asset-manifest.json names its plates by
+                # entityId AND role (both fingerprints included) — read
+                # before the extraction, the roots collide across zips
+                if "asset-manifest.json" in zf.namelist():
+                    try:
+                        am = json.loads(zf.read("asset-manifest.json"))
+                        for e in am:
+                            if (
+                                isinstance(e, dict)
+                                and isinstance(e.get("entityId"), str)
+                                and isinstance(e.get("role"), str)
+                                and isinstance(e.get("sha256"), str)
+                            ):
+                                binding[(e["entityId"], e["role"])] = e
+                    except (json.JSONDecodeError, KeyError):
+                        # a manifest that cannot be read leaves the text
+                        # law standing — never a silent half-truth
+                        pass
                 zf.extractall(tmp)
         pdfs = sorted(tmp.glob("profiles/*.pdf"))
     if not pdfs:
@@ -162,7 +253,7 @@ def main() -> None:
     seen_pix: dict[str, str] = {}
 
     for pdf in pdfs:
-        civ, _ver, plates = parse_pdf(pdf)
+        civ, _ver, plates = parse_pdf(pdf, binding=binding if binding else None)
         for p in plates:
             slot = f"{p['civ']}/{p['role']}"
             held_slot = live_raw.get(p["sha256"])
@@ -220,16 +311,20 @@ def main() -> None:
     assets["counts"]["pendingRoleAssets"] = (
         assets["counts"]["civilian"] - civilian // len(ROLES)
     ) * len(ROLES) + assets["counts"]["idm"] * len(ROLES)
-    assets.setdefault("batches", []).append(
-        {
-            "source": args.src or args.zips,
-            "ingested": now,
-            "profilesNew": len(new_profiles),
-            "platesPublished": len(fresh),
-            "platesAlreadyPresent": len(already),
-            "uniquenessAudit": "raw sha256 + decoded-pixel sha256, batch and archive",
-        }
-    )
+    entry = {
+        "source": args.src or args.zips,
+        "ingested": now,
+        "profilesNew": len(new_profiles),
+        "platesPublished": len(fresh),
+        "platesAlreadyPresent": len(already),
+        "uniquenessAudit": "raw sha256 + decoded-pixel sha256, batch and archive",
+    }
+    if binding:
+        entry["binding"] = (
+            "zip asset-manifest.json — plates bound by entityId and role "
+            "(raw sha256, decoded-pixel fallback)"
+        )
+    assets.setdefault("batches", []).append(entry)
     ASSETS.write_text(json.dumps(assets, ensure_ascii=False, indent=1), encoding="utf-8")
 
     index["manifest"]["generated"] = now

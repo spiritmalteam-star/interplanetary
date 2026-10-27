@@ -1,13 +1,13 @@
 {
  "schema": "chronoscope-assets-v1",
  "promptVersion": "chronoscope-v1",
- "generated": "2026-10-26T21:13:22Z",
+ "generated": "2026-10-27T16:47:52Z",
  "counts": {
   "records": 3220,
   "civilian": 3212,
   "idm": 8,
-  "readyRoleAssets": 280,
-  "pendingRoleAssets": 12600
+  "readyRoleAssets": 680,
+  "pendingRoleAssets": 12200
  },
  "legacy": {
   "quarantined": true,
@@ -2815,6 +2815,4006 @@
    "height": 627,
    "sha256": "35091075d56db87f9677450e9b283236cce41b1e1e2362e81ea80cfcafe16b0a",
    "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0101",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0101-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "6f12e806e794336a7474a007aae91c031aa194532d9447ff66e5911eac952d7d",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0101",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0101-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "899b4d8597caf48a06dd80a78201d791d1a4aa33b19823240a5f89c9d07cbe96",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0101",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0101-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "11f10bd5f36493bb84466de024c212f568ff7834cd4b05c4e4a456002e21fe65",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0101",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0101-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "88fac0848c8a7d6e7d9bcba4f7c67cb272c7b7e2717c996dfa8a63f98c9bd8c9",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0102",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0102-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "f4ca1ac6cadbcdf72e4c1aab4636f14cd772c018a1673ccc5508888bccfb4041",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0102",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0102-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "8ae988ac7a12f4df585b739f6cff0a08383233b24a7b9cb52ec103f9bb6a0db6",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0102",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0102-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "faedf6d4cbed1d5ea496c38cc656d33060a8130169c79d2e328f4f21323d36de",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0102",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0102-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "975f73ffd034ae81e1b23f7f8fa5da4c81a0eeffa956a95edf6557452b0bbb15",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0103",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0103-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "eb790d5b61ce36a4da03e316fb5182e1bcec3bba93256a8c0d4ca5f274793ac1",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0103",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0103-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "d864f7e74235ee3ae55ba82ed15310c8ebfdb0bdf10759a5c562811a5fc90851",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0103",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0103-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "3ee513314bbef065ba800592b47ff80dc1ba59e7fb449255c629397cb1fb5325",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0103",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0103-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "603301d895334ecad2e38500b2bf6183bd59139f38fd27396944cca4df9f689b",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0104",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0104-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "761eddda788da658ab99546043fa545a67cb8b7d30a445b25ab8928d150aa3bd",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0104",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0104-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "4d616b817b85a74c259501e1178365cdbebe6741f57ae3b01d2d39582e8eae96",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0104",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0104-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "3fee6934e0b697b375699b063fc65cabe22f4f570903ba3604fc7566bb80565a",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0104",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0104-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "e502bf1dc7a872825ea69985d2f10cd1da119e8066942371dd8ab60856bd7894",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0105",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0105-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "18e0f60862ae7745fd438a6dcafd1755d18dac5a901e598748041f3b0c92caa7",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0105",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0105-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "2975577606f69b21b6709b8377c1c8c7ee5690d320be3268e8ad571e551d4bac",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0105",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0105-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "6d52e860d97cabe745ad06e1e8df2551063ceceff5d51f55a36568d0a7d06716",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0105",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0105-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "6a386f454f5fb976e2d8857104b743aa11b9185303492975ddce1c752e774b67",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0106",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0106-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "7a6e4381773a78ee59e6de30a3c09ac9eb6234e10d82982a3a8eef1b0f630f85",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0106",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0106-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "8c778e3b8a83303cdf78e05f0b93ff734b3d8e47dc7da522a112079c1e967357",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0106",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0106-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "fcec1b1334f044976987e1c40d6561ee215d2a3cbb9f0e16906f6ccdfedac262",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0106",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0106-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "f0dedc114b7076aaa71272b86c9d97a088e8f7d89adde19505e84d2bc5917cf5",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0107",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0107-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "e6d15b0bbac9d933e25106f25e2eeaa3dba9863ea8327bb4e9f0d7439360df27",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0107",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0107-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "eee8f208affe7f5b41a32a42f97af8cbce5a767530ffceeecd68ebe45061bac4",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0107",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0107-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "a065ed96521737f5f7e8ea4a76d7e53a8d6e0da87019a1a266bf4b313b1762fc",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0107",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0107-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "188e363ee25c8621f1859b6194d531f66ccf2720a553be5cd2c8d9e44ae49e3b",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0108",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0108-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "59fbe7dd0b69da8cce6eccae899596777f12ece10125653672de299236d741d1",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0108",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0108-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "f781b1beec1c3c18941f0db20cafaa68dfaa4ad0c3396dbba133bb1f436a7b6a",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0108",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0108-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "89c4c9cee9e69f527c801c0e190022d57211894ad83211271fec2079a0714428",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0108",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0108-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "3125cc50e6a0591046f0965094dddd9e62a545151528b2e1a3f60e46ee3d2fa7",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0109",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0109-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "f0c483fceffe3565fb63ce2d2542f4ca54709cd44bcd5d5f1819840715e4af87",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0109",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0109-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "9da4de070acf524244fd4033e1d7f5a4da2998a5df16d06092e1503e66911dee",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0109",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0109-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "38bdb74be1a5afb906cb208dab26c4f118c00888f488a424c6162912d40b1e41",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0109",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0109-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "af67b5590892901f2ade0c446dd76532599f050846ed9d44b005f03ef89ce578",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0110",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0110-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "c8c4b98dd1842e5673846eebd0cfde851836fd5980cb07ee6f77c930138d9704",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0110",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0110-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "2f600eb628b8a7bc7872dff9f95c9c525a34134c9bd901445d74a2d0d50a3fc7",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0110",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0110-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "8b223daa64955252c7355e84bb671136d54b50e608b9cf7f8c963c81fbd58eb1",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0110",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0110-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "417ccc9c2a06f0c7684c11e90eb1cd8ea3c55eff6b02ccc3a0b2c7a92aa4db07",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0111",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0111-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "4623caadeb4a7c905cbdd0c8af35b995ca43829bb03b235e81aa3c228c0365c1",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0111",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0111-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "37d2313dbcda207f6d5b728b6d26c331b32897126890ef553612d6390e307cb4",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0111",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0111-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "a7a52bcf89806d850bec697a68d08bb340f231858e64d3f7142c474bed93949f",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0111",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0111-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "9dc57ac6c8df1c38ee15d75eb75931bea1fb2a32289412737e6c0d150124751c",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0112",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0112-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "603fe85c43564bc9e4fe748a654282a9b6dee5274c725b3cdab5a6edea95c7db",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0112",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0112-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "dbfef76df7cd099cb885cf01805f7174cd35b6b2bae7617c99edb968c4b23f18",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0112",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0112-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "2cc0690bf6a725233a855402686a72252e3f7464ffc19a467b39a2e07bcf77fb",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0112",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0112-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "8ffd8f111afab08b15fdadfb14704b8cbdaec6b9f5a7065ed166fe08f4559748",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0113",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0113-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "98089ee493c863117e5a6f1a0d604d8ade098b05155dd88fd8cd6e489a016270",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0113",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0113-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "7b310f42a2af6adcc11165c472cf9a08eb070edbab27c403217b778710e33f51",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0113",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0113-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "102f46c35540b36f180016d512784275bc5312eca35948237c6e527ac08f4914",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0113",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0113-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "c4ff6b3a690988abe09d32fc45b7d3c1915f35a866cec26b84d1be269242b7dc",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0114",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0114-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "a72080d846070f053ea1927de49418872958a72981d69779cc41593db4d90504",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0114",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0114-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "fb2b4ebff81406aad30a28f9160750c362648f5565ca412102ab19d8b9f564ea",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0114",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0114-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "de405ee659f05a014cc0aac76aed9a21349d2d4a039db77353388905ace8a76f",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0114",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0114-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "7e5fab763aafd354809a014935279f67e7b6bd49173ec6d1382beb56ba2c4951",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0115",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0115-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "59498d34f66c458e5a4ad9bc094fbd8824046eb8a42c7bbf50c607d44a04dfa2",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0115",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0115-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "b0e012c9f030bd4db5f18d4788a4144cfcc692a0171c2b38b14ef18f9615f50a",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0115",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0115-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "4b9d13158309f7d293dd7d3363c766f276d0cc78c3367b1b01831d527c6eeeb6",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0115",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0115-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "aef7f0bc35ee60f082621e5fd8600efc13cd044acd1f6b0843479773ef5ba453",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0116",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0116-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "131c0e3cee8ac8cd208a22e7db5ea4591c3433fbfaa9f3080eef695ba7031b57",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0116",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0116-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "8efd050f09236ffddff6ea55a235021bfd98ae8ac72af71a29d687013adde37f",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0116",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0116-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "693388ae336e433b9ad0ee601bafa2cfbf1cdbea531a91659e7e377e731febc3",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0116",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0116-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "fcf380b9d7a1a02ee26abd238fb3e2123ea356e4f642aebd1521872f26cbfa77",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0117",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0117-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "30fab12644383f6e054986bc836d4978948997bc1b8334de5983e867d50f360f",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0117",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0117-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "cf240ebd117734edb5a22b7c657a6bb5e7d0a9fb1c9ce2b02c48ad92c08c3adb",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0117",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0117-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "d813703f2d29d5deeafa3504f706135b656d8232ef83988f31a15b9eab7b6b02",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0117",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0117-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "680c19f4034a802eaf74479f9ae39a1f22453d5a36c225ae91c540cd299610b1",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0118",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0118-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "4d2363b224028d71dd1e4e8bdd77c3d710dd4220adf55a8e690d0429be87ebfb",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0118",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0118-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "de1ee40eea21ffe6464229c6567f93b5e7cb4f85cb5c0e57379a8091190915e6",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0118",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0118-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "69391a9c8aa936b6ac54bb6660827ab2bf69e68cd88dff96c7711e3888bde185",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0118",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0118-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "e8dd313bc2c10e75fe7baf9aa19d32bc8ad51f13b1b95730a4e779931829c5fd",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0119",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0119-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "10a630db8cd4c1343597f419ecd7c9970d6a0adcabe4a92b72f60ad216c6610a",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0119",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0119-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "70866ac2e242e61d51f27222e29e3579e81a4b7151154f46098bf8c12e029451",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0119",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0119-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "526b65988f5ffb2a6515c9e3aae6b2a374cd384b21e9e17ca653ae6c957ecfd2",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0119",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0119-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "1127af5d6f7a0580090fb9d0ded413b307b0e2924cfdacd1357b480de17501c4",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0120",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0120-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "e65d7aab18375c58e34c43989e297470c1e72b7bef3460551307a504d2ccaa40",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0120",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0120-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "cce5fb8af1579d30105abe32a795b3f8995a37e067f2063429b99fd435ebd277",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0120",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0120-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "9fbde643a3050744394feddfcee3b5296a84db9b41fdf218327577501bed5a94",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0120",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0120-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "fbd2a1aa7dbf323d5c37b4fff6d4b7131bbfe591a2a67683d7a6222c62964910",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0121",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0121-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "33cd5bb32f4d7522457895aa5c3f371ed148dafa78e0d01c5744483bd410b2fa",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0121",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0121-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "d67a0e0b53b64a814d6028e4d1d775972953bb5eb4c7fb777ec13a7a6cb7ad90",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0121",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0121-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "be445241a4841c26fa9879b5e966a030734de28a82aecd49f4c559ca4619bc03",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0121",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0121-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "993cc0036641277c89985149058fce059c1c8d86b143b1184a27267b691b52df",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0122",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0122-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "d5935b739b2ef4b4f46a5e9ceabdd20aecfc9e0ca562552ec3681552a78f0f5b",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0122",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0122-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "4b2cc85e8c5000b527cee0734607babba831f5c6cc47f90a001c9f0282bea165",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0122",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0122-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "da18fad91af2e0f459f03d143e85b292c056363d0200a484e61ee7b1fea4ec9a",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0122",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0122-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "66c474b4581862c2a1c321b32cf2608bb443f4843e3521043a884a1b0043d8b6",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0123",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0123-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "dfe6f0b5786962def2f52c1c9282810dffaea6f0bdd7b579944855be5932343e",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0123",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0123-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "afdc98a6ccb8afb062a2b40bace277777626dfa87fb642a0f7fee8c93a5c6904",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0123",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0123-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "666f4baf73b4137581b8524835c1db8ba8f636ca8e93eb6b29881fe815445979",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0123",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0123-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "f9ae1c8e5383ce05ebe57339faee2102b6585c72a90bbbe8b39aacb53e69044e",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0124",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0124-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "ef238df55fe6865065a8eed1cdab85543ba2f4d2d468680d155cd74c387f8777",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0124",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0124-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "ed179d30c1b0c6a8b2c54b027fe6652128e5f584a0f2bd6fbfb37564cea9f3c3",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0124",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0124-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "7cb784e0604ca05ea4c3c2217a533f05aa286daaf1f2a536cac10092e2960a87",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0124",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0124-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "3c561cdfee6ef443838f9172ce66b67d4b55d76f9c9b0722d8881a4c2faaf845",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0125",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0125-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "c4af6388efcfa6e99114f3eb4057cb4dc90476a3e743bdee315eed8692471bb4",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0125",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0125-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "35fc1d01abd0f8079e5e61c3f951796a2119976c3aa91dfcd7b0025899568580",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0125",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0125-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "81626920706fd2f41fc8c4115e8718691b40bd5be630b4c14792d098879d72de",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0125",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0125-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "dfc0474235bb22212029d30c9b803e130110758e0bda8c05d8fb03a4bbcb8c68",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0126",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0126-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "85ba5d78afac6aa1b994b0f8f17a8bc560bab1c2bae7968bbba49b1e7f542316",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0126",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0126-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "4e9425441f84caae90f50681a17d269bd894fbff7159b544b4d792f387bf0199",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0126",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0126-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "1ee285f068b944560053e35b2c9dda619e991e12d5cc60acb64af4fe918bc1de",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0126",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0126-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "4af173915ff4b363d7f8f837fc161bc9a98933dfebe507b06e23e1656fedd101",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0127",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0127-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "66fce7b9737f8e3b71246103a9a66713043c7f7f0e8a052eb57aeb2cbe392152",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0127",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0127-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "3c2003ac36c05072e3f5f4649f071c22da23a8841ec747f15ffab713af2cc7e3",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0127",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0127-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "fd4afbf3300e961956d4676f1d91fde8b1b106debfd7bdd93cd4f0f11e692e3c",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0127",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0127-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "cde53542739c9f7736c1ef7a0418b7ab02acf68402ad8c7f0d2de3d05f750453",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0128",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0128-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "2c9b53e3d30ed1dc93541b9905957c2e9c24555e2066b1fe9f6dc8f10e8f6431",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0128",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0128-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "7bff805d19241e320cc01483c8443472d9f53303ae1142e68bc3f575ae5a5833",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0128",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0128-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "587e1defc9b2058056e561761d2e364aa7957b03c9648a2213b107cb72dd4e2d",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0128",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0128-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "e301b06b6aa5d7d200adf64bdd4fa4def1578fe6d5ad33fc04c3389ae01b2752",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0129",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0129-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "3bf910527d7c4bd30ea1b90a2e0ca3ae559c26ad92dbbbd2837605c1390077fc",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0129",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0129-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "06003bbab9e6f4bf0c2c36ca614c15fa801a5cdd948bbe6b22c98d4337ae6cde",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0129",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0129-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "84c179ec7d2c97abf44697241b0bf3339fb7b18c9f792119808c2bca8133f440",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0129",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0129-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "75583ea339d8955032027906241907e62cac58bedcfc89b9d74dee639844aa8a",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0130",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0130-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "8729b3e340d76e8cc8ab864bc0724b59c11f07cd6936cb25e92ceab4411f1bce",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0130",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0130-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "45b54f09149edf45b803d27799cdce468c1717d2b34aa32e36b882ab4e4d7881",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0130",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0130-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "3d792f00429187bd6565c9ac2f8555025f8f76b21123ce055e76ed77805a1f1b",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0130",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0130-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "6d98b2e1479a0cdd3cb9d4a079b23b37118a2b926c7f1e2b26616ff29bbdc531",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0131",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0131-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "5d75871ff22eab6b4972458b80ec0a81ac9036a930932b709deddbfe66b67c0e",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0131",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0131-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "e007f4fdd9c0dd8d2740805461191bd1a6f5f8726f209b99e3716c5ee521e062",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0131",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0131-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "aec5592b80d0bac98c7123f2d55203f0c649cd1f08d4e5afac9a31e47e181646",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0131",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0131-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "052c39835c7ed154140235b2e5b50432260f0818cb4fca76d2bf9caad2925f00",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0132",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0132-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "1aebea8e7e37297784a15c9e46877a9dda7e0b8c5a8947ef03f1e5a0bf2ae1f6",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0132",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0132-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "c1bfb771be3e5f47229fcc8444fa8638f0a62ae1dd5a691cb43b96cd44824176",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0132",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0132-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "7748abffe30bfb2a07c1f1e427d6366235e143a9c9723eb502d12aa775b6197f",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0132",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0132-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "96aff480e9b918c3f4b9ddf47ee0a4f3b5fb8e014402474e90affe0661390e70",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0133",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0133-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "f604a1afc35480656dee017a3c15885190c1d3b8944d52302ddc007d086352af",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0133",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0133-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "4dd5d7c0d1c7ce67a3f3bb0cf1f90aadfa2c3c1d7e3a042ef5002de8a7cfc0c7",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0133",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0133-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "03b01440222c8530e8cc543b45a8c1fe764eca141f4eee571fb55052188a5d12",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0133",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0133-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "152c078ce86bc180bebf8732fc8fac21dd38893af0e887cdf066e664449cba5e",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0134",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0134-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "24d523b7e0ff9d55aceb2cf1016a2facdac7a716d15bf704c6a3abd7bc3e2213",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0134",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0134-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "401be0be0201b48699a0539393125686a3f0e79ef072837672201fe218a9f839",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0134",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0134-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "17e471946cdd562d037fe28fd26f22334768fcf775126ede6b8a9aa95b413b61",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0134",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0134-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "468af9a9eaca44bc51ebaaa66038f72a1003d89a3d11b77f403769c0d512727e",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0135",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0135-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "78700f9b0f604557bebf925528ca2529dd648caf59a9ce8bf9f340fb59e6a974",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0135",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0135-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "f6ab8926594d963ef912969f0db846469297df2e741d1b0af46bafa33fc9c446",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0135",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0135-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "97fbc20ece057eecd7a14f16aadd710faa73b8a10012aa2711abe13e5ffeab66",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0135",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0135-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "fadd4ad751940b06040baf71fdf8ab4ec0c583cb08c6a83e7aa667fab4d43b4d",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0136",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0136-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "57b5a7ef7b8d47179f5c1c88a64814e3f7e681ab6b9ee0ed43ee527e3037daff",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0136",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0136-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "57564bef8749e05490173313255af4e75168d2207da6488606b420f8782cc970",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0136",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0136-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "4bde542eeed24c94fab23aa528edd18341b54197e107b3a8cbd6989d98ba4507",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0136",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0136-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "61671d3d891712c62af298226cf5f6586b9f74abf8d1ea0aca996b0085c0ed3f",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0137",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0137-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "434dd2adc355c81b0355779385a980006ad66360a98aa058f5cee93dd9cd3ba5",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0137",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0137-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "6f977dd5a1c6824935a7fb235ae8564c93f928aeebc3610ae733904542143617",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0137",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0137-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "26f2a3264ee6d8115556fb79120393ade436115e34437a4eeeda43cb4af81a47",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0137",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0137-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "3ef4781fcd4c8beeddba3d023ee0d5f884aee6d5980a63adbeaf1639d6ed01cd",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0138",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0138-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "c20ddb4ca5f8a6fe682055d0a365971d999aed370f12d38bf590f1cd94e658d3",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0138",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0138-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "ca5a70d41d716ef9626875a58810e90e128db6a30b8295393154b6b3f339737b",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0138",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0138-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "33d1644027a7cb413f41319929d4dbd0ff01cef7b4be67b6a46e5791cfd00f34",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0138",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0138-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "74823f78959cb81e60de754f7cb33b3f0c207ec36d522fc39f7fae64f5f30ad0",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0139",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0139-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "4bea8018bad8e0d14d9640efb785e53f49649f3878dbb46ab44c19874d3f9734",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0139",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0139-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "60571331cbf4dc418a0536e761191385d026847387f680d1055c2cb2c0493d84",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0139",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0139-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "b45e915e4750172f6ef37c5f9ecd715cdc6c73f3097519fd4693e2a704fb5cb1",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0139",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0139-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "5cb02977b20e3c0165652016d20edf47c9f6079a3f28f434ff7ae37fcf76a648",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0140",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0140-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "8ac2c52410a637046b3da480a53f8de3ce07efe7c7dac879512a2650b3fa09a0",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0140",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0140-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "5235a49d36c5b080307e8d4011d532fcf301861a484f5e490400303caa5b6453",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0140",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0140-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "6a4cc0072e9c4a88f7c43b5fb71af0bf617fdca77ae0de590a766d8b74e9bfbd",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0140",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0140-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "2a8a7d9e9e3955431498e8468efaa800d3420f6bded67f7bac980ac1a15fe8c1",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0141",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0141-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "d1be56baac03f1d44ca5891063862a25e07713e24cd73bd8e4bb124b20965e65",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0141",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0141-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "c5dddf29e8a8fe562762e3a0ba2286314c4eb44a0cee3e8fe05aa0c7816558a8",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0141",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0141-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "ee65471c32d75697f71ee5842013b96325182342bf92c9c69cdeea9573682574",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0141",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0141-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "8fb68e55c3821d4d63177aae36eb92ecbbf58ea82272c193e6824a3442a12ea6",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0142",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0142-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "05f262f9b3001bf6f6caf2ae1731e7651d5357a15e1e7bce3e4596cb4a0bc19a",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0142",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0142-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "03d29e1494c7ac112d9d8d375d89d2147f026f2aa09a9f70421a5cbb0ff3c713",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0142",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0142-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "9aff9186bc0ee9e08ab306e3723894135f59241cfe583506b66c1de27be27a77",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0142",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0142-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "4882e1e9feb298007c0ce443e94f10c098528b2d81601b199cd5e9fe2b9f2910",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0143",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0143-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "623dba2d317cb274bcdf20c8b1cc4c5e7b82e7ec10f91b5c2903d6f16e353361",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0143",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0143-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "3652b57db5f1426a8bc634b7bafa23f330a1f401d2792d2c15f1b92657245433",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0143",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0143-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "da63859ae56ce6ed52073fc6860e4da260e0e7fd800ee31bea8fe85227513fec",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0143",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0143-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "5ac43ea6c97fa3c1e0d98b64e169678b40f769940f3d637b6e7fb07a8e4e49f0",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0144",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0144-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "311ebbb6845d293bb5909a08b25474cb80d84f02db10f4c750a269c8cacd24d3",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0144",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0144-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "53c310da78913adfbfdd51140ba4f0a742164c3a4894ec70e9183af44abbc45a",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0144",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0144-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "76ca1a367aad6c43a87a4cb62ecc939bccf370ecb8fc7e7c4e48eea8e74c3e11",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0144",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0144-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "8934f7d3df5e66ce4ef780626b8ac589f30908e31dfe90fdd423a0194865479f",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0145",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0145-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "dc158e40f4831e46bcc8adcc19c50823ea60f1056c3b6032d15b658e1f604bed",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0145",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0145-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "4a1903c1b059f99d7d9e62cc2de1ad65867011a34fba895f05d82440b10e359d",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0145",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0145-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "fb4a056c55aa0cf6596069795fb0bdb3e580be29c0fdaf6b98301161cbe8f7f5",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0145",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0145-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "615fbbd3aa953052b78cdd1b26cfb246682d649465c3a3b8ebd4e4500a88467d",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0146",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0146-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "d4f7084962d70b11676c326c6487eefd727d233676498d909c17e13ba9b5a28f",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0146",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0146-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "12357a8cb55958459ca14eb071bff52356c1e34cac270ea11ba2735d8274d96e",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0146",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0146-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "f0c399fbdbbfe92fa0126e370a0920b9071a114d75e110a9a0753444c39ea42d",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0146",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0146-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "28d10003897c0458a90d20aa21b9e78ea18541f8c54b6ff24e64e3ed6f2813bc",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0147",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0147-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "b635aae02f0058680fa475120f6d99f49ccf34972c550221691a37f8f5a52746",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0147",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0147-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "e46a9ae74077fc82b96a7f9ce99b058e101c592eb4aa868916f46fb38c624654",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0147",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0147-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "51077c0dffe525d92996a9134038bcc595313aa829d34ad3ffe2722b435de052",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0147",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0147-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "5865e150e09fdbee751d8f6017fe73e3cad0895c2ef7965ec8881e6b3427741c",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0148",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0148-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "91048d95261e57a0c86253f5b1caf0dc6c3b29914f5b5aaef0a67c66b0bd463f",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0148",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0148-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "27d6ae10559bb114611bc1407f9e1cd1f6ada5a5a59d2fb04a8a1d82c3b3033b",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0148",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0148-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "37c6f0c82dc8dcbe29256f85a2f80b4d57e518760e974908483ca283b0a2d576",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0148",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0148-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "809f816b4ba70fe8ec647360ccdb8035aa4ee4bf1f097c1264fdf36d8d4ff910",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0149",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0149-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "1ceb88107fe100c84ead9b875d99058b81353849f34199300c362f9b0cf6bfb9",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0149",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0149-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "f7113c6fa9b77e90566985f98530bc530a062b41011c7321202c00b5a0c73f81",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0149",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0149-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "02c00377c5dcad9f1b613c0fd3a67fec9229ef0c1665ec7d5a0098ed0236b54c",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0149",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0149-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "b2b943ee634633bc7a8760d27709c1506f44ed797a561547b1a0055456bcd4dd",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0150",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0150-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "52420a1b14baa69cf5fbae155188649ce958f10792e328eec93695b966ca0149",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0150",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0150-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "2128755b0e202c08aeb07691ca9bde69538abb8a15fb277f0115bc2585b364f5",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0150",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0150-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "250135e52116f4dd6ec8496cb3b6be0de61ac86fb4e4707ae3aac9a88c48e60b",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0150",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0150-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "36fba3481bc57124c0b7c42c0529624532565e6252ecdc46104977b50aa39f5a",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0151",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0151-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "f4cf205e9a652cb6f1f3e842bfcd662d3acc8b23ff2bca3040dd85c4cd9133f6",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0151",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0151-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "02fef3aef318fdbae3ce99a52e36072f3d4289bd58d5dd82f229a537d5857bd8",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0151",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0151-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "960e4afdee646617633aa27aecddb012c58985c32a0e13b4caec4e2b672afd61",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0151",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0151-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "31124f351c368a15e4b04ed3e7c2f983c54ccd8d8e237e94a0049e7d6a8656a9",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0152",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0152-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "c791fa7de7c269c9b2c04ae06642e309aa56e6edce57dedcdae53a131b387612",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0152",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0152-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "f1c4af0ac3d94a5a1477ba2799314e865f29242f896dd172dbf94d18bc5085fe",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0152",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0152-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "53c997a57be0364622259d1d47b0c54936fc8d5cc417a5cf49ef870710cff7d8",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0152",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0152-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "22efbb0be7ae6b3a273c1bcdfc09d1b0f519f9131b127da6b9eed602da2d0e2d",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0153",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0153-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "1efb867ccccf5d31fd24fa5b98ac0d037427e6d6d79333d64b8aa5092fd92c19",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0153",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0153-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "b582e8a2eab6da47477923f4c874b210e49b56866d3cf9071a8c44784146013f",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0153",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0153-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "b0ccea336546934be5de98f315a8dae81b53acf5baf9f4e0717c6370a64c88c4",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0153",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0153-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "75969fea652aed63303b772c4aacbab5fa300cb260fcba45b38e9526aa0f912d",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0154",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0154-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "83a656a1a3933ab9141439b62a725206765b1bdb9e2cb06aa6a49aba836e3c2f",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0154",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0154-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "a86f06f12f9d19a86da8983259d623c2c34599108b1d78a1add4eaa20f1f4caf",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0154",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0154-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "5b1a38c4d5ab887cb730dd943dfd7e01790fae36002aeec6a99d87982ad5b90e",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0154",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0154-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "e6897f469bd13918948fef5c65570ad04cdfb538ff1cc0fcd4f919fd41f80fd6",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0155",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0155-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "923d96b1659d5918eebd54ff031a60b18456b72bdfbfe0be61c5831b1be1abc6",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0155",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0155-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "aced56cb2d3e3f306a57a87312a2fb0f3114c2f967814171bec092814f971bdb",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0155",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0155-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "adc596e23ea6a5654fc6fd509da80d13e16ba7e0325c345b0c17a70761816782",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0155",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0155-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "67d74aa70c1849f8eb89cc3f2017d62d9957a429d8670e715f28f255b57bb6eb",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0156",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0156-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "fef36956fcd83fee341f9d58b05a5dda4a9df82c5ad03ec04b5a8e81b5f6b0a6",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0156",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0156-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "c25173bed98c31a582edde2cea310c15b4eeba880b4f868160d7e758050e777a",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0156",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0156-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "390f010dd383e1d69163ce8e4c28f65d09020406358505850ee215a56feccbeb",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0156",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0156-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "e8d0292cd2d4288f7bbb10263288c15e27a5ad64170f912810587f91983a49fd",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0157",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0157-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "b7b5ff637dfc618892afc72f5902463751587d2ee5b4a5b11cf340542dde98b2",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0157",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0157-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "ea0e3073d36086f2c0b4f28083a8a8a487b64c3eac373c47b9855f636624a785",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0157",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0157-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "164111d12beb9786461f8ed98acd21eea6a6b77541698031c2f97256b434441f",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0157",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0157-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "3c179e33698f1cdd9b21596dd76d2851a8211a0c25f3c9b03d2c88f448e386c0",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0158",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0158-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "0220cb46015a4d035bcd3173cf3920ba063e2baf2c6526dedd53970bdd4279d5",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0158",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0158-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "ba5e6ae0d75fb07c75bb5de4965a0248a12f68365e9372d86e46e9208106c080",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0158",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0158-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "b5aa2305e509d288a64c598ffb35554de11b8a8b3708b7e986dd5c0b8cb9ab81",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0158",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0158-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "b1ce77d4e1c1b6048a9cfc03a8c6dbe4a38deaf5fda52c6f81a92f63b89aa66d",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0159",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0159-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "6b626231923986cea2ab8d0a40ddcf5d1949671a4939e4c08cbb6297debb1697",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0159",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0159-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "18cbd7b823913c5ff872f3dcaf9c98cead320cb9142b5bfb4c0356374a8b260b",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0159",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0159-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "e22f768f38aeb5a13aa610892f2729e5fd2961212e2afad876f1fb4055c20cad",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0159",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0159-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "44b5529f44e79842583d385afbd51048ddd66ca6d5d2c018ff64f7c0b98f5e9d",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0160",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0160-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "011be6cef47794e9ce1709a801f1865244f7eaea4f7aa34f396a4679090b92b5",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0160",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0160-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "06d69b9970a50494f89fe02dd1e0cc1a09adde35415ee64ec40031d25bbdbfe3",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0160",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0160-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "14727f6f40dc51c0f1c274b8ed6c38665324c2c774f033a8985a107e9de7ba32",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0160",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0160-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "5c10f4495690c250eadb4530c23b7c4edefd79017a5124a98f4e7b094fc0bb93",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0161",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0161-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "b79a907f488ce1aeb266a8039df4d8780930b3527aee2294afb29fd43f7e3967",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0161",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0161-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "d78e6127d3a83f348662a669b191350d6b57672b57a9714c80b8d782e640ac6d",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0161",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0161-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "47ab65dc7b4dbb8be51bdfd12c8d4bd51651a2cbc8862a0791375bbd8ca1fa2a",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0161",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0161-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "8fda080a6b9d108d558bbf1d08ec61e33f5797711f1f74adf1af2dd16813045d",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0162",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0162-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "95881dd93234b6d9239626a9a54ad2834f2f09fb3eadbcd85c0fc3f61ead7d6b",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0162",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0162-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "ec0446a1c5dccf07e90bf579467a90bb129a9d5ffc357144081f317005083f44",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0162",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0162-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "38a4a5971dec74e94facff2edb0a19f8f14128e6ae88a6508e197471b71586ad",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0162",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0162-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "bef0152732c1f5479822a089c48db7d64843dc71c445669c71e19e4ef40ba908",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0163",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0163-being-v001.webp",
+   "width": 687,
+   "height": 572,
+   "sha256": "f33082c184b99a8657a7d1c99094866ac58a4f2fb519a1948210f4f029c53652",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0163",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0163-world-v001.webp",
+   "width": 687,
+   "height": 572,
+   "sha256": "90c525a8ef8a5f8e6ab912f7c3c198ec100341f82e3ffda660693d63e1e85b4c",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0163",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0163-technology-v001.webp",
+   "width": 687,
+   "height": 573,
+   "sha256": "de4370498615d23132ab10cf72fd9d2cda8af4b76c934b7cd787f6bb79af9ff8",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0163",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0163-life-v001.webp",
+   "width": 687,
+   "height": 573,
+   "sha256": "f921a69344a858a5ee10429f87da55d15a6f1ed9116eb3b899dd9985042281cf",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0164",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0164-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "03235be84e1c0900453604db837afb13e491d755445a8c05767d2722a28159c1",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0164",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0164-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "d2cab1dcb918510baa4a5d63f7c661885f3e7374e5903d41dbdf8aaa835ed086",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0164",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0164-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "3d146fe989fb6aea30c1587c3202ec1d2e19bc3ebbcd54c372c8454d2f382b15",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0164",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0164-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "186e8122759b6bef29d69d551b6e03540eed97fb02468e93690a9bd600aee6e2",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0165",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0165-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "433d4f544fd992353d8c7077d8b30d48b83caaae37d768deb970375dd5dfa5df",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0165",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0165-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "a35efdc3e465e81483c44e0b904f0bd52f75893fc5c88e72c514301b06a25192",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0165",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0165-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "1b0f19c47d877591e6ce6cf63bd89cd30f0060fd48adf1bd9ae6a9ec86c02025",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0165",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0165-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "cb4d0ecc1f6ff80698c2e76a66cb6619eb5dfe10790f28c0b9b104d080068f94",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0166",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0166-being-v001.webp",
+   "width": 627,
+   "height": 627,
+   "sha256": "863bc2301345bc4706829c096d24b44389cc00995659849581b9d27bd87b22ff",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0166",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0166-world-v001.webp",
+   "width": 627,
+   "height": 627,
+   "sha256": "97147ef18f70bf542ce9e4fa5966c0ec224c96d106eb451bba06c429888e286e",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0166",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0166-technology-v001.webp",
+   "width": 627,
+   "height": 627,
+   "sha256": "dd833acf7fefc57bd9d7a376f7959cc6b28868193e29f0f0baac1daa48810399",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0166",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0166-life-v001.webp",
+   "width": 627,
+   "height": 627,
+   "sha256": "916e04874441fc2a329deef26ae96e181351b76599e804769b11a4643600df07",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0167",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0167-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "5ae5ae62f7d57518952a626b2b3b191fcde57d16023579cd746368eca6247411",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0167",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0167-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "2c7f1fc53cd70cfcec51d354b1bed64c87665e4b4e44fcbd148e9c3df918b6e2",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0167",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0167-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "cc36534914f2649bcfb28bedc0f022d6acc486b3c9fa48788e921690974970e3",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0167",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0167-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "8d061477b945f3eb83d3654708e4c89e9dab60c9ae0195bd7d4052c41c2ada77",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0168",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0168-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "da0f4bb63ff7613593cb2b33505017d337740e4052a55ed3b169c66a1983876e",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0168",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0168-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "2e40a7723661ae6550c6e2496ff9eed3191cbbe9a904c4147455162e228a0570",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0168",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0168-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "d040455f36457b7f0500a93578ca9bfe97996006f22b3207ccd77893cfa7f6d1",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0168",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0168-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "fd7caa1f1b049696bc28786d5fd0452ceaea0b78fb822e8bc29172e4ea68a120",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0169",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0169-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "191275de380fffe183445309e5e0b4cdaa10dc7fe30beb77ca87c72a37e67f1a",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0169",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0169-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "6f53280b24fdaf5e9e5a476dd791b31168bac13a30966c4e4e1edaa3a8da1d23",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0169",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0169-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "cf44c6f7290bf0ba63e187e9ff1d20393118b5de01f50e2bfdaedc64510300a4",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0169",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0169-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "021fd3198ea2d55595c60b119eb2b786e1b7ce3429c522e155fc125f5700d3f0",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0170",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0170-being-v001.webp",
+   "width": 627,
+   "height": 627,
+   "sha256": "ba2172bffcd6345ad674d80c88e6c77d782c6b9366af5815c90a71f86483f43c",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0170",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0170-world-v001.webp",
+   "width": 627,
+   "height": 627,
+   "sha256": "7cd99f8e642fa4fa5eed44f0d572ef3dec6854e24ef99aa98dbf4ec9851d71ca",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0170",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0170-technology-v001.webp",
+   "width": 627,
+   "height": 627,
+   "sha256": "86e2f09841a37abf9ee86fce754072fd35a32bf0b5e38045fc4dba961e5c2fe6",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0170",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0170-life-v001.webp",
+   "width": 627,
+   "height": 627,
+   "sha256": "4eb2ec359421816427cce64f29f131f73a65b6c41dc3e10a81d7a3c28d44b195",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0171",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0171-being-v001.webp",
+   "width": 627,
+   "height": 627,
+   "sha256": "539a1e33d9bc65ef128a18f4b4e45ebe99caa0813723404ee8fe2a83fe5e6271",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0171",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0171-world-v001.webp",
+   "width": 627,
+   "height": 627,
+   "sha256": "f0ba570e610f458530661652523a73b06c3adc52f97deb10c416fbca89867c20",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0171",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0171-technology-v001.webp",
+   "width": 627,
+   "height": 627,
+   "sha256": "3bb774223186b10d01c2485d8618edb5b8a891b3c17155e5e6b5cac1288e3370",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0171",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0171-life-v001.webp",
+   "width": 627,
+   "height": 627,
+   "sha256": "25cc65d7d5a286ed2bf0a14b621c5d9582e3f05316d2ab0d908e07a1574219ff",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0172",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0172-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "088a4c73d5fbc5dda1be87a5953261a182e327dc57b41ddeca0b7bf62ffc4019",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0172",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0172-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "1dea48aa20152a820d99d695109b4fcea06ffea39dd701698e21b3d832e0fe07",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0172",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0172-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "0b89fdc383ec4b118744c0b6ef919f0c2691ff1e550d2c53566d4bf6329f581f",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0172",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0172-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "6ccecf83e9ece15286b53de249751db1af2a9eef88326781aaf26a1b78905c97",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0173",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0173-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "d8b832ead7b85dac45bc5d45ba2197b1929ec45d3216b1802c842239c7bb671d",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0173",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0173-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "d77b8342398720d3cb63862e6491a3af4e6cb2123d4cdd6cf69bacf16fd54311",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0173",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0173-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "5d0ada0ac3e9b3f47ea6a9771528e0b378c48aaeb67b973ca657c7ab7a1ca34e",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0173",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0173-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "fb108af7ef06576c3748c070644ca11b23df44fe121540c15bdedf6473c43fa4",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0174",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0174-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "d73642ab374c970b4658c212200c988915bf4bf9acf41057fa7e5f06eb54db79",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0174",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0174-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "3647fe86f8b22b08d21be0a51b3e5f1869410ad5e3b22d795a97f9e365b5a0a4",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0174",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0174-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "6b94c7a924b93da21f6cc8874452278cac65c35a7aedc24dc1a2254a85123083",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0174",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0174-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "e8154c2be08932de83fce858b6b279deae5387fe67bef0ac5e2594ba5dd5902c",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0175",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0175-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "d8d5f8c2c2bbe97522e9f1bdce565265d4325bda895f48011a622390074e2069",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0175",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0175-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "b9a5d304f7e18867638898e1a9bbdd36b5668112a6b1df1d1e0a5687495609ab",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0175",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0175-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "6e21408f2dd7f6566fe11dfa958a648ea52f9a57bc97925a4cf53d817e463d15",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0175",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0175-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "5421e25b7e058a927a5c5d86dae7232eead0d44292cf2523c5ee3e5b0ebfd04e",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0176",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0176-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "00a9e0421e053a4b180f2b75eb10c1ccf17a95357e49b51093f5d56d07843c1a",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0176",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0176-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "7193e2d230bd6a338eaede0c4ee1cbe176baed459fa8c5678695194beaa74ca8",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0176",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0176-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "77a066bed5371e748ee590b1019b6680a2b38f538842ae65cf2682da90875c65",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0176",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0176-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "0695f070d0fd6392e2a596c3c1e7a9a4a9de821a2f6948f1f1fcd908aea328f2",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0177",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0177-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "6073b9e1374d682679f4b6d39700e2b43553cac3563d3c774c939fe11bbf90fa",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0177",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0177-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "1c58cafe748117bbd703ff27e0cf1a1575b50f7f059a52364f101d1924600dd9",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0177",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0177-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "1c9746aa65cc30ead6e376c720c3e60e9e1c18160d45fc161e9dfbbb03e3b538",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0177",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0177-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "ebd1375ef0a31754957999f8078145794e8a21f5f095bda6b5d85893f040c2e0",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0178",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0178-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "4eacaa1be6c8e28ea52a89b627c1813f69c651f3a993b1ebf44a7bafa3e60d7f",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0178",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0178-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "ac4a3066bab48ae7504121ab886021ba08e050a05df7080c81328007a53280fb",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0178",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0178-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "8c212240fb8f1723983d753d56918d2b883e6acfdf8b0ad03a1ab87e60fc347c",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0178",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0178-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "526b5663e28dcf091df7b0af8a1c526ae99394223a1d6fa84e57797fe76ec6c1",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0179",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0179-being-v001.webp",
+   "width": 656,
+   "height": 599,
+   "sha256": "c1e5a7a8cb9c07dacc558571499f175c5a8a24f52d74310d17910dea091500c5",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0179",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0179-world-v001.webp",
+   "width": 656,
+   "height": 599,
+   "sha256": "aefecf51dcf2fd300b4bac3b7e7ea9094abefb36adbf09c69504870edbc05d7f",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0179",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0179-technology-v001.webp",
+   "width": 656,
+   "height": 600,
+   "sha256": "d0678755b50e14c417a926faaf3e64650b957a062e6a44232a317fdee9b8c92c",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0179",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0179-life-v001.webp",
+   "width": 656,
+   "height": 600,
+   "sha256": "56f609ff3afc402d35ce5e43997550e93ad56157e8d8d2fd889925a72475f93d",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0180",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0180-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "c3a619f9681bdfa8c86b7c1bc89f436b8b96a157f8bc3b2b2c3c0b720aa43fbd",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0180",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0180-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "b6676b4b829ada4ee83d91120e5e29c3798751ff57658a2e2b5d119f21893fe1",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0180",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0180-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "f0afb7c3e5e0399866a7b736fddce02092f66a927a262d3fd08031693f43b5f0",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0180",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0180-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "62b058a3e61762f56eff8dfaf15e81ec18f82847bf987ee342e9b703f450e540",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0181",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0181-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "8d9ef281c47d703a3f08b13bf9930f3792166302f84da778258160bec4ef13f2",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0181",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0181-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "9c505a1584035bc0423d39b6f8e543dd4946248fc019b690733a71882d8cf8a9",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0181",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0181-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "b541b60c8ae6dbaa26baa01dade0acb7b20db3c9c5633b008736bda21ec374e0",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0181",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0181-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "5f089583b1520ec2d161a1988b7e0d8859a2dd64931df25ed8b7c7aa62e02f72",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0182",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0182-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "a8d894d145334d21efd510a0d5f6a84d08446af75efe3e16302faf688f7e5824",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0182",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0182-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "9e11c4dca703664287ce8f57da0e67b23b1c94a243476e71fc8af45b21d7fb8f",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0182",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0182-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "901a3d190e2c4cd4f3d4887f7ed682ae49ba1e937abe3dca7e62b2792bac0dbc",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0182",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0182-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "d86cc34e5734a9e75f80b6f40ab311a14e82f0f73dd498c78c58cd77b57dcb03",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0183",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0183-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "e7a15bc958a5e73ff3beaed3b6648387787dd577c35b30739e0062f8e8912934",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0183",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0183-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "20e477b99eaf3108a1b54b0c7effb436d4bc101b749063b752bbeb5b375407bb",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0183",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0183-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "33d6af66f97b9d0941f1ecc86f687942dd44b09f87c295c193fba8a6bf556a2a",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0183",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0183-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "e1a6536befd9fbb12d535833dc5f4ed5c55fc43e72fca01dd54a0765133915c8",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0184",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0184-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "114e3b1c731257d084800c64606815e1cb40400c3d746c969ab6e8c0f4036258",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0184",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0184-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "e52951f28aef62cf25094e491d490cde30e6356a033c601300f668a4c762bb1a",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0184",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0184-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "596d78985e2435c0e25ef2315e08961cf345b9b8169b8bef4dab59bc8a4f8b0a",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0184",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0184-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "ba0820685cdbde6db1925c30360b65638f90421d0101403ca185897656d36edc",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0185",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0185-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "c75313b89c14191e3687182b6b04a96bb587ec65791c5a1365a51117435ccc5e",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0185",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0185-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "a52a3d7d492f58afc7f6928ca50f5c7ab544f647be50203e2cc4d62b005dbd02",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0185",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0185-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "f0b52d06467064c32b7cbb4dca565698c87e0c4663ee9b81313b8f5bd89d45fc",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0185",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0185-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "3a6114bf9994b432d17c870bd4877b1eddd202bea17caeb3b153994e146c882e",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0186",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0186-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "506706e2872b269b1c2a7fc87c5394957c212a2f1a493886a0501b3e39b2ba26",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0186",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0186-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "54a27444f4eca0c4eaa97b420cca8870ef626a62a0e14cb9199f4141b0cc651e",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0186",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0186-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "dc29652de99bc56dacb7f373204527b90553443747c718145aab99bb35e51d5d",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0186",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0186-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "f4b694617e87274a249e205866ba2ec2742481650ce92fd72abb6c14ae090049",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0187",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0187-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "a17d2b2dfec192c9d091773bdc4534a632de782ead71253809d3ffa63cf71cfa",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0187",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0187-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "dfc3c8f4563b057cb5aa269bf2156a5d295c12c34151b8c0a02a849236e5b616",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0187",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0187-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "09a146f30f528e43b4f0dd5e03301b2094a63d5a2c47ac9af57a0f3654e59f42",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0187",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0187-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "9e68cc3f5568665f9b77da30f29c76317ee52641906c7f5c14e0447611f78e58",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0188",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0188-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "92ea882d846950b58c8339591e32285fe2eef357db98a9c5d3bbbee85469fd2e",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0188",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0188-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "7b9598b0e1f37e39151fdc102de95a7275b5ac24657d625c96d3772e8d3dc99c",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0188",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0188-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "0f46296f8b55345eada0a2ae387a5171396d80aa50155cca19f6ee8cc99cc283",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0188",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0188-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "2e717a25873f92c7d19730071148f1f5bb2de77e22ba12ff5d89df87734d65d3",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0189",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0189-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "28827b78a9f0a161e80ea0bf4758414bfd57a2739eb526d7277675afba07d518",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0189",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0189-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "36b6c8f8ef24fdcfa971cc0f812e97b942faf2fb279703f1ba107e6fb0a9ab1b",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0189",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0189-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "4b046b53553470c9ba17626acbd8683f113f8c41a8e762e648343906423951cb",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0189",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0189-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "147c754b5493ba732cef4e0cf8b3371c3fa77859e6cbe9fab8a06d9366c9941f",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0190",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0190-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "e8a71c1bd2c7f4af6175c09c1f25761910aa3905b1f3f3cbac9461b4cf2770d1",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0190",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0190-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "7a67d0f78df3e46fa703445b6d7211ec6371b3e3896486bebc0073a205e6a4d8",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0190",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0190-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "3bb25c10ad3546147cd5ba50004f214ead96e102ff6dc5f73bb6d524e2b90f53",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0190",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0190-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "11bf73fa4f15fa5207203c20cd8b68313f9265ff0fcf3210e376530a70c781de",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0191",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0191-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "67c521740c62d0696f11ab9d5216335cc47c47b2f7a6240bc6ad4df2279743e0",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0191",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0191-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "ce84651abce2a057a62088d00e4afd7a8dc891f5fac17d5b4713be00e708009f",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0191",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0191-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "d7b44eb79590ffe34d99b92373bd73e0ef90f52e1095e7a1468f1d303d61d0c1",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0191",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0191-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "a32803756c65da6c895134c23c873943d8d467a293a843534a8447d587d63575",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0192",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0192-being-v001.webp",
+   "width": 627,
+   "height": 627,
+   "sha256": "57ee4cd3b04d104e1c6864d39b7fed02f2a47bd74abeb46c2ca8d80966f04d84",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0192",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0192-world-v001.webp",
+   "width": 627,
+   "height": 627,
+   "sha256": "9635e0a1b98f2fedb4a80c770b16d5ac33a34ee6dc12beb022f33f0307cda134",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0192",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0192-technology-v001.webp",
+   "width": 627,
+   "height": 627,
+   "sha256": "2e0a6a0dcdce6a9c2a30d3eae4b45162f2460b00eb4b1ea9fa97f9e64553dd39",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0192",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0192-life-v001.webp",
+   "width": 627,
+   "height": 627,
+   "sha256": "74987c44f213ffdac87a890a04c5d6817c3d510c7bb12d42200c59498f7e93b5",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0193",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0193-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "bf8a605f5b10be86f97a5df195d332c27d58352e87ed4e56036cd0428211a499",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0193",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0193-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "58592283c40ed02006ca25c9bc757c98b54be52e07bb917128b2c024d83c6f72",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0193",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0193-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "f631d2d7e67d581548fe4068a7d0e4574f7bbf6c17a2e11d7421a9cdd1121b22",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0193",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0193-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "ad010f1fdc71575930d3f22ee959d2de8ec9e515113c5cf0f7d053bde586fe6f",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0194",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0194-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "4e8f497020b2a9d3dc1970f20e59290043d3b8a9cb589f8a830490e473cd2e32",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0194",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0194-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "b2757522d26a134cc8b7f258b964e6fe61c721c69c6327570b455914802c58d1",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0194",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0194-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "4ba18ea1084aed33759d2bee6d1a2830a10167d3fc69df86e7c5e72a2b46ccad",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0194",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0194-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "5957df19a041eb36e311a863693a4168a041b6be2e9d0f57eb833a0d703e80ce",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0195",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0195-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "06b5f9e6484d268a0e351829f239af5756f40d50a5981e6aa0143a442cc82f33",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0195",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0195-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "32ff4e2ff8c76f2d3425cf1d86017584380990d5358cd71fcf61e1c52e8fc35b",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0195",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0195-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "6ecac6955eb6aad38abfda46a17e86f9957538574c85794fbe804b3de283154c",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0195",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0195-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "3878def4dd12ba2c5e8267341a0df45cfc8cc911de255982c0974d71e9f1da14",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0196",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0196-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "ed64660539df9d667c18be91da82e38e2237abcdffb6e8d10df3b57cbc016a31",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0196",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0196-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "8b589eb11b37c7d489e719792f57d8550aed49ab02a5cb664d99e71436b7d348",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0196",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0196-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "b5d8c126f4e5a980f2af44ab85f2c9cbea792485ff747da4dfd583bdc9ecea82",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0196",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0196-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "2e162d8e8bf698a82c991846fe3c292d7f04833c26864d4d2d3a22c76a7518ae",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0197",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0197-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "b399535f8cf27e9b8d70b593de81ec525d7575c7ac8d1ff9fdf8ac92dd5bdd1b",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0197",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0197-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "e9e723b5cba6c5d80d6c2d059a70f3d995d4c7142bdb052ee6a3f5493918fc31",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0197",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0197-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "4f376653cbc6592de53fb91bd7fc1f5fd59c2179db20443c0421da615e63ecd8",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0197",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0197-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "0c4076ab9c6c6304c52801993530579fe978472d5ff45085117c34419f60c761",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0198",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0198-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "1a23a430971d0672a89bbc930a5541d4769dc62fe723f8aad489ff92f8577a79",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0198",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0198-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "4754e089a91aa93f1a31ff7388f7545252a3ac67be7decf9c7feef02fcd1b1a3",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0198",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0198-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "34eb7ab9873644efc392ffb52b861b70b40c1eddc9782957efd50f2d9a3558e8",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0198",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0198-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "e8a7e441b8ed95a898cf67e97289bd9b456d0e08e970f3be2bb88196ab2a7516",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0199",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0199-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "d6bfda63930949887e7473c0508f76d13ff9a64c5364e12cbf3637d1c43645c8",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0199",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0199-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "2a851360c78dbd6a3ccf5f055151129e00e1ee9547ceadc2c2ac632482e38177",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0199",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0199-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "b3011049d20e3143305efe7bbc9917cad12d379bd16bdfebf77b2e47ddf91826",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0199",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0199-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "a8746de302748e999220a6c268576539076d9db8613df8ddda59d913cacca03e",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0200",
+   "role": "being",
+   "version": "v001",
+   "file": "CIV-0200-being-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "65ed56713b135c8ac3cda5ee19beff770b3a751714099dc9a0dc8cc43b2a668c",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0200",
+   "role": "world",
+   "version": "v001",
+   "file": "CIV-0200-world-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "167a7ef1b3de32727ca52e11ea029eb2ae1e09fc14268457cb98223a88c482e7",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0200",
+   "role": "technology",
+   "version": "v001",
+   "file": "CIV-0200-technology-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "4cfc3afbb4d6c9c1aeff7c056c221e9bcc3b91d5300428c5271abccc1aca1606",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
+  },
+  {
+   "entityId": "CIV-0200",
+   "role": "life",
+   "version": "v001",
+   "file": "CIV-0200-life-v001.webp",
+   "width": 768,
+   "height": 512,
+   "sha256": "ce296dfd4ff3cf5323bd058c51aec0613ccc4f66fca32ccccebdb49f28ad9230",
+   "reviewStatus": "unique batch plate · pixel-audited at ingest"
   }
  ],
  "batches": [
@@ -2825,6 +6825,24 @@
    "platesPublished": 256,
    "platesAlreadyPresent": 24,
    "uniquenessAudit": "raw sha256 + decoded-pixel sha256, batch and archive"
+  },
+  {
+   "source": "upload/Unique_Profiles_0101_0110.zip",
+   "ingested": "2026-10-27T16:46:33Z",
+   "profilesNew": 10,
+   "platesPublished": 40,
+   "platesAlreadyPresent": 0,
+   "uniquenessAudit": "raw sha256 + decoded-pixel sha256, batch and archive",
+   "binding": "zip asset-manifest.json — plates bound by entityId and role (raw sha256, decoded-pixel fallback)"
+  },
+  {
+   "source": "upload/Unique_Profiles_*.zip",
+   "ingested": "2026-10-27T16:47:20Z",
+   "profilesNew": 90,
+   "platesPublished": 360,
+   "platesAlreadyPresent": 320,
+   "uniquenessAudit": "raw sha256 + decoded-pixel sha256, batch and archive",
+   "binding": "zip asset-manifest.json — plates bound by entityId and role (raw sha256, decoded-pixel fallback)"
   }
  ]
 }
