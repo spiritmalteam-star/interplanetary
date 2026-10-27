@@ -32,6 +32,8 @@ import {
 } from "@/lib/server/lc-engine";
 import { assembleLoop } from "@/lib/server/loop-assembly";
 import { LC_MODES } from "@/lib/data/light-codes";
+import { db } from "@/lib/db";
+import { mirrorAudioToVault } from "@/lib/server/music-vault";
 import { rename } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -863,6 +865,10 @@ async function postImpl(
         if (!daily.ok) return verdictResponse(daily, passed);
       }
 
+      /* the weave's own job row — declared before the try so the catch
+         (and the sweep's law) can always speak to it */
+      let job: { id: string; drawn: number } | null = null;
+
       beginWeave(keeperId, fingerprint, length, partIndex <= 1);
       try {
         const languageName = LANG_NAMES[b.language ?? "en"] ?? "English";
@@ -873,6 +879,65 @@ async function postImpl(
           languageName,
           isLoop ? { index: partIndex, total } : undefined
         );
+
+        /* ---- the durable keeping — the weave's own job row ------------
+           THE HOUSE'S KEEPING LAW (the music room's half): a signed
+           passage's weave is written into the vault BEFORE the sky is
+           asked, so a refresh mid-weave can never lose the thread OR
+           its drawn light: the row stands "processing" until the sound
+           lands (then it carries the track), and a weave the house
+           never hears back from is swept to "failed" with its light
+           returned — once, and only once. Anonymous visitors keep the
+           old keeping: their sounds rest on their own device alone.
+           The endless journey rides its own shelf already — its token
+           thread is instance-local, so a job row could not recover it. */
+        const durableKeeper = Boolean(
+          meter &&
+            !meter.userId.startsWith("stateless:") &&
+            !meter.visitor.user.email.startsWith("anon:")
+        );
+        if (durableKeeper && meter && !isLoop) {
+          try {
+            /* the light this weigh drew — read from the ledger row the
+               meter laid; when no row exists, nothing was drawn (the
+               keeper walks free, or the wallet's law rests) */
+            let drawn = 0;
+            if (meter.walletLedgerId) {
+              const spend = await db.creditLedger.findUnique({
+                where: { id: meter.walletLedgerId },
+                select: { creditsDeducted: true },
+              });
+              drawn = spend ? Math.abs(spend.creditsDeducted) : 0;
+            }
+            const created = await db.generationJob.create({
+              data: {
+                userId: meter.userId,
+                tool: "light_codes",
+                status: "processing",
+                request: {
+                  intention: (b.intention ?? "").slice(0, 600),
+                  mode: b.mode ?? null,
+                  length,
+                  language: b.language ?? "en",
+                  style: (passed.style ?? "").slice(0, 800) || null,
+                  walletLedgerId: meter.walletLedgerId ?? null,
+                },
+                creditsDrawn: drawn,
+              },
+              select: { id: true },
+            });
+            job = { id: created.id, drawn };
+          } catch (err) {
+            /* the vault rests — the weave continues unhurried; only the
+               durability is absent, never the sound */
+            console.error(
+              "[light-codes] the weave's job row could not be laid:",
+              err instanceof Error ? err.message : err
+            );
+            job = null;
+          }
+        }
+
         const weave = await lyriaWeave(
           body,
           key,
@@ -882,6 +947,70 @@ async function postImpl(
         noteLcSuccess(body.model);
 
         if (!isLoop) {
+          /* ---- the vault keeps what the sky gave (signed passages) ----
+             The bytes are already in the house's hands, so writing them
+             into the audio vault is a local act — near-certain, never
+             guaranteed. When it stumbles the response still carries the
+             sound and the row says so honestly; the visitor's answer is
+             never failed because the keeping failed. */
+          let kept: { trackId: string; audioUrl: string } | null = null;
+          if (job && meter) {
+            try {
+              const bytes = Buffer.from(weave.audioB64, "base64");
+              const file = await mirrorAudioToVault(bytes, weave.mime);
+              if (file) {
+                const audioUrl = `/api/music-audio/${file}`;
+                const track = await db.musicTrack.create({
+                  data: {
+                    userId: meter.userId,
+                    jobId: job.id,
+                    title: passed.title || "A transmission",
+                    audioUrl,
+                    localFile: file,
+                    status: "mirrored",
+                  },
+                  select: { id: true },
+                });
+                kept = { trackId: track.id, audioUrl };
+              }
+            } catch (err) {
+              console.error(
+                "[light-codes] the vault could not keep the woven sound:",
+                err instanceof Error ? err.message : err
+              );
+              kept = null;
+            }
+            try {
+              await db.generationJob.update({
+                where: { id: job.id },
+                data: {
+                  status: "succeeded",
+                  result: kept
+                    ? {
+                        engine: body.model,
+                        tracks: [
+                          {
+                            id: kept.trackId,
+                            title: passed.title,
+                            audioUrl: kept.audioUrl,
+                            status: "mirrored",
+                          },
+                        ],
+                      }
+                    : {
+                        engine: body.model,
+                        tracks: [],
+                        note: "The weave succeeded, but the house could not keep the sound on this passage.",
+                      },
+                },
+              });
+            } catch (err) {
+              console.error(
+                "[light-codes] the weave's job row could not be sealed:",
+                err instanceof Error ? err.message : err
+              );
+            }
+          }
           return NextResponse.json({
             ...passed,
             structure: weave.texts.join("\n\n").slice(0, 2000) || undefined,
@@ -889,6 +1018,9 @@ async function postImpl(
             mimeType: weave.mime,
             engine: body.model,
             length,
+            ...(kept && job
+              ? { jobId: job.id, trackId: kept.trackId, audioUrl: kept.audioUrl }
+              : {}),
           });
         }
 
@@ -941,6 +1073,31 @@ async function postImpl(
       } catch (err) {
         const code = (err as LyriaFailure)?.code ?? "engine";
         noteLcError(code, err instanceof Error ? err.message : "unknown");
+        /* the weave stumbled — the job row is spoken to honestly. The
+           light's RETURN is the meter's own law (any ≥400 verdict gives
+           the drawn credits back before the door closes); the row's
+           refunded mark only records that law's effect, so a later
+           sweep can never give the same light twice. */
+        if (job) {
+          try {
+            await db.generationJob.updateMany({
+              where: { id: job.id, status: "processing" },
+              data: {
+                status: "failed",
+                refunded: job.drawn > 0,
+                result: {
+                  error: (err instanceof Error ? err.message : "the weave stumbled").slice(0, 400),
+                  code,
+                },
+              },
+            });
+          } catch (dbErr) {
+            console.error(
+              "[light-codes] the failed weave could not be written:",
+              dbErr instanceof Error ? dbErr.message : dbErr
+            );
+          }
+        }
         throw err;
       } finally {
         endWeave(keeperId);

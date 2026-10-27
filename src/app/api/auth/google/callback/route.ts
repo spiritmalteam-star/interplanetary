@@ -70,6 +70,12 @@ export async function GET(req: NextRequest) {
        otherwise a fresh passage is carved instead of a hijack */
     if (profile.verified_email === false) return fail("unverified");
 
+    /* the keeper's binding rides the passage: when the platform's
+       ADMIN_EMAIL arrives through Google's own verified door, the role
+       is carved in the same upsert */
+    const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+    const keeperArrives = email === adminEmail;
+
     const user = await db.user.upsert({
       where: { email },
       create: {
@@ -77,8 +83,12 @@ export async function GET(req: NextRequest) {
         name: profile.name?.slice(0, 60) ?? null,
         provider: "google",
         passwordHash: null,
+        ...(keeperArrives ? { role: "ADMIN" } : {}),
       },
-      update: { provider: "google" },
+      update: {
+        provider: "google",
+        ...(keeperArrives ? { role: "ADMIN" } : {}),
+      },
     });
 
     const res = NextResponse.redirect(origin);

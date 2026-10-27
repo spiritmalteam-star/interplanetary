@@ -271,5 +271,15 @@ export interface LcTrack {
   length?: "preview" | "full" | "loop";
   /** The engine's own words about the song's structure (revealed on request). */
   structure?: string;
+  /** THE HOUSE'S KEEPING — present when this transmission also rests
+      as a MusicTrack row in the visitor's own vault: durable across
+      refreshes and devices, its sound served from the house's audio
+      vault (owner-checked). libraryId is the row's own id. */
+  libraryId?: string;
+  /** The owner's heart on a vault-kept transmission. */
+  favorite?: boolean;
+  /** True when the shelf may replay this sound from the house's serve
+      door (audioUrl then carries the /api/music-audio/ key). */
+  durable?: boolean;
   createdAt: number;
 }

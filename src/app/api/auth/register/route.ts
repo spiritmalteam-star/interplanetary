@@ -56,8 +56,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    /* the keeper's binding at the door: when the platform's ADMIN_EMAIL
+       registers, the role is carved in the same breath — the keeper never
+       waits for a restart to be the keeper */
+    const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+    const role = email === adminEmail ? "ADMIN" : "user";
+
     const user = await db.user.create({
-      data: { email, name: name || null, passwordHash: hashPassword(password), provider: "email" },
+      data: { email, name: name || null, passwordHash: hashPassword(password), provider: "email", role },
     });
 
     /* the new passage receives its workspace, its ledger and its gift */

@@ -861,7 +861,8 @@ interface MirrorState {
   clearLcBrief: () => void;
   /** Play a kept transmission — recalls the sound from the visitor's
       own device; when the device no longer holds it, a gentle notice
-      stands in its place. */
+      stands in its place. A vault-kept transmission plays straight
+      from the house's serve door — any device, any visit. */
   playLc: (track: LcTrack) => Promise<void>;
   reshapeLc: (track: LcTrack) => void;
   clearLcPlayer: () => void;
@@ -874,6 +875,14 @@ interface MirrorState {
       1 = the next older transmission, -1 = the one before it. */
   lcAdvance: (dir: 1 | -1) => Promise<void>;
   forgetLc: (id: string) => void;
+  /** THE VAULT SHELF — a signed passage's heart, laid or lifted on a
+      vault-kept row (the server holds the truth; the shelf follows). */
+  toggleLcFavorite: (id: string) => void;
+  /** THE KEEPING THREAD — fetch the vault shelf into the chamber's
+      history, and when weaves are still standing (a refresh mid-weave),
+      watch them through the same shelf until they land. Guests keep
+      their device-only keeping — this door stays shut for them. */
+  resumeLcLibrary: () => Promise<void>;
 
   /** ET Technology: consult the Mirror about a specific technology —
       closes modals, opens the Interplanetary channel, preloads the
@@ -1350,6 +1359,184 @@ async function runEndlessJourney(
   throw new Error(
     "The journey's thread rested before its ending. Ask once more — the weaving continues where it stood."
   );
+}
+
+/* ------------------------------------------------------------------ */
+/*  THE VAULT SHELF — the house's own keeping for signed passages.     */
+/*  The chamber's weaves land as MusicTrack rows; this thread fetches  */
+/*  the shelf, merges it into the visitor's history (the local,        */
+/*  device-kept rows are never displaced), and — after a refresh       */
+/*  mid-weave — watches the standing jobs until they resolve, each     */
+/*  spoken to exactly once. Guests never walk this path: their keeping */
+/*  stays on their own device, exactly as it always has.               */
+/* ------------------------------------------------------------------ */
+
+interface LcLibraryTrack {
+  id: string;
+  title: string;
+  audioUrl: string;
+  durationSec: number | null;
+  status: string;
+  favorite: boolean;
+  createdAt: string;
+}
+
+interface LcLibraryJob {
+  id: string;
+  status: string;
+  providerTaskId: string | null;
+  creditsDrawn: number;
+  refunded: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface LcLibraryPayload {
+  tracks: LcLibraryTrack[];
+  jobs: LcLibraryJob[];
+}
+
+/* one watcher at a time, wherever in the house the visitor wanders */
+let lcVaultPoll: ReturnType<typeof setTimeout> | null = null;
+let lcVaultWatched = new Set<string>();
+let lcVaultTicks = 0;
+
+function persistLcHistory(history: LcTrack[]): void {
+  try {
+    localStorage.setItem("mirror-lc-history", JSON.stringify(history));
+  } catch {
+    /* storage unavailable */
+  }
+}
+
+/** Fold the vault's rows into the chamber's shelf: server rows are the
+    truth for their own ids, local rows stand untouched beside them. */
+function mergeVaultShelf(
+  get: () => MirrorState,
+  set: (partial: Partial<MirrorState>) => void,
+  payload: LcLibraryPayload
+): void {
+  const existing = get().lcHistory;
+  const byLibrary = new Map<string, LcTrack>();
+  for (const t of existing) if (t.libraryId) byLibrary.set(t.libraryId, t);
+  const rows: LcTrack[] = [];
+  for (const row of payload.tracks) {
+    if (row.status === "failed" || !row.audioUrl) continue;
+    const prev = byLibrary.get(row.id);
+    const createdAt = Date.parse(row.createdAt) || 0;
+    rows.push(
+      prev
+        ? {
+            ...prev,
+            favorite: row.favorite,
+            duration: row.durationSec ?? prev.duration,
+            audioUrl: row.audioUrl,
+            durable: true,
+            createdAt: prev.createdAt || createdAt,
+          }
+        : {
+            id: row.id,
+            title: row.title,
+            mode: "light-transmission",
+            intention: "",
+            audioUrl: row.audioUrl,
+            duration: row.durationSec ?? undefined,
+            libraryId: row.id,
+            favorite: row.favorite,
+            durable: true,
+            createdAt,
+          }
+    );
+  }
+  const keptIds = new Set(
+    rows.map((r) => r.libraryId).filter((v): v is string => Boolean(v))
+  );
+  const merged = [
+    ...rows,
+    ...existing.filter((t) => t.libraryId && !keptIds.has(t.libraryId)),
+    ...existing.filter((t) => !t.libraryId),
+  ]
+    .sort((a, b) => b.createdAt - a.createdAt)
+    .slice(0, 48);
+  set({ lcHistory: merged });
+  persistLcHistory(merged);
+}
+
+/** The keeping thread — watch standing weave jobs through the shelf
+    itself (one door, no second machinery) until each resolves, then
+    speak honestly: what landed, and what light came home. */
+function watchVaultJobs(
+  get: () => MirrorState,
+  set: (partial: Partial<MirrorState>) => void,
+  jobs: LcLibraryJob[]
+): void {
+  const processing = jobs.filter((j) => j.status === "processing");
+  if (processing.length === 0) return;
+  for (const j of processing) lcVaultWatched.add(j.id);
+  if (lcVaultPoll !== null) return; // the watcher already walks
+
+  const schedule = (): void => {
+    if (lcVaultPoll !== null || lcVaultWatched.size === 0) return;
+    lcVaultPoll = setTimeout(() => {
+      void tick();
+    }, 5000);
+  };
+
+  const tick = async (): Promise<void> => {
+    lcVaultPoll = null;
+    const me = get().me;
+    if (!me || me.email.startsWith("anon:") || lcVaultWatched.size === 0) return;
+    lcVaultTicks += 1;
+    if (lcVaultTicks > 120) {
+      /* ten quiet minutes — the thread rests; the room's next mount
+         picks the watch up again */
+      lcVaultWatched.clear();
+      return;
+    }
+    let payload: LcLibraryPayload | null = null;
+    try {
+      const res = await fetch("/api/music-library");
+      if (res.status === 401) return; // the passage rested
+      payload = res.ok
+        ? ((await res.json().catch(() => null)) as LcLibraryPayload | null)
+        : null;
+    } catch {
+      payload = null;
+    }
+    if (!payload) {
+      schedule(); // one breath, then ask again
+      return;
+    }
+    mergeVaultShelf(get, set, payload);
+    const resolved = payload.jobs.filter(
+      (j) => j.status !== "processing" && lcVaultWatched.has(j.id)
+    );
+    for (const j of resolved) lcVaultWatched.delete(j.id);
+    if (resolved.length > 0) {
+      const recovered = resolved.filter((j) => j.status === "succeeded");
+      const failed = resolved.filter((j) => j.status === "failed");
+      const lights = failed.reduce((n, j) => n + (j.creditsDrawn || 0), 0);
+      const words: string[] = [];
+      if (recovered.length > 0) {
+        words.push(
+          "A weave that outlived the refresh has landed — its transmission now rests on your shelf."
+        );
+      }
+      if (failed.length > 0) {
+        words.push(
+          lights > 0
+            ? `A weave could not finish — its ${lights} ${
+                lights === 1 ? "light" : "lights"
+              } returned to your purse.`
+            : "A weave could not finish — nothing had been drawn from your purse."
+        );
+      }
+      if (words.length > 0) set({ lcNotice: words.join(" ") });
+    }
+    if (lcVaultWatched.size > 0) schedule();
+  };
+
+  schedule();
 }
 
 export const useMirror = create<MirrorState>()((set, get) => ({
@@ -1858,6 +2045,11 @@ export const useMirror = create<MirrorState>()((set, get) => ({
             engine?: string;
             error?: string;
             code?: string;
+            /* the house's keeping, when the weave was kept for a
+               signed passage: the vault row's id and its serve key */
+            audioUrl?: string;
+            trackId?: string;
+            jobId?: string;
           }
         | null;
       if (!weave.ok) {
@@ -1876,11 +2068,24 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       const bytes = base64ToBytes(b64);
       const mime = String(wdata?.mimeType ?? "audio/mpeg");
       const id = `lc-${Date.now()}`;
+      /* the house's keeping — when the weave was kept in the visitor's
+         vault, the row's id and serve key ride home beside the sound */
+      const serveKey =
+        typeof wdata?.audioUrl === "string" &&
+        wdata.audioUrl.startsWith("/api/music-audio/")
+          ? wdata.audioUrl
+          : null;
+      const rowId =
+        typeof wdata?.trackId === "string" && wdata.trackId
+          ? wdata.trackId
+          : null;
+      const durable = Boolean(serveKey && rowId);
       const audioUrl = URL.createObjectURL(
         new Blob([bytes.buffer as ArrayBuffer], { type: mime })
       );
-      /* the sound rests on the visitor's own device (the keeping law) */
-      void lcAudioSave(id, bytes, mime);
+      /* the keeping law: a guest's sound rests on their own device; a
+         vault-kept sound rests in the house — no second copy here */
+      if (!durable) void lcAudioSave(id, bytes, mime);
       const track: LcTrack = {
         id,
         title: brief.title,
@@ -1896,12 +2101,16 @@ export const useMirror = create<MirrorState>()((set, get) => ({
             ? wdata.structure
             : undefined,
         engineId: wdata?.engine ? String(wdata.engine) : undefined,
+        ...(durable && rowId
+          ? { libraryId: rowId, favorite: false, durable: true }
+          : {}),
         createdAt: Date.now(),
       };
-      /* the shelf remembers the shape, never the blob — the sound lives
-         in the visitor's own IndexedDB and is recalled on demand */
+      /* the shelf remembers the shape, never the blob — a durable row
+         carries its serve key so any visit can replay it; a local row
+         carries nothing and leans on the visitor's own IndexedDB */
       const history = [
-        { ...track, audioUrl: "" },
+        { ...track, audioUrl: durable && serveKey ? serveKey : "" },
         ...get().lcHistory.filter((t) => t.id !== track.id),
       ].slice(0, 40);
       try {
@@ -2107,6 +2316,17 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     if (ok) await get().weaveBrief();
   },
   playLc: async (track) => {
+    /* the house's kept sound — served from the vault, owner-checked,
+       any device, any visit; no device copy is ever needed */
+    if (track.durable && track.audioUrl.startsWith("/api/")) {
+      set({
+        lcTrack: { ...track, audioUrl: track.audioUrl },
+        lcStatus: "ready",
+        lcError: null,
+        lcNotice: null,
+      });
+      return;
+    }
     const stored = await lcAudioGet(track.id);
     if (stored) {
       const audioUrl = URL.createObjectURL(
@@ -2162,7 +2382,15 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   },
   forgetLc: (id) =>
     set((s) => {
-      /* the visitor's own hand forgets — the sound leaves the device too */
+      /* the visitor's own hand forgets — the sound leaves the device,
+         and a vault-kept sound leaves the house's keeping too */
+      const track = s.lcHistory.find((t) => t.id === id);
+      const libraryId = track?.libraryId ?? null;
+      if (libraryId) {
+        void fetch(`/api/music-library?id=${encodeURIComponent(libraryId)}`, {
+          method: "DELETE",
+        }).catch(() => undefined);
+      }
       void lcAudioDelete(id);
       const history = s.lcHistory.filter((t) => t.id !== id);
       try {
@@ -2172,6 +2400,44 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       }
       return { lcHistory: history };
     }),
+  toggleLcFavorite: (id) =>
+    set((s) => {
+      const track = s.lcHistory.find((t) => t.id === id);
+      if (!track?.libraryId) return {}; // only vault rows carry a heart
+      const favorite = !track.favorite;
+      void fetch("/api/music-library", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: track.libraryId, favorite }),
+      }).catch(() => undefined);
+      const history = s.lcHistory.map((t) =>
+        t.id === id ? { ...t, favorite } : t
+      );
+      persistLcHistory(history);
+      return {
+        history,
+        ...(s.lcTrack && s.lcTrack.id === id
+          ? { lcTrack: { ...s.lcTrack, favorite } }
+          : {}),
+      };
+    }),
+  resumeLcLibrary: async () => {
+    const me = get().me;
+    if (!me || me.email.startsWith("anon:")) return; // guests keep their own keeping
+    try {
+      const res = await fetch("/api/music-library");
+      if (res.status === 401) return; // the passage rested — the device keeps what it has
+      if (!res.ok) return;
+      const payload = (await res.json().catch(() => null)) as
+        | LcLibraryPayload
+        | null;
+      if (!payload) return;
+      mergeVaultShelf(get, set, payload);
+      watchVaultJobs(get, set, payload.jobs ?? []);
+    } catch {
+      /* the vault rested — the shelf stays as it was */
+    }
+  },
 
   askAboutTechnology: (name) =>
     set((s) => ({

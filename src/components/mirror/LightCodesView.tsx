@@ -12,6 +12,7 @@ import {
   Eye,
   Feather,
   Gauge,
+  Heart,
   ListMusic,
   Mic,
   Music4,
@@ -406,6 +407,7 @@ function PlayerBar() {
   const reshapeLc = useMirror((s) => s.reshapeLc);
   const newVersionFromTrack = useMirror((s) => s.newVersionFromTrack);
   const forgetLc = useMirror((s) => s.forgetLc);
+  const toggleLcFavorite = useMirror((s) => s.toggleLcFavorite);
   const t = useT();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [audioEl, setAudioEl] = useState<HTMLAudioElement | null>(null);
@@ -895,22 +897,58 @@ function PlayerBar() {
                             {shelfTrack.title}
                           </span>
                           <span className="mono-label block truncate text-[9.5px] uppercase tracking-[0.16em] text-muted-foreground/70">
-                            {t(
-                              LC_MODES.find((m) => m.id === shelfTrack.mode)
-                                ?.name ?? shelfTrack.mode
-                            )}
+                            {shelfTrack.durable && !shelfTrack.intention
+                              ? t("Kept transmission")
+                              : t(
+                                  LC_MODES.find((m) => m.id === shelfTrack.mode)
+                                    ?.name ?? shelfTrack.mode
+                                )}
                             {" · "}
                             {new Date(shelfTrack.createdAt).toLocaleDateString()}
+                            {shelfTrack.duration
+                              ? ` · ${fmtTime(shelfTrack.duration)}`
+                              : ""}
                           </span>
                         </span>
-                        <button
-                          type="button"
-                          onClick={() => reshapeLc(shelfTrack)}
-                          aria-label={`${t("Reshape")} ${shelfTrack.title}`}
-                          className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground opacity-0 transition-all duration-300 hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100"
-                        >
-                          <Wand2 className="size-3.5" aria-hidden="true" />
-                        </button>
+                        {shelfTrack.durable && (
+                          <button
+                            type="button"
+                            onClick={() => toggleLcFavorite(shelfTrack.id)}
+                            aria-pressed={Boolean(shelfTrack.favorite)}
+                            aria-label={
+                              shelfTrack.favorite
+                                ? `${t("Unfavorite")} ${shelfTrack.title}`
+                                : `${t("Favorite")} ${shelfTrack.title}`
+                            }
+                            data-testid={`lc-favorite-${shelfTrack.id}`}
+                            className={cn(
+                              "focus-glow flex size-7 shrink-0 items-center justify-center rounded-full transition-all duration-300 hover:text-foreground",
+                              TOUCH_VEIL,
+                              shelfTrack.favorite
+                                ? "text-[var(--scope-a)] opacity-100"
+                                : "text-muted-foreground opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+                            )}
+                          >
+                            <Heart
+                              className={cn(
+                                "size-3.5",
+                                shelfTrack.favorite && "fill-current"
+                              )}
+                              aria-hidden="true"
+                            />
+                          </button>
+                        )}
+                        {LC_MODES.some((m) => m.id === shelfTrack.mode) &&
+                          Boolean(shelfTrack.intention) && (
+                            <button
+                              type="button"
+                              onClick={() => reshapeLc(shelfTrack)}
+                              aria-label={`${t("Reshape")} ${shelfTrack.title}`}
+                              className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground opacity-0 transition-all duration-300 hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100"
+                            >
+                              <Wand2 className="size-3.5" aria-hidden="true" />
+                            </button>
+                          )}
                         <button
                           type="button"
                           onClick={() => forgetLc(shelfTrack.id)}
@@ -1646,6 +1684,16 @@ export function LightCodesView() {
   const [bench, setBench] = useState<"transmissions" | "sequencer">(
     "transmissions"
   );
+
+  /* THE KEEPING THREAD — a signed passage's shelf wakes with the room:
+     the vault's rows join the history, and any weave that outlived a
+     refresh is picked up and watched until it lands. Guests never
+     knock — their keeping lives on their own device, untouched. */
+  const me = useMirror((s) => s.me);
+  const resumeLcLibrary = useMirror((s) => s.resumeLcLibrary);
+  useEffect(() => {
+    if (me && !me.email.startsWith("anon:")) void resumeLcLibrary();
+  }, [me, resumeLcLibrary]);
 
   const mode = LC_MODES.find((m) => m.id === lcMode) ?? LC_MODES[0];
   const busy = lcStatus === "interpreting" || lcStatus === "polling";

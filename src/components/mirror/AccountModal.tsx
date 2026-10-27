@@ -175,10 +175,9 @@ export function AccountModal() {
   if (!accountOpen) return null;
 
   const plan = summary?.plan;
-  const credits = summary?.credits;
-  const grant = credits?.monthlyGrant || plan?.monthlyCredits || 1;
-  const balance = credits?.balance;
-  const usedPct = balance != null ? Math.max(0, Math.min(100, ((grant - balance) / grant) * 100)) : 0;
+
+  /* THE ONE PURSE — the legacy workspace ledger (a phantom 10,000
+     nothing spends) is never shown beside the real wallet again. */
 
   const billingCall = async (body: Record<string, string>, label: string) => {
     setBusy(label);
@@ -364,39 +363,16 @@ export function AccountModal() {
                   )}
                 </div>
               </div>
-              {plan?.renewsAt && (
+              {plan?.renewsAt && plan.priceCents > 0 && (
                 <p className="mt-2 text-[13px] text-muted-foreground">
                   {t("Renews")}: {fmtDate(plan.renewsAt)}
                 </p>
               )}
             </section>
 
-            {/* -------- the credits -------- */}
-            <section aria-label={t("Credits")} className="rounded-xl border hairline bg-[var(--glass-bg-soft)] p-4">
-              <div className="flex items-end justify-between">
-                <div>
-                  <p className="mono-label text-[9.5px] uppercase tracking-[0.18em] text-muted-foreground">{t("Credits")}</p>
-                  <p className="mt-1 text-[23px] font-semibold tracking-tight text-foreground/95" data-testid="account-credit-balance">
-                    {balance != null ? fmtCredits(balance) : "—"}
-                    <span className="ml-1.5 text-[13px] font-normal text-muted-foreground">/ {fmtCredits(grant)}</span>
-                  </p>
-                </div>
-              </div>
-              <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[var(--glass-bg)]" role="progressbar" aria-valuenow={Math.round(usedPct)} aria-valuemin={0} aria-valuemax={100}>
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-[var(--cy)] via-[var(--mg)] to-[var(--pk)] transition-all duration-700"
-                  style={{ width: `${usedPct}%` }}
-                />
-              </div>
-              <p className="mt-2 flex items-center gap-1.5 text-[12.5px] text-muted-foreground">
-                <Gauge className="size-3 shrink-0" aria-hidden="true" />
-                {credits?.enforced
-                  ? t("Every passage is weighed by the server — never by the browser.")
-                  : t("The ledger records everything — nothing is charged while the free law stands.")}
-              </p>
-            </section>
-
-            {/* -------- the coins — the passage's own purse -------- */}
+            {/* -------- the coins — the passage's own purse --------
+                THE ONLY BALANCE IN THIS ROOM: the wallet the whole
+                house reads by. The legacy workspace ledger is gone. */}
             {summary.wallet && (
               <section aria-label={t("Your coins")} className="rounded-xl border hairline bg-[var(--glass-bg-soft)] p-4" data-testid="account-coins">
                 <div className="flex items-start justify-between gap-3">
