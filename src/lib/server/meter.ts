@@ -176,13 +176,17 @@ export function meterRoute(operation: string, handler: MeteredHandler) {
          THE ECONOMY'S LAW: the conversation is free forever. The paid
          creations draw their price from the visitor's own wallet
          first — an empty purse is answered at once with 402
-         INSUFFICIENT_CREDITS, and an unsigned visitor is answered 401
-         SIGN_IN_REQUIRED (no billable generation begins without a
-         passage). THE ONE EXCEPTION — the verified keeper (the ADMIN
-         role bound in the database, seeded by ADMIN_EMAIL at boot)
-         walks through every paid door without their purse being drawn:
-         their real usage is still recorded below, never billed. When a
-         door stumbles, the exact draw is refunded. */
+         INSUFFICIENT_CREDITS. THE QUIET KEEPER'S OWN LIGHT: the birth
+         gift is spendable by every passage — signed or anonymous —
+         so the anonymous purse is weighed like any other: while it
+         can pay, it pays; only a DRY purse asks for a passage (401
+         SIGN_IN_REQUIRED), and the ask carries the purse's true
+         balance so the unlock modal speaks the truth. THE ONE
+         EXCEPTION — the verified keeper (the ADMIN role bound in the
+         database, seeded by ADMIN_EMAIL at boot) walks through every
+         paid door without their purse being drawn: their real usage
+         is still recorded below, never billed. When a door stumbles,
+         the exact draw is refunded. */
       const flatAction = WALLET_OPERATIONS[operation];
       const dynamicWeigh = await bodyWeighFor(operation, req);
       const weigh = flatAction
@@ -201,26 +205,74 @@ export function meterRoute(operation: string, handler: MeteredHandler) {
         !keeperFree
       ) {
         if (visitor.user.email.startsWith("anon:")) {
-          await recordUsage({
-            userId,
-            workspaceId,
-            operation,
-            provider: "none",
-            success: false,
-            error: "sign_in_required",
-            latencyMs: Date.now() - started,
-          });
-          return withAnonCookie(
-            NextResponse.json(
-              {
-                error: "SIGN_IN_REQUIRED",
-                required: weigh.cost,
-                actionType: weigh.actionType,
-              },
-              { status: 401 }
-            ),
-            visitor
-          );
+          /* the quiet keeper's purse — the same weigh every passage
+             walks: pay with the gift while it holds, ask for a
+             passage only when the purse stands empty */
+          try {
+            const anonSnapshot = await ensureWallet(userId);
+            if (anonSnapshot.total < weigh.cost) {
+              await recordUsage({
+                userId,
+                workspaceId,
+                operation,
+                provider: "none",
+                success: false,
+                error: "sign_in_required",
+                latencyMs: Date.now() - started,
+              });
+              return withAnonCookie(
+                NextResponse.json(
+                  {
+                    error: "SIGN_IN_REQUIRED",
+                    required: weigh.cost,
+                    current: anonSnapshot.total,
+                    actionType: weigh.actionType,
+                  },
+                  { status: 401 }
+                ),
+                visitor
+              );
+            }
+            const anonDraw = await spendWalletCredits(userId, weigh.actionType, {
+              cost: weigh.cost,
+              description: weigh.description,
+            });
+            if (!anonDraw.ok) {
+              /* a race spent the last light — the passage is asked for
+                 with the purse's true remainder */
+              await recordUsage({
+                userId,
+                workspaceId,
+                operation,
+                provider: "none",
+                success: false,
+                error: "sign_in_required",
+                latencyMs: Date.now() - started,
+              });
+              return withAnonCookie(
+                NextResponse.json(
+                  {
+                    error: "SIGN_IN_REQUIRED",
+                    required: weigh.cost,
+                    current: Math.max(0, anonDraw.total),
+                    actionType: weigh.actionType,
+                  },
+                  { status: 401 }
+                ),
+                visitor
+              );
+            }
+            walletLedgerId = anonDraw.ledgerId ?? null;
+            ctx.walletLedgerId = walletLedgerId;
+            walletSpent = weigh.cost;
+          } catch (err) {
+            /* the wallet rests (database unreachable) — the door stays
+               open rather than locking a visitor out of a resting vault */
+            console.error(
+              `[meter:${operation}] the quiet keeper's weigh rested:`,
+              err instanceof Error ? err.message : err
+            );
+          }
         } else {
           try {
             const snapshot = await ensureWallet(userId);

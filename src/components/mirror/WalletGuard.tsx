@@ -74,6 +74,7 @@ export function WalletGuard() {
           const data = (await res.clone().json()) as {
             error?: string;
             required?: number;
+            current?: number;
             actionType?: string;
           } | null;
           if (data?.error === "SIGN_IN_REQUIRED") {
@@ -85,10 +86,11 @@ export function WalletGuard() {
             if (state.me && !state.me.email.startsWith("anon:")) {
               void state.refreshMe();
             }
-            /* the modal offers one */
+            /* the modal offers one — and speaks the purse's true
+               remainder, never a pretended zero */
             useMirror.getState().openWalletModal({
               required: data.required ?? 1,
-              current: 0,
+              current: data.current ?? 0,
               actionType: data.actionType,
             });
           }
@@ -249,7 +251,7 @@ export function CreditsNeededModal({
           <div className="rounded-xl border hairline bg-[var(--glass-bg-soft)] p-4">
             <p className="text-[14.5px] leading-relaxed text-foreground/85">
               {t(
-                "The purse belongs to a passage. Open yours — it arrives already holding five lights."
+                "The purse belongs to a passage. Open yours — it arrives already holding five hundred lights."
               )}
             </p>
             <button

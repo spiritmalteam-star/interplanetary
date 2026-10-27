@@ -100,3 +100,21 @@ Work Log:
 
 Stage Summary:
 - The replication prompt no longer exists on the site in any form; the chronoscope's first two hundred records all wear their own unique artwork; the crown is quiet (profile, tools, scopes, zoom); every email now holds 500 free lights and the profile room speaks the purse's truth with a working door to the account chamber.
+
+---
+Task ID: 12
+Agent: Z.ai Code (main orchestrator)
+Task: The free coins must actually pay for the music; the song's explanation text removed; the generation's section and the music seated at the very top; the media buttons lifted from the composer
+
+Work Log:
+- Reproduced the visitor's exact report in the browser: an anonymous keeper holding 500 lights pressed Weave and the door answered 401 SIGN_IN_REQUIRED — the meter refused every unsigned passage outright, before ever weighing the purse, so the birth gift could never be spent; the unlock modal then lied "The purse holds 0" (the 401 handler passed a pretended zero).
+- THE QUIET KEEPER'S OWN LIGHT (meter.ts): the anonymous purse is now weighed like any other — while it can pay, it pays (free lights first); only a DRY purse asks for a passage (401), and the ask carries the purse's true balance (`current`). The signed path (402) unchanged; keeper-free and stateless exceptions unchanged; stumbling doors still refund.
+- WalletGuard: the 401 handler now passes the response's real `current` — the modal speaks the purse's truth, never a pretended zero.
+- The passage copy told the truth at last: "it arrives already holding five lights" → "five hundred lights" in WalletGuard and all seven dictionaries (sq, el, fr, es, de, tr, it) with translated numerals.
+- Music room seated as asked: the busy wave, the error card and the Mirror's brief moved directly beneath the describe line — the generation's own section stands at the very top of the music section, above the style row; on landing (or stumble) the chamber rises to its top so the stage is before the eye (reduced-motion honored). The endless journey still lands "ready" only once, so no yank mid-journey.
+- The song's explanation removed: the player's "Transmission notes" block lifted; the raw machinery refusals (SIGN_IN_REQUIRED / INSUFFICIENT_CREDITS) now speak the Mirror's voice inline ("The purse has spent its gift — a passage carries the next five hundred lights.").
+- The media buttons lifted from the music composer: the paperclip/camera attachment pair (ChatInputExtras + AttachmentChips) removed from the describe line — voice and words remain — clearing the bench for the coming media-player conversion.
+- Browser-verified end-to-end (1280px and 390px): anon Weave DEBITS the purse (ledger: LIGHT_CODES −2, freePart 2 — free-first law) with no sign-in demand; the sandbox's missing GEMINI_API_KEY stumbled the engine and the door REFUNDED (+2, "the light returned") — purse whole at 500; drained to 3, the Endless weave (15) rose the honest modal "The purse holds 3 of light — this reflection asks for 15" with the five-hundred copy; profile purse panel reads 500 FREE with the account-chamber link working; zero console/page errors.
+
+Stage Summary:
+- The birth gift is now a real currency for every passage — signed or quiet: 500 lights that genuinely pay for music (and every other weighed door), with sign-in asked only when the purse stands empty. The modal and the inline card both speak the true balance and the Mirror's voice. The music room's generation lives at the very top and the woven music appears there, the explanation text and the media buttons are gone. Engine note, honestly kept: actual sound in the sandbox waits on GEMINI_API_KEY (user-side env); the wallet law itself is proven in the ledger.

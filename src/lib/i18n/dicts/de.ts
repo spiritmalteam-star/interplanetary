@@ -25,7 +25,7 @@ export const de: TranslationDict = {
   "Your light — credits remaining": "Dein Licht — verbleibende Lichter",
   "Every reflection is weighed before it is served — a whisper 1 · a reading 2 · the atelier 5 · the light codes 12.": "Jede Reflexion wird gewogen, bevor sie gereicht wird — ein Flüstern 1 · eine Lesung 2 · das Atelier 5 · die Lichtcodes 12.",
   "Choose": "Wählen",
-  "The purse belongs to a passage. Open yours — it arrives already holding five lights.": "Das Köchlein gehört zu einem Durchgang. Öffne deinen — er kommt bereits mit fünf Lichtern.",
+  "The purse belongs to a passage. Open yours — it arrives already holding five hundred lights.": "Das Köchlein gehört zu einem Durchgang. Öffne deinen — er kommt bereits mit fünfhundert Lichtern.",
   "The purse holds {current} of light — this reflection asks for {required}.": "Das Köchlein hält {current} Licht — diese Reflexion verlangt {required}.",
   "Your reflections are weighed in light. Choose how the purse is filled.": "Deine Reflexionen werden im Licht gewogen. Wähle, wie das Köchlein gefüllt wird.",
   "Bring more light — the mirror keeps speaking": "Mehr Licht — der Spiegel spricht weiter",

@@ -25,7 +25,7 @@ export const it: TranslationDict = {
   "Your light — credits remaining": "La tua luce — luci rimaste",
   "Every reflection is weighed before it is served — a whisper 1 · a reading 2 · the atelier 5 · the light codes 12.": "Ogni riflesso è pesato prima di essere servito — un sussurro 1 · una lettura 2 · l'atelier 5 · i codici di luce 12.",
   "Choose": "Scegli",
-  "The purse belongs to a passage. Open yours — it arrives already holding five lights.": "La tasca appartiene a un passaggio. Apri il tuo — arriva già custodendo cinque luci.",
+  "The purse belongs to a passage. Open yours — it arrives already holding five hundred lights.": "La tasca appartiene a un passaggio. Apri il tuo — arriva già custodendo cinquecento luci.",
   "The purse holds {current} of light — this reflection asks for {required}.": "La tasca custodisce {current} di luce — questo riflesso chiede {required}.",
   "Your reflections are weighed in light. Choose how the purse is filled.": "I tuoi riflessi sono pesati nella luce. Scegli come si riempie la tasca.",
   "Bring more light — the mirror keeps speaking": "Porta più luce — lo specchio continua a parlare",

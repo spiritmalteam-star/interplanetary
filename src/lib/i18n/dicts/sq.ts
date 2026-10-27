@@ -72,7 +72,7 @@ export const sq: TranslationDict = {
   "Your light — credits remaining": "Drita jote — dritat e mbetura",
   "Every reflection is weighed before it is served — a whisper 1 · a reading 2 · the atelier 5 · the light codes 12.": "Çdo pasqyrim peshohet përpara se të shërbehet — një pëshpërimë 1 · një lexim 2 · atelierja 5 · kodat e dritës 12.",
   "Choose": "Zgjidh",
-  "The purse belongs to a passage. Open yours — it arrives already holding five lights.": "Thesca i përket një kalimi. Hape tëndën — vjen duke mbajtur tashmë pesë drita.",
+  "The purse belongs to a passage. Open yours — it arrives already holding five hundred lights.": "Thesca i përket një kalimi. Hape tëndën — vjen duke mbajtur tashmë pesëqind drita.",
   "The purse holds {current} of light — this reflection asks for {required}.": "Thesca mban {current} dritë — ky pasqyrim kërkon {required}.",
   "Your reflections are weighed in light. Choose how the purse is filled.": "Pasqyrimet e tua peshohen në dritë. Zgjidh si mbushet thesci.",
   "Bring more light — the mirror keeps speaking": "Sjell më shumë drit — pasqyra vazhdon të flasë",

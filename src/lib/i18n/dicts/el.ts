@@ -25,7 +25,7 @@ export const el: TranslationDict = {
   "Your light — credits remaining": "Το φως σου — υπόλοιπα φώτα",
   "Every reflection is weighed before it is served — a whisper 1 · a reading 2 · the atelier 5 · the light codes 12.": "Κάθε ανάκλαση ζυγίζεται πριν σερβιριστεί — ένας ψιθύρος 1 · ένα διάβασμα 2 · το ατελιέ 5 · οι κώδικες φωτός 12.",
   "Choose": "Διάλεξε",
-  "The purse belongs to a passage. Open yours — it arrives already holding five lights.": "Το πουγκί ανήκει σε ένα πέρασμα. Άνοιξε το δικό σου — έρχεται ήδη κρατώντας πέντε φώτα.",
+  "The purse belongs to a passage. Open yours — it arrives already holding five hundred lights.": "Το πουγκί ανήκει σε ένα πέρασμα. Άνοιξε το δικό σου — έρχεται ήδη κρατώντας πεντακόσια φώτα.",
   "The purse holds {current} of light — this reflection asks for {required}.": "Το πουγκί κρατά {current} φως — αυτή η ανάκλαση ζητά {required}.",
   "Your reflections are weighed in light. Choose how the purse is filled.": "Οι ανακλάσεις σου ζυγίζονται σε φως. Διάλεξε πώς γεμίζει το πουγκί.",
   "Bring more light — the mirror keeps speaking": "Φέρε περισσότερο φως — ο καθρέφτης συνεχίζει να μιλά",

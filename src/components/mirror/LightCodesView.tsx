@@ -48,8 +48,6 @@ import {
   type LcMode,
 } from "@/lib/data/light-codes";
 import { cn } from "@/lib/utils";
-import { AttachmentChips, ChatInputExtras } from "./ChatInputExtras";
-import type { ChatAttachment } from "./attachments";
 
 /* ------------------------------------------------------------------ */
 /*  LIGHT CODES — the musical chamber, poured in thick purple liquid.  */
@@ -119,6 +117,18 @@ function fmtTime(s: number): string {
   const m = Math.floor(s / 60);
   const r = Math.floor(s % 60);
   return `${m}:${r.toString().padStart(2, "0")}`;
+}
+
+/* THE DOOR'S OWN VOICE — the machinery's two refusals (a passage asked
+   for, a purse run dry) are spoken by the Mirror, never by the
+   machinery; the unlock modal itself rises beside these words. */
+function doorVoice(error: string): string {
+  const e = error.trim();
+  if (e === "SIGN_IN_REQUIRED")
+    return "The purse has spent its gift — a passage carries the next five hundred lights.";
+  if (e === "INSUFFICIENT_CREDITS")
+    return "The purse has run dry — bring more light and the mirror keeps speaking.";
+  return error;
 }
 
 /** The long clock — a journey of half an hour and beyond reads its
@@ -766,18 +776,6 @@ function PlayerBar() {
                 />
               </span>
             </div>
-
-            {/* TRANSMISSION NOTES */}
-            {active.notes && (
-              <div className="mt-3 border-t hairline pt-2.5">
-                <p className="mono-label text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
-                  {t("Transmission notes")}
-                </p>
-                <p className="mt-1 line-clamp-2 text-[13px] italic leading-relaxed text-foreground/80">
-                  {active.notes}
-                </p>
-              </div>
-            )}
 
             {/* VIEW TRANSLATION — the engine-facing direction, revealed on request */}
             <AnimatePresence>
@@ -1671,8 +1669,6 @@ export function LightCodesView() {
   const t = useT();
 
   const [shapeOpen, setShapeOpen] = useState(false);
-  /* what the transmission carries — one image, up to three documents */
-  const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
   const lcNotice = useMirror((s) => s.lcNotice);
   const playLc = useMirror((s) => s.playLc);
   /* THE TWO BENCHES — the chamber's own instruments: the standing
@@ -1723,13 +1719,28 @@ export function LightCodesView() {
   /* the one describe-send — the words go up; when the brief comes
      back, the channeling takes the stage */
   const sendDescribe = useCallback(
-    (opts?: { intention?: string; attachments?: ChatAttachment[] }) => {
+    (opts?: { intention?: string }) => {
       void composeBrief(opts).then((ok) => {
         if (ok) window.setTimeout(focusChanneling, 120);
       });
     },
     [composeBrief, focusChanneling]
   );
+
+  /* THE STAGE'S OWN LAW — when a weave lands (or stumbles), the room
+     rises to its very top so the stage stands before the eye: the
+     music is never left loading below the fold. The stage itself is
+     pinned above the chamber, so this one rise shows it. */
+  const chamberRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (lcStatus !== "ready" && lcStatus !== "error") return;
+    const el = chamberRef.current;
+    if (!el) return;
+    const reduce =
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    el.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
+  }, [lcStatus]);
 
   return (
     <div className="scope-lightcodes relative flex h-full flex-col">
@@ -1771,6 +1782,7 @@ export function LightCodesView() {
 
       {/* ---------- the chamber ---------- */}
       <div
+        ref={chamberRef}
         className="nice-scroll relative z-10 min-h-0 flex-1 overflow-y-auto overscroll-contain"
         data-testid="light-codes"
       >
@@ -1881,27 +1893,18 @@ export function LightCodesView() {
             <div className="mt-3 grid items-start gap-4">
               {/* ================= LEFT — describe & channeling ================= */}
               <div className="flex min-w-0 flex-col">
-                {/* THE DESCRIBE LINE — the ask, spoken or typed, with the
-                    paperclip and the voice; sending it begins the
-                    channeling and the room turns to the brief below. */}
+                {/* THE DESCRIBE LINE — the ask, spoken or typed; sending
+                    it begins the channeling and the brief rises at once
+                    beneath the ask — the generation's own section, at
+                    the very top of the room. */}
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
-                    const carried = attachments;
-                    setAttachments([]);
-                    sendDescribe({ attachments: carried });
+                    sendDescribe();
                   }}
                   className="relative rounded-2xl border hairline bg-card/85 p-2 shadow-[0_18px_48px_-30px_rgba(0,0,0,0.55)] backdrop-blur-md"
                   data-testid="lc-composer"
                 >
-                  <AttachmentChips
-                    attachments={attachments}
-                    onRemove={(id) =>
-                      setAttachments((prev) => prev.filter((a) => a.id !== id))
-                    }
-                    accentVar="var(--scope-a)"
-                    testId="lc-attachments"
-                  />
                   <div className="flex items-center gap-1.5">
                     <VoiceRecordButton
                       testId="lc-voice"
@@ -1909,9 +1912,7 @@ export function LightCodesView() {
                       onTranscript={(text) => {
                         /* THE SIMPLEST ROUND — they speak, the Mirror proceeds */
                         setLcIntention(text);
-                        const carried = attachments;
-                        setAttachments([]);
-                        sendDescribe({ intention: text, attachments: carried });
+                        sendDescribe({ intention: text });
                       }}
                     />
                     <input
@@ -1931,16 +1932,6 @@ export function LightCodesView() {
                       maxLength={600}
                       data-testid="lc-intention"
                       className="focus-glow h-10 min-w-0 flex-1 rounded-full border hairline bg-background/70 px-4 text-[15px] text-foreground placeholder:text-muted-foreground/60 transition-all duration-300"
-                    />
-                    <ChatInputExtras
-                      scope="healing"
-                      size="2xs"
-                      withCall={false}
-                      mobileLarger
-                      accentVar="var(--scope-a)"
-                      disabled={busy}
-                      attachments={attachments}
-                      onAttachmentsChange={setAttachments}
                     />
                     <button
                       type="submit"
@@ -1974,6 +1965,100 @@ export function LightCodesView() {
                     </button>
                   </div>
                 </form>
+
+                {/* the chamber at work — the results breathe directly
+                    beneath the ask: the generation's own section stands
+                    at the very top of the room, so the weaving is seen
+                    the moment it begins and the music is never left
+                    loading below the fold */}
+                <div className="mt-4 flex flex-col items-center">
+                  <AnimatePresence mode="wait">
+                    {busy && (
+                      <motion.div
+                        key="busy"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="mt-1 flex flex-col items-center"
+                        aria-live="polite"
+                        aria-busy="true"
+                        data-testid="lc-busy"
+                      >
+                        <div className="flex h-8 items-end gap-[3px]" aria-hidden="true">
+                          {[0, 1, 2, 3, 4, 5, 6].map((i) => (
+                            <span
+                              key={i}
+                              className="w-[3px] rounded-full bg-[var(--scope-a)]"
+                              style={{
+                                height: `${30 + (i % 3) * 26}%`,
+                                animation: `lc-wave 1.2s ease-in-out ${i * 0.12}s infinite`,
+                              }}
+                            />
+                          ))}
+                        </div>
+                        <p className="mt-2 text-[13.5px] italic text-muted-foreground">
+                          {lcStatus === "interpreting"
+                            ? t("The Mirror is translating intention into sound…")
+                            : lcLength === "full"
+                              ? t("The full song is being woven — verses finding their chorus…")
+                              : t("The sound is being woven — hold still…")}
+                        </p>
+                      </motion.div>
+                    )}
+                    {lcStatus === "error" && lcError && (
+                      <motion.div
+                        key="error"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="mt-1 rounded-xl border border-[color-mix(in_srgb,var(--destructive)_30%,transparent)] bg-[color-mix(in_srgb,var(--destructive)_6%,transparent)] px-4 py-3 text-center"
+                        data-testid="lc-error"
+                      >
+                        <p className="text-[14px] leading-relaxed text-foreground/85">
+                          {doorVoice(lcError)}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            /* a standing brief is woven again; no brief asks
+                               the Mirror for a fresh round */
+                            if (lcBrief) void weaveBrief();
+                            else void generateLightCode();
+                          }}
+                          data-testid="lc-ask-again"
+                          className="focus-glow mt-2 text-[13px] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+                        >
+                          {t("Ask again")}
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* a gentle word for the shelf — a sound the device no longer holds */}
+                {lcNotice && lcStatus !== "error" && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="mt-3 rounded-xl border hairline bg-[color-mix(in_srgb,var(--scope-a)_5%,var(--glass-bg-soft))] px-4 py-3 text-center"
+                    data-testid="lc-notice"
+                  >
+                    <p className="text-[13.5px] leading-relaxed text-muted-foreground">{lcNotice}</p>
+                  </motion.div>
+                )}
+
+                {/* THE MIRROR'S BRIEF — the channeling, before the sound.
+                    This sheet takes the focus after every describe-send. */}
+                {lcBrief && lcStatus !== "ready" && (
+                  <div
+                    ref={briefFocusRef}
+                    tabIndex={-1}
+                    data-testid="lc-brief-wrap"
+                    className="mt-4 scroll-mt-4 outline-none"
+                  >
+                    <BriefCard />
+                  </div>
+                )}
 
                 {/* THE STYLE ROW — the First Law, literal: the no-style
                     chip stands first. While it is held, every selector
@@ -2186,96 +2271,6 @@ export function LightCodesView() {
                   )}
                 </div>
 
-                {/* the chamber at work — the results breathe here, in the
-                    channeling's own column (the only place the room scrolls) */}
-                <div className="mt-4 flex flex-col items-center">
-                  <AnimatePresence mode="wait">
-                    {busy && (
-                      <motion.div
-                        key="busy"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="mt-1 flex flex-col items-center"
-                        aria-live="polite"
-                        aria-busy="true"
-                        data-testid="lc-busy"
-                      >
-                        <div className="flex h-8 items-end gap-[3px]" aria-hidden="true">
-                          {[0, 1, 2, 3, 4, 5, 6].map((i) => (
-                            <span
-                              key={i}
-                              className="w-[3px] rounded-full bg-[var(--scope-a)]"
-                              style={{
-                                height: `${30 + (i % 3) * 26}%`,
-                                animation: `lc-wave 1.2s ease-in-out ${i * 0.12}s infinite`,
-                              }}
-                            />
-                          ))}
-                        </div>
-                        <p className="mt-2 text-[13.5px] italic text-muted-foreground">
-                          {lcStatus === "interpreting"
-                            ? t("The Mirror is translating intention into sound…")
-                            : lcLength === "full"
-                              ? t("The full song is being woven — verses finding their chorus…")
-                              : t("The sound is being woven — hold still…")}
-                        </p>
-                      </motion.div>
-                    )}
-                    {lcStatus === "error" && lcError && (
-                      <motion.div
-                        key="error"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="mt-1 rounded-xl border border-[color-mix(in_srgb,var(--destructive)_30%,transparent)] bg-[color-mix(in_srgb,var(--destructive)_6%,transparent)] px-4 py-3 text-center"
-                        data-testid="lc-error"
-                      >
-                        <p className="text-[14px] leading-relaxed text-foreground/85">
-                          {lcError}
-                        </p>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            /* a standing brief is woven again; no brief asks
-                               the Mirror for a fresh round */
-                            if (lcBrief) void weaveBrief();
-                            else void generateLightCode();
-                          }}
-                          data-testid="lc-ask-again"
-                          className="focus-glow mt-2 text-[13px] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-                        >
-                          {t("Ask again")}
-                        </button>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-
-                {/* a gentle word for the shelf — a sound the device no longer holds */}
-                {lcNotice && lcStatus !== "error" && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="mt-3 rounded-xl border hairline bg-[color-mix(in_srgb,var(--scope-a)_5%,var(--glass-bg-soft))] px-4 py-3 text-center"
-                    data-testid="lc-notice"
-                  >
-                    <p className="text-[13.5px] leading-relaxed text-muted-foreground">{lcNotice}</p>
-                  </motion.div>
-                )}
-
-                {/* THE MIRROR'S BRIEF — the channeling, before the sound.
-                    This sheet takes the focus after every describe-send. */}
-                {lcBrief && lcStatus !== "ready" && (
-                  <div
-                    ref={briefFocusRef}
-                    tabIndex={-1}
-                    data-testid="lc-brief-wrap"
-                    className="mt-4 scroll-mt-4 outline-none"
-                  >
-                    <BriefCard />
-                  </div>
-                )}
               </div>
 
             </div>

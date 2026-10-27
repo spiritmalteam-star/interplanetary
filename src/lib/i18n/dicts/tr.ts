@@ -25,7 +25,7 @@ export const tr: TranslationDict = {
   "Your light — credits remaining": "Işığın — kalan ışıklar",
   "Every reflection is weighed before it is served — a whisper 1 · a reading 2 · the atelier 5 · the light codes 12.": "Her yansıma servis edilmeden önce tartılır — bir fısıltı 1 · bir okuma 2 · atölye 5 · ışık kodları 12.",
   "Choose": "Seç",
-  "The purse belongs to a passage. Open yours — it arrives already holding five lights.": "Kese bir geçide ait. Kendini aç — beş ışık taşıyarak geliyor.",
+  "The purse belongs to a passage. Open yours — it arrives already holding five hundred lights.": "Kese bir geçide ait. Kendini aç — beş yüz ışık taşıyarak geliyor.",
   "The purse holds {current} of light — this reflection asks for {required}.": "Kese {current} ışık tutuyor — bu yansıma {required} istiyor.",
   "Your reflections are weighed in light. Choose how the purse is filled.": "Yansımaların ışıkta tartılır. Keseyi nasıl dolduracağını seç.",
   "Bring more light — the mirror keeps speaking": "Daha fazla ışık getir — ayna konuşmayı sürdürüyor",
