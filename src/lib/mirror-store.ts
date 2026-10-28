@@ -755,6 +755,10 @@ interface MirrorState {
   /** THE ONE BACK — the whole workplace lays down at once: every tab
       closes and the main chat landing stands again. */
   closeWorkspace: () => void;
+  /** THE SCOPES' OWN BACK — the fields' workplace is independent: its
+      back hand lays only the scopes down (the InDream tabs keep
+      resting beneath) and the main chat landing stands again. */
+  closeScopes: () => void;
 
   /* THE MIRROR BRIDGE — a workspace's compact assistant may carry its
      own context to the floor: the draft waits in the room's reply line
@@ -1785,6 +1789,11 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   },
   closeWorkspace: () =>
     set({ toolTabs: [], activeToolTab: null }),
+  closeScopes: () =>
+    set((s) => ({
+      activeToolTab: s.activeToolTab === "scopes" ? null : s.activeToolTab,
+      toolTabs: s.toolTabs.filter((k) => k !== "scopes"),
+    })),
   closeToolTab: (key) =>
     set((s) => {
       const tabs = s.toolTabs.filter((k) => k !== key);

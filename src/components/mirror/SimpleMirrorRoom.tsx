@@ -121,7 +121,7 @@ const INVENT_CONFIG: SimpleRoomConfig = {
     "Give my idea a name and a simple mechanism",
     "How would I test whether my idea truly works?",
   ],
-  proceed: ["Go deeper", "Draw it as an image", "What would I build first?"],
+  proceed: ["Go deeper", "What would I build first?"],
   ask: (q, thread, language, image) =>
     speakReplyGift(
       "/api/transmission",

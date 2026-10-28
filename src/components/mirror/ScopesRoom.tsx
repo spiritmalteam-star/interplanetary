@@ -1,47 +1,32 @@
 "use client";
 
-import { BookOpen, Hammer, Layers, Music, ScrollText, Sparkles } from "lucide-react";
-import { useMirror, type LandingScopeKey, type ToolTabKey } from "@/lib/mirror-store";
+import { Layers } from "lucide-react";
+import { useMirror, type LandingScopeKey } from "@/lib/mirror-store";
 import { SCOPE_META, SCOPE_ORDER } from "@/lib/mirror/workspaces";
 import { useT } from "@/lib/i18n";
 
 /* ------------------------------------------------------------------ */
-/*  THE SCOPES ROOM — the fields' own workplace. The crown's Scopes    */
-/*  hand opens this room instead of a dropdown: the five fields stand  */
-/*  as full cards, and the five makers ride beside them, so the        */
-/*  visitor jumps between the tools (InDream) and the scopes with one  */
-/*  touch. A chosen field dresses the whole chat in its light and the  */
-/*  workplace lays itself down — the main chat landing stands again.   */
+/*  THE SCOPES ROOM — the fields' own workplace's body. The crown's    */
+/*  Scopes hand opens the independent scopes window and the fields'    */
+/*  subcategories render here, same as the inbounds always wore them:  */
+/*  one card per field, the field's own light inside, the chosen one   */
+/*  marked. A chosen field dresses the whole chat in its light and the */
+/*  back hand (the window header's arrow) returns to the main landing  */
+/*  chat.                                                              */
 /* ------------------------------------------------------------------ */
-
-/* THE FIVE MAKERS — the same shelf the InDream workplace carries, so
-   book maker, akashic, music, invent and manifest are reachable from
-   inside the scopes room too (the jump works in both directions). */
-const MAKERS: {
-  key: ToolTabKey;
-  label: string;
-  icon: typeof BookOpen;
-}[] = [
-  { key: "dreambook", label: "Book", icon: BookOpen },
-  { key: "lightcodes", label: "Music", icon: Music },
-  { key: "akashic", label: "Akashic", icon: ScrollText },
-  { key: "mirroros", label: "Manifest", icon: Sparkles },
-  { key: "invent", label: "Invent", icon: Hammer },
-];
 
 export function ScopesRoom() {
   const t = useT();
   const landingScope = useMirror((s) => s.landingScope);
   const setLandingScope = useMirror((s) => s.setLandingScope);
-  const openToolTab = useMirror((s) => s.openToolTab);
-  const closeWorkspace = useMirror((s) => s.closeWorkspace);
+  const closeScopes = useMirror((s) => s.closeScopes);
 
   const pickScope = (key: LandingScopeKey) => {
     /* every field is its own world — the choice dresses the whole chat,
        and the room returns the visitor to the main chat landing wearing
        the field's light */
     setLandingScope(key);
-    closeWorkspace();
+    closeScopes();
   };
 
   return (
@@ -137,36 +122,6 @@ export function ScopesRoom() {
                     {t("Here")}
                   </span>
                 )}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* THE MAKERS — the InDream shelf, one touch away: book maker,
-            akashic, music, invent and manifest jump straight into their
-            rooms (the workplace turns the page; the scopes room remains
-            a standing tab of the same window) */}
-        <p className="mono-label mt-6 px-1 text-[9px] uppercase tracking-[0.2em] text-muted-foreground/60">
-          {t("The makers")}
-        </p>
-        <div className="mt-2 flex flex-wrap gap-1.5">
-          {MAKERS.map((m) => {
-            const Icon = m.icon;
-            return (
-              <button
-                key={m.key}
-                type="button"
-                onClick={() => openToolTab(m.key)}
-                data-testid={`scopes-room-maker-${m.key}`}
-                className="focus-glow flex h-8 items-center gap-1.5 rounded-full border px-3 text-[12px] text-muted-foreground transition-colors duration-300 hover:text-foreground"
-                style={{
-                  borderColor:
-                    "color-mix(in srgb, var(--scope-a,var(--gd)) 24%, transparent)",
-                  background: "var(--glass-bg-soft, transparent)",
-                }}
-              >
-                <Icon className="size-3.5" aria-hidden="true" />
-                {t(m.label)}
               </button>
             );
           })}

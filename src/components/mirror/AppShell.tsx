@@ -8,6 +8,7 @@ import { useT } from "@/lib/i18n";
 import { CosmicBackdrop } from "./CosmicBackdrop";
 import { StarField } from "./StarField";
 import { ToolWorkspace } from "./living/ToolWorkspace";
+import { ScopesWorkplace } from "./ScopesWorkplace";
 import { LandingChatNav } from "./landing/LandingChatNav";
 import { WalletGuard } from "./WalletGuard";
 import { BranchCanopy } from "./BranchCanopy";
@@ -331,6 +332,12 @@ function AppShellViews({
           (bare now only gears the docking physics, never the
           window's geometry). */}
       <ToolWorkspace bare={bare} />
+
+      {/* THE SCOPES WORKPLACE — the fields' own independent room: the
+          crown's Scopes hand opens it directly (never a tab of the
+          tools' window), the fields' subcategories render inside, and
+          its own back hand returns to the main chat landing. */}
+      <ScopesWorkplace />
 
       {/* the reading rooms' own modals — every door keeps its keys */}
       <FederationModal />

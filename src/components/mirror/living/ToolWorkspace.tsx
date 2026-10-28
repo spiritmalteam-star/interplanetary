@@ -186,16 +186,16 @@ export const TAB_META: Record<
 );
 
 /* THE STANDING RAIL — the InDream shelf's own order (the five makers
-   the visitor named) and the scopes at the row's end. These pills
-   stand in the header always; the other rooms ride the rail only
-   while they are open. */
+   the visitor named). These pills stand in the header always; the
+   other rooms ride the rail only while they are open. THE SCOPES ARE
+   NOT HERE — the fields' workplace is its own independent room (the
+   crown's Scopes hand opens it directly), never a tab of InDream. */
 const STANDING_RAIL: ToolTabKey[] = [
   "dreambook",
   "lightcodes",
   "akashic",
   "mirroros",
   "invent",
-  "scopes",
 ];
 
 /* ------------------------------------------------------------------ */
@@ -283,6 +283,7 @@ function ToolWorkspaceImpl({ bare = false }: { bare?: boolean }) {
      always the chat's own overlay. */
   const active =
     activeToolTab &&
+    activeToolTab !== "scopes" &&
     (view === "observatory" ||
       view === "transmission" ||
       (bare && toolTabs.length > 0))
@@ -417,9 +418,10 @@ function ToolWorkspaceImpl({ bare = false }: { bare?: boolean }) {
         })}
 
         {/* the extra rooms — video, register, library: they ride the
-            same rail when some other hand has opened them */}
+            same rail when some other hand has opened them (the scopes
+            never ride here — their workplace is independent) */}
         {toolTabs
-          .filter((key) => !STANDING_RAIL.includes(key))
+          .filter((key) => !STANDING_RAIL.includes(key) && key !== "scopes")
           .map((key) => {
             const meta = TAB_META[key];
             const Icon = meta.icon;

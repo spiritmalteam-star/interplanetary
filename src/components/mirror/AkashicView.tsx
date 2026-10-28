@@ -492,7 +492,7 @@ export function AkashicView() {
         onScroll={handleScroll}
         className="nice-scroll relative z-10 flex-1 overflow-y-auto"
       >
-        <div className="mx-auto flex w-full max-w-[780px] flex-col px-3 pb-28 pt-5 sm:px-6 sm:pt-7">
+        <div className="mx-auto flex w-full max-w-[780px] flex-col px-3 pb-6 pt-5 sm:px-6 sm:pt-7">
           <AnimatePresence mode="wait">
             {/* the unopened shelf — an invitation, before the first record */}
             {!record && !seeking && !error && (
@@ -842,14 +842,21 @@ export function AkashicView() {
               the paper owns the whole width ---------- */}
 
       {/* ---------- the ask bar — the visitor's own line to the Librarian,
-          always waiting at the foot of the room: write a request and the
-          next transmission is a asked-for one; pressed send with nothing
-          set down, the Library chooses unasked (no saying beneath — the
-          whole width of the room belongs to the words) ---------- */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-40 flex justify-center px-3 pb-[max(0.85rem,env(safe-area-inset-bottom))] sm:px-5">
+          standing IN FLOW at the foot of the room, the same structure
+          and position the Invent and Manifest rooms carry: one quiet
+          rounded bar with the words and the signature feather hand
+          inside it. Write a request and the next transmission is an
+          asked-for one; pressed send with nothing set down, the Library
+          chooses unasked. ---------- */}
+      <div className="shrink-0 px-3 pb-3 pt-1 sm:px-4">
         <form
           onSubmit={send}
-          className="pointer-events-auto relative w-full max-w-[640px] rounded-2xl border hairline bg-card p-2.5 shadow-[0_24px_60px_-28px_rgba(0,0,0,0.42)]"
+          className="relative w-full rounded-2xl border px-2.5 py-1.5"
+          style={{
+            borderColor: "color-mix(in srgb, var(--scope-a,var(--gd)) 32%, transparent)",
+            background:
+              "color-mix(in srgb, var(--scope-a,var(--gd)) 10%, transparent)",
+          }}
           data-testid="akashic-ask-bar"
         >
           <AttachmentChips
@@ -860,11 +867,21 @@ export function AkashicView() {
             accentVar="var(--foreground)"
             testId="akashic-attachments"
           />
-          <div className="flex items-center gap-2">
-            <input
-              type="text"
+          <div className="flex items-end gap-2">
+            <label htmlFor="akashic-wish" className="sr-only">
+              {replying ? t("Reply to the record") : t("What do you wish to read about?")}
+            </label>
+            <textarea
+              id="akashic-wish"
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+                  e.preventDefault();
+                  e.currentTarget.form?.requestSubmit();
+                }
+              }}
+              rows={1}
               placeholder={
                 replying
                   ? t(
@@ -872,13 +889,8 @@ export function AkashicView() {
                     )
                   : t("What do you wish to read about?")
               }
-              aria-label={
-                replying
-                  ? t("Reply to the record")
-                  : t("What do you wish to read about?")
-              }
               data-testid="akashic-wish-input"
-              className="focus-glow h-11 min-w-0 flex-1 rounded-full border hairline bg-background/70 px-4 text-[16px] text-foreground placeholder:text-muted-foreground/60 transition-all duration-300"
+              className="nice-scroll max-h-24 min-h-[26px] min-w-0 flex-1 resize-none bg-transparent py-1 text-[16px] leading-relaxed text-foreground outline-none placeholder:text-muted-foreground/60"
             />
             <ChatInputExtras
               scope="akashic"
@@ -894,7 +906,7 @@ export function AkashicView() {
               disabled={seeking}
               aria-label={replying ? t("Send the reply") : t("Receive by resonance")}
               data-testid="akashic-wish-send"
-              className="akashic-btn focus-glow flex size-11 shrink-0 items-center justify-center rounded-full transition-all duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-35"
+              className="akashic-btn focus-glow flex size-9 shrink-0 items-center justify-center rounded-full transition-all duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-35"
             >
               <Feather className="size-4" aria-hidden="true" />
             </button>

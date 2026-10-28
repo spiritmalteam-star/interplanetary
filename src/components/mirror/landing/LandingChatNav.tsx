@@ -30,11 +30,13 @@ export function LandingChatNav() {
   const toolTabs = useMirror((s) => s.toolTabs);
   const lastMakerTab = useMirror((s) => s.lastMakerTab);
 
-  /* IN DREAM — the workplace already stands? One touch re-enters it
-     (the window never re-stacks); it stands closed? The last maker's
-     room rises (the Book serves when the visit is new). */
+  /* IN DREAM — the workplace already stands (and the scopes are not
+     standing over it)? One touch re-enters it (the window never
+     re-stacks). The scopes window stands, or nothing stands? The last
+     maker's room rises (the Book serves when the visit is new). The
+     scopes are independent — they never count as the InDream window. */
   const openInDream = useCallback(() => {
-    if (activeToolTab) {
+    if (activeToolTab && activeToolTab !== "scopes") {
       activateToolTab(activeToolTab);
       return;
     }
@@ -58,7 +60,7 @@ export function LandingChatNav() {
         type="button"
         onClick={openInDream}
         aria-haspopup="dialog"
-        aria-expanded={Boolean(activeToolTab)}
+        aria-expanded={Boolean(activeToolTab) && activeToolTab !== "scopes"}
         aria-label={t("InDream — the making rooms")}
         title={t("InDream — the making rooms")}
         data-testid="landing-nav-indream"

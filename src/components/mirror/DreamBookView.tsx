@@ -1640,7 +1640,7 @@ export function DreamBookView() {
       </header>
 
       <div className="nice-scroll relative z-10 min-h-0 flex-1 overflow-y-auto">
-        <div className="mx-auto flex w-full max-w-[620px] flex-col px-4 pb-24 pt-2 sm:px-6">
+        <div className="mx-auto flex w-full max-w-[620px] flex-col px-4 pb-4 pt-2 sm:px-6">
           {/* the compact face of the atelier — one line, one panel, the
               book plainly indicated: everything the visitor needs held
               in a single quiet sheet, nothing to scroll past */}
@@ -1869,25 +1869,42 @@ export function DreamBookView() {
         </div>
       </div>
 
-      {/* THE ONE COMPOSER — the Akashic's own style of ask, dressed in
-          the book's ink: a floating card at the foot of the room, the
-          speak-line and the channel hand inside it. No saying beneath,
-          no gate saying above — the loom chooses its own threads when
-          none are held, and the whole sheet stays one screen tall. */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex justify-center px-3 pb-[max(0.85rem,env(safe-area-inset-bottom))] sm:px-5">
+      {/* THE ONE COMPOSER — standing IN FLOW at the foot of the room,
+          the same structure and position the Invent and Manifest rooms
+          carry: one quiet rounded bar with the words inside it and the
+          book's own signature channel hand (the waves) at its right.
+          No saying beneath, no gate saying above — the loom chooses its
+          own threads when none are held, and the whole sheet stays one
+          screen tall. */}
+      <div className="shrink-0 px-3 pb-3 pt-1 sm:px-4">
         <form
           onSubmit={channelBook}
-          className="pointer-events-auto relative w-full max-w-[640px] rounded-2xl border border-border bg-card p-2.5 shadow-[0_24px_60px_-28px_rgba(0,0,0,0.42)]"
+          className="relative w-full rounded-2xl border px-2.5 py-1.5"
+          style={{
+            borderColor: "color-mix(in srgb, var(--scope-a) 32%, transparent)",
+            background: "color-mix(in srgb, var(--scope-a) 10%, transparent)",
+          }}
           data-testid="dream-composer"
         >
-          <div className="flex items-center gap-2">
-            <input
+          <div className="flex items-end gap-2">
+            <label htmlFor="dream-topic" className="sr-only">
+              {t("Speak anything — a subject, a wish, a whole world…")}
+            </label>
+            <textarea
+              id="dream-topic"
               value={topicDraft}
               onChange={(e) => setTopicDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+                  e.preventDefault();
+                  e.currentTarget.form?.requestSubmit();
+                }
+              }}
+              rows={1}
               placeholder={t("Speak anything — a subject, a wish, a whole world…")}
-              aria-label={t("Speak anything — a subject, a wish, a whole world…")}
               maxLength={600}
-              className="focus-glow h-11 min-w-0 flex-1 rounded-full border hairline bg-background/70 px-4 font-[family-name(var(--font-literata))] text-[15px] italic text-foreground placeholder:font-[family-name(var(--font-sans))] placeholder:not-italic placeholder:text-muted-foreground/60 transition-all duration-300"
+              data-testid="dream-topic-input"
+              className="nice-scroll max-h-24 min-h-[26px] min-w-0 flex-1 resize-none bg-transparent py-1 font-[family-name(var(--font-literata))] text-[15px] italic leading-relaxed text-foreground outline-none placeholder:font-[family-name(var(--font-sans))] placeholder:not-italic placeholder:text-muted-foreground/60"
             />
             <button
               type="submit"
@@ -1895,7 +1912,7 @@ export function DreamBookView() {
               aria-label={t("Channel the book")}
               title={t("Channel the book")}
               data-testid="dream-channel-send"
-              className="akashic-btn focus-glow flex size-11 shrink-0 items-center justify-center rounded-full transition-all duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-35"
+              className="akashic-btn focus-glow flex size-9 shrink-0 items-center justify-center rounded-full transition-all duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-35"
             >
               <Waves className="size-4" aria-hidden="true" />
             </button>
