@@ -358,6 +358,10 @@ interface RoomTurn {
   imageTitle?: string;
   /** the model's own vision direction, kept for the paint hand */
   visionPrompt?: string;
+  /* THE HONEST BRUSH — a crystallization whose brushes rested: the
+     wish is spoken, no plate arrived, and the retry hand stands
+     beside the notice until the vision is painted. */
+  paintFailed?: boolean;
 }
 
 /* ------------- THE DEVICE'S OWN KEEPING (the landing's history) ------
@@ -844,11 +848,44 @@ function LandingPainting({
   turn,
   testId,
   onZoom,
+  onRetry,
 }: {
-  turn: { imageUrl?: string; imageTitle?: string };
+  turn: { imageUrl?: string; imageTitle?: string; paintFailed?: boolean };
   testId: string;
   onZoom: (src: string, caption: string) => void;
+  /** THE RETRY HAND — offered while the brushes rest (the last turn
+      only; older failed turns keep the honest word alone) */
+  onRetry?: () => void;
 }) {
+  /* THE HONEST BRUSH — no silent absence: when the crystallization
+     could not paint, the turn says so and offers the hand again. */
+  if (!turn.imageUrl && turn.paintFailed) {
+    return (
+      <div
+        className="flex flex-col items-start gap-1.5 rounded-xl border border-[color-mix(in_srgb,#f59e0b_30%,transparent)] bg-[color-mix(in_srgb,#f59e0b_6%,var(--background))] px-3 py-2"
+        data-testid={`${testId}-failed`}
+        role="status"
+      >
+        <p className="text-[12.5px] leading-relaxed text-[#b8860b] dark:text-[#f59e0b]">
+          The brushes rested — the vision could not be painted.
+        </p>
+        {onRetry && (
+          <button
+            type="button"
+            onClick={onRetry}
+            data-testid={`${testId}-retry`}
+            className="focus-glow flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11.5px] text-[#b8860b] transition-colors duration-300 hover:brightness-110 dark:text-[#f59e0b]"
+            style={{
+              borderColor:
+                "color-mix(in srgb, #f59e0b 40%, transparent)",
+            }}
+          >
+            Crystallize again
+          </button>
+        )}
+      </div>
+    );
+  }
   if (!turn.imageUrl) return null;
   return (
     <figure
@@ -3444,14 +3481,24 @@ export function BranchCanopy({
   /* THE LANDING'S OWN PAINT HAND — the vision (the visitor's own ask
      or the mirror's own gift) mixed straight into the landing thread:
      one plate beneath the words, the chosen style worn, its address
-     kept so it returns with the words. */
+     kept so it returns with the words. THE HONEST BRUSH: a paint that
+     rests marks the turn with paintFailed — no silent absence, the
+     retry hand rises beside the notice. */
   const paintLandingTurn = useCallback(
     async (
-      prompt: string
+      prompt: string,
+      turnIndex?: number
     ): Promise<{ imageUrl?: string; imageTitle?: string }> => {
+    const paintFailedOn = (t: RoomTurn[], i: number) =>
+      t.map((turn, ti) =>
+        ti === i ? { ...turn, paintFailed: true } : turn
+      );
+    const targetIndex = turnIndex ?? -1; // -1 = the last turn
     setLandingThread((t) =>
       t.map((turn, i) =>
-        i === t.length - 1 ? { ...turn, painting: true } : turn
+        (targetIndex === -1 ? i === t.length - 1 : i === targetIndex)
+          ? { ...turn, painting: true, paintFailed: false }
+          : turn
       )
     );
     try {
@@ -3471,35 +3518,49 @@ export function BranchCanopy({
         artifact?: { imageUrl?: string; title?: string };
       } | null;
       const url = data?.artifact?.imageUrl;
+      if (!url) {
+        /* the brushes rested — the turn says so honestly */
+        setLandingThread((t) =>
+          paintFailedOn(
+            t.map((turn, i) =>
+              (targetIndex === -1 ? i === t.length - 1 : i === targetIndex)
+                ? { ...turn, loading: false, painting: false }
+                : turn
+            ),
+            targetIndex === -1 ? t.length - 1 : targetIndex
+          )
+        );
+        return {};
+      }
       setLandingThread((t) =>
         t.map((turn, i) =>
-          i === t.length - 1
+          (targetIndex === -1 ? i === t.length - 1 : i === targetIndex)
             ? {
                 ...turn,
                 /* the wish-path turn arrives still loading — the plate
                    (or its honest absence) is the turn's own completion */
                 loading: false,
                 painting: false,
-                ...(url
-                  ? {
-                      imageUrl: url,
-                      imageTitle: data?.artifact?.title,
-                    }
-                  : {}),
+                paintFailed: false,
+                imageUrl: url,
+                imageTitle: data?.artifact?.title,
               }
             : turn
         )
       );
       return {
-        imageUrl: url ?? undefined,
+        imageUrl: url,
         imageTitle: data?.artifact?.title,
       };
     } catch {
       setLandingThread((t) =>
-        t.map((turn, i) =>
-          i === t.length - 1
-            ? { ...turn, loading: false, painting: false }
-            : turn
+        paintFailedOn(
+          t.map((turn, i) =>
+            (targetIndex === -1 ? i === t.length - 1 : i === targetIndex)
+              ? { ...turn, loading: false, painting: false }
+              : turn
+          ),
+          targetIndex === -1 ? t.length - 1 : targetIndex
         )
       );
       return {};
@@ -3519,23 +3580,23 @@ export function BranchCanopy({
       if (isVisualIntent(q)) {
         const priorTurns = landingTurnsRef.current;
         const lastReply = [...priorTurns].reverse().find((t) => t.a.trim())?.a ?? "";
+        const crystallizeRequest = blendVisualRequest(q, lastReply);
         setLandingThread((t) => [
           ...t,
-          { q, a: "", loading: true, painting: true },
+          { q, a: "", loading: true, painting: true, visionPrompt: crystallizeRequest },
         ]);
         setLandingBusy(true);
         window.dispatchEvent(new CustomEvent("landing-chat:return"));
         try {
-          const painted = await paintLandingTurn(
-            blendVisualRequest(q, lastReply)
-          );
+          const painted = await paintLandingTurn(crystallizeRequest);
           /* THE FIELD'S OWN KEEP — the finished exchange (its plate
-             included) rests in the field's own cache and page */
-          const kept = [
+             included) rests in the field's own cache and page; a
+             rested brush keeps the honest absence, never a false word */
+          const kept: KeptLandingTurn[] = [
             ...landingTurnsRef.current,
             {
               q,
-              a: "A vision, crystallized.",
+              a: painted.imageUrl ? "A vision, crystallized." : "",
               ...(painted.imageUrl
                 ? {
                     imageUrl: painted.imageUrl,
@@ -3898,6 +3959,18 @@ export function BranchCanopy({
      untouched); the full portal reads the channel as it always did. */
   const lastLandingTurn =
     landingThread.length > 0 ? landingThread[landingThread.length - 1] : null;
+  /* THE RETRY HAND — a crystallization whose brushes rested may be
+     asked again: the same vision prompt, the same turn, one touch. */
+  const retryLandingPaint = useCallback(
+    (turnIndex?: number) => {
+      const idx = turnIndex ?? landingThread.length - 1;
+      const turn = landingThread[idx];
+      const prompt = turn?.visionPrompt;
+      if (!prompt || turn?.painting) return;
+      void paintLandingTurn(prompt, idx);
+    },
+    [landingThread, paintLandingTurn]
+  );
   const floorBusy = realm
     ? landingBusy || !!lastLandingTurn?.loading
     : liveLoading;
@@ -5728,14 +5801,6 @@ export function BranchCanopy({
             {/* THE TEMPORARY CHAT'S OWN LINE — the landing's floor is
                 free and holds nothing: a quiet honest word for the
                 non logged-in, the way in named for the ones who stay. */}
-            {landingViewing && (
-              <ZoomableLightbox
-                src={landingViewing.src}
-                caption={landingViewing.caption}
-                onClose={() => setLandingViewing(null)}
-                testId="landing-lightbox"
-              />
-            )}
             {guest && (
               <p
                 data-testid="floor-temporary-note"
@@ -5757,6 +5822,20 @@ export function BranchCanopy({
             aria-hidden="true"
             data-testid={`${testIdPrefix}-veil`}
             className="canopy-veil absolute inset-0 z-20 bg-[color-mix(in_srgb,var(--background)_68%,transparent)]"
+          />
+        )}
+
+        {/* THE DEEP READING — the plate's own room of coming closer,
+            open from every gear of the chat (the floor AND the zoomed
+            walk room — the buttons that open it live in BOTH): one
+            portal over the whole sky, the wheel and the fingers zoom
+            it further, Escape or one touch on the dark lays it down. */}
+        {landingViewing && (
+          <ZoomableLightbox
+            src={landingViewing.src}
+            caption={landingViewing.caption}
+            onClose={() => setLandingViewing(null)}
+            testId="landing-lightbox"
           />
         )}
 
@@ -6161,9 +6240,15 @@ export function BranchCanopy({
                         {displayError}
                       </p>
                     </div>
-                  ) : roomMaking && revealStage >= 2 ? null : (
+                  ) : roomMaking && revealStage >= 2 ? null :
+                    realm &&
+                    lastLandingTurn &&
+                    lastLandingTurn.paintFailed &&
+                    !lastLandingTurn.loading ? null : (
                     /* THE PLATE ALONE — a wish that crystallized straight
-                       into an image needs no reflecting words beneath it */
+                       into an image needs no reflecting words beneath it.
+                       A RESTED BRUSH says so honestly — the spinner never
+                       spins forever over a paint that will not come. */
                     revealStage >= 2 &&
                     !(
                       realm &&
@@ -6193,14 +6278,23 @@ export function BranchCanopy({
                     )
                   )}
                   {/* THE VISION BENEATH THE WORDS — the last turn's
-                      painting, zoomable into the deep-reading room */}
-                  {lastLandingTurn?.imageUrl && revealStage >= 2 && (
+                      painting, zoomable into the deep-reading room; a
+                      rested brush shows its honest notice + retry here */}
+                  {lastLandingTurn &&
+                    (lastLandingTurn.imageUrl ||
+                      (lastLandingTurn.paintFailed && !lastLandingTurn.loading)) &&
+                    revealStage >= 2 && (
                     <div className="mt-3">
                       <LandingPainting
                         turn={lastLandingTurn}
                         testId={`${testIdPrefix}-zoom-painting`}
                         onZoom={(src, caption) =>
                           setLandingViewing({ src, caption })
+                        }
+                        onRetry={
+                          lastLandingTurn.paintFailed && !lastLandingTurn.painting
+                            ? () => retryLandingPaint()
+                            : undefined
                         }
                       />
                     </div>
@@ -6335,6 +6429,11 @@ export function BranchCanopy({
                             testId={`${testIdPrefix}-room-painting-${i}`}
                             onZoom={(src, caption) =>
                               setLandingViewing({ src, caption })
+                            }
+                            onRetry={
+                              turn.paintFailed && !turn.painting
+                                ? () => retryLandingPaint(i)
+                                : undefined
                             }
                           />
                         </div>

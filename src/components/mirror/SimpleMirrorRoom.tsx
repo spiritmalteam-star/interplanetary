@@ -194,24 +194,26 @@ const QUANTUM_CONFIG: SimpleRoomConfig = {
   crystallize: true,
 };
 
-/* THE HEALX — the body's quiet room: speak gently at your own pace
-   (the healing voice), and crystallize the resting place on request. */
+/* THE HEALX — the evolved medical field: an advanced mirror intelligence
+   exploring and illuminating new paths of medical discovery (the healx
+   voice), and crystallizing the sight it opens on request. */
 const HEALX_CONFIG: SimpleRoomConfig = {
   storageKey: "mirror:room-healx",
-  spiritKey: "The body's quiet evolution — speak gently, at your own pace.",
-  placeholderKey: "Tell me where the body asks for quiet…",
+  spiritKey:
+    "The evolved medical field — exploring and illuminating new paths of discovery with mirror intelligence.",
+  placeholderKey: "Ask the evolved medical field…",
   seeds: [
-    "Help me unwind the tension I carry in my shoulders",
-    "Guide a slow breathing exercise for this evening",
-    "What does my body need when sleep won't come?",
+    "Illuminate a new path for understanding this body I carry",
+    "What frontier of medicine should humanity explore next?",
+    "Map how my nervous system could regenerate its calm",
   ],
-  proceed: ["Go gentler", "Make it a small evening ritual"],
+  proceed: ["Go deeper into that path", "What discovery does this point toward?"],
   ask: (q, thread, language, image) =>
     speakReplyGift(
       "/api/transmission",
       {
         query: q,
-        mode: "healing",
+        mode: "healx",
         language,
         walk: [],
         history: thread.slice(-6).map((t) => ({ q: t.q, a: t.a })),
@@ -306,10 +308,15 @@ function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
         } | null;
         const url = data?.artifact?.imageUrl;
         if (!url) {
+          /* THE HONEST BRUSH — a rested brush is never a silent one:
+             the room says so, and the crystallize hand stands again */
           setThread((cur) =>
             cur.map((turn, i) =>
               i === turnIndex ? { ...turn, painting: false } : turn
             )
+          );
+          import("sonner").then(({ toast }) =>
+            toast.error(t("The brushes rested — the vision could not be painted. Ask again in a moment."))
           );
           return;
         }
@@ -333,7 +340,7 @@ function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
         );
       }
     },
-    [language, config.singleImage]
+    [language, config.singleImage, t]
   );
 
   /* THE CRYSTALLIZE HAND — the visitor's own touch turns a finished
@@ -1012,8 +1019,9 @@ export function QuantumRoom() {
   return <SimpleMirrorRoom config={QUANTUM_CONFIG} />;
 }
 
-/** THE HEALX — the body's quiet room (the healing voice): gentle
-    guidance, the resting place crystallized on request. */
+/** THE HEALX — the evolved medical field's own room: new paths of
+    discovery illuminated by mirror intelligence, the sight
+    crystallized on request. */
 export function HealXRoom() {
   return <SimpleMirrorRoom config={HEALX_CONFIG} />;
 }

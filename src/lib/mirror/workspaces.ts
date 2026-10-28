@@ -30,6 +30,7 @@ import {
   Library,
   Music,
   NotebookPen,
+  Palette,
   ScrollText,
   Sparkles,
   type LucideIcon,
@@ -75,15 +76,18 @@ export type WorkspaceDefinition = {
 };
 
 /* ------------------------------------------------------------------ */
-/*  THE EIGHT PAGES — the house's own instruments. The Quantum and the
-/*  HealX stand among the makers now (the visitor named them); the
-/*  Manifest keeps its own room, reached from the scopes' shore.       */
+/*  THE ELEVEN PAGES — the house's own instruments. THE ATELIER STANDS
+/*  AMONG THE MAKERS (the visitor named it): the ArtX atelier rides the
+/*  InDream rail in the Quantum and HealX's old places — the two deep
+/*  rooms rest at the scopes' shore now. The Manifest keeps its own
+/*  room, reached from the scopes' shore as well.
 /* ------------------------------------------------------------------ */
 
 export const WORKSPACE_ORDER: ToolTabKey[] = [
   "dreambook",
   "lightcodes",
   "akashic",
+  "artx",
   "quantum",
   "healx",
   "invent",
@@ -140,6 +144,21 @@ export const WORKSPACES: Record<ToolTabKey, WorkspaceDefinition> = {
     resourceProfile: "low",
     bridgeMode: "absolute",
   },
+  artx: {
+    id: "artx",
+    title: "ArtX Atelier",
+    category: "studio",
+    icon: Palette,
+    theme: { accent: "#e879f9" },
+    loader: () =>
+      import("@/components/mirror/ArtX").then((m) => ({
+        default: m.ArtXAtelierRoom as ComponentType,
+      })),
+    capabilities: ["atelier-conversation", "vision-crystallization", "thread-memory"],
+    preserveState: true,
+    resourceProfile: "low",
+    bridgeMode: "artx",
+  },
   quantum: {
     id: "quantum",
     title: "Quantum",
@@ -165,10 +184,10 @@ export const WORKSPACES: Record<ToolTabKey, WorkspaceDefinition> = {
       import("@/components/mirror/SimpleMirrorRoom").then((m) => ({
         default: m.HealXRoom as ComponentType,
       })),
-    capabilities: ["mirror-conversation", "vision-crystallization", "thread-memory"],
+    capabilities: ["evolved-medical-paths", "mirror-conversation", "vision-crystallization", "thread-memory"],
     preserveState: true,
     resourceProfile: "low",
-    bridgeMode: "healing",
+    bridgeMode: "healx",
   },
   mirroros: {
     id: "mirroros",

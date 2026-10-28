@@ -310,7 +310,15 @@ function AxExchange({
 
 /* ---------------- the direct line ---------------- */
 
-export function ArtXChat() {
+export function ArtXChat({
+  /* EMBEDDED — the atelier rides inside the workplace frame (the
+     InDream rail's own room): no floating chrome stands over it, so
+     the thread's top padding rests slim again. */
+  variant = "world",
+}: {
+  variant?: "world" | "embedded";
+} = {}) {
+  const embedded = variant === "embedded";
   const axMessages = useMirror((s) => s.axMessages);
   const axStatus = useMirror((s) => s.axStatus);
   const axError = useMirror((s) => s.axError);
@@ -453,7 +461,12 @@ export function ArtXChat() {
   const submit = () => submitText(axDraft);
 
   return (
-    <div className="scope-frame-card relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl">
+    <div
+      className={cn(
+        "scope-frame-card relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl",
+        embedded && "h-full"
+      )}
+    >
       <div
         className="animate-line-breathe h-px w-full"
         style={{
@@ -465,11 +478,15 @@ export function ArtXChat() {
 
       {/* thread — it reaches the very top of the world, sliding beneath
           the floating controls; its own top padding keeps the first word
-          clear of the back · window · new-chat row */}
+          clear of the back · window · new-chat row (the embedded atelier
+          wears the frame's own header instead — the padding rests) */}
       <div
         ref={scrollRef}
-        className="nice-scroll min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-3 pb-5 pt-16 sm:px-5 sm:pt-[72px]"
-      >
+        className={cn(
+          "nice-scroll min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-3 pb-5 sm:px-5",
+          embedded ? "pt-3 sm:pt-4" : "pt-16 sm:pt-[72px]"
+        )
+      }>
         {axMessages.length === 0 && axStatus === "idle" && !axError ? (
           /* the room belongs to the tree — the canopy stands over it */
           <div className="h-full" aria-hidden="true" />
@@ -691,6 +708,14 @@ export function ArtXChat() {
 /* ---------------- the Art X shell ---------------- */
 
 type AxPlace = "chat" | (typeof axWindows)[number]["id"];
+
+/** THE ATELIER'S OWN ROOM IN THE WORKPLACE — the InDream rail's page:
+    the atelier core (the one conversation with its windows, canopy
+    and composer), wearing the workplace frame instead of the world's
+    own floating hands. The frame's ONE BACK returns to the chat. */
+export function ArtXAtelierRoom() {
+  return <ArtXChat variant="embedded" />;
+}
 
 export function ArtX() {
   const exitArtX = useMirror((s) => s.exitArtX);

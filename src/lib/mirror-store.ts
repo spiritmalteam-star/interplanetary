@@ -206,6 +206,7 @@ export type ToolTabKey =
   | "library"
   | "quantum"
   | "healx"
+  | "artx"
   | "scopes";
 
 /* THE LANDING'S OWN SCOPE — the field the threshold's docked chat

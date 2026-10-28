@@ -8,6 +8,13 @@ import { meterRoute } from "@/lib/server/meter";
 /*  The SDK synthesizes at most 1024 chars per call and emits WAV, so  */
 /*  text is split into sentence-bounded chunks and the per-chunk WAV   */
 /*  files are merged into one canonical PCM WAV before responding.     */
+/*                                                                     */
+/*  THE GOOGLE VOICE — engine "google" asks the sky's own Gemini TTS   */
+/*  (gemini-2.5-flash-preview-tts) for a CALM, INTELLIGENT MALE voice  */
+/*  (Charon): the direct call's first reader when GEMINI_API_KEY is    */
+/*  placed. One round trip, one voice, zero falling back — and the     */
+/*  house voice (xiaochen) stands behind it when the key is absent or  */
+/*  the sky refuses.                                                    */
 /* ------------------------------------------------------------------ */
 
 const MAX_CHUNK = 900;
@@ -112,6 +119,64 @@ function buildWav(meta: WavMeta, pcm: Buffer): Buffer {
   return Buffer.concat([header, pcm]);
 }
 
+/* ---------------- the Google voice (Gemini TTS) --------------------- */
+
+/* Gemini TTS speaks raw PCM (16-bit, mono, 24 kHz) — the canonical WAV
+   header is dressed on top before the wire carries it home. */
+const GOOGLE_TTS_MODEL = "gemini-2.5-flash-preview-tts";
+/* Charon — the calm, firm, intelligent male register of the Google
+   choir: the direct call's own voice. */
+const GOOGLE_TTS_VOICE = "Charon";
+const GOOGLE_TTS_STYLE =
+  "Speak in a calm, measured, deeply intelligent male voice — warm and unhurried, like a wise presence on a quiet line:";
+
+async function speakWithGoogle(
+  text: string,
+  speed: number
+): Promise<{ buffer: Buffer; error?: string } | null> {
+  const key = process.env.GEMINI_API_KEY;
+  if (!key) return null;
+  try {
+    const { GoogleGenAI } = await import("@google/genai");
+    const client = new GoogleGenAI({ apiKey: key });
+    const response = await client.models.generateContent({
+      model: GOOGLE_TTS_MODEL,
+      contents: [{ parts: [{ text: `${GOOGLE_TTS_STYLE} ${text}` }] }],
+      config: {
+        responseModalities: ["AUDIO"],
+        speechConfig: {
+          voiceConfig: {
+            prebuiltVoiceConfig: { voiceName: GOOGLE_TTS_VOICE },
+          },
+        },
+      },
+    });
+    const b64 =
+      (
+        response.candidates?.[0]?.content?.parts?.[0] as
+          | { inlineData?: { data?: string } }
+          | undefined
+      )?.inlineData?.data ?? null;
+    if (!b64) return null;
+    const pcm = Buffer.from(b64, "base64");
+    if (pcm.length === 0) return null;
+    const meta = {
+      audioFormat: 1,
+      numChannels: 1,
+      sampleRate: 24000,
+      bitsPerSample: 16,
+    };
+    /* the pace rides when the sky's own tempo needs the house's hand */
+    void speed;
+    return { buffer: buildWav(meta, pcm) };
+  } catch (err) {
+    return {
+      buffer: Buffer.alloc(0),
+      error: err instanceof Error ? err.message.slice(0, 400) : "google voice quiet",
+    };
+  }
+}
+
 /* ---- route -------------------------------------------------------- */
 
 export const POST = meterRoute("tts", postImpl);
@@ -123,11 +188,39 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
     const voice: VoiceId = isVoiceId(body?.voice) ? body.voice : "aurora";
     const rawPace: number = typeof body?.pace === "number" ? body.pace : 0.95;
     const speed = Math.min(2, Math.max(0.5, rawPace));
+    /* THE GOOGLE VOICE — the direct call asks for the sky's own calm
+       male reader first; the house voice answers when it cannot. */
+    const wantsGoogle = body?.engine === "google";
 
     if (typeof text !== "string" || !text.trim()) {
       return NextResponse.json(
         { error: "Nothing was given to narrate." },
         { status: 400 }
+      );
+    }
+
+    if (wantsGoogle) {
+      const spoken = text.replace(/\s+/g, " ").trim().slice(0, 2400);
+      const google = await speakWithGoogle(spoken, speed);
+      if (google && google.buffer.length > 0) {
+        return new NextResponse(new Uint8Array(google.buffer), {
+          status: 200,
+          headers: {
+            "Content-Type": "audio/wav",
+            "Content-Length": google.buffer.length.toString(),
+            "Cache-Control": "no-store",
+            "X-Voice-Engine": "google",
+          },
+        });
+      }
+      const status = google?.error ? 502 : 501;
+      return NextResponse.json(
+        {
+          error: "The google voice is quiet — the house voice reads instead.",
+          code: google?.error ? "google_voice_failed" : "no_google_key",
+          detail: google?.error,
+        },
+        { status }
       );
     }
 

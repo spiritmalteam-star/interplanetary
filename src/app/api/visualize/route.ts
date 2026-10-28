@@ -503,7 +503,11 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
         );
       }
     } else {
-      mainPainting = await paint(finalPrompt, size);
+      /* THE ONE PLATE NEVER GIVES UP EASILY — a single crystallization
+         (the wish spoken on the floor, the rooms' crystallize hand)
+         tries three brushes before it rests: the first knock, two
+         more with breathing room between. */
+      mainPainting = await paint(finalPrompt, size, singleImage ? 3 : 2);
     }
 
     const id = `viz-${Date.now().toString(36)}-${crypto

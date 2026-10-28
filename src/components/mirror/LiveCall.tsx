@@ -266,7 +266,11 @@ export function LiveCall({
   const speak = useCallback(
     async (text: string) => {
       /* the voice is prepared while the phase still reads "thinking" —
-         the visitor never watches a silent "speaking" state */
+         the visitor never watches a silent "speaking" state.
+         THE CALL'S OWN VOICE — the GOOGLE VOICE first (the sky's own
+         Gemini TTS: a calm, measured, intelligent man, one round trip,
+         spoken the moment the reply lands), the house voice behind it,
+         and the traveler's own browser voice when both skies rest. */
       let url: string | null = null;
       let audio: HTMLAudioElement | null = null;
       try {
@@ -277,9 +281,10 @@ export function LiveCall({
             text,
             voice: cfg.voice,
             pace: Math.min(1.15, cfg.pace + 0.08),
+            engine: "google",
           }),
         });
-        if (!res.ok) throw new Error("voice quiet");
+        if (!res.ok) throw new Error("google voice quiet");
         const blob = await res.blob();
         url = URL.createObjectURL(blob);
         audio = new Audio(url);
@@ -310,28 +315,74 @@ export function LiveCall({
         setRevealedChars(0);
         await audio.play();
       } catch {
-        /* the house voice could not travel — the traveler's own
-           browser voice reads the reply, so the call keeps its sound */
+        /* the google voice could not travel — the house voice reads
+           the reply, so the call keeps its sound */
         if (audioRef.current === audio && audio) audioRef.current = null;
         if (url) URL.revokeObjectURL(url);
-        stopSpeaking();
-        const handle = speakWithBrowserVoice({
-          text,
-          lang: language,
-          rate: Math.min(1.15, cfg.pace + 0.08),
-          onEnd: () => {
+        try {
+          const res = await fetch("/api/tts", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              text,
+              voice: cfg.voice,
+              pace: Math.min(1.15, cfg.pace + 0.08),
+            }),
+          });
+          if (!res.ok) throw new Error("voice quiet");
+          const blob = await res.blob();
+          url = URL.createObjectURL(blob);
+          audio = new Audio(url);
+          audioRef.current = audio;
+
+          audio.ontimeupdate = () => {
+            const d = audio!.duration;
+            const frac =
+              Number.isFinite(d) && d > 0
+                ? Math.min(1, audio!.currentTime / d)
+                : 0;
+            setRevealedChars((prev) =>
+              Math.max(prev, Math.floor(text.length * frac))
+            );
+          };
+          const release = () => {
+            if (audioRef.current === audio) {
+              URL.revokeObjectURL(url!);
+              audioRef.current = null;
+            }
             setRevealedChars(text.length);
             if (phaseRef.current === "speaking") setPhaseSafe("idle");
-          },
-          onError: () => {
-            setRevealedChars(text.length);
-            if (phaseRef.current === "speaking") setPhaseSafe("idle");
-          },
-        });
-        if (!handle) throw new Error("voice quiet");
-        browserVoiceRef.current = handle;
-        setPhaseSafe("speaking");
-        setRevealedChars(0);
+          };
+          audio.onended = release;
+          audio.onerror = release;
+
+          setPhaseSafe("speaking");
+          setRevealedChars(0);
+          await audio.play();
+        } catch {
+          /* the house voice could not travel — the traveler's own
+             browser voice reads the reply, so the call keeps its sound */
+          if (audioRef.current === audio && audio) audioRef.current = null;
+          if (url) URL.revokeObjectURL(url);
+          stopSpeaking();
+          const handle = speakWithBrowserVoice({
+            text,
+            lang: language,
+            rate: Math.min(1.15, cfg.pace + 0.08),
+            onEnd: () => {
+              setRevealedChars(text.length);
+              if (phaseRef.current === "speaking") setPhaseSafe("idle");
+            },
+            onError: () => {
+              setRevealedChars(text.length);
+              if (phaseRef.current === "speaking") setPhaseSafe("idle");
+            },
+          });
+          if (!handle) throw new Error("voice quiet");
+          browserVoiceRef.current = handle;
+          setPhaseSafe("speaking");
+          setRevealedChars(0);
+        }
       }
     },
     [cfg.voice, cfg.pace, language, setPhaseSafe, stopSpeaking]
