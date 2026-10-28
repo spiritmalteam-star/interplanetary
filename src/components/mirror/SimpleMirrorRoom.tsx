@@ -10,32 +10,43 @@ import {
 } from "react";
 import {
   Eraser,
+  Gem,
   ImagePlus,
   Paperclip,
   Send,
+  Sparkles,
   X,
 } from "lucide-react";
 import { EnergyError, speakReplyGift } from "@/lib/speak-client";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { MirrorChanneling } from "./MirrorChanneling";
+import { ZoomableLightbox } from "./ZoomableLightbox";
 import { cn } from "@/lib/utils";
 import { IMAGE_ACCEPT, isImageFile, readFileAsDataUrl } from "./attachments";
+import {
+  filterStyles,
+  isStyleSlashQuery,
+} from "@/lib/image-styles";
 
 /* ------------------------------------------------------------------ */
-/*  THE SIMPLE ROOMS — Manifest and Invent. One honest thing in each   */
-/*  room: an interactive way of communicating with the Mirror — a      */
-/*  spirit line, a conversation, a whisper line. The words carry       */
-/*  pictures now: the Mirror may end a reply with its own painting     */
-/*  (the vision gift), and the visitor may hand the Mirror one image   */
-/*  of their own to speak about. Each reply leaves three small hands   */
-/*  beneath it — the conversation proceeds in one touch.               */
+/*  THE SIMPLE ROOMS — Manifest, Invent, Quantum and HealX. One honest */
+/*  thing in each room: an interactive way of communicating with the   */
+/*  Mirror — a spirit line, a conversation, a whisper line.            */
+/*                                                                     */
+/*  THE PAINTING'S OWN LAWS — the Manifest gifts its one picture       */
+/*  beneath a reply (the vision gift, always a single plate); the      */
+/*  Invent, the Quantum and the HealX never paint by themselves: at    */
+/*  the end of every transmission stands the CRYSTALLIZE hand, and     */
+/*  only the visitor's own touch turns the words into an image.        */
+/*                                                                     */
+/*  THE STYLE'S OWN HAND — a "/" typed alone in the whisper line opens */
+/*  the style picker; the chosen look rides with every painting.       */
 /*                                                                     */
 /*  Each room keeps its own words on the device (localStorage), so     */
 /*  leaving the page and coming back finds the conversation standing   */
-/*  exactly where it was left — the room's own memory, never a         */
-/*  server's. Paintings keep their address (the house serves them),   */
-/*  so they come back with the words.                                  */
+/*  exactly where it was left. Paintings keep their address (the house */
+/*  serves them), so they come back with the words.                    */
 /* ------------------------------------------------------------------ */
 
 type RoomTurn = {
@@ -51,6 +62,9 @@ type RoomTurn = {
   imageTitle?: string;
   /** the painting is still being mixed */
   painting?: boolean;
+  /** the painting's own direction — the model's vision line when it
+      offered one, kept so the crystallize hand paints the same sight */
+  visionPrompt?: string;
   /** THE FORGE'S OWN SKETCHES — up to three visions of the idea,
       painted by the sky's Gemini. Session-only: they breathe with
       the visit and are never written to the device's keep. */
@@ -76,10 +90,19 @@ type SimpleRoomConfig = {
     language: string,
     image?: string
   ) => Promise<{ text: string; vision: string | null }>;
+  /** THE VISION GIFT — the room paints by itself beneath a reply
+      (the Manifest's way). Crystallize rooms never auto-paint. */
+  autoPaint?: boolean;
+  /** THE ONE PLATE LAW — the gift is always a single image. */
+  singleImage?: boolean;
+  /** THE CRYSTALLIZE HAND — a button at the end of every transmission;
+      the image is born only when the visitor presses it. */
+  crystallize?: boolean;
 };
 
 /* THE MANIFEST — the making room: speak the world you wish to make,
-   and the Mirror shapes it with you (the manifesting voice). */
+   and the Mirror shapes it with you (the manifesting voice). One
+   image at most rides with each reply, never a deck of slides. */
 const MANIFEST_CONFIG: SimpleRoomConfig = {
   storageKey: "mirror:room-manifest",
   spiritKey: "Speak the world you wish to make — the Mirror shapes it with you.",
@@ -108,10 +131,13 @@ const MANIFEST_CONFIG: SimpleRoomConfig = {
       "reply",
       "The field is quiet"
     ),
+  autoPaint: true,
+  singleImage: true,
 };
 
 /* THE INVENT — the forge room: bring a spark, and the Mirror forges
-   it into form with you (the forge voice). */
+   it into form with you (the forge voice). The picture waits for the
+   visitor's own hand — the crystallize button at the reply's end. */
 const INVENT_CONFIG: SimpleRoomConfig = {
   storageKey: "mirror:room-invent",
   spiritKey: "Bring a spark — the Mirror forges it into form with you.",
@@ -136,6 +162,65 @@ const INVENT_CONFIG: SimpleRoomConfig = {
       "transmission",
       "The field is quiet"
     ),
+  crystallize: true,
+};
+
+/* THE QUANTUM — the deep room: unfold reality quanta by quanta (the
+   quantum voice), and crystallize the unseen into a plate on request. */
+const QUANTUM_CONFIG: SimpleRoomConfig = {
+  storageKey: "mirror:room-quantum",
+  spiritKey: "Unfold the deep nature of reality — quanta by quanta.",
+  placeholderKey: "Prepare a state to observe…",
+  seeds: [
+    "Show me superposition the way a poet would hold it",
+    "What does entanglement mean for two souls far apart?",
+    "Walk me through the observer effect slowly",
+  ],
+  proceed: ["Go deeper", "Give me the equation beneath it"],
+  ask: (q, thread, language, image) =>
+    speakReplyGift(
+      "/api/transmission",
+      {
+        query: q,
+        mode: "quantum",
+        language,
+        walk: [],
+        history: thread.slice(-6).map((t) => ({ q: t.q, a: t.a })),
+        ...(image ? { image } : {}),
+      },
+      "transmission",
+      "The field is quiet"
+    ),
+  crystallize: true,
+};
+
+/* THE HEALX — the body's quiet room: speak gently at your own pace
+   (the healing voice), and crystallize the resting place on request. */
+const HEALX_CONFIG: SimpleRoomConfig = {
+  storageKey: "mirror:room-healx",
+  spiritKey: "The body's quiet evolution — speak gently, at your own pace.",
+  placeholderKey: "Tell me where the body asks for quiet…",
+  seeds: [
+    "Help me unwind the tension I carry in my shoulders",
+    "Guide a slow breathing exercise for this evening",
+    "What does my body need when sleep won't come?",
+  ],
+  proceed: ["Go gentler", "Make it a small evening ritual"],
+  ask: (q, thread, language, image) =>
+    speakReplyGift(
+      "/api/transmission",
+      {
+        query: q,
+        mode: "healing",
+        language,
+        walk: [],
+        history: thread.slice(-6).map((t) => ({ q: t.q, a: t.a })),
+        ...(image ? { image } : {}),
+      },
+      "transmission",
+      "The field is quiet"
+    ),
+  crystallize: true,
 };
 
 function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
@@ -161,6 +246,13 @@ function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
   const [attached, setAttached] = useState<string | null>(null);
+  /* THE VISITOR'S OWN STYLE — chosen through the "/" hand */
+  const [style, setStyle] = useState<string | null>(null);
+  const [styleMenuOpen, setStyleMenuOpen] = useState(false);
+  /* the deep-reading room — the image under the visitor's fingers */
+  const [viewing, setViewing] = useState<{ src: string; caption: string } | null>(
+    null
+  );
   const fileRef = useRef<HTMLInputElement | null>(null);
   const bodyRef = useRef<HTMLDivElement | null>(null);
   /* the thread's own mirror — the ask reads it without re-binding */
@@ -186,17 +278,28 @@ function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
     }
   }, [thread, config.storageKey]);
 
-  /* THE PAINTING — the vision gift handed to the visualization
-     engine; the words stand while the picture is mixed, and the
-     finished painting lands beneath them (its address keeps, so it
-     returns with the words on every later visit). */
+  /* THE PAINTING — the vision handed to the visualization engine; the
+     words stand while the picture is mixed, and the finished painting
+     lands beneath them (its address keeps, so it returns with the
+     words on every later visit). The chosen style rides along; the
+     Manifest's gift is always a single plate. */
   const paintVision = useCallback(
-    async (turnIndex: number, vision: string) => {
+    async (turnIndex: number, vision: string, chosenStyle?: string | null) => {
+      setThread((cur) =>
+        cur.map((turn, i) =>
+          i === turnIndex ? { ...turn, painting: true } : turn
+        )
+      );
       try {
         const res = await fetch("/api/visualize", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: vision, language }),
+          body: JSON.stringify({
+            message: vision,
+            language,
+            ...(config.singleImage ? { single: true } : {}),
+            ...(chosenStyle ? { style: chosenStyle } : {}),
+          }),
         });
         const data = (await res.json().catch(() => null)) as {
           artifact?: { imageUrl?: string; title?: string };
@@ -230,7 +333,22 @@ function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
         );
       }
     },
-    [language]
+    [language, config.singleImage]
+  );
+
+  /* THE CRYSTALLIZE HAND — the visitor's own touch turns a finished
+     transmission into an image: the model's own vision direction when
+     it offered one, otherwise the transmission's own subject. */
+  const crystallize = useCallback(
+    (turnIndex: number) => {
+      const turn = threadRef.current[turnIndex];
+      if (!turn || turn.painting) return;
+      const prompt =
+        turn.visionPrompt ??
+        `Crystallize this into one image. The visitor's idea: "${turn.q.slice(0, 300)}". The transmission described: ${turn.a.slice(0, 600)}`;
+      void paintVision(turnIndex, prompt, style);
+    },
+    [paintVision, style]
   );
 
   const send = useCallback(
@@ -250,6 +368,7 @@ function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
           .map((turn) => ({ q: turn.q, a: turn.a }));
         const { text, vision } = await config.ask(q, prior, language, image);
         const index = threadRef.current.length - 1;
+        const wantsAutoPaint = Boolean(config.autoPaint && vision);
         setThread((cur) =>
           cur.map((turn, i) =>
             i === index
@@ -257,12 +376,16 @@ function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
                   ...turn,
                   a: text,
                   loading: false,
-                  ...(vision ? { painting: true } : {}),
+                  /* the crystallize rooms keep the model's own vision
+                     direction for the visitor's own hand; the Manifest
+                     begins painting at once */
+                  ...(vision ? { visionPrompt: vision } : {}),
+                  ...(wantsAutoPaint ? { painting: true } : {}),
                 }
               : turn
           )
         );
-        if (vision) void paintVision(index, vision);
+        if (wantsAutoPaint && vision) void paintVision(index, vision, style);
       } catch (err) {
         const message =
           err instanceof Error && err.message ? err.message : "";
@@ -283,7 +406,7 @@ function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
         setBusy(false);
       }
     },
-    [busy, config, language, paintVision]
+    [busy, config, language, paintVision, style]
   );
 
   const pickImage = useCallback(async (file: File | undefined | null) => {
@@ -314,7 +437,8 @@ function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
   /* THE FORGE'S SKETCH HAND — the idea (the last word the visitor
      spoke, or the draft in the field) is scratched into form: up to
      three visions painted by the sky's own Gemini, one touch. The
-     visions land beneath the last turn and breathe with the visit. */
+     chosen style rides along. The visions land beneath the last turn
+     and breathe with the visit. */
   const [sketching, setSketching] = useState(false);
   const sketchIdea = useCallback(async () => {
     if (busy || sketching) return;
@@ -332,7 +456,7 @@ function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
       const res = await fetch("/api/invent-sketch", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idea, context }),
+        body: JSON.stringify({ idea, context, ...(style ? { style } : {}) }),
       });
       const data = (await res.json().catch(() => null)) as {
         images?: { angle: string; mimeType: string; data: string }[];
@@ -365,7 +489,7 @@ function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
     } finally {
       setSketching(false);
     }
-  }, [busy, sketching, draft, t]);
+  }, [busy, sketching, draft, t, style]);
 
   /* THE QUIET READER — a new word lands, the room reads only if the
      visitor already rests at the bottom (never dragged mid-thought) */
@@ -376,6 +500,22 @@ function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
     if (near) el.scrollTop = el.scrollHeight;
   }, [thread]);
 
+  /* THE "/" HAND — the style picker opens while the whisper line
+     carries only the slash (and what the visitor typed after it) */
+  const styleMatches = useMemo(
+    () => (styleMenuOpen ? filterStyles(draft) : []),
+    [styleMenuOpen, draft]
+  );
+  const onDraftChange = (value: string) => {
+    setDraft(value);
+    setStyleMenuOpen(isStyleSlashQuery(value));
+  };
+  const pickStyle = (value: string) => {
+    setStyle(value);
+    setDraft("");
+    setStyleMenuOpen(false);
+  };
+
   const empty = thread.length === 0;
   const seeds = useMemo(() => config.seeds, [config.seeds]);
   const proceed = useMemo(() => config.proceed, [config.proceed]);
@@ -384,7 +524,7 @@ function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
     <div
       data-testid="simple-room"
       data-room={config.storageKey}
-      className="flex h-full flex-col"
+      className="relative flex h-full flex-col"
     >
       {/* THE SPIRIT LINE — the room's one honest sentence; the clear
           hand rests beside it, only while there are words to lay down */}
@@ -417,7 +557,8 @@ function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
 
       {/* THE CONVERSATION — the room's whole world: the visitor's words
           on the right, the Mirror's answers on the left, paintings
-          beneath them, three small hands under the last reply */}
+          beneath them, the crystallize hand at the reply's end, three
+          small hands under the last reply */}
       <div
         ref={bodyRef}
         data-testid="simple-room-thread"
@@ -515,8 +656,8 @@ function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
                       <p className="min-w-0 max-w-[94%] whitespace-pre-wrap break-words text-[14px] leading-[1.7] text-foreground/90">
                         {turn.a}
                       </p>
-                      {/* THE MIRROR'S OWN PAINTING — the vision gift,
-                          mixed quietly while the words stood */}
+                      {/* THE PICTURE IN THE MIXING — the vision being
+                          painted while the words already stand */}
                       {turn.painting && (
                         <MirrorChanneling
                           compact
@@ -527,19 +668,23 @@ function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
                       )}
                       {turn.imageUrl && (
                         <figure
-                          className="w-full max-w-[340px] overflow-hidden rounded-xl border"
+                          className="group relative w-full max-w-[340px] overflow-hidden rounded-xl border"
                           style={{
                             borderColor:
                               "color-mix(in srgb, var(--scope-a,var(--gd)) 30%, transparent)",
                           }}
                           data-testid="simple-room-painting"
                         >
-                          <a
-                            href={turn.imageUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            aria-label={turn.imageTitle ?? t("The Mirror's painting")}
-                            className="block"
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setViewing({
+                                src: turn.imageUrl!,
+                                caption: turn.imageTitle ?? t("The Mirror's painting"),
+                              })
+                            }
+                            aria-label={t("Zoom the image")}
+                            className="block w-full cursor-zoom-in"
                           >
                             <img
                               src={turn.imageUrl}
@@ -547,7 +692,13 @@ function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
                               loading="lazy"
                               className="aspect-[7/4] w-full bg-background/40 object-cover"
                             />
-                          </a>
+                          </button>
+                          <span
+                            aria-hidden="true"
+                            className="pointer-events-none absolute bottom-9 right-2 flex size-7 items-center justify-center rounded-full border border-white/20 bg-black/45 text-white/85 opacity-0 backdrop-blur-sm transition-opacity duration-300 group-hover:opacity-100"
+                          >
+                            <Gem className="size-3.5" />
+                          </span>
                           {turn.imageTitle && (
                             <figcaption className="mono-label truncate px-2.5 py-1.5 text-[9.5px] uppercase tracking-[0.16em] text-muted-foreground/80">
                               {turn.imageTitle}
@@ -563,12 +714,16 @@ function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
                           data-testid="simple-room-sketches"
                         >
                           {turn.sketches.map((sk, k) => (
-                            <a
+                            <button
                               key={`${sk.angle}-${k}`}
-                              href={sk.src}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="group block overflow-hidden rounded-xl border"
+                              type="button"
+                              onClick={() =>
+                                setViewing({
+                                  src: sk.src,
+                                  caption: `${t("The idea's sketch")} — ${sk.angle}`,
+                                })
+                              }
+                              className="group block overflow-hidden rounded-xl border cursor-zoom-in"
                               style={{
                                 borderColor:
                                   "color-mix(in srgb, var(--scope-a,var(--gd)) 30%, transparent)",
@@ -580,8 +735,46 @@ function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
                                 loading="lazy"
                                 className="aspect-square w-full bg-background/40 object-cover transition-transform duration-500 group-hover:scale-[1.03]"
                               />
-                            </a>
+                            </button>
                           ))}
+                        </div>
+                      )}
+                      {/* THE CRYSTALLIZE HAND — the image is born only
+                          when the visitor's own touch calls it; the room
+                          never paints a transmission on its own */}
+                      {config.crystallize && turn.a.trim() && (
+                        <div className="mt-0.5">
+                          {turn.painting ? null : turn.imageUrl ? (
+                            <button
+                              type="button"
+                              onClick={() => crystallize(i)}
+                              data-testid="simple-room-crystallize-again"
+                              className="focus-glow flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] text-muted-foreground transition-colors duration-300 hover:text-foreground"
+                              style={{
+                                borderColor:
+                                  "color-mix(in srgb, var(--scope-a,var(--gd)) 26%, transparent)",
+                              }}
+                            >
+                              <Sparkles className="size-3" aria-hidden="true" />
+                              {t("Crystallize anew")}
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => crystallize(i)}
+                              data-testid="simple-room-crystallize"
+                              className="focus-glow flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] font-medium text-[var(--scope-a,var(--gd))] transition-all duration-300 hover:brightness-110"
+                              style={{
+                                borderColor:
+                                  "color-mix(in srgb, var(--scope-a,var(--gd)) 40%, transparent)",
+                                background:
+                                  "color-mix(in srgb, var(--scope-a,var(--gd)) 9%, transparent)",
+                              }}
+                            >
+                              <Gem className="size-3.5" aria-hidden="true" />
+                              {t("Crystallize into an image")}
+                            </button>
+                          )}
                         </div>
                       )}
                       {/* THE PROCEEDING HANDS — the last reply leaves
@@ -622,6 +815,65 @@ function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
       {/* THE WHISPER LINE — the room's own composer: one quiet field,
           one image hand, one send hand, the house's light on the edge */}
       <div className="shrink-0 px-3 pb-3 pt-1 sm:px-4">
+        {/* THE STYLE'S CHIP — the chosen look, worn until taken off */}
+        {style && (
+          <div className="mb-1.5 flex items-center gap-1.5">
+            <span
+              className="mono-label flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] uppercase tracking-[0.14em] text-[var(--scope-a,var(--gd))]"
+              data-testid="simple-room-style-chip"
+              style={{
+                borderColor:
+                  "color-mix(in srgb, var(--scope-a,var(--gd)) 40%, transparent)",
+                background:
+                  "color-mix(in srgb, var(--scope-a,var(--gd)) 8%, transparent)",
+              }}
+            >
+              <Sparkles className="size-3" aria-hidden="true" />
+              {style}
+            </span>
+            <button
+              type="button"
+              onClick={() => setStyle(null)}
+              aria-label={t("Remove the style")}
+              className="focus-glow flex size-5 items-center justify-center rounded-full text-muted-foreground/70 transition-colors hover:text-foreground"
+            >
+              <X className="size-3" aria-hidden="true" />
+            </button>
+          </div>
+        )}
+        {/* THE "/" PICKER — the styles standing over the whisper line */}
+        {styleMenuOpen && styleMatches.length > 0 && (
+          <div
+            className="mb-1.5 max-h-44 overflow-y-auto rounded-xl border hairline bg-[var(--glass-bg)] p-1 shadow-lg nice-scroll"
+            data-testid="simple-room-style-menu"
+            role="listbox"
+            aria-label={t("Choose a style for the image")}
+          >
+            {styleMatches.map((s) => (
+              <button
+                key={s.value}
+                type="button"
+                role="option"
+                aria-selected={style === s.value}
+                onClick={() => pickStyle(s.value)}
+                className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left transition-colors duration-200 hover:bg-foreground/5"
+              >
+                <Sparkles
+                  className="size-3.5 shrink-0 text-[var(--scope-a,var(--gd))]"
+                  aria-hidden="true"
+                />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[12.5px] font-medium text-foreground">
+                    {s.value}
+                  </span>
+                  <span className="block truncate text-[10.5px] text-muted-foreground/70">
+                    {t(s.hint)}
+                  </span>
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
         {attached && (
           <div className="mb-1.5 flex items-center gap-2">
             <img
@@ -694,11 +946,18 @@ function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
           </button>
           <textarea
             value={draft}
-            onChange={(e) => setDraft(e.target.value)}
+            onChange={(e) => onDraftChange(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
                 e.preventDefault();
+                if (styleMenuOpen) {
+                  setStyleMenuOpen(false);
+                  return;
+                }
                 void send(draft, attached ?? undefined);
+              }
+              if (e.key === "Escape" && styleMenuOpen) {
+                setStyleMenuOpen(false);
               }
             }}
             rows={1}
@@ -720,18 +979,41 @@ function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
           </button>
         </div>
       </div>
+
+      {/* THE DEEP READING — the image fills the sky; fingers pinch it
+          closer, the wheel breathes it in */}
+      {viewing && (
+        <ZoomableLightbox
+          src={viewing.src}
+          caption={viewing.caption}
+          onClose={() => setViewing(null)}
+          testId="simple-room-lightbox"
+        />
+      )}
     </div>
   );
 }
 
 /** THE MANIFEST — the simple making room (the manifesting voice):
-    words, paintings and three small hands under every reply. */
+    words, one gifted painting beneath a reply, three small hands. */
 export function ManifestRoom() {
   return <SimpleMirrorRoom config={MANIFEST_CONFIG} />;
 }
 
 /** THE INVENT — the forge room (the forge voice): bring a spark, hand
-    the Mirror a picture, and the conversation proceeds in one touch. */
+    the Mirror a picture, and crystallize the form when YOU choose. */
 export function InventRoom() {
   return <SimpleMirrorRoom config={INVENT_CONFIG} />;
+}
+
+/** THE QUANTUM — the deep room (the quantum voice): reality unfolded
+    quanta by quanta, the unseen crystallized on request. */
+export function QuantumRoom() {
+  return <SimpleMirrorRoom config={QUANTUM_CONFIG} />;
+}
+
+/** THE HEALX — the body's quiet room (the healing voice): gentle
+    guidance, the resting place crystallized on request. */
+export function HealXRoom() {
+  return <SimpleMirrorRoom config={HEALX_CONFIG} />;
 }

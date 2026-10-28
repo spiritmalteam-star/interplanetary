@@ -151,7 +151,8 @@ register({
   dependencies: ["zai.llm", "browser.webAudio"],
   hardware: "cpu",
   cost: { tier: "free", note: "Conversation pace." },
-  timeoutMs: 120_000,
+  /* the natural length law — a weave may breathe past the old two minutes */
+  timeoutMs: 300_000,
   progress: false,
   cancellable: false,
   retries: 1,

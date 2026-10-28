@@ -17,6 +17,7 @@ import {
 import { toast } from "sonner";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import { ZoomableImageSurface } from "./ZoomableLightbox";
 import type { VisualizationArtifact } from "@/lib/visualization";
 
 /* ================================================================== */
@@ -846,6 +847,14 @@ export function VisualizationCard({
                           testIdPrefix={`${testIdPrefix}-lb`}
                         />
                       </div>
+                    ) : artifact.imageUrl ? (
+                      <ZoomableImageSurface
+                        src={artifact.imageUrl}
+                        alt={artifact.title}
+                        testId={`${testIdPrefix}-lb`}
+                        className="mx-auto flex max-w-[1080px] items-center justify-center"
+                        imgClassName="max-h-[72vh] w-auto max-w-full rounded-xl border border-white/15 shadow-[0_30px_90px_-20px_rgba(0,0,0,0.9)]"
+                      />
                     ) : (
                       artwork(true)
                     )}

@@ -185,16 +185,19 @@ export const TAB_META: Record<
   >
 );
 
-/* THE STANDING RAIL — the InDream shelf's own order (the five makers
-   the visitor named). These pills stand in the header always; the
-   other rooms ride the rail only while they are open. THE SCOPES ARE
-   NOT HERE — the fields' workplace is its own independent room (the
-   crown's Scopes hand opens it directly), never a tab of InDream. */
+/* THE STANDING RAIL — the InDream shelf's own order (the makers the
+   visitor named, the Quantum and the HealX standing where the Manifest
+   once stood, the Manifest itself resting at the scopes' shore). These
+   pills stand in the header always; the other rooms ride the rail only
+   while they are open. THE SCOPES ARE NOT HERE — the fields' workplace
+   is its own independent room (the crown's Scopes hand opens it
+   directly), never a tab of InDream. */
 const STANDING_RAIL: ToolTabKey[] = [
   "dreambook",
   "lightcodes",
   "akashic",
-  "mirroros",
+  "quantum",
+  "healx",
   "invent",
 ];
 

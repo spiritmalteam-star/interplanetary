@@ -109,6 +109,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const body = (await req.json().catch(() => null)) as {
     idea?: string;
     context?: string;
+    style?: string;
   } | null;
   const idea = body?.idea?.trim() ?? "";
   if (!idea) {
@@ -135,9 +136,12 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
   const client = new GoogleGenAI({ apiKey: key });
   const context = (body?.context ?? "").trim().slice(0, 800);
+  /* the visitor's own style — chosen through the "/" hand — leads the look */
+  const style = (body?.style ?? "").trim().slice(0, 120);
   const base =
     `You are visualising an invention idea. THE IDEA: ${idea.slice(0, 700)}. ` +
     (context ? `THE CONVERSATION AROUND IT: ${context}. ` : "") +
+    (style ? `THE VISITOR'S CHOSEN STYLE: ${style} — let it lead the whole look. ` : "") +
     "Depict the idea faithfully — every visible detail must serve what the idea actually is. " +
     "No readable paragraphs of text in the image. ";
 

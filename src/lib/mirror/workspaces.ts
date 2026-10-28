@@ -21,9 +21,11 @@
 
 import type { ComponentType } from "react";
 import {
+  Atom,
   BookOpen,
   Clapperboard,
   Hammer,
+  HeartPulse,
   Layers,
   Library,
   Music,
@@ -73,17 +75,19 @@ export type WorkspaceDefinition = {
 };
 
 /* ------------------------------------------------------------------ */
-/*  THE EIGHT PAGES — the house's own instruments (the Quantum         */
-/*  Laboratory has been laid down at the visitor's word; the Quantum   */
-/*  FIELD itself still speaks its own voice in the chat).              */
+/*  THE EIGHT PAGES — the house's own instruments. The Quantum and the
+/*  HealX stand among the makers now (the visitor named them); the
+/*  Manifest keeps its own room, reached from the scopes' shore.       */
 /* ------------------------------------------------------------------ */
 
 export const WORKSPACE_ORDER: ToolTabKey[] = [
   "dreambook",
   "lightcodes",
   "akashic",
-  "mirroros",
+  "quantum",
+  "healx",
   "invent",
+  "mirroros",
   "video",
   "register",
   "library",
@@ -135,6 +139,36 @@ export const WORKSPACES: Record<ToolTabKey, WorkspaceDefinition> = {
     preserveState: false,
     resourceProfile: "low",
     bridgeMode: "absolute",
+  },
+  quantum: {
+    id: "quantum",
+    title: "Quantum",
+    category: "laboratory",
+    icon: Atom,
+    theme: { accent: "#a78bfa" },
+    loader: () =>
+      import("@/components/mirror/SimpleMirrorRoom").then((m) => ({
+        default: m.QuantumRoom as ComponentType,
+      })),
+    capabilities: ["mirror-conversation", "vision-crystallization", "thread-memory"],
+    preserveState: true,
+    resourceProfile: "low",
+    bridgeMode: "quantum",
+  },
+  healx: {
+    id: "healx",
+    title: "HealX",
+    category: "laboratory",
+    icon: HeartPulse,
+    theme: { accent: "#2dd4bf" },
+    loader: () =>
+      import("@/components/mirror/SimpleMirrorRoom").then((m) => ({
+        default: m.HealXRoom as ComponentType,
+      })),
+    capabilities: ["mirror-conversation", "vision-crystallization", "thread-memory"],
+    preserveState: true,
+    resourceProfile: "low",
+    bridgeMode: "healing",
   },
   mirroros: {
     id: "mirroros",

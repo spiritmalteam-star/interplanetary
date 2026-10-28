@@ -59,8 +59,10 @@ export const maxDuration = 300;
 /*  the veil; the Mirror is the visible voice.                         */
 /*                                                                      */
 /*  Two models, two doors:                                             */
-/*    lyria-3-clip-preview — the 30-second preview (quick listening)   */
-/*    lyria-3.5             — the full song (verses, chorus, bridge)   */
+/*    lyria-3.5             — the one weave door (every length rides   */
+/*                            it: the piece finds its own length)      */
+/*    lyria-3-clip-preview  — retired from the weave (kept only as a   */
+/*                            status mirror for older deployments)     */
 /*                                                                      */
 /*  FOUR DOORS THE VISITOR MAY KNOCK:                                  */
 /*    interpret  — the Mirror's written direction (the brief)          */
@@ -82,7 +84,12 @@ export const maxDuration = 300;
 /* ------------------------------------------------------------------ */
 
 const LYRIA_FULL_MODEL = process.env.LYRIA_MODEL || "lyria-3.5";
+
+/* retired from the weave — the fixed half-minute clip door (kept so
+   older clients' status panels never meet a bare string) */
 const LYRIA_CLIP_MODEL = process.env.LYRIA_CLIP_MODEL || "lyria-3-clip-preview";
+void LYRIA_CLIP_MODEL;
+
 /** The heaviest payload the sky can carry home (Vercel's response door). */
 const MAX_AUDIO_B64 = 4_300_000;
 
@@ -468,7 +475,8 @@ function structureWords(b: LcBody): string {
   return "A loose song shape — the chorus may return, the form may breathe freely.";
 }
 
-/** The 30-second preview's input — compact, one paragraph. */
+/** The preview's input — compact, one paragraph. THE NATURAL LENGTH
+    LAW: no duration is dictated — the piece finds its own length. */
 function clipInput(b: LcBody, interp: LcBody["interp"], languageName: string): string {
   const style = (interp?.style ?? "").trim();
   /* condense: the clip model wants a short, vivid direction */
@@ -486,9 +494,9 @@ function clipInput(b: LcBody, interp: LcBody["interp"], languageName: string): s
     const voice = b.shape?.voice && b.shape.voice !== "None" ? b.shape.voice.toLowerCase() : "gentle";
     const lang =
       b.shape?.vocalLanguage === "My language" ? ` sung in ${languageName}` : "";
-    return `A 30-second piece: ${condensed} Featuring ${voice} vocals${lang}: "${firstLines}".`;
+    return `A piece that finds its own natural length: ${condensed} Featuring ${voice} vocals${lang}: "${firstLines}".`;
   }
-  return `A 30-second instrumental piece — no vocals: ${condensed}`;
+  return `An instrumental piece that finds its own natural length — no vocals: ${condensed}`;
 }
 
 /** The full song's input — the Mirror's complete production brief.
@@ -605,8 +613,10 @@ function buildLyriaInput(
   loopPart?: { index: number; total: number }
 ): { model: string; input: string | LyriaInputBlock[] } {
   const isFull = b.length === "full";
-  const isLoop = b.length === "loop";
-  const model = isFull || isLoop ? LYRIA_FULL_MODEL : LYRIA_CLIP_MODEL;
+  /* THE NATURAL LENGTH LAW — every weave rides the full model, so no
+     piece is walled at thirty seconds: the sound lasts as long as the
+     song itself asks (the clip model's fixed half-minute is retired). */
+  const model = LYRIA_FULL_MODEL;
   const text = loopPart
     ? loopSegmentInput(
         b,
@@ -779,7 +789,7 @@ async function lyriaWeave(
     }
     if (status === 0 && /timeout|abort/i.test(detail)) {
       throw new Error(
-        "The weave took longer than the chamber can hold. Try the 30-second preview first."
+        "The weave took longer than the chamber can hold. Rest, then ask again."
       );
     }
     if (/network|fetch failed|ECONN/i.test(detail)) {
@@ -1016,7 +1026,7 @@ async function postImpl(
         const weave = await lyriaWeave(
           body,
           key,
-          journey ? 200_000 : length === "full" ? 280_000 : 120_000,
+          journey ? 200_000 : 280_000,
           isLoop ? 12_000_000 : MAX_AUDIO_B64
         );
         noteLcSuccess(body.model);

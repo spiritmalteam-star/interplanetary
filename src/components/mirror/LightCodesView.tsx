@@ -627,7 +627,7 @@ function PlayerBar() {
                     ? " · full song"
                     : active.length === "loop"
                       ? " · endless journey"
-                      : " · preview"}
+                      : ""}
                 </p>
                 <h3 className="mt-0.5 truncate font-serif text-[15.5px] font-semibold text-foreground">
                   {active.title}
@@ -1216,9 +1216,9 @@ function LengthToggle() {
   const fullPrice = prices?.musicFull ?? 5;
   const loopPrice = prices?.musicLoop ?? 15;
   const options = [
-    { id: "preview" as const, label: t("Preview · 30s"), price: previewPrice, testId: "lc-length-preview", title: t("A thirty-second listening — 2 lights") },
-    { id: "full" as const, label: t("Full song · 4+ min"), price: fullPrice, testId: "lc-length-full", title: t("The whole composition — woven in two movements and joined into one piece") },
-    { id: "loop" as const, label: t("Endless · ~30 min"), price: loopPrice, testId: "lc-length-loop", title: t("One long seamless journey, woven in six movements, looping for hours") },
+    { id: "preview" as const, label: t("Preview"), price: previewPrice, testId: "lc-length-preview", title: t("A listening that finds its own natural length — 2 lights") },
+    { id: "full" as const, label: t("Full song"), price: fullPrice, testId: "lc-length-full", title: t("The whole composition — woven in two movements and joined into one piece") },
+    { id: "loop" as const, label: t("Endless"), price: loopPrice, testId: "lc-length-loop", title: t("One long seamless journey, woven in six movements, looping for hours") },
   ];
   return (
     <div

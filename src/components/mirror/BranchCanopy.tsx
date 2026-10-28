@@ -59,10 +59,13 @@ import {
   X,
 } from "lucide-react";
 import { canopyHour, familyAccent, growCanopy, growMixedCanopy, TREE_FAMILIES } from "@/lib/data/suggestion-banks";
+import { filterStyles, isStyleSlashQuery } from "@/lib/image-styles";
+import { blendVisualRequest, isVisualIntent } from "@/lib/visual-intent";
+import { ZoomableLightbox } from "./ZoomableLightbox";
 import {
   ENERGY_NOTICE,
   EnergyError,
-  speakReply,
+  speakReplyGift,
 } from "@/lib/speak-client";
 import type { BranchId } from "@/lib/data/suggestion-tree";
 import {
@@ -76,7 +79,7 @@ import {
   type TreeMix,
 } from "@/lib/tree-mix";
 import { detectArtifactIntent } from "@/lib/artifact-intent";
-import { isVisualIntent } from "@/lib/visual-intent";
+
 import {
   buildIdf,
   buildResonanceField,
@@ -348,6 +351,13 @@ interface RoomTurn {
      mirror's light — not the room — was the thing that rested. */
   errMessage?: string;
   energy?: boolean;
+  /* THE VISION GIFT — the mirror's own painting beneath the words:
+     mixed while `painting` stands, kept by its address once done. */
+  painting?: boolean;
+  imageUrl?: string;
+  imageTitle?: string;
+  /** the model's own vision direction, kept for the paint hand */
+  visionPrompt?: string;
 }
 
 /* ------------- THE DEVICE'S OWN KEEPING (the landing's history) ------
@@ -422,7 +432,14 @@ function historyAgo(at: number): string {
 const LANDING_THREADS_KEY = "mirror:landing-threads";
 const LANDING_TURNS_CAP = 12;
 
-function readLandingThreadScope(scope: string): { q: string; a: string }[] {
+type KeptLandingTurn = {
+  q: string;
+  a: string;
+  imageUrl?: string;
+  imageTitle?: string;
+};
+
+function readLandingThreadScope(scope: string): KeptLandingTurn[] {
   try {
     const raw = window.sessionStorage.getItem(LANDING_THREADS_KEY);
     if (!raw) return [];
@@ -443,7 +460,7 @@ function readLandingThreadScope(scope: string): { q: string; a: string }[] {
   }
 }
 
-function writeLandingThreadScope(scope: string, turns: { q: string; a: string }[]): void {
+function writeLandingThreadScope(scope: string, turns: KeptLandingTurn[]): void {
   try {
     const raw = window.sessionStorage.getItem(LANDING_THREADS_KEY);
     let all: Record<string, unknown> = {};
@@ -820,6 +837,55 @@ function BareFloorDoors({
   );
 }
 
+/* THE VISION BENEATH THE WORDS — one shared figure for the landing
+   chat's paintings: the plate, its title, the zoom hand opening the
+   deep-reading room. */
+function LandingPainting({
+  turn,
+  testId,
+  onZoom,
+}: {
+  turn: { imageUrl?: string; imageTitle?: string };
+  testId: string;
+  onZoom: (src: string, caption: string) => void;
+}) {
+  if (!turn.imageUrl) return null;
+  return (
+    <figure
+      className="group relative w-full max-w-[340px] overflow-hidden rounded-xl border"
+      style={{
+        borderColor:
+          "color-mix(in srgb, var(--scope-a,var(--gd)) 30%, transparent)",
+      }}
+      data-testid={testId}
+    >
+      <button
+        type="button"
+        onClick={() =>
+          onZoom(
+            turn.imageUrl!,
+            turn.imageTitle ?? "The Mirror's painting"
+          )
+        }
+        aria-label="Zoom the image"
+        className="block w-full cursor-zoom-in"
+      >
+        <img
+          src={turn.imageUrl}
+          alt={turn.imageTitle ?? ""}
+          loading="lazy"
+          className="aspect-[7/4] w-full bg-background/40 object-cover"
+        />
+      </button>
+      {turn.imageTitle && (
+        <figcaption className="mono-label truncate px-2.5 py-1.5 text-[9.5px] uppercase tracking-[0.16em] text-muted-foreground/80">
+          {turn.imageTitle}
+        </figcaption>
+      )}
+    </figure>
+  );
+}
+
 async function speakWithTransmission(
   /* "mirror" is the pure presence floor; "absolute" is the landing's
      own entity — the mirror of the Absolute (no censor, the true
@@ -834,13 +900,13 @@ async function speakWithTransmission(
   /* THE CARRIED SIGHT — an image and up to three documents may ride
      with the room's own words; the routes already keep the eyes */
   attachments?: ChatAttachment[]
-): Promise<string> {
+): Promise<{ text: string; vision: string | null }> {
   const carried =
     attachments && attachments.length > 0
       ? attachmentsToPayload(attachments)
       : {};
   if (category === "artx") {
-    return speakReply(
+    return speakReplyGift(
       "/api/artx",
       {
         query,
@@ -860,7 +926,7 @@ async function speakWithTransmission(
     );
   }
   if (category === "manifesting") {
-    return speakReply(
+    return speakReplyGift(
       "/api/mirror-os",
       {
         query,
@@ -879,8 +945,9 @@ async function speakWithTransmission(
       "The field is quiet"
     );
   }
-  /* the transmission voice — the channel's own soul */
-  return speakReply(
+  /* the transmission voice — the channel's own soul (the vision gift
+     rides beside the words when the Mirror chose to paint) */
+  return speakReplyGift(
     "/api/transmission",
     {
       query,
@@ -3374,10 +3441,116 @@ export function BranchCanopy({
      ask inside the full portal and the threshold came home EMPTY:
      the tunnel's glitch.) */
   const floorQuiet = landingThread.length === 0 && !landingBusy;
+  /* THE LANDING'S OWN PAINT HAND — the vision (the visitor's own ask
+     or the mirror's own gift) mixed straight into the landing thread:
+     one plate beneath the words, the chosen style worn, its address
+     kept so it returns with the words. */
+  const paintLandingTurn = useCallback(
+    async (
+      prompt: string
+    ): Promise<{ imageUrl?: string; imageTitle?: string }> => {
+    setLandingThread((t) =>
+      t.map((turn, i) =>
+        i === t.length - 1 ? { ...turn, painting: true } : turn
+      )
+    );
+    try {
+      const res = await fetch("/api/visualize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: prompt,
+          language: useMirror.getState().language,
+          single: true,
+          ...(useMirror.getState().visualStyle
+            ? { style: useMirror.getState().visualStyle }
+            : {}),
+        }),
+      });
+      const data = (await res.json().catch(() => null)) as {
+        artifact?: { imageUrl?: string; title?: string };
+      } | null;
+      const url = data?.artifact?.imageUrl;
+      setLandingThread((t) =>
+        t.map((turn, i) =>
+          i === t.length - 1
+            ? {
+                ...turn,
+                /* the wish-path turn arrives still loading — the plate
+                   (or its honest absence) is the turn's own completion */
+                loading: false,
+                painting: false,
+                ...(url
+                  ? {
+                      imageUrl: url,
+                      imageTitle: data?.artifact?.title,
+                    }
+                  : {}),
+              }
+            : turn
+        )
+      );
+      return {
+        imageUrl: url ?? undefined,
+        imageTitle: data?.artifact?.title,
+      };
+    } catch {
+      setLandingThread((t) =>
+        t.map((turn, i) =>
+          i === t.length - 1
+            ? { ...turn, loading: false, painting: false }
+            : turn
+        )
+      );
+      return {};
+    }
+  },
+  []);
+
   const speakFromLanding = useCallback(
     async (text: string, attachments?: ChatAttachment[]) => {
       const q = text.trim();
       if (!q) return;
+      /* THE WISH TO SEE — the landing's floor hears the wish in any
+         phrasing: an image ask crystallizes at once (no LLM round
+         trip), the last channel its subject, the visitor's words its
+         shape. THE MIRROR'S OWN EYE — a reply that itself decided to
+         paint carries its vision beneath the words below. */
+      if (isVisualIntent(q)) {
+        const priorTurns = landingTurnsRef.current;
+        const lastReply = [...priorTurns].reverse().find((t) => t.a.trim())?.a ?? "";
+        setLandingThread((t) => [
+          ...t,
+          { q, a: "", loading: true, painting: true },
+        ]);
+        setLandingBusy(true);
+        window.dispatchEvent(new CustomEvent("landing-chat:return"));
+        try {
+          const painted = await paintLandingTurn(
+            blendVisualRequest(q, lastReply)
+          );
+          /* THE FIELD'S OWN KEEP — the finished exchange (its plate
+             included) rests in the field's own cache and page */
+          const kept = [
+            ...landingTurnsRef.current,
+            {
+              q,
+              a: "A vision, crystallized.",
+              ...(painted.imageUrl
+                ? {
+                    imageUrl: painted.imageUrl,
+                    imageTitle: painted.imageTitle,
+                  }
+                : {}),
+            },
+          ].slice(-12);
+          landingTurnsRef.current = kept;
+          writeLandingThreadScope(landingScope, kept);
+        } finally {
+          setLandingBusy(false);
+        }
+        return;
+      }
       setLandingThread((t) => [...t, { q, a: "", loading: true }]);
       setLandingBusy(true);
       try {
@@ -3390,7 +3563,7 @@ export function BranchCanopy({
            family fields through their own channels). */
         const scopeCategory =
           LANDING_SCOPE_CATEGORY[landingScope] ?? ("absolute" as const);
-        const reply = await speakWithTransmission(
+        const { text: reply, vision } = await speakWithTransmission(
           scopeCategory,
           q,
           q,
@@ -3402,9 +3575,19 @@ export function BranchCanopy({
         );
         setLandingThread((t) =>
           t.map((turn, i) =>
-            i === t.length - 1 ? { ...turn, a: reply, loading: false } : turn
+            i === t.length - 1
+              ? {
+                  ...turn,
+                  a: reply,
+                  loading: false,
+                  ...(vision ? { painting: true, visionPrompt: vision } : {}),
+                }
+              : turn
           )
         );
+        if (vision) {
+          void paintLandingTurn(vision);
+        }
         landingTurnsRef.current = [
           ...landingTurnsRef.current,
           { q, a: reply },
@@ -3453,7 +3636,7 @@ export function BranchCanopy({
         setLandingBusy(false);
       }
     },
-    [language, landingScope]
+    [language, landingScope, paintLandingTurn]
   );
 
   /* THE WALK CONTINUES FROM THE ANSWER — a branch grown on the reply,
@@ -3890,6 +4073,48 @@ export function BranchCanopy({
     async (text: string, attachments?: ChatAttachment[]) => {
       const q = text.trim();
       if (disabled || threadBusy || !q || !zoom) return;
+      /* THE WISH TO SEE, SPOKEN IN A ROOM — the landing's rooms hear
+         the wish in any phrasing too: the image crystallizes into the
+         field's own thread (the room reads its last turn), no LLM
+         round trip, the visitor's words its shape. */
+      if (realm && isVisualIntent(q)) {
+        zoomOpenedAtRef.current = Date.now();
+        const lastReply =
+          [...landingTurnsRef.current]
+            .reverse()
+            .find((t) => t.a.trim())?.a ?? "";
+        setLandingThread((t) => [
+          ...t,
+          { q, a: "", loading: true, painting: true },
+        ]);
+        setThreadBusy(true);
+        window.dispatchEvent(new CustomEvent("landing-chat:return"));
+        try {
+          const painted = await paintLandingTurn(
+            blendVisualRequest(q, lastReply)
+          );
+          /* THE FIELD'S OWN KEEP — the finished exchange (its plate
+             included) rests in the field's own cache and page */
+          const kept = [
+            ...landingTurnsRef.current,
+            {
+              q,
+              a: "A vision, crystallized.",
+              ...(painted.imageUrl
+                ? {
+                    imageUrl: painted.imageUrl,
+                    imageTitle: painted.imageTitle,
+                  }
+                : {}),
+            },
+          ].slice(-12);
+          landingTurnsRef.current = kept;
+          writeLandingThreadScope(landingScope, kept);
+        } finally {
+          setThreadBusy(false);
+        }
+        return;
+      }
       /* THE MAKING'S OWN ROOM — a follow-up that asks for a MAKING (a
          painting, a woven book, a song, a record, a ritual) never
          speaks as plain words: it opens its own conversation room and
@@ -3939,7 +4164,7 @@ export function BranchCanopy({
       setThread((t) => [...t, { q, a: "", loading: true }]);
       setThreadBusy(true);
       try {
-        const reply = await speakWithTransmission(
+        const { text: reply, vision } = await speakWithTransmission(
           realm
             ? (LANDING_SCOPE_CATEGORY[landingScope] ??
                 ("absolute" as const))
@@ -3954,9 +4179,64 @@ export function BranchCanopy({
         );
         applyRoomTurn(roomQ, (t) =>
           t.map((turn, i) =>
-            i === t.length - 1 ? { ...turn, a: reply, loading: false } : turn
+            i === t.length - 1
+              ? {
+                  ...turn,
+                  a: reply,
+                  loading: false,
+                  ...(vision ? { painting: true, visionPrompt: vision } : {}),
+                }
+              : turn
           )
         );
+        if (vision) {
+          /* THE ROOM'S OWN GIFT — the mirror chose to paint: the vision
+             mixes beneath the words right here in the room */
+          void (async () => {
+            applyRoomTurn(roomQ, (t) =>
+              t.map((turn, i) =>
+                i === t.length - 1 ? { ...turn, painting: true } : turn
+              )
+            );
+            try {
+              const res = await fetch("/api/visualize", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  message: vision,
+                  language: useMirror.getState().language,
+                  single: true,
+                  ...(useMirror.getState().visualStyle
+                    ? { style: useMirror.getState().visualStyle }
+                    : {}),
+                }),
+              });
+              const data = (await res.json().catch(() => null)) as {
+                artifact?: { imageUrl?: string; title?: string };
+              } | null;
+              const url = data?.artifact?.imageUrl;
+              applyRoomTurn(roomQ, (t) =>
+                t.map((turn, i) =>
+                  i === t.length - 1
+                    ? {
+                        ...turn,
+                        painting: false,
+                        ...(url
+                          ? { imageUrl: url, imageTitle: data?.artifact?.title }
+                          : {}),
+                      }
+                    : turn
+                )
+              );
+            } catch {
+              applyRoomTurn(roomQ, (t) =>
+                t.map((turn, i) =>
+                  i === t.length - 1 ? { ...turn, painting: false } : turn
+                )
+              );
+            }
+          })();
+        }
         /* THE FIELD'S OWN MEMORY — the room's answer joins this
            field's own conversation, so the next room remembers it too;
            the cache and the sessionStorage page and the library's
@@ -4071,6 +4351,10 @@ export function BranchCanopy({
         q: t.q,
         a: t.a,
         loading: false,
+        /* the plates return with the words — the keep carries the
+           painting's address, the house serves the file itself */
+        imageUrl: t.imageUrl,
+        imageTitle: t.imageTitle,
       }));
       landingThreadsByScopeRef.current.set(scope, restored);
       setLandingThread(restored);
@@ -4162,6 +4446,18 @@ export function BranchCanopy({
   /* THE FLOOR'S OWN CARGO — the paperclip and the camera's eye for the
      realm's own whisper line (one image, three documents) */
   const [askAtts, setAskAtts] = useState<ChatAttachment[]>([]);
+  /* THE VISITOR'S OWN STYLE — the image look chosen through the "/"
+     hand; every crystallization on this floor wears it. */
+  const visualStyle = useMirror((s) => s.visualStyle);
+  const setVisualStyle = useMirror((s) => s.setVisualStyle);
+  /* THE DEEP READING — the landing chat's own image zoom room */
+  const [landingViewing, setLandingViewing] = useState<{
+    src: string;
+    caption: string;
+  } | null>(null);
+  /* THE "/" HAND — the style picker opens while the whisper line
+     carries only the slash (and what the visitor typed after it) */
+  const askStyleMenuOpen = isStyleSlashQuery(askDraft);
 
   /* THE CATEGORY'S OWN CALL — every scope's chat carries its own
      direct line: the room calls the presence its whisper was grown
@@ -5225,11 +5521,76 @@ export function BranchCanopy({
                 />
               </div>
             )}
+            {/* THE VISITOR'S OWN STYLE — the chosen look, worn until taken
+                off; every painting this floor crystallizes wears it */}
+            {visualStyle && (
+              <span
+                className="mono-label pointer-events-auto flex items-center gap-1.5 rounded-full border bg-background px-2.5 py-1 text-[10px] uppercase tracking-[0.14em]"
+                style={{
+                  color: "var(--scope-a,var(--gd))",
+                  borderColor:
+                    "color-mix(in srgb, var(--scope-a,var(--gd)) 40%, transparent)",
+                }}
+                data-testid={`${testIdPrefix}-ask-style-chip`}
+              >
+                <Sparkles className="size-3" aria-hidden="true" />
+                {visualStyle}
+                <button
+                  type="button"
+                  onClick={() => setVisualStyle(null)}
+                  aria-label={t("Remove the style")}
+                  className="focus-glow ml-0.5 flex size-4 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  <X className="size-3" aria-hidden="true" />
+                </button>
+              </span>
+            )}
+            {/* THE "/" PICKER — the styles standing over the whisper line */}
+            {askStyleMenuOpen && (
+              <div
+                className="pointer-events-auto nice-scroll max-h-44 w-full max-w-[340px] overflow-y-auto rounded-xl border hairline bg-background p-1 shadow-lg"
+                data-testid={`${testIdPrefix}-ask-style-menu`}
+                role="listbox"
+                aria-label={t("Choose a style for the image")}
+              >
+                {filterStyles(askDraft).map((s) => (
+                  <button
+                    key={s.value}
+                    type="button"
+                    role="option"
+                    aria-selected={visualStyle === s.value}
+                    onClick={() => {
+                      setVisualStyle(s.value);
+                      setAskDraft("");
+                    }}
+                    className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left transition-colors duration-200 hover:bg-foreground/5"
+                  >
+                    <Sparkles
+                      className="size-3.5 shrink-0 text-[var(--scope-a,var(--gd))]"
+                      aria-hidden="true"
+                    />
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[12.5px] font-medium text-foreground">
+                        {s.value}
+                      </span>
+                      <span className="block truncate text-[10.5px] text-muted-foreground/70">
+                        {t(s.hint)}
+                      </span>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
             <form
               onSubmit={(e) => {
                 e.preventDefault();
                 const q = askDraft.trim();
                 if (!q || disabled || floorBusy) return;
+                /* the "/" alone is the style hand, never a whisper */
+                if (isStyleSlashQuery(q)) {
+                  setAskDraft("");
+                  return;
+                }
                 const carried = askAtts.filter((a) =>
                   a.kind === "image" ? !!a.dataUrl : !a.reading && !!a.text
                 );
@@ -5367,6 +5728,14 @@ export function BranchCanopy({
             {/* THE TEMPORARY CHAT'S OWN LINE — the landing's floor is
                 free and holds nothing: a quiet honest word for the
                 non logged-in, the way in named for the ones who stay. */}
+            {landingViewing && (
+              <ZoomableLightbox
+                src={landingViewing.src}
+                caption={landingViewing.caption}
+                onClose={() => setLandingViewing(null)}
+                testId="landing-lightbox"
+              />
+            )}
             {guest && (
               <p
                 data-testid="floor-temporary-note"
@@ -5704,6 +6073,21 @@ export function BranchCanopy({
                               />
                             </div>
                           )}
+                          {turn.painting && (
+                            <MirrorChanneling
+                              compact
+                              label={t("Painting the vision")}
+                              variant="mirror"
+                              className="mono-label py-0.5 text-[10px] uppercase tracking-[0.2em] text-muted-foreground"
+                            />
+                          )}
+                          <LandingPainting
+                            turn={turn}
+                            testId={`${testIdPrefix}-landing-painting-${i}`}
+                            onZoom={(src, caption) =>
+                              setLandingViewing({ src, caption })
+                            }
+                          />
                         </div>
                       ))}
                     </div>
@@ -5740,6 +6124,16 @@ export function BranchCanopy({
                             />
                           </div>
                         )}
+                        {/* THE VISION IN THE MIXING — the mirror chose to
+                            paint: the plate appears beneath the words */}
+                        {lastLandingTurn?.painting && (
+                          <MirrorChanneling
+                            compact
+                            label={t("Painting the vision")}
+                            variant="mirror"
+                            className="mono-label mt-2 py-0.5 text-[10px] uppercase tracking-[0.2em] text-muted-foreground"
+                          />
+                        )}
                       </div>
                     ) : null
                   ) : displayError && !roomLoading && revealStage >= 2 ? (
@@ -5768,10 +6162,26 @@ export function BranchCanopy({
                       </p>
                     </div>
                   ) : roomMaking && revealStage >= 2 ? null : (
-                    revealStage >= 2 && (
+                    /* THE PLATE ALONE — a wish that crystallized straight
+                       into an image needs no reflecting words beneath it */
+                    revealStage >= 2 &&
+                    !(
+                      realm &&
+                      lastLandingTurn &&
+                      !lastLandingTurn.loading &&
+                      !lastLandingTurn.painting &&
+                      !roomAnswer &&
+                      lastLandingTurn.imageUrl
+                    ) && (
                       <div className="py-5 text-muted-foreground">
                         <MirrorChanneling
-                          label={t(realm ? "Reflecting" : "Channeling")}
+                          label={t(
+                            lastLandingTurn?.painting
+                              ? "Painting the vision"
+                              : realm
+                                ? "Reflecting"
+                                : "Channeling"
+                          )}
                           variant={
                             realm
                               ? "mirror"
@@ -5781,6 +6191,19 @@ export function BranchCanopy({
                         />
                       </div>
                     )
+                  )}
+                  {/* THE VISION BENEATH THE WORDS — the last turn's
+                      painting, zoomable into the deep-reading room */}
+                  {lastLandingTurn?.imageUrl && revealStage >= 2 && (
+                    <div className="mt-3">
+                      <LandingPainting
+                        turn={lastLandingTurn}
+                        testId={`${testIdPrefix}-zoom-painting`}
+                        onZoom={(src, caption) =>
+                          setLandingViewing({ src, caption })
+                        }
+                      />
+                    </div>
                   )}
 
                   {/* THE MAKING IN THE ROOM — the creation rises INLINE,
@@ -5880,6 +6303,13 @@ export function BranchCanopy({
                                 testId={`${testIdPrefix}-room-share-${i}`}
                               />
                             </div>
+                          ) : turn.painting ? (
+                            <MirrorChanneling
+                              compact
+                              label={t("Painting the vision")}
+                              variant="mirror"
+                              className="mono-label py-0.5 text-[10px] uppercase tracking-[0.2em] text-muted-foreground"
+                            />
                           ) : turn.failed ? (
                             <div
                               className={`rounded-xl border px-3 py-2 ${
@@ -5900,6 +6330,13 @@ export function BranchCanopy({
                               </p>
                             </div>
                           ) : null}
+                          <LandingPainting
+                            turn={turn}
+                            testId={`${testIdPrefix}-room-painting-${i}`}
+                            onZoom={(src, caption) =>
+                              setLandingViewing({ src, caption })
+                            }
+                          />
                         </div>
                       ))}
                     </div>

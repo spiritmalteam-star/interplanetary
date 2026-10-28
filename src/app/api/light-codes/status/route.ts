@@ -29,8 +29,8 @@ export async function GET(req: NextRequest) {
     keyConfigured: Boolean(process.env.GEMINI_API_KEY),
     models: {
       preview: {
-        id: process.env.LYRIA_CLIP_MODEL || "lyria-3-clip-preview",
-        purpose: "30-second previews",
+        id: process.env.LYRIA_MODEL || "lyria-3.5",
+        purpose: "previews — the piece finds its own natural length",
       },
       full: {
         id: process.env.LYRIA_MODEL || "lyria-3.5",

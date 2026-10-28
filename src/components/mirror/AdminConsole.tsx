@@ -218,9 +218,9 @@ export function AdminConsole() {
   }
 
   const priceFields: { key: keyof EconomyData["prices"]; label: string }[] = [
-    { key: "musicPreview", label: t("Music preview (30s)") },
-    { key: "musicFull", label: t("Full song (3+ min)") },
-    { key: "musicLoop", label: t("Endless journey (~30 min loop)") },
+    { key: "musicPreview", label: t("Music preview") },
+    { key: "musicFull", label: t("Full song") },
+    { key: "musicLoop", label: t("Endless journey") },
     { key: "akashicReading", label: t("Akashic creative reading") },
     { key: "bookShort", label: t("Short book") },
     { key: "bookExtended", label: t("Extended book") },

@@ -265,6 +265,13 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
     const modeHint = isVisualizationMode(body?.modeHint)
       ? (body.modeHint as VisualizationMode)
       : null;
+    /* THE ONE PLATE LAW — when the visitor's room asks for a single
+       picture (the Manifest gift), the presentation door never opens:
+       exactly one image is painted, however the director leans. */
+    const singleImage = body?.single === true;
+    /* THE VISITOR'S OWN STYLE — chosen through the "/" hand; the
+       director weaves it into the prompt when present. */
+    const style = str(body?.style, 120);
     const contextSubject = str(body?.contextSubject, 400);
     const previousMode = isVisualizationMode(body?.previousMode)
       ? (body.previousMode as VisualizationMode)
@@ -295,6 +302,16 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
     if (modeHint) {
       userLines.push(
         `The visitor explicitly chose the mode "${modeHint}" — honor it exactly.`
+      );
+    }
+    if (singleImage) {
+      userLines.push(
+        `ONE IMAGE ONLY: never choose the "presentation" mode — reply with one single artwork ("illustration" unless another single mode serves better).`
+      );
+    }
+    if (style) {
+      userLines.push(
+        `THE VISITOR'S CHOSEN STYLE: "${style}" — let it lead the artwork's whole look (palette, texture, mood), while staying true to the subject.`
       );
     }
 
@@ -378,9 +395,10 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
     }
 
     /* ---------- shape the director's spec ---------- */
-    const mode: VisualizationMode = isVisualizationMode(spec.mode)
+    let mode: VisualizationMode = isVisualizationMode(spec.mode)
       ? spec.mode
       : "illustration";
+    if (singleImage && mode === "presentation") mode = "illustration";
     const aspect = ["wide", "tall", "square"].includes(String(spec.aspect))
       ? String(spec.aspect)
       : null;
@@ -460,14 +478,16 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
 
     /* ---------- the atelier paints ---------- */
     sweepOldPaintings();
-    const finalPrompt = `${artworkPrompt}. ${ART_DIRECTION}. ${ART_AVOID}.`;
+    const finalPrompt = style
+      ? `${artworkPrompt}. Style: ${style}. ${ART_DIRECTION}. ${ART_AVOID}.`
+      : `${artworkPrompt}. ${ART_DIRECTION}. ${ART_AVOID}.`;
     const preparedPrompt = finalPrompt;
     const slidesSpec = Array.isArray(spec.slides) ? spec.slides : [];
 
     let mainPainting: GeneratedImage | null = null;
     const slidePaintings: (GeneratedImage | null)[] = [];
 
-    if (mode === "presentation") {
+    if (mode === "presentation" && !singleImage) {
       /* painted one by one — the queue keeps the brushes honest; each
          slide may try three times before the brushes rest */
       const slideDefs = slidesSpec.slice(0, 5);

@@ -3,7 +3,6 @@
 import { useCallback, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  Camera,
   Check,
   FileText,
   LoaderCircle,
@@ -17,22 +16,23 @@ import { cn } from "@/lib/utils";
 import { LiveCall } from "./LiveCall";
 import type { LiveScopeKey } from "@/lib/live-scopes";
 import {
-  FULL_ACCEPT,
+  DOC_ACCEPT,
   MAX_DOC_BYTES,
-  MAX_IMAGES,
   MAX_DOCUMENTS,
-  MAX_IMAGE_BYTES,
   type ChatAttachment,
+  isDocFile,
   makeAttachment,
   parseDocument,
-  readFileAsDataUrl,
 } from "./attachments";
 
 /* ------------------------------------------------------------------ */
 /*  ChatInputExtras — the paperclip and the call, on every chat input. */
-/*  The paperclip receives ONE image and up to THREE documents         */
-/*  (PDF, Excel, Word). The call icon has ONE purpose only: a single   */
-/*  click opens the scope's own direct mirror communication.           */
+/*  THE IMAGES STAND DOWN — the chat hears the wish to see and paints  */
+/*  by itself (the crystallization gate), so the image hands have no   */
+/*  place on the line anymore: the paperclip carries only documents    */
+/*  (PDF, Excel, Word, up to three), the camera rests. The call icon   */
+/*  has ONE purpose: a single click opens the scope's own direct       */
+/*  mirror communication.                                              */
 /* ------------------------------------------------------------------ */
 
 interface ChatInputExtrasProps {
@@ -72,7 +72,6 @@ export function ChatInputExtras({
   const t = useT();
 
   const fileRef = useRef<HTMLInputElement | null>(null);
-  const cameraRef = useRef<HTMLInputElement | null>(null);
   const [liveCallOpen, setLiveCallOpen] = useState(false);
 
   /* ---------- the paperclip ---------- */
@@ -98,59 +97,47 @@ export function ChatInputExtras({
       if (!files || files.length === 0) return;
       const incoming = Array.from(files);
       const shaped: ChatAttachment[] = [];
-      let images = attachments.filter((a) => a.kind === "image").length;
       let docs = attachments.filter((a) => a.kind === "document").length;
       let docQueued = false;
 
       for (const file of incoming) {
-        const made = makeAttachment(file);
-        if (!made) {
-          toast.error(t("Only image, PDF, Excel or Word files are received"));
+        /* the line carries words and documents only — an image handed
+           here is met with the honest word (the chat paints by itself) */
+        if (!isDocFile(file)) {
+          toast.error(t("Only PDF, Excel or Word files are received"));
           continue;
         }
-        if (made.kind === "image") {
-          if (images >= MAX_IMAGES) {
-            toast.error(t("One image may travel with a message"));
-            continue;
-          }
-          if (file.size > MAX_IMAGE_BYTES) {
-            toast.error(t("That file is too large"));
-            continue;
-          }
-          images++;
-          const att = made.attachment;
-          shaped.push(att);
-          readFileAsDataUrl(file)
-            .then((url) => updateAttachment(att.id, { dataUrl: url }))
-            .catch(() => removeAttachment(att.id));
-        } else {
-          if (docs >= MAX_DOCUMENTS) {
-            toast.error(t("Up to three documents may travel with a message"));
-            continue;
-          }
-          if (file.size > MAX_DOC_BYTES) {
-            toast.error(t("That file is too large"));
-            continue;
-          }
-          docs++;
-          docQueued = true;
-          const att = made.attachment;
-          shaped.push(att);
-          parseDocument(file)
-            .then(({ text }) =>
-              updateAttachment(att.id, { text, reading: false })
-            )
-            .catch((err: unknown) => {
-              removeAttachment(att.id);
-              toast.error(
-                t(
-                  err instanceof Error
-                    ? err.message
-                    : "That document could not be read"
-                )
-              );
-            });
+        const made = makeAttachment(file);
+        if (!made) {
+          toast.error(t("Only PDF, Excel or Word files are received"));
+          continue;
         }
+        if (docs >= MAX_DOCUMENTS) {
+          toast.error(t("Up to three documents may travel with a message"));
+          continue;
+        }
+        if (file.size > MAX_DOC_BYTES) {
+          toast.error(t("That file is too large"));
+          continue;
+        }
+        docs++;
+        docQueued = true;
+        const att = made.attachment;
+        shaped.push(att);
+        parseDocument(file)
+          .then(({ text }) =>
+            updateAttachment(att.id, { text, reading: false })
+          )
+          .catch((err: unknown) => {
+            removeAttachment(att.id);
+            toast.error(
+              t(
+                err instanceof Error
+                  ? err.message
+                  : "That document could not be read"
+              )
+            );
+          });
       }
 
       if (docQueued) toast(t("Reading the documents…"));
@@ -158,7 +145,6 @@ export function ChatInputExtras({
         onAttachmentsChange((prev) => [...prev, ...shaped]);
       }
       if (fileRef.current) fileRef.current.value = "";
-      if (cameraRef.current) cameraRef.current.value = "";
     },
     [attachments, t, updateAttachment, removeAttachment, onAttachmentsChange]
   );
@@ -181,35 +167,22 @@ export function ChatInputExtras({
       <input
         ref={fileRef}
         type="file"
-        accept={FULL_ACCEPT}
+        accept={DOC_ACCEPT}
         multiple
         hidden
         onChange={(e) => handleFiles(e.target.files)}
         aria-hidden="true"
         tabIndex={-1}
       />
-      {/* THE CAPTURE — the camera's own eye: one touch and the phone
-          photographs straight into the message (the rear lens by law;
-          the picker still answers on desks without a camera). */}
-      <input
-        ref={cameraRef}
-        type="file"
-        accept="image/*"
-        capture="environment"
-        hidden
-        onChange={(e) => handleFiles(e.target.files)}
-        aria-hidden="true"
-        tabIndex={-1}
-      />
 
-      {/* paperclip — one image, three documents */}
+      {/* paperclip — documents only, the image hands rest */}
       {withAttachments && (
         <button
           type="button"
           onClick={() => fileRef.current?.click()}
           disabled={disabled}
-          aria-label={t("Attach an image or documents")}
-          title={t("Attach an image or documents")}
+          aria-label={t("Attach documents")}
+          title={t("Attach documents")}
           data-testid={`chat-attach-${scope}`}
           className={cn(
             "focus-glow flex shrink-0 items-center justify-center rounded-full border transition-all duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40",
@@ -218,25 +191,6 @@ export function ChatInputExtras({
           style={{ borderColor: "color-mix(in srgb, " + accentVar + " 26%, transparent)" }}
         >
           <Paperclip className={cn(iconSize, "text-muted-foreground")} aria-hidden="true" />
-        </button>
-      )}
-
-      {/* the camera — one touch photographs into the message */}
-      {withAttachments && (
-        <button
-          type="button"
-          onClick={() => cameraRef.current?.click()}
-          disabled={disabled}
-          aria-label={t("Photograph into the message")}
-          title={t("Photograph into the message")}
-          data-testid={`chat-capture-${scope}`}
-          className={cn(
-            "focus-glow flex shrink-0 items-center justify-center rounded-full border transition-all duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40",
-            btnSize
-          )}
-          style={{ borderColor: "color-mix(in srgb, " + accentVar + " 26%, transparent)" }}
-        >
-          <Camera className={cn(iconSize, "text-muted-foreground")} aria-hidden="true" />
         </button>
       )}
 

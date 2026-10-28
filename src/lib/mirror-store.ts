@@ -204,6 +204,8 @@ export type ToolTabKey =
   | "register"
   | "mirroros"
   | "library"
+  | "quantum"
+  | "healx"
   | "scopes";
 
 /* THE LANDING'S OWN SCOPE — the field the threshold's docked chat
@@ -793,6 +795,9 @@ interface MirrorState {
   lcShape: LcShape;
   /** The weave's length: the 30-second preview or the full song. */
   lcLength: "preview" | "full" | "loop";
+  /* THE VISITOR'S OWN STYLE — the image look chosen through the "/"
+     hand in any composer; every crystallization wears it. */
+  visualStyle: string | null;
   lcStatus: "idle" | "interpreting" | "polling" | "ready" | "error";
   /** THE MIRROR'S BRIEF — the chamber's composition draft: the direction
       the Mirror wrote (or one carried in from the chat), editable by
@@ -836,6 +841,7 @@ interface MirrorState {
   setLcUserLyrics: (v: string) => void;
   setLcShape: (shape: Partial<LcShape>) => void;
   setLcLength: (length: "preview" | "full" | "loop") => void;
+  setVisualStyle: (style: string | null) => void;
   /** Mirror translation → the weave → the player. The chamber's full
       round: the Mirror composes the brief, then the engine renders it.
       Kept for one-ask paths (chips, prefills, error retries). */
@@ -1155,6 +1161,10 @@ async function crystallizeVisual(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         language: useMirror.getState().language,
+        /* the visitor's own style — chosen through the "/" hand — rides along */
+        ...(useMirror.getState().visualStyle
+          ? { style: useMirror.getState().visualStyle }
+          : {}),
         message: regenerateOf ? regenerateOf.request ?? request : request,
         history,
         ...(regenerateOf
@@ -1645,6 +1655,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   lcUserLyrics: "",
   lcShape: { ...LC_DEFAULT_SHAPE },
   lcLength: "preview" as "preview" | "full" | "loop",
+  visualStyle: null,
   lcStatus: "idle" as "idle" | "interpreting" | "polling" | "ready" | "error",
   lcBrief: null,
   lcBusyOp: null,
@@ -1960,6 +1971,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   setLcUserLyrics: (v) => set({ lcUserLyrics: v }),
   setLcShape: (shape) => set((s) => ({ lcShape: { ...s.lcShape, ...shape } })),
   setLcLength: (length) => set({ lcLength: length }),
+  setVisualStyle: (style) => set({ visualStyle: style }),
   setLcRaw: (v) => set({ lcRaw: v }),
   /* THE CHAMBER'S ROUND — the Mirror composes the brief; the visitor
      reads it, shapes it, and strikes the generate with their own hand;
@@ -3582,6 +3594,8 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           language: get().language,
+          /* the visitor's own style — chosen through the "/" hand — rides along */
+          ...(get().visualStyle ? { style: get().visualStyle } : {}),
           message: regenerateOf ? regenerateOf.request ?? question : question,
           history,
           ...(regenerateOf
@@ -4120,6 +4134,8 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           language: get().language,
+          /* the visitor's own style — chosen through the "/" hand — rides along */
+          ...(get().visualStyle ? { style: get().visualStyle } : {}),
           message: regenerateOf ? regenerateOf.request ?? question : question,
           history,
           ...(regenerateOf
@@ -4300,6 +4316,8 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           language: get().language,
+          /* the visitor's own style — chosen through the "/" hand — rides along */
+          ...(get().visualStyle ? { style: get().visualStyle } : {}),
           message: regenerateOf ? regenerateOf.request ?? question : question,
           history,
           ...(regenerateOf
@@ -4608,6 +4626,8 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           language: get().language,
+          /* the visitor's own style — chosen through the "/" hand — rides along */
+          ...(get().visualStyle ? { style: get().visualStyle } : {}),
           message: regenerateOf ? regenerateOf.request ?? question : question,
           history,
           ...(regenerateOf
