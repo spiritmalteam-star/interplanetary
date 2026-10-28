@@ -13,6 +13,7 @@ import {
   beginWeave,
   dropLoopSession,
   LOOP_PARTS,
+  FULL_SONG_PARTS,
   endWeave,
   getLoopSession,
   guardBusy,
@@ -517,38 +518,61 @@ function songInput(b: LcBody, interp: LcBody["interp"], languageName: string): s
 /** The endless journey's per-part input — one long piece woven in
     parts: part one opens the world, the middle parts carry it, the
     final part closes gently. Every part keeps the SAME instruments,
-    key, mood and texture, so the joined whole sounds like one breath. */
+    key, mood and texture, so the joined whole sounds like one breath.
+    THE SONG'S OWN MOVEMENTS — the full song rides the same loom now
+    (kind "song"): the opening movement begins the song and must not
+    fade out; the closing movement brings it to a natural end. */
 function loopSegmentInput(
   b: LcBody,
   interp: LcBody["interp"],
   languageName: string,
   index: number,
-  total: number
+  total: number,
+  kind: "journey" | "song" = "journey"
 ): string {
+  const song = kind === "song";
   const style = (interp?.style ?? "").trim();
   const lyrics = b.userLyrics?.trim() || interp?.lyrics || null;
-  const sings = wantVocals(b, lyrics) && (index === 1 || index === total);
+  const sings = wantVocals(b, lyrics) && (song || index === 1 || index === total);
   const parts: string[] = [];
   const title = interp?.title ?? "a transmission";
   if (index === 1) {
-    parts.push(`Long-form ambient journey — "${title}" — PART 1 of ${total}.`);
+    parts.push(
+      song
+        ? `Musical production brief — "${title}" — PART 1 of ${total}: the song's OPENING MOVEMENT.`
+        : `Long-form ambient journey — "${title}" — PART 1 of ${total}.`
+    );
   } else if (index === total) {
-    parts.push(`Long-form ambient journey — "${title}" — FINAL PART (${index} of ${total}).`);
+    parts.push(
+      song
+        ? `Musical production brief — "${title}" — FINAL PART (${index} of ${total}): the song's CLOSING MOVEMENT.`
+        : `Long-form ambient journey — "${title}" — FINAL PART (${index} of ${total}).`
+    );
   } else {
-    parts.push(`Long-form ambient journey — "${title}" — CONTINUATION, part ${index} of ${total}.`);
+    parts.push(
+      song
+        ? `Musical production brief — "${title}" — CONTINUATION, movement ${index} of ${total}.`
+        : `Long-form ambient journey — "${title}" — CONTINUATION, part ${index} of ${total}.`
+    );
   }
   if (style) parts.push(style);
   if (index === 1) {
     parts.push(
-      `This is the OPENING part of one long, continuously flowing piece. Begin calmly, from near-silence, and swell gently. Establish the whole world: the instruments, the key, the pace. Do NOT conclude — sustain the atmosphere so the next part can continue seamlessly. No hard intro hit, no drum entrance that starts abruptly.`
+      song
+        ? `This is the OPENING MOVEMENT of one song carried across several movements. Begin the song properly: establish the key, the instruments, the pace; let the first verse breathe. Do NOT fade out and do NOT conclude — keep the song's energy alive so the next movement continues it exactly where this one stands.`
+        : `This is the OPENING part of one long, continuously flowing piece. Begin calmly, from near-silence, and swell gently. Establish the whole world: the instruments, the key, the pace. Do NOT conclude — sustain the atmosphere so the next part can continue seamlessly. No hard intro hit, no drum entrance that starts abruptly.`
     );
   } else if (index === total) {
     parts.push(
-      `This is the CLOSING part of the same long piece. Continue the exact same world — same instruments, same key, same pace, no restart, no re-introduction. Let the music gradually settle: the energy recedes, the texture thins, and the piece ends sustained and calm, fading like a tide going out. No abrupt ending.`
+      song
+        ? `This is the CLOSING MOVEMENT of the same song. Continue the exact same world — same instruments, same key, same pace, no restart, no re-introduction. Carry the song into its second half: the chorus returns, the last verse lands, and the piece comes to its NATURAL CLOSE — a real outro, the song ending whole, never cut, never fading mid-phrase.`
+        : `This is the CLOSING part of the same long piece. Continue the exact same world — same instruments, same key, same pace, no restart, no re-introduction. Let the music gradually settle: the energy recedes, the texture thins, and the piece ends sustained and calm, fading like a tide going out. No abrupt ending.`
     );
   } else {
     parts.push(
-      `This is a CONTINUATION of the same long piece. Begin exactly where the previous part's atmosphere stood — no restart, no re-introduction, no new opening theme. Keep the same instruments, key, pace and mood; let small variations bloom inside the world (a new counter-melody, a texture that shifts like light on water). Do NOT conclude — the piece continues after this part.`
+      song
+        ? `This is a CONTINUATION MOVEMENT of the same song. Begin exactly where the previous movement's energy stood — no restart, no re-introduction, no new opening theme. Keep the same instruments, key, pace and mood; carry the song's story forward (a new verse, the chorus returning) and do NOT conclude — the song continues after this movement.`
+        : `This is a CONTINUATION of the same long piece. Begin exactly where the previous part's atmosphere stood — no restart, no re-introduction, no new opening theme. Keep the same instruments, key, pace and mood; let small variations bloom inside the world (a new counter-melody, a texture that shifts like light on water). Do NOT conclude — the piece continues after this part.`
     );
   }
   if (sings) {
@@ -556,12 +580,16 @@ function loopSegmentInput(
     const lang = b.shape?.vocalLanguage === "My language" ? `sung in ${languageName}` : "";
     parts.push(`Vocals: ${voice}${lang ? `, ${lang}` : ""}.`);
     if (lyrics) parts.push(`LYRICS (set them to the music):\n${lyrics}`);
-  } else if (index !== 1 && index !== total) {
+  } else if (!song && index !== 1 && index !== total) {
     parts.push("This part is instrumental — the theme carried by instruments alone.");
   } else {
     parts.push("Instrumental — no vocals, no lyrics.");
   }
-  parts.push(`Length: about four to five minutes of continuous music.`);
+  parts.push(
+    song
+      ? `Length: about four minutes of continuous music.`
+      : `Length: about four to five minutes of continuous music.`
+  );
   return parts.join("\n\n");
 }
 
@@ -579,8 +607,15 @@ function buildLyriaInput(
   const isFull = b.length === "full";
   const isLoop = b.length === "loop";
   const model = isFull || isLoop ? LYRIA_FULL_MODEL : LYRIA_CLIP_MODEL;
-  const text = isLoop && loopPart
-    ? loopSegmentInput(b, interp, languageName, loopPart.index, loopPart.total)
+  const text = loopPart
+    ? loopSegmentInput(
+        b,
+        interp,
+        languageName,
+        loopPart.index,
+        loopPart.total,
+        isFull ? "song" : "journey"
+      )
     : isFull
       ? songInput(b, interp, languageName)
       : clipInput(b, interp, languageName);
@@ -801,10 +836,16 @@ async function postImpl(
       const keeperId = meter?.userId ?? "anon";
       const length: LcLength =
         b.length === "full" ? "full" : b.length === "loop" ? "loop" : "preview";
+      /* THE JOURNEY'S OWN SHAPE — the endless journey rides six
+         movements; the full song rides two (the song's opening and
+         closing movement, joined into one piece). A continuation part
+         announces itself by carrying the journey's loopPart. */
       const isLoop = length === "loop";
-      const total = isLoop ? LOOP_PARTS : 0;
-      const rawIndex = isLoop ? Number(b.loopPart?.index ?? 1) : 0;
-      const partIndex = isLoop ? Math.min(Math.max(1, Math.floor(rawIndex) || 1), total) : 0;
+      const isSongJourney = length === "full" && Boolean(b.loopPart);
+      const journey = isLoop || isSongJourney;
+      const total = isLoop ? LOOP_PARTS : isSongJourney ? FULL_SONG_PARTS : 0;
+      const rawIndex = journey ? Number(b.loopPart?.index ?? 1) : 0;
+      const partIndex = journey ? Math.min(Math.max(1, Math.floor(rawIndex) || 1), total) : 0;
 
       /* the journey's thread — parts after the first must find their session.
          THE DEEP THREAD: a keeper with a row in the house lays every part
@@ -815,7 +856,7 @@ async function postImpl(
         meter && !meter.userId.startsWith("stateless:") ? meter.userId : null;
       let session: LoopSession | null = null;
       let dbThread: { token: string; total: number; parts: number } | null = null;
-      if (isLoop && partIndex > 1) {
+      if (journey && partIndex > 1) {
         if (dbUserId) {
           const st = b.loopToken ? await dbLoopState(b.loopToken, dbUserId) : null;
           if (!st) {
@@ -916,7 +957,7 @@ async function postImpl(
           passed,
           imageDataUrl,
           languageName,
-          isLoop ? { index: partIndex, total } : undefined
+          journey ? { index: partIndex, total } : undefined
         );
 
         /* ---- the durable keeping — the weave's own job row ------------
@@ -930,7 +971,7 @@ async function postImpl(
         const durableKeeper = Boolean(
           meter && !meter.userId.startsWith("stateless:")
         );
-        if (durableKeeper && meter && !isLoop) {
+        if (durableKeeper && meter && !isLoop && partIndex <= 1) {
           try {
             /* the light this weigh drew — read from the ledger row the
                meter laid; when no row exists, nothing was drawn (the
@@ -975,12 +1016,12 @@ async function postImpl(
         const weave = await lyriaWeave(
           body,
           key,
-          length === "full" ? 280_000 : isLoop ? 200_000 : 120_000,
+          journey ? 200_000 : length === "full" ? 280_000 : 120_000,
           isLoop ? 12_000_000 : MAX_AUDIO_B64
         );
         noteLcSuccess(body.model);
 
-        if (!isLoop) {
+        if (!journey) {
           /* ---- the vault keeps what the sky gave ----------------------
              THE WEIGHT LAW'S OTHER HALF: the sound is kept FIRST, under
              its own vault name — the file where the house's shelf is
@@ -1081,7 +1122,8 @@ async function postImpl(
           });
         }
 
-        /* --- the endless journey: land this part, then join or continue --- */
+        /* --- the journey (endless or the song's own movements): land
+           this part, then join or continue --- */
         const segBytes = Buffer.from(weave.audioB64, "base64");
         if (dbUserId) {
           /* the deep thread — parts and final rest in the vault itself,
@@ -1090,7 +1132,7 @@ async function postImpl(
             const st = await dbLoopBegin(dbUserId, total, weave.mime, segBytes);
             return NextResponse.json({
               ...passed,
-              length: "loop",
+              length,
               loopToken: st.token,
               loopProgress: `${st.parts}/${st.total}`,
               loopFinalized: false,
@@ -1112,7 +1154,7 @@ async function postImpl(
           if (st.parts < st.total) {
             return NextResponse.json({
               ...passed,
-              length: "loop",
+              length,
               loopToken: st.token,
               loopProgress: `${st.parts}/${st.total}`,
               loopFinalized: false,
@@ -1133,7 +1175,7 @@ async function postImpl(
           }
           return NextResponse.json({
             ...passed,
-            length: "loop",
+            length,
             loopToken: dbThread.token,
             loopProgress: `${total}/${total}`,
             loopFinalized: true,
@@ -1154,7 +1196,7 @@ async function postImpl(
         if (session.parts.length < session.total) {
           return NextResponse.json({
             ...passed,
-            length: "loop",
+            length,
             loopToken: session.token,
             loopProgress: `${session.parts.length}/${session.total}`,
             loopFinalized: false,
@@ -1178,7 +1220,7 @@ async function postImpl(
         putLoopFinal(finalToken, keeperId, finalFile, joined.durationSec, joined.seamless);
         return NextResponse.json({
           ...passed,
-          length: "loop",
+          length,
           loopToken: finalToken,
           loopProgress: `${total}/${total}`,
           loopFinalized: true,

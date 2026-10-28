@@ -10,6 +10,7 @@ import {
 } from "react";
 import {
   Eraser,
+  ImagePlus,
   Paperclip,
   Send,
   X,
@@ -50,6 +51,10 @@ type RoomTurn = {
   imageTitle?: string;
   /** the painting is still being mixed */
   painting?: boolean;
+  /** THE FORGE'S OWN SKETCHES — up to three visions of the idea,
+      painted by the sky's Gemini. Session-only: they breathe with
+      the visit and are never written to the device's keep. */
+  sketches?: { src: string; angle: string }[];
 };
 
 type SimpleRoomConfig = {
@@ -163,12 +168,18 @@ function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
   threadRef.current = thread;
 
   /* THE KEEP — every finished word rests on the device (capped), so
-     the room wakes exactly where it was left */
+     the room wakes exactly where it was left. The sketches ride
+     session-only: their heavy data URLs are never written to the keep. */
   useEffect(() => {
     try {
       window.localStorage.setItem(
         config.storageKey,
-        JSON.stringify(thread.slice(-30))
+        JSON.stringify(
+          thread.slice(-30).map((turn) => {
+            const { sketches: _session, ...rest } = turn;
+            return rest;
+          })
+        )
       );
     } catch {
       /* the keep stays closed — the visit's own memory serves */
@@ -299,6 +310,62 @@ function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
       /* quiet */
     }
   }, [busy, config.storageKey]);
+
+  /* THE FORGE'S SKETCH HAND — the idea (the last word the visitor
+     spoke, or the draft in the field) is scratched into form: up to
+     three visions painted by the sky's own Gemini, one touch. The
+     visions land beneath the last turn and breathe with the visit. */
+  const [sketching, setSketching] = useState(false);
+  const sketchIdea = useCallback(async () => {
+    if (busy || sketching) return;
+    const threadCur = threadRef.current;
+    const idea =
+      [...threadCur].reverse().find((turn) => turn.q.trim())?.q ??
+      draft.trim();
+    if (!idea) return;
+    const context = threadCur
+      .slice(-4)
+      .map((turn) => `${turn.q}\n${turn.a}`.slice(0, 400))
+      .join("\n---\n");
+    setSketching(true);
+    try {
+      const res = await fetch("/api/invent-sketch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idea, context }),
+      });
+      const data = (await res.json().catch(() => null)) as {
+        images?: { angle: string; mimeType: string; data: string }[];
+        note?: string;
+        error?: string;
+      } | null;
+      if (!res.ok || !data?.images?.length) {
+        import("sonner").then(({ toast }) =>
+          toast.error(t(data?.error || "The brushes rested — ask again in a moment."))
+        );
+        return;
+      }
+      const sketches = data.images.map((img) => ({
+        src: `data:${img.mimeType};base64,${img.data}`,
+        angle: img.angle,
+      }));
+      setThread((cur) => {
+        if (cur.length === 0) return cur;
+        const copy = [...cur];
+        copy[copy.length - 1] = { ...copy[copy.length - 1], sketches };
+        return copy;
+      });
+      if (data.note) {
+        import("sonner").then(({ toast }) => toast(t(data.note!)));
+      }
+    } catch {
+      import("sonner").then(({ toast }) =>
+        toast.error(t("The brushes rested — ask again in a moment."))
+      );
+    } finally {
+      setSketching(false);
+    }
+  }, [busy, sketching, draft, t]);
 
   /* THE QUIET READER — a new word lands, the room reads only if the
      visitor already rests at the bottom (never dragged mid-thought) */
@@ -488,6 +555,35 @@ function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
                           )}
                         </figure>
                       )}
+                      {/* THE FORGE'S OWN SKETCHES — up to three visions of
+                          the idea, one touch away; each wears its angle */}
+                      {turn.sketches && turn.sketches.length > 0 && (
+                        <div
+                          className="grid w-full max-w-[420px] grid-cols-1 gap-2 sm:grid-cols-3"
+                          data-testid="simple-room-sketches"
+                        >
+                          {turn.sketches.map((sk, k) => (
+                            <a
+                              key={`${sk.angle}-${k}`}
+                              href={sk.src}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="group block overflow-hidden rounded-xl border"
+                              style={{
+                                borderColor:
+                                  "color-mix(in srgb, var(--scope-a,var(--gd)) 30%, transparent)",
+                              }}
+                            >
+                              <img
+                                src={sk.src}
+                                alt={`${t("The idea's sketch")} — ${sk.angle}`}
+                                loading="lazy"
+                                className="aspect-square w-full bg-background/40 object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                              />
+                            </a>
+                          ))}
+                        </div>
+                      )}
                       {/* THE PROCEEDING HANDS — the last reply leaves
                           three small ways the conversation continues */}
                       {isLast && !busy && turn.a.trim() && (
@@ -575,6 +671,26 @@ function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
             className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground/80 transition-colors duration-300 hover:bg-foreground/5 hover:text-foreground disabled:opacity-35"
           >
             <Paperclip className="size-3.5" aria-hidden="true" />
+          </button>
+          {/* THE SKETCH HAND — the idea scratched into form: up to three
+              visions of it painted by the sky's Gemini */}
+          <button
+            type="button"
+            onClick={() => void sketchIdea()}
+            disabled={busy || sketching || (!draft.trim() && thread.every((turn) => !turn.q.trim()))}
+            aria-label={t("Sketch the idea — up to three visions")}
+            title={t("Sketch the idea — up to three visions")}
+            data-testid="simple-room-sketch"
+            className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full text-[var(--scope-a,var(--gd))] transition-colors duration-300 hover:bg-foreground/5 disabled:cursor-not-allowed disabled:opacity-35"
+          >
+            {sketching ? (
+              <span
+                className="size-3.5 animate-pulse rounded-full bg-[var(--scope-a,var(--gd))]"
+                aria-hidden="true"
+              />
+            ) : (
+              <ImagePlus className="size-3.5" aria-hidden="true" />
+            )}
           </button>
           <textarea
             value={draft}

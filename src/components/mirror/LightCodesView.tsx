@@ -15,6 +15,7 @@ import {
   Heart,
   ListMusic,
   Mic,
+  MoreHorizontal,
   Music4,
   Pause,
   Play,
@@ -450,6 +451,10 @@ function PlayerBar() {
   const [muted, setMuted] = useState(false);
   const [shelfOpen, setShelfOpen] = useState(false);
   const [waveFailed, setWaveFailed] = useState(false);
+  /* THE QUIET MORE-DOOR — the craft hands (new version, reshape,
+     download, translation) rest folded inside one more-hand, so
+     the transport stays small, symmetric and uncluttered */
+  const [moreOpen, setMoreOpen] = useState(false);
   /* the stage answers a fresh weave with one slow breath of light */
   const [glow, setGlow] = useState(false);
   const stageRef = useRef<HTMLDivElement | null>(null);
@@ -464,10 +469,10 @@ function PlayerBar() {
     ? ""
     : status === "interpreting"
       ? t("The Mirror is translating intention into sound…")
-      : lcLength === "full"
-        ? t("The full song is being woven — verses finding their chorus…")
-        : lcLength === "loop" && lcNotice
-          ? lcNotice
+      : (lcLength === "loop" || lcLength === "full") && lcNotice
+        ? lcNotice
+        : lcLength === "full"
+          ? t("The full song is being woven — verses finding their chorus…")
           : t("The sound is being woven — hold still…");
   const active = track;
   const realWaveAllowed = !!active && active.length !== "loop" && !waveFailed;
@@ -687,8 +692,10 @@ function PlayerBar() {
               <span>{fmtTimeLong(dur)}</span>
             </div>
 
-            {/* THE TRANSPORT — one compact glass bar: back, play, forward,
-                the repeat dial, the craft hands, the volume. */}
+            {/* THE TRANSPORT — one compact glass bar, small and
+                symmetric: back, play, forward, the repeat dial, one
+                quiet more-hand (the craft hands folded inside), the
+                volume. Nothing crowds the bench. */}
             <div
               className="mt-2 flex flex-wrap items-center gap-1 rounded-full border hairline bg-[var(--glass-bg-soft)] p-1"
               data-testid="lc-transport"
@@ -699,11 +706,11 @@ function PlayerBar() {
                 aria-label={t("Previous transmission")}
                 data-testid="lc-prev"
                 className={cn(
-                  "focus-glow flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-all duration-300 hover:text-foreground",
+                  "focus-glow flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-all duration-300 hover:text-foreground",
                   TOUCH_VEIL
                 )}
               >
-                <SkipBack className="size-4" aria-hidden="true" />
+                <SkipBack className="size-3.5" aria-hidden="true" />
               </button>
               <button
                 type="button"
@@ -711,14 +718,14 @@ function PlayerBar() {
                 data-testid="lc-play"
                 aria-label={playing ? t("Pause") : t("Play")}
                 className={cn(
-                  "focus-glow mx-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-[var(--scope-a)] to-[color-mix(in_srgb,var(--scope-b)_80%,var(--scope-a))] text-[#f6f4ef] shadow-[0_4px_20px_-8px_color-mix(in_srgb,var(--scope-a)_85%,transparent)] transition-all duration-300 hover:-translate-y-px",
+                  "focus-glow mx-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-[var(--scope-a)] to-[color-mix(in_srgb,var(--scope-b)_80%,var(--scope-a))] text-[#f6f4ef] shadow-[0_4px_20px_-8px_color-mix(in_srgb,var(--scope-a)_85%,transparent)] transition-all duration-300 hover:-translate-y-px",
                   TOUCH_VEIL
                 )}
               >
                 {playing ? (
-                  <Pause className="size-4" aria-hidden="true" />
+                  <Pause className="size-3.5" aria-hidden="true" />
                 ) : (
-                  <Play className="size-4 translate-x-[1px]" aria-hidden="true" />
+                  <Play className="size-3.5 translate-x-[1px]" aria-hidden="true" />
                 )}
               </button>
               <button
@@ -727,11 +734,11 @@ function PlayerBar() {
                 aria-label={t("Next transmission")}
                 data-testid="lc-next"
                 className={cn(
-                  "focus-glow flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-all duration-300 hover:text-foreground",
+                  "focus-glow flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-all duration-300 hover:text-foreground",
                   TOUCH_VEIL
                 )}
               >
-                <SkipForward className="size-4" aria-hidden="true" />
+                <SkipForward className="size-3.5" aria-hidden="true" />
               </button>
               <button
                 type="button"
@@ -739,7 +746,10 @@ function PlayerBar() {
                 aria-label={t(repeatLabel)}
                 aria-pressed={repeat !== "off"}
                 data-testid="lc-loop"
-                className={cn("btn-chip uppercase", repeat !== "off" && "btn-chip-active")}
+                className={cn(
+                  "btn-chip uppercase",
+                  repeat !== "off" && "btn-chip-active"
+                )}
               >
                 {repeat === "one" ? (
                   <Repeat1 className="size-3" aria-hidden="true" />
@@ -750,38 +760,106 @@ function PlayerBar() {
                   {repeat === "one" ? "1" : repeat === "all" ? "All" : t("Loop")}
                 </span>
               </button>
-              <PlayerChip
-                onClick={newVersionFromTrack}
-                icon={RefreshCw}
-                label="New version"
-                testId="lc-new-version"
-              />
-              <PlayerChip
-                onClick={() => reshapeLc(active)}
-                icon={Wand2}
-                label="Reshape"
-                testId="lc-reshape"
-              />
-              <a
-                href={active.audioUrl}
-                download={`${active.title}.mp3`}
-                target="_blank"
-                rel="noreferrer"
-                data-testid="lc-download"
-                className="btn-chip"
-              >
-                <Download className="size-3" aria-hidden="true" />
-                {t("Download")}
-              </a>
-              {(active.style || active.lyrics) && (
-                <PlayerChip
-                  onClick={() => setShowTranslation((v) => !v)}
-                  icon={Eye}
-                  label="Translation"
-                  active={showTranslation}
-                  testId="lc-translation"
-                />
-              )}
+
+              {/* THE QUIET MORE-HAND — the craft hands folded inside one
+                  small dial, so the transport stays symmetric */}
+              <span className="relative">
+                <button
+                  type="button"
+                  onClick={() => setMoreOpen((v) => !v)}
+                  aria-expanded={moreOpen}
+                  aria-haspopup="menu"
+                  aria-label={t("More hands")}
+                  title={t("More hands")}
+                  data-testid="lc-more"
+                  className={cn(
+                    "focus-glow flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-all duration-300 hover:text-foreground",
+                    moreOpen && "text-foreground",
+                    TOUCH_VEIL
+                  )}
+                >
+                  <MoreHorizontal className="size-3.5" aria-hidden="true" />
+                </button>
+                {moreOpen && (
+                  <>
+                    <span
+                      aria-hidden="true"
+                      className="fixed inset-0 z-30"
+                      onClick={() => setMoreOpen(false)}
+                    />
+                    <span
+                      role="menu"
+                      aria-label={t("More hands")}
+                      className="absolute bottom-[calc(100%+0.5rem)] left-1/2 z-40 flex w-[168px] -translate-x-1/2 flex-col gap-0.5 rounded-2xl border bg-background p-1.5 lift-lg"
+                      style={{
+                        borderColor:
+                          "color-mix(in srgb, var(--scope-a) 30%, transparent)",
+                      }}
+                      data-testid="lc-more-menu"
+                    >
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          setMoreOpen(false);
+                          newVersionFromTrack();
+                        }}
+                        data-testid="lc-new-version"
+                        className="focus-glow flex items-center gap-2 rounded-xl px-2 py-1.5 text-left text-[12.5px] text-foreground transition-colors duration-300 hover:bg-[color-mix(in_srgb,var(--scope-a)_8%,transparent)]"
+                      >
+                        <RefreshCw className="size-3.5 text-[var(--scope-a)]" aria-hidden="true" />
+                        {t("New version")}
+                      </button>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          setMoreOpen(false);
+                          reshapeLc(active);
+                        }}
+                        data-testid="lc-reshape"
+                        className="focus-glow flex items-center gap-2 rounded-xl px-2 py-1.5 text-left text-[12.5px] text-foreground transition-colors duration-300 hover:bg-[color-mix(in_srgb,var(--scope-a)_8%,transparent)]"
+                      >
+                        <Wand2 className="size-3.5 text-[var(--scope-a)]" aria-hidden="true" />
+                        {t("Reshape")}
+                      </button>
+                      <a
+                        role="menuitem"
+                        href={active.audioUrl}
+                        download={`${active.title}.mp3`}
+                        target="_blank"
+                        rel="noreferrer"
+                        onClick={() => setMoreOpen(false)}
+                        data-testid="lc-download"
+                        className="focus-glow flex items-center gap-2 rounded-xl px-2 py-1.5 text-left text-[12.5px] text-foreground transition-colors duration-300 hover:bg-[color-mix(in_srgb,var(--scope-a)_8%,transparent)]"
+                      >
+                        <Download className="size-3.5 text-[var(--scope-a)]" aria-hidden="true" />
+                        {t("Download")}
+                      </a>
+                      {(active.style || active.lyrics) && (
+                        <button
+                          type="button"
+                          role="menuitemradio"
+                          aria-checked={showTranslation}
+                          onClick={() => setShowTranslation((v) => !v)}
+                          data-testid="lc-translation"
+                          className="focus-glow flex items-center gap-2 rounded-xl px-2 py-1.5 text-left text-[12.5px] text-foreground transition-colors duration-300 hover:bg-[color-mix(in_srgb,var(--scope-a)_8%,transparent)]"
+                        >
+                          <Eye
+                            className={cn(
+                              "size-3.5 text-[var(--scope-a)]",
+                              showTranslation && "fill-current"
+                            )}
+                            aria-hidden="true"
+                          />
+                          {t("Translation")}
+                        </button>
+                      )}
+                    </span>
+                  </>
+                )}
+              </span>
+
               {/* the volume hand — the visitor's own quiet dial */}
               <span className="ml-auto flex items-center gap-1 pl-0.5">
                 <button
@@ -1048,34 +1126,6 @@ function PlayerBar() {
   );
 }
 
-function PlayerChip({
-  onClick,
-  icon: Icon,
-  label,
-  active,
-  testId,
-}: {
-  onClick: () => void;
-  icon: typeof Play;
-  label: string;
-  active?: boolean;
-  testId?: string;
-}) {
-  const t = useT();
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      data-testid={testId}
-      aria-pressed={active}
-      className={cn("btn-chip", active && "btn-chip-active")}
-    >
-      <Icon className="size-3" aria-hidden="true" />
-      <span className="whitespace-nowrap">{t(label)}</span>
-    </button>
-  );
-}
-
 /* ------------------------- shape controls ---------------------------- */
 
 function ShapeDial({
@@ -1167,7 +1217,7 @@ function LengthToggle() {
   const loopPrice = prices?.musicLoop ?? 15;
   const options = [
     { id: "preview" as const, label: t("Preview · 30s"), price: previewPrice, testId: "lc-length-preview", title: t("A thirty-second listening — 2 lights") },
-    { id: "full" as const, label: t("Full song · 3+ min"), price: fullPrice, testId: "lc-length-full", title: t("The whole composition — at least three minutes") },
+    { id: "full" as const, label: t("Full song · 4+ min"), price: fullPrice, testId: "lc-length-full", title: t("The whole composition — woven in two movements and joined into one piece") },
     { id: "loop" as const, label: t("Endless · ~30 min"), price: loopPrice, testId: "lc-length-loop", title: t("One long seamless journey, woven in six movements, looping for hours") },
   ];
   return (
@@ -1238,7 +1288,6 @@ function BriefCard() {
   const status = useMirror((s) => s.lcStatus);
   const updateBriefDraft = useMirror((s) => s.updateBriefDraft);
   const weaveBrief = useMirror((s) => s.weaveBrief);
-  const refineBrief = useMirror((s) => s.refineBrief);
   const lyricsLabOp = useMirror((s) => s.lyricsLabOp);
   const restoreLyricsDraft = useMirror((s) => s.restoreLyricsDraft);
   const clearLcBrief = useMirror((s) => s.clearLcBrief);
@@ -1248,7 +1297,6 @@ function BriefCard() {
   const t = useT();
 
   const [styleOpen, setStyleOpen] = useState(false);
-  const [refine, setRefine] = useState("");
   const [copied, setCopied] = useState(false);
 
   const weaving = status === "polling";
@@ -1452,51 +1500,11 @@ function BriefCard() {
         </div>
       )}
 
-      {/* ---------- THE REFINEMENT LINE — conversation shapes the brief ---------- */}
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          const word = refine;
-          setRefine("");
-          void refineBrief(word);
-        }}
-        className="mt-3.5"
-        data-testid="lc-refine-form"
-      >
-        <div className="flex items-center gap-1.5">
-          <input
-            type="text"
-            value={refine}
-            onChange={(e) => setRefine(e.target.value)}
-            placeholder={t("Tell the Mirror what to change — \u201cmake it more emotional\u201d\u2026")}
-            aria-label={t("Tell the Mirror what to change")}
-            maxLength={300}
-            disabled={labBusy || weaving}
-            data-testid="lc-refine-input"
-            className="focus-glow h-9 min-w-0 flex-1 rounded-full border hairline bg-background/60 px-3.5 text-[13.5px] text-foreground outline-none transition-all duration-300 placeholder:text-muted-foreground/55 disabled:opacity-50"
-          />
-          <VoiceRecordButton
-            testId="lc-refine-voice"
-            disabled={labBusy || weaving}
-            onTranscript={(text) => {
-              setRefine("");
-              void refineBrief(text);
-            }}
-          />
-          <button
-            type="submit"
-            disabled={labBusy || weaving || !refine.trim()}
-            aria-label={t("Reshape the brief")}
-            data-testid="lc-refine-send"
-            className={cn(
-              "focus-glow flex size-9 shrink-0 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--scope-a)_40%,transparent)] text-[var(--scope-a)] transition-all duration-300 hover:bg-[color-mix(in_srgb,var(--scope-a)_10%,transparent)] disabled:cursor-not-allowed disabled:opacity-35",
-              TOUCH_VEIL
-            )}
-          >
-            <Send className="size-3.5" aria-hidden="true" />
-          </button>
-        </div>
-      </form>
+      {/* THE ONE INPUT LAW — the describe line above the brief is the
+          room's only input: the old refinement line (a second field
+          nested inside the room's input) has been lifted at the
+          visitor's word. The words typed above re-ask the Mirror and
+          reshape the brief the honest way. */}
 
       {refineNote && (
         <p
@@ -1749,6 +1757,48 @@ export function LightCodesView() {
   const t = useT();
 
   const [shapeOpen, setShapeOpen] = useState(false);
+  /* THE STYLE DOOR — one dropdown button instead of the old rows of
+     chips: compact, symmetric, and closed by default (the visitor's
+     own words carry the ask — the creativity leads). */
+  const [styleMenuOpen, setStyleMenuOpen] = useState(false);
+  /* THE DEEPENING HAND — the small wand that turns the visitor's own
+     idea into a more advanced telling, relying on the core idea: the
+     refined words land in the input, the visitor's hand sends them. */
+  const [enhancing, setEnhancing] = useState(false);
+  const deepenIdea = useCallback(async () => {
+    const idea = lcIntention.trim();
+    const state = useMirror.getState();
+    const roomBusy =
+      state.lcStatus === "interpreting" || state.lcStatus === "polling";
+    if (!idea || roomBusy || enhancing) return;
+    setEnhancing(true);
+    try {
+      const res = await fetch("/api/light-codes/idea", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idea, language: useMirror.getState().language }),
+      });
+      const data = (await res.json().catch(() => null)) as {
+        refined?: string;
+        error?: string;
+      } | null;
+      if (res.ok && data?.refined) {
+        setLcIntention(data.refined);
+      } else {
+        import("sonner").then(({ toast }) =>
+          toast.error(
+            t(data?.error || "The deepening hand slipped — the idea stays as it was.")
+          )
+        );
+      }
+    } catch {
+      import("sonner").then(({ toast }) =>
+        toast.error(t("The deepening hand slipped — the idea stays as it was."))
+      );
+    } finally {
+      setEnhancing(false);
+    }
+  }, [lcIntention, enhancing, setLcIntention, t]);
   const lcNotice = useMirror((s) => s.lcNotice);
   const playLc = useMirror((s) => s.playLc);
   /* THE TWO BENCHES — the chamber's own instruments: the standing
@@ -2011,8 +2061,36 @@ export function LightCodesView() {
                       }
                       maxLength={600}
                       data-testid="lc-intention"
-                      className="focus-glow h-10 min-w-0 flex-1 rounded-full border hairline bg-background/70 px-4 text-[15px] text-foreground placeholder:text-muted-foreground/60 transition-all duration-300"
+                      className="focus-glow h-9 min-w-0 flex-1 rounded-full border hairline bg-background/70 px-3.5 text-[14.5px] text-foreground placeholder:text-muted-foreground/60 transition-all duration-300"
                     />
+                    {/* THE DEEPENING HAND — while the visitor's own idea
+                        stands in the input, one small wand turns it into
+                        a more advanced telling that still relies on the
+                        core idea; the words land in the input, the
+                        visitor's own hand sends them */}
+                    {lcIntention.trim().length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => void deepenIdea()}
+                        disabled={busy || enhancing}
+                        aria-label={t("Deepen the idea — more advanced, same core")}
+                        title={t("Deepen the idea — more advanced, same core")}
+                        data-testid="lc-deepen"
+                        className={cn(
+                          "focus-glow flex size-9 shrink-0 items-center justify-center rounded-full border text-[var(--scope-a)] transition-all duration-300 hover:bg-[color-mix(in_srgb,var(--scope-a)_10%,transparent)] disabled:cursor-not-allowed disabled:opacity-40",
+                          TOUCH_VEIL
+                        )}
+                      >
+                        {enhancing ? (
+                          <span
+                            className="size-3.5 animate-pulse rounded-full bg-[var(--scope-a)]"
+                            aria-hidden="true"
+                          />
+                        ) : (
+                          <Wand2 className="size-3.5" aria-hidden="true" />
+                        )}
+                      </button>
+                    )}
                     <button
                       type="submit"
                       disabled={busy}
@@ -2023,25 +2101,12 @@ export function LightCodesView() {
                       }
                       data-testid="lc-generate"
                       className={cn(
-                        "focus-glow flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-full bg-gradient-to-r from-[var(--scope-a)] to-[color-mix(in_srgb,var(--scope-b)_80%,var(--scope-a))] px-4 text-[13px] font-semibold text-[#f6f4ef] shadow-[0_6px_28px_-10px_color-mix(in_srgb,var(--scope-a)_75%,transparent)] transition-all duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-35",
+                        "focus-glow flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-full bg-gradient-to-r from-[var(--scope-a)] to-[color-mix(in_srgb,var(--scope-b)_80%,var(--scope-a))] px-3.5 text-[12.5px] font-semibold text-[#f6f4ef] shadow-[0_6px_28px_-10px_color-mix(in_srgb,var(--scope-a)_75%,transparent)] transition-all duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-35",
                         TOUCH_VEIL
                       )}
                     >
                       <Sparkles className="size-3.5" aria-hidden="true" />
                       {t("Compose")}
-                    </button>
-                  </div>
-                  <div className="mt-1.5 flex justify-center">
-                    <button
-                      type="button"
-                      onClick={() => void surpriseMe()}
-                      disabled={busy}
-                      data-testid="lc-surprise"
-                      aria-label={t("Surprise me — let the Mirror choose")}
-                      className="btn-chip h-7 px-3 text-[11.5px] disabled:opacity-45"
-                    >
-                      <Dices className="size-3" aria-hidden="true" />
-                      {t("Surprise me")}
                     </button>
                   </div>
                 </form>
@@ -2106,215 +2171,281 @@ export function LightCodesView() {
                   </div>
                 )}
 
-                {/* THE STYLE ROW — the First Law, literal: the no-style
-                    chip stands first. While it is held, every selector
-                    below dims and locks (inert) — the brief is composed
-                    from the visitor's words ALONE. */}
+                {/* THE STYLE DOOR — one compact dropdown instead of the
+                    old rows of chips: the visitor's words carry the ask
+                    by default (no style until a chamber is chosen by
+                    hand), and everything a style may add rests folded
+                    inside one button — compact, symmetric, quiet. */}
                 <div
                   role="group"
                   aria-label={t("The style of the transmission")}
-                  className="mt-3 flex flex-col gap-2"
+                  className="mt-3"
                 >
-                  <div className="flex flex-wrap items-center gap-1.5">
+                  <div className="flex items-center justify-center gap-1.5">
                     <button
                       type="button"
-                      onClick={() => setLcRaw(!lcRaw)}
-                      aria-pressed={lcRaw}
-                      data-testid="lc-raw"
+                      onClick={() => setStyleMenuOpen((v) => !v)}
+                      aria-expanded={styleMenuOpen}
+                      data-testid="lc-style-door"
                       title={t(
                         "No style — just my words: the brief is composed from this input alone"
                       )}
-                      aria-label={t(
-                        "No style — just my words: the brief is composed from your input alone, every selector set aside"
-                      )}
                       className={cn(
-                        "btn-chip",
-                        lcRaw && "btn-chip-active border-dashed"
+                        "btn-chip max-w-[78%] sm:max-w-none",
+                        !lcRaw && "btn-chip-active"
                       )}
                     >
-                      <Type className="size-3.5" aria-hidden="true" />
-                      {t("No style — just my words")}
+                      <Type className="size-3.5 shrink-0" aria-hidden="true" />
+                      <span className="truncate">
+                        {lcRaw
+                          ? t("No style — just my words")
+                          : t(mode.name)}
+                      </span>
+                      <ChevronDown
+                        className={cn(
+                          "size-3 shrink-0 transition-transform duration-300",
+                          styleMenuOpen && "rotate-180"
+                        )}
+                        aria-hidden="true"
+                      />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void surpriseMe()}
+                      disabled={busy}
+                      data-testid="lc-surprise"
+                      aria-label={t("Surprise me — let the Mirror choose")}
+                      className="btn-chip h-7 px-3 text-[11.5px] disabled:opacity-45"
+                    >
+                      <Dices className="size-3" aria-hidden="true" />
+                      <span className="hidden sm:inline">{t("Surprise me")}</span>
                     </button>
                   </div>
 
-                  {/* everything a selector — locked while the words stand alone */}
-                  <div
-                    inert={lcRaw ? true : undefined}
-                    data-testid="lc-style-selectors"
-                    className={cn(
-                      "flex flex-col gap-2.5 transition-opacity duration-300",
-                      lcRaw && "pointer-events-none opacity-40"
-                    )}
-                  >
-                    {/* the chambers — one row of small glass chips */}
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      {LC_MODES.map((m) => (
-                        <ModeChip
-                          key={m.id}
-                          mode={m}
-                          active={m.id === lcMode}
-                          onClick={() => setLcMode(m.id)}
-                        />
-                      ))}
-                    </div>
+                  <AnimatePresence>
+                    {styleMenuOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.3, ease: "easeOut" }}
+                        className="overflow-hidden"
+                      >
+                        <div
+                          data-testid="lc-style-selectors"
+                          className="mt-2 space-y-3 rounded-xl border hairline bg-[color-mix(in_srgb,var(--scope-a)_4%,var(--glass-bg-soft))] p-3.5"
+                        >
+                          {/* the First Law, literal — the no-style chip
+                              stands first; while it is held, the brief is
+                              composed from the visitor's words ALONE */}
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => setLcRaw(true)}
+                              aria-pressed={lcRaw}
+                              data-testid="lc-raw"
+                              title={t(
+                                "No style — just my words: the brief is composed from this input alone"
+                              )}
+                              aria-label={t(
+                                "No style — just my words: the brief is composed from your input alone, every selector set aside"
+                              )}
+                              className={cn(
+                                "btn-chip",
+                                lcRaw && "btn-chip-active border-dashed"
+                              )}
+                            >
+                              <Type className="size-3.5" aria-hidden="true" />
+                              {t("No style — just my words")}
+                            </button>
+                          </div>
 
-                    {/* one-tap intents of the chosen chamber */}
-                    {mode.intents && (
-                      <div className="flex flex-wrap gap-1.5">
-                        {mode.intents.map((intent) => (
-                          <button
-                            key={intent}
-                            type="button"
-                            onClick={() => setLcIntention(intent)}
-                            className={cn("btn-chip h-7 text-[12px]", LC_PILL)}
-                          >
-                            {t(intent)}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* civilizations */}
-                    {mode.civilizations && (
-                      <div className="flex flex-wrap gap-1.5">
-                        {mode.civilizations.map((c) => (
-                          <button
-                            key={c.id}
-                            type="button"
-                            onClick={() =>
-                              setLcCivilization(lcCivilization === c.id ? null : c.id)
-                            }
-                            aria-pressed={lcCivilization === c.id}
+                          {/* everything a style may add — one touch on a
+                              chamber lifts the no-style law by itself */}
+                          <div
                             className={cn(
-                              "btn-chip h-7 text-[12px]",
-                              lcCivilization === c.id && "btn-chip-active"
+                              "flex flex-col gap-2.5 transition-opacity duration-300",
+                              lcRaw && "pointer-events-none opacity-40"
                             )}
                           >
-                            {t(c.name)}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* the visitor's own lyrics */}
-                    {lcShape.lyricsMode === "USER WRITES" && (
-                      <div>
-                        <label htmlFor="lc-lyrics" className="sr-only">
-                          {t("Your words")}
-                        </label>
-                        <textarea
-                          id="lc-lyrics"
-                          rows={2}
-                          value={lcUserLyrics}
-                          onChange={(e) => setLcUserLyrics(e.target.value)}
-                          placeholder={t("Your words — the Mirror will set them to sound.")}
-                          maxLength={600}
-                          className="focus-glow w-full resize-none rounded-xl border hairline bg-transparent px-3 py-2 font-serif text-[14px] italic leading-relaxed text-foreground placeholder:text-muted-foreground/60"
-                        />
-                      </div>
-                    )}
-
-                    {/* SHAPE THE TRANSMISSION — hidden until asked */}
-                    <div>
-                      <button
-                        type="button"
-                        onClick={() => setShapeOpen((v) => !v)}
-                        aria-expanded={shapeOpen}
-                        data-testid="lc-shape-toggle"
-                        className={cn(
-                          "focus-glow mx-auto flex w-fit items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[11.5px] uppercase tracking-[0.2em] text-muted-foreground transition-all duration-300 hover:text-foreground",
-                          LC_PILL
-                        )}
-                      >
-                        {t("Shape the transmission")}
-                        <ChevronDown
-                          className={cn(
-                            "size-3.5 transition-transform duration-300",
-                            shapeOpen && "rotate-180"
-                          )}
-                          aria-hidden="true"
-                        />
-                      </button>
-                      <AnimatePresence>
-                        {shapeOpen && (
-                          <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: "auto" }}
-                            exit={{ opacity: 0, height: 0 }}
-                            transition={{ duration: 0.35, ease: "easeOut" }}
-                            className="overflow-hidden"
-                          >
-                            <div className="mt-2.5 space-y-3 rounded-xl border hairline bg-[color-mix(in_srgb,var(--scope-a)_4%,var(--glass-bg-soft))] p-3.5">
-                              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                                <ShapeDial
-                                  label="Energy"
-                                  ends={LC_SHAPE.energy}
-                                  value={lcShape.energy}
-                                  onChange={(v) => setLcShape({ energy: v })}
+                            {/* the chambers — one row of small glass chips */}
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              {LC_MODES.map((m) => (
+                                <ModeChip
+                                  key={m.id}
+                                  mode={m}
+                                  active={!lcRaw && m.id === lcMode}
+                                  onClick={() => {
+                                    setLcMode(m.id);
+                                    setLcRaw(false);
+                                  }}
                                 />
-                                <ShapeDial
-                                  label="Light / Dark"
-                                  ends={LC_SHAPE.light}
-                                  value={lcShape.light}
-                                  onChange={(v) => setLcShape({ light: v })}
-                                />
-                                <ShapeDial
-                                  label="Familiarity"
-                                  ends={LC_SHAPE.familiarity}
-                                  value={lcShape.familiarity}
-                                  onChange={(v) => setLcShape({ familiarity: v })}
-                                />
-                                <ShapeDial
-                                  label="Structure"
-                                  ends={LC_SHAPE.structure}
-                                  value={lcShape.structure}
-                                  onChange={(v) => setLcShape({ structure: v })}
-                                />
-                              </div>
-                              <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-                                <ShapeSelect
-                                  label="Time feel"
-                                  options={LC_SHAPE.timeFeel}
-                                  value={lcShape.timeFeel}
-                                  onChange={(v) => setLcShape({ timeFeel: v })}
-                                />
-                                <ShapeSelect
-                                  label="Voice"
-                                  options={LC_SHAPE.voice}
-                                  value={lcShape.voice}
-                                  onChange={(v) => setLcShape({ voice: v })}
-                                />
-                                <ShapeSelect
-                                  label="Vocal language"
-                                  options={LC_SHAPE.vocalLanguage}
-                                  value={lcShape.vocalLanguage}
-                                  onChange={(v) => setLcShape({ vocalLanguage: v })}
-                                />
-                                <ShapeSelect
-                                  label="Lyrics mode"
-                                  options={LC_SHAPE.lyricsMode}
-                                  value={lcShape.lyricsMode}
-                                  onChange={(v) => setLcShape({ lyricsMode: v })}
-                                />
-                              </div>
+                              ))}
                             </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  </div>
 
-                  {/* the raw whisper — the law, spoken once */}
-                  {lcRaw && (
-                    <p
-                      className="text-[11.5px] italic leading-relaxed text-muted-foreground/80"
-                      data-testid="lc-raw-whisper"
-                    >
-                      {t(
-                        "Your words alone — no chamber, shape or voice rides with the ask."
-                      )}
-                    </p>
-                  )}
+                            {/* one-tap intents of the chosen chamber */}
+                            {!lcRaw && mode.intents && (
+                              <div className="flex flex-wrap gap-1.5">
+                                {mode.intents.map((intent) => (
+                                  <button
+                                    key={intent}
+                                    type="button"
+                                    onClick={() => setLcIntention(intent)}
+                                    className={cn("btn-chip h-7 text-[12px]", LC_PILL)}
+                                  >
+                                    {t(intent)}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+
+                            {/* civilizations */}
+                            {!lcRaw && mode.civilizations && (
+                              <div className="flex flex-wrap gap-1.5">
+                                {mode.civilizations.map((c) => (
+                                  <button
+                                    key={c.id}
+                                    type="button"
+                                    onClick={() =>
+                                      setLcCivilization(lcCivilization === c.id ? null : c.id)
+                                    }
+                                    aria-pressed={lcCivilization === c.id}
+                                    className={cn(
+                                      "btn-chip h-7 text-[12px]",
+                                      lcCivilization === c.id && "btn-chip-active"
+                                    )}
+                                  >
+                                    {t(c.name)}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+
+                            {/* the visitor's own lyrics */}
+                            {!lcRaw && lcShape.lyricsMode === "USER WRITES" && (
+                              <div>
+                                <label htmlFor="lc-lyrics" className="sr-only">
+                                  {t("Your words")}
+                                </label>
+                                <textarea
+                                  id="lc-lyrics"
+                                  rows={2}
+                                  value={lcUserLyrics}
+                                  onChange={(e) => setLcUserLyrics(e.target.value)}
+                                  placeholder={t("Your words — the Mirror will set them to sound.")}
+                                  maxLength={600}
+                                  className="focus-glow w-full resize-none rounded-xl border hairline bg-transparent px-3 py-2 font-serif text-[14px] italic leading-relaxed text-foreground placeholder:text-muted-foreground/60"
+                                />
+                              </div>
+                            )}
+
+                            {/* SHAPE THE TRANSMISSION — hidden until asked */}
+                            {!lcRaw && (
+                              <div>
+                                <button
+                                  type="button"
+                                  onClick={() => setShapeOpen((v) => !v)}
+                                  aria-expanded={shapeOpen}
+                                  data-testid="lc-shape-toggle"
+                                  className={cn(
+                                    "focus-glow mx-auto flex w-fit items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[11.5px] uppercase tracking-[0.2em] text-muted-foreground transition-all duration-300 hover:text-foreground",
+                                    LC_PILL
+                                  )}
+                                >
+                                  {t("Shape the transmission")}
+                                  <ChevronDown
+                                    className={cn(
+                                      "size-3.5 transition-transform duration-300",
+                                      shapeOpen && "rotate-180"
+                                    )}
+                                    aria-hidden="true"
+                                  />
+                                </button>
+                                <AnimatePresence>
+                                  {shapeOpen && (
+                                    <motion.div
+                                      initial={{ opacity: 0, height: 0 }}
+                                      animate={{ opacity: 1, height: "auto" }}
+                                      exit={{ opacity: 0, height: 0 }}
+                                      transition={{ duration: 0.35, ease: "easeOut" }}
+                                      className="overflow-hidden"
+                                    >
+                                      <div className="mt-2.5 space-y-3 rounded-xl border hairline bg-[color-mix(in_srgb,var(--scope-a)_4%,var(--glass-bg-soft))] p-3.5">
+                                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                          <ShapeDial
+                                            label="Energy"
+                                            ends={LC_SHAPE.energy}
+                                            value={lcShape.energy}
+                                            onChange={(v) => setLcShape({ energy: v })}
+                                          />
+                                          <ShapeDial
+                                            label="Light / Dark"
+                                            ends={LC_SHAPE.light}
+                                            value={lcShape.light}
+                                            onChange={(v) => setLcShape({ light: v })}
+                                          />
+                                          <ShapeDial
+                                            label="Familiarity"
+                                            ends={LC_SHAPE.familiarity}
+                                            value={lcShape.familiarity}
+                                            onChange={(v) => setLcShape({ familiarity: v })}
+                                          />
+                                          <ShapeDial
+                                            label="Structure"
+                                            ends={LC_SHAPE.structure}
+                                            value={lcShape.structure}
+                                            onChange={(v) => setLcShape({ structure: v })}
+                                          />
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+                                          <ShapeSelect
+                                            label="Time feel"
+                                            options={LC_SHAPE.timeFeel}
+                                            value={lcShape.timeFeel}
+                                            onChange={(v) => setLcShape({ timeFeel: v })}
+                                          />
+                                          <ShapeSelect
+                                            label="Voice"
+                                            options={LC_SHAPE.voice}
+                                            value={lcShape.voice}
+                                            onChange={(v) => setLcShape({ voice: v })}
+                                          />
+                                          <ShapeSelect
+                                            label="Vocal language"
+                                            options={LC_SHAPE.vocalLanguage}
+                                            value={lcShape.vocalLanguage}
+                                            onChange={(v) => setLcShape({ vocalLanguage: v })}
+                                          />
+                                          <ShapeSelect
+                                            label="Lyrics mode"
+                                            options={LC_SHAPE.lyricsMode}
+                                            value={lcShape.lyricsMode}
+                                            onChange={(v) => setLcShape({ lyricsMode: v })}
+                                          />
+                                        </div>
+                                      </div>
+                                    </motion.div>
+                                  )}
+                                </AnimatePresence>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* the raw whisper — the law, spoken once */}
+                          {lcRaw && (
+                            <p
+                              className="text-[11.5px] italic leading-relaxed text-muted-foreground/80"
+                              data-testid="lc-raw-whisper"
+                            >
+                              {t(
+                                "Your words alone — no chamber, shape or voice rides with the ask."
+                              )}
+                            </p>
+                          )}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
 
               </div>

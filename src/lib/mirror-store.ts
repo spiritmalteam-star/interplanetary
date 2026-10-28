@@ -203,7 +203,8 @@ export type ToolTabKey =
   | "video"
   | "register"
   | "mirroros"
-  | "library";
+  | "library"
+  | "scopes";
 
 /* THE LANDING'S OWN SCOPE — the field the threshold's docked chat
    walks in (the crown's Scopes hand chooses it). THE MIRROR is the
@@ -743,11 +744,17 @@ interface MirrorState {
      window carries every open room, one tab active at a time. */
   toolTabs: ToolTabKey[];
   activeToolTab: ToolTabKey | null;
+  /** THE LAST MAKER — the maker tab the visitor last stood in (the
+      InDream hand reopens it; "scopes" never rides here). */
+  lastMakerTab: Exclude<ToolTabKey, "scopes"> | null;
   /** opts.bare — open from the landing's docked portal: the tab is
       pushed and activated, but the view never leaves the landing. */
   openToolTab: (key: ToolTabKey, opts?: { bare?: boolean }) => void;
   closeToolTab: (key: ToolTabKey) => void;
   activateToolTab: (key: ToolTabKey) => void;
+  /** THE ONE BACK — the whole workplace lays down at once: every tab
+      closes and the main chat landing stands again. */
+  closeWorkspace: () => void;
 
   /* THE MIRROR BRIDGE — a workspace's compact assistant may carry its
      own context to the floor: the draft waits in the room's reply line
@@ -1235,23 +1242,45 @@ const osStream = {
 /*  visitor's device.                                                  */
 /* ------------------------------------------------------------------ */
 const LOOP_PARTS = 6;
+const FULL_SONG_PARTS = 2;
 let journeyToken: string | null = null;
 let journeyPartsDone = 0;
+/* the thread's own shape — a stale token from another journey's shape
+   (endless vs the song's two movements) must never resume across */
+let journeyKind: "loop" | "full" | null = null;
 
-async function runEndlessJourney(
+/* THE JOURNEY'S OWN LOOM — one engine for both long weaves: the
+   endless journey (six movements ≈ thirty minutes) and the full
+   song's own two movements (the opening and the closing, joined into
+   one composition past the two-minute wall). The journey was weighed
+   once at its first part; every continuation rides free, and a
+   stumbled part resumes where it stood. */
+async function runJourney(
   get: () => MirrorState,
-  set: (partial: Partial<MirrorState>) => void
+  set: (partial: Partial<MirrorState>) => void,
+  kind: "loop" | "full"
 ): Promise<void> {
+  const total = kind === "loop" ? LOOP_PARTS : FULL_SONG_PARTS;
+  /* a thread of another shape never resumes here */
+  if (journeyKind !== kind) {
+    journeyToken = null;
+    journeyPartsDone = 0;
+    journeyKind = kind;
+  }
   const brief = get().lcBrief!;
   const raw = get().lcRaw;
   let lastStructure: string | undefined;
   let lastNote: string | undefined;
-  for (let k = journeyPartsDone + 1; k <= LOOP_PARTS; k++) {
+  for (let k = journeyPartsDone + 1; k <= total; k++) {
     set({
       lcNotice:
         k === 1
-          ? "Weaving the journey's first movement — one of six. A long piece takes several breaths."
-          : `Weaving movement ${k} of six — the journey continues.`,
+          ? kind === "loop"
+            ? "Weaving the journey's first movement — one of six. A long piece takes several breaths."
+            : `Weaving the song's opening movement — one of two. A full song takes several breaths.`
+          : kind === "loop"
+            ? `Weaving movement ${k} of six — the journey continues.`
+            : `Weaving the song's closing movement — two of two.`,
     });
     const resume = k > 1 && journeyToken;
     const res = await fetch("/api/light-codes/generate", {
@@ -1268,10 +1297,10 @@ async function runEndlessJourney(
         instrumental: raw ? !brief.lyrics : get().lcShape.voice === "None" || !brief.lyrics,
         language: get().language,
         compose: true,
-        length: "loop",
+        length: kind,
         ...(resume
-          ? { loopToken: journeyToken, loopPart: { index: k, total: LOOP_PARTS, nonce: Math.random().toString(36).slice(2, 10) } }
-          : { loopPart: { index: 1, total: LOOP_PARTS } }),
+          ? { loopToken: journeyToken, loopPart: { index: k, total, nonce: Math.random().toString(36).slice(2, 10) } }
+          : { loopPart: { index: 1, total } }),
         interp: {
           title: brief.title,
           style: brief.style,
@@ -1296,7 +1325,7 @@ async function runEndlessJourney(
     if (!res.ok || !data) {
       throw new Error(
         (data && data.error) ||
-          "The journey's weaving rested a moment. Ask again — it continues where it stood."
+          "The weaving rested a moment. Ask again — it continues where it stood."
       );
     }
     lastStructure =
@@ -1308,13 +1337,18 @@ async function runEndlessJourney(
       continue;
     }
     /* the journey is joined — fetch it once from its own door */
-    set({ lcNotice: "Crossing the movements into one long journey…" });
+    set({
+      lcNotice:
+        kind === "loop"
+          ? "Crossing the movements into one long journey…"
+          : "Crossing the song's movements into one whole piece…",
+    });
     const audioRes = await fetch(data.audioUrl ?? "");
     if (!audioRes.ok) {
       const errData = (await audioRes.json().catch(() => null)) as { error?: string } | null;
       throw new Error(
         (errData && errData.error) ||
-          "The journey's sound rested before it reached you. Ask again — the brief still stands."
+          "The sound rested before it reached you. Ask again — the brief still stands."
       );
     }
     const bytes = new Uint8Array(await audioRes.arrayBuffer());
@@ -1330,7 +1364,7 @@ async function runEndlessJourney(
       style: brief.style || undefined,
       lyrics: brief.lyrics,
       notes: brief.notes || undefined,
-      length: "loop",
+      length: kind,
       duration: data.loopDurationSec || undefined,
       structure: [lastNote, lastStructure].filter(Boolean).join("\n\n") || undefined,
       createdAt: Date.now(),
@@ -1346,6 +1380,7 @@ async function runEndlessJourney(
     }
     journeyToken = null;
     journeyPartsDone = 0;
+    journeyKind = null;
     set({
       lcTrack: track,
       lcStatus: "ready",
@@ -1549,6 +1584,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   view: "observatory",
   toolTabs: [],
   activeToolTab: null,
+  lastMakerTab: null,
   bridgeDraft: null,
   libraryFocus: null,
   composerFocusNonce: 0,
@@ -1617,7 +1653,10 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   lcNotice: null,
   lcHistory: [],
   lcRepeat: "off" as "off" | "one" | "all",
-  lcRaw: false,
+  /* THE FIRST LAW, DEFAULTED: the visitor's words need no style — the
+     no-style door stands open at birth, and the creativity leads until
+     the visitor's own hand chooses a chamber. */
+  lcRaw: true,
 
   me: null,
   googleConfigured: false,
@@ -1741,8 +1780,11 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       modal: null,
       toolTabs: s.toolTabs.includes(key) ? s.toolTabs : [...s.toolTabs, key],
       activeToolTab: key,
+      ...(key !== "scopes" ? { lastMakerTab: key } : {}),
     }));
   },
+  closeWorkspace: () =>
+    set({ toolTabs: [], activeToolTab: null }),
   closeToolTab: (key) =>
     set((s) => {
       const tabs = s.toolTabs.filter((k) => k !== key);
@@ -1750,7 +1792,11 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         s.activeToolTab === key ? (tabs[tabs.length - 1] ?? null) : s.activeToolTab;
       return { toolTabs: tabs, activeToolTab: active };
     }),
-  activateToolTab: (key) => set({ activeToolTab: key }),
+  activateToolTab: (key) =>
+    set((s) => ({
+      activeToolTab: key,
+      ...(key !== "scopes" ? { lastMakerTab: key } : {}),
+    })),
 
   /* THE MIRROR BRIDGE — the draft is stamped so the room's reply line
      only lifts the newest carry (an older draft never re-fires). */
@@ -2012,8 +2058,12 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     const raw = s.lcRaw;
     set({ lcStatus: "polling", lcError: null, lcNotice: null, lcRefineNote: null });
     try {
-      if (s.lcLength === "loop") {
-        await runEndlessJourney(get, set);
+      /* THE LONG WEAVES — the endless journey (six movements) and the
+         full song (two movements joined into one piece) both ride the
+         journey's own loom; the preview and the plain full song keep
+         the single call. */
+      if (s.lcLength === "loop" || s.lcLength === "full") {
+        await runJourney(get, set, s.lcLength);
         return;
       }
       const weave = await fetch("/api/light-codes/generate", {
@@ -2104,7 +2154,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         style: brief.style || undefined,
         lyrics: brief.lyrics,
         notes: brief.notes || undefined,
-        length: s.lcLength === "full" ? "full" : "preview",
+        length: "preview",
         structure:
           typeof wdata?.structure === "string" && wdata.structure
             ? wdata.structure
@@ -3717,7 +3767,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     } catch {
       /* even if the line is quiet, the visitor leaves cleanly */
     }
-    set({ me: null, wallet: null, walletModalOpen: false, walletNotice: null, authOpen: false, view: "observatory", toolTabs: [], activeToolTab: null });
+    set({ me: null, wallet: null, walletModalOpen: false, walletNotice: null, authOpen: false, view: "observatory", toolTabs: [], activeToolTab: null, lastMakerTab: null });
   },
 
   /** The visitor's own cosmic library — free for everyone. */

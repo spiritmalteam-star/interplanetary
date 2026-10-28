@@ -24,6 +24,7 @@ import {
   BookOpen,
   Clapperboard,
   Hammer,
+  Layers,
   Library,
   Music,
   NotebookPen,
@@ -86,6 +87,7 @@ export const WORKSPACE_ORDER: ToolTabKey[] = [
   "video",
   "register",
   "library",
+  "scopes",
 ];
 
 export const WORKSPACES: Record<ToolTabKey, WorkspaceDefinition> = {
@@ -208,6 +210,21 @@ export const WORKSPACES: Record<ToolTabKey, WorkspaceDefinition> = {
     preserveState: true,
     resourceProfile: "low",
     bridgeMode: "mirror",
+  },
+  scopes: {
+    id: "scopes",
+    title: "Scopes",
+    category: "atlas",
+    icon: Layers,
+    theme: { accent: "var(--scope-a, var(--gd))" },
+    loader: () =>
+      import("@/components/mirror/ScopesRoom").then((m) => ({
+        default: m.ScopesRoom as ComponentType,
+      })),
+    capabilities: ["field-choosing", "maker-jumping"],
+    preserveState: false,
+    resourceProfile: "low",
+    bridgeMode: "absolute",
   },
 };
 

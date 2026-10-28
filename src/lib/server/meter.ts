@@ -77,7 +77,11 @@ async function bodyWeighFor(operation: string, req: NextRequest): Promise<BodyWe
       loopPart?: { index?: number } | null;
     } | null;
     if (!b?.compose) return null;
-    if (b.length === "loop" && b.loopPart && Number(b.loopPart.index) > 1) return null;
+    /* THE JOURNEY'S CONTINUATION PARTS RIDE FREE — for the endless
+       journey AND for the full song's own two movements (both carry
+       the journey's loopPart): the weave was weighed once, at its
+       first part. */
+    if (b.loopPart && Number(b.loopPart.index) > 1) return null;
     const prices = await servicePrices();
     const kind =
       b.length === "loop" ? "endless loop" : b.length === "full" ? "full song" : "preview";

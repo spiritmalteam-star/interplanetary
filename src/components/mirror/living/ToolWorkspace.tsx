@@ -13,7 +13,7 @@ import {
 } from "react";
 import dynamic from "next/dynamic";
 import { createPortal } from "react-dom";
-import { ArrowLeft, Columns, Maximize2, Minimize2, RotateCcw, X } from "lucide-react";
+import { ArrowLeft, Columns, Maximize2, Minimize2, RotateCcw } from "lucide-react";
 import { useMirror, type ToolTabKey } from "@/lib/mirror-store";
 import { WORKSPACES, WORKSPACE_ORDER } from "@/lib/mirror/workspaces";
 import { runWorkspaceCleanup } from "@/lib/mirror/workspace-lifecycle";
@@ -185,15 +185,33 @@ export const TAB_META: Record<
   >
 );
 
+/* THE STANDING RAIL — the InDream shelf's own order (the five makers
+   the visitor named) and the scopes at the row's end. These pills
+   stand in the header always; the other rooms ride the rail only
+   while they are open. */
+const STANDING_RAIL: ToolTabKey[] = [
+  "dreambook",
+  "lightcodes",
+  "akashic",
+  "mirroros",
+  "invent",
+  "scopes",
+];
+
 /* ------------------------------------------------------------------ */
 /*  THE WORKSPACE — the pages open as tabs over the one chat: one      */
-/*  window carries every open room, one tab active at a time. The      */
-/*  window is ALWAYS the chat's own exact frame (absolute inset-0 of   */
-/*  the realm — the lens clips its corners), in both of the chat's     */
-/*  gears; it stands BELOW the crown's hands and every modal, and      */
-/*  only over the chat — when a full-screen room owns the frame (a     */
-/*  tab was expanded), the window rests and the tab stays parked       */
-/*  until the room's own back hand returns.                            */
+/*  window carries every open room, one tab active at a time. THE      */
+/*  STANDING RAIL — the five makers and the scopes stand in the row    */
+/*  always (horizontal tab buttons, the InDream layout the visitor     */
+/*  asked for): a standing pill that is not open yet opens its room    */
+/*  with one touch, so the visitor jumps between the tools and the     */
+/*  scopes much easier now. The window is ALWAYS the chat's own exact  */
+/*  frame (absolute inset-0 of the realm — the lens clips its          */
+/*  corners), in both of the chat's gears; it stands BELOW the crown's */
+/*  hands and every modal, and only over the chat — when a             */
+/*  full-screen room owns the frame (a tab was expanded), the window   */
+/*  rests and the tab stays parked until the room's own back hand      */
+/*  returns.                                                           */
 /*                                                                     */
 /*  THE LIFECYCLE LAW — when the active page turns (or the window      */
 /*  closes), the leaving page's registered hands are run: audio        */
@@ -205,7 +223,8 @@ function ToolWorkspaceImpl({ bare = false }: { bare?: boolean }) {
   const toolTabs = useMirror((s) => s.toolTabs);
   const activeToolTab = useMirror((s) => s.activeToolTab);
   const activateToolTab = useMirror((s) => s.activateToolTab);
-  const closeToolTab = useMirror((s) => s.closeToolTab);
+  const openToolTab = useMirror((s) => s.openToolTab);
+  const closeWorkspace = useMirror((s) => s.closeWorkspace);
   /* THE ROOM'S OWN ZOOM — every room may grow to fill the whole sky
      while staying exactly where it is: the same room, the same state,
      the same work, only bigger. Nothing moves elsewhere; the portal
@@ -332,18 +351,21 @@ function ToolWorkspaceImpl({ bare = false }: { bare?: boolean }) {
     >
       {/* THE WORKPLACE HEADER — THE ONE BACK at the row's very left
           (the same place for every room, the same in both gears): one
-          touch lays the standing room down and the chat stands again —
-          the per-room back hands and top bars are gone from the house.
-          Beside it, the row of open rooms as compact pills. The active
-          room wears the house's light: var(--scope-a) is the scope the
-          visitor chose (LandingGate sets it on the whole chamber), so
-          every workplace tints itself with its own house. */}
+          touch lays the whole workplace down and the main chat landing
+          stands again. Beside it, THE STANDING RAIL — the five makers
+          and the scopes as horizontal tab buttons, every one always
+          present: an unopened pill opens its room on the touch, an
+          open one turns to it. The active room wears the house's
+          light: var(--scope-a) is the scope the visitor chose
+          (LandingGate sets it on the whole chamber), so every
+          workplace tints itself with its own house. */}
       <div className="relative z-10 flex h-9 shrink-0 items-center gap-1 overflow-x-auto px-1">
         {/* THE ONE BACK HAND — the single return every tool and every
-            room shares: leftmost, always the same place */}
+            room shares: leftmost, always the same place; the whole
+            workplace lays down and the chat stands again */}
         <button
           type="button"
-          onClick={() => active && closeToolTab(active)}
+          onClick={closeWorkspace}
           aria-label={t("Back to the chat")}
           title={t("Back to the chat")}
           data-testid="tool-workspace-back"
@@ -351,15 +373,20 @@ function ToolWorkspaceImpl({ bare = false }: { bare?: boolean }) {
         >
           <ArrowLeft className="size-3.5" aria-hidden="true" />
         </button>
-        {toolTabs.map((key) => {
+
+        {/* THE STANDING RAIL — the InDream shelf and the scopes, one
+            row, always standing. Unopened pills wear the quiet dress;
+            open pills wear the house's light when active. */}
+        {STANDING_RAIL.map((key) => {
           const meta = TAB_META[key];
           const Icon = meta.icon;
+          const opened = toolTabs.includes(key);
           const isActive = key === activeToolTab;
           return (
             <button
               key={key}
               type="button"
-              onClick={() => activateToolTab(key)}
+              onClick={() => (opened ? activateToolTab(key) : openToolTab(key))}
               aria-pressed={isActive}
               title={t(meta.label)}
               data-testid={`tool-tab-${key}`}
@@ -367,7 +394,9 @@ function ToolWorkspaceImpl({ bare = false }: { bare?: boolean }) {
                 "flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-[11.5px] transition-colors duration-300",
                 isActive
                   ? "font-medium"
-                  : "border-transparent text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
+                  : opened
+                    ? "border-transparent text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
+                    : "border-dashed text-muted-foreground/55 hover:border-[var(--hairline-hover)] hover:text-foreground"
               )}
               style={
                 isActive
@@ -383,29 +412,49 @@ function ToolWorkspaceImpl({ bare = false }: { bare?: boolean }) {
             >
               <Icon className="size-3.5" aria-hidden="true" />
               {t(meta.label)}
-              {/* the tiny close affordance — a span, for a button may
-                  never nest inside a button */}
-              <span
-                role="button"
-                tabIndex={0}
-                aria-label={`${t("Close")} ${t(meta.label)}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  closeToolTab(key);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.stopPropagation();
-                    closeToolTab(key);
-                  }
-                }}
-                className="ml-0.5 flex size-4 items-center justify-center rounded-full text-muted-foreground/60 transition-colors duration-300 hover:bg-foreground/10 hover:text-foreground"
-              >
-                <X className="size-3" aria-hidden="true" />
-              </span>
             </button>
           );
         })}
+
+        {/* the extra rooms — video, register, library: they ride the
+            same rail when some other hand has opened them */}
+        {toolTabs
+          .filter((key) => !STANDING_RAIL.includes(key))
+          .map((key) => {
+            const meta = TAB_META[key];
+            const Icon = meta.icon;
+            const isActive = key === activeToolTab;
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => activateToolTab(key)}
+                aria-pressed={isActive}
+                title={t(meta.label)}
+                data-testid={`tool-tab-${key}`}
+                className={cn(
+                  "flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-[11.5px] transition-colors duration-300",
+                  isActive
+                    ? "font-medium"
+                    : "border-transparent text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
+                )}
+                style={
+                  isActive
+                    ? {
+                        backgroundColor:
+                          "color-mix(in srgb, var(--scope-a,var(--gd)) 12%, transparent)",
+                        color: "var(--scope-a,var(--gd))",
+                        borderColor:
+                          "color-mix(in srgb, var(--scope-a,var(--gd)) 35%, transparent)",
+                      }
+                    : undefined
+                }
+              >
+                <Icon className="size-3.5" aria-hidden="true" />
+                {t(meta.label)}
+              </button>
+            );
+          })}
 
         <span className="flex-1" aria-hidden="true" />
 

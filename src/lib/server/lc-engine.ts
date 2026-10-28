@@ -203,6 +203,12 @@ export function verdictResponse(
 
 export const LOOP_PARTS = 6; // six weavings ≈ thirty minutes of sound
 
+/* THE SONG'S TWO MOVEMENTS — the full song rides the journey's loom
+   too: two real weavings joined into one piece, so the song breathes
+   past the two-minute wall (each movement carries minutes of its own
+   and the join makes one continuous composition). */
+export const FULL_SONG_PARTS = 2;
+
 export interface LoopSession {
   token: string;
   keeperId: string;
