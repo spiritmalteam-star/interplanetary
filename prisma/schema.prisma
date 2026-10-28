@@ -43,6 +43,8 @@ model User {
   ledger          CreditLedger[]
   generationJobs  GenerationJob[] @relation("GenerationJobs")
   musicTracks     MusicTrack[]    @relation("MusicTracks")
+  loopWeaves      LoopWeave[]
+  loopWeaveFinals LoopWeaveFinal[]
   expansion       ExpansionProfile?
   expansionEvents ExpansionEvent[]
 }
@@ -282,10 +284,54 @@ model MusicTrack {
   title       String
   audioUrl    String // the serve key (/api/music-audio/<file>) — never a browser guess
   localFile   String? // the mirrored file's name under the house's audio vault
+  audioData   Bytes? // the sound's own bytes, kept in the vault's deep shelf — the sky keeps no files, so the row itself holds the sound
   remoteUrl   String? // the maker's own CDN address (kept for re-mirror attempts)
   durationSec Float?
   status      String   @default("ready") // ready | mirrored | remote_only | failed
   favorite    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+// the endless journey's durable thread — the weave crosses warm
+// instances, so the parts and the joined whole rest in the vault's
+// deep shelf, not in one instance's memory
+model LoopWeave {
+  id        String          @id @default(cuid())
+  token     String          @unique
+  userId    String
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  total     Int
+  mime      String          @default("audio/mpeg")
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  parts     LoopWeavePart[]
+
+  @@index([userId, updatedAt])
+}
+
+model LoopWeavePart {
+  id        String    @id @default(cuid())
+  weaveId   String
+  weave     LoopWeave @relation(fields: [weaveId], references: [id], onDelete: Cascade)
+  idx       Int
+  audio     Bytes
+  createdAt DateTime  @default(now())
+
+  @@unique([weaveId, idx])
+}
+
+model LoopWeaveFinal {
+  id          String   @id @default(cuid())
+  token       String   @unique
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mime        String   @default("audio/mpeg")
+  audio       Bytes
+  durationSec Float    @default(0)
+  seamless    Boolean  @default(false)
+  note        String   @default("")
   createdAt   DateTime @default(now())
 
   @@index([userId, createdAt])

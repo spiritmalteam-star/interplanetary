@@ -2058,18 +2058,10 @@ export const useMirror = create<MirrorState>()((set, get) => ({
             "The chamber rests a moment. Breathe, then ask for the transmission again."
         );
       }
-      const b64 = typeof wdata?.audio === "string" ? wdata.audio : "";
-      if (!b64) {
-        throw new Error(
-          (wdata && wdata.error) ||
-            "The chamber answered without a sound. Try again."
-        );
-      }
-      const bytes = base64ToBytes(b64);
-      const mime = String(wdata?.mimeType ?? "audio/mpeg");
-      const id = `lc-${Date.now()}`;
-      /* the house's keeping — when the weave was kept in the visitor's
-         vault, the row's id and serve key ride home beside the sound */
+      /* THE WEIGHT LAW (the visitor's side): when the house kept the
+         sound, the answer carries only its serve key — the heavy bytes
+         never ride the JSON again. The key IS the sound's address; the
+         inline base64 rides only when no shelf held it. */
       const serveKey =
         typeof wdata?.audioUrl === "string" &&
         wdata.audioUrl.startsWith("/api/music-audio/")
@@ -2080,12 +2072,29 @@ export const useMirror = create<MirrorState>()((set, get) => ({
           ? wdata.trackId
           : null;
       const durable = Boolean(serveKey && rowId);
-      const audioUrl = URL.createObjectURL(
-        new Blob([bytes.buffer as ArrayBuffer], { type: mime })
-      );
-      /* the keeping law: a guest's sound rests on their own device; a
-         vault-kept sound rests in the house — no second copy here */
-      if (!durable) void lcAudioSave(id, bytes, mime);
+      const b64 = typeof wdata?.audio === "string" ? wdata.audio : "";
+      if (!b64 && !serveKey) {
+        throw new Error(
+          (wdata && wdata.error) ||
+            "The chamber answered without a sound. Try again."
+        );
+      }
+      const bytes = b64 ? base64ToBytes(b64) : null;
+      const mime = String(wdata?.mimeType ?? "audio/mpeg");
+      const id = `lc-${Date.now()}`;
+      let audioUrl: string;
+      if (serveKey) {
+        /* the vault's own serve key — the sound is fetched from the
+           house, and the house holds it across visits */
+        audioUrl = serveKey;
+      } else {
+        /* the keeping law: a guest's sound rests on their own device */
+        const localBytes = bytes as Uint8Array;
+        audioUrl = URL.createObjectURL(
+          new Blob([localBytes.buffer as ArrayBuffer], { type: mime })
+        );
+        void lcAudioSave(id, localBytes, mime);
+      }
       const track: LcTrack = {
         id,
         title: brief.title,

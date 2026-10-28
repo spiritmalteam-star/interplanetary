@@ -46,7 +46,7 @@ export function RealmLightToggle({
       aria-label={word}
       title={word}
       data-testid={testId}
-      className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full border text-[var(--scope-a,var(--gd))] transition-all duration-300 after:absolute after:-inset-1 after:rounded-full after:content-[''] hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)]"
+      className="focus-glow relative flex size-7 shrink-0 items-center justify-center rounded-full border text-[var(--scope-a,var(--gd))] transition-all duration-300 after:absolute after:-inset-1 after:rounded-full after:content-[''] hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)]"
       style={{
         borderColor:
           "color-mix(in srgb, var(--scope-a,var(--gd)) 34%, transparent)",

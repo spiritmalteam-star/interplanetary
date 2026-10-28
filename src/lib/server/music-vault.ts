@@ -67,6 +67,51 @@ export async function mirrorAudioToVault(
   }
 }
 
+/**
+ * The deep shelf — a woven sound is kept under its own vault name: the
+ * file when the house's shelf is writable, and ALWAYS the row's own
+ * bytes (audioData) when the caller lays the row. The sky (Vercel)
+ * keeps no writable house shelf, so there the row itself is the vault:
+ * the serve door reads the bytes from the row when no file stands.
+ */
+export async function keepWovenSound(
+  bytes: Buffer,
+  mime: string
+): Promise<{ file: string; fileKept: boolean }> {
+  const file = `${randomUUID()}${extensionForMime(mime)}`;
+  try {
+    await mkdir(AUDIO_VAULT_DIR, { recursive: true });
+    await writeFile(join(AUDIO_VAULT_DIR, file), bytes);
+    return { file, fileKept: true };
+  } catch (err) {
+    console.error(
+      "[music-vault] the house shelf could not keep the sound — the deep shelf (the row) will hold it:",
+      err instanceof Error ? err.message : err
+    );
+    return { file, fileKept: false };
+  }
+}
+
+/** The deep shelf's read — the bytes a row holds, by the file's name. */
+export async function loadTrackBytes(
+  file: string
+): Promise<Buffer | null> {
+  try {
+    const row = await db.musicTrack.findFirst({
+      where: { localFile: file },
+      select: { audioData: true },
+    });
+    if (!row?.audioData) return null;
+    return Buffer.from(row.audioData);
+  } catch (err) {
+    console.error(
+      "[music-vault] the deep shelf could not be read:",
+      err instanceof Error ? err.message : err
+    );
+    return null;
+  }
+}
+
 /** The owner's hand forgets — the bytes leave the vault (best effort;
  *  a missing file is already forgotten, and is not an error). */
 export async function removeAudioFromVault(file: string): Promise<void> {

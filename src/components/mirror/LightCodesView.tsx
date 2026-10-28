@@ -405,11 +405,32 @@ function VoiceRecordButton({
    of every sound this device still holds. When a new weave lands,
    the stage answers with a light — the camera is already here. */
 
+/* THE WEAVING BARS — the channeling's own seven-bar breath, shared by
+   the stage (where the sound will land) and the strip beneath it. */
+function WeavingBars() {
+  return (
+    <div className="flex h-8 shrink-0 items-end gap-[3px]" aria-hidden="true">
+      {[0, 1, 2, 3, 4, 5, 6].map((i) => (
+        <span
+          key={i}
+          className="w-[3px] rounded-full bg-[var(--scope-a)]"
+          style={{
+            height: `${30 + (i % 3) * 26}%`,
+            animation: `lc-wave 1.2s ease-in-out ${i * 0.12}s infinite`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
 function PlayerBar() {
   const track = useMirror((s) => s.lcTrack);
   const status = useMirror((s) => s.lcStatus);
   const history = useMirror((s) => s.lcHistory);
   const repeat = useMirror((s) => s.lcRepeat);
+  const lcLength = useMirror((s) => s.lcLength);
+  const lcNotice = useMirror((s) => s.lcNotice);
   const setLcRepeat = useMirror((s) => s.setLcRepeat);
   const lcAdvance = useMirror((s) => s.lcAdvance);
   const playLc = useMirror((s) => s.playLc);
@@ -434,6 +455,20 @@ function PlayerBar() {
   const stageRef = useRef<HTMLDivElement | null>(null);
   const seenTrack = useRef<string | null>(null);
   const live = status === "ready" && track !== null;
+  /* THE CHANNELING'S STAGE — the weaving is seen forming in the very
+     player that will hold the sound: while the chamber works, the
+     stage carries the animation (full, when no sound holds the room
+     yet; a quiet strip beneath the transport when one does). */
+  const weaving = status === "interpreting" || status === "polling";
+  const weavePhrase = !weaving
+    ? ""
+    : status === "interpreting"
+      ? t("The Mirror is translating intention into sound…")
+      : lcLength === "full"
+        ? t("The full song is being woven — verses finding their chorus…")
+        : lcLength === "loop" && lcNotice
+          ? lcNotice
+          : t("The sound is being woven — hold still…");
   const active = track;
   const realWaveAllowed = !!active && active.length !== "loop" && !waveFailed;
   const progress = active && dur > 0 ? Math.min(1, time / dur) : 0;
@@ -777,6 +812,22 @@ function PlayerBar() {
               </span>
             </div>
 
+            {/* THE CHANNELING STRIP — a sound already holds the stage,
+                so the weaving breathes quietly beneath the transport */}
+            {weaving && (
+              <div
+                className="mt-2 flex items-center gap-2.5 rounded-xl border hairline bg-[color-mix(in_srgb,var(--scope-a)_6%,transparent)] px-3 py-2"
+                data-testid="lc-stage-weaving"
+                aria-live="polite"
+                aria-busy="true"
+              >
+                <WeavingBars />
+                <p className="min-w-0 flex-1 text-[12.5px] italic leading-snug text-muted-foreground">
+                  {weavePhrase}
+                </p>
+              </div>
+            )}
+
             {/* VIEW TRANSLATION — the engine-facing direction, revealed on request */}
             <AnimatePresence>
               {showTranslation && (active.style || active.lyrics) && (
@@ -806,6 +857,35 @@ function PlayerBar() {
               )}
             </AnimatePresence>
           </>
+        ) : weaving ? (
+          /* THE CHANNELING ON THE STAGE — the music that is about to be
+             channeled is seen forming right here, where it will land:
+             the weaving animation stands where the empty shelf stood. */
+          <div
+            className="flex items-center gap-3 py-1"
+            data-testid="lc-stage-weaving"
+            aria-live="polite"
+            aria-busy="true"
+          >
+            <div
+              aria-hidden="true"
+              className="relative flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-[var(--scope-a)] to-[color-mix(in_srgb,var(--scope-b)_75%,var(--scope-a))] shadow-[0_6px_22px_-10px_color-mix(in_srgb,var(--scope-a)_90%,transparent)]"
+            >
+              <AudioLines className="size-5 text-[#f6f4ef]" />
+              <span className="absolute inset-0 animate-pulse rounded-xl border border-[#f6f4ef]/30" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="mono-label text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+                {t("The music player")}
+              </p>
+              <div className="mt-1 flex items-center gap-2.5">
+                <WeavingBars />
+                <p className="min-w-0 flex-1 text-[12.5px] italic leading-snug text-muted-foreground">
+                  {weavePhrase}
+                </p>
+              </div>
+            </div>
+          </div>
         ) : (
           /* THE STAGE AT REST — honest, before any sound holds the room */
           <div
@@ -1966,45 +2046,11 @@ export function LightCodesView() {
                   </div>
                 </form>
 
-                {/* the chamber at work — the results breathe directly
-                    beneath the ask: the generation's own section stands
-                    at the very top of the room, so the weaving is seen
-                    the moment it begins and the music is never left
-                    loading below the fold */}
+                {/* the chamber's honest error, spoken in the Mirror's voice:
+                    the weaving itself has moved up to the stage — the
+                    animation stands where the music will land */}
                 <div className="mt-4 flex flex-col items-center">
                   <AnimatePresence mode="wait">
-                    {busy && (
-                      <motion.div
-                        key="busy"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="mt-1 flex flex-col items-center"
-                        aria-live="polite"
-                        aria-busy="true"
-                        data-testid="lc-busy"
-                      >
-                        <div className="flex h-8 items-end gap-[3px]" aria-hidden="true">
-                          {[0, 1, 2, 3, 4, 5, 6].map((i) => (
-                            <span
-                              key={i}
-                              className="w-[3px] rounded-full bg-[var(--scope-a)]"
-                              style={{
-                                height: `${30 + (i % 3) * 26}%`,
-                                animation: `lc-wave 1.2s ease-in-out ${i * 0.12}s infinite`,
-                              }}
-                            />
-                          ))}
-                        </div>
-                        <p className="mt-2 text-[13.5px] italic text-muted-foreground">
-                          {lcStatus === "interpreting"
-                            ? t("The Mirror is translating intention into sound…")
-                            : lcLength === "full"
-                              ? t("The full song is being woven — verses finding their chorus…")
-                              : t("The sound is being woven — hold still…")}
-                        </p>
-                      </motion.div>
-                    )}
                     {lcStatus === "error" && lcError && (
                       <motion.div
                         key="error"

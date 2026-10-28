@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { open, stat } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { db } from "@/lib/db";
 import {
   AUDIO_VAULT_DIR,
+  loadTrackBytes,
   sanitizeVaultFile,
 } from "@/lib/server/music-vault";
 import {
@@ -22,7 +23,9 @@ export const dynamic = "force-dynamic";
 /*  passage whose MusicTrack row names it — or to the keeper's own     */
 /*  admin passage. Every other ask is met with silence (404): the      */
 /*  door never reveals whether a sound exists. The bytes live under    */
-/*  db/audio/ and the file parameter is name-checked twice (route      */
+/*  db/audio/ (the house's own shelf) or, when the shelf is not        */
+/*  writable (the sky keeps no files), inside the row itself — the     */
+/*  deep shelf — and the file parameter is name-checked twice (route   */
 /*  and vault) — a path, a climb or a stranger character never         */
 /*  reaches the disk.                                                  */
 /*                                                                     */
@@ -61,12 +64,16 @@ export async function GET(
     }
 
     const path = join(AUDIO_VAULT_DIR, file);
-    let size = 0;
+    let bytes: Buffer | null = null;
     try {
-      size = (await stat(path)).size;
+      bytes = await readFile(path);
     } catch {
-      /* the row stands but the bytes are gone — the house says so
-         honestly instead of pretending to serve silence */
+      /* the house shelf holds nothing under this name — the deep shelf
+         (the row's own bytes) is asked next; if neither holds the sound,
+         the house says so honestly instead of pretending to serve */
+      bytes = await loadTrackBytes(file);
+    }
+    if (!bytes) {
       return withAnonCookie(
         NextResponse.json(
           { error: "The house no longer holds this sound." },
@@ -75,6 +82,7 @@ export async function GET(
         visitor
       );
     }
+    const size = bytes.length;
 
     /* the range ask — "bytes=start-end", "bytes=start-", "bytes=-n" */
     let start = 0;
@@ -106,31 +114,25 @@ export async function GET(
     }
 
     const length = end - start + 1;
-    const handle = await open(path, "r");
-    try {
-      const buf = Buffer.alloc(length);
-      await handle.read(buf, 0, length, start);
-      const headers: Record<string, string> = {
-        "Content-Type": file.toLowerCase().endsWith(".wav")
-          ? "audio/wav"
-          : "audio/mpeg",
-        "Accept-Ranges": "bytes",
-        "Content-Length": String(length),
-        "Cache-Control": "private, max-age=3600",
-      };
-      if (partial) {
-        headers["Content-Range"] = `bytes ${start}-${end}/${size}`;
-      }
-      return withAnonCookie(
-        new NextResponse(new Uint8Array(buf), {
-          status: partial ? 206 : 200,
-          headers,
-        }),
-        visitor
-      );
-    } finally {
-      await handle.close();
+    const slice = bytes.subarray(start, end + 1);
+    const headers: Record<string, string> = {
+      "Content-Type": file.toLowerCase().endsWith(".wav")
+        ? "audio/wav"
+        : "audio/mpeg",
+      "Accept-Ranges": "bytes",
+      "Content-Length": String(length),
+      "Cache-Control": "private, max-age=3600",
+    };
+    if (partial) {
+      headers["Content-Range"] = `bytes ${start}-${end}/${size}`;
     }
+    return withAnonCookie(
+      new NextResponse(new Uint8Array(slice), {
+        status: partial ? 206 : 200,
+        headers,
+      }),
+      visitor
+    );
   } catch (err) {
     console.error(
       "[music-audio] the vault's serving door stumbled:",

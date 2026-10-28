@@ -31,9 +31,15 @@ import {
   type LoopSession,
 } from "@/lib/server/lc-engine";
 import { assembleLoop } from "@/lib/server/loop-assembly";
+import {
+  dbLoopAddPart,
+  dbLoopBegin,
+  dbLoopFinalize,
+  dbLoopState,
+} from "@/lib/server/loop-vault";
+import { keepWovenSound } from "@/lib/server/music-vault";
 import { LC_MODES } from "@/lib/data/light-codes";
 import { db } from "@/lib/db";
-import { mirrorAudioToVault } from "@/lib/server/music-vault";
 import { rename } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -642,7 +648,10 @@ interface StepContentBlock {
    blocks without assuming any order — text blocks (lyrics, structure)
    and audio blocks arrive as the engine lays them down. The last audio
    block heard is the song. The SDK's own convenience properties
-   (output_audio / output_text) stand first, should the steps rest. */
+   (output_audio / output_text) stand first, should the steps rest.
+   THE WEIGHT LAW: a song heavier than the sky's response door is no
+   longer refused — the flag rides home and the vault decides: kept
+   sounds travel by their serve key, unkept heavies speak honestly. */
 function extractWeave(
   interaction: {
     output_audio?: { data?: string; mime_type?: string } | null;
@@ -650,7 +659,7 @@ function extractWeave(
     steps?: { type?: string; content?: StepContentBlock[] }[] | null;
   },
   maxB64 = MAX_AUDIO_B64
-): { audioB64: string; texts: string[]; mime: string } {
+): { audioB64: string; texts: string[]; mime: string; oversized: boolean } {
   let audioB64: string | null = null;
   let mime = "audio/mpeg";
   const texts: string[] = [];
@@ -684,12 +693,7 @@ function extractWeave(
   if (!audioB64) {
     throw new Error("The engine answered without a sound. Try again in a breath.");
   }
-  if (audioB64.length > maxB64) {
-    throw new Error(
-      "The song was woven, but it is too heavy for the sky to carry home. Ask the Mirror for a shorter piece."
-    );
-  }
-  return { audioB64, texts, mime };
+  return { audioB64, texts, mime, oversized: audioB64.length > maxB64 };
 }
 
 async function lyriaWeave(
@@ -697,7 +701,7 @@ async function lyriaWeave(
   key: string,
   timeoutMs: number,
   maxB64 = MAX_AUDIO_B64
-): Promise<{ audioB64: string; texts: string[]; mime: string }> {
+): Promise<{ audioB64: string; texts: string[]; mime: string; oversized: boolean }> {
   const client = new GoogleGenAI({ apiKey: key });
   try {
     /* the honest weave: one request, no silent retries — a costly
@@ -802,38 +806,73 @@ async function postImpl(
       const rawIndex = isLoop ? Number(b.loopPart?.index ?? 1) : 0;
       const partIndex = isLoop ? Math.min(Math.max(1, Math.floor(rawIndex) || 1), total) : 0;
 
-      /* the journey's thread — parts after the first must find their session */
+      /* the journey's thread — parts after the first must find their session.
+         THE DEEP THREAD: a keeper with a row in the house lays every part
+         in the vault's deep shelf (the database), so the journey crosses
+         warm instances in the sky; a stateless keeper rides the instance's
+         own shelf, which holds on one warm ground alone. */
+      const dbUserId =
+        meter && !meter.userId.startsWith("stateless:") ? meter.userId : null;
       let session: LoopSession | null = null;
+      let dbThread: { token: string; total: number; parts: number } | null = null;
       if (isLoop && partIndex > 1) {
-        session = b.loopToken ? getLoopSession(b.loopToken) : null;
-        if (!session) {
-          return NextResponse.json(
-            {
-              ...passed,
-              error:
-                "The journey's thread rested before its weaving ended (the chamber keeps it about forty-five minutes). Ask again — the Mirror begins the journey anew, and the brief still stands.",
-              code: "journey_thread_rest",
-            },
-            { status: 410 }
-          );
-        }
-        if (!loopSessionOwned(session, keeperId)) {
-          return NextResponse.json(
-            { ...passed, error: "This journey belongs to another keeper.", code: "journey_foreign" },
-            { status: 403 }
-          );
-        }
-        if (session.parts.length !== partIndex - 1) {
-          return NextResponse.json(
-            {
-              ...passed,
-              error: `The journey's parts arrived out of step — the loom waits for part ${session.parts.length + 1} of ${session.total}.`,
-              code: "journey_out_of_step",
-              loopToken: session.token,
-              loopProgress: `${session.parts.length}/${session.total}`,
-            },
-            { status: 409 }
-          );
+        if (dbUserId) {
+          const st = b.loopToken ? await dbLoopState(b.loopToken, dbUserId) : null;
+          if (!st) {
+            return NextResponse.json(
+              {
+                ...passed,
+                error:
+                  "The journey's thread rested before its weaving ended (the chamber keeps it about an hour). Ask again — the Mirror begins the journey anew, and the brief still stands.",
+                code: "journey_thread_rest",
+              },
+              { status: 410 }
+            );
+          }
+          if (st.parts !== partIndex - 1) {
+            return NextResponse.json(
+              {
+                ...passed,
+                error: `The journey's parts arrived out of step — the loom waits for part ${st.parts + 1} of ${st.total}.`,
+                code: "journey_out_of_step",
+                loopToken: st.token,
+                loopProgress: `${st.parts}/${st.total}`,
+              },
+              { status: 409 }
+            );
+          }
+          dbThread = st;
+        } else {
+          session = b.loopToken ? getLoopSession(b.loopToken) : null;
+          if (!session) {
+            return NextResponse.json(
+              {
+                ...passed,
+                error:
+                  "The journey's thread rested before its weaving ended (the chamber keeps it about forty-five minutes). Ask again — the Mirror begins the journey anew, and the brief still stands.",
+                code: "journey_thread_rest",
+              },
+              { status: 410 }
+            );
+          }
+          if (!loopSessionOwned(session, keeperId)) {
+            return NextResponse.json(
+              { ...passed, error: "This journey belongs to another keeper.", code: "journey_foreign" },
+              { status: 403 }
+            );
+          }
+          if (session.parts.length !== partIndex - 1) {
+            return NextResponse.json(
+              {
+                ...passed,
+                error: `The journey's parts arrived out of step — the loom waits for part ${session.parts.length + 1} of ${session.total}.`,
+                code: "journey_out_of_step",
+                loopToken: session.token,
+                loopProgress: `${session.parts.length}/${session.total}`,
+              },
+              { status: 409 }
+            );
+          }
         }
       }
 
@@ -881,20 +920,15 @@ async function postImpl(
         );
 
         /* ---- the durable keeping — the weave's own job row ------------
-           THE HOUSE'S KEEPING LAW (the music room's half): a signed
-           passage's weave is written into the vault BEFORE the sky is
-           asked, so a refresh mid-weave can never lose the thread OR
-           its drawn light: the row stands "processing" until the sound
-           lands (then it carries the track), and a weave the house
-           never hears back from is swept to "failed" with its light
-           returned — once, and only once. Anonymous visitors keep the
-           old keeping: their sounds rest on their own device alone.
-           The endless journey rides its own shelf already — its token
-           thread is instance-local, so a job row could not recover it. */
+           THE HOUSE'S KEEPING LAW (the music room's half): any passage
+           with a row in the house (signed or quietly anonymous — the
+           anonymous purse is weighed like any other, so it is kept like
+           any other) has its weave written into the vault BEFORE the sky
+           is asked, so a refresh mid-weave can never lose the thread OR
+           its drawn light. Only the truly stateless (no row behind them)
+           keep the old keeping: their sounds rest on their own device. */
         const durableKeeper = Boolean(
-          meter &&
-            !meter.userId.startsWith("stateless:") &&
-            !meter.visitor.user.email.startsWith("anon:")
+          meter && !meter.userId.startsWith("stateless:")
         );
         if (durableKeeper && meter && !isLoop) {
           try {
@@ -947,32 +981,32 @@ async function postImpl(
         noteLcSuccess(body.model);
 
         if (!isLoop) {
-          /* ---- the vault keeps what the sky gave (signed passages) ----
-             The bytes are already in the house's hands, so writing them
-             into the audio vault is a local act — near-certain, never
-             guaranteed. When it stumbles the response still carries the
-             sound and the row says so honestly; the visitor's answer is
-             never failed because the keeping failed. */
-          let kept: { trackId: string; audioUrl: string } | null = null;
+          /* ---- the vault keeps what the sky gave ----------------------
+             THE WEIGHT LAW'S OTHER HALF: the sound is kept FIRST, under
+             its own vault name — the file where the house's shelf is
+             writable, and the row's own bytes always — so the answer
+             travels by its serve key instead of riding the JSON. A kept
+             song never meets the sky's weight door again; only an
+             unkept heavy speaks the honest weight words now. */
+          let kept: { trackId: string; audioUrl: string; mirrored: boolean } | null = null;
           if (job && meter) {
             try {
               const bytes = Buffer.from(weave.audioB64, "base64");
-              const file = await mirrorAudioToVault(bytes, weave.mime);
-              if (file) {
-                const audioUrl = `/api/music-audio/${file}`;
-                const track = await db.musicTrack.create({
-                  data: {
-                    userId: meter.userId,
-                    jobId: job.id,
-                    title: passed.title || "A transmission",
-                    audioUrl,
-                    localFile: file,
-                    status: "mirrored",
-                  },
-                  select: { id: true },
-                });
-                kept = { trackId: track.id, audioUrl };
-              }
+              const keep = await keepWovenSound(bytes, weave.mime);
+              const audioUrl = `/api/music-audio/${keep.file}`;
+              const track = await db.musicTrack.create({
+                data: {
+                  userId: meter.userId,
+                  jobId: job.id,
+                  title: passed.title || "A transmission",
+                  audioUrl,
+                  localFile: keep.file,
+                  audioData: bytes,
+                  status: keep.fileKept ? "mirrored" : "ready",
+                },
+                select: { id: true },
+              });
+              kept = { trackId: track.id, audioUrl, mirrored: keep.fileKept };
             } catch (err) {
               console.error(
                 "[light-codes] the vault could not keep the woven sound:",
@@ -993,7 +1027,7 @@ async function postImpl(
                             id: kept.trackId,
                             title: passed.title,
                             audioUrl: kept.audioUrl,
-                            status: "mirrored",
+                            status: kept.mirrored ? "mirrored" : "ready",
                           },
                         ],
                       }
@@ -1011,6 +1045,32 @@ async function postImpl(
               );
             }
           }
+          /* the kept sound travels by its serve key — never by weight */
+          if (kept && job) {
+            return NextResponse.json({
+              ...passed,
+              structure: weave.texts.join("\n\n").slice(0, 2000) || undefined,
+              engine: body.model,
+              length,
+              jobId: job.id,
+              trackId: kept.trackId,
+              audioUrl: kept.audioUrl,
+            });
+          }
+          /* an unkept heavy — the honest weight words, at last true */
+          if (weave.oversized) {
+            return NextResponse.json(
+              {
+                ...passed,
+                error:
+                  "The song was woven, but no shelf could hold it to carry home — the chamber could not keep it for your passage. Ask the Mirror for a shorter piece.",
+                code: "too_heavy",
+                engine: body.model,
+                length,
+              },
+              { status: 500 }
+            );
+          }
           return NextResponse.json({
             ...passed,
             structure: weave.texts.join("\n\n").slice(0, 2000) || undefined,
@@ -1018,14 +1078,73 @@ async function postImpl(
             mimeType: weave.mime,
             engine: body.model,
             length,
-            ...(kept && job
-              ? { jobId: job.id, trackId: kept.trackId, audioUrl: kept.audioUrl }
-              : {}),
           });
         }
 
         /* --- the endless journey: land this part, then join or continue --- */
         const segBytes = Buffer.from(weave.audioB64, "base64");
+        if (dbUserId) {
+          /* the deep thread — parts and final rest in the vault itself,
+             so the journey crosses warm instances in the sky */
+          if (partIndex <= 1 || !dbThread) {
+            const st = await dbLoopBegin(dbUserId, total, weave.mime, segBytes);
+            return NextResponse.json({
+              ...passed,
+              length: "loop",
+              loopToken: st.token,
+              loopProgress: `${st.parts}/${st.total}`,
+              loopFinalized: false,
+            });
+          }
+          const st = await dbLoopAddPart(dbThread.token, dbUserId, partIndex, segBytes);
+          if ("outOfStep" in st) {
+            return NextResponse.json(
+              {
+                ...passed,
+                error: `The journey's parts arrived out of step — the loom waits for part ${st.outOfStep + 1} of ${dbThread.total}.`,
+                code: "journey_out_of_step",
+                loopToken: dbThread.token,
+                loopProgress: `${st.outOfStep}/${dbThread.total}`,
+              },
+              { status: 409 }
+            );
+          }
+          if (st.parts < st.total) {
+            return NextResponse.json({
+              ...passed,
+              length: "loop",
+              loopToken: st.token,
+              loopProgress: `${st.parts}/${st.total}`,
+              loopFinalized: false,
+            });
+          }
+          /* the final part — join the whole journey in the vault */
+          const joined = await dbLoopFinalize(dbThread.token, dbUserId);
+          if (!joined) {
+            return NextResponse.json(
+              {
+                ...passed,
+                error:
+                  "The journey's thread rested just before its joining. Ask once more — the weaving continues where it stood.",
+                code: "journey_thread_rest",
+              },
+              { status: 410 }
+            );
+          }
+          return NextResponse.json({
+            ...passed,
+            length: "loop",
+            loopToken: dbThread.token,
+            loopProgress: `${total}/${total}`,
+            loopFinalized: true,
+            audioUrl: `/api/light-codes/audio?token=${dbThread.token}`,
+            loopDurationSec: Math.round(joined.durationSec),
+            loopSeamless: joined.seamless,
+            loopNote: joined.note,
+            structure: weave.texts.join("\n\n").slice(0, 2000) || undefined,
+            engine: body.model,
+          });
+        }
         if (!session) {
           session = createLoopSession(keeperId, total, weave.mime);
           await prepareLoopShelf(session);
