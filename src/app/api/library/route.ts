@@ -45,6 +45,7 @@ export async function GET(req: NextRequest) {
         title: r.title,
         excerpt: r.excerpt,
         content,
+        cover: r.cover ?? null,
         createdAt: r.createdAt.toISOString(),
       };
     });
@@ -57,6 +58,68 @@ export async function GET(req: NextRequest) {
     console.error("[library] failed:", err);
     return NextResponse.json(
       { error: "The library is momentarily veiled. Rest, then return." },
+      { status: 500 }
+    );
+  }
+}
+
+/** PATCH /api/library — the book's own face arrives after the loom:
+    the sky's own Gemini paints the volume's cover a breath after the
+    open, and the visitor's room lays it on the entry here — the shelf
+    and the market both read it from this one column. */
+export async function PATCH(req: NextRequest) {
+  try {
+    const visitor = await resolveVisitor(req);
+
+    const body: unknown = await req.json().catch(() => null);
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return NextResponse.json(
+        { error: "The cover arrived without its name." },
+        { status: 400 }
+      );
+    }
+    const b = body as Record<string, unknown>;
+
+    const id = typeof b.id === "string" ? b.id : "";
+    const cover = typeof b.cover === "string" ? b.cover : "";
+    if (!id || !cover) {
+      return NextResponse.json(
+        { error: "The cover arrived without its name." },
+        { status: 400 }
+      );
+    }
+    /* the plate's own size law — the sky's covers ride well under it */
+    if (cover.length > 4_500_000) {
+      return NextResponse.json(
+        { error: "The plate is too heavy for the shelf." },
+        { status: 413 }
+      );
+    }
+
+    const row = await db.libraryEntry.findFirst({
+      where: { id, userId: visitor.user.id },
+      select: { id: true },
+    });
+    if (!row) {
+      return NextResponse.json(
+        { error: "No volume of yours answers to that name." },
+        { status: 404 }
+      );
+    }
+
+    await db.libraryEntry.update({
+      where: { id: row.id },
+      data: { cover },
+    });
+
+    return withAnonCookie(
+      NextResponse.json({ ok: true, id: row.id }),
+      visitor
+    );
+  } catch (err) {
+    console.error("[library/patch] failed:", err);
+    return NextResponse.json(
+      { error: "The cover could not be laid on the shelf just now." },
       { status: 500 }
     );
   }

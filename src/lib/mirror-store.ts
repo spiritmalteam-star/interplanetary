@@ -207,7 +207,8 @@ export type ToolTabKey =
   | "quantum"
   | "healx"
   | "artx"
-  | "scopes";
+  | "scopes"
+  | "market";
 
 /* THE LANDING'S OWN SCOPE — the field the threshold's docked chat
    walks in (the crown's Scopes hand chooses it). THE MIRROR is the
@@ -323,6 +324,9 @@ export interface DreamBookResume {
   /** Where the reading rested — the resume reopens at the same leaf
    *  (Adaptive Reading). Optional: older shelves never carried one. */
   pageIdx?: number;
+  /** The volume's own face — the album cover painted by the sky
+   *  (optional: volumes woven before the cover brush rested bare). */
+  cover?: string;
 }
 
 /* ------- the chat's own paused volume — the weaving instrument ------
@@ -1796,7 +1800,9 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       modal: null,
       toolTabs: s.toolTabs.includes(key) ? s.toolTabs : [...s.toolTabs, key],
       activeToolTab: key,
-      ...(key !== "scopes" ? { lastMakerTab: key } : {}),
+      /* the market is the house's own hall, never a maker's bench —
+         it never becomes the InDream trail's last stone */
+      ...(key !== "scopes" && key !== "market" ? { lastMakerTab: key } : {}),
     }));
   },
   /* THE PARKED WORKPLACE — going back never lays the rooms down: the
@@ -1820,7 +1826,9 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   activateToolTab: (key) =>
     set((s) => ({
       activeToolTab: key,
-      ...(key !== "scopes" ? { lastMakerTab: key } : {}),
+      ...(key !== "scopes" && key !== "market"
+        ? { lastMakerTab: key }
+        : {}),
     })),
 
   /* THE MIRROR BRIDGE — the draft is stamped so the room's reply line

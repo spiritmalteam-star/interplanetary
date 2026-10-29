@@ -348,6 +348,8 @@ Ceremonial atmosphere, tactile materiality and unusual physical laws are OPTIONS
 THE STORY ARCHITECTURE (the private brief)
 Before drafting, hold a private narrative brief: premise; the story question; the central moral or emotional dilemma; the intended reader experience; the cast (each figure with desire, wound, contradiction and distinct speech); the causal chain; the major reversals; and the desired ending effect. Break longer works into arcs, acts and chapters. Every scene carries an objective, a resistance, a change and a consequence — subtle is welcome, absent is not. Every chapter modifies at least one state: knowledge, relationship, decision, danger, opportunity, location, or the meaning of something established earlier. Outline flexibly — surprising discoveries are welcome while causal coherence holds. Return the brief's living core in the ledger (below): it is the book's spine, honored at every continuation.
 
+THE TELLING'S CROWN (10/10, or the loom rests): every volume is written as if it will be read aloud to someone beloved — scene by scene, never summarized; dialogue that breathes, description that sees. The STRUCTURE rises cleanly from the first breath to the last (a hook that aches → the ascent → the confrontation → the reckoning), with no sagging middle, no repeated beats, no skipped turns — each chapter earns its place by changing what the reader knows or feels. And the ENDING is the book's SIGNATURE: a final cadence that reassembles the volume's own earliest pieces into a meaning the reader could not see before — surprising, inevitable, and impossible to forget. A book that merely stops is a failed book; the close must land with weight and wonder.
+
 THE LEDGER (the book's own intelligence — durable, carried, handed back)
 With EVERY weaving return a "ledger" beside the thread — the volume's durable memory, kept by the room and handed back to you at every continuation. Update it with what the new pages changed, never lose a line that still holds:
 - "brief": {"premise","question","dilemma","chain","ending"} — one compact line each (the private architecture).
@@ -453,6 +455,7 @@ function buildUserPrompt(body: {
     ? [
         `[USER DESIRE / DYNAMIC TOPIC]: """${topic.trim().slice(0, 600)}"""`,
         `This spoken subject is the MASTER SUBJECT of the whole volume — bend tone, lexicon and content to it, whatever it is: an era, a philosophy, a technology, a fiction, a universe, a question nobody has asked yet. The chosen shapes and the resonance skeleton below are the resonances AROUND it: the skeleton shapes HOW the story is told, the subject shapes WHAT it tells. Neither may be ignored.`,
+        `THE VISITOR'S HAND IS LAW (the commission, not a suggestion): the visitor's own words above are the book's exact brief. Every specific thing they name — a character, a place, an event, an outcome, a turn, a tone, a detail — MUST appear in the volume, honored faithfully and given real dramatic weight, woven as they spoke it, not translated into something safer or more familiar. If their words sketch a plot, that plot is the book's spine. If their words name a world, that world is the book's stage. The story bends around the visitor's ask — never the ask around the story's convenience.`,
       ]
     : [];
 
@@ -630,7 +633,7 @@ function buildUserPrompt(body: {
       ``,
       SEALED_NAME_LAW,
       ``,
-      `Land every open thread with tenderness and truth — the ending must feel inevitable, as if the whole book had been walking toward exactly these pages, and the final cadence must leave an indelible afterimage: the reader should close the book feeling it continues to evolve in their mind. The last paragraph of the final page is the book's final breath; make it sing softly enough to be remembered for years. On page ${body.pageNumber}, open the final chapter (give it a title) if the rhythm asks. The ending must be an ENDING — no re-declared resolutions, no closing cadence the book has already sung. Return the updated thread, the final ledger, and the private audit.`,
+      `Land every open thread with tenderness and truth — the ending must feel inevitable, as if the whole book had been walking toward exactly these pages, and the final cadence must leave an indelible afterimage: the reader should close the book feeling it continues to evolve in their mind. THIS IS THE BOOK'S SIGNATURE MOMENT — make the close IMPRESSIVE: the last pages reassemble the volume's own earliest seeds (its objects, wounds, promises and motifs, all held in the ledger) into a meaning only visible now, so the ending lands with weight, wonder and the quiet shock of everything arriving at once. The last paragraph of the final page is the book's final breath; make it sing softly enough to be remembered for years. On page ${body.pageNumber}, open the final chapter (give it a title) if the rhythm asks. The ending must be an ENDING — no re-declared resolutions, no closing cadence the book has already sung. Return the updated thread, the final ledger, and the private audit.`,
       ...(seedLine ? [seedLine] : [])
     );
   }

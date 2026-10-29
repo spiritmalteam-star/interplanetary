@@ -57,6 +57,7 @@ model LibraryEntry {
   title     String
   excerpt   String
   content   String // JSON: { query, reply, meta }
+  cover     String? // the volume's own face — a data URL painted by the sky's own Gemini (the book's album cover)
   createdAt DateTime @default(now())
 
   @@index([userId, createdAt])

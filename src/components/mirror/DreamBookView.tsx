@@ -139,7 +139,65 @@ interface BookMeta {
    one warm woman's voice for every volume (never the man). */
 const BOOK_VOICE: VoiceId = "reader";
 
+/* the plate's own weight law — the sky's raw paintings ride heavy
+   (over a megabyte each); the reader dresses them down to a shelf-
+   sized face before they ride to the row, so the shelf, the resume
+   and the market's table all carry them lightly. */
+async function dressPlate(dataUrl: string): Promise<string> {
+  try {
+    const img = document.createElement("img");
+    img.src = dataUrl;
+    await img.decode();
+    const maxDim = 640;
+    const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+    const w = Math.max(1, Math.round(img.width * scale));
+    const h = Math.max(1, Math.round(img.height * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return dataUrl;
+    ctx.drawImage(img, 0, 0, w, h);
+    return canvas.toDataURL("image/jpeg", 0.85);
+  } catch {
+    return dataUrl;
+  }
+}
+
 const ZOOM_STEPS = [15.5, 17.5, 19.5, 21.5, 24];
+
+/* THE BOOK'S OWN FACE — the album cover the sky painted for this
+   story, worn at the head of the title leaf. While the brush still
+   works, a quiet empty frame stands in its place (never a spinner). */
+function CoverPlate({
+  src,
+  painting,
+}: {
+  src: string | null;
+  painting: boolean;
+}) {
+  if (!src && !painting) return null;
+  return (
+    <div
+      className="relative mx-auto mb-6 w-full max-w-[240px] overflow-hidden rounded-xl"
+      style={{
+        aspectRatio: "3 / 4",
+        boxShadow:
+          "inset 0 0 0 1px color-mix(in srgb, var(--dream-ink-faint, gray) 30%, transparent), 0 18px 50px -24px rgba(0,0,0,0.55)",
+      }}
+      data-testid="dream-cover-plate"
+    >
+      {src ? (
+        <img src={src} alt="" className="size-full object-cover" />
+      ) : (
+        <div
+          aria-hidden="true"
+          className="size-full animate-pulse bg-[color-mix(in_srgb,var(--dream-ink-faint,gray)_10%,transparent)]"
+        />
+      )}
+    </div>
+  );
+}
 
 /* THE ATELIER'S CHIP FACES — the weaving-selection wears small glass
    chips now (the music selector's own law): each option keeps its full
@@ -298,6 +356,13 @@ export function DreamBookView() {
   const weavingRef = useRef(false);
   const rewritesRef = useRef<string[]>([]);
   const configRef = useRef({ age, tale, volume, level, topic, vein, pageCount });
+  /* THE BOOK'S OWN FACE — the album cover the sky's own Gemini paints
+     for every woven story (the visitor named it): painted a breath
+     after the open lands, worn on the title leaf, the shelf and the
+     market's table alike. */
+  const [cover, setCover] = useState<string | null>(null);
+  const coverRef = useRef<string | null>(null);
+  const [coverPainting, setCoverPainting] = useState(false);
   /* the book's own place in its keeper's cosmic library — a fresh
      volume is given it on open; a volume brought back already has one,
      and every woven page keeps that entry alive */
@@ -490,6 +555,9 @@ export function DreamBookView() {
       threadsRef.current = r.threads;
       metaRef.current = { ...r.meta };
       endedRef.current = r.ended;
+      /* the volume's own face returns with it (older volumes rest bare) */
+      coverRef.current = r.cover ?? null;
+      setCover(r.cover ?? null);
       /* the volume's bones return with it — the ledger kept per book */
       ledgerRef.current = ledgerByBookRef.current.get(r.bookId) ?? null;
       configRef.current = {
@@ -585,6 +653,7 @@ export function DreamBookView() {
       config: { ...configRef.current },
       threads: threadsRef.current,
       pageIdx: pageIdxRef.current,
+      ...(coverRef.current ? { cover: coverRef.current } : {}),
       pages: pagesRef.current.map((p) => ({
         n: p.n,
         ...(p.part ? { part: p.part } : {}),
@@ -645,6 +714,7 @@ export function DreamBookView() {
           title: string;
           excerpt: string;
           content: Record<string, unknown>;
+          cover?: string | null;
           createdAt: string;
         }> = Array.isArray(data?.entries) ? data.entries : [];
         const vols: ShelfVolume[] = entries
@@ -681,6 +751,9 @@ export function DreamBookView() {
               },
               threads: String(c.threads ?? ""),
               pages: c.pages as ShelfVolume["pages"],
+              ...(typeof e.cover === "string" && e.cover
+                ? { cover: e.cover }
+                : {}),
             };
           });
         setLibraryVolumes(vols);
@@ -709,6 +782,7 @@ export function DreamBookView() {
         threads: v.threads,
         ended: v.ended,
         pageIdx: v.pageIdx,
+        ...(v.cover ? { cover: v.cover } : {}),
       });
       setShelfOpen(false);
     },
@@ -769,6 +843,52 @@ export function DreamBookView() {
   /* the weaving phase — the loom keeps count. THE FLAVOR: a "batch"
      breath channels the next six pages in the background while the
      visitor reads; the "reveal" flavor is the whole-book channeling. */
+  /* THE COVER'S OWN BRUSH — one breath after the open lands, the sky
+     paints the volume's album cover from its own title, sigil and
+     subject; the plate rides home to the library entry (PATCH), so
+     the shelf, the reader and the market all wear the same face. */
+  const paintCover = useCallback(async () => {
+    const m = metaRef.current;
+    if (!m || coverRef.current || coverPainting) return;
+    setCoverPainting(true);
+    try {
+      const res = await fetch("/api/dream-book/cover", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: m.title,
+          sigil: m.sigil,
+          axiom: m.axiom,
+          subject: configRef.current.topic,
+          vein: configRef.current.vein,
+          language,
+        }),
+        signal: AbortSignal.timeout(110000),
+      });
+      const data = (await res.json().catch(() => null)) as {
+        cover?: string;
+      } | null;
+      if (res.ok && typeof data?.cover === "string" && data.cover.startsWith("data:image/")) {
+        const dressed = await dressPlate(data.cover);
+        coverRef.current = dressed;
+        setCover(dressed);
+        /* the shelf and the market read the face from the entry's own
+           column — one quiet PATCH, and every table wears the plate */
+        if (bookIdRef.current) {
+          void fetch("/api/library", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: bookIdRef.current, cover: dressed }),
+          }).catch(() => {});
+        }
+      }
+    } catch {
+      /* the plate may rest unpainted — the book stands whole without it */
+    } finally {
+      setCoverPainting(false);
+    }
+  }, [language, coverPainting]);
+
   const weave = useCallback(
     async (
       phase: "open" | "next" | "close" | "extend",
@@ -783,6 +903,12 @@ export function DreamBookView() {
       weavingRef.current = true;
       setWeavingNext(true);
       setWeaveFailed(false);
+      /* a fresh conjuring arrives bare — the last volume's face never
+         rides onto the new book's title leaf */
+      if (phase === "open") {
+        coverRef.current = null;
+        setCover(null);
+      }
 
       try {
         const recent = pagesRef.current.slice(-2).map(pageText);
@@ -917,6 +1043,9 @@ export function DreamBookView() {
             totalPages: data.totalPages ?? 96,
           };
           setMeta(metaRef.current);
+          /* THE BOOK'S OWN FACE — the cover brush starts the moment the
+             volume has a name: the plate paints while the reader reads */
+          void paintCover();
           /* the new volume's birth echo enters the session's keeping —
              the next conjuring will refuse every one of its bones */
           if (data.resonance && typeof data.resonance === "object") {
@@ -956,7 +1085,7 @@ export function DreamBookView() {
         setWeavingNext(false);
       }
     },
-    [language, t, flushInkEdit]
+    [language, t, flushInkEdit, paintCover]
   );
 
   /* ---------------- the atelier ---------------- */
@@ -2354,6 +2483,9 @@ export function DreamBookView() {
               >
                 ❧
               </span>
+              <div className="mt-4 w-full">
+                <CoverPlate src={cover} painting={coverPainting} />
+              </div>
               {meta?.sigil && (
                 <p className="mt-4 max-w-[360px] font-[family-name(var(--font-literata))] text-[13.5px] italic leading-relaxed text-[var(--dream-ink-soft)]">
                   {meta.sigil}
@@ -2626,13 +2758,16 @@ export function DreamBookView() {
                   /* the title page — the Liminal Threshold, one leaf,
                      tall as the screen itself */
                   <div className="dream-page dream-page-single mx-auto flex min-h-0 w-full flex-1 flex-col items-center justify-between px-8 py-10 text-center sm:px-12">
-                    <div className="flex flex-col items-center pt-4 text-center sm:pt-8">
+                    <div className="flex w-full flex-col items-center pt-4 text-center sm:pt-8">
                       <span
                         className="font-[family-name(var(--font-literata))] text-2xl text-[var(--dream-ink-faint)]"
                         aria-hidden="true"
                       >
                         ❧
                       </span>
+                      <div className="mt-4 w-full">
+                        <CoverPlate src={cover} painting={coverPainting} />
+                      </div>
                       {meta?.sigil && (
                         <p className="mt-4 max-w-[360px] font-[family-name(var(--font-literata))] text-[13.5px] italic leading-relaxed text-[var(--dream-ink-soft)]">
                           {meta.sigil}
@@ -3127,12 +3262,21 @@ export function DreamBookView() {
           line own their full width, with no button pressing against
           them at narrow sizes */}
       <div className="flex items-start gap-3">
-        <span
-          className="ink-hand flex size-9 shrink-0 items-center justify-center text-[17px] text-foreground/40"
-          aria-hidden="true"
-        >
-          {v.sigil || "❧"}
-        </span>
+        {v.cover ? (
+          <span
+            className="block size-14 shrink-0 overflow-hidden rounded-lg"
+            style={{ boxShadow: "inset 0 0 0 1px color-mix(in srgb, var(--foreground) 12%, transparent)" }}
+          >
+            <img src={v.cover} alt="" className="size-full object-cover" />
+          </span>
+        ) : (
+          <span
+            className="ink-hand flex size-9 shrink-0 items-center justify-center text-[17px] text-foreground/40"
+            aria-hidden="true"
+          >
+            {v.sigil || "❧"}
+          </span>
+        )}
         <div className="min-w-0 flex-1">
           <p className="truncate text-[14.5px] font-medium text-foreground/90">
             {v.title}

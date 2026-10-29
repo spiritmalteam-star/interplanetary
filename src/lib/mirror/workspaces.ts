@@ -33,6 +33,7 @@ import {
   Palette,
   ScrollText,
   Sparkles,
+  Store,
   type LucideIcon,
 } from "lucide-react";
 import type { LandingScopeKey, ToolTabKey } from "@/lib/mirror-store";
@@ -76,11 +77,15 @@ export type WorkspaceDefinition = {
 };
 
 /* ------------------------------------------------------------------ */
-/*  THE ELEVEN PAGES — the house's own instruments. THE ATELIER STANDS
+/*  THE TWELVE PAGES — the house's own instruments. THE ATELIER STANDS
 /*  AMONG THE MAKERS (the visitor named it): the ArtX atelier rides the
 /*  InDream rail in the Quantum and HealX's old places — the two deep
-/*  rooms rest at the scopes' shore now. The Manifest keeps its own
-/*  room, reached from the scopes' shore as well.
+/*  rooms rest at the scopes' shore now. THE MANIFEST HAS COME HOME —
+/*  the visitor named it back among the tools, riding the InDream rail
+/*  again (the scopes' shore wears the fields alone). THE MARKET — the
+/*  house's own open hall where every visitor's creations are shown;
+/*  it never rides the InDream rail — the crown's own corner hand
+/*  opens it directly.
 /* ------------------------------------------------------------------ */
 
 export const WORKSPACE_ORDER: ToolTabKey[] = [
@@ -95,6 +100,7 @@ export const WORKSPACE_ORDER: ToolTabKey[] = [
   "video",
   "register",
   "library",
+  "market",
   "scopes",
 ];
 
@@ -261,6 +267,21 @@ export const WORKSPACES: Record<ToolTabKey, WorkspaceDefinition> = {
       })),
     capabilities: ["creations-room", "sector-filtering", "in-place-reader"],
     preserveState: true,
+    resourceProfile: "low",
+    bridgeMode: "mirror",
+  },
+  market: {
+    id: "market",
+    title: "Market",
+    category: "atlas",
+    icon: Store,
+    theme: { accent: "#d8b571" },
+    loader: () =>
+      import("@/components/mirror/MarketView").then((m) => ({
+        default: m.MarketView as ComponentType,
+      })),
+    capabilities: ["creations-showcase", "market-browsing"],
+    preserveState: false,
     resourceProfile: "low",
     bridgeMode: "mirror",
   },

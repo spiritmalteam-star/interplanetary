@@ -2021,95 +2021,12 @@ export function LightCodesView() {
             {/* THE TWO ZONES — the channeling flows on the left, the
                 listening rests on the right; one column on small hands */}
             <div className="mt-3 grid items-start gap-4">
-              {/* ================= LEFT — describe & channeling ================= */}
+              {/* ================= LEFT — the channeling ================= */}
               <div className="flex min-w-0 flex-col">
-                {/* THE DESCRIBE LINE — the ask, spoken or typed; sending
-                    it begins the channeling and the brief rises at once
-                    beneath the ask — the generation's own section, at
-                    the very top of the room. */}
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    sendDescribe();
-                  }}
-                  className="relative rounded-2xl border hairline bg-card/85 p-2 shadow-[0_18px_48px_-30px_rgba(0,0,0,0.55)] backdrop-blur-md"
-                  data-testid="lc-composer"
-                >
-                  <div className="flex items-center gap-1.5">
-                    <VoiceRecordButton
-                      testId="lc-voice"
-                      disabled={busy}
-                      onTranscript={(text) => {
-                        /* THE SIMPLEST ROUND — they speak, the Mirror proceeds */
-                        setLcIntention(text);
-                        sendDescribe({ intention: text });
-                      }}
-                    />
-                    <input
-                      type="text"
-                      value={lcIntention}
-                      onChange={(e) => setLcIntention(e.target.value)}
-                      placeholder={
-                        lcRaw
-                          ? t("Just your words — the Mirror adds no style of its own.")
-                          : t(mode.placeholder)
-                      }
-                      aria-label={
-                        lcRaw
-                          ? t("Your words — the only style")
-                          : t(mode.placeholder)
-                      }
-                      maxLength={600}
-                      data-testid="lc-intention"
-                      className="focus-glow h-9 min-w-0 flex-1 rounded-full border hairline bg-background/70 px-3.5 text-[14.5px] text-foreground placeholder:text-muted-foreground/60 transition-all duration-300"
-                    />
-                    {/* THE DEEPENING HAND — while the visitor's own idea
-                        stands in the input, one small wand turns it into
-                        a more advanced telling that still relies on the
-                        core idea; the words land in the input, the
-                        visitor's own hand sends them */}
-                    {lcIntention.trim().length > 0 && (
-                      <button
-                        type="button"
-                        onClick={() => void deepenIdea()}
-                        disabled={busy || enhancing}
-                        aria-label={t("Deepen the idea — more advanced, same core")}
-                        title={t("Deepen the idea — more advanced, same core")}
-                        data-testid="lc-deepen"
-                        className={cn(
-                          "focus-glow flex size-9 shrink-0 items-center justify-center rounded-full border text-[var(--scope-a)] transition-all duration-300 hover:bg-[color-mix(in_srgb,var(--scope-a)_10%,transparent)] disabled:cursor-not-allowed disabled:opacity-40",
-                          TOUCH_VEIL
-                        )}
-                      >
-                        {enhancing ? (
-                          <span
-                            className="size-3.5 animate-pulse rounded-full bg-[var(--scope-a)]"
-                            aria-hidden="true"
-                          />
-                        ) : (
-                          <Wand2 className="size-3.5" aria-hidden="true" />
-                        )}
-                      </button>
-                    )}
-                    <button
-                      type="submit"
-                      disabled={busy}
-                      aria-label={
-                        mode.id === "mirror-transmission"
-                          ? t("Compose with the Mirror")
-                          : t("Ask the Mirror to compose")
-                      }
-                      data-testid="lc-generate"
-                      className={cn(
-                        "focus-glow flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-full bg-gradient-to-r from-[var(--scope-a)] to-[color-mix(in_srgb,var(--scope-b)_80%,var(--scope-a))] px-3.5 text-[12.5px] font-semibold text-[#f6f4ef] shadow-[0_6px_28px_-10px_color-mix(in_srgb,var(--scope-a)_75%,transparent)] transition-all duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-35",
-                        TOUCH_VEIL
-                      )}
-                    >
-                      <Sparkles className="size-3.5" aria-hidden="true" />
-                      {t("Compose")}
-                    </button>
-                  </div>
-                </form>
+                {/* THE DESCRIBE LINE STANDS AT THE FLOOR now — the ask is
+                    pinned at the bottom of the room (like every other
+                    room's line); the channeling itself flows here, above
+                    the words that called it. */}
 
                 {/* the chamber's honest error, spoken in the Mirror's voice:
                     the weaving itself has moved up to the stage — the
@@ -2458,6 +2375,106 @@ export function LightCodesView() {
           )}
         </div>
       </div>
+
+      {/* THE COMPOSER AT THE FLOOR — the ask stands pinned at the
+          bottom of the room, the way every other room carries its
+          line: the content rests above it in its own scroll, and the
+          words are always one glance away — never a scroll down. */}
+      {bench === "transmissions" && (
+        <div
+          className="relative z-10 shrink-0 border-t bg-background/75 backdrop-blur-md"
+          style={{
+            borderColor:
+              "color-mix(in srgb, var(--scope-a) 22%, var(--hairline))",
+          }}
+        >
+          <div className="mx-auto w-full max-w-[1020px] px-4 pb-[max(0.625rem,env(safe-area-inset-bottom))] pt-2.5 sm:px-6">
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    sendDescribe();
+                  }}
+                  className="relative rounded-2xl border hairline bg-card/85 p-2 shadow-[0_18px_48px_-30px_rgba(0,0,0,0.55)] backdrop-blur-md"
+                  data-testid="lc-composer"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <VoiceRecordButton
+                      testId="lc-voice"
+                      disabled={busy}
+                      onTranscript={(text) => {
+                        /* THE SIMPLEST ROUND — they speak, the Mirror proceeds */
+                        setLcIntention(text);
+                        sendDescribe({ intention: text });
+                      }}
+                    />
+                    <input
+                      type="text"
+                      value={lcIntention}
+                      onChange={(e) => setLcIntention(e.target.value)}
+                      placeholder={
+                        lcRaw
+                          ? t("Just your words — the Mirror adds no style of its own.")
+                          : t(mode.placeholder)
+                      }
+                      aria-label={
+                        lcRaw
+                          ? t("Your words — the only style")
+                          : t(mode.placeholder)
+                      }
+                      maxLength={600}
+                      data-testid="lc-intention"
+                      className="focus-glow h-9 min-w-0 flex-1 rounded-full border hairline bg-background/70 px-3.5 text-[14.5px] text-foreground placeholder:text-muted-foreground/60 transition-all duration-300"
+                    />
+                    {/* THE DEEPENING HAND — while the visitor's own idea
+                        stands in the input, one small wand turns it into
+                        a more advanced telling that still relies on the
+                        core idea; the words land in the input, the
+                        visitor's own hand sends them */}
+                    {lcIntention.trim().length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => void deepenIdea()}
+                        disabled={busy || enhancing}
+                        aria-label={t("Deepen the idea — more advanced, same core")}
+                        title={t("Deepen the idea — more advanced, same core")}
+                        data-testid="lc-deepen"
+                        className={cn(
+                          "focus-glow flex size-9 shrink-0 items-center justify-center rounded-full border text-[var(--scope-a)] transition-all duration-300 hover:bg-[color-mix(in_srgb,var(--scope-a)_10%,transparent)] disabled:cursor-not-allowed disabled:opacity-40",
+                          TOUCH_VEIL
+                        )}
+                      >
+                        {enhancing ? (
+                          <span
+                            className="size-3.5 animate-pulse rounded-full bg-[var(--scope-a)]"
+                            aria-hidden="true"
+                          />
+                        ) : (
+                          <Wand2 className="size-3.5" aria-hidden="true" />
+                        )}
+                      </button>
+                    )}
+                    <button
+                      type="submit"
+                      disabled={busy}
+                      aria-label={
+                        mode.id === "mirror-transmission"
+                          ? t("Compose with the Mirror")
+                          : t("Ask the Mirror to compose")
+                      }
+                      data-testid="lc-generate"
+                      className={cn(
+                        "focus-glow flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-full bg-gradient-to-r from-[var(--scope-a)] to-[color-mix(in_srgb,var(--scope-b)_80%,var(--scope-a))] px-3.5 text-[12.5px] font-semibold text-[#f6f4ef] shadow-[0_6px_28px_-10px_color-mix(in_srgb,var(--scope-a)_75%,transparent)] transition-all duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-35",
+                        TOUCH_VEIL
+                      )}
+                    >
+                      <Sparkles className="size-3.5" aria-hidden="true" />
+                      {t("Compose")}
+                    </button>
+                  </div>
+                </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

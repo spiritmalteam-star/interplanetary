@@ -13,22 +13,12 @@ import {
 } from "react";
 import dynamic from "next/dynamic";
 import { createPortal } from "react-dom";
-import { ArrowLeft, Maximize2, Minimize2, RotateCcw, X } from "lucide-react";
+import { ArrowLeft, Maximize2, Minimize2, RotateCcw } from "lucide-react";
 import { useMirror, type ToolTabKey } from "@/lib/mirror-store";
 import { WORKSPACES, WORKSPACE_ORDER } from "@/lib/mirror/workspaces";
 import { runWorkspaceCleanup } from "@/lib/mirror/workspace-lifecycle";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 
 /* ------------------------------------------------------------------ */
 /*  THE LAZY PAGES — every room rides its own chunk through the        */
@@ -176,16 +166,19 @@ export const TAB_META: Record<
 /* THE STANDING RAIL — the InDream shelf's own order (the makers the
    visitor named, the ArtX atelier standing where the Quantum and the
    HealX once stood — the two deep rooms rest at the scopes' shore
-   now). These pills stand in the header always; the other rooms ride
-   the rail only while they are open. THE SCOPES ARE NOT HERE — the
-   fields' workplace is its own independent room (the crown's Scopes
-   hand opens it directly), never a tab of InDream. */
+   now, and THE MANIFEST HAS COME HOME — the visitor named it back
+   among the tools). These pills stand in the header always; the other
+   rooms ride the rail only while they are open. THE SCOPES AND THE
+   MARKET ARE NOT HERE — the fields' workplace is its own independent
+   room (the crown's Scopes hand opens it), and the market is the
+   crown's own corner hand's room. */
 const STANDING_RAIL: ToolTabKey[] = [
   "dreambook",
   "lightcodes",
   "akashic",
   "artx",
   "invent",
+  "mirroros",
 ];
 
 /* ------------------------------------------------------------------ */
@@ -196,8 +189,8 @@ const STANDING_RAIL: ToolTabKey[] = [
 /*  as a real tab bar — every open room STAYS MOUNTED while its pill   */
 /*  stands, even when another room is on the stage. A book being      */
 /*  woven keeps weaving while the visitor checks the Invent; nothing  */
-/*  is laid down unless its own x lays it down (and then only after   */
-/*  the house asks again), or the visitor closes it from the pill.    */
+/*  is ever laid down by a hidden hand — the rooms stand for the      */
+/*  whole visit (the visitor named the x away: no close hands).        */
 /*  The hidden rooms rest display:none — no render cost, no lost      */
 /*  state, no interrupted work.                                       */
 /*                                                                     */
@@ -214,13 +207,9 @@ function ToolWorkspaceImpl({ bare = false }: { bare?: boolean }) {
   const activeToolTab = useMirror((s) => s.activeToolTab);
   const activateToolTab = useMirror((s) => s.activateToolTab);
   const openToolTab = useMirror((s) => s.openToolTab);
-  const closeToolTab = useMirror((s) => s.closeToolTab);
   const closeWorkspace = useMirror((s) => s.closeWorkspace);
   /* THE ROOM'S OWN ZOOM — see the persistence law above. */
   const [zoomed, setZoomed] = useState(false);
-  /* the room whose x was pressed — the house asks again before laying
-     a room (and any work still in flight inside it) down */
-  const [confirmClose, setConfirmClose] = useState<ToolTabKey | null>(null);
 
   /* a tab turn never lays the zoom down any more — only the visitor's
      own hand does (the zoom hand, Esc, or going back to the chat) */
@@ -265,10 +254,10 @@ function ToolWorkspaceImpl({ bare = false }: { bare?: boolean }) {
     (key) => key !== "scopes" && PAGE_VIEWS[key]
   );
 
-  /* THE PERSISTENCE LAW'S HANDS — a room's cleanups run only when its
-     own tab is laid down (its x, confirmed), never on a tab turn. The
-     hidden rooms keep their work breathing: the book keeps weaving,
-     the music keeps its sequencer, the thread keeps its place. */
+  /* THE PERSISTENCE LAW'S HANDS — a room's cleanups run only when the
+     whole window is unmounted, never on a tab turn. The hidden rooms
+     keep their work breathing: the book keeps weaving, the music
+     keeps its sequencer, the thread keeps its place. */
   const prevTabsRef = useRef<ToolTabKey[]>(toolTabs);
   useEffect(() => {
     const removed = prevTabsRef.current.filter((k) => !toolTabs.includes(k));
@@ -315,24 +304,29 @@ function ToolWorkspaceImpl({ bare = false }: { bare?: boolean }) {
       : {}),
   };
 
-  /* ONE PILL — the tab button and (when the room stands open) its own
-     close hand, side by side inside one quiet capsule. The close hand
-     never springs the room open; it asks the house first. */
+  /* ONE PILL — the tab button, whole and quiet: no close hand rides
+     beside the name any more (the visitor named the x away). Every
+     room stands for the whole visit — the persistence law's own
+     kindness: the work is never interrupted. */
   const renderPill = (key: ToolTabKey) => {
     const meta = TAB_META[key];
     const Icon = meta.icon;
     const opened = toolTabs.includes(key);
     const isActive = key === activeToolTab;
     return (
-      <div
+      <button
         key={key}
+        type="button"
         data-testid={`tool-tab-${key}`}
+        onClick={() => (opened ? activateToolTab(key) : openToolTab(key))}
+        aria-pressed={isActive}
+        title={t(meta.label)}
         className={cn(
-          "flex shrink-0 items-center rounded-full border transition-colors duration-300",
-          isActive ? "border-transparent" : "border-transparent",
+          "focus-glow flex shrink-0 items-center gap-1 rounded-full border border-transparent py-0.5 pl-2 pr-2 text-[11.5px] transition-colors duration-300",
           opened
             ? "text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
-            : "border-dashed text-muted-foreground/55 hover:border-[var(--hairline-hover)] hover:text-foreground"
+            : "border-dashed text-muted-foreground/55 hover:border-[var(--hairline-hover)] hover:text-foreground",
+          isActive && "font-medium"
         )}
         style={
           isActive
@@ -346,33 +340,9 @@ function ToolWorkspaceImpl({ bare = false }: { bare?: boolean }) {
             : undefined
         }
       >
-        <button
-          type="button"
-          onClick={() => (opened ? activateToolTab(key) : openToolTab(key))}
-          aria-pressed={isActive}
-          title={t(meta.label)}
-          className={cn(
-            "focus-glow flex items-center gap-1 rounded-full py-0.5 pl-2 text-[11.5px] transition-colors duration-300",
-            opened ? "pr-1.5" : "pr-2",
-            isActive && "font-medium"
-          )}
-        >
-          <Icon className="size-3.5" aria-hidden="true" />
-          {t(meta.label)}
-        </button>
-        {opened && (
-          <button
-            type="button"
-            onClick={() => setConfirmClose(key)}
-            aria-label={`${t(meta.label)} — ${t("Close the room")}`}
-            title={t("Close the room")}
-            data-testid={`tool-tab-close-${key}`}
-            className="focus-glow flex size-4 shrink-0 items-center justify-center rounded-full text-muted-foreground/60 transition-colors duration-300 hover:bg-foreground/10 hover:text-foreground"
-          >
-            <X className="size-2.5" aria-hidden="true" />
-          </button>
-        )}
-      </div>
+        <Icon className="size-3.5" aria-hidden="true" />
+        {t(meta.label)}
+      </button>
     );
   };
 
@@ -396,9 +366,8 @@ function ToolWorkspaceImpl({ bare = false }: { bare?: boolean }) {
           touch lays the workplace down and the main chat landing stands
           again — every room keeps working beneath, and the crown's
           makers lift the workplace exactly where it was. Beside it,
-          THE STANDING RAIL — the five makers as horizontal tab buttons,
-          every one always present, each open room carrying its own
-          close hand. */}
+          THE STANDING RAIL — the makers as horizontal tab buttons,
+          every one always present, none carrying a close hand. */}
       <div className="relative z-10 flex h-9 shrink-0 items-center gap-1 overflow-x-auto px-1">
         {/* THE ONE BACK HAND — the single return every tool and every
             room shares: leftmost, always the same place */}
@@ -494,58 +463,6 @@ function ToolWorkspaceImpl({ bare = false }: { bare?: boolean }) {
           />
         )}
       </div>
-
-      {/* THE HOUSE ASKS AGAIN — laying a room down is the visitor's
-          own hand, confirmed once: any work still in flight inside it
-          (a weaving, a pattern, a words-thread) is laid down with it,
-          and the house says so plainly before it happens. */}
-      <AlertDialog
-        open={confirmClose !== null}
-        onOpenChange={(open) => {
-          if (!open) setConfirmClose(null);
-        }}
-      >
-        <AlertDialogContent
-          className="max-w-[340px] rounded-2xl border"
-          style={{
-            borderColor:
-              "color-mix(in srgb, var(--scope-a,var(--gd)) 30%, var(--hairline))",
-          }}
-        >
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-[15px]">
-              {t("Lay this room down?")}
-            </AlertDialogTitle>
-            <AlertDialogDescription className="text-[13px] leading-relaxed">
-              {t(
-                "Its work rests with it — a weaving still in flight will be laid down too. The words already spoken keep their place."
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="gap-2">
-            <AlertDialogCancel className="rounded-full text-[12.5px]">
-              {t("Let it keep working")}
-            </AlertDialogCancel>
-            <AlertDialogAction
-              data-testid="tool-tab-close-confirm"
-              className="rounded-full text-[12.5px]"
-              style={{
-                background:
-                  "color-mix(in srgb, var(--scope-a,var(--gd)) 14%, transparent)",
-                color: "var(--scope-a,var(--gd))",
-                border:
-                  "1px solid color-mix(in srgb, var(--scope-a,var(--gd)) 40%, transparent)",
-              }}
-              onClick={() => {
-                if (confirmClose) closeToolTab(confirmClose);
-                setConfirmClose(null);
-              }}
-            >
-              {t("Lay it down")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 

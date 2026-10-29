@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { Hammer, Layers } from "lucide-react";
+import { Hammer, Layers, Store } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -21,10 +21,11 @@ import { cn } from "@/lib/utils";
 /*  them there), opened from the fields' own workplace.                */
 /*                                                                     */
 /*  SCOPES — the fields' hand opens the scopes workplace the same way: */
-/*  a full room where the fields wear their light, the Quantum and     */
-/*  HealX rooms keep their own doors, and the Manifest keeps its own   */
-/*  card. Both rooms carry the one back hand — the main chat landing   */
-/*  is always one arrow away.                                          */
+/*  a full room where the fields wear their light, and the one back    */
+/*  hand returns to the main chat landing.                             */
+/*                                                                     */
+/*  THE MARKET — the crown's own corner hand: one touch opens the      */
+/*  house's open hall, where every visitor's creations are displayed.  */
 /* ------------------------------------------------------------------ */
 
 export function LandingChatNav() {
@@ -41,7 +42,11 @@ export function LandingChatNav() {
      maker's room rises (the Book serves when the visit is new). The
      scopes are independent — they never count as the InDream window. */
   const openInDream = useCallback(() => {
-    if (activeToolTab && activeToolTab !== "scopes") {
+    if (
+      activeToolTab &&
+      activeToolTab !== "scopes" &&
+      activeToolTab !== "market"
+    ) {
       activateToolTab(activeToolTab);
       return;
     }
@@ -53,6 +58,13 @@ export function LandingChatNav() {
   const openScopes = useCallback(() => {
     if (toolTabs.includes("scopes")) activateToolTab("scopes");
     else openToolTab("scopes");
+  }, [toolTabs, activateToolTab, openToolTab]);
+
+  /* THE MARKET — the house's open hall rises (or re-enters when it
+     already stands open among the rooms). */
+  const openMarket = useCallback(() => {
+    if (toolTabs.includes("market")) activateToolTab("market");
+    else openToolTab("market");
   }, [toolTabs, activateToolTab, openToolTab]);
 
   const hand =
@@ -97,6 +109,26 @@ export function LandingChatNav() {
         <Layers className="size-3" aria-hidden="true" />
         <span className="mono-label whitespace-nowrap text-[10px] uppercase tracking-[0.14em]">
           {t("Scopes")}
+        </span>
+      </button>
+
+      {/* ---------------------------- MARKET ---------------------------- */}
+      <button
+        type="button"
+        onClick={openMarket}
+        aria-haspopup="dialog"
+        aria-expanded={activeToolTab === "market"}
+        aria-label={t("Market — the hall of creations")}
+        title={t("Market — the hall of creations")}
+        data-testid="landing-nav-market"
+        className={cn(
+          hand,
+          "hairline text-muted-foreground hover:border-[var(--hairline-hover)] hover:text-foreground"
+        )}
+      >
+        <Store className="size-3" aria-hidden="true" />
+        <span className="mono-label whitespace-nowrap text-[10px] uppercase tracking-[0.14em]">
+          {t("Market")}
         </span>
       </button>
 

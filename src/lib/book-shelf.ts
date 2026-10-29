@@ -37,6 +37,9 @@ export interface ShelfVolume {
    *  (Adaptive Reading: the canvas remembers its origin, the volume
    *  remembers its page). */
   pageIdx?: number;
+  /** The volume's own face — the album cover the sky's own Gemini
+   *  painted for this story (optional: older shelves rest bare). */
+  cover?: string;
 }
 
 const SHELF_KEY = "mirror-dream-shelf";
