@@ -3282,64 +3282,63 @@ export function DreamBookView() {
   const shelfRow = (v: ShelfVolume, local: boolean) => (
     <div
       key={`${local ? "local" : "lib"}-${v.bookId}-${v.savedAt}`}
-      className="rounded-xl border border-border/80 bg-card/40 px-3.5 py-3"
+      className="flex items-stretch gap-3 rounded-xl border border-border/80 bg-card/40 p-3"
       data-testid={local ? "shelf-volume-local" : "shelf-volume-library"}
     >
-      {/* the volume's words — the title, the whisper and the keeping
-          line own their full width, with no button pressing against
-          them at narrow sizes */}
-      <div className="flex items-start gap-3">
-        {v.cover ? (
-          <span
-            className="block size-14 shrink-0 overflow-hidden rounded-lg"
-            style={{ boxShadow: "inset 0 0 0 1px color-mix(in srgb, var(--foreground) 12%, transparent)" }}
-          >
-            <img src={v.cover} alt="" className="size-full object-cover" />
-          </span>
-        ) : (
-          <span
-            className="ink-hand flex size-9 shrink-0 items-center justify-center text-[17px] text-foreground/40"
-            aria-hidden="true"
-          >
-            {v.sigil || "❧"}
-          </span>
-        )}
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-[14.5px] font-medium text-foreground/90">
-            {v.title}
-          </p>
-          <p className="mt-0.5 line-clamp-2 text-[13px] leading-relaxed text-muted-foreground">
-            {v.axiom || v.subtitle || v.pages[0]?.paragraphs[0]?.slice(0, 120) || "…"}
-          </p>
-          <p className="mono-label mt-1.5 text-[9.5px] uppercase tracking-[0.16em] text-muted-foreground/60">
-            {(v.savedAt || "").slice(0, 10)} · {t("page {n} of {m}", { n: Math.min(v.pages.length, v.totalPages || v.pages.length), m: v.totalPages || v.pages.length })}
-            {v.ended ? ` · ${t("Read again")}` : ""}
-          </p>
-        </div>
-      </div>
-      {/* the volume's own hands — a quiet row beneath the words, so
-          the buttons never collide with the title on narrow widths */}
-      <div className="mt-2.5 flex items-center justify-end gap-1.5 border-t border-border/50 pt-2.5">
-        {local && (
+      {/* THE COVER-LED CARD — a fixed-ratio cover leads every card
+          (object-fit, never squeezed), the title and the whisper run
+          in normal flow with room to wrap, and the hands stand in
+          their own row beneath — nothing overlaps at any width. */}
+      {v.cover ? (
+        <span
+          className="block aspect-[3/4] w-20 shrink-0 overflow-hidden rounded-lg sm:w-24"
+          style={{ boxShadow: "inset 0 0 0 1px color-mix(in srgb, var(--foreground) 12%, transparent)" }}
+        >
+          <img src={v.cover} alt="" loading="lazy" className="size-full object-cover" />
+        </span>
+      ) : (
+        <span
+          className="ink-hand flex aspect-[3/4] w-20 shrink-0 items-center justify-center rounded-lg border border-border/60 bg-background/40 text-[22px] text-foreground/35 sm:w-24"
+          aria-hidden="true"
+        >
+          {v.sigil || "❧"}
+        </span>
+      )}
+      <div className="flex min-w-0 flex-1 flex-col">
+        <p className="break-words text-[14.5px] font-medium leading-snug text-foreground/90">
+          {v.title}
+        </p>
+        <p className="mt-0.5 line-clamp-2 break-words text-[13px] leading-relaxed text-muted-foreground">
+          {v.axiom || v.subtitle || v.pages[0]?.paragraphs[0]?.slice(0, 120) || "…"}
+        </p>
+        <p className="mono-label mt-1.5 text-[9.5px] uppercase tracking-[0.16em] text-muted-foreground/60">
+          {(v.savedAt || "").slice(0, 10)} · {t("page {n} of {m}", { n: Math.min(v.pages.length, v.totalPages || v.pages.length), m: v.totalPages || v.pages.length })}
+          {v.ended ? ` · ${t("Read again")}` : ""}
+        </p>
+        {/* the volume's own hands — a quiet row beneath the words, so
+            the buttons never collide with the title on narrow widths */}
+        <div className="mt-auto flex items-center justify-end gap-1.5 border-t border-border/50 pt-2.5">
+          {local && (
+            <button
+              type="button"
+              onClick={() => forgetLocal(v.bookId)}
+              aria-label={t("Forget this volume")}
+              title={t("Forget this volume")}
+              className="focus-glow mr-auto flex size-9 items-center justify-center rounded-full text-muted-foreground/60 transition-colors hover:text-foreground"
+            >
+              <X className="size-3.5" aria-hidden="true" />
+            </button>
+          )}
           <button
             type="button"
-            onClick={() => forgetLocal(v.bookId)}
-            aria-label={t("Forget this volume")}
-            title={t("Forget this volume")}
-            className="focus-glow flex size-9 items-center justify-center rounded-full text-muted-foreground/60 transition-colors hover:text-foreground"
+            onClick={() => resumeVolume(v)}
+            data-testid="shelf-continue"
+            className="focus-glow inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-[12.5px] font-medium text-foreground/85 transition-all duration-300 hover:border-foreground/40 hover:glow-sm"
           >
-            <X className="size-3.5" aria-hidden="true" />
+            <Feather className="size-3" aria-hidden="true" />
+            {v.ended ? t("Read again") : t("Continue the story")}
           </button>
-        )}
-        <button
-          type="button"
-          onClick={() => resumeVolume(v)}
-          data-testid="shelf-continue"
-          className="focus-glow inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-[12.5px] font-medium text-foreground/85 transition-all duration-300 hover:border-foreground/40 hover:glow-sm"
-        >
-          <Feather className="size-3" aria-hidden="true" />
-          {v.ended ? t("Read again") : t("Continue the story")}
-        </button>
+        </div>
       </div>
     </div>
   );
@@ -3379,7 +3378,7 @@ export function DreamBookView() {
                 <p className="mono-label mb-2 text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
                   {t("On this device")}
                 </p>
-                <div className="space-y-2" data-testid="shelf-local-list">
+                <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2" data-testid="shelf-local-list">
                   {localShelf.map((v) => shelfRow(v, true))}
                 </div>
               </section>
@@ -3389,7 +3388,7 @@ export function DreamBookView() {
                 <p className="mono-label mb-2 text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
                   {t("In your library")}
                 </p>
-                <div className="space-y-2" data-testid="shelf-library-list">
+                <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2" data-testid="shelf-library-list">
                   {libraryVolumes
                     .filter(
                       (v) =>
