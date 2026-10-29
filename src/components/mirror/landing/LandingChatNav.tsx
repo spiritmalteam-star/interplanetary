@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { Hammer, Layers, Store } from "lucide-react";
+import { Hammer, Layers, Sparkles } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -16,16 +16,14 @@ import { cn } from "@/lib/utils";
 /*  dream-work. The last maker the visitor stood in reopens. The       */
 /*  ATELIER stands among the makers (the ArtX atelier rides the rail). */
 /*                                                                     */
-/*  QUANTUM AND HEALX — the two deep rooms no longer wear marks in the */
-/*  crown: they rest at the SCOPES' shore alone (the visitor named     */
-/*  them there), opened from the fields' own workplace.                */
-/*                                                                     */
 /*  SCOPES — the fields' hand opens the scopes workplace the same way: */
 /*  a full room where the fields wear their light, and the one back    */
 /*  hand returns to the main chat landing.                             */
 /*                                                                     */
-/*  THE MARKET — the crown's own corner hand: one touch opens the      */
-/*  house's open hall, where every visitor's creations are displayed.  */
+/*  THE MARKET — its OWN WORLD entirely: separate from the workplace   */
+/*  and the scopes, it opens over everything and returns the visitor   */
+/*  exactly where they stood. Its hand wears the world's own violet    */
+/*  light — a gem among the quiet hands of the crown.                  */
 /* ------------------------------------------------------------------ */
 
 export function LandingChatNav() {
@@ -33,7 +31,8 @@ export function LandingChatNav() {
   const openToolTab = useMirror((s) => s.openToolTab);
   const activateToolTab = useMirror((s) => s.activateToolTab);
   const activeToolTab = useMirror((s) => s.activeToolTab);
-  const toolTabs = useMirror((s) => s.toolTabs);
+  const openMarket = useMirror((s) => s.openMarket);
+  const marketOpen = useMirror((s) => s.marketOpen);
   const lastMakerTab = useMirror((s) => s.lastMakerTab);
 
   /* IN DREAM — the workplace already stands (and the scopes are not
@@ -42,11 +41,7 @@ export function LandingChatNav() {
      maker's room rises (the Book serves when the visit is new). The
      scopes are independent — they never count as the InDream window. */
   const openInDream = useCallback(() => {
-    if (
-      activeToolTab &&
-      activeToolTab !== "scopes" &&
-      activeToolTab !== "market"
-    ) {
+    if (activeToolTab && activeToolTab !== "scopes") {
       activateToolTab(activeToolTab);
       return;
     }
@@ -56,16 +51,8 @@ export function LandingChatNav() {
   /* SCOPES — the fields' own workplace rises (or re-enters when the
      visitor stands in another room of the same window). */
   const openScopes = useCallback(() => {
-    if (toolTabs.includes("scopes")) activateToolTab("scopes");
-    else openToolTab("scopes");
-  }, [toolTabs, activateToolTab, openToolTab]);
-
-  /* THE MARKET — the house's open hall rises (or re-enters when it
-     already stands open among the rooms). */
-  const openMarket = useCallback(() => {
-    if (toolTabs.includes("market")) activateToolTab("market");
-    else openToolTab("market");
-  }, [toolTabs, activateToolTab, openToolTab]);
+    openToolTab("scopes");
+  }, [openToolTab]);
 
   const hand =
     "focus-glow relative flex h-7 items-center gap-1.5 rounded-full border px-2.5 transition-all duration-300 after:absolute after:-inset-2 after:rounded-full after:content-['']";
@@ -113,20 +100,27 @@ export function LandingChatNav() {
       </button>
 
       {/* ---------------------------- MARKET ---------------------------- */}
+      {/* ITS OWN WORLD — a small violet gem in the crown's corner: the
+          gradient breathes once when it is laid, the glow answers the
+          hover, and one touch opens the world itself. */}
       <button
         type="button"
         onClick={openMarket}
         aria-haspopup="dialog"
-        aria-expanded={activeToolTab === "market"}
+        aria-expanded={marketOpen}
         aria-label={t("Market — the hall of creations")}
         title={t("Market — the hall of creations")}
         data-testid="landing-nav-market"
         className={cn(
           hand,
-          "hairline text-muted-foreground hover:border-[var(--hairline-hover)] hover:text-foreground"
+          "border-transparent font-medium text-[#f3e8ff] shadow-[0_0_0_1px_rgba(216,180,254,0.35),0_2px_14px_-4px_rgba(168,85,247,0.55)] hover:shadow-[0_0_0_1px_rgba(216,180,254,0.6),0_4px_20px_-4px_rgba(168,85,247,0.8)] hover:brightness-110"
         )}
+        style={{
+          background:
+            "linear-gradient(120deg, #4c1d95 0%, #7e22ce 45%, #a855f7 78%, #d8b571 130%)",
+        }}
       >
-        <Store className="size-3" aria-hidden="true" />
+        <Sparkles className="size-3" aria-hidden="true" />
         <span className="mono-label whitespace-nowrap text-[10px] uppercase tracking-[0.14em]">
           {t("Market")}
         </span>

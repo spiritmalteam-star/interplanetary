@@ -12,7 +12,6 @@ import {
   type ReactNode,
 } from "react";
 import dynamic from "next/dynamic";
-import { createPortal } from "react-dom";
 import { ArrowLeft, Maximize2, Minimize2, RotateCcw } from "lucide-react";
 import { useMirror, type ToolTabKey } from "@/lib/mirror-store";
 import { WORKSPACES, WORKSPACE_ORDER } from "@/lib/mirror/workspaces";
@@ -208,8 +207,15 @@ function ToolWorkspaceImpl({ bare = false }: { bare?: boolean }) {
   const activateToolTab = useMirror((s) => s.activateToolTab);
   const openToolTab = useMirror((s) => s.openToolTab);
   const closeWorkspace = useMirror((s) => s.closeWorkspace);
-  /* THE ROOM'S OWN ZOOM — see the persistence law above. */
-  const [zoomed, setZoomed] = useState(false);
+  /* THE ROOM'S OWN ZOOM — the persistence law, and THE ONE TREE LAW:
+     the zoom lives in the store so the chamber's root can lay its own
+     transform down while a room stands zoomed (a transform would
+     otherwise hold the fixed frame inside the docked lens). The zoom
+     keeps through tab turns; only the visitor's own hand lays it
+     down. */
+  const zoomed = useMirror((s) => s.workspaceZoomed);
+  const setWorkspaceZoomed = useMirror((s) => s.setWorkspaceZoomed);
+  const setZoomed = setWorkspaceZoomed;
 
   /* a tab turn never lays the zoom down any more — only the visitor's
      own hand does (the zoom hand, Esc, or going back to the chat) */
@@ -233,7 +239,7 @@ function ToolWorkspaceImpl({ bare = false }: { bare?: boolean }) {
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = prevOverflow;
     };
-  }, [zoomed]);
+  }, [zoomed, setZoomed]);
 
   /* THE STANDING LAW — the window lives only over the chat: the realm
      IS the landing chat now, in both of its gears (docked and
@@ -275,10 +281,10 @@ function ToolWorkspaceImpl({ bare = false }: { bare?: boolean }) {
   if (openRoomTabs.length === 0) return null;
 
   /* THE PARKED WORKPLACE — the visitor went back to the chat: every
-     room stays mounted in a hidden keeper, so the book's weaving and
-     every other work continue while the chat stands. One touch on any
-     maker in the crown lifts the workplace again, exactly where it
-     was left. */
+     room stays mounted in the hidden frame itself, so the book's
+     weaving and every other work continue while the chat stands. One
+     touch on any maker in the crown lifts the workplace again,
+     exactly where it was left. */
   const parked = !active;
 
   /* THE CHAT'S OWN FRAME — the window is always the exact frame of
@@ -355,9 +361,19 @@ function ToolWorkspaceImpl({ bare = false }: { bare?: boolean }) {
       data-resource-profile={activeMeta?.resourceProfile ?? undefined}
       className={cn(
         "pointer-events-auto flex flex-col overflow-hidden border bg-background shadow-[0_24px_70px_-30px_rgba(0,0,0,0.6)]",
-        zoomed
-          ? "fixed inset-0 z-[95] rounded-none"
-          : "absolute inset-0 z-30 rounded-none"
+        parked
+          ? /* parked: the very same frame rests hidden — mounted, warm,
+               unseen (the rooms keep working beneath) */
+            "hidden"
+          : zoomed
+            ? /* THE ROOM'S OWN ZOOM — the same frame, the same tree, the
+                 same work: only its POSITION changes (fixed to the sky).
+                 One element, never a portal, never a re-parent — so the
+                 zoom is purely visual and interrupts absolutely
+                 nothing: a weaving book keeps weaving through every
+                 zoom and every unzoom. */
+              "fixed inset-0 z-[95] rounded-none"
+            : "absolute inset-0 z-30 rounded-none"
       )}
       style={winStyle}
     >
@@ -400,7 +416,7 @@ function ToolWorkspaceImpl({ bare = false }: { bare?: boolean }) {
             only the visitor's own hand lays it down. */}
         <button
           type="button"
-          onClick={() => setZoomed((z) => !z)}
+          onClick={() => setZoomed(!zoomed)}
           aria-label={zoomed ? t("Return the room to its place") : t("Enlarge the room")}
           aria-pressed={zoomed}
           title={zoomed ? t("Return the room to its place") : t("Enlarge the room")}
@@ -466,20 +482,14 @@ function ToolWorkspaceImpl({ bare = false }: { bare?: boolean }) {
     </div>
   );
 
-  /* the parked workplace rests hidden — mounted, warm, unseen */
-  if (parked) {
-    return (
-      <div className="hidden" aria-hidden="true" data-testid="tool-workspace-parked">
-        {frame}
-      </div>
-    );
-  }
-
-  /* when the room is zoomed, the frame is lifted to the sky itself —
-     above every transform of the page, still the very same room */
-  if (zoomed && typeof document !== "undefined") {
-    return createPortal(frame, document.body);
-  }
+  /* THE ONE TREE LAW — the frame is ALWAYS the same element, returned
+     the same way in every state (active, parked, zoomed). The old
+     portal swap (element ↔ portal ↔ hidden wrapper) re-parented the
+     whole subtree on every zoom and every park, and React remounted
+     every room: a weaving book's stride died mid-breath, a sequencer
+     lost its pattern. Now the zoom changes only where the frame
+     stands (fixed vs absolute) and the park only hides it — the
+     rooms' state, refs and timers live through all of it untouched. */
   return frame;
 }
 

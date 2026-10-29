@@ -1,23 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { withAnonCookie } from "@/lib/server/access";
+import { resolveVisitor } from "@/lib/server/access";
 
 export const dynamic = "force-dynamic";
 
 /* ------------------------------------------------------------------ */
-/*  GET /api/marketplace — THE OPEN HALL'S OWN TABLE.                  */
+/*  GET /api/marketplace — THE HALL'S OWN TABLE.                       */
 /*                                                                     */
-/*  The visitor named the market: a beautiful, laid-out hall at the    */
-/*  crown's corner where every visitor's creations are displayed —    */
-/*  books, musics, research files, artworks and more. The hall reads   */
-/*  the house's own shelves: the cosmic library (every sector's saved  */
-/*  transmissions, the woven volumes with their painted covers) and    */
-/*  the music vault's track rows (every song's name, its maker, its    */
-/*  length — streamed through the hall's own listening door).          */
+/*  The market is its own world: a gallery the crown's corner hand     */
+/*  opens, wearing its own violet light. It hangs only what keepers    */
+/*  have PUBLISHED — every offering was laid on the shelf by its       */
+/*  maker's own hand, and the Mirror wrote its explaining words.       */
 /*                                                                     */
-/*  THE HALL'S LIGHT HAND: a display is a preview, not a cargo run —   */
-/*  the listing carries names, first breaths, covers and lengths,      */
-/*  never the full freight of a volume's pages.                        */
+/*  THE PASSAGE LAW: only a signed-in keeper may see or purchase. An   */
+/*  anonymous visitor is answered with SIGN_IN_REQUIRED — the world    */
+/*  greets them with its own gate.                                     */
 /* ------------------------------------------------------------------ */
 
 type MarketKind = "book" | "music" | "art" | "research";
@@ -33,154 +30,63 @@ interface MarketItem {
   audioUrl: string | null;
   durationSec: number | null;
   pages: number | null;
-  /** the volume's subject / the song's chamber — one honest line */
   note: string | null;
-}
-
-function creatorName(
-  user: { name: string | null; email: string } | null | undefined
-): string {
-  if (!user) return "A keeper of the house";
-  if (user.name && user.name.trim()) return user.name.trim();
-  const email = user.email ?? "";
-  if (email.includes("@") && !email.startsWith("anon:")) {
-    return email.split("@")[0];
-  }
-  return "A keeper of the house";
 }
 
 export async function GET(req: NextRequest) {
   try {
-    const items: MarketItem[] = [];
-
-    /* ---------- the woven volumes and the saved transmissions ---------- */
-    const rows = await db.libraryEntry.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 240,
-      select: {
-        id: true,
-        sector: true,
-        title: true,
-        excerpt: true,
-        content: true,
-        cover: true,
-        createdAt: true,
-        user: { select: { name: true, email: true } },
-      },
-    });
-
-    for (const r of rows) {
-      let content: Record<string, unknown> = {};
-      try {
-        const parsed: unknown = JSON.parse(r.content);
-        if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
-          content = parsed as Record<string, unknown>;
-        }
-      } catch {
-        /* a row that does not speak JSON keeps only its shelf words */
-      }
-
-      if (r.sector === "dreambook" || r.sector === "dreambook_archive") {
-        /* the woven volumes — the hall's principal works */
-        const pages = Array.isArray(content.pages)
-          ? (content.pages as unknown[]).length
-          : null;
-        items.push({
-          id: r.id,
-          kind: "book",
-          title: String(content.title ?? r.title ?? "A Dream Book"),
-          excerpt:
-            String(content.axiom ?? content.subtitle ?? r.excerpt ?? "").slice(
-              0,
-              240
-            ) || "A volume woven in real time.",
-          creator: creatorName(r.user),
-          createdAt: r.createdAt.toISOString(),
-          cover: r.cover ?? null,
-          audioUrl: null,
-          durationSec: null,
-          pages,
-          note: String(content.topic ?? "") || null,
-        });
-        continue;
-      }
-
-      if (r.sector === "artx") {
-        /* the atelier's plates — the hall's gallery wall */
-        items.push({
-          id: r.id,
-          kind: "art",
-          title: r.title || "A vision from the atelier",
-          excerpt: String(content.query ?? r.excerpt ?? "").slice(0, 240),
-          creator: creatorName(r.user),
-          createdAt: r.createdAt.toISOString(),
-          cover: null,
-          audioUrl: null,
-          durationSec: null,
-          pages: null,
-          note: null,
-        });
-        continue;
-      }
-
-      /* every other sector — the observatory's studies, the quantum
-         readings, the healing treatises, the shaping intents: research */
-      items.push({
-        id: r.id,
-        kind: "research",
-        title: r.title || "A transmission",
-        excerpt: String(content.reply ?? r.excerpt ?? "").slice(0, 240),
-        creator: creatorName(r.user),
-        createdAt: r.createdAt.toISOString(),
-        cover: null,
-        audioUrl: null,
-        durationSec: null,
-        pages: null,
-        note: r.sector,
-      });
+    const visitor = await resolveVisitor(req);
+    if (visitor.user.anon) {
+      return NextResponse.json(
+        {
+          error:
+            "The hall keeps its doors for the house's own keepers — sign in to walk among the works.",
+          code: "SIGN_IN_REQUIRED",
+        },
+        { status: 401 }
+      );
     }
 
-    /* ---------- the songs ---------- */
-    const tracks = await db.musicTrack.findMany({
-      where: { status: { not: "failed" } },
+    const rows = await db.marketListing.findMany({
+      where: { status: "live" },
       orderBy: { createdAt: "desc" },
-      take: 120,
+      take: 160,
       select: {
         id: true,
+        kind: true,
         title: true,
+        excerpt: true,
+        creatorName: true,
+        note: true,
+        cover: true,
         audioUrl: true,
         localFile: true,
         durationSec: true,
+        pages: true,
         createdAt: true,
-        user: { select: { name: true, email: true } },
       },
     });
 
-    for (const t of tracks) {
+    const items: MarketItem[] = rows.map((r) => ({
+      id: r.id,
+      kind: r.kind as MarketKind,
+      title: r.title,
+      excerpt: r.excerpt ?? "",
+      creator: r.creatorName,
+      createdAt: r.createdAt.toISOString(),
+      cover: r.cover,
       /* the hall's own listening door — never the private vault's */
-      const audioUrl = t.localFile
-        ? `/api/marketplace/audio/${encodeURIComponent(t.localFile)}`
-        : null;
-      items.push({
-        id: t.id,
-        kind: "music",
-        title: t.title || "A woven song",
-        excerpt: "A transmission woven into sound in the music chamber.",
-        creator: creatorName(t.user),
-        createdAt: t.createdAt.toISOString(),
-        cover: null,
-        audioUrl,
-        durationSec: t.durationSec ?? null,
-        pages: null,
-        note: null,
-      });
-    }
-
-    /* the hall hangs its newest works first */
-    items.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+      audioUrl:
+        r.kind === "music" && r.localFile
+          ? `/api/marketplace/audio/${encodeURIComponent(r.localFile)}`
+          : null,
+      durationSec: r.durationSec,
+      pages: r.pages,
+      note: r.note,
+    }));
 
     return NextResponse.json({
-      items: items.slice(0, 160),
+      items,
       counts: {
         books: items.filter((i) => i.kind === "book").length,
         music: items.filter((i) => i.kind === "music").length,

@@ -21,6 +21,7 @@ import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ModalShell } from "./ModalShell";
+import { PublishToMarket } from "./PublishToMarket";
 
 /* ------------------------------------------------------------------ */
 /*  THE COSMIC LIBRARY — the visitor's own keeping-place: every        */
@@ -63,6 +64,9 @@ interface LibraryEntry {
     subtitle?: string;
     totalPages?: number;
   } | null;
+  /** the volume's own face — the Gemini-painted plate (the book's
+      album cover), read by the shelf and the market alike */
+  cover?: string | null;
   createdAt: string;
 }
 
@@ -391,6 +395,27 @@ export function LibraryView() {
                                     {e.excerpt}
                                   </p>
                                 </button>
+                                {/* THE PUBLISH HAND — every saved work (a
+                                    study, a vision, a transmission) may hang
+                                    in the market's hall with one touch */}
+                                <div className="mt-2 flex items-center gap-2">
+                                  <PublishToMarket
+                                    kind={
+                                      e.sector === "artx"
+                                        ? "art"
+                                        : e.sector === "dreambook" ||
+                                            e.sector === "dreambook_archive"
+                                          ? "book"
+                                          : "research"
+                                    }
+                                    refId={e.id}
+                                    refKind="library"
+                                    title={e.title}
+                                    excerpt={e.excerpt}
+                                    cover={e.cover ?? null}
+                                    testId={`library-publish-${e.id}`}
+                                  />
+                                </div>
                                 {continuable && (
                                   <button
                                     type="button"

@@ -59,6 +59,7 @@ import {
   X,
 } from "lucide-react";
 import { canopyHour, familyAccent, growCanopy, growMixedCanopy, TREE_FAMILIES } from "@/lib/data/suggestion-banks";
+import { easyWhispersFor, shuffledEasy, swapGroveToEasy } from "@/lib/data/suggestions-easy";
 import { filterStyles, isStyleSlashQuery } from "@/lib/image-styles";
 import { blendVisualRequest, isVisualIntent } from "@/lib/visual-intent";
 import { ZoomableLightbox } from "./ZoomableLightbox";
@@ -718,23 +719,37 @@ function BareFloorDoors({
 }) {
   const t = useT();
   const treeMix = useMirror((s) => s.treeMix);
+  const me = useMirror((s) => s.me);
   const scopeKey = scope || "general";
+  /* THE PLAIN TONGUE — a visitor who has not signed in reads doors
+     that ask simple, literal questions; a signed keeper walks the
+     full grove with the easy well riding beside it. */
+  const anon = !me;
 
   /* the pool — pure and synchronous: THE MIRROR's own first doors,
      one field's grove, or the landing's first doors woven with the
      whole house's mix. The same hour grows the same grove, so the
      draw never flickers. Every field speaks its own language: the
      Mirror the house's own reflection doors, the families their own
-     groves. */
+     groves — and the easy well (a thousand plain doors) rides the
+     pool beside them all, so the little reload hand keeps pouring. */
   const pool = useMemo(() => {
-    if (scope === "mirror") return LANDING_SUGGESTION_POOL;
+    if (anon) {
+      /* THE EASY DOORS ONLY — plainly worded, easy to understand */
+      return shuffledEasy(scope === "mirror" || !scope ? null : scope, canopyHour());
+    }
+    if (scope === "mirror")
+      return [...LANDING_SUGGESTION_POOL, ...easyWhispersFor(null)];
     if (scope) {
       const family = TREE_FAMILIES.find((f) => f.key === scope);
       if (family)
-        return growCanopy(family.category, null, canopyHour()).map(
-          (w) => w.text
-        );
-      return LANDING_SUGGESTION_POOL;
+        return [
+          ...growCanopy(family.category, null, canopyHour()).map(
+            (w) => w.text
+          ),
+          ...easyWhispersFor(scope),
+        ];
+      return [...LANDING_SUGGESTION_POOL, ...easyWhispersFor(null)];
     }
     const mixed = growMixedCanopy(
       treeMix.on,
@@ -742,8 +757,8 @@ function BareFloorDoors({
       null,
       canopyHour()
     ).map((w) => w.text);
-    return [...LANDING_SUGGESTION_POOL, ...mixed];
-  }, [scope, treeMix]);
+    return [...LANDING_SUGGESTION_POOL, ...mixed, ...easyWhispersFor(null)];
+  }, [scope, treeMix, anon]);
 
   const draw = useCallback(
     (current: string[]) => {
@@ -2242,6 +2257,14 @@ export function BranchCanopy({
       growMixedCanopy(mix.on, mix.weights, scopeHint ?? null, hour, salt),
     [mix, scopeHint, hour, salt]
   );
+  /* THE PLAIN TONGUE — the walk of a visitor who has not signed in
+     speaks easy, literal doors: same layout, same families, plainly
+     worded. The signed keeper keeps the full grove's own voice. */
+  const anonWalk = useMirror((s) => !s.me);
+  const shownGrove = useMemo(
+    () => (anonWalk ? swapGroveToEasy(grove, hour) : grove),
+    [grove, anonWalk, hour]
+  );
 
   /* THE FAMILY'S LIGHT — every whisper knows its own family, so every
      seed carries that family's accent to the tree (rope + section;
@@ -2251,15 +2274,15 @@ export function BranchCanopy({
      manifest answers, an Art X room as the atelier. */
   const familyByUk = useMemo(() => {
     const m = new Map<string, string | undefined>();
-    for (const w of grove)
+    for (const w of shownGrove)
       m.set(w.text.toLowerCase(), familyAccent(w.family) ?? undefined);
     return m;
-  }, [grove]);
+  }, [shownGrove]);
   const familyKeyByText = useMemo(() => {
     const m = new Map<string, string>();
-    for (const w of grove) m.set(w.text.toLowerCase(), w.family ?? "");
+    for (const w of shownGrove) m.set(w.text.toLowerCase(), w.family ?? "");
     return m;
-  }, [grove]);
+  }, [shownGrove]);
   const accentOfText = useCallback(
     (text: string): string | undefined => familyByUk.get(text.toLowerCase()),
     [familyByUk]
@@ -2315,7 +2338,7 @@ export function BranchCanopy({
   /* THE GRAFT LAW — the idf belongs to every walk (the realm's own
      grafted houses are tuned by it too): one memoized pass over the
      grove, never a per-frame cost. */
-  const idf = useMemo(() => buildIdf(grove.map((w) => w.text)), [grove]);
+  const idf = useMemo(() => buildIdf(shownGrove.map((w) => w.text)), [shownGrove]);
 
   const ranked = useMemo(() => {
     /* THE REALM'S WALL — the grove shuffled by the hour, the salt and
@@ -2340,9 +2363,9 @@ export function BranchCanopy({
     /* the dedupe law — one whisper never stands twice in the family
        (a set, never a scan: the grove is five hundred voices) */
     const seenTexts = new Set<string>();
-    const unique: (typeof grove[number] & { score: number })[] = [];
+    const unique: (typeof shownGrove[number] & { score: number })[] = [];
     for (const w of hits.length === 0
-      ? grove.map((w) => ({ ...w, score: 0 }))
+      ? shownGrove.map((w) => ({ ...w, score: 0 }))
       : [
           ...hits,
           ...grove
@@ -3158,7 +3181,7 @@ export function BranchCanopy({
         hour,
       });
       const spentSet = spent;
-      const fresh = grove.filter((w) => !spentSet.has(w.text.toLowerCase()));
+      const fresh = shownGrove.filter((w) => !spentSet.has(w.text.toLowerCase()));
       if (fresh.length > 0) {
         const seeds = weaveCreations(
           chooseGraftSeeds(fresh, pickField),
@@ -3739,7 +3762,7 @@ export function BranchCanopy({
           buds: [text],
           hour,
         });
-        const fresh = grove.filter((w) => !spent.has(w.text.toLowerCase()));
+        const fresh = shownGrove.filter((w) => !spent.has(w.text.toLowerCase()));
         if (fresh.length > 0) {
           const seeds = weaveCreations(
             chooseGraftSeeds(fresh, pickField),

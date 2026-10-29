@@ -33,7 +33,6 @@ import {
   Palette,
   ScrollText,
   Sparkles,
-  Store,
   type LucideIcon,
 } from "lucide-react";
 import type { LandingScopeKey, ToolTabKey } from "@/lib/mirror-store";
@@ -83,9 +82,9 @@ export type WorkspaceDefinition = {
 /*  rooms rest at the scopes' shore now. THE MANIFEST HAS COME HOME —
 /*  the visitor named it back among the tools, riding the InDream rail
 /*  again (the scopes' shore wears the fields alone). THE MARKET — the
-/*  house's own open hall where every visitor's creations are shown;
-/*  it never rides the InDream rail — the crown's own corner hand
-/*  opens it directly.
+/*  house's own hall is its OWN WORLD now: never a tab of this registry
+/*  — the crown's corner hand opens it over everything, and it returns
+/*  the visitor exactly where they stood.
 /* ------------------------------------------------------------------ */
 
 export const WORKSPACE_ORDER: ToolTabKey[] = [
@@ -100,7 +99,6 @@ export const WORKSPACE_ORDER: ToolTabKey[] = [
   "video",
   "register",
   "library",
-  "market",
   "scopes",
 ];
 
@@ -267,21 +265,6 @@ export const WORKSPACES: Record<ToolTabKey, WorkspaceDefinition> = {
       })),
     capabilities: ["creations-room", "sector-filtering", "in-place-reader"],
     preserveState: true,
-    resourceProfile: "low",
-    bridgeMode: "mirror",
-  },
-  market: {
-    id: "market",
-    title: "Market",
-    category: "atlas",
-    icon: Store,
-    theme: { accent: "#d8b571" },
-    loader: () =>
-      import("@/components/mirror/MarketView").then((m) => ({
-        default: m.MarketView as ComponentType,
-      })),
-    capabilities: ["creations-showcase", "market-browsing"],
-    preserveState: false,
     resourceProfile: "low",
     bridgeMode: "mirror",
   },

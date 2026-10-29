@@ -69,6 +69,7 @@ import type { BookAudit, BookLedger } from "@/lib/book-ledger";
 import { AUDIT_DIMENSIONS } from "@/lib/book-ledger";
 import { downloadBookPdf } from "@/lib/book-pdf";
 import { recordDownload } from "@/lib/downloads-log";
+import { PublishToMarket } from "./PublishToMarket";
 import { cn } from "@/lib/utils";
 import { ShareButton } from "./ShareButton";
 import { paragraphsFromEditorText, plainTextToManuscriptHtml } from "./dreambook/manuscript-text";
@@ -348,6 +349,9 @@ export function DreamBookView() {
   const [auditOpen, setAuditOpen] = useState(false);
   /* the binding press — while the PDF is gathered */
   const [binding, setBinding] = useState(false);
+  /* the shelf's own mark — the library row this volume keeps (a state,
+     not only a ref, so the publish hand can rise with the book) */
+  const [savedBookId, setSavedBookId] = useState("");
 
   const pagesRef = useRef<WeavePage[]>([]);
   const threadsRef = useRef("");
@@ -541,6 +545,7 @@ export function DreamBookView() {
       stopNarration();
       setInkDeskOpen(false);
       bookIdRef.current = r.bookId;
+      setSavedBookId(r.bookId);
       pagesRef.current = r.pages.map((p) => ({
         ...p,
         paragraphs: [...p.paragraphs],
@@ -1005,6 +1010,7 @@ export function DreamBookView() {
         /* a fresh volume's place in the library rides home with it */
         if (phase === "open" && typeof data.libraryId === "string") {
           bookIdRef.current = data.libraryId;
+          setSavedBookId(data.libraryId);
         }
 
         /* THE LEDGER — the loom's updated memory of the volume */
@@ -2307,6 +2313,27 @@ export function DreamBookView() {
           >
             <BookDown className="size-4" aria-hidden="true" />
           </button>
+          {/* THE PUBLISH HAND — the finished volume may hang in the
+              market's hall: one touch, the Mirror writes its words, the
+              visitor stands exactly where they are */}
+          {savedBookId && meta && (
+            <span className="shrink-0">
+              <PublishToMarket
+                kind="book"
+                refId={savedBookId}
+                refKind="library"
+                title={meta.title}
+                excerpt={
+                  meta.subtitle ||
+                  meta.axiom ||
+                  (pages[0] ? pageText(pages[0]).slice(0, 240) : "")
+                }
+                cover={cover}
+                pages={pages.length}
+                testId="dream-publish"
+              />
+            </span>
+          )}
           {/* THE FOCUS READING — the column widens, the frame quiets */}
           <button
             type="button"

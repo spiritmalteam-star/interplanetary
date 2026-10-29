@@ -207,8 +207,7 @@ export type ToolTabKey =
   | "quantum"
   | "healx"
   | "artx"
-  | "scopes"
-  | "market";
+  | "scopes";
 
 /* THE LANDING'S OWN SCOPE — the field the threshold's docked chat
    walks in (the crown's Scopes hand chooses it). THE MIRROR is the
@@ -766,6 +765,19 @@ interface MirrorState {
       back hand lays only the scopes down (the InDream tabs keep
       resting beneath) and the main chat landing stands again. */
   closeScopes: () => void;
+
+  /* THE MARKET — its own world entirely: never a tab of the workplace,
+     never a scope — a separate hall that opens over everything and
+     returns the visitor exactly where they stood. */
+  marketOpen: boolean;
+  openMarket: () => void;
+  closeMarket: () => void;
+
+  /* THE ROOM'S OWN ZOOM — store-held so the chamber's root can lay
+     its own transform down while a room stands zoomed (the transform
+     would otherwise hold the zoomed frame inside the docked lens). */
+  workspaceZoomed: boolean;
+  setWorkspaceZoomed: (z: boolean) => void;
 
   /* THE MIRROR BRIDGE — a workspace's compact assistant may carry its
      own context to the floor: the draft waits in the room's reply line
@@ -1682,6 +1694,8 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   googleConfigured: false,
   accountOpen: false,
   authOpen: false,
+  marketOpen: false,
+  workspaceZoomed: false,
   authMode: "signin" as const,
   profilePageOpen: false,
   wallet: null,
@@ -1800,9 +1814,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       modal: null,
       toolTabs: s.toolTabs.includes(key) ? s.toolTabs : [...s.toolTabs, key],
       activeToolTab: key,
-      /* the market is the house's own hall, never a maker's bench —
-         it never becomes the InDream trail's last stone */
-      ...(key !== "scopes" && key !== "market" ? { lastMakerTab: key } : {}),
+      ...(key !== "scopes" ? { lastMakerTab: key } : {}),
     }));
   },
   /* THE PARKED WORKPLACE — going back never lays the rooms down: the
@@ -1811,6 +1823,12 @@ export const useMirror = create<MirrorState>()((set, get) => ({
      exactly where it was left. Only a room's own x lays that room
      down (the house asks first). */
   closeWorkspace: () => set({ activeToolTab: null }),
+  /* THE MARKET'S OWN WORLD — one hand opens it over everything, one
+     hand lays it down; whatever room or view stood beneath keeps
+     standing untouched. */
+  openMarket: () => set({ marketOpen: true, mobileNavOpen: false }),
+  closeMarket: () => set({ marketOpen: false }),
+  setWorkspaceZoomed: (z) => set({ workspaceZoomed: z }),
   closeScopes: () =>
     set((s) => ({
       activeToolTab: s.activeToolTab === "scopes" ? null : s.activeToolTab,
@@ -1826,9 +1844,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   activateToolTab: (key) =>
     set((s) => ({
       activeToolTab: key,
-      ...(key !== "scopes" && key !== "market"
-        ? { lastMakerTab: key }
-        : {}),
+      ...(key !== "scopes" ? { lastMakerTab: key } : {}),
     })),
 
   /* THE MIRROR BRIDGE — the draft is stamped so the room's reply line
@@ -4745,6 +4761,9 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     } catch {
       /* storage unavailable */
     }
+    /* the level belongs to the passage too — it rides the visitor's
+       own tuning to every device they walk from */
+    void get().pushSettings();
   },
 
   sendDepth: () => {
@@ -4778,6 +4797,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       language?: string;
       voice?: string;
       pace?: number;
+      depth?: number;
       seeds?: string[];
     };
     if (s.language && isLanguageCode(s.language)) {
@@ -4805,6 +4825,15 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         /* storage unavailable */
       }
     }
+    if (typeof s.depth === "number" && Number.isFinite(s.depth)) {
+      const depth = Math.min(4, Math.max(-1, Math.floor(s.depth)));
+      set({ expLevel: depth });
+      try {
+        localStorage.setItem("mirror-entity-exp-level", String(depth));
+      } catch {
+        /* storage unavailable */
+      }
+    }
     if (Array.isArray(s.seeds)) {
       const clean = s.seeds
         .filter((x): x is string => typeof x === "string")
@@ -4821,14 +4850,20 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   },
 
   pushSettings: async () => {
-    const { me, language, voice, pace, expansionSeeds } = get();
+    const { me, language, voice, pace, expansionSeeds, expLevel } = get();
     if (!me || me.email.startsWith("anon:")) return;
     try {
       await fetch("/api/account/settings", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          settings: { language, voice, pace, seeds: expansionSeeds },
+          settings: {
+            language,
+            voice,
+            pace,
+            depth: expLevel,
+            seeds: expansionSeeds,
+          },
         }),
       });
     } catch {

@@ -45,6 +45,7 @@ model User {
   musicTracks     MusicTrack[]    @relation("MusicTracks")
   loopWeaves      LoopWeave[]
   loopWeaveFinals LoopWeaveFinal[]
+  marketListings  MarketListing[]
   expansion       ExpansionProfile?
   expansionEvents ExpansionEvent[]
 }
@@ -64,6 +65,36 @@ model LibraryEntry {
 }
 
 // ------------------------------- tenancy ---------------------------------
+
+/* ------------------------------ the market -------------------------------
+   THE MARKET'S OWN SHELF — a creation the visitor chose to publish. The
+   Mirror writes its explaining words; the hall hangs it for every
+   signed-in keeper of the house to see, hear and read. */
+model MarketListing {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind        String // book | music | art | research
+  refId       String // the creation it stands for (LibraryEntry or MusicTrack id)
+  refKind     String   @default("library") // library | music
+  title       String
+  creatorName String
+  note        String? // the Mirror's own explaining words for the hall
+  excerpt     String?
+  cover       String?
+  audioUrl    String?
+  localFile   String?
+  durationSec Int?
+  pages       Int?
+  status      String   @default("publishing") // publishing | live | cancelled | failed
+  progress    Int      @default(10) // 10 laid | 50 the words | 90 dressed | 100 live
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, refId])
+  @@index([status, createdAt])
+  @@index([userId, createdAt])
+}
 
 model Workspace {
   id        String   @id @default(cuid())

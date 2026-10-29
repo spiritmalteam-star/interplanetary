@@ -36,6 +36,10 @@ export function SettingsModal() {
   const setLanguage = useMirror((s) => s.setLanguage);
   const setVoice = useMirror((s) => s.setVoice);
   const setPace = useMirror((s) => s.setPace);
+  /* THE DEPTH & EXPLORATION — how deep the house answers: the walk's
+     own DNA decides, or the visitor holds the level themselves */
+  const expLevel = useMirror((s) => s.expLevel);
+  const setExpLevel = useMirror((s) => s.setExpLevel);
   /* THE MIX OF WORLDS — how much of each family the living tree
      carries; the same proportions the tree's kategories speak */
   const mix = useMirror((s) => s.treeMix);
@@ -329,6 +333,32 @@ export function SettingsModal() {
               );
             })}
           </div>
+        </section>
+
+        {/* ---------------- Depth & exploration ---------------- */}
+        <section aria-label={t("Depth & exploration")}>
+          <p className="mono-label mb-1 text-[12.5px] text-muted-foreground">
+            {t("Depth & exploration")}
+          </p>
+          <p className="mb-3 text-[13px] leading-relaxed text-muted-foreground/80">
+            {t(
+              "How deep the house answers you — let the walk decide as it deepens, or hold the level in your own hand."
+            )}
+          </p>
+          <select
+            value={expLevel}
+            onChange={(e) => setExpLevel(Number(e.target.value))}
+            aria-label={t("Depth & exploration")}
+            data-testid="settings-explevel"
+            className="w-full rounded-xl border hairline bg-[var(--glass-bg)] px-3 py-2.5 text-[14.5px] text-foreground transition-colors focus:outline-none focus-visible:border-[color-mix(in_srgb,var(--scope-a)_45%,transparent)]"
+          >
+            <option value={-1}>{t("Let the walk decide")}</option>
+            <option value={0}>{t("First light — I am new")}</option>
+            <option value={1}>{t("The deepening — I have walked some")}</option>
+            <option value={2}>{t("The braided walk — experienced")}</option>
+            <option value={3}>{t("The canopy — very experienced")}</option>
+            <option value={4}>{t("The deep roots — the furthest")}</option>
+          </select>
         </section>
 
         {/* ---------------- Narration pace ---------------- */}

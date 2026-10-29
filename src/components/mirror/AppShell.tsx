@@ -9,6 +9,7 @@ import { CosmicBackdrop } from "./CosmicBackdrop";
 import { StarField } from "./StarField";
 import { ToolWorkspace } from "./living/ToolWorkspace";
 import { ScopesWorkplace } from "./ScopesWorkplace";
+import { MarketWorld } from "./MarketWorld";
 import { LandingChatNav } from "./landing/LandingChatNav";
 import { WalletGuard } from "./WalletGuard";
 import { BranchCanopy } from "./BranchCanopy";
@@ -255,8 +256,18 @@ function AppShellViews({
      navigator rides beside the where-pill. The transmission streams
      into the room from the channel below; the walk continues from
      every reply's own grown branches. */
+  /* THE ZOOM'S OWN SKY — while a workplace room stands zoomed, the
+     root lays its scroll-shift transform DOWN: a transform here would
+     hold the zoomed frame inside the docked lens (a transformed
+     ancestor becomes the containing block for fixed children). The
+     frame itself is one stable tree — the class change remounts
+     nothing. */
+  const workspaceZoomed = useMirror((s) => s.workspaceZoomed);
   return (
-    <div className={`relative h-[var(--app-h,var(--vh-safe))] overflow-hidden ${FRAME_LIFT}`}>
+    <div
+      className={`relative h-[var(--app-h,var(--vh-safe))] overflow-hidden ${workspaceZoomed ? "" : FRAME_LIFT}`}
+      data-zoomed-sky={workspaceZoomed || undefined}
+    >
       <CosmicBackdrop />
       <StarField />
       <BranchCanopy
@@ -338,6 +349,12 @@ function AppShellViews({
           tools' window), the fields' subcategories render inside, and
           its own back hand returns to the main chat landing. */}
       <ScopesWorkplace />
+
+      {/* THE MARKET WORLD — its own world entirely: the crown's corner
+          hand opens it over everything (never a tab of the tools, never
+          a scope), and its back hand returns the visitor exactly where
+          they stood. */}
+      <MarketWorld />
 
       {/* the reading rooms' own modals — every door keeps its keys */}
       <FederationModal />

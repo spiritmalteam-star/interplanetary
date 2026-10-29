@@ -626,7 +626,7 @@ export default function Chronoscope() {
           data-testid="chronoscope-instrument"
           className="fixed inset-0 z-[80] overflow-y-auto overscroll-contain bg-[color-mix(in_srgb,var(--lp-deep)_96%,#0d0a16)]"
         >
-          <div className="mx-auto flex min-h-full w-full max-w-[1100px] flex-col px-3 pb-[max(env(safe-area-inset-bottom),12px)] pt-3 sm:px-6 lg:max-w-[1560px]">
+          <div className="mx-auto flex min-h-full w-full max-w-[1100px] flex-col px-3 pb-[max(env(safe-area-inset-bottom),12px)] pt-3 sm:px-6 lg:max-w-[1780px]">
             {/* ------------------- the top edge ------------------- */}
             <div className="flex flex-wrap items-center gap-2 py-1">
               <div className="flex items-center gap-1.5">
@@ -886,7 +886,7 @@ export default function Chronoscope() {
                   up and down to read it. */}
               <article
                 data-testid="chronoscope-card"
-                className="relative z-10 w-full max-w-[680px] overflow-hidden rounded-2xl border bg-[color-mix(in_srgb,var(--lp-veil-solid)_88%,transparent)] shadow-[0_24px_80px_-32px_rgba(20,12,40,0.5)] lg:grid lg:max-w-[1400px] lg:grid-cols-[minmax(230px,0.95fr)_minmax(400px,1.5fr)_minmax(240px,1fr)] lg:items-stretch"
+                className="relative z-10 w-full max-w-[680px] overflow-hidden rounded-2xl border bg-[color-mix(in_srgb,var(--lp-veil-solid)_88%,transparent)] shadow-[0_24px_80px_-32px_rgba(20,12,40,0.5)] lg:grid lg:max-w-[1720px] lg:grid-cols-[minmax(270px,1fr)_minmax(560px,1.85fr)_minmax(300px,1.12fr)] lg:items-stretch"
                 style={{ borderColor: `color-mix(in srgb, ${accent} 42%, var(--lp-edge))` }}
               >
                 {/* the card's face — one primary image decodes here.
@@ -897,7 +897,11 @@ export default function Chronoscope() {
                     "relative aspect-[3/2] w-full overflow-hidden lg:order-2 lg:row-span-2 lg:aspect-auto lg:border-x",
                     readyFile && "cursor-zoom-in"
                   )}
-                  style={{ borderColor: `color-mix(in srgb, ${accent} 24%, var(--lp-edge))` }}
+                  style={{
+                    borderColor: `color-mix(in srgb, ${accent} 24%, var(--lp-edge))`,
+                    background:
+                      "color-mix(in srgb, var(--lp-deep) 88%, #0d0a16)",
+                  }}
                   onClick={readyFile ? () => setZoomOpen(true) : undefined}
                 >
                   {readyFile ? (
@@ -907,8 +911,8 @@ export default function Chronoscope() {
                       alt={`${currentId} · ${t("role")}: ${roleKey}`}
                       fill
                       unoptimized
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 680px, 540px"
-                      className="object-cover"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 680px, 820px"
+                      className="object-cover lg:object-contain lg:object-center"
                       priority={role === 0}
                     />
                   ) : (
@@ -997,6 +1001,34 @@ export default function Chronoscope() {
                         {chip}
                       </span>
                     ))}
+                  </div>
+
+                  {/* THE RECORD'S OWN TABLE — the desk spread carries the
+                      identity fields and the society's words right here:
+                      more of the record read at once, no sheet needed */}
+                  <div className="mt-3 hidden lg:block">
+                    <FieldGrid
+                      rows={[
+                        [t("Star system"), civRecord?.star],
+                        [t("Homeworld"), civRecord?.home],
+                        [t("Kinship"), civRecord?.kinship],
+                        [t("Development"), civRecord?.kard],
+                        [t("Gravity"), civRecord?.g != null ? `${civRecord.g} g` : undefined],
+                        [t("Atmosphere"), civRecord?.atm],
+                        [t("Governance"), civRecord?.gov],
+                        [t("Population"), civRecord?.pop],
+                      ]}
+                    />
+                    {civRecord?.society && (
+                      <div className="mt-3">
+                        <Prose title={t("Society & architecture")} body={civRecord.society} />
+                      </div>
+                    )}
+                    {civRecord?.q?.t && (
+                      <div className="mt-3">
+                        <QuoteBlock text={civRecord.q.t} source={civRecord.q.s} />
+                      </div>
+                    )}
                   </div>
 
                   <div className="mt-3 flex items-center justify-between gap-2 border-t border-[var(--lp-edge)] pt-3 lg:mt-auto">
@@ -1124,6 +1156,8 @@ export default function Chronoscope() {
               civ={civRecord}
               idm={idmRecord}
               accent={accent}
+              artFile={readyFile}
+              recordId={currentId}
               scrollRef={detailsScroll}
               onClose={() => setDetailsOpen(false)}
             />
@@ -1358,9 +1392,16 @@ function RoleContext({
     const text = byRole[role];
     if (!text) return null;
     return (
-      <p className="mt-3 line-clamp-4 text-[13px] leading-[1.75] text-[var(--lp-body)]">
-        {text}
-      </p>
+      <>
+        <p className="mt-3 line-clamp-4 text-[13px] leading-[1.75] text-[var(--lp-body)] lg:line-clamp-none">
+          {text}
+        </p>
+        {idm.cognitiveImpactAndMessages && (
+          <p className="mt-3 hidden border-t border-[var(--lp-edge)] pt-3 text-[12.5px] leading-[1.75] text-[var(--lp-body-soft)] lg:block">
+            {idm.cognitiveImpactAndMessages}
+          </p>
+        )}
+      </>
     );
   }
   if (!civ) return null;
@@ -1376,9 +1417,20 @@ function RoleContext({
   const text = byRole[role];
   if (!text) return null;
   return (
-    <p className="mt-3 line-clamp-4 text-[13px] leading-[1.75] text-[var(--lp-body)]">
-      {text}
-    </p>
+    <>
+      {/* THE FACE'S OWN WORDS — full on the desk (the spread was built
+          to be read at once), breathing clamped on the small screens */}
+      <p className="mt-3 line-clamp-4 text-[13px] leading-[1.75] text-[var(--lp-body)] lg:line-clamp-none">
+        {text}
+      </p>
+      {/* THE RECORD'S THESIS — the overview beneath the face's words,
+          so the left shore carries more of the record on the desk */}
+      {civ.thesis && (
+        <p className="mt-3 hidden border-t border-[var(--lp-edge)] pt-3 text-[12.5px] leading-[1.75] text-[var(--lp-body-soft)] lg:block">
+          {civ.thesis}
+        </p>
+      )}
+    </>
   );
 }
 
@@ -1389,6 +1441,8 @@ function DetailsSheet({
   civ,
   idm,
   accent,
+  artFile,
+  recordId,
   scrollRef,
   onClose,
 }: {
@@ -1396,14 +1450,36 @@ function DetailsSheet({
   civ: CivRecord | null;
   idm: IdmRecord | null;
   accent: string;
+  /** the record's own artwork — shown whole at the sheet's head */
+  artFile?: string;
+  recordId: string;
   scrollRef: React.MutableRefObject<number>;
   onClose: () => void;
 }) {
   const sheetRef = useRef<HTMLDivElement | null>(null);
+  /* THE BAR THAT YIELDS — scroll down and the top bar (with its close
+     hand) folds away; scroll up a breath and it returns. On the phone
+     the record's words own the glass, and the bar answers the thumb. */
+  const [barGone, setBarGone] = useState(false);
+  const lastTopRef = useRef(0);
+
+  const onScroll = useCallback(() => {
+    const el = sheetRef.current;
+    if (!el) return;
+    const top = el.scrollTop;
+    const delta = top - lastTopRef.current;
+    if (Math.abs(delta) > 6) {
+      setBarGone(delta > 0 && top > 56);
+      lastTopRef.current = top;
+    }
+  }, []);
 
   useEffect(() => {
     const el = sheetRef.current;
-    if (el) el.scrollTop = scrollRef.current;
+    if (el) {
+      el.scrollTop = scrollRef.current;
+      lastTopRef.current = el.scrollTop;
+    }
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
@@ -1416,7 +1492,7 @@ function DetailsSheet({
 
   return (
     <div
-      className="fixed inset-x-0 bottom-0 top-auto z-[90] flex max-h-[86dvh] items-stretch justify-center sm:items-end"
+      className="fixed inset-x-0 bottom-0 top-auto z-[90] flex max-h-[88dvh] items-stretch justify-center sm:items-end"
       role="dialog"
       aria-modal="true"
       aria-label={t("The full record")}
@@ -1424,10 +1500,18 @@ function DetailsSheet({
     >
       <div
         ref={sheetRef}
-        className="w-full max-w-[880px] overflow-y-auto overscroll-contain rounded-t-3xl border border-b-0 bg-[color-mix(in_srgb,var(--lp-deep)_97%,transparent)] px-4 pb-8 pt-3 shadow-[0_-20px_60px_-30px_rgba(10,6,24,0.6)] sm:rounded-3xl sm:px-6"
+        onScroll={onScroll}
+        className="nice-scroll w-full max-w-[880px] overflow-y-auto overscroll-contain rounded-t-3xl border border-b-0 bg-[color-mix(in_srgb,var(--lp-deep)_97%,transparent)] px-4 pb-8 pt-3 shadow-[0_-20px_60px_-30px_rgba(10,6,24,0.6)] sm:rounded-3xl sm:px-6 sm:pb-10"
         style={{ borderColor: `color-mix(in srgb, ${accent} 30%, var(--lp-edge))` }}
       >
-        <div className="sticky top-0 z-10 -mx-4 mb-2 flex items-center justify-between gap-2 bg-[color-mix(in_srgb,var(--lp-deep)_97%,transparent)] px-4 pb-2 pt-1 sm:-mx-6 sm:px-6">
+        <div
+          className={cn(
+            "sticky top-0 z-10 -mx-4 mb-2 flex items-center justify-between gap-2 bg-[color-mix(in_srgb,var(--lp-deep)_97%,transparent)] px-4 pb-2 pt-1 transition-all duration-300 sm:-mx-6 sm:px-6",
+            barGone &&
+              "pointer-events-none -translate-y-2 opacity-0"
+          )}
+          data-testid="chronoscope-details-bar"
+        >
           <p className="mono-label text-[9px] tracking-[0.2em]" style={{ color: accent }}>
             {idm?.id ?? civ?.i} · {t("THE FULL RECORD")}
           </p>
@@ -1441,6 +1525,27 @@ function DetailsSheet({
             <X className="size-4" aria-hidden="true" />
           </button>
         </div>
+
+        {/* the record's own artwork — shown WHOLE at the head: nothing
+            cropped, the plate in its full proportions (its own dark
+            behind it), the record reads with its face at hand */}
+        {artFile && (
+          <figure
+            className="overflow-hidden rounded-2xl border"
+            style={{
+              borderColor: `color-mix(in srgb, ${accent} 26%, var(--lp-edge))`,
+              background: "color-mix(in srgb, var(--lp-deep) 88%, #0d0a16)",
+            }}
+            data-testid="chronoscope-details-art"
+          >
+            <img
+              src={`/chronoscope/art/${artFile}`}
+              alt={`${recordId} — ${t("The record's artwork")}`}
+              className="mx-auto block max-h-[52dvh] w-full max-w-[560px] object-contain"
+              loading="lazy"
+            />
+          </figure>
+        )}
 
         {idm && (
           <div className="space-y-5 pb-2">

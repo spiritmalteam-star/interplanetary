@@ -85,10 +85,17 @@ export const maxDuration = 300;
 
 const LYRIA_FULL_MODEL = process.env.LYRIA_MODEL || "lyria-3.5";
 
-/* retired from the weave — the fixed half-minute clip door (kept so
-   older clients' status panels never meet a bare string) */
+/* the ladder's other rungs — the clip door (the fixed half-minute
+   engine) and the pro-preview door, so a renamed or resting engine
+   name never silences the music outright */
 const LYRIA_CLIP_MODEL = process.env.LYRIA_CLIP_MODEL || "lyria-3-clip-preview";
-void LYRIA_CLIP_MODEL;
+const LYRIA_PRO_MODEL = process.env.LYRIA_PRO_MODEL || "lyria-3-pro-preview";
+
+/* THE SOUND DOOR'S REST PASSAGE — the weave rides the same honest REST
+   transport the sky's own brush paints through (the passage every
+   working image already travels), so the music never depends on the
+   SDK's heavier machinery. The SDK stands behind as a last hand. */
+const INTERACTIONS_URL = "https://generativelanguage.googleapis.com/v1beta/interactions";
 
 /** The heaviest payload the sky can carry home (Vercel's response door). */
 const MAX_AUDIO_B64 = 4_300_000;
@@ -741,16 +748,147 @@ function extractWeave(
   return { audioB64, texts, mime, oversized: audioB64.length > maxB64 };
 }
 
+interface LyriaVerdict {
+  ok: boolean;
+  status: number;
+  detail: string;
+  apiStatus: string;
+  interaction?: unknown;
+}
+
+/** One honest REST call to the interactions door — the same transport
+    the images' brush already paints through. */
+async function lyriaRestCall(
+  model: string,
+  input: string | LyriaInputBlock[],
+  key: string,
+  timeoutMs: number
+): Promise<LyriaVerdict> {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const res = await fetch(INTERACTIONS_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-goog-api-key": key },
+      body: JSON.stringify({ model, input }),
+      signal: ctrl.signal,
+    });
+    const raw = await res.text();
+    if (!res.ok) {
+      let detail = raw.slice(0, 500);
+      let apiStatus = "";
+      try {
+        const j = JSON.parse(raw) as { error?: { message?: string; status?: string } };
+        if (j.error?.message) detail = j.error.message;
+        if (j.error?.status) apiStatus = j.error.status;
+      } catch {
+        /* the body was not the sky's usual error shape — the raw words stand */
+      }
+      return { ok: false, status: res.status, detail, apiStatus };
+    }
+    try {
+      return {
+        ok: true,
+        status: res.status,
+        detail: "",
+        apiStatus: "",
+        interaction: JSON.parse(raw),
+      };
+    } catch {
+      return {
+        ok: false,
+        status: 502,
+        detail: "the engine's answer could not be read",
+        apiStatus: "",
+      };
+    }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return {
+      ok: false,
+      status: 0,
+      detail: /abort|timeout/i.test(msg) ? "timeout" : `network: ${msg}`,
+      apiStatus: "",
+    };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/* THE WEAVE'S OWN LADDER — every rung the chamber knows is walked in
+   turn: the full engine, the clip door, the pro-preview door. A rung
+   is refused when the sky answers "not found" or "unsupported" (a
+   renamed or not-yet-enabled engine), when its quota rests (separate
+   engines carry separate allowances), or when its answer holds no
+   sound. A denied key or a malformed ask stops the walk — no rung
+   would heal those. The SDK stands behind the REST passage as a last
+   hand, so a cold sky is asked three ways before the verdict lands. */
 async function lyriaWeave(
   body: { model: string; input: string | LyriaInputBlock[] },
   key: string,
   timeoutMs: number,
   maxB64 = MAX_AUDIO_B64
 ): Promise<{ audioB64: string; texts: string[]; mime: string; oversized: boolean }> {
-  const client = new GoogleGenAI({ apiKey: key });
+  const rungs = Array.from(
+    new Set([body.model, LYRIA_FULL_MODEL, LYRIA_CLIP_MODEL, LYRIA_PRO_MODEL].filter(Boolean))
+  );
+  let last: LyriaVerdict | null = null;
+
+  for (const model of rungs) {
+    const verdict = await lyriaRestCall(model, body.input, key, timeoutMs);
+
+    if (verdict.ok) {
+      try {
+        const out = extractWeave(
+          verdict.interaction as unknown as Parameters<typeof extractWeave>[0],
+          maxB64
+        );
+        if (model !== body.model) {
+          console.error(
+            `[light-codes] model ${body.model} was refused — model ${model} answered`
+          );
+        }
+        return out;
+      } catch (err) {
+        /* the door opened but the answer held no sound — this rung
+           rests; the walk continues */
+        last = {
+          ok: false,
+          status: 502,
+          detail: err instanceof Error ? err.message : "no sound in the answer",
+          apiStatus: "",
+        };
+        continue;
+      }
+    }
+
+    last = verdict;
+    console.error(
+      `[light-codes] rung ${model} refused (${verdict.status || "no status"}): ${verdict.detail.slice(0, 200)}`
+    );
+
+    /* a denied key or a malformed ask — no rung would heal these */
+    if (
+      verdict.status === 403 ||
+      verdict.status === 401 ||
+      /API_KEY_INVALID|api key.*not valid|permission denied/i.test(verdict.detail)
+    ) {
+      throw mapLyriaError(verdict.status, verdict.detail, verdict.apiStatus);
+    }
+    if (
+      verdict.status === 400 &&
+      !/safety|blocked|prohibited/i.test(verdict.detail) &&
+      /invalid|required|malformed/i.test(verdict.detail)
+    ) {
+      throw mapLyriaError(verdict.status, verdict.detail, verdict.apiStatus);
+    }
+    /* safety refusals travel with the ask, not the engine — walk on
+       once, but if every rung refuses, the safety verdict speaks */
+  }
+
+  /* every REST rung rested — one last hand: the SDK's own passage */
   try {
-    /* the honest weave: one request, no silent retries — a costly
-       generation is never asked twice without the visitor's hand */
+    const client = new GoogleGenAI({ apiKey: key });
     const interaction = await client.interactions.create(
       {
         model: body.model,
@@ -765,57 +903,32 @@ async function lyriaWeave(
       interaction as unknown as Parameters<typeof extractWeave>[0],
       maxB64
     );
-  } catch (err) {
-    const e = err as {
-      status?: number;
-      message?: string;
-      code?: string;
-      body?: unknown;
-    };
-    const status = typeof e?.status === "number" ? e.status : 0;
-    /* the SDK wraps Google's own words inside body — unwrap them so the
-       honest verdict can name the real cause (an invalid key, a safety
-       refusal, an unsupported form) instead of the SDK's blank wrapper */
-    let detail = String(e?.message ?? "");
+  } catch (sdkErr) {
+    const e = sdkErr as { status?: number; message?: string; code?: string; body?: unknown };
+    const sdkStatus = typeof e?.status === "number" ? e.status : 0;
+    let sdkDetail = String(e?.message ?? "");
     try {
       const b = (e?.body ?? null) as unknown;
       const root = Array.isArray(b) ? b[0] : b;
-      const inner = (root as { error?: { message?: string; status?: string } } | null)
-        ?.error;
-      if (inner?.message) detail = `${inner.message} ${inner.status ?? ""}`;
-      else if (typeof b === "string" && b) detail = b;
+      const inner = (root as { error?: { message?: string; status?: string } } | null)?.error;
+      if (inner?.message) sdkDetail = `${inner.message} ${inner.status ?? ""}`;
     } catch {
-      /* the wrapper keeps its silence — the generic words stand */
+      /* the wrapper keeps its silence */
     }
-    if (status === 0 && /timeout|abort/i.test(detail)) {
-      throw new Error(
-        "The weave took longer than the chamber can hold. Rest, then ask again."
-      );
+    if (last && typeof last.status === "number" && (sdkStatus > last.status || !last)) {
+      last = { ok: false, status: sdkStatus, detail: sdkDetail, apiStatus: String(e?.code ?? "") };
     }
-    if (/network|fetch failed|ECONN/i.test(detail)) {
-      throw new Error("The chamber could not reach the sound engine. Try again in a breath.");
-    }
-    /* THE MODEL'S OWN LADDER — a door that answers "model not found"
-       (a renamed or not-yet-enabled engine name) hands the weave to
-       the chamber's other engine name once, so a renamed sky never
-       silences the music outright */
-    const mapped = mapLyriaError(status || 502, detail, String(e?.code ?? ""));
-    if (
-      (status === 404 || /not found|not supported|unsupported/i.test(detail)) &&
-      body.model !== LYRIA_CLIP_MODEL
-    ) {
-      console.error(
-        `[light-codes] model ${body.model} was refused (${status || "no status"}) — trying ${LYRIA_CLIP_MODEL}`
-      );
-      return lyriaWeave(
-        { ...body, model: LYRIA_CLIP_MODEL },
-        key,
-        timeoutMs,
-        maxB64
-      );
-    }
-    throw mapped;
   }
+
+  if (last && last.status === 0 && /timeout/i.test(last.detail)) {
+    throw new Error(
+      "The weave took longer than the chamber can hold. Rest, then ask again."
+    );
+  }
+  if (last && /network|fetch failed|ECONN/i.test(last.detail)) {
+    throw new Error("The chamber could not reach the sound engine. Try again in a breath.");
+  }
+  throw mapLyriaError(last?.status || 502, last?.detail ?? "", last?.apiStatus ?? "");
 }
 
 /* ------------------------- the four doors ------------------------- */
