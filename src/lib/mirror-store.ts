@@ -585,6 +585,15 @@ interface MirrorState {
   authOpen: boolean;
   authMode: "signin" | "register";
   accountOpen: boolean;
+  /* THE WELCOME WITHOUT A WALL — the eight-slide tour dialog and the
+     readable /about material, both reachable from the crown's own
+     About Us hand and from the ?room=about address. */
+  tourOpen: boolean;
+  aboutOpen: boolean;
+  openTour: () => void;
+  closeTour: () => void;
+  openAbout: () => void;
+  closeAbout: () => void;
 
   /* The visitor's own light — the wallet (planTier + both buckets),
      the unlock modal and its cause. The modal opens by itself when any
@@ -1703,6 +1712,8 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   meStatus: "loading" as "loading" | "ready",
   googleConfigured: false,
   accountOpen: false,
+  tourOpen: false,
+  aboutOpen: false,
   authOpen: false,
   marketOpen: false,
   workspaceZoomed: false,
@@ -3827,6 +3838,11 @@ export const useMirror = create<MirrorState>()((set, get) => ({
 
   openAccount: () => set({ accountOpen: true, mobileNavOpen: false }),
   closeAccount: () => set({ accountOpen: false }),
+
+  openTour: () => set({ tourOpen: true, mobileNavOpen: false }),
+  closeTour: () => set({ tourOpen: false }),
+  openAbout: () => set({ aboutOpen: true, tourOpen: false, mobileNavOpen: false }),
+  closeAbout: () => set({ aboutOpen: false }),
 
   signOut: async () => {
     try {

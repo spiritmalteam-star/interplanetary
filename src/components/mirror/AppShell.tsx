@@ -23,6 +23,8 @@ import { AstralJobsModal } from "./AstralJobsModal";
 import { DossierModal } from "./DossierModal";
 import { SettingsModal } from "./SettingsModal";
 import { SpeciesModal } from "./SpeciesModal";
+import { WelcomeTour, AboutRoom } from "./WelcomeTour";
+import { UrlRooms } from "./UrlRooms";
 
 /* THE LAZY ROOM — the technology table is a modal of its own: its
    code only rides along when first shown, never in the frame's
@@ -75,6 +77,9 @@ export default function AppShell({
       {/* the purse keeper rides above every world — the 402 watch, the
           Stripe greeting, the unlock modal */}
       <WalletGuard />
+      {/* the real address layer — every room's own ?room= address,
+          refreshed links land true, Back / Forward walk the visit */}
+      <UrlRooms />
       <AppShellViews
         bare={bare}
         onExpand={onExpand}
@@ -241,6 +246,8 @@ function AppShellViews({
       <AuthModal />
       <AccountModal />
       <BranchHub />
+      <WelcomeTour />
+      <AboutRoom />
     </>
   );
 

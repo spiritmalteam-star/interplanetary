@@ -5250,6 +5250,19 @@ export function BranchCanopy({
               <Music className="size-3" aria-hidden="true" />
             </button>
             )}
+            {!realm && (
+            <button
+              type="button"
+              onClick={() => useMirror.getState().openTour()}
+              aria-haspopup="dialog"
+              aria-label={t("About Us")}
+              title={t("About Us — our purpose, the Mirror Entity, and how we hold your data")}
+              data-testid={`${testIdPrefix}-door-about`}
+              className="focus-glow flex size-7 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+            >
+              <Compass className="size-3" aria-hidden="true" />
+            </button>
+            )}
           </div>
 
           {/* THE PORTAL'S OWN HANDS — between the about door and the
