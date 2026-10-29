@@ -142,6 +142,10 @@ export interface ScopeSession {
 
 export type { RemedyKind };
 
+/* THE QUIET PULSE'S MEMORY — when the passage was last glanced at
+   (the throttle that keeps the chat from paying a round-trip per reply) */
+let lastMeRefresh = 0;
+
 export interface RemedyResult {
   kind: RemedyKind;
   title: string;
@@ -590,7 +594,7 @@ interface MirrorState {
   openWalletModal: (notice?: WalletNotice | null) => void;
   closeWalletModal: () => void;
 
-  refreshMe: () => Promise<void>;
+  refreshMe: (force?: boolean) => Promise<void>;
   setMe: (user: MeUser | null) => void;
   openAuth: (mode?: "signin" | "register") => void;
   closeAuth: () => void;
@@ -3527,15 +3531,9 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         },
       }));
 
-      /* THE VISION GIFT — the mirror itself decided this reply wants
-         a painting (ChatGPT-like understanding). The visualization
-         engine paints it silently beneath the words. */
-      if (typeof data.vision === "string" && data.vision.trim()) {
-        void get().askScopeVisual(mode, data.vision.trim(), {
-          id: replyId,
-          request: data.vision.trim(),
-        });
-      }
+      /* THE VISION GIFT IS RETIRED — the consent law: the mirror never
+         paints on its own initiative. An image needs the visitor's
+         press on Crystallize or their own typed ask. */
     } catch (err) {
       /* THE QUIET FIELD LAW — the visitor's words are never lost to a
          failed transmission: the question rests in the channel marked
@@ -3732,7 +3730,14 @@ export const useMirror = create<MirrorState>()((set, get) => ({
 
   /* ------------- The passage — account, free door, profile ------------- */
 
-  refreshMe: async () => {
+  refreshMe: async (force?: boolean) => {
+    /* THE QUIET PULSE — the passage's glance is throttled: at most one
+       glance every twelve seconds (the name and the purse change
+       slowly), unless a door asks to be told at once. The chat's every
+       reply no longer pays a round-trip of its own. */
+    const now = Date.now();
+    if (!force && now - lastMeRefresh < 12_000) return;
+    lastMeRefresh = now;
     try {
       const res = await fetch("/api/auth/me");
       if (!res.ok) {

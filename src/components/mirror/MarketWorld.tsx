@@ -301,49 +301,29 @@ function MyOfferings() {
   );
 }
 
-/* THE WORLD'S GATE — the anonymous visitor meets the passage ask */
-function MarketGate() {
+/* THE PASSAGE HAND — the sign-in ask that can always be seen: the
+   world lays itself down first (the passage modal rests beneath it),
+   then the ask rises. Used wherever a hand needs a keeper. */
+function SignInHere() {
   const t = useT();
   const openAuth = useMirror((s) => s.openAuth);
+  const closeMarket = useMirror((s) => s.closeMarket);
   return (
-    <div className="flex flex-1 items-center justify-center px-5 pb-24">
-      <div
-        className="w-full max-w-[440px] rounded-3xl border border-[rgba(196,181,253,0.2)] p-8 text-center"
-        style={{
-          background:
-            "linear-gradient(165deg, rgba(76,29,149,0.4), rgba(30,17,54,0.72))",
-          boxShadow: "0 30px 80px -30px rgba(88,28,135,0.8)",
-        }}
-        data-testid="market-gate"
-      >
-        <span
-          className="mx-auto flex size-14 items-center justify-center rounded-2xl"
-          style={{ background: VIOLET_GEM, boxShadow: "0 8px 30px -8px rgba(168,85,247,0.7)" }}
-        >
-          <Store className="size-6 text-[#f3e8ff]" aria-hidden="true" />
-        </span>
-        <h2 className="mt-5 font-serif text-[22px] font-semibold text-[#f5f3ff]">
-          {t("The Market")}
-        </h2>
-        <p className="mt-2.5 text-[13.5px] leading-relaxed text-[#c4b5fd]">
-          {t(
-            "A hall of the house's own creations — woven books, songs, visions and studies, each offered by its maker. Sign in to walk among them."
-          )}
-        </p>
-        <button
-          type="button"
-          onClick={() => openAuth("signin")}
-          data-testid="market-gate-signin"
-          className="focus-glow mt-6 inline-flex items-center gap-2 rounded-full px-6 py-2.5 text-[13px] font-medium text-[#f3e8ff] transition-all duration-300 hover:brightness-110"
-          style={{
-            background: VIOLET_GEM,
-            boxShadow: "0 6px 24px -8px rgba(168,85,247,0.8)",
-          }}
-        >
-          {t("Sign in")}
-        </button>
-      </div>
-    </div>
+    <button
+      type="button"
+      onClick={() => {
+        closeMarket();
+        openAuth("signin");
+      }}
+      data-testid="market-gate-signin"
+      className="focus-glow inline-flex shrink-0 items-center gap-2 rounded-full px-5 py-2 text-[12.5px] font-medium text-[#f3e8ff] transition-all duration-300 hover:brightness-110"
+      style={{
+        background: VIOLET_GEM,
+        boxShadow: "0 6px 24px -8px rgba(168,85,247,0.8)",
+      }}
+    >
+      {t("Sign in")}
+    </button>
   );
 }
 
@@ -398,10 +378,8 @@ export function MarketWorld() {
 
   useEffect(() => {
     if (!open) return;
-    if (!me) {
-      setPayload(null);
-      return;
-    }
+    /* THE OPEN HALL — every visitor may walk among the works; the
+       passage is asked only when something is offered or bought. */
     void load();
   }, [open, me, load]);
 
@@ -542,13 +520,32 @@ export function MarketWorld() {
 
       {/* the hall's floor */}
       <div className="nice-scroll relative z-10 h-[calc(100%-61px)] overflow-y-auto overscroll-contain">
-        {!me ? (
-          <MarketGate />
-        ) : (
-          <div className="mx-auto w-full max-w-[1180px] px-4 pb-16 pt-5 sm:px-6">
+        <div className="mx-auto w-full max-w-[1180px] px-4 pb-16 pt-5 sm:px-6">
+          {me ? (
             <MyOfferings />
+          ) : (
+            /* THE OPEN DOOR'S RIBBON — the hall is walked freely; the
+               passage is asked only where a hand is needed (offering,
+               buying). The layering law: the world lays itself down so
+               the ask can be seen. */
+            <div
+              className="mb-5 flex flex-col items-center justify-between gap-3 rounded-2xl border border-[rgba(196,181,253,0.22)] px-4 py-3.5 sm:flex-row"
+              style={{
+                background:
+                  "linear-gradient(165deg, rgba(76,29,149,0.35), rgba(30,17,54,0.6))",
+              }}
+              data-testid="market-visitor-ribbon"
+            >
+              <p className="text-center text-[13px] leading-relaxed text-[#c4b5fd] sm:text-left">
+                {t(
+                  "Walk among the works freely — sign in to offer your own creations."
+                )}
+              </p>
+              <SignInHere />
+            </div>
+          )}
 
-            <header className="mt-2 flex flex-col items-center text-center">
+          <header className="mt-2 flex flex-col items-center text-center">
               <p className="max-w-[560px] text-[13.5px] leading-relaxed text-[#c4b5fd]">
                 {t(
                   "Every work here was offered by its maker's own hand — the book you weave tonight may hang here tomorrow."
@@ -640,7 +637,6 @@ export function MarketWorld() {
               )}
             </div>
           </div>
-        )}
       </div>
     </div>,
     document.body

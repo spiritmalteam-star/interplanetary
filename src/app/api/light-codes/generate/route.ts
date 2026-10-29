@@ -832,10 +832,15 @@ async function lyriaWeave(
   const rungs = Array.from(
     new Set([body.model, LYRIA_FULL_MODEL, LYRIA_CLIP_MODEL, LYRIA_PRO_MODEL].filter(Boolean))
   );
+  /* THE BUDGET LAW — the ladder must fit inside the request's own life:
+     the budget is shared across every rung plus the SDK's last hand, so
+     the whole walk can never outlive the chamber that carries it (a
+     weave killed by the platform takes its light and its silence both). */
+  const perRung = Math.max(45_000, Math.floor(timeoutMs / (rungs.length + 1)));
   let last: LyriaVerdict | null = null;
 
   for (const model of rungs) {
-    const verdict = await lyriaRestCall(model, body.input, key, timeoutMs);
+    const verdict = await lyriaRestCall(model, body.input, key, perRung);
 
     if (verdict.ok) {
       try {
@@ -895,7 +900,7 @@ async function lyriaWeave(
         input: body.input,
       } as Parameters<typeof client.interactions.create>[0],
       {
-        timeout_ms: timeoutMs,
+        timeout_ms: perRung,
         retries: { strategy: "none" },
       } as Parameters<typeof client.interactions.create>[1]
     );
@@ -1113,7 +1118,11 @@ async function postImpl(
         const durableKeeper = Boolean(
           meter && !meter.userId.startsWith("stateless:")
         );
-        if (durableKeeper && meter && !isLoop && partIndex <= 1) {
+        if (durableKeeper && meter && partIndex <= 1) {
+          /* THE JOURNEY IS KEPT TOO — the endless loop's first part lays
+             its row as well, so an interrupted journey (a walk that
+             never returns) can be swept honestly and its weigh given
+             back; the continuation parts ride free as before. */
           try {
             /* the light this weigh drew — read from the ledger row the
                meter laid; when no row exists, nothing was drawn (the
@@ -1378,16 +1387,18 @@ async function postImpl(
         noteLcError(code, err instanceof Error ? err.message : "unknown");
         /* the weave stumbled — the job row is spoken to honestly. The
            light's RETURN is the meter's own law (any ≥400 verdict gives
-           the drawn credits back before the door closes); the row's
-           refunded mark only records that law's effect, so a later
-           sweep can never give the same light twice. */
+           the drawn credits back, now carried beyond the answer by
+           `after`); the row's refunded mark stays HUMBLE — false until
+           a return is certain — so the sweep can heal any return the
+           sky's nap ever lost, and can never give the same light twice
+           (the wallet's refund is idempotent by the ledger's own mark). */
         if (job) {
           try {
             await db.generationJob.updateMany({
               where: { id: job.id, status: "processing" },
               data: {
                 status: "failed",
-                refunded: job.drawn > 0,
+                refunded: false,
                 result: {
                   error: (err instanceof Error ? err.message : "the weave stumbled").slice(0, 400),
                   code,

@@ -626,7 +626,7 @@ export default function Chronoscope() {
           data-testid="chronoscope-instrument"
           className="fixed inset-0 z-[80] overflow-y-auto overscroll-contain bg-[color-mix(in_srgb,var(--lp-deep)_96%,#0d0a16)]"
         >
-          <div className="mx-auto flex min-h-full w-full max-w-[1100px] flex-col px-3 pb-[max(env(safe-area-inset-bottom),12px)] pt-3 sm:px-6 lg:max-w-[1780px]">
+          <div className="mx-auto flex min-h-full w-full max-w-[1100px] flex-col px-3 pb-[max(env(safe-area-inset-bottom),12px)] pt-3 sm:px-6 lg:max-w-[1560px]">
             {/* ------------------- the top edge ------------------- */}
             <div className="flex flex-wrap items-center gap-2 py-1">
               <div className="flex items-center gap-1.5">
@@ -886,15 +886,17 @@ export default function Chronoscope() {
                   up and down to read it. */}
               <article
                 data-testid="chronoscope-card"
-                className="relative z-10 w-full max-w-[680px] overflow-hidden rounded-2xl border bg-[color-mix(in_srgb,var(--lp-veil-solid)_88%,transparent)] shadow-[0_24px_80px_-32px_rgba(20,12,40,0.5)] lg:grid lg:max-w-[1720px] lg:grid-cols-[minmax(270px,1fr)_minmax(560px,1.85fr)_minmax(300px,1.12fr)] lg:items-stretch"
+                className="relative z-10 w-full max-w-[680px] overflow-hidden rounded-2xl border bg-[color-mix(in_srgb,var(--lp-veil-solid)_88%,transparent)] shadow-[0_24px_80px_-32px_rgba(20,12,40,0.5)] lg:grid lg:max-w-[1560px] lg:grid-cols-[minmax(240px,0.9fr)_minmax(480px,1.8fr)_minmax(280px,1.1fr)] lg:items-stretch"
                 style={{ borderColor: `color-mix(in srgb, ${accent} 42%, var(--lp-edge))` }}
               >
                 {/* the card's face — one primary image decodes here.
-                    Desktop: the artwork takes the MIDDLE column and
-                    stretches with the record. */}
+                    Desktop: the artwork takes the MIDDLE column, in the
+                    SAME LINE as both side sections, filling its whole
+                    cell (cover — never a grey band), the record's main
+                    focus. One single row: no empty cell beneath. */}
                 <div
                   className={cn(
-                    "relative aspect-[3/2] w-full overflow-hidden lg:order-2 lg:row-span-2 lg:aspect-auto lg:border-x",
+                    "relative aspect-[3/2] w-full overflow-hidden lg:order-2 lg:border-x",
                     readyFile && "cursor-zoom-in"
                   )}
                   style={{
@@ -912,7 +914,7 @@ export default function Chronoscope() {
                       fill
                       unoptimized
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 680px, 820px"
-                      className="object-cover lg:object-contain lg:object-center"
+                      className="object-cover"
                       priority={role === 0}
                     />
                   ) : (
@@ -1036,7 +1038,11 @@ export default function Chronoscope() {
                       type="button"
                       onClick={() => setDetailsOpen(true)}
                       data-testid="chronoscope-details"
-                      className="focus-glow inline-flex min-h-[44px] items-center rounded-full border border-[var(--lp-edge)] px-4 text-[12.5px] text-[var(--lp-head)] transition-colors hover:border-[color-mix(in_srgb,var(--lp-violet)_55%,transparent)]"
+                      /* THE PHONE'S OWN LAW — no second page on the
+                         phone: the card itself carries the whole record
+                         (the deeper chapters ride beneath, arranged
+                         once), so the visitor simply keeps scrolling. */
+                      className="focus-glow hidden min-h-[44px] items-center rounded-full border border-[var(--lp-edge)] px-4 text-[12.5px] text-[var(--lp-head)] transition-colors hover:border-[color-mix(in_srgb,var(--lp-violet)_55%,transparent)] sm:inline-flex"
                     >
                       {t("Open the full record")}
                     </button>
@@ -1052,7 +1058,7 @@ export default function Chronoscope() {
                     (entity · geometry · locus · voices on the other
                     wing). Desktop: the LEFT column, the roles' own
                     shore beside the artwork. */}
-                <div className="p-4 pt-0 sm:p-5 sm:pt-0 lg:order-1 lg:row-span-2 lg:flex lg:flex-col lg:py-5 lg:pl-5 lg:pr-0">
+                <div className="p-4 pt-0 sm:p-5 sm:pt-0 lg:order-1 lg:flex lg:flex-col lg:py-5 lg:pl-5 lg:pr-0">
                   <div className="mt-3.5 grid grid-cols-4 gap-1 border-t border-[var(--lp-edge)] pt-3 lg:mt-0 lg:grid-cols-2 lg:border-t-0 lg:pt-0" role="tablist" aria-label={t("The profile's four faces")}>
                     {(isIdm
                       ? [t("Entity"), t("Geometry"), t("Locus"), t("Voices")]
@@ -1092,6 +1098,67 @@ export default function Chronoscope() {
                     idm={idmRecord}
                     t={t}
                   />
+                </div>
+
+                {/* THE PHONE'S WHOLE RECORD — on mobile there is no
+                    second page: the deeper chapters ride beneath the
+                    card itself, arranged once (the desk's own fields,
+                    society, chronicle, anatomy and the three panels) —
+                    the visitor simply keeps scrolling, nothing repeats,
+                    nothing is withheld. Desktop keeps the sheet. */}
+                <div className="space-y-5 border-t border-[var(--lp-edge)] p-4 pb-6 sm:p-5 lg:hidden">
+                  {civRecord && (
+                    <>
+                      <FieldGrid
+                        rows={[
+                          [t("Star system"), civRecord.star],
+                          [t("Sector"), civRecord.sector],
+                          [t("Coordinates"), civRecord.coords],
+                          [t("Distance"), typeof civRecord.d === "number" ? `${fmt(civRecord.d)} LY` : (civRecord.d ?? undefined) as string | undefined],
+                          [t("Homeworld"), civRecord.home],
+                          [t("Kinship"), civRecord.kinship],
+                          [t("Development"), civRecord.kard],
+                          [t("Biochemistry"), civRecord.bio],
+                          [t("Morphology"), civRecord.morph],
+                          [t("Gravity"), civRecord.g != null ? `${civRecord.g} g` : undefined],
+                          [t("Atmosphere"), civRecord.atm],
+                          [t("Governance"), civRecord.gov],
+                          [t("Communication"), civRecord.comm],
+                          [t("Population"), civRecord.pop],
+                          [t("Catalogued"), civRecord.year ? String(civRecord.year) : undefined],
+                        ]}
+                      />
+                      <Prose title={t("Society & architecture")} body={civRecord.society} />
+                      <Prose title={t("Chronicle")} body={civRecord.chron} />
+                      <Prose title={t("Anatomy & integration")} body={civRecord.anat} />
+                      <TechPanel civ={civRecord} t={t} />
+                      <BiotaPanel civ={civRecord} t={t} />
+                      <VistaPanel civ={civRecord} t={t} />
+                      {civRecord.q?.t && (
+                        <QuoteBlock text={civRecord.q.t} source={civRecord.q.s} />
+                      )}
+                    </>
+                  )}
+                  {idmRecord && (
+                    <>
+                      <FieldGrid
+                        rows={[
+                          [t("Classification"), idmRecord.classification],
+                          [t("Dimensionality"), idmRecord.dimensionality],
+                          [t("Resonance substrate"), idmRecord.resonanceSubstrate],
+                          [t("Phenomenological locus"), idmRecord.phenomenologicalLocus],
+                          [t("Communication mode"), idmRecord.communicationMode],
+                          [t("Ontological stability"), idmRecord.ontologicalStability],
+                        ]}
+                      />
+                      <Prose title={t("Phenomenology & encounters")} body={idmRecord.phenomenologyAndEncounters} />
+                      <Prose title={t("Hyper-geometric anatomy")} body={idmRecord.hyperGeometricAnatomy} />
+                      <Prose title={t("Cognitive impact & messages")} body={idmRecord.cognitiveImpactAndMessages} />
+                      {idmRecord.archivalQuote && (
+                        <QuoteBlock text={idmRecord.archivalQuote} source={idmRecord.quoteAttribution} />
+                      )}
+                    </>
+                  )}
                 </div>
               </article>
             </div>
@@ -1492,7 +1559,7 @@ function DetailsSheet({
 
   return (
     <div
-      className="fixed inset-x-0 bottom-0 top-auto z-[90] flex max-h-[88dvh] items-stretch justify-center sm:items-end"
+      className="fixed inset-x-0 bottom-0 top-auto z-[90] flex max-h-[94dvh] items-stretch justify-center sm:items-center sm:p-5"
       role="dialog"
       aria-modal="true"
       aria-label={t("The full record")}
@@ -1501,7 +1568,7 @@ function DetailsSheet({
       <div
         ref={sheetRef}
         onScroll={onScroll}
-        className="nice-scroll w-full max-w-[880px] overflow-y-auto overscroll-contain rounded-t-3xl border border-b-0 bg-[color-mix(in_srgb,var(--lp-deep)_97%,transparent)] px-4 pb-8 pt-3 shadow-[0_-20px_60px_-30px_rgba(10,6,24,0.6)] sm:rounded-3xl sm:px-6 sm:pb-10"
+        className="nice-scroll w-full max-w-[880px] overflow-y-auto overscroll-contain rounded-t-3xl border border-b-0 bg-[color-mix(in_srgb,var(--lp-deep)_97%,transparent)] px-4 pb-8 pt-3 shadow-[0_-20px_60px_-30px_rgba(10,6,24,0.6)] sm:rounded-3xl sm:border sm:px-6 sm:pb-10 lg:max-w-[1080px]"
         style={{ borderColor: `color-mix(in srgb, ${accent} 30%, var(--lp-edge))` }}
       >
         <div
@@ -1541,7 +1608,7 @@ function DetailsSheet({
             <img
               src={`/chronoscope/art/${artFile}`}
               alt={`${recordId} — ${t("The record's artwork")}`}
-              className="mx-auto block max-h-[52dvh] w-full max-w-[560px] object-contain"
+              className="mx-auto block max-h-[42dvh] w-full max-w-[720px] object-contain"
               loading="lazy"
             />
           </figure>
@@ -1571,33 +1638,51 @@ function DetailsSheet({
 
         {civ && (
           <div className="space-y-5 pb-2">
-            <Prose title={t("Overview")} body={civ.thesis} />
+            {/* THE DESK ALREADY SHOWS IT — on desktop the opening
+                thesis, the identity table's own eight fields, the
+                society's words and the quote stand on the desk spread;
+                the sheet carries only what the desk does not (nothing
+                ever reads twice). On the phone the sheet is the record's
+                only deep page, so it keeps every word. */}
+            <div className="lg:hidden">
+              <Prose title={t("Overview")} body={civ.thesis} />
+            </div>
             <FieldGrid
               rows={[
-                [t("Star system"), civ.star],
                 [t("Sector"), civ.sector],
                 [t("Coordinates"), civ.coords],
                 [t("Distance"), typeof civ.d === "number" ? `${fmt(civ.d)} LY` : (civ.d ?? undefined) as string | undefined],
-                [t("Homeworld"), civ.home],
-                [t("Kinship"), civ.kinship],
-                [t("Development"), civ.kard],
                 [t("Biochemistry"), civ.bio],
                 [t("Morphology"), civ.morph],
-                [t("Gravity"), civ.g != null ? `${civ.g} g` : undefined],
-                [t("Atmosphere"), civ.atm],
-                [t("Governance"), civ.gov],
                 [t("Communication"), civ.comm],
-                [t("Population"), civ.pop],
                 [t("Catalogued"), civ.year ? String(civ.year) : undefined],
               ]}
             />
-            <Prose title={t("Society & architecture")} body={civ.society} />
+            <div className="lg:hidden">
+              <FieldGrid
+                rows={[
+                  [t("Star system"), civ.star],
+                  [t("Homeworld"), civ.home],
+                  [t("Kinship"), civ.kinship],
+                  [t("Development"), civ.kard],
+                  [t("Gravity"), civ.g != null ? `${civ.g} g` : undefined],
+                  [t("Atmosphere"), civ.atm],
+                  [t("Governance"), civ.gov],
+                  [t("Population"), civ.pop],
+                ]}
+              />
+              <Prose title={t("Society & architecture")} body={civ.society} />
+            </div>
             <Prose title={t("Chronicle")} body={civ.chron} />
             <Prose title={t("Anatomy & integration")} body={civ.anat} />
             <TechPanel civ={civ} t={t} />
             <BiotaPanel civ={civ} t={t} />
             <VistaPanel civ={civ} t={t} />
-            {civ.q?.t && <QuoteBlock text={civ.q.t} source={civ.q.s} />}
+            {civ.q?.t && (
+              <div className="lg:hidden">
+                <QuoteBlock text={civ.q.t} source={civ.q.s} />
+              </div>
+            )}
           </div>
         )}
       </div>

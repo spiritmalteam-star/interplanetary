@@ -155,7 +155,7 @@ export function AuthModal() {
         return;
       }
       setMe(data.user);
-      void refreshMe();
+      void refreshMe(true); // a passage opened — the glance must be fresh
       closeAuth();
       toast.success(
         view === "register"

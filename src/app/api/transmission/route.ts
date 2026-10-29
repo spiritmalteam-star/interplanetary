@@ -151,23 +151,10 @@ OUTPUT FORMAT
 Return STRICT JSON only, with no markdown fences and no text outside the JSON:
 {"classification":"<ONE OF THE FIVE VALUES ABOVE>","transmission":"<the reply text, with \\n\\n between paragraphs>"}`;
 
-/* the model's own eye — the ChatGPT-like understanding of when a
-   reply wants words and when it wants a painting. The marker is
-   stripped before the visitor sees anything; the visualization
-   engine paints beneath the words. NEVER in the book weaving (the
-   instrument keeps the desk) and never on live voice calls. */
-const VISION_RULE = `
-
-THE VISION GIFT (the Mirror's own eye — read with care):
-If the visitor wishes to SEE — however they say it — end your reply with ONE final line, after everything else, in this exact shape:
-[VISION: <a rich, detailed English painting prompt describing subject, atmosphere, light and style>]
-The line is invisible machinery — the visitor never reads it; the painting appears beneath your words.
-THE WISH HAS A THOUSAND FACES (notice them all): "show me", "draw", "paint", "as an image", "a picture of", "I want to see", "I wish I could see", "can I see", "let me see", "what would it look like", "I imagine it as", "visualize", "render", "crystallize", "I'd love a picture", "make it an image", a description that clearly asks to behold something, or any other phrasing whose true aim is to SEE the thing. If a wish to see is present in any shape, grant it — do not wait for the literal word "image".
-The laws that keep it honest:
-- The wish must be the visitor's OWN, in THIS message (or a direct answer to your questions). A passing mention of images, pictures or dreaming inside a longer conversation is NOT a wish — a story about the past ("when I drew as a child"), a refusal ("no images please") and talk about the machinery are never wishes.
-- ONE wish, ONE vision line: at most one per reply, and it must be the reply's final line.
-- NEVER for prayers, rites, lists, instructions, emotional support, healing guidance or the making of books.
-- Never mention the line, the painting or the machinery inside the transmission words themselves.`;
+/* THE CONSENT LAW — no vision rule travels in the prompt any more:
+   an image is born only when the visitor presses Crystallize or asks
+   through their own input. The mirror never paints on its own
+   initiative, and no marker is ever asked of the model. */
 
 const SYSTEM_PROMPT = `You are "the Mirror Entity" of the Mirror Entity Digital Chamber — a translational presence devoted to the one scope it is tuned to. A per-scope SPECIALIZATION instruction is provided with each question; it is AUTHORITATIVE: it defines your expertise, your domain and your voice for this channel.
 
@@ -386,7 +373,10 @@ function historyMessages(raw: unknown): { role: "user" | "assistant"; content: s
 
 export const POST = meterRoute("transmission", postImpl);
 
-async function postImpl(req: NextRequest): Promise<NextResponse> {
+async function postImpl(
+  req: NextRequest,
+  ctx: { visitor: Awaited<ReturnType<typeof resolveVisitor>> }
+): Promise<NextResponse> {
   try {
     const body = await req.json().catch(() => null);
     const query: unknown = body?.query;
@@ -402,9 +392,11 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
       );
     }
 
-    /* everything is free — the visitor is only named, so the
-       transmission can rest in their own cosmic library */
-    const visitor = await resolveVisitor(req);
+    /* THE VISITOR TRAVELS WITH THE DOOR — the meter already named this
+       keeper (and stamped any fresh anonymous cookie onto the request);
+       resolving them a second time would pay one more hall's wait for
+       the same name. */
+    const visitor = ctx.visitor;
 
     const zai = await ZAI.create();
 
@@ -490,11 +482,7 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
                   REMEMBRANCE_LAW +
                   walkerDepthLine(body?.depth) +
                   walkLine(body?.walk) +
-                  (body?.live === true
-                    ? LIVE_CALL_BLOCK
-                    : body?.artifact === "book"
-                      ? ""
-                      : VISION_RULE),
+                  (body?.live === true ? LIVE_CALL_BLOCK : ""),
         },
         ...historyMessages(body?.history),
         {
@@ -531,27 +519,15 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
       );
     }
 
-    /* the model's own vision — a trailing [VISION: prompt] marker is
-       stripped from the words and handed to the visualization engine,
-       which paints it beneath the reply (ChatGPT-like seeing). Never
-       in the book weaving, never on live calls. EVERY marker is
-       stripped — the first becomes the vision, any further ones the
-       model multiplied are machinery leaking into the visitor's eyes
-       and are removed without mercy. */
-    let vision: string | null = null;
-    if (body?.artifact !== "book" && body?.live !== true) {
-      const visionMatches = [
-        ...transmission.matchAll(/\[VISION\s*:\s*([^\]]{8,900})\]/gi),
-      ];
-      if (visionMatches.length > 0) {
-        vision = visionMatches[0][1].trim();
-        transmission = transmission
-          .replace(/\s*\[VISION\s*:[^\]]{8,900}\]\s*/gi, " ")
-          .replace(/[ \t]+\n/g, "\n")
-          .replace(/\n{3,}/g, "\n\n")
-          .trim();
-      }
-    }
+    /* THE CONSENT LAW'S QUIET SWEEP — if an older habit of the model
+       ever leaves a marker behind, it is stripped from the visitor's
+       eyes; nothing is painted from it. The atelier wakes only at the
+       visitor's own hand (Crystallize) or their own typed ask. */
+    transmission = transmission
+      .replace(/\s*\[VISION\s*:[^\]]{8,900}\]\s*/gi, " ")
+      .replace(/[ \t]+\n/g, "\n")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
 
     /* the transmission passed — lay it in the visitor's own library
        (the Forge keeps the Invent sector, the main scopes the Observatory).
@@ -572,7 +548,6 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
       NextResponse.json({
         transmission,
         classification,
-        ...(vision ? { vision } : {}),
         createdAt: new Date().toISOString(),
       }),
       visitor

@@ -84,7 +84,7 @@ export function WalletGuard() {
                offers a sign-in (not credit packs that would 401 again) */
             const state = useMirror.getState();
             if (state.me && !state.me.email.startsWith("anon:")) {
-              void state.refreshMe();
+              void state.refreshMe(true); // the truth, told at once
             }
             /* the modal offers one — and speaks the purse's true
                remainder, never a pretended zero */
@@ -136,7 +136,7 @@ export function WalletGuard() {
       }
     });
     void useMirror.getState().refreshWallet();
-    void useMirror.getState().refreshMe();
+    void useMirror.getState().refreshMe(true); // lights landed — fresh glance
   }, []);
 
   return <CreditsNeededModal open={open} onClose={closeWalletModal} />;

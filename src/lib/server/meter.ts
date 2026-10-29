@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { ANON_COOKIE, isKeeperFree, resolveVisitor, withAnonCookie, type Visitor } from "@/lib/server/access";
 import { costOf } from "@/lib/server/costs";
 import { creditsEnforced, spendCredits } from "@/lib/server/credits";
@@ -135,15 +135,26 @@ export function meterRoute(operation: string, handler: MeteredHandler) {
         }
       }
 
-      if (!userId.startsWith("stateless:")) {
-        try {
-          const provisions = await ensureVisitorProvisions(userId);
-          workspaceId = provisions.workspaceId;
-          planLimit = Math.max(GATES.ai.limit, provisions.plan.rateLimitPerMinute);
-        } catch {
-          /* provisions rest when the database rests — the world stays open */
-        }
+      /* THE PARALLEL HALL — the provisions and the dynamic weigh (the
+         body's own per-ask price) run side by side: they never depend
+         on one another, so the door answers after one hall's wait. */
+      const [provisionsRes, dynamicWeighRes] = await Promise.allSettled([
+        userId.startsWith("stateless:")
+          ? Promise.resolve(null)
+          : ensureVisitorProvisions(userId),
+        bodyWeighFor(operation, req),
+      ]);
+      if (provisionsRes.status === "fulfilled" && provisionsRes.value) {
+        workspaceId = provisionsRes.value.workspaceId;
+        planLimit = Math.max(
+          GATES.ai.limit,
+          provisionsRes.value.plan.rateLimitPerMinute
+        );
+      } else if (provisionsRes.status === "rejected") {
+        /* provisions rest when the database rests — the world stays open */
       }
+      const dynamicWeigh =
+        dynamicWeighRes.status === "fulfilled" ? dynamicWeighRes.value : null;
 
       /* the flood-gate: per identity, sized by plan */
       const gate = rateLimit(`ai:${userId}`, { limit: planLimit, windowMs: GATES.ai.windowMs });
@@ -192,7 +203,6 @@ export function meterRoute(operation: string, handler: MeteredHandler) {
          is still recorded below, never billed. When a door stumbles,
          the exact draw is refunded. */
       const flatAction = WALLET_OPERATIONS[operation];
-      const dynamicWeigh = await bodyWeighFor(operation, req);
       const weigh = flatAction
         ? {
             actionType: flatAction,
@@ -339,11 +349,17 @@ export function meterRoute(operation: string, handler: MeteredHandler) {
 
       const res = await handler(req, ctx);
 
-      /* a stumbling door gives the light back — any 4xx/5xx refunds */
+      /* a stumbling door gives the light back — any 4xx/5xx refunds.
+         THE REFUND RIDES AFTER THE ANSWER — `after` keeps the promise
+         alive beyond the response freeze, so a serverless nap can
+         never eat a refund (no one pays for a silence). */
       if (walletLedgerId && res.status >= 400) {
-        void refundWalletCredits(userId, walletLedgerId);
+        const refundLedger = walletLedgerId;
         walletSpent = 0;
         walletLedgerId = null;
+        after(() =>
+          refundWalletCredits(userId, refundLedger).catch(() => undefined)
+        );
       }
 
       /* ---------- the weighing: record & deduct after success ---------- */
@@ -380,16 +396,23 @@ export function meterRoute(operation: string, handler: MeteredHandler) {
         charged = totalCost;
       }
 
-      await recordUsage({
-        userId,
-        workspaceId,
-        operation,
-        provider: "none",
-        success,
-        error: success ? null : `http_${res.status}`,
-        creditsCharged: charged + walletSpent,
-        latencyMs: Date.now() - started,
-      });
+      /* THE WITNESS WRITES AFTER THE DOOR — the usage row is laid
+         beside the served answer, never in front of it: the visitor
+         waits one breath less on every door. */
+      const latencyMs = Date.now() - started;
+      after(
+        () =>
+          recordUsage({
+            userId,
+            workspaceId,
+            operation,
+            provider: "none",
+            success,
+            error: success ? null : `http_${res.status}`,
+            creditsCharged: charged + walletSpent,
+            latencyMs,
+          }).catch(() => undefined)
+      );
 
       /* plain Responses (the streaming SSE lines) are wrapped so the
          anonymous cookie can still ride home on them */
@@ -406,7 +429,10 @@ export function meterRoute(operation: string, handler: MeteredHandler) {
          and the wallet's pre-execution draw goes back to its owner */
       console.error(`[meter:${operation}] handler failed:`, err);
       if (walletLedgerId) {
-        void refundWalletCredits(userId, walletLedgerId).catch(() => undefined);
+        const failLedger = walletLedgerId;
+        after(() =>
+          refundWalletCredits(userId, failLedger).catch(() => undefined)
+        );
       }
       if (visitor) {
         await recordUsage({

@@ -9,7 +9,6 @@ import type { BranchId } from "@/lib/data/suggestion-tree";
 import {
   BRANCH_TYPE_LABELS,
   driftTreeTo,
-  journeyDepth,
   loadSeen,
   parseBranchesPayload,
   recordJourney,
@@ -230,9 +229,11 @@ export function ReplyBranches({
             /* the visitor's own fields of expansion ride along —
                coherent ones grow branches of their own */
             seeds,
-            /* THE DNA DEEPENING: the deeper the walk, the deeper the
-               branches the engine grows */
-            depth: journeyDepth(),
+            /* THE DNA DEEPENING + THE VISITOR'S OWN LEVEL: the deeper
+               the walk — or the level chosen in the profile's own
+               settings — the deeper the branches the engine grows
+               (the chosen level always leads when it is set). */
+            depth: useMirror.getState().sendDepth(),
             /* THE WALKER'S OWN SCORE: the profile's expansion index —
                the branches meet the walker at their own depth */
             score: readExpansionScore(),
@@ -251,7 +252,7 @@ export function ReplyBranches({
         inflight.delete(message.id);
         if (abortRef.current === controller) abortRef.current = null;
       }
-    }, 650);
+    }, 2200); // the branches grow after the reply has settled — never in its way
     return () => window.clearTimeout(id);
   }, [active, message.id, message.text, message.query, message.branches, kind, contextQuery, scopeHint, seeds, attachBranches]);
 

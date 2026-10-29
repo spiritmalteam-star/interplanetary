@@ -2151,6 +2151,16 @@ export function BranchCanopy({
     const id = window.setTimeout(() => setExpansionScore(readExpansionScore()), 0);
     return () => window.clearTimeout(id);
   }, [mounted]);
+  /* THE VISITOR'S OWN LEVEL — the level chosen in the profile's settings
+     (Depth & exploration) walks ahead of the earned score: the deeper of
+     the two tunes the wall's voice, so a chosen depth is met at once —
+     the level 0–4 lifts the questions' voice the same way the Expansion
+     Index earns it (one level ≈ twenty points of walked depth). */
+  const expLevel = useMirror((s) => s.expLevel);
+  const expansionLevelScore = Math.max(
+    expansionScore,
+    expLevel >= 0 ? expLevel * 20 : 0
+  );
 
   /* THE COMPASS — the mix of the house. The tree's default branch is
      GENERAL: every family woven together. The mix now lives in the
@@ -2526,7 +2536,7 @@ export function BranchCanopy({
         ranked
           .slice(0, BATCH_SIZE * 2)
           .map((w) => ({ text: w.text, movement: w.movement, score: w.score })),
-        expansionScore,
+        expansionLevelScore,
         BATCH_SIZE
       );
       const seeds = weaveCreations(withAccents(tuned), 0);
@@ -2671,7 +2681,7 @@ export function BranchCanopy({
       slice
         .slice(0, BATCH_SIZE * 2)
         .map((w) => ({ text: w.text, movement: w.movement, score: w.score })),
-      expansionScore,
+      expansionLevelScore,
       BATCH_SIZE
     );
     if (tuned.length === 0) return null;
@@ -3109,12 +3119,12 @@ export function BranchCanopy({
           [...hits, ...fill].map(
             (w) => ({ text: w.text, movement: w.movement, score: w.score })
           ),
-          expansionScore,
+          expansionLevelScore,
           BATCH_SIZE
         )
       );
     },
-    [idf, seenSnapshot, expansionScore, withAccents]
+    [idf, seenSnapshot, expansionLevelScore, withAccents]
   );
 
   /* the pan — one quiet assignment, never an animation loop; the
@@ -3665,14 +3675,14 @@ export function BranchCanopy({
                   ...turn,
                   a: reply,
                   loading: false,
-                  ...(vision ? { painting: true, visionPrompt: vision } : {}),
                 }
               : turn
           )
         );
-        if (vision) {
-          void paintLandingTurn(vision);
-        }
+        /* THE CONSENT LAW — the reply is words only: no painting rises
+           from the mirror's own initiative. The atelier wakes at the
+           visitor's own typed ask (the wish-to-see door above) or at
+           a Crystallize press — never from a reply's own decision. */
         landingTurnsRef.current = [
           ...landingTurnsRef.current,
           { q, a: reply },
@@ -3864,7 +3874,7 @@ export function BranchCanopy({
     }
     const tuned = tuneSeedBatch(
       pool.map((b) => ({ text: b.question, movement: b.type, score: 3 })),
-      expansionScore,
+      expansionLevelScore,
       6
     );
     const byText = new Map(pool.map((b) => [b.question, b]));
@@ -4261,7 +4271,7 @@ export function BranchCanopy({
       setThread((t) => [...t, { q, a: "", loading: true }]);
       setThreadBusy(true);
       try {
-        const { text: reply, vision } = await speakWithTransmission(
+        const { text: reply } = await speakWithTransmission(
           realm
             ? (LANDING_SCOPE_CATEGORY[landingScope] ??
                 ("absolute" as const))
@@ -4281,59 +4291,13 @@ export function BranchCanopy({
                   ...turn,
                   a: reply,
                   loading: false,
-                  ...(vision ? { painting: true, visionPrompt: vision } : {}),
                 }
               : turn
           )
         );
-        if (vision) {
-          /* THE ROOM'S OWN GIFT — the mirror chose to paint: the vision
-             mixes beneath the words right here in the room */
-          void (async () => {
-            applyRoomTurn(roomQ, (t) =>
-              t.map((turn, i) =>
-                i === t.length - 1 ? { ...turn, painting: true } : turn
-              )
-            );
-            try {
-              const res = await fetch("/api/visualize", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  message: vision,
-                  language: useMirror.getState().language,
-                  single: true,
-                  ...(useMirror.getState().visualStyle
-                    ? { style: useMirror.getState().visualStyle }
-                    : {}),
-                }),
-              });
-              const data = (await res.json().catch(() => null)) as {
-                artifact?: { imageUrl?: string; title?: string };
-              } | null;
-              const url = data?.artifact?.imageUrl;
-              applyRoomTurn(roomQ, (t) =>
-                t.map((turn, i) =>
-                  i === t.length - 1
-                    ? {
-                        ...turn,
-                        painting: false,
-                        ...(url
-                          ? { imageUrl: url, imageTitle: data?.artifact?.title }
-                          : {}),
-                      }
-                    : turn
-                )
-              );
-            } catch {
-              applyRoomTurn(roomQ, (t) =>
-                t.map((turn, i) =>
-                  i === t.length - 1 ? { ...turn, painting: false } : turn
-                )
-              );
-            }
-          })();
-        }
+        /* THE CONSENT LAW — the room's reply is words only: no painting
+           rises from the mirror's own initiative. The atelier wakes at
+           the visitor's own typed ask or a Crystallize press. */
         /* THE FIELD'S OWN MEMORY — the room's answer joins this
            field's own conversation, so the next room remembers it too;
            the cache and the sessionStorage page and the library's

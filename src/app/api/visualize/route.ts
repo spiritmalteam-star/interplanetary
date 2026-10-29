@@ -48,7 +48,7 @@ const ART_DIRECTION =
   "Cinematic science-fiction concept art of extraordinary quality, advanced interplanetary encyclopedia aesthetic, monumental crystalline and organic architecture, sophisticated holographic interface elements, midnight-blue, violet, cyan, ivory and gold palette, volumetric illumination, realistic reflections, deep spatial composition, atmospheric perspective, intricate environmental storytelling, controlled luminosity rather than excessive brightness, ultra-detailed, elegant, professional composition";
 
 const ART_AVOID =
-  "Avoid: generic AI look, chaotic composition, distorted anatomy, cluttered layout, watermark, signature, frame, border, large garbled text, misspelled words";
+  "Avoid: generic AI look, chaotic composition, distorted anatomy, cluttered layout, watermark, signature, frame, border, large garbled text, misspelled words, blur, noise, low resolution, oversaturation";
 
 const DIRECTOR_SYSTEM = `You are the Visual Director of the Mirror Entity — an interplanetary visual encyclopedia that answers curiosity with extraordinary images. A visitor asks to SEE something; you translate their request into a complete visual composition.
 
@@ -66,7 +66,7 @@ RESOLVING THE SUBJECT (CRITICAL)
 - For follow-ups, EVOLVE the previous visualization (same subject, new aspect, richer detail, new angle, or a new mode) — do not start from zero.
 
 PROMPT COMPOSITION
-- "artworkPrompt": a rich ENGLISH image prompt (40-90 words) built from the user's request, the conversation context, the subject's distinctive visual characteristics, and the Mirror Entity art direction. Describe composition, lighting, scale, materials, mood. IMPORTANT: the image model cannot render readable text — do NOT ask it to include labels, captions or paragraphs. At most "a single short engraved title" is acceptable; prefer purely visual artwork.
+- "artworkPrompt": a rich ENGLISH image prompt (60-120 words) built from the user's request, the conversation context, the subject's distinctive visual characteristics, and the Mirror Entity art direction. CONTEXT FIDELITY (sacred): the painting must represent the visitor's context as fully as possible — fold EVERY salient detail from their request and the conversation into the prompt: who/what is present, the setting and era, culture and artifacts, colors, weather, time of day, emotional mood, symbolic elements, scale and action. A detail the prompt omits is a detail the painting loses. Describe composition, lighting, materials, texture, depth. Quality law: crisp ultra-detailed HD rendering, clean uncluttered composition, razor-sharp focus, high fidelity textures, professional color grading. IMPORTANT: the image model cannot render readable text — do NOT ask it to include labels, captions or paragraphs. At most "a single short engraved title" is acceptable; prefer purely visual artwork.
 - For "presentation", each slide carries its own artworkPrompt with a DIFFERENT visual aspect of the subject (overview, detail, system, human scale).
 
 STRUCTURED CONTENT (hybrid rendering — the app draws the text itself)
@@ -192,9 +192,10 @@ async function paint(
     for (let i = 0; i < attempts; i++) {
       /* the generate_image tool — DALL·E 3 first, the Z.ai atelier as
          the eternal fallback; retries and the circuit breaker live
-         inside the engine */
+         inside the engine. THE HD LAW — every crystal paints in
+         high definition (professional, clean, context-true). */
       const paintClock = Date.now();
-      const img = await generateImage(prompt, { size });
+      const img = await generateImage(prompt, { size, quality: "hd" });
       console.log("[api/visualize] the brush painted in", Date.now() - paintClock, "ms (engine:", img?.engine ?? "none", ")");
       if (img) return img;
       console.error(`[api/visualize] paint attempt ${i + 1}: every brush rested`);

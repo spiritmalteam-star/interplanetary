@@ -233,6 +233,31 @@ export async function sweepStaleWeaveJobs(userId: string): Promise<void> {
     for (const job of stale) {
       await failWeaveJobOnce(job);
     }
+    /* THE LOST RETURNS — weaves already marked failed whose light was
+       never confirmed returned (the row's humble refunded mark stands
+       false): one visit to the shelf gives each its weigh back, once,
+       guarded by the same atomic claim. */
+    const unreturned = await db.generationJob.findMany({
+      where: {
+        userId,
+        tool: "light_codes",
+        status: "failed",
+        refunded: false,
+        creditsDrawn: { gt: 0 },
+        updatedAt: { lt: new Date(Date.now() - STALE_MS) },
+      },
+      select: { id: true, userId: true, creditsDrawn: true, request: true },
+      take: 10,
+      orderBy: { createdAt: "asc" },
+    });
+    for (const job of unreturned) {
+      const claimed = await db.generationJob.updateMany({
+        where: { id: job.id, status: "failed", refunded: false },
+        data: { refunded: true },
+      });
+      if (claimed.count !== 1) continue; // someone spoke first — the lock holds
+      await returnDrawnCredits(job);
+    }
   } catch (err) {
     console.error(
       "[music-vault] the sweep rested:",

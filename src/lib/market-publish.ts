@@ -83,6 +83,16 @@ function schedulePoll(get: () => PublishStore, set: (p: Partial<PublishStore>) =
   }, 2500);
 }
 
+/* THE LAYERING LAW — the passage modal rests beneath the zoomed room
+   (z-95) and beneath the market world (z-92): every layer above it is
+   laid down before the ask rises, so the ask is always seen. */
+function askPassageHere(): void {
+  const s = useMirror.getState();
+  if (s.workspaceZoomed) s.setWorkspaceZoomed(false);
+  if (s.marketOpen) s.closeMarket();
+  s.openAuth("signin");
+}
+
 export const useMarketPublish = create<PublishStore>((set, get) => ({
   byRef: {},
   loaded: false,
@@ -110,9 +120,12 @@ export const useMarketPublish = create<PublishStore>((set, get) => ({
     set({ error: null });
     if (!me) {
       /* THE PASSAGE FIRST — the visitor is asked to sign in where they
-         stand; the offering publishes itself the moment they arrive. */
+         stand; the offering publishes itself the moment they arrive.
+         THE LAYERING LAW — the passage modal rests beneath the zoomed
+         room and beneath the market world, so every layer above it is
+         laid down first: the ask must be SEEN to be answered. */
+      askPassageHere();
       set({ pendingRef: { kind, refId, refKind, payload } });
-      useMirror.getState().openAuth("signin");
       return false;
     }
     try {
@@ -127,8 +140,8 @@ export const useMarketPublish = create<PublishStore>((set, get) => ({
         code?: string;
       } | null;
       if (res.status === 401 || data?.code === "SIGN_IN_REQUIRED") {
+        askPassageHere();
         set({ pendingRef: { kind, refId, refKind, payload } });
-        useMirror.getState().openAuth("signin");
         return false;
       }
       if (!res.ok || !data?.listing) {

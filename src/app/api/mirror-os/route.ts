@@ -14,21 +14,9 @@ import { resolveVisitor, saveLibrary, withAnonCookie } from "@/lib/server/access
 import { meterRoute } from "@/lib/server/meter";
 import { ENERGY_CODE, ENERGY_NOTICE, isEnergyError } from "@/lib/server/energy";
 
-/* the model's own eye — the same gift the transmission door carries:
-   a trailing [VISION: prompt] line becomes a painted image beneath
-   the words. Stripped before the visitor reads anything; never on
-   live voice calls. */
-const VISION_RULE = `
-
-THE VISION GIFT (rare and optional — read carefully):
-If — and only if — the reply would be TRULY deepened by a painted image (a scene, a being, a place, a symbol, a cosmic vista the visitor asked to SEE, or a visual that carries real presence), you may end your reply with ONE final line, after everything else, in this exact shape:
-[VISION: <a rich, detailed English painting prompt describing subject, atmosphere, light and style>]
-The line is invisible machinery — the visitor never reads it; the painting appears beneath your words. Obey the laws:
-- Use it ONLY when the visitor EXPLICITLY asks to see something ("show me", "as an image", "draw/paint it") or the image adds real presence to the words. Most replies carry NO vision line at all.
-- THE LONG-CONTEXT LAW: when the visitor's message is long, multi-paragraph or conversational, it is a CONVERSATION, not a canvas request. A passing mention of images, pictures, drawings, visualizing, meditation, dreams or imagination inside a longer message NEVER justifies the vision line — only an explicit, unambiguous ask to SEE does.
-- NEVER use it for prayers, rites, lists, instructions, emotional support, healing guidance or the making of books.
-- At most ONE vision line per reply, and it must be the reply's final line.
-- Never mention the line, the painting or the machinery inside the words themselves.`;
+/* THE CONSENT LAW — no vision rule travels here any more: an image is
+   born only at the visitor's own hand (Crystallize) or their own typed
+   ask. The OS's replies are words only. */
 
 const LANGUAGE_NAMES: Record<string, string> = {
   en: "English",
@@ -127,7 +115,7 @@ async function postImpl(req: NextRequest): Promise<Response> {
           REMEMBRANCE_LAW +
           walkerDepthLine(body?.depth) +
           walkLine(body?.walk) +
-          (body?.live === true ? LIVE_CALL_BLOCK : VISION_RULE),
+          (body?.live === true ? LIVE_CALL_BLOCK : ""),
       },
     ];
 

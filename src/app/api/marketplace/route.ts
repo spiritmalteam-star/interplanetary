@@ -12,9 +12,9 @@ export const dynamic = "force-dynamic";
 /*  have PUBLISHED — every offering was laid on the shelf by its       */
 /*  maker's own hand, and the Mirror wrote its explaining words.       */
 /*                                                                     */
-/*  THE PASSAGE LAW: only a signed-in keeper may see or purchase. An   */
-/*  anonymous visitor is answered with SIGN_IN_REQUIRED — the world    */
-/*  greets them with its own gate.                                     */
+/*  THE OPEN-HALL LAW: every visitor may walk among the works — the    */
+/*  passage is asked only where a hand is needed (publishing lays the  */
+/*  ask itself; a future purchase asks at the checkout door).         */
 /* ------------------------------------------------------------------ */
 
 type MarketKind = "book" | "music" | "art" | "research";
@@ -35,17 +35,9 @@ interface MarketItem {
 
 export async function GET(req: NextRequest) {
   try {
-    const visitor = await resolveVisitor(req);
-    if (visitor.user.anon) {
-      return NextResponse.json(
-        {
-          error:
-            "The hall keeps its doors for the house's own keepers — sign in to walk among the works.",
-          code: "SIGN_IN_REQUIRED",
-        },
-        { status: 401 }
-      );
-    }
+    /* THE OPEN HALL — the visitor is only named for their own cookies;
+       the hall's table itself is public. */
+    await resolveVisitor(req);
 
     const rows = await db.marketListing.findMany({
       where: { status: "live" },
