@@ -89,6 +89,7 @@ const LYRIA_FULL_MODEL = process.env.LYRIA_MODEL || "lyria-3.5";
    engine) and the pro-preview door, so a renamed or resting engine
    name never silences the music outright */
 const LYRIA_CLIP_MODEL = process.env.LYRIA_CLIP_MODEL || "lyria-3-clip-preview";
+void LYRIA_CLIP_MODEL; // the retired clip door rests — kept only for env compatibility
 const LYRIA_PRO_MODEL = process.env.LYRIA_PRO_MODEL || "lyria-3-pro-preview";
 
 /* THE SOUND DOOR'S REST PASSAGE — the weave rides the same honest REST
@@ -694,51 +695,128 @@ interface StepContentBlock {
   text?: string;
   data?: string;
   mime_type?: string;
+  mimeType?: string;
+}
+
+/* THE AUDIO FINDER — one deep, honest walk through whatever shape the
+   sky answers in. The Interactions door has worn several faces: the
+   convenience fields arrive camelCase (outputAudio / mimeType) from
+   the REST JSON and snake_case from older shapes, media blocks rest
+   inside steps of more kinds than one, and inline payloads travel as
+   inlineData / inline_data. The finder accepts every known face AND
+   walks the whole body recursively as the last sweep — any base64
+   field that speaks audio (by mime, by name, or by a data: prefix)
+   is the song. Text blocks are collected as words only: a song of
+   pure lyrics is NEVER mistaken for a sound. */
+function findAudioDeep(
+  node: unknown,
+  key = "",
+  found: { data: string; mime: string }[] = []
+): { data: string; mime: string }[] {
+  if (!node || typeof node !== "object") return found;
+  if (Array.isArray(node)) {
+    for (const item of node) findAudioDeep(item, key, found);
+    return found;
+  }
+  const obj = node as Record<string, unknown>;
+
+  /* a mime riding beside the data — either spelling */
+  const siblingMime =
+    (typeof obj.mime_type === "string" && obj.mime_type) ||
+    (typeof obj.mimeType === "string" && obj.mimeType) ||
+    "";
+
+  for (const [k, v] of Object.entries(obj)) {
+    const lower = k.toLowerCase();
+    /* the data fields themselves — every known spelling */
+    if (typeof v === "string" && v.length > 512) {
+      const looksBase64 = /^[A-Za-z0-9+/=\r\n_-]+$/.test(v.slice(0, 512));
+      const dataUri = /^data:audio\//i.test(v.slice(0, 40));
+      const audioByName =
+        /audio/.test(lower) ||
+        /audio/.test(siblingMime.toLowerCase()) ||
+        /audio/.test(key.toLowerCase());
+      const inline = lower === "inlinedata" || lower === "inline_data";
+      if (dataUri || (looksBase64 && (audioByName || inline))) {
+        found.push({
+          data: dataUri ? v.slice(v.indexOf(",") + 1) : v,
+          mime: siblingMime || "audio/mpeg",
+        });
+        continue;
+      }
+    }
+    /* recurse — the song may rest several rooms deep */
+    findAudioDeep(v, k, found);
+  }
+  return found;
 }
 
 /* THE RESPONSE LAW: walk the interaction's steps and their content
    blocks without assuming any order — text blocks (lyrics, structure)
    and audio blocks arrive as the engine lays them down. The last audio
    block heard is the song. The SDK's own convenience properties
-   (output_audio / output_text) stand first, should the steps rest.
+   (output_audio / outputAudio) stand first, should the steps rest, and
+   the deep finder sweeps the whole body before any silence is called.
    THE WEIGHT LAW: a song heavier than the sky's response door is no
    longer refused — the flag rides home and the vault decides: kept
    sounds travel by their serve key, unkept heavies speak honestly. */
 function extractWeave(
   interaction: {
     output_audio?: { data?: string; mime_type?: string } | null;
+    outputAudio?: { data?: string; mimeType?: string } | null;
     output_text?: string | null;
+    outputText?: string | null;
     steps?: { type?: string; content?: StepContentBlock[] }[] | null;
-  },
+  } & Record<string, unknown>,
   maxB64 = MAX_AUDIO_B64
 ): { audioB64: string; texts: string[]; mime: string; oversized: boolean } {
   let audioB64: string | null = null;
   let mime = "audio/mpeg";
   const texts: string[] = [];
 
-  if (
-    interaction.output_audio &&
-    typeof interaction.output_audio.data === "string" &&
-    interaction.output_audio.data
-  ) {
-    audioB64 = interaction.output_audio.data;
-    if (interaction.output_audio.mime_type) mime = interaction.output_audio.mime_type;
+  /* the convenience fields — every spelling the doors have worn */
+  const convenience =
+    interaction.outputAudio ??
+    interaction.output_audio ??
+    null;
+  if (convenience && typeof convenience.data === "string" && convenience.data) {
+    audioB64 = convenience.data;
+    const m =
+      (convenience as { mimeType?: string; mime_type?: string }).mimeType ??
+      (convenience as { mimeType?: string; mime_type?: string }).mime_type;
+    if (m) mime = m;
   }
-  if (typeof interaction.output_text === "string" && interaction.output_text) {
-    texts.push(interaction.output_text);
+  const outText = interaction.outputText ?? interaction.output_text;
+  if (typeof outText === "string" && outText) {
+    texts.push(outText);
   }
 
-  if (!audioB64 && Array.isArray(interaction.steps)) {
+  /* the steps — whatever kind names them (model_output or otherwise);
+     media blocks do not always ride the same label */
+  if (Array.isArray(interaction.steps)) {
     for (const step of interaction.steps) {
-      if (step?.type !== "model_output" || !Array.isArray(step.content)) continue;
+      if (!Array.isArray(step?.content)) continue;
       for (const block of step.content) {
         if (block?.type === "audio" && typeof block.data === "string" && block.data) {
           audioB64 = block.data;
-          if (typeof block.mime_type === "string" && block.mime_type) mime = block.mime_type;
+          const m = block.mimeType ?? block.mime_type;
+          if (typeof m === "string" && m) mime = m;
         } else if (block?.type === "text" && typeof block.text === "string" && block.text) {
           texts.push(block.text);
         }
       }
+    }
+  }
+
+  /* THE LAST SWEEP — the deep finder walks the whole answer: any
+     audio-shaped base64 field, however the engine dressed it. The
+     last audio heard is the song. */
+  if (!audioB64) {
+    const found = findAudioDeep(interaction);
+    if (found.length > 0) {
+      const last = found[found.length - 1];
+      audioB64 = last.data;
+      if (last.mime) mime = last.mime;
     }
   }
 
@@ -815,32 +893,48 @@ async function lyriaRestCall(
   }
 }
 
-/* THE WEAVE'S OWN LADDER — every rung the chamber knows is walked in
-   turn: the full engine, the clip door, the pro-preview door. A rung
-   is refused when the sky answers "not found" or "unsupported" (a
-   renamed or not-yet-enabled engine), when its quota rests (separate
-   engines carry separate allowances), or when its answer holds no
-   sound. A denied key or a malformed ask stops the walk — no rung
-   would heal those. The SDK stands behind the REST passage as a last
-   hand, so a cold sky is asked three ways before the verdict lands. */
+/* THE WEAVE'S OWN LADDER (rewritten) — the rungs are walked only while
+   the sky refuses the ENGINE itself: a renamed or not-yet-enabled door
+   (404 / unsupported) or a resting quota. A sound that was paid for is
+   never re-asked of another engine, and a deadline heals nothing. The
+   primary rung owns the whole of the request's own life — no per-rung
+   end time stands between the ask and the song. The SDK stands behind
+   the REST passage as a last hand, for refused engines only. */
 async function lyriaWeave(
   body: { model: string; input: string | LyriaInputBlock[] },
   key: string,
   timeoutMs: number,
   maxB64 = MAX_AUDIO_B64
 ): Promise<{ audioB64: string; texts: string[]; mime: string; oversized: boolean }> {
+  /* THE LADDER'S OWN LAW (rewritten): a rung is climbed only when the
+     engine itself was refused — a renamed or not-yet-enabled model
+     (404 / unsupported), or its own quota resting (429 / resource
+     exhausted). A paid generation that returned words instead of
+     sound is NEVER re-asked of another engine: the answer was heard,
+     re-asking burns the key's allowance again for the same silence.
+     A timeout is likewise terminal — no rung heals a deadline, and
+     the visitor's weave must never be paid for twice. The full model
+     rides the WHOLE of the request's own life: no per-rung end time
+     stands between the ask and the song. */
   const rungs = Array.from(
-    new Set([body.model, LYRIA_FULL_MODEL, LYRIA_CLIP_MODEL, LYRIA_PRO_MODEL].filter(Boolean))
+    new Set(
+      [body.model, LYRIA_FULL_MODEL, "lyria-002", LYRIA_PRO_MODEL].filter(Boolean)
+    )
   );
-  /* THE BUDGET LAW — the ladder must fit inside the request's own life:
-     the budget is shared across every rung plus the SDK's last hand, so
-     the whole walk can never outlive the chamber that carries it (a
-     weave killed by the platform takes its light and its silence both). */
-  const perRung = Math.max(45_000, Math.floor(timeoutMs / (rungs.length + 1)));
   let last: LyriaVerdict | null = null;
+  let climbable = true;
 
-  for (const model of rungs) {
+  for (let i = 0; i < rungs.length; i++) {
+    const model = rungs[i];
+    /* the budget law, rewritten: the primary rung owns the whole of
+       the request's life (minus one small settling breath for the
+       vault's keeping); a climbed fallback rung inherits whatever
+       life remains. No shared slicing, no mid-song aborts. */
+    const perRung =
+      i === 0 ? Math.max(60_000, timeoutMs - 5_000) : Math.max(30_000, timeoutMs);
+    const started = Date.now();
     const verdict = await lyriaRestCall(model, body.input, key, perRung);
+    const latencyMs = Date.now() - started;
 
     if (verdict.ok) {
       try {
@@ -853,23 +947,26 @@ async function lyriaWeave(
             `[light-codes] model ${body.model} was refused — model ${model} answered`
           );
         }
+        console.error(
+          `[light-codes] weave landed: model=${model} latency=${latencyMs}ms audioB64=${out.audioB64.length} mime=${out.mime} texts=${out.texts.length}`
+        );
         return out;
       } catch (err) {
-        /* the door opened but the answer held no sound — this rung
-           rests; the walk continues */
-        last = {
-          ok: false,
-          status: 502,
-          detail: err instanceof Error ? err.message : "no sound in the answer",
-          apiStatus: "",
-        };
-        continue;
+        /* the door opened and the answer held no sound even after the
+           deep sweep — a terminal honesty, never a re-ask: the same
+           ask sent to three more engines only burns the allowance */
+        console.error(
+          `[light-codes] weave silent: model=${model} status=${verdict.status} latency=${latencyMs}ms — ${err instanceof Error ? err.message : "no sound"}`
+        );
+        throw new Error(
+          "The engine answered without a sound. Rest, then ask again — every silence was returned to your purse."
+        );
       }
     }
 
     last = verdict;
     console.error(
-      `[light-codes] rung ${model} refused (${verdict.status || "no status"}): ${verdict.detail.slice(0, 200)}`
+      `[light-codes] rung ${model} refused (${verdict.status || "no status"}) after ${latencyMs}ms: ${verdict.detail.slice(0, 200)}`
     );
 
     /* a denied key or a malformed ask — no rung would heal these */
@@ -887,11 +984,27 @@ async function lyriaWeave(
     ) {
       throw mapLyriaError(verdict.status, verdict.detail, verdict.apiStatus);
     }
-    /* safety refusals travel with the ask, not the engine — walk on
-       once, but if every rung refuses, the safety verdict speaks */
+    /* a timeout is terminal — the song was being woven when the clock
+       spoke. No other rung is asked (they would only start over and
+       burn the allowance twice); the honest message stands. */
+    if (verdict.status === 0 && /timeout/i.test(verdict.detail)) {
+      throw new Error(
+        "The weave is still longer than one answer may hold. Rest, then ask again — nothing was kept from your purse."
+      );
+    }
+    /* a refused engine (renamed / unsupported / quota resting) is the
+       only climbable verdict */
+    climbable =
+      verdict.status === 404 ||
+      verdict.status === 429 ||
+      /not found|unsupported|not supported|does not exist|quota|resource.?exhausted|rate.?limit|unavailable/i.test(
+        verdict.detail
+      );
+    if (!climbable) break;
   }
 
-  /* every REST rung rested — one last hand: the SDK's own passage */
+  /* every REST rung was refused as an engine (never as a silence) —
+     one last hand: the SDK's own passage, only then */
   try {
     const client = new GoogleGenAI({ apiKey: key });
     const interaction = await client.interactions.create(
@@ -900,7 +1013,7 @@ async function lyriaWeave(
         input: body.input,
       } as Parameters<typeof client.interactions.create>[0],
       {
-        timeout_ms: perRung,
+        timeout_ms: Math.max(30_000, timeoutMs),
         retries: { strategy: "none" },
       } as Parameters<typeof client.interactions.create>[1]
     );
@@ -920,16 +1033,11 @@ async function lyriaWeave(
     } catch {
       /* the wrapper keeps its silence */
     }
-    if (last && typeof last.status === "number" && (sdkStatus > last.status || !last)) {
+    if (!last || (typeof last.status === "number" && sdkStatus > last.status)) {
       last = { ok: false, status: sdkStatus, detail: sdkDetail, apiStatus: String(e?.code ?? "") };
     }
   }
 
-  if (last && last.status === 0 && /timeout/i.test(last.detail)) {
-    throw new Error(
-      "The weave took longer than the chamber can hold. Rest, then ask again."
-    );
-  }
   if (last && /network|fetch failed|ECONN/i.test(last.detail)) {
     throw new Error("The chamber could not reach the sound engine. Try again in a breath.");
   }
@@ -1164,10 +1272,13 @@ async function postImpl(
           }
         }
 
+        /* NO END TIME OF OUR OWN — the weave rides the whole of the
+           request's life (the platform's 300s chamber is the only
+           boundary left); journeys ride the same for every part. */
         const weave = await lyriaWeave(
           body,
           key,
-          journey ? 200_000 : 280_000,
+          290_000,
           isLoop ? 12_000_000 : MAX_AUDIO_B64
         );
         noteLcSuccess(body.model);

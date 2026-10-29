@@ -224,7 +224,13 @@ export function meterRoute(operation: string, handler: MeteredHandler) {
              passage only when the purse stands empty */
           try {
             const anonSnapshot = await ensureWallet(userId);
-            if (anonSnapshot.total < weigh.cost) {
+            /* THE SPENDABLE LAW — the gate and the draw must agree: the
+               purse spends free + paid (the deposit well is a store of
+               value, not a hand), so the ask is weighed against the
+               spendable remainder, never a larger total. */
+            const anonSpendable =
+              anonSnapshot.freeCreditsRemaining + anonSnapshot.paidCreditsRemaining;
+            if (anonSpendable < weigh.cost) {
               await recordUsage({
                 userId,
                 workspaceId,
@@ -239,7 +245,7 @@ export function meterRoute(operation: string, handler: MeteredHandler) {
                   {
                     error: "SIGN_IN_REQUIRED",
                     required: weigh.cost,
-                    current: anonSnapshot.total,
+                    current: anonSpendable,
                     actionType: weigh.actionType,
                   },
                   { status: 401 }
@@ -290,7 +296,12 @@ export function meterRoute(operation: string, handler: MeteredHandler) {
         } else {
           try {
             const snapshot = await ensureWallet(userId);
-            if (snapshot.total < weigh.cost) {
+            /* THE SPENDABLE LAW — the gate and the draw must agree: the
+               purse spends free + paid, so a confirmed shortfall is
+               explained with the spendable remainder, never a larger
+               total that includes the sealed deposit well. */
+            const spendable = snapshot.freeCreditsRemaining + snapshot.paidCreditsRemaining;
+            if (spendable < weigh.cost) {
               await recordUsage({
                 userId,
                 workspaceId,
@@ -305,7 +316,7 @@ export function meterRoute(operation: string, handler: MeteredHandler) {
                   {
                     error: "INSUFFICIENT_CREDITS",
                     required: weigh.cost,
-                    current: snapshot.total,
+                    current: spendable,
                     planTier: snapshot.planTier,
                     actionType: weigh.actionType,
                   },

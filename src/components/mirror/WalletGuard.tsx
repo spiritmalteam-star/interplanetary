@@ -59,12 +59,23 @@ export function WalletGuard() {
             actionType?: string;
           } | null;
           if (data?.error === "INSUFFICIENT_CREDITS") {
-            useMirror.getState().openWalletModal({
-              required: data.required ?? 1,
-              current: data.current ?? 0,
-              planTier: data.planTier,
-              actionType: data.actionType,
-            });
+            /* THE QUIET CHECK'S OWN LAW — while the session's first
+               glance still breathes, no purchase dialog may open: the
+               truth is asked at once, and the modal rises only after
+               the face on the wall is certain. */
+            const state = useMirror.getState();
+            const open = () =>
+              useMirror.getState().openWalletModal({
+                required: data.required ?? 1,
+                current: data.current ?? 0,
+                planTier: data.planTier,
+                actionType: data.actionType,
+              });
+            if (state.meStatus === "loading") {
+              void state.refreshMe(true).then(open);
+            } else {
+              open();
+            }
           }
         } catch {
           /* a body that cannot be read keeps its silence */
@@ -87,12 +98,21 @@ export function WalletGuard() {
               void state.refreshMe(true); // the truth, told at once
             }
             /* the modal offers one — and speaks the purse's true
-               remainder, never a pretended zero */
-            useMirror.getState().openWalletModal({
-              required: data.required ?? 1,
-              current: data.current ?? 0,
-              actionType: data.actionType,
-            });
+               remainder, never a pretended zero. THE QUIET CHECK'S LAW:
+               while the session's first glance still breathes the modal
+               waits for the truth, never rising on a guessed face. */
+            const st = useMirror.getState();
+            const openSignIn = () =>
+              useMirror.getState().openWalletModal({
+                required: data.required ?? 1,
+                current: data.current ?? 0,
+                actionType: data.actionType,
+              });
+            if (st.meStatus === "loading") {
+              void st.refreshMe(true).then(openSignIn);
+            } else {
+              openSignIn();
+            }
           }
         } catch {
           /* other 401s are none of the purse's business */

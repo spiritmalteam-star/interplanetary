@@ -143,9 +143,12 @@ export function AccountModal() {
       const res = await fetch("/api/account/summary");
       const data = (await res.json().catch(() => null)) as Summary | null;
       if (data?.user) setSummary(data);
-      else setSummary(null);
+      else if (res.status === 401) setSummary(null);
+      /* THE STALE FACE — a resting vault (5xx / network breath) is a
+         retry state, never a verdict: the last known summary stays,
+         only an honest "signed out" clears the room. */
     } catch {
-      setSummary(null);
+      /* the glance keeps its silence — the face stays as it was */
     } finally {
       setLoading(false);
     }

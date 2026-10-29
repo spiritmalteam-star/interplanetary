@@ -723,8 +723,12 @@ function BareFloorDoors({
   const scopeKey = scope || "general";
   /* THE PLAIN TONGUE — a visitor who has not signed in reads doors
      that ask simple, literal questions; a signed keeper walks the
-     full grove with the easy well riding beside it. */
-  const anon = !me;
+     full grove with the easy well riding beside it. THE QUIET
+     CHECK'S LAW — while the session's first glance still breathes,
+     the full grove stands (a keeper must never read a stranger's
+     plain doors for a breath; a guest simply sees them settle in). */
+  const meReady = useMirror((s) => s.meStatus === "ready");
+  const anon = meReady ? !me : false;
 
   /* the pool — pure and synchronous: THE MIRROR's own first doors,
      one field's grove, or the landing's first doors woven with the
@@ -1987,7 +1991,10 @@ export function BranchCanopy({
   /* THE GUEST'S OWN LAW — the landing chat is temporary for the non
      logged-in: a small honest line under the whisper line speaks it. */
   const meIdentity = useMirror((s) => s.me);
-  const guest = !meIdentity || meIdentity.email.startsWith("anon:");
+  const meIdentityReady = useMirror((s) => s.meStatus === "ready");
+  const guest = meIdentityReady
+    ? !meIdentity || meIdentity.email.startsWith("anon:")
+    : false; // the quiet check never guesses a guest
   /* THE WHOLE HOUSE'S DOORS — every kategory of the old website's
      sidebar, standing within the branches themselves: the worlds the
      tree grows toward, the archives, and the quiet hands. */
@@ -2270,7 +2277,9 @@ export function BranchCanopy({
   /* THE PLAIN TONGUE — the walk of a visitor who has not signed in
      speaks easy, literal doors: same layout, same families, plainly
      worded. The signed keeper keeps the full grove's own voice. */
-  const anonWalk = useMirror((s) => !s.me);
+  const anonWalk = useMirror((s) =>
+    s.meStatus === "ready" ? !s.me : false
+  ); // the quiet check never guesses a stranger's voice
   const shownGrove = useMemo(
     () => (anonWalk ? swapGroveToEasy(grove, hour) : grove),
     [grove, anonWalk, hour]

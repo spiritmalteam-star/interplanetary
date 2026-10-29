@@ -22,6 +22,24 @@ export function publicOrigin(requestOrigin: string): string {
   return (fromEnv || requestOrigin).replace(/\/$/, "");
 }
 
+/* THE VALIDATED WAY BACK — the room the visitor left behind is kept
+   and honored once, never guessed: only a same-origin path survives
+   (it must begin with a single "/", carry no scheme, no host and no
+   backslash escape — anything else falls back to the threshold). */
+export function safeReturnPath(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  let path = raw;
+  try {
+    path = decodeURIComponent(raw);
+  } catch {
+    /* an unreadable ride falls back to the raw words */
+  }
+  if (!path.startsWith("/") || path.startsWith("//") || path.includes("\\")) return null;
+  if (/[a-z][a-z0-9+.-]*:/i.test(path)) return null; // scheme-like
+  if (path.length > 512) return null;
+  return path;
+}
+
 export async function GET(req: NextRequest) {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
@@ -91,7 +109,11 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    const res = NextResponse.redirect(origin);
+    /* THE WAY BACK IS KEPT — the room the visitor left rides the
+       mirror_g_next cookie (laid down when the passage opened) and is
+       honored once here: a validated same-origin path only. */
+    const back = safeReturnPath(req.cookies.get("mirror_g_next")?.value);
+    const res = NextResponse.redirect(`${origin}${back ?? "/"}`);
     setSessionCookie(res, user.id, req);
     /* the passage carries its workspace, ledger and gift */
     await ensureVisitorProvisions(user.id);
@@ -100,6 +122,7 @@ export async function GET(req: NextRequest) {
     /* everything the anonymous cookie kept comes with the visitor */
     await mergeAnonLibrary(readAnonId(req), user.id);
     res.cookies.set("mirror_g_state", "", { path: "/", maxAge: 0 });
+    res.cookies.set("mirror_g_next", "", { path: "/", maxAge: 0 });
     return res;
   } catch (err) {
     console.error("[auth/google/callback] failed:", err);

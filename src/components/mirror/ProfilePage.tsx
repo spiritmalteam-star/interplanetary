@@ -194,7 +194,14 @@ export function ProfilePage() {
     return () => window.clearTimeout(id);
   }, [open]);
 
-  const signedIn = Boolean(me && !me.email.startsWith("anon:"));
+  /* THE QUIET CHECK — the session's own breath is explicit: while the
+     first glance still travels, the room shows a resting skeleton and
+     never an "Enter the passage" verdict (a keeper must not be asked
+     to sign in for a breath; a lookup failure is a retry, not proof
+     of a stranger). */
+  const meStatus = useMirror((s) => s.meStatus);
+  const signedIn =
+    meStatus === "ready" && Boolean(me && !me.email.startsWith("anon:"));
 
   /* the library's quiet head — counts and the freshest entries */
   useEffect(() => {
@@ -786,6 +793,17 @@ export function ProfilePage() {
                       <LogOut className="size-3.5" aria-hidden="true" />
                       {t("Leave the passage")}
                     </button>
+                  ) : meStatus === "loading" ? (
+                    /* THE QUIET CHECK'S OWN PLACEHOLDER — no verdict
+                       while the session's glance still breathes */
+                    <div
+                      aria-busy="true"
+                      className="flex h-9 items-center gap-2 rounded-full border hairline px-4 text-[13px] text-muted-foreground"
+                      data-testid="profilepage-checking"
+                    >
+                      <span className="size-2 animate-pulse rounded-full bg-muted-foreground/50" />
+                      {t("Checking the passage")}
+                    </div>
                   ) : (
                     <button
                       type="button"
@@ -1380,7 +1398,20 @@ export function ProfilePage() {
                 </p>
                 <button
                   type="button"
-                  onClick={() => exitTo(() => openAuth(me ? "register" : "signin"))}
+                  onClick={() =>
+                    /* THE QUIET CHECK'S LAW — a click during the first
+                       glance waits for the truth before offering a door */
+                    meStatus === "loading"
+                      ? void useMirror.getState().refreshMe(true).then(() => {
+                          const cur = useMirror.getState().me;
+                          exitTo(() =>
+                            useMirror.getState().openAuth(
+                              cur && !cur.email.startsWith("anon:") ? "register" : "signin"
+                            )
+                          );
+                        })
+                      : exitTo(() => openAuth(me ? "register" : "signin"))
+                  }
                   data-testid="profilepage-api-signin"
                   className="focus-glow flex h-8 items-center gap-2 rounded-full bg-foreground px-4 text-[13px] font-medium text-background transition-all duration-300 hover:opacity-85"
                 >

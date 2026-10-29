@@ -576,6 +576,11 @@ interface MirrorState {
   /* The passage — the visitor's account and modals. Everything is free:
      the passage only keeps the cosmic library with its one owner. */
   me: MeUser | null;
+  /* THE SESSION'S OWN BREATH — explicit states, never a guessed one:
+     "loading" is the quiet check after boot (no sign-in pitch, no
+     purchase dialog may open while it holds), "ready" means the first
+     glance has truly settled and the face on the wall is the truth. */
+  meStatus: "loading" | "ready";
   googleConfigured: boolean;
   authOpen: boolean;
   authMode: "signin" | "register";
@@ -1695,6 +1700,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   lcRaw: true,
 
   me: null,
+  meStatus: "loading" as "loading" | "ready",
   googleConfigured: false,
   accountOpen: false,
   authOpen: false,
@@ -3744,6 +3750,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         /* a degraded greeting (the vault resting — 503) keeps the last
            known face: a stale name beats an erased passage. Only an
            honest "signed out" body may clear the me. */
+        set({ meStatus: "ready" }); // the check has settled — a retry state, never a sign-in verdict
         return;
       }
       const data = (await res.json().catch(() => null)) as {
@@ -3755,6 +3762,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       } | null;
       set({
         me: data?.user ? { ...data.user, admin: Boolean(data.admin) } : null,
+        meStatus: "ready",
         googleConfigured: Boolean(data?.googleConfigured),
         wallet: data?.wallet ?? get().wallet,
       });
@@ -3774,11 +3782,13 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         void get().pushSettings();
       }
     } catch {
-      /* the passage keeps its silence — the laboratory stays open */
+      /* the passage keeps its silence — the laboratory stays open;
+         the check itself has settled either way */
+      set({ meStatus: "ready" });
     }
   },
 
-  setMe: (user) => set({ me: user }),
+  setMe: (user) => set({ me: user, meStatus: "ready" }),
 
   /* ------------- The visitor's own light — the wallet ------------- */
 

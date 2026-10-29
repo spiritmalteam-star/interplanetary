@@ -175,7 +175,12 @@ export function AuthModal() {
 
   const google = () => {
     if (googleConfigured) {
-      window.location.href = "/api/auth/google";
+      /* THE WAY BACK IS KEPT — the room the visitor signs in from
+         rides the passage: the callback returns them exactly where
+         the ask was spoken, not to the threshold. */
+      const back =
+        window.location.pathname + window.location.search + window.location.hash;
+      window.location.href = `/api/auth/google?next=${encodeURIComponent(back)}`;
     } else {
       toast.message(t("The Google passage"), {
         description: t(
