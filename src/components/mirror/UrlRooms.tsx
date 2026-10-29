@@ -147,6 +147,9 @@ export function UrlRooms() {
     if (room) {
       addressRoom.current = room;
       openRoom(room);
+      /* the title wears the room's name from the very first breath */
+      const title = roomTitle(room);
+      if (document.title !== title) document.title = title;
     }
   }, []);
 
