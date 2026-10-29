@@ -24,6 +24,7 @@ import {
   ChevronDown,
   ChevronRight,
   ChevronUp,
+  CircleQuestionMark,
   Compass,
   Copy,
   Share2,
@@ -5250,19 +5251,9 @@ export function BranchCanopy({
               <Music className="size-3" aria-hidden="true" />
             </button>
             )}
-            {!realm && (
-            <button
-              type="button"
-              onClick={() => useMirror.getState().openTour()}
-              aria-haspopup="dialog"
-              aria-label={t("About Us")}
-              title={t("About Us — our purpose, the Mirror Entity, and how we hold your data")}
-              data-testid={`${testIdPrefix}-door-about`}
-              className="focus-glow flex size-7 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
-            >
-              <Compass className="size-3" aria-hidden="true" />
-            </button>
-            )}
+            {/* THE ABOUT DOOR HAS MOVED HOME — it left the house doors:
+                About Us now wears its own question mark at the crown's
+                very top right, alone in its circle. */}
           </div>
 
           {/* THE PORTAL'S OWN HANDS — between the about door and the
@@ -5312,6 +5303,21 @@ export function BranchCanopy({
                 </button>
               </>
             )}
+            {/* THE WEBSITE'S OWN QUESTION — About Us stands at the very
+                top right of the house, in every gear (landing and
+                realm, phone and desk): a question mark in its own
+                circle, one touch from the eight-slide welcome. */}
+            <button
+              type="button"
+              onClick={() => useMirror.getState().openTour()}
+              aria-haspopup="dialog"
+              aria-label={t("About Us")}
+              title={t("About Us — our purpose, the Mirror Entity, and how we hold your data")}
+              data-testid={`${testIdPrefix}-about-question`}
+              className="focus-glow flex size-7 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+            >
+              <CircleQuestionMark className="size-3.5" aria-hidden="true" />
+            </button>
           </div>
           </div>
         </div>

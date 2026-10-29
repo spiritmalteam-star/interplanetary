@@ -122,11 +122,17 @@ function buildWav(meta: WavMeta, pcm: Buffer): Buffer {
 /* ---------------- the Google voice (Gemini TTS) --------------------- */
 
 /* Gemini TTS speaks raw PCM (16-bit, mono, 24 kHz) — the canonical WAV
-   header is dressed on top before the wire carries it home. */
-const GOOGLE_TTS_MODEL = "gemini-2.5-flash-preview-tts";
+   header is dressed on top before the wire carries it home. THE LADDER
+   OF VOICES — the flash preview engine sings first, the pro preview
+   behind it: a renamed or resting engine never silences the call, and
+   GOOGLE_TTS_MODEL may pin either from the environment. */
+const GOOGLE_TTS_MODELS = [
+  process.env.GOOGLE_TTS_MODEL || "gemini-2.5-flash-preview-tts",
+  "gemini-2.5-pro-preview-tts",
+].filter(Boolean);
 /* Charon — the calm, firm, intelligent male register of the Google
    choir: the direct call's own voice. */
-const GOOGLE_TTS_VOICE = "Charon";
+const GOOGLE_TTS_VOICE = process.env.GOOGLE_TTS_VOICE || "Charon";
 const GOOGLE_TTS_STYLE =
   "Speak in a calm, measured, deeply intelligent male voice — warm and unhurried, like a wise presence on a quiet line:";
 
@@ -136,45 +142,54 @@ async function speakWithGoogle(
 ): Promise<{ buffer: Buffer; error?: string } | null> {
   const key = process.env.GEMINI_API_KEY;
   if (!key) return null;
-  try {
-    const { GoogleGenAI } = await import("@google/genai");
-    const client = new GoogleGenAI({ apiKey: key });
-    const response = await client.models.generateContent({
-      model: GOOGLE_TTS_MODEL,
-      contents: [{ parts: [{ text: `${GOOGLE_TTS_STYLE} ${text}` }] }],
-      config: {
-        responseModalities: ["AUDIO"],
-        speechConfig: {
-          voiceConfig: {
-            prebuiltVoiceConfig: { voiceName: GOOGLE_TTS_VOICE },
+  const { GoogleGenAI } = await import("@google/genai");
+  const client = new GoogleGenAI({ apiKey: key });
+  let lastError = "google voice quiet";
+  for (const model of GOOGLE_TTS_MODELS) {
+    try {
+      const response = await client.models.generateContent({
+        model,
+        contents: [{ parts: [{ text: `${GOOGLE_TTS_STYLE} ${text}` }] }],
+        config: {
+          responseModalities: ["AUDIO"],
+          speechConfig: {
+            voiceConfig: {
+              prebuiltVoiceConfig: { voiceName: GOOGLE_TTS_VOICE },
+            },
           },
         },
-      },
-    });
-    const b64 =
-      (
-        response.candidates?.[0]?.content?.parts?.[0] as
-          | { inlineData?: { data?: string } }
-          | undefined
-      )?.inlineData?.data ?? null;
-    if (!b64) return null;
-    const pcm = Buffer.from(b64, "base64");
-    if (pcm.length === 0) return null;
-    const meta = {
-      audioFormat: 1,
-      numChannels: 1,
-      sampleRate: 24000,
-      bitsPerSample: 16,
-    };
-    /* the pace rides when the sky's own tempo needs the house's hand */
-    void speed;
-    return { buffer: buildWav(meta, pcm) };
-  } catch (err) {
-    return {
-      buffer: Buffer.alloc(0),
-      error: err instanceof Error ? err.message.slice(0, 400) : "google voice quiet",
-    };
+      });
+      const b64 =
+        (
+          response.candidates?.[0]?.content?.parts?.[0] as
+            | { inlineData?: { data?: string } }
+            | undefined
+        )?.inlineData?.data ?? null;
+      if (!b64) {
+        lastError = `${model}: the voice answered without sound`;
+        continue;
+      }
+      const pcm = Buffer.from(b64, "base64");
+      if (pcm.length === 0) {
+        lastError = `${model}: the voice answered empty`;
+        continue;
+      }
+      const meta = {
+        audioFormat: 1,
+        numChannels: 1,
+        sampleRate: 24000,
+        bitsPerSample: 16,
+      };
+      /* the pace rides when the sky's own tempo needs the house's hand */
+      void speed;
+      return { buffer: buildWav(meta, pcm) };
+    } catch (err) {
+      lastError = `${model}: ${
+        err instanceof Error ? err.message.slice(0, 300) : "quiet"
+      }`;
+    }
   }
+  return { buffer: Buffer.alloc(0), error: lastError };
 }
 
 /* ---- route -------------------------------------------------------- */

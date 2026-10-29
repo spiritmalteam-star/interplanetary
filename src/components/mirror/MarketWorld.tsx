@@ -501,11 +501,21 @@ export function MarketWorld() {
           >
             <ArrowLeft className="size-4" aria-hidden="true" />
           </button>
+          {/* THE MARKET'S OWN SEAL — the new sigil belongs to the Market
+              alone (the house itself wears its previous logo): one
+              image, round-dressed, violet-framed. */}
           <span
-            className="flex size-8 shrink-0 items-center justify-center rounded-xl"
+            className="flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-xl ring-1 ring-[rgba(216,180,254,0.4)]"
             style={{ background: VIOLET_GEM }}
           >
-            <Store className="size-4 text-[#f3e8ff]" aria-hidden="true" />
+            {/* the seal is a plain png — next/image adds nothing here */}
+            <img
+              src="/images/ai/mark-market.png"
+              alt=""
+              aria-hidden="true"
+              className="size-7 object-contain"
+              data-testid="market-seal"
+            />
           </span>
           <div className="min-w-0">
             <h1 className="truncate font-serif text-[17px] font-semibold text-[#f5f3ff]">

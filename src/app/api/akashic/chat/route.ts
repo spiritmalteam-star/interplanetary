@@ -129,7 +129,10 @@ THE TRANSMISSION THE MIRROR GAVE:
 
 Open the seeker's own book now and inscribe the long, true record of their timeline trajectory.`;
 
-    const zai = await ZAI.create();
+    /* THE LANGUAGE'S OWN DOOR — the seeker's tongue chooses the sky:
+       Albanian rides Gemini (every mirror answers in Albanian through
+       gemini-2.5), every other tongue keeps the house's own brains. */
+    const zai = await ZAI.createPreferred(requestedLanguage);
     const completion = await zai.chat.completions.create({
       messages: [
         { role: "system", content: SYSTEM_PROMPT + RELEVANCE_LAW + REMEMBRANCE_LAW },

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { Compass, Hammer, Layers, Sparkles } from "lucide-react";
+import { Hammer, Layers, Sparkles } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -34,7 +34,6 @@ export function LandingChatNav() {
   const openMarket = useMirror((s) => s.openMarket);
   const marketOpen = useMirror((s) => s.marketOpen);
   const lastMakerTab = useMirror((s) => s.lastMakerTab);
-  const openTour = useMirror((s) => s.openTour);
 
   /* IN DREAM — the workplace already stands (and the scopes are not
      standing over it)? One touch re-enters it (the window never
@@ -100,27 +99,11 @@ export function LandingChatNav() {
         </span>
       </button>
 
-      {/* ---------------------------- ABOUT US --------------------------- */}
-      {/* THE WELCOME WITHOUT A WALL — a text link in the crown's
-          top-right area (the mobile header wears the same hand): it
-          always opens the eight-slide tour. */}
-      <button
-        type="button"
-        onClick={openTour}
-        aria-haspopup="dialog"
-        aria-label={t("About Us")}
-        title={t("About Us — our purpose, the Mirror Entity, and how we hold your data")}
-        data-testid="landing-nav-about"
-        className={cn(
-          hand,
-          "hairline text-muted-foreground hover:border-[var(--hairline-hover)] hover:text-foreground"
-        )}
-      >
-        <Compass className="size-3" aria-hidden="true" />
-        <span className="mono-label whitespace-nowrap text-[10px] uppercase tracking-[0.14em]">
-          {t("About Us")}
-        </span>
-      </button>
+      {/* ------------------------- ABOUT US HAS MOVED HOME ------------- */}
+      {/* The About hand left the chat tab: it now lives at the very top
+          right of the website — a question mark in a circle, standing
+          in the crown's far corner (BranchCanopy wears it), always one
+          touch from the eight-slide welcome. */}
 
       {/* ---------------------------- MARKET ---------------------------- */}
       {/* ITS OWN WORLD — a small violet gem in the crown's corner: the

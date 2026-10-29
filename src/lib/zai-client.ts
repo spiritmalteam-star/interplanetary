@@ -587,6 +587,33 @@ function openaiConfig(): CloudConfig | null {
   };
 }
 
+/* ------------------------- the gemini sky --------------------------- */
+/*  GEMINI 2.5 — the quiet third sky. It stands behind the house's own
+    brains for every slow or spent moment (a Z.ai sky that takes too
+    long to answer, a quota resting, a 5xx storm), and it LEADS the
+    conversation the moment the visitor speaks Albanian — every mirror
+    answers in Albanian through Gemini's own tongue. The key lives in
+    GEMINI_API_KEY (the same key the sound engine and the brush
+    already carry in Vercel's vault). The endpoint is Gemini's own
+    OpenAI-compatible door: the exact request shape every other sky
+    already speaks, so one class serves it too. */
+function geminiConfig(): CloudConfig | null {
+  const apiKey =
+    process.env.GEMINI_API_KEY?.trim() || process.env.GOOGLE_API_KEY?.trim();
+  if (!apiKey) return null;
+  return {
+    apiKey,
+    baseUrl: (
+      process.env.GEMINI_BASE_URL ??
+      "https://generativelanguage.googleapis.com/v1beta/openai"
+    ).replace(/\/$/, ""),
+    model: process.env.GEMINI_CHAT_MODEL ?? "gemini-2.5-flash",
+    visionModel: process.env.GEMINI_VISION_MODEL ?? "gemini-2.5-flash",
+    allowThinking: false,
+    label: "Gemini",
+  };
+}
+
 export type Provider = "zai-cloud" | "openai" | "zai";
 
 export function resolveProvider(): Provider {
@@ -789,14 +816,98 @@ function skyRefused(err: unknown): boolean {
   return FALLBACK_TRIGGER.test(msg);
 }
 
+/* ---- the patient hourglass ------------------------------------------ */
+/*  THE SLOW SKY'S OWN LAW — a sky that takes too long to answer is its
+    own kind of silence. When the first sky has not spoken within its
+    patience (SLOW_SKY_MS, twenty seconds by nature), the second sky
+    carries the words at once; the first may finish in the background,
+    but no visitor waits on it. The hourglass never shortens a call
+    that already answered. */
+const SLOW_SKY_MS = Number(process.env.SLOW_SKY_MS ?? 20_000);
+const SLOW_SKY = Symbol("slow-sky");
+
+function raceSlow<T>(p: Promise<T>, ms: number): Promise<T> {
+  if (!(ms > 0)) return p;
+  return new Promise<T>((resolve, reject) => {
+    let settled = false;
+    const timer = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      /* the slow sky keeps walking — its answer is simply no longer
+         waited for (and its storms are swallowed, never unhandled) */
+      p.then(
+        () => undefined,
+        () => undefined
+      );
+      reject(SLOW_SKY);
+    }, ms);
+    p.then(
+      (v) => {
+        if (!settled) {
+          settled = true;
+          clearTimeout(timer);
+          resolve(v);
+        }
+      },
+      (e) => {
+        if (!settled) {
+          settled = true;
+          clearTimeout(timer);
+          reject(e);
+        }
+      }
+    );
+  });
+}
+
 function chainChatBackends(primary: ZAIClient, fallback: ZAIClient): ZAIClient {
   const withFallback = async (
     run: (sky: ZAIClient) => Promise<ChatCompletion>
   ): Promise<ChatCompletion> => {
     try {
-      return await run(primary);
+      return await raceSlow(run(primary), SLOW_SKY_MS);
     } catch (err) {
-      if (skyRefused(err)) return run(fallback);
+      /* the slow sky falls to the second exactly like a refused one */
+      if (err === SLOW_SKY || skyRefused(err)) return run(fallback);
+      throw err;
+    }
+  };
+  return {
+    chat: {
+      completions: {
+        create: (params: ChatParams) =>
+          withFallback((sky) => sky.chat.completions.create(params)),
+        createVision: (params: ChatParams) =>
+          withFallback((sky) => sky.chat.completions.createVision(params)),
+      },
+    },
+    audio: primary.audio,
+  };
+}
+
+/* THE THREE-SKY BRIDGE — primary, then the second, then Gemini: every
+   sky gets the same patience (retries inside their own class, the
+   hourglass across them), so the words only fall when three skies
+   have all spoken their refusal — or the first two stood silent. */
+function chainThreeBackends(
+  primary: ZAIClient,
+  second: ZAIClient,
+  third: ZAIClient
+): ZAIClient {
+  const withFallback = async (
+    run: (sky: ZAIClient) => Promise<ChatCompletion>
+  ): Promise<ChatCompletion> => {
+    try {
+      return await raceSlow(run(primary), SLOW_SKY_MS);
+    } catch (err) {
+      if (err === SLOW_SKY || skyRefused(err)) {
+        try {
+          return await raceSlow(run(second), SLOW_SKY_MS);
+        } catch (err2) {
+          if (err2 === SLOW_SKY || skyRefused(err2)) return run(third);
+          throw err2;
+        }
+      }
       throw err;
     }
   };
@@ -834,6 +945,24 @@ export default class ZAI {
     return ZAI.sky;
   }
 
+  /* THE LANGUAGE'S OWN DOOR — the visitor's tongue chooses the leading
+     sky. When they speak Albanian, every mirror answers through the
+     Gemini sky (gemini-2.5) in Albanian; every other tongue keeps the
+     house's own brains, with Gemini standing quietly behind them all. */
+  static async createPreferred(language?: string): Promise<ZAIClient> {
+    const lang = (language ?? "en").toLowerCase();
+    const gemini = geminiConfig();
+    if (lang === "sq" && gemini) {
+      const primary = new CloudBackend(gemini);
+      const secondSky = zaiCloudConfig() ?? openaiConfig();
+      if (secondSky) {
+        return chainChatBackends(primary, new CloudBackend(secondSky));
+      }
+      return primary;
+    }
+    return ZAI.create();
+  }
+
   private static async build(): Promise<ZAIClient> {
     const provider = resolveProvider();
     if (provider === "zai-cloud") {
@@ -844,10 +973,25 @@ export default class ZAI {
            every patient retry, the OpenAI-compatible sky (if a key
            exists) carries the words so the chats keep responding.
            The voice never rides this second sky — only the house
-           voice (Z.ai) reads aloud. */
-        const secondSky = openaiConfig();
+           voice (Z.ai) reads aloud. THE THIRD SKY — and when the
+           second has spent itself too (or the first simply took too
+           long), Gemini 2.5 stands behind them both. */
+        const secondSky = openaiConfig() ?? geminiConfig();
         if (secondSky) {
-          return chainChatBackends(primary, new CloudBackend(secondSky));
+          const chain = chainChatBackends(primary, new CloudBackend(secondSky));
+          const thirdSky =
+            secondSky.label === "OpenAI" ? geminiConfig() : null;
+          /* three skies only when both keys exist — the chain wraps
+             the already-chained client's primary, so a full walk is
+             Z.ai → OpenAI → Gemini */
+          if (thirdSky) {
+            return chainThreeBackends(
+              primary,
+              new CloudBackend(secondSky),
+              new CloudBackend(thirdSky)
+            );
+          }
+          return chain;
         }
         return primary;
       }
@@ -856,24 +1000,53 @@ export default class ZAI {
       const cfg = openaiConfig();
       if (cfg) {
         const primary = new CloudBackend(cfg);
-        const secondSky = zaiCloudConfig();
+        const secondSky = zaiCloudConfig() ?? geminiConfig();
         if (secondSky) {
-          return chainChatBackends(primary, new CloudBackend(secondSky));
+          const chain = chainChatBackends(primary, new CloudBackend(secondSky));
+          const thirdSky =
+            secondSky.label === "Z.ai" ? geminiConfig() : null;
+          if (thirdSky) {
+            return chainThreeBackends(
+              primary,
+              new CloudBackend(secondSky),
+              new CloudBackend(thirdSky)
+            );
+          }
+          return chain;
         }
         return primary;
       }
     }
     if (!process.env.VERCEL) {
       /* the atelier — and, when the laboratory holds a cloud key, the
-         quiet second sky behind it for the exhausted-quota moments */
+         quiet second sky behind it for the exhausted-quota moments,
+         with Gemini as the patient third hand */
       const atelier = await atelierBackend();
-      const secondSky = zaiCloudConfig() ?? openaiConfig();
+      const secondSky = zaiCloudConfig() ?? openaiConfig() ?? geminiConfig();
       if (secondSky) {
+        if (secondSky.label === "Gemini") {
+          return chainChatBackends(atelier, new CloudBackend(secondSky));
+        }
+        const thirdSky = zaiCloudConfig()
+          ? openaiConfig() ?? geminiConfig()
+          : geminiConfig();
+        if (thirdSky) {
+          return chainThreeBackends(
+            atelier,
+            new CloudBackend(secondSky),
+            new CloudBackend(thirdSky)
+          );
+        }
         return chainChatBackends(atelier, new CloudBackend(secondSky));
       }
       return atelier;
     }
-    /* the cloud can only live from a key — say clearly which one */
+    /* the cloud can only live from a key — say clearly which one.
+       THE GEMINI MERCY — when the house holds no Z.ai and no OpenAI
+       key but a Gemini key stands in the vault, the Gemini sky serves
+       the whole house alone rather than letting every chat fall. */
+    const gemini = geminiConfig();
+    if (gemini) return new CloudBackend(gemini);
     throw new Error(
       "No AI provider is configured on this deployment. Add ZAI_API_KEY (Z.ai — the same GLM brains as the laboratory) or OPENAI_API_KEY in Vercel → Settings → Environment Variables, then redeploy."
     );

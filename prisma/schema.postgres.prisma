@@ -23,6 +23,12 @@ datasource db {
 //  - ApiKey → hashed at rest, prefix shown, full secret seen once
 //  - ProcessedEvent → webhook idempotency; the same event never pays twice
 // ---------------------------------------------------------------------------
+// THIS SCHEMA IS THE CLOUD TWIN OF prisma/schema.prisma (sqlite). The two
+// MUST carry the same shapes — every model, every field, every index. A
+// model that lives in one and rests in the other leaves the sky's own
+// client without its accessor (db.model === undefined), and every passage
+// that touches it falls with "Cannot read properties of undefined".
+// ---------------------------------------------------------------------------
 
 model User {
   id              String   @id @default(cuid())
@@ -31,6 +37,7 @@ model User {
   passwordHash    String? // null → the visitor arrived through Google, or anonymously
   provider        String   @default("email") // email | google | anon
   tier            String   @default("crystalline") // kept for gentle history; every world is free
+  role            String   @default("user") // user | ADMIN — bound in the database, never by a request's own claim
   settings        Json? // the visitor's own tuning: language, voice, pace, theme, fields of expansion
   emailVerifiedAt DateTime?
   createdAt       DateTime @default(now())
@@ -38,6 +45,15 @@ model User {
   entries         LibraryEntry[]
   memberships     WorkspaceMember[]
   ownedWorkspaces Workspace[] @relation("OwnedWorkspaces")
+  wallet          UserWallet?
+  ledger          CreditLedger[]
+  generationJobs  GenerationJob[] @relation("GenerationJobs")
+  musicTracks     MusicTrack[]    @relation("MusicTracks")
+  loopWeaves      LoopWeave[]
+  loopWeaveFinals LoopWeaveFinal[]
+  marketListings  MarketListing[]
+  expansion       ExpansionProfile?
+  expansionEvents ExpansionEvent[]
 }
 
 model LibraryEntry {
@@ -48,12 +64,43 @@ model LibraryEntry {
   title     String
   excerpt   String
   content   String // JSON: { query, reply, meta }
+  cover     String? // the volume's own face — a data URL painted by the sky's own Gemini (the book's album cover)
   createdAt DateTime @default(now())
 
   @@index([userId, createdAt])
 }
 
 // ------------------------------- tenancy ---------------------------------
+
+/* ------------------------------ the market -------------------------------
+   THE MARKET'S OWN SHELF — a creation the visitor chose to publish. The
+   Mirror writes its explaining words; the hall hangs it for every
+   signed-in keeper of the house to see, hear and read. */
+model MarketListing {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind        String // book | music | art | research
+  refId       String // the creation it stands for (LibraryEntry or MusicTrack id)
+  refKind     String   @default("library") // library | music
+  title       String
+  creatorName String
+  note        String? // the Mirror's own explaining words for the hall
+  excerpt     String?
+  cover       String?
+  audioUrl    String?
+  localFile   String?
+  durationSec Int?
+  pages       Int?
+  status      String   @default("publishing") // publishing | live | cancelled | failed
+  progress    Int      @default(10) // 10 laid | 50 the words | 90 dressed | 100 live
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, refId])
+  @@index([status, createdAt])
+  @@index([userId, createdAt])
+}
 
 model Workspace {
   id        String   @id @default(cuid())
@@ -205,4 +252,289 @@ model ProcessedEvent {
   id         String   @id // the provider's event id (e.g. Stripe evt_…)
   type       String
   receivedAt DateTime @default(now())
+}
+
+// ---------------------- the visitor's own wallet -------------------------
+// The per-user credit pipeline (the frontier law): every passage carries
+// its own wallet, purchases land here instantly through Stripe's signed
+// webhooks, and every AI operation the five gated doors serve is weighed
+// against it BEFORE it runs. The allowed values are the law written here:
+//   planTier    : FREE | SEEKER | OBSERVATORY_PRO
+//   actionType  : CHAT | AKASHIC | ART_X | LIGHT_CODES | DREAM_BOOK |
+//                 SUBSCRIPTION_GRANT | TOPUP_PURCHASE
+// CreditLedger.creditsDeducted is signed: negative = spent, positive =
+// granted or refunded. rawCostUsd is internal bookkeeping only — it is
+// never shown to the visitor.
+
+model UserWallet {
+  id                    String    @id @default(cuid())
+  userId                String    @unique
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planTier              String    @default("FREE") // FREE | SEEKER | OBSERVATORY_PRO
+  freeCreditsRemaining  Int       @default(5) // the birth gift — spent first
+  paidCreditsRemaining  Int       @default(0) // every purchase lands here
+  depositCredits        BigInt    @default(0) // the great deposit — reflection pulses converted from the skies' own API accumulation (Int32 cannot hold it)
+  depositSource         String?   // where the great deposit was borrowed from (e.g. "zai_api_accumulation")
+  stripeCustomerId      String?   @unique
+  stripeSubscriptionId  String?   @unique
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+}
+
+model CreditLedger {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  actionType      String // CHAT | AKASHIC | ART_X | LIGHT_CODES | DREAM_BOOK | SUBSCRIPTION_GRANT | TOPUP_PURCHASE
+  creditsDeducted Int // signed — negative spent, positive granted/refunded
+  rawCostUsd      Float?   // internal: the API cost actually incurred
+  metadata        Json?    // model, tokens, split (freePart/paidPart), referenceId
+  createdAt       DateTime @default(now())
+
+  @@index([userId])
+  @@index([userId, createdAt])
+}
+
+model GenerationJob {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation("GenerationJobs", fields: [userId], references: [id], onDelete: Cascade)
+  tool           String // light_codes | …future durable makers
+  providerTaskId String? // the maker's own handle (e.g. the Suno taskId)
+  status         String   @default("pending") // pending | processing | succeeded | failed
+  request        Json? // the ask, enough to resume or re-render
+  result         Json? // the maker's final answer (tracks metadata)
+  creditsDrawn   Int      @default(0) // the light the weigh drew for this job
+  refunded       Boolean  @default(false) // a confirmed failure gives the light back, once
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([userId, createdAt])
+  @@index([providerTaskId])
+}
+
+model MusicTrack {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation("MusicTracks", fields: [userId], references: [id], onDelete: Cascade)
+  jobId       String? // the GenerationJob that wove it
+  title       String
+  audioUrl    String // the serve key (/api/music-audio/<file>) — never a browser guess
+  localFile   String? // the mirrored file's name under the house's audio vault
+  audioData   Bytes? // the sound's own bytes, kept in the vault's deep shelf — the sky keeps no files, so the row itself holds the sound
+  remoteUrl   String? // the maker's own CDN address (kept for re-mirror attempts)
+  durationSec Float?
+  status      String   @default("ready") // ready | mirrored | remote_only | failed
+  favorite    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+// the endless journey's durable thread — the weave crosses warm
+// instances, so the parts and the joined whole rest in the vault's
+// deep shelf, not in one instance's memory
+model LoopWeave {
+  id        String          @id @default(cuid())
+  token     String          @unique
+  userId    String
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  total     Int
+  mime      String          @default("audio/mpeg")
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  parts     LoopWeavePart[]
+
+  @@index([userId, updatedAt])
+}
+
+model LoopWeavePart {
+  id        String    @id @default(cuid())
+  weaveId   String
+  weave     LoopWeave @relation(fields: [weaveId], references: [id], onDelete: Cascade)
+  idx       Int
+  audio     Bytes
+  createdAt DateTime  @default(now())
+
+  @@unique([weaveId, idx])
+}
+
+model LoopWeaveFinal {
+  id          String   @id @default(cuid())
+  token       String   @unique
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mime        String   @default("audio/mpeg")
+  audio       Bytes
+  durationSec Float    @default(0)
+  seamless    Boolean  @default(false)
+  note        String   @default("")
+  createdAt   DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model ExpansionProfile {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  score        Int      @default(0)
+  stage        Int      @default(0)
+  breadth      Float    @default(0)
+  depth        Float    @default(0)
+  harmony      Float    @default(0)
+  constancy    Float    @default(0)
+  creation     Float    @default(0)
+  totalPicks   Int      @default(0)
+  chains       Int      @default(0)
+  deepestChain Int      @default(0)
+  delta        Int      @default(0)
+  updatedAt    DateTime @updatedAt
+  createdAt    DateTime @default(now())
+}
+
+model ExpansionEvent {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind      String // pick | transmission | grow
+  scope     String?
+  movement  String?
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+// ----------------- the fuel engine incubator (admin) ----------------------
+//  The protected chamber where the house's own energy is fused with the
+//  available APIs and distributed to passages on request. Visible only to
+//  the keeper's admin passage (ADMIN_EMAIL). The reserves are the tanks;
+//  the grants are the outflow ledger — every drop accounted for.
+
+model FuelReserve {
+  id          String    @id @default(cuid())
+  key         String    @unique // openai_brush | zai_cogview | zai_atelier | mirror_core | messenger | stripe_rails | google_passage
+  name        String
+  source      String // openai | zai | resend | stripe | google | internal
+  role        String // what this pipeline does, in one line
+  capacity    Int       @default(0) // the tank's size (fuel cells)
+  fused       Int       @default(0) // total energy fused into the tank
+  distributed Int       @default(0) // total energy sent out of the tank
+  status      String    @default("resting") // resting | active | paused
+  lastFusedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model FuelGrant {
+  id        String   @id @default(cuid())
+  email     String // the passage that received the fuel
+  userId    String?
+  amount    Int // fuel cells granted (== wallet credits)
+  kind      String // plan_fuel | topup | gift | repair
+  reserve   String   @default("mirror_core") // the tank it drew from
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([email])
+}
+
+// ------------------ the deposit economy (the keeper's well) ---------------
+//  THE DEPOSIT LAW: the admin is the central deposit — the well every user
+//  credit is poured from. Payment sources (Stripe / PayPal / manual /
+//  custom) are stored ENCRYPTED at rest (AES-256-GCM via secret-box.ts) and
+//  never leave the server: every response carries only the masked hint.
+//  DepositLedger.direction carries the sign — amount is always positive.
+//  balance = sum(in) - sum(out). A mint that finds the well dry (when
+//  WALLET_ENFORCED) is refused honestly — the keeper charges the well first.
+
+model PaymentSource {
+  id             String    @id @default(cuid())
+  name           String
+  provider       String // stripe | paypal | manual | custom
+  credentialsEnc String // AES-256-GCM JSON {iv,tag,data} (secret-box.ts) — decrypted server-side only, never in any response or log
+  hint           String    @default("••••") // masked shape ("••••1234") computed once from the first credential value
+  active         Boolean   @default(true)
+  lastUsedAt     DateTime?
+  lastTestedAt   DateTime?
+  lastTestOk     Boolean?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([active])
+}
+
+model DepositLedger {
+  id         String   @id @default(cuid())
+  direction  String // "in" | "out" — the sign lives here; amount is positive
+  amount     Int // credits, always positive
+  sourceId   String?  // the PaymentSource the well was charged from
+  sourceName String?  // denormalized for the movements list (survives source deletion)
+  reference  String?  // stripe session/invoice id, or the keeper's own reference
+  actorEmail String?  // who moved it — buyer's email for purchases, the keeper for charges
+  userId     String?  // the passage that received credits (out rows)
+  note       String?
+  createdAt  DateTime @default(now())
+
+  @@index([direction, createdAt])
+  @@index([reference])
+}
+
+// ---------------------------------------------------------------------------
+// THE UNIVERSAL CAPABILITY ENGINE — the creation ledger (Stage 1).
+// A CreationJob is one workflow the Mirror walks with a visitor: its plan,
+// its steps, their honest progress. A CreationArtifact is what the walk
+// made: registered server-side, its files kept on the visitor's own device
+// (the house's keeping law) or at a reference the sky returned.
+// ---------------------------------------------------------------------------
+
+model CreationJob {
+  id            String   @id @default(cuid())
+  kind          String // the workflow id, e.g. "create.video.motion"
+  status        String   @default("queued") // queued | planning | running | completed | failed | cancelled
+  input         String   @default("{}") // JSON: the visitor's request + options
+  plan          String? // JSON: the workflow's own plan (steps, storyboard)
+  steps         String   @default("[]") // JSON: [{ id, capability, status, note }]
+  progress      Int      @default(0) // 0..100
+  error         String?
+  sourceConvId  String? // the conversation the making was born from
+  sourceBranch  String? // the branch text the making grew from
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([status, createdAt])
+  @@index([sourceConvId])
+}
+
+model CreationArtifact {
+  id           String   @id @default(cuid())
+  type         String // video | book | image | song | scene | invention | document
+  title        String
+  description  String?
+  status       String   @default("ready") // draft | ready | failed
+  version      Int      @default(1)
+  jobId        String? // the workflow that made it
+  sourceConvId String?
+  sourceBranch String?
+  files        String   @default("[]") // JSON: [{ storage, key, url?, mime?, bytes? }]
+  metadata     String   @default("{}") // JSON: duration, sceneCount, mode, ...
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([type, createdAt])
+  @@index([sourceConvId])
+}
+
+// ---------------------------------------------------------------------------
+// THE KEEPER'S OWN CONSOLE — live platform configuration. Prices, packs and
+// service switches the administrator may tune without a redeploy; every row
+// remembers who last moved it. The code's defaults stand whenever a row
+// rests — the console overrides, never replaces, the house's own laws.
+// ---------------------------------------------------------------------------
+model PlatformConfig {
+  key       String   @id // "service_prices" | "packs" | ...
+  value     Json
+  updatedBy String? // the admin email that last moved this row
+  updatedAt DateTime @updatedAt
 }

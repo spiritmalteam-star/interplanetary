@@ -1113,7 +1113,19 @@ async function postImpl(
       let dbThread: { token: string; total: number; parts: number } | null = null;
       if (journey && partIndex > 1) {
         if (dbUserId) {
-          const st = b.loopToken ? await dbLoopState(b.loopToken, dbUserId) : null;
+          /* THE DEEP SHELF'S OWN BREATH — a vault that rests (unreached,
+             unshaped, or missing) never silences the music with a raw
+             wound: the honest journey words are spoken instead. */
+          let st: { token: string; total: number; parts: number } | null = null;
+          try {
+            st = b.loopToken ? await dbLoopState(b.loopToken, dbUserId) : null;
+          } catch (vaultErr) {
+            console.error(
+              "[light-codes] the deep shelf rested (thread):",
+              vaultErr instanceof Error ? vaultErr.message : vaultErr
+            );
+            st = null;
+          }
           if (!st) {
             return NextResponse.json(
               {
@@ -1389,65 +1401,90 @@ async function postImpl(
         const segBytes = Buffer.from(weave.audioB64, "base64");
         if (dbUserId) {
           /* the deep thread — parts and final rest in the vault itself,
-             so the journey crosses warm instances in the sky */
-          if (partIndex <= 1 || !dbThread) {
-            const st = await dbLoopBegin(dbUserId, total, weave.mime, segBytes);
+             so the journey crosses warm instances in the sky.
+             THE VAULT'S OWN BREATH: a shelf that rests (unreached or
+             unshaped) never kills the weave — the journey falls back to
+             this instance's own memory, and the sound always lands. */
+          try {
+            if (partIndex <= 1 || !dbThread) {
+              const st = await dbLoopBegin(dbUserId, total, weave.mime, segBytes);
+              return NextResponse.json({
+                ...passed,
+                length,
+                loopToken: st.token,
+                loopProgress: `${st.parts}/${st.total}`,
+                loopFinalized: false,
+              });
+            }
+            const st = await dbLoopAddPart(dbThread.token, dbUserId, partIndex, segBytes);
+            if ("outOfStep" in st) {
+              return NextResponse.json(
+                {
+                  ...passed,
+                  error: `The journey's parts arrived out of step — the loom waits for part ${st.outOfStep + 1} of ${dbThread.total}.`,
+                  code: "journey_out_of_step",
+                  loopToken: dbThread.token,
+                  loopProgress: `${st.outOfStep}/${dbThread.total}`,
+                },
+                { status: 409 }
+              );
+            }
+            if (st.parts < st.total) {
+              return NextResponse.json({
+                ...passed,
+                length,
+                loopToken: st.token,
+                loopProgress: `${st.parts}/${st.total}`,
+                loopFinalized: false,
+              });
+            }
+            /* the final part — join the whole journey in the vault */
+            const joined = await dbLoopFinalize(dbThread.token, dbUserId);
+            if (!joined) {
+              return NextResponse.json(
+                {
+                  ...passed,
+                  error:
+                    "The journey's thread rested just before its joining. Ask once more — the weaving continues where it stood.",
+                  code: "journey_thread_rest",
+                },
+                { status: 410 }
+              );
+            }
             return NextResponse.json({
               ...passed,
               length,
-              loopToken: st.token,
-              loopProgress: `${st.parts}/${st.total}`,
-              loopFinalized: false,
+              loopToken: dbThread.token,
+              loopProgress: `${total}/${total}`,
+              loopFinalized: true,
+              audioUrl: `/api/light-codes/audio?token=${dbThread.token}`,
+              loopDurationSec: Math.round(joined.durationSec),
+              loopSeamless: joined.seamless,
+              loopNote: joined.note,
+              structure: weave.texts.join("\n\n").slice(0, 2000) || undefined,
+              engine: body.model,
             });
-          }
-          const st = await dbLoopAddPart(dbThread.token, dbUserId, partIndex, segBytes);
-          if ("outOfStep" in st) {
-            return NextResponse.json(
-              {
-                ...passed,
-                error: `The journey's parts arrived out of step — the loom waits for part ${st.outOfStep + 1} of ${dbThread.total}.`,
-                code: "journey_out_of_step",
-                loopToken: dbThread.token,
-                loopProgress: `${st.outOfStep}/${dbThread.total}`,
-              },
-              { status: 409 }
+          } catch (vaultErr) {
+            console.error(
+              "[light-codes] the deep shelf rested — the journey rides this instance's own memory:",
+              vaultErr instanceof Error ? vaultErr.message : vaultErr
             );
+            /* a continuation part whose thread lived only in the deep
+               shelf cannot be continued from this instance's memory —
+               the honest words, never a raw wound */
+            if (partIndex > 1 && !dbThread) {
+              return NextResponse.json(
+                {
+                  ...passed,
+                  error:
+                    "The journey's thread rested before its weaving ended (the chamber keeps it about an hour). Ask again — the Mirror begins the journey anew, and the brief still stands.",
+                  code: "journey_thread_rest",
+                },
+                { status: 410 }
+              );
+            }
+            /* the first part falls back to the memory shelf below */
           }
-          if (st.parts < st.total) {
-            return NextResponse.json({
-              ...passed,
-              length,
-              loopToken: st.token,
-              loopProgress: `${st.parts}/${st.total}`,
-              loopFinalized: false,
-            });
-          }
-          /* the final part — join the whole journey in the vault */
-          const joined = await dbLoopFinalize(dbThread.token, dbUserId);
-          if (!joined) {
-            return NextResponse.json(
-              {
-                ...passed,
-                error:
-                  "The journey's thread rested just before its joining. Ask once more — the weaving continues where it stood.",
-                code: "journey_thread_rest",
-              },
-              { status: 410 }
-            );
-          }
-          return NextResponse.json({
-            ...passed,
-            length,
-            loopToken: dbThread.token,
-            loopProgress: `${total}/${total}`,
-            loopFinalized: true,
-            audioUrl: `/api/light-codes/audio?token=${dbThread.token}`,
-            loopDurationSec: Math.round(joined.durationSec),
-            loopSeamless: joined.seamless,
-            loopNote: joined.note,
-            structure: weave.texts.join("\n\n").slice(0, 2000) || undefined,
-            engine: body.model,
-          });
         }
         if (!session) {
           session = createLoopSession(keeperId, total, weave.mime);

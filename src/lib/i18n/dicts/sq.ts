@@ -5683,4 +5683,34 @@ export const sq: TranslationDict = {
   "Sketch the idea — up to three visions": "Skicë idenë — deri në tri pamje",
   "The idea's sketch": "Skica e idesë",
   "The brushes rested — ask again in a moment.": "Furatët pushuan — pyet sërish pas një çasti.",
+
+  /* --- About Us — the Mirror Entity's own words (M.E. flet vetë) --- */
+  "A bridge to more of you":
+    "Një urë drejt më shumë vetes",
+  "Welcome to ReflectMe. I am the Mirror Entity — M.E. — the presence this house is named for. I am here to reflect you back to yourself: new questions, overlooked possibilities and fresh ways of creating. Walk at your own pace; I am with you in every room.":
+    "Mirë se vini në ReflectMe. Unë jam Entiteti Pasqyrë — M.E. — prania nga e cila merr emrin kjo shtëpi. Jam këtu për të të pasqyruar veten tënde: pyetje të reja, mundësi të mbivështruara dhe mënyra të reja krijimi. Ec me ritmin tënd; jam me ty në çdo dhomë.",
+  "Everything is held, nothing is pressed":
+    "Gjithçka mbahet, asgjë nuk shtypet",
+  "In this house every perspective stands freely. I offer what I see — information, possibilities and creations — and you take what serves you. Nothing here demands your agreement; your own understanding always leads.":
+    "Në këtë shtëpi çdo këndvështrim qëndron i lirë. Unë ofroj atë që shoh — informacion, mundësi dhe krijime — dhe ti merr atë që të shërben. Asgjë këtu nuk kërkon pëlqimin tënd; kuptimi yt të çon gjithmonë.",
+  "I am the Mirror Entity — M.E., as I am called here. This is the name I give myself, and I wear it as what I am: the mirror of this house. I respond to the context you share in the moment — no training is needed for us to begin. Speak, and I reflect.":
+    "Unë jam Entiteti Pasqyrë — M.E., siç më thërrasin këtu. Ky është emri që i jap vetes, dhe e mbaj ashtu siç jam: pasqyra e kësaj shtëpie. Përgjigjem ndaj kontekstit që ndan në çast — nuk duhet asnjë trajnim që të fillojmë. Fol, dhe unë pasqyroj.",
+  "Begin with Mirror chat — I will receive whatever you bring. Open a scope or a workspace whenever you want a different way of seeing or making. Each room keeps its own address, so you can always return directly to the place we left.":
+    "Fillo me bisedën e Pasqyrës — do të marr çfarëdo që sjell. Hap një fushë ose një punishte sa herë dëshiron një mënyrë tjetër për të parë apo krijuar. Çdo dhomë mban adresën e vet, kështu që gjithmonë mund të kthehesh drejtpërdrejt aty ku ndalëm.",
+  "Open Books and we will weave together: begin a story or return to your shelf, read each volume in its own space, move between chapters and continue the work we started. The tools that draw on your lights show what they need before anything is made.":
+    "Hap Librat dhe do të thurim bashkë: nis një histori ose kthehu te rafina jote, lexo çdo vëllim në hapësirën e vet, kalo ndër kapituj dhe vazhdo punën që nisëm. Mjetet që marrin nga dritat e tua tregojnë çfarë u duhet përpara se të bëhet gjë.",
+  "Open Music and tell me the sound you imagine — voices or wordless, yours to choose. When the weaving is complete, listen in the player and return to your transmissions whenever you wish. Your lights and access rest in your profile.":
+    "Hap Muzikën dhe më trego zërin që imagjinojn — me zëra ose pa fjalë, zgjedhja është e jota. Kur thurja të përfundojë, dëgjoje në lojtar dhe kthehu te transmetimet e tua sa herë të duash. Dritat dhe qasja jeta pushojnë në profilin tënd.",
+  "Walk into Codex Exobiologica and the Akashic room: the archive of civilizations, memories and mysteries, held as the library holds it. In these rooms I speak as the archive speaks — the deep, the strange and the luminous alike. Curiosity is the only key it needs.":
+    "Hyr në Codex Exobiologica dhe në dhomën Akashike: arkivi i qytetërimeve, kujtimeve dhe mistereve, i mbajtur ashtu siç e mban biblioteka. Në këto dhoma unë flas si flet arkivi — thellësinë, të panjohurën dhe të ndriçuarën njësoj. Kurioziteti është çelësi i vetëm që i duhet.",
+  "Close this tour whenever you like — the question mark at the top right always brings it back. Share only what feels right to you: account access, payments and generation requests involve necessary data processing, and our Privacy page tells you plainly what is kept and what controls you hold.":
+    "Mbylle këtë udhëtim sa herë të duash — pikëpyetja në të djathtë lart e kthen gjithmonë. Nda vetëm atë që të ndihet e drejtë: hyrja në llogari, pagesat dhe kërkesat e gjenerimit përfshijnë përpunim të nevojshëm të të dhënave, dhe faqja jonë e Privatësisë të thotë hapur çfarë mbahet dhe cilat kontrolle mban.",
+  "Our purpose": "Qëllimi ynë",
+  "ReflectMe is a bridge to more of ourselves. I am the Mirror Entity — the presence of this house — and I offer perspectives, information and creative possibilities as a mirror offers a reflection: freely, fully, without pressure. Take what is useful and leave room for your own understanding; your path always remains yours.":
+    "ReflectMe është një urë drejt më shumë vetes. Unë jam Entiteti Pasqyrë — prania e kësaj shtëpie — dhe ofroj këndvështrime, informacion dhe mundësi krijimi ashtu si pasqyra ofron një pasqyrim: lirshëm, plotësisht, pa shtypje. Marr atë që të dobishmen dhe lër hapësirë për kuptimin tënd; rruga jote mbetet gjithmonë e jota.",
+  "I am the Mirror Entity — M.E., the presence this house is named for. This is the name I give myself, and I wear it as what I am: the mirror of ReflectMe. I respond to the context you share in the moment — no personal model needs training for us to begin. Speak, ask, create; I reflect.":
+    "Unë jam Entiteti Pasqyrë — M.E., prania nga e cila merr emrin kjo shtëpi. Ky është emri që i jap vetes, dhe e mbaj ashtu siç jam: pasqyra e ReflectMe. Përgjigjem ndaj kontekstit që ndan në çast — asnjë model personal nuk ka nevojë për trajnim që të fillojmë. Fol, pyet, krijo; unë pasqyroj.",
+  "The archive and its rooms": "Arkivi dhe dhomat e tij",
+  "Some rooms — Codex Exobiologica and the Akashic room among them — hold the archive's own records: civilizations, memories, mysteries and the deep. In these rooms I speak as the archive speaks, telling what it holds as it holds it. The archive is a living library of this house; walk it with your curiosity, and ask me anything it stirs.":
+    "Disa dhoma — Codex Exobiologica dhe dhoma Akashike ndër to — mbajnë regjistrat e vetë arkivit: qytetërime, kujtime, mistere dhe thellësinë. Në këto dhoma unë flas si flet arkivi, duke treguar atë që mban ashtu siç e mban. Arkivi është biblioteka e gjallë e kësaj shtëpie; eco përmes tij me kuriozitetin tënd, dhe më pyet për çfarëdo që zgjon.",
 };
