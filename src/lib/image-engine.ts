@@ -26,7 +26,7 @@ import ZAI_SDK from "z-ai-web-dev-sdk";
 export const GALLERY_DIR = path.join(process.cwd(), ".visualizations");
 
 export type ImageQuality = "standard" | "hd";
-export type ImageEngineName = "openai" | "zai";
+export type ImageEngineName = "openai" | "zai" | "gemini";
 
 export interface GeneratedImage {
   /** The painting — /api/visual/<file> in the gallery, a hosted url in the cloud. */
@@ -129,6 +129,7 @@ const breakers: Record<ImageEngineName, { failures: number; openUntil: number }>
   {
     openai: { failures: 0, openUntil: 0 },
     zai: { failures: 0, openUntil: 0 },
+    gemini: { failures: 0, openUntil: 0 },
   };
 
 /* --------------------- the painter's journal ----------------------- */
@@ -401,6 +402,116 @@ async function paintWithDalle(
 const ATELIER_BACKOFF_MS = [600, 1500];
 const ATELIER_ATTEMPT_TIMEOUT_MS = 75_000;
 
+/* ------------------------ brush: Gemini ------------------------- */
+
+/* THE SKY'S OWN BRUSH — Gemini paints with the very key the chamber
+   already carries (GEMINI_API_KEY on Vercel): the one brush that
+   stands when neither the OpenAI nor the Z.ai key was given passage.
+   The model ladder walks from the standing image model down to the
+   earlier preview door; each model is knocked once. */
+function geminiImageModels(): string[] {
+  const configured = process.env.GEMINI_IMAGE_MODEL?.trim();
+  return [
+    ...(configured ? [configured] : []),
+    "gemini-2.5-flash-image",
+    "gemini-2.0-flash-preview-image-generation",
+  ];
+}
+
+function geminiAspectOf(size?: string): string | null {
+  const [w = 0, h = 0] = (size ?? "").split("x").map(Number);
+  if (!Number.isFinite(w) || !Number.isFinite(h) || !w || !h) return null;
+  const ratio = w / h;
+  if (ratio > 1.6) return "16:9";
+  if (ratio > 1.15) return "4:3";
+  if (ratio < 0.62) return "9:16";
+  if (ratio < 0.87) return "3:4";
+  return "1:1";
+}
+
+async function geminiImageCall(
+  prompt: string,
+  size?: string
+): Promise<{ mime: string; b64: string }> {
+  const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+  if (!apiKey) throw new Error("GEMINI_API_KEY is not configured");
+  const aspect = geminiAspectOf(size);
+  let lastError = "";
+  for (const model of geminiImageModels()) {
+    try {
+      const body: Record<string, unknown> = {
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        generationConfig: {
+          responseModalities: ["TEXT", "IMAGE"],
+          /* the aspect law rides only with the model that knows it —
+             the older preview door answers without it */
+          ...(model.startsWith("gemini-2.5") && aspect
+            ? { imageConfig: { aspectRatio: aspect } }
+            : {}),
+        },
+      };
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-goog-api-key": apiKey,
+          },
+          body: JSON.stringify(body),
+        }
+      );
+      if (!res.ok) {
+        lastError = `${model}: ${res.status} ${(await res.text()).slice(0, 160)}`;
+        continue;
+      }
+      const data = (await res.json().catch(() => null)) as {
+        candidates?: {
+          content?: {
+            parts?: {
+              inlineData?: { mimeType?: string; data?: string };
+              inline_data?: { mime_type?: string; data?: string };
+            }[];
+          };
+        }[];
+      } | null;
+      const parts = data?.candidates?.[0]?.content?.parts ?? [];
+      for (const part of parts) {
+        const inline = part.inlineData ?? part.inline_data;
+        const b64 = (inline as { data?: string } | undefined)?.data;
+        if (b64) {
+          const mime =
+            (inline as { mimeType?: string; mime_type?: string } | undefined)
+              ?.mimeType ??
+            (inline as { mime_type?: string } | undefined)?.mime_type ??
+            "image/png";
+          return { mime, b64 };
+        }
+      }
+      lastError = `${model}: the sky answered without a painting`;
+    } catch (err) {
+      lastError = `${model}: ${err instanceof Error ? err.message : String(err)}`;
+    }
+  }
+  throw new Error(lastError || "the Gemini brush rested");
+}
+
+async function paintWithGemini(
+  prompt: string,
+  size?: string
+): Promise<GeneratedImage> {
+  const { mime, b64 } = await geminiImageCall(prompt, size);
+  let url: string;
+  if (canWriteGallery()) {
+    url = `/api/visual/${savePainting(b64)}`;
+  } else {
+    /* the cloud's read-only shelf — the painting travels inside its
+       own address (a data url), served straight from the answer */
+    url = `data:${mime};base64,${b64}`;
+  }
+  return { url, revisedPrompt: null, originalPrompt: prompt, engine: "gemini" };
+}
+
 async function paintWithAtelier(
   prompt: string,
   size: (typeof ZAI_SIZES)[number],
@@ -629,6 +740,21 @@ export async function generateImage(
     }
   }
 
+  /* the final cloud brush — Gemini paints when its key stands (the
+     Vercel chamber often carries only this one), before the atelier */
+  const gemReady =
+    Boolean(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY) &&
+    !breakerOpen("gemini");
+  if (gemReady) {
+    try {
+      const img = await paintWithGemini(prompt, options.size);
+      noteSuccess("gemini");
+      return { ...img, originalPrompt: wish };
+    } catch (err) {
+      noteFailure("gemini", err);
+    }
+  }
+
   /* the final brush — the Z.ai atelier, always ready in the laboratory */
   try {
     const img = await paintWithAtelier(prompt, toZaiSize(options.size));
@@ -648,4 +774,9 @@ export function isZaiCloudConfigured(): boolean {
 /** True when the OpenAI brush is configured (for status endpoints). */
 export function isOpenAiConfigured(): boolean {
   return Boolean(process.env.OPENAI_API_KEY);
+}
+
+/** True when the Gemini brush is configured (for status endpoints). */
+export function isGeminiConfigured(): boolean {
+  return Boolean(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY);
 }

@@ -795,7 +795,26 @@ async function lyriaWeave(
     if (/network|fetch failed|ECONN/i.test(detail)) {
       throw new Error("The chamber could not reach the sound engine. Try again in a breath.");
     }
-    throw mapLyriaError(status || 502, detail, String(e?.code ?? ""));
+    /* THE MODEL'S OWN LADDER — a door that answers "model not found"
+       (a renamed or not-yet-enabled engine name) hands the weave to
+       the chamber's other engine name once, so a renamed sky never
+       silences the music outright */
+    const mapped = mapLyriaError(status || 502, detail, String(e?.code ?? ""));
+    if (
+      (status === 404 || /not found|not supported|unsupported/i.test(detail)) &&
+      body.model !== LYRIA_CLIP_MODEL
+    ) {
+      console.error(
+        `[light-codes] model ${body.model} was refused (${status || "no status"}) — trying ${LYRIA_CLIP_MODEL}`
+      );
+      return lyriaWeave(
+        { ...body, model: LYRIA_CLIP_MODEL },
+        key,
+        timeoutMs,
+        maxB64
+      );
+    }
+    throw mapped;
   }
 }
 

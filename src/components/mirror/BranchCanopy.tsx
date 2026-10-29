@@ -127,6 +127,7 @@ import { LANDING_SCOPE_CATEGORY, SCOPE_META } from "@/lib/mirror/workspaces";
 import { useT } from "@/lib/i18n";
 import { LANDING_SCOPES, useMirror } from "@/lib/mirror-store";
 import { cn } from "@/lib/utils";
+import { flowAnswerText } from "@/lib/text-flow";
 import { tuneSeedBatch } from "@/lib/question-voice";
 import {
   categoryForMove,
@@ -6140,7 +6141,7 @@ export function BranchCanopy({
                           {turn.a && (
                             <div className="flex items-start gap-1">
                               <p className="sv-answer min-w-0 flex-1 break-words text-[14.5px] leading-[1.7] text-foreground/85">
-                                {turn.a}
+                                {flowAnswerText(turn.a)}
                               </p>
                               <RoomCopyButton
                                 text={turn.a}
@@ -6182,7 +6183,7 @@ export function BranchCanopy({
                     revealStage >= 2 ? (
                       <div className="relative">
                         <div className="canopy-answer whitespace-pre-wrap break-words text-[15.5px] leading-[1.75] text-foreground/90 sm:text-[16px]">
-                          {roomAnswer}
+                          {flowAnswerText(roomAnswer)}
                           {roomLoading && (
                             <span
                               aria-hidden="true"
@@ -6386,7 +6387,7 @@ export function BranchCanopy({
                                 <p className="sv-mark sv-mark-a">{t(SCOPE_META[landingScope].aMark!)}</p>
                               )}
                               <p className="sv-answer min-w-0 flex-1 whitespace-pre-wrap break-words text-[15.5px] leading-[1.7] text-foreground/90">
-                                {turn.a}
+                                {flowAnswerText(turn.a)}
                               </p>
                               <RoomCopyButton
                                 text={turn.a}

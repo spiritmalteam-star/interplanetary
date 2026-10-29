@@ -1,6 +1,6 @@
 "use client";
 
-import { Atom, HeartPulse, Layers, Sparkles } from "lucide-react";
+import { Layers, Sparkles } from "lucide-react";
 import { useMirror, type LandingScopeKey } from "@/lib/mirror-store";
 import { SCOPE_META, SCOPE_ORDER } from "@/lib/mirror/workspaces";
 import { useT } from "@/lib/i18n";
@@ -13,10 +13,10 @@ import { useT } from "@/lib/i18n";
 /*  whole chat in its light and the back hand (the window header's     */
 /*  arrow) returns to the main landing chat.                           */
 /*                                                                     */
-/*  THE ROOMS' OWN SHORE — the deep rooms rest here alone now: the     */
-/*  Manifest, the Quantum and the HealX keep their own cards and open  */
-/*  their rooms in one touch (their marks left the crown and the       */
-/*  InDream rail — the visitor named the scopes as their home).        */
+/*  ONE CARD, ONE FIELD — the Quantum and the HealX wear their own
+/*  field cards and nothing more: the extra deep-room cards that had
+/*  been added beneath the fields laid themselves down (the visitor
+/*  named the duplication), the fields' own cards are the one door.
 /* ------------------------------------------------------------------ */
 
 export function ScopesRoom() {
@@ -36,13 +36,6 @@ export function ScopesRoom() {
 
   const openManifest = () => {
     openToolTab("mirroros");
-    closeScopes();
-  };
-
-  /* THE DEEP ROOMS' OWN DOORS — the two laboratories rest at the
-     scopes' shore; one touch opens each room in the workplace window. */
-  const openRoom = (key: "quantum" | "healx") => {
-    openToolTab(key);
     closeScopes();
   };
 
@@ -187,76 +180,6 @@ export function ScopesRoom() {
               </button>
             );
           })}
-        </div>
-
-        {/* THE DEEP ROOMS' OWN SHORE — the Quantum and the HealX rest
-            here alone now (their marks left the crown and the InDream
-            rail): one touch opens each room in the workplace window. */}
-        <div className="mt-4 grid gap-2 sm:grid-cols-2">
-          <button
-            type="button"
-            onClick={() => openRoom("quantum")}
-            aria-haspopup="dialog"
-            title={t("Open the Quantum room")}
-            data-testid="scopes-room-quantum"
-            className="focus-glow group relative flex items-center gap-3 rounded-2xl border px-3.5 py-3 text-left transition-all duration-300"
-            style={{
-              borderColor:
-                "color-mix(in srgb, var(--scope-a,var(--gd)) 20%, var(--hairline))",
-              background: "var(--glass-bg-soft, transparent)",
-            }}
-          >
-            <span
-              aria-hidden="true"
-              className="flex size-8 shrink-0 items-center justify-center rounded-full"
-              style={{
-                background: "color-mix(in srgb, #a78bfa 16%, transparent)",
-                boxShadow: "inset 0 0 0 1px color-mix(in srgb, #a78bfa 45%, transparent)",
-              }}
-            >
-              <Atom className="size-3.5 text-[#a78bfa]" aria-hidden="true" />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-[14px] font-medium text-foreground">
-                {t("Quantum")}
-              </span>
-              <span className="mono-label block truncate text-[9.5px] uppercase tracking-[0.14em] text-muted-foreground/70">
-                {t("The deep room of reality")}
-              </span>
-            </span>
-          </button>
-          <button
-            type="button"
-            onClick={() => openRoom("healx")}
-            aria-haspopup="dialog"
-            title={t("Open the HealX room")}
-            data-testid="scopes-room-healx"
-            className="focus-glow group relative flex items-center gap-3 rounded-2xl border px-3.5 py-3 text-left transition-all duration-300"
-            style={{
-              borderColor:
-                "color-mix(in srgb, var(--scope-a,var(--gd)) 20%, var(--hairline))",
-              background: "var(--glass-bg-soft, transparent)",
-            }}
-          >
-            <span
-              aria-hidden="true"
-              className="flex size-8 shrink-0 items-center justify-center rounded-full"
-              style={{
-                background: "color-mix(in srgb, #2dd4bf 16%, transparent)",
-                boxShadow: "inset 0 0 0 1px color-mix(in srgb, #2dd4bf 45%, transparent)",
-              }}
-            >
-              <HeartPulse className="size-3.5 text-[#2dd4bf]" aria-hidden="true" />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-[14px] font-medium text-foreground">
-                {t("HealX")}
-              </span>
-              <span className="mono-label block truncate text-[9.5px] uppercase tracking-[0.14em] text-muted-foreground/70">
-                {t("The evolved medical field")}
-              </span>
-            </span>
-          </button>
         </div>
 
         {/* the honest word — the back hand of the workplace header lays

@@ -46,7 +46,6 @@
         "@tiptap/starter-kit": "^3.32.0",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
-        "dockview": "^8.7.0",
         "framer-motion": "^12.23.2",
         "lucide-react": "^0.525.0",
         "mammoth": "^1.12.3",
@@ -767,10 +766,6 @@
     "detect-node-es": ["detect-node-es@1.1.0", "https://registry.npmjs.com/detect-node-es/-/detect-node-es-1.1.0.tgz", {}, "sha512-ypdmJU/TbBby2Dxibuv7ZLW3Bs1QEmM7nHjEANfohJLvE0XVujisn1qPJcZxg+qDucsr+bP6fLD1rPS3AhJ7EQ=="],
 
     "dingbat-to-unicode": ["dingbat-to-unicode@1.0.2", "", {}, "sha512-R0bRerYzy/EZP6QzD3Hkl6JjUDA1Mnn+pd928w0nWjPzihnbAR6dcjGJGiRyznj5E4S1duEKzWrTqw02DPcdzg=="],
-
-    "dockview": ["dockview@8.7.0", "", { "dependencies": { "dockview-core": "^8.7.0" } }, "sha512-UdEMuQrUUBxOnRgRDhETNKAITMlYu9m+EWZanoVyZN+NHLkEz4+pXilSNlwYULZA9Zic1RnPp3v4zEMQ2CviAg=="],
-
-    "dockview-core": ["dockview-core@8.7.0", "", {}, "sha512-LAMMO77HJfkD0SkAi+5I7AWK05RjvnXUmiFaH4Pvbygi30ZJ90gLhMohMGMgq/4C9/Dic01XsXn3PNO7AmZ+ew=="],
 
     "doctrine": ["doctrine@2.1.0", "https://registry.npmjs.com/doctrine/-/doctrine-2.1.0.tgz", { "dependencies": { "esutils": "^2.0.2" } }, "sha512-35mSku4ZXK0vfCuHEDAwt55dg2jNajHZ1odvF+8SSr82EsZY4QmXfuWso8oEd8zRhVObSN18aM0CjSdoBX7zIw=="],
 

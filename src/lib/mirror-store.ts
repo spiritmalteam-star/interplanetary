@@ -1799,8 +1799,12 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       ...(key !== "scopes" ? { lastMakerTab: key } : {}),
     }));
   },
-  closeWorkspace: () =>
-    set({ toolTabs: [], activeToolTab: null }),
+  /* THE PARKED WORKPLACE — going back never lays the rooms down: the
+     tabs keep standing (hidden, still working — a weaving book keeps
+     weaving), and any maker's touch in the crown lifts the workplace
+     exactly where it was left. Only a room's own x lays that room
+     down (the house asks first). */
+  closeWorkspace: () => set({ activeToolTab: null }),
   closeScopes: () =>
     set((s) => ({
       activeToolTab: s.activeToolTab === "scopes" ? null : s.activeToolTab,
@@ -3829,10 +3833,11 @@ export const useMirror = create<MirrorState>()((set, get) => ({
 
   /* ---------------- Art X — the atelier ---------------- */
 
-  /** Art X is its own world: opening it suspends every other surface,
-      exactly like the Manifest OS and ParticleX do. Free for everyone. */
-  openArtX: () =>
-    set({ view: "artx", mobileNavOpen: false, modal: null }),
+  /** THE ATELIER'S OWN DOOR — the atelier rides the makers' workplace
+      now (the eleventh page of the registry): opening it lifts the
+      workplace tab, exactly like every other maker. The old
+      full-page world is gone with the one-frame law. */
+  openArtX: () => get().openToolTab("artx"),
 
   exitArtX: () => set({ view: "observatory" }),
 

@@ -6,13 +6,11 @@ import {
   useMemo,
   useRef,
   useState,
-  type ChangeEvent,
 } from "react";
 import {
   Eraser,
   Gem,
   ImagePlus,
-  Paperclip,
   Send,
   Sparkles,
   X,
@@ -23,7 +21,6 @@ import { useT } from "@/lib/i18n";
 import { MirrorChanneling } from "./MirrorChanneling";
 import { ZoomableLightbox } from "./ZoomableLightbox";
 import { cn } from "@/lib/utils";
-import { IMAGE_ACCEPT, isImageFile, readFileAsDataUrl } from "./attachments";
 import {
   filterStyles,
   isStyleSlashQuery,
@@ -225,6 +222,38 @@ const HEALX_CONFIG: SimpleRoomConfig = {
   crystallize: true,
 };
 
+/* THE ARTX — the atelier of visions (the artx voice): speak the
+   vision, and the Mirror paints beside it — the atelier speaks the
+   forge's own honest laws now: the picture is born only when the
+   visitor's own hand presses the crystallize button at the reply's
+   end, and the style's own "/" hand dresses every painting. */
+const ARTX_CONFIG: SimpleRoomConfig = {
+  storageKey: "mirror:room-artx",
+  spiritKey: "The atelier of visions — speak the vision, crystallize it at your hand.",
+  placeholderKey: "What shall we paint today?",
+  seeds: [
+    "A city grown from glass reefs, painted at dusk",
+    "Give me a sigil for a quiet, fearless heart",
+    "Paint the feeling of an unfinished letter",
+  ],
+  proceed: ["Go deeper into this vision", "Paint its companion piece"],
+  ask: (q, thread, language, image) =>
+    speakReplyGift(
+      "/api/transmission",
+      {
+        query: q,
+        mode: "artx",
+        language,
+        walk: [],
+        history: thread.slice(-6).map((t) => ({ q: t.q, a: t.a })),
+        ...(image ? { image } : {}),
+      },
+      "transmission",
+      "The field is quiet"
+    ),
+  crystallize: true,
+};
+
 function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
   const t = useT();
   const language = useMirror((s) => s.language);
@@ -247,7 +276,6 @@ function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
   });
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
-  const [attached, setAttached] = useState<string | null>(null);
   /* THE VISITOR'S OWN STYLE — chosen through the "/" hand */
   const [style, setStyle] = useState<string | null>(null);
   const [styleMenuOpen, setStyleMenuOpen] = useState(false);
@@ -255,7 +283,6 @@ function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
   const [viewing, setViewing] = useState<{ src: string; caption: string } | null>(
     null
   );
-  const fileRef = useRef<HTMLInputElement | null>(null);
   const bodyRef = useRef<HTMLDivElement | null>(null);
   /* the thread's own mirror — the ask reads it without re-binding */
   const threadRef = useRef<RoomTurn[]>([]);
@@ -359,21 +386,20 @@ function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
   );
 
   const send = useCallback(
-    async (raw: string, image?: string) => {
+    async (raw: string) => {
       const q = raw.trim();
       if (!q || busy) return;
       setDraft("");
-      setAttached(null);
       setThread((cur) => [
         ...cur,
-        { q, a: "", loading: true, ...(image ? { attached: image } : {}) },
+        { q, a: "", loading: true },
       ]);
       setBusy(true);
       try {
         const prior = threadRef.current
           .slice(0, -1)
           .map((turn) => ({ q: turn.q, a: turn.a }));
-        const { text, vision } = await config.ask(q, prior, language, image);
+        const { text, vision } = await config.ask(q, prior, language);
         const index = threadRef.current.length - 1;
         const wantsAutoPaint = Boolean(config.autoPaint && vision);
         setThread((cur) =>
@@ -415,21 +441,6 @@ function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
     },
     [busy, config, language, paintVision, style]
   );
-
-  const pickImage = useCallback(async (file: File | undefined | null) => {
-    if (!file || !isImageFile(file)) return;
-    try {
-      const dataUrl = await readFileAsDataUrl(file);
-      setAttached(dataUrl);
-    } catch {
-      /* the image stays unhanded — the words still travel */
-    }
-  }, []);
-
-  const onFilePicked = (e: ChangeEvent<HTMLInputElement>) => {
-    void pickImage(e.target.files?.[0]);
-    e.target.value = "";
-  };
 
   const clear = useCallback(() => {
     if (busy) return;
@@ -881,27 +892,6 @@ function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
             ))}
           </div>
         )}
-        {attached && (
-          <div className="mb-1.5 flex items-center gap-2">
-            <img
-              src={attached}
-              alt=""
-              className="size-9 rounded-lg border object-cover"
-              style={{
-                borderColor:
-                  "color-mix(in srgb, var(--scope-a,var(--gd)) 30%, transparent)",
-              }}
-            />
-            <button
-              type="button"
-              onClick={() => setAttached(null)}
-              aria-label={t("Remove the image")}
-              className="focus-glow flex size-6 items-center justify-center rounded-full text-muted-foreground/70 transition-colors hover:text-foreground"
-            >
-              <X className="size-3.5" aria-hidden="true" />
-            </button>
-          </div>
-        )}
         <div
           className="flex items-end gap-2 rounded-2xl border px-2.5 py-1.5"
           style={{
@@ -911,26 +901,6 @@ function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
               "color-mix(in srgb, var(--scope-a,var(--gd)) 10%, transparent)",
           }}
         >
-          <input
-            ref={fileRef}
-            type="file"
-            accept={IMAGE_ACCEPT}
-            onChange={onFilePicked}
-            className="hidden"
-            aria-hidden="true"
-            tabIndex={-1}
-          />
-          <button
-            type="button"
-            onClick={() => fileRef.current?.click()}
-            disabled={busy}
-            aria-label={t("Attach an image")}
-            title={t("Attach an image")}
-            data-testid="simple-room-attach"
-            className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground/80 transition-colors duration-300 hover:bg-foreground/5 hover:text-foreground disabled:opacity-35"
-          >
-            <Paperclip className="size-3.5" aria-hidden="true" />
-          </button>
           {/* THE SKETCH HAND — the idea scratched into form: up to three
               visions of it painted by the sky's Gemini */}
           <button
@@ -961,7 +931,7 @@ function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
                   setStyleMenuOpen(false);
                   return;
                 }
-                void send(draft, attached ?? undefined);
+                void send(draft);
               }
               if (e.key === "Escape" && styleMenuOpen) {
                 setStyleMenuOpen(false);
@@ -975,7 +945,7 @@ function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
           />
           <button
             type="button"
-            onClick={() => void send(draft, attached ?? undefined)}
+            onClick={() => void send(draft)}
             disabled={busy || !draft.trim()}
             aria-label={t("Send")}
             title={t("Send")}
@@ -1024,4 +994,11 @@ export function QuantumRoom() {
     crystallized on request. */
 export function HealXRoom() {
   return <SimpleMirrorRoom config={HEALX_CONFIG} />;
+}
+
+/** THE ARTX — the atelier of visions (the artx voice): the same
+    honest room the forge wears — words, the crystallize hand at the
+    reply's end, the "/" style picker, three small ways onward. */
+export function ArtXRoom() {
+  return <SimpleMirrorRoom config={ARTX_CONFIG} />;
 }

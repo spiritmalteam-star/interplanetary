@@ -626,7 +626,7 @@ export default function Chronoscope() {
           data-testid="chronoscope-instrument"
           className="fixed inset-0 z-[80] overflow-y-auto overscroll-contain bg-[color-mix(in_srgb,var(--lp-deep)_96%,#0d0a16)]"
         >
-          <div className="mx-auto flex min-h-full w-full max-w-[1100px] flex-col px-3 pb-[max(env(safe-area-inset-bottom),12px)] pt-3 sm:px-6">
+          <div className="mx-auto flex min-h-full w-full max-w-[1100px] flex-col px-3 pb-[max(env(safe-area-inset-bottom),12px)] pt-3 sm:px-6 lg:max-w-[1560px]">
             {/* ------------------- the top edge ------------------- */}
             <div className="flex flex-wrap items-center gap-2 py-1">
               <div className="flex items-center gap-1.5">
@@ -878,18 +878,26 @@ export default function Chronoscope() {
                 </svg>
               </div>
 
-              {/* THE CARD — one active profile, readable, centred */}
+              {/* THE CARD — one active profile. ON DESKTOP THE WHOLE
+                  RECORD AT ONCE: the four faces (being · world ·
+                  technology · life) on the left, the artwork standing
+                  in the middle, the record's own information on the
+                  right — the full spread on one screen, no scrolling
+                  up and down to read it. */}
               <article
                 data-testid="chronoscope-card"
-                className="relative z-10 w-full max-w-[680px] overflow-hidden rounded-2xl border bg-[color-mix(in_srgb,var(--lp-veil-solid)_88%,transparent)] shadow-[0_24px_80px_-32px_rgba(20,12,40,0.5)]"
+                className="relative z-10 w-full max-w-[680px] overflow-hidden rounded-2xl border bg-[color-mix(in_srgb,var(--lp-veil-solid)_88%,transparent)] shadow-[0_24px_80px_-32px_rgba(20,12,40,0.5)] lg:grid lg:max-w-[1400px] lg:grid-cols-[minmax(230px,0.95fr)_minmax(400px,1.5fr)_minmax(240px,1fr)] lg:items-stretch"
                 style={{ borderColor: `color-mix(in srgb, ${accent} 42%, var(--lp-edge))` }}
               >
-                {/* the card's face — one primary image decodes here */}
+                {/* the card's face — one primary image decodes here.
+                    Desktop: the artwork takes the MIDDLE column and
+                    stretches with the record. */}
                 <div
                   className={cn(
-                    "relative aspect-[3/2] w-full overflow-hidden",
+                    "relative aspect-[3/2] w-full overflow-hidden lg:order-2 lg:row-span-2 lg:aspect-auto lg:border-x",
                     readyFile && "cursor-zoom-in"
                   )}
+                  style={{ borderColor: `color-mix(in srgb, ${accent} 24%, var(--lp-edge))` }}
                   onClick={readyFile ? () => setZoomOpen(true) : undefined}
                 >
                   {readyFile ? (
@@ -899,7 +907,7 @@ export default function Chronoscope() {
                       alt={`${currentId} · ${t("role")}: ${roleKey}`}
                       fill
                       unoptimized
-                      sizes="(max-width: 640px) 100vw, 680px"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 680px, 540px"
                       className="object-cover"
                       priority={role === 0}
                     />
@@ -955,8 +963,9 @@ export default function Chronoscope() {
                   </button>
                 </div>
 
-                {/* the card's voice */}
-                <div className="p-4 sm:p-5">
+                {/* the card's voice — the record's own information.
+                    Desktop: the RIGHT column. */}
+                <div className="flex flex-col p-4 sm:p-5 lg:order-3 lg:py-5">
                   <div className="flex items-baseline justify-between gap-3">
                     <p className="mono-label text-[9px] tracking-[0.2em]" style={{ color: accent }}>
                       {counter}
@@ -990,8 +999,29 @@ export default function Chronoscope() {
                     ))}
                   </div>
 
-                  {/* the four faces — visible selected state, 44px targets */}
-                  <div className="mt-3.5 grid grid-cols-4 gap-1 border-t border-[var(--lp-edge)] pt-3" role="tablist" aria-label={t("The profile's four faces")}>
+                  <div className="mt-3 flex items-center justify-between gap-2 border-t border-[var(--lp-edge)] pt-3 lg:mt-auto">
+                    <button
+                      type="button"
+                      onClick={() => setDetailsOpen(true)}
+                      data-testid="chronoscope-details"
+                      className="focus-glow inline-flex min-h-[44px] items-center rounded-full border border-[var(--lp-edge)] px-4 text-[12.5px] text-[var(--lp-head)] transition-colors hover:border-[color-mix(in_srgb,var(--lp-violet)_55%,transparent)]"
+                    >
+                      {t("Open the full record")}
+                    </button>
+                    {!isIdm && readyFile && (
+                      <span className="mono-label text-[8.5px] tracking-[0.14em] text-[var(--lp-faint)]">
+                        {t("ready artwork · unique-batch audited")}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* THE FOUR FACES — being · world · technology · life
+                    (entity · geometry · locus · voices on the other
+                    wing). Desktop: the LEFT column, the roles' own
+                    shore beside the artwork. */}
+                <div className="p-4 pt-0 sm:p-5 sm:pt-0 lg:order-1 lg:row-span-2 lg:flex lg:flex-col lg:py-5 lg:pl-5 lg:pr-0">
+                  <div className="mt-3.5 grid grid-cols-4 gap-1 border-t border-[var(--lp-edge)] pt-3 lg:mt-0 lg:grid-cols-2 lg:border-t-0 lg:pt-0" role="tablist" aria-label={t("The profile's four faces")}>
                     {(isIdm
                       ? [t("Entity"), t("Geometry"), t("Locus"), t("Voices")]
                       : [t("Being"), t("World"), t("Technology"), t("Life")]
@@ -1030,22 +1060,6 @@ export default function Chronoscope() {
                     idm={idmRecord}
                     t={t}
                   />
-
-                  <div className="mt-3 flex items-center justify-between gap-2 border-t border-[var(--lp-edge)] pt-3">
-                    <button
-                      type="button"
-                      onClick={() => setDetailsOpen(true)}
-                      data-testid="chronoscope-details"
-                      className="focus-glow inline-flex min-h-[44px] items-center rounded-full border border-[var(--lp-edge)] px-4 text-[12.5px] text-[var(--lp-head)] transition-colors hover:border-[color-mix(in_srgb,var(--lp-violet)_55%,transparent)]"
-                    >
-                      {t("Open the full record")}
-                    </button>
-                    {!isIdm && readyFile && (
-                      <span className="mono-label text-[8.5px] tracking-[0.14em] text-[var(--lp-faint)]">
-                        {t("ready artwork · unique-batch audited")}
-                      </span>
-                    )}
-                  </div>
                 </div>
               </article>
             </div>

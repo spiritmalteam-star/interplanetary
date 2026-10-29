@@ -351,7 +351,7 @@ export function ZoomableLightbox({
       aria-modal="true"
       aria-label={caption ?? t("Enlarged image")}
       data-testid={testId}
-      className="fixed inset-0 z-[130] flex items-center justify-center bg-black/90 p-3 backdrop-blur-md sm:p-8"
+      className="fixed inset-0 z-[130] flex items-center justify-center bg-black/92 p-1.5 backdrop-blur-md sm:p-4"
       onClick={onClose}
     >
       {/* the close hand */}
@@ -379,8 +379,8 @@ export function ZoomableLightbox({
           src={src}
           alt={caption ?? ""}
           testId={testId}
-          className="max-h-[82vh] max-w-[94vw] sm:max-w-[88vw]"
-          imgClassName="max-h-[82vh] max-w-[94vw] rounded-xl border border-white/15 shadow-[0_30px_90px_-20px_rgba(0,0,0,0.9)] sm:max-w-[88vw]"
+          className="max-h-[94vh] max-w-[98vw] sm:max-w-[96vw]"
+          imgClassName="max-h-[94vh] max-w-[98vw] rounded-lg border border-white/15 shadow-[0_30px_90px_-20px_rgba(0,0,0,0.9)] sm:max-w-[96vw]"
           onLoad={() => setLoaded(true)}
         />
         {caption && (

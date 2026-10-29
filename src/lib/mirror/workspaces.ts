@@ -151,8 +151,8 @@ export const WORKSPACES: Record<ToolTabKey, WorkspaceDefinition> = {
     icon: Palette,
     theme: { accent: "#e879f9" },
     loader: () =>
-      import("@/components/mirror/ArtX").then((m) => ({
-        default: m.ArtXAtelierRoom as ComponentType,
+      import("@/components/mirror/SimpleMirrorRoom").then((m) => ({
+        default: m.ArtXRoom as ComponentType,
       })),
     capabilities: ["atelier-conversation", "vision-crystallization", "thread-memory"],
     preserveState: true,

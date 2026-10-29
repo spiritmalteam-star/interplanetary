@@ -767,7 +767,7 @@ export function DreamBookView() {
      before ever troubling the visitor. */
 
   /* the weaving phase — the loom keeps count. THE FLAVOR: a "batch"
-     breath channels the next seven pages in the background while the
+     breath channels the next six pages in the background while the
      visitor reads; the "reveal" flavor is the whole-book channeling. */
   const weave = useCallback(
     async (
@@ -978,10 +978,10 @@ export function DreamBookView() {
     setWeaveError(false);
     setStage("weaving");
     setPhaseIdx(0);
-    /* THE SEVEN-PAGE FIRST BREATH — the loom opens the volume with
-       seven pages at once, so the visitor can truly begin reading
+    /* THE SIX-PAGE FIRST BREATH — the loom opens the volume with
+       six pages at once, so the visitor can truly begin reading
        while the rest of the book channels in the background */
-    const ok = await weave("open", 1, 7, 240000);
+    const ok = await weave("open", 1, 6, 240000);
     if (ok) {
       setStage("reading");
       setPageIdx(0);
@@ -1039,17 +1039,26 @@ export function DreamBookView() {
   const showChoice = atPlannedEnd && pageIdx === maxIdx + 1;
   const showEnd = ended && pageIdx === maxIdx + 1;
 
-  /* THE SEVEN-PAGE BREATH — the loom weaves SEVEN pages at a time, in
-     the background: when the visitor is four pages from the woven edge
-     (page three of the batch), the next seven begin channeling while
-     they keep reading — the reader never waits on the loom again. */
+  /* THE SIX-PAGE BREATH — the loom weaves SIX pages at a time, in
+     the background: when the visitor is three pages from the woven
+     edge, the next six begin channeling while they keep reading — the
+     reader never waits on the loom again. */
   useEffect(() => {
     if (stage !== "reading" || endedRef.current || !metaRef.current) return;
     const have = pagesRef.current.length;
     if (have >= metaRef.current.totalPages) return; /* the choice will ask */
-    if (have - pageIdx > 4) return;
-    void weave("next", have + 1, 7, 240000);
+    if (have - pageIdx > 3) return;
+    void weave("next", have + 1, 6, 240000);
   }, [pageIdx, pages.length, stage, weave]);
+
+  /* THE READER'S OWN CRANK — one hand-weave of the next six pages,
+     the button the visitor presses while they read: the loom answers
+     at once, no waiting for the edge to come near. */
+  const weaveNextSix = useCallback(async () => {
+    const atFrontier = pageIdx >= pagesRef.current.length;
+    const ok = await weave("next", pagesRef.current.length + 1, 6, 240000);
+    if (ok && atFrontier) setPageIdx((s) => s + 1);
+  }, [weave, pageIdx]);
 
   const goPage = useCallback(
     (dir: 1 | -1) => {
@@ -2737,6 +2746,29 @@ export function DreamBookView() {
                 </motion.p>
               )}
             </AnimatePresence>
+
+            {/* THE READER'S OWN CRANK — one hand-weave of the next six
+                pages, standing whenever the woven edge draws near: the
+                visitor presses it while they read and the loom answers */}
+            {stage === "reading" &&
+              !wholeMode &&
+              !ended &&
+              !weavingNext &&
+              !showChoice &&
+              !showEnd &&
+              !!meta &&
+              pages.length < meta.totalPages &&
+              pageIdx >= pages.length - 1 && (
+                <button
+                  type="button"
+                  onClick={() => void weaveNextSix()}
+                  data-testid="dream-weave-next-six"
+                  className="dream-ink-outline focus-glow mx-auto mt-4 flex h-10 items-center gap-2 rounded-full px-5 font-[family-name(var(--font-literata))] text-[13.5px]"
+                >
+                  <Feather className="size-3.5" aria-hidden="true" />
+                  {t("Weave the next six pages")}
+                </button>
+              )}
           </div>
           </div>
         )}
