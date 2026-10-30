@@ -81,10 +81,9 @@ export type WorkspaceDefinition = {
 /*  InDream rail in the Quantum and HealX's old places — the two deep
 /*  rooms rest at the scopes' shore now. THE MANIFEST HAS COME HOME —
 /*  the visitor named it back among the tools, riding the InDream rail
-/*  again (the scopes' shore wears the fields alone). THE MARKET — the
-/*  house's own hall is its OWN WORLD now: never a tab of this registry
-/*  — the crown's corner hand opens it over everything, and it returns
-/*  the visitor exactly where they stood.
+/*  again (the scopes' shore wears the fields alone). THE MARKET HAS
+/*  LEFT THE HOUSE — no hall, no gem, no tab: the registry carries the
+/*  makers and the scopes alone.
 /* ------------------------------------------------------------------ */
 
 export const WORKSPACE_ORDER: ToolTabKey[] = [

@@ -127,7 +127,7 @@ function sensitiveReturnUnderway(): boolean {
   }
   const s = useMirror.getState();
   return Boolean(
-    s.authOpen || s.profilePageOpen || s.accountOpen || s.walletModalOpen || s.marketOpen
+    s.authOpen || s.profilePageOpen || s.accountOpen || s.walletModalOpen
   );
 }
 

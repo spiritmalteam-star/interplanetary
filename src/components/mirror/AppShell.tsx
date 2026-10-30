@@ -9,7 +9,6 @@ import { CosmicBackdrop } from "./CosmicBackdrop";
 import { StarField } from "./StarField";
 import { ToolWorkspace } from "./living/ToolWorkspace";
 import { ScopesWorkplace } from "./ScopesWorkplace";
-import { MarketWorld } from "./MarketWorld";
 import { LandingChatNav } from "./landing/LandingChatNav";
 import { WalletGuard } from "./WalletGuard";
 import { BranchCanopy } from "./BranchCanopy";
@@ -356,12 +355,6 @@ function AppShellViews({
           tools' window), the fields' subcategories render inside, and
           its own back hand returns to the main chat landing. */}
       <ScopesWorkplace />
-
-      {/* THE MARKET WORLD — its own world entirely: the crown's corner
-          hand opens it over everything (never a tab of the tools, never
-          a scope), and its back hand returns the visitor exactly where
-          they stood. */}
-      <MarketWorld />
 
       {/* the reading rooms' own modals — every door keeps its keys */}
       <FederationModal />

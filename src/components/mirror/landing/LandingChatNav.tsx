@@ -20,10 +20,8 @@ import { cn } from "@/lib/utils";
 /*  a full room where the fields wear their light, and the one back    */
 /*  hand returns to the main chat landing.                             */
 /*                                                                     */
-/*  THE MARKET — its OWN WORLD entirely: separate from the workplace   */
-/*  and the scopes, it opens over everything and returns the visitor   */
-/*  exactly where they stood. Its hand wears the world's own violet    */
-/*  light — a gem among the quiet hands of the crown.                  */
+/*  THE MARKET HAS LEFT THE HOUSE — its violet gem is gone from the    */
+/*  crown and the hall is closed for good; nothing is sold or hung.    */
 /* ------------------------------------------------------------------ */
 
 export function LandingChatNav() {
@@ -103,11 +101,9 @@ export function LandingChatNav() {
           in the crown's far corner (BranchCanopy wears it), always one
           touch from the eight-slide welcome. */}
 
-      {/* ---------------------------- MARKET HAS MOVED HOME ------------ */}
-      {/* The Market's violet gem left the chat's top row: it now stands
-          at the website's very top right corner (BranchCanopy wears it,
-          beside the About hand) — the crown's far corner, its own world
-          always one touch away. */}
+      {/* ---------------------------- MARKET HAS LEFT ------------------ */}
+      {/* The Market is gone — no gem in the crown's corner, no hall,
+          no publishing hand anywhere: the mirror sells nothing. */}
 
       {/* THE VISITOR'S OWN HAND HAS MOVED HOME — the profile icon now
           stands at the crown's very beginning, before the light's

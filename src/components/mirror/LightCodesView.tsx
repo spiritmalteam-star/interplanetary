@@ -41,7 +41,6 @@ import { useT } from "@/lib/i18n";
 import { useVoiceRecorder } from "@/hooks/use-voice-recorder";
 import { MusicSequencer } from "./living/MusicSequencer";
 import { MirrorBridge } from "./living/MirrorBridge";
-import { PublishToMarket } from "./PublishToMarket";
 import {
   LC_MODES,
   LC_SHAPE,
@@ -1094,25 +1093,6 @@ function PlayerBar() {
                               aria-hidden="true"
                             />
                           </button>
-                        )}
-                        {/* THE PUBLISH HAND — a kept song may hang in the
-                            market's hall: one touch, the Mirror writes its
-                            words, the visitor stands where they are */}
-                        {shelfTrack.durable && shelfTrack.libraryId && (
-                          <PublishToMarket
-                            kind="music"
-                            refId={shelfTrack.libraryId}
-                            refKind="music"
-                            title={shelfTrack.title}
-                            audioUrl={shelfTrack.audioUrl}
-                            durationSec={
-                              shelfTrack.duration
-                                ? Math.round(shelfTrack.duration)
-                                : null
-                            }
-                            compact
-                            testId={`lc-publish-${shelfTrack.id}`}
-                          />
                         )}
                         {LC_MODES.some((m) => m.id === shelfTrack.mode) &&
                           Boolean(shelfTrack.intention) && (

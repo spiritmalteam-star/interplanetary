@@ -34,7 +34,6 @@ const TAB_ROOMS: Record<ToolTabKey, string> = {
 };
 
 const OVERLAY_ROOMS = {
-  market: "market",
   profile: "profile",
   about: "about",
   tour: "tour",
@@ -56,7 +55,6 @@ const ROOM_TITLES: Record<string, string> = {
   library: "Library",
   mirroros: "Mirror OS",
   scopes: "Scopes",
-  market: "Market",
   profile: "Profile",
   billing: "Credits & plans",
   signin: "Sign in",
@@ -67,7 +65,6 @@ const ROOM_TITLES: Record<string, string> = {
 type RoomName = string;
 
 function roomFromState(s: ReturnType<typeof useMirror.getState>): RoomName | null {
-  if (s.marketOpen) return OVERLAY_ROOMS.market;
   if (s.profilePageOpen) return OVERLAY_ROOMS.profile;
   if (s.aboutOpen) return OVERLAY_ROOMS.about;
   if (s.tourOpen) return OVERLAY_ROOMS.tour;
@@ -93,9 +90,6 @@ function openRoom(room: RoomName | null) {
   const s = useMirror.getState();
   switch (room) {
     case null:
-      return;
-    case OVERLAY_ROOMS.market:
-      s.openMarket();
       return;
     case OVERLAY_ROOMS.profile:
       s.openProfilePage();
@@ -127,7 +121,6 @@ function openRoom(room: RoomName | null) {
 
 export function UrlRooms() {
   const activeToolTab = useMirror((s) => s.activeToolTab);
-  const marketOpen = useMirror((s) => s.marketOpen);
   const profilePageOpen = useMirror((s) => s.profilePageOpen);
   const aboutOpen = useMirror((s) => s.aboutOpen);
   const tourOpen = useMirror((s) => s.tourOpen);
@@ -167,7 +160,7 @@ export function UrlRooms() {
     } catch {
       /* an address that cannot be written never blocks the room */
     }
-  }, [activeToolTab, marketOpen, profilePageOpen, aboutOpen, tourOpen, authOpen, walletModalOpen]);
+  }, [activeToolTab, profilePageOpen, aboutOpen, tourOpen, authOpen, walletModalOpen]);
 
   /* THE VISITOR'S OWN STEPS — Back and Forward re-enter the room the
      history carries, without pushing a new address for it. */

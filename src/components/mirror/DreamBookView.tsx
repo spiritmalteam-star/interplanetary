@@ -67,7 +67,6 @@ import type { BookAudit, BookLedger } from "@/lib/book-ledger";
 import { AUDIT_DIMENSIONS } from "@/lib/book-ledger";
 import { downloadBookPdf } from "@/lib/book-pdf";
 import { recordDownload } from "@/lib/downloads-log";
-import { PublishToMarket } from "./PublishToMarket";
 import { cn } from "@/lib/utils";
 import { ShareButton } from "./ShareButton";
 import { paragraphsFromEditorText, plainTextToManuscriptHtml } from "./dreambook/manuscript-text";
@@ -2270,50 +2269,6 @@ export function DreamBookView() {
               {t("Whole book")}
             </span>
           </button>
-          {/* THE PUBLISH HAND — the finished volume may hang in the
-              market's hall: one touch, the Mirror writes its words, the
-              visitor stands exactly where they are (it stands among the
-              makers — the hands that shape the volume) */}
-          {savedBookId && meta && (
-            <span className="shrink-0">
-              <PublishToMarket
-                kind="book"
-                refId={savedBookId}
-                refKind="library"
-                title={meta.title}
-                excerpt={
-                  meta.subtitle ||
-                  meta.axiom ||
-                  (pages[0] ? pageText(pages[0]).slice(0, 240) : "")
-                }
-                cover={cover}
-                pages={pages.length}
-                testId="dream-publish"
-              />
-            </span>
-          )}
-        </div>
-        {/* THE INSTRUMENTS' ROW — the reading's own quiet hands: the
-            presses, the focus, the ink desk, the voice and the text's
-            size — one calm row beneath the makers */}
-        <div className="flex flex-wrap items-center justify-center gap-1">
-          {/* THE BINDING PRESS — the whole book as one PDF */}
-          <button
-            type="button"
-            onClick={() => void downloadWhole()}
-            disabled={binding || pages.length === 0}
-            aria-label={t("Download the whole book")}
-            title={t("Download the whole book")}
-            data-testid="dream-download"
-            className={cn(inkIconBtn, "shrink-0 disabled:opacity-35")}
-          >
-            {binding ? (
-              <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
-            ) : (
-              <Download className="size-4" aria-hidden="true" />
-            )}
-          </button>
-          {/* THE LOOSE-LEAF PRESS — the whole book as one Markdown file */}
           <button
             type="button"
             onClick={exportMarkdown}

@@ -784,13 +784,6 @@ interface MirrorState {
       resting beneath) and the main chat landing stands again. */
   closeScopes: () => void;
 
-  /* THE MARKET — its own world entirely: never a tab of the workplace,
-     never a scope — a separate hall that opens over everything and
-     returns the visitor exactly where they stood. */
-  marketOpen: boolean;
-  openMarket: () => void;
-  closeMarket: () => void;
-
   /* THE ROOM'S OWN ZOOM — store-held so the chamber's root can lay
      its own transform down while a room stands zoomed (the transform
      would otherwise hold the zoomed frame inside the docked lens). */
@@ -1715,7 +1708,6 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   tourOpen: false,
   aboutOpen: false,
   authOpen: false,
-  marketOpen: false,
   workspaceZoomed: false,
   authMode: "signin" as const,
   profilePageOpen: false,
@@ -1844,11 +1836,6 @@ export const useMirror = create<MirrorState>()((set, get) => ({
      exactly where it was left. Only a room's own x lays that room
      down (the house asks first). */
   closeWorkspace: () => set({ activeToolTab: null }),
-  /* THE MARKET'S OWN WORLD — one hand opens it over everything, one
-     hand lays it down; whatever room or view stood beneath keeps
-     standing untouched. */
-  openMarket: () => set({ marketOpen: true, mobileNavOpen: false }),
-  closeMarket: () => set({ marketOpen: false }),
   setWorkspaceZoomed: (z) => set({ workspaceZoomed: z }),
   closeScopes: () =>
     set((s) => ({

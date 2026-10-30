@@ -1885,39 +1885,6 @@ function CrownLightHand({ testIdPrefix }: { testIdPrefix: string }) {
   );
 }
 
-/* ------------- the market's own gem — the crown's corner -------------
-   ITS OWN WORLD AT THE WEBSITE'S VERY TOP RIGHT (the visitor named
-   the place): the violet pill stands beside the About hand — separate
-   from the InDream workplace and the scopes, one touch from anywhere,
-   on every device, in both gears. */
-
-function CrownMarketHand({ testIdPrefix }: { testIdPrefix: string }) {
-  const t = useT();
-  const openMarket = useMirror((s) => s.openMarket);
-  const marketOpen = useMirror((s) => s.marketOpen);
-  return (
-    <button
-      type="button"
-      onClick={openMarket}
-      aria-haspopup="dialog"
-      aria-expanded={marketOpen}
-      aria-label={t("Market — the hall of creations")}
-      title={t("Market — the hall of creations")}
-      data-testid={`${testIdPrefix}-market-hand`}
-      className="focus-glow relative flex h-7 shrink-0 items-center gap-1.5 rounded-full border border-transparent px-2.5 font-medium text-[#f3e8ff] shadow-[0_0_0_1px_rgba(216,180,254,0.35),0_2px_14px_-4px_rgba(168,85,247,0.55)] transition-all duration-300 after:absolute after:-inset-2 after:rounded-full after:content-[''] hover:shadow-[0_0_0_1px_rgba(216,180,254,0.6),0_4px_20px_-4px_rgba(168,85,247,0.8)] hover:brightness-110"
-      style={{
-        background:
-          "linear-gradient(120deg, #4c1d95 0%, #7e22ce 45%, #a855f7 78%, #d8b571 130%)",
-      }}
-    >
-      <Sparkles className="size-3" aria-hidden="true" />
-      <span className="mono-label whitespace-nowrap text-[10px] uppercase tracking-[0.14em]">
-        {t("Market")}
-      </span>
-    </button>
-  );
-}
-
 /* THE WALK THAT ADVANCES — the visitor's own steps, kept on the
    device (never on a server): every exchange is one step. The family
    wall's tool orbs (the theme pages' suggestion wall) record them. */
@@ -5372,12 +5339,11 @@ export function BranchCanopy({
                 top right of the house, in every gear (landing and
                 realm, phone and desk): a question mark in its own
                 circle, one touch from the eight-slide welcome. */}
-            {/* THE CROWN'S CORNER CLUSTER — the market's violet gem and
-                the light's own hand stand BESIDE the question: the
-                website's very top right holds the Market, the sun/moon
-                and the About circle together, on every device, in both
-                gears (the visitor named each of their places). */}
-            <CrownMarketHand testIdPrefix={testIdPrefix} />
+            {/* THE CROWN'S CORNER CLUSTER — the light's own hand stands
+                beside the question: the website's very top right holds
+                the sun/moon and the About circle together, on every
+                device, in both gears. THE MARKET HAS LEFT THE HOUSE —
+                the violet gem is gone, the hall closed for good. */}
             <CrownLightHand testIdPrefix={testIdPrefix} />
             <button
               type="button"
