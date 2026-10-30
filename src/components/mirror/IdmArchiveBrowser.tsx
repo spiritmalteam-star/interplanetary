@@ -330,9 +330,10 @@ export function IdmArchiveBrowser({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
       aria-label={t("Interdimensional Archive")}
-      className="mx-auto w-full max-w-[860px] px-1 pb-10 pt-8 sm:pt-10"
+      className="nice-scroll h-full overflow-y-auto overscroll-contain"
       data-testid="idm-archive-browser"
     >
+      <div className="mx-auto w-full max-w-[860px] px-1 pb-10 pt-8 sm:pt-10">
       {/* header */}
       <div className="text-center">
         <span className="mono-label inline-flex items-center gap-1.5 rounded-full border hairline px-2.5 py-1 text-[10.5px] text-muted-foreground">
@@ -755,6 +756,7 @@ export function IdmArchiveBrowser({
       {lightbox && (
         <Lightbox src={lightbox.src} alt={lightbox.alt} onClose={() => setLightbox(null)} />
       )}
+    </div>
     </motion.section>
   );
 }

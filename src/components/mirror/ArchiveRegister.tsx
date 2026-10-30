@@ -394,8 +394,9 @@ function ArchiveList({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
       aria-label={t(meta.title)}
-      className="mx-auto w-full max-w-[860px] px-1 pb-8 pt-8 sm:pt-10"
+      className="nice-scroll h-full overflow-y-auto overscroll-contain"
     >
+      <div className="mx-auto w-full max-w-[860px] px-1 pb-8 pt-8 sm:pt-10">
       <div ref={topRef} aria-hidden="true" className="h-px" />
       {/* header */}
       <div className="text-center">
@@ -833,6 +834,7 @@ function ArchiveList({
           <Fingerprint className="size-3.5" aria-hidden="true" />
           {t("Interdimensional Archive ({n})", { n: idmArchiveTotal })}
         </button>
+      </div>
       </div>
     </motion.section>
   );
