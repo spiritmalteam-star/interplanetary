@@ -9,6 +9,7 @@ import {
   ChevronRight,
   Copy,
   CreditCard,
+  Dna,
   Flame,
   Gem,
   History,
@@ -641,6 +642,8 @@ export function ProfilePage() {
       case "profile":
       case "account":
         return me?.admin ? ["profile", "admin", "account"] : ["profile", "account"];
+      case "history":
+        return ["history"];
       case "transactions":
         return ["transactions"];
       case "library":

@@ -150,6 +150,7 @@ function RegisterRow({
 export function ArchiveRegister() {
   const registerKind = useMirror((s) => s.registerKind);
   const openRegister = useMirror((s) => s.openRegister);
+  const exitRegister = useMirror((s) => s.exitRegister);
   const t = useT();
 
   /* THE SIBLING COLLECTION — the Interdimensional Archive is its own
