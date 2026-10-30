@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { Hammer, Layers, Sparkles } from "lucide-react";
+import { Hammer, Layers } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -31,8 +31,6 @@ export function LandingChatNav() {
   const openToolTab = useMirror((s) => s.openToolTab);
   const activateToolTab = useMirror((s) => s.activateToolTab);
   const activeToolTab = useMirror((s) => s.activeToolTab);
-  const openMarket = useMirror((s) => s.openMarket);
-  const marketOpen = useMirror((s) => s.marketOpen);
   const lastMakerTab = useMirror((s) => s.lastMakerTab);
 
   /* IN DREAM — the workplace already stands (and the scopes are not
@@ -105,32 +103,11 @@ export function LandingChatNav() {
           in the crown's far corner (BranchCanopy wears it), always one
           touch from the eight-slide welcome. */}
 
-      {/* ---------------------------- MARKET ---------------------------- */}
-      {/* ITS OWN WORLD — a small violet gem in the crown's corner: the
-          gradient breathes once when it is laid, the glow answers the
-          hover, and one touch opens the world itself. */}
-      <button
-        type="button"
-        onClick={openMarket}
-        aria-haspopup="dialog"
-        aria-expanded={marketOpen}
-        aria-label={t("Market — the hall of creations")}
-        title={t("Market — the hall of creations")}
-        data-testid="landing-nav-market"
-        className={cn(
-          hand,
-          "border-transparent font-medium text-[#f3e8ff] shadow-[0_0_0_1px_rgba(216,180,254,0.35),0_2px_14px_-4px_rgba(168,85,247,0.55)] hover:shadow-[0_0_0_1px_rgba(216,180,254,0.6),0_4px_20px_-4px_rgba(168,85,247,0.8)] hover:brightness-110"
-        )}
-        style={{
-          background:
-            "linear-gradient(120deg, #4c1d95 0%, #7e22ce 45%, #a855f7 78%, #d8b571 130%)",
-        }}
-      >
-        <Sparkles className="size-3" aria-hidden="true" />
-        <span className="mono-label whitespace-nowrap text-[10px] uppercase tracking-[0.14em]">
-          {t("Market")}
-        </span>
-      </button>
+      {/* ---------------------------- MARKET HAS MOVED HOME ------------ */}
+      {/* The Market's violet gem left the chat's top row: it now stands
+          at the website's very top right corner (BranchCanopy wears it,
+          beside the About hand) — the crown's far corner, its own world
+          always one touch away. */}
 
       {/* THE VISITOR'S OWN HAND HAS MOVED HOME — the profile icon now
           stands at the crown's very beginning, before the light's

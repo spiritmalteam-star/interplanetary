@@ -451,6 +451,21 @@ function ToolWorkspaceImpl({ bare = false }: { bare?: boolean }) {
           tools never unmounts anything, so a weaving book keeps
           weaving and a sequencer keeps its pattern. */}
       <div className="relative min-h-0 flex-1">
+        {/* THE ROOM'S OWN ATMOSPHERE — the fullscreen room keeps the
+            house's breath: two still lights (the room's accent and its
+            companion) breathing behind the work. Without it the
+            enlarged room reads as one flat blue sheet laid over
+            everything — the mask the visitor named on the desktop.
+            Still, composited once, zero paint cost. */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 z-0"
+          data-testid="tool-workspace-atmosphere"
+          style={{
+            background:
+              "radial-gradient(ellipse 90% 60% at 18% -12%, color-mix(in srgb, var(--scope-a,var(--gd)) 13%, transparent), transparent 62%), radial-gradient(ellipse 80% 55% at 88% 112%, color-mix(in srgb, var(--scope-b,#7dd3fc) 9%, transparent), transparent 58%), radial-gradient(ellipse 60% 40% at 70% 8%, color-mix(in srgb, var(--scope-a,var(--gd)) 6%, transparent), transparent 60%)",
+          }}
+        />
         {openRoomTabs.map((key) => {
           const RoomView = PAGE_VIEWS[key];
           if (!RoomView) return null;

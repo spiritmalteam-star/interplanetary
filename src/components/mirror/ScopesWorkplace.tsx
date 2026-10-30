@@ -66,8 +66,18 @@ export function ScopesWorkplace() {
         }}
       />
 
-      {/* THE FIELDS — the scopes' own subcategories fill the room */}
+      {/* THE FIELDS — the scopes' own subcategories fill the room, the
+          house's own breath behind them (never one flat sheet when the
+          room fills the screen) */}
       <div className="relative min-h-0 flex-1">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 z-0"
+          style={{
+            background:
+              "radial-gradient(ellipse 90% 60% at 18% -12%, color-mix(in srgb, var(--scope-a,var(--gd)) 13%, transparent), transparent 62%), radial-gradient(ellipse 80% 55% at 88% 112%, color-mix(in srgb, var(--scope-b,#7dd3fc) 9%, transparent), transparent 58%)",
+          }}
+        />
         <ScopesRoom />
       </div>
     </div>

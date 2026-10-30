@@ -53,6 +53,41 @@ const REGISTER_META: Record<
   },
 };
 
+/* THE CODEX'S OWN PAGES — the register reveals itself in leaves of
+   sixty names; the page hands let the visitor stand on any leaf of
+   the codex without walking the whole shore (the visitor named the
+   numbers: type a page, land on it). */
+const REGISTER_PAGE_SIZE = BATCH;
+
+/** the page chips around the standing page — first, last, the chosen
+    leaf and its two neighbours, an ellipsis where a gap opens */
+function registerPageChips(
+  page: number,
+  total: number
+): (number | "gap")[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const wanted = new Set<number>([1, total, page]);
+  if (page - 1 > 1) wanted.add(page - 1);
+  if (page + 1 < total) wanted.add(page + 1);
+  if (page <= 3) {
+    wanted.add(2);
+    wanted.add(3);
+  }
+  if (page >= total - 2) {
+    wanted.add(total - 1);
+    wanted.add(total - 2);
+  }
+  const sorted = [...wanted].sort((a, b) => a - b);
+  const chips: (number | "gap")[] = [];
+  let prev = 0;
+  for (const p of sorted) {
+    if (p - prev > 1) chips.push("gap");
+    chips.push(p);
+    prev = p;
+  }
+  return chips;
+}
+
 function RegisterRow({
   rep,
   kind,
@@ -118,7 +153,9 @@ export function ArchiveRegister() {
   const [groupId, setGroupId] = useState<string | null>(null);
   const [revealed, setRevealed] = useState(BATCH);
   const [prevContext, setPrevContext] = useState(`|`);
+  const [jumpDraft, setJumpDraft] = useState("");
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const listTopRef = useRef<HTMLDivElement>(null);
 
   // Reset the reveal window whenever the filter context changes —
   // adjusted during render (no effect needed).
@@ -163,6 +200,31 @@ export function ArchiveRegister() {
 
   const shown = filtered.slice(0, revealed);
   const groupChips = meta.groups;
+
+  /* THE PAGE HANDS — the codex's own numbers: the standing page, the
+     whole count, and the way to land on any leaf by chip or by hand */
+  const totalPages = Math.max(1, Math.ceil(filtered.length / REGISTER_PAGE_SIZE));
+  const standingPage = Math.min(
+    totalPages,
+    Math.max(1, Math.ceil(revealed / REGISTER_PAGE_SIZE))
+  );
+  const goToPage = (p: number) => {
+    const leaf = Math.min(Math.max(1, Math.floor(p)), totalPages);
+    if (leaf === standingPage) return;
+    setRevealed(Math.min(leaf * REGISTER_PAGE_SIZE, filtered.length));
+    /* the reader's eyes ride to the list's own top — the names begin
+       where the numbers promise (the anchor stands above the list) */
+    try {
+      listTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    } catch {
+      /* an engine without smooth steps still carries the eyes */
+    }
+  };
+  const submitJump = () => {
+    const n = Number.parseInt(jumpDraft, 10);
+    if (Number.isFinite(n) && n > 0) goToPage(n);
+    setJumpDraft("");
+  };
 
   return (
     <motion.section
@@ -237,7 +299,7 @@ export function ArchiveRegister() {
                 ? t("Search the full civilization register")
                 : t("Search the full interdimensional register")
             }
-            className="focus-glow h-10 w-full rounded-xl border hairline bg-transparent pl-10 pr-9 text-[15.5px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
+            className="focus-glow h-9 w-full rounded-xl border hairline bg-transparent pl-10 pr-9 text-[14.5px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none sm:h-10 sm:text-[15.5px]"
           />
           {query && (
             <button
@@ -251,13 +313,13 @@ export function ArchiveRegister() {
           )}
         </div>
 
-        <div className="flex flex-wrap items-center justify-center gap-1.5">
+        <div className="flex flex-wrap items-center justify-center gap-1 sm:gap-1.5">
           <button
             type="button"
             onClick={() => setGroupId(null)}
             aria-pressed={groupId === null}
             className={cn(
-              "focus-glow mono-label rounded-full border px-2.5 py-1 text-[11.5px] transition-all duration-300",
+              "focus-glow mono-label rounded-full border px-2 py-0.5 text-[10.5px] transition-all duration-300 sm:px-2.5 sm:py-1 sm:text-[11.5px]",
               groupId === null
                 ? "border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--cy)_12%,transparent)] text-foreground"
                 : "hairline text-muted-foreground hover:text-foreground"
@@ -275,7 +337,7 @@ export function ArchiveRegister() {
               onClick={() => setGroupId(groupId === g.id ? null : g.id)}
               aria-pressed={groupId === g.id}
               className={cn(
-                "focus-glow mono-label rounded-full border px-2.5 py-1 text-[11.5px] transition-all duration-300",
+                "focus-glow mono-label rounded-full border px-2 py-0.5 text-[10.5px] transition-all duration-300 sm:px-2.5 sm:py-1 sm:text-[11.5px]",
                 groupId === g.id
                   ? "border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--cy)_12%,transparent)] text-foreground"
                   : "hairline text-muted-foreground hover:text-foreground"
@@ -285,6 +347,97 @@ export function ArchiveRegister() {
             </button>
           ))}
         </div>
+      </div>
+
+      {/* THE CODEX'S OWN PAGES — the numbers at the register's top:
+          one row of leaves (first · neighbours · last), a small hand
+          that takes any page typed into it, and the way one leaf back
+          or onward. No walk down the whole shore to reach a name. */}
+      <div
+        className="mt-4 flex flex-wrap items-center justify-center gap-1.5"
+        data-testid="codex-page-hands"
+      >
+        <button
+          type="button"
+          onClick={() => goToPage(standingPage - 1)}
+          disabled={standingPage <= 1}
+          aria-label={t("The page before")}
+          title={t("The page before")}
+          className="focus-glow mono-label flex h-7 items-center rounded-full border px-2.5 text-[11px] text-muted-foreground transition-all duration-300 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-35"
+        >
+          ‹
+        </button>
+        {registerPageChips(standingPage, totalPages).map((chip, i) =>
+          chip === "gap" ? (
+            <span
+              key={`gap-${i}`}
+              aria-hidden="true"
+              className="mono-label px-0.5 text-[11px] text-muted-foreground/45"
+            >
+              …
+            </span>
+          ) : (
+            <button
+              key={chip}
+              type="button"
+              onClick={() => goToPage(chip)}
+              aria-current={chip === standingPage ? "page" : undefined}
+              aria-label={t("Codex page {n}", { n: chip })}
+              title={t("Codex page {n}", { n: chip })}
+              className={cn(
+                "focus-glow mono-label flex h-7 min-w-7 items-center justify-center rounded-full border px-1.5 text-[11px] tabular-nums transition-all duration-300",
+                chip === standingPage
+                  ? "border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--cy)_12%,transparent)] font-semibold text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {chip}
+            </button>
+          )
+        )}
+        <button
+          type="button"
+          onClick={() => goToPage(standingPage + 1)}
+          disabled={standingPage >= totalPages}
+          aria-label={t("The page after")}
+          title={t("The page after")}
+          className="focus-glow mono-label flex h-7 items-center rounded-full border px-2.5 text-[11px] text-muted-foreground transition-all duration-300 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-35"
+        >
+          ›
+        </button>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            submitJump();
+          }}
+          className="ml-1 flex items-center gap-1"
+        >
+          <label
+            htmlFor="codex-page-jump"
+            className="mono-label text-[10px] uppercase tracking-[0.14em] text-muted-foreground/70"
+          >
+            {t("Page")}
+          </label>
+          <input
+            id="codex-page-jump"
+            type="number"
+            min={1}
+            max={totalPages}
+            value={jumpDraft}
+            onChange={(e) => setJumpDraft(e.target.value)}
+            placeholder={String(standingPage)}
+            aria-label={t("Jump to a codex page")}
+            className="focus-glow h-7 w-14 rounded-full border hairline bg-transparent px-2 text-center font-mono text-[11.5px] tabular-nums text-foreground placeholder:text-muted-foreground/50 focus:outline-none"
+          />
+          <button
+            type="submit"
+            aria-label={t("Open that page")}
+            title={t("Open that page")}
+            className="focus-glow mono-label flex h-7 items-center rounded-full border hairline px-2.5 text-[10.5px] uppercase tracking-[0.12em] text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+          >
+            {t("Go")}
+          </button>
+        </form>
       </div>
 
       {/* result status line */}
@@ -303,6 +456,7 @@ export function ArchiveRegister() {
       </div>
 
       {/* list */}
+      <div ref={listTopRef} aria-hidden="true" className="h-px scroll-mt-2" />
       <ul className="mt-3 space-y-1.5" aria-live="polite">
         {shown.map((rep) => (
           <RegisterRow key={rep.id} rep={rep} kind={registerKind} />

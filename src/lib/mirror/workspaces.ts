@@ -399,12 +399,14 @@ export const SCOPE_META: Record<LandingScopeKey, ScopeMeta> = {
 };
 
 /** the crown's fields, in the house's own standing order (the Mirror
-    first — it is the default page of the book) */
+    first — it is the default page of the book). THE ATELIER DOES NOT
+    STAND HERE — ArtX lives among the InDream makers (its own room in
+    the workplace); the scopes' shore wears the fields alone (the
+    visitor named this: one home per room, never two). */
 export const SCOPE_ORDER: LandingScopeKey[] = [
   "mirror",
   "interplanetary",
   "quantum",
-  "artx",
   "healing",
 ];
 

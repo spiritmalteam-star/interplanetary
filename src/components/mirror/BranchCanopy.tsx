@@ -53,6 +53,7 @@ import {
   Send,
   Sparkles,
   Sprout,
+  Sun,
   TreeDeciduous,
   UserRound,
   Volume2,
@@ -1849,9 +1850,73 @@ function CrownProfileIcon({ testIdPrefix }: { testIdPrefix: string }) {
 }
 
 /* ------------- the crown's own light — a quiet hand ------------------
-   THE HAND HAS MOVED INDOORS: the toggle no longer stands in the
-   crown (the visitor's own room wears it now, beside the purse).
-   The component stays below — the profile room renders it. */
+   THE LIGHT RETURNS TO THE CROWN'S CORNER (the visitor named it): the
+   sun/moon stands beside the About hand at the website's very top
+   right — one touch from anywhere, on every device, in both gears
+   (landing and realm). The profile room keeps its own deep tuning. */
+
+function CrownLightHand({ testIdPrefix }: { testIdPrefix: string }) {
+  const { resolvedTheme, setTheme } = useTheme();
+  const toggle = () => {
+    const root = document.documentElement;
+    root.classList.add("theme-anim");
+    setTheme(resolvedTheme === "dark" ? "light" : "dark");
+    window.setTimeout(() => root.classList.remove("theme-anim"), 560);
+  };
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      aria-label="Toggle between deep space and daylight laboratory"
+      title="Toggle theme"
+      data-testid={`${testIdPrefix}-light-hand`}
+      className="focus-glow group flex size-7 shrink-0 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+    >
+      {/* CSS-driven swap avoids hydration mismatch and effect state */}
+      <Sun
+        className="hidden size-3.5 transition-transform duration-500 group-hover:rotate-45 dark:block"
+        aria-hidden="true"
+      />
+      <Moon
+        className="size-3.5 transition-transform duration-500 group-hover:-rotate-12 dark:hidden"
+        aria-hidden="true"
+      />
+    </button>
+  );
+}
+
+/* ------------- the market's own gem — the crown's corner -------------
+   ITS OWN WORLD AT THE WEBSITE'S VERY TOP RIGHT (the visitor named
+   the place): the violet pill stands beside the About hand — separate
+   from the InDream workplace and the scopes, one touch from anywhere,
+   on every device, in both gears. */
+
+function CrownMarketHand({ testIdPrefix }: { testIdPrefix: string }) {
+  const t = useT();
+  const openMarket = useMirror((s) => s.openMarket);
+  const marketOpen = useMirror((s) => s.marketOpen);
+  return (
+    <button
+      type="button"
+      onClick={openMarket}
+      aria-haspopup="dialog"
+      aria-expanded={marketOpen}
+      aria-label={t("Market — the hall of creations")}
+      title={t("Market — the hall of creations")}
+      data-testid={`${testIdPrefix}-market-hand`}
+      className="focus-glow relative flex h-7 shrink-0 items-center gap-1.5 rounded-full border border-transparent px-2.5 font-medium text-[#f3e8ff] shadow-[0_0_0_1px_rgba(216,180,254,0.35),0_2px_14px_-4px_rgba(168,85,247,0.55)] transition-all duration-300 after:absolute after:-inset-2 after:rounded-full after:content-[''] hover:shadow-[0_0_0_1px_rgba(216,180,254,0.6),0_4px_20px_-4px_rgba(168,85,247,0.8)] hover:brightness-110"
+      style={{
+        background:
+          "linear-gradient(120deg, #4c1d95 0%, #7e22ce 45%, #a855f7 78%, #d8b571 130%)",
+      }}
+    >
+      <Sparkles className="size-3" aria-hidden="true" />
+      <span className="mono-label whitespace-nowrap text-[10px] uppercase tracking-[0.14em]">
+        {t("Market")}
+      </span>
+    </button>
+  );
+}
 
 /* THE WALK THAT ADVANCES — the visitor's own steps, kept on the
    device (never on a server): every exchange is one step. The family
@@ -5307,6 +5372,13 @@ export function BranchCanopy({
                 top right of the house, in every gear (landing and
                 realm, phone and desk): a question mark in its own
                 circle, one touch from the eight-slide welcome. */}
+            {/* THE CROWN'S CORNER CLUSTER — the market's violet gem and
+                the light's own hand stand BESIDE the question: the
+                website's very top right holds the Market, the sun/moon
+                and the About circle together, on every device, in both
+                gears (the visitor named each of their places). */}
+            <CrownMarketHand testIdPrefix={testIdPrefix} />
+            <CrownLightHand testIdPrefix={testIdPrefix} />
             <button
               type="button"
               onClick={() => useMirror.getState().openTour()}

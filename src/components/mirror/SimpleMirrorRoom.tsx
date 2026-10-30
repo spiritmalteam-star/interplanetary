@@ -20,6 +20,10 @@ import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { MirrorChanneling } from "./MirrorChanneling";
 import { ZoomableLightbox } from "./ZoomableLightbox";
+import {
+  chatSuggestionPools,
+  type PoolId,
+} from "@/lib/data/suggestions-pools";
 import { cn } from "@/lib/utils";
 import {
   filterStyles,
@@ -79,6 +83,11 @@ type SimpleRoomConfig = {
   seeds: string[];
   /** the hands that follow every reply — the conversation proceeds */
   proceed: string[];
+  /** THE ROOM'S OWN WHISPER POOL — when a room names its pool (the
+      Invent's forge, the Manifest's mirror law), its doors and its
+      proceeding hands draw FIVE fresh whispers from a thousand,
+      reshuffled at every load (the visitor named both numbers). */
+  pool?: PoolId;
   /** the room's own door to the Mirror — the words, and the vision
       gift beside them when the Mirror chose to paint */
   ask: (
@@ -104,6 +113,7 @@ const MANIFEST_CONFIG: SimpleRoomConfig = {
   storageKey: "mirror:room-manifest",
   spiritKey: "Speak the world you wish to make — the Mirror shapes it with you.",
   placeholderKey: "Speak your intention…",
+  pool: "mirroros",
   seeds: [
     "Help me shape a clear intention for this week",
     "What should I release to move forward?",
@@ -139,6 +149,7 @@ const INVENT_CONFIG: SimpleRoomConfig = {
   storageKey: "mirror:room-invent",
   spiritKey: "Bring a spark — the Mirror forges it into form with you.",
   placeholderKey: "Spark the forge…",
+  pool: "invent",
   seeds: [
     "Help me sketch an invention for a small daily annoyance",
     "Give my idea a name and a simple mechanism",
@@ -385,6 +396,31 @@ function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
     [paintVision, style]
   );
 
+  /* THE ROOM'S OWN WHISPERS — five at a time, drawn fresh from the
+     room's thousand-door pool: once on arrival, then again after every
+     reply lands and every clearing (the visitor named the law: each
+     load reshuffles, no two loads alike). It stands BEFORE the send
+     hand so the hand's own memory can carry it. */
+  const [whispers, setWhispers] = useState<string[]>([]);
+  const drawWhispers = useCallback(() => {
+    const pool = config.pool ? chatSuggestionPools[config.pool] : null;
+    if (!pool || pool.length === 0) {
+      setWhispers([]);
+      return;
+    }
+    const shuffled = [...pool];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const tmp = shuffled[i];
+      shuffled[i] = shuffled[j];
+      shuffled[j] = tmp;
+    }
+    setWhispers(shuffled.slice(0, 5));
+  }, [config.pool]);
+  useEffect(() => {
+    drawWhispers();
+  }, [drawWhispers]);
+
   const send = useCallback(
     async (raw: string) => {
       const q = raw.trim();
@@ -437,20 +473,23 @@ function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
         );
       } finally {
         setBusy(false);
+        /* the reply has landed — the room's whispers reshuffle */
+        drawWhispers();
       }
     },
-    [busy, config, language, paintVision, style]
+    [busy, config, language, paintVision, style, drawWhispers]
   );
 
   const clear = useCallback(() => {
     if (busy) return;
     setThread([]);
+    drawWhispers();
     try {
       window.localStorage.removeItem(config.storageKey);
     } catch {
       /* quiet */
     }
-  }, [busy, config.storageKey]);
+  }, [busy, config.storageKey, drawWhispers]);
 
   /* THE FORGE'S SKETCH HAND — the idea (the last word the visitor
      spoke, or the draft in the field) is scratched into form: up to
@@ -538,6 +577,11 @@ function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
   const seeds = useMemo(() => config.seeds, [config.seeds]);
   const proceed = useMemo(() => config.proceed, [config.proceed]);
 
+  /* the standing row — the pool's five when the room has a pool, the
+     room's own honest doors otherwise */
+  const whisperRow = whispers.length > 0 ? whispers : seeds;
+  const proceedRow = whispers.length > 0 ? whispers : proceed;
+
   return (
     <div
       data-testid="simple-room"
@@ -601,7 +645,7 @@ function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
               {t(config.spiritKey)}
             </p>
             <div className="flex w-full max-w-[340px] flex-col gap-1.5">
-              {seeds.map((seed) => (
+              {whisperRow.map((seed) => (
                 <button
                   key={seed}
                   type="button"
@@ -802,7 +846,7 @@ function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
                           className="mt-0.5 flex flex-wrap items-center gap-1.5"
                           data-testid="simple-room-proceed"
                         >
-                          {proceed.map((chip) => (
+                          {proceedRow.map((chip) => (
                             <button
                               key={chip}
                               type="button"

@@ -2850,49 +2850,59 @@ html:not(.dark) .lp-sigil-img {
    image, no nine-slice, no weight. */
 
 /* THE PASS-THROUGH LAW — while the portal is docked (not expanded),
-   its space belongs to the page: every touch that is not text and
-   not a hand falls through the lens into the threshold beneath, so
-   the visitor can always scroll on and see the bottom of the house.
-   Text keeps its touch (rooms stay readable), every hand (button,
-   input, form, link) keeps its work; the quiet floor, the glows and
-   the empty membrane let the page scroll beneath them. */
+   ITS TOUCH BELONGS TO THE PAGE ON TOUCH DEVICES ONLY: a coarse
+   pointer with no hover yields every touch that is not text and not
+   a hand through the lens into the threshold beneath, so a finger can
+   always scroll on and see the bottom of the house. THE DESKTOP
+   KEEPS ITS WHEEL — a fine pointer never yields: the profile, every
+   chat's transcript and every elevator (scrollbar) inside the docked
+   lens answer the wheel and the drag directly (the visitor named the
+   law: the profile must scroll on the desktop, the elevator must
+   serve). Text, hands and reading spaces keep their touch in both
+   worlds through the same re-arming rules below. */
 .lens-docked {
-  pointer-events: none;
-}
-.lens-docked button,
-.lens-docked input,
-.lens-docked textarea,
-.lens-docked select,
-.lens-docked a,
-.lens-docked form,
-.lens-docked p,
-.lens-docked h1,
-.lens-docked h2,
-.lens-docked h3,
-.lens-docked h4,
-.lens-docked h5,
-.lens-docked h6,
-.lens-docked blockquote,
-.lens-docked [data-touch-keep] {
   pointer-events: auto;
 }
+@media (hover: none) and (pointer: coarse) {
+  .lens-docked {
+    pointer-events: none;
+  }
+  .lens-docked button,
+  .lens-docked input,
+  .lens-docked textarea,
+  .lens-docked select,
+  .lens-docked a,
+  .lens-docked form,
+  .lens-docked p,
+  .lens-docked h1,
+  .lens-docked h2,
+  .lens-docked h3,
+  .lens-docked h4,
+  .lens-docked h5,
+  .lens-docked h6,
+  .lens-docked blockquote,
+  .lens-docked [data-touch-keep] {
+    pointer-events: auto;
+  }
 
-/* THE CHAT'S OWN YIELD — inside the docked chat, the reading space
-   belongs to the page again: swiping across the room's words (the
-   question, the answer, the thread) moves the threshold beneath, so
-   the visitor is never trapped inside the chat frame. Only the hands
-   keep their touch — every button, input, form and link inside the
-   yield re-arms through the pass-through law above. */
-.lens-docked [data-chat-yield],
-.lens-docked [data-chat-yield] p,
-.lens-docked [data-chat-yield] h1,
-.lens-docked [data-chat-yield] h2,
-.lens-docked [data-chat-yield] h3,
-.lens-docked [data-chat-yield] h4,
-.lens-docked [data-chat-yield] h5,
-.lens-docked [data-chat-yield] h6,
-.lens-docked [data-chat-yield] blockquote {
-  pointer-events: none;
+  /* THE CHAT'S OWN YIELD — inside the docked chat on touch only, the
+     reading space belongs to the page again: swiping across the
+     room's words (the question, the answer, the thread) moves the
+     threshold beneath, so the visitor is never trapped inside the
+     chat frame. Only the hands keep their touch — every button,
+     input, form and link inside the yield re-arms through the
+     pass-through law above. */
+  .lens-docked [data-chat-yield],
+  .lens-docked [data-chat-yield] p,
+  .lens-docked [data-chat-yield] h1,
+  .lens-docked [data-chat-yield] h2,
+  .lens-docked [data-chat-yield] h3,
+  .lens-docked [data-chat-yield] h4,
+  .lens-docked [data-chat-yield] h5,
+  .lens-docked [data-chat-yield] h6,
+  .lens-docked [data-chat-yield] blockquote {
+    pointer-events: none;
+  }
 }
 
 /* THE FLOOR'S OWN LIGHT — the landing chat's whisper line wears the

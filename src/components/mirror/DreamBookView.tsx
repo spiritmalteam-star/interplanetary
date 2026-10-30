@@ -52,10 +52,8 @@ import {
 } from "@/lib/browser-voice";
 import { BOOK_DEPTHS, READERS, TALES, VOLUMES } from "@/lib/data/book-options";
 import { dedupeChapters } from "@/lib/book-text";
-import { bookToText } from "@/lib/book-text";
 import { formatArchiveNumber } from "@/lib/i18n/core";
 import { registerWorkspaceCleanup } from "@/lib/mirror/workspace-lifecycle";
-import { MirrorBridge } from "./living/MirrorBridge";
 import {
   forgetVolume,
   keepVolume,
@@ -1496,26 +1494,9 @@ export function DreamBookView() {
     }
   }, [meta, t, flushInkEdit]);
 
-  /* THE MIRROR BRIDGE — the work at hand: the book's own opening, so
-     the advice lands on THIS volume (only what is needed travels) */
-  const buildBridgeContext = useCallback(() => {
-    if (!meta) return null;
-    /* the pen's pending ink lands before the Mirror reads the volume */
-    flushInkEdit();
-    const pages = pagesRef.current;
-    if (pages.length === 0) return null;
-    const text = bookToText(
-      meta,
-      pages.map((p) => ({
-        n: p.n,
-        ...(p.part ? { part: p.part } : {}),
-        ...(p.chapter ? { chapter: p.chapter } : {}),
-        paragraphs: p.paragraphs,
-      }))
-    );
-    return text.slice(0, 600);
-  }, [meta, flushInkEdit]);
-
+  /* THE MIRROR BRIDGE HAS LEFT THE BOOK — the reader asked the Mirror's
+     small hand away from the reading stage's corner (the work-at-hand
+     context builder rests with it). */
   /* ---------------- the narrator ---------------- */
 
   const narrate = useCallback(async (auto = false) => {
@@ -1716,7 +1697,7 @@ export function DreamBookView() {
 
   /* the shared ink icon button — the same quiet circle as every chat */
   const inkIconBtn =
-    "focus-glow flex size-9 items-center justify-center rounded-full border border-border text-muted-foreground transition-all duration-300 hover:border-foreground/40 hover:text-foreground";
+    "focus-glow flex size-8 items-center justify-center rounded-full border border-border text-muted-foreground transition-all duration-300 hover:border-foreground/40 hover:text-foreground sm:size-9";
 
   /* ================================================================ */
   /*  THE ATELIER                                                      */
@@ -2207,10 +2188,13 @@ export function DreamBookView() {
             : "max-h-44 translate-y-0 pt-[max(0.75rem,env(safe-area-inset-top))] opacity-100"
         )}
       >
-        {/* THE READING DESK — two calm rows that can wrap but never
-            squeeze: the book's name keeps its own width between the two
-            quiet hands, and the instruments rest in a centered row
-            beneath, wrapping instead of colliding on narrow screens */}
+        {/* THE READING DESK — two calm rows that never squeeze: the
+            book's name keeps its own width between the two quiet
+            hands; beneath, THE MAKERS' ROW (the hands that shape the
+            volume) and THE INSTRUMENTS' ROW (the hands that serve the
+            reading) stand apart — smaller and quieter on the phone,
+            centered, wrapping instead of colliding (the visitor named
+            the cleaner desk) */}
         <div className="flex items-center gap-2">
         <button
           type="button"
@@ -2248,14 +2232,15 @@ export function DreamBookView() {
           <X className="size-4" aria-hidden="true" />
         </button>
         </div>
-        <div className="mt-1.5 flex flex-wrap items-center justify-center gap-1 pb-1">
+        {/* THE MAKERS' ROW — rewrite, whole book, publish */}
+        <div className="mt-1.5 flex flex-wrap items-center justify-center gap-1 pb-0.5">
           {/* the rewriting hand — a fancy button at the very top */}
           <button
             type="button"
             onClick={() => setRewriteOpen(true)}
             aria-label={t("Rewrite the coming pages")}
             title={t("Rewrite the coming pages")}
-            className="dream-fancy focus-glow relative flex h-9 shrink-0 items-center gap-1.5 rounded-full pl-3 pr-3.5"
+            className="dream-fancy focus-glow relative flex h-8 shrink-0 items-center gap-1.5 rounded-full pl-2.5 pr-3 sm:h-9 sm:pl-3 sm:pr-3.5"
           >
             <Sparkles className="size-3.5" aria-hidden="true" />
             <span className="font-[family-name(var(--font-literata))] text-[13.5px] italic tracking-wide">
@@ -2278,13 +2263,40 @@ export function DreamBookView() {
             aria-label={t("Whole book")}
             title={t("Whole book")}
             data-testid="dream-whole-reveal"
-            className="dream-fancy focus-glow relative flex h-9 shrink-0 items-center gap-1.5 rounded-full pl-3 pr-3.5 disabled:opacity-55"
+            className="dream-fancy focus-glow relative flex h-8 shrink-0 items-center gap-1.5 rounded-full pl-2.5 pr-3 disabled:opacity-55 sm:h-9 sm:pl-3 sm:pr-3.5"
           >
             <BookOpenText className="size-3.5" aria-hidden="true" />
             <span className="hidden font-[family-name(var(--font-literata))] text-[13.5px] italic tracking-wide sm:inline">
               {t("Whole book")}
             </span>
           </button>
+          {/* THE PUBLISH HAND — the finished volume may hang in the
+              market's hall: one touch, the Mirror writes its words, the
+              visitor stands exactly where they are (it stands among the
+              makers — the hands that shape the volume) */}
+          {savedBookId && meta && (
+            <span className="shrink-0">
+              <PublishToMarket
+                kind="book"
+                refId={savedBookId}
+                refKind="library"
+                title={meta.title}
+                excerpt={
+                  meta.subtitle ||
+                  meta.axiom ||
+                  (pages[0] ? pageText(pages[0]).slice(0, 240) : "")
+                }
+                cover={cover}
+                pages={pages.length}
+                testId="dream-publish"
+              />
+            </span>
+          )}
+        </div>
+        {/* THE INSTRUMENTS' ROW — the reading's own quiet hands: the
+            presses, the focus, the ink desk, the voice and the text's
+            size — one calm row beneath the makers */}
+        <div className="flex flex-wrap items-center justify-center gap-1">
           {/* THE BINDING PRESS — the whole book as one PDF */}
           <button
             type="button"
@@ -2313,27 +2325,6 @@ export function DreamBookView() {
           >
             <BookDown className="size-4" aria-hidden="true" />
           </button>
-          {/* THE PUBLISH HAND — the finished volume may hang in the
-              market's hall: one touch, the Mirror writes its words, the
-              visitor stands exactly where they are */}
-          {savedBookId && meta && (
-            <span className="shrink-0">
-              <PublishToMarket
-                kind="book"
-                refId={savedBookId}
-                refKind="library"
-                title={meta.title}
-                excerpt={
-                  meta.subtitle ||
-                  meta.axiom ||
-                  (pages[0] ? pageText(pages[0]).slice(0, 240) : "")
-                }
-                cover={cover}
-                pages={pages.length}
-                testId="dream-publish"
-              />
-            </span>
-          )}
           {/* THE FOCUS READING — the column widens, the frame quiets */}
           <button
             type="button"
@@ -2978,20 +2969,10 @@ export function DreamBookView() {
         )}
       </AnimatePresence>
 
-      {/* THE MIRROR BRIDGE — the reading stage's own advisor: it sees
-          the volume at hand and advises; only the reader's own hand
-          carries anything onward. It rests while the frame is already
-          full (whole-book mode, immersed reading, small screens). */}
-      {stage === "reading" &&
-        !wholeMode &&
-        !immersed &&
-        !!meta &&
-        pages.length > 0 && (
-          <MirrorBridge
-            workspaceKey="dreambook"
-            buildContext={buildBridgeContext}
-          />
-        )}
+      {/* THE MIRROR BRIDGE HAS LEFT THE BOOK — the reader asked the
+          Mirror's small hand away from the reading stage's corner: the
+          volume speaks for itself now, and the Mirror waits in the
+          chat's own floor (one back hand away, always). */}
 
       {/* the progress thread + the slide buttons (they rest while the
           reading is immersed — the page alone fills the screen) */}
