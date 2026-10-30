@@ -345,7 +345,7 @@ type WalletRow = {
 };
 
 function snapshotOf(row: WalletRow): WalletSnapshot {
-  const deposit = Number(row.depositCredits ?? 0n);
+  const deposit = Number(row.depositCredits ?? 0);
   return {
     planTier: (["FREE", "SEEKER", "OBSERVATORY_PRO"].includes(row.planTier)
       ? row.planTier

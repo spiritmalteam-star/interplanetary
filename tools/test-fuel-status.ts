@@ -5,7 +5,8 @@ try {
   console.log("reserves:", JSON.stringify(s.reserves)?.slice(0, 200));
   console.log("recentGrants:", s.recentGrants?.length, "totals:", JSON.stringify(s.totals)?.slice(0, 200));
 } catch (e) {
-  console.error("FUEL STATUS THROWS:", e?.message);
-  console.error(e?.stack?.split("\n").slice(0, 4).join("\n"));
+  const err = e instanceof Error ? e : new Error(String(e));
+  console.error("FUEL STATUS THROWS:", err.message);
+  console.error(err.stack?.split("\n").slice(0, 4).join("\n"));
 }
 process.exit(0);

@@ -4,11 +4,10 @@
    scripts/i18n-keys-dynamic.json (stale entries preserved minus the
    removed Interplanetary Biology vocabulary). */
 import { readFileSync, writeFileSync } from "node:fs";
-import { scopeSuggestionPools } from "../src/lib/data/suggestions.ts";
-import { giftLines, labFrequencies, modeContext } from "../src/lib/data/metaphysics.ts";
-import { LIVE_SCOPES } from "../src/lib/live-scopes.ts";
-import { federationBodies, federationTreaties, federationPrinciples } from "../src/lib/data/federation.ts";
-import { SCOPE_META } from "../src/lib/entity-utils.ts";
+import { giftLines, labFrequencies, modeContext } from "../src/lib/data/metaphysics";
+import { LIVE_SCOPES } from "../src/lib/live-scopes";
+import { federationBodies, federationTreaties, federationPrinciples } from "../src/lib/data/federation";
+import { SCOPE_META } from "../src/lib/entity-utils";
 import {
   shiftFormulas,
   higherMindIntro,
@@ -21,13 +20,13 @@ import {
   morningPool,
   eveningPool,
   focusPool,
-} from "../src/lib/data/mirroros.ts";
+} from "../src/lib/data/mirroros";
 import {
   CRAFT_PHASES,
   KIND_LABEL,
   STEPS_LABEL_HERBAL,
   STEPS_LABEL_PRACTICE,
-} from "../src/lib/data/remedy.ts";
+} from "../src/lib/data/remedy";
 import {
   forgeDomains,
   forgeScales,
@@ -38,14 +37,14 @@ import {
   inventTools,
   toolPhases,
   TOOL_LINE_LABELS,
-} from "../src/lib/data/invent.ts";
-import { chatSuggestionPools } from "../src/lib/data/suggestions-pools.ts";
-import { LEXICON } from "../src/lib/data/lexicon.ts";
+} from "../src/lib/data/invent";
+import { chatSuggestionPools } from "../src/lib/data/suggestions-pools";
+import { LEXICON } from "../src/lib/data/lexicon";
 import {
   bxSliderMeta,
   pxBioChamber,
   pxBioMechanisms,
-} from "../src/lib/data/particlex-bio.ts";
+} from "../src/lib/data/particlex-bio";
 
 const dynPath = "/home/z/my-project/scripts/i18n-keys-dynamic.json";
 const existing: string[] = JSON.parse(readFileSync(dynPath, "utf8"));
@@ -307,7 +306,7 @@ const retired = new Set([
 const set = new Set<string>(existing.filter((k) => !retired.has(k)));
 
 /* scope suggestions — the live per-scope pools (66 questions each) */
-for (const arr of Object.values(scopeSuggestionPools)) for (const q of arr) set.add(q);
+for (const arr of Object.values(chatSuggestionPools)) for (const q of arr) set.add(q);
 
 /* gift lines + emotional frequencies (label + hint) */
 for (const line of giftLines) set.add(line);
