@@ -239,7 +239,7 @@ export const LANDING_SCOPES: LandingScopeKey[] = [
 /** The standing field of the threshold — THE MIRROR, always. */
 export const LANDING_DEFAULT_SCOPE: LandingScopeKey = "mirror";
 
-export type RegisterKind = DossierKind;
+export type RegisterKind = DossierKind | "archive";
 
 /* -------- the passage — the visitor's account and the free door -------- */
 

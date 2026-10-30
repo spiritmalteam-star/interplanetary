@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import {
   BadgeCheck,
+  Fingerprint,
   Layers,
   Search,
   Orbit,
@@ -20,6 +21,8 @@ import {
 import { interdimEntities } from "@/lib/data/entities-interdim";
 import { civilizations } from "@/lib/data/civilizations";
 import { interdimensional } from "@/lib/data/interdimensional";
+import { idmArchiveTotal } from "@/lib/data/idm-archive";
+import { IdmArchiveBrowser } from "./IdmArchiveBrowser";
 import { entityImage } from "@/lib/entity-utils";
 import { entityRegistryLine } from "@/lib/entity-profile";
 import { useT } from "@/lib/i18n";
@@ -147,6 +150,25 @@ function RegisterRow({
 export function ArchiveRegister() {
   const registerKind = useMirror((s) => s.registerKind);
   const openRegister = useMirror((s) => s.openRegister);
+  const t = useT();
+
+  /* THE SIBLING COLLECTION — the Interdimensional Archive is its own
+     browser with its own laws (the roll, the red thread, the turn
+     from the top); it never bends the register list beneath it. */
+  if (registerKind === "archive") {
+    return (
+      <IdmArchiveBrowser onExit={exitRegister} onSwitch={openRegister} />
+    );
+  }
+
+  return (
+    <ArchiveList registerKind={registerKind} />
+  );
+}
+
+function ArchiveList({ registerKind }: { registerKind: "civilization" | "interdim" }) {
+  const openRegister = useMirror((s) => s.openRegister);
+  const exitRegister = useMirror((s) => s.exitRegister);
   const t = useT();
 
   const [query, setQuery] = useState("");
@@ -520,6 +542,15 @@ export function ArchiveRegister() {
                     n: archiveTotals.civilizations,
                   }),
           })}
+        </button>
+        <button
+          type="button"
+          onClick={() => openRegister("archive")}
+          data-testid="open-idm-archive"
+          className="focus-glow flex items-center gap-2 rounded-full border border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--cy)_12%,transparent)] px-4 py-2 text-[14px] font-semibold text-foreground transition-all duration-300 hover:glow-sm"
+        >
+          <Fingerprint className="size-3.5" aria-hidden="true" />
+          {t("Interdimensional Archive ({n})", { n: idmArchiveTotal })}
         </button>
       </div>
     </motion.section>

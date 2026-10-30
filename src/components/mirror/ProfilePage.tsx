@@ -11,6 +11,7 @@ import {
   CreditCard,
   Flame,
   Gem,
+  History,
   KeyRound,
   LibraryBig,
   LoaderCircle,
@@ -42,6 +43,12 @@ import {
   listDownloads,
   type DownloadEntry,
 } from "@/lib/downloads-log";
+import {
+  listToolWorks,
+  TOOL_WORK_LABELS,
+  type ToolWork,
+  type ToolWorkKind,
+} from "@/lib/tool-history";
 import { cn } from "@/lib/utils";
 import { TransactionsPanel } from "./wallet/TransactionsPanel";
 import { RealmLightToggle } from "./RealmLightToggle";
@@ -104,6 +111,7 @@ interface VesselKeyRow {
 
 type SectionId =
   | "profile"
+  | "history"
   | "settings"
   | "downloads"
   | "seeds"
@@ -133,6 +141,18 @@ export function ProfilePage() {
   const openLibrary = useMirror((s) => s.openLibrary);
   const setLibraryFocus = useMirror((s) => s.setLibraryFocus);
   const signOut = useMirror((s) => s.signOut);
+
+  /* THE HISTORY'S HANDS — every tool's own way back into its room */
+  const lcHistory = useMirror((s) => s.lcHistory);
+  const openChat = useMirror((s) => s.openChat);
+  const setMode = useMirror((s) => s.setMode);
+  const resumeDreamBook = useMirror((s) => s.resumeDreamBook);
+  const openMirrorOS = useMirror((s) => s.openMirrorOS);
+  const openInvent = useMirror((s) => s.openInvent);
+  const openLightCodes = useMirror((s) => s.openLightCodes);
+  const openParticleX = useMirror((s) => s.openParticleX);
+  const openEvolveMed = useMirror((s) => s.openEvolveMed);
+  const openAkashic = useMirror((s) => s.openAkashic);
 
   /* the passage's own tuning */
   const language = useMirror((s) => s.language);
@@ -166,6 +186,9 @@ export function ProfilePage() {
   /* the shelf of bound works — read from the visitor's own device */
   const [bound, setBound] = useState<DownloadEntry[] | null>(null);
   const [bindingOne, setBindingOne] = useState<string | null>(null);
+  /* THE HISTORY OF EVERY WORK — the shelf the mistakes cannot close */
+  const [works, setWorks] = useState<ToolWork[] | null>(null);
+  const [resumingWork, setResumingWork] = useState<string | null>(null);
   /* the Mirror Intelligence API room */
   const [asking, setAsking] = useState(false);
   const [offerAnswer, setOfferAnswer] = useState<string | null>(null);
@@ -285,6 +308,72 @@ export function ProfilePage() {
     }
     setBound(listDownloads());
   }, [open]);
+
+  /* THE HISTORY — read fresh whenever the room opens or the shelves
+     change (a new code, a kept volume, a saved conversation) */
+  useEffect(() => {
+    if (!open || section !== "history") {
+      return;
+    }
+    setWorks(listToolWorks(lcHistory));
+  }, [open, section, lcHistory]);
+
+  /* THE PRECISE WAY BACK — every work resumes into its own room,
+     restored exactly as it stood; the profile room closes first so
+     the door never swings open behind its own wall. */
+  const resumeWork = (work: ToolWork) => {
+    setResumingWork(work.id);
+    try {
+      if (work.resume.type === "chat") {
+        openChat(work.resume.surface, work.resume.chatId);
+        switch (work.resume.surface) {
+          case "os":
+            openMirrorOS();
+            break;
+          case "px":
+            openParticleX();
+            break;
+          case "em":
+            openEvolveMed();
+            break;
+          case "ax":
+            openAkashic();
+            break;
+          case "forge":
+            openInvent();
+            break;
+          case "interplanetary":
+            setMode("interplanetary");
+            break;
+          case "healing":
+            setMode("healing");
+            break;
+        }
+      } else if (work.resume.type === "dreambook") {
+        const v = work.resume.volume;
+        resumeDreamBook({
+          bookId: v.bookId,
+          config: v.config,
+          meta: {
+            title: v.title,
+            subtitle: v.subtitle,
+            sigil: v.sigil,
+            axiom: v.axiom,
+            dedication: v.dedication ?? "",
+            totalPages: v.totalPages,
+          },
+          threads: v.threads,
+          pages: v.pages,
+          ended: v.ended,
+        });
+      } else {
+        openLightCodes();
+      }
+      close();
+    } finally {
+      setResumingWork(null);
+    }
+  };
 
   /* the vessel keys — read when the API room stands open */
   useEffect(() => {
@@ -494,6 +583,13 @@ export function ProfilePage() {
       icon: UserRound,
       available: true,
       testId: "profile-nav-profile",
+    },
+    {
+      id: "history",
+      label: "History of your works",
+      icon: History,
+      available: true,
+      testId: "profile-nav-history",
     },
     {
       id: "transactions",
@@ -1100,6 +1196,88 @@ export function ProfilePage() {
             )}
           </div>
         );
+
+      case "history": {
+        /* THE WORK KIND'S OWN SEAL — one small glyph per room */
+        const KIND_ICONS: Record<ToolWorkKind, typeof History> = {
+          manifest: Sparkles,
+          quantum: Gem,
+          evolvemed: Dna,
+          akashic: LibraryBig,
+          forge: KeyRound,
+          interplanetary: BookMarked,
+          healing: History,
+          dreambook: BookMarked,
+          lightcodes: Sparkles,
+        };
+        return (
+          <div data-testid="profilepage-history">
+            <SectionHead
+              title={t("History of your works")}
+              desc={t(
+                "Everything your tools have made and kept on this device — a closed tab never takes a work away. One touch resumes it exactly where it stood."
+              )}
+            />
+            <section className={cn(panel, "p-4 sm:p-5")}>
+              {works === null ? (
+                <p
+                  className="flex items-center gap-2 py-3 text-[12.5px] text-muted-foreground"
+                  aria-busy="true"
+                >
+                  <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
+                  {t("The shelves are being read…")}
+                </p>
+              ) : works.length === 0 ? (
+                <p className="py-3 text-[12.5px] italic text-muted-foreground">
+                  {t(
+                    "Nothing rests here yet — every conversation, every book, every code you make keeps itself here automatically."
+                  )}
+                </p>
+              ) : (
+                <div className="max-h-[52vh] space-y-1.5 overflow-y-auto pr-1 nice-scroll" data-testid="profilepage-history-list">
+                  {works.map((w) => {
+                    const Icon = KIND_ICONS[w.kind] ?? History;
+                    return (
+                      <div
+                        key={w.id}
+                        className="flex items-center gap-3 rounded-xl border hairline bg-[var(--glass-bg)] px-3 py-2.5"
+                        data-testid="profilepage-history-row"
+                      >
+                        <span
+                          className="mono-label flex size-8 shrink-0 items-center justify-center rounded-lg border hairline text-muted-foreground"
+                          aria-hidden="true"
+                        >
+                          <Icon className="size-3.5" />
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-[13px] font-medium text-foreground/90">
+                            {w.title}
+                          </span>
+                          <span className="mono-label block text-[8.5px] uppercase tracking-[0.14em] text-muted-foreground">
+                            {t(TOOL_WORK_LABELS[w.kind])} ·{" "}
+                            {(w.at || "").slice(0, 16).replace("T", " ")}
+                          </span>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => resumeWork(w)}
+                          disabled={resumingWork === w.id}
+                          aria-label={`${t("Resume")}: ${w.title}`}
+                          data-testid="profilepage-history-resume"
+                          className="focus-glow flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--cy)_10%,transparent)] px-3 text-[11.5px] font-medium text-foreground transition-all duration-300 hover:glow-sm disabled:opacity-40"
+                        >
+                          <RotateCcw className="size-3.5" aria-hidden="true" />
+                          {t("Resume")}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </section>
+          </div>
+        );
+      }
 
       case "downloads":
         return (
