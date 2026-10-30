@@ -5766,4 +5766,7 @@ export const sq: TranslationDict = {
   "Manifest OS": "Manifest OS",
   "Akashic records": "Regjistrimet Akashike",
   "Interplanetary walk": "Ecja ndërplanetare",
-  "Healing walk": "Ecja shëruese",};
+  "Healing walk": "Ecja shëruese",  "The evolved medical field": "Fusha mjekësore e evoluar",
+  "The Atelier": "Ateljeu",
+  "the standing thread": "filli në këmbë",
+};

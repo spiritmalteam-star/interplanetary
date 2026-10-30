@@ -3934,4 +3934,7 @@ export const de: TranslationDict = {
   "Manifest OS": "Manifest OS",
   "Akashic records": "Akasha-Chroniken",
   "Interplanetary walk": "Interplanetarer Gang",
-  "Healing walk": "Heilender Gang",};
+  "Healing walk": "Heilender Gang",  "The evolved medical field": "Das evolutionäre medizinische Feld",
+  "The Atelier": "Das Atelier",
+  "the standing thread": "der stehende Faden",
+};

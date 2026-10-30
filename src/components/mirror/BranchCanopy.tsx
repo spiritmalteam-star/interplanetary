@@ -5272,7 +5272,6 @@ export function BranchCanopy({
               <BookOpen className="size-3" aria-hidden="true" />
             </button>
             )}
-            {!realm && (
             <button
               type="button"
               onClick={() => openRegister("archive")}
@@ -5283,7 +5282,6 @@ export function BranchCanopy({
             >
               <Fingerprint className="size-3" aria-hidden="true" />
             </button>
-            )}
             {!realm && (
             <button
               type="button"

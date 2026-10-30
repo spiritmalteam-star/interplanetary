@@ -3412,4 +3412,7 @@ export const tr: TranslationDict = {
   "Manifest OS": "Manifest OS",
   "Akashic records": "Akasha kayıtları",
   "Interplanetary walk": "Gezegenler arası yürüyüş",
-  "Healing walk": "Şifa yürüyüşü",};
+  "Healing walk": "Şifa yürüyüşü",  "The evolved medical field": "Evrimleşmiş tıbbi alan",
+  "The Atelier": "Atölye",
+  "the standing thread": "ayakta duran iplik",
+};

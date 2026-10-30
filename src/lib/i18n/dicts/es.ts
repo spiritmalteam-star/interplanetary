@@ -3912,4 +3912,7 @@ export const es: TranslationDict = {
   "Manifest OS": "Manifest OS",
   "Akashic records": "Registros akáshicos",
   "Interplanetary walk": "Paseo interplanetario",
-  "Healing walk": "Paseo sanador",};
+  "Healing walk": "Paseo sanador",  "The evolved medical field": "El campo médico evolucionado",
+  "The Atelier": "El Taller",
+  "the standing thread": "el hilo en pie",
+};

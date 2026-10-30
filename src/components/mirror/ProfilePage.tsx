@@ -146,14 +146,11 @@ export function ProfilePage() {
   /* THE HISTORY'S HANDS — every tool's own way back into its room */
   const lcHistory = useMirror((s) => s.lcHistory);
   const openChat = useMirror((s) => s.openChat);
+  const openToolTab = useMirror((s) => s.openToolTab);
   const setMode = useMirror((s) => s.setMode);
   const resumeDreamBook = useMirror((s) => s.resumeDreamBook);
-  const openMirrorOS = useMirror((s) => s.openMirrorOS);
-  const openInvent = useMirror((s) => s.openInvent);
-  const openLightCodes = useMirror((s) => s.openLightCodes);
   const openParticleX = useMirror((s) => s.openParticleX);
   const openEvolveMed = useMirror((s) => s.openEvolveMed);
-  const openAkashic = useMirror((s) => s.openAkashic);
 
   /* the passage's own tuning */
   const language = useMirror((s) => s.language);
@@ -328,20 +325,11 @@ export function ProfilePage() {
       if (work.resume.type === "chat") {
         openChat(work.resume.surface, work.resume.chatId);
         switch (work.resume.surface) {
-          case "os":
-            openMirrorOS();
-            break;
           case "px":
             openParticleX();
             break;
           case "em":
             openEvolveMed();
-            break;
-          case "ax":
-            openAkashic();
-            break;
-          case "forge":
-            openInvent();
             break;
           case "interplanetary":
             setMode("interplanetary");
@@ -349,7 +337,17 @@ export function ProfilePage() {
           case "healing":
             setMode("healing");
             break;
+          default:
+            break;
         }
+      } else if (work.resume.type === "tab") {
+        /* the room's own keep — the tab wakes with its thread standing.
+           A tab already standing is laid down first so its room mounts
+           fresh and re-reads the keep — a stale empty instance never
+           buries the returned work. */
+        const closeToolTab = useMirror.getState().closeToolTab;
+        closeToolTab(work.resume.tab);
+        openToolTab(work.resume.tab);
       } else if (work.resume.type === "dreambook") {
         const v = work.resume.volume;
         resumeDreamBook({
@@ -368,7 +366,7 @@ export function ProfilePage() {
           ended: v.ended,
         });
       } else {
-        openLightCodes();
+        openToolTab("lightcodes");
       }
       close();
     } finally {
@@ -1206,10 +1204,12 @@ export function ProfilePage() {
           manifest: Sparkles,
           quantum: Gem,
           evolvemed: Dna,
-          akashic: LibraryBig,
+          healx: Dna,
           forge: KeyRound,
+          artx: Gem,
           interplanetary: BookMarked,
           healing: History,
+          akashic: LibraryBig,
           dreambook: BookMarked,
           lightcodes: Sparkles,
         };
@@ -1258,7 +1258,9 @@ export function ProfilePage() {
                           </span>
                           <span className="mono-label block text-[8.5px] uppercase tracking-[0.14em] text-muted-foreground">
                             {t(TOOL_WORK_LABELS[w.kind])} ·{" "}
-                            {(w.at || "").slice(0, 16).replace("T", " ")}
+                            {w.at
+                              ? (w.at || "").slice(0, 16).replace("T", " ")
+                              : t("the standing thread")}
                           </span>
                         </span>
                         <button

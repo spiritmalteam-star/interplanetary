@@ -3618,4 +3618,7 @@ export const el: TranslationDict = {
   "Manifest OS": "Manifest OS",
   "Akashic records": "Ακαυσικά αρχεία",
   "Interplanetary walk": "Διαπλανητικός περίπατος",
-  "Healing walk": "Θεραπευτικός περίπατος",};
+  "Healing walk": "Θεραπευτικός περίπατος",  "The evolved medical field": "Το εξελιγμένο ιατρικό πεδίο",
+  "The Atelier": "Το Ατελιέ",
+  "the standing thread": "το όρθιο νήμα",
+};
