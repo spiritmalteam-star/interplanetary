@@ -47,7 +47,7 @@ export const LC_MODES: LcMode[] = [
     tagline: "Abstract atmospheric transmissions — textures before tunes.",
     placeholder: "What would you like the transmission to carry?",
     vocabulary:
-      "luminous ambient textures, crystalline synths, distant harmonic voices, evolving drones, unusual spatial movement, non-linear melodic structures, long atmospheric transitions. Structure serves atmosphere, never a chorus.",
+      "luminous ambient textures, crystalline synths, distant harmonic voices, evolving drones, unusual spatial movement, non-linear melodic structures, long breathing transitions that flow one into the next. Structure serves atmosphere, never a chorus.",
   },
   {
     id: "calming-frequencies",
@@ -128,7 +128,7 @@ export const LC_MODES: LcMode[] = [
       "inner stillness",
     ],
     vocabulary:
-      "slow, kind harmonic motion, unhurried melodic fragments, generous silence, textures that hold without pushing. Music that keeps company while the listener settles.",
+      "slow, kind harmonic motion, unhurried melodic fragments, continuous warmth with no gaps, textures that hold and carry one another. Music that keeps company while the listener settles.",
   },
   {
     id: "reprogramming",

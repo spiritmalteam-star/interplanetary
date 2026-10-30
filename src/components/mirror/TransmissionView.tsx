@@ -663,7 +663,6 @@ export const Exchange = memo(function Exchange({
               kind={message.sideArtifact.kind}
               resonance={message.sideArtifact.resonance}
               resume={message.sideArtifact.resume}
-              themes={message.sideArtifact.themes}
               tool={message.sideArtifact.tool}
             />
           )}

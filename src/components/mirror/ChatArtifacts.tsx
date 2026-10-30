@@ -49,7 +49,7 @@ import { bookToText, dedupeChapters } from "@/lib/book-text";
 import { ShareButton } from "./ShareButton";
 import { toast } from "sonner";
 import type { SideArtifactKind } from "@/lib/artifact-intent";
-import { forgeDirective, guessLightCodesMode } from "@/lib/artifact-intent";
+import { forgeDirective, guessLightCodesMode, wantsVocals } from "@/lib/artifact-intent";
 import type { LightCodesMode } from "@/lib/data/light-codes";
 import { WorldSigil, type WorldSigilKey } from "./WorldSigils";
 import { READERS, TALES, VERSE_FORMS } from "@/lib/data/book-options";
@@ -2523,10 +2523,8 @@ function codesWaveBars(seed: string, bars = 36): number[] {
 
 function CodesTransmission({
   resonance,
-  themes,
 }: {
   resonance: string;
-  themes?: string;
 }) {
   const t = useT();
   const language = useMirror((s) => s.language);
@@ -2536,6 +2534,12 @@ function CodesTransmission({
     (CodesInterp & { mode: LightCodesMode }) | null
   >(null);
   const busyRef = useRef(false);
+
+  /* THE VOICE ASK — the visitor's own words decide: lyrics and singing
+     requested here render a true vocal song. THE STANDALONE LAW — no
+     thread themes travel with the ask: every transmission answers ONLY
+     the words set down now, so each music stays authentic. */
+  const vocals = useMemo(() => wantsVocals(resonance), [resonance]);
 
   const tune = useCallback(async () => {
     if (busyRef.current) return;
@@ -2549,7 +2553,7 @@ function CodesTransmission({
         body: JSON.stringify({
           mode,
           intention: resonance,
-          context: themes || undefined,
+          vocalsRequested: vocals || undefined,
           interpretOnly: true,
           language,
         }),
@@ -2572,7 +2576,7 @@ function CodesTransmission({
     } finally {
       busyRef.current = false;
     }
-  }, [language, resonance, themes]);
+  }, [language, resonance, vocals]);
 
   useEffect(() => {
     void tune();
@@ -2656,7 +2660,7 @@ function CodesTransmission({
                   title: interp.title,
                   notes: interp.notes,
                   style: interp.style,
-                  context: themes,
+                  vocalsRequested: vocals,
                   autoGenerate: true,
                 })
               }
@@ -2879,7 +2883,6 @@ export function SideArtifact({
   kind,
   resonance,
   resume,
-  themes,
   tool,
 }: {
   kind: SideArtifactKind;
@@ -2887,9 +2890,6 @@ export function SideArtifact({
   /** The book door only: the visitor asked for their paused volume
       back — the weaver mounts open at the page where it rested. */
   resume?: boolean;
-  /** The Light Codes door: the thread's themes, carried into the
-      chamber's interpretation. */
-  themes?: string;
   /** The Quantum World door: the narrator instrument reading through. */
   tool?: string;
 }) {
@@ -2927,7 +2927,7 @@ export function SideArtifact({
       {kind === "forge" && <ForgeStrike resonance={resonance} />}
       {kind === "book" && <BookWeaver resonance={resonance} resume={resume} />}
       {kind === "poem" && <PoemCard resonance={resonance} />}
-      {kind === "codes" && <CodesTransmission resonance={resonance} themes={themes} />}
+      {kind === "codes" && <CodesTransmission resonance={resonance} />}
       {kind === "quantum" && (
         <NexusReveal
           endpoint="/api/particlex"

@@ -281,6 +281,9 @@ export function LiveCall({
             text,
             voice: cfg.voice,
             pace: Math.min(1.15, cfg.pace + 0.08),
+            /* THE CALM MALE VOICE — the call asks the sky's own calm
+               reader first (engine "google" = the Gemini TTS ladder,
+               Charon); the house voice and the browser stand behind */
             engine: "google",
           }),
         });

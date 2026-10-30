@@ -204,8 +204,10 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
     const rawPace: number = typeof body?.pace === "number" ? body.pace : 0.95;
     const speed = Math.min(2, Math.max(0.5, rawPace));
     /* THE GOOGLE VOICE — the direct call asks for the sky's own calm
-       male reader first; the house voice answers when it cannot. */
-    const wantsGoogle = body?.engine === "google";
+       male reader first (the `calm` flag is the same ask, honored from
+       the chamber's older hand); the house voice answers when it
+       cannot, and the browser stands in behind it. */
+    const wantsGoogle = body?.engine === "google" || body?.calm === true;
 
     if (typeof text !== "string" || !text.trim()) {
       return NextResponse.json(
@@ -258,6 +260,23 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
       );
     }
 
+    const respondWav = (
+      buffer: Buffer,
+      extraHeaders: Record<string, string> = {}
+    ) => {
+      const headers: Record<string, string> = {
+        "Content-Type": "audio/wav",
+        "Content-Length": buffer.length.toString(),
+        "Cache-Control": "no-store",
+        ...extraHeaders,
+      };
+      if (truncated) headers["X-Voice-Truncated"] = String(originalChars);
+      return new NextResponse(new Uint8Array(buffer), {
+        status: 200,
+        headers,
+      });
+    };
+
     const zai = await ZAI.create();
     const engineVoice = voiceEngine(voice);
     let mergeMeta: WavMeta | null = null;
@@ -292,19 +311,7 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
 
     const buffer = buildWav(mergeMeta, Buffer.concat(pcmParts));
 
-    const headers: Record<string, string> = {
-      "Content-Type": "audio/wav",
-      "Content-Length": buffer.length.toString(),
-      "Cache-Control": "no-store",
-    };
-    if (truncated) {
-      headers["X-Voice-Truncated"] = String(originalChars);
-    }
-
-    return new NextResponse(new Uint8Array(buffer), {
-      status: 200,
-      headers,
-    });
+    return respondWav(buffer);
   } catch (err) {
     console.error("[tts] failed:", err);
     /* upstream voices (4xx/5xx from the sky, unparseable audio) ride

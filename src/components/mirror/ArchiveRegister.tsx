@@ -5,11 +5,20 @@ import { motion } from "framer-motion";
 import {
   BadgeCheck,
   Fingerprint,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Layers,
   Search,
   Orbit,
   X,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   archiveTotals,
   findDossier,
@@ -19,6 +28,7 @@ import {
   civEntities,
 } from "@/lib/data/entities-civ";
 import { interdimEntities } from "@/lib/data/entities-interdim";
+import { innerEarth } from "@/lib/data/inner-earth";
 import { civilizations } from "@/lib/data/civilizations";
 import { interdimensional } from "@/lib/data/interdimensional";
 import { idmArchiveTotal } from "@/lib/data/idm-archive";
@@ -27,17 +37,44 @@ import { entityImage } from "@/lib/entity-utils";
 import { entityRegistryLine } from "@/lib/entity-profile";
 import { useT } from "@/lib/i18n";
 import type { DossierKind, EntityDossier } from "@/lib/mirror-types";
+import type { RegisterKind } from "@/lib/mirror-store";
 import { cn } from "@/lib/utils";
 
 const BATCH = 60;
 
+/* The codex's third register — the hyperspace ledger: the hidden
+   orders beneath the crust and beyond the veil, carried in the same
+   row shape as the star families so one reader serves all three. */
+interface HyperspaceRow {
+  id: string;
+  groupId: string;
+  name: string;
+  origin: string;
+  density: string;
+  specialty: string;
+  signal: string;
+}
+
+const hyperspaceRows: HyperspaceRow[] = innerEarth.map((sp) => ({
+  id: sp.id,
+  groupId: "inner-earth",
+  name: sp.name,
+  origin: "Inner Earth",
+  density: "3D – 5D thresholds",
+  specialty: sp.gift,
+  signal: sp.form,
+}));
+
 const REGISTER_META: Record<
-  DossierKind,
+  Exclude<RegisterKind, "archive">,
   {
     title: string;
     subtitle: string;
     groupLabel: string;
     groups: { id: string; name: string; count: number }[];
+    /** The second counter's own word (the codex's three registers all
+        carry exact counts — the hyperspace ledger counts one realm). */
+    realms?: number;
   }
 > = {
   civilization: {
@@ -53,6 +90,14 @@ const REGISTER_META: Record<
       "Every catalogued presence of the subtle orders. Nothing summarized, nothing hidden — reveal them all the way down to the last name.",
     groupLabel: "Orders",
     groups: interdimensional.map((o) => ({ id: o.id, name: o.name, count: o.count })),
+  },
+  hyperspace: {
+    title: "Full Register — Hyperspace & the Hidden Orders",
+    subtitle:
+      "The fifty-nine peoples of the deep crust and the threshold orders beyond the veil — every one named, every gift kept whole.",
+    groupLabel: "Realms",
+    groups: [],
+    realms: 1,
   },
 };
 
@@ -90,49 +135,98 @@ function registerPageChips(
   }
   return chips;
 }
+/* The codex's top rail — the three registers stand side by side, and
+   the interdimensional door lives HERE, at the codex, exactly where
+   the hyperspace ledger stands beside it. */
+const KIND_TABS: {
+  kind: RegisterKind;
+  label: string;
+  count: number;
+}[] = [
+  { kind: "civilization", label: "Civilisations", count: archiveTotals.civilizations },
+  { kind: "interdim", label: "Interdimensional", count: archiveTotals.interdim },
+  { kind: "hyperspace", label: "Hyperspace", count: archiveTotals.innerearth },
+  { kind: "archive", label: "Exobiologica", count: idmArchiveTotal },
+];
 
 function RegisterRow({
   rep,
   kind,
+  isLastViewed,
 }: {
-  rep: EntityDossier;
-  kind: DossierKind;
+  rep: EntityDossier | HyperspaceRow;
+  kind: RegisterKind;
+  isLastViewed: boolean;
 }) {
   const openModal = useMirror((s) => s.openModal);
-  const group = useMemo(() => findDossier(kind, rep.groupId), [kind, rep.groupId]);
+  const markCodexViewed = useMirror((s) => s.markCodexViewed);
+  const group = useMemo(
+    () =>
+      kind === "hyperspace"
+        ? null
+        : findDossier(kind as DossierKind, rep.groupId),
+    [kind, rep.groupId]
+  );
 
   return (
-    <li>
+    <li className="relative">
+      {isLastViewed && (
+        <span
+          aria-hidden="true"
+          className="absolute left-0 top-1/2 h-[calc(100%-14px)] w-[3px] -translate-y-1/2 rounded-full bg-red-500 dark:bg-red-400"
+        />
+      )}
       <button
         type="button"
-        onClick={() => openModal({ type: "entity", kind, id: rep.id })}
+        onClick={() => {
+          markCodexViewed(kind, rep.id);
+          openModal(
+            kind === "hyperspace"
+              ? { type: "hyperspace", id: rep.id }
+              : { type: "entity", kind: kind as DossierKind, id: rep.id }
+          );
+        }}
         className="focus-glow group flex w-full items-center gap-3.5 rounded-xl border hairline bg-[var(--glass-bg-soft)] px-3.5 py-3 text-left transition-all duration-300 hover:-translate-y-px hover:border-[var(--hairline-hover)] hover:glow-sm"
       >
         <span
           className="relative size-12 shrink-0 overflow-hidden rounded-xl border hairline"
           aria-hidden="true"
         >
-          <img
-            src={entityImage(rep.id)}
-            alt=""
-            loading="lazy"
-            className="size-full object-cover"
-            onError={(e) => {
-              e.currentTarget.style.visibility = "hidden";
-            }}
-          />
+          {kind === "hyperspace" ? (
+            <span className="flex size-full items-center justify-center bg-[color-mix(in_srgb,var(--gd)_14%,transparent)] font-mono text-[15px] text-foreground/70">
+              ✶
+            </span>
+          ) : (
+            <img
+              src={entityImage(rep.id)}
+              alt=""
+              loading="lazy"
+              className="size-full object-cover"
+              onError={(e) => {
+                e.currentTarget.style.visibility = "hidden";
+              }}
+            />
+          )}
         </span>
         <span className="min-w-0 flex-1">
           <span className="flex items-baseline gap-2">
             <span className="truncate text-[17px] font-semibold leading-tight text-foreground transition-colors group-hover:text-[var(--cy)]">
               {rep.name}
             </span>
-            <span className="ml-auto shrink-0 font-mono text-[12px] text-muted-foreground/55">
-              {entityRegistryLine(rep, kind)}
+            {isLastViewed && (
+              <span className="mono-label shrink-0 rounded-full border border-red-500/40 bg-red-500/10 px-1.5 py-0.5 text-[8.5px] uppercase tracking-[0.12em] text-red-600 dark:text-red-400">
+                last viewed
+              </span>
+            )}
+            <span className="ml-auto shrink-0 font-mono text-[11px] text-muted-foreground/55">
+              {kind === "hyperspace"
+                ? `ME-HYP · inner earth`
+                : entityRegistryLine(rep as EntityDossier, kind as DossierKind)}
             </span>
           </span>
-          <span className="mt-1 block truncate text-[15px] text-muted-foreground">
-            {group?.name} · {rep.origin} · {rep.density}
+          <span className="mt-1 block truncate text-[14px] text-muted-foreground">
+            {group ? `${group.name} · ` : ""}
+            {rep.origin} · {rep.density}
           </span>
           <span className="mt-0.5 block truncate text-[14.5px] italic leading-relaxed text-foreground/65">
             {rep.specialty}
@@ -151,6 +245,9 @@ export function ArchiveRegister() {
   const registerKind = useMirror((s) => s.registerKind);
   const openRegister = useMirror((s) => s.openRegister);
   const exitRegister = useMirror((s) => s.exitRegister);
+  const codexLastViewed = useMirror((s) => s.codexLastViewed);
+  const markCodexViewed = useMirror((s) => s.markCodexViewed);
+  const openModal = useMirror((s) => s.openModal);
   const t = useT();
 
   /* THE SIBLING COLLECTION — the Interdimensional Archive is its own
@@ -167,9 +264,16 @@ export function ArchiveRegister() {
   );
 }
 
-function ArchiveList({ registerKind }: { registerKind: "civilization" | "interdim" }) {
+function ArchiveList({
+  registerKind,
+}: {
+  registerKind: "civilization" | "interdim" | "hyperspace";
+}) {
   const openRegister = useMirror((s) => s.openRegister);
   const exitRegister = useMirror((s) => s.exitRegister);
+  const codexLastViewed = useMirror((s) => s.codexLastViewed);
+  const markCodexViewed = useMirror((s) => s.markCodexViewed);
+  const openModal = useMirror((s) => s.openModal);
   const t = useT();
 
   const [query, setQuery] = useState("");
@@ -179,6 +283,7 @@ function ArchiveList({ registerKind }: { registerKind: "civilization" | "interdi
   const [jumpDraft, setJumpDraft] = useState("");
   const sentinelRef = useRef<HTMLDivElement>(null);
   const listTopRef = useRef<HTMLDivElement>(null);
+  const topRef = useRef<HTMLDivElement>(null);
 
   // Reset the reveal window whenever the filter context changes —
   // adjusted during render (no effect needed).
@@ -189,8 +294,42 @@ function ArchiveList({ registerKind }: { registerKind: "civilization" | "interdi
   }
 
   const meta = REGISTER_META[registerKind];
-  const total = registerKind === "civilization" ? archiveTotals.civilizations : archiveTotals.interdim;
-  const source = registerKind === "civilization" ? civEntities : interdimEntities;
+  const total =
+    registerKind === "civilization"
+      ? archiveTotals.civilizations
+      : registerKind === "interdim"
+        ? archiveTotals.interdim
+        : archiveTotals.innerearth;
+  const source: (EntityDossier | HyperspaceRow)[] =
+    registerKind === "civilization"
+      ? civEntities
+      : registerKind === "interdim"
+        ? interdimEntities
+        : hyperspaceRows;
+
+  /* THE NUMBERED PROFILE — the codex keeps every profile in one exact
+     order; the drop-down roll opens any number straight away, and the
+     last-viewed profile wears the red mark. */
+  const lastViewedIndex = useMemo(() => {
+    if (!codexLastViewed || codexLastViewed.kind !== registerKind) return -1;
+    return source.findIndex((e) => e.id === codexLastViewed.id);
+  }, [codexLastViewed, registerKind, source]);
+
+  const openProfileAt = (index: number) => {
+    const rep = source[index];
+    if (!rep) return;
+    markCodexViewed(registerKind, rep.id);
+    openModal(
+      registerKind === "hyperspace"
+        ? { type: "hyperspace", id: rep.id }
+        : { type: "entity", kind: registerKind as DossierKind, id: rep.id }
+    );
+    /* THE NEXT LAW — the moment a profile is called, the codex shows
+       it from the top: the page climbs back to its first word. */
+    requestAnimationFrame(() =>
+      topRef.current?.scrollIntoView({ block: "start", behavior: "smooth" })
+    );
+  };
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -257,6 +396,7 @@ function ArchiveList({ registerKind }: { registerKind: "civilization" | "interdi
       aria-label={t(meta.title)}
       className="mx-auto w-full max-w-[860px] px-1 pb-8 pt-8 sm:pt-10"
     >
+      <div ref={topRef} aria-hidden="true" className="h-px" />
       {/* header */}
       <div className="text-center">
         <span className="mono-label inline-flex items-center gap-1.5 rounded-full border hairline px-2.5 py-1 text-[11.5px] text-muted-foreground">
@@ -271,6 +411,134 @@ function ArchiveList({ registerKind }: { registerKind: "civilization" | "interdi
         </p>
       </div>
 
+      {/* THE CODEX RAIL — the three registers side by side, then the
+          numbered profile roll with its own red mark and hands */}
+      <div
+        className="mt-5 flex flex-col items-center gap-2.5 rounded-2xl border hairline bg-[var(--glass-bg-soft)] px-3 py-3 sm:px-4"
+        data-testid="codex-rail"
+      >
+        <div
+          className="flex w-full max-w-full flex-wrap items-stretch justify-center gap-1.5"
+          role="tablist"
+          aria-label={t("The codex registers")}
+        >
+          {KIND_TABS.map((tab) => {
+            const active = registerKind === tab.kind;
+            return (
+              <button
+                key={tab.kind}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() => openRegister(tab.kind)}
+                data-testid={`codex-kind-${tab.kind}`}
+                className={cn(
+                  "focus-glow flex min-w-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12.5px] transition-all duration-300",
+                  active
+                    ? "border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--cy)_12%,transparent)] font-semibold text-foreground"
+                    : "hairline text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <span className="truncate">{t(tab.label)}</span>
+                <span className="mono-label shrink-0 tabular-nums text-[9.5px] text-muted-foreground/75">
+                  {tab.count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="flex w-full flex-wrap items-center justify-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => openProfileAt(Math.max(0, lastViewedIndex - 1))}
+            disabled={lastViewedIndex <= 0}
+            aria-label={t("Previous profile")}
+            title={t("Previous profile")}
+            data-testid="codex-prev"
+            className="focus-glow flex size-8 shrink-0 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <ChevronLeft className="size-4" aria-hidden="true" />
+          </button>
+
+          <DropdownMenu modal={false}>
+            <DropdownMenuTrigger
+              data-testid="codex-profile-select"
+              aria-label={t("Choose a profile by number")}
+              title={t("Choose a profile by number")}
+              className="focus-glow flex h-8 min-w-0 max-w-[min(320px,calc(100vw-9rem))] flex-1 items-center gap-2 rounded-full border px-3 text-[12.5px] hairline text-muted-foreground transition-all duration-300 hover:text-foreground data-[state=open]:border-[var(--hairline-active)]"
+            >
+              <span className="mono-label shrink-0 text-[9.5px] uppercase tracking-[0.14em]">
+                {t("Profile №")}
+              </span>
+              <span className="min-w-0 flex-1 truncate text-left font-mono text-[12px] tabular-nums text-foreground/85">
+                {lastViewedIndex >= 0
+                  ? `${lastViewedIndex + 1} — ${source[lastViewedIndex]?.name ?? ""}`
+                  : t("{n} profiles on the roll", { n: source.length })}
+              </span>
+              <ChevronDown className="size-3.5 shrink-0 opacity-60" aria-hidden="true" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="center"
+              sideOffset={6}
+              className="max-h-[min(460px,var(--radix-dropdown-menu-content-available-height))] w-[min(360px,calc(100vw-2rem))] overflow-y-auto nice-scroll"
+            >
+              {source.map((rep, i) => {
+                const isLast = i === lastViewedIndex;
+                return (
+                  <DropdownMenuItem
+                    key={rep.id}
+                    onSelect={() => openProfileAt(i)}
+                    data-testid={`codex-profile-item-${i + 1}`}
+                    aria-pressed={isLast}
+                    className={cn(
+                      "items-baseline gap-2.5 rounded-lg px-2.5 py-1.5",
+                      isLast && "bg-red-500/10"
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "mono-label w-10 shrink-0 text-right text-[9.5px] tabular-nums",
+                        isLast ? "text-red-600 dark:text-red-400" : "text-muted-foreground/60"
+                      )}
+                    >
+                      № {i + 1}
+                    </span>
+                    <span
+                      className={cn(
+                        "min-w-0 flex-1 truncate text-[12.5px]",
+                        isLast
+                          ? "font-semibold text-red-600 dark:text-red-400"
+                          : "text-foreground/85"
+                      )}
+                    >
+                      {rep.name}
+                    </span>
+                    {isLast && (
+                      <span className="mono-label shrink-0 text-[8px] uppercase tracking-[0.12em] text-red-600 dark:text-red-400">
+                        {t("last viewed")}
+                      </span>
+                    )}
+                  </DropdownMenuItem>
+                );
+              })}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <button
+            type="button"
+            onClick={() => openProfileAt(lastViewedIndex + 1)}
+            disabled={lastViewedIndex >= source.length - 1}
+            aria-label={t("Next profile — shown from the top")}
+            title={t("Next profile — shown from the top")}
+            data-testid="codex-next"
+            className="focus-glow flex size-8 shrink-0 items-center justify-center rounded-full border border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--cy)_10%,transparent)] text-foreground transition-all duration-300 hover:glow-sm disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <ChevronRight className="size-4" aria-hidden="true" />
+          </button>
+        </div>
+      </div>
+
       {/* exact counters */}
       <div className="mt-5 grid grid-cols-3 gap-2.5">
         <div className="rounded-xl border hairline bg-[var(--glass-bg-soft)] px-3 py-3 text-center">
@@ -282,8 +550,8 @@ function ArchiveList({ registerKind }: { registerKind: "civilization" | "interdi
           </p>
         </div>
         <div className="rounded-xl border hairline bg-[var(--glass-bg-soft)] px-3 py-3 text-center">
-          <p className="font-mono text-[19px] font-semibold tabular-nums text-foreground sm:text-[23px]">
-            {groupChips.length}
+          <p className="font-mono text-[18px] font-semibold tabular-nums text-foreground sm:text-[22px]">
+            {registerKind === "hyperspace" ? (meta.realms ?? 1) : groupChips.length}
           </p>
           <p className="mono-label mt-1 text-[10.5px] text-muted-foreground">
             {t(meta.groupLabel).toLowerCase()} {t("catalogued")}
@@ -296,8 +564,8 @@ function ArchiveList({ registerKind }: { registerKind: "civilization" | "interdi
               revealed >= filtered.length ? "text-[var(--ok)]" : "text-foreground"
             )}
           >
-            {revealed}
-            <span className="text-[15px] text-muted-foreground">/{filtered.length}</span>
+            {Math.min(revealed, filtered.length)}
+            <span className="text-[14px] text-muted-foreground">/{filtered.length}</span>
           </p>
           <p className="mono-label mt-1 text-[10.5px] text-muted-foreground">
             {t("revealed on this page")}
@@ -320,7 +588,9 @@ function ArchiveList({ registerKind }: { registerKind: "civilization" | "interdi
             aria-label={
               registerKind === "civilization"
                 ? t("Search the full civilization register")
-                : t("Search the full interdimensional register")
+                : registerKind === "interdim"
+                  ? t("Search the full interdimensional register")
+                  : t("Search the hyperspace register")
             }
             className="focus-glow h-9 w-full rounded-xl border hairline bg-transparent pl-10 pr-9 text-[14.5px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none sm:h-10 sm:text-[15.5px]"
           />
@@ -336,40 +606,42 @@ function ArchiveList({ registerKind }: { registerKind: "civilization" | "interdi
           )}
         </div>
 
-        <div className="flex flex-wrap items-center justify-center gap-1 sm:gap-1.5">
-          <button
-            type="button"
-            onClick={() => setGroupId(null)}
-            aria-pressed={groupId === null}
-            className={cn(
-              "focus-glow mono-label rounded-full border px-2 py-0.5 text-[10.5px] transition-all duration-300 sm:px-2.5 sm:py-1 sm:text-[11.5px]",
-              groupId === null
-                ? "border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--cy)_12%,transparent)] text-foreground"
-                : "hairline text-muted-foreground hover:text-foreground"
-            )}
-          >
-            {t("All {label} ({n})", {
-              label: t(meta.groupLabel).toLowerCase(),
-              n: total,
-            })}
-          </button>
-          {groupChips.map((g) => (
+        {groupChips.length > 0 && (
+          <div className="flex flex-wrap items-center justify-center gap-1.5">
             <button
-              key={g.id}
               type="button"
-              onClick={() => setGroupId(groupId === g.id ? null : g.id)}
-              aria-pressed={groupId === g.id}
+              onClick={() => setGroupId(null)}
+              aria-pressed={groupId === null}
               className={cn(
-                "focus-glow mono-label rounded-full border px-2 py-0.5 text-[10.5px] transition-all duration-300 sm:px-2.5 sm:py-1 sm:text-[11.5px]",
-                groupId === g.id
+                "focus-glow mono-label rounded-full border px-2.5 py-1 text-[10.5px] transition-all duration-300",
+                groupId === null
                   ? "border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--cy)_12%,transparent)] text-foreground"
                   : "hairline text-muted-foreground hover:text-foreground"
               )}
             >
-              {g.name.replace(/ (Family|Lineages|Collective|Council|Descendants|Realms|Neighbors|Humanoids|Nations|Orders|Records|Keepers|Emanations|Frontier Worlds|Concordium|Gardeners|Archives|Ember Councils|Beings|Selves|Peoples|Minds|Assemblies|Custodians)$/i, "")} ({g.count})
+              {t("All {label} ({n})", {
+                label: t(meta.groupLabel).toLowerCase(),
+                n: total,
+              })}
             </button>
-          ))}
-        </div>
+            {groupChips.map((g) => (
+              <button
+                key={g.id}
+                type="button"
+                onClick={() => setGroupId(groupId === g.id ? null : g.id)}
+                aria-pressed={groupId === g.id}
+                className={cn(
+                  "focus-glow mono-label rounded-full border px-2.5 py-1 text-[10.5px] transition-all duration-300",
+                  groupId === g.id
+                    ? "border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--cy)_12%,transparent)] text-foreground"
+                    : "hairline text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {g.name.replace(/ (Family|Lineages|Collective|Council|Descendants|Realms|Neighbors|Humanoids|Nations|Orders|Records|Keepers|Emanations|Frontier Worlds|Concordium|Gardeners|Archives|Ember Councils|Beings|Selves|Peoples|Minds|Assemblies|Custodians)$/i, "")} ({g.count})
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* THE CODEX'S OWN PAGES — the numbers at the register's top:
@@ -482,7 +754,15 @@ function ArchiveList({ registerKind }: { registerKind: "civilization" | "interdi
       <div ref={listTopRef} aria-hidden="true" className="h-px scroll-mt-2" />
       <ul className="mt-3 space-y-1.5" aria-live="polite">
         {shown.map((rep) => (
-          <RegisterRow key={rep.id} rep={rep} kind={registerKind} />
+          <RegisterRow
+            key={rep.id}
+            rep={rep}
+            kind={registerKind}
+            isLastViewed={
+              codexLastViewed?.kind === registerKind &&
+              codexLastViewed.id === rep.id
+            }
+          />
         ))}
       </ul>
 

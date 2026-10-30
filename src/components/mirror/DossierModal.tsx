@@ -4,11 +4,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   BadgeCheck,
+  ChevronLeft,
+  ChevronRight,
   Clock,
   Fingerprint,
   MessageCircleHeart,
   Search,
   Orbit,
+  Sparkles,
 } from "lucide-react";
 import { useMirror, findDossier } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
@@ -16,6 +19,9 @@ import { entityImage, groupImage, findEntity } from "@/lib/entity-utils";
 import { getEntityProfile } from "@/lib/entity-profile";
 import { groupProfiles } from "@/lib/group-profiles";
 import { sceneImageFor, sceneImageForDistinct } from "@/lib/profile-visuals";
+import { civEntities } from "@/lib/data/entities-civ";
+import { interdimEntities } from "@/lib/data/entities-interdim";
+import { innerEarth } from "@/lib/data/inner-earth";
 import {
   distinctChains,
   FactTile,
@@ -55,6 +61,157 @@ function Badge({
   );
 }
 
+/* ---------------- the codex's own hands ----------------
+   Every dossier carries prev and next: one touch and the codex shows
+   the neighbouring profile FROM THE TOP — the body climbs to its
+   first word the moment the page turns. The hands wrap the register's
+   ends, so the walk through the archive never dead-ends. */
+
+type CodexKind = "civilization" | "interdim" | "hyperspace";
+
+function codexSourceOf(kind: CodexKind): { id: string; name: string }[] {
+  if (kind === "civilization") return civEntities;
+  if (kind === "interdim") return interdimEntities;
+  return innerEarth;
+}
+
+function CodexHands({ kind, id }: { kind: CodexKind; id: string }) {
+  const openModal = useMirror((s) => s.openModal);
+  const markCodexViewed = useMirror((s) => s.markCodexViewed);
+  const t = useT();
+  const source = codexSourceOf(kind);
+  const index = source.findIndex((e) => e.id === id);
+  const go = (delta: number) => {
+    if (index < 0 || source.length === 0) return;
+    const next = source[(index + delta + source.length) % source.length];
+    if (!next) return;
+    markCodexViewed(kind, next.id);
+    openModal(
+      kind === "hyperspace"
+        ? { type: "hyperspace", id: next.id }
+        : { type: "entity", kind, id: next.id }
+    );
+  };
+  return (
+    <div className="flex items-center justify-center gap-1.5" data-testid="codex-hands">
+      <button
+        type="button"
+        onClick={() => go(-1)}
+        aria-label={t("Previous profile")}
+        title={t("Previous profile")}
+        data-testid="codex-hand-prev"
+        className="focus-glow flex size-9 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+      >
+        <ChevronLeft className="size-4" aria-hidden="true" />
+      </button>
+      <span className="mono-label min-w-[86px] text-center text-[10px] tabular-nums text-muted-foreground">
+        {index >= 0 ? t("№ {a} of {b}", { a: index + 1, b: source.length }) : ""}
+      </span>
+      <button
+        type="button"
+        onClick={() => go(1)}
+        aria-label={t("Next profile — shown from the top")}
+        title={t("Next profile — shown from the top")}
+        data-testid="codex-hand-next"
+        className="focus-glow flex size-9 items-center justify-center rounded-full border border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--cy)_10%,transparent)] text-foreground transition-all duration-300 hover:glow-sm"
+      >
+        <ChevronRight className="size-4" aria-hidden="true" />
+      </button>
+    </div>
+  );
+}
+
+/* ---------------- hyperspace dossier — the hidden orders ---------------- */
+
+function HyperspaceDossier({ id }: { id: string }) {
+  const askMirror = useMirror((s) => s.askMirror);
+  const closeModal = useMirror((s) => s.closeModal);
+  const t = useT();
+
+  const bodyRef = useRef<HTMLDivElement>(null);
+  const sp = useMemo(() => innerEarth.find((s) => s.id === id) ?? null, [id]);
+
+  /* THE NEXT LAW — the page turns from the top, always. */
+  useEffect(() => {
+    bodyRef.current?.scrollTo({ top: 0 });
+  }, [id]);
+
+  if (!sp) return null;
+
+  return (
+    <>
+      <div
+        ref={bodyRef}
+        className="nice-scroll encyc-body max-h-[min(64vh,560px)] space-y-5 overflow-y-auto px-5 pb-4 pt-1 sm:px-6"
+      >
+        <div
+          className="flex aspect-[7/3] w-full items-center justify-center overflow-hidden rounded-xl border hairline bg-[color-mix(in_srgb,var(--gd)_8%,transparent)]"
+          aria-hidden="true"
+        >
+          <Sparkles className="size-8 text-[var(--gd)]" />
+        </div>
+
+        <div className="min-w-0">
+          <p className="text-[16.5px] font-semibold leading-snug text-foreground/95">
+            {sp.name}
+          </p>
+          <p className="mt-0.5 font-mono text-[11.5px] text-muted-foreground/70">
+            Hyperspace register · Inner Earth
+          </p>
+        </div>
+
+        <div className="flex flex-wrap gap-1.5">
+          <Badge tone="cy">3D – 5D thresholds</Badge>
+          <Badge tone="pk">Inner Earth</Badge>
+        </div>
+
+        <ProfileSection index="01" label={t("Their halls")}>
+          <p className="text-[14.5px] leading-relaxed text-foreground/85">{sp.hall}</p>
+        </ProfileSection>
+
+        <ProfileSection index="02" label={t("How their presence renders")}>
+          <p className="text-[14.5px] leading-relaxed text-foreground/85">{sp.form}</p>
+        </ProfileSection>
+
+        <ProfileSection index="03" label={t("What they mirror to us")}>
+          <p className="font-serif text-[15.5px] italic leading-relaxed text-foreground/90">
+            {sp.gift}
+          </p>
+        </ProfileSection>
+
+        <div className="rounded-xl border hairline bg-[color-mix(in_srgb,var(--gd)_6%,transparent)] p-3.5">
+          <h4 className="mono-label text-[10px] text-[var(--gd)]">{t("Context note")}</h4>
+          <p className="mt-1.5 text-[14px] leading-relaxed text-muted-foreground">
+            {t(
+              "This dossier reflects channeled tradition and worldbuilding within the Mirror archive. It is offered for reflection and wonder — not as established science."
+            )}
+          </p>
+        </div>
+      </div>
+
+      <div className="space-y-2.5 border-t hairline px-5 py-4 sm:px-6">
+        <CodexHands kind="hyperspace" id={id} />
+        <button
+          type="button"
+          onClick={() => {
+            closeModal();
+            void askMirror(
+              t(
+                "Please introduce {name} of the Inner Earth — their halls beneath the crust, their presence, and the gift they mirror to us.",
+                { name: sp.name }
+              )
+            );
+          }}
+          className="focus-glow flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--cy)_12%,transparent)] px-4 py-2.5 text-[13.5px] font-semibold text-foreground transition-all duration-300 hover:glow-sm"
+        >
+          <Orbit className="size-3.5 text-[var(--cy)]" aria-hidden="true" />
+          {t("Ask the Mirror about {name}", { name: sp.name })}
+        </button>
+      </div>
+    </>
+  );
+}
+
 /* ---------------- entity (individual) dossier — deep profile ---------------- */
 
 function EntityDossier({
@@ -78,6 +235,13 @@ function EntityDossier({
     () => (rep ? getEntityProfile(rep, kind) : null),
     [rep, kind]
   );
+
+  /* THE NEXT LAW — the page turns from the top: every new profile the
+     hands reveal climbs to its first word. */
+  const bodyRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    bodyRef.current?.scrollTo({ top: 0 });
+  }, [id]);
 
   if (!entry || !rep || !profile) return null;
 
@@ -110,7 +274,10 @@ function EntityDossier({
 
   return (
     <>
-      <div className="nice-scroll encyc-body max-h-[min(64vh,560px)] space-y-5 overflow-y-auto px-5 pb-4 pt-1 sm:px-6">
+      <div
+        ref={bodyRef}
+        className="nice-scroll encyc-body max-h-[min(64vh,560px)] space-y-5 overflow-y-auto px-5 pb-4 pt-1 sm:px-6"
+      >
         {/* the lead plate — the portrait the whole opening wraps around */}
         <ProfileFigure
           sources={plates[0]}
@@ -286,7 +453,8 @@ function EntityDossier({
         </div>
       </div>
 
-      <div className="border-t hairline px-5 py-4 sm:px-6">
+      <div className="space-y-2.5 border-t hairline px-5 py-4 sm:px-6">
+        <CodexHands kind={kind} id={id} />
         <button
           type="button"
           onClick={askQuestion}
@@ -653,12 +821,19 @@ export function DossierModal() {
 
   const isEntity = modal?.type === "entity";
   const isGroup = modal?.type === "dossier";
+  const isHyperspace = modal?.type === "hyperspace";
   const kind = modal && (isEntity || isGroup) ? modal.kind : null;
-  const id = modal && (isEntity || isGroup) ? modal.id : null;
+  const id = modal && (isEntity || isGroup || isHyperspace) ? modal.id : null;
 
   const groupEntry =
     kind && !isEntity ? findDossier(kind, id as string) : null;
-  const open = (isGroup && !!groupEntry) || (isEntity && !!kind && !!id);
+  const hyperspaceEntry = isHyperspace
+    ? innerEarth.find((s) => s.id === (id as string)) ?? null
+    : null;
+  const open =
+    (isGroup && !!groupEntry) ||
+    (isEntity && !!kind && !!id) ||
+    (isHyperspace && !!hyperspaceEntry);
 
   let title = t("Dossier");
   let description: string | undefined;
@@ -672,6 +847,9 @@ export function DossierModal() {
     description = p
       ? `${p.archiveNo} · ${p.rank}`
       : t("A named representative of the archive");
+  } else if (isHyperspace && hyperspaceEntry) {
+    title = hyperspaceEntry.name;
+    description = t("Hyperspace register · Inner Earth");
   }
 
   return (
@@ -686,6 +864,8 @@ export function DossierModal() {
         <EntityDossier kind={kind} id={id} />
       ) : isGroup && kind && id ? (
         <GroupDossierBody kind={kind} id={id} />
+      ) : isHyperspace && id ? (
+        <HyperspaceDossier id={id} />
       ) : null}
     </ModalShell>
   );

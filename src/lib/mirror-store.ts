@@ -83,6 +83,7 @@ export type ModalState =
   | { type: "technology" }
   | { type: "dossier"; kind: DossierKind; id: string }
   | { type: "entity"; kind: DossierKind; id: string }
+  | { type: "hyperspace"; id: string }
   | { type: "species"; id: string }
   | { type: "settings" }
   | null;
@@ -239,7 +240,46 @@ export const LANDING_SCOPES: LandingScopeKey[] = [
 /** The standing field of the threshold — THE MIRROR, always. */
 export const LANDING_DEFAULT_SCOPE: LandingScopeKey = "mirror";
 
-export type RegisterKind = DossierKind | "archive";
+export type RegisterKind = DossierKind | "archive" | "hyperspace";
+
+/** The codex remembers which profile the visitor last opened —
+    kept on the device, so the register marks it red on return. */
+export interface CodexLastViewed {
+  kind: RegisterKind;
+  id: string;
+}
+
+const CODEX_LAST_KEY = "mirror-codex-last";
+
+function loadCodexLast(): CodexLastViewed | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(CODEX_LAST_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as CodexLastViewed;
+    if (
+      parsed &&
+      (parsed.kind === "civilization" ||
+        parsed.kind === "interdim" ||
+        parsed.kind === "hyperspace") &&
+      typeof parsed.id === "string" &&
+      parsed.id.length > 0
+    )
+      return parsed;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function saveCodexLast(value: CodexLastViewed | null) {
+  try {
+    if (value) localStorage.setItem(CODEX_LAST_KEY, JSON.stringify(value));
+    else localStorage.removeItem(CODEX_LAST_KEY);
+  } catch {
+    /* storage unavailable */
+  }
+}
 
 /* -------- the passage — the visitor's account and the free door -------- */
 
@@ -405,8 +445,9 @@ export interface LcPrefill {
   style?: string;
   /** Generate at once when the chamber opens. */
   autoGenerate?: boolean;
-  /** Conversation themes carried into the interpretation. */
-  context?: string;
+  /** The visitor's words asked for lyrics and singing — the chamber
+      renders a true vocal song (never an instrumental approximation). */
+  vocalsRequested?: boolean;
 }
 
 /* -------- direct line to the Manifest OS (reality refining) ------- */
@@ -529,6 +570,9 @@ interface MirrorState {
 
   /* Full-archive register */
   registerKind: RegisterKind;
+  /** The profile the visitor last opened — marked red in the codex. */
+  codexLastViewed: CodexLastViewed | null;
+  markCodexViewed: (kind: RegisterKind, id: string) => void;
 
   /* Mirror OS — Reality Guidance */
   labStage: "compose" | "charging" | "blueprint";
@@ -875,16 +919,18 @@ interface MirrorState {
       Kept for one-ask paths (chips, prefills, error retries). */
   generateLightCode: (opts?: {
     interpretOnly?: boolean;
-    context?: string;
     intention?: string;
     attachments?: ChatAttachment[];
+    vocalsRequested?: boolean;
   }) => Promise<void>;
   /** THE FIRST DOOR ONLY — the Mirror composes the brief; nothing is
       woven until the visitor's own hand strikes the generate. */
   composeBrief: (opts?: {
     intention?: string;
-    context?: string;
     attachments?: ChatAttachment[];
+    /** The visitor's words asked for lyrics and singing — a true
+        vocal song, never an instrumental approximation. */
+    vocalsRequested?: boolean;
   }) => Promise<boolean>;
   /** THE SECOND DOOR — the standing brief is woven into sound. */
   weaveBrief: () => Promise<void>;
@@ -1642,6 +1688,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   remedyError: null,
 
   registerKind: "civilization",
+  codexLastViewed: loadCodexLast(),
 
   labStage: "compose",
   labIntention: "",
@@ -1965,9 +2012,13 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     get().openToolTab("lightcodes", opts);
     if (prefill?.autoGenerate) {
       /* a brief carried in from the chat is woven as it stands — no
-         second interpretation is asked of the Mirror */
+         second interpretation is asked of the Mirror; the vocals ask
+         rides with it (a true song, never an approximation) */
       if (get().lcBrief) void get().weaveBrief();
-      else void get().generateLightCode({ context: prefill.context });
+      else
+        void get().generateLightCode({
+          vocalsRequested: prefill.vocalsRequested,
+        });
     }
   },
   exitLightCodes: () =>
@@ -2059,8 +2110,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
               }),
           intention,
           language: s.language,
-          context: opts?.context,
-          interpretOnly: true,
+          vocalsRequested: opts?.vocalsRequested === true || undefined,
           ...(opts?.attachments ? attachmentsToPayload(opts.attachments) : {}),
         }),
       });
@@ -3698,6 +3748,11 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   openRegister: (kind) => {
     set({ registerKind: kind });
     get().openToolTab("register");
+  },
+  markCodexViewed: (kind, id) => {
+    const value: CodexLastViewed = { kind, id };
+    saveCodexLast(value);
+    set({ codexLastViewed: value });
   },
 
   exitRegister: () =>

@@ -73,6 +73,21 @@ export const maxDuration = 300;
 /*                 the chamber never pretends it does)                 */
 /*    lyrics     — the Lyrics Laboratory: one craft hand at a time     */
 /*                                                                      */
+/*  THE STANDALONE LAW: the chamber receives ONLY the visitor's current */
+/*  intention — no conversation history, no thread context. Every       */
+/*  transmission is authentic to the words spoken now, and nothing      */
+/*  else.                                                              */
+/*                                                                      */
+/*  THE CONTINUITY LAW: every transmission is ONE connected piece —    */
+/*  its movements may vary in rhythm, density and color, but they flow  */
+/*  into each other seamlessly: no long pauses, no dead air, no hard    */
+/*  cuts; a sustained harmonic bed carries the whole.                   */
+/*                                                                      */
+/*  THE VOICE LAW: when the visitor asks for lyrics and singing, the   */
+/*  answer is a TRUE vocal song — verses, chorus, bridge — in the       */
+/*  visitor's own tongue, reflective of the request; never an           */
+/*  instrumental approximation.                                        */
+/*                                                                      */
 /*  The chamber's law: the music is for calming, meditative,           */
 /*  reflective, grounding, intention-based listening. It is never      */
 /*  presented as a cure, a treatment or a medical instrument.          */
@@ -123,7 +138,9 @@ interface LcBody {
   userLyrics?: string;
   instrumental?: boolean;
   language?: string;
-  context?: string;
+  /** The visitor's words asked for lyrics and singing — a true vocal
+      song must be rendered, overriding every wordless default. */
+  vocalsRequested?: boolean;
   interpretOnly?: boolean;
   /** compose phase — the Mirror's own direction, already written */
   compose?: boolean;
@@ -168,6 +185,10 @@ const LANG_NAMES: Record<string, string> = {
 /* ------------------------- the guards ------------------------- */
 
 function wantVocals(b: LcBody, lyrics: string | null): boolean {
+  /* THE VOICE LAW — a vocals ask (or the visitor's own lyrics) always
+     wins over every wordless default: the answer is a TRUE SONG. */
+  if (b.vocalsRequested === true || (b.userLyrics?.trim().length ?? 0) > 0)
+    return true;
   return !(
     b.instrumental === true ||
     b.shape?.voice === "None" ||
@@ -218,8 +239,14 @@ function modeVocabulary(b: LcBody): string {
   return lines.join("\n");
 }
 
-function interpreterPrompt(b: LcBody, languageName: string): string {
+function interpreterPrompt(b: LcBody, languageName: string, vocalsWanted: boolean): string {
   const modeName = String(b.mode ?? "light-transmission");
+  const userLyrics = b.userLyrics?.trim() ?? "";
+  const lyricsContract = userLyrics
+    ? `"lyrics": "<return the visitor's own words EXACTLY as given, unchanged, ready to be sung>"`
+    : vocalsWanted
+      ? `"lyrics": "<a COMPLETE song in ${languageName}: 10-18 short singable lines marked [Verse], [Chorus], [Bridge] — words that genuinely carry the visitor's request, its imagery and its feeling; kind, reflective, no production instructions inside>"`
+      : `"lyrics": "<if words are wanted: 2-6 very short lines in ${languageName}, kind, spare, no production instructions inside — or null for instrumental>"`;
   return [
     "You are the MIRROR ENTITY in its LIGHT CODES chamber — the interpreter between a human intention and a piece of music.",
     "Your art is TRANSLATION: you never repeat the visitor's words back; you convert intention, mood and symbolism into a precise musical direction that a music-generation model (Google DeepMind Lyria, through the Gemini API) can render.",
@@ -231,16 +258,17 @@ function interpreterPrompt(b: LcBody, languageName: string): string {
     `CHAMBER MODE: ${modeName}.`,
     modeVocabulary(b),
     `THE VISITOR'S OWN ENERGY SHAPE (defaults only — the words above outrank these): ${shapeWords(b)}.`,
-    b.context ? `WHAT THE VISITOR IS LIVING THROUGH (from the conversation): ${b.context}` : "",
-    `THE VISITOR'S INTENTION: ${b.intention?.trim() || "(the Mirror chooses freely — compose what the moment holds)"}`,
+    `THE VISITOR'S INTENTION (the ONLY seed — nothing from any earlier conversation may shape this transmission): ${b.intention?.trim() || "(the Mirror chooses freely — compose what the moment holds)"}`,
     "",
     "Return STRICT JSON (no markdown fences):",
     '{"title": "<a poetic, short track title in ' + languageName + '>",',
-    ' "style": "<ONE dense musical production brief, 120-220 words, written FOR A MUSIC MODEL: genre/era/production language, instruments, harmony, tempo (a BPM range), texture, mix character, and the arrangement arc — how it opens, how it builds, where it rests, how it ends. Written in English for the engine, but the SOUND the words describe should fit the visitor\'s language and feeling. Always end with: no EDM drops, no generic cinematic trailer music, no busy percussion, no commercial pop structure.>",',
-    ' "lyrics": "<if words are wanted: short, kind, spare lines in ' + languageName + ', organized with section tags [Verse], [Chorus], [Bridge] — the chorus returns, one bridge rests mid-song. No production instructions inside the lyric lines. Or null for instrumental>",',
-    ' "notes": "<2-3 sentences in ' + languageName + ' — the TRANSMISSION NOTES: the emotional arc and how the music carries it, grounded, artistic, no medical language>"}',
+    ' "style": "<ONE dense musical production brief, 140-230 words, written FOR A MUSIC MODEL: genre/era/production language, instruments, harmony, tempo (a BPM range), texture, mix character, and the arrangement arc — how it opens, how it builds, where it rests, how it ends. THE CONTINUITY LAW is absolute: describe ONE single connected piece — it may pass through varied movements, rhythms and colors, but they must FLOW INTO EACH OTHER: seamless transitions, a sustained harmonic bed from first breath to last, no long silences, no dead air, no hard cuts, no spoken intro, and an ending that resolves rather than stops. Written in English for the engine, but the SOUND the words describe should fit the visitor\'s language and feeling. Always end with: no EDM drops, no generic cinematic trailer music, no busy percussion, no commercial pop structure, no abrupt breaks, no long silent gaps.>",',
+    lyricsContract,
+    '"notes": "<2-3 sentences in ' + languageName + ' — the TRANSMISSION NOTES: the emotional arc and how the music carries it, grounded, artistic, no medical language>"}',
     "",
-    "LYRICS LAW: if the visitor asked for instrumental or wordless, lyrics must be null. Never mix production instructions into the lyrical text.",
+    vocalsWanted || userLyrics
+      ? `VOICE LAW: the visitor asked for lyrics and singing — the answer is a TRUE SONG: lyrics MUST be present and singable${userLyrics ? " (the visitor's own words, kept exactly)" : ", with clear verse/chorus structure"}. Never answer with an instrumental approximation.`
+      : "LYRICS LAW: if the visitor asked for instrumental or wordless, lyrics must be null. Never mix production instructions into the lyrical text.",
   ]
     .filter(Boolean)
     .join("\n");
@@ -252,34 +280,78 @@ async function interpret(
 ): Promise<LcBrief> {
   const zai = await ZAI.create();
   const languageName = LANG_NAMES[b.language ?? "en"] ?? "English";
+  const userLyrics = b.userLyrics?.trim() ?? "";
+  const vocalsWanted =
+    b.vocalsRequested === true ||
+    userLyrics.length > 0 ||
+    b.shape?.lyricsMode === "MIRROR WRITES" ||
+    b.shape?.lyricsMode === "USER WRITES";
   /* one quiet retry — the interpreter must never come back empty-handed */
   let lastRaw = "";
   for (let attempt = 0; attempt < 2; attempt++) {
     const completion = await zai.chat.completions.create({
       messages: [
-        { role: "system", content: interpreterPrompt(b, languageName) },
+        { role: "system", content: interpreterPrompt(b, languageName, vocalsWanted) },
         {
           role: "user",
           content:
             (b.intention?.trim() ||
               "The Mirror chooses what this transmission holds.") +
+            (userLyrics
+              ? `\n\nTHE VISITOR'S OWN LYRICS (keep them whole):\n${userLyrics}`
+              : "") +
             attachmentLines,
         },
       ],
       temperature: 0.85,
-      max_tokens: 1200,
+      max_tokens: vocalsWanted ? 3000 : 1200,
       thinking: { type: "disabled" },
     });
     const raw = completion.choices?.[0]?.message?.content ?? "";
     lastRaw = raw;
+    const harvest = (): {
+      title: string;
+      style: string;
+      lyrics: string | null;
+      notes: string;
+    } | null => {
+      /* field harvest — a truncated JSON (a long song cut mid-line)
+         still yields its fields: every value is one JSON-escaped
+         string on its own line, so each is lifted by name. */
+      const grab = (key: string): string => {
+        const m = raw.match(
+          new RegExp(`"${key}"\\s*:\\s*"((?:[^"\\\\]|\\\\.)*)"`, "s")
+        );
+        return m ? m[1] : "";
+      };
+      const title = grab("title");
+      const style = grab("style");
+      if (!title && !style) return null;
+      const unescape = (s: string) =>
+        s
+          .replace(/\\n/g, "\n")
+          .replace(/\\"/g, '"')
+          .replace(/\\\\/g, "\\");
+      return {
+        title: (title || "Untitled transmission").slice(0, 90),
+        style: unescape(style).slice(0, 1400),
+        lyrics: grab("lyrics")
+          ? unescape(grab("lyrics")).slice(0, vocalsWanted ? 1800 : 600)
+          : null,
+        notes: unescape(grab("notes")).slice(0, 600),
+      };
+    };
     const match = raw.match(/\{[\s\S]*\}/);
-    if (!match) continue;
-    try {
-      const parsed = JSON.parse(match[0]) as Partial<LcBrief>;
-      return sanitizeBrief(parsed);
-    } catch {
-      /* one more breath */
+    if (match) {
+      try {
+        const parsed = JSON.parse(match[0]) as Partial<LcBrief>;
+        return sanitizeBrief(parsed, vocalsWanted);
+      } catch {
+        /* fall through to the harvest */
+      }
     }
+    const salvaged = harvest();
+    if (salvaged && salvaged.style) return sanitizeBrief(salvaged, vocalsWanted);
   }
   console.error(
     "[light-codes] interpreter returned no JSON:",
@@ -290,11 +362,13 @@ async function interpret(
   );
 }
 
-function sanitizeBrief(parsed: Partial<LcBrief>): LcBrief {
+function sanitizeBrief(parsed: Partial<LcBrief>, vocalsWanted = false): LcBrief {
   return {
     title: (parsed.title ?? "Untitled transmission").slice(0, 90),
     style: (parsed.style ?? "").slice(0, 1400),
-    lyrics: parsed.lyrics ? String(parsed.lyrics).slice(0, 900) : null,
+    lyrics: parsed.lyrics
+      ? String(parsed.lyrics).slice(0, vocalsWanted ? 1800 : 900)
+      : null,
     notes: (parsed.notes ?? "").slice(0, 600),
   };
 }

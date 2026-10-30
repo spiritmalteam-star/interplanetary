@@ -6385,7 +6385,6 @@ export function BranchCanopy({
                           kind={roomMessage.sideArtifact.kind}
                           resonance={roomMessage.sideArtifact.resonance}
                           resume={roomMessage.sideArtifact.resume}
-                          themes={roomMessage.sideArtifact.themes}
                           tool={roomMessage.sideArtifact.tool}
                         />
                       ) : (
