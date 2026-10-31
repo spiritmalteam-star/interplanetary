@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { mergeAnonLibrary, readAnonId, setSessionCookie } from "@/lib/server/access";
+import {
+  clearForeignSessionCookies,
+  ensureSteadySecret,
+  mergeAnonLibrary,
+  readAnonId,
+  setSessionCookie,
+} from "@/lib/server/access";
 import { ensureVisitorProvisions } from "@/lib/server/workspace";
 import { ensureWallet } from "@/lib/server/wallet";
 
@@ -19,7 +25,19 @@ export function publicOrigin(requestOrigin: string): string {
     (process.env.VERCEL_PROJECT_PRODUCTION_URL
       ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
       : "");
-  return (fromEnv || requestOrigin).replace(/\/$/, "");
+  let origin = (fromEnv || requestOrigin).replace(/\/$/, "");
+  /* THE CANONICAL HOUSE — www is the only door the Google passage was
+     registered against and the only host the session cookie calls home.
+     When the origin answers as the bare apex (an alias, an old env
+     value, a deployment URL), it is promoted to www so redirect_uri,
+     the state cookie and the session cookie all live on one address. */
+  try {
+    const host = new URL(origin).hostname;
+    if (host === "reflectme.space") origin = "https://www.reflectme.space";
+  } catch {
+    /* an unreadable origin rides on unchanged */
+  }
+  return origin;
 }
 
 /* THE VALIDATED WAY BACK — the room the visitor left behind is kept
@@ -45,8 +63,11 @@ export async function GET(req: NextRequest) {
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
   const origin = publicOrigin(req.nextUrl.origin);
 
-  const fail = (reason: string) =>
-    NextResponse.redirect(`${origin}/?google=${encodeURIComponent(reason)}`);
+  const fail = (reason: string) => {
+    const res = NextResponse.redirect(`${origin}/?google=${encodeURIComponent(reason)}`);
+    res.headers.set("cache-control", "private, no-store");
+    return res;
+  };
 
   try {
     const code = req.nextUrl.searchParams.get("code");
@@ -79,6 +100,7 @@ export async function GET(req: NextRequest) {
     const profile = (await infoRes.json()) as {
       email?: string;
       name?: string;
+      picture?: string;
       verified_email?: boolean;
     };
     const email = profile.email?.toLowerCase();
@@ -94,35 +116,55 @@ export async function GET(req: NextRequest) {
     const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
     const keeperArrives = email === adminEmail;
 
+    /* THE STEADY SECRET — the session about to be carved must be signed
+       with the one shared key, never an instance's cold-start mint */
+    await ensureSteadySecret();
+
     const user = await db.user.upsert({
       where: { email },
       create: {
         email,
         name: profile.name?.slice(0, 60) ?? null,
+        image: profile.picture ?? null,
         provider: "google",
         passwordHash: null,
         ...(keeperArrives ? { role: "ADMIN" } : {}),
       },
       update: {
         provider: "google",
+        /* the face travels with the verified identity; a name the
+           visitor chose for themselves is never overwritten */
+        image: profile.picture ?? null,
         ...(keeperArrives ? { role: "ADMIN" } : {}),
       },
     });
 
-    /* THE WAY BACK IS KEPT — the room the visitor left rides the
-       mirror_g_next cookie (laid down when the passage opened) and is
-       honored once here: a validated same-origin path only. */
     const back = safeReturnPath(req.cookies.get("mirror_g_next")?.value);
     const res = NextResponse.redirect(`${origin}${back ?? "/"}`);
-    setSessionCookie(res, user.id, req);
-    /* the passage carries its workspace, ledger and gift */
-    await ensureVisitorProvisions(user.id);
-    /* and its own wallet — five free lights on first arrival */
-    await ensureWallet(user.id);
-    /* everything the anonymous cookie kept comes with the visitor */
-    await mergeAnonLibrary(readAnonId(req), user.id);
+    res.headers.set("cache-control", "private, no-store");
+    setSessionCookie(res, user.id, user.sessionVersion ?? 0, req);
+    /* the passage carries its workspace, ledger and gift — and its own
+       wallet. THE SESSION'S PRIORITY: these generous provisions are
+       best-effort and can NEVER stand between a verified visitor and
+       their signed cookie — a hiccup here must not read as a failed
+       sign-in (the room would greet a signed-in keeper with a login
+       button, the very silence this passage ends). */
+    try {
+      await ensureVisitorProvisions(user.id);
+      await ensureWallet(user.id);
+      await mergeAnonLibrary(readAnonId(req), user.id);
+    } catch (provisionErr) {
+      console.error(
+        "[auth/google/callback] provisions lagged behind the passage:",
+        provisionErr instanceof Error ? provisionErr.message : provisionErr
+      );
+    }
     res.cookies.set("mirror_g_state", "", { path: "/", maxAge: 0 });
     res.cookies.set("mirror_g_next", "", { path: "/", maxAge: 0 });
+    /* LAST OF ALL — the parent-domain ghosts' expiry lines travel as
+       raw set-cookie headers, which every jar write would otherwise
+       re-serialize away; appended after the last jar write they stand */
+    clearForeignSessionCookies(res);
     return res;
   } catch (err) {
     console.error("[auth/google/callback] failed:", err);

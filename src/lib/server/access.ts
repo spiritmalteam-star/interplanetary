@@ -33,6 +33,8 @@ export interface SessionUser {
   id: string;
   email: string;
   name: string | null;
+  /** The Google passage's own face, when one was carried in. */
+  image?: string | null;
   tier: Tier;
   /** The database-bound role: "user" — or "ADMIN", the verified keeper.
    *  Never trusted from a request's own claim; only from the user row. */
@@ -69,6 +71,54 @@ function secret(): string {
     : "mirror-entity-laboratory-passage-secret";
 }
 
+/* THE STEADY SECRET'S OWN HAND — when the environment vault is silent
+   (a deployment built before AUTH_SECRET was placed, or an instance
+   whose cold boot missed the instrumentation carve), the shared row in
+   PlatformConfig is read and injected into process.env so every sync
+   reader (sign() included) wears the SAME secret as every other
+   instance. Without this, a login could sign a passage with one
+   instance's random secret and /api/auth/me on another instance could
+   not read it back — the very "signed in, then asked again" complaint.
+   Idempotent and cheap: it returns at once once the env speaks. */
+let steadySecretTried = false;
+export async function ensureSteadySecret(): Promise<void> {
+  const existing = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || "";
+  if (existing.length >= 16) return; // the vault already speaks
+  if (steadySecretTried) return; // one quiet attempt per instance
+  steadySecretTried = true;
+  try {
+    const { randomBytes } = await import("crypto");
+    const KEY = "auth_secret";
+    const row = await db.platformConfig.findUnique({ where: { key: KEY } });
+    const fromVault =
+      row && typeof row.value === "object" && row.value !== null && "secret" in row.value
+        ? String((row.value as { secret: unknown }).secret)
+        : "";
+    let secret = fromVault;
+    if (!secret || secret.length < 16) {
+      /* no row yet — carve one. First carve wins on a cold-boot race:
+         the upsert never rotates an existing value. */
+      secret = randomBytes(32).toString("hex");
+      await db.platformConfig.upsert({
+        where: { key: KEY },
+        update: {},
+        create: { key: KEY, value: { secret }, updatedBy: "access:request" },
+      });
+    }
+    if (secret.length >= 16) {
+      process.env.AUTH_SECRET = secret;
+      console.info(
+        "[access] the steady secret was drawn from the shared vault — passages sign and read with one key across every instance."
+      );
+    }
+  } catch (err) {
+    console.warn(
+      "[access] the shared secret was not reachable this request:",
+      err instanceof Error ? err.message : err
+    );
+  }
+}
+
 /* --------------------------- passwords ----------------------------- */
 
 export function hashPassword(password: string): string {
@@ -101,13 +151,25 @@ function sign(payload: string): string {
   return b64url(createHmac("sha256", secret()).update(payload).digest());
 }
 
-export function createSessionToken(userId: string): string {
+/** The signed passage carries its owner, the session version it was
+ *  carved under and its own expiry — the cookie's life and the token's
+ *  life are one and the same (30 days). */
+export function createSessionToken(userId: string, version = 0): string {
   const exp = Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000;
-  const payload = b64url(JSON.stringify({ uid: userId, exp }));
+  const payload = b64url(JSON.stringify({ uid: userId, v: version, exp }));
   return `${payload}.${sign(payload)}`;
 }
 
-function readSessionToken(token: string | undefined): string | null {
+interface SessionTokenMeta {
+  uid: string;
+  v: number;
+  exp: number;
+}
+
+/* the token's own shape and the public meta are one shape */
+export type SessionMeta = SessionTokenMeta;
+
+function readSessionToken(token: string | undefined): SessionTokenMeta | null {
   if (!token) return null;
   const [payload, sig] = token.split(".");
   if (!payload || !sig) return null;
@@ -121,9 +183,9 @@ function readSessionToken(token: string | undefined): string | null {
   try {
     const json = JSON.parse(
       Buffer.from(payload.replace(/-/g, "+").replace(/_/g, "/"), "base64").toString("utf8")
-    ) as { uid?: string; exp?: number };
+    ) as { uid?: string; v?: number; exp?: number };
     if (!json.uid || !json.exp || Date.now() > json.exp) return null;
-    return json.uid;
+    return { uid: json.uid, v: typeof json.v === "number" ? json.v : 0, exp: json.exp };
   } catch {
     return null;
   }
@@ -181,9 +243,10 @@ export function requestIsSecure(req?: {
 export function setSessionCookie(
   res: NextResponse,
   userId: string,
+  version = 0,
   req?: NextRequest
 ): void {
-  res.cookies.set(SESSION_COOKIE, createSessionToken(userId), {
+  res.cookies.set(SESSION_COOKIE, createSessionToken(userId, version), {
     httpOnly: true,
     sameSite: "lax",
     secure: requestIsSecure(req),
@@ -192,20 +255,91 @@ export function setSessionCookie(
   });
 }
 
+/* THE RENEWAL — a passage that is still being used should not grow old:
+   when less than half its life remains, the greeting quietly lays a
+   fresh 30-day stone (same version, same owner) so an active visitor is
+   never asked to sign in mid-journey. The cookie's expiry and the
+   token's expiry are carved together, as always. */
+export function renewSessionCookie(
+  res: NextResponse,
+  meta: SessionMeta,
+  req?: NextRequest
+): void {
+  const HALF_LIFE = (SESSION_DAYS * 24 * 60 * 60 * 1000) / 2;
+  if (meta.exp - Date.now() > HALF_LIFE) return; // still young — nothing to do
+  setSessionCookie(res, meta.uid, meta.v, req);
+}
+
+/* THE CONFUSING GHOSTS — an earlier deployment may have left a session
+   cookie wearing a different dress: an insecure variant, or a
+   parent-domain variant (Domain=reflectme.space). Browsers keep such
+   variants side by side and send BOTH; the older one can arrive first
+   and shadow the fresh signed passage. The expiry lines travel as raw
+   Set-Cookie headers (the cookie jar keeps one entry per name, so
+   four jar writes would have collapsed into one).
+
+   TWO COMPANIONS, TWO LAWS:
+   - clearForeignSessionCookies — the parent-domain variants alone.
+     Safe beside a fresh login: their identity (Domain=reflectme.space)
+     differs from the new host-only cookie, so the expiry never touches
+     it. Laid down whenever a NEW passage is carved.
+   - clearSessionCookie — every variant (host-only insecure and secure,
+     parent-domain insecure and secure), for the sign-out, where no new
+     cookie must survive. The host-only variants share the new cookie's
+     identity, which is exactly why they are never used at login time —
+     there, the fresh set itself overwrites them. */
+function expiredSessionCookieLine(secure: boolean, domain?: string): string {
+  const parts = [
+    `${SESSION_COOKIE}=`,
+    "Path=/",
+    "Max-Age=0",
+    "HttpOnly",
+    "SameSite=Lax",
+    ...(secure ? ["Secure"] : []),
+    ...(domain ? [`Domain=${domain}`] : []),
+  ];
+  return parts.join("; ");
+}
+
+export function clearForeignSessionCookies(res: NextResponse): void {
+  res.headers.append("set-cookie", expiredSessionCookieLine(false, "reflectme.space"));
+  res.headers.append("set-cookie", expiredSessionCookieLine(true, "reflectme.space"));
+}
+
 export function clearSessionCookie(res: NextResponse): void {
-  res.cookies.set(SESSION_COOKIE, "", { httpOnly: true, path: "/", maxAge: 0 });
+  /* the jar first — every jar write re-serializes the response's
+     set-cookie headers, so the raw variant-expiry lines below must
+     always be appended AFTER the last jar write to survive */
+  res.cookies.set("mirror_g_state", "", { httpOnly: true, path: "/", maxAge: 0 });
+  res.cookies.set("mirror_g_next", "", { httpOnly: true, path: "/", maxAge: 0 });
+  res.headers.append("set-cookie", expiredSessionCookieLine(false));
+  res.headers.append("set-cookie", expiredSessionCookieLine(true));
+  clearForeignSessionCookies(res);
+}
+
+/** Signature-and-expiry check only — no database. Returns the token's
+ *  whole meta (owner, session version, expiry) so routes can tell a
+ *  version-stale passage apart from a resting vault. */
+export function readSessionMeta(req: NextRequest): SessionMeta | null {
+  return readSessionToken(req.cookies.get(SESSION_COOKIE)?.value);
 }
 
 export async function getSessionUser(req: NextRequest): Promise<SessionUser | null> {
-  const uid = readSessionUid(req);
-  if (!uid) return null;
+  const meta = readSessionMeta(req);
+  if (!meta) return null;
   try {
-    const user = await db.user.findUnique({ where: { id: uid } });
+    const user = await db.user.findUnique({ where: { id: meta.uid } });
     if (!user) return null;
+    /* THE SIGN-OUT LAW — a passage carved before the row's current
+       session version no longer opens the door. Logout bumps the row's
+       version in the durable shared database, so a sign-out is a true
+       invalidation: every device, every tab, every copy of the cookie. */
+    if (meta.v !== (user.sessionVersion ?? 0)) return null;
     return {
       id: user.id,
       email: user.email,
       name: user.name,
+      image: user.image ?? null,
       tier: user.tier === "light" ? "light" : "crystalline",
       role: user.role,
     };
@@ -224,7 +358,7 @@ export async function getSessionUser(req: NextRequest): Promise<SessionUser | nu
  *  "this browser holds a signed passage" apart from "signed out", so a
  *  resting vault never masquerades as a logged-out visitor. */
 export function readSessionUid(req: NextRequest): string | null {
-  return readSessionToken(req.cookies.get(SESSION_COOKIE)?.value);
+  return readSessionToken(req.cookies.get(SESSION_COOKIE)?.value)?.uid ?? null;
 }
 
 /* --------------------------- anonymous id -------------------------- */

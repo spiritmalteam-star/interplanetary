@@ -818,20 +818,36 @@ export function ProfilePage() {
             />
             <section aria-label={t("Identity")} className={cn(panel, "p-3.5 sm:p-4")}>
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-                <span
-                  className="mono-label flex size-12 shrink-0 items-center justify-center rounded-2xl text-[21px] text-foreground/90"
-                  style={{
-                    border:
-                      "1px solid color-mix(in srgb, var(--scope-a, var(--gd)) 40%, transparent)",
-                    backgroundColor:
-                      "color-mix(in srgb, var(--scope-a, var(--gd)) 9%, var(--glass-bg))",
-                    boxShadow:
-                      "0 10px 30px -18px rgba(0,0,0,0.5), 0 0 26px -10px color-mix(in srgb, var(--scope-a, var(--gd)) 50%, transparent)",
-                  }}
-                  aria-hidden="true"
-                >
-                  {me ? (me.name || me.email).slice(0, 1).toUpperCase() : "✦"}
-                </span>
+                {me?.image ? (
+                  /* THE GOOGLE PASSAGE'S OWN FACE — the picture the
+                     verified identity carried in, kept on the wall */
+                  <img
+                    src={me.image}
+                    alt=""
+                    referrerPolicy="no-referrer"
+                    data-testid="profile-avatar"
+                    className="size-12 shrink-0 rounded-2xl object-cover"
+                    style={{
+                      boxShadow:
+                        "0 10px 30px -18px rgba(0,0,0,0.5), 0 0 26px -10px color-mix(in srgb, var(--scope-a, var(--gd)) 50%, transparent)",
+                    }}
+                  />
+                ) : (
+                  <span
+                    className="mono-label flex size-12 shrink-0 items-center justify-center rounded-2xl text-[21px] text-foreground/90"
+                    style={{
+                      border:
+                        "1px solid color-mix(in srgb, var(--scope-a, var(--gd)) 40%, transparent)",
+                      backgroundColor:
+                        "color-mix(in srgb, var(--scope-a, var(--gd)) 9%, var(--glass-bg))",
+                      boxShadow:
+                        "0 10px 30px -18px rgba(0,0,0,0.5), 0 0 26px -10px color-mix(in srgb, var(--scope-a, var(--gd)) 50%, transparent)",
+                    }}
+                    aria-hidden="true"
+                  >
+                    {me ? (me.name || me.email).slice(0, 1).toUpperCase() : "✦"}
+                  </span>
+                )}
                 <div className="min-w-0 flex-1">
                   <p className="ink-title truncate text-[18px] font-semibold leading-tight text-foreground/95">
                     {displayName}

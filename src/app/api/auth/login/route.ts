@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import {
+  clearForeignSessionCookies,
+  ensureSteadySecret,
   loginAttemptsExceeded,
   mergeAnonLibrary,
   readAnonId,
@@ -48,15 +50,21 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    /* the shared signing key before the passage is carved */
+    await ensureSteadySecret();
+
     const res = NextResponse.json({
       user: {
         email: user.email,
         name: user.name,
+        image: user.image ?? null,
         tier: user.tier === "light" ? "light" : "crystalline",
         admin: isAdminEmail(user.email),
       },
     });
-    setSessionCookie(res, user.id, req);
+    res.headers.set("cache-control", "private, no-store");
+    setSessionCookie(res, user.id, user.sessionVersion ?? 0, req);
+    clearForeignSessionCookies(res);
     /* make sure the passage carries its workspace, ledger and gift —
        also for accounts carved before the provisions existed */
     await ensureVisitorProvisions(user.id);

@@ -88,6 +88,7 @@ export async function GET(req: NextRequest) {
       user: {
         email: user.email,
         name: user.name,
+        image: user.image ?? null,
         tier: user.tier,
         emailVerified: Boolean(gateUser?.emailVerifiedAt),
         createdAt: gateUser?.createdAt ?? null,
@@ -156,7 +157,7 @@ export async function GET(req: NextRequest) {
           available: Boolean(p.stripePriceId),
         })),
       },
-    });
+    }, { headers: { "cache-control": "private, no-store" } });
   } catch (err) {
     console.error("[account/summary] failed:", err);
     return NextResponse.json(

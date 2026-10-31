@@ -33,6 +33,8 @@ model User {
   tier            String   @default("crystalline") // kept for gentle history; every world is free
   role            String   @default("user") // user | ADMIN — bound in the database, never by a request's own claim
   settings        Json? // the visitor's own tuning: language, voice, pace, theme, fields of expansion
+  image           String? // the Google passage's own face (profile picture url) — shown on the profile and account rooms
+  sessionVersion  Int      @default(0) // the sign-out law: every logout bumps it, tokens carved before it no longer open the door
   emailVerifiedAt DateTime?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt

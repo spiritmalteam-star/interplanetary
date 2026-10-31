@@ -39,6 +39,8 @@ export async function GET(req: NextRequest) {
   const res = NextResponse.redirect(
     `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`
   );
+  /* the crossing is a live handoff — no cache may keep its key */
+  res.headers.set("cache-control", "private, no-store");
   res.cookies.set("mirror_g_state", state, {
     httpOnly: true,
     sameSite: "lax",

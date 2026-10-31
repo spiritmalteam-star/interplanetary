@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { hashPassword, mergeAnonLibrary, readAnonId, setSessionCookie } from "@/lib/server/access";
+import {
+  clearForeignSessionCookies,
+  ensureSteadySecret,
+  hashPassword,
+  mergeAnonLibrary,
+  readAnonId,
+  setSessionCookie,
+} from "@/lib/server/access";
 import { GATES, rateLimit, requestIp } from "@/lib/server/rate-limit";
 import { ensureVisitorProvisions } from "@/lib/server/workspace";
 import { ensureWallet } from "@/lib/server/wallet";
@@ -10,10 +17,11 @@ import { randomBytes } from "crypto";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
-function publicUser(u: { email: string; name: string | null; tier: string }) {
+function publicUser(u: { email: string; name: string | null; image?: string | null; tier: string }) {
   return {
     email: u.email,
     name: u.name,
+    image: u.image ?? null,
     tier: u.tier === "light" ? "light" : "crystalline",
     admin: isAdminEmail(u.email),
   };
@@ -71,8 +79,13 @@ export async function POST(req: NextRequest) {
     /* and its own wallet — five free lights, laid in at the birth */
     await ensureWallet(user.id);
 
+    /* the shared signing key before the passage is carved */
+    await ensureSteadySecret();
+
     const res = NextResponse.json({ user: publicUser(user) }, { status: 201 });
-    setSessionCookie(res, user.id, req);
+    res.headers.set("cache-control", "private, no-store");
+    setSessionCookie(res, user.id, user.sessionVersion ?? 0, req);
+    clearForeignSessionCookies(res);
     /* everything the anonymous cookie kept comes with the new passage */
     await mergeAnonLibrary(readAnonId(req), user.id);
 

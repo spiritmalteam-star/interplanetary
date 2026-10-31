@@ -31,7 +31,7 @@ import { ModalShell } from "./ModalShell";
 /* ------------------------------------------------------------------ */
 
 interface Summary {
-  user: { email: string; name: string | null; emailVerified: boolean; createdAt: string | null };
+  user: { email: string; name: string | null; image?: string | null; emailVerified: boolean; createdAt: string | null };
   admin?: boolean;
   wallet?: { planTier: string; free: number; paid: number; deposit?: number; depositSource?: string | null; total: number } | null;
   plan: {
@@ -335,6 +335,40 @@ export function AccountModal() {
                 {notice}
               </div>
             )}
+
+            {/* -------- the keeper's own face --------
+                the Google picture when the passage carries one, the
+                name's first light when it does not — the chamber opens
+                by naming whom it belongs to */}
+            <section aria-label={t("Identity")} className="flex items-center gap-3.5 rounded-xl border hairline bg-[var(--glass-bg-soft)] p-4">
+              {summary.user.image ? (
+                /* the provider's own url — no optimization needed */
+                <img
+                  src={summary.user.image}
+                  alt=""
+                  referrerPolicy="no-referrer"
+                  className="size-12 shrink-0 rounded-2xl object-cover"
+                  data-testid="account-avatar"
+                />
+              ) : (
+                <span
+                  aria-hidden="true"
+                  className="mono-label flex size-12 shrink-0 items-center justify-center rounded-2xl text-[20px] text-foreground/90"
+                  style={{
+                    border: "1px solid color-mix(in srgb, var(--scope-a, var(--gd)) 40%, transparent)",
+                    backgroundColor: "color-mix(in srgb, var(--scope-a, var(--gd)) 9%, var(--glass-bg))",
+                  }}
+                >
+                  {(summary.user.name || summary.user.email).slice(0, 1).toUpperCase()}
+                </span>
+              )}
+              <div className="min-w-0">
+                <p className="ink-title truncate text-[16px] font-semibold leading-tight text-foreground/95">
+                  {summary.user.name || summary.user.email.split("@")[0]}
+                </p>
+                <p className="mt-0.5 truncate text-[13px] text-muted-foreground">{summary.user.email}</p>
+              </div>
+            </section>
 
             {/* -------- the plan -------- */}
             <section aria-label={t("Plan")} className="rounded-xl border hairline bg-[var(--glass-bg-soft)] p-4">

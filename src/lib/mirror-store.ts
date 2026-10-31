@@ -286,6 +286,8 @@ function saveCodexLast(value: CodexLastViewed | null) {
 export interface MeUser {
   email: string;
   name: string | null;
+  /** The Google passage's own face, when one was carried in. */
+  image?: string | null;
   tier: "crystalline" | "light";
   /** The keeper's own light — true only for the ADMIN_EMAIL passage. */
   admin?: boolean;
@@ -3798,7 +3800,11 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     if (!force && now - lastMeRefresh < 12_000) return;
     lastMeRefresh = now;
     try {
-      const res = await fetch("/api/auth/me");
+      /* THE NO-STORE ASK — the greeting is asked for fresh, never from
+         any cache's shelf: a signed-in visitor must never be greeted
+         by yesterday's silence (the server answers no-store too; the
+         two laws hold the door on both ends). */
+      const res = await fetch("/api/auth/me", { cache: "no-store" });
       if (!res.ok) {
         /* a degraded greeting (the vault resting — 503) keeps the last
            known face: a stale name beats an erased passage. Only an
