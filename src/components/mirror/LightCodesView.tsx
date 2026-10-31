@@ -8,6 +8,7 @@ import {
   ChevronDown,
   Copy,
   Dices,
+  Disc3,
   Download,
   Eye,
   Feather,
@@ -40,6 +41,7 @@ import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { useVoiceRecorder } from "@/hooks/use-voice-recorder";
 import { MusicSequencer } from "./living/MusicSequencer";
+import { EthermixDeck } from "./living/EthermixDeck";
 import { MirrorBridge } from "./living/MirrorBridge";
 import {
   LC_MODES,
@@ -1803,13 +1805,16 @@ export function LightCodesView() {
   const playLc = useMirror((s) => s.playLc);
   /* THE TWO BENCHES — the chamber's own instruments: the standing
      transmissions (the Mirror's briefs woven by the engine) and the
-     local sequencer (a genuine instrument that plays on the visitor's
-     own device, no server, no credits). The transmissions stay the
-     default; the sequencer mounts only when chosen, so its device
-     breath is released the moment the bench is left. */
+     local Ethermix bench (a genuine instrument that plays on the
+     visitor's own device, no server, no credits). The transmissions
+     stay the default; the bench mounts only when chosen, so its
+     device breath is released the moment the bench is left. */
   const [bench, setBench] = useState<"transmissions" | "sequencer">(
     "transmissions"
   );
+  /* THE FULL-SCREEN SET — the Ethermix deck rises over the room when
+     the visitor asks for it; laid down entirely by its own close hand */
+  const [deckOpen, setDeckOpen] = useState(false);
 
   /* THE KEEPING THREAD — a signed passage's shelf wakes with the room:
      the vault's rows join the history, and any weave that outlived a
@@ -1965,7 +1970,7 @@ export function LightCodesView() {
                 }
               >
                 <Music4 className="size-3.5" aria-hidden="true" />
-                {t("Sequencer")}
+                {t("Ethermix")}
               </button>
             </div>
           </div>
@@ -1975,6 +1980,53 @@ export function LightCodesView() {
                bridge rides at the room's own corner with the pattern
                read at ask-time from the visitor's saved pattern */
             <div className="relative mx-auto mt-4 max-w-[720px]">
+              {/* THE ETHERMIX DECK — the glass strip that opens the
+                  full-screen set: two decks, a synthesizer, drums and
+                  the recorder, all played on the visitor's own device */}
+              <div
+                className="relative mb-4 overflow-hidden rounded-2xl border hairline shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]"
+                style={{
+                  background:
+                    "linear-gradient(to bottom, color-mix(in srgb, var(--scope-a) 10%, transparent), transparent 70%), var(--glass-bg-soft)",
+                }}
+              >
+                {/* the prismatic top edge */}
+                <div
+                  aria-hidden="true"
+                  className="absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(168,85,247,0.35),rgba(232,217,176,0.3),transparent)]"
+                />
+                <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
+                    <p className="font-[family-name:Cinzel] text-[13px] tracking-[0.28em] text-[var(--scope-a)]">
+                      {t("THE ETHERMIX DECK")}
+                    </p>
+                    <p className="mt-1 text-[12.5px] leading-snug text-muted-foreground">
+                      {t(
+                        "Play and remix your mirror musics — two decks, a synthesizer, and the full set."
+                      )}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    data-testid="ethermix-open"
+                    onClick={() => setDeckOpen(true)}
+                    className="btn-chip h-9 shrink-0 px-4 text-[12.5px]"
+                    style={{
+                      backgroundColor:
+                        "color-mix(in srgb, var(--scope-a) 14%, transparent)",
+                      color: "var(--scope-a)",
+                      boxShadow:
+                        "inset 0 0 0 1px color-mix(in srgb, var(--scope-a) 40%, transparent), 0 0 24px -10px color-mix(in srgb, var(--scope-a) 70%, transparent)",
+                    }}
+                  >
+                    <Disc3 className="size-4" aria-hidden="true" />
+                    {t("Open the full-screen set")}
+                  </button>
+                </div>
+              </div>
+              {deckOpen && (
+                <EthermixDeck onClose={() => setDeckOpen(false)} />
+              )}
               <MusicSequencer />
               <MirrorBridge
                 workspaceKey="lightcodes"
@@ -2178,11 +2230,17 @@ export function LightCodesView() {
                           </div>
 
                           {/* everything a style may add — one touch on a
-                              chamber lifts the no-style law by itself */}
+                              chamber lifts the no-style law by itself.
+                              THE OPEN DOOR — the folded law dims the
+                              selectors but never jails them: a chip's
+                              own touch lifts the law (the old
+                              pointer-events-none locked every chip
+                              while the only key to the lock hung
+                              inside). */}
                           <div
                             className={cn(
                               "flex flex-col gap-2.5 transition-opacity duration-300",
-                              lcRaw && "pointer-events-none opacity-40"
+                              lcRaw && "opacity-40"
                             )}
                           >
                             {/* the chambers — one row of small glass chips */}

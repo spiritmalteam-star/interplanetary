@@ -120,6 +120,24 @@ export async function GET(req: NextRequest) {
        with the one shared key, never an instance's cold-start mint */
     await ensureSteadySecret();
 
+    /* THE SECURE LINKING LAW — Google's own word (verified_email) proves
+       the visitor controls this mailbox, but an existing passage is
+       linked by PROOF, never by a shared address alone:
+       - a passage that proved its mailbox by OUR letter (or Google
+         before it) is safe to link — both sides verified;
+       - an UNVERIFIED email passage's password was set WITHOUT proof
+         of the mailbox (possibly a hostile pre-claim of someone else's
+         address) — the verified arrival takes the passage over, the
+         unproven password dies, and any session the claimant held is
+         closed (the version bump);
+       - a fresh passage is carved when no address matches. */
+    const existing = await db.user.findUnique({ where: { email } });
+    const takingOverUnproven =
+      !!existing &&
+      existing.provider === "email" &&
+      !existing.emailVerifiedAt &&
+      !!existing.passwordHash;
+
     const user = await db.user.upsert({
       where: { email },
       create: {
@@ -128,6 +146,7 @@ export async function GET(req: NextRequest) {
         image: profile.picture ?? null,
         provider: "google",
         passwordHash: null,
+        emailVerifiedAt: new Date(),
         ...(keeperArrives ? { role: "ADMIN" } : {}),
       },
       update: {
@@ -135,6 +154,11 @@ export async function GET(req: NextRequest) {
         /* the face travels with the verified identity; a name the
            visitor chose for themselves is never overwritten */
         image: profile.picture ?? null,
+        /* the verified provider's own word marks the mailbox proven */
+        emailVerifiedAt: existing?.emailVerifiedAt ?? new Date(),
+        /* the unproven password dies with the takeover — the verified
+           identity's passage opens by Google alone */
+        ...(takingOverUnproven ? { passwordHash: null, sessionVersion: (existing?.sessionVersion ?? 0) + 1 } : {}),
         ...(keeperArrives ? { role: "ADMIN" } : {}),
       },
     });

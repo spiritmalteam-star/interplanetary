@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSessionUser } from "@/lib/server/access";
+import { emailGateRequired, getSessionUser } from "@/lib/server/access";
 import { ensureStripeCustomer, getStripe, stripeConfigured } from "@/lib/server/billing";
 import { ensureVisitorProvisions } from "@/lib/server/workspace";
 
@@ -14,6 +14,17 @@ export async function POST(req: NextRequest) {
     const user = await getSessionUser(req);
     if (!user || user.email.startsWith("anon:")) {
       return NextResponse.json({ error: "Sign in first." }, { status: 401 });
+    }
+    /* THE VERIFICATION GATE — the purse's own hall opens only to a
+       passage that has proven its mailbox */
+    if (emailGateRequired(user)) {
+      return NextResponse.json(
+        {
+          error: "Confirm your email first — the letter's key opens the purse's doors.",
+          code: "email_unverified",
+        },
+        { status: 403 }
+      );
     }
     if (!stripeConfigured()) {
       return NextResponse.json(

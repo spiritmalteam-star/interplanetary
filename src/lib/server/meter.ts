@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse, after } from "next/server";
-import { ANON_COOKIE, isKeeperFree, resolveVisitor, withAnonCookie, type Visitor } from "@/lib/server/access";
+import {
+  ANON_COOKIE,
+  emailGateRequired,
+  isKeeperFree,
+  resolveVisitor,
+  withAnonCookie,
+  type Visitor,
+} from "@/lib/server/access";
 import { costOf } from "@/lib/server/costs";
 import { creditsEnforced, spendCredits } from "@/lib/server/credits";
 import { GATES, rateLimit } from "@/lib/server/rate-limit";
@@ -211,6 +218,40 @@ export function meterRoute(operation: string, handler: MeteredHandler) {
           }
         : dynamicWeigh;
       const keeperFree = isKeeperFree(visitor.user);
+
+      /* THE VERIFICATION GATE — a paid door stands open only to a
+         passage that has proven its mailbox: an email-and-password
+         account still wearing its unverified dress is answered 403
+         EMAIL_UNVERIFIED BEFORE any purse is drawn (a direct API call
+         cannot walk around it — the gate lives ahead of the weigh).
+         Anonymous keepers and Google's own verified identities pass
+         untouched; the free doors never ask. */
+      if (weigh && weigh.cost > 0 && walletEnforced() && !keeperFree) {
+        if (emailGateRequired(visitor.user)) {
+          await recordUsage({
+            userId,
+            workspaceId,
+            operation,
+            provider: "none",
+            success: false,
+            error: "email_unverified",
+            latencyMs: Date.now() - started,
+          });
+          return withAnonCookie(
+            NextResponse.json(
+              {
+                error: "EMAIL_UNVERIFIED",
+                message:
+                  "Confirm your email first — the letter's key opens the paid doors. Check your inbox (or ask for a fresh letter from your profile).",
+                code: "email_unverified",
+              },
+              { status: 403, headers: { "cache-control": "private, no-store" } }
+            ),
+            visitor
+          );
+        }
+      }
+
       if (
         weigh &&
         weigh.cost > 0 &&

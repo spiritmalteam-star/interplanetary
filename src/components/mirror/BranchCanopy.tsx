@@ -3296,6 +3296,10 @@ export function BranchCanopy({
   const [landingThread, setLandingThread] = useState<RoomTurn[]>([]);
   const landingTurnsRef = useRef<{ q: string; a: string }[]>([]);
   const [landingBusy, setLandingBusy] = useState(false);
+  /* THE WATCHFUL FIELD — the moment the floor's last ask began, so a
+     crossing that never comes home is closed gently instead of leaving
+     the room a wordless blue panel (the watchdog below speaks). */
+  const landingBusySinceRef = useRef(0);
   /* THE STANDING FIELD — the scope the chat wears; every ask, every
      room follow-up and every kept page is the field's own. */
   const landingScope = useMirror((s) => s.landingScope);
@@ -3663,6 +3667,7 @@ export function BranchCanopy({
           { q, a: "", loading: true, painting: true, visionPrompt: crystallizeRequest },
         ]);
         setLandingBusy(true);
+        landingBusySinceRef.current = Date.now();
         window.dispatchEvent(new CustomEvent("landing-chat:return"));
         try {
           const painted = await paintLandingTurn(crystallizeRequest);
@@ -3691,6 +3696,7 @@ export function BranchCanopy({
       }
       setLandingThread((t) => [...t, { q, a: "", loading: true }]);
       setLandingBusy(true);
+      landingBusySinceRef.current = Date.now();
       try {
         /* THE CARRIED CONVERSATION — every earlier exchange of THIS
            field (floor asks and room follow-ups alike) rides with this
@@ -3711,12 +3717,21 @@ export function BranchCanopy({
           [],
           attachments
         );
+        /* THE WORDLESS GUARD — a crossing that lands without words (a
+           silence from the far side of the sky) is given one gentle
+           line, so the room never stands blue and empty: the
+           conversation always holds something true. */
+        const landedReply =
+          reply ||
+          (vision
+            ? ""
+            : "The field rests a breath — speak once more, dear one.");
         setLandingThread((t) =>
           t.map((turn, i) =>
             i === t.length - 1
               ? {
                   ...turn,
-                  a: reply,
+                  a: landedReply,
                   loading: false,
                 }
               : turn
@@ -3728,7 +3743,7 @@ export function BranchCanopy({
            a Crystallize press — never from a reply's own decision. */
         landingTurnsRef.current = [
           ...landingTurnsRef.current,
-          { q, a: reply },
+          { q, a: landedReply || reply },
         ].slice(-12);
         /* THE FIELD'S OWN KEEP — the finished exchange rests in the
            field's own cache and its own sessionStorage page, for this
@@ -3738,7 +3753,7 @@ export function BranchCanopy({
           landingScope,
           landingThreadRef.current.map((turn, i) =>
             i === landingThreadRef.current.length - 1
-              ? { ...turn, a: reply, loading: false }
+              ? { ...turn, a: landedReply, loading: false }
               : turn
           )
         );
@@ -3776,6 +3791,33 @@ export function BranchCanopy({
     },
     [language, landingScope, paintLandingTurn]
   );
+
+  /* THE WATCHFUL FIELD — a floor ask whose crossing never comes home
+     (a lost fetch, a hung sky) is closed gently after two honest
+     minutes: the turn speaks its quiet word, the room never sits a
+     wordless blue panel, and the composer's hand is free again. */
+  useEffect(() => {
+    if (!realm || !landingBusy) return;
+    const id = window.setInterval(() => {
+      const since = landingBusySinceRef.current;
+      if (!since || Date.now() - since < 120_000) return;
+      landingBusySinceRef.current = 0;
+      setLandingThread((t) =>
+        t.map((turn, i) =>
+          i === t.length - 1 && turn.loading
+            ? {
+                ...turn,
+                loading: false,
+                failed: true,
+                a: "The field is quiet — speak once more",
+              }
+            : turn
+        )
+      );
+      setLandingBusy(false);
+    }, 10_000);
+    return () => window.clearInterval(id);
+  }, [realm, landingBusy]);
 
   /* THE WALK CONTINUES FROM THE ANSWER — a branch grown on the reply,
      pressed inside the panel, keeps the walk going from the family's
@@ -6244,7 +6286,14 @@ export function BranchCanopy({
                     />
                   )}
                   {roomAnswer ? (
-                    revealStage >= 2 ? (
+                    /* THE FIELD'S OWN WORDS — in the realm the answer is
+                       shown the moment the landing turn holds it: the
+                       reveal stages belong to the full portal's branch
+                       cards, never to the field's own conversation (the
+                       old gate let a finished answer stand behind a
+                       stage that reads the wrong channel — the room
+                       sat blue and wordless until the next input). */
+                    (revealStage >= 2 || realm) ? (
                       <div className="relative">
                         <div className="canopy-answer whitespace-pre-wrap break-words text-[15.5px] leading-[1.75] text-foreground/90 sm:text-[16px]">
                           {flowAnswerText(roomAnswer)}
@@ -6280,7 +6329,7 @@ export function BranchCanopy({
                         )}
                       </div>
                     ) : null
-                  ) : displayError && !roomLoading && revealStage >= 2 ? (
+                  ) : displayError && !roomLoading && (revealStage >= 2 || realm) ? (
                     /* THE ROOM'S HONESTY — an ask that could not cross
                        shows its reason right here; the walk stands. On
                        the landing's floor the mirror speaks plainly —
@@ -6305,7 +6354,7 @@ export function BranchCanopy({
                         {displayError}
                       </p>
                     </div>
-                  ) : roomMaking && revealStage >= 2 ? null :
+                  ) : roomMaking && (revealStage >= 2 || realm) ? null :
                     realm &&
                     lastLandingTurn &&
                     lastLandingTurn.paintFailed &&
@@ -6314,7 +6363,7 @@ export function BranchCanopy({
                        into an image needs no reflecting words beneath it.
                        A RESTED BRUSH says so honestly — the spinner never
                        spins forever over a paint that will not come. */
-                    revealStage >= 2 &&
+                    (revealStage >= 2 || realm) &&
                     !(
                       realm &&
                       lastLandingTurn &&
@@ -6348,7 +6397,7 @@ export function BranchCanopy({
                   {lastLandingTurn &&
                     (lastLandingTurn.imageUrl ||
                       (lastLandingTurn.paintFailed && !lastLandingTurn.loading)) &&
-                    revealStage >= 2 && (
+                    (revealStage >= 2 || realm) && (
                     <div className="mt-3">
                       <LandingPainting
                         turn={lastLandingTurn}

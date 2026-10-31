@@ -120,6 +120,9 @@ export async function GET(req: NextRequest) {
       user,
       admin: user.role === "ADMIN" || isAdminEmail(user.email),
       googleConfigured,
+      /* whether a messenger stands — the "check your email" room and
+         the verification banner only speak when letters can fly */
+      mailConfigured: Boolean(process.env.RESEND_API_KEY),
       libraryCount: entries,
       settings,
       wallet,

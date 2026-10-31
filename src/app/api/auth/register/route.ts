@@ -6,6 +6,7 @@ import {
   hashPassword,
   mergeAnonLibrary,
   readAnonId,
+  safeVerifyNext,
   setSessionCookie,
 } from "@/lib/server/access";
 import { GATES, rateLimit, requestIp } from "@/lib/server/rate-limit";
@@ -17,13 +18,22 @@ import { randomBytes } from "crypto";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
-function publicUser(u: { email: string; name: string | null; image?: string | null; tier: string }) {
+function publicUser(u: {
+  email: string;
+  name: string | null;
+  image?: string | null;
+  tier: string;
+  provider?: string;
+  emailVerifiedAt?: Date | null;
+}) {
   return {
     email: u.email,
     name: u.name,
     image: u.image ?? null,
     tier: u.tier === "light" ? "light" : "crystalline",
     admin: isAdminEmail(u.email),
+    provider: u.provider,
+    emailVerified: Boolean(u.emailVerifiedAt) || u.provider === "google",
   };
 }
 
@@ -42,6 +52,10 @@ export async function POST(req: NextRequest) {
     const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
     const password = typeof body?.password === "string" ? body.password : "";
     const name = typeof body?.name === "string" ? body.name.trim().slice(0, 60) : "";
+    /* the room the visitor stood in when the passage was carved — the
+       verification letter carries it so the click returns them exactly
+       where their walk was interrupted */
+    const next = safeVerifyNext(body?.next);
 
     if (!EMAIL_RE.test(email) || email.length > 160) {
       return NextResponse.json(
@@ -82,7 +96,16 @@ export async function POST(req: NextRequest) {
     /* the shared signing key before the passage is carved */
     await ensureSteadySecret();
 
-    const res = NextResponse.json({ user: publicUser(user) }, { status: 201 });
+    const res = NextResponse.json(
+      {
+        user: publicUser(user),
+        /* the door's own honest word: whether a letter of light is on
+           its way, so the screen can show the "check your email" room */
+        mailConfigured: mailConfigured(),
+        verificationSent: mailConfigured(),
+      },
+      { status: 201 }
+    );
     res.headers.set("cache-control", "private, no-store");
     setSessionCookie(res, user.id, user.sessionVersion ?? 0, req);
     clearForeignSessionCookies(res);
@@ -103,9 +126,10 @@ export async function POST(req: NextRequest) {
           },
         });
         const origin = process.env.APP_URL || req.nextUrl.origin;
+        const link = `${origin}/?verify=${raw}${next ? `&next=${encodeURIComponent(next)}` : ""}`;
         const { text, html } = envelope(
           "Welcome to your laboratory. One tap and your email is part of your passage.",
-          `${origin}/?verify=${raw}`,
+          link,
           "Verify my email"
         );
         void sendLetter({ to: email, subject: "Welcome to the Laboratory — Reflective Me", text, html });

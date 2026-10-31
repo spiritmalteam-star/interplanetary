@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { getSessionUser } from "@/lib/server/access";
+import { emailGateRequired, getSessionUser } from "@/lib/server/access";
 import {
   ensureStripeCustomer,
   getStripe,
@@ -65,6 +65,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { error: "Sign in first — a passage is needed before coins change hands." },
         { status: 401 }
+      );
+    }
+    /* THE VERIFICATION GATE — coins change hands only through a passage
+       that has proven its mailbox (a direct API call cannot walk around
+       it — the gate lives ahead of any Stripe session) */
+    if (emailGateRequired(user)) {
+      return NextResponse.json(
+        {
+          error: "Confirm your email first — the letter's key opens the purse's doors.",
+          code: "email_unverified",
+        },
+        { status: 403, headers: { "cache-control": "private, no-store" } }
       );
     }
     if (!stripeConfigured()) {

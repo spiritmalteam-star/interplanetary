@@ -2946,13 +2946,44 @@ html:not(.dark) .lp-sigil-img {
 }
 
 /* THE DORMANT LAW — while the docked portal is scrolled out of the
-   eye, every breath inside it rests: no frame is spent on what
-   nobody sees. The realm wakes the moment its slot returns. */
+   eye, the merely decorative breath rests: no frame is spent on what
+   nobody sees. The realm wakes the moment its slot returns.
+
+   THE CONTENT NEVER FREEZES — the law pauses only what decorates.
+   The old law paused EVERY animation inside the lens (`*`), and every
+   content wrapper wears an entrance animation with `both` fill — so
+   any word mounted while the lens dozed (a reply completing as the
+   visitor scrolled) began at its `from` keyframe — opacity 0 — and
+   stood frozen on the bare crystal until the next send scrolled the
+   lens back awake: the chat "turning blue" and the conversation
+   vanishing until another input. The room's own containers and all
+   their children are named back to running below, so words are never
+   born invisible; the infinite decorations outside them still rest. */
 .lens-dormant,
 .lens-dormant *,
 .lens-dormant *::before,
 .lens-dormant *::after {
   animation-play-state: paused !important;
+}
+.lens-dormant .canopy-panel,
+.lens-dormant .canopy-panel *,
+.lens-dormant .canopy-veil,
+.lens-dormant .canopy-veil *,
+.lens-dormant .room-swap,
+.lens-dormant .room-swap *,
+.lens-dormant .sv-thread,
+.lens-dormant .sv-thread *,
+.lens-dormant .sv-turn,
+.lens-dormant .sv-turn *,
+.lens-dormant .canopy-answer,
+.lens-dormant .canopy-answer *,
+.lens-dormant .mc-mirror,
+.lens-dormant .mc-mirror *,
+.lens-dormant .animate-fade-in,
+.lens-dormant .animate-fade-in *,
+.lens-dormant .animate-rise,
+.lens-dormant .animate-rise * {
+  animation-play-state: running !important;
 }
 
 /* THE CALM SCROLL — the threshold's deep chapters render only when

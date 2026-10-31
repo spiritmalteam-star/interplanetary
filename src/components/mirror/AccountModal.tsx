@@ -613,14 +613,27 @@ export function AccountModal() {
                       {!summary.capabilities.mail ? (
                         t("Email not verified")
                       ) : (
-                        <button
-                          type="button"
-                          onClick={() => void resendVerification()}
-                          disabled={busy === "verify"}
-                          className="focus-glow underline decoration-dotted underline-offset-2 hover:text-foreground disabled:opacity-50"
-                        >
-                          {t("Resend verification letter")}
-                        </button>
+                        <span className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => void resendVerification()}
+                            disabled={busy === "verify"}
+                            className="focus-glow underline decoration-dotted underline-offset-2 hover:text-foreground disabled:opacity-50"
+                          >
+                            {t("Resend verification letter")}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              closeAccount();
+                              useMirror.getState().openAuth("check");
+                            }}
+                            data-testid="account-verify-now"
+                            className="focus-glow rounded-full border hairline px-2.5 py-0.5 text-[11.5px] text-foreground/80 transition-colors hover:border-[rgba(232,217,176,0.5)] hover:text-foreground"
+                          >
+                            {t("Verify now")}
+                          </button>
+                        </span>
                       )}
                     </>
                   )}

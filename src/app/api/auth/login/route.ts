@@ -60,6 +60,9 @@ export async function POST(req: NextRequest) {
         image: user.image ?? null,
         tier: user.tier === "light" ? "light" : "crystalline",
         admin: isAdminEmail(user.email),
+        provider: user.provider,
+        emailVerified:
+          Boolean(user.emailVerifiedAt) || user.provider === "google",
       },
     });
     res.headers.set("cache-control", "private, no-store");

@@ -291,6 +291,12 @@ export interface MeUser {
   tier: "crystalline" | "light";
   /** The keeper's own light — true only for the ADMIN_EMAIL passage. */
   admin?: boolean;
+  /** How the passage was carved: "email" (password), "google" or "anon". */
+  provider?: string;
+  /** True when the mailbox is proven — Google's word, or the letter's
+   *  clicked key. An unverified email passage waits at the account
+   *  features and the paid doors until the letter comes home. */
+  emailVerified?: boolean;
 }
 
 /* -------- the visitor's own light — the wallet at a glance ---------- */
@@ -628,8 +634,11 @@ interface MirrorState {
      glance has truly settled and the face on the wall is the truth. */
   meStatus: "loading" | "ready";
   googleConfigured: boolean;
+  /** Whether a messenger stands (RESEND_API_KEY) — the verification
+   *  rooms and banners only speak when letters can truly fly. */
+  mailConfigured: boolean;
   authOpen: boolean;
-  authMode: "signin" | "register";
+  authMode: "signin" | "register" | "check";
   accountOpen: boolean;
   /* THE WELCOME WITHOUT A WALL — the eight-slide tour dialog and the
      readable /about material, both reachable from the crown's own
@@ -656,7 +665,7 @@ interface MirrorState {
 
   refreshMe: (force?: boolean) => Promise<void>;
   setMe: (user: MeUser | null) => void;
-  openAuth: (mode?: "signin" | "register") => void;
+  openAuth: (mode?: "signin" | "register" | "check") => void;
   closeAuth: () => void;
   openAccount: () => void;
   closeAccount: () => void;
@@ -1147,6 +1156,24 @@ const tTemplateTech = (name: string) =>
 
 let messageCounter = 0;
 const nextMessageId = () => `m-${Date.now().toString(36)}-${(messageCounter++).toString(36)}`;
+
+/* ------------------------------------------------------------------ */
+/*  THE VERIFICATION GATE'S OWN VOICE — a paid door's 403              */
+/*  EMAIL_UNVERIFIED is never spoken as machinery: the check-email     */
+/*  room rises (resend + change email inside), and the door says one   */
+/*  gentle word. Returns the friendly message when the gate spoke,     */
+/*  null when the error belongs to the door itself.                    */
+/* ------------------------------------------------------------------ */
+export const EMAIL_GATE_WORD = "EMAIL_UNVERIFIED";
+export function applyVerificationGate(err: unknown): string | null {
+  const message = err instanceof Error ? err.message : "";
+  if (message !== EMAIL_GATE_WORD) return null;
+  useMirror.getState().openAuth("check");
+  return (
+    "Confirm your email first — the letter's key opens the paid doors. " +
+    "Check your inbox, or ask for a fresh letter in the room that just opened."
+  );
+}
 
 /* ------------------------------------------------------------------ */
 /*  IMAGE CRYSTALLIZATION — the shared plumbing. When the visitor      */
@@ -1753,6 +1780,9 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   me: null,
   meStatus: "loading" as "loading" | "ready",
   googleConfigured: false,
+  /* whether a messenger stands — the verification rooms only speak
+     when letters can truly fly (RESEND_API_KEY in the vault) */
+  mailConfigured: false,
   accountOpen: false,
   tourOpen: false,
   aboutOpen: false,
@@ -2294,12 +2324,14 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         lcCarriedImage: null,
       });
     } catch (err) {
+      const gate = applyVerificationGate(err);
       set({
-        lcStatus: "error",
+        lcStatus: gate ? "idle" : "error",
         lcError:
-          err instanceof Error
+          gate ??
+          (err instanceof Error
             ? err.message
-            : "The chamber rests a moment. Breathe, then ask again.",
+            : "The chamber rests a moment. Breathe, then ask again."),
       });
     }
   },
@@ -2367,12 +2399,14 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         lcStatus: s.lcStatus === "ready" ? "idle" : s.lcStatus,
       });
     } catch (err) {
+      const gate = applyVerificationGate(err);
       set({
         lcBusyOp: null,
         lcError:
-          err instanceof Error
+          gate ??
+          (err instanceof Error
             ? err.message
-            : "The Mirror's refinement dissolved before it landed.",
+            : "The Mirror's refinement dissolved before it landed."),
       });
     }
   },
@@ -2433,12 +2467,14 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         lcStatus: s.lcStatus === "ready" ? "idle" : s.lcStatus,
       });
     } catch (err) {
+      const gate = applyVerificationGate(err);
       set({
         lcBusyOp: null,
         lcError:
-          err instanceof Error
+          gate ??
+          (err instanceof Error
             ? err.message
-            : "The Lyrics Laboratory's hand slipped — ask for the craft once more.",
+            : "The Lyrics Laboratory's hand slipped — ask for the craft once more."),
       });
     }
   },
@@ -3549,8 +3585,20 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       /* THE CARRY LAW — the visitor walked on while the mirror spoke
          (a new chat, another category's fresh page, a kept volume
          restored): the answer stays with the page it belongs to, the
-         words already resting on the archive's own shelf. */
-      if (gen !== channelGeneration) return;
+         words already resting on the archive's own shelf. THE CHANNEL
+         NEVER SEIZES — the walked-on channel's own status comes home
+         to "ready" on this very return: a stuck "loading" would
+         disable the whole realm forever (the visitor would need
+         another input just to breathe again). */
+      if (gen !== channelGeneration) {
+        set((s) => ({
+          sessions: {
+            ...s.sessions,
+            [mode]: { ...s.sessions[mode], status: "ready", activeQuery: "" },
+          },
+        }));
+        return;
+      }
 
       /* the reply's own id — a model-requested vision attaches to it */
       const replyId = nextMessageId();
@@ -3594,7 +3642,18 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       /* THE QUIET FIELD LAW — the visitor's words are never lost to a
          failed transmission: the question rests in the channel marked
          "not delivered", and one touch sends it again. No retyping. */
-      if (gen !== channelGeneration) return;
+      const gate = applyVerificationGate(err);
+      if (gen !== channelGeneration) {
+        /* the carry law's own error hand — a walked-on channel is
+           never left "loading" (see the success path above) */
+        set((s) => ({
+          sessions: {
+            ...s.sessions,
+            [mode]: { ...s.sessions[mode], status: "ready", activeQuery: "" },
+          },
+        }));
+        return;
+      }
       set((s) => ({
         sessions: {
           ...s.sessions,
@@ -3614,9 +3673,10 @@ export const useMirror = create<MirrorState>()((set, get) => ({
               },
             ],
             error:
-              err instanceof Error
+              gate ??
+              (err instanceof Error
                 ? err.message
-                : "The field is momentarily quiet. Rest, then try again.",
+                : "The field is momentarily quiet. Rest, then try again."),
           },
         },
       }));
@@ -3816,6 +3876,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         user?: MeUser | null;
         admin?: boolean;
         googleConfigured?: boolean;
+        mailConfigured?: boolean;
         settings?: unknown;
         wallet?: WalletBalance | null;
       } | null;
@@ -3823,6 +3884,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         me: data?.user ? { ...data.user, admin: Boolean(data.admin) } : null,
         meStatus: "ready",
         googleConfigured: Boolean(data?.googleConfigured),
+        mailConfigured: Boolean(data?.mailConfigured),
         wallet: data?.wallet ?? get().wallet,
       });
       /* THE KEEPER'S RETURN — once the passage names its keeper, the

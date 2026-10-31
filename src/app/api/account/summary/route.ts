@@ -90,7 +90,9 @@ export async function GET(req: NextRequest) {
         name: user.name,
         image: user.image ?? null,
         tier: user.tier,
-        emailVerified: Boolean(gateUser?.emailVerifiedAt),
+        emailVerified:
+          Boolean(gateUser?.emailVerifiedAt) || user.provider === "google",
+        provider: user.provider,
         createdAt: gateUser?.createdAt ?? null,
       },
       admin: isAdminEmail(user.email),

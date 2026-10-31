@@ -1,7 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Check, Eye, EyeOff, KeyRound, LoaderCircle, Lock, Mail, UserRound } from "lucide-react";
+import {
+  Check,
+  Eye,
+  EyeOff,
+  KeyRound,
+  LoaderCircle,
+  Lock,
+  Mail,
+  MailCheck,
+  RefreshCw,
+  UserRound,
+} from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner";
 import { useMirror } from "@/lib/mirror-store";
@@ -25,15 +36,28 @@ import { cn } from "@/lib/utils";
 /*  and the letter's own key (?reset=…) opens the room where the       */
 /*  passage is carved anew. The verification letter's answer           */
 /*  (?verified=…) is spoken here as a gentle word too.                 */
+/*                                                                     */
+/*  THE PROOF OF THE MAILBOX — a new email passage receives a letter   */
+/*  with a single-use key: the CHECK-EMAIL room holds the visitor's    */
+/*  hand while it waits (resend with a cool-down, a change of address  */
+/*  for the letters that went astray), and the letter's own link       */
+/*  (?verify=…) opens the CONFIRM room — one human touch, one POST,    */
+/*  and the mailbox is proven and the thirty-day session carved (the  */
+/*  same passage the Google door gives — no second sign-in). Email     */
+/*  scanners and link previews follow the link with a bare GET; only   */
+/*  the button's POST may ever spend a key, so a preview spends        */
+/*  nothing.                                                           */
 /* ------------------------------------------------------------------ */
 
-type DoorView = "signin" | "register" | "forgot" | "reset";
+type DoorView = "signin" | "register" | "forgot" | "reset" | "check" | "confirm";
 
 export function AuthModal() {
   const t = useT();
   const authOpen = useMirror((s) => s.authOpen);
   const authMode = useMirror((s) => s.authMode);
   const googleConfigured = useMirror((s) => s.googleConfigured);
+  const mailConfigured = useMirror((s) => s.mailConfigured);
+  const me = useMirror((s) => s.me);
   const closeAuth = useMirror((s) => s.closeAuth);
   const setMe = useMirror((s) => s.setMe);
   const refreshMe = useMirror((s) => s.refreshMe);
@@ -47,33 +71,72 @@ export function AuthModal() {
   /* the return door's own keeping */
   const [resetToken, setResetToken] = useState<string | null>(null);
   const [doorNote, setDoorNote] = useState<{ ok: boolean; text: string } | null>(null);
+  /* the proof of the mailbox — the check-email and confirm rooms */
+  const [pendingEmail, setPendingEmail] = useState("");
+  const [resendCool, setResendCool] = useState(0);
+  const [changeOpen, setChangeOpen] = useState(false);
+  const [changeEmail, setChangeEmail] = useState("");
+  const [verifyToken, setVerifyToken] = useState<string | null>(null);
+  const [verifyNext, setVerifyNext] = useState<string | null>(null);
+  const [verifyState, setVerifyState] = useState<"idle" | "busy" | "done" | "spent">("idle");
+  const [verifyNote, setVerifyNote] = useState<{ code: string; text: string } | null>(null);
 
   useEffect(() => {
     if (authOpen) {
       /* THE LETTER'S PRIORITY — when the visitor arrived holding a
-         reset key, the door is already standing in the carve-anew
-         room; the opening hand never drags it back to sign-in. */
+         reset key or a verification key, the door is already standing
+         in that room; the opening hand never drags it back to sign-in. */
       if (view === "reset" && resetToken) return;
-      setView(authMode === "register" ? "register" : "signin");
+      if (view === "confirm" && verifyToken) return;
+      if (authMode === "check") {
+        /* the check room needs a signed passage; without one, the
+           sign-in room greets (the letter's resend asks for a session) */
+        if (useMirror.getState().me) {
+          setPendingEmail((prev) => prev || useMirror.getState().me!.email);
+          setView("check");
+        } else {
+          setView("signin");
+        }
+      } else {
+        setView(authMode === "register" ? "register" : "signin");
+      }
       setPassword("");
       setShowPw(false);
       setDoorNote(null);
     }
   }, [authOpen, authMode]);
 
+  /* the resend's own breath — one letter a minute */
+  useEffect(() => {
+    if (resendCool <= 0) return;
+    const id = window.setInterval(() => setResendCool((s) => (s > 0 ? s - 1 : 0)), 1000);
+    return () => window.clearInterval(id);
+  }, [resendCool]);
+
   /* THE LETTER'S RETURN — when the visitor arrives holding a reset
      key (?reset=…), the door opens straight into the room where the
      passage is carved anew; the verification letter's answer
-     (?verified=…) is spoken once and the address left clean. */
+     (?verified=…) is spoken once and the address left clean; and the
+     letter's own key (?verify=…&next=…) opens the confirm room, where
+     one touch proves the mailbox and carves the session. */
   useEffect(() => {
     try {
       const params = new URLSearchParams(window.location.search);
       const reset = params.get("reset");
       const verified = params.get("verified");
+      const verify = params.get("verify");
+      const next = params.get("next");
       if (reset && reset.length >= 20 && reset.length <= 200) {
         setResetToken(reset);
         setView("reset");
         setDoorNote(null);
+        useMirror.getState().openAuth("signin");
+      } else if (verify && verify.length >= 20 && verify.length <= 200) {
+        setVerifyToken(verify);
+        setVerifyNext(next);
+        setVerifyState("idle");
+        setVerifyNote(null);
+        setView("confirm");
         useMirror.getState().openAuth("signin");
       } else if (verified) {
         toast.success(
@@ -82,9 +145,11 @@ export function AuthModal() {
             : t("That key has already rested or was never carved. You can ask for a fresh letter anytime.")
         );
       }
-      if (reset || verified) {
+      if (reset || verified || verify || next) {
         params.delete("reset");
         params.delete("verified");
+        params.delete("verify");
+        params.delete("next");
         const rest = params.toString();
         window.history.replaceState(
           null,
@@ -98,6 +163,128 @@ export function AuthModal() {
   }, []);
 
   if (!authOpen) return null;
+
+  /* THE RESIGNED LETTER — one fresh key flies to the pending address */
+  const resendLetter = async () => {
+    if (busy || resendCool > 0) return;
+    setBusy(true);
+    try {
+      const here = window.location.pathname + window.location.search;
+      const res = await fetch("/api/auth/verify/resend", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ next: here }),
+      });
+      const data = (await res.json().catch(() => null)) as
+        | { verified?: boolean; message?: string; error?: string }
+        | null;
+      if (data?.verified) {
+        toast.success(t("The passage already shines — the email is verified."));
+        setView("signin");
+        return;
+      }
+      if (!res.ok) {
+        toast.error(data?.error ?? t("The letter could not be written. Rest, then try again."));
+        return;
+      }
+      setResendCool(60);
+      toast.success(t(data?.message ?? "A letter of light is on its way."));
+    } catch {
+      toast.error(t("The letter could not be written. Rest, then try again."));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  /* THE NEW ADDRESS — a pending passage re-names itself; a fresh key
+     flies to the new address alone */
+  const submitChangeEmail = async () => {
+    if (busy) return;
+    const next = changeEmail.trim();
+    if (!next || !next.includes("@")) {
+      toast.error(t("That email does not look ready to receive light."));
+      return;
+    }
+    setBusy(true);
+    try {
+      const res = await fetch("/api/auth/email/change", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: next }),
+      });
+      const data = (await res.json().catch(() => null)) as
+        | { email?: string; message?: string; error?: string }
+        | null;
+      if (!res.ok) {
+        toast.error(data?.error ?? t("The address could not be re-named. Rest, then try again."));
+        return;
+      }
+      setPendingEmail(data?.email ?? next);
+      setChangeEmail("");
+      setChangeOpen(false);
+      setResendCool(60);
+      toast.success(t(data?.message ?? "A fresh letter of light flies to the new address."));
+      void refreshMe(true);
+    } catch {
+      toast.error(t("The address could not be re-named. Rest, then try again."));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  /* THE PROOF'S OWN HAND — one touch, one POST, the mailbox is proven
+     and the thirty-day session carved before the answer even lands */
+  const confirmVerify = async () => {
+    if (!verifyToken || verifyState === "busy" || verifyState === "done") return;
+    setVerifyState("busy");
+    setVerifyNote(null);
+    try {
+      const res = await fetch("/api/auth/verify/confirm", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: verifyToken, next: verifyNext }),
+      });
+      const data = (await res.json().catch(() => null)) as
+        | {
+            verified?: boolean;
+            next?: string | null;
+            user?: { email: string; name: string | null; emailVerified?: boolean };
+            error?: string;
+            code?: string;
+          }
+        | null;
+      if (!res.ok || !data?.verified) {
+        setVerifyState("spent");
+        setVerifyNote({ code: data?.code ?? "invalid", text: data?.error ?? t("That key does not answer.") });
+        return;
+      }
+      setVerifyState("done");
+      setMe({
+        email: data.user?.email ?? pendingEmail,
+        name: data.user?.name ?? null,
+        tier: "crystalline",
+        emailVerified: true,
+        admin: false,
+      });
+      void refreshMe(true);
+      toast.success(
+        t("The mailbox is proven — your passage now carries its full light. Welcome.")
+      );
+      /* THE INTENDED PAGE — the letter carried the room the visitor was
+         walking when the passage was carved; the proven session goes
+         back there in one clean step (a full navigation, so the fresh
+         cookie serves the very first ask) */
+      if (data.next && data.next.startsWith("/") && !data.next.startsWith("//")) {
+        window.location.replace(data.next);
+        return;
+      }
+      window.history.replaceState(null, "", window.location.pathname);
+      closeAuth();
+    } catch {
+      setVerifyState("spent");
+      setVerifyNote({ code: "error", text: t("The key could not be read. Rest, then try again.") });
+    }
+  };
 
   const submit = async () => {
     if (busy) return;
@@ -144,11 +331,25 @@ export function AuthModal() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(
-          view === "register" ? { email, password, name } : { email, password }
+          view === "register"
+            ? {
+                email,
+                password,
+                name,
+                /* the room the visitor stands in rides the passage —
+                   the verification letter's click returns them here */
+                next: window.location.pathname + window.location.search,
+              }
+            : { email, password }
         ),
       });
       const data = (await res.json().catch(() => null)) as
-        | { user?: { email: string; name: string | null; tier: "crystalline" | "light" }; error?: string }
+        | {
+            user?: { email: string; name: string | null; tier: "crystalline" | "light"; emailVerified?: boolean };
+            verificationSent?: boolean;
+            mailConfigured?: boolean;
+            error?: string;
+          }
         | null;
       if (!res.ok || !data?.user) {
         toast.error(data?.error ?? t("The passage did not open. Rest, then try again."));
@@ -156,6 +357,19 @@ export function AuthModal() {
       }
       setMe(data.user);
       void refreshMe(true); // a passage opened — the glance must be fresh
+      if (view === "register" && data.verificationSent && !data.user.emailVerified) {
+        /* THE PROOF OF THE MAILBOX — the passage is carved and its
+           session rides home already; the check-email room holds the
+           visitor's hand while the letter flies (free chat goes on —
+           the account's full light wakes at the letter's click) */
+        setPendingEmail(data.user.email);
+        setResendCool(60);
+        setView("check");
+        toast.success(
+          t("Your passage is carved — a letter of proof flies to your email.")
+        );
+        return;
+      }
       closeAuth();
       toast.success(
         view === "register"
@@ -202,7 +416,21 @@ export function AuthModal() {
         ? { title: t("The letter of return"), description: t("Name the passage's email — a key to carve it anew travels out to you alone.") }
         : view === "reset"
           ? { title: t("Carve the passage anew"), description: t("The letter's key opened this room. Choose a new secret phrase — then sign in with it as always.") }
-          : { title: t("Enter your passage"), description: t("Welcome back. Your cosmic library is waiting, exactly where you left it.") };
+          : view === "check"
+            ? {
+                title: t("Check your email"),
+                description: t(
+                  "A letter of proof flies to your inbox — one touch and the mailbox is yours, the session already yours until then and after."
+                ),
+              }
+            : view === "confirm"
+              ? {
+                  title: t("Prove the mailbox"),
+                  description: t(
+                    "The letter's key opened this room. One touch confirms this browser is the hand that holds the letter — and your thirty-day passage is carved at once."
+                  ),
+                }
+              : { title: t("Enter your passage"), description: t("Welcome back. Your cosmic library is waiting, exactly where you left it.") };
 
   const canSubmit =
     view === "forgot"
@@ -296,12 +524,202 @@ export function AuthModal() {
           </div>
         )}
 
+        {/* THE CHECK-EMAIL ROOM — the letter of proof is flying */}
+        {view === "check" && (
+          <div className="mt-4" data-testid="passage-check">
+            <div className="flex flex-col items-center gap-2 rounded-2xl border hairline bg-[var(--glass-bg-soft)] px-4 py-5 text-center">
+              <span className="flex size-11 items-center justify-center rounded-full border border-[rgba(232,217,176,0.4)] bg-[color-mix(in_srgb,var(--lp-gold)_12%,transparent)]">
+                <MailCheck className="size-5 text-[var(--lp-gold)]" aria-hidden="true" />
+              </span>
+              <p className="text-[15px] font-medium text-foreground" data-testid="passage-check-email">
+                {pendingEmail || me?.email}
+              </p>
+              <p className="max-w-[38ch] text-[13.5px] leading-relaxed text-muted-foreground">
+                {t(
+                  "Open the letter and press its seal — the mailbox is proven and this browser's passage is carved for thirty days. The letter's room is one touch away."
+                )}
+              </p>
+            </div>
+            <div className="mt-3 space-y-2">
+              <button
+                type="button"
+                onClick={() => void resendLetter()}
+                disabled={busy || resendCool > 0}
+                data-testid="passage-resend"
+                className="focus-glow flex h-11 w-full items-center justify-center gap-2 rounded-xl border hairline bg-[var(--glass-bg)] text-[14.5px] font-medium text-foreground/85 transition-all duration-300 hover:border-[rgba(232,217,176,0.5)] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {busy ? (
+                  <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
+                ) : (
+                  <RefreshCw className="size-4" aria-hidden="true" />
+                )}
+                {resendCool > 0
+                  ? t(`A fresh letter may fly in ${resendCool}s`)
+                  : t("Send the letter again")}
+              </button>
+              {!changeOpen ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setChangeOpen(true);
+                    setChangeEmail("");
+                  }}
+                  data-testid="passage-change-email"
+                  className="focus-glow flex h-11 w-full items-center justify-center gap-2 rounded-xl border hairline bg-[var(--glass-bg-soft)] text-[14px] text-foreground/75 transition-colors duration-300 hover:text-foreground"
+                >
+                  <Mail className="size-3.5" aria-hidden="true" />
+                  {t("The letter went astray — change the address")}
+                </button>
+              ) : (
+                <div className="rounded-xl border hairline bg-[var(--glass-bg-soft)] p-3">
+                  <label
+                    htmlFor="passage-change-input"
+                    className="mono-label text-[10.5px] uppercase tracking-[0.22em] text-muted-foreground"
+                  >
+                    {t("The new address")}
+                  </label>
+                  <div className={fieldShell}>
+                    <Mail className="size-3.5 shrink-0 text-muted-foreground/70" aria-hidden="true" />
+                    <input
+                      id="passage-change-input"
+                      type="email"
+                      required
+                      value={changeEmail}
+                      onChange={(e) => setChangeEmail(e.target.value)}
+                      autoComplete="email"
+                      placeholder="you@somewhere.earth"
+                      data-testid="passage-change-input"
+                      className={fieldInput}
+                    />
+                  </div>
+                  <div className="mt-2 flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => void submitChangeEmail()}
+                      disabled={busy}
+                      data-testid="passage-change-save"
+                      className="focus-glow h-9 flex-1 rounded-lg bg-[linear-gradient(180deg,var(--lp-gold),var(--lp-gold-soft))] text-[13px] font-medium text-[var(--lp-veil-solid)] disabled:opacity-40"
+                    >
+                      {t("Send the fresh letter")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setChangeOpen(false)}
+                      className="focus-glow h-9 rounded-lg border hairline px-3 text-[13px] text-muted-foreground hover:text-foreground"
+                    >
+                      {t("Keep the old address")}
+                    </button>
+                  </div>
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={() => closeAuth()}
+                data-testid="passage-check-continue"
+                className="focus-glow w-full pt-1 text-center text-[13.5px] text-muted-foreground underline decoration-dotted underline-offset-4 transition-colors hover:text-foreground"
+              >
+                {t("Continue into the laboratory while the letter flies — the free rooms are all open")}
+              </button>
+            </div>
+            <p className="mt-3 text-center text-[12px] leading-relaxed text-muted-foreground/70">
+              {t(
+                "The letter proves this address receives your mail — it is a proof of the mailbox, never a judgment of who you are."
+              )}
+            </p>
+          </div>
+        )}
+
+        {/* THE CONFIRM ROOM — the letter's key waits for one human touch */}
+        {view === "confirm" && (
+          <div className="mt-4" data-testid="passage-confirm">
+            {verifyState !== "done" && (
+              <>
+                <div className="flex flex-col items-center gap-2 rounded-2xl border hairline bg-[var(--glass-bg-soft)] px-4 py-5 text-center">
+                  <span className="flex size-11 items-center justify-center rounded-full border border-[rgba(232,217,176,0.4)] bg-[color-mix(in_srgb,var(--lp-gold)_12%,transparent)]">
+                    <MailCheck className="size-5 text-[var(--lp-gold)]" aria-hidden="true" />
+                  </span>
+                  <p className="max-w-[40ch] text-[13.5px] leading-relaxed text-muted-foreground">
+                    {t(
+                      "Press the seal once — the key is spent by this touch alone, the mailbox is proven, and your thirty-day passage is carved in the same breath."
+                    )}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => void confirmVerify()}
+                  disabled={verifyState === "busy"}
+                  data-testid="passage-verify-confirm"
+                  className="focus-glow mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[linear-gradient(180deg,var(--lp-gold),var(--lp-gold-soft))] text-[15px] font-medium tracking-[0.02em] text-[var(--lp-veil-solid)] shadow-[0_12px_30px_-14px_rgba(154,120,30,0.6),inset_0_1px_0_rgba(255,255,255,0.35)] transition-all duration-300 hover:-translate-y-px hover:brightness-[1.06] disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {verifyState === "busy" ? (
+                    <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
+                  ) : (
+                    <MailCheck className="size-4" aria-hidden="true" />
+                  )}
+                  {t("Verify my email")}
+                </button>
+              </>
+            )}
+            {verifyNote && (
+              <div
+                role="alert"
+                data-testid="passage-verify-note"
+                className="mt-3 rounded-xl border border-[color-mix(in_srgb,#f43f5e_32%,transparent)] bg-[color-mix(in_srgb,#f43f5e_6%,var(--background))] px-3.5 py-3 text-[13.5px] leading-relaxed text-foreground/90"
+              >
+                {verifyNote.text}
+              </div>
+            )}
+            {(verifyState === "spent" || verifyState === "done") && (
+              <div className="mt-3 space-y-2">
+                {verifyState === "spent" && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (me && !me.email.startsWith("anon:")) {
+                        setPendingEmail(me.email);
+                        setView("check");
+                      } else {
+                        setView("signin");
+                        setDoorNote({
+                          ok: true,
+                          text: t(
+                            "Sign in first — then the fresh letter can be asked for from the profile's own room."
+                          ),
+                        });
+                      }
+                    }}
+                    data-testid="passage-verify-again"
+                    className="focus-glow flex h-11 w-full items-center justify-center gap-2 rounded-xl border hairline bg-[var(--glass-bg)] text-[14px] text-foreground/85 transition-colors duration-300 hover:border-[rgba(232,217,176,0.5)]"
+                  >
+                    <RefreshCw className="size-3.5" aria-hidden="true" />
+                    {t("Ask for a fresh letter")}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setVerifyToken(null);
+                    setView("signin");
+                  }}
+                  data-testid="passage-verify-back"
+                  className="focus-glow w-full pt-1 text-center text-[13px] text-muted-foreground underline decoration-dotted underline-offset-4 transition-colors hover:text-foreground"
+                >
+                  {t("Back to the passage")}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
         <form
           onSubmit={(e) => {
             e.preventDefault();
             void submit();
           }}
-          className="mt-5 space-y-3.5"
+          className={cn(
+            "mt-5 space-y-3.5",
+            (view === "check" || view === "confirm") && "hidden"
+          )}
         >
           {view === "register" && (
             <div>
@@ -377,7 +795,9 @@ export function AuthModal() {
               </div>
               {view !== "signin" && (
                 <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">
-                  {t("Eight characters or more. The laboratory never sees it — only its echo, hashed beyond reading.")}
+                  {view === "register" && mailConfigured
+                    ? t("Eight characters or more. A proof letter flies at once — the free rooms never wait for it.")
+                    : t("Eight characters or more. The laboratory never sees it — only its echo, hashed beyond reading.")}
                 </p>
               )}
               {view === "signin" && (

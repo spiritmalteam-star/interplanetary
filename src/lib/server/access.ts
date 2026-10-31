@@ -39,8 +39,27 @@ export interface SessionUser {
   /** The database-bound role: "user" — or "ADMIN", the verified keeper.
    *  Never trusted from a request's own claim; only from the user row. */
   role?: string;
+  /** How this passage was carved: "email" (password), "google" (the
+   *  verified provider) or "anon" (the quiet cookie). */
+  provider?: string;
+  /** True when the mailbox was proven: Google vouches its own emails;
+   *  email passages prove theirs by the verification letter. */
+  emailVerified?: boolean;
   /** True when this identity is the anonymous cookie's quiet keeper. */
   anon?: boolean;
+}
+
+/* THE VERIFICATION GATE — an email-and-password passage that has not
+   yet proven its mailbox stands at the door of the account features
+   and the paid tools: the letter was sent, the click has not come.
+   The gate speaks ONLY when a messenger is configured (without one
+   there is no letter to answer — the account simply works, honestly);
+   anonymous cookies and Google's own verified identities never wait. */
+export function emailGateRequired(user: SessionUser): boolean {
+  if (!process.env.RESEND_API_KEY) return false;
+  if (user.anon || user.email.startsWith("anon:")) return false;
+  if (user.emailVerified) return false;
+  return user.provider === "email";
 }
 
 /* ---------------------------- the secret --------------------------- */
@@ -225,6 +244,24 @@ export async function ensureAdminBinding(): Promise<void> {
   }
 }
 
+/* --------------------------- the way back -------------------------- */
+
+/** The validated way back — only a same-origin path survives.
+    Shared by the verify letter's links (register, resend, confirm). */
+export function safeVerifyNext(raw: unknown): string | null {
+  if (typeof raw !== "string" || !raw) return null;
+  let path = raw;
+  try {
+    path = decodeURIComponent(raw);
+  } catch {
+    /* an unreadable ride falls back to the raw words */
+  }
+  if (!path.startsWith("/") || path.startsWith("//") || path.includes("\\")) return null;
+  if (/[a-z][a-z0-9+.-]*:/i.test(path)) return null; // scheme-like
+  if (path.length > 512) return null;
+  return path;
+}
+
 /* --------------------------- cookies ------------------------------- */
 
 /** Whether cookies may wear the Secure flag: only when the request
@@ -342,6 +379,9 @@ export async function getSessionUser(req: NextRequest): Promise<SessionUser | nu
       image: user.image ?? null,
       tier: user.tier === "light" ? "light" : "crystalline",
       role: user.role,
+      provider: user.provider,
+      emailVerified:
+        Boolean(user.emailVerifiedAt) || user.provider === "google",
     };
   } catch (err) {
     /* the cloud without a database — a signed-in cookie is received
@@ -424,6 +464,8 @@ export async function resolveVisitor(req: NextRequest): Promise<Visitor> {
         name: user.name,
         tier: "crystalline",
         role: user.role,
+        provider: "anon",
+        emailVerified: false,
         anon: true,
       },
       anonId,
@@ -441,6 +483,8 @@ export async function resolveVisitor(req: NextRequest): Promise<Visitor> {
         email: anonEmail(anonId),
         name: null,
         tier: "crystalline",
+        provider: "anon",
+        emailVerified: false,
         anon: true,
       },
       anonId,
