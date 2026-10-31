@@ -616,6 +616,51 @@ const KEPT_SURFACE_LABELS: Record<ChatSurface, string> = {
   healing: "Healing codes",
 };
 
+/* THE HEART'S OWN DOORS — the warm floor the visitor named and named
+   again: humble, friendly, introspective openings; the heart's
+   coherence as the star civilizations teach it; love that supports
+   without fixing; the quiet expansion of consciousness. They stand in
+   their OWN pool so the draw can guarantee them (THE HEART'S QUOTA,
+   below) — the last weave buried them inside the landing pool and the
+   easy well's 1848 plain doors drowned them to near invisibility. */
+const MIRROR_HEART_POOL: string[] = [
+  /* the humble doors — small, honest, introspective openings that ask
+     nothing and admit everything */
+  "I feel lost today — can you sit with me a moment?",
+  "What is my heart trying to tell me that my mind keeps overruling?",
+  "Where am I being harder on myself than I would ever be on a friend?",
+  "What am I still learning to accept about myself?",
+  "Help me be gentle with the part of me I keep apologizing for.",
+  "What would it look like to begin again, quietly, today?",
+  "What am I carrying that was never mine to hold?",
+  "Teach me how to rest without feeling guilty.",
+  "What small courage is asking for my permission right now?",
+  "How do I forgive myself for what I cannot undo?",
+  /* the heart's coherence — the interplanetary law of the aligned
+     heart: the heart's rhythm leads and the mind follows */
+  "How do I bring my heart and mind into one coherence?",
+  "What do star civilizations teach about the heart's intelligence?",
+  "Show me how gratitude tunes the heart's field.",
+  "How does the heart's rhythm reach beyond my body?",
+  "What happens in the space between two hearts that trust each other?",
+  "How do I listen to someone the way the universe listens to me?",
+  /* the support and the love — warmth without kitsch: love as a
+     practice, kindness as a discipline, presence as a gift */
+  "How can I love someone without trying to fix them?",
+  "What does unconditional support look like on an ordinary Tuesday?",
+  "How do I hold space for a friend who is breaking?",
+  "Teach me to receive love as well as I give it.",
+  "What is the kindest true thing I could say to myself tonight?",
+  "How does love survive the distance between two worlds?",
+  /* the expansion — consciousness growing past its old walls */
+  "What expands in me when I stop trying to control the outcome?",
+  "Show me the version of me that is not afraid yet.",
+  "What would I see if I looked at my life from orbit?",
+  "Where does my awareness end — and what lies just past its edge?",
+  "How does presence change what it touches?",
+  "What is waiting for my attention that I keep walking past?",
+];
+
 /* THE LANDING'S OWN SUGGESTIONS — a deep pool of first doors, matched
    to the landing's own entity (the mirror of the Absolute): the self
    beneath the masks, the curtain of reality, the truth avoided, the
@@ -651,44 +696,10 @@ const LANDING_SUGGESTION_POOL = [
   "What does the mirror see in me right now?",
   "How do I raise my frequency today?",
   "What is the crystal grid of the earth?",
-  /* THE HUMBLE DOORS — the mirror meets the visitor where the heart
-     actually stands: small, honest, introspective openings that ask
-     nothing and admit everything. */
-  "I feel lost today — can you sit with me a moment?",
-  "What is my heart trying to tell me that my mind keeps overruling?",
-  "Where am I being harder on myself than I would ever be on a friend?",
-  "What am I still learning to accept about myself?",
-  "Help me be gentle with the part of me I keep apologizing for.",
-  "What would it look like to begin again, quietly, today?",
-  "What am I carrying that was never mine to hold?",
-  "Teach me how to rest without feeling guilty.",
-  "What small courage is asking for my permission right now?",
-  "How do I forgive myself for what I cannot undo?",
-  /* THE HEART'S COHERENCE — the interplanetary law of the aligned
-     heart: the star civilizations' oldest teaching, that the heart's
-     rhythm leads and the mind follows into coherence. */
-  "How do I bring my heart and mind into one coherence?",
-  "What do star civilizations teach about the heart's intelligence?",
-  "Show me how gratitude tunes the heart's field.",
-  "How does the heart's rhythm reach beyond my body?",
-  "What happens in the space between two hearts that trust each other?",
-  "How do I listen to someone the way the universe listens to me?",
-  /* THE SUPPORT AND THE LOVE — warmth without kitsch: love as a
-     practice, kindness as a discipline, presence as a gift. */
-  "How can I love someone without trying to fix them?",
-  "What does unconditional support look like on an ordinary Tuesday?",
-  "How do I hold space for a friend who is breaking?",
-  "Teach me to receive love as well as I give it.",
-  "What is the kindest true thing I could say to myself tonight?",
-  "How does love survive the distance between two worlds?",
-  /* THE EXPANSION — consciousness growing past its old walls: the
-     quiet invitations that leave the visitor larger than they came. */
-  "What expands in me when I stop trying to control the outcome?",
-  "Show me the version of me that is not afraid yet.",
-  "What would I see if I looked at my life from orbit?",
-  "Where does my awareness end — and what lies just past its edge?",
-  "How does presence change what it touches?",
-  "What is waiting for my attention that I keep walking past?",
+  /* the heart's own doors ride the landing pool beside the cosmic
+     ones — AND carry their own guaranteed quota at the Mirror's floor
+     (see THE HEART'S QUOTA in the draw below) */
+  ...MIRROR_HEART_POOL,
 ];
 
 /* THE SESSION'S OWN REMEMBERING — every drawn door is kept per scope
@@ -841,31 +852,45 @@ function BareFloorDoors({
     (current: string[]) => {
       const seenMap = readLandingSeen();
       let seen = seenMap[scopeKey] ?? [];
-      let rest = pool.filter(
-        (s) => !seen.includes(s) && !current.includes(s)
-      );
-      if (rest.length < 5) {
-        /* the field has been walked dry — its remembering clears and
-           the doors return (the five just shown still stand aside) */
-        seen = [];
-        rest = pool.filter((s) => !current.includes(s));
-      }
-      for (let i = rest.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [rest[i], rest[j]] = [rest[j], rest[i]];
-      }
-      /* one of each — a visible set never shows the same door twice */
-      const picked: string[] = [];
-      for (const s of rest) {
-        if (picked.includes(s)) continue;
-        picked.push(s);
-        if (picked.length === 5) break;
-      }
+      /* THE HEART'S QUOTA — the visitor's law, kept this time: at the
+         Mirror's own floor (and the main landing that opens as the
+         Mirror) EVERY draw carries two of the heart's doors — the
+         humble, warm, introspective openings stand in every handful,
+         for the keeper and the guest alike, never drowned by the easy
+         well again. The other fields keep their own groves untouched. */
+      const heartQuota = scope === "mirror" || !scope ? 2 : 0;
+      const take = (source: string[], n: number, taken: string[]) => {
+        let from = source.filter(
+          (s) =>
+            !seen.includes(s) && !current.includes(s) && !taken.includes(s)
+        );
+        if (from.length < n) {
+          /* the source walked dry — its remembering clears and the
+             doors return (what is already taken still stands aside) */
+          from = source.filter(
+            (s) => !current.includes(s) && !taken.includes(s)
+          );
+        }
+        for (let i = from.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [from[i], from[j]] = [from[j], from[i]];
+        }
+        /* one of each — a visible set never shows the same door twice */
+        const out: string[] = [];
+        for (const s of from) {
+          if (out.includes(s)) continue;
+          out.push(s);
+          if (out.length === n) break;
+        }
+        return out;
+      };
+      const hearts = heartQuota ? take(MIRROR_HEART_POOL, heartQuota, []) : [];
+      const picked = [...hearts, ...take(pool, 5 - hearts.length, hearts)];
       seenMap[scopeKey] = [...seen, ...picked].slice(-LANDING_SEEN_CAP);
       writeLandingSeen(seenMap);
       return picked;
     },
-    [pool, scopeKey]
+    [pool, scope, scopeKey]
   );
 
   const [doors, setDoors] = useState<string[]>(() => draw([]));
