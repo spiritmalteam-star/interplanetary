@@ -3,24 +3,29 @@
 import { useCallback, useState } from "react";
 import { FileDown, Gem, Loader2 } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
+import { flowAnswerText } from "@/lib/text-flow";
 import { cn } from "@/lib/utils";
 
 /* ------------------------------------------------------------------ */
-/*  THE HYPERX PANEL — the discovery answer's own instruments.         */
+/*  THE HYPERX ANSWER — the discovery transmission's own body.         */
 /*                                                                     */
-/*  THE CRYSTALS — the deep voice closes every truth with its crystals */
-/*  (◇ lines after the CRYSTALS marker). Each crystal is a door: one   */
-/*  touch and the truth inside it CRYSTALLIZES INTO A VISION — the     */
-/*  visualization engine paints the concept so the eye can comprehend  */
-/*  what the words opened. The crystals are stripped from the prose    */
-/*  itself (the visitor reads the transmission, never the machinery).  */
+/*  THE DIAMONDS AT THE PARAGRAPH'S SIDE (the visitor's law): every    */
+/*  paragraph of the transmission carries ONE small crystal at its     */
+/*  side — nearly invisible at rest, waking on the pointer's approach  */
+/*  — so no vision is ever asked by mistake. One touch and THE CHAT    */
+/*  MAKES SPACE: an inline plate opens right beneath that paragraph    */
+/*  and the truth crystallizes into a vision (the visualization        */
+/*  engine paints the paragraph's own crystal). No crystal row at the  */
+/*  bottom of the transmission any more — the visions live beside the  */
+/*  words they illuminate.                                             */
 /*                                                                     */
-/*  THE DEEP RESEARCH PRESS — one hand that extends the truth into a   */
-/*  full research document (up to 8000 words) and presses it into a    */
-/*  real PDF the visitor keeps for deep research projects.             */
+/*  THE FOLLOWING DOORS — when the answer stands complete, three       */
+/*  follow-up suggestions ride beneath it (one grown from the          */
+/*  answer's own crystals, two from the discovery's own well), each    */
+/*  one touch from the next question.                                  */
 /*                                                                     */
-/*  Both hands speak the house's honesty: a resting brush or a resting */
-/*  press says so — never a silent wall.                               */
+/*  THE DEEP RESEARCH PRESS — the truth extended up to 8000 words,     */
+/*  pressed into a real PDF (rides with the full variant).             */
 /* ------------------------------------------------------------------ */
 
 export interface HyperxCrystal {
@@ -56,37 +61,87 @@ export function splitCrystals(text: string): {
       crystals.push({ label: rest.trim().slice(0, 60), focus: rest.trim() });
     }
   }
-  return { body, crystals: crystals.slice(0, 5) };
+  return { body, crystals };
 }
 
-interface CrystalState {
+/** the vision's focus when a paragraph carries no crystal of its own:
+    the paragraph's own opening thought, shaped for the painter. */
+function deriveFocus(para: string): string {
+  const clean = para.replace(/\s+/g, " ").trim();
+  return clean.length > 170 ? `${clean.slice(0, 167)}…` : clean;
+}
+
+const FOLLOW_UP_WELL: string[] = [
+  "What does humanity not yet know about this?",
+  "What would a civilisation build with this truth?",
+  "What is the next discovery a human can walk from here?",
+  "Which hidden layer holds the next mechanism?",
+  "Where does this truth touch the body directly?",
+  "What mirrors this truth in the oldest records?",
+];
+
+function pickFollowUps(
+  crystals: HyperxCrystal[],
+  seedText: string
+): string[] {
+  const out: string[] = [];
+  if (crystals[0]?.label) {
+    out.push(`Unfold "${crystals[0].label}" — what stands beneath it?`);
+  }
+  let seed = 0;
+  for (let i = 0; i < seedText.length; i++) {
+    seed = (seed * 31 + seedText.charCodeAt(i)) >>> 0;
+  }
+  let cursor = seed % FOLLOW_UP_WELL.length;
+  while (out.length < 3) {
+    const pick = FOLLOW_UP_WELL[cursor % FOLLOW_UP_WELL.length];
+    if (!out.includes(pick)) out.push(pick);
+    cursor += 1 + (seed % 3);
+  }
+  return out.slice(0, 3);
+}
+
+interface VisionState {
   loading: boolean;
   imageUrl?: string;
   imageTitle?: string;
   failed?: boolean;
 }
 
-export function HyperXPanel({
+export function HyperXAnswer({
   question,
   answer,
   onZoom,
+  onAsk,
   testId = "hyperx",
+  variant = "full",
+  loading = false,
 }: {
   question: string;
   answer: string;
   onZoom: (src: string, caption: string) => void;
+  /** the following doors — one touch asks the next question */
+  onAsk?: (q: string) => void;
   testId?: string;
+  /** full = follow-ups + deep research press; compact = the diamonds alone */
+  variant?: "full" | "compact";
+  /** while the transmission still streams, the doors and the press rest */
+  loading?: boolean;
 }) {
   const language = useMirror((s) => s.language);
-  const { crystals } = splitCrystals(answer);
-  const [visions, setVisions] = useState<Record<number, CrystalState>>({});
+  const { body, crystals } = splitCrystals(answer);
+  const paragraphs = body
+    .split(/\n{2,}/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+  const [visions, setVisions] = useState<Record<number, VisionState>>({});
   const [pdfState, setPdfState] = useState<"idle" | "weaving" | "failed">(
     "idle"
   );
   const [pdfNote, setPdfNote] = useState<string | null>(null);
 
   const crystallize = useCallback(
-    async (idx: number, crystal: HyperxCrystal) => {
+    async (idx: number, focus: string, label: string) => {
       setVisions((v) => ({
         ...v,
         [idx]: { loading: true, imageUrl: v[idx]?.imageUrl },
@@ -96,7 +151,7 @@ export function HyperXPanel({
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            message: `A HyperX crystal of comprehension — the concept "${crystal.label}", shown so it is easy to comprehend at one glance: ${crystal.focus}. The question it illuminates: "${question}".`,
+            message: `A HyperX crystal of comprehension — the concept "${label}", shown so it is easy to comprehend at one glance: ${focus}. The question it illuminates: "${question}".`,
             language,
             single: true,
           }),
@@ -111,7 +166,7 @@ export function HyperXPanel({
             ? {
                 loading: false,
                 imageUrl: url,
-                imageTitle: data?.artifact?.title ?? crystal.label,
+                imageTitle: data?.artifact?.title ?? label,
               }
             : { loading: false, failed: true },
         }));
@@ -162,151 +217,179 @@ export function HyperXPanel({
     }
   }, [question, answer, language]);
 
-  if (crystals.length === 0 && pdfState === "idle" && !pdfNote) {
-    /* no crystals, no press in flight — the panel rests invisible */
-    return null;
-  }
+  const followUps = pickFollowUps(crystals, answer);
 
   return (
     <div
-      className="hx-panel mt-3 flex flex-col gap-2.5"
-      data-testid={`${testId}-panel`}
+      className="hx-answer flex flex-col gap-1"
+      data-testid={`${testId}-answer`}
     >
-      {/* ------------------------- THE CRYSTALS ------------------------- */}
-      {crystals.length > 0 && (
-        <div className="flex flex-col gap-2" data-testid={`${testId}-crystals`}>
-          <p
-            className="mono-label text-[9px] uppercase tracking-[0.2em] text-muted-foreground/70"
-            data-testid={`${testId}-crystals-hint`}
-          >
-            Touch a crystal — the truth crystallizes into a vision
+      {/* ------------- THE TRANSMISSION, PARAGRAPH BY PARAGRAPH ---------- */}
+      {paragraphs.map((para, idx) => {
+        const crystal = crystals[idx];
+        const label = crystal?.label ?? "This paragraph's truth";
+        const focus = crystal?.focus ?? deriveFocus(para);
+        const st = visions[idx];
+        return (
+          <div key={idx} className="hx-para">
+            <div className="flex items-start gap-1">
+              <p className="hx-para-text min-w-0 flex-1 whitespace-pre-wrap break-words text-[15.5px] leading-[1.75] text-foreground/90">
+                {flowAnswerText(para)}
+              </p>
+              <span className="hx-diamond-arm pt-[7px]">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (st?.loading) return;
+                    if (st?.imageUrl) {
+                      onZoom(st.imageUrl, st.imageTitle ?? label);
+                      return;
+                    }
+                    void crystallize(idx, focus, label);
+                  }}
+                  disabled={st?.loading}
+                  aria-label={`Crystallize this paragraph's vision: ${label}`}
+                  title={`Crystallize a vision — ${label}`}
+                  data-testid={`${testId}-diamond-${idx}`}
+                  className="hx-diamond focus-glow flex size-5 items-center justify-center rounded-full"
+                >
+                  {st?.loading ? (
+                    <Loader2
+                      className="size-3 animate-spin text-[#e879f9]"
+                      aria-hidden="true"
+                    />
+                  ) : (
+                    <Gem
+                      className="size-3 text-[#e879f9]"
+                      aria-hidden="true"
+                    />
+                  )}
+                </button>
+              </span>
+            </div>
+            {/* THE SPACE THE CHAT MAKES — the vision opens right beneath
+                the paragraph it illuminates */}
+            {st?.loading && (
+              <div
+                className="hx-plate-wait mono-label mt-1.5 flex w-full max-w-[340px] items-center gap-2 rounded-xl border px-3 py-2.5 text-[9.5px] uppercase tracking-[0.18em] text-muted-foreground/85"
+                data-testid={`${testId}-plate-${idx}-waiting`}
+              >
+                <Loader2
+                  className="size-3.5 animate-spin text-[#e879f9]"
+                  aria-hidden="true"
+                />
+                Crystallizing “{label}”…
+              </div>
+            )}
+            {st?.failed && (
+              <button
+                type="button"
+                onClick={() => void crystallize(idx, focus, label)}
+                className="hx-plate-fail mt-1.5 w-full max-w-[340px] rounded-xl border px-3 py-2 text-left text-[11.5px] text-[#b8860b] transition-colors duration-300 hover:brightness-110 dark:text-[#f59e0b]"
+                data-testid={`${testId}-plate-${idx}-failed`}
+              >
+                The brushes rested — touch to crystallize again.
+              </button>
+            )}
+            {st?.imageUrl && (
+              <figure
+                className="hx-plate group relative mt-1.5 w-full max-w-[340px] overflow-hidden rounded-xl border"
+                data-testid={`${testId}-plate-${idx}`}
+              >
+                <button
+                  type="button"
+                  onClick={() =>
+                    onZoom(st.imageUrl!, st.imageTitle ?? label)
+                  }
+                  aria-label="Zoom the crystallized vision"
+                  className="block w-full cursor-zoom-in"
+                >
+                  <img
+                    src={st.imageUrl}
+                    alt={st.imageTitle ?? label}
+                    loading="lazy"
+                    className="aspect-[7/4] w-full bg-background/40 object-cover"
+                  />
+                </button>
+                <figcaption className="mono-label flex items-center gap-1.5 px-2.5 py-1.5 text-[9.5px] uppercase tracking-[0.16em] text-muted-foreground/80">
+                  <Gem className="size-2.5 shrink-0 text-[#e879f9]" aria-hidden="true" />
+                  <span className="truncate">
+                    {st.imageTitle ?? label} — crystallized
+                  </span>
+                </figcaption>
+              </figure>
+            )}
+          </div>
+        );
+      })}
+
+      {/* ---------------- THE DOORS THAT FOLLOW THE ANSWER --------------- */}
+      {variant === "full" && !loading && onAsk && (
+        <div
+          className="mt-3 flex flex-col gap-1.5"
+          data-testid={`${testId}-follow-ups`}
+        >
+          <p className="mono-label text-[9px] uppercase tracking-[0.2em] text-muted-foreground/70">
+            Continue the discovery
           </p>
           <div className="flex flex-wrap gap-1.5">
-            {crystals.map((crystal, idx) => {
-              const st = visions[idx];
-              return (
-                <span key={`${crystal.label}-${idx}`} className="inline-flex flex-col gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (st?.loading) return;
-                      if (st?.imageUrl) {
-                        onZoom(
-                          st.imageUrl,
-                          st.imageTitle ?? crystal.label
-                        );
-                        return;
-                      }
-                      void crystallize(idx, crystal);
-                    }}
-                    disabled={st?.loading}
-                    aria-label={`Crystallize the vision: ${crystal.label}`}
-                    title={crystal.focus}
-                    data-testid={`${testId}-crystal-${idx}`}
-                    className={cn(
-                      "hx-crystal focus-glow inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11.5px] transition-all duration-300",
-                      st?.loading
-                        ? "cursor-wait opacity-80"
-                        : "hover:brightness-110"
-                    )}
-                  >
-                    {st?.loading ? (
-                      <Loader2 className="size-3 animate-spin" aria-hidden="true" />
-                    ) : (
-                      <Gem className="size-3" aria-hidden="true" />
-                    )}
-                    <span className="max-w-[240px] truncate">{crystal.label}</span>
-                  </button>
-                  {st?.loading && (
-                    <span
-                      className="hx-plate-wait mono-label rounded-xl border px-3 py-2 text-[9.5px] uppercase tracking-[0.18em] text-muted-foreground/80"
-                      data-testid={`${testId}-crystal-${idx}-waiting`}
-                    >
-                      Crystallizing the vision…
-                    </span>
-                  )}
-                  {st?.failed && (
-                    <button
-                      type="button"
-                      onClick={() => void crystallize(idx, crystal)}
-                      className="hx-plate-fail rounded-xl border px-3 py-2 text-left text-[11.5px] text-[#b8860b] transition-colors duration-300 hover:brightness-110 dark:text-[#f59e0b]"
-                      data-testid={`${testId}-crystal-${idx}-failed`}
-                    >
-                      The brushes rested — touch to crystallize again.
-                    </button>
-                  )}
-                  {st?.imageUrl && (
-                    <figure
-                      className="hx-plate group relative w-full max-w-[340px] overflow-hidden rounded-xl border"
-                      data-testid={`${testId}-crystal-${idx}-plate`}
-                    >
-                      <button
-                        type="button"
-                        onClick={() =>
-                          onZoom(
-                            st.imageUrl!,
-                            st.imageTitle ?? crystal.label
-                          )
-                        }
-                        aria-label="Zoom the crystallized vision"
-                        className="block w-full cursor-zoom-in"
-                      >
-                        <img
-                          src={st.imageUrl}
-                          alt={st.imageTitle ?? crystal.label}
-                          loading="lazy"
-                          className="aspect-[7/4] w-full bg-background/40 object-cover"
-                        />
-                      </button>
-                      <figcaption className="mono-label flex items-center gap-1.5 px-2.5 py-1.5 text-[9.5px] uppercase tracking-[0.16em] text-muted-foreground/80">
-                        <Gem className="size-2.5" aria-hidden="true" />
-                        <span className="truncate">
-                          {st.imageTitle ?? crystal.label} — crystallized
-                        </span>
-                      </figcaption>
-                    </figure>
-                  )}
-                </span>
-              );
-            })}
+            {followUps.map((q, i) => (
+              <button
+                key={`${q}-${i}`}
+                type="button"
+                onClick={() => onAsk(q)}
+                data-testid={`${testId}-follow-up-${i}`}
+                className="hx-follow focus-glow rounded-full border px-3 py-1 text-[11.5px] text-foreground/85 transition-all duration-300 hover:brightness-110"
+                style={{
+                  borderColor:
+                    "color-mix(in srgb, #22d3ee 42%, transparent)",
+                  background:
+                    "color-mix(in srgb, #22d3ee 7%, var(--background))",
+                }}
+              >
+                {q}
+              </button>
+            ))}
           </div>
         </div>
       )}
 
       {/* --------------------- THE DEEP RESEARCH PRESS -------------------- */}
-      <div className="flex flex-col items-start gap-1.5">
-        <button
-          type="button"
-          onClick={() => void weavePdf()}
-          disabled={pdfState === "weaving"}
-          aria-label="Press the deep research PDF — the truth extended up to 8000 words"
-          title="The deep research press — this truth extended up to 8000 words, pressed into a PDF for deep research projects"
-          data-testid={`${testId}-pdf`}
-          className={cn(
-            "hx-pdf focus-glow inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11.5px] transition-all duration-300",
-            pdfState === "weaving" && "cursor-wait opacity-80"
-          )}
-        >
-          {pdfState === "weaving" ? (
-            <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
-          ) : (
-            <FileDown className="size-3.5" aria-hidden="true" />
-          )}
-          <span className="mono-label uppercase tracking-[0.16em]">
-            {pdfState === "weaving"
-              ? "Weaving the deep research…"
-              : "Deep Research PDF — up to 8000 words"}
-          </span>
-        </button>
-        {pdfNote && (
-          <p
-            className="rounded-xl border px-3 py-2 text-[12px] leading-relaxed text-[#b8860b] dark:text-[#f59e0b]"
-            data-testid={`${testId}-pdf-note`}
+      {variant === "full" && (
+        <div className="mt-2 flex flex-col items-start gap-1.5">
+          <button
+            type="button"
+            onClick={() => void weavePdf()}
+            disabled={pdfState === "weaving" || loading}
+            aria-label="Press the deep research PDF — the truth extended up to 8000 words"
+            title="The deep research press — this truth extended up to 8000 words, pressed into a PDF for deep research projects"
+            data-testid={`${testId}-pdf`}
+            className={cn(
+              "hx-pdf focus-glow inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11.5px] transition-all duration-300",
+              (pdfState === "weaving" || loading) && "cursor-wait opacity-80"
+            )}
           >
-            {pdfNote}
-          </p>
-        )}
-      </div>
+            {pdfState === "weaving" ? (
+              <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+            ) : (
+              <FileDown className="size-3.5" aria-hidden="true" />
+            )}
+            <span className="mono-label uppercase tracking-[0.16em]">
+              {pdfState === "weaving"
+                ? "Weaving the deep research…"
+                : "Deep Research PDF — up to 8000 words"}
+            </span>
+          </button>
+          {pdfNote && (
+            <p
+              className="rounded-xl border px-3 py-2 text-[12px] leading-relaxed text-[#b8860b] dark:text-[#f59e0b]"
+              data-testid={`${testId}-pdf-note`}
+            >
+              {pdfNote}
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }

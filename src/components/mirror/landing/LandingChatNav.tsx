@@ -84,13 +84,10 @@ export function LandingChatNav() {
         aria-label={t("InDream — the making rooms")}
         title={t("InDream — the making rooms")}
         data-testid="landing-nav-indream"
-        className={cn(
-          hand,
-          "hairline text-muted-foreground hover:border-[var(--hairline-hover)] hover:text-foreground"
-        )}
+        className={cn(hand, "indream-hand")}
       >
-        <Hammer className="size-3" aria-hidden="true" />
-        <span className="mono-label whitespace-nowrap text-[10px] uppercase tracking-[0.14em]">
+        <Hammer className="size-3 text-[#b45309] dark:text-[#fcd34d]" aria-hidden="true" />
+        <span className="mono-label whitespace-nowrap text-[10px] font-semibold uppercase tracking-[0.14em] text-[#b45309] dark:text-[#fcd34d]">
           {t("InDream")}
         </span>
       </button>
@@ -104,13 +101,10 @@ export function LandingChatNav() {
         aria-label={t("Scopes")}
         title={t("Scopes")}
         data-testid="landing-nav-scopes"
-        className={cn(
-          hand,
-          "hairline text-muted-foreground hover:border-[var(--hairline-hover)] hover:text-foreground"
-        )}
+        className={cn(hand, "scopes-hand")}
       >
-        <Layers className="size-3" aria-hidden="true" />
-        <span className="mono-label whitespace-nowrap text-[10px] uppercase tracking-[0.14em]">
+        <Layers className="size-3 text-[#0f766e] dark:text-[#5eead4]" aria-hidden="true" />
+        <span className="mono-label whitespace-nowrap text-[10px] font-semibold uppercase tracking-[0.14em] text-[#0f766e] dark:text-[#5eead4]">
           {t("Scopes")}
         </span>
       </button>

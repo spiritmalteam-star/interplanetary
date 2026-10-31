@@ -21,8 +21,12 @@ export const CODEX_TABS: {
   count: number;
 }[] = [
   { kind: "civilization", label: "Civilisations", count: archiveTotals.civilizations },
-  { kind: "interdim", label: "Interdimensional", count: archiveTotals.interdim },
   { kind: "hyperspace", label: "Hyperspace", count: archiveTotals.innerearth },
+  /* THE INTERDIMENSIONAL INSIDE THE CODEX — the visitor named it home:
+     its own wing, standing directly NEXT TO the Hyperspace wing, with
+     its profiles wearing the same dossier structure as every other
+     category. The scopes' shore carries its door no more. */
+  { kind: "interdim", label: "Interdimensional", count: archiveTotals.interdim },
   { kind: "archive", label: "Interdim. Archive", count: idmArchiveTotal },
 ];
 

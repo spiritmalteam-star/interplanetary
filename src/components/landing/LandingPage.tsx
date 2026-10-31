@@ -10,7 +10,11 @@ import {
 import Image from "next/image";
 import {
   ChevronDown,
+  CircleQuestionMark,
+  Moon,
+  Sun,
 } from "lucide-react";
+import { useTheme } from "next-themes";
 import { useT } from "@/lib/i18n";
 import { useMirror } from "@/lib/mirror-store";
 import { cn } from "@/lib/utils";
@@ -91,6 +95,39 @@ const SIGILS = {
   grandPlume: "/sigils/intricate_10.png",
   grandWave: "/sigils/intricate_02.png",
 } as const;
+
+/* THE BANNER'S OWN LIGHT (the phone's law) — the same sun/moon hand
+   the crown wears, standing over the image banner's top right on
+   mobile (About beside it). The CSS-driven swap avoids hydration
+   mismatch, exactly like the crown's own hand. */
+function BannerLightHand() {
+  const { resolvedTheme, setTheme } = useTheme();
+  const toggle = () => {
+    const root = document.documentElement;
+    root.classList.add("theme-anim");
+    setTheme(resolvedTheme === "dark" ? "light" : "dark");
+    window.setTimeout(() => root.classList.remove("theme-anim"), 560);
+  };
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      aria-label="Toggle between deep space and daylight laboratory"
+      title="Toggle theme"
+      data-testid="banner-light-hand"
+      className="focus-glow group flex size-8 items-center justify-center rounded-full border border-white/30 bg-black/25 text-white/90 backdrop-blur-sm transition-all duration-300 hover:border-white/60 hover:text-white"
+    >
+      <Sun
+        className="hidden size-4 transition-transform duration-500 group-hover:rotate-45 dark:block"
+        aria-hidden="true"
+      />
+      <Moon
+        className="size-4 transition-transform duration-500 group-hover:-rotate-12 dark:hidden"
+        aria-hidden="true"
+      />
+    </button>
+  );
+}
 
 function Sigil({
   src,
@@ -361,6 +398,25 @@ export default function LandingPage({
         <main className="mx-auto w-full max-w-[900px]">
           {/* ============================ HERO ============================ */}
           <header className="relative pb-5 pt-10 text-center sm:pb-4 sm:pt-16 lg:pb-4 lg:pt-16">
+            {/* THE BANNER'S OWN HANDS (the phone's law) — About Us and
+                the light's toggle stand at the image banner's TOP RIGHT
+                on mobile, outside the chat's crown exactly where the
+                visitor asked them to live; the desk keeps them in the
+                crown's corner as they always stood. */}
+            <div className="absolute right-3 top-3 z-20 flex items-center gap-1.5 md:hidden">
+              <BannerLightHand />
+              <button
+                type="button"
+                onClick={() => useMirror.getState().openTour()}
+                aria-haspopup="dialog"
+                aria-label={t("About Us")}
+                title={t("About Us — our purpose, the Mirror Entity, and how we hold your data")}
+                data-testid="banner-about-question"
+                className="focus-glow flex size-8 items-center justify-center rounded-full border border-white/30 bg-black/25 text-white/90 backdrop-blur-sm transition-all duration-300 hover:border-white/60 hover:text-white"
+              >
+                <CircleQuestionMark className="size-4" aria-hidden="true" />
+              </button>
+            </div>
             {/* the hero's sky stays untouched — no mark rests upon the
                 background image; the light language lives in the empty
                 shoulders further down the walk */}

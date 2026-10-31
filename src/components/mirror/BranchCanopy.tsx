@@ -42,6 +42,7 @@ import {
   Maximize2,
   Menu,
   Minimize2,
+  MessageSquarePlus,
   MessageSquareText,
   Moon,
   Music,
@@ -132,7 +133,8 @@ import { useT } from "@/lib/i18n";
 import { LANDING_SCOPES, useMirror } from "@/lib/mirror-store";
 import { cn } from "@/lib/utils";
 import { flowAnswerText } from "@/lib/text-flow";
-import { HyperXPanel, splitCrystals } from "./HyperXPanel";
+import { HyperXAnswer, splitCrystals } from "./HyperXPanel";
+import { ListenButton } from "./ListenButton";
 import { tuneSeedBatch } from "@/lib/question-voice";
 import {
   categoryForMove,
@@ -694,6 +696,28 @@ function writeLandingSeen(map: Record<string, string[]>) {
    percentage mix. The outer hand only watches the chosen field: a
    new field remounts the doors (keyed below), and a remount always
    draws its own fresh five — no effect, no cascading render. */
+/* HYPERX'S OWN GROVE — the discovery field's floor doors: bold, precise
+   invitations into the unseen (advanced discovery, the illumination
+   path, the underlying truths). The plain well rides beside them. */
+const HYPERX_SUGGESTION_POOL: string[] = [
+  "What is the true nature of dark matter?",
+  "Why does time move forward only?",
+  "What is consciousness made of?",
+  "What actually happens at the edge of a black hole?",
+  "What did the universe look like before the first light?",
+  "What is the underlying truth beneath gravity?",
+  "What would a civilisation a million years old build first?",
+  "Where does energy go when it is spent?",
+  "What is the smallest thing reality is woven from?",
+  "What does the universe remember that we have forgotten?",
+  "Which law of physics is closest to breaking?",
+  "What would humanity discover first on another world?",
+  "What is the illumination path for a mind that cannot sleep?",
+  "What stands beneath the quantum veil?",
+  "How would a civilisation speak across a galaxy?",
+  "What is waiting at the edge of the unseen?",
+];
+
 function BareFloorSuggestions({
   onPick,
   disabled,
@@ -742,6 +766,12 @@ function BareFloorDoors({
      groves — and the easy well (a thousand plain doors) rides the
      pool beside them all, so the little reload hand keeps pouring. */
   const pool = useMemo(() => {
+    if (scope === "hyperx") {
+      /* HYPERX'S OWN GROVE — the discovery field draws ONLY its own
+         doors (bold, precise invitations into the unseen); the reload
+         hand pours from the grove itself */
+      return [...HYPERX_SUGGESTION_POOL];
+    }
     if (anon) {
       /* THE EASY DOORS ONLY — plainly worded, easy to understand */
       return shuffledEasy(scope === "mirror" || !scope ? null : scope, canopyHour());
@@ -1911,7 +1941,7 @@ function CrownLightHand({ testIdPrefix }: { testIdPrefix: string }) {
       aria-label="Toggle between deep space and daylight laboratory"
       title="Toggle theme"
       data-testid={`${testIdPrefix}-light-hand`}
-      className="focus-glow group flex size-7 shrink-0 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+      className="focus-glow group flex size-7 shrink-0 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground max-md:hidden"
     >
       {/* CSS-driven swap avoids hydration mismatch and effect state */}
       <Sun
@@ -4129,6 +4159,31 @@ export function BranchCanopy({
     },
     [landingThread, paintLandingTurn]
   );
+  /* THE HYPERX NEW-CHAT HAND — a fresh floor for the next discovery:
+     the field's thread, its caches and its device-kept page all empty
+     together, the room lays down, and the floor rises with its own
+     question again (the same clearing the room's own clear hand keeps). */
+  const startFreshRoom = useCallback(() => {
+    if (!realm) return;
+    setLandingThread([]);
+    landingTurnsRef.current = [];
+    landingThreadsByScopeRef.current.set(landingScope, []);
+    landingTurnsByScopeRef.current.set(landingScope, []);
+    writeLandingThreadScope(landingScope, []);
+    historySessionRef.current = freshHistorySessionId();
+    historySessionsByScopeRef.current.set(
+      landingScope,
+      historySessionRef.current
+    );
+    exitZoom();
+    window.dispatchEvent(new CustomEvent("landing-chat:return"));
+  }, [
+    realm,
+    setLandingThread,
+    landingScope,
+    historySessionRef,
+    exitZoom,
+  ]);
   const floorBusy = realm
     ? landingBusy || !!lastLandingTurn?.loading
     : liveLoading;
@@ -5440,7 +5495,7 @@ export function BranchCanopy({
               aria-label={t("About Us")}
               title={t("About Us — our purpose, the Mirror Entity, and how we hold your data")}
               data-testid={`${testIdPrefix}-about-question`}
-              className="focus-glow flex size-7 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+              className="focus-glow flex size-7 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground max-md:hidden"
             >
               <CircleQuestionMark className="size-3.5" aria-hidden="true" />
             </button>
@@ -6294,19 +6349,35 @@ export function BranchCanopy({
                           </p>
                           {turn.a && (
                             <div className="flex items-start gap-1">
-                              <p className="sv-answer min-w-0 flex-1 break-words text-[14.5px] leading-[1.7] text-foreground/85">
-                                {realm && landingScope === "hyperx"
-                                  ? flowAnswerText(splitCrystals(turn.a).body)
-                                  : flowAnswerText(turn.a)}
-                              </p>
-                              <RoomCopyButton
-                                text={turn.a}
-                                testId={`${testIdPrefix}-landing-copy-${i}`}
-                              />
-                              <RoomShareButton
-                                text={turn.a}
-                                testId={`${testIdPrefix}-landing-share-${i}`}
-                              />
+                              {realm && landingScope === "hyperx" ? (
+                                <div className="min-w-0 flex-1">
+                                  <HyperXAnswer
+                                    question={turn.q}
+                                    answer={turn.a}
+                                    onZoom={(src, caption) =>
+                                      setLandingViewing({ src, caption })
+                                    }
+                                    testId={`${testIdPrefix}-landing-hyperx-${i}`}
+                                    variant="compact"
+                                  />
+                                </div>
+                              ) : (
+                                <p className="sv-answer min-w-0 flex-1 break-words text-[14.5px] leading-[1.7] text-foreground/85">
+                                  {flowAnswerText(turn.a)}
+                                </p>
+                              )}
+                              {!(realm && landingScope === "hyperx") && (
+                                <>
+                                  <RoomCopyButton
+                                    text={turn.a}
+                                    testId={`${testIdPrefix}-landing-copy-${i}`}
+                                  />
+                                  <RoomShareButton
+                                    text={turn.a}
+                                    testId={`${testIdPrefix}-landing-share-${i}`}
+                                  />
+                                </>
+                              )}
                             </div>
                           )}
                           {turn.painting && (
@@ -6344,23 +6415,77 @@ export function BranchCanopy({
                        stage that reads the wrong channel — the room
                        sat blue and wordless until the next input). */
                     (revealStage >= 2 || realm) ? (
-                      <div className="relative">
-                        <div className="canopy-answer whitespace-pre-wrap break-words text-[15.5px] leading-[1.75] text-foreground/90 sm:text-[16px]">
-                          {realm && landingScope === "hyperx"
-                            ? flowAnswerText(splitCrystals(roomAnswer).body)
-                            : flowAnswerText(roomAnswer)}
-                          {roomLoading && (
-                            <span
-                              aria-hidden="true"
-                              className="ml-1 inline-block h-[13px] w-[7px] translate-y-[1px] animate-pulse rounded-[2px] bg-[var(--scope-a,var(--gd))] align-baseline opacity-70"
-                            />
-                          )}
-                        </div>
-                        {/* THE COPY HAND — the words are the visitor's */}
+                      <>
+                        {realm && landingScope === "hyperx" ? (
+                          /* THE HYPERX ANSWER — the transmission paragraph
+                             by paragraph, each paragraph's small diamond at
+                             its side (the chat makes space for the vision
+                             right there), the doors that follow the answer,
+                             and the deep research press. */
+                          <HyperXAnswer
+                            question={zoomQ ?? ""}
+                            answer={roomAnswer}
+                            onZoom={(src, caption) =>
+                              setLandingViewing({ src, caption })
+                            }
+                            onAsk={(q) => sendFromPanel(q, null)}
+                            testId={`${testIdPrefix}-zoom-hyperx`}
+                            loading={roomLoading}
+                          />
+                        ) : (
+                          <div className="relative">
+                            <div className="canopy-answer whitespace-pre-wrap break-words text-[15.5px] leading-[1.75] text-foreground/90 sm:text-[16px]">
+                              {flowAnswerText(roomAnswer)}
+                              {roomLoading && (
+                                <span
+                                  aria-hidden="true"
+                                  className="ml-1 inline-block h-[13px] w-[7px] translate-y-[1px] animate-pulse rounded-[2px] bg-[var(--scope-a,var(--gd))] align-baseline opacity-70"
+                                />
+                              )}
+                            </div>
+                            {/* THE VISION IN THE MIXING — the mirror chose to
+                                paint: the plate appears beneath the words */}
+                            {lastLandingTurn?.painting && (
+                              <MirrorChanneling
+                                compact
+                                label={t("Painting the vision")}
+                                variant="mirror"
+                                className="mono-label mt-2 py-0.5 text-[10px] uppercase tracking-[0.2em] text-muted-foreground"
+                              />
+                            )}
+                          </div>
+                        )}
+                        {/* THE ANSWER'S OWN HANDS — the copy hand in every
+                            field; HYPERX adds the narrator's own voice and
+                            the new-chat hand beside the share */}
                         {!roomLoading && (
-                          <div className="mt-0.5 flex justify-end">
+                          <div className="mt-0.5 flex items-center justify-end gap-1">
+                            {realm && landingScope === "hyperx" && (
+                              <>
+                                <ListenButton
+                                  text={splitCrystals(roomAnswer).body}
+                                  cacheKey={`hyperx-${testIdPrefix}-${zoomQ ?? ""}`}
+                                  variant="icon"
+                                  className="size-7 rounded-full border hairline text-muted-foreground transition-colors duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={startFreshRoom}
+                                  aria-label={t("New chat")}
+                                  title={t("New chat — a fresh floor for the next discovery")}
+                                  data-testid={`${testIdPrefix}-hyperx-new-chat`}
+                                  className="focus-glow flex size-7 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[color-mix(in_srgb,#e879f9_55%,transparent)] hover:text-foreground"
+                                >
+                                  <MessageSquarePlus className="size-3.5" aria-hidden="true" />
+                                </button>
+                              </>
+                            )}
                             <RoomCopyButton
-                              text={roomAnswer}
+                              text={
+                                realm && landingScope === "hyperx"
+                                  ? splitCrystals(roomAnswer).body
+                                  : roomAnswer
+                              }
                               testId={`${testIdPrefix}-zoom-copy`}
                             />
                             <RoomShareButton
@@ -6369,32 +6494,7 @@ export function BranchCanopy({
                             />
                           </div>
                         )}
-                        {/* THE HYPERX INSTRUMENTS — the discovery answer's
-                            own crystals (each one crystallizes its truth
-                            into a vision when touched) and the deep
-                            research press (the truth extended up to 8000
-                            words, pressed into a PDF) */}
-                        {realm && landingScope === "hyperx" && !roomLoading && (
-                          <HyperXPanel
-                            question={zoomQ ?? ""}
-                            answer={roomAnswer}
-                            onZoom={(src, caption) =>
-                              setLandingViewing({ src, caption })
-                            }
-                            testId={`${testIdPrefix}-zoom-hyperx`}
-                          />
-                        )}
-                        {/* THE VISION IN THE MIXING — the mirror chose to
-                            paint: the plate appears beneath the words */}
-                        {lastLandingTurn?.painting && (
-                          <MirrorChanneling
-                            compact
-                            label={t("Painting the vision")}
-                            variant="mirror"
-                            className="mono-label mt-2 py-0.5 text-[10px] uppercase tracking-[0.2em] text-muted-foreground"
-                          />
-                        )}
-                      </div>
+                      </>
                     ) : null
                   ) : displayError && !roomLoading && (revealStage >= 2 || realm) ? (
                     /* THE ROOM'S HONESTY — an ask that could not cross
@@ -6577,19 +6677,45 @@ export function BranchCanopy({
                               {realm && SCOPE_META[landingScope]?.aMark && (
                                 <p className="sv-mark sv-mark-a">{t(SCOPE_META[landingScope].aMark!)}</p>
                               )}
-                              <p className="sv-answer min-w-0 flex-1 whitespace-pre-wrap break-words text-[15.5px] leading-[1.7] text-foreground/90">
-                                {realm && landingScope === "hyperx"
-                                  ? flowAnswerText(splitCrystals(turn.a).body)
-                                  : flowAnswerText(turn.a)}
-                              </p>
-                              <RoomCopyButton
-                                text={turn.a}
-                                testId={`${testIdPrefix}-room-copy-${i}`}
-                              />
-                              <RoomShareButton
-                                text={turn.a}
-                                testId={`${testIdPrefix}-room-share-${i}`}
-                              />
+                              {realm && landingScope === "hyperx" ? (
+                                /* THE HYPERX THREAD ANSWER — paragraph by
+                                   paragraph with its side diamonds; the
+                                   last turn carries the following doors */
+                                <div className="min-w-0 flex-1">
+                                  <HyperXAnswer
+                                    question={turn.q}
+                                    answer={turn.a}
+                                    onZoom={(src, caption) =>
+                                      setLandingViewing({ src, caption })
+                                    }
+                                    onAsk={
+                                      i === thread.length - 1
+                                        ? (q) => sendFromPanel(q, null)
+                                        : undefined
+                                    }
+                                    testId={`${testIdPrefix}-room-hyperx-${i}`}
+                                    variant={
+                                      i === thread.length - 1 ? "full" : "compact"
+                                    }
+                                  />
+                                </div>
+                              ) : (
+                                <p className="sv-answer min-w-0 flex-1 whitespace-pre-wrap break-words text-[15.5px] leading-[1.7] text-foreground/90">
+                                  {flowAnswerText(turn.a)}
+                                </p>
+                              )}
+                              {!(realm && landingScope === "hyperx") && (
+                                <>
+                                  <RoomCopyButton
+                                    text={turn.a}
+                                    testId={`${testIdPrefix}-room-copy-${i}`}
+                                  />
+                                  <RoomShareButton
+                                    text={turn.a}
+                                    testId={`${testIdPrefix}-room-share-${i}`}
+                                  />
+                                </>
+                              )}
                             </div>
                           ) : turn.painting ? (
                             <MirrorChanneling
@@ -6630,20 +6756,6 @@ export function BranchCanopy({
                                 : undefined
                             }
                           />
-                          {/* THE HYPERX INSTRUMENTS — every follow-up
-                              answer carries its own crystals and the
-                              deep research press, exactly like the
-                              room's standing answer */}
-                          {realm && landingScope === "hyperx" && !turn.loading && turn.a && (
-                            <HyperXPanel
-                              question={turn.q}
-                              answer={turn.a}
-                              onZoom={(src, caption) =>
-                                setLandingViewing({ src, caption })
-                              }
-                              testId={`${testIdPrefix}-room-hyperx-${i}`}
-                            />
-                          )}
                         </div>
                       ))}
                     </div>
