@@ -130,7 +130,12 @@ export function HyperXAnswer({
 }) {
   const language = useMirror((s) => s.language);
   const { body, crystals } = splitCrystals(answer);
-  const paragraphs = body
+  /* THE FLOW LAW RUNS FIRST — the whole body is flowed as one text so
+     a run of thin one-sentence paragraphs weaves back into the prose
+     it was meant to be, and only then is the reading cut into its
+     paragraphs (the old order flowed each paragraph alone and the
+     thin-tall strips survived the cut). */
+  const paragraphs = flowAnswerText(body)
     .split(/\n{2,}/)
     .map((p) => p.trim())
     .filter(Boolean);
@@ -271,7 +276,7 @@ export function HyperXAnswer({
           <div key={idx} className="hx-para">
             <div className="flex items-start gap-1">
               <p className="hx-para-text min-w-0 flex-1 whitespace-pre-wrap break-words text-[15.5px] leading-[1.75] text-foreground/90">
-                {flowAnswerText(para)}
+                {para}
               </p>
               <span className="hx-diamond-arm pt-[7px]">
                 <button
@@ -360,8 +365,13 @@ export function HyperXAnswer({
         );
       })}
 
-      {/* -------------- THE COPY HAND AT THE RESULT'S END --------------- */}
-      {!loading && paragraphs.length > 0 && (
+      {/* -------------- THE COPY HAND AT THE RESULT'S END ---------------
+          THE ALWAYS LAW — the hand rests at the result's tail from the
+          first word to the last: while the transmission still streams
+          the visitor may already carry what has arrived, and when the
+          body itself rests empty but the crystals stand, the hand
+          copies the whole truth as it is. */}
+      {answer.trim().length > 0 && (
         <div className="mt-2 flex justify-end">
           <button
             type="button"

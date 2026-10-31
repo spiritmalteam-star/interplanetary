@@ -84,6 +84,7 @@ import {
   type TreeMix,
 } from "@/lib/tree-mix";
 import { detectArtifactIntent } from "@/lib/artifact-intent";
+import { useFloatingBarAutoHide } from "./useFloatingBar";
 
 import {
   buildIdf,
@@ -4084,6 +4085,10 @@ export function BranchCanopy({
      opens at its own top (one quiet reset, never a jump) */
   const bodyRef = useRef<HTMLDivElement | null>(null);
   const pinnedRef = useRef(true);
+  /* THE ROOM'S CROWN OF HANDS — refs wired to the breath law below
+     (the hook itself stands after the room's own name is known). */
+  const zoomSectionRef = useRef<HTMLElement | null>(null);
+  const roomHandsRef = useRef<HTMLDivElement | null>(null);
   const onBodyScroll = useCallback(() => {
     const el = bodyRef.current;
     if (!el) return;
@@ -4103,6 +4108,20 @@ export function BranchCanopy({
      visitor's hand has opened the gate. */
   const zoomQ = zoom?.q ?? null;
   const zoomMove = zoom?.move ?? null;
+
+  /* THE ROOM'S CROWN OF HANDS AND ITS OWN BREATH — the reload, the
+     narrator, the keep and the fresh-floor hand stand at the room's
+     TOP, and they read the reader: while the transmission flows
+     downward beneath them the crown sinks away, and an upward breath
+     — a couple of swipes toward the beginning — raises it again
+     QUICKLY (the reveal travel is short on purpose: two swipes, not
+     a long climb). An open keep holds the crown in place. */
+  const roomHandsHidden = useFloatingBarAutoHide({
+    rootRef: zoomSectionRef,
+    barRef: roomHandsRef,
+    hold: historyOpen,
+    rebindKey: zoomQ ?? "room",
+  });
 
   /* a new room opens at its own top — one quiet reset, never a jump */
   useEffect(() => {
@@ -6088,6 +6107,7 @@ export function BranchCanopy({
         {zoom && (
           <div className="pointer-events-none absolute inset-0 z-30 flex justify-center p-1.5 sm:p-2.5">
             <section
+              ref={zoomSectionRef}
               data-testid={`${testIdPrefix}-zoom`}
               aria-label={zoom.q}
               /* THE CHAT'S OWN YIELD — docked in the threshold (bare) the
@@ -6176,7 +6196,14 @@ export function BranchCanopy({
                     )}
                   </div>
                 </div>
-                <div className="flex shrink-0 items-center gap-1.5">
+                <div
+                  ref={roomHandsRef}
+                  className={cn(
+                    "flex shrink-0 items-center gap-1.5 transition-all duration-500",
+                    roomHandsHidden &&
+                      "pointer-events-none translate-y-1 opacity-0"
+                  )}
+                >
                   {/* THE CHAT'S OWN RELOAD — the reload hand lives in the
                       chat and it truly clears: one touch ends the whole
                       conversation (the room folds, the thread empties,
@@ -6313,6 +6340,22 @@ export function BranchCanopy({
                       className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
                     >
                       <TreeDeciduous className="size-3.5" aria-hidden="true" />
+                    </button>
+                  )}
+                  {/* THE FRESH-FLOOR HAND AT THE TOP — the new chat
+                      stands in the room's crown now, one touch away
+                      from the first word to the last: no climb to the
+                      answer's tail to find it. */}
+                  {realm && landingScope === "hyperx" && (
+                    <button
+                      type="button"
+                      onClick={startFreshRoom}
+                      aria-label={t("New chat")}
+                      title={t("New chat — a fresh floor for the next discovery")}
+                      data-testid={`${testIdPrefix}-hyperx-new-chat-top`}
+                      className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[color-mix(in_srgb,#e879f9_55%,transparent)] hover:text-foreground"
+                    >
+                      <MessageSquarePlus className="size-3.5" aria-hidden="true" />
                     </button>
                   )}
                 </div>
@@ -6494,34 +6537,24 @@ export function BranchCanopy({
                           </div>
                         )}
                         {/* THE ANSWER'S OWN HANDS — the copy hand in every
-                            field; HYPERX adds the narrator's own voice and
-                            the new-chat hand beside the share */}
+                            field; HYPERX adds the narrator's own voice.
+                            The new-chat hand has climbed to the room's
+                            crown (the top row) — it never lived here. */}
                         {!roomLoading && (
                           <div className="mt-0.5 flex items-center justify-end gap-1">
                             {realm && landingScope === "hyperx" && (
-                              <>
-                                <ListenButton
-                                  text={splitCrystals(roomAnswer).body}
-                                  cacheKey={`hyperx-${testIdPrefix}-${zoomQ ?? ""}`}
-                                  variant="icon"
-                                  className="size-7 rounded-full border hairline text-muted-foreground transition-colors duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
-                                />
-                                <button
-                                  type="button"
-                                  onClick={startFreshRoom}
-                                  aria-label={t("New chat")}
-                                  title={t("New chat — a fresh floor for the next discovery")}
-                                  data-testid={`${testIdPrefix}-hyperx-new-chat`}
-                                  className="focus-glow flex size-7 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[color-mix(in_srgb,#e879f9_55%,transparent)] hover:text-foreground"
-                                >
-                                  <MessageSquarePlus className="size-3.5" aria-hidden="true" />
-                                </button>
-                              </>
+                              <ListenButton
+                                text={splitCrystals(roomAnswer).body}
+                                cacheKey={`hyperx-${testIdPrefix}-${zoomQ ?? ""}`}
+                                variant="icon"
+                                className="size-7 rounded-full border hairline text-muted-foreground transition-colors duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+                              />
                             )}
                             <RoomCopyButton
                               text={
                                 realm && landingScope === "hyperx"
-                                  ? splitCrystals(roomAnswer).body
+                                  ? (splitCrystals(roomAnswer).body.trim() ||
+                                      roomAnswer)
                                   : roomAnswer
                               }
                               testId={`${testIdPrefix}-zoom-copy`}

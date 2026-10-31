@@ -21,14 +21,16 @@ import { useCallback, useEffect, useRef, useState } from "react";
 /*  Quantum, Evolve Med, Invent).                                      */
 /* ------------------------------------------------------------------ */
 
-/* the upward breath must travel this far before the bar rises — a
-   real turn toward the beginning, not a small adjustment */
-const REVEAL_TRAVEL_PX = 120;
-/* the finger's version of the same law — a drawn pull, not a nudge */
-const TOUCH_REVEAL_TRAVEL_PX = 96;
+/* the upward breath must travel this far before the bar rises — the
+   visitor named the law: a COUPLE of swipes toward the beginning
+   should be enough, never a long climb. Two deliberate swipes (~35px
+   each) cross this line inside one breath; a single twitch does not. */
+const REVEAL_TRAVEL_PX = 72;
+/* the finger's version of the same law — two short drawn pulls */
+const TOUCH_REVEAL_TRAVEL_PX = 56;
 /* a pause longer than this between upward movements starts a new
-   breath — slow drips never add up into a reveal */
-const UP_CONTINUITY_MS = 700;
+   breath — but a breath is allowed the time two real swipes take */
+const UP_CONTINUITY_MS = 900;
 
 export function useFloatingBarAutoHide({
   /** An ancestor of every scroller whose movement should hide the bar —
@@ -250,9 +252,15 @@ export function useFloatingBarAutoHide({
     bar?.addEventListener("focusin", onBarFocusIn);
     bar?.addEventListener("focusout", onBarFocusOut);
 
+    /* a freshly bound bar (and a room that just turned its page)
+       stands visible first — the stillness law takes it from there.
+       One breath deferred (the setState never runs inside the effect
+       body itself, the cascading-render law keeps its peace). */
+    const rise = window.setTimeout(() => setSank(false), 0);
     arm();
 
     return () => {
+      window.clearTimeout(rise);
       clearTimer();
       root.removeEventListener("scroll", onScroll, { capture: true });
       root.removeEventListener("wheel", onWheel);
