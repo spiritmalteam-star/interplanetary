@@ -3,6 +3,11 @@ import ZAI from "@/lib/zai-client";
 import { buildInkPdf, pdfFilename } from "@/lib/pdf";
 import { meterRoute } from "@/lib/server/meter";
 import { db } from "@/lib/db";
+import {
+  resolveVisitor,
+  saveLibrary,
+  withAnonCookie,
+} from "@/lib/server/access";
 
 /* ------------------------------------------------------------------ */
 /*  POST /api/hyperx/pdf — THE DEEP RESEARCH PRESS.                    */
@@ -104,7 +109,6 @@ async function hyperxPdfImpl(req: NextRequest): Promise<NextResponse> {
         ? String((gate.value as { mode?: unknown }).mode ?? "open")
         : "open";
     if (gateMode === "pro") {
-      const { resolveVisitor } = await import("@/lib/server/access");
       const visitor = await resolveVisitor(req);
       const isAdmin = visitor.user.role === "ADMIN";
       let pro = isAdmin;
@@ -229,6 +233,52 @@ async function hyperxPdfImpl(req: NextRequest): Promise<NextResponse> {
     const filename =
       pdfFilename(title || "HyperX Deep Research") ||
       `hyperx-deep-research-${Date.now()}`;
+
+    /* THE LIBRARY'S OWN SHELF — the document rests in the keeper's
+       library the moment it is pressed, so a page turned away can
+       never lose it: the visitor walks anywhere, the weaving completes
+       here on the server, and the finished treatise waits on the shelf
+       (a signed keeper's keeping — the anonymous hand simply carries
+       the download itself). The base64 plate is weighed before the
+       shelf receives it, so no truncation can ever corrupt a volume. */
+    let libraryId: string | null = null;
+    try {
+      const visitor = await resolveVisitor(req);
+      const words = sections.reduce(
+        (n, s) => n + s.body.split(/\s+/).filter(Boolean).length,
+        0
+      );
+      const pdfBase64 = Buffer.from(pdf).toString("base64");
+      if (pdfBase64.length < 4_000_000) {
+        libraryId = await saveLibrary(
+          visitor.user.id,
+          "observatory",
+          (title || "HyperX Deep Research").slice(0, 140),
+          `A HyperX deep research treatise — ${question.slice(0, 200)}`,
+          {
+            kind: "hyperx-pdf",
+            question,
+            title: title || "A Truth Discovered",
+            filename,
+            words,
+            pdf: pdfBase64,
+          },
+          5_500_000
+        );
+      }
+      const res = new NextResponse(new Uint8Array(pdf), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/pdf",
+          "Content-Disposition": `attachment; filename="${filename}"`,
+          "Cache-Control": "no-store",
+          ...(libraryId ? { "X-Hyperx-Library-Id": libraryId } : {}),
+        },
+      });
+      return withAnonCookie(res, visitor);
+    } catch {
+      /* the shelf may rest — the download itself never waits on it */
+    }
 
     return new NextResponse(new Uint8Array(pdf), {
       status: 200,

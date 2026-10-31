@@ -8,6 +8,7 @@ import {
   ArrowUpNarrowWide,
   Atom,
   BookOpen,
+  FileDown,
   LibraryBig,
   MoonStar,
   NotebookPen,
@@ -62,11 +63,42 @@ interface LibraryEntry {
     sigil?: string;
     subtitle?: string;
     totalPages?: number;
+    /* THE DEEP RESEARCH PRESS — a HyperX treatise kept whole (the
+       pressed PDF rides as base64, ready to be carried again) */
+    kind?: string;
+    question?: string;
+    pdf?: string;
+    filename?: string;
+    words?: number;
   } | null;
   /** the volume's own face — the Gemini-painted plate (the book's
       album cover), read by the shelf and the market alike */
   cover?: string | null;
   createdAt: string;
+}
+
+/** THE PDF'S OWN HAND — a kept treatise is carried back to the
+    visitor's device: base64 → bytes → a real download, named by the
+    press that made it. */
+function downloadKeptPdf(entry: LibraryEntry): void {
+  const b64 = entry.content?.pdf;
+  if (!b64) return;
+  try {
+    const bin = atob(b64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    const blob = new Blob([bytes], { type: "application/pdf" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = entry.content?.filename ?? "HyperX-Deep-Research.pdf";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 20_000);
+  } catch {
+    /* a plate that cannot be read stays quietly on the shelf */
+  }
 }
 
 const SECTORS: { id: string; label: string; icon: typeof Atom }[] = [
@@ -373,6 +405,9 @@ export function LibraryView() {
                               (e.sector === "dreambook" ||
                                 e.sector === "dreambook_archive") &&
                               bookPages.length > 0;
+                            const keptPdf =
+                              e.content?.kind === "hyperx-pdf" &&
+                              Boolean(e.content?.pdf);
                             return (
                               <div
                                 key={e.id}
@@ -394,6 +429,22 @@ export function LibraryView() {
                                     {e.excerpt}
                                   </p>
                                 </button>
+                                {keptPdf && (
+                                  <button
+                                    type="button"
+                                    onClick={() => downloadKeptPdf(e)}
+                                    data-testid="library-pdf-download"
+                                    className="focus-glow mt-2 inline-flex items-center gap-1.5 rounded-full border hairline px-2.5 py-1 text-[12px] font-medium text-foreground/85 transition-all duration-300 hover:border-[var(--hairline-active)] hover:glow-sm"
+                                  >
+                                    <FileDown className="size-3" aria-hidden="true" />
+                                    {tEntry("Download the deep research PDF")}
+                                    {Boolean(e.content?.words) && (
+                                      <span className="mono-label text-[10px] text-muted-foreground/70">
+                                        {tEntry("{n} words", { n: e.content?.words ?? 0 })}
+                                      </span>
+                                    )}
+                                  </button>
+                                )}
                                 {continuable && (
                                   <button
                                     type="button"
@@ -556,6 +607,35 @@ export function LibraryView() {
             <p className="mono-label text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">
               {DAYFmt.format(new Date(reading.createdAt))} · {TIMEFmt.format(new Date(reading.createdAt))}
             </p>
+            {/* THE KEPT TREATISE — the deep research document carries its
+                own question and its own download hand inside the reader */}
+            {reading.content?.kind === "hyperx-pdf" && (
+              <>
+                {reading.content.question && !reading.content.query && (
+                  <div className="mt-3 rounded-xl border hairline bg-[color-mix(in_srgb,var(--foreground)_4%,transparent)] px-4 py-3">
+                    <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-foreground/90">
+                      {reading.content.question}
+                    </p>
+                  </div>
+                )}
+                {reading.content.pdf && (
+                  <button
+                    type="button"
+                    onClick={() => downloadKeptPdf(reading)}
+                    data-testid="library-reader-pdf-download"
+                    className="focus-glow mt-4 inline-flex items-center gap-1.5 rounded-full border hairline px-3 py-1.5 text-[12.5px] font-medium text-foreground/85 transition-all duration-300 hover:border-[var(--hairline-active)] hover:glow-sm"
+                  >
+                    <FileDown className="size-3.5" aria-hidden="true" />
+                    {t("Download the deep research PDF")}
+                    {Boolean(reading.content?.words) && (
+                      <span className="mono-label text-[10px] text-muted-foreground/70">
+                        {t("{n} words", { n: reading.content?.words ?? 0 })}
+                      </span>
+                    )}
+                  </button>
+                )}
+              </>
+            )}
             {reading.content?.query && (
               <div className="mt-3 rounded-xl border hairline bg-[color-mix(in_srgb,var(--foreground)_4%,transparent)] px-4 py-3">
                 <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-foreground/90">

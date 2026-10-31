@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { FileDown, Gem, Loader2 } from "lucide-react";
+import { useCallback, useRef, useState } from "react";
+import { Check, Copy, FileDown, Gem, Loader2 } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { flowAnswerText } from "@/lib/text-flow";
 import { cn } from "@/lib/utils";
@@ -135,10 +135,14 @@ export function HyperXAnswer({
     .map((p) => p.trim())
     .filter(Boolean);
   const [visions, setVisions] = useState<Record<number, VisionState>>({});
-  const [pdfState, setPdfState] = useState<"idle" | "weaving" | "failed">(
-    "idle"
-  );
+  const [pdfState, setPdfState] = useState<
+    "idle" | "weaving" | "failed" | "kept"
+  >("idle");
   const [pdfNote, setPdfNote] = useState<string | null>(null);
+  /* the copy hand at the discovery's own end — the visitor's law: every
+     HyperX result closes with its copy of the truth alone */
+  const [copied, setCopied] = useState(false);
+  const copiedTimer = useRef<number | null>(null);
 
   const crystallize = useCallback(
     async (idx: number, focus: string, label: string) => {
@@ -181,9 +185,14 @@ export function HyperXAnswer({
     setPdfState("weaving");
     setPdfNote(null);
     try {
+      /* THE PATIENT PRESS — keepalive keeps the weaving alive through
+         a page turned away: the deep research document completes on
+         the server no matter where the visitor walks, and rests in
+         the Library until they return for it. */
       const res = await fetch("/api/hyperx/pdf", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        keepalive: true,
         body: JSON.stringify({ question, answer, language }),
       });
       if (!res.ok) {
@@ -197,6 +206,7 @@ export function HyperXAnswer({
         );
         return;
       }
+      const keptInLibrary = res.headers.get("x-hyperx-library-id");
       const blob = await res.blob();
       const header = res.headers.get("content-disposition") ?? "";
       const nameMatch = header.match(/filename="?([^";]+)"?/i);
@@ -208,7 +218,12 @@ export function HyperXAnswer({
       a.click();
       a.remove();
       window.setTimeout(() => URL.revokeObjectURL(url), 20_000);
-      setPdfState("idle");
+      setPdfState("kept");
+      setPdfNote(
+        keptInLibrary
+          ? "The deep research document is yours — and it rests in your Library, ready whenever you return for it."
+          : null
+      );
     } catch {
       setPdfState("failed");
       setPdfNote(
@@ -216,6 +231,28 @@ export function HyperXAnswer({
       );
     }
   }, [question, answer, language]);
+
+  /* THE END-OF-RESULT COPY — the transmission alone (the crystal
+     machinery never rides along), straight from the answer's tail. */
+  const copyDiscovery = useCallback(async () => {
+    const { body: prose, crystals: own } = splitCrystals(answer);
+    const crystalsBlock =
+      own.length > 0
+        ? `\n\nCRYSTALS\n${own
+            .map((c) => `◇ ${c.label} — ${c.focus}`)
+            .join("\n")}`
+        : "";
+    try {
+      await navigator.clipboard.writeText(`${prose.trim()}${crystalsBlock}`);
+    } catch {
+      /* the clipboard may rest behind a permission — the silent hand
+         never breaks the reading */
+      return;
+    }
+    setCopied(true);
+    if (copiedTimer.current) window.clearTimeout(copiedTimer.current);
+    copiedTimer.current = window.setTimeout(() => setCopied(false), 2400);
+  }, [answer]);
 
   const followUps = pickFollowUps(crystals, answer);
 
@@ -323,6 +360,34 @@ export function HyperXAnswer({
         );
       })}
 
+      {/* -------------- THE COPY HAND AT THE RESULT'S END --------------- */}
+      {!loading && paragraphs.length > 0 && (
+        <div className="mt-2 flex justify-end">
+          <button
+            type="button"
+            onClick={() => void copyDiscovery()}
+            aria-label={copied ? "Copied" : "Copy this discovery"}
+            title="Copy this discovery — the truth alone, ready to travel"
+            data-testid={`${testId}-copy-end`}
+            className={cn(
+              "focus-glow inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] transition-all duration-300",
+              copied
+                ? "border-[color-mix(in_srgb,#22d3ee_55%,transparent)] text-[#22d3ee]"
+                : "hairline text-muted-foreground hover:text-foreground"
+            )}
+          >
+            {copied ? (
+              <Check className="size-3" aria-hidden="true" />
+            ) : (
+              <Copy className="size-3" aria-hidden="true" />
+            )}
+            <span className="mono-label uppercase tracking-[0.16em]">
+              {copied ? "Copied" : "Copy this discovery"}
+            </span>
+          </button>
+        </div>
+      )}
+
       {/* ---------------- THE DOORS THAT FOLLOW THE ANSWER --------------- */}
       {variant === "full" && !loading && onAsk && (
         <div
@@ -377,7 +442,9 @@ export function HyperXAnswer({
             <span className="mono-label uppercase tracking-[0.16em]">
               {pdfState === "weaving"
                 ? "Weaving the deep research…"
-                : "Deep Research PDF — up to 8000 words"}
+                : pdfState === "kept"
+                  ? "Deep Research PDF — in your Library"
+                  : "Deep Research PDF — up to 8000 words"}
             </span>
           </button>
           {pdfNote && (

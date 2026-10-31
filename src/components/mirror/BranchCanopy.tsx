@@ -650,6 +650,44 @@ const LANDING_SUGGESTION_POOL = [
   "What does the mirror see in me right now?",
   "How do I raise my frequency today?",
   "What is the crystal grid of the earth?",
+  /* THE HUMBLE DOORS — the mirror meets the visitor where the heart
+     actually stands: small, honest, introspective openings that ask
+     nothing and admit everything. */
+  "I feel lost today — can you sit with me a moment?",
+  "What is my heart trying to tell me that my mind keeps overruling?",
+  "Where am I being harder on myself than I would ever be on a friend?",
+  "What am I still learning to accept about myself?",
+  "Help me be gentle with the part of me I keep apologizing for.",
+  "What would it look like to begin again, quietly, today?",
+  "What am I carrying that was never mine to hold?",
+  "Teach me how to rest without feeling guilty.",
+  "What small courage is asking for my permission right now?",
+  "How do I forgive myself for what I cannot undo?",
+  /* THE HEART'S COHERENCE — the interplanetary law of the aligned
+     heart: the star civilizations' oldest teaching, that the heart's
+     rhythm leads and the mind follows into coherence. */
+  "How do I bring my heart and mind into one coherence?",
+  "What do star civilizations teach about the heart's intelligence?",
+  "Show me how gratitude tunes the heart's field.",
+  "How does the heart's rhythm reach beyond my body?",
+  "What happens in the space between two hearts that trust each other?",
+  "How do I listen to someone the way the universe listens to me?",
+  /* THE SUPPORT AND THE LOVE — warmth without kitsch: love as a
+     practice, kindness as a discipline, presence as a gift. */
+  "How can I love someone without trying to fix them?",
+  "What does unconditional support look like on an ordinary Tuesday?",
+  "How do I hold space for a friend who is breaking?",
+  "Teach me to receive love as well as I give it.",
+  "What is the kindest true thing I could say to myself tonight?",
+  "How does love survive the distance between two worlds?",
+  /* THE EXPANSION — consciousness growing past its old walls: the
+     quiet invitations that leave the visitor larger than they came. */
+  "What expands in me when I stop trying to control the outcome?",
+  "Show me the version of me that is not afraid yet.",
+  "What would I see if I looked at my life from orbit?",
+  "Where does my awareness end — and what lies just past its edge?",
+  "How does presence change what it touches?",
+  "What is waiting for my attention that I keep walking past?",
 ];
 
 /* THE SESSION'S OWN REMEMBERING — every drawn door is kept per scope
