@@ -103,7 +103,7 @@ let steadySecretTried = false;
 export async function ensureSteadySecret(): Promise<void> {
   const existing = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || "";
   if (existing.length >= 16) return; // the vault already speaks
-  if (steadySecretTried) return; // one quiet attempt per instance
+  if (steadySecretTried) return; // one quiet attempt per request-cycle
   steadySecretTried = true;
   try {
     const { randomBytes } = await import("crypto");
@@ -131,8 +131,15 @@ export async function ensureSteadySecret(): Promise<void> {
       );
     }
   } catch (err) {
+    /* THE RETRY LAW — a resting vault on one request must not lock this
+       instance out of the shared key forever: the gate reopens so the
+       very next request draws again. Before this law, a single database
+       hiccup at cold boot pinned the instance to its cold-start secret,
+       and every cookie signed by the vault failed here — the visitor
+       signed in and was asked again (the persistence complaint). */
+    steadySecretTried = false;
     console.warn(
-      "[access] the shared secret was not reachable this request:",
+      "[access] the shared secret was not reachable this request (the next request will draw again):",
       err instanceof Error ? err.message : err
     );
   }
@@ -361,8 +368,32 @@ export function readSessionMeta(req: NextRequest): SessionMeta | null {
   return readSessionToken(req.cookies.get(SESSION_COOKIE)?.value);
 }
 
-export async function getSessionUser(req: NextRequest): Promise<SessionUser | null> {
+/* THE SECOND READING — a cookie that stands in the jar but fails the
+   signature may have been carved under the SHARED vault secret by
+   another instance, while this cold instance still speaks its own
+   cold-start key. Before any route may say "signed out", the shared
+   key is drawn once and the cookie is read again. A forged cookie
+   fails both readings — nothing is weakened; a valid passage simply
+   survives the cold-boot race instead of evaporating into a login
+   button. */
+export async function readSessionMetaWithRescue(
+  req: NextRequest
+): Promise<SessionMeta | null> {
   const meta = readSessionMeta(req);
+  if (meta) return meta;
+  const cookiePresent = Boolean(req.cookies.get(SESSION_COOKIE)?.value);
+  const envSecret =
+    process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || "";
+  if (!cookiePresent || envSecret.length >= 16) return null;
+  await ensureSteadySecret();
+  return readSessionMeta(req);
+}
+
+export async function getSessionUser(req: NextRequest): Promise<SessionUser | null> {
+  /* the second reading first — a cookie the cold instance cannot vouch
+     for gets one chance with the shared vault key before any
+     "signed out" verdict falls */
+  const meta = await readSessionMetaWithRescue(req);
   if (!meta) return null;
   try {
     const user = await db.user.findUnique({ where: { id: meta.uid } });

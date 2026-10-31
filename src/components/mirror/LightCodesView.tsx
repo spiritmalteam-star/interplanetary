@@ -1801,19 +1801,12 @@ export function LightCodesView() {
   }, [lcIntention, enhancing, setLcIntention, t]);
   const lcNotice = useMirror((s) => s.lcNotice);
   const playLc = useMirror((s) => s.playLc);
-  /* THE TWO BENCHES — the chamber's own instruments: the standing
-     transmissions (the Mirror's briefs woven by the engine) and the
-     local Ethermix bench (a genuine instrument that plays on the
-     visitor's own device, no server, no credits). The transmissions
-     stay the default; the bench mounts only when chosen, so its
-     device breath is released the moment the bench is left. */
-  const [bench, setBench] = useState<"transmissions" | "sequencer">(
-    "transmissions"
-  );
-  /* THE ETHERMIX OPENS ITSELF — entering the Ethermix raises the
-     full-screen deck at once (the sequencer is gone for good): the
-     visitor lands IN the set, never on a door to it. Laying the deck
-     down keeps a slim hand to raise it again. */
+  /* THE ETHERMIX OPENS ITSELF — entering the Music room raises the
+     full-screen Ethermix deck AT ONCE (the old bench switch and the
+     step sequencer are gone for good): the visitor lands IN the set,
+     never on a door to it. Laying the deck down returns to the
+     transmissions — the style door and every weave fully alive —
+     with one slim hand to raise the set again. */
   const [deckOpen, setDeckOpen] = useState(true);
 
   /* THE KEEPING THREAD — a signed passage's shelf wakes with the room:
@@ -1922,115 +1915,62 @@ export function LightCodesView() {
         data-testid="light-codes"
       >
         <div className="mx-auto w-full max-w-[1020px] px-4 pb-10 pt-3 sm:px-6">
-          {/* THE TWO BENCHES — one quiet switch between the Mirror's
-              studio and the visitor's own local instrument */}
-          <div
-            role="group"
-            aria-label={t("Choose the bench")}
-            className="flex justify-center"
-          >
-            <div className="flex items-center gap-1 rounded-full border hairline p-1">
-              <button
-                type="button"
-                onClick={() => setBench("transmissions")}
-                aria-pressed={bench === "transmissions"}
-                data-testid="lc-bench-transmissions"
-                className="btn-chip h-7 px-3 text-[12px]"
-                style={
-                  bench === "transmissions"
-                    ? {
-                        backgroundColor:
-                          "color-mix(in srgb, var(--scope-a) 12%, transparent)",
-                        color: "var(--scope-a)",
-                        boxShadow:
-                          "inset 0 0 0 1px color-mix(in srgb, var(--scope-a) 35%, transparent)",
-                      }
-                    : undefined
-                }
-              >
-                <AudioLines className="size-3.5" aria-hidden="true" />
-                {t("Transmissions")}
-              </button>
-              <button
-                type="button"
-                onClick={() => setBench("sequencer")}
-                aria-pressed={bench === "sequencer"}
-                data-testid="lc-bench-sequencer"
-                className="btn-chip h-7 px-3 text-[12px]"
-                style={
-                  bench === "sequencer"
-                    ? {
-                        backgroundColor:
-                          "color-mix(in srgb, var(--scope-a) 12%, transparent)",
-                        color: "var(--scope-a)",
-                        boxShadow:
-                          "inset 0 0 0 1px color-mix(in srgb, var(--scope-a) 35%, transparent)",
-                      }
-                    : undefined
-                }
-              >
-                <Music4 className="size-3.5" aria-hidden="true" />
-                {t("Ethermix")}
-              </button>
-            </div>
-          </div>
+          {/* THE ETHERMIX SET — the full-screen crystal set opens DIRECTLY
+              on entering the room: two decks, the synthesizer, the
+              drums, the auto-pilot, the recorder — played on the
+              visitor's own device. The old step sequencer and the bench
+              switch are removed entirely. */}
+          {deckOpen && <EthermixDeck onClose={() => setDeckOpen(false)} />}
 
-          {bench === "sequencer" ? (
-            /* ETHERMIX — the full-screen crystal set opens DIRECTLY:
-                two decks, the synthesizer, the drums, the recorder —
-                played on the visitor's own device. The old step
-                sequencer is removed entirely. */
+          {/* the slim re-entry hand — the deck laid down keeps one quiet
+              way back in; the transmissions stand fully alive beneath */}
+          {!deckOpen && (
             <div className="relative mx-auto mt-4 max-w-[720px]">
-              {deckOpen ? (
-                <EthermixDeck onClose={() => setDeckOpen(false)} />
-              ) : (
-                /* the slim re-entry hand — the deck laid down keeps one
-                    quiet way back in (no sequencer beneath it) */
+              <div
+                className="relative overflow-hidden rounded-2xl border hairline shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]"
+                style={{
+                  background:
+                    "linear-gradient(to bottom, color-mix(in srgb, var(--scope-a) 10%, transparent), transparent 70%), var(--glass-bg-soft)",
+                }}
+              >
+                {/* the prismatic top edge */}
                 <div
-                  className="relative mb-4 overflow-hidden rounded-2xl border hairline shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]"
-                  style={{
-                    background:
-                      "linear-gradient(to bottom, color-mix(in srgb, var(--scope-a) 10%, transparent), transparent 70%), var(--glass-bg-soft)",
-                  }}
-                >
-                  {/* the prismatic top edge */}
-                  <div
-                    aria-hidden="true"
-                    className="absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(168,85,247,0.35),rgba(232,217,176,0.3),transparent)]"
-                  />
-                  <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="min-w-0">
-                      <p className="font-[family-name:Cinzel] text-[13px] tracking-[0.28em] text-[var(--scope-a)]">
-                        {t("THE ETHERMIX DECK")}
-                      </p>
-                      <p className="mt-1 text-[12.5px] leading-snug text-muted-foreground">
-                        {t(
-                          "Play and remix your mirror musics — two decks, a synthesizer, and the full set."
-                        )}
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      data-testid="ethermix-open"
-                      onClick={() => setDeckOpen(true)}
-                      className="btn-chip h-9 shrink-0 px-4 text-[12.5px]"
-                      style={{
-                        backgroundColor:
-                          "color-mix(in srgb, var(--scope-a) 14%, transparent)",
-                        color: "var(--scope-a)",
-                        boxShadow:
-                          "inset 0 0 0 1px color-mix(in srgb, var(--scope-a) 40%, transparent), 0 0 24px -10px color-mix(in srgb, var(--scope-a) 70%, transparent)",
-                      }}
-                    >
-                      <Disc3 className="size-4" aria-hidden="true" />
-                      {t("Open the full-screen set")}
-                    </button>
+                  aria-hidden="true"
+                  className="absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(168,85,247,0.35),rgba(232,217,176,0.3),transparent)]"
+                />
+                <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
+                    <p className="font-[family-name:Cinzel] text-[13px] tracking-[0.28em] text-[var(--scope-a)]">
+                      {t("THE ETHERMIX DECK")}
+                    </p>
+                    <p className="mt-1 text-[12.5px] leading-snug text-muted-foreground">
+                      {t(
+                        "Play and remix your mirror musics — two decks, a synthesizer, and the full set."
+                      )}
+                    </p>
                   </div>
+                  <button
+                    type="button"
+                    data-testid="ethermix-open"
+                    onClick={() => setDeckOpen(true)}
+                    className="btn-chip h-9 shrink-0 px-4 text-[12.5px]"
+                    style={{
+                      backgroundColor:
+                        "color-mix(in srgb, var(--scope-a) 14%, transparent)",
+                      color: "var(--scope-a)",
+                      boxShadow:
+                        "inset 0 0 0 1px color-mix(in srgb, var(--scope-a) 40%, transparent), 0 0 24px -10px color-mix(in srgb, var(--scope-a) 70%, transparent)",
+                    }}
+                  >
+                    <Disc3 className="size-4" aria-hidden="true" />
+                    {t("Open the full-screen set")}
+                  </button>
                 </div>
-              )}
+              </div>
             </div>
-          ) : (
-            <>
+          )}
+
+          <>
             {/* the round's own voice, for those who listen otherwise */}
             <p aria-live="polite" className="sr-only" data-testid="lc-round-live">
               {lcStatus === "interpreting"
@@ -2400,7 +2340,6 @@ export function LightCodesView() {
                         {/* THE KEEPER'S DIAGNOSTIC — silence for every ordinary visitor */}
             <ChamberStatus />
             </>
-          )}
         </div>
       </div>
 
@@ -2408,7 +2347,7 @@ export function LightCodesView() {
           bottom of the room, the way every other room carries its
           line: the content rests above it in its own scroll, and the
           words are always one glance away — never a scroll down. */}
-      {bench === "transmissions" && (
+      {!deckOpen && (
         <div
           className="relative z-10 shrink-0 border-t bg-background/75 backdrop-blur-md"
           style={{

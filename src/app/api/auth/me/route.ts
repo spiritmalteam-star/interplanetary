@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import {
   ensureSteadySecret,
   getSessionUser,
-  readSessionMeta,
+  readSessionMetaWithRescue,
   renewSessionCookie,
 } from "@/lib/server/access";
 import { ensureWallet } from "@/lib/server/wallet";
@@ -35,12 +35,16 @@ export async function GET(req: NextRequest) {
 
   try {
     /* the shared signing key must be the one truth before anything is
-       read — a cold instance without it must not judge a valid cookie */
+       read — a cold instance without it must not judge a valid cookie.
+       THE SECOND READING — a cookie the cold instance cannot vouch for
+       is read once more after the shared vault key is drawn, so a
+       valid passage survives the cold-boot race instead of melting
+       into a login button. */
     await ensureSteadySecret();
 
     /* a signed passage the token itself cannot vouch for (missing,
        tampered, expired) — genuinely signed out */
-    const meta = readSessionMeta(req);
+    const meta = await readSessionMetaWithRescue(req);
     if (!meta) {
       return NextResponse.json(
         { user: null, googleConfigured },
@@ -91,17 +95,31 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const entries = await db.libraryEntry.count({ where: { userId: user.id } });
+    /* the library's count is a garnish, never the greeting itself —
+       a resting shelf must not spill the whole greeting into 503 (a
+       first sign-in answered 503 would leave the previous `me` — null
+       — on the client, which shows the login button despite a valid
+       passage). The count rests at zero instead. */
+    let entries = 0;
+    try {
+      entries = await db.libraryEntry.count({ where: { userId: user.id } });
+    } catch {
+      entries = 0; // the shelf rests — the greeting still comes home
+    }
 
     /* the visitor's own tuning comes home with them — language, voice,
        pace, theme and their fields of expansion, on every device */
     let settings: unknown = null;
     if (!user.email.startsWith("anon:")) {
-      const row = await db.user.findUnique({
-        where: { id: user.id },
-        select: { settings: true },
-      });
-      settings = row?.settings ?? null;
+      try {
+        const row = await db.user.findUnique({
+          where: { id: user.id },
+          select: { settings: true },
+        });
+        settings = row?.settings ?? null;
+      } catch {
+        settings = null; // the tuning rests — the greeting stands
+      }
     }
 
     /* the wallet rides with every greeting — planTier and both credit

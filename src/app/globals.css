@@ -2905,6 +2905,20 @@ html:not(.dark) .lp-sigil-img {
   }
 }
 
+/* THE DESKTOP'S OWN RE-ARMING — a fine pointer (the mouse) never
+   yields the conversation room: on the desk the whole docked chat
+   panel keeps its touch, so every hand inside (the room's header,
+   the reply line, the send, the branches) answers the click.
+   THE ROOM CAN NO LONGER FALL THROUGH — before this law a click
+   anywhere in the docked room slipped beneath the panel onto the
+   closing veil, the room unmounted and only the bare blue crystal
+   floor remained. The coarse-pointer yield above is untouched. */
+@media (hover: hover) and (pointer: fine) {
+  .lens-docked [data-chat-yield] {
+    pointer-events: auto;
+  }
+}
+
 /* THE FLOOR'S OWN LIGHT — the landing chat's whisper line wears the
    crystal's own glow: a red crystal breathing from the west, a blue
    crystal from the east, meeting softly at the border. Static

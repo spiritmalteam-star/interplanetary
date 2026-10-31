@@ -15,6 +15,7 @@ import {
   Disc3,
   Download,
   Drum,
+  Orbit,
   Pause,
   Play,
   Repeat,
@@ -394,6 +395,11 @@ export function EthermixDeck({ onClose }: { onClose: () => void }) {
     size: number;
     name: string;
   } | null>(null);
+  /* THE AUTO-PILOT — the deck can carry the set by itself: both decks
+     wake, the crossfader breathes from side to side on its own, and
+     the visitor simply listens (or takes the wheel back with one
+     touch — the pilot never fights a hand that moves the fader). */
+  const [autoPilot, setAutoPilot] = useState(false);
 
   /* --------------------------- the refs ---------------------------- */
   const engineRef = useRef<Engine | null>(null);
@@ -1167,6 +1173,60 @@ export function EthermixDeck({ onClose }: { onClose: () => void }) {
     const iv = window.setInterval(() => setRecSecs((s) => s + 1), 1000);
     return () => window.clearInterval(iv);
   }, [recActive]);
+
+  /* --------------------- the auto-pilot pilot ---------------------- */
+  const autoRef = useRef<{
+    dir: 1 | -1;
+    pos: number;
+    last: number;
+    lastSet: number;
+  } | null>(null);
+  useEffect(() => {
+    if (!autoPilot) return;
+    /* the wake — every deck carries a track and plays; the shelf's
+       first weaves are loaded if the decks still stand empty */
+    ("ab" as const).split("").forEach((id, idx) => {
+      const dId = id as DeckId;
+      const ui = uiRef.current[dId];
+      if (!ui.trackId) {
+        const tr = allTracks[idx] ?? allTracks[0];
+        if (tr) loadTrack(dId, tr);
+      }
+      if (!uiRef.current[dId].playing) playDeck(dId);
+    });
+    autoRef.current = {
+      dir: xfRef.current >= 0.5 ? -1 : 1,
+      pos: xfRef.current,
+      last: performance.now(),
+      lastSet: 0,
+    };
+    let raf = 0;
+    const step = (now: number) => {
+      const st = autoRef.current;
+      if (!st) return;
+      const dt = Math.min(200, now - st.last);
+      st.last = now;
+      st.pos += st.dir * (dt / 26000); // one full breath every ~26s
+      if (st.pos >= 0.88) {
+        st.pos = 0.88;
+        st.dir = -1;
+      }
+      if (st.pos <= 0.12) {
+        st.pos = 0.12;
+        st.dir = 1;
+      }
+      if (now - st.lastSet > 120) {
+        st.lastSet = now;
+        setCrossfade(st.pos);
+      }
+      raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => {
+      autoRef.current = null;
+      cancelAnimationFrame(raf);
+    };
+  }, [autoPilot, allTracks, loadTrack, playDeck]);
 
   /* ------------------------- the shelf wake ------------------------ */
   const tRef = useRef(t);
@@ -2038,6 +2098,39 @@ export function EthermixDeck({ onClose }: { onClose: () => void }) {
               <span className="w-6 text-center font-[family-name:Cinzel] text-[11px] tracking-widest">
                 B
               </span>
+              {/* THE AUTO-PILOT — the deck carries the set by itself:
+                  both decks wake, the crossfader breathes from side to
+                  side, the visitor simply listens. One touch takes the
+                  wheel back — the pilot never fights a human hand. */}
+              <button
+                type="button"
+                data-testid="ethermix-auto"
+                onClick={() => setAutoPilot((v) => !v)}
+                aria-pressed={autoPilot}
+                aria-label={t("The auto-pilot — the deck carries the set")}
+                title={t("The auto-pilot — the deck carries the set")}
+                className="btn-chip flex h-9 shrink-0 items-center gap-2 px-3 text-[12px]"
+                style={
+                  autoPilot
+                    ? {
+                        backgroundColor:
+                          "color-mix(in srgb, var(--scope-a) 16%, transparent)",
+                        color: "var(--scope-a)",
+                        boxShadow:
+                          "inset 0 0 0 1px color-mix(in srgb, var(--scope-a) 45%, transparent), 0 0 24px -10px color-mix(in srgb, var(--scope-a) 70%, transparent)",
+                      }
+                    : undefined
+                }
+              >
+                <Orbit
+                  className={cn(
+                    "size-4",
+                    autoPilot && "ethermix-rec-dot"
+                  )}
+                  aria-hidden="true"
+                />
+                {t("Auto")}
+              </button>
               <div className="flex w-full shrink-0 flex-col gap-1 sm:w-44">
                 {(["L", "R"] as const).map((side) => (
                   <div key={side} className="flex items-center gap-2">

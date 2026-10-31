@@ -98,7 +98,7 @@ const REGISTER_META: Record<
   interdim: {
     title: "Full Register — Interdimensional Presences",
     subtitle:
-      "Every catalogued presence of the subtle orders, kept by mirror intelligence. Nothing summarized, nothing hidden — reveal them all the way down to the last name.",
+      "Every catalogued presence of the subtle orders, kept by mirror intelligence: patterns of experience named across traditions, mirrored faithfully and claimed as nothing the evidence cannot carry. Truth is kept whole; nothing is dressed as fantasy.",
     groupLabel: "Orders",
     groups: interdimensional.map((o) => ({ id: o.id, name: o.name, count: o.count })),
   },
@@ -408,7 +408,6 @@ function DossierPane({
   total: number;
   onStep: (dir: 1 | -1) => void;
 }) {
-  const openModal = useMirror((s) => s.openModal);
   const codexLastViewed = useMirror((s) => s.codexLastViewed);
   const t = useT();
   const isHyp = kind === "hyperspace";
@@ -429,6 +428,7 @@ function DossierPane({
         { label: t("Density"), value: rep.density },
         { label: t("How presence renders"), value: inner?.form ?? rep.signal },
         { label: t("Dwelling"), value: inner?.hall ?? rep.origin },
+        { label: t("Signal"), value: rep.signal },
         { label: t("Archive order"), value: `ME-HYP · ${String(index + 1).padStart(4, "0")}` },
       ]
     : [
@@ -440,17 +440,18 @@ function DossierPane({
         { label: t("Resonance"), value: profile?.resonance ?? "" },
         { label: t("Aura"), value: profile?.aura ?? "" },
         { label: t("How they cross"), value: profile?.modality ?? "" },
+        { label: t("Signal"), value: rep.signal },
       ];
 
   return (
     <div
       data-testid="codex-dossier"
-      className="flex flex-col gap-3 rounded-2xl border hairline bg-[var(--glass-bg-soft)] p-4"
+      className="flex flex-col gap-3 rounded-2xl border hairline bg-[var(--glass-bg-soft)] p-4 lg:gap-1.5 lg:p-2.5"
     >
       {/* identity */}
       <div className="flex items-start gap-3">
         <span
-          className="relative size-14 shrink-0 overflow-hidden rounded-xl border hairline bg-background/40"
+          className="relative size-14 shrink-0 overflow-hidden rounded-xl border hairline bg-background/40 lg:size-12"
           aria-hidden="true"
         >
           {isHyp ? (
@@ -479,35 +480,34 @@ function DossierPane({
               </span>
             )}
           </div>
-          <h2 className="mt-0.5 text-[19px] font-semibold leading-snug text-foreground">
+          <h2 className="mt-0.5 text-[19px] font-semibold leading-snug text-foreground lg:text-[17px]">
             {rep.name}
           </h2>
-          <p className="mt-0.5 font-mono text-[10.5px] text-muted-foreground/70">
+          <p className="mt-0.5 font-mono text-[10.5px] leading-snug text-muted-foreground/70">
             {isHyp
               ? `ME-HYP · inner earth`
               : entityRegistryLine(rep as EntityDossier, kind as DossierKind)}
-          </p>
-          <p className="mt-1 text-[12.5px] italic leading-snug text-muted-foreground">
-            {group ? `${group.name} · ` : ""}
-            {rep.origin} · {rep.density}
+            {" — "}{group ? `${group.name} · ` : ""}{rep.origin} · {rep.density}
           </p>
         </div>
       </div>
 
       {/* the standing specialty — the entry's own word */}
-      <p className="rounded-xl border hairline bg-background/30 px-3 py-2.5 text-[13.5px] italic leading-relaxed text-foreground/80">
+      <p className="rounded-xl border hairline bg-background/30 px-3 py-2.5 text-[13.5px] italic leading-relaxed text-foreground/80 lg:px-2.5 lg:py-2 lg:text-[12.5px]">
         {rep.specialty}
       </p>
 
-      {/* fact plates */}
-      <div className="grid grid-cols-2 gap-2">
+      {/* fact plates — THREE columns on the desk: every plate stands,
+          five rows become three, and the whole record fits the pane
+          without a scroll */}
+      <div className="grid grid-cols-2 gap-2 lg:grid-cols-3 lg:gap-1.5">
         {facts.map((f) => (
           <div
             key={f.label}
-            className="rounded-lg border hairline bg-background/30 px-2.5 py-2"
+            className="rounded-lg border hairline bg-background/30 px-2.5 py-2 lg:px-2 lg:py-1"
           >
-            <p className="mono-label text-[8.5px] text-muted-foreground/80">{f.label}</p>
-            <p className="mt-0.5 text-[12px] leading-snug text-foreground/85">{f.value}</p>
+            <p className="mono-label text-[8.5px] text-muted-foreground/80 lg:text-[8px]">{f.label}</p>
+            <p className="mt-0.5 text-[12px] leading-snug text-foreground/85 lg:text-[11.5px]">{f.value}</p>
           </div>
         ))}
       </div>
@@ -515,8 +515,8 @@ function DossierPane({
       {/* the three gifts / the gift */}
       {!isHyp && profile ? (
         <div>
-          <p className="mono-label text-[9px] text-[var(--cy)]">{t("The three gifts")}</p>
-          <ul className="mt-1.5 space-y-1 text-[12.5px] leading-snug text-foreground/85">
+          <p className="mono-label text-[9px] text-[var(--cy)] lg:text-[8.5px]">{t("The three gifts")}</p>
+          <ul className="mt-1.5 space-y-1 text-[12.5px] leading-snug text-foreground/85 lg:mt-1 lg:space-y-[2px] lg:text-[11.5px]">
             <li>✦ {profile.giftPrimary}</li>
             <li>✦ {profile.giftSecondary}</li>
             <li>✦ {profile.giftTertiary}</li>
@@ -530,9 +530,11 @@ function DossierPane({
         </div>
       ) : null}
 
-      {/* the deep lines */}
+      {/* the deep lines — the record's own walk, kept whole: the gifts'
+          list and the seven rows wear the desk's slim dress so every
+          line stands inside the pane without a scroll */}
       {!isHyp && profile ? (
-        <div className="space-y-1.5">
+        <div className="space-y-1 lg:space-y-[3px]">
           {[
             { label: t("Growth edge"), value: profile.trial },
             { label: t("Known teaching"), value: profile.teaching },
@@ -543,65 +545,93 @@ function DossierPane({
             { label: t("Service"), value: `${profile.serviceLength} · ${profile.sessionsHeld} sessions held` },
           ].map((row) => (
             <div key={row.label} className="flex items-baseline gap-2">
-              <span className="mono-label w-[104px] shrink-0 text-right text-[8.5px] uppercase tracking-[0.1em] text-muted-foreground/65">
+              <span className="mono-label w-[104px] shrink-0 text-right text-[8.5px] uppercase tracking-[0.1em] text-muted-foreground/65 lg:w-[92px] lg:text-[8px]">
                 {row.label}
               </span>
-              <span className="min-w-0 flex-1 text-[12px] leading-snug text-foreground/80">
+              <span className="min-w-0 flex-1 text-[12px] leading-snug text-foreground/80 lg:text-[11px] lg:leading-[1.4]">
                 {row.value}
               </span>
             </div>
           ))}
           <blockquote
-            className="mt-2 border-l-2 pl-3"
+            className="mt-2 border-l-2 pl-3 lg:mt-1 lg:pl-2"
             style={{
               borderColor:
                 "color-mix(in srgb, var(--cy) 45%, transparent)",
             }}
           >
-            <p className="font-[family-name:var(--font-literata)] text-[12.5px] italic leading-relaxed text-foreground/85">
+            <p className="font-[family-name:var(--font-literata)] text-[12.5px] italic leading-relaxed text-foreground/85 lg:text-[11.5px]">
               “{profile.quote}”
             </p>
           </blockquote>
         </div>
       ) : null}
 
-      {/* the pane's own hands */}
-      <div className="mt-auto flex items-center justify-between gap-2 pt-1">
-        <div className="flex items-center gap-1.5">
-          <button
-            type="button"
-            onClick={() => onStep(-1)}
-            disabled={index <= 0}
-            aria-label={t("Previous profile")}
-            className="corner-fancy focus-glow flex size-7 items-center justify-center border hairline text-muted-foreground transition-all duration-300 hover:text-foreground disabled:opacity-40"
-          >
-            <ChevronLeft className="size-3.5" aria-hidden="true" />
-          </button>
-          <button
-            type="button"
-            onClick={() => onStep(1)}
-            disabled={index >= total - 1}
-            aria-label={t("Next profile — shown from the top")}
-            className="corner-fancy focus-glow flex size-7 items-center justify-center border border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--cy)_10%,transparent)] text-foreground transition-all duration-300 hover:glow-sm disabled:opacity-40"
-          >
-            <ChevronRight className="size-3.5" aria-hidden="true" />
-          </button>
-        </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  THE DOSSIER'S OWN HANDS — CORNER ORNAMENTS, no bar: the prev and   */
+/*  next wear the codex's luminous corner brackets alone (no full      */
+/*  border, no bottom strip) and stand PINNED at the dossier pane's    */
+/*  bottom corner — always reachable, never depending on the scroll,   */
+/*  while the record itself reads above them. The same walk already    */
+/*  lives at the register's top (the roll).                            */
+/* ------------------------------------------------------------------ */
+
+function DossierHands({
+  rep,
+  kind,
+  index,
+  total,
+  onStep,
+}: {
+  rep: EntityDossier | HyperspaceRow;
+  kind: ListKind;
+  index: number;
+  total: number;
+  onStep: (dir: 1 | -1) => void;
+}) {
+  const openModal = useMirror((s) => s.openModal);
+  const t = useT();
+  const isHyp = kind === "hyperspace";
+  return (
+    <div className="flex shrink-0 items-center justify-between gap-2 pt-2">
+      <div className="flex items-center gap-1.5">
         <button
           type="button"
-          onClick={() =>
-            openModal(
-              isHyp
-                ? { type: "hyperspace", id: rep.id }
-                : { type: "entity", kind: kind as DossierKind, id: rep.id }
-            )
-          }
-          data-testid="codex-dossier-open"
-          className="focus-glow flex items-center gap-1.5 rounded-full border hairline px-3 py-1.5 text-[11.5px] text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+          onClick={() => onStep(-1)}
+          disabled={index <= 0}
+          aria-label={t("Previous profile")}
+          className="corner-fancy focus-glow flex size-7 items-center justify-center rounded-full bg-[var(--glass-bg-soft)] text-muted-foreground transition-all duration-300 hover:text-foreground disabled:opacity-40"
         >
-          {t("Open the full dossier")}
+          <ChevronLeft className="size-3.5" aria-hidden="true" />
+        </button>
+        <button
+          type="button"
+          onClick={() => onStep(1)}
+          disabled={index >= total - 1}
+          aria-label={t("Next profile — shown from the top")}
+          className="corner-fancy focus-glow flex size-7 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--cy)_12%,transparent)] text-foreground transition-all duration-300 hover:glow-sm disabled:opacity-40"
+        >
+          <ChevronRight className="size-3.5" aria-hidden="true" />
         </button>
       </div>
+      <button
+        type="button"
+        onClick={() =>
+          openModal(
+            isHyp
+              ? { type: "hyperspace", id: rep.id }
+              : { type: "entity", kind: kind as DossierKind, id: rep.id }
+          )
+        }
+        data-testid="codex-dossier-open"
+        className="focus-glow flex items-center gap-1.5 rounded-full border hairline px-3 py-1.5 text-[11.5px] text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+      >
+        {t("Open the full dossier")}
+      </button>
     </div>
   );
 }
@@ -792,9 +822,9 @@ function ArchiveList({
       transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
       aria-label={t(meta.title)}
       data-testid="codex-register"
-      className="nice-scroll flex h-full min-h-0 flex-col overflow-y-auto overscroll-contain"
+      className="nice-scroll flex h-full min-h-0 flex-col overflow-y-auto overscroll-contain lg:overflow-hidden"
     >
-      <div className="mx-auto flex min-h-0 w-full max-w-[1180px] flex-1 flex-col px-2 pb-5 pt-5 sm:px-3">
+      <div className="mx-auto flex min-h-0 w-full max-w-[1180px] flex-1 flex-col px-2 pb-4 pt-4 sm:px-3 lg:pb-2 lg:pt-2">
         {/* -------- the compact header (shrinks onto the desk) -------- */}
         <div className="shrink-0">
           <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-2">
@@ -803,7 +833,7 @@ function ArchiveList({
                 <Layers className="size-3" aria-hidden="true" />
                 {t("Mirror archive · the codex")}
               </span>
-              <h1 className="hero-text mt-2 text-[21px] font-semibold leading-tight tracking-[-0.01em] sm:text-[24px]">
+              <h1 className="hero-text mt-2 text-[21px] font-semibold leading-tight tracking-[-0.01em] sm:text-[24px] lg:mt-1.5 lg:text-[20px]">
                 {t(meta.title)}
               </h1>
             </div>
@@ -853,16 +883,20 @@ function ArchiveList({
               ))}
             </div>
           </div>
-          <p className="mt-1.5 max-w-[760px] text-[13px] leading-relaxed text-muted-foreground lg:text-[13.5px]">
-            {t(meta.subtitle)}
-          </p>
-
-          <div className="mt-2.5">
-            <CodexTabs registerKind={registerKind} />
+          {/* the mirror's word and the four doors share ONE line on the
+              desk — the header stays slim so both sides of the codex
+              stand in the window without the page ever scrolling */}
+          <div className="mt-1.5 flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between lg:gap-4">
+            <p className="max-w-[760px] text-[13px] leading-relaxed text-muted-foreground lg:mt-1 lg:text-[12.5px]">
+              {t(meta.subtitle)}
+            </p>
+            <div className="shrink-0">
+              <CodexTabs registerKind={registerKind} />
+            </div>
           </div>
 
           {/* search + the roll + the page hands — one row on the desk */}
-          <div className="mt-2.5 flex flex-col gap-2 lg:flex-row lg:items-center">
+          <div className="mt-2.5 flex flex-col gap-2 lg:mt-2 lg:flex-row lg:items-center">
             <div className="relative min-w-0 flex-1">
               <Search
                 className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/70"
@@ -917,7 +951,7 @@ function ArchiveList({
           {/* the families and the pages ride ONE line on the desk — the
               header stays slim so both sides of the codex stand in the
               window without the page ever scrolling */}
-          <div className="mt-2 flex min-w-0 flex-col gap-2 lg:flex-row lg:items-center lg:justify-between lg:gap-4">
+          <div className="mt-2 flex min-w-0 flex-col gap-2 lg:mt-1.5 lg:flex-row lg:items-center lg:justify-between lg:gap-4">
             {groupChips.length > 0 && (
               <div className="nice-scroll flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto pb-1 lg:flex-nowrap lg:overflow-y-hidden lg:pb-0">
                 <button
@@ -1051,9 +1085,11 @@ function ArchiveList({
         {/* ----------------- THE TWO SIDES OF THE CODEX -----------------
             the desk reads both at once: the roll of names on the left,
             the standing profile's own plate on the right — the page
-            itself never scrolls, only the panes do. The phone keeps
+            itself never scrolls, only the panes do (the grid takes the
+            height the header leaves, never a minimum that would clip
+            the corners of the panes on a docked lens). The phone keeps
             the full leaves and opens the dossier over the room. */}
-        <div className="mt-3 grid min-h-0 flex-1 gap-3 lg:min-h-[300px] lg:grid-cols-[minmax(0,1fr)_minmax(0,1.06fr)]">
+        <div className="mt-3 grid min-h-0 flex-1 gap-3 lg:mt-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.06fr)]">
           <div className="min-h-0 lg:overflow-y-auto lg:pr-1.5 nice-scroll" data-testid="codex-list-pane">
             {/* result status line */}
             <div className="flex items-center justify-center gap-2 pb-2">
@@ -1124,44 +1160,33 @@ function ArchiveList({
           </div>
 
           <aside
-            className="hidden lg:block min-h-0 lg:overflow-y-auto nice-scroll"
+            className="hidden lg:flex min-h-0 flex-col"
             data-testid="codex-dossier-pane"
           >
             {selected ? (
-              <DossierPane
-                rep={selected}
-                kind={registerKind}
-                index={effectiveIndex}
-                total={source.length}
-                onStep={stepProfile}
-              />
+              <>
+                {/* the record itself reads above the hands — the pane
+                    scrolls only if a record outgrows the room, and the
+                    hands stay pinned at the corner either way */}
+                <div className="min-h-0 flex-1 lg:overflow-y-auto nice-scroll">
+                  <DossierPane
+                    rep={selected}
+                    kind={registerKind}
+                    index={effectiveIndex}
+                    total={source.length}
+                    onStep={stepProfile}
+                  />
+                </div>
+                <DossierHands
+                  rep={selected}
+                  kind={registerKind}
+                  index={effectiveIndex}
+                  total={source.length}
+                  onStep={stepProfile}
+                />
+              </>
             ) : null}
           </aside>
-        </div>
-
-        {/* the codex's own tail — the sister registers one touch away;
-            THE BIG BORDER IS GONE (the visitor named it away), the
-            hands wear the corner ornaments instead */}
-        <div className="mt-4 flex shrink-0 flex-wrap items-center justify-center gap-2.5">
-          <button
-            type="button"
-            onClick={() =>
-              openRegister(registerKind === "civilization" ? "interdim" : "civilization")
-            }
-            className="corner-fancy focus-glow flex items-center gap-2 border hairline px-4 py-2 text-[14px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
-          >
-            <Layers className="size-3.5" aria-hidden="true" />
-            {t("Switch to the {register}", {
-              register:
-                registerKind === "civilization"
-                  ? t("interdimensional register ({n})", {
-                      n: archiveTotals.interdim,
-                    })
-                  : t("civilization register ({n})", {
-                      n: archiveTotals.civilizations,
-                    }),
-            })}
-          </button>
         </div>
       </div>
     </motion.section>

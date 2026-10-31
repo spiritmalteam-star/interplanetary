@@ -32,7 +32,6 @@ import {
   Eraser,
   Hammer,
   Hand,
-  Fingerprint,
   History,
   Hourglass,
   Layers,
@@ -2037,7 +2036,6 @@ export function BranchCanopy({
   const openParticleX = useMirror((s) => s.openParticleX);
   const openEvolveMed = useMirror((s) => s.openEvolveMed);
   const openArtX = useMirror((s) => s.openArtX);
-  const openRegister = useMirror((s) => s.openRegister);
   const resetField = useMirror((s) => s.resetField);
   /* THE CREATION DOOR — the branch's own words ride with the touch:
      the theme page that opens forges its making from them. */
@@ -5314,16 +5312,12 @@ export function BranchCanopy({
               <BookOpen className="size-3" aria-hidden="true" />
             </button>
             )}
-            <button
-              type="button"
-              onClick={() => openRegister("civilization")}
-              aria-label={t("The Codex")}
-              title={t("The Codex — the archive's four registers")}
-              data-testid={`${testIdPrefix}-door-codex`}
-              className="focus-glow flex size-7 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
-            >
-              <Fingerprint className="size-3" aria-hidden="true" />
-            </button>
+            {/* THE REGISTER HAS LEFT THE CROWN — the codex door (the
+                Fingerprint that once stood between the profile and the
+                scopes) is gone from the top of the chat for good: the
+                codex lives at the scopes' shore and inside the codex
+                hall itself. Nothing of the register remains at the top
+                of the chat where InDream and Scopes stand. */}
             {!realm && (
             <button
               type="button"
@@ -5925,7 +5919,12 @@ export function BranchCanopy({
             heavy enough that no tree line ever shows behind the room */}
         {zoomed && (
           <div
-            onClick={exitZoom}
+            /* THE VEIL NEVER STEALS THE ROOM — docked in the threshold
+               (bare) the veil no longer closes the conversation on a
+               stray click: the room is dismissed only by its own back
+               hand in the header. The full portal keeps the old
+               click-outside law. */
+            onClick={bare ? undefined : exitZoom}
             aria-hidden="true"
             data-testid={`${testIdPrefix}-veil`}
             className="canopy-veil absolute inset-0 z-20 bg-[color-mix(in_srgb,var(--background)_68%,transparent)]"
@@ -5992,7 +5991,15 @@ export function BranchCanopy({
                   when the walk turns to the next branch, only the room
                   inside it changes — the transmission glides, no flicker */}
               <header
-                className="flex shrink-0 items-start justify-between gap-3 border-b px-4 py-2.5 pr-11 sm:px-5 sm:pr-12"
+                className={cn(
+                  "flex shrink-0 items-start justify-between gap-3 border-b px-4 py-2.5 pr-11 sm:px-5 sm:pr-12",
+                  /* THE HEADER'S OWN TOUCH — docked or full, the room's
+                     crown of hands answers every pointer: the fine
+                     desktop click never falls through the docked panel
+                     onto the closing veil again, and the touch law's
+                     own re-arming is kept (controls keep their touch). */
+                  bare && "pointer-events-auto"
+                )}
                 style={{
                   borderColor:
                     "color-mix(in srgb, var(--hairline) 70%, transparent)",
@@ -6565,7 +6572,14 @@ export function BranchCanopy({
                   transmission, so the next branch glides in without a
                   single flicker. */}
               <footer
-                className="flex shrink-0 flex-col gap-2.5 border-t px-4 py-2.5 sm:px-6 sm:py-3"
+                className={cn(
+                  "flex shrink-0 flex-col gap-2.5 border-t px-4 py-2.5 sm:px-6 sm:py-3",
+                  /* THE FOOTER'S OWN TOUCH — the reply line and every
+                     branch hand keep their click on the desk: the room
+                     is never lost to a stray fall-through again (the
+                     veil behind it no longer closes the docked room). */
+                  bare && "pointer-events-auto"
+                )}
                 style={{
                   borderColor:
                     "color-mix(in srgb, var(--hairline) 70%, transparent)",
