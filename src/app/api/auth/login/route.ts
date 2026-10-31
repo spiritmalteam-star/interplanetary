@@ -69,10 +69,22 @@ export async function POST(req: NextRequest) {
     setSessionCookie(res, user.id, user.sessionVersion ?? 0, req);
     clearForeignSessionCookies(res);
     /* make sure the passage carries its workspace, ledger and gift —
-       also for accounts carved before the provisions existed */
-    await ensureVisitorProvisions(user.id);
+       also for accounts carved before the provisions existed.
+       THE COOKIE NEVER FALLS — the provisions stand BESIDE the signed
+       answer, never between it and the keeper: a stumbling hall must
+       never strip the session that was already carved (the same law
+       the Google callback keeps). */
+    try {
+      await ensureVisitorProvisions(user.id);
+    } catch (provisionErr) {
+      console.error("[auth/login] provisions stumbled (the passage stands):", provisionErr);
+    }
     /* everything the anonymous cookie kept comes with the visitor */
-    await mergeAnonLibrary(readAnonId(req), user.id);
+    try {
+      await mergeAnonLibrary(readAnonId(req), user.id);
+    } catch (mergeErr) {
+      console.error("[auth/login] library merge stumbled (the passage stands):", mergeErr);
+    }
     return res;
   } catch (err) {
     console.error("[auth/login] failed:", err);

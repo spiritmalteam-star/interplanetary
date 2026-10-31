@@ -30,6 +30,7 @@ import {
   Share2,
   Dna,
   Eraser,
+  Gem,
   Hammer,
   Hand,
   History,
@@ -131,6 +132,7 @@ import { useT } from "@/lib/i18n";
 import { LANDING_SCOPES, useMirror } from "@/lib/mirror-store";
 import { cn } from "@/lib/utils";
 import { flowAnswerText } from "@/lib/text-flow";
+import { HyperXPanel, splitCrystals } from "./HyperXPanel";
 import { tuneSeedBatch } from "@/lib/question-voice";
 import {
   categoryForMove,
@@ -872,7 +874,7 @@ function LandingPainting({
   onZoom,
   onRetry,
 }: {
-  turn: { imageUrl?: string; imageTitle?: string; paintFailed?: boolean };
+  turn: { imageUrl?: string; imageTitle?: string; paintFailed?: boolean; painting?: boolean };
   testId: string;
   onZoom: (src: string, caption: string) => void;
   /** THE RETRY HAND — offered while the brushes rest (the last turn
@@ -908,6 +910,39 @@ function LandingPainting({
       </div>
     );
   }
+  /* THE CRYSTAL IN THE MAKING — when a suggestion (or any wish) is
+     crystallizing into an image, the plate announces it BEFORE the
+     picture exists: the visitor always knows an image is on its way,
+     and exactly where it will land. */
+  if (!turn.imageUrl && turn.painting) {
+    return (
+      <div
+        className="flex w-full max-w-[340px] flex-col items-start gap-1.5 rounded-xl border border-dashed px-3 py-3"
+        style={{
+          borderColor:
+            "color-mix(in srgb, var(--scope-a,var(--gd)) 38%, transparent)",
+          background:
+            "color-mix(in srgb, var(--scope-a,var(--gd)) 6%, var(--background))",
+        }}
+        data-testid={`${testId}-pending`}
+        role="status"
+      >
+        <span className="flex items-center gap-1.5">
+          <Gem
+            className="size-3.5 animate-pulse text-[var(--scope-a,var(--gd))]"
+            aria-hidden="true"
+          />
+          <span className="mono-label text-[9.5px] uppercase tracking-[0.18em] text-muted-foreground/85">
+            Crystallizing an image
+          </span>
+        </span>
+        <p className="text-[12.5px] leading-relaxed text-muted-foreground">
+          Your suggestion is becoming a vision — the image is being painted
+          and will appear right here.
+        </p>
+      </div>
+    );
+  }
   if (!turn.imageUrl) return null;
   return (
     <figure
@@ -937,8 +972,12 @@ function LandingPainting({
         />
       </button>
       {turn.imageTitle && (
-        <figcaption className="mono-label truncate px-2.5 py-1.5 text-[9.5px] uppercase tracking-[0.16em] text-muted-foreground/80">
-          {turn.imageTitle}
+        <figcaption className="mono-label flex items-center gap-1.5 px-2.5 py-1.5 text-[9.5px] uppercase tracking-[0.16em] text-muted-foreground/80">
+          <Gem
+            className="size-2.5 shrink-0 text-[var(--scope-a,var(--gd))]"
+            aria-hidden="true"
+          />
+          <span className="truncate">{turn.imageTitle} — crystallized</span>
         </figcaption>
       )}
     </figure>
@@ -948,8 +987,10 @@ function LandingPainting({
 async function speakWithTransmission(
   /* "mirror" is the pure presence floor; "absolute" is the landing's
      own entity — the mirror of the Absolute (no censor, the true
-     story) — both speaking through /api/transmission's own doors */
-  category: BranchId | "mirror" | "absolute",
+     story) — both speaking through /api/transmission's own doors.
+     "hyperx" is the discovery voice — its own mode through the same
+     door (the server carries the HyperX specialization). */
+  category: BranchId | "mirror" | "absolute" | "hyperx",
   query: string,
   branchQuestion: string,
   transmission: string,
@@ -6254,7 +6295,9 @@ export function BranchCanopy({
                           {turn.a && (
                             <div className="flex items-start gap-1">
                               <p className="sv-answer min-w-0 flex-1 break-words text-[14.5px] leading-[1.7] text-foreground/85">
-                                {flowAnswerText(turn.a)}
+                                {realm && landingScope === "hyperx"
+                                  ? flowAnswerText(splitCrystals(turn.a).body)
+                                  : flowAnswerText(turn.a)}
                               </p>
                               <RoomCopyButton
                                 text={turn.a}
@@ -6303,7 +6346,9 @@ export function BranchCanopy({
                     (revealStage >= 2 || realm) ? (
                       <div className="relative">
                         <div className="canopy-answer whitespace-pre-wrap break-words text-[15.5px] leading-[1.75] text-foreground/90 sm:text-[16px]">
-                          {flowAnswerText(roomAnswer)}
+                          {realm && landingScope === "hyperx"
+                            ? flowAnswerText(splitCrystals(roomAnswer).body)
+                            : flowAnswerText(roomAnswer)}
                           {roomLoading && (
                             <span
                               aria-hidden="true"
@@ -6323,6 +6368,21 @@ export function BranchCanopy({
                               testId={`${testIdPrefix}-zoom-share`}
                             />
                           </div>
+                        )}
+                        {/* THE HYPERX INSTRUMENTS — the discovery answer's
+                            own crystals (each one crystallizes its truth
+                            into a vision when touched) and the deep
+                            research press (the truth extended up to 8000
+                            words, pressed into a PDF) */}
+                        {realm && landingScope === "hyperx" && !roomLoading && (
+                          <HyperXPanel
+                            question={zoomQ ?? ""}
+                            answer={roomAnswer}
+                            onZoom={(src, caption) =>
+                              setLandingViewing({ src, caption })
+                            }
+                            testId={`${testIdPrefix}-zoom-hyperx`}
+                          />
                         )}
                         {/* THE VISION IN THE MIXING — the mirror chose to
                             paint: the plate appears beneath the words */}
@@ -6385,12 +6445,16 @@ export function BranchCanopy({
                             lastLandingTurn?.painting
                               ? "Painting the vision"
                               : realm
-                                ? "Reflecting"
+                                ? landingScope === "hyperx"
+                                  ? "Discovering"
+                                  : "Reflecting"
                                 : "Channeling"
                           )}
                           variant={
                             realm
-                              ? "mirror"
+                              ? landingScope === "hyperx"
+                                ? "hyperx"
+                                : "mirror"
                               : SCOPE_CHANNELING[roomLiveScope] ?? "orbs"
                           }
                           className="mono-label text-[11px] uppercase tracking-[0.22em]"
@@ -6492,10 +6556,18 @@ export function BranchCanopy({
                           {turn.loading ? (
                             <MirrorChanneling
                               compact
-                              label={t(realm ? "Reflecting" : "The transmission is listening…")}
+                              label={t(
+                                realm
+                                  ? landingScope === "hyperx"
+                                    ? "Discovering"
+                                    : "Reflecting"
+                                  : "The transmission is listening…"
+                              )}
                               variant={
                                 realm
-                                  ? "mirror"
+                                  ? landingScope === "hyperx"
+                                    ? "hyperx"
+                                    : "mirror"
                                   : SCOPE_CHANNELING[roomLiveScope] ?? "orbs"
                               }
                               className="py-1 mono-label text-[10.5px] uppercase tracking-[0.2em] text-muted-foreground"
@@ -6506,7 +6578,9 @@ export function BranchCanopy({
                                 <p className="sv-mark sv-mark-a">{t(SCOPE_META[landingScope].aMark!)}</p>
                               )}
                               <p className="sv-answer min-w-0 flex-1 whitespace-pre-wrap break-words text-[15.5px] leading-[1.7] text-foreground/90">
-                                {flowAnswerText(turn.a)}
+                                {realm && landingScope === "hyperx"
+                                  ? flowAnswerText(splitCrystals(turn.a).body)
+                                  : flowAnswerText(turn.a)}
                               </p>
                               <RoomCopyButton
                                 text={turn.a}
@@ -6556,6 +6630,20 @@ export function BranchCanopy({
                                 : undefined
                             }
                           />
+                          {/* THE HYPERX INSTRUMENTS — every follow-up
+                              answer carries its own crystals and the
+                              deep research press, exactly like the
+                              room's standing answer */}
+                          {realm && landingScope === "hyperx" && !turn.loading && turn.a && (
+                            <HyperXPanel
+                              question={turn.q}
+                              answer={turn.a}
+                              onZoom={(src, caption) =>
+                                setLandingViewing({ src, caption })
+                              }
+                              testId={`${testIdPrefix}-room-hyperx-${i}`}
+                            />
+                          )}
                         </div>
                       ))}
                     </div>

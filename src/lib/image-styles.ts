@@ -13,6 +13,14 @@ export type ImageStyleOption = {
 };
 
 export const IMAGE_STYLES: ImageStyleOption[] = [
+  /* THE HOUSE'S OWN STYLE — the M.E. Illustrated Codex is the default
+     manner of every brush in the atelier (the image engine paints in
+     it whenever no style is named); it stands here too, so the visitor
+     can name it EXPLICITLY and return to it after any other choice. */
+  {
+    value: "M.E. Illustrated Codex",
+    hint: "the house's own illuminated plates — midnight blue, emerald, gold",
+  },
   { value: "Ethereal dream", hint: "soft light, weightless air" },
   { value: "Cosmic nebula", hint: "deep space, starlight veils" },
   { value: "Bioluminescent", hint: "living glow, night gardens" },

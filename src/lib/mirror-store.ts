@@ -218,16 +218,19 @@ export type ToolTabKey =
    walks in (the crown's Scopes hand chooses it). THE MIRROR is the
    house's own reflection — the standing default (the old "General"):
    the whole house's own voice answering from the open floor. The
-   other four keys are family keys, so the suggestions, the accent
+   other keys are family keys, so the suggestions, the accent
    light and the banks all resolve through the walk's own families.
    Every scope is its own world: its own doors, its own light, its
-   own conversation and its own memory. */
+   own conversation and its own memory. HYPERX is the pro passage's
+   own field — the discovery voice, chosen from the crown's own
+   HyperX hand. */
 export type LandingScopeKey =
   | "mirror"
   | "interplanetary"
   | "quantum"
   | "healing"
-  | "artx";
+  | "artx"
+  | "hyperx";
 
 export const LANDING_SCOPES: LandingScopeKey[] = [
   "mirror",
@@ -235,6 +238,7 @@ export const LANDING_SCOPES: LandingScopeKey[] = [
   "quantum",
   "healing",
   "artx",
+  "hyperx",
 ];
 
 /** The standing field of the threshold — THE MIRROR, always. */

@@ -299,7 +299,8 @@ export type ScopeVoiceCategory =
   | "interplanetary"
   | "quantum"
   | "healing"
-  | "artx";
+  | "artx"
+  | "hyperx";
 
 export type ScopeMeta = {
   label: string;
@@ -394,6 +395,28 @@ export const SCOPE_META: Record<LandingScopeKey, ScopeMeta> = {
     aMark: "Breathing out",
     voice: "healing",
     librarySector: "evolvemed",
+  },
+  /* HYPERX — OUR MOST INTELLIGENT REFLECTION OF THE ABSOLUTE: the one
+     field that does not reflect but DISCOVERS — hyper-advanced
+     reasoning, underlying truths, the illumination path, hints and
+     advanced discovery, spoken in a precision tone that never
+     mistakes its reflection, in answers of 900–1200 words, with
+     crystals that crystallize each truth into a vision when touched,
+     and a deep-research press (up to 8000 words) for the long
+     journeys. The pro passage's own light: electric, vibrant,
+     alive. */
+  hyperx: {
+    label: "HyperX",
+    spirit: "Advanced discovery · illumination · underlying truths",
+    accent: "#e879f9",
+    dot: "#e879f9",
+    second: "#22d3ee",
+    floorAsk: "what truth shall we uncover, HyperX?",
+    whisper: "Ask what has never been heard — HyperX answers precise…",
+    qMark: "HyperX receiving",
+    aMark: "Truth discovered",
+    voice: "hyperx",
+    librarySector: "observatory",
   },
 };
 

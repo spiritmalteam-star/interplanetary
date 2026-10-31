@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { Hammer, Layers } from "lucide-react";
+import { Hammer, Layers, Sparkles } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -16,9 +16,19 @@ import { cn } from "@/lib/utils";
 /*  dream-work. The last maker the visitor stood in reopens. The       */
 /*  ATELIER stands among the makers (the ArtX atelier rides the rail). */
 /*                                                                     */
-/*  SCOPES — the fields' hand opens the scopes workplace the same way: */
-/*  a full room where the fields wear their light, and the one back    */
-/*  hand returns to the main chat landing.                             */
+/*  SCOPES — the Interdimensional's own shore: the door opens the      */
+/*  Codex Exobiologica at the Interdimensional category, where every   */
+/*  profile is laid.                                                   */
+/*                                                                     */
+/*  HYPERX — OUR MOST INTELLIGENT REFLECTION OF THE ABSOLUTE: the      */
+/*  crown's own discovery hand. One touch transforms the mirror into   */
+/*  HyperX — hyper-advanced reasoning and underlying truths, the       */
+/*  illumination path and its hints, advanced discovery in a precision */
+/*  tone that never mistakes its reflection: the highest truth sharer  */
+/*  and an evolution-of-civilisation source. The chat dresses itself   */
+/*  in the electric light, answers run 900–1200 words, crystals       */
+/*  crystallize each context into a vision when touched, and the deep  */
+/*  research press (up to 8000 words) stands beside every truth.       */
 /*                                                                     */
 /*  THE MARKET HAS LEFT THE HOUSE — its violet gem is gone from the    */
 /*  crown and the hall is closed for good; nothing is sold or hung.    */
@@ -30,6 +40,9 @@ export function LandingChatNav() {
   const activateToolTab = useMirror((s) => s.activateToolTab);
   const activeToolTab = useMirror((s) => s.activeToolTab);
   const lastMakerTab = useMirror((s) => s.lastMakerTab);
+  const landingScope = useMirror((s) => s.landingScope);
+  const setLandingScope = useMirror((s) => s.setLandingScope);
+  const closeScopes = useMirror((s) => s.closeScopes);
 
   /* IN DREAM — the workplace already stands (and the scopes are not
      standing over it)? One touch re-enters it (the window never
@@ -44,11 +57,18 @@ export function LandingChatNav() {
     openToolTab(lastMakerTab ?? "dreambook");
   }, [activeToolTab, activateToolTab, openToolTab, lastMakerTab]);
 
-  /* SCOPES — the fields' own workplace rises (or re-enters when the
-     visitor stands in another room of the same window). */
+  /* SCOPES — the Interdimensional's own shore rises (or re-enters). */
   const openScopes = useCallback(() => {
     openToolTab("scopes");
   }, [openToolTab]);
+
+  /* HYPERX — the mirror is transformed: the discovery field dresses
+     the whole chat and the scopes' shore lays itself down so the
+     transformation is seen at once. */
+  const openHyperX = useCallback(() => {
+    setLandingScope("hyperx");
+    closeScopes();
+  }, [setLandingScope, closeScopes]);
 
   const hand =
     "focus-glow relative flex h-7 items-center gap-1.5 rounded-full border px-2.5 transition-all duration-300 after:absolute after:-inset-2 after:rounded-full after:content-['']";
@@ -92,6 +112,26 @@ export function LandingChatNav() {
         <Layers className="size-3" aria-hidden="true" />
         <span className="mono-label whitespace-nowrap text-[10px] uppercase tracking-[0.14em]">
           {t("Scopes")}
+        </span>
+      </button>
+
+      {/* ---------------------------- HYPERX ---------------------------- */}
+      <button
+        type="button"
+        onClick={openHyperX}
+        aria-pressed={landingScope === "hyperx"}
+        aria-label={t(
+          "HyperX — the highest truth sharer, advanced discovery and underlying truths"
+        )}
+        title={t(
+          "HyperX — the highest truth sharer, advanced discovery and underlying truths"
+        )}
+        data-testid="landing-nav-hyperx"
+        className={cn(hand, "hyperx-hand text-[#f5d0fe]")}
+      >
+        <Sparkles className="size-3" aria-hidden="true" />
+        <span className="mono-label whitespace-nowrap text-[10px] font-semibold uppercase tracking-[0.14em] text-[#a21caf] dark:text-[#f5d0fe]">
+          HyperX
         </span>
       </button>
 

@@ -2025,7 +2025,9 @@ export function DreamBookView() {
                 }
               }}
               rows={1}
-              placeholder={t("Speak anything — a subject, a wish, a whole world…")}
+              placeholder={t(
+                "Pour your imagination onto these pages — a scene, a feeling, a whole world: everything you write becomes living ink, so the book carries your energy inside it…"
+              )}
               maxLength={600}
               data-testid="dream-topic-input"
               className="nice-scroll max-h-24 min-h-[26px] min-w-0 flex-1 resize-none bg-transparent py-1 font-[family-name(var(--font-literata))] text-[15px] italic leading-relaxed text-foreground outline-none placeholder:font-[family-name(var(--font-sans))] placeholder:not-italic placeholder:text-muted-foreground/60"
@@ -2812,7 +2814,9 @@ export function DreamBookView() {
                             )
                       }
                       onUpdate={handleInkUpdate}
-                      placeholder={t("The page waits for your hand…")}
+                      placeholder={t(
+                        "Write here and the book keeps your energy — every image, every wonder you add becomes part of its living pages…"
+                      )}
                       readOnly={inkLocked}
                       formatNumber={(n) => formatArchiveNumber(n, language)}
                       className="mt-1"

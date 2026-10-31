@@ -109,8 +109,14 @@ export async function POST(req: NextRequest) {
     res.headers.set("cache-control", "private, no-store");
     setSessionCookie(res, user.id, user.sessionVersion ?? 0, req);
     clearForeignSessionCookies(res);
-    /* everything the anonymous cookie kept comes with the new passage */
-    await mergeAnonLibrary(readAnonId(req), user.id);
+    /* everything the anonymous cookie kept comes with the new passage.
+       THE COOKIE NEVER FALLS — a stumbling merge must never strip the
+       session that was already carved (the callback's own law). */
+    try {
+      await mergeAnonLibrary(readAnonId(req), user.id);
+    } catch (mergeErr) {
+      console.error("[auth/register] library merge stumbled (the passage stands):", mergeErr);
+    }
 
     /* when a messenger is configured, a verification letter flies out;
        without one the account simply works (honest, nothing faked) */

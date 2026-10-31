@@ -62,6 +62,12 @@ const ZAI_SIZES = [
   "720x1440",
 ] as const;
 
+/* THE SAFE CANVAS — the Z.ai images API silently answers a prompt
+   longer than ~3,000 characters with a body that carries no painting;
+   every atelier/cog brush paints from a prompt capped below the line
+   (the channel law rides first, the wish rides whole as space allows). */
+const ATELIER_PROMPT_MAX = 2880;
+
 /** Map any requested size onto DALL·E 3's three aspect buckets. */
 function toDalleSize(size?: string): DalleSize {
   if (size && (DALLE_SIZES as readonly string[]).includes(size)) {
@@ -564,7 +570,11 @@ async function paintWithAtelier(
       );
     } catch (err) {
       lastError = err;
-      console.error(`[image-engine] atelier attempt ${i + 1} failed:`, err);
+      console.error(
+        `[image-engine] atelier attempt ${i + 1} failed:`,
+        err instanceof Error ? err.message : err,
+        `| prompt ${prompt.length} chars, size ${size}, head: ${prompt.slice(0, 140).replace(/\s+/g, " ")}`
+      );
     }
     if (i < attempts - 1) {
       await new Promise((r) =>
@@ -703,7 +713,8 @@ export async function generateImage(
   if (cogReady)
     candidates.push({
       engine: "zai",
-      run: () => paintWithCogView(prompt, toZaiSize(options.size)),
+      run: () =>
+        paintWithCogView(prompt.slice(0, ATELIER_PROMPT_MAX), toZaiSize(options.size)),
     });
   if (dalleReady)
     candidates.push({
@@ -755,9 +766,15 @@ export async function generateImage(
     }
   }
 
-  /* the final brush — the Z.ai atelier, always ready in the laboratory */
+  /* the final brush — the Z.ai atelier, always ready in the laboratory.
+     THE SAFE CANVAS — the images API answers a too-long prompt with an
+     empty body (and the SDK reads nothing from it): every brush paints
+     from a prompt capped at the atelier's own honest length. */
   try {
-    const img = await paintWithAtelier(prompt, toZaiSize(options.size));
+    const img = await paintWithAtelier(
+      prompt.slice(0, ATELIER_PROMPT_MAX),
+      toZaiSize(options.size)
+    );
     return { ...img, originalPrompt: wish };
   } catch (err) {
     journal("atelier", err);
