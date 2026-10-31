@@ -4619,3 +4619,44 @@ html:not(.dark) .lp-sigil-img {
     animation: none;
   }
 }
+
+/* ---------------------------------------------------------------- */
+/*  THE CODEX'S OWN CORNERS — small luminous brackets at two corners */
+/*  of the codex's page-turn hands: the ornament the visitor named   */
+/*  ("fancy at corner"), drawn with borders so no image ever loads.  */
+/* ---------------------------------------------------------------- */
+.corner-fancy {
+  position: relative;
+  border-radius: 4px;
+}
+.corner-fancy::before,
+.corner-fancy::after {
+  content: "";
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  pointer-events: none;
+  border-color: color-mix(in srgb, var(--cy) 55%, transparent);
+  transition:
+    border-color 0.3s ease,
+    filter 0.3s ease;
+}
+.corner-fancy::before {
+  top: -2.5px;
+  left: -2.5px;
+  border-top: 1.5px solid;
+  border-left: 1.5px solid;
+  border-top-left-radius: 5px;
+}
+.corner-fancy::after {
+  bottom: -2.5px;
+  right: -2.5px;
+  border-bottom: 1.5px solid;
+  border-right: 1.5px solid;
+  border-bottom-right-radius: 5px;
+}
+.corner-fancy:hover::before,
+.corner-fancy:hover::after {
+  border-color: var(--cy);
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--cy) 60%, transparent));
+}

@@ -5316,9 +5316,9 @@ export function BranchCanopy({
             )}
             <button
               type="button"
-              onClick={() => openRegister("archive")}
-              aria-label={t("Codex Exobiologica")}
-              title={t("Codex Exobiologica")}
+              onClick={() => openRegister("civilization")}
+              aria-label={t("The Codex")}
+              title={t("The Codex — the archive's four registers")}
               data-testid={`${testIdPrefix}-door-codex`}
               className="focus-glow flex size-7 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
             >

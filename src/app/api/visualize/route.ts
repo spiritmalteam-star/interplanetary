@@ -216,11 +216,13 @@ async function paint(
   });
 }
 
-/** Keep the atelier tidy — paintings older than two days are released. */
+/** Keep the atelier tidy — paintings older than thirty days are
+    released (the visitor's history reopens a conversation's visions
+    for a whole month before the gallery lets them rest). */
 function sweepOldPaintings(): void {
   try {
     if (!fs.existsSync(ART_DIR)) return;
-    const cutoff = Date.now() - 48 * 60 * 60 * 1000;
+    const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
     for (const f of fs.readdirSync(ART_DIR)) {
       if (!f.endsWith(".png")) continue;
       const p = path.join(ART_DIR, f);

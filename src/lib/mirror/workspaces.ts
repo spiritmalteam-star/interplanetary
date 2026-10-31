@@ -127,7 +127,7 @@ export const WORKSPACES: Record<ToolTabKey, WorkspaceDefinition> = {
       import("@/components/mirror/LightCodesView").then((m) => ({
         default: m.LightCodesView as ComponentType,
       })),
-    capabilities: ["sound-transmissions", "ethermix", "local-synthesis", "pattern-save"],
+    capabilities: ["sound-transmissions", "ethermix", "local-synthesis"],
     preserveState: true,
     resourceProfile: "medium",
     bridgeMode: "mirror",
@@ -239,7 +239,7 @@ export const WORKSPACES: Record<ToolTabKey, WorkspaceDefinition> = {
   },
   register: {
     id: "register",
-    title: "Register",
+    title: "Codex",
     category: "atlas",
     icon: NotebookPen,
     theme: { accent: "var(--scope-a, var(--gd))" },

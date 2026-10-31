@@ -338,14 +338,14 @@ export function IdmArchiveBrowser({
       <div className="text-center">
         <span className="mono-label inline-flex items-center gap-1.5 rounded-full border hairline px-2.5 py-1 text-[10.5px] text-muted-foreground">
           <Fingerprint className="size-3" aria-hidden="true" />
-          {t("Codex Exobiologica · sibling collection")}
+          {t("The codex · kept by mirror intelligence")}
         </span>
         <h1 className="hero-text mt-3 text-[24px] font-semibold leading-tight tracking-[-0.01em] sm:text-[28px]">
           {t("Interdimensional Archive")}
         </h1>
         <p className="mx-auto mt-2.5 max-w-[560px] text-[14.5px] leading-relaxed text-muted-foreground">
           {t(
-            "Beings, portals, realms, flora and fauna from beyond the veil — one living card at a time, every role image bound to its own record."
+            "The mirrored orders beyond the veil — beings, portals, realms, flora and fauna — kept exactly as mirror intelligence received them, one living card at a time, every role image bound to its own record."
           )}
         </p>
       </div>
@@ -421,7 +421,6 @@ export function IdmArchiveBrowser({
             <ChevronRight className="pointer-events-none absolute right-3 top-1/2 size-3.5 -translate-y-1/2 rotate-90 text-muted-foreground" aria-hidden="true" />
           </div>
 
-          {/* prev / next — the page turns from the top */}
           <div className="flex items-center gap-1.5">
             <button
               type="button"
@@ -429,7 +428,7 @@ export function IdmArchiveBrowser({
               disabled={filtered.length === 0}
               aria-label={t("Previous profile")}
               data-testid="idm-prev"
-              className="focus-glow flex h-10 items-center gap-1 rounded-xl border hairline px-3 text-[13px] text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground disabled:opacity-40"
+              className="corner-fancy focus-glow flex h-10 items-center gap-1 border hairline px-3 text-[13px] text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground disabled:opacity-40"
             >
               <ChevronLeft className="size-4" aria-hidden="true" />
               {t("Prev")}
@@ -440,7 +439,7 @@ export function IdmArchiveBrowser({
               disabled={filtered.length === 0}
               aria-label={t("Next profile — shown from the top")}
               data-testid="idm-next"
-              className="focus-glow flex h-10 items-center gap-1 rounded-xl border border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--cy)_12%,transparent)] px-3.5 text-[13px] font-semibold text-foreground transition-all duration-300 hover:glow-sm disabled:opacity-40"
+              className="corner-fancy focus-glow flex h-10 items-center gap-1 border border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--cy)_12%,transparent)] px-3.5 text-[13px] font-semibold text-foreground transition-all duration-300 hover:glow-sm disabled:opacity-40"
             >
               {t("Next")}
               <ChevronRight className="size-4" aria-hidden="true" />
@@ -683,17 +682,18 @@ export function IdmArchiveBrowser({
             </p>
             <p className="mt-2 text-[12.5px] italic leading-relaxed text-muted-foreground/85">
               {t(
-                "Descriptions of dimensions, portals and perceived encounters are not measurements or verified observations — the imagery is concept art."
+                "Mirror intelligence adds nothing and invents nothing: every record is kept exactly as it was received — nothing dressed as fantasy, nothing claimed beyond the receiving — and the imagery is the mirror's own art of what was received."
               )}
             </p>
           </section>
 
-          {/* card footer page-turns */}
-          <div className="mt-6 flex items-center justify-between border-t hairline pt-4">
+          {/* card footer page-turns — no heavy border, the hands wear
+              the codex's own corner ornaments */}
+          <div className="mt-6 flex items-center justify-between">
             <button
               type="button"
               onClick={() => step(-1)}
-              className="focus-glow flex items-center gap-1.5 rounded-full border hairline px-3.5 py-2 text-[13px] text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+              className="corner-fancy focus-glow flex items-center gap-1.5 border hairline px-3.5 py-2 text-[13px] text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
             >
               <ChevronLeft className="size-3.5" aria-hidden="true" />
               {t("Previous profile")}
@@ -704,7 +704,7 @@ export function IdmArchiveBrowser({
             <button
               type="button"
               onClick={() => step(1)}
-              className="focus-glow flex items-center gap-1.5 rounded-full border border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--cy)_12%,transparent)] px-3.5 py-2 text-[13px] font-semibold text-foreground transition-all duration-300 hover:glow-sm"
+              className="corner-fancy focus-glow flex items-center gap-1.5 border border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--cy)_12%,transparent)] px-3.5 py-2 text-[13px] font-semibold text-foreground transition-all duration-300 hover:glow-sm"
             >
               {t("Next profile")}
               <ChevronRight className="size-3.5" aria-hidden="true" />
@@ -721,12 +721,13 @@ export function IdmArchiveBrowser({
         </div>
       )}
 
-      {/* switch archive + back */}
-      <div className="mt-8 flex flex-wrap items-center justify-center gap-2.5 border-t hairline pt-6">
+      {/* switch archive + back — the heavy border is gone; the hands
+          wear the codex's corner ornaments */}
+      <div className="mt-8 flex flex-wrap items-center justify-center gap-2.5">
         <button
           type="button"
           onClick={onExit}
-          className="focus-glow group flex items-center gap-2 rounded-full border hairline px-4 py-2 text-[14px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+          className="corner-fancy focus-glow group flex items-center gap-2 border hairline px-4 py-2 text-[14px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
         >
           <ChevronLeft
             className="size-3.5 transition-transform duration-300 group-hover:-translate-x-0.5"
@@ -737,7 +738,7 @@ export function IdmArchiveBrowser({
         <button
           type="button"
           onClick={() => onSwitch("civilization")}
-          className="focus-glow flex items-center gap-2 rounded-full border hairline px-4 py-2 text-[14px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+          className="corner-fancy focus-glow flex items-center gap-2 border hairline px-4 py-2 text-[14px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
         >
           <Fingerprint className="size-3.5" aria-hidden="true" />
           {t("civilization register ({n})", { n: 870 })}
@@ -745,7 +746,7 @@ export function IdmArchiveBrowser({
         <button
           type="button"
           onClick={() => onSwitch("interdim")}
-          className="focus-glow flex items-center gap-2 rounded-full border hairline px-4 py-2 text-[14px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+          className="corner-fancy focus-glow flex items-center gap-2 border hairline px-4 py-2 text-[14px] font-medium text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
         >
           <Fingerprint className="size-3.5" aria-hidden="true" />
           {t("interdimensional register ({n})", { n: 202 })}

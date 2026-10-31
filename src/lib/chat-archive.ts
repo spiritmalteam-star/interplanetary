@@ -43,10 +43,17 @@ interface ArchiveShape {
 const KEY = "mirror-chat-archive-v1";
 const MAX_CHATS_PER_SURFACE = 30;
 const MAX_MESSAGES_PER_CHAT = 80;
-/** data: URLs (canvas paintings) can alone exceed the quota — they are
-    dropped on the shelf (the live session still holds them). Remote
-    https images keep their place. */
-const MAX_INLINE_STRING = 60_000;
+/** THE ARTIFACTS KEEP THEIR PLACE (the visitor named the law): the
+    archive no longer sheds a canvas painting just for being big —
+    data: URLs ride the shelf up to a generous cap, and the shelf only
+    sheds progressively when the browser's own quota truly refuses.
+    Restored conversations reopen with their pictures, their plates
+    and their visions whole. Remote https images always keep their
+    place. */
+const INLINE_CAPS = [280_000, 140_000, 60_000, 20_000, 0];
+/** the whole-archive budget the first cap aims at (~the browser's
+    5 MB per-origin quota minus the house's other shelves) */
+const ARCHIVE_BUDGET = 3_600_000;
 
 export const ARCHIVE_EVENT = "mirror:archive-changed";
 
@@ -54,22 +61,37 @@ function freshId(): string {
   return `c_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
 }
 
-/* ---- the deep sweep — long inline strings (data: images) are shed ---- */
+/* ---- the deep sweep — long inline strings (data: images) are kept
+        as long as the shelf honestly holds them, shed progressively
+        when it does not ---- */
 
-function shedHeavy(value: unknown, depth = 0): unknown {
+function shedHeavy(value: unknown, cap: number, depth = 0): unknown {
   if (depth > 8) return null;
   if (typeof value === "string")
-    return value.length > MAX_INLINE_STRING && value.startsWith("data:")
-      ? ""
-      : value;
-  if (Array.isArray(value)) return value.slice(0, 60).map((v) => shedHeavy(v, depth + 1));
+    return value.length > cap && value.startsWith("data:") ? "" : value;
+  if (Array.isArray(value))
+    return value.slice(0, 60).map((v) => shedHeavy(v, cap, depth + 1));
   if (value && typeof value === "object") {
     const out: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(value as Record<string, unknown>))
-      out[k] = shedHeavy(v, depth + 1);
+      out[k] = shedHeavy(v, cap, depth + 1);
     return out;
   }
   return value;
+}
+
+function shedArchive(state: ArchiveShape, cap: number): ArchiveShape {
+  const out: ArchiveShape = {};
+  for (const [surface, entry] of Object.entries(state)) {
+    out[surface] = {
+      activeId: entry.activeId,
+      chats: entry.chats.map((c) => ({
+        ...c,
+        messages: (shedHeavy(c.messages, cap) as unknown[]) ?? [],
+      })),
+    };
+  }
+  return out;
 }
 
 function readArchive(): ArchiveShape {
@@ -87,10 +109,24 @@ function readArchive(): ArchiveShape {
 
 function writeArchive(state: ArchiveShape) {
   if (typeof window === "undefined") return;
-  try {
-    window.localStorage.setItem(KEY, JSON.stringify(state));
-  } catch {
-    /* the shelf is full — shed the oldest conversations by half, once */
+  /* THE KEEPING LADDER — the richest cap first; only when the browser
+     refuses (or the budget is breached) does the shelf step down, so
+     artifacts survive at the highest fidelity the device allows */
+  let written = false;
+  for (const cap of INLINE_CAPS) {
+    const candidate = shedArchive(state, cap);
+    try {
+      const raw = JSON.stringify(candidate);
+      if (cap !== 0 && raw.length > ARCHIVE_BUDGET) continue;
+      window.localStorage.setItem(KEY, raw);
+      written = true;
+      break;
+    } catch {
+      /* the quota refused this cap — the ladder steps down */
+    }
+  }
+  if (!written) {
+    /* every cap refused — shed the oldest conversations by half, once */
     try {
       const trimmed: ArchiveShape = {};
       for (const [surface, entry] of Object.entries(state)) {
@@ -143,7 +179,7 @@ export function saveActiveChat(
   }
 ): void {
   if (typeof window === "undefined") return;
-  const messages = (shedHeavy(data.messages) as unknown[]) ?? [];
+  const messages = (shedHeavy(data.messages, INLINE_CAPS[0]) as unknown[]) ?? [];
   if (messages.length === 0) return;
   const state = readArchive();
   const entry = entryOf(state, surface);

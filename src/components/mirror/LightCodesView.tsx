@@ -40,9 +40,7 @@ import Image from "next/image";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { useVoiceRecorder } from "@/hooks/use-voice-recorder";
-import { MusicSequencer } from "./living/MusicSequencer";
 import { EthermixDeck } from "./living/EthermixDeck";
-import { MirrorBridge } from "./living/MirrorBridge";
 import {
   LC_MODES,
   LC_SHAPE,
@@ -1812,9 +1810,11 @@ export function LightCodesView() {
   const [bench, setBench] = useState<"transmissions" | "sequencer">(
     "transmissions"
   );
-  /* THE FULL-SCREEN SET — the Ethermix deck rises over the room when
-     the visitor asks for it; laid down entirely by its own close hand */
-  const [deckOpen, setDeckOpen] = useState(false);
+  /* THE ETHERMIX OPENS ITSELF — entering the Ethermix raises the
+     full-screen deck at once (the sequencer is gone for good): the
+     visitor lands IN the set, never on a door to it. Laying the deck
+     down keeps a slim hand to raise it again. */
+  const [deckOpen, setDeckOpen] = useState(true);
 
   /* THE KEEPING THREAD — a signed passage's shelf wakes with the room:
      the vault's rows join the history, and any weave that outlived a
@@ -1976,88 +1976,58 @@ export function LightCodesView() {
           </div>
 
           {bench === "sequencer" ? (
-            /* THE LOCAL INSTRUMENT — mounts only while chosen; the
-               bridge rides at the room's own corner with the pattern
-               read at ask-time from the visitor's saved pattern */
+            /* ETHERMIX — the full-screen crystal set opens DIRECTLY:
+                two decks, the synthesizer, the drums, the recorder —
+                played on the visitor's own device. The old step
+                sequencer is removed entirely. */
             <div className="relative mx-auto mt-4 max-w-[720px]">
-              {/* THE ETHERMIX DECK — the glass strip that opens the
-                  full-screen set: two decks, a synthesizer, drums and
-                  the recorder, all played on the visitor's own device */}
-              <div
-                className="relative mb-4 overflow-hidden rounded-2xl border hairline shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]"
-                style={{
-                  background:
-                    "linear-gradient(to bottom, color-mix(in srgb, var(--scope-a) 10%, transparent), transparent 70%), var(--glass-bg-soft)",
-                }}
-              >
-                {/* the prismatic top edge */}
-                <div
-                  aria-hidden="true"
-                  className="absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(168,85,247,0.35),rgba(232,217,176,0.3),transparent)]"
-                />
-                <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="min-w-0">
-                    <p className="font-[family-name:Cinzel] text-[13px] tracking-[0.28em] text-[var(--scope-a)]">
-                      {t("THE ETHERMIX DECK")}
-                    </p>
-                    <p className="mt-1 text-[12.5px] leading-snug text-muted-foreground">
-                      {t(
-                        "Play and remix your mirror musics — two decks, a synthesizer, and the full set."
-                      )}
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    data-testid="ethermix-open"
-                    onClick={() => setDeckOpen(true)}
-                    className="btn-chip h-9 shrink-0 px-4 text-[12.5px]"
-                    style={{
-                      backgroundColor:
-                        "color-mix(in srgb, var(--scope-a) 14%, transparent)",
-                      color: "var(--scope-a)",
-                      boxShadow:
-                        "inset 0 0 0 1px color-mix(in srgb, var(--scope-a) 40%, transparent), 0 0 24px -10px color-mix(in srgb, var(--scope-a) 70%, transparent)",
-                    }}
-                  >
-                    <Disc3 className="size-4" aria-hidden="true" />
-                    {t("Open the full-screen set")}
-                  </button>
-                </div>
-              </div>
-              {deckOpen && (
+              {deckOpen ? (
                 <EthermixDeck onClose={() => setDeckOpen(false)} />
+              ) : (
+                /* the slim re-entry hand — the deck laid down keeps one
+                    quiet way back in (no sequencer beneath it) */
+                <div
+                  className="relative mb-4 overflow-hidden rounded-2xl border hairline shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]"
+                  style={{
+                    background:
+                      "linear-gradient(to bottom, color-mix(in srgb, var(--scope-a) 10%, transparent), transparent 70%), var(--glass-bg-soft)",
+                  }}
+                >
+                  {/* the prismatic top edge */}
+                  <div
+                    aria-hidden="true"
+                    className="absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(168,85,247,0.35),rgba(232,217,176,0.3),transparent)]"
+                  />
+                  <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0">
+                      <p className="font-[family-name:Cinzel] text-[13px] tracking-[0.28em] text-[var(--scope-a)]">
+                        {t("THE ETHERMIX DECK")}
+                      </p>
+                      <p className="mt-1 text-[12.5px] leading-snug text-muted-foreground">
+                        {t(
+                          "Play and remix your mirror musics — two decks, a synthesizer, and the full set."
+                        )}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      data-testid="ethermix-open"
+                      onClick={() => setDeckOpen(true)}
+                      className="btn-chip h-9 shrink-0 px-4 text-[12.5px]"
+                      style={{
+                        backgroundColor:
+                          "color-mix(in srgb, var(--scope-a) 14%, transparent)",
+                        color: "var(--scope-a)",
+                        boxShadow:
+                          "inset 0 0 0 1px color-mix(in srgb, var(--scope-a) 40%, transparent), 0 0 24px -10px color-mix(in srgb, var(--scope-a) 70%, transparent)",
+                      }}
+                    >
+                      <Disc3 className="size-4" aria-hidden="true" />
+                      {t("Open the full-screen set")}
+                    </button>
+                  </div>
+                </div>
               )}
-              <MusicSequencer />
-              <MirrorBridge
-                workspaceKey="lightcodes"
-                buildContext={() => {
-                  try {
-                    const raw = window.localStorage.getItem("mirror:music-pattern");
-                    if (!raw) return null;
-                    const p = JSON.parse(raw) as {
-                      tempo?: number;
-                      pattern?: boolean[][];
-                      mutes?: boolean[];
-                    };
-                    if (!p?.pattern) return null;
-                    const names = ["Kick", "Hush", "Breath", "Tone"];
-                    const lines = p.pattern
-                      .map((row, i) => {
-                        if (p.mutes?.[i]) return `${names[i]}: muted`;
-                        const on = row
-                          .map((v, s) => (v ? s + 1 : 0))
-                          .filter(Boolean)
-                          .join(",");
-                        return on ? `${names[i]}: steps ${on}` : null;
-                      })
-                      .filter(Boolean);
-                    if (lines.length === 0) return null;
-                    return `${t("Tempo")}: ${p.tempo ?? "?"} bpm\n${lines.join("\n")}`;
-                  } catch {
-                    return null;
-                  }
-                }}
-              />
             </div>
           ) : (
             <>

@@ -8,27 +8,11 @@ export const maxDuration = 120;
 /* ------------------------------------------------------------------ */
 /*  THE FORGE'S SKETCH DOOR — the Invent room's own hand: the idea is  */
 /*  scratched into form as an image, painted by the same Gemini the    */
-/*  sky already carries (GEMINI_API_KEY). One call, one image — the    */
-/*  room asks three times with three honest angles (the mechanism,     */
-/*  the form, the idea in use) so up to three pictures of ONE idea      */
-/*  stand side by side.                                                */
+/*  sky already carries (GEMINI_API_KEY). THE ONE PLATE LAW (the       */
+/*  visitor named it): ONE image per call — a single high-density      */
+/*  concept plate that holds the mechanism, the form and the idea in   */
+/*  use together, packed edge to edge with honest invention detail.    */
 /* ------------------------------------------------------------------ */
-
-/* the three honest angles — one idea, three ways of seeing it */
-const ANGLES: { key: string; note: string }[] = [
-  {
-    key: "mechanism",
-    note: "a clean technical concept sketch of the idea's mechanism, annotated callout lines, blueprint-like linework on warm paper",
-  },
-  {
-    key: "form",
-    note: "a product-design render of the idea as a finished object, studio lighting, soft shadows, museum-clean background",
-  },
-  {
-    key: "use",
-    note: "a warm illustrative scene of the idea being used in daily life, cinematic lighting, storybook detail",
-  },
-];
 
 const IMAGE_MODELS = [
   "gemini-2.5-flash-image",
@@ -136,27 +120,34 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
   const client = new GoogleGenAI({ apiKey: key });
   const context = (body?.context ?? "").trim().slice(0, 800);
-  /* the visitor's own style — chosen through the "/" hand — leads the look */
+  /* the visitor's own style — chosen through the "/" hand — leads the
+     look; when the visitor names no style, the plate wears the house's
+     M.E. Illustrated Codex manner by default */
   const style = (body?.style ?? "").trim().slice(0, 120);
+  const defaultStyle =
+    "richly painted dreamlike illustrated explanation in the M.E. Illustrated Codex manner: deep midnight blue, emerald, violet, turquoise and warm luminous gold, elegant ornamental borders, light streams and pathways guiding the eye, clearly organized panels with generous empty space around every label";
   const base =
     `You are visualising an invention idea. THE IDEA: ${idea.slice(0, 700)}. ` +
     (context ? `THE CONVERSATION AROUND IT: ${context}. ` : "") +
-    (style ? `THE VISITOR'S CHOSEN STYLE: ${style} — let it lead the whole look. ` : "") +
+    (style
+      ? `THE VISITOR'S CHOSEN STYLE: ${style} — let it lead the whole look. `
+      : `THE DEFAULT STYLE: ${defaultStyle}. `) +
     "Depict the idea faithfully — every visible detail must serve what the idea actually is. " +
     "No readable paragraphs of text in the image. ";
 
-  const sketches = await Promise.allSettled(
-    ANGLES.map((angle) =>
-      paintOne(client, `${base}The picture: ${angle.note}.`).then((img) =>
-        img ? { angle: angle.key, ...img } : null
-      )
-    )
-  );
+  /* THE ONE PLATE — a single high-density concept plate: the whole
+     invention read at one glance, three honest layers composed as one
+     packed sheet (mechanism, finished form, the idea in use) */
+  const platePrompt =
+    `${base}The picture: ONE single high-density concept plate of the invention — a masterfully packed presentation sheet that holds the whole idea at once: ` +
+    "a precise annotated cutaway of the mechanism with fine callout lines, the invention as a finished object rendered in clean studio light, and the idea alive in honest use — all three composed together in one dense, richly detailed, edge-to-edge plate; " +
+    "small neat labels only (one to three words), high information density, meticulous craftsmanship, no clutter, no empty filler zones.";
 
-  const images: SketchPart[] = [];
-  for (const s of sketches) {
-    if (s.status === "fulfilled" && s.value) images.push(s.value);
-  }
+  const painted = await paintOne(client, platePrompt);
+
+  const images: SketchPart[] = painted
+    ? [{ angle: "plate", ...painted }]
+    : [];
 
   if (images.length === 0) {
     return door(
@@ -177,9 +168,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         mimeType: img.mimeType,
         data: img.data,
       })),
-      ...(images.length < ANGLES.length
-        ? { note: "Some brushes rested — fewer visions landed than asked." }
-        : {}),
     },
     200,
     visitor
